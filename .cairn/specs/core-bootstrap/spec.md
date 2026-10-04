@@ -385,6 +385,30 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 [conformance/cases.json](../../../specs/conformance/cases.json) supplies newly authored source and structured harness cases. [EVIDENCE.md](../evidence/spec.md) defines their status and observation rules.
 
+### Requirement: B-LIVE-01
+r[B-LIVE-01]
+
+**B-LIVE-01.** `Live-Wasm-Draft` is an optional post-M4, post-DXM1 profile, not Core-Bootstrap or an amendment to historical M4, MC1/MC2 or Declared-Modules-v1 acceptance. Its first selected source vocabulary is the resource-free Core-Bootstrap subset plus explicitly supplied immutable Declared-Modules-v1 files and typed bindings. Source/module reload MUST pass the same independent kernel acceptance with finite expected interfaces and limits; neither compiler emission nor VM validation replaces this check. No ordinary `noble run`/`session` invocation opts into live behavior implicitly. Previously accepted M4 compiled source execution and its evidence remain unchanged; the live profile's own in-process binary emitter, VM compatibility and next-call freshness require separate executed acceptance.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-01 for B-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-01](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-08 for B-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-08](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
 ### Requirement: B-GATE-01
 r[B-GATE-01]
 

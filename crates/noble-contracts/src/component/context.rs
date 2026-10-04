@@ -15,6 +15,11 @@ impl super::World {
         let capacity_bytes = profile
             .len()
             .saturating_add(super::BINDING_SCHEMA.len())
+            .saturating_add(if self.checked_u64 {
+                super::CHECKED_U64_SCHEMA.len().saturating_add(1)
+            } else {
+                0
+            })
             .saturating_add(abi.len())
             .saturating_add(self.identity.len())
             .saturating_add(self.wit.len())
@@ -24,6 +29,10 @@ impl super::World {
         key.push(0);
         key.extend_from_slice(super::BINDING_SCHEMA.as_bytes());
         key.push(0);
+        if self.checked_u64 {
+            key.extend_from_slice(super::CHECKED_U64_SCHEMA.as_bytes());
+            key.push(0);
+        }
         key.extend_from_slice(&super::STREAM_U8_KIND.0.to_le_bytes());
         key.extend_from_slice(&super::FUTURE_S64_KIND.0.to_le_bytes());
         key.extend_from_slice(&super::FUTURE_RESULT_S64_STRING_KIND.0.to_le_bytes());

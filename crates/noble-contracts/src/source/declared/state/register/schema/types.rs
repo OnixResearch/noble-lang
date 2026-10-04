@@ -1,6 +1,8 @@
 pub(super) fn parse_shape(
     schema: &crate::source::declared::Schema,
     local_types: &[(alloc::string::String, noble_kernel::types::Ty)],
+    families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+    environment: Option<&noble_kernel::contracts::Env>,
     mut meter: crate::Meter,
 ) -> (
     crate::Meter,
@@ -22,7 +24,7 @@ pub(super) fn parse_shape(
         }
     };
     let parsed = match meter.charge(bytes, crate::source::declared::SPAN) {
-        Ok(()) => Ok(shape(schema, local_types).ok()),
+        Ok(()) => Ok(shape(schema, local_types, families, environment).ok()),
         Err(problem) => Err(crate::source::declared::diagnostic(
             crate::source::Stage::Check,
             problem,
@@ -45,12 +47,16 @@ const fn type_word_len(schema: &crate::source::declared::Schema) -> usize {
 pub(super) fn shape(
     schema: &crate::source::declared::Schema,
     local_types: &[(alloc::string::String, noble_kernel::types::Ty)],
+    families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+    environment: Option<&noble_kernel::contracts::Env>,
 ) -> Result<(noble_kernel::types::NominalShape, usize), crate::Diagnostic> {
     match &schema.kind {
         crate::source::declared::SchemaKind::Opaque { base, .. } => {
-            let parsed = attempt!(crate::source::declared::types::parse(
+            let parsed = attempt!(crate::source::declared::types::parse_with_families(
                 base,
                 local_types,
+                families,
+                environment,
                 crate::source::declared::SPAN,
             ));
             Ok((
@@ -63,14 +69,18 @@ pub(super) fn shape(
             right_type,
             ..
         } => {
-            let left = attempt!(crate::source::declared::types::parse(
+            let left = attempt!(crate::source::declared::types::parse_with_families(
                 left_type,
                 local_types,
+                families,
+                environment,
                 crate::source::declared::SPAN,
             ));
-            let right = attempt!(crate::source::declared::types::parse(
+            let right = attempt!(crate::source::declared::types::parse_with_families(
                 right_type,
                 local_types,
+                families,
+                environment,
                 crate::source::declared::SPAN,
             ));
             Ok((

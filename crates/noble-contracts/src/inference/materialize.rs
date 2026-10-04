@@ -27,6 +27,47 @@ impl State {
 }
 
 impl super::Arena {
+    /// Concrete suffix guaranteed by a solved stack, independent of an
+    /// unresolved prefix. This reports constraints, not a complete witness.
+    pub(crate) fn editor_stack_suffix(
+        &self,
+        mut id: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<alloc::vec::Vec<alloc::string::String>, crate::Diagnostic> {
+        let mut suffix = alloc::vec::Vec::new();
+        // Every pushed entry follows its own successful unit work charge.
+        let work_limit = attempt!(crate::offset(meter.limits.work, span));
+        loop {
+            attempt!(meter.charge(1, span));
+            id = attempt!(self.root(id, span, meter));
+            match attempt!(self.get(id, span)) {
+                super::Term::Push(stack, value) => {
+                    let described = attempt!(self.describe_stack(value, span, meter));
+                    if suffix.len() >= work_limit {
+                        return Err(crate::internal(span));
+                    }
+                    suffix.push(described);
+                    id = stack;
+                }
+                super::Term::Hole(super::Sort::Stack) | super::Term::Empty
+                | super::Term::RigidStack(_) => break,
+                _ => return Err(crate::internal(span)),
+            }
+        }
+        suffix.reverse();
+        Ok(suffix)
+    }
+
+    pub(crate) fn describe_stack(
+        &self,
+        id: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<alloc::string::String, crate::Diagnostic> {
+        rendering::describe(self, id, span, meter)
+    }
+
     pub fn stack_value(
         &self,
         id: u32,
@@ -142,7 +183,9 @@ impl super::Arena {
         attempt!(meter.charge(1, span));
         match step {
             Step::Visit(id) => self.visit(id, state, span, meter),
-            Step::Finish(term, effects) => state.finish(term, effects, span),
+            Step::Finish(term, effects) => {
+                state.finish(term, effects, &self.generic_nominals, span)
+            }
         }
     }
 
@@ -160,6 +203,12 @@ impl super::Arena {
                 return Err(crate::invalid(
                     span,
                     "ambiguous witness; add an explicit typed block or word binding",
+                ));
+            }
+            super::Term::RigidValue(_) | super::Term::RigidStack(_) => {
+                return Err(crate::invalid(
+                    span,
+                    "declaration-level universal cannot become a runtime value",
                 ));
             }
             super::Term::Link(_) => return Err(crate::internal(span)),
@@ -210,6 +259,14 @@ impl super::Arena {
                 state.steps.push(Step::Visit(a));
                 return Ok(state);
             }
+            super::Term::GenericNominal(_, a, b) => {
+                state
+                    .steps
+                    .push(Step::Finish(term, noble_kernel::types::EffSet::empty()));
+                state.steps.push(Step::Visit(b));
+                state.steps.push(Step::Visit(a));
+                return Ok(state);
+            }
             super::Term::List(item) => {
                 state
                     .steps
@@ -235,12 +292,27 @@ impl super::Arena {
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<alloc::string::String, crate::Diagnostic> {
-        let expected = attempt!(rendering::describe(self, expected, span, meter));
-        let actual = attempt!(rendering::describe(self, actual, span, meter));
+        let (expected, actual) = attempt!(self.join_stacks(expected, actual, span, meter));
         let mut message = alloc::string::String::from("stack/program join: expected ");
         message.push_str(&expected);
         message.push_str("; actual ");
         message.push_str(&actual);
         Ok(message)
+    }
+
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-maintainers; expected and actual are ordered IDs in the same term arena from the rejected stack equation."
+    )]
+    pub fn join_stacks(
+        &self,
+        expected: u32,
+        actual: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<(alloc::string::String, alloc::string::String), crate::Diagnostic> {
+        let expected = attempt!(rendering::describe(self, expected, span, meter));
+        let actual = attempt!(rendering::describe(self, actual, span, meter));
+        Ok((expected, actual))
     }
 }

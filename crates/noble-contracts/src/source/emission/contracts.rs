@@ -2,11 +2,12 @@ mod patterns;
 
 pub(super) fn scheme(
     expected: &noble_kernel::untrusted::Expected,
+    environment: &noble_kernel::contracts::Env,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<noble_kernel::words::Scheme, crate::Diagnostic> {
-    let stack_in = attempt!(stack(&expected.stack_in, span, meter));
-    let stack_out = attempt!(stack(&expected.stack_out, span, meter));
+    let stack_in = attempt!(stack(&expected.stack_in, environment, span, meter));
+    let stack_out = attempt!(stack(&expected.stack_out, environment, span, meter));
     let effects = attempt!(effect_slots(&expected.allowed_effects, span, meter));
     Ok(noble_kernel::words::Scheme {
         var_kinds: alloc::vec::Vec::new(),
@@ -18,6 +19,7 @@ pub(super) fn scheme(
 
 fn stack(
     types: &[noble_kernel::types::Ty],
+    environment: &noble_kernel::contracts::Env,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<alloc::vec::Vec<noble_kernel::shapes::Pattern>, crate::Diagnostic> {
@@ -25,7 +27,7 @@ fn stack(
     let mut at = 0usize;
     let mut failure = None;
     while at < types.len() {
-        match patterns::convert(&types[at], span, meter) {
+        match patterns::convert(&types[at], environment, span, meter) {
             Ok(pattern) => patterns.push(pattern),
             Err(problem) => {
                 failure = Some(problem);

@@ -13,7 +13,7 @@ fn live_async_values_remain_non_data_and_non_capture_in_nested_payloads() -> Res
             noble_contracts::component::Type::FutureResultS64String,
         ),
     ] {
-        let live = ty.noble();
+        let live = ty.noble().ok_or("missing live resource mapping")?;
         for (source, expected) in [
             (word.to_string(), live.clone()),
             (

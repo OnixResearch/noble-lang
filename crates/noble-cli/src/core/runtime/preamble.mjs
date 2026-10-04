@@ -12,7 +12,7 @@ const utf8 = new TextDecoder('utf-8', { fatal: true });
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const names = ['dup', 'drop', 'swap', 'dip', 'i64.add', 'i64.sub', 'i64.mul', 'i64.eq',
   'quote', 'compose', 'run', 'reflect', 'unit', 'pair', 'unpair', 'inl', 'inr', 'case',
-  'if', 'nil', 'cons', 'list.case', 'test.emit', 'test.abort'];
+  'if', 'nil', 'cons', 'list.case', 'test.emit', 'test.abort', 'self.propose', 'self.generation'];
 const fail = message => { throw Error(message); };
 const integer = (value, maximum, label) => {
   if (!Number.isSafeInteger(value) || value < 0 || value > maximum) fail(`invalid ${label}`);

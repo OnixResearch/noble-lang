@@ -28,13 +28,17 @@ impl<'a> Build<'a> {
     }
 }
 
-/// Inert kernel-only types and programs are not v1 nominal payloads.
-pub(super) fn pattern(ty: &crate::types::Ty) -> Option<crate::shapes::Pattern> {
+/// Construct a payload pattern, including immutable programs whose
+/// interfaces may mention resources without owning those resources.
+pub(super) fn pattern(
+    env: &super::super::Env,
+    ty: &crate::types::Ty,
+) -> Option<crate::shapes::Pattern> {
     let mut state = Some(Build::new(ty));
     let mut result = None;
     while let Some(mut current) = state {
         state = match current.work.pop() {
-            Some(frame) if current.work.len() < 512 => advance(frame, current),
+            Some(frame) if current.work.len() < 512 => advance(env, frame, current),
             Some(_) => None,
             None => {
                 if current.built.len() == 1 {
@@ -47,9 +51,13 @@ pub(super) fn pattern(ty: &crate::types::Ty) -> Option<crate::shapes::Pattern> {
     result
 }
 
-fn advance<'a>(frame: Frame<'a>, mut state: Build<'a>) -> Option<Build<'a>> {
+fn advance<'a>(
+    env: &super::super::Env,
+    frame: Frame<'a>,
+    mut state: Build<'a>,
+) -> Option<Build<'a>> {
     if frame.is_complete {
-        return complete(frame.ty, state);
+        return complete(env, frame.ty, state);
     }
     if state.entered >= 512 {
         return None;
@@ -89,6 +97,42 @@ fn enter<'a>(ty: &'a crate::types::Ty, mut state: Build<'a>) -> Option<Build<'a>
             is_complete: false,
         });
         return Some(state);
+    } else if let crate::types::Ty::Program(input, output, _) = ty {
+        state.work.push(Frame {
+            ty,
+            is_complete: true,
+        });
+        let mut index = output.len();
+        while index > 0 {
+            index -= 1;
+            state.work.push(Frame {
+                ty: &output[index],
+                is_complete: false,
+            });
+        }
+        index = input.len();
+        while index > 0 {
+            index -= 1;
+            state.work.push(Frame {
+                ty: &input[index],
+                is_complete: false,
+            });
+        }
+        return Some(state);
+    } else if let crate::types::Ty::GenericNominal(_, args, _) = ty {
+        state.work.push(Frame {
+            ty,
+            is_complete: true,
+        });
+        state.work.push(Frame {
+            ty: &args[1],
+            is_complete: false,
+        });
+        state.work.push(Frame {
+            ty: &args[0],
+            is_complete: false,
+        });
+        return Some(state);
     }
     match leaf_pattern(ty) {
         Some(pattern) => {
@@ -105,6 +149,10 @@ fn leaf_pattern(ty: &crate::types::Ty) -> Option<crate::shapes::Pattern> {
         crate::types::Ty::Bool => Some(crate::shapes::Pattern::Bool),
         crate::types::Ty::I64 => Some(crate::shapes::Pattern::I64),
         crate::types::Ty::Text => Some(crate::shapes::Pattern::Text),
+        crate::types::Ty::Syntax => Some(crate::shapes::Pattern::Syntax),
+        crate::types::Ty::Contract => Some(crate::shapes::Pattern::Contract),
+        crate::types::Ty::Evidence => Some(crate::shapes::Pattern::Evidence),
+        crate::types::Ty::Certified => Some(crate::shapes::Pattern::Certified),
         crate::types::Ty::Resource(kind) => Some(crate::shapes::Pattern::Resource(*kind)),
         crate::types::Ty::Nominal(id, shape) => Some(crate::shapes::Pattern::Nominal(
             *id,
@@ -118,13 +166,85 @@ fn leaf_pattern(ty: &crate::types::Ty) -> Option<crate::shapes::Pattern> {
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; literal const complete fails on non-const complete_pair/complete_list (E0015) and owned Build destruction (E0493) under both pinned compilers; reassess when those operations become const-capable."
 )]
-fn complete<'a>(ty: &crate::types::Ty, state: Build<'a>) -> Option<Build<'a>> {
+fn complete<'a>(
+    env: &super::super::Env,
+    ty: &crate::types::Ty,
+    state: Build<'a>,
+) -> Option<Build<'a>> {
     match ty {
         crate::types::Ty::Pair(_, _) => complete_pair(false, state),
         crate::types::Ty::Sum(_, _) => complete_pair(true, state),
         crate::types::Ty::List(_) => complete_list(state),
+        crate::types::Ty::Program(input, output, effects) => {
+            complete_program(input.len(), output.len(), effects, state)
+        }
+        crate::types::Ty::GenericNominal(id, _, _) => complete_generic(env, *id, state),
         _ => None,
     }
+}
+
+fn complete_generic<'a>(
+    env: &super::super::Env,
+    id: crate::types::NominalTypeId,
+    mut state: Build<'a>,
+) -> Option<Build<'a>> {
+    let second = state.built.pop()?;
+    let first = state.built.pop()?;
+    let decl = env.generic_variant(id)?;
+    state.built.push(crate::shapes::Pattern::GenericNominal(
+        id,
+        alloc::boxed::Box::new([first, second]),
+        decl.payload_params,
+    ));
+    Some(state)
+}
+
+fn complete_program<'a>(
+    input_len: usize,
+    output_len: usize,
+    effects: &crate::types::EffSet,
+    mut state: Build<'a>,
+) -> Option<Build<'a>> {
+    let mut output = alloc::vec::Vec::with_capacity(output_len);
+    let mut index = 0;
+    while index < output_len {
+        match state.built.pop() {
+            Some(part) => {
+                output.push(part);
+                index += 1;
+            }
+            None => break,
+        }
+    }
+    if index != output_len {
+        return None;
+    }
+    output.reverse();
+    let mut input = alloc::vec::Vec::with_capacity(input_len);
+    index = 0;
+    while index < input_len {
+        match state.built.pop() {
+            Some(part) => {
+                input.push(part);
+                index += 1;
+            }
+            None => break,
+        }
+    }
+    if index != input_len {
+        return None;
+    }
+    input.reverse();
+    let mut slots = alloc::vec::Vec::with_capacity(effects.as_slice().len());
+    index = 0;
+    while index < effects.as_slice().len() {
+        slots.push(crate::shapes::EffectSlot::Effect(effects.as_slice()[index]));
+        index += 1;
+    }
+    state
+        .built
+        .push(crate::shapes::Pattern::program(input, output, slots));
+    Some(state)
 }
 
 #[expect(

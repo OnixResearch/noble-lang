@@ -1,0 +1,42 @@
+{
+  "schema": "noble-release-policy-review-receipt/v1",
+  "result": "passed",
+  "kind": "review",
+  "cases": ["WI-17", "S-CASE-15"],
+  "claim": "Source-bound review rejects full Component-Draft and higher-rank stable-safe claims while retaining actually passed M5/M6 selections and prerelease pins; neither review implements release nor closes proofs.",
+  "inputs_sha256": {
+    "review": "fd416dc1ec3edfce2952b0f8a54d39c3048d4dc671eb81eca0bbf1f95a24d938",
+    "runner": "b0593eecbf4d6efd14c139f48e5b1f92fa9af677259b818ba375b2d8e0e22b8c",
+    "witCase": "b98b1ad8a350d11d3106330262030ada32dec9e654764fa0daa9277b357541d3",
+    "safetyCase": "9e65a55370b43e6481c2dbec1b1d6a08879ff2155c6a9d052c1f41b33202232d",
+    "witSpec": "2caec07607b46dc3ed665bcbaa898a194ad22c50f50a39d05fdfcb022064fe67",
+    "safetySpec": "d7327a3fec8c08212da7f07b52a5346325cb6fb3bb5f015c0ed00f7ab559514a",
+    "languageSpec": "98aa6171d3df718deb3b2d03625d4c1ef43d9b0fd94ecb981cd3f9887fb3ffa6",
+    "verificationSpec": "bd940c2fb0c0e85f9c241cb94347b41f7fa36774f7d63b514504628ad91112e1",
+    "ledger": "faa80fb0f2657228043dbdc9f87a3ad0eae267b0dcdd8e3a012b8cd8469793f0",
+    "m5": "7a2e3b909c48d642e9596c47c0db4adde22ef29c415e3608e80660d60305735e",
+    "m5Pins": "06b202d1364df51a9bebaa13f668c404ad77da237839f60a4f7b33728e1a00ad",
+    "m6": "d1428205a03a42e0f489cf2d57a57ef77257708d5c5a1dd17ba98b3f4f8a3ff6",
+    "m6Pins": "be35b6c0e3958e2feb408c5abe8655516e72f82d824373af6ffc4d43b0e90ba2",
+    "m6Runtime": "c7d6aa31180961a7748b4fdfd674c3ddbecabf11ae816476aea6f8906a761ed5"
+  },
+  "observations": [
+    {"id":"sync-slice-is-not-full-profile","source":"verification/m5/evidence.json"},
+    {"id":"async-slice-is-executed-but-not-stable-wasi","source":"verification/m6/acceptance.json"},
+    {"id":"component-boundary-and-safety-gap","source":".cairn/specs/wit-wasi/spec.md"},
+    {"id":"higher-rank-is-open-not-prohibited","source":".cairn/specs/safety/spec.md"}
+  ],
+  "controls": {
+    "m5_sync_selected": true,
+    "m6_async_selected": true,
+    "m6_prerelease_clock_peer_only": true,
+    "stable_link_rejected": true,
+    "full_profile_execution_claimed": false,
+    "higher_rank_proof_claimed": false
+  },
+  "assumptions": [
+    "Authored review judgments are not mechanically proved by source-text assertions; this checks bindings and concrete scope counterexamples only.",
+    "Existing M5/M6 receipts are scoped historical evidence, not rerun here; broader host authenticity, ABI, native retirement and formal obligations remain open.",
+    "No release implementation, stable WASI profile, higher-rank checker, universal safety theorem or proof admission is supplied by this review."
+  ]
+}

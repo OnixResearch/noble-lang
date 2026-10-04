@@ -64,6 +64,10 @@ const fn count_children(node: &crate::types::Ty) -> usize {
             crate::types::NominalShape::Opaque(_) => 1,
             crate::types::NominalShape::Variant(_, _) => 2,
         },
+        crate::types::Ty::GenericNominal(_, _, shape) => match &**shape {
+            crate::types::NominalShape::Variant(_, _) => 2,
+            crate::types::NominalShape::Opaque(_) => 1,
+        },
         crate::types::Ty::List(_) => 1,
         crate::types::Ty::Program(stack_in, stack_out, _) => {
             (**stack_in).len() + (**stack_out).len()
@@ -160,6 +164,18 @@ fn queue_children(
                 crate::types::NominalShape::Variant(left, right) => {
                     todo.push(((**left).clone(), false));
                     todo.push(((**right).clone(), false));
+                }
+            }
+        }
+        crate::types::Ty::GenericNominal(_, _, shape) => {
+            todo.push((node.clone(), true));
+            match &**shape {
+                crate::types::NominalShape::Variant(left, right) => {
+                    todo.push(((**left).clone(), false));
+                    todo.push(((**right).clone(), false));
+                }
+                crate::types::NominalShape::Opaque(representation) => {
+                    todo.push(((**representation).clone(), false));
                 }
             }
         }

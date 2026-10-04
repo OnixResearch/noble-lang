@@ -1,0 +1,732 @@
+diff --git a/cargo-octet/src/engine.rs b/cargo-octet/src/engine.rs
+index 85dedfe..cc834cc 100644
+--- a/cargo-octet/src/engine.rs
++++ b/cargo-octet/src/engine.rs
+@@ -1,3 +1,4 @@
++use std::collections::BTreeMap;
+ use std::env;
+ use std::fs;
+ use std::io::BufRead;
+@@ -9,6 +10,15 @@ use std::path::PathBuf;
+ use std::process::Command;
+ use std::process::Stdio;
+ 
++use cap_std::ambient_authority;
++use cap_std::fs::Dir;
++#[cfg(unix)]
++use cap_std::fs::MetadataExt;
++#[cfg(unix)]
++use cap_std::fs::OpenOptions;
++#[cfg(unix)]
++use cap_std::fs::OpenOptionsExt;
++
+ use crate::baseline;
+ use crate::baseline::BaselineEvaluation;
+ use crate::cap_fs::ArtifactRoot;
+@@ -173,6 +183,8 @@ pub fn run(check: &CheckArgs) -> Result<i32, String> {
+             .transpose()?;
+         let dylint_libs = serde_json::to_string(&vec![lint_lib.path().to_owned()])
+             .map_err(|error| format!("encode DYLINT_LIBS: {error}"))?;
++        let diagnostic_paths =
++            DiagnosticPaths::from_cargo_metadata(&cfg.workspace_root, &toolchain, &scope_args, &cargo_check_args)?;
+ 
+         let mut cmd = Command::new(CARGO_COMMAND);
+         cmd.arg(CARGO_CHECK_SUBCOMMAND).arg(CARGO_MESSAGE_FORMAT_JSON);
+@@ -244,7 +256,7 @@ pub fn run(check: &CheckArgs) -> Result<i32, String> {
+                         &lint_name,
+                         &run_metadata.config_hash,
+                         check.cache,
+-                        &cfg.workspace_root,
++                        &diagnostic_paths,
+                     )?);
+                 }
+                 "compiler-artifact" if check.output_format == OutputFormat::Human => {
+@@ -977,19 +989,207 @@ fn json_u64_to_u32(value: Option<u64>) -> u32 {
+ 
+ // r[impl octet.runner_self_check.inventory]
+ // r[verify octet.runner_self_check.inventory.paths]
+-fn normalize_finding_locator(workspace_root: &Path, reported_path: &str) -> Result<String, String> {
+-    let reported_path = Path::new(reported_path);
+-    let relative_path = if reported_path.is_absolute() {
+-        reported_path
+-            .strip_prefix(workspace_root)
+-            .map_err(|_| "Cargo diagnostic path is outside the workspace root".to_owned())?
+-    } else {
+-        reported_path
+-    };
++struct DiagnosticPaths {
++    root: PathBuf,
++    reported_root: PathBuf,
++    package_dirs: BTreeMap<String, PathBuf>,
++    dir: Dir,
++}
++
++impl DiagnosticPaths {
++    fn from_cargo_metadata(
++        root: &Path,
++        toolchain: &str,
++        scope: &[String],
++        check_args: &[String],
++    ) -> Result<Self, String> {
++        let reported_root = root.to_path_buf();
++        let root =
++            fs::canonicalize(root).map_err(|error| format!("canonicalize diagnostic workspace root: {error}"))?;
++        let mut command = Command::new(CARGO_COMMAND);
++        command
++            .args(["metadata", "--format-version", "1"])
++            .current_dir(&root)
++            .env("RUSTUP_TOOLCHAIN", toolchain);
++        // Preserve options affecting the effective manifest and Cargo configuration.
++        for args in [scope, check_args] {
++            let mut args = args.iter();
++            while let Some(arg) = args.next() {
++                if ["--manifest-path", "--config", "--features", "--filter-platform"].contains(&arg.as_str()) {
++                    let value = args.next().ok_or_else(|| format!("Cargo option `{arg}` is missing its value"))?;
++                    command.arg(arg).arg(value);
++                } else if [
++                    "--locked",
++                    "--offline",
++                    "--frozen",
++                    "--all-features",
++                    "--no-default-features",
++                ]
++                .contains(&arg.as_str())
++                    || arg.starts_with("--manifest-path=")
++                    || arg.starts_with("--config=")
++                    || arg.starts_with("--features=")
++                    || arg.starts_with("--filter-platform=")
++                {
++                    command.arg(arg);
++                }
++            }
++        }
++        let output = command.output().map_err(|error| format!("run diagnostic Cargo metadata: {error}"))?;
++        if !output.status.success() {
++            return Err(format!(
++                "diagnostic Cargo metadata failed: {}",
++                String::from_utf8_lossy(&output.stderr).trim()
++            ));
++        }
++        let metadata: serde_json::Value = serde_json::from_slice(&output.stdout)
++            .map_err(|error| format!("parse diagnostic Cargo metadata: {error}"))?;
++        let metadata_root =
++            metadata["workspace_root"].as_str().ok_or("diagnostic Cargo metadata has no workspace root")?;
++        if fs::canonicalize(metadata_root).map_err(|error| format!("canonicalize Cargo metadata root: {error}"))?
++            != root
++        {
++            return Err("diagnostic Cargo metadata workspace root differs from the check workspace".to_owned());
++        }
++        let mut package_dirs = BTreeMap::new();
++        let packages = metadata["packages"].as_array().ok_or("diagnostic Cargo metadata has no packages")?;
++        for package in packages {
++            // Registry/git packages may have paths under an ambient Cargo cache;
++            // only local packages can anchor a compiler-origin workspace path.
++            match package.get("source") {
++                Some(serde_json::Value::Null) => {}
++                Some(_) => continue,
++                None => return Err("diagnostic Cargo metadata package lacks source provenance".to_owned()),
++            }
++            let (Some(id), Some(manifest)) = (package["id"].as_str(), package["manifest_path"].as_str()) else {
++                return Err("diagnostic Cargo metadata package lacks ID or manifest".to_owned());
++            };
++            let manifest = fs::canonicalize(manifest)
++                .map_err(|error| format!("canonicalize diagnostic package manifest `{manifest}`: {error}"))?;
++            let directory = manifest.parent().ok_or("diagnostic package manifest has no parent")?;
++            if let Ok(relative) = directory.strip_prefix(&root) {
++                let directory = if relative.as_os_str().is_empty() {
++                    PathBuf::new()
++                } else {
++                    RootRelativePath::new(relative)
++                        .map_err(|error| format!("invalid diagnostic package directory: {error}"))?
++                        .as_path()
++                        .to_path_buf()
++                };
++                if package_dirs.insert(id.to_owned(), directory).is_some() {
++                    return Err(format!("duplicate diagnostic Cargo package ID `{id}`"));
++                }
++            }
++        }
++        let dir = Dir::open_ambient_dir(&root, ambient_authority())
++            .map_err(|error| format!("open diagnostic workspace root: {error}"))?;
++        Ok(Self {
++            root,
++            reported_root,
++            package_dirs,
++            dir,
++        })
++    }
++
++    fn normalize(&self, package_id: Option<&str>, reported_path: &str) -> Result<String, String> {
++        let path = Path::new(reported_path);
++        #[cfg(unix)]
++        {
++            self.normalize_physical(package_id, reported_path, path)
++        }
++        #[cfg(not(unix))]
++        {
++            let _ = (package_id, reported_path, path);
++            Err("invalid Cargo diagnostic path: physical source verification is unsupported on this platform".to_owned())
++        }
++    }
+ 
+-    RootRelativePath::new(relative_path)
+-        .map(|path| path.display())
+-        .map_err(|error| format!("invalid Cargo diagnostic path: {error}"))
++    #[cfg(unix)]
++    fn normalize_physical(&self, package_id: Option<&str>, reported_path: &str, path: &Path) -> Result<String, String> {
++        const MAX_DIAGNOSTIC_PATH_BYTES: usize = 4096;
++        const MAX_DIAGNOSTIC_COMPONENTS: usize = 256;
++        if reported_path.len() > MAX_DIAGNOSTIC_PATH_BYTES {
++            return Err("invalid Cargo diagnostic path: oversized path".to_owned());
++        }
++        let package = package_id
++            .and_then(|id| self.package_dirs.get(id))
++            .ok_or("invalid Cargo diagnostic path: unknown Cargo metadata package ID")?;
++        let relative = if path.is_absolute() {
++            path.strip_prefix(&self.reported_root)
++                .or_else(|_| path.strip_prefix(&self.root))
++                .map_err(|_| "invalid Cargo diagnostic path: absolute path is outside the workspace root".to_owned())?
++        } else {
++            path
++        };
++        if !path.is_absolute() && !relative.starts_with(package) {
++            return Err("invalid Cargo diagnostic path: relative source lacks matching package directory".to_owned());
++        }
++        let mut physical = self.root.clone();
++        let mut count = 0;
++        // Path::components() elides interior `.` and trailing separators:
++        // `file/./..` must still fail ENOTDIR rather than becoming `file/..`.
++        let text = relative.to_str().ok_or("invalid Cargo diagnostic path: non-UTF-8 component")?;
++        let mut components = text.split('/').filter(|part| !part.is_empty()).peekable();
++        while let Some(part) = components.next() {
++            count += 1;
++            if count > MAX_DIAGNOSTIC_COMPONENTS {
++                return Err("invalid Cargo diagnostic path: too many path components".to_owned());
++            }
++            match part {
++                "." => {}
++                ".." => {
++                    physical.pop();
++                }
++                name => physical.push(name),
++            }
++            physical = fs::canonicalize(&physical).map_err(|error| {
++                format!("invalid Cargo diagnostic path: missing or inaccessible component: {error}")
++            })?;
++            if !physical.starts_with(&self.root) {
++                return Err("invalid Cargo diagnostic path: component escapes the workspace root".to_owned());
++            }
++            if (components.peek().is_some() || part == "." || text.ends_with('/'))
++                && !fs::metadata(&physical)
++                    .map_err(|error| format!("inspect Cargo diagnostic component: {error}"))?
++                    .is_dir()
++            {
++                return Err("invalid Cargo diagnostic path: intermediate component is not a directory".to_owned());
++            }
++        }
++        let relative = physical.strip_prefix(&self.root).expect("checked path containment");
++        let locator =
++            RootRelativePath::new(relative).map_err(|error| format!("invalid Cargo diagnostic path: {error}"))?;
++        // The root-relative capability open prevents a swapped directory from
++        // redirecting the checked target outside the workspace before open.
++        // O_NONBLOCK ensures a swapped-in FIFO cannot stall the check.
++        let file = {
++            let mut options = OpenOptions::new();
++            options.read(true).custom_flags(libc::O_NONBLOCK);
++            self.dir.open_with(locator.as_path(), &options)
++        };
++        let file = file.map_err(|error| format!("invalid Cargo diagnostic path: cannot open source file: {error}"))?;
++        let opened = file.metadata().map_err(|error| format!("inspect Cargo diagnostic file: {error}"))?;
++        if !opened.is_file() {
++            return Err("invalid Cargo diagnostic path: source is not a regular file".to_owned());
++        }
++        let physical_again =
++            fs::canonicalize(&physical).map_err(|error| format!("recheck Cargo diagnostic path: {error}"))?;
++        if physical_again != physical || !physical_again.starts_with(&self.root) {
++            return Err("invalid Cargo diagnostic path: source changed during verification".to_owned());
++        }
++        // This detects an inode replacement between capability-open and the
++        // final path check on Unix. It is not a snapshot of the compiler's FD:
++        // a concurrent swap-back remains possible, so containment is the
++        // security guarantee, not immutable source identity.
++        let current = self
++            .dir
++            .metadata(locator.as_path())
++            .map_err(|error| format!("recheck Cargo diagnostic file: {error}"))?;
++        if opened.dev() != current.dev() || opened.ino() != current.ino() {
++            return Err("invalid Cargo diagnostic path: source changed during verification".to_owned());
++        }
++        Ok(locator.display())
++    }
+ }
+ 
+ fn normalize_finding_message(workspace_root: &Path, message: &str) -> String {
+@@ -1009,7 +1209,7 @@ fn build_finding(
+     lint_name: &str,
+     config_hash: &str,
+     cache_enabled: bool,
+-    workspace_root: &Path,
++    diagnostic_paths: &DiagnosticPaths,
+ ) -> Result<Finding, String> {
+     let message = &cargo_msg["message"];
+ 
+@@ -1018,12 +1218,21 @@ fn build_finding(
+         .and_then(|spans| spans.iter().find(|s| s["is_primary"].as_bool() == Some(true)))
+         .or_else(|| message["spans"].as_array().and_then(|s| s.first()));
+ 
+-    let reported_path = primary_span.and_then(|s| s["file_name"].as_str()).unwrap_or("unknown");
+-    let file = normalize_finding_locator(workspace_root, reported_path)?;
++    let file = if let Some(span) = primary_span {
++        let reported_path = span["file_name"]
++            .as_str()
++            .ok_or("compiler source span has no file name")?;
++        diagnostic_paths.normalize(cargo_msg["package_id"].as_str(), reported_path)?
++    } else {
++        // A genuinely spanless compiler diagnostic has no source to verify.
++        // Never treat a source-bearing virtual/missing path as this sentinel.
++        "unknown".to_owned()
++    };
+     let line = json_u64_to_u32(primary_span.and_then(|s| s["line_start"].as_u64()));
+     let column = json_u64_to_u32(primary_span.and_then(|s| s["column_start"].as_u64()));
+ 
+-    let msg_text = normalize_finding_message(workspace_root, message["message"].as_str().unwrap_or(""));
++    let msg_text =
++        normalize_finding_message(&diagnostic_paths.reported_root, message["message"].as_str().unwrap_or(""));
+     let severity = message["level"].as_str().unwrap_or("warning").to_owned();
+     let crate_name = cargo_msg["target"]["name"].as_str().unwrap_or("unknown").to_owned();
+ 
+@@ -1461,11 +1670,21 @@ fn copy_file(from: &Path, to: &Path) -> Result<(), String> {
+ #[cfg(test)]
+ mod tests {
+     use std::collections::BTreeSet;
++    #[cfg(unix)]
++    use std::fs;
+     use std::path::Path;
++    #[cfg(unix)]
++    use std::path::PathBuf;
++
++    #[cfg(unix)]
++    use serde_json::json;
+ 
++    #[cfg(unix)]
++    use super::DiagnosticPaths;
++    #[cfg(unix)]
++    use super::build_finding;
+     use super::embedded_source;
+     use super::json_u64_to_u32;
+-    use super::normalize_finding_locator;
+     use super::normalize_finding_message;
+     use super::normalize_lint_name;
+ 
+@@ -1492,25 +1711,399 @@ mod tests {
+         assert_eq!(json_u64_to_u32(Some(42)), 42);
+     }
+ 
++    #[cfg(unix)]
+     #[test]
+-    fn finding_locators_normalize_relative_and_in_workspace_absolute_paths() {
+-        let workspace_root = Path::new("/workspace");
+-
+-        assert_eq!(normalize_finding_locator(workspace_root, "src/lib.rs").expect("relative path"), "src/lib.rs");
++    fn compiler_spans_require_package_provenance_and_physical_source_containment() {
++        let temporary = tempfile::tempdir().expect("workspace fixture");
++        let root = temporary.path().join("workspace");
++        let package = root.join("crates/noble-cli");
++        let proof = root.join("proofs/mc1/NobleContracts");
++        let module = package.join("src/core/declared");
++        fs::create_dir_all(&proof).expect("proof directory");
++        fs::create_dir_all(&module).expect("module directory");
++        fs::write(root.join("Cargo.toml"), "[workspace]\nmembers = [\"crates/noble-cli\"]\nresolver = \"2\"\n")
++            .expect("workspace manifest");
++        fs::write(
++            package.join("Cargo.toml"),
++            "[package]\nname = \"noble-cli\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
++        )
++        .expect("package manifest");
++        fs::write(proof.join("Rules.lean"), "theorem included : True := True.intro\n").expect("proof source");
++        fs::write(module.join("mod.rs"), "compile_error!(\"preserve this error\");\n").expect("module source");
++        fs::create_dir_all(package.join("src/workflow")).expect("workflow directory");
++        fs::write(package.join("src/main.rs"), "fn main() {}\n").expect("package target");
++        let toolchain = std::env::var("RUSTUP_TOOLCHAIN").unwrap_or_else(|_| "stable".to_owned());
++        let paths = DiagnosticPaths::from_cargo_metadata(&root, &toolchain, &[], &[])
++            .expect("real Cargo metadata resolves the package");
++        let id = paths.package_dirs.keys().next().expect("package ID");
+         assert_eq!(
+-            normalize_finding_locator(workspace_root, "/workspace/crates/core/src/lib.rs")
+-                .expect("in-workspace absolute path"),
+-            "crates/core/src/lib.rs"
++            paths
++                .normalize(Some(id), "crates/noble-cli/src/main.rs")
++                .expect("source-bearing clean relative locator"),
++            "crates/noble-cli/src/main.rs"
+         );
++        assert!(paths.normalize(None, "crates/noble-cli/src/main.rs").unwrap_err().contains("package ID"));
++        assert!(paths.normalize(None, "virtual/generated.rs").unwrap_err().contains("package ID"));
++        assert!(paths.normalize(None, "../proofs/mc1/NobleContracts/Rules.lean").is_err());
++        assert!(
++            paths
++                .normalize(Some(id), &format!("crates/noble-cli/src/{}.rs", "x".repeat(4096)))
++                .unwrap_err()
++                .contains("oversized")
++        );
++        assert!(
++            paths
++                .normalize(Some(id), &format!("crates/noble-cli/src/{}", vec!["."; 255].join("/")))
++                .unwrap_err()
++                .contains("too many path components")
++        );
++        let finding = |name: &str, package_id: &str| {
++            build_finding(
++                1,
++                &json!({
++                    "package_id": package_id,
++                    "target": {"name": "noble-cli"},
++                    "message": {
++                        "message": "preserve this error",
++                        "level": "error",
++                        "spans": [{"is_primary": true, "file_name": name, "line_start": 1, "column_start": 1}]
++                    }
++                }),
++                &crate::output::UNKNOWN_LINT_META,
++                "compiler_error",
++                "fixture-hash",
++                false,
++                &paths,
++            )
++        };
++        let proof_span = "crates/noble-cli/../../proofs/mc1/NobleContracts/Rules.lean";
++        let accepted = finding(proof_span, id).expect("package-origin proof span");
++        assert_eq!(accepted.file, "proofs/mc1/NobleContracts/Rules.lean");
++        assert_eq!(accepted.severity, "error");
++        assert_eq!(accepted.message, "preserve this error");
++        assert_eq!(
++            finding("crates/noble-cli/src/workflow/../core/declared/mod.rs", id)
++                .expect("package-origin module span")
++                .file,
++            "crates/noble-cli/src/core/declared/mod.rs"
++        );
++        assert_eq!(
++            finding(&proof.join("Rules.lean").display().to_string(), id).expect("absolute compiler span").file,
++            accepted.file
++        );
++        for (name, package_id, expected) in [
++            (proof_span, "path+file:///forged#0.1.0", "package ID"),
++            ("crates/noble-cli/src/main.rs", "path+file:///forged#0.1.0", "package ID"),
++            ("crates/noble-cli/src/Absent.rs", id.as_str(), "missing"),
++            ("virtual/generated.rs", id.as_str(), "package directory"),
++            (
++                "crates/noble-cli-extra/../../proofs/mc1/NobleContracts/Rules.lean",
++                id.as_str(),
++                "package directory",
++            ),
++            ("../../proofs/mc1/NobleContracts/Rules.lean", id.as_str(), "package directory"),
++            ("crates/noble-cli/../../proofs/mc1/NobleContracts/Absent.lean", id.as_str(), "missing"),
++            ("crates/noble-cli/../../proofs", id.as_str(), "regular file"),
++            ("crates/noble-cli/src/main.rs/../main.rs", id.as_str(), "not a directory"),
++            ("crates/noble-cli/src/main.rs/./../main.rs", id.as_str(), "not a directory"),
++            ("crates/noble-cli/../../../workspace/proofs/mc1/NobleContracts/Rules.lean", id.as_str(), "escapes"),
++        ] {
++            let error = finding(name, package_id).expect_err(name);
++            assert!(error.contains(expected), "{name}: {error}");
++        }
++        let outside = temporary.path().join("outside.rs");
++        fs::write(&outside, "outside\n").expect("outside source");
++        assert!(finding(&outside.display().to_string(), id).unwrap_err().contains("outside"));
++        #[cfg(unix)]
++        {
++            use std::os::unix::fs::symlink;
++            symlink(&outside, package.join("src/escape.rs")).expect("symlink outside");
++            assert!(finding("crates/noble-cli/src/escape.rs", id).unwrap_err().contains("escapes"));
++            assert!(finding("crates/noble-cli/src/../src/escape.rs", id).unwrap_err().contains("escapes"));
++            symlink(temporary.path(), package.join("src/through-outside")).expect("symlink outside directory");
++            assert!(
++                finding("crates/noble-cli/src/through-outside/../workspace/proofs/mc1/NobleContracts/Rules.lean", id)
++                    .unwrap_err()
++                    .contains("escapes")
++            );
++        }
+     }
+ 
++    #[cfg(unix)]
+     #[test]
+-    fn finding_locators_reject_outside_workspace_empty_and_parent_paths() {
+-        let workspace_root = Path::new("/workspace");
++    fn clean_compiler_span_cannot_claim_another_local_package() {
++        let temporary = tempfile::tempdir().expect("workspace fixture");
++        let root = temporary.path();
++        fs::write(
++            root.join("Cargo.toml"),
++            "[workspace]\nmembers = [\"crates/noble-cli\", \"crates/noble-kernel\"]\nresolver = \"2\"\n",
++        )
++        .expect("workspace manifest");
++        for package in ["noble-cli", "noble-kernel"] {
++            let directory = root.join("crates").join(package);
++            fs::create_dir_all(directory.join("src")).expect("package source directory");
++            fs::write(
++                directory.join("Cargo.toml"),
++                format!("[package]\nname = \"{package}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n"),
++            )
++            .expect("package manifest");
++            fs::write(directory.join("src/lib.rs"), "pub fn value() {}\n").expect("package source");
++        }
++        let toolchain = std::env::var("RUSTUP_TOOLCHAIN").unwrap_or_else(|_| "stable".to_owned());
++        lock_fixture(root, &toolchain);
++        let paths = DiagnosticPaths::from_cargo_metadata(root, &toolchain, &[], &[])
++            .expect("real Cargo metadata binds both local packages");
++        let id_for = |directory| {
++            paths
++                .package_dirs
++                .iter()
++                .find(|(_, observed)| observed.as_path() == Path::new(directory))
++                .map(|(id, _)| id.as_str())
++                .expect("metadata package ID")
++        };
++        let cli_id = id_for("crates/noble-cli");
++        let kernel_id = id_for("crates/noble-kernel");
++        let source = "crates/noble-cli/src/lib.rs";
++        assert_eq!(paths.normalize(Some(cli_id), source).expect("correct source owner"), source);
++        assert!(
++            paths
++                .normalize(Some(kernel_id), source)
++                .unwrap_err()
++                .contains("package directory"),
++            "a valid but unrelated Cargo package ID cannot claim a clean relative source"
++        );
++    }
+ 
+-        assert!(normalize_finding_locator(workspace_root, "/other/src/lib.rs").is_err());
+-        assert!(normalize_finding_locator(workspace_root, "").is_err());
+-        assert!(normalize_finding_locator(workspace_root, "../src/lib.rs").is_err());
++    #[cfg(unix)]
++    #[test]
++    fn root_package_metadata_does_not_break_clean_relative_diagnostics() {
++        let temporary = tempfile::tempdir().expect("root package fixture");
++        fs::write(
++            temporary.path().join("Cargo.toml"),
++            "[package]\nname = \"root-package\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
++        )
++        .expect("root package manifest");
++        fs::create_dir(temporary.path().join("src")).expect("source directory");
++        fs::write(temporary.path().join("src/lib.rs"), "pub fn value() {}\n").expect("source file");
++        let toolchain = std::env::var("RUSTUP_TOOLCHAIN").unwrap_or_else(|_| "stable".to_owned());
++        let paths = DiagnosticPaths::from_cargo_metadata(temporary.path(), &toolchain, &[], &[])
++            .expect("root package Cargo metadata");
++        let id = paths.package_dirs.keys().next().expect("root package ID");
++        assert_eq!(paths.normalize(Some(id), "src/lib.rs").expect("existing clean source"), "src/lib.rs");
++        assert!(paths.normalize(None, "src/lib.rs").unwrap_err().contains("package ID"));
++        assert!(paths.normalize(Some(id), "generated/virtual.rs").unwrap_err().contains("missing"));
++        let spanless = build_finding(
++            1,
++            &json!({
++                "target": {"name": "root-package"},
++                "message": {"message": "compiler emitted an unspanned error", "level": "error", "spans": []}
++            }),
++            &crate::output::UNKNOWN_LINT_META,
++            "compiler_error",
++            "fixture-hash",
++            false,
++            &paths,
++        )
++        .expect("spanless compiler diagnostic is not falsely treated as a file");
++        assert_eq!(spanless.file, "unknown");
++        assert_eq!(spanless.severity, "error");
++        assert!(spanless.message.contains("unspanned error"));
++        assert_eq!(paths.normalize(Some(id), "src/../Cargo.toml").expect("root-package parent path"), "Cargo.toml");
++        assert!(paths.normalize(Some(id), "../Cargo.toml").is_err());
++    }
++
++    #[cfg(unix)]
++    #[test]
++    fn actual_cargo_compiler_error_from_parent_module_is_kept_as_a_finding() {
++        let temporary = tempfile::tempdir().expect("compiler fixture");
++        let root = temporary.path();
++        let package = root.join("crates/noble-cli");
++        let proof = root.join("proofs/mc1/NobleContracts");
++        fs::create_dir_all(&package).expect("package directory");
++        fs::create_dir_all(&proof).expect("proof directory");
++        fs::write(root.join("Cargo.toml"), "[workspace]\nmembers = [\"crates/noble-cli\"]\nresolver = \"2\"\n")
++            .expect("workspace manifest");
++        fs::write(
++            package.join("Cargo.toml"),
++            "[package]\nname = \"noble-cli\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[lib]\npath = \"main.rs\"\n",
++        )
++        .expect("package manifest");
++        fs::write(
++            package.join("main.rs"),
++            "#[path = \"../../proofs/mc1/NobleContracts/Rules.rs\"] mod rules;\n\
++             const RULE: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/../../proofs/mc1/NobleContracts/Rules.lean\"));\n",
++        )
++        .expect("source root");
++        fs::write(proof.join("Rules.rs"), "compile_error!(\"retained proof compiler error\");\n")
++            .expect("proof Rust module");
++        fs::write(proof.join("Rules.lean"), "theorem included : True := True.intro\n").expect("included proof");
++        let toolchain = std::env::var("RUSTUP_TOOLCHAIN").unwrap_or_else(|_| "stable".to_owned());
++        let paths = DiagnosticPaths::from_cargo_metadata(root, &toolchain, &[], &[]).expect("fixture metadata");
++        let output = std::process::Command::new("cargo")
++            .args(["check", "--message-format=json", "--offline", "-p", "noble-cli"])
++            .current_dir(root)
++            .env("RUSTUP_TOOLCHAIN", &toolchain)
++            .env("CARGO_TARGET_DIR", temporary.path().join("target"))
++            .output()
++            .expect("run fixture compiler");
++        assert!(!output.status.success(), "fixture must produce its intended compiler error");
++        let diagnostics = output
++            .stdout
++            .split(|byte| *byte == b'\n')
++            .filter_map(|line| serde_json::from_slice::<serde_json::Value>(line).ok())
++            .filter(|value| value["reason"] == "compiler-message")
++            .collect::<Vec<_>>();
++        let error = diagnostics
++            .iter()
++            .find(|value| {
++                value["message"]["message"]
++                    .as_str()
++                    .is_some_and(|text| text.contains("retained proof compiler error"))
++            })
++            .expect("actual compiler error in proof module");
++        let span = error["message"]["spans"]
++            .as_array()
++            .and_then(|spans| spans.iter().find(|span| span["is_primary"] == true))
++            .and_then(|span| span["file_name"].as_str())
++            .expect("compiler primary span");
++        assert!(
++            span.contains("crates/noble-cli/../../proofs/mc1/NobleContracts/Rules.rs"),
++            "expected compiler-origin parent-bearing filename, got `{span}`"
++        );
++        let finding =
++            build_finding(1, error, &crate::output::UNKNOWN_LINT_META, "compiler_error", "fixture-hash", false, &paths)
++                .expect("actual Cargo compiler diagnostic");
++        assert_eq!(finding.file, "proofs/mc1/NobleContracts/Rules.rs");
++        assert_eq!(finding.severity, "error");
++        assert!(finding.message.contains("retained proof compiler error"));
++    }
++
++    #[cfg(unix)]
++    #[test]
++    fn excluded_local_dependency_compiler_span_retains_its_error() {
++        let temporary = tempfile::tempdir().expect("excluded dependency fixture");
++        let root = temporary.path();
++        fs::create_dir_all(root.join("app/src")).expect("app source directory");
++        fs::create_dir_all(root.join("dep/src")).expect("dependency source directory");
++        fs::create_dir_all(root.join("proofs")).expect("proof source directory");
++        fs::write(root.join("Cargo.toml"), "[workspace]\nmembers = [\"app\"]\nexclude = [\"dep\"]\nresolver = \"2\"\n")
++            .expect("workspace manifest");
++        fs::write(
++            root.join("app/Cargo.toml"),
++            "[package]\nname = \"app\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\
++             [dependencies]\ndep = { path = \"../dep\" }\n",
++        )
++        .expect("app manifest");
++        fs::write(root.join("app/src/lib.rs"), "pub fn app() { dep::dependency(); }\n").expect("app source");
++        fs::write(root.join("dep/Cargo.toml"), "[package]\nname = \"dep\"\nversion = \"0.1.0\"\nedition = \"2021\"\n")
++            .expect("dependency manifest");
++        fs::write(
++            root.join("dep/src/lib.rs"),
++            "#[path = \"../../proofs/Rules.rs\"] mod rules;\npub fn dependency() {}\n",
++        )
++        .expect("dependency source");
++        fs::write(root.join("proofs/Rules.rs"), "compile_error!(\"retained excluded dependency error\");\n")
++            .expect("proof module");
++        let toolchain = std::env::var("RUSTUP_TOOLCHAIN").unwrap_or_else(|_| "stable".to_owned());
++        let paths = DiagnosticPaths::from_cargo_metadata(root, &toolchain, &[], &["--offline".to_owned()])
++            .expect("complete offline Cargo metadata resolves excluded path dependency");
++        let output = std::process::Command::new("cargo")
++            .args(["check", "--message-format=json", "--offline", "-p", "app"])
++            .current_dir(root)
++            .env("RUSTUP_TOOLCHAIN", &toolchain)
++            .env("CARGO_TARGET_DIR", temporary.path().join("target"))
++            .output()
++            .expect("compile app and excluded dependency");
++        assert!(!output.status.success(), "excluded dependency must emit its compiler error");
++        let error = output
++            .stdout
++            .split(|byte| *byte == b'\n')
++            .filter_map(|line| serde_json::from_slice::<serde_json::Value>(line).ok())
++            .find(|message| {
++                message["reason"] == "compiler-message"
++                    && message["message"]["message"]
++                        .as_str()
++                        .is_some_and(|text| text.contains("retained excluded dependency error"))
++            })
++            .expect("compiler error originated in the excluded local dependency");
++        let id = error["package_id"].as_str().expect("compiler-provided package ID");
++        assert_eq!(paths.package_dirs.get(id).map(PathBuf::as_path), Some(Path::new("dep")));
++        let span = error["message"]["spans"]
++            .as_array()
++            .and_then(|spans| spans.iter().find(|span| span["is_primary"] == true))
++            .and_then(|span| span["file_name"].as_str())
++            .expect("compiler primary span");
++        assert!(span.contains("dep/src/../../proofs/Rules.rs"), "expected parent-bearing dependency span: {span}");
++        let finding = build_finding(
++            1,
++            &error,
++            &crate::output::UNKNOWN_LINT_META,
++            "compiler_error",
++            "fixture-hash",
++            false,
++            &paths,
++        )
++        .expect("retain excluded local dependency error");
++        assert_eq!(finding.file, "proofs/Rules.rs");
++        assert_eq!(finding.severity, "error");
++        assert!(finding.message.contains("retained excluded dependency error"));
++    }
++
++    #[cfg(unix)]
++    #[test]
++    fn fifo_diagnostic_path_returns_without_blocking() {
++        use std::time::Duration;
++        use std::time::Instant;
++
++        const ROOT_ENV: &str = "OCTET_FIFO_DIAGNOSTIC_TEST_ROOT";
++        let toolchain = std::env::var("RUSTUP_TOOLCHAIN").unwrap_or_else(|_| "stable".to_owned());
++        if let Some(root) = std::env::var_os(ROOT_ENV) {
++            let paths = DiagnosticPaths::from_cargo_metadata(Path::new(&root), &toolchain, &[], &[])
++                .expect("root-package compiler provenance");
++            let id = paths.package_dirs.keys().next().expect("package ID");
++            assert!(
++                paths.normalize(Some(id), "src/../blocked.fifo").unwrap_err().contains("regular file"),
++                "FIFO must be rejected after nonblocking capability open"
++            );
++            return;
++        }
++        let temporary = tempfile::tempdir().expect("FIFO fixture");
++        fs::write(
++            temporary.path().join("Cargo.toml"),
++            "[package]\nname = \"fifo-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
++        )
++        .expect("package manifest");
++        fs::create_dir(temporary.path().join("src")).expect("source directory");
++        fs::write(temporary.path().join("src/lib.rs"), "pub fn value() {}\n").expect("source file");
++        let fifo = temporary.path().join("blocked.fifo");
++        assert!(
++            std::process::Command::new("mkfifo").arg(&fifo).status().expect("create FIFO").success(),
++            "mkfifo must create the test input"
++        );
++        let mut child = std::process::Command::new(std::env::current_exe().expect("test executable"))
++            .args([
++                "--exact",
++                "engine::tests::fifo_diagnostic_path_returns_without_blocking",
++                "--nocapture",
++            ])
++            .env(ROOT_ENV, temporary.path())
++            .stdout(std::process::Stdio::null())
++            .stderr(std::process::Stdio::null())
++            .spawn()
++            .expect("run isolated FIFO check");
++        let deadline = Instant::now() + Duration::from_secs(10);
++        loop {
++            if let Some(status) = child.try_wait().expect("wait for FIFO check") {
++                assert!(status.success(), "isolated FIFO check failed: {status}");
++                break;
++            }
++            if Instant::now() >= deadline {
++                child.kill().expect("stop blocked FIFO check");
++                child.wait().expect("reap blocked FIFO check");
++                panic!("diagnostic normalization blocked on a FIFO");
++            }
++            std::thread::sleep(Duration::from_millis(20));
++        }
+     }
+ 
+     #[test]

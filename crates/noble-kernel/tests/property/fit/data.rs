@@ -49,7 +49,8 @@ pub(super) fn unpair(
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Program(_, _, _)
         | noble_kernel::types::Ty::Resource(_)
-        | noble_kernel::types::Ty::Nominal(_, _) => return None,
+        | noble_kernel::types::Ty::Nominal(_, _)
+        | noble_kernel::types::Ty::GenericNominal(_, _, _) => return None,
     };
     let next = [super::under_one(now), &[a.clone(), b.clone()][..]].concat();
     Some((
@@ -141,7 +142,8 @@ pub(super) fn prepend(
         | noble_kernel::types::Ty::Sum(_, _)
         | noble_kernel::types::Ty::Program(_, _, _)
         | noble_kernel::types::Ty::Resource(_)
-        | noble_kernel::types::Ty::Nominal(_, _) => return None,
+        | noble_kernel::types::Ty::Nominal(_, _)
+        | noble_kernel::types::Ty::GenericNominal(_, _, _) => return None,
     };
     if item != inner {
         return None;

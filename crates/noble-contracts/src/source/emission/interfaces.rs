@@ -30,7 +30,12 @@ fn install_interface(
 ) -> Result<noble_kernel::untrusted::Expected, crate::Diagnostic> {
     let interface = attempt!(super::materialization::interface(arena, body, meter));
     if body.identity.is_some() {
-        let scheme = attempt!(super::contracts::scheme(&interface, body.span, meter));
+        let scheme = attempt!(super::contracts::scheme(
+            &interface,
+            environment,
+            body.span,
+            meter
+        ));
         let deps = attempt!(super::materialization::dependencies(body, meter));
         environment.defs.reserve(1);
         environment.kinds.reserve(1);

@@ -3,6 +3,8 @@
 pub const USAGE: &str = "usage:
   noble verify CONTRACT [--emit DIR] [--proof FILE | --refutation FILE] [--timeout-ms N]
   noble explain-proof CONTRACT
+  noble verify-module SOURCE [--module PREVIOUS_SOURCE ...] [--timeout-ms N]
+      [--normalization-work N] [--substitution-work N]
   noble --internal-budget-smoke <u32>
 
 Consumer configuration (absolute paths): NOBLE_LEAN, NOBLE_BWRAP,
@@ -25,6 +27,7 @@ pub(crate) const MAX_TIMEOUT: u64 = 600_000;
 
 pub(crate) mod admission;
 mod arguments;
+pub(crate) mod intrinsic;
 pub(crate) mod artifacts;
 pub(crate) mod encoding;
 pub(crate) mod output;

@@ -23,6 +23,9 @@ pub(super) enum Action {
     NominalRight(u64, u32, u32),
     NominalMatch(u64, u32, u32, u32, u32),
     EmitBound(u32),
+    ClockBound(u32),
+    LivePropose(u64),
+    LiveGeneration,
 }
 
 pub(super) struct Operation {
@@ -55,8 +58,14 @@ pub(super) struct Layout {
     pub(super) output_types: alloc::vec::Vec<u32>,
     pub(super) text_witness: u32,
     pub(super) declared_modules: bool,
+    pub(super) live: bool,
     pub(super) has_nominals: bool,
+    pub(super) has_core_emit: bool,
+    pub(super) has_core_abort: bool,
     pub(super) has_bound_emit: bool,
+    pub(super) has_bound_clock: bool,
+    pub(super) has_live_propose: bool,
+    pub(super) has_live_generation: bool,
 }
 
 struct Arena {
@@ -66,7 +75,7 @@ struct Arena {
 
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the bounded effect set is checked exhaustively against the two admitted host identities, with Unsupported for any other identity instead of assertions on producer data."
+    reason = "Owner: noble-maintainers; the bounded effect set is checked exhaustively against the admitted test and live effect identities, with Unsupported for any other identity instead of assertions on producer data."
 )]
 pub(super) fn effect_mask(effects: &noble_kernel::types::EffSet) -> Result<u32, crate::Diagnostic> {
     let mut mask = 0u32;
@@ -76,6 +85,9 @@ pub(super) fn effect_mask(effects: &noble_kernel::types::EffSet) -> Result<u32, 
         match effects.as_slice()[index].0 {
             0 => mask |= 1,
             1 => mask |= 2,
+            2 => mask |= 4,
+            3 => mask |= 8,
+            4 => mask |= 16,
             _ => {
                 failure = Some(crate::Diagnostic::Unsupported);
                 break;
@@ -145,10 +157,44 @@ fn start(
         output_types: alloc::vec::Vec::new(),
         text_witness: 0,
         declared_modules: submission.environment.declared_modules,
-        has_nominals: !submission.environment.nominals.is_empty(),
-        has_bound_emit: !submission.environment.bound_adapters.is_empty(),
+        live: submission.environment.effects.contains(&noble_kernel::types::EffId(3)),
+        has_nominals: !submission.environment.nominals.is_empty()
+            || !submission.environment.generic_variants.is_empty(),
+        has_core_emit: false,
+        has_core_abort: false,
+        has_bound_emit: false,
+        has_bound_clock: false,
+        has_live_propose: false,
+        has_live_generation: false,
     };
     Ok((layout, arenas))
+}
+
+// Every lowered program is emitted, including named definitions and quotation
+// bodies that the root does not invoke yet. Only executable operations grant
+// host imports; an interface's effect set or an unused binding does not.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the complete private program table is traversed after checked lowering, and forbidden ambient operations reject before any module is emitted."
+)]
+fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
+    for program in &layout.programs {
+        for operation in &program.operations {
+            match operation.action {
+                Action::Word(22 | 23) if layout.declared_modules || layout.live => {
+                    return Err(crate::Diagnostic::Invalid);
+                }
+                Action::Word(22) => layout.has_core_emit = true,
+                Action::Word(23) => layout.has_core_abort = true,
+                Action::EmitBound(_) => layout.has_bound_emit = true,
+                Action::ClockBound(_) => layout.has_bound_clock = true,
+                Action::LivePropose(_) => layout.has_live_propose = true,
+                Action::LiveGeneration => layout.has_live_generation = true,
+                _ => {}
+            }
+        }
+    }
+    Ok(())
 }
 
 #[expect(
@@ -171,6 +217,7 @@ pub(super) fn lower(
             checked: &checked.definitions[index],
             arena: &arenas[index],
             arenas: &arenas,
+            owner: Some(submission.definitions[index].identity),
         };
         match operations::fill(input, compiler, &mut layout, work) {
             Ok(()) => index += 1,
@@ -189,8 +236,10 @@ pub(super) fn lower(
         checked: &checked.root,
         arena: &arenas[index],
         arenas: &arenas,
+        owner: None,
     };
     attempt!(operations::fill(input, compiler, &mut layout, work));
+    attempt!(host_footprint(&mut layout));
     attempt!(topology::order(&mut layout));
     attempt!(allocation::finish(
         &mut layout,

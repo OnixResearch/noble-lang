@@ -1,0 +1,14 @@
+package noble-test:bounded-region@1.0.0;
+
+interface regions {
+  resource region {
+    read: func(offset: s64, length: s64) -> result<list<u8>, string>;
+  }
+  release: func(value: own<region>);
+}
+
+world bounded {
+  use regions.{region};
+  import regions;
+  export read-region: func(value: own<region>, offset: s64, length: s64) -> result<list<u8>, string>;
+}

@@ -116,7 +116,8 @@ pub struct Limits {
     pub type_size: u32,
     /// One stack's height.
     pub stack_height: u32,
-    /// Total checking work.
+    /// Work shared by dependency/schema walks, declared definitions,
+    /// nominal/adapter entries, and candidate-body folds.
     pub work: u32,
     /// Diagnostic entries.
     pub diagnostics: u32,

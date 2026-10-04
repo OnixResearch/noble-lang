@@ -5,6 +5,8 @@ impl super::Report {
         name: &str,
         module: Option<(u64, std::string::String, u32)>,
         binding: Option<(std::string::String, u32)>,
+        contracts: crate::workflow::encoding::Json,
+        intrinsic_proof: crate::workflow::encoding::Json,
     ) -> Self {
         let module = match module {
             Some((identity, name, version)) => crate::workflow::encoding::object([
@@ -55,6 +57,8 @@ impl super::Report {
             ("diagnostic", crate::workflow::encoding::string(name)),
             ("resolved_module", module),
             ("binding", binding),
+            ("contracts", contracts),
+            ("intrinsic_proof", intrinsic_proof),
             ("guest_requests", crate::workflow::encoding::Json::Number(0)),
             ("host_requests", crate::workflow::encoding::Json::Number(0)),
             (

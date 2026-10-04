@@ -2,7 +2,36 @@ pub(super) fn build(
     options: &super::super::arguments::Options,
 ) -> Result<std::string::String, super::super::output::Failure> {
     let destination = attempt!(artifact_destination(options));
-    Ok(payload(options, destination.as_deref()))
+    payload(options, destination.as_deref())
+}
+
+/// Artifact admission never inherits a declared binding or persistent session.
+pub(super) fn admission(optimized: bool) -> std::string::String {
+    crate::workflow::encoding::object([
+        ("selection", crate::workflow::encoding::string(super::SELECTION)),
+        ("abi", crate::workflow::encoding::string(super::ABI)),
+        ("optimized", crate::workflow::encoding::Json::Bool(optimized)),
+        ("artifacts", crate::workflow::encoding::Json::Null),
+        ("declared_modules", crate::workflow::encoding::Json::Bool(false)),
+        ("bindings", crate::workflow::encoding::Json::Array(std::vec::Vec::new())),
+        ("declared_extension", crate::workflow::encoding::Json::Null),
+    ]).encode()
+}
+
+/// The opt-in live worker uses the same selected ABI and resident Node/V8,
+/// but receives already checked binary modules instead of WAT tool requests.
+pub(super) fn live() -> std::string::String {
+    crate::workflow::encoding::object([
+        ("selection", crate::workflow::encoding::string(super::SELECTION)),
+        ("abi", crate::workflow::encoding::string(super::ABI)),
+        ("optimized", crate::workflow::encoding::Json::Bool(false)),
+        ("artifacts", crate::workflow::encoding::Json::Null),
+        ("declared_modules", crate::workflow::encoding::Json::Bool(false)),
+        ("bindings", crate::workflow::encoding::Json::Array(std::vec::Vec::new())),
+        ("declared_extension", crate::workflow::encoding::Json::Null),
+        ("in_process_live", crate::workflow::encoding::Json::Bool(true)),
+    ])
+    .encode()
 }
 
 /// The worker receives a canonical artifact path; its creation precedes launch.
@@ -30,11 +59,12 @@ fn artifact_destination(
 fn payload(
     options: &super::super::arguments::Options,
     destination: Option<&str>,
-) -> std::string::String {
+) -> Result<std::string::String, super::super::output::Failure> {
     let selection = crate::workflow::encoding::string(super::SELECTION);
     let abi = crate::workflow::encoding::string(super::ABI);
     let artifacts = crate::workflow::encoding::optional_string(destination);
-    crate::workflow::encoding::object([
+    let bindings = attempt!(bindings(options));
+    Ok(crate::workflow::encoding::object([
         ("selection", selection),
         ("abi", abi),
         (
@@ -46,7 +76,7 @@ fn payload(
             "declared_modules",
             crate::workflow::encoding::Json::Bool(options.declared_modules),
         ),
-        ("bindings", bindings(options)),
+        ("bindings", bindings),
         (
             "declared_extension",
             crate::workflow::encoding::optional_string(
@@ -54,12 +84,12 @@ fn payload(
             ),
         ),
     ])
-    .encode()
+    .encode())
 }
 
-fn bindings(options: &super::super::arguments::Options) -> crate::workflow::encoding::Json {
+fn bindings(options: &super::super::arguments::Options) -> Result<crate::workflow::encoding::Json, super::super::output::Failure> {
     match &options.manifest {
         Some(manifest) => manifest.worker(),
-        None => crate::workflow::encoding::Json::Array(std::vec::Vec::new()),
+        None => Ok(crate::workflow::encoding::Json::Array(std::vec::Vec::new())),
     }
 }

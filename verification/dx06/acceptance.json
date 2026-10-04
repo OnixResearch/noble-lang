@@ -1,0 +1,57 @@
+{
+  "schema": "noble-scripted-test-host-acceptance/v1",
+  "case_id": "DX-06",
+  "profile": "Test-Host-Draft",
+  "date": "2026-09-30",
+  "result": "passed",
+  "proof": "open",
+  "source_root": "/home/brittonr/git/noble",
+  "source_revision": "sha256:bb142a954824c7db61a1ebc4886a03e463a794881843587140b2d7662568f3cb",
+  "source_scope": [
+    "crates/noble-kernel/src",
+    "crates/noble-contracts/src",
+    "crates/noble-wasm/src",
+    "crates/noble-cli/src",
+    "verification/dx06/gate.mjs",
+    "README.md"
+  ],
+  "source_files": 343,
+  "pre_promotion_case_sha256": "5edfdb6a5856094be96229ccd27b5b15dece9f4b32270728992057c9255254ac",
+  "gate_sha256": "712e3cae04b5d759165525b73ddc4306acc25d2cbc5cd50c7c622118c3358f13",
+  "retained": {
+    "directory": "/home/brittonr/.cache/noble-safety-core-20260930-a/dx06-source-frozen-b",
+    "terminal_smoke": "smoke.json",
+    "terminal_smoke_sha256": "86a3e67c5106c3a657406b4f35eb3b8cd6e62e39bdbd8bccc045c6c10cb5bab7",
+    "frozen_cli": "executables/noble",
+    "frozen_cli_sha256": "924f79b4ed8ed61c6c7fed73cf0a95b1618d754ecda09ba9eaae3d4ba444c0df",
+    "selected_node_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+    "selected_wasm_tools": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+    "selected_wasm_tools_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+    "compiled_wasm": "matching-interface-emission/engine/module-3.wasm",
+    "compiled_wasm_sha256": "5b7ddcef085ea16b22ccfc162d8c0e40db28c9916bbe49caf0f8f35f1695b499",
+    "files_before_terminal_smoke": 37,
+    "production_cli_commands": 6
+  },
+  "controls": {
+    "authorized-matching-interface": "compiled Wasm imports test_clock_bound, one version-1 host callback returns I64 42, preserves test.clock effect, zero fallback",
+    "denied": "compiled Wasm records one policy-denied test.clock request and zero protected operations",
+    "missing-mapping": "link refuses missing bound adapter with zero guest and host requests",
+    "incompatible-interface": "manifest rejects an I64 input where the clock requires no input before guest execution",
+    "second-request-script-exhausted": "first scripted value 42 permitted; second request explicitly denied as script-exhausted, both recorded",
+    "unexpected-operation": "adversarial compiled WAT requests test.emit using a clock slot; host rejects unexpected-operation with zero protected operations and zero fallback"
+  },
+  "latent_effect_witness": ["test.clock"],
+  "report_fields": ["substitutions", "adapter_versions", "scripted_inputs", "host_requests"],
+  "real_host_fallback_calls": 0,
+  "real_host_evidence": false,
+  "scope": "Finite, explicit, versioned, source-checked scripted test-host substitution over checked compiled managed-memory Wasm. The source inventory and every retained input, response, emission and frozen executable hash are recorded in the terminal smoke file. The hostile unexpected-operation WAT is a direct host-boundary control, not an independently source-accepted guest.",
+  "assumptions": [
+    "The frozen production CLI, selected Node/V8, selected wasm-tools, ABI and application-supplied adapter policy remain trusted mechanisms; cryptographic hashes bind bytes and do not prove semantic correctness.",
+    "The finite script is host-supplied and test-only. Neither module source nor an import can acquire a real clock or ambient authority."
+  ],
+  "non_claims": [
+    "No real host clock, resource-capable host, cross-host authority, generalized adapter framework or universal frontend/backend/host/engine refinement theorem.",
+    "Pinned Charon extracted the frozen current kernel, but Aeneas 505b6ca failed before Lean emission on the recursive Ty/NominalShape trait-impl group; formal M3 source binding and proof remain open.",
+    "The prepromotion source revision intentionally records only the enumerated source tree, gate and README, and the prepromotion DX-06 case bytes separately; promotion and historical current-source replays are separate later evidence."
+  ]
+}

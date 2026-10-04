@@ -7,6 +7,9 @@ Status: Record schema and document checks only
 
 ## Independent dimensions
 
+**EV-LIVE-01.** Live-reload designs MUST remain `implementation: absent`, `execution: not-run`, `proof: open`, `trust: unassessed`, with no test/evidence claim until the distinct opt-in binary emitter, selected VM and transactional reload actually run. Later receipts MUST bind both prior and proposed generation's exact source/import bytes, resolved definition and program-value identities, emitter/ABI/VM revision, validated module bytes, checked ordered stack/effect/capability interfaces, host policy, bounded execution and publication/refusal observation. An old proof or old source-bound receipt MUST NOT be inherited by a new body merely because its name, interface, source path or Wasm module format matches. Historical Core/M4/MC1/MC2/DXM1 evidence remains immutable and says nothing about live execution.
+
+For guest self-edit, the receipt MUST separately identify the host-selected name, independently checked originating definition identity, grant's expected source generation, invocation-pinned generation observation, queued candidate's bounded byte snapshot and post-return snapshot comparison/independently checked recipe/interface, pending versus final commit/refusal, actual prior guest request prefix and stack outcome, derived-source origin/digest, and unchanged selected file bytes/hash. A denied import, trapped invocation and post-return candidate refusal are different outcomes; none is evidence that an unexecuted candidate body ran or that a completed invocation was rolled back.
 **EV-STATE-01.** Every scenario MUST carry independent implementation, execution, proof, and trust fields. One successful dimension MUST NOT imply success in another.
 
 | Field | Allowed values |
@@ -52,7 +55,15 @@ The [calculator scenarios](conformance/calculator-cases.json) use `Calculator-De
 
 **EV-CASE-02.** A static or admission rejection MUST observe zero candidate-body host requests and zero protected operations. Compiler-service effects, where applicable, are recorded separately.
 
-**EV-CASE-03.** Authority denial requires a declared effect that includes the request. A denied request counts toward the effect trace. Denial MUST NOT substitute for static effect rejection.
+**EV-CASE-03.**
+
+Authority denial requires a declared effect that includes the request. A denied request counts toward the effect trace. Denial MUST NOT substitute for static effect rejection. To promote S-CASE-06, a new immutable source-bound prepromotion acceptance MUST show independent preparation/compilation of the host-selected complete WIT/world/export-source recipe and exact component-byte correspondence **before** preopening the file or establishing Directory/READ authority. It MUST show the matched actual `"main.rs" fs.read` Noble component invoking production Wasmtime once with the canonical live host-owned **logical** `Directory`, `read_right:false`, `stage:authorization`, `outcome:denied`, `guest_requests:1`, actual bounded callback `request_trace:["fs.read"]`, `protected_operations:0` and no protected file-content reads. A separately READ-granted run of the **same compiled guest bytes** MUST show exact bounded bytes read from the vetted host-preopened regular File and owner retirement, with hostile path/owner/rights refusals before any protected content read. A mismatched source/WIT recipe MUST refuse with status 2 at admission before file open/owner creation, and MUST NOT masquerade as the canonical one-request denial. An oversized granted file MUST instead be labeled a bounded postauthorization failure and MUST NOT be misreported as zero-read authorization denial. Source, pinned tools, WIT/guest/CLI and fixture identity, command outputs and assumptions MUST be bound; structural/document validation, static rejection, a synthetic callback, and a prior fixture receipt are not substitutes. Only after passing prepromotion acceptance MAY native deltas sync and canonical state/evidence/views change; postpromotion documents/Cairn checks are separate. Proof including owner law, Octet and Aeneas remains open.
+
+#### Scenario: S-CASE-06 prepromotion runtime acceptance
+
+- GIVEN the exact unpromoted canonical S-CASE-06 record, source-bound compiled guest, host-preopened file and independent READ-or-none grants
+- WHEN the denied and granted invocations and hostile controls execute against the production host before any case promotion
+- THEN the denial matches every canonical expected field after one real request and zero protected reads; the granted control returns only exact vetted bounded bytes, owner obligations settle, and distinct prepromotion and postpromotion receipts remain bound to their respective source states
 
 **EV-CASE-04.** Runtime builder cases MUST obtain operands after compilation and disable the Noble preparation service during execution. Optimized literal-only examples do not satisfy them.
 
@@ -70,7 +81,7 @@ Harness names and symbolic operation IDs describe future test drivers. They do n
 
 **EV-TRACE-01.** Every numbered requirement MUST have a declared evidence route. A requirement with no concrete scenario remains `test-design-open`, not covered or passed.
 
-Native requirement headings and matching `r[ID]` markers own the index. Legacy labels support historical preservation checks only. Fenced examples MUST NOT create requirements, scenario targets, or preservation obligations.
+Native requirement headings and their matching bracketed markers own the index. Legacy labels support historical preservation checks only. Fenced examples MUST NOT create requirements, scenario targets, or preservation obligations.
 
 The index uses these planned routes:
 

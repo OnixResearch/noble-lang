@@ -1,0 +1,4 @@
+package noble-test:unsigned@1.0.0;
+world demo {
+  export echo: func(value: u64) -> u64;
+}

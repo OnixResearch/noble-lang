@@ -56,6 +56,12 @@
       "cairn_id": "backend-experiments"
     },
     {
+      "id": "SPEC-BE002",
+      "path": "../.cairn/specs/c-backend/spec.md",
+      "compatibility_path": "C-BACKEND.md",
+      "cairn_id": "c-backend"
+    },
+    {
       "id": "SPEC-R001",
       "path": "../.cairn/specs/resource-adapters/spec.md",
       "compatibility_path": "RESOURCE-ADAPTERS.md",
@@ -93,6 +99,8 @@
     "conformance/language-workflow-cases.json",
     "conformance/calculator-cases.json",
     "conformance/worker-cases.json",
+    "conformance/live-wasm-cases.json",
+    "conformance/c-backend-cases.json",
     "conformance/octet-adoption-cases.json"
   ],
   "lifecycle": ".cairn"

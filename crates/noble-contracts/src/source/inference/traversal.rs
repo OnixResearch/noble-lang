@@ -8,6 +8,7 @@ pub(super) fn visit(
     parents: &mut alloc::vec::Vec<super::Frame>,
     state: &mut super::State,
     scope: &super::Scope<'_>,
+    editor_analysis: bool,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(meter.charge(1, frame.span));
@@ -47,6 +48,26 @@ pub(super) fn visit(
             parents.push(frame);
             parents.push(child);
             return Ok(());
+        }
+        crate::source::Kind::EditorHole => {
+            if !editor_analysis {
+                return Err(crate::invalid(node.span, "editor hole cannot enter source admission"));
+            }
+            let output = attempt!(state.arena.add(
+                crate::inference::Term::Hole(crate::inference::Sort::Stack),
+                node.span,
+                meter
+            ));
+            let effect = attempt!(state.arena.effect_hole(node.span, meter));
+            attempt!(meter.node(node.span));
+            state.holes.push(super::Hole {
+                input: frame.stack,
+                output,
+                effect,
+                span: node.span,
+            });
+            frame.stack = output;
+            frame.effect = attempt!(state.arena.effect_union(frame.effect, effect, node.span, meter));
         }
         crate::source::Kind::Word(_) => return Err(crate::internal(node.span)),
     }
@@ -109,6 +130,20 @@ fn named(
     let span = call.span;
     let input = frame.stack;
     let effect = attempt!(state.arena.effect_empty(span, meter));
+    let signature = match definition.signature.as_ref() {
+        Some(scheme) => {
+            let (output, effects) = attempt!(super::apply_signature(
+                &mut state.arena,
+                scheme,
+                input,
+                false,
+                span,
+                meter,
+            ));
+            Some((output, effects, false))
+        }
+        None => None,
+    };
     attempt!(meter.node(span));
     let body = state.bodies.len();
     state.bodies.push(super::Body {
@@ -133,6 +168,7 @@ fn named(
         origin: super::Origin::Named,
         span,
         caller: frame.caller.or(Some(span)),
+        signature,
     })
 }
 
@@ -165,5 +201,6 @@ fn quotation(
         origin: super::Origin::Quotation(frame.stack),
         span,
         caller: frame.caller,
+        signature: None,
     })
 }

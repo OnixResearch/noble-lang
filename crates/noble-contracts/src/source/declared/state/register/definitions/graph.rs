@@ -205,6 +205,12 @@ impl<'a> Schedule<'a> {
         let installed = super::install_one(
             session,
             super::DefinitionInput {
+                signature: self
+                    .work
+                    .signatures
+                    .iter()
+                    .find(|(declared, _)| declared == &name)
+                    .map(|(_, scheme)| scheme.clone()),
                 name,
                 source: definition_bytes,
                 limits: self.limits,

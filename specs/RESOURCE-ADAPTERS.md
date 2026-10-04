@@ -8,7 +8,9 @@ Status: Bounded synchronous M5 and selected native-async M6 implementations acce
 
 ## Scope
 
-**RA-SCOPE-01.** Implementations of `Component-Sync-Bootstrap` MUST support synchronous WIT imports/exports and owned resources. Borrow support is limited to adapter-local borrows for imported calls. This is not full `Component-Draft` conformance.
+**RA-SCOPE-01.**
+
+Implementations of `Component-Sync-Bootstrap` MUST support synchronous WIT imports/exports and owned resources. Borrow support is limited to adapter-local borrows for imported calls. This is not full `Component-Draft` conformance.
 
 The subset excludes borrowed exports, borrowed values in guest storage, and suspension during a borrowed call. It adds no source borrow type or general lifetime-polymorphic program.
 
@@ -17,6 +19,14 @@ The delivered M5 slice uses the pinned [`noble-test:sync/bootstrap@1.0.0` world]
 The [M5 runtime gate](../verification/m5/gate.mjs) exercises the production resource table and an independent Rust/Wasmtime 40.0.2 component peer. Its bounded local cancellation and unexpected-suspension control revokes guest access, retains the native pin through actual guest GC, and handles completion, duplicate callbacks and repeated retirement without resurrection or a second release. This control is not native async execution. The peer independently links and converts component values but reuses Noble's resource/authority decision libraries for host policy.
 
 The [strict resource proof lane](../proofs/m5/M5Resources.lean) relates the extracted Rust transition and checked table-decision functions to their logical transitions, with separate owner-return, busy-owner, cancellation-pin and late-completion properties. The [extraction audit](../verification/m5/extraction.mjs) binds those seven theorem roots to actual Rust definitions; broader authority and component body/dependency coverage is not refinement. Native release, authenticated host facts and callbacks, and engine/ABI correctness remain external assumptions. Fresh complete extraction/check receipts, not these descriptions or a diagnostic proof audit, determine milestone acceptance.
+
+In addition to the existing M5 bootstrap world, the selected `noble-test:bounded-region/bounded@1.0.0` world provides only an imported `region.read(s64,s64)->result<list<u8>,string>` resource method and explicit `regions.release(own<region>)`, with an exported `read-region(own<region>,s64,s64)->result<list<u8>,string>`. The host invoker alone selects up to 4096 immutable region bytes and creates its owner with context and read right before guest invocation. Distinct simultaneously live host Stores MUST use different TableId and Context identities even if slot and generation coincide; the host allocates identities monotonically without wraparound and fails closed on exhaustion. The borrowed method MUST restore that same owner on both normal result branches and the guest MUST release it once; abnormal exit remains a host cleanup obligation. This does not grant guest allocation, mutation, arbitrary address reads or implicit capability conversion from byte lists.
+
+#### Scenario: S-CASE-02 versioned resource call
+
+- GIVEN a host-selected `00 01 02` region registered for one component invocation and an actual compiled Noble guest whose method borrow is adapter-local
+- WHEN the guest enters `read-region` with the canonical offset and length and separately with valid in-bounds controls
+- THEN the canonical request is refused before protected access, valid reads return only bytes in the selected region, and ownership returns from borrow and is released or host-retired exactly once
 
 **RA-SCOPE-02.** The compiler MUST reject unsupported borrow or async patterns before component emission. A boundary that unexpectedly suspends or reenters a busy owner must fail closed under the cleanup protocol.
 
@@ -61,7 +71,17 @@ The host tracks kind, owner context, generation, rights, call scope, and outstan
 | `Retiring(scope)` | Guest access revoked; native work still has an accounted pin |
 | `Retired` | No guest access and no outstanding native access |
 
-**RA-STATE-01.** A `Live` to `Busy` transition MUST validate kind, context, generation, and rights before protected work. It consumes guest availability atomically with scope registration.
+**RA-STATE-01.**
+
+A `Live` to `Busy` transition MUST validate kind, context, generation, and rights before protected work. It consumes guest availability atomically with scope registration. In the selected bounded-region adapter the host MUST also validate signed nonnegative and overflow-free offset/length against the retained byte extent and output quota before taking that borrow/native pin. The host MUST retain the resource through `begin`, validate native access, read only the checked range and `complete` it before the guest's explicit release; invalid arithmetic or claims MUST leave the protected read count at zero.
+
+The separate S-CASE-06 filesystem adapter retains its logical `Directory` owner over one preopened regular File in the host (no guest borrow, WIT Directory representation or OS directory preopen). It MUST validate that host table's owner identity, invocation context, kind, generation and liveness, and independent host-granted READ with `Table::validate`, plus the exact preopened-file key `main.rs`, before a protected file-content read. This retained Table right is the selected authorization boundary; it does not claim use of the service-specific `Authority::authorize_from_trusted_host` one-shot Plan/facts. A denied authorization, invalid owner or unmapped key has no protected read or native pin. For an approved read, the host begins its protected table scope, keeps the owner/file alive and returns at most 4096 bytes; it MAY read at most one extra bounded sentinel byte to reject an oversized file without returning those bytes. The host completes the scope and accounts for the operation before retiring the owner; neither a live owner nor a valid key is sufficient authority without READ.
+
+#### Scenario: S-CASE-06 refused and granted file reads
+
+- GIVEN the canonical live host-owned Directory with no READ grant and one vetted regular file at exact guest key `main.rs`, plus a separate READ-granted invocation
+- WHEN the same compiled guest requests `fs.read` through the production host
+- THEN the canonical invocation denies before protected content access, whereas the independently granted one returns only that preopened file's at-most-4096 bytes and retires its owner
 
 **RA-STATE-02.** A busy owner MUST reject release, transfer, new borrows, and reentrant operations from guest entry points. Sequential invariants do not justify access during a callback.
 
@@ -77,19 +97,43 @@ The host tracks kind, owner context, generation, rights, call scope, and outstan
 | Native completion after retirement request | Release the final pin without returning guest ownership |
 | Repeated retirement or late callback | No second release and no resurrection |
 
-**RA-CLEAN-01.** Abnormal cleanup MUST not depend on guest continuation. The host retires all invocation-owned obligations under the execution profile. It does not return a guessed pre-call session stack.
+**RA-CLEAN-01.**
+
+Abnormal cleanup MUST not depend on guest continuation. The host retires all invocation-owned obligations under the execution profile. It does not return a guessed pre-call session stack. For S-CASE-06 the host, not the guest, retains the live `Directory` throughout the invocation. Normal denied/successful result, domain error and guest trap MUST each settle that owner's custody or retain explicitly accounted cleanup debt until safe release; repeated cleanup, late callback and invalid claims MUST NOT release twice, revive a retired owner or gain a protected file read.
+
+#### Scenario: Host Directory settlement on refusal and completion
+
+- GIVEN an invocation-owned host Directory with no READ and a separately granted invocation of the same compiled guest
+- WHEN a denied result, successful bounded read or abnormal guest exit completes
+- THEN each owner's retirement is accounted exactly once and no later duplicate or stale event regains read authority
 
 **RA-CLEAN-02.** Cancellation MUST revoke guest access immediately. Native storage MUST remain pinned until no callback or native operation can access it. Unstoppable work remains owned and charged as `Retiring`, not falsely reported as fully cleaned up.
 
-**RA-CLEAN-03.** Retirement and callback handling MUST be idempotent with respect to local release. The invariant includes hidden adapter state and native pins, not only the guest stack.
+**RA-CLEAN-03.**
 
-## Owned transfer
+Retirement and callback handling MUST be idempotent with respect to local release. The invariant includes hidden adapter state and native pins, not only the guest stack. For selected S-CASE-08, an invalid callback-returned claim MUST NOT discard the separately retained live pending authentic owner, and repeated cleanup, callback failure or abnormal exit MUST NOT create a second release, resurrect the rejected claim or leave a hidden pin. The `noble-callback-owner/v1` report MUST account exactly one released pending owner, zero live owners/native pins, and `fixture_releases:0` in authentic mode or `fixture_releases:1` in each hostile mode. The hostile fixture release is the stale setup retirement or one wrong-kind/foreign-context live-owner cleanup; neither is a second release of the pending authentic owner. Each mode MUST allocate only its necessary fixture.
 
-**RA-OWN-01.** Before committing an owned WIT transfer, the adapter MUST finish argument validation and establish a cleanup owner for each obligation. A failed preflight leaves ownership with the caller.
+#### Scenario: Failed callback construction settles the retained owner
+
+- GIVEN one pre-registered pending authentic owner in every mode, with no fixture for authentic, a prior retired generation for stale, or one live wrong-kind/foreign-context fixture
+- WHEN a hostile returned claim refuses before resource construction, an authentic guest consumes its validated owner, or cleanup is repeated after either terminal outcome
+- THEN the invocation reports one and only one pending-owner release, zero authentic or one hostile fixture release, no residual live owner or native pin, and no rejected claim becomes a guest-owned value
+
+**RA-OWN-01.**
+
+Before committing an owned WIT transfer, the adapter MUST finish argument validation and establish a cleanup owner for each obligation. A failed preflight leaves ownership with the caller.
 
 After commit, the sender cannot use the transferred handle. A domain error does not reverse the transfer unless the declared result explicitly returns ownership. The receiver or host retains cleanup responsibility after a trap.
 
 This contract describes local handle ownership. It does not prove physical exclusivity of an external object or exactly-once remote cleanup.
+
+For selected S-CASE-08 `noble-test:callback-owner/bounded@1.0.0`, the `tokens.issue() -> own<token>` callback result is an incoming **host-produced** owner claim, not an already trusted guest value. Only after complete recipe byte-match, `Host::new` MUST pre-register one pending authentic owner and at most one mode-selected fixture: none for authentic, a retired prior generation for stale, or one live wrong-kind or foreign-context owner. The `issue` callback selects a retained claim without creating a new owner. The production host MUST retain custody of the pending actual `Table::Owner` and validate the selected claim's table namespace, slot, generation, expected token kind, current invocation context, liveness and applicable rights before constructing Wasmtime `ResourceAny` and publishing exactly one `Val::Resource` as a guest WIT-owned value. Only a matching live claim permits that publication. The host retains its `Table::Owner` custody and deterministic cleanup accounting; this selected callback path does **not** invoke `Table::transfer` or claim to move the kernel owner into Wasmtime. A stale-generation, wrong-kind or foreign-context result MUST publish no guest owner while host custody of the pending owner remains for exactly-once retirement; matching numeric slot/generation in a distinct table/context is insufficient. The authentic guest `tokens.consume(own<token>)` request MUST consume the published WIT owner representation only once, account its one protected operation and let the host release the retained table owner once; an invalid result MUST perform no protected operation or create a native pin.
+
+#### Scenario: Callback owner obligation before and after validated publication
+
+- GIVEN a matched component with one pending authentic host-table owner and at most one mode-selective real fixture pre-registered before guest entry
+- WHEN the host preflights the returned claim before Wasmtime owned-resource creation and the authentic guest subsequently calls `tokens.consume`
+- THEN only the authentic result publishes one trusted WIT-owned guest value and reaches the second guest request, while the host retains its table owner until consume; invalid results leave the host responsible for retiring that pending owner once and settling the selected fixture separately without publishing a trusted value
 
 **RA-OWN-02.** Memory reclamation MUST remain separate from resource retirement. GC reachability MUST NOT make a resource capturable or remove its release obligation. Guest operations MUST NOT convert a live owner into freely duplicable unmanaged authority.
 

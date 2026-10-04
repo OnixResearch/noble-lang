@@ -1,0 +1,16 @@
+[package]
+name = "noble-wi03-peer"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Independent Wasmtime host; never link Noble's compiler or runtime.
+[workspace]
+
+[dependencies]
+anyhow = "=1.0.100"
+serde_json = "=1.0.140"
+wasmtime = { path = "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasmtime", default-features = false, features = ["std", "runtime", "cranelift", "component-model", "wat", "gc", "gc-drc"] }
+
+[profile.dev]
+debug = 0

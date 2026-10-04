@@ -162,6 +162,45 @@ operation-success receipt and a cancelled invocation. The comparison selects
 implementation work, not new language semantics, completed async support, or
 changes to the MW1/MW2 and Syndicate dependencies.
 
+## Scoped Bend/qcue research direction
+
+The earlier Bend2 native-async comparison remains ND-56–58. The later
+[`bendlang/bend` main snapshot `3378e6237ed431d17629efd36d24c96241815b7e`](https://github.com/bendlang/bend/commit/3378e6237ed431d17629efd36d24c96241815b7e)
+motivates only the following *future* design/evidence choices. The
+[`4ad/qcue` master snapshot `c71183b0a5d3319dde1d611b6e6f77a6eab29418`](https://github.com/4ad/qcue/commit/c71183b0a5d3319dde1d611b6e6f77a6eab29418)
+supplies a finite-model [oracle methodology](https://github.com/4ad/qcue/blob/c71183b0a5d3319dde1d611b6e6f77a6eab29418/doc/oracle.md)
+and explicit [implementation limits](https://github.com/4ad/qcue/blob/c71183b0a5d3319dde1d611b6e6f77a6eab29418/doc/implementation.md);
+neither project supplies Noble acceptance evidence or a runtime dependency.
+
+| ID | Decision | Consequence |
+|---|---|---|
+| ND-59 | Freeze human-owned pure MC2 law intent before candidate edits and check exact proof, prepared candidate and artifact independently at an optional release gate | VC-OWNER-01/CONTRACT-16 are new, unexecuted release-policy scope; MC2's completed proof/admission controls and ordinary proof-free execution remain unchanged |
+| ND-60 | Define the four Result conveniences as ordinary selected-arm variant programs | DX-04 remains unexecuted; concrete generic schema/module signatures and resource-positive behavior need separate gates, not a new IO monad |
+| ND-61 | Measure type-directed finite ADT, ANF and call lowering only after M3 on selected managed-memory Wasm | ADAPT-17 is not M3's completed comparison, an unconditional backend theorem, a speed claim, or evidence for WIT resource ownership |
+| ND-62 | Defer an independent bounded resource-free pure fork/join trial until language gates | ADAPT-18 cannot rewrite M6 ordered imports or treat copyable channels, aliased arrays, noncancelling timeouts, fail-stop OOM, foreign C/JS or GPU scheduling as task ownership |
+| ND-63 | Borrow qcue's independent bounded finite-model and preservation-test methods for the optional owner-law research lane | DX-13 remains a design review; no CUE dependency, live refinement, higher-rank/impredicative types, proof-time native execution or second proof kernel; model agreement never grants proof/release |
+
+qcue itself reports a pending attached live-interface conformance proof after
+raw source export/reimport; its bounded oracle cases cannot close that gap,
+much less Noble's unrelated backend/host proof obligations. Existing DX-10
+already has seeded/shrunk property coverage; ND-63 narrows a new experiment
+to independently specified finite *law* models and identity-preserving
+metamorphic checks against a separately checked proof/admission gate.
+
+## Intrinsic Noble-source proofs
+
+| ID | Decision | Consequence |
+|---|---|---|
+| ND-64 | Select optional versioned `contract 1`/`proof 1` declarations in actual Noble `.noble` modules | User proofs are Noble terms in an erased logical layer; ordinary stack programs and MC1/MC2 historical claims remain unchanged |
+| ND-65 | Restrict predicative Type0 universals to independently checked `PureTyCode` and dependent Eq over total eligible values | No `Type0:Type0`, unrestricted Lean `Type`, resource laundering, runtime dependent `Program` or implicit proof-to-authority conversion |
+| ND-66 | Check Noble proof terms against exact claims via independent strict Lean, and reuse existing Charon → Aeneas → Lean for eventual actual Rust implementation refinement | Aeneas does not parse/check Noble source; source/claim translation correctness and actual Rust correspondence remain separately open; Bend2/Eurydice/Scylla are not proof dependencies |
+
+The [new active change](../.cairn/changes/intrinsic-noble-proofs/proposal.md) and
+CONTRACT-17–25 are spec-only unexecuted designs. For an owner-law release,
+candidate-authored module contracts do not replace the pre-frozen independent
+VC-OWNER-01 law. The new change does not close or edit the active Bend/qcue
+change or alter older MC1/MC2 receipts.
+
 ## Platform direction
 
 Component Model and WIT remain the standard external boundary. WASI 0.3 remains the preferred host family, with exact versions selected through executed compatibility work.
@@ -223,10 +262,11 @@ static, twelve link-admission and two compiled-denial rows, respectively;
 source-derived independent kernel controls and host authorization retain
 their distinct trust boundaries. Whole-crate extraction retains only nine
 strict Lean roots for three inherited pure M7 dataspace functions, not a
-nominal/module theorem. All 2,595 current authored production-body
-refinement obligations remain open. General Result/local bindings, unit
-invariants, portable package/cache transport, general capability modules
-and later MA/MW entry gates are unaffected.
+nominal/module theorem. All 2,595 authored production-body refinement
+obligations at the DXM1 snapshot remain open. Broader Result beyond the
+selected `result@1` library, local bindings, unit invariants, portable
+package/cache transport, general capability modules and later MA/MW entry
+gates are unaffected.
 
 ## Open decisions
 

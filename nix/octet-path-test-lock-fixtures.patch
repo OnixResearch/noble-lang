@@ -1,0 +1,59 @@
+--- a/cargo-octet/src/engine.rs
++++ b/cargo-octet/src/engine.rs
+@@ -1703,5 +1703,16 @@
+         "standards/strict-profiles/generated/strict-rust-profiles.json",
+     ];
+ 
++    #[cfg(unix)]
++    fn lock_fixture(root: &Path, toolchain: &str) {
++        let status = std::process::Command::new("cargo")
++            .args(["generate-lockfile", "--offline"])
++            .current_dir(root)
++            .env("RUSTUP_TOOLCHAIN", toolchain)
++            .status()
++            .expect("generate local fixture lock");
++        assert!(status.success(), "local fixture Cargo.lock must be valid");
++    }
++
+     #[test]
+     fn spanless_compiler_errors_keep_valid_structured_domains() {
+@@ -1733,6 +1744,7 @@
+         fs::create_dir_all(package.join("src/workflow")).expect("workflow directory");
+         fs::write(package.join("src/main.rs"), "fn main() {}\n").expect("package target");
+         let toolchain = std::env::var("RUSTUP_TOOLCHAIN").unwrap_or_else(|_| "stable".to_owned());
++        lock_fixture(&root, &toolchain);
+         let paths = DiagnosticPaths::from_cargo_metadata(&root, &toolchain, &[], &[])
+             .expect("real Cargo metadata resolves the package");
+         let id = paths.package_dirs.keys().next().expect("package ID");
+@@ -1821,6 +1833,7 @@
+         fs::create_dir(temporary.path().join("src")).expect("source directory");
+         fs::write(temporary.path().join("src/lib.rs"), "pub fn value() {}\n").expect("source file");
+         let toolchain = std::env::var("RUSTUP_TOOLCHAIN").unwrap_or_else(|_| "stable".to_owned());
++        lock_fixture(temporary.path(), &toolchain);
+         let paths = DiagnosticPaths::from_cargo_metadata(temporary.path(), &toolchain, &[], &[])
+             .expect("root package Cargo metadata");
+         let id = paths.package_dirs.keys().next().expect("root package ID");
+@@ -1854,6 +1867,7 @@
+         fs::write(proof.join("Rules.rs"), "compile_error!(\"retained proof compiler error\");\n")
+             .expect("proof Rust module");
+         fs::write(proof.join("Rules.lean"), "theorem included : True := True.intro\n").expect("included proof");
+         let toolchain = std::env::var("RUSTUP_TOOLCHAIN").unwrap_or_else(|_| "stable".to_owned());
++        lock_fixture(root, &toolchain);
+         let paths = DiagnosticPaths::from_cargo_metadata(root, &toolchain, &[], &[]).expect("fixture metadata");
+         let output = std::process::Command::new("cargo")
+@@ -1922,6 +1936,7 @@
+         fs::write(root.join("proofs/Rules.rs"), "compile_error!(\"retained excluded dependency error\");\n")
+             .expect("proof module");
+         let toolchain = std::env::var("RUSTUP_TOOLCHAIN").unwrap_or_else(|_| "stable".to_owned());
++        lock_fixture(root, &toolchain);
+         let paths = DiagnosticPaths::from_cargo_metadata(root, &toolchain, &[], &["--offline".to_owned()])
+             .expect("complete offline Cargo metadata resolves excluded path dependency");
+         let output = std::process::Command::new("cargo")
+@@ -1992,6 +2007,7 @@
+         .expect("package manifest");
+         fs::create_dir(temporary.path().join("src")).expect("source directory");
+         fs::write(temporary.path().join("src/lib.rs"), "pub fn value() {}\n").expect("source file");
++        lock_fixture(temporary.path(), &toolchain);
+         let fifo = temporary.path().join("blocked.fifo");
+         assert!(
+             std::process::Command::new("mkfifo").arg(&fifo).status().expect("create FIFO").success(),

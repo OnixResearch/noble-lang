@@ -173,6 +173,21 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "B-LIVE-01",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-01",
+        "LIVE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "B-RESULT-01",
       "document": "../.cairn/specs/core-bootstrap/spec.md",
       "document_id": "SPEC-B001",
@@ -321,8 +336,23 @@
       "scenarios": [
         "ADAPT-09",
         "ADAPT-10",
+        "ADAPT-17",
         "CORE-03",
         "CORE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-LAYOUT-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-17"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -336,7 +366,25 @@
         "review"
       ],
       "scenarios": [
-        "ADAPT-09"
+        "ADAPT-09",
+        "ADAPT-17",
+        "ADAPT-18"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "BE-LIVE-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-02",
+        "LIVE-04",
+        "LIVE-07"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -352,6 +400,7 @@
       "scenarios": [
         "ADAPT-09",
         "ADAPT-10",
+        "ADAPT-17",
         "CORE-05",
         "CORE-09"
       ],
@@ -867,6 +916,174 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "CB-ADMIT-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CB-BUILD-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-04",
+        "CB-CASE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CB-GATE-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-01",
+        "CB-CASE-02",
+        "CB-CASE-03",
+        "CB-CASE-06",
+        "CB-CASE-07",
+        "CB-CASE-08",
+        "CB-CASE-09",
+        "CB-CASE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CB-HOST-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-03",
+        "CB-CASE-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CB-IDENTITY-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-04",
+        "CB-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CB-LIMIT-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CB-NUM-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CB-ORDER-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-02",
+        "CB-CASE-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CB-SANDBOX-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CB-SCOPE-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-01",
+        "CB-CASE-04",
+        "CB-CASE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "CB-VALUE-01",
+      "document": "../.cairn/specs/c-backend/spec.md",
+      "document_id": "SPEC-BE002",
+      "evidence_routes": [
+        "native-boundary-test",
+        "backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "CB-CASE-02",
+        "CB-CASE-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "DX-CACHE-01",
       "document": "../.cairn/specs/developer-experience/spec.md",
       "document_id": "SPEC-DX001",
@@ -981,6 +1198,24 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "DX-LIVE-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-01",
+        "LIVE-03",
+        "LIVE-07",
+        "LIVE-09",
+        "LIVE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "DX-LOCAL-01",
       "document": "../.cairn/specs/developer-experience/spec.md",
       "document_id": "SPEC-DX001",
@@ -1067,6 +1302,23 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "DX-PROOF-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-19",
+        "CONTRACT-21",
+        "CONTRACT-25",
+        "CONTRACT-26"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "DX-PROPERTY-01",
       "document": "../.cairn/specs/developer-experience/spec.md",
       "document_id": "SPEC-DX001",
@@ -1090,7 +1342,8 @@
         "review"
       ],
       "scenarios": [
-        "DX-10"
+        "DX-10",
+        "DX-13"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -1133,6 +1386,20 @@
       ],
       "scenarios": [
         "OCTET-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-PURE-PAR-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "ADAPT-18"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -1230,6 +1497,8 @@
         "review"
       ],
       "scenarios": [
+        "CONTRACT-16",
+        "DX-13",
         "OCTET-09"
       ],
       "test_design": "scenario-described-not-executed"
@@ -1320,6 +1589,23 @@
       ],
       "scenarios": [
         "ADAPT-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EV-LIVE-01",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-06",
+        "LIVE-07",
+        "LIVE-08",
+        "LIVE-09",
+        "LIVE-10"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -1530,6 +1816,72 @@
       ],
       "scenarios": [
         "WORKER-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-LIVE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-01",
+        "LIVE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-LIVE-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-01",
+        "LIVE-02",
+        "LIVE-03",
+        "LIVE-05",
+        "LIVE-08",
+        "LIVE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-LIVE-03",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-02",
+        "LIVE-05",
+        "LIVE-06",
+        "LIVE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "H-LIVE-04",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-09",
+        "LIVE-10"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -1796,7 +2148,8 @@
       ],
       "scenarios": [
         "ADAPT-01",
-        "ADAPT-02"
+        "ADAPT-02",
+        "ADAPT-18"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -1874,6 +2227,7 @@
         "review"
       ],
       "scenarios": [
+        "ADAPT-18",
         "CORE-06",
         "OCTET-07"
       ],
@@ -2017,6 +2371,36 @@
       ],
       "scenarios": [
         "CORE-17"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-LIVE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-01",
+        "LIVE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-LIVE-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-09",
+        "LIVE-10"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -2170,6 +2554,38 @@
         "WORKER-01",
         "WORKER-02",
         "WORKER-03"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-PROOF-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-17",
+        "CONTRACT-18",
+        "CONTRACT-19",
+        "CONTRACT-22",
+        "CONTRACT-26"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-PROOF-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-17"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -3563,6 +3979,25 @@
       "test_design": "test-design-open"
     },
     {
+      "id": "S-LIVE-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-03",
+        "LIVE-04",
+        "LIVE-05",
+        "LIVE-06",
+        "LIVE-09",
+        "LIVE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "S-MEM-01",
       "document": "../.cairn/specs/safety/spec.md",
       "document_id": "SPEC-S001",
@@ -4026,6 +4461,61 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "V-INTRINSIC-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-18",
+        "CONTRACT-22",
+        "CONTRACT-24",
+        "CONTRACT-26"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "V-INTRINSIC-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-17",
+        "CONTRACT-18",
+        "CONTRACT-20",
+        "CONTRACT-21",
+        "CONTRACT-23",
+        "CONTRACT-24",
+        "CONTRACT-25",
+        "CONTRACT-26"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "V-LIVE-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "LIVE-04",
+        "LIVE-08",
+        "LIVE-09",
+        "LIVE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "V-MODEL-01",
       "document": "../.cairn/specs/verification/spec.md",
       "document_id": "SPEC-V001",
@@ -4232,7 +4722,8 @@
         "review"
       ],
       "scenarios": [
-        "CONTRACT-13"
+        "CONTRACT-13",
+        "CONTRACT-16"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -4481,7 +4972,8 @@
       ],
       "scenarios": [
         "CONTRACT-02",
-        "CONTRACT-05"
+        "CONTRACT-05",
+        "CONTRACT-20"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -4553,6 +5045,89 @@
       ],
       "scenarios": [
         "CONTRACT-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-INTRINSIC-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-18",
+        "CONTRACT-20",
+        "CONTRACT-26"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-INTRINSIC-02",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-17",
+        "CONTRACT-19",
+        "CONTRACT-25"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-INTRINSIC-03",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-18",
+        "CONTRACT-20",
+        "CONTRACT-23",
+        "CONTRACT-24",
+        "CONTRACT-26"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-INTRINSIC-04",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-22",
+        "CONTRACT-23",
+        "CONTRACT-26"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-INTRINSIC-05",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-19",
+        "CONTRACT-20",
+        "CONTRACT-21",
+        "CONTRACT-26"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -4637,7 +5212,8 @@
         "review"
       ],
       "scenarios": [
-        "CONTRACT-07"
+        "CONTRACT-07",
+        "CONTRACT-16"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -4707,6 +5283,22 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "VC-OWNER-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "CONTRACT-16",
+        "CONTRACT-23",
+        "DX-13"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "VC-REWRITE-01",
       "document": "../.cairn/specs/program-contracts/spec.md",
       "document_id": "SPEC-V002",
@@ -4740,7 +5332,8 @@
         "review"
       ],
       "scenarios": [
-        "CONTRACT-11"
+        "CONTRACT-11",
+        "CONTRACT-16"
       ],
       "test_design": "scenario-described-not-executed"
     },

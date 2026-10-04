@@ -1,5 +1,6 @@
 mod compilation;
 mod evidence;
+pub(super) mod named_v2;
 
 pub(crate) struct Acceptance {
     pub(crate) axioms: std::vec::Vec<std::string::String>,
@@ -19,7 +20,7 @@ struct Workspace {
 }
 
 impl Workspace {
-    fn create(library: &super::rules::Library) -> Result<Self, super::output::Failure> {
+    fn create(library: &super::rules::Library, install_v1_replay: bool) -> Result<Self, super::output::Failure> {
         let temporary = attempt!(super::artifacts::Temporary::create());
         let workspace = Self {
             sources: temporary.path.join("sources"),
@@ -46,15 +47,17 @@ impl Workspace {
             &workspace.checker.join("NobleCompile.lean"),
             include_bytes!("../compiler.lean"),
         ));
-        // Concatenation preserves every byte of the trusted consumer program.
-        attempt!(super::artifacts::write_source(
-            &workspace.checker.join("NobleConsumer.lean"),
-            concat!(
-                include_str!("../consumer/decoding.lean"),
-                include_str!("../consumer/replay.lean"),
-            )
-            .as_bytes()
-        ));
+        if install_v1_replay {
+            // Concatenation preserves every byte of the trusted v1 replay.
+            attempt!(super::artifacts::write_source(
+                &workspace.checker.join("NobleConsumer.lean"),
+                concat!(
+                    include_str!("../consumer/decoding.lean"),
+                    include_str!("../consumer/replay.lean"),
+                )
+                .as_bytes()
+            ));
+        }
         attempt!(library.modules.iter().try_for_each(|module| {
             super::artifacts::write_source(
                 &workspace.sources.join(&module.relative),
@@ -100,7 +103,7 @@ pub(super) fn verify(
     let probe = attempt!(probe_toolchain(&sandbox, deadline));
     let session = Session {
         sandbox,
-        workspace: attempt!(Workspace::create(library)),
+        workspace: attempt!(Workspace::create(library, true)),
         deadline,
     };
     attempt!(session.compile_library(library));
@@ -115,6 +118,106 @@ pub(super) fn verify(
         wire,
         tools: tools(&session.sandbox, &probe.stdout),
     })
+}
+
+/// Recompile the restricted closed Type0 witness in an isolated kernel process.
+/// The final consumer receives only a bounded Lean term produced from the
+/// source AST, never a producer object or any source-selected import/tactic.
+pub(super) fn verify_intrinsic_pure(
+    claim: &str,
+    term: &str,
+    library: &super::rules::Library,
+    timeout_ms: u64,
+) -> Result<Acceptance, super::output::Failure> {
+    let deadline = attempt!(crate::sandbox::now()
+        .checked_add(std::time::Duration::from_millis(timeout_ms))
+        .ok_or_else(|| super::output::Failure::error("timeout-overflow","invalid proof deadline".into())));
+    let sandbox = attempt!(crate::sandbox::Environment::discover(deadline));
+    let probe = attempt!(probe_toolchain(&sandbox,deadline));
+    let session = Session {sandbox,workspace:attempt!(Workspace::create(library, false)),deadline};
+    attempt!(session.compile_library(library));
+    let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../proofs/mc1/IntrinsicTypeWitness.lean"));
+    attempt!(super::artifacts::write_source(&session.workspace.sources.join("IntrinsicTypeWitness.lean"),source.as_bytes()));
+    let object = std::path::Path::new("IntrinsicTypeWitness.olean");
+    let writable = attempt!(super::artifacts::output_slots(&session.workspace.library,object));
+    let mounts = attempt!(super::artifacts::output_mounts(
+        std::vec![
+            super::artifacts::read_mount(&session.workspace.sources,"/inputs"),
+            super::artifacts::read_mount(&session.workspace.library,"/out"),
+        ],
+        &session.workspace.library,&writable,"/out"));
+    let transcript = attempt!(session.compile_module(mounts,"/out",
+        compilation::Job {source:"/inputs/IntrinsicTypeWitness.lean",root:"/inputs",output:"/out/IntrinsicTypeWitness.olean"}));
+    attempt!(require_success(transcript,"intrinsic-library-rejected","trusted PureTyCode witness failed Lean"));
+    attempt!(super::artifacts::finish_outputs(&session.workspace.library,object,&writable));
+    let independent = std::format!(r#"import Lean
+import IntrinsicTypeWitness
+open NobleContracts.Intrinsic
+theorem intrinsic_proof : {claim} := {term}
+open Lean Elab Command
+elab "check_intrinsic_proof_axioms" : command => do
+  let env ← getEnv
+  let name := ``intrinsic_proof
+  match env.find? name with
+  | some (.thmInfo _) => pure ()
+  | _ => throwError "intrinsic theorem is not kernel checked"
+  let axioms ← liftCoreM (collectAxioms name)
+  for ax in axioms do
+    unless [``propext, ``Classical.choice, ``Quot.sound].contains ax do
+      throwError "disallowed intrinsic axiom {{ax}}"
+  logInfo "NOBLE-INTRINSIC-ACCEPT"
+  for ax in axioms do
+    logInfo m!"NOBLE-INTRINSIC-AXIOM:{{ax}}"
+check_intrinsic_proof_axioms
+"#);
+    if independent.len() > super::PROOF_LIMIT {
+        return Err(super::output::Failure::error("intrinsic-limit","lowered proof exceeded bounded source size".into()));
+    }
+    attempt!(super::artifacts::write_source(&session.workspace.consumer.join("IntrinsicConsumer.lean"),independent.as_bytes()));
+    let mounts = std::vec![
+        super::artifacts::read_mount(&session.workspace.library,"/library"),
+        super::artifacts::read_mount(&session.workspace.consumer,"/consumer"),
+    ];
+    let transcript = attempt!(session.sandbox.run(&mounts,"/library",
+        &std::vec!["-R".into(),"/consumer".into(),"-j".into(),"2".into(),"/consumer/IntrinsicConsumer.lean".into()],
+        deadline));
+    let transcript = attempt!(require_intrinsic_consumer_success(transcript));
+    let axioms = attempt!(intrinsic_axioms(&transcript.stdout, "NOBLE-INTRINSIC"));
+    Ok(Acceptance {axioms,wire:independent,tools:tools(&session.sandbox,&probe.stdout)})
+}
+
+fn intrinsic_axioms(stdout: &str, protocol: &str) -> Result<std::vec::Vec<std::string::String>,super::output::Failure> {
+    let mut accepted = false;
+    let mut axioms = std::vec::Vec::new();
+    let accepted_marker = std::format!("{protocol}-ACCEPT");
+    let axiom_marker = std::format!("{protocol}-AXIOM:");
+    for line in stdout.lines() {
+        if line.ends_with(&accepted_marker) {
+            if accepted {
+                return Err(super::output::Failure::error("intrinsic-consumer-protocol","duplicate kernel acceptance marker".into()));
+            }
+            accepted = true;
+        } else if let Some((_,name)) = line.split_once(&axiom_marker) {
+            let name = name.trim();
+            if !accepted || !["propext","Classical.choice","Quot.sound"].contains(&name)
+                || axioms.iter().any(|old|old==name) {
+                return Err(super::output::Failure::error("intrinsic-consumer-protocol","invalid transitive axiom report".into()));
+            }
+            // Distinct allowlisted axioms never exceed three; this separate
+            // exit makes that growth bound explicit ahead of the push.
+            if axioms.len() >= 3 {
+                return Err(super::output::Failure::error(
+                    "intrinsic-consumer-protocol",
+                    "invalid transitive axiom report".into(),
+                ));
+            }
+            axioms.push(name.into());
+        }
+    }
+    if !accepted {
+        return Err(super::output::Failure::error("intrinsic-consumer-protocol","independent kernel did not report accepted theorem".into()));
+    }
+    Ok(axioms)
 }
 
 #[expect(
@@ -202,6 +305,34 @@ fn require_success(
     let mut error = super::output::Failure::error(code, message.into());
     error.details = transcript_json(&transcript);
     Err(error)
+}
+
+fn require_intrinsic_consumer_success(
+    transcript: crate::sandbox::Transcript,
+) -> Result<crate::sandbox::Transcript, super::output::Failure> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        let status = &transcript.status;
+        // systemd-run/bwrap can relay a child's signal as 128 + signal
+        // instead of reporting the signal on their own ExitStatus.
+        if status.code() == Some(128 + 24) {
+            let mut error = super::output::Failure::timeout("sandbox exhausted its CPU-time limit");
+            error.details = transcript_json(&transcript);
+            return Err(error);
+        }
+        let abnormal = status.signal().is_some_and(|signal| signal != 24)
+            || status.code().is_some_and(|code| (129..=192).contains(&code));
+        if abnormal {
+            let mut error = super::output::Failure::error(
+                "intrinsic-checker-process-failure",
+                "fresh intrinsic proof consumer process terminated abnormally".into(),
+            );
+            error.details = transcript_json(&transcript);
+            return Err(error);
+        }
+    }
+    require_success(transcript,"intrinsic-proof-rejected","fresh kernel rejected exact typed intrinsic proof")
 }
 
 fn transcript_json(transcript: &crate::sandbox::Transcript) -> super::encoding::Json {

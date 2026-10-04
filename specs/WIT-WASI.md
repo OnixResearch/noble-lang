@@ -113,7 +113,15 @@ The standard component profile targets the stable WASI 0.3 family. An implementa
 
 **WI-WIT-01.** The Noble compiler SHALL accept versioned WIT packages/worlds as compiler inputs and generate typed Noble bindings without requiring the user to hand-write equivalent host declarations.
 
-**WI-WIT-02.** Generated bindings MUST preserve the complete externally visible WIT type distinction. Where the Noble kernel has no identical scalar or aggregate type, the binding layer MUST introduce an exact declared/boundary type or checked conversion; it MUST NOT silently narrow, wrap, reinterpret, or otherwise lose information.
+**WI-WIT-02.**
+
+Generated bindings MUST preserve the complete externally visible WIT type distinction. Where the Noble kernel has no identical scalar or aggregate type, the binding layer MUST introduce an exact declared/boundary type or checked conversion; it MUST NOT silently narrow, wrap, reinterpret, or otherwise lose information. In the bounded WI-03 selection, parsed WIT `u64` MUST remain `RawType::U64` and resolve to the distinct boundary `Type::CheckedU64`, not implicitly bind to Noble `I64`, regardless of the runtime value or the Canonical ABI's `i64` lane. The exact canonical all-ones WI-03 implicit request MUST reject at binding, without publishing a component or exposing a wrapped `I64`. Only a separately caller-selected public `compile-checked-u64`/`World::parse_checked_u64` synchronous, import-free single-scalar `echo: func(value:u64)->u64` export MAY explicitly check unsigned values at most `9223372036854775807` into source-body `I64`; mode selection records deterministic recipe identity, not authenticated host authority. Higher values MUST reject under the ingress guard before signed source-body use, not before all guest instructions. A negative `I64` export result MUST reject before publication as `u64`. Every import MUST reject at binding in this selected checked world, including a signed import alongside the `u64` export; all `u64` imports are unsupported. This selection does not add general unsigned Noble arithmetic, async or indirect/aggregate `u64` adapters.
+
+#### Scenario: WI-03 implicit binding refusal and explicit checked controls
+
+- GIVEN exact WI-03 `input` and `expected`, plus a separately caller-selected import-free checked `echo: func(value:u64)->u64` export
+- WHEN default binding requests `I64`, an unsupported `u64` import and a mixed signed-import/unsigned-export checked world are attempted, and the import-free checked export receives `0`, `9223372036854775807`, `9223372036854775808`, and `18446744073709551615` through the real component ABI
+- THEN default and both import-bearing requests reject at binding, with canonical `lossy-conversion-reject` and `wrapped_value_exposed:false` for WI-03; the two representable explicit inputs expose their exact values; each explicit high-bit `Val::U64` invocation traps without a result, while the source-ordered unsigned guard prevents signed `I64` exposure under the stated compiler/engine assumptions
 
 **WI-WIT-03.** For a WIT function with ordered parameters `A1 ... An` and ordered results `B1 ... Bm`, a generated Noble import word MUST have the schematic stack interface:
 
@@ -131,7 +139,15 @@ Every guest-requested import MUST retain its `WitOpId` in the effect bound, incl
 
 **WI-WIT-05.** A Noble export implementing a WIT function MUST have a closed, WIT-lowerable external interface. The component adapter SHALL invoke that program against an isolated adapter stack containing only the declared parameters and SHALL validate that its normal results match the declared WIT result contract. An ambient Noble stack tail MUST NOT cross a component boundary implicitly.
 
-**WI-WIT-06.** Values crossing the component boundary MUST be validated and lowered/lifted according to the selected Component Model/Canonical ABI contract. An implementation MUST NOT expose internal addresses, closure pointers, stack locations, or unspecified language representations as WIT values.
+**WI-WIT-06.**
+
+Values crossing the component boundary MUST be validated and lowered/lifted according to the selected Component Model/Canonical ABI contract. An implementation MUST NOT expose internal addresses, closure pointers, stack locations, or unspecified language representations as WIT values. For the separately selected WI-03 synchronous import-free one-scalar checked export, the ABI's `i64` lane is only bit storage for the WIT `u64`; after the emitted `$enter` prologue, the adapter MUST perform the unsigned range check before signed `I64` use by the source body and MUST check the guest's `I64` result is nonnegative before publishing WIT `u64`. Valid `0` and `9223372036854775807` MUST retain their exact values; `9223372036854775808` and `18446744073709551615` MUST reject under this guard before signed source-body use, not before every guest instruction. A source-bound compiled guest and independent typed peer MUST exercise these controls, including negative egress. Acceptance MUST retain the actual `Val::U64(18446744073709551615)` peer invocation, trap and no result, plus emitted module/WAT identity and verified `$enter` prologue → unsigned ingress guard → signed source-body use → egress guard ordering under explicit compiler/engine trust; no source-body entry counter is selected, so source-body nonentry is unmeasured. These controls MUST pass before canonical WI-03 promotion; document validation alone supplies no runtime or proof evidence.
+
+#### Scenario: WI-03 actual ABI boundary and no-operation refusal
+
+- GIVEN the exact canonical WI-03 implicit input and a caller-selected checked synchronous import-free `echo` export backed by a compiled Noble guest and independent typed peer
+- WHEN the implicit request is bound, the explicit export is invoked with the two representable and two high-bit boundary values, and a separate compiled negative-`I64` result reaches the egress check
+- THEN implicit binding rejects before component publication, each valid explicit input returns exact WIT `u64` through the checked mapping, each real high-bit `Val::U64` input traps with no returned result (especially exact all-ones), emitted source/WAT places `$enter` before the range guard and that guard before signed `I64` source-body use, and the negative guest result rejects before `u64` publication; source-body nonentry remains unmeasured
 
 **WI-WIT-07.** The adapter contract MUST account for allocation, copying, and buffer ownership during lifting/lowering and cleanup. A failed conversion MUST NOT publish a partially initialized trusted value. Internal GC support or a byte-view library MUST NOT imply zero-copy component transfer.
 

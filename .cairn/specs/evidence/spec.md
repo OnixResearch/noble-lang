@@ -18,6 +18,56 @@ Status: Record schema and document checks only
 
 ## Independent dimensions
 
+### Requirement: EV-LIVE-01
+r[EV-LIVE-01]
+
+**EV-LIVE-01.** Live-reload designs MUST remain `implementation: absent`, `execution: not-run`, `proof: open`, `trust: unassessed`, with no test/evidence claim until the distinct opt-in binary emitter, selected VM and transactional reload actually run. Later receipts MUST bind both prior and proposed generation's exact source/import bytes, resolved definition and program-value identities, emitter/ABI/VM revision, validated module bytes, checked ordered stack/effect/capability interfaces, host policy, bounded execution and publication/refusal observation. An old proof or old source-bound receipt MUST NOT be inherited by a new body merely because its name, interface, source path or Wasm module format matches. Historical Core/M4/MC1/MC2/DXM1 evidence remains immutable and says nothing about live execution.
+
+For guest self-edit, the receipt MUST separately identify the host-selected name, independently checked originating definition identity, grant's expected source generation, invocation-pinned generation observation, queued candidate's bounded byte snapshot and post-return snapshot comparison/independently checked recipe/interface, pending versus final commit/refusal, actual prior guest request prefix and stack outcome, derived-source origin/digest, and unchanged selected file bytes/hash. A denied import, trapped invocation and post-return candidate refusal are different outcomes; none is evidence that an unexecuted candidate body ran or that a completed invocation was rolled back.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-06 for EV-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-06](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-07 for EV-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-07](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-08 for EV-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-08](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-09 for EV-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-09](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-10 for EV-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-10](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
 ### Requirement: EV-STATE-01
 r[EV-STATE-01]
 
@@ -120,7 +170,9 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 ### Requirement: EV-CASE-03
 r[EV-CASE-03]
 
-**EV-CASE-03.** Authority denial requires a declared effect that includes the request. A denied request counts toward the effect trace. Denial MUST NOT substitute for static effect rejection.
+**EV-CASE-03.**
+
+Authority denial requires a declared effect that includes the request. A denied request counts toward the effect trace. Denial MUST NOT substitute for static effect rejection. To promote S-CASE-06, a new immutable source-bound prepromotion acceptance MUST show independent preparation/compilation of the host-selected complete WIT/world/export-source recipe and exact component-byte correspondence **before** preopening the file or establishing Directory/READ authority. It MUST show the matched actual `"main.rs" fs.read` Noble component invoking production Wasmtime once with the canonical live host-owned **logical** `Directory`, `read_right:false`, `stage:authorization`, `outcome:denied`, `guest_requests:1`, actual bounded callback `request_trace:["fs.read"]`, `protected_operations:0` and no protected file-content reads. A separately READ-granted run of the **same compiled guest bytes** MUST show exact bounded bytes read from the vetted host-preopened regular File and owner retirement, with hostile path/owner/rights refusals before any protected content read. A mismatched source/WIT recipe MUST refuse with status 2 at admission before file open/owner creation, and MUST NOT masquerade as the canonical one-request denial. An oversized granted file MUST instead be labeled a bounded postauthorization failure and MUST NOT be misreported as zero-read authorization denial. Source, pinned tools, WIT/guest/CLI and fixture identity, command outputs and assumptions MUST be bound; structural/document validation, static rejection, a synthetic callback, and a prior fixture receipt are not substitutes. Only after passing prepromotion acceptance MAY native deltas sync and canonical state/evidence/views change; postpromotion documents/Cairn checks are separate. Proof including owner law, Octet and Aeneas remains open.
 
 
 <!-- cairn:scenario-links:start -->
@@ -141,6 +193,12 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
 <!-- cairn:scenario-links:end -->
+
+#### Scenario: S-CASE-06 prepromotion runtime acceptance
+
+- GIVEN the exact unpromoted canonical S-CASE-06 record, source-bound compiled guest, host-preopened file and independent READ-or-none grants
+- WHEN the denied and granted invocations and hostile controls execute against the production host before any case promotion
+- THEN the denial matches every canonical expected field after one real request and zero protected reads; the granted control returns only exact vetted bounded bytes, owner obligations settle, and distinct prepromotion and postpromotion receipts remain bound to their respective source states
 
 ### Requirement: EV-CASE-04
 r[EV-CASE-04]
@@ -184,7 +242,7 @@ r[EV-TRACE-01]
 
 **EV-TRACE-01.** Every numbered requirement MUST have a declared evidence route. A requirement with no concrete scenario remains `test-design-open`, not covered or passed.
 
-Native requirement headings and matching `r[ID]` markers own the index. Legacy labels support historical preservation checks only. Fenced examples MUST NOT create requirements, scenario targets, or preservation obligations.
+Native requirement headings and their matching bracketed markers own the index. Legacy labels support historical preservation checks only. Fenced examples MUST NOT create requirements, scenario targets, or preservation obligations.
 
 The index uses these planned routes:
 
@@ -228,6 +286,22 @@ Consumers select the expected subject, claim, policy, and trust context independ
 
 
 <!-- cairn:scenario-links:start -->
+#### Scenario: CONTRACT-16 for EV-BIND-01
+
+- GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-16](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-16` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-16`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: DX-13 for EV-BIND-01
+
+- GIVEN the `Property-Test-Design` profile and every field of `input` in [DX-13](../../../specs/conformance/language-workflow-cases.json)
+- WHEN the `review` procedure for case `DX-13` runs against those inputs
+- THEN the observations match every field of `expected` in case `DX-13`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 #### Scenario: OCTET-09 for EV-BIND-01
 
 - GIVEN the `Octet-Adoption-Design` profile and every field of `input` in [OCTET-09](../../../specs/conformance/octet-adoption-cases.json)

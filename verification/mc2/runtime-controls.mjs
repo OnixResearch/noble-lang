@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Run only with the selected immutable Node from the runtime configuration.
-// Both outcomes execute the same actually compiled module; one is not a static
-// preparation failure relabelled as fuel exhaustion.
+// Both engines independently prepare byte-identical compiler-produced Wasm;
+// neither outcome is a static preparation failure relabelled as fuel exhaustion.
 import { readFileSync, mkdtempSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
@@ -21,16 +21,20 @@ const receipt = { schema: 'noble-mc2-runtime-fuel/v1', input: {
   source_path: sourcePath, source_sha256: digest(source), wat_path: watPath, wat_sha256: digest(wat),
 }, baseline: null, exhausted: null, limits: { baseline: abi.limits_maximum, exhausted: { steps: 0 } } };
 const baseline = new CoreEngine(configuration, abi, { artifacts: mkdtempSync(join(directory, 'baseline-')) });
-let module, metadata;
 try {
   receipt.preparation = baseline.prepare(wat, source);
-  module = baseline.pending.module;
-  metadata = baseline.pending.record;
+  const before = baseline.compilations;
   receipt.baseline = baseline.execute();
+  if (baseline.compilations !== before) throw new Error('baseline execution triggered compilation');
 } finally { baseline.close(); }
 const exhausted = new CoreEngine(configuration, abi, { artifacts: mkdtempSync(join(directory, 'exhausted-')) });
 try {
-  receipt.installation = exhausted.install(module, { ...metadata, stem: null });
+  receipt.exhausted_preparation = exhausted.prepare(wat, source);
+  if (receipt.exhausted_preparation.module.wasm_sha256 !== receipt.preparation.module.wasm_sha256) {
+    throw new Error('exhausted module differs from reviewed preparation');
+  }
+  const before = exhausted.compilations;
   receipt.exhausted = exhausted.execute({ limits: { steps: 0 } });
+  if (exhausted.compilations !== before) throw new Error('exhausted execution triggered compilation');
 } finally { exhausted.close(); }
 console.log(JSON.stringify(receipt));

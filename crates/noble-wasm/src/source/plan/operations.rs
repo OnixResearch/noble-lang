@@ -13,6 +13,7 @@ pub(super) struct Input<'a> {
     pub(super) checked: &'a noble_kernel::untrusted::Checked,
     pub(super) arena: &'a super::Arena,
     pub(super) arenas: &'a [super::Arena],
+    pub(super) owner: Option<u64>,
 }
 
 #[expect(
@@ -163,6 +164,15 @@ impl Input<'_> {
         if def.0 == 8 {
             return quotation::lower(output.interface, output.compiler, output.work);
         }
+        if def.0 == 24 && super::super::builtin_count(&self.submission.environment) == 26 {
+            return match self.owner {
+                Some(owner) => Ok(super::Action::LivePropose(owner)),
+                None => Err(crate::Diagnostic::Invalid),
+            };
+        }
+        if def.0 == 25 && super::super::builtin_count(&self.submission.environment) == 26 {
+            return Ok(super::Action::LiveGeneration);
+        }
         if def.0 < super::super::builtin_count(&self.submission.environment) {
             return Ok(super::Action::Word(def.0));
         }
@@ -170,6 +180,8 @@ impl Input<'_> {
             Some(noble_kernel::contracts::Behavior::Named) => self.named_call(def),
             Some(kind) => match kind {
                 noble_kernel::contracts::Behavior::BoundEmit(slot) => output.bound_action(slot),
+                noble_kernel::contracts::Behavior::BoundClock(slot) =>
+                    output.clock_action(slot),
                 noble_kernel::contracts::Behavior::NominalNew(id) => output.new_action(id),
                 noble_kernel::contracts::Behavior::NominalInto(id) => {
                     let ty = attempt!(nominal::Output::checked_input(
@@ -194,6 +206,15 @@ impl Input<'_> {
                         3,
                     ));
                     output.match_action(id, ty)
+                }
+                noble_kernel::contracts::Behavior::GenericLeft(id) => {
+                    output.generic_variant_action(true, id)
+                }
+                noble_kernel::contracts::Behavior::GenericRight(id) => {
+                    output.generic_variant_action(false, id)
+                }
+                noble_kernel::contracts::Behavior::GenericMatch(id) => {
+                    output.generic_match_action(id)
                 }
                 noble_kernel::contracts::Behavior::Dup
                 | noble_kernel::contracts::Behavior::Drop

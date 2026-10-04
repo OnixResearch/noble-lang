@@ -56,8 +56,8 @@ fn colored_slot(colors: &[u8], definition: crate::contracts::Definition) -> Opti
 )]
 pub(super) fn dependencies(
     env: &crate::contracts::Env,
-    limits: &crate::untrusted::Limits,
-) -> Result<(), super::Fail> {
+    remaining: u32,
+) -> Result<u32, super::Fail> {
     let count = env.defs.len();
     let mut walk = DepWalk {
         colors: alloc::vec![0; count],
@@ -69,7 +69,7 @@ pub(super) fn dependencies(
     while root < count {
         if walk.colors[root] == 0 {
             let (next, step) =
-                dep_root(env, crate::contracts::Definition(root as u32), walk, limits);
+                dep_root(env, crate::contracts::Definition(root as u32), walk, remaining);
             walk = next;
             match step {
                 Ok(()) => root += 1,
@@ -81,7 +81,9 @@ pub(super) fn dependencies(
     }
     match failure {
         Some(problem) => Err(problem),
-        None => Ok(()),
+        None => remaining
+            .checked_sub(walk.spent)
+            .ok_or(super::Fail::Exhausted(crate::untrusted::LimitKind::Work)),
     }
 }
 
@@ -94,13 +96,13 @@ fn dep_root(
     env: &crate::contracts::Env,
     root: crate::contracts::Definition,
     walk: DepWalk,
-    limits: &crate::untrusted::Limits,
+    remaining: u32,
 ) -> (DepWalk, Result<(), super::Fail>) {
     let mut walk = walk;
     walk.stack.push(root);
     let mut failure: Option<super::Fail> = None;
     while !walk.stack.is_empty() {
-        let (next, step) = dep_step(env, walk, limits);
+        let (next, step) = dep_step(env, walk, remaining);
         walk = next;
         match step {
             Ok(()) => {}
@@ -131,7 +133,7 @@ fn dep_root(
 fn dep_step(
     env: &crate::contracts::Env,
     mut walk: DepWalk,
-    limits: &crate::untrusted::Limits,
+    remaining: u32,
 ) -> (DepWalk, Result<(), super::Fail>) {
     let top = match walk.stack.last() {
         Some(top) => *top,
@@ -161,7 +163,7 @@ fn dep_step(
     let mut failure: Option<super::Fail> = None;
     let mut dep_index: usize = 0;
     while dep_index < deps.len() {
-        if walk.spent >= limits.work {
+        if walk.spent >= remaining {
             failure = Some(super::Fail::Exhausted(crate::untrusted::LimitKind::Work));
             break;
         }
@@ -200,13 +202,13 @@ fn dep_step(
 )]
 pub(super) fn schemas(
     env: &crate::contracts::Env,
-    limits: &crate::untrusted::Limits,
-) -> Result<(), super::Fail> {
+    remaining: u32,
+) -> Result<u32, super::Fail> {
     let mut spent: u32 = 0;
     let mut failure: Option<super::Fail> = None;
     let mut index: usize = 0;
     while index < env.schemas.len() {
-        if spent >= limits.work {
+        if spent >= remaining {
             failure = Some(super::Fail::Exhausted(crate::untrusted::LimitKind::Work));
             break;
         }
@@ -228,6 +230,8 @@ pub(super) fn schemas(
     }
     match failure {
         Some(problem) => Err(problem),
-        None => Ok(()),
+        None => remaining
+            .checked_sub(spent)
+            .ok_or(super::Fail::Exhausted(crate::untrusted::LimitKind::Work)),
     }
 }

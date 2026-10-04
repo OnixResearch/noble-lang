@@ -9,6 +9,7 @@ impl super::super::Env {
     pub(crate) fn valid_pattern(&self, pattern: &crate::shapes::Pattern, max_nodes: u32) -> bool {
         match pattern {
             crate::shapes::Pattern::Nominal(_, _)
+            | crate::shapes::Pattern::GenericNominal(_, _, _)
             | crate::shapes::Pattern::Pair(_, _)
             | crate::shapes::Pattern::Sum(_, _)
             | crate::shapes::Pattern::List(_)
@@ -94,6 +95,15 @@ impl super::super::Env {
                 } else {
                     None
                 }
+            }
+            crate::shapes::Pattern::GenericNominal(id, args, mapping) => {
+                let decl = self.generic_variant(*id)?;
+                if decl.payload_params != *mapping {
+                    return None;
+                }
+                work.push(&args[0]);
+                work.push(&args[1]);
+                Some(work)
             }
             crate::shapes::Pattern::Resource(kind) => {
                 self.resource_kinds.contains(kind).then_some(work)

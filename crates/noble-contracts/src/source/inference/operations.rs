@@ -86,11 +86,19 @@ pub(super) fn builtin(
         if error.kind != crate::DiagnosticKind::Invalid {
             return Err(error);
         }
+        let origin = mismatched_literal_origin(frame, state, scheme);
         let message = state
             .arena
-            .join_message(input, frame.stack, call.span, meter)
+            .join_stacks(input, frame.stack, call.span, meter)
             .ok();
-        return Err(contextualize(error, definition, frame.caller, message));
+        return Err(contextualize(
+            error,
+            definition,
+            environment.kind(definition),
+            frame.caller,
+            origin,
+            message,
+        ));
     }
     frame.effect = attempt!(state
         .arena
@@ -111,18 +119,58 @@ pub(super) fn builtin(
     Ok(())
 }
 
+fn mismatched_literal_origin(
+    frame: &super::Frame,
+    state: &super::State,
+    scheme: &noble_kernel::words::Scheme,
+) -> Option<crate::Span> {
+    let node = frame.sequence.last()?;
+    let draft = state
+        .bodies
+        .get(frame.body)?
+        .nodes
+        .get(usize::try_from(node.0).ok()?)?;
+    let super::DraftKind::Literal(literal) = &draft.kind else {
+        return None;
+    };
+    let expected = scheme.stack_in.last()?;
+    let matches = match (expected, literal) {
+        (noble_kernel::shapes::Pattern::I64, noble_kernel::untrusted::Lit::I64(_))
+        | (noble_kernel::shapes::Pattern::Bool, noble_kernel::untrusted::Lit::Bool(_))
+        | (noble_kernel::shapes::Pattern::Text, noble_kernel::untrusted::Lit::Text)
+        | (noble_kernel::shapes::Pattern::Unit, noble_kernel::untrusted::Lit::Unit) => true,
+        (
+            noble_kernel::shapes::Pattern::I64
+            | noble_kernel::shapes::Pattern::Bool
+            | noble_kernel::shapes::Pattern::Text
+            | noble_kernel::shapes::Pattern::Unit,
+            _,
+        ) => false,
+        _ => return None,
+    };
+    (!matches).then_some(draft.span)
+}
+
 fn contextualize(
     mut error: crate::Diagnostic,
     definition: noble_kernel::contracts::Definition,
+    behavior: Option<noble_kernel::contracts::Behavior>,
     caller: Option<crate::Span>,
-    message: Option<alloc::string::String>,
+    origin: Option<crate::Span>,
+    stacks: Option<(alloc::string::String, alloc::string::String)>,
 ) -> crate::Diagnostic {
-    let mut message = match message {
-        Some(message) => message,
+    let (expected_stack, actual_stack) = match stacks {
+        Some(stacks) => stacks,
         None => return error,
     };
+    let mut message = alloc::string::String::from("stack/program join: expected ");
+    message.push_str(&expected_stack);
+    message.push_str("; actual ");
+    message.push_str(&actual_stack);
     message.push_str("; word ");
+    let word_start = message.len();
     crate::program::append_bootstrap_spelling(definition, &mut message);
+    let word = alloc::string::String::from(&message[word_start..]);
     message.push_str("; ");
     message.push_str(&error.message);
     if let Some(caller) = caller {
@@ -130,5 +178,22 @@ fn contextualize(
         error.span = caller;
     }
     error.message = message;
-    error
+    error.with_join(crate::JoinDiagnostic {
+        word,
+        expected_stack,
+        actual_stack,
+        constraint: if matches!(
+            behavior,
+            Some(
+                noble_kernel::contracts::Behavior::If
+                    | noble_kernel::contracts::Behavior::Case
+                    | noble_kernel::contracts::Behavior::ListCase
+            )
+        ) {
+            "branch-join"
+        } else {
+            "stack-type"
+        },
+        value_origin: if caller.is_some() { None } else { origin },
+    })
 }

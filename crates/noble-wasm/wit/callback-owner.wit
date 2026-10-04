@@ -1,0 +1,12 @@
+package noble-test:callback-owner@1.0.0;
+
+interface tokens {
+  resource token;
+  issue: func() -> own<token>;
+  consume: func(value: own<token>) -> s64;
+}
+
+world bounded {
+  import tokens;
+  export check: func() -> s64;
+}

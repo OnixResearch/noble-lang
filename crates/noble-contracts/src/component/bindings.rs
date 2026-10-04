@@ -107,6 +107,7 @@ const fn gather_types(
             }
             super::Type::Boolean
             | super::Type::S64
+            | super::Type::CheckedU64
             | super::Type::String
             | super::Type::Bytes
             | super::Type::ResultS64String
@@ -228,6 +229,7 @@ fn pattern(ty: super::Type) -> noble_kernel::shapes::Pattern {
     match ty {
         super::Type::Boolean => noble_kernel::shapes::Pattern::Bool,
         super::Type::S64 => noble_kernel::shapes::Pattern::I64,
+        super::Type::CheckedU64 => noble_kernel::shapes::Pattern::I64,
         super::Type::String => noble_kernel::shapes::Pattern::Text,
         super::Type::Bytes => noble_kernel::shapes::Pattern::List(alloc::boxed::Box::new(
             noble_kernel::shapes::Pattern::I64,

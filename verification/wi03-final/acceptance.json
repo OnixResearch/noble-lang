@@ -1,0 +1,1038 @@
+{
+  "schema": "noble-wi03-final-source-body-guard/v1",
+  "kind": "test",
+  "result": "passed",
+  "failures": [],
+  "integrity_failures": [],
+  "source_revision": "sha256:1443691b20888c4a8aaa20bb59dd7fb572c060457d5f40dc697898d0a26d1fa9",
+  "source_sha256": {
+    ".cairn/changes/wit-exact-u64-adapter/design.md": "7217ff6c90f1c3a904c2a268aa4e34498ba9c5cdf290e22df3d70f7e5d7f01ca",
+    ".cairn/changes/wit-exact-u64-adapter/metadata.json": "a6fd5ca231a3bb7b2746437ddfeea40804e0b37172b383ad5cf5ca2bf064d0a9",
+    ".cairn/changes/wit-exact-u64-adapter/proposal.md": "96898b7787c3536a3c261d4ffd96fcedae1586fe40a6dd20d82671540106a3dd",
+    ".cairn/changes/wit-exact-u64-adapter/specs/wit-wasi/spec.md": "b3cde13b7d2b7ac1a7f297cb984684e4ef20cb0e720637ae42e81dcd7daaf824",
+    ".cairn/changes/wit-exact-u64-adapter/tasks.md": "5aeb9675541d7a792b11089888404c485d91e3ff1397f058066b3b5cd5f90215",
+    ".cairn/specs/wit-wasi/spec.md": "2caec07607b46dc3ed665bcbaa898a194ad22c50f50a39d05fdfcb022064fe67",
+    "Cargo.lock": "a4673bf747953fc07522879afa912e2a0b41f241db89980f29f8a42fd07b882d",
+    "Cargo.toml": "f80e3a51b375873afb46e9b933890e560ab5334c4f98c7e7000b528c50f0a73e",
+    "crates/noble-cli/Cargo.toml": "34ca1bfe77974fc57b05b406b17cab83337a96a1d979d5b239f8fddab328ded2",
+    "crates/noble-cli/src/backend.rs": "443798531adb131336744d94aa242875e65bda5b17f8520fb4ed88956f0ac073",
+    "crates/noble-cli/src/backend/vocabulary.noble": "f8d7a7e587cf85bcc36fe21c75506dd0c58a4c7e18baa8ddb1e11fde8aeb23e3",
+    "crates/noble-cli/src/build.rs": "24ade4605b16177e2dc1505d0cac2afecd85c21dc204d5b71c7505514caa7d68",
+    "crates/noble-cli/src/build/arguments.rs": "dae163f52475af9837180d577258b2e9635f17ae8548d6d6aef2b55251f15b7b",
+    "crates/noble-cli/src/build/artifacts.rs": "10fefea771a90c326585041a904e75b5f8e027340b4fd355c140b947b4abcad5",
+    "crates/noble-cli/src/build/compilation.rs": "63cd4f7f5fa8bccd0008c00067e756c474a0dea49319c1d3157ab6fcf94f595a",
+    "crates/noble-cli/src/build/release.rs": "135491ba17e2b47ae9192c12a3ad0edebc218b4c7a46f3ebc88edef590d5385c",
+    "crates/noble-cli/src/build/report.rs": "0424edfa68cc17773ceee012acce4daaf61227496c80f242f9e9ecedb3cbc4fc",
+    "crates/noble-cli/src/build/report/release.rs": "1bc68b2a37ee52bba04083ed5753a618d240d3e731d1d3e2af2336ac4172a015",
+    "crates/noble-cli/src/compiler.lean": "8286e69ee4e9f461737495f032428ea450f39b9055b52002728d3677b7d62dea",
+    "crates/noble-cli/src/component.rs": "b1ff53e7ee74073921e9b533016a9d8204abe3e2cfe0cc8d880385c1ee7796bf",
+    "crates/noble-cli/src/component/artifacts.rs": "584dbd064218b304fa0d0e174e0b7b5fef129265c950a0793b14b93dd9c29610",
+    "crates/noble-cli/src/component/authorized_fs.rs": "cf52c8e9d8a4377f8956806620d4fec654f6665f2433a37d477568745fb46ce7",
+    "crates/noble-cli/src/component/bounded_region.rs": "e0b268fdace9f7a54884a5c3be488bd3f8ffb3a145fd1ce82a4cb0078f457f58",
+    "crates/noble-cli/src/component/callback_owner.rs": "33825d2d738349071ae453c2f1f2a53ad6a6072463fef84565b2d790bc7a0ea5",
+    "crates/noble-cli/src/component/identity.rs": "a122c6ab9bddb76e9519a3a82f03b875c76ca37bf383cd91947b2d4b25b4550c",
+    "crates/noble-cli/src/component/quota.rs": "ec09656c72c9ba5c99ed48bcfce187047838cd7f990704bd872191d03d982696",
+    "crates/noble-cli/src/component/report.rs": "1d11a6b95c2f7dcdb9cc29c3f8228bda01d532486ec7335c62dd096ed0d10c13",
+    "crates/noble-cli/src/consumer/decoding.lean": "d59bd674dd89d8d1f9de69420081d6d75dfd23ce75406eee213f3e6cd5234fb4",
+    "crates/noble-cli/src/consumer/replay.lean": "5d226925c51c5a8e4973e035b6c66a8f4bd01a2ed4e1cf732787fa1a8baca26c",
+    "crates/noble-cli/src/core.rs": "c367535ea82479dd6922370e80bf527b0d2201de701fcc18ba1d0e0d32e057e3",
+    "crates/noble-cli/src/core/arguments.rs": "653aa117d938fd1031e59b45e5416f79d231fac6c366beaded27fded63fb407c",
+    "crates/noble-cli/src/core/arguments/bindings.rs": "5c3cebb556956d62c6518f914862aa1fce4b6d2db9e430493461ec357e57a53e",
+    "crates/noble-cli/src/core/arguments/bindings/adapter.rs": "2ce5f9402d62e16e9eb551216d2b6f937b4f10c19ffaa42392ef8dcb9ac46142",
+    "crates/noble-cli/src/core/artifact.rs": "6c4ce4e03e19f498c73ffc1f61bf30101d8230de123103724e73ad74aeea6bfa",
+    "crates/noble-cli/src/core/companions.rs": "4c63133f4ed23befecc7843d27b8eb84458e928f8ac3ad651ab573a2f1a6f9fb",
+    "crates/noble-cli/src/core/companions/controls.rs": "995ca2390f75903f23e5940f54692f35be81c519af6f225fcd552d7ae0658861",
+    "crates/noble-cli/src/core/companions/controls/adversarial.rs": "4d5dbaf8d6dc975a038ef7e5a95c6a77161e99074edce7bc75b488cf48523b3b",
+    "crates/noble-cli/src/core/companions/controls/binding.rs": "c6bfb745c9d2ebd92a92f47e5f306ef03a0cfd653f30d581e0d4ab8d43d497ac",
+    "crates/noble-cli/src/core/companions/controls/checker.rs": "9e0b0ebb9c5ca025064cecea6736c8609be84019493e523e1d4f891d22b16d73",
+    "crates/noble-cli/src/core/companions/controls/composition.rs": "a52e84da06bdc4a35ec47a55f2f231292d8d029c9b6d2516b840e7086acf5170",
+    "crates/noble-cli/src/core/companions/controls/context.rs": "ec2d64379b79c75859f9d80656e67752b0ac4f3e8d6477081248e7a2c287e56f",
+    "crates/noble-cli/src/core/companions/controls/derivation.rs": "d8e120bd571877743642bbd126d284c31c6d01ebe93f3a3ea448fa2c42e72a0e",
+    "crates/noble-cli/src/core/companions/controls/eligibility.rs": "af58fe6c675f1a68c03d838ec1a439e74c27fcda017e53353b4a5ddb11a5c9e9",
+    "crates/noble-cli/src/core/companions/entry.rs": "eb4b9987b5a495636e6f7108cc62026c85a1fc387bd5a674e914ea6d278cb0bb",
+    "crates/noble-cli/src/core/companions/operations.rs": "8a11bad1b9cf4260f6b4a68619d85dc89143671cdac248789d7b315f650ca8da",
+    "crates/noble-cli/src/core/companions/operations/admission.rs": "78fd064dbdaddfb4064fed0ce972f25dadf240fddecb82e990c3ba8e0940ef65",
+    "crates/noble-cli/src/core/companions/operations/binding.rs": "dabf0930d8e809d1907bc64d5d9c67ccaffcc486df7ce3abbb4d78bd227f2ef4",
+    "crates/noble-cli/src/core/companions/operations/composition.rs": "a6bd042ed2cac269e52acc1d10685b0158fb553becd9262d7d3d67d568456793",
+    "crates/noble-cli/src/core/companions/operations/composition/output.rs": "90052e84efe8626260d35586dd6d9275bdfa943e9279eb2b6f89578b6a3983b1",
+    "crates/noble-cli/src/core/companions/operations/derivations.rs": "b7b228a7ffbd968e6d3708fdff2e0b72842dc74bfa78570f054c62ae642b172e",
+    "crates/noble-cli/src/core/companions/operations/instantiation.rs": "88e602b7101ee127da9c1cce1e133a344d9f0c1d809e18a3db02dcba0cdc4d80",
+    "crates/noble-cli/src/core/companions/operations/invocation.rs": "e6be372fd667e168169e62f59f88dbc62d0bfd6567e3c7f7aa344f80a802112e",
+    "crates/noble-cli/src/core/companions/reporting.rs": "3e33c130624f0cda68041391b9ba92a849aca9c75b9b689d782c09261edd8d99",
+    "crates/noble-cli/src/core/companions/reporting/inputs.rs": "f76d97047e14ac2bc318a0d2bbe4a4d8946f79aff1e378ca3033f0e8d49e787c",
+    "crates/noble-cli/src/core/companions/reporting/values.rs": "837b17dfe90674337d086ef101c2f7e2d07d58ba23a58be5b5f98bc4ee276760",
+    "crates/noble-cli/src/core/companions/session.rs": "27e765c9db1347bbd092206303bfe10eefdeca6e0afd724853306426fbc5ff07",
+    "crates/noble-cli/src/core/companions/session/binding.rs": "deaa1c8e381fe2d75919f448a656829a5f8181936a12580da43020a660cb1f00",
+    "crates/noble-cli/src/core/companions/session/stack.rs": "18d6d54a37dd5c9570267343eb0262e3357e9489398b365663969d1dc7736e6e",
+    "crates/noble-cli/src/core/declared/mod.rs": "7cff0dab870fd03e8fa65a4ee4c9808632a3b1df817e8227f5ee68fc24e3f8ca",
+    "crates/noble-cli/src/core/editor.rs": "c38071297ba40541e53204cd1e8b813f7a3d69855ae70682bef1fd8939ac5c28",
+    "crates/noble-cli/src/core/entry.rs": "90449c791e1da69d04f6191896706c9757f06227db18ce044de3eff20b11bf3d",
+    "crates/noble-cli/src/core/entry/compilation.rs": "66509f8713ee308f75b41c2ed3c865458c0ff497616327aa6cba11a4fedf8b0c",
+    "crates/noble-cli/src/core/entry/compilation/legacy.rs": "896cfe9526cd8995bebe90f7e0a957c9ad19217390aafd3600c5c284ae5cf18d",
+    "crates/noble-cli/src/core/framing.rs": "5907b7f5c4a249cd2ce555cef858aea21868b5d4281678944f6fd7436bc3a572",
+    "crates/noble-cli/src/core/output.rs": "a0f8417691a28d0502c8d2c08ab979d04defa122c7b7ab4e455d23f1745fee8e",
+    "crates/noble-cli/src/core/output/declared.rs": "8c108a6eff71fd8fe3713dd3512866c86229cd33ef0dd1eb388a92cc66280c56",
+    "crates/noble-cli/src/core/report.rs": "e85b2e60a5c2aeb0b2ceccecaf00d0b756db30cecf03692e18b41e5231fe0a9d",
+    "crates/noble-cli/src/core/report/strings.rs": "07160e4f71a8ed31363dd252ea06c2f27dcaaf429fb4dc7459592c557ede08b3",
+    "crates/noble-cli/src/core/runtime/abi.json": "9a2fc7c7da611ea88c2bef945872c89af66b0dc07bbcb2fa33ec0c561459e3b7",
+    "crates/noble-cli/src/core/runtime/config.json": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db",
+    "crates/noble-cli/src/core/runtime/declared-abi.json": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d",
+    "crates/noble-cli/src/core/runtime/engine-host.mjs": "d7c1f3db62c841bf69b9402859517b31a45d117f00ddf024b17de286c6ef05e0",
+    "crates/noble-cli/src/core/runtime/engine.mjs": "4b038aff2c7f5d0111a65182363a824ff922e5f1da53e38b75ee5358cbb5068e",
+    "crates/noble-cli/src/core/runtime/host.mjs": "271d8add2c5ab940fec867d822cbb68fed9b0c57e98f9243ffed879065d59494",
+    "crates/noble-cli/src/core/runtime/preamble.mjs": "0d26adfa15aa3cb0b7e8dfda9de7acff084551e6d41140af9dbe234e6425ef9b",
+    "crates/noble-cli/src/core/runtime/protocol.mjs": "969f0170878df3bbf9196b64285c07343c32299c15197f8232f4883e9111030b",
+    "crates/noble-cli/src/core/runtime/values.mjs": "a9120540151f9b4f303fda60a8ebaca2a20c76e81482929a1a5f3d65b792102f",
+    "crates/noble-cli/src/core/worker.rs": "5a5c51099a5caa41ca4040557cfeb0eabe31cf70948add6fe9fbc31265c14206",
+    "crates/noble-cli/src/core/worker/assembly.rs": "c019be2c1aa3af3a3fd787e32eb59734f2d6bd70928b5de0e2ee9ede464763ea",
+    "crates/noble-cli/src/core/worker/configuration.rs": "7fdb576309aa9f154b95a6003eac989fa7c94125c1d0fe3635ed1134f163122d",
+    "crates/noble-cli/src/core/worker/process.rs": "6fd43083f07a66330e91568d59a21f0c954d1e688d9b65787729b6b949356267",
+    "crates/noble-cli/src/core/worker/protocol.rs": "2f411ae83f9e8d2fbab3e42534d9efd7a99d7c2ca8f26093c78dc80d711ddfa9",
+    "crates/noble-cli/src/main.rs": "85f9588353b83fae7c2c8057ed8bb539b58019412b07e128c090020d4edc330f",
+    "crates/noble-cli/src/producer.lean": "47ff027c39e486953a7d5eb9720b425e1c79ad269d45c0c2a9e6bfae285017ec",
+    "crates/noble-cli/src/sandbox.rs": "f1e5a27a839d7d3c3cb84bf17fc745476b47a131e2e238b63c91afce469163cb",
+    "crates/noble-cli/src/sandbox/launch.rs": "8b8505b935bdaafd75a822959e8d9bd87b0ac6b359b671d7bf3e82f73dbb0515",
+    "crates/noble-cli/src/sandbox/process.rs": "477bfb450a838f587c7c2cea1ae66fbbfb9956a9f822c6a9c24185ce1ed0e1c2",
+    "crates/noble-cli/src/sandbox/runtime.rs": "56655d387087e3515a6786acc7b348bd088b8eadd58bf21e989405fea4717a03",
+    "crates/noble-cli/src/workflow.rs": "e0033cb322c9fabd19ea7e82f9affe77df619526ad0c2434e122e88734524663",
+    "crates/noble-cli/src/workflow/admission/mod.rs": "391fbd717fc80ee1aa87e40a45c525785da1e0c17bdd64f1b562b55b46c21cef",
+    "crates/noble-cli/src/workflow/arguments.rs": "d0215ec28ea245fe8620ac1000e689f2504b5d90733d654b65eb0c0efc660260",
+    "crates/noble-cli/src/workflow/artifacts.rs": "dbea271f3776f1f10388672ce97a7df531feaa442ee351c6ab685500e056b0ff",
+    "crates/noble-cli/src/workflow/encoding.rs": "b7dcd7d781e1efb13cab6947c55a3115f750b0c47bc58c6ff9bf762c9ad50a86",
+    "crates/noble-cli/src/workflow/intrinsic.rs": "fe49539c969d0b5cce76e35e6990146d80316bd8d6b9118c4db886cd891fdb40",
+    "crates/noble-cli/src/workflow/output.rs": "ed432204465635d1a2a587397e0f55ea4da81ba3193fb9a3cfa088d84f119289",
+    "crates/noble-cli/src/workflow/rules.rs": "81a0ead0f4cfd423270fcc613b330589f0e4cc1929f7b5e8437b8f79ec018190",
+    "crates/noble-cli/src/workflow/subject.rs": "ce57e20b5397a0afe22d9c3eaf1e3deac8d6c6363560e28360be349807130af3",
+    "crates/noble-cli/src/workflow/verification.rs": "9693b59db5c1caf8ccbe93c5a7e812311940ffc22fea7ffdc36d1e9a7da54059",
+    "crates/noble-cli/src/workflow/verification/compilation.rs": "d583e93a772d4bdbb442cf531b26163b13ac41edd1cdb7abf391b136f185c76e",
+    "crates/noble-cli/src/workflow/verification/evidence.rs": "4cb181af6be0cfb5ad65f7d27c3c18cb9e116685439b8535acc4c34a2e601249",
+    "crates/noble-cli/src/workflow/verification/named_v2.rs": "eb4e0290802352058f2053d25ff686d768009f335c1bf27b6ba52976261b510c",
+    "crates/noble-contracts/Cargo.toml": "757e1546739b76fb93fadffee7ceb32bc537c030e945adcd2ca6905f79d43bd8",
+    "crates/noble-contracts/src/companion/admit/accept.rs": "7db7f141db27f81d01a3e569c5b562d2717cdd94ef19352ab0589014b95bd7b9",
+    "crates/noble-contracts/src/companion/admit/mod.rs": "264818198e36f98e032fb955d0a0dd9b9bed05bfc609efc6f43262e3f974b767",
+    "crates/noble-contracts/src/companion/admit/observation.rs": "d17cec93d48e322f408c4b3ce1e26e410529be8e6911b19746796dfee2f97979",
+    "crates/noble-contracts/src/companion/admit/program.rs": "3c27a6d3d482d88d56fbd6892e6de8f958dce8baf581c84f4ebb9b0af98c203b",
+    "crates/noble-contracts/src/companion/admit/recognize.rs": "c7f6e3d895920832a254e49fc4f1871ba0b7d16fb6b13d9af95e3a455cc70d4f",
+    "crates/noble-contracts/src/companion/admit/statement.rs": "2213e9b145621ad3221993918c34a2b7561ebd207207fb71075bef0db7c24562",
+    "crates/noble-contracts/src/companion/admit/types.rs": "2fd2f10902c436d5915c1263e8ac93092eba93d4ea51ba7ccd672e5bd19425b5",
+    "crates/noble-contracts/src/companion/core.rs": "34be91a978aa07d60b21850775a7afedd7013a3dc1b73ed6b1136430e44213f6",
+    "crates/noble-contracts/src/companion/core/context.rs": "42bef7e1ffbea8e5c7861a780125dfcded0d531d28e085894562976d158abb5c",
+    "crates/noble-contracts/src/companion/core/refusal.rs": "c017b814c14c317bd13fea0417fd3338aea83d3e9f13533f0c1192898a5a58bc",
+    "crates/noble-contracts/src/companion/digest.rs": "5991936c611370a6288d286729f7ef4704b9d044ad1022ee07d73e5679fb1dd7",
+    "crates/noble-contracts/src/companion/guard.rs": "6949b5aa42530b351f1ae4496fd5a056d8fe7bc7cca30d21c0eac7acfb750ac2",
+    "crates/noble-contracts/src/companion/mod.rs": "7aff1146a2fb5201e25c8a6a36180a1f50c0b4028b29f1584ab265612655f9fd",
+    "crates/noble-contracts/src/companion/registry/application.rs": "1eb48dcae96bec1db4ef53c2c42ee8ee50b1a29e9c4e7b18ac09299a655695c6",
+    "crates/noble-contracts/src/companion/registry/entries.rs": "e4138f93157804c57c426cb7f3264a3675b811392209aebf934bfe49ab6e3265",
+    "crates/noble-contracts/src/companion/registry/mod.rs": "8755a01f7f1042999dc1b0a8f4b87b389421d5c1222a4072c92a1f69266936a1",
+    "crates/noble-contracts/src/companion/release.rs": "bbeec5ad59670399a7100d30f8eacdf1bbe6010cdccea631ae9c7fd9503ff788",
+    "crates/noble-contracts/src/companion/rules/derive.rs": "cacdcb104abf70bd2e6b376293e2d5fe50adebfeee906cd83b4b54a66c666dc7",
+    "crates/noble-contracts/src/companion/rules/mod.rs": "deaadd1a3336593cc00260f18520eb368ebdb614887452a266848e09e0d61188",
+    "crates/noble-contracts/src/companion/rules/premises.rs": "f7dfd0dab43d1838bcb9b70c3073b3d7d32f747aa43a1e1af92974f8723bb731",
+    "crates/noble-contracts/src/companion/rules/premises/step.rs": "d3a55001f4537a8306790b6b11c8900a1845d6d1e4b1cb373fb9345eeb59e93d",
+    "crates/noble-contracts/src/companion/subject.rs": "3624b0d64fd9415cc3342ac478aa9f9755ce36d155513164caa53f3a90dafd84",
+    "crates/noble-contracts/src/component/bindings.rs": "9ee38c70676649bd566768967e830de87b00ae8fd31a813bb8c7f32fee529124",
+    "crates/noble-contracts/src/component/context.rs": "b3852d60802cea277eafe6e7af2518a22bc0edd4ceb14fe1fd88b6186a129850",
+    "crates/noble-contracts/src/component/mod.rs": "e0149f5304186b591c80f5f938d67c96af1d894dde1dad732359625a15a70c1c",
+    "crates/noble-contracts/src/component/parser.rs": "5ae80cbc6bb43ab3ca63e94f6a9a9ea90535790ad24d5bb93925ab4539b716d0",
+    "crates/noble-contracts/src/component/parser/cursor.rs": "688585bc01c9e08bf7c372b58adccdb44c9543263697849904c6354843b72f40",
+    "crates/noble-contracts/src/component/parser/function.rs": "39d51acf39d6aae05c4b6f5213d19c9e136510550b48bc71b322db85ba10ef4f",
+    "crates/noble-contracts/src/component/parser/lexer.rs": "dc71f58edddc358cb66aa0570944dd125b77f345c392484a252643639047686d",
+    "crates/noble-contracts/src/component/parser/resolve.rs": "aac71a35db74dcd5513530d74ec305fcc92714618df40be0baf531f79a77745d",
+    "crates/noble-contracts/src/component/parser/resolve/declarations.rs": "5bcc5c31be5d171bccca8e4c18294c90a056f14b520a75b26f4f5d1bdba57a6a",
+    "crates/noble-contracts/src/component/parser/resolve/signature.rs": "0d16246e68bbc8043ec480a2d41f917bdcbc2dd5bdfa5b990ff6969555396163",
+    "crates/noble-contracts/src/component/parser/resolve/traversal.rs": "31dcb21770f4403ca60ad6f72be0c52dc86d1227bb45a6231119691ab2d9a8d1",
+    "crates/noble-contracts/src/component/parser/resolve/types.rs": "1ba01647af4b8f6eac65b77048c58a9722d6985d7179eb4b984d03a57c4a14b1",
+    "crates/noble-contracts/src/component/parser/world.rs": "b01379989ec611e661659f14f208e6c22ea2043b15e728a76025853d1ffbce82",
+    "crates/noble-contracts/src/component/preparation.rs": "27d31e883ce3adcc14e12f0d27aa541fd34bfdff812b505083252193c7a296b9",
+    "crates/noble-contracts/src/fixtures/capture-family.noble": "730d8f2f40fde9d0e0a1b4a8d0e1855d3e86707b94e8bcbc6be445d6a3595f3f",
+    "crates/noble-contracts/src/fixtures/increment.noble": "7300303dadacfc6392122f72ef8f36ebe107a58172a2eec47bf13bbd3cf6c670",
+    "crates/noble-contracts/src/fixtures/result.noble": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80",
+    "crates/noble-contracts/src/fixtures/structural-map.noble": "43185ec76a74d195f3a74974f27b78201bd8261249db6527ad3db8c617274f17",
+    "crates/noble-contracts/src/fixtures/structural.noble": "81d08ba64328de03b44ea1669b051d76a07d59cb8a213c2220e90c21998a7550",
+    "crates/noble-contracts/src/frontend.rs": "d22c64b8098d40a95b0d4a076466974507f8f15cbee089dc0fc4c0f35a610206",
+    "crates/noble-contracts/src/frontend/bindings.rs": "5b034788036e9863f75324baf8a1cb2040f3def8c5fb1df9904346f499e1cb26",
+    "crates/noble-contracts/src/frontend/fields.rs": "94aef56657221833ebe16795fdc68a224f734432699d90eea7d42f6a97f1f166",
+    "crates/noble-contracts/src/frontend/logic.rs": "c3d41fd2ca6671119483e783f0addf6295c31fe6cf42f481b90f2bb3e7762079",
+    "crates/noble-contracts/src/inference/build/mod.rs": "bd90a1cab042bde83934d1ed10123e350a83344fd54d12acf5ccec5135fdf8af",
+    "crates/noble-contracts/src/inference/build/stack.rs": "7d3fe8f71aec972ec755d0def8cb67e6035165b5a4d77d0e170f209eb818bccf",
+    "crates/noble-contracts/src/inference/construct.rs": "47e7ccf8a241a7e4e37fa43efccce66044c0d63c130b5f869e9a8d55a3642940",
+    "crates/noble-contracts/src/inference/effects.rs": "87818b31909d7612d0f54f73ae98e1217cbcc319255e1dcf0e4c6c9be70af5b0",
+    "crates/noble-contracts/src/inference/effects/solve.rs": "3dea13fcaf25b9bf75ad733c72985421536d284050b8edb6d764bc8be4081aa5",
+    "crates/noble-contracts/src/inference/finish.rs": "4a90eff0f9303ef2fb15198f777fec15d938361cddd1ded4ae5e6b92506fac3c",
+    "crates/noble-contracts/src/inference/materialize.rs": "71b9473c050db28348c760f56230f1072d3fc37e109e4b0770d48635a193c8d7",
+    "crates/noble-contracts/src/inference/materialize/rendering.rs": "56fb56676a9a2e824e20d2e9cec24a16163629a9142ad604d745b504a173e3c7",
+    "crates/noble-contracts/src/inference/mod.rs": "00296891e2e3d55064df6e82c23b802ea410cbd8ffa8592ef254e241a9e0e9f5",
+    "crates/noble-contracts/src/inference/unify.rs": "f523601f032cc4147d395a98064864c429dfea6e160884ce8a4cc67e56bc0e8f",
+    "crates/noble-contracts/src/intrinsic.rs": "4e4ed5c22bd039fbce6e4fa9d4b247ad76495dc442e391531076bade2f591512",
+    "crates/noble-contracts/src/intrinsic/named_v2.rs": "0bbcb4f775ed08cfc6f80187017a1300fe9d6c0f43a3902b15efa813352d69a8",
+    "crates/noble-contracts/src/lib.rs": "c5f78cea53b8c4ff22b98a62956dbbfc2dde80208431ab10c115bdc3e802b375",
+    "crates/noble-contracts/src/metering.rs": "e7d671ba8a0d105d5543b6bb3600da881b3128d84557d7ecca5e71638eac4d8b",
+    "crates/noble-contracts/src/predicate.rs": "e34974b713220f5dc1b5b2668f074df32ec85ac2f5070d07c63bf2cbfeaad6be",
+    "crates/noble-contracts/src/predicate/application.rs": "c4f474dff30b9cb371976e81cadea1d511a5cf2056632f30b18ef53997047837",
+    "crates/noble-contracts/src/predicate/binary.rs": "2a3093c5e22c620f6db6089581a198c0722a059c4fb149a1188913d55909bc93",
+    "crates/noble-contracts/src/predicate/mapping.rs": "9484effd42febf336ea92b314c39b163818fb3f1662c91d6ae0df744d00a5575",
+    "crates/noble-contracts/src/predicate/references.rs": "5b92e8e2f25b62d6ac6aa697c5899b101b3a4fa13bbf1e0914efc9f45b9f8723",
+    "crates/noble-contracts/src/predicate/resolving.rs": "25134ed3bf8fd1c53ddfc2d63247faafb7ca782bbfc2bf9c3d201daef637eced",
+    "crates/noble-contracts/src/predicate/structural.rs": "d45a22af42493b556d2683817578a94b85bede1a106a31bb6977f8bbf84b4b2b",
+    "crates/noble-contracts/src/predicate/unary.rs": "792d7f0f825977fb4870bc1acf2eba8bf625312d0c9f1e51337e4c022dc59cce",
+    "crates/noble-contracts/src/program.rs": "bf7bc901641630c918ecd326c62c2a7ee7c8c6ff841be922159fd5c2dad39e64",
+    "crates/noble-contracts/src/program/bindings.rs": "99465f2d28d08d43d036550c9207e2b7117804934f701c1307f257980d9f70f7",
+    "crates/noble-contracts/src/program/forms.rs": "c73952856ef8a607ad6dc3fd25536be588fe6e2207e442539ea954b3f9128e2e",
+    "crates/noble-contracts/src/program/traversal.rs": "95fe8cc2bb07a954ee3507913d757053a3da4470523271ca791672a676d9ea37",
+    "crates/noble-contracts/src/program/witness.rs": "a274688dc9abf3abcc0a47fa4d285f227fbecf54f67d744e94bd14a03ea9cde5",
+    "crates/noble-contracts/src/program/words.rs": "d3a34ff3389a00e62a4d5286a1755d866923bb6f20f3eab117b83ee230ca11bf",
+    "crates/noble-contracts/src/rendering/expression.rs": "25523deba0bd5df66b5fb9b6f86685c1b5064a219a41335b0bcd50a9c50c86f5",
+    "crates/noble-contracts/src/rendering/mod.rs": "b6ca77d54d4ad535808468df0b60d193affe9a53e8d3a559d4a8c6acdad803dc",
+    "crates/noble-contracts/src/rendering/subject.rs": "d47c830314d77fe2efa81d52af3060baf98e480262df356af745a2b900bf8748",
+    "crates/noble-contracts/src/rendering/types.rs": "913d7d4b45d08f0d0c0425abdaa7e4060028899f261d691426dc53c45dc2a41b",
+    "crates/noble-contracts/src/source.rs": "fe28d87fd4479a2b3e79d1d25903dbf82f7568c0e675ab25702bd31af1809219",
+    "crates/noble-contracts/src/source/declared.rs": "34a18b85a57e8ecdf72b94339c04cc1c6e039e16b873e35778593fc048cd6497",
+    "crates/noble-contracts/src/source/declared/links.rs": "b4ad19ce0f6b775a485d4b2d43fd71c79b9b8dfa436738c231f316aa765b2319",
+    "crates/noble-contracts/src/source/declared/parsing.rs": "9b478675d1ce0f132bfe9bda43c76077845480bee6ff3ca8770fcfb8fbbb2a92",
+    "crates/noble-contracts/src/source/declared/parsing/body.rs": "c8ff60cda660f14a661194bf67c5c017ceecceb9cb90e9ba30aa8992edbb05bb",
+    "crates/noble-contracts/src/source/declared/parsing/imports.rs": "e08bcbdac420e2d633229566976f2537a6f0388df71474f27be890c361907a68",
+    "crates/noble-contracts/src/source/declared/parsing/logic.rs": "b9f449ae36173d620489b04146b769c11d840afbebc57d410ffa012361918514",
+    "crates/noble-contracts/src/source/declared/parsing/members.rs": "1427858ab4071f57816c35ef5c554b579257a98fccfbb21dbf1ec59905fd9986",
+    "crates/noble-contracts/src/source/declared/signatures.rs": "e342f25c4b100abfda015b14be7f7a7a8c7a9ae5cad2cf886a788dc18dad99e3",
+    "crates/noble-contracts/src/source/declared/state.rs": "54b722439c516f68a97e23aa1990c49aab75719c1ee456135799cbce90c64021",
+    "crates/noble-contracts/src/source/declared/state/namespace.rs": "7ec32b94e903c172758e438a2409a4229002bdbe9c8b46bb25272bbbd7ab0ba4",
+    "crates/noble-contracts/src/source/declared/state/namespace/words.rs": "85faec86668fb1cc3d1f2d5af7e82090e37feb19988c8c3d4165322cdbc718c7",
+    "crates/noble-contracts/src/source/declared/state/prepare.rs": "c50ece6346193a6fbfb5b4ddabcbf9c918621d6f14e4b699481de9eaa4a07cb2",
+    "crates/noble-contracts/src/source/declared/state/register.rs": "bfff49fc57f73e3b451967e451dfdef86deb88729f8dbc934a62204e1db6f841",
+    "crates/noble-contracts/src/source/declared/state/register/adapter.rs": "a9a6732f1b49488fabb15476c1db96563bd4794b08cd2b88e87af4296745b306",
+    "crates/noble-contracts/src/source/declared/state/register/collection.rs": "b2d3a2d3f3484839cd35d369ad005c861e707ac32ad19013ad8eeb197a17b393",
+    "crates/noble-contracts/src/source/declared/state/register/definitions.rs": "e48ddc51f0f480ae67d7ae469e07be6bac3d140d56a26c8eed6ad0c4b9dca017",
+    "crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs": "557166761f88367bfd4c03b4986fe729dfa783b93568724ce3419df9ecb5370b",
+    "crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs": "490782945b9b78c9f4763109b438e7f8bca26b7e0fef923942d599a491829e26",
+    "crates/noble-contracts/src/source/declared/state/register/exports.rs": "12a9c9ddb722a9b5811fde13c839efc212d345afff3f060a05499be15d452bf5",
+    "crates/noble-contracts/src/source/declared/state/register/logical.rs": "691d30c5f2897e86dbdd21cff3fba2e0ac7ddc13c4ac60481ee86169b81bbc51",
+    "crates/noble-contracts/src/source/declared/state/register/logical/origin.rs": "6d46e2d520a0f8d8169c61da4e5a3e0e450e2bf749849b8dab0d24b2f5e008c9",
+    "crates/noble-contracts/src/source/declared/state/register/publication.rs": "3aa5c6a138736d868be6ecc0c430c7daaa936d5490cc71b2b767f853af137813",
+    "crates/noble-contracts/src/source/declared/state/register/schema.rs": "e77f92d7a5d86b26b0bea24a89ae8931ef8a1d48ad2785ad52e8df8677ef4bce",
+    "crates/noble-contracts/src/source/declared/state/register/schema/names.rs": "8d8a8829b3fbd387bce3a1ab6fbf305c202b1a7a39451e81d3ffddd2855f93da",
+    "crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs": "5d4d739934501d364d34181245f14fe6991937a1947235f990f507cf51470d58",
+    "crates/noble-contracts/src/source/declared/state/register/schema/types.rs": "8dc1ee64cf75b28584c6bcf5509b2855fc2424487e4463acc4e1a83e4bec0f15",
+    "crates/noble-contracts/src/source/declared/types.rs": "20bb498b95bc7b21f87be4f0aafbd4ea28d0811dedb9d58d13f9166f91398f25",
+    "crates/noble-contracts/src/source/editor.rs": "cc6321aebbc2602a1e82db36805790f88386e1faea3ffdca17ce41c1d31101f1",
+    "crates/noble-contracts/src/source/emission/contracts.rs": "a328d895c524a3d3ac97b067575336bba603af8f956ab085db67bb777de77986",
+    "crates/noble-contracts/src/source/emission/contracts/patterns.rs": "68a51f00094419be8f7b4724a076765a9f92fd2a39086d0d4357eaf886c378f8",
+    "crates/noble-contracts/src/source/emission/identity.rs": "5115a9a96f06f4edca90f14519cf616e3f61e5f84a75694f79bda941daba5867",
+    "crates/noble-contracts/src/source/emission/interfaces.rs": "d7f4dc6cd833f23168e43db2ebe3c17ae107074c45c3b747b74d7e213e407a40",
+    "crates/noble-contracts/src/source/emission/materialization.rs": "2c651078193830576bce7b7aae2287c31586325d9d28e1ac7b2ea2c687c002b6",
+    "crates/noble-contracts/src/source/emission/mod.rs": "759a97b671bd83e60af081983d64ad45009ebfdabc3f4f3a8f1b6f586fa1531a",
+    "crates/noble-contracts/src/source/inference/completion.rs": "2bded13065832f85841ac165de0883ca9089f4b387fbd7a0788e05e45395bcef",
+    "crates/noble-contracts/src/source/inference/mod.rs": "480d547d6734ba57d936acfd5cd73ee1a3745323a6395eb6d2d0caeb777da6cb",
+    "crates/noble-contracts/src/source/inference/operations.rs": "dacf4026042552c45719028e56cf52b9606fc02a5d479b99b8c711f8e1577a82",
+    "crates/noble-contracts/src/source/inference/traversal.rs": "318db7059b48528d380dab9c75e5dee2189f93a5990d9b9756f2cb1cd697fa10",
+    "crates/noble-contracts/src/source/inference/validation.rs": "4a083bb8e1855a768cf2e3e8f92dee6d951fb621b04655de634f50be79186509",
+    "crates/noble-contracts/src/source/lexer.rs": "3e02815022842845f520b7f60704cd059e9f91812a38bdcfea54278d5941c733",
+    "crates/noble-contracts/src/source/lexer/text.rs": "f3b0b9bbccf2cc7b5d0978e8973054916b1013e9f416ed6a740b8c2fca6df952",
+    "crates/noble-contracts/src/source/lexer/tokens.rs": "4ecfd1dfbb17417dc4f7bb40e23ff1299057a8c6ee51c7607669f4bdaee28b0a",
+    "crates/noble-contracts/src/source/parsing.rs": "c5bcccac7584836aefd09579ca842ac39bd104fcff4d419d75a6b26d22576783",
+    "crates/noble-contracts/src/source/preflight.rs": "0bdb4757774650ee98e1cd61384e50bef471dca1879790d71ffeb222168f47db",
+    "crates/noble-contracts/src/source/preflight/paths.rs": "9dcb992474993ad915c8963a973bb46ae2ce58a61f6fefb4c429bf840b1f2977",
+    "crates/noble-contracts/src/source/preparation.rs": "6ad1e5bb5a3514a7896ecb3da6496e43cc9463a927ece84bb011e5bf772f22a6",
+    "crates/noble-contracts/src/source/resolution.rs": "c5de7fe93a51a1f6cb922fbbac71cc5a8cc63c54c99799865dde997267e539a0",
+    "crates/noble-contracts/src/source/resolution/comparison.rs": "7450af43569ec048ccdce978de10dfbf26b7e8086ca1c6971123d31b6e1981ce",
+    "crates/noble-contracts/src/syntax/constructors.rs": "70eb27a6805caf5c230bed99cd0f49ab1925f6fa80b7124eb4fc811e7aa6a06e",
+    "crates/noble-contracts/src/syntax/identifiers.rs": "32bf4e675bd54f497a2448bfdfbb9fdd0f7b2a846dfac50b0c7e250b0442de97",
+    "crates/noble-contracts/src/syntax/integer.rs": "fa33fe5666b9e372ad49a9d816b207a78f71485caec7d90fcb3fa7446e1924c7",
+    "crates/noble-contracts/src/syntax/mod.rs": "35e9667c7171a593fabbf645d77c0d4e6d4317f4535cde554ef4e407fc51f860",
+    "crates/noble-contracts/src/syntax/parsing.rs": "d7f8e9cf2691323dffd559c65080b9c26473e2014f5fb60b56ee2373148b3aca",
+    "crates/noble-contracts/src/syntax/typing.rs": "655b289ae1076d45d2b1e532b5c316039d779916abd5678a2ad0a87e55ede3e4",
+    "crates/noble-contracts/src/wire.rs": "e498f15a507c5f57258bd5bb0a56b43316c953cf9f6e08e693c255d19b5c0ab9",
+    "crates/noble-kernel/Cargo.toml": "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",
+    "crates/noble-kernel/src/acceptance/frames.rs": "d246d8cfeda5650687defdf30425f802fad306cf85dd5e623f6110eac7a61f05",
+    "crates/noble-kernel/src/acceptance/mod.rs": "43e7f01b3b78f727033dc14e69867d6a4373f1ea9db4cac516cab63cc2a9fb89",
+    "crates/noble-kernel/src/acceptance/nodes.rs": "5c8c724011338d967d3821412f10d08b4aa5ba317fb4df21904a0df3dbcfc8a1",
+    "crates/noble-kernel/src/acceptance/nodes/visibility.rs": "a9f6267701cf4687eeda932df74e3d983c3df2d128f00aaacf290f15fde71255",
+    "crates/noble-kernel/src/acceptance/parts.rs": "151a2b8408a756de898fef98e110a9176bb6f7bff0d251a0e8fae842231d7ed9",
+    "crates/noble-kernel/src/acceptance/parts/effects.rs": "a9a7f5727bfe231deca57c3220db00320ae35d0c9990b07b11a351538b40e5ce",
+    "crates/noble-kernel/src/acceptance/parts/instantiate.rs": "2f08149cb213fbc3b575cca6a8069c968a4f4a5383d2ddb70a0a7f35850cb557",
+    "crates/noble-kernel/src/acceptance/parts/multiset.rs": "2c4f39f5fc40624c677a7321ca18e37ccb464d80886ece22da696fa385bdb1eb",
+    "crates/noble-kernel/src/acceptance/preflight.rs": "8e240102219d908bcb92f8963ca3576af1ff9a7c6b4bde282492bda4ae2a33e5",
+    "crates/noble-kernel/src/acceptance/schemes.rs": "07796bdec46d73554fb4bda8f52eabc599fd86664b6fab41783c886b82b5dbc5",
+    "crates/noble-kernel/src/acceptance/validate.rs": "0b1830f0f12cf5326d4841f44a90aad4445b42137fbe5dae71bea3c48096c9d9",
+    "crates/noble-kernel/src/async_tasks/accounting.rs": "1f5ad623385fc49613fba5f6cbfe564126b556d57ca0817cb175e692b85dc9f3",
+    "crates/noble-kernel/src/async_tasks/bounds.rs": "0d4399f7778bbb8ae11ee9d59f896660743db607a81ed13126071b91d7305899",
+    "crates/noble-kernel/src/async_tasks/domain.rs": "ad7291c0b2d16f67e065369a490b5657fa7bc76e22f34dc2e28fb6444f0d9115",
+    "crates/noble-kernel/src/async_tasks/mod.rs": "e6555dce4344e36839dede79efde3b87b8e8240aba8f21a00fa944a909d80d40",
+    "crates/noble-kernel/src/async_tasks/schema.rs": "3ebc3d67c0bfa8ee5ddf23b87b05f038bfd774a57a9207a91ff4130a7f3a9f24",
+    "crates/noble-kernel/src/async_tasks/schema/coverage.rs": "ddd74ea7eb19a32618eb37b89cfc7a09bb58698bc650f67f5761cf67becbde01",
+    "crates/noble-kernel/src/async_tasks/table.rs": "2fd40027c437cebf8beb3b396bf438defab1d7d5176a1b1709f3955c1c67b54b",
+    "crates/noble-kernel/src/async_tasks/table/admission.rs": "0f8fa1db0a91df899c5241c295678b2639090027e61adebeba1d4ac8ea4eb512",
+    "crates/noble-kernel/src/async_tasks/table/callbacks.rs": "d60510a9cb329fea57c3a227a32690941c24f8646dc79d5f059df48abc262856",
+    "crates/noble-kernel/src/async_tasks/table/inspection.rs": "acb126a14d2b4decb4c55cc7be46fe8340b170523972f3a44adc3b0447df982a",
+    "crates/noble-kernel/src/async_tasks/table/ownership.rs": "35f9bc998377527b8633adbdf3ffef527eaf1d56ce53156ac2e7c00f63493d4e",
+    "crates/noble-kernel/src/async_tasks/transition.rs": "82618f6878188ab86d915a666ee94d883cfcbc9621f620a40ed372f7f10be7e6",
+    "crates/noble-kernel/src/async_tasks/transition/cleanup.rs": "5d766b0655bfe95e7ba133075eda597ecf9345823b3adf074bf971533aca532f",
+    "crates/noble-kernel/src/async_tasks/transition/completion.rs": "76e6790bcfb6fd51b9e85840e435e3754b3872749878af68c8ca34290d3c3fea",
+    "crates/noble-kernel/src/async_tasks/transition/lifecycle.rs": "73fc27318d81b4fb90cf24a26907fe1a1d0183188f93fb8f30ac458d3279517c",
+    "crates/noble-kernel/src/async_tasks/transition/validation.rs": "3f0b78edac2a575bcadd2bf64e22cac6fffee52d26fc61b3782b526f61a79e14",
+    "crates/noble-kernel/src/authority/admission.rs": "fc9ecd0c744680c392380f1b140aca6f8861dd88b400d3a659ae599bb65aa26a",
+    "crates/noble-kernel/src/authority/facts.rs": "8f8812cf68385d3d6e02bad49f3a48a5efc908507407c2d5d525d981b16d044e",
+    "crates/noble-kernel/src/authority/mod.rs": "b2d5c908480706a7d061771ce00359d82ea431f963856063593910f61ffc839c",
+    "crates/noble-kernel/src/authority/observation.rs": "c966bf9265551b1f9f352ab6c945a371b4123e4024465ed67eb237a68be20b20",
+    "crates/noble-kernel/src/authority/permit.rs": "d85558ed22d47483ed65e5955086efe4f545500b1f4292291278ecb1743e5c8d",
+    "crates/noble-kernel/src/authority/receipts.rs": "7a4cb2ddc5e9bb4c9316343a38554d159fcca06edc7ac04c6c6229fe55fa84eb",
+    "crates/noble-kernel/src/authority/report.rs": "0b56bc438c3543e56b97d5e3d2a7ba8b0304452be9d5fc9103a4da0def380859",
+    "crates/noble-kernel/src/capacity.rs": "d823bc8d9e40fdecd77f67186a50af9acec6a46db523232a6de9958eeeef5038",
+    "crates/noble-kernel/src/contracts.rs": "1709b78d1e25d59023808fb921791cef30f14f7077ac57ca3b0355b09570f6d5",
+    "crates/noble-kernel/src/contracts/bootstrap.rs": "e89181ecf00623d6bb366c13e6e705eb704ee66f8fde8aaa18bc7808364cecd4",
+    "crates/noble-kernel/src/contracts/bootstrap/data.rs": "c41941d104412cde0169ea34d28d79e01c0c8a1d41fdd9981f19fc6280d77807",
+    "crates/noble-kernel/src/contracts/nominal.rs": "4733ae080bc93c5ba9e24d524bb3ee2e2df55fb82fb2daa8f6ccdb18fb34aed7",
+    "crates/noble-kernel/src/contracts/nominal/inspection.rs": "9d69df46c1ba4529b87ba073c1d2edf4e6a5973b3a6795a7cb8504d61df5af54",
+    "crates/noble-kernel/src/contracts/nominal/payload.rs": "c822ebfba56de1e792290fd6d081dd4def0ca46e510fc78976eed5aafe976efe",
+    "crates/noble-kernel/src/contracts/nominal/schemes.rs": "13108d5e4e3014eb7cc6160d38c6197f3e6067f8c0a0c3650e23d34704bb3fd2",
+    "crates/noble-kernel/src/contracts/nominal/type/walk.rs": "68232d557954dfe3d1d0a454827b3d0d0f2b7bdcbb63dfe4ea001e1ec6326475",
+    "crates/noble-kernel/src/contracts/nominal/type/walk/work.rs": "7ed8ee6155d404f4aeb28e3828d22d9556b734cd7e9b451a067947cd3b76cfa2",
+    "crates/noble-kernel/src/contracts/nominal/validation.rs": "365fd6776344854a5effd895f1525f9cdc73e7e36335d98b3f9cb3ec0eb94b27",
+    "crates/noble-kernel/src/dataspace/mod.rs": "5ba97535f38318bc3a11ba0c6c0122a8fac7f42d22d92e0dba5c5b948c40fd6f",
+    "crates/noble-kernel/src/dataspace/table.rs": "568bb6249883a3dd4821b8adbc00d28f690933868805019147a0d06a832771de",
+    "crates/noble-kernel/src/dataspace/table/actions.rs": "ab02f1a631cb1958c38bed12bbd3ad417380193012de5c30322329b74850d1a2",
+    "crates/noble-kernel/src/dataspace/wire.rs": "38b722dcbe36f6d986be105a76fd17472e5c8d72a126c1db813c7878d1915d08",
+    "crates/noble-kernel/src/execution/mod.rs": "35dc68a19d895fbc8ee05ea595eecef171dd76a575d2f5784f1c535e9deadd87",
+    "crates/noble-kernel/src/lib.rs": "57be2f831cad2203ad43945dc9bdc211f3e38addf3431e2ad36505b8226ce407",
+    "crates/noble-kernel/src/resources/mod.rs": "8669397e41d886c4b795a1a76df08c4e8665669dc533586d1587191b9577b0e3",
+    "crates/noble-kernel/src/resources/table.rs": "e4a7c7add3fedae1b590601e12f13daa169da6a5d625ccae1ad51c75d27adc35",
+    "crates/noble-kernel/src/resources/table/access.rs": "8fb0aa1c1b7c53407ac56238923b4b9a6a75e149dd781c36322183b13e84421b",
+    "crates/noble-kernel/src/resources/table/inspection.rs": "ea6c0522621552be0d2eaa0528035dd88e08913cf5901cf57c7d7df860da4a58",
+    "crates/noble-kernel/src/resources/table/transfer.rs": "2a380ae1f469d3153e1a09a297d8da51d8d871098285021adbeebe3e99e74cff",
+    "crates/noble-kernel/src/resources/transition.rs": "f1afba83433c04ae07a4ac165b3ef614af1c12c31336ef80736add52268bdc6f",
+    "crates/noble-kernel/src/shapes.rs": "1a452ff236760dd9c482f83dfd190e2ba4f8b10721bd870da04e71d49558b01b",
+    "crates/noble-kernel/src/shapes/impls.rs": "d6fa03596ccaf651c916962077b859340ebfc0b5595ce2a5935f6faf9407f8ee",
+    "crates/noble-kernel/src/shapes/impls/equality.rs": "aa459b0b6d8301ecbf2d8290b1c7abdfecee812f8fccd5859fbe4b17c430e841",
+    "crates/noble-kernel/src/types.rs": "b507eff5c349c8de136fac81e1d4604ea89db9d3a90a647e842c94ddce8fb6ab",
+    "crates/noble-kernel/src/types/data.rs": "4aaacf41cbd9de822513890d4bdcc2b48ab18da465702fe07a9def0ebe6af9a1",
+    "crates/noble-kernel/src/types/impls.rs": "23915e27ed1686fb77fd21447629b59d63ef8e9153e7e9c60604f50ed4f5f4ab",
+    "crates/noble-kernel/src/types/size.rs": "800f7c6402d5b9de720243755b2258dd66f2735fd796a94e9371495ad0bc860a",
+    "crates/noble-kernel/src/untrusted.rs": "3c2335ad6d918aa0298a79d7aefdcb43cff27fbaf844001216582a08ccd1174e",
+    "crates/noble-kernel/src/words.rs": "d1f593ba85770a758b0d4df692b868095649be1538429a7166820a5d5c662941",
+    "crates/noble-kernel/src/words/bounds.rs": "f966e4fa5618ec03a9013cd9a068d0f6438fd053041ae4dba07d9dcb57b166c8",
+    "crates/noble-kernel/src/words/resolve.rs": "f32824db52c2110f5590b9087d8d524d5098e57cca2fcf8e334daf0ca7365cfe",
+    "crates/noble-kernel/src/words/segments.rs": "58433562c4c2cbce4956284153405cedbc03d1bbeb1f2e4ccc38daf96bacd6bf",
+    "crates/noble-kernel/src/words/subst.rs": "822fb34c24c7c4a7a8b7239ffe767f6c16653ff14f88fda1db00d3e7ae32f2db",
+    "crates/noble-kernel/src/words/subst/finish.rs": "01c6cb01f33f68899dcf500d356589b86b47c1a3f19f8772c3b04565f839e9b4",
+    "crates/noble-kernel/src/words/subst/schedule.rs": "aa002bbe003739fa07cde5164c62acfea147ac817956c30fd79ce37b79e7be00",
+    "crates/noble-syndicate/Cargo.toml": "111546759bcc1665f5575e63f08f9f464ba1ce28d1cf6596aaf49cda659f78f2",
+    "crates/noble-syndicate/src/choreography.rs": "fee989ce55befc8a59d75287b7949d6ca621e1ed032371ebf51fd81272bef80d",
+    "crates/noble-syndicate/src/choreography/json.rs": "d1ec5b3cd4ee6820bff0f62bc0e23dc5b90cccb6aef499f4a976a17b24a98736",
+    "crates/noble-syndicate/src/choreography/json/scan.rs": "18fc514097bee497f75dde67b00a8a64a381241fc758decb13041890a496d006",
+    "crates/noble-syndicate/src/choreography/monitor.rs": "28ffda5d421576e5939fc0021a2dfd9da0c3e3dc86987cb0315ee383f5e4a5d9",
+    "crates/noble-syndicate/src/choreography/monitor/admit.rs": "7fbc9257b164c748870ce6826a1ed6c15a0822643bc753ee8fe6ce093ca83bc9",
+    "crates/noble-syndicate/src/choreography/monitor/drive.rs": "30d78e469e8936fa746bb5b22f552a797e62da9b8dc54cbde85f891b4db9c966",
+    "crates/noble-syndicate/src/choreography/projection.rs": "c2221019dddc5dc344393cfb2c1a2c9c460c159bb60f83896d7267944a772fb0",
+    "crates/noble-syndicate/src/lib.rs": "c9eb69a8904a09ea496c9ecc5a6b65160869e1c04e01cd585df4af44a69abed8",
+    "crates/noble-wasm/Cargo.toml": "06f6400f49ffd974532ae16fd8804ec9cc6f38914085d7177250ce20e710c920",
+    "crates/noble-wasm/runtime/accounting.wat": "a18aaaffe56be77fffedf6541d293d1fed01f123ea83ec064fac9b988b9ee864",
+    "crates/noble-wasm/runtime/common.wat": "76539a5985594ee1146706148c4705bdc9542d50d70125c3d5f81ea596da808b",
+    "crates/noble-wasm/runtime/data.wat": "3680e0487bd20d7f701879f9f99fd1f0e5d16e32e56cbb5c40d7efee1a9d11bf",
+    "crates/noble-wasm/runtime/experiment.wat": "8fb13ca3686e356dd392cab41ebfd7bb4ff930093c8bbcc54d019e4fe94ed0c3",
+    "crates/noble-wasm/runtime/gc-storage.wat": "10f03f88ef8f250d69e88a0f8297f8a0bfc9a6d54b7b94a6bce2621060cc5c17",
+    "crates/noble-wasm/runtime/linear-storage.wat": "3d5462d25adff005c82140a42c6a7385abbf91fd7a4aa5f6012240858e2aa72a",
+    "crates/noble-wasm/runtime/operations.wat": "ed8b474eaf8209030a7fa53f249c5743da6edb67887d94a32dfaef08f7c2897d",
+    "crates/noble-wasm/runtime/programs.wat": "ef6432e7f40e619494a65de802add69b3376185bfd802579364410ee5c6af3be",
+    "crates/noble-wasm/runtime/reflection.wat": "5e034aac1ba61a9a6d78cd3b99baece0b5c48f6d762c1d5395b59660965a909c",
+    "crates/noble-wasm/runtime/source.wat": "069b0f7959abdc7e23b649434dd0a68ae1c6320dcceb37c313119689e9010df5",
+    "crates/noble-wasm/runtime/stack.wat": "6abc22e80a016b4f6f0f263e696bf401d370c3685e732606e388636d9f230db0",
+    "crates/noble-wasm/src/admission.rs": "12ffbbb5f81d3166d8dc01e996df3e3c42ec90faa2bd25d8d78ac83a9f4792d9",
+    "crates/noble-wasm/src/component/abi.rs": "13dc21bab5f44222fe95c8b4f642d2402cb210750525714690ee30658ae9daed",
+    "crates/noble-wasm/src/component/admission/body.rs": "89b3f9bae12f643362de1972b3a837fb8ff30c5cdaf0147927a79b938e2dadad",
+    "crates/noble-wasm/src/component/admission/mod.rs": "8122f21190eb4c33647976324b6c85a9a59694fb03f5039a54d5e4d2d9c01f80",
+    "crates/noble-wasm/src/component/async.wat": "053a71122f287f857d15f890e0ddcdbabefd3277abaceb73acccd8206f653f58",
+    "crates/noble-wasm/src/component/emit.rs": "32bf46c9350146afbca4b56f805ab89f83ec002f870d51811f4d41ec87819ecb",
+    "crates/noble-wasm/src/component/emit/task.rs": "1bade84f166b320238cdb7193d38319462d18b18de06f03dffac1e4772dedf2d",
+    "crates/noble-wasm/src/component/lower.rs": "1894aad6244ee232cb5a167857397b69702da052bec3111c0961fae8ebfb128c",
+    "crates/noble-wasm/src/component/lower/calls.rs": "cd0e616b9a79499f486418746289b50aa3a5f0dd808e149aee6c39fee5331ed9",
+    "crates/noble-wasm/src/component/lower/inputs.rs": "5eda64225fa52a56165ee32be6516bff1ae36f67ee473dab1020df2b1c1e73c7",
+    "crates/noble-wasm/src/component/lower/operations.rs": "3c38e2e70c232f4aab9919f305b15b746429d36d61f015146cb3b6385f37a7a5",
+    "crates/noble-wasm/src/component/lower/results.rs": "41ebc8f88974a40123118f3c2f43ac7238d46dd525dc53b032b1a1d614f9b3d9",
+    "crates/noble-wasm/src/component/mod.rs": "47e179157657ee03796515ab72119e535712f99d7e3cc712e034e42d9db439f3",
+    "crates/noble-wasm/src/component/runtime.wat": "c1a21dd7573c87235d176722b3cdd0f7319c896912be564bb210c8cc41eb5754",
+    "crates/noble-wasm/src/emit.rs": "aa0995e977303f6b3b743345a687588b89fec74aa5fcdaca76443fdc0214afb6",
+    "crates/noble-wasm/src/emit/initialization.rs": "c4f99d19e90ff84a47c2e3fc2e1be3c706904427f68867c7ae84821d8ec651bf",
+    "crates/noble-wasm/src/lib.rs": "b43cf2405dd8b862b5f48e9b4315fb0e9ebb9aafce58a5361831645fb0cd9f42",
+    "crates/noble-wasm/src/lowering.rs": "ebc566a95352d9416df20de45ceb63b3ddfe26a5e7b509aa3c829e4fff295dfa",
+    "crates/noble-wasm/src/lowering/topology.rs": "455a5ca2d20e91a43472b40d90f5780c4aaf643da8f0a3dede6970be385991ae",
+    "crates/noble-wasm/src/operations.rs": "011486bba310dc34d93e08fa72792b580df96702c530486370b91515970b6fbd",
+    "crates/noble-wasm/src/output.rs": "4b8ecf81585259f8394d43c8d2ddbc7f3551c0762377bb0fa6dfc39ec4d08725",
+    "crates/noble-wasm/src/signatures.rs": "e4ad566d1e09978a973a5596e816a2426917133b89e2404043c16b52503ade24",
+    "crates/noble-wasm/src/signatures/walk.rs": "45875185878d08d2e7615d4f375d321f1e2cada2ab68829b1a3bf304be22f61f",
+    "crates/noble-wasm/src/source/admission.rs": "6ce72ae96411626cb8b0c690558b113e1b5504cc64114cde0a10143e7428bc82",
+    "crates/noble-wasm/src/source/admission/definitions.rs": "f295ee7df95912d482c6ad81bde29d47e2449b752cd5efc0d77ed80f1c3690a4",
+    "crates/noble-wasm/src/source/admission/dependencies.rs": "918556d2046b32a2b121c211ba162f06eb663388fcdf9452d76b07174ca52783",
+    "crates/noble-wasm/src/source/admission/environment.rs": "29d90fbb4ec3b0c381d49546d397c213eb596981e7285d79238a08a4ff3f23cf",
+    "crates/noble-wasm/src/source/admission/environment/replay.rs": "93f487b5793b4286709069b82b53c56900c788acad084fdff11c6a31f3246e6d",
+    "crates/noble-wasm/src/source/admission/identity.rs": "35e41bf9fa3d4ef08f9c4319d542fa24029b7f12b0c16e02c9c2ef9dc277c17a",
+    "crates/noble-wasm/src/source/admission/metadata.rs": "e6fc1b604e5949ff977059aa2569bcb47ca0bd1cb7c0eb6d26ed71f940864eae",
+    "crates/noble-wasm/src/source/admission/meter.rs": "e85fdb948d1177b5172a870a52887133b2cea86bb8451213a0e55e39602907a8",
+    "crates/noble-wasm/src/source/emit.rs": "c484aafdaa2fdf0bcd68c294975e79bd34b65aa7c56490e6816cac5dd5b546b2",
+    "crates/noble-wasm/src/source/emit/bound-emit.wat": "538303af1163c62ee97cda613b8cb9831cdb2960d7555eea90639557442244fc",
+    "crates/noble-wasm/src/source/emit/functions.rs": "4cc2429caf8a010d011a08e6aa357c18d0057bbd5c10995fad46b3804c501a2e",
+    "crates/noble-wasm/src/source/emit/imports.rs": "6a12ae63021d1ac5ab3fb9c4ad9562b2b99e88a50e519d852924d8e589711c3b",
+    "crates/noble-wasm/src/source/emit/initialize.rs": "512224ede0bc24af59dff48caafcf5acba268fa033d9eb92fb510846de190075",
+    "crates/noble-wasm/src/source/emit/metadata.rs": "6294d2eb85387768e7679d8e6d55812adfe044aa99501c414aca6c0ada62f333",
+    "crates/noble-wasm/src/source/emit/nominal.wat": "7970b01791396703f3e4c7db9e4acf77a4f0b2f9f64afdb2466d627932815dea",
+    "crates/noble-wasm/src/source/emit/reflection.rs": "8a2cd26cd2fe09af78766546edc8c1dbc18eef12214306f0de10234113381a7c",
+    "crates/noble-wasm/src/source/mod.rs": "692de2bc94f29140bbcfa8f7ac73b6d5651d3069da6c596b0f4735474b8f0f7c",
+    "crates/noble-wasm/src/source/plan.rs": "132400f3b7db59a447e951767bd1eacf468fd513c1213ce7f9667f730fad9eec",
+    "crates/noble-wasm/src/source/plan/allocation.rs": "08e5ba123875047b3fdda66b6ff779c88ef0bc1b970c088397aa1de39e26fb75",
+    "crates/noble-wasm/src/source/plan/operations.rs": "8b6e44fe060d25b8d4ae34e1cbe30d6fa90292eb5c99da634a7b2c24b7488a7b",
+    "crates/noble-wasm/src/source/plan/operations/nominal.rs": "4da0656ecd7faeb1c9ff4d5e6b0acaa07c0f249125485f96d9fab45d9bc041c3",
+    "crates/noble-wasm/src/source/plan/operations/quotation.rs": "627830568fdfda25cb4e16b27edccaa4a516d5b75c2d61ea3e66370efccab9bb",
+    "crates/noble-wasm/src/source/plan/topology.rs": "291b0f0dec8ad247db07a539acbed287acb0fbca1c7fa44428e891e9f60ac57e",
+    "crates/noble-wasm/src/source/preflight.rs": "5a1f644c4da1045b9d444a3e6cc4a0fc9478dbe3f7f281d0ab95d90e57d9904d",
+    "crates/noble-wasm/src/source/preflight/concrete.rs": "0b3a0a23474c18728f4c81a821601eda9b8baaaa2555760dc77d96b4590a557d",
+    "crates/noble-wasm/src/source/preflight/schemes.rs": "036f9c5592c0e553830cb39e0da8158b1feb03f8a6d03aec17e5904bbf8b4296",
+    "crates/noble-wasm/src/source/transaction.rs": "db5c05eec186a2d638c01a2acab6aa6fb35dff0d0cbdefa03ce61f64d13d1e91",
+    "crates/noble-wasm/src/source/types.rs": "1d56d52799700b191e0caec551c4601e7efa6437cca57e5ae1da02ae7a73461d",
+    "crates/noble-wasm/src/source/types/emission.rs": "544d5443af2a083ea413ec4c30d6d9bdd333ba54b469cb8148889eb72e4b250c",
+    "crates/noble-wasm/wit/async.wit": "c39188a9900f23c1eb4905ea1d6504c93c735b0d9214f1497b968315d2a505d0",
+    "crates/noble-wasm/wit/authorized-fs.wit": "76551487a6c27280214f43fdf88b8ee0b2f4a019f0e29d8f967e2c5c4b2f54d1",
+    "crates/noble-wasm/wit/bootstrap.wit": "d1928908b21d1d63be477fdf2226a6547db7d6efa5ef905635498d1d1e43bc68",
+    "crates/noble-wasm/wit/bounded-region.wit": "3602a7f6f8f3d376ba42d453a957eea5eb973c67202199c19df717fa03c05e5c",
+    "crates/noble-wasm/wit/callback-owner.wit": "c8386c4461dda5cd11a9fbf6ac4691eb7498eaba1f0d9530479ef7e738bc8eee",
+    "crates/noble-wasm/wit/runtime-quotas.wit": "b3aa7ef85e93b893c9efc94b8c9da82023ee6af57ec89c48c730d1cbd0bd2027",
+    "crates/noble-wasm/wit/syndicate.wit": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+    "policy/tool-selection.json": "67318eadf5ea11b047ad0b24bd0dbbd14c9d1de09ce28d700564bd622e743c15",
+    "rust-toolchain.toml": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271",
+    "specs/conformance/wit-wasi-cases.json": "58fa015f6a307150b6b8ab50ed8acaad60c8e83998a5aa7849f3ef5cdcd7aff2",
+    "verification/wi03-final/gate.mjs": "28af3c53c7c69633496c6142f7a9bde7df6525817585ecf3604ef8e6e5f97df8",
+    "verification/wi03-final/postpromotion.mjs": "e69f15b456cb6c05845ea0448e826690c2cd990f90081fef18b09f07616bf842",
+    "verification/wi03/README.md": "4c2cf4857f2bd778f25fb15df7f5496d584dee51451353d0532f76bc632df341",
+    "verification/wi03/async.wit": "c6dee7c12172c9fc499b8f8885aea8bfa817cafff58b26a2b9a4c8d512df85b0",
+    "verification/wi03/echo.noble": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "verification/wi03/echo.wit": "4923a13454d711dba3ab9d22dc9e7855a27e1f981ae3dd29137bfabbea072c5e",
+    "verification/wi03/gate.mjs": "66fe8dbd12bb61f21bd8ad76de35ef348e20d653d7488b69fdd93f4ceb2f802d",
+    "verification/wi03/import-s64.wit": "bd8d456c65a829a4e31f9eecb2bca36927052d5daa48fa25410b8ee57cdaea67",
+    "verification/wi03/import-u64.wit": "b1b814882341383354d96d324a3ea328fece7750d37e1105deb6c60abd2cf456",
+    "verification/wi03/mixed.wit": "57a10c9b9e0be8d6e6fb3d0aa118e51257c0f3447427763736bfe8bb835b8c5d",
+    "verification/wi03/negative.noble": "4eee25e05f29d14e5c4ee406a70cdab15a25fd12edc5c0260550b8b2e831fb9c",
+    "verification/wi03/peer/Cargo.lock": "1662abfe404edef982798580f92b510758758437ffc37a0bb0377032ea43de5c",
+    "verification/wi03/peer/Cargo.toml": "c2187bea3a832edd08d4bbc8febb8643a105248af317b5105faafe5fe52f25b2",
+    "verification/wi03/peer/src/main.rs": "c82b2bfbd32cea4e94941cde08a8f53bd0bfe892d8aed03dac7eb72f58ca3456",
+    "verification/wi03/postpromotion.mjs": "d15ea2dbe575a72cd4e2aeb8c341b56c3962bebcd821c63e5eec4522e84e0830"
+  },
+  "external_raw_output": "/var/tmp/noble-wi03-prepromotion-20260930-d",
+  "prepromotion_case_sha256": "58fa015f6a307150b6b8ab50ed8acaad60c8e83998a5aa7849f3ef5cdcd7aff2",
+  "prepromotion_case_path": "prepromotion-wit-wasi-cases.json",
+  "case": {
+    "id": "WI-03",
+    "profile": "Component-Draft",
+    "kind": "adapter",
+    "requirements": [
+      "WI-WIT-02",
+      "WI-WIT-06"
+    ],
+    "input": {
+      "harness": "exact-u64-boundary",
+      "wit_type": "u64",
+      "value": "18446744073709551615",
+      "requested_implicit_target": "I64"
+    },
+    "expected": {
+      "stage": "binding",
+      "outcome": "lossy-conversion-reject",
+      "wrapped_value_exposed": false
+    }
+  },
+  "historical_receipt_sha256": {
+    "verification/wi03/acceptance.json": "d5d9a7d891582f3247778b9417b638083a2165e762a7f1f89aa5c5fe62288f67",
+    "verification/m5/acceptance.json": "16d05ae874accd00c839e3a5a31f35ef6702446094775cf16e3ba4add1aa10f7",
+    "verification/m6/acceptance.json": "c7d6aa31180961a7748b4fdfd674c3ddbecabf11ae816476aea6f8906a761ed5",
+    "verification/m7/acceptance.json": "22c7415d476c2361cd13e1f994f3c23b9485aa0333c356d8d1fff21af8989582",
+    "verification/release-policy/acceptance.json": "1cbe016550aea58b60977f89d957d8457aeff26fe8f0dfccaf7df70200f52ae9",
+    "verification/m8/acceptance.json": "a02c47bda7f69040ee6f0a0bb2ca9019e0bfe615efb08dfdaa7388bc5da3bf0d"
+  },
+  "prior_prepromotion_receipt": {
+    "path": "verification/wi03/acceptance.json",
+    "sha256": "d5d9a7d891582f3247778b9417b638083a2165e762a7f1f89aa5c5fe62288f67",
+    "source_revision": "sha256:6ff838c42913498a7eb120a6ba1b009621afb56559b2676d9115faa33e7555f0",
+    "scope": "historical-only-unpromoted"
+  },
+  "tools": {
+    "rust": {
+      "derivation": "/nix/store/zxvqck0x496vcj2qn1r0wil6bb85zj7b-rust-default-1.96.0-nightly-2026-03-21.drv",
+      "output": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21"
+    },
+    "node": {
+      "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b"
+    },
+    "wasm_tools": {
+      "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+      "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f"
+    },
+    "wasmtime_source": "/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source",
+    "wasmtime_source_nar_hash": "sha256-4y9WpCdyuF/Tp2k/1d5rZxwYunWNdeibEsFgHcBC52Q=",
+    "vendor": "/nix/store/4drsk5fp0k4s82psjch6vlsfyqs1mxgq-wasmtime-40.0.2-vendor",
+    "vendor_nar_hash": "sha256-EQ1olp92CFLQ5oHp6zIphL+ScKnIWQLuFFfZW/rIeDI=",
+    "linker_bin": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin"
+  },
+  "binaries": {
+    "cli": {
+      "path": "/var/tmp/noble-wi03-prepromotion-20260930-d/target/debug/noble",
+      "sha256": "70ecd777c0e8ecee44b48c354dbb4978635669acb3552bb39abe487ae8e8271c"
+    },
+    "peer": {
+      "path": "/var/tmp/noble-wi03-prepromotion-20260930-d/peer-target/debug/noble-wi03-peer",
+      "sha256": "469d98094d683de3e67dadaabfbf36690d8f296cb981c1504ba05db26dff8bb2"
+    }
+  },
+  "canonical_refusal": {
+    "stage": "binding",
+    "outcome": "lossy-conversion-reject",
+    "wrapped_value_exposed": false,
+    "actual_cli_stage": "Binding",
+    "actual_cli_outcome": "error",
+    "component_emitted": false,
+    "runtime_value_consumed": false,
+    "guest_requests": 0,
+    "protected_operations": 0
+  },
+  "implicit_cli_report": {
+    "schema": "noble-component/v1",
+    "outcome": "error",
+    "diagnostic": {
+      "code": "component-check",
+      "message": "Binding: WIT u64 requires an explicitly selected checked I64 boundary",
+      "details": null
+    },
+    "component_emitted": false
+  },
+  "rejected_signatures": {
+    "unsigned-import": {
+      "stage": "binding",
+      "outcome": "unsupported",
+      "report": {
+        "schema": "noble-component/v1",
+        "outcome": "unsupported",
+        "diagnostic": {
+          "code": "component-check",
+          "message": "Binding: checked u64 boundary requires an import-free world",
+          "details": null
+        },
+        "component_emitted": false
+      }
+    },
+    "signed-import": {
+      "stage": "binding",
+      "outcome": "unsupported",
+      "report": {
+        "schema": "noble-component/v1",
+        "outcome": "unsupported",
+        "diagnostic": {
+          "code": "component-check",
+          "message": "Binding: checked u64 boundary requires an import-free world",
+          "details": null
+        },
+        "component_emitted": false
+      }
+    },
+    "async-export": {
+      "stage": "binding",
+      "outcome": "unsupported",
+      "report": {
+        "schema": "noble-component/v1",
+        "outcome": "unsupported",
+        "diagnostic": {
+          "code": "component-check",
+          "message": "Binding: checked u64 adapter supports only synchronous scalar operations",
+          "details": null
+        },
+        "component_emitted": false
+      }
+    },
+    "mixed-export": {
+      "stage": "binding",
+      "outcome": "unsupported",
+      "report": {
+        "schema": "noble-component/v1",
+        "outcome": "unsupported",
+        "diagnostic": {
+          "code": "component-check",
+          "message": "Binding: checked u64 adapter supports only synchronous scalar operations",
+          "details": null
+        },
+        "component_emitted": false
+      }
+    }
+  },
+  "components": {
+    "checked": {
+      "report": {
+        "schema": "noble-component/v1",
+        "profile": "Component-Sync-Bootstrap",
+        "checked_u64_boundary": true,
+        "outcome": "compiled",
+        "world": "noble-test:unsigned/demo@1.0.0",
+        "component_emitted": true,
+        "independent_kernel_check": true,
+        "build_context_hex": "436f6d706f6e656e742d53796e632d426f6f747374726170005749542d426f756e6465642d76333a626f6f6c2c7336342c737472696e672c6c6973743c75383e2c726573756c743c7336342c737472696e673e2c726573756c743c6c6973743c75383e2c737472696e673e2c6f776e2c626f72726f772c73747265616d3c75383e2c6675747572653c7336343e2c6675747572653c726573756c743c7336342c737472696e673e3e00636865636b65642d7536342d746f2d4936343a302e2e3d3932323333373230333638353437373538303700fdfffffffeffffffffffffff43616e6f6e6963616c2d53796e632d636d33327032006e6f626c652d746573743a756e7369676e65642f64656d6f40312e302e30007061636b616765206e6f626c652d746573743a756e7369676e656440312e302e303b0a776f726c642064656d6f207b0a20206578706f7274206563686f3a2066756e632876616c75653a2075363429202d3e207536343b0a7d0a006e6f626c652d636f6d706f6e656e742d63616e6f6e6963616c33322d7631000000000000000000",
+        "component_bytes": 1705,
+        "exports": [
+          {
+            "name": "echo",
+            "source": "export-0.noble"
+          }
+        ],
+        "output": "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-positive",
+        "assembler": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+        "abi": "wasm-tools-1.245.1-sync-memory32-utf8"
+      },
+      "component": "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-positive/component.wasm",
+      "sha256": "d0aa76e0f92dcead78e2eb42e48c3002ad7dbd1a8ae742f497e0b0bc79c7076a",
+      "emitted": {
+        "wat": {
+          "path": "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-positive/module.wat",
+          "sha256": "1a2aa06811754cf8d9f9f8575c85d15665c0419017de8df43d0d5484db7458b5"
+        },
+        "core": {
+          "path": "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-positive/core.wasm",
+          "sha256": "dabe828b6b40db81645d5b1cfcd2a4d1180e95ba1c6634046e14708437142285"
+        }
+      },
+      "guard_order": {
+        "internal_enter_prologue_before_ingress_guard": true,
+        "ingress_before_source_body": true,
+        "egress_before_publication": true,
+        "source_body_entries_measured": false
+      }
+    },
+    "negative": {
+      "report": {
+        "schema": "noble-component/v1",
+        "profile": "Component-Sync-Bootstrap",
+        "checked_u64_boundary": true,
+        "outcome": "compiled",
+        "world": "noble-test:unsigned/demo@1.0.0",
+        "component_emitted": true,
+        "independent_kernel_check": true,
+        "build_context_hex": "436f6d706f6e656e742d53796e632d426f6f747374726170005749542d426f756e6465642d76333a626f6f6c2c7336342c737472696e672c6c6973743c75383e2c726573756c743c7336342c737472696e673e2c726573756c743c6c6973743c75383e2c737472696e673e2c6f776e2c626f72726f772c73747265616d3c75383e2c6675747572653c7336343e2c6675747572653c726573756c743c7336342c737472696e673e3e00636865636b65642d7536342d746f2d4936343a302e2e3d3932323333373230333638353437373538303700fdfffffffeffffffffffffff43616e6f6e6963616c2d53796e632d636d33327032006e6f626c652d746573743a756e7369676e65642f64656d6f40312e302e30007061636b616765206e6f626c652d746573743a756e7369676e656440312e302e303b0a776f726c642064656d6f207b0a20206578706f7274206563686f3a2066756e632876616c75653a2075363429202d3e207536343b0a7d0a006e6f626c652d636f6d706f6e656e742d63616e6f6e6963616c33322d763100000000000b00000064726f7020302031202d0a",
+        "component_bytes": 1722,
+        "exports": [
+          {
+            "name": "echo",
+            "source": "export-0.noble"
+          }
+        ],
+        "output": "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-negative",
+        "assembler": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+        "abi": "wasm-tools-1.245.1-sync-memory32-utf8"
+      },
+      "component": "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-negative/component.wasm",
+      "sha256": "96b7413067408695355e9ffc31bf191f153e3cdddd8660507b732df5f7b56818",
+      "emitted": {
+        "wat": {
+          "path": "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-negative/module.wat",
+          "sha256": "468bd1defd0d3917854faaa501bcff82d1e1b598696486e57dc52985d5ac7708"
+        },
+        "core": {
+          "path": "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-negative/core.wasm",
+          "sha256": "34f195606f8dccf47541cae00ded1bbc9553475b80ba284f931f781b6ab5fc8f"
+        }
+      },
+      "guard_order": {
+        "internal_enter_prologue_before_ingress_guard": true,
+        "ingress_before_source_body": true,
+        "egress_before_publication": true,
+        "source_body_entries_measured": false
+      }
+    }
+  },
+  "typed_peer": {
+    "checked": {
+      "component": {
+        "path": "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-positive/component.wasm",
+        "sha256": "d0aa76e0f92dcead78e2eb42e48c3002ad7dbd1a8ae742f497e0b0bc79c7076a"
+      },
+      "engine": "wasmtime-40.0.2",
+      "export": "echo",
+      "observations": [
+        {
+          "input": {
+            "type": "u64",
+            "value": "0"
+          },
+          "invocation": {
+            "outcome": "normal",
+            "post_return": true,
+            "result": {
+              "type": "u64",
+              "value": "0"
+            }
+          }
+        },
+        {
+          "input": {
+            "type": "u64",
+            "value": "42"
+          },
+          "invocation": {
+            "outcome": "normal",
+            "post_return": true,
+            "result": {
+              "type": "u64",
+              "value": "42"
+            }
+          }
+        },
+        {
+          "input": {
+            "type": "u64",
+            "value": "9223372036854775807"
+          },
+          "invocation": {
+            "outcome": "normal",
+            "post_return": true,
+            "result": {
+              "type": "u64",
+              "value": "9223372036854775807"
+            }
+          }
+        },
+        {
+          "input": {
+            "type": "u64",
+            "value": "9223372036854775808"
+          },
+          "invocation": {
+            "error": "error while executing at wasm backtrace:\n    0:    0x40b - <unknown>!<wasm function 14>: wasm trap: wasm `unreachable` instruction executed",
+            "outcome": "trap",
+            "post_return": false
+          }
+        },
+        {
+          "input": {
+            "type": "u64",
+            "value": "18446744073709551615"
+          },
+          "invocation": {
+            "error": "error while executing at wasm backtrace:\n    0:    0x40b - <unknown>!<wasm function 14>: wasm trap: wasm `unreachable` instruction executed",
+            "outcome": "trap",
+            "post_return": false
+          }
+        }
+      ],
+      "schema": "noble-wi03-peer/v1"
+    },
+    "negative": {
+      "component": {
+        "path": "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-negative/component.wasm",
+        "sha256": "96b7413067408695355e9ffc31bf191f153e3cdddd8660507b732df5f7b56818"
+      },
+      "engine": "wasmtime-40.0.2",
+      "export": "echo",
+      "observations": [
+        {
+          "input": {
+            "type": "u64",
+            "value": "0"
+          },
+          "invocation": {
+            "error": "error while executing at wasm backtrace:\n    0:    0x42e - <unknown>!<wasm function 14>: wasm trap: wasm `unreachable` instruction executed",
+            "outcome": "trap",
+            "post_return": false
+          }
+        },
+        {
+          "input": {
+            "type": "u64",
+            "value": "42"
+          },
+          "invocation": {
+            "error": "error while executing at wasm backtrace:\n    0:    0x42e - <unknown>!<wasm function 14>: wasm trap: wasm `unreachable` instruction executed",
+            "outcome": "trap",
+            "post_return": false
+          }
+        },
+        {
+          "input": {
+            "type": "u64",
+            "value": "9223372036854775807"
+          },
+          "invocation": {
+            "error": "error while executing at wasm backtrace:\n    0:    0x42e - <unknown>!<wasm function 14>: wasm trap: wasm `unreachable` instruction executed",
+            "outcome": "trap",
+            "post_return": false
+          }
+        },
+        {
+          "input": {
+            "type": "u64",
+            "value": "9223372036854775808"
+          },
+          "invocation": {
+            "error": "error while executing at wasm backtrace:\n    0:    0x40d - <unknown>!<wasm function 14>: wasm trap: wasm `unreachable` instruction executed",
+            "outcome": "trap",
+            "post_return": false
+          }
+        },
+        {
+          "input": {
+            "type": "u64",
+            "value": "18446744073709551615"
+          },
+          "invocation": {
+            "error": "error while executing at wasm backtrace:\n    0:    0x40d - <unknown>!<wasm function 14>: wasm trap: wasm `unreachable` instruction executed",
+            "outcome": "trap",
+            "post_return": false
+          }
+        }
+      ],
+      "schema": "noble-wi03-peer/v1"
+    }
+  },
+  "commands": [
+    {
+      "label": "build-production-cli",
+      "executable": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+      "executable_sha256": "862f9dd92f6d1065dbda15da68138db4432ad85581bceadf568ba2749171ddd4",
+      "args": [
+        "build",
+        "-p",
+        "noble-cli",
+        "--locked",
+        "--offline",
+        "-j",
+        "4"
+      ],
+      "status": 0,
+      "expected_status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "00-build-production-cli.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "00-build-production-cli.stderr",
+      "stderr_sha256": "bed53830195ff3745d5ff5b30b9f414c600aea29893136e0dab54ffd221eb556"
+    },
+    {
+      "label": "build-independent-peer",
+      "executable": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+      "executable_sha256": "862f9dd92f6d1065dbda15da68138db4432ad85581bceadf568ba2749171ddd4",
+      "args": [
+        "build",
+        "--manifest-path",
+        "verification/wi03/peer/Cargo.toml",
+        "--locked",
+        "--offline",
+        "-j",
+        "4",
+        "--config",
+        "source.crates-io.replace-with=\"wi03-vendor\"",
+        "--config",
+        "source.wi03-vendor.directory=\"/nix/store/4drsk5fp0k4s82psjch6vlsfyqs1mxgq-wasmtime-40.0.2-vendor/source-registry-0\""
+      ],
+      "status": 0,
+      "expected_status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "01-build-independent-peer.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "01-build-independent-peer.stderr",
+      "stderr_sha256": "992a9c9bad8b977fffd07aa805fc843415a4281a3af4303c58819e3a1e1baa54"
+    },
+    {
+      "label": "default-implicit-binding",
+      "executable": "/var/tmp/noble-wi03-prepromotion-20260930-d/target/debug/noble",
+      "executable_sha256": "70ecd777c0e8ecee44b48c354dbb4978635669acb3552bb39abe487ae8e8271c",
+      "args": [
+        "component",
+        "compile",
+        "/home/brittonr/git/noble/verification/wi03/echo.wit",
+        "demo",
+        "/var/tmp/noble-wi03-prepromotion-20260930-d/implicit-refused",
+        "echo=/home/brittonr/git/noble/verification/wi03/echo.noble"
+      ],
+      "status": 2,
+      "expected_status": 2,
+      "signal": null,
+      "error": null,
+      "stdout": "02-default-implicit-binding.stdout",
+      "stdout_sha256": "f5b42cc93a0c118a35033513de22a37f8f3dc180a382831be542eb2c582bf1d9",
+      "stderr": "02-default-implicit-binding.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "unsigned-import",
+      "executable": "/var/tmp/noble-wi03-prepromotion-20260930-d/target/debug/noble",
+      "executable_sha256": "70ecd777c0e8ecee44b48c354dbb4978635669acb3552bb39abe487ae8e8271c",
+      "args": [
+        "component",
+        "compile-checked-u64",
+        "/home/brittonr/git/noble/verification/wi03/import-u64.wit",
+        "demo",
+        "/var/tmp/noble-wi03-prepromotion-20260930-d/rejected-unsigned-import",
+        "echo=/home/brittonr/git/noble/verification/wi03/echo.noble"
+      ],
+      "status": 4,
+      "expected_status": 4,
+      "signal": null,
+      "error": null,
+      "stdout": "03-unsigned-import.stdout",
+      "stdout_sha256": "1b6ec7c6ac4338e448f38a8186bd9cbfeba0cb8f04b58bddaaefab673b3e1c34",
+      "stderr": "03-unsigned-import.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "signed-import",
+      "executable": "/var/tmp/noble-wi03-prepromotion-20260930-d/target/debug/noble",
+      "executable_sha256": "70ecd777c0e8ecee44b48c354dbb4978635669acb3552bb39abe487ae8e8271c",
+      "args": [
+        "component",
+        "compile-checked-u64",
+        "/home/brittonr/git/noble/verification/wi03/import-s64.wit",
+        "demo",
+        "/var/tmp/noble-wi03-prepromotion-20260930-d/rejected-signed-import",
+        "echo=/home/brittonr/git/noble/verification/wi03/echo.noble"
+      ],
+      "status": 4,
+      "expected_status": 4,
+      "signal": null,
+      "error": null,
+      "stdout": "04-signed-import.stdout",
+      "stdout_sha256": "1b6ec7c6ac4338e448f38a8186bd9cbfeba0cb8f04b58bddaaefab673b3e1c34",
+      "stderr": "04-signed-import.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "async-export",
+      "executable": "/var/tmp/noble-wi03-prepromotion-20260930-d/target/debug/noble",
+      "executable_sha256": "70ecd777c0e8ecee44b48c354dbb4978635669acb3552bb39abe487ae8e8271c",
+      "args": [
+        "component",
+        "compile-checked-u64",
+        "/home/brittonr/git/noble/verification/wi03/async.wit",
+        "demo",
+        "/var/tmp/noble-wi03-prepromotion-20260930-d/rejected-async-export",
+        "echo=/home/brittonr/git/noble/verification/wi03/echo.noble"
+      ],
+      "status": 4,
+      "expected_status": 4,
+      "signal": null,
+      "error": null,
+      "stdout": "05-async-export.stdout",
+      "stdout_sha256": "bcc344e5144324185b5ca4379332b25001f4527243054f68f3a19373d133b195",
+      "stderr": "05-async-export.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "mixed-export",
+      "executable": "/var/tmp/noble-wi03-prepromotion-20260930-d/target/debug/noble",
+      "executable_sha256": "70ecd777c0e8ecee44b48c354dbb4978635669acb3552bb39abe487ae8e8271c",
+      "args": [
+        "component",
+        "compile-checked-u64",
+        "/home/brittonr/git/noble/verification/wi03/mixed.wit",
+        "demo",
+        "/var/tmp/noble-wi03-prepromotion-20260930-d/rejected-mixed-export",
+        "echo=/home/brittonr/git/noble/verification/wi03/echo.noble"
+      ],
+      "status": 4,
+      "expected_status": 4,
+      "signal": null,
+      "error": null,
+      "stdout": "06-mixed-export.stdout",
+      "stdout_sha256": "bcc344e5144324185b5ca4379332b25001f4527243054f68f3a19373d133b195",
+      "stderr": "06-mixed-export.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "compile-checked-positive",
+      "executable": "/var/tmp/noble-wi03-prepromotion-20260930-d/target/debug/noble",
+      "executable_sha256": "70ecd777c0e8ecee44b48c354dbb4978635669acb3552bb39abe487ae8e8271c",
+      "args": [
+        "component",
+        "compile-checked-u64",
+        "/home/brittonr/git/noble/verification/wi03/echo.wit",
+        "demo",
+        "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-positive",
+        "echo=/home/brittonr/git/noble/verification/wi03/echo.noble"
+      ],
+      "status": 0,
+      "expected_status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "07-compile-checked-positive.stdout",
+      "stdout_sha256": "3a6af323d25f0d59600b4508059d2dd34bd995ce1b0769f02580956c7b3be256",
+      "stderr": "07-compile-checked-positive.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "compile-checked-negative",
+      "executable": "/var/tmp/noble-wi03-prepromotion-20260930-d/target/debug/noble",
+      "executable_sha256": "70ecd777c0e8ecee44b48c354dbb4978635669acb3552bb39abe487ae8e8271c",
+      "args": [
+        "component",
+        "compile-checked-u64",
+        "/home/brittonr/git/noble/verification/wi03/echo.wit",
+        "demo",
+        "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-negative",
+        "echo=/home/brittonr/git/noble/verification/wi03/negative.noble"
+      ],
+      "status": 0,
+      "expected_status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "08-compile-checked-negative.stdout",
+      "stdout_sha256": "ccbfc5f4079ad050e492e234e671aa6a2ee2348263726baa0bca646749411981",
+      "stderr": "08-compile-checked-negative.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "independent-checked-u64",
+      "executable": "/var/tmp/noble-wi03-prepromotion-20260930-d/peer-target/debug/noble-wi03-peer",
+      "executable_sha256": "469d98094d683de3e67dadaabfbf36690d8f296cb981c1504ba05db26dff8bb2",
+      "args": [
+        "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-positive/component.wasm"
+      ],
+      "status": 0,
+      "expected_status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "09-independent-checked-u64.stdout",
+      "stdout_sha256": "ec259b5dd08babcfa00abe3d4ebcedfcaf611c1c15fb197c541966ecb8484ea9",
+      "stderr": "09-independent-checked-u64.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "independent-negative-result",
+      "executable": "/var/tmp/noble-wi03-prepromotion-20260930-d/peer-target/debug/noble-wi03-peer",
+      "executable_sha256": "469d98094d683de3e67dadaabfbf36690d8f296cb981c1504ba05db26dff8bb2",
+      "args": [
+        "/var/tmp/noble-wi03-prepromotion-20260930-d/checked-negative/component.wasm"
+      ],
+      "status": 0,
+      "expected_status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "10-independent-negative-result.stdout",
+      "stdout_sha256": "1c4c3d9bb3caa1d53e968abd87f90e522080e02c6386b668855106a30d7ac773",
+      "stderr": "10-independent-negative-result.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "typed_call_counts": {
+    "checked": {
+      "typed_calls": 5,
+      "normal": 3,
+      "traps": 2,
+      "import_callbacks_configured": 0,
+      "source_body_entries_measured": null
+    },
+    "negative": {
+      "typed_calls": 5,
+      "normal": 0,
+      "traps": 5,
+      "import_callbacks_configured": 0,
+      "source_body_entries_measured": null
+    }
+  },
+  "assumptions": [
+    "Canonical WI-03 binds a default implicit u64-to-I64 refusal at Binding; its all-ones decimal is a case design, not a runtime value consumed by that refusal.",
+    "Separate explicit checked export admits only import-free synchronous u64-to-u64 scalar; typed peer runs fresh instances and observes returned Val::U64 or trap. The internal $enter guest prologue executes before the unsigned ingress guard; source-body use follows the guard. No source-body counter exists and no before-any-guest-instruction claim is made. Source-body and pre-publication ordering rely on compiled guard placement and selected compiler/Wasmtime behavior.",
+    "The public CLI and World API let the caller opt into checked mode; build_context is deterministic recipe identity, not an authenticated host authorization grant. This gate makes no host-selection authority claim.",
+    "Selected Rust, pinned Wasmtime and vendor store closures, linker, wasm-tools, Noble compiler/host, source snapshots and historical receipts are trusted for this finite observation; universal compiler/ABI/engine correctness and proof remain open.",
+    "Full Octet/Clippy and signed+sandbox Nix checks are blocked/unclaimed; the native Cairn change remains ACTIVE and is not archived."
+  ]
+}

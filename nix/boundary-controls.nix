@@ -5,6 +5,9 @@
   nickel,
   octetGate,
   cargoOctet,
+  wasmtimeSource,
+  reviewedVendor,
+  reviewedCargoConfig,
   selection,
 }:
 let
@@ -94,6 +97,7 @@ let
     in
     pkgs.runCommand "noble-boundary-${case.id}"
       {
+        buildInputs = [ wasmtimeSource reviewedVendor ];
         nativeBuildInputs = [
           rust
           pkgs.stdenv.cc
@@ -113,6 +117,9 @@ let
         export NIX_CONFIG='experimental-features = nix-command'
         unset RUSTC_WRAPPER RUSTC_WORKSPACE_WRAPPER RUSTFLAGS CARGO_ENCODED_RUSTFLAGS DYLINT_RUSTFLAGS
         mkdir -p "$CARGO_HOME" "$out"
+        ${pkgs.lib.optionalString (!usesRandomnessDependency) ''
+          cp ${reviewedCargoConfig} "$CARGO_HOME/config.toml"
+        ''}
         cp -r ${src} source
         chmod -R u+w source
         cd source

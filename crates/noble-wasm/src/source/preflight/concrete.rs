@@ -15,6 +15,10 @@ fn type_children(ty: &noble_kernel::types::Ty) -> Result<usize, crate::Diagnosti
             noble_kernel::types::NominalShape::Opaque(_) => Ok(1),
             noble_kernel::types::NominalShape::Variant(_, _) => Ok(2),
         },
+        noble_kernel::types::Ty::GenericNominal(_, _, shape) => match shape.as_ref() {
+            noble_kernel::types::NominalShape::Opaque(_) => Err(crate::Diagnostic::Invalid),
+            noble_kernel::types::NominalShape::Variant(_, _) => Ok(4),
+        },
         noble_kernel::types::Ty::Program(input, output, effects) => {
             if input.len() > super::STACK_LIMIT
                 || output.len() > super::STACK_LIMIT
@@ -63,6 +67,21 @@ fn type_child(
                 }
             }
         },
+        noble_kernel::types::Ty::GenericNominal(_, arguments, shape) => {
+            if child < 2 {
+                return Ok(&arguments[child]);
+            }
+            match shape.as_ref() {
+                noble_kernel::types::NominalShape::Opaque(_) => Err(crate::Diagnostic::Invalid),
+                noble_kernel::types::NominalShape::Variant(left, right) => {
+                    if child == 2 {
+                        Ok(left)
+                    } else {
+                        Ok(right)
+                    }
+                }
+            }
+        }
         noble_kernel::types::Ty::Program(input, output, _) => {
             let selected = if child < input.len() {
                 input.get(child)

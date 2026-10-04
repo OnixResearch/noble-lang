@@ -1,3 +1,173 @@
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct Symbolic {
+    concrete: u64,
+    rigid: u64,
+    unknown: bool,
+}
+
+impl Symbolic {
+    const fn empty() -> Self {
+        Self {
+            concrete: 0,
+            rigid: 0,
+            unknown: false,
+        }
+    }
+
+    const fn union(self, other: Self) -> Self {
+        Self {
+            concrete: self.concrete | other.concrete,
+            rigid: self.rigid | other.rigid,
+            unknown: self.unknown || other.unknown,
+        }
+    }
+}
+
+/// A declaration-level effect variable is an arbitrary set, not a hole whose
+/// bound may be narrowed. Compare the body's union formula with its declared
+/// formula before the concrete finite-bit solver runs.
+pub(super) fn rigid(
+    arena: &crate::inference::Arena,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<(), crate::Diagnostic> {
+    if arena.rigid_effect_goals.is_empty() {
+        return Ok(());
+    }
+    let mut facts = alloc::vec::Vec::with_capacity(arena.effects.len());
+    for effect in &arena.effects {
+        facts.push(match effect {
+            super::Effect::Constant(bits) => Symbolic {
+                concrete: *bits,
+                ..Symbolic::empty()
+            },
+            super::Effect::Rigid(index) => Symbolic {
+                rigid: attempt!(1u64
+                    .checked_shl(*index)
+                    .ok_or_else(|| { crate::invalid(span, "rigid effect binder limit exceeded") })),
+                ..Symbolic::empty()
+            },
+            super::Effect::Hole => Symbolic {
+                unknown: true,
+                ..Symbolic::empty()
+            },
+            super::Effect::Union(_, _) => Symbolic::empty(),
+        });
+    }
+    let mut remaining = arena.effects.len().saturating_add(1);
+    let mut changed = true;
+    while changed && remaining != 0 {
+        attempt!(meter.charge(1, span));
+        changed = false;
+        for (at, effect) in arena.effects.iter().enumerate() {
+            attempt!(meter.charge(1, span));
+            if let super::Effect::Union(a, b) = effect {
+                let left = attempt!(symbol(&facts, *a, span));
+                let right = attempt!(symbol(&facts, *b, span));
+                let next = left.union(right);
+                if facts[at] != next {
+                    facts[at] = next;
+                    changed = true;
+                }
+            }
+        }
+        for (a, b) in &arena.effect_equations {
+            attempt!(meter.charge(1, span));
+            let left = attempt!(symbol(&facts, *a, span));
+            let right = attempt!(symbol(&facts, *b, span));
+            let combined = Symbolic {
+                concrete: left.concrete | right.concrete,
+                rigid: left.rigid | right.rigid,
+                unknown: left.unknown && right.unknown,
+            };
+            for id in [*a, *b] {
+                changed |= attempt!(equate_through_pure(
+                    &arena.effects,
+                    &mut facts,
+                    id,
+                    combined,
+                    span,
+                    meter,
+                ));
+            }
+        }
+        remaining -= 1;
+    }
+    if changed {
+        return Err(crate::invalid(
+            span,
+            "rigid effect equation did not converge",
+        ));
+    }
+    for (a, b) in &arena.effect_equations {
+        let left = attempt!(symbol(&facts, *a, span));
+        let right = attempt!(symbol(&facts, *b, span));
+        if !left.unknown && !right.unknown && left != right {
+            return Err(crate::invalid(span, "signature narrows a universal effect"));
+        }
+    }
+    for (body, declared) in &arena.rigid_effect_goals {
+        let actual = attempt!(symbol(&facts, *body, span));
+        let expected = attempt!(symbol(&facts, *declared, span));
+        if actual.unknown || expected.unknown || actual != expected {
+            return Err(crate::invalid(
+                span,
+                "source body does not preserve its universal effect bound",
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// An equality with `pure ∪ x` constrains `x` exactly. Propagate only
+/// through the neutral side; an arbitrary union cannot attribute effects to
+/// either operand and remains unknown until another equation constrains it.
+fn equate_through_pure(
+    effects: &[super::Effect],
+    facts: &mut [Symbolic],
+    mut id: u32,
+    value: Symbolic,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<bool, crate::Diagnostic> {
+    let mut remaining = effects.len();
+    while remaining != 0 {
+        attempt!(meter.charge(1, span));
+        let index = attempt!(crate::offset(id, span));
+        match effects.get(index) {
+            Some(super::Effect::Hole) => {
+                if facts[index] != value {
+                    facts[index] = value;
+                    return Ok(true);
+                }
+                return Ok(false);
+            }
+            Some(super::Effect::Union(left, right)) => {
+                let left_value = attempt!(symbol(facts, *left, span));
+                let right_value = attempt!(symbol(facts, *right, span));
+                if left_value == Symbolic::empty() {
+                    id = *right;
+                } else if right_value == Symbolic::empty() {
+                    id = *left;
+                } else {
+                    return Ok(false);
+                }
+            }
+            Some(super::Effect::Constant(_) | super::Effect::Rigid(_)) => return Ok(false),
+            None => return Err(crate::internal(span)),
+        }
+        remaining -= 1;
+    }
+    Err(crate::invalid(span, "cyclic effect equation"))
+}
+
+fn symbol(facts: &[Symbolic], id: u32, span: crate::Span) -> Result<Symbolic, crate::Diagnostic> {
+    facts
+        .get(attempt!(crate::offset(id, span)))
+        .copied()
+        .ok_or_else(|| crate::internal(span))
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; each fixed-point pass and each constraint consumes work, bounds only lose finite effect bits, and concrete effects are checked after convergence with the first diagnostic retained."

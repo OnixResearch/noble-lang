@@ -59,6 +59,13 @@ pub enum Pattern {
         crate::types::NominalTypeId,
         alloc::boxed::Box<crate::types::NominalShape>,
     ),
+    /// A two-parameter variant family. The payload indexes must match the
+    /// family declaration; substitution derives the concrete descriptor.
+    GenericNominal(
+        crate::types::NominalTypeId,
+        alloc::boxed::Box<[Pattern; 2]>,
+        [u8; 2],
+    ),
     /// A value-type variable.
     Var(crate::words::Variable),
     /// A whole-stack variable standing for zero or more stack positions.
@@ -222,6 +229,12 @@ fn require_pattern(
         Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
             work.push(Step::Pattern(*left));
             work.push(Step::Pattern(*right));
+            Ok(work)
+        }
+        Pattern::GenericNominal(_, args, _) => {
+            let [first, second] = *args;
+            work.push(Step::Pattern(first));
+            work.push(Step::Pattern(second));
             Ok(work)
         }
         Pattern::List(item) => {

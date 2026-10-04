@@ -112,7 +112,7 @@ fn async_imports_preserve_direct_style_types_effects_and_owned_results() -> Resu
     let identity = identity.submission().ok_or("missing owner-transfer body")?;
     assert_eq!(
         identity.request.expected.stack_out,
-        vec![noble_contracts::component::Type::FutureS64.noble()]
+        vec![noble_contracts::component::Type::FutureS64.noble().ok_or("missing future mapping")?]
     );
     let owned = world
         .prepare_export("run", b"service.open service.close", LIMITS)
@@ -163,15 +163,15 @@ fn async_operations_reject_explicit_and_implicit_retained_borrows() -> Result<()
         .kind;
     assert!(!method.asynchronous);
     assert_eq!(
-        method.input_types(),
-        vec![noble_kernel::types::Ty::Resource(kind)]
+        method.input_types(&synchronous),
+        Some(vec![noble_kernel::types::Ty::Resource(kind)])
     );
     assert_eq!(
-        method.output_types(),
-        vec![
+        method.output_types(&synchronous),
+        Some(vec![
             noble_kernel::types::Ty::Resource(kind),
             noble_kernel::types::Ty::I64
-        ]
+        ])
     );
     Ok(())
 }
@@ -209,7 +209,7 @@ fn synthetic_resource_identities_are_disjoint_and_stable() -> Result<(), String>
             .iter()
             .find(|operation| operation.parameters == [ty])
             .ok_or("missing matching live consumer")?;
-        assert_eq!(producer.output_types(), consumer.input_types());
+        assert_eq!(producer.output_types(&world), consumer.input_types(&world));
     }
     Ok(())
 }
@@ -288,4 +288,57 @@ fn unsupported_async_payloads_do_not_widen_to_untyped_handles() {
             noble_contracts::DiagnosticKind::Invalid | noble_contracts::DiagnosticKind::Unsupported
         ));
     }
+}
+
+#[test]
+fn unsigned_wit_requires_a_selected_checked_boundary() -> Result<(), String> {
+    const WIT: &[u8] =
+        b"package test:unsigned@1.0.0; world main { export echo: func(value: u64) -> u64; }";
+    let implicit = noble_contracts::component::World::parse(WIT, "main", LIMITS)
+        .expect_err("implicit unsigned-to-signed binding must refuse");
+    assert_eq!(implicit.stage, noble_contracts::component::Stage::Binding);
+    assert_eq!(implicit.diagnostic.kind, noble_contracts::DiagnosticKind::Invalid);
+    assert_eq!(noble_contracts::component::Type::CheckedU64.noble(), None);
+
+    let selected = noble_contracts::component::World::parse_checked_u64(WIT, "main", LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert_ne!(
+        selected.build_context(),
+        world(b"package test:unsigned@1.0.0; world main { export echo: func(value: s64) -> s64; }", "main")?
+            .build_context()
+    );
+    let operation = selected.exports().first().ok_or("missing unsigned export")?;
+    assert_eq!(operation.parameters, [noble_contracts::component::Type::CheckedU64]);
+    assert_eq!(operation.input_types(&selected), Some(vec![noble_kernel::types::Ty::I64]));
+    let accepted = selected.prepare_export("echo", b"", LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(
+        accepted.submission().ok_or("missing unsigned body")?.request.expected.stack_out,
+        vec![noble_kernel::types::Ty::I64]
+    );
+    Ok(())
+}
+
+#[test]
+fn checked_unsigned_selector_requires_import_free_exact_scalar_export() {
+    for wit in [
+        b"package test:unsigned@1.0.0; world main { import signed: func(value: s64) -> s64; export echo: func(value: u64) -> u64; }".as_slice(),
+        b"package test:unsigned@1.0.0; world main { import unsigned: func(value: u64) -> u64; export echo: func(value: u64) -> u64; }",
+        b"package test:unsigned@1.0.0; world main { import unsigned: func(value: u64) -> u64; }",
+        b"package test:unsigned@1.0.0; world main { export echo: func() -> u64; }",
+        b"package test:unsigned@1.0.0; world main { export echo: func(value: u64); }",
+        b"package test:unsigned@1.0.0; world main { export echo: func(value: s64) -> u64; }",
+        b"package test:unsigned@1.0.0; world main { export echo: func(value: u64) -> s64; }",
+        b"package test:unsigned@1.0.0; world main { export echo: async func(value: u64) -> u64; }",
+    ] {
+        let error = noble_contracts::component::World::parse_checked_u64(wit, "main", LIMITS)
+            .expect_err("selected checked export must be import-free and exactly u64 -> u64");
+        assert_eq!(error.stage, noble_contracts::component::Stage::Binding);
+        assert_eq!(error.diagnostic.kind, noble_contracts::DiagnosticKind::Unsupported);
+    }
+    let signed = b"package test:signed@1.0.0; world main { import signed: func(value: s64) -> s64; export echo: func(value: s64) -> s64; }";
+    let world = noble_contracts::component::World::parse(signed, "main", LIMITS)
+        .expect("normal signed import/export world must remain supported");
+    assert_eq!(world.imports().len(), 1);
+    assert_eq!(world.exports().len(), 1);
 }

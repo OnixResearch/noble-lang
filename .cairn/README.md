@@ -4,7 +4,7 @@
 
 Revision: `0.1.0-draft.5`
 
-This directory owns the twelve normative draft specifications and their requirement IDs.
+This directory owns the thirteen normative draft specifications and their requirement IDs.
 Accepted specifications describe selected contracts. They do not establish completed code, executed scenarios, or accepted proofs.
 
 ## Core and execution
@@ -14,6 +14,7 @@ Accepted specifications describe selected contracts. They do not establish compl
 | `language` | SPEC-0001 | [Language semantics](specs/language/spec.md) |
 | `core-bootstrap` | SPEC-B001 | [First implementation subset](specs/core-bootstrap/spec.md) |
 | `backend-experiments` | SPEC-BE001 | [Wasm representation comparison](specs/backend-experiments/spec.md) |
+| `c-backend` | SPEC-BE002 | [Opt-in nonselected C11 backend design](specs/c-backend/spec.md) |
 | `safety` | SPEC-S001 | [Safety invariants](specs/safety/spec.md) |
 
 ## Boundaries and applications
@@ -46,6 +47,7 @@ The worker and Octet maps remain supporting documents, not additional normative 
 
 Conversion began with empty `changes/` and `archive/` directories; it did not fabricate implementation tasks, completed changes, or archive evidence.
 Subsequent implementation changes have their own lifecycle records. Active changes belong in `changes/<slug>/`, with explicit requirement deltas.
+`changes/live-wasm-reload/` and `changes/c-backend/` are specification-only active designs. Their scenarios are absent/not-run, their roadmap milestones not-started, and neither change selects a new implementation or changes historical Wasm evidence.
 
 ## Inspect and validate
 

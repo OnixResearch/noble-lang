@@ -22,6 +22,7 @@ pub(super) fn world(
     wit: &[u8],
     selected: &str,
     limits: crate::Limits,
+    checked_u64: bool,
 ) -> Result<crate::component::World, crate::component::Error> {
     attempt!(declarations::unique(&package));
     let mut selected_index = None;
@@ -49,6 +50,7 @@ pub(super) fn world(
         exports: alloc::vec::Vec::new(),
         resources,
         asynchronous: false,
+        checked_u64,
         limits,
     };
     let context = Context {
@@ -71,6 +73,37 @@ pub(super) fn world(
         || world.exports.len() > crate::component::MAX_OPERATIONS
     {
         return Err(crate::component::exhausted());
+    }
+    let unsigned = world.imports.iter().chain(world.exports.iter()).any(|operation|
+        operation.parameters.iter().chain(operation.results.iter())
+            .any(|ty| *ty == crate::component::Type::CheckedU64));
+    if !checked_u64 && unsigned {
+        return Err(crate::component::error(
+            crate::component::Stage::Binding,
+            crate::DiagnosticKind::Invalid,
+            "WIT u64 requires an explicitly selected checked I64 boundary",
+        ));
+    }
+    if checked_u64 && unsigned && !world.imports.is_empty() {
+        return Err(crate::component::error(
+            crate::component::Stage::Binding,
+            crate::DiagnosticKind::Unsupported,
+            "checked u64 boundary requires an import-free world",
+        ));
+    }
+    if checked_u64 && world.exports.iter().any(|operation| {
+        let unsigned = operation.parameters.iter().chain(operation.results.iter())
+            .any(|ty| *ty == crate::component::Type::CheckedU64);
+        unsigned && (world.asynchronous || operation.asynchronous
+            || operation.parameters.len() != 1 || operation.results.len() != 1
+            || operation.parameters.iter().chain(operation.results.iter())
+                .any(|ty| *ty != crate::component::Type::CheckedU64))
+    }) {
+        return Err(crate::component::error(
+            crate::component::Stage::Binding,
+            crate::DiagnosticKind::Unsupported,
+            "checked u64 adapter supports only synchronous scalar operations",
+        ));
     }
     attempt!(crate::component::bindings::make(&world));
     Ok(world)

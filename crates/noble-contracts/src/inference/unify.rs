@@ -65,8 +65,14 @@ impl super::Arena {
                 pending.push(a);
                 pending.push(b);
             }
+            super::Term::GenericNominal(_, a, b) => {
+                pending.push(a);
+                pending.push(b);
+            }
             super::Term::List(item) => pending.push(item),
             super::Term::Hole(_)
+            | super::Term::RigidValue(_)
+            | super::Term::RigidStack(_)
             | super::Term::Link(_)
             | super::Term::Unit
             | super::Term::Bool
@@ -166,6 +172,15 @@ impl super::Arena {
             | (super::Term::Empty, super::Term::Empty) => {}
             (super::Term::Resource(a), super::Term::Resource(b)) if a == b => {}
             (super::Term::Nominal(a), super::Term::Nominal(b)) if a == b => {}
+            (super::Term::RigidValue(a), super::Term::RigidValue(b))
+            | (super::Term::RigidStack(a), super::Term::RigidStack(b))
+                if a == b => {}
+            (super::Term::GenericNominal(id_a, a, b), super::Term::GenericNominal(id_c, c, d))
+                if id_a == id_c =>
+            {
+                pending.push((a, c));
+                pending.push((b, d));
+            }
             (super::Term::Pair(a, b), super::Term::Pair(c, d))
             | (super::Term::Sum(a, b), super::Term::Sum(c, d))
             | (super::Term::Program(a, b), super::Term::Program(c, d))
@@ -176,6 +191,8 @@ impl super::Arena {
             (super::Term::List(a), super::Term::List(b)) => pending.push((a, b)),
             (
                 super::Term::Link(_)
+                | super::Term::RigidValue(_)
+                | super::Term::RigidStack(_)
                 | super::Term::Unit
                 | super::Term::Bool
                 | super::Term::I64
@@ -186,6 +203,7 @@ impl super::Arena {
                 | super::Term::Certified
                 | super::Term::Resource(_)
                 | super::Term::Nominal(_)
+                | super::Term::GenericNominal(_, _, _)
                 | super::Term::Pair(_, _)
                 | super::Term::Sum(_, _)
                 | super::Term::List(_)
@@ -207,7 +225,9 @@ impl super::Arena {
 const fn sort(term: super::Term) -> super::Sort {
     match term {
         super::Term::Hole(sort) => sort,
-        super::Term::Empty | super::Term::Push(_, _) => super::Sort::Stack,
+        super::Term::RigidStack(_) | super::Term::Empty | super::Term::Push(_, _) => {
+            super::Sort::Stack
+        }
         super::Term::Link(_)
         | super::Term::Unit
         | super::Term::Bool
@@ -219,6 +239,8 @@ const fn sort(term: super::Term) -> super::Sort {
         | super::Term::Certified
         | super::Term::Resource(_)
         | super::Term::Nominal(_)
+        | super::Term::RigidValue(_)
+        | super::Term::GenericNominal(_, _, _)
         | super::Term::Pair(_, _)
         | super::Term::Sum(_, _)
         | super::Term::List(_)

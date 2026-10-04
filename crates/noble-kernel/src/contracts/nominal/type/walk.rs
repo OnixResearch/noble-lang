@@ -28,11 +28,7 @@ impl super::super::super::Env {
         self.walk_type(ty, max_nodes, false, self.nominals.len(), None)
     }
 
-    pub(in super::super) fn valid_nominal_payload(
-        &self,
-        ty: &crate::types::Ty,
-        max_nodes: u32,
-    ) -> bool {
+    pub(crate) fn valid_nominal_payload(&self, ty: &crate::types::Ty, max_nodes: u32) -> bool {
         self.walk_type(ty, max_nodes, true, self.nominals.len(), None)
     }
 
@@ -48,12 +44,12 @@ impl super::super::super::Env {
             crate::types::Ty::Unit
             | crate::types::Ty::Bool
             | crate::types::Ty::I64
-            | crate::types::Ty::Text => return max_nodes > 0,
+            | crate::types::Ty::Text
+            | crate::types::Ty::Syntax => return max_nodes > 0,
             crate::types::Ty::Resource(kind) => {
                 return max_nodes > 0 && self.resource_kinds.contains(kind);
             }
-            crate::types::Ty::Syntax
-            | crate::types::Ty::Contract
+            crate::types::Ty::Contract
             | crate::types::Ty::Evidence
             | crate::types::Ty::Certified => {
                 return max_nodes > 0 && !payload_only;
@@ -67,7 +63,7 @@ impl super::super::super::Env {
             prior,
             caller,
         };
-        pending.push(ty);
+        pending.push((ty, payload_only));
         let mut state = Some(work::State {
             pending,
             visited: 0,
@@ -94,14 +90,14 @@ impl super::super::super::Env {
         mut state: work::State<'a>,
         scope: &Scope,
     ) -> Option<work::State<'a>> {
-        let Some(next) = state.pending.pop() else {
+        let Some((next, payload_restricted)) = state.pending.pop() else {
             return Some(state);
         };
         if state.visited >= scope.max_nodes || state.pending.len() >= 512 {
             return None;
         }
         state.visited += 1;
-        self.enqueue_checked_type(next, state, scope)
+        self.enqueue_checked_type(next, payload_restricted, state, scope)
     }
 
     #[expect(
@@ -111,19 +107,23 @@ impl super::super::super::Env {
     fn enqueue_checked_type<'a>(
         &self,
         ty: &'a crate::types::Ty,
+        payload_restricted: bool,
         state: work::State<'a>,
         scope: &Scope,
     ) -> Option<work::State<'a>> {
         match ty {
             crate::types::Ty::Nominal(id, shape) => {
-                self.enqueue_known_nominal(*id, shape, state, scope)
+                self.enqueue_known_nominal(*id, shape, payload_restricted, state, scope)
+            }
+            crate::types::Ty::GenericNominal(id, args, shape) => {
+                self.enqueue_known_generic(*id, args, shape, payload_restricted, state, scope)
             }
             crate::types::Ty::Resource(kind) => self.resource_kinds.contains(kind).then_some(state),
             crate::types::Ty::Pair(left, right) | crate::types::Ty::Sum(left, right) => {
-                Some(state.with_pair(left, right))
+                Some(state.with_pair(left, right, payload_restricted))
             }
-            crate::types::Ty::List(item) => Some(state.with_type(item)),
-            crate::types::Ty::Program(input, output, effects) if !scope.payload_only => {
+            crate::types::Ty::List(item) => Some(state.with_type(item, payload_restricted)),
+            crate::types::Ty::Program(input, output, effects) => {
                 if !super::super::validation::valid_program_components(
                     self,
                     input,
@@ -143,12 +143,12 @@ impl super::super::super::Env {
             crate::types::Ty::Unit
             | crate::types::Ty::Bool
             | crate::types::Ty::I64
-            | crate::types::Ty::Text => Some(state),
-            crate::types::Ty::Syntax
-            | crate::types::Ty::Contract
+            | crate::types::Ty::Text
+            | crate::types::Ty::Syntax => Some(state),
+            crate::types::Ty::Contract
             | crate::types::Ty::Evidence
             | crate::types::Ty::Certified
-                if !scope.payload_only =>
+                if !payload_restricted =>
             {
                 Some(state)
             }
@@ -160,6 +160,7 @@ impl super::super::super::Env {
         &self,
         id: crate::types::NominalTypeId,
         shape: &'a crate::types::NominalShape,
+        payload_restricted: bool,
         state: work::State<'a>,
         scope: &Scope,
     ) -> Option<work::State<'a>> {
@@ -178,10 +179,39 @@ impl super::super::super::Env {
         if &decl.shape != shape || !is_visible {
             return None;
         }
-        if scope.payload_only {
-            return state.with_descriptor(shape);
+        if payload_restricted {
+            return state.with_descriptor(shape, true);
         }
         Some(state)
+    }
+
+    fn enqueue_known_generic<'a>(
+        &self,
+        id: crate::types::NominalTypeId,
+        args: &'a [crate::types::Ty; 2],
+        shape: &'a crate::types::NominalShape,
+        payload_restricted: bool,
+        state: work::State<'a>,
+        scope: &Scope,
+    ) -> Option<work::State<'a>> {
+        if !args[0].valid_generic_argument()
+            || !args[1].valid_generic_argument()
+            || !bounded_shape(shape, scope.max_nodes.saturating_sub(state.visited))
+        {
+            return None;
+        }
+        let decl = self.generic_variant(id)?;
+        if !(scope.payload_only || decl.exported || scope.caller == Some(id.module))
+            || !super::super::generic_descriptor_matches(decl, args, shape)
+        {
+            return None;
+        }
+        // Both ordered arguments are traversed in the same bounded walk,
+        // rather than recursively restarting validation for nested families.
+        if payload_restricted {
+            return state.with_descriptor(shape, true);
+        }
+        Some(state.with_pair(&args[0], &args[1], false))
     }
 
     pub(crate) fn validate_decl(&self, index: usize, max_nodes: u32) -> bool {
@@ -193,7 +223,7 @@ impl super::super::super::Env {
         while prior < index && self.nominals[prior].id != decl.id {
             prior += 1;
         }
-        if prior < index {
+        if prior < index || self.generic_variant(decl.id).is_some() {
             return false;
         }
         if let crate::types::NominalShape::Opaque(ty) = &decl.shape {
@@ -238,7 +268,7 @@ enum ShapeStep<'a> {
     reason = "Owner: noble-maintainers; both pinned Rust compilers reject pending Vec::pop (E0015) before charged shape traversal; reassess when this work-queue transition becomes const-capable."
 )]
 fn bounded_step<'a>(mut state: work::State<'a>, max_nodes: u32) -> ShapeStep<'a> {
-    let Some(ty) = state.pending.pop() else {
+    let Some((ty, _)) = state.pending.pop() else {
         return ShapeStep::Done;
     };
     if state.visited >= max_nodes || state.pending.len() >= 512 {
@@ -269,11 +299,12 @@ const fn program_children_fit(ty: &crate::types::Ty, max_nodes: u32) -> bool {
 fn enqueue_shape<'a>(ty: &'a crate::types::Ty, state: work::State<'a>) -> Option<work::State<'a>> {
     match ty {
         crate::types::Ty::Pair(left, right) | crate::types::Ty::Sum(left, right) => {
-            Some(state.with_pair(left, right))
+            Some(state.with_pair(left, right, false))
         }
-        crate::types::Ty::List(item) => Some(state.with_type(item)),
+        crate::types::Ty::List(item) => Some(state.with_type(item, false)),
         crate::types::Ty::Program(input, output, _) => Some(state.with_program(input, output)),
-        crate::types::Ty::Nominal(_, nested) => state.with_descriptor(nested),
+        crate::types::Ty::Nominal(_, nested) => state.with_descriptor(nested, false),
+        crate::types::Ty::GenericNominal(_, args, nested) => state.with_generic(args, nested),
         _ => is_shape_leaf(ty).then_some(state),
     }
 }

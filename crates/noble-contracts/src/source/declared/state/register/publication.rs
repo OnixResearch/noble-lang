@@ -85,13 +85,15 @@ impl WordBuilder {
         schema: &str,
         session: crate::source::declared::ModuleSession,
         mut local_exports: alloc::vec::Vec<crate::source::declared::Export>,
-        ty: &noble_kernel::types::Ty,
+        ty: Option<&noble_kernel::types::Ty>,
+        generic: Option<noble_kernel::types::NominalTypeId>,
         is_visible: bool,
     ) -> super::exports::Installed {
         if is_visible {
             local_exports.push(crate::source::declared::Export {
                 name: alloc::string::String::from(schema),
-                ty: Some(ty.clone()),
+                ty: ty.cloned(),
+                generic,
                 words: self.exported_words,
             });
         }

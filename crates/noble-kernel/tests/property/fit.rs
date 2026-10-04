@@ -71,7 +71,8 @@ fn as_program(
         | noble_kernel::types::Ty::Sum(_, _)
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Resource(_)
-        | noble_kernel::types::Ty::Nominal(_, _) => None,
+        | noble_kernel::types::Ty::Nominal(_, _)
+        | noble_kernel::types::Ty::GenericNominal(_, _, _) => None,
     }
 }
 

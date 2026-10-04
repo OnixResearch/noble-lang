@@ -8,19 +8,31 @@ function configureDeclaredAbi(engine, abi, declared_modules, declared_extension,
         || engine.declaredExtension.base_profile !== abi.profile
         || engine.declaredExtension.profile !== engine.profile
         || !Array.isArray(engine.declaredExtension.host_functions)
-        || engine.declaredExtension.host_functions.length !== 1
+        || engine.declaredExtension.host_functions.length !== 2
         || engine.declaredExtension.host_functions[0].name !== 'test_emit_bound'
         || !Array.isArray(engine.declaredExtension.host_functions[0].params)
         || engine.declaredExtension.host_functions[0].params.join(',') !== 'i32,i32,i32'
-        || engine.declaredExtension.host_functions[0].result !== 'i32') {
+        || engine.declaredExtension.host_functions[0].result !== 'i32'
+        || engine.declaredExtension.host_functions[1].name !== 'test_clock_bound'
+        || !Array.isArray(engine.declaredExtension.host_functions[1].params)
+        || engine.declaredExtension.host_functions[1].params.join(',') !== 'i32'
+        || engine.declaredExtension.host_functions[1].result !== 'i32,i64') {
         fail('invalid declared module ABI extension');
       }
     } else if (declared_extension !== null || !Array.isArray(bindings) || bindings.length !== 0) {
       fail('declared host boundary is unavailable in Core-Bootstrap');
     }
+    if (engine.inProcessLive && (declared_modules
+      || !Array.isArray(abi.live_host_functions)
+      || abi.live_host_functions.length !== 2
+      || abi.live_host_functions.some((fn, index) => fn.name !== ['live_propose', 'live_generation'][index]
+        || fn.params?.join(',') !== ['i64,i64,i32', ''][index]
+        || fn.result !== ['i32', 'i64'][index]))) {
+      fail('invalid live host ABI');
+    }
     engine.hostFunctions = declared_modules
       ? [...abi.host_functions.filter(fn => fn.name !== 'test_emit'), ...engine.declaredExtension.host_functions]
-      : abi.host_functions;
+      : engine.inProcessLive ? [...abi.host_functions, ...abi.live_host_functions] : abi.host_functions;
 
 }
 function initializeHostState(engine, bindings) {
@@ -39,11 +51,38 @@ function initializeHostState(engine, bindings) {
         || typeof row.module !== 'string' || row.module.length === 0 || row.module.length > 128
         || !Number.isInteger(row.version) || row.version <= 0 || row.version > 4294967295
         || typeof row.adapter !== 'string' || row.adapter.length === 0 || row.adapter.length > 64
+        || !['test.emit', 'test.clock'].includes(row.operation)
+        || !Array.isArray(row.script) || !Array.isArray(row.dispatch)
         || typeof row.allowed !== 'boolean' || engine.boundAdapters.has(row.slot)) {
         fail('invalid or duplicate module adapter slot');
       }
+      if (row.operation === 'test.emit' && (row.script.length !== 0 || row.dispatch.length !== 0)
+        || row.operation === 'test.clock' && (row.script.length < 1 || row.script.length > 16
+          || row.dispatch.length !== row.script.length + 1)) {
+        fail('incompatible test host adapter interface');
+      }
+      const scripted = [];
+      for (const value of row.script) {
+        if (typeof value !== 'string' || !/^(0|-[1-9][0-9]*|[1-9][0-9]*)$/.test(value)
+          || BigInt.asIntN(64, BigInt(value)) !== BigInt(value)) {
+          fail('invalid test.clock scripted input');
+        }
+        scripted.push(value);
+      }
+      const dispatch = [];
+      for (let index = 0; index < row.dispatch.length; index++) {
+        const step = row.dispatch[index];
+        const expected = row.allowed
+          ? index < scripted.length ? 'allow' : 'script-exhausted' : 'deny';
+        if (step === null || typeof step !== 'object' || step.decision !== expected
+          || step.value !== (expected === 'allow' ? scripted[index] : null)) {
+          fail('incompatible test.clock dispatch plan');
+        }
+        dispatch.push({ decision: step.decision, value: expected === 'allow' ? BigInt(step.value) : 0n });
+      }
       engine.boundAdapters.set(row.slot, { module: row.module, version: row.version,
-        adapter: row.adapter, allowed: row.allowed, invocations: 0 });
+        adapter: row.adapter, operation: row.operation, allowed: row.allowed,
+        script: scripted, dispatch, scriptIndex: 0, invocations: 0 });
     }
 
 }
@@ -81,15 +120,52 @@ function installTestHosts(engine, declared_modules) {
           slot, decision: 'deny', reason: 'trace-exhausted' };
         return 1;
       }
-      const text = readText(engine, offset, count);
+      const text = binding?.operation === 'test.emit' ? readText(engine, offset, count) : null;
       const request = { effect: 'test.emit', module: binding?.module ?? null,
         version: binding?.version ?? null, adapter_identity: binding?.adapter ?? null,
-        slot, decision: binding?.allowed ? 'allow' : 'deny', text };
+        slot, decision: binding?.allowed && binding.operation === 'test.emit' ? 'allow' : 'deny',
+        ...(!binding ? { reason: 'missing-mapping' }
+          : binding.operation !== 'test.emit' ? { reason: 'unexpected-operation' }
+          : !binding.allowed ? { reason: 'policy-denied' } : {}), text };
       engine.boundRequests.push(request);
       engine.trace.push(`test.emit:${binding?.adapter ?? 'unbound'}:${request.decision}:${text}`);
-      if (!binding?.allowed) return 1;
+      if (request.decision !== 'allow') return 1;
       engine.protectedOperations += 1;
       return 0;
+    };
+    engine.shared.test_clock_bound = (slot) => {
+      engine.hostRequestsTotal += 1;
+      engine.boundRequestsTotal += 1;
+      const binding = engine.boundAdapters.get(slot);
+      if (binding) binding.invocations += 1;
+      if (engine.trace.length >= 4096 || engine.boundRequests.length >= 4096) {
+        engine.boundTraceExhausted += 1;
+        engine.boundTraceTerminal = { effect: 'test.clock', module: binding?.module ?? null,
+          version: binding?.version ?? null, adapter_identity: binding?.adapter ?? null,
+          slot, decision: 'deny', reason: 'trace-exhausted' };
+        return [1, 0n];
+      }
+      let step = null;
+      let reason = null;
+      if (!binding) reason = 'missing-mapping';
+      else if (binding.operation !== 'test.clock') reason = 'unexpected-operation';
+      else {
+        const index = Math.min(binding.scriptIndex, binding.dispatch.length - 1);
+        step = binding.dispatch[index];
+        binding.scriptIndex += 1;
+        if (step.decision !== 'allow') reason = step.decision === 'deny'
+          ? 'policy-denied' : 'script-exhausted';
+      }
+      const request = { effect: 'test.clock', module: binding?.module ?? null,
+        version: binding?.version ?? null, adapter_identity: binding?.adapter ?? null,
+        slot, decision: step?.decision === 'allow' ? 'allow' : 'deny',
+        ...(reason ? { reason } : {}),
+        ...(step?.decision === 'allow' ? { value: step.value.toString() } : {}) };
+      engine.boundRequests.push(request);
+      engine.trace.push(`test.clock:${binding?.adapter ?? 'unbound'}:${request.decision}`);
+      if (request.decision !== 'allow') return [1, 0n];
+      engine.protectedOperations += 1;
+      return [0, step.value];
     };
     engine.shared.test_abort = () => {
       if (declared_modules) engine.hostRequestsTotal += 1;

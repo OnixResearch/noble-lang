@@ -187,9 +187,10 @@ function compile(label, source, inputTypes, optimization) {
   const output = command(label, binary, args);
   assert.equal(output.status, 0, output.stdout + output.stderr);
   const engine = new CoreEngine(config, abi, { optimized: optimization === 'on', artifacts: fs.mkdtempSync(path.join(artifacts, `${label}-`)) });
+  const wat = Buffer.from(output.stdout), sourceBytes = Buffer.from(source);
   try {
-    engine.prepare(Buffer.from(output.stdout), Buffer.from(source));
-    return { engine, module: engine.pending.module, metadata: engine.pending.record };
+    engine.prepare(wat, sourceBytes);
+    return { engine, module: engine.pending.module, metadata: engine.pending.record, wat, sourceBytes };
   } catch (error) {
     engine.close();
     throw error;
@@ -198,14 +199,27 @@ function compile(label, source, inputTypes, optimization) {
 function dynamicRuns(label, source, type, inputs, optimization) {
   const compiled = compile(label, source, [type], optimization);
   const observations = [];
-  for (let index = 0; index < inputs.length; index += 1) {
-    const engine = index === 0 ? compiled.engine : new CoreEngine(config, abi, { optimized: optimization === 'on', artifacts: fs.mkdtempSync(path.join(artifacts, `${label}-variant-`)) });
-    if (index !== 0) engine.install(compiled.module, { ...compiled.metadata, stem: null });
-    const before = engine.compilations;
-    const observed = engine.execute({ inputs: [{ type, value: inputs[index] }] });
-    assert.equal(engine.compilations, before, 'runtime input triggered compilation');
-    observations.push({ optimization, input_after_compile: inputs[index], compiler_service: 'absent', ...observed });
-    engine.close();
+  let baselineOpen = true;
+  try {
+    for (let index = 0; index < inputs.length; index += 1) {
+      const engine = index === 0 ? compiled.engine : new CoreEngine(config, abi, { optimized: optimization === 'on', artifacts: fs.mkdtempSync(path.join(artifacts, `${label}-variant-`)) });
+      try {
+        if (index !== 0) {
+          const ready = engine.prepare(compiled.wat, compiled.sourceBytes);
+          assert.equal(ready.outcome, 'ready');
+          assert.equal(ready.module.wasm_sha256, compiled.metadata.wasm_sha256, 'variant module differs from reviewed preparation');
+        }
+        const before = engine.compilations;
+        const observed = engine.execute({ inputs: [{ type, value: inputs[index] }] });
+        assert.equal(engine.compilations, before, 'runtime input triggered compilation');
+        observations.push({ optimization, input_after_compile: inputs[index], compiler_service: 'absent', ...observed });
+      } finally {
+        engine.close();
+        if (index === 0) baselineOpen = false;
+      }
+    }
+  } finally {
+    if (baselineOpen) compiled.engine.close();
   }
   return observations;
 }
@@ -397,17 +411,26 @@ try {
   });
   control('runtime-limit-boundaries', () => {
     const compiled = compile('runtime-bounds', '40 2 quote [ + ] compose run', [], 'off');
-    const baseline = compiled.engine.execute();
-    normal(baseline, [scalar(42)]);
-    compiled.engine.close();
+    let baseline;
+    try {
+      const before = compiled.engine.compilations;
+      baseline = compiled.engine.execute();
+      assert.equal(compiled.engine.compilations, before, 'baseline execution triggered compilation');
+      normal(baseline, [scalar(42)]);
+    } finally { compiled.engine.close(); }
     const observations = [];
     for (const key of ['allocation_bytes', 'recipe_leaves', 'program_depth', 'operand_bytes', 'continuation_bytes', 'steps']) {
       const trial = value => {
         const engine = new CoreEngine(config, abi, { artifacts: fs.mkdtempSync(path.join(artifacts, `limit-${key}-`)) });
-        engine.install(compiled.module, { ...compiled.metadata, stem: null });
-        const observed = engine.execute({ limits: { [key]: value } });
-        engine.close();
-        return observed;
+        try {
+          const ready = engine.prepare(compiled.wat, compiled.sourceBytes);
+          assert.equal(ready.outcome, 'ready');
+          assert.equal(ready.module.wasm_sha256, compiled.metadata.wasm_sha256, 'limit module differs from reviewed preparation');
+          const before = engine.compilations;
+          const observed = engine.execute({ limits: { [key]: value } });
+          assert.equal(engine.compilations, before, 'runtime limit triggered compilation');
+          return observed;
+        } finally { engine.close(); }
       };
       let low = 0, high = abi.limits_maximum[key];
       while (low < high) {

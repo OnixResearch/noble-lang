@@ -142,7 +142,7 @@ pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
-    if submission.environment.defs.len() > super::DEFINITION_LIMIT.saturating_add(24)
+    if submission.environment.defs.len() > super::DEFINITION_LIMIT.saturating_add(26)
         || submission.definitions.len() > super::DEFINITION_LIMIT
     {
         return Err(crate::Diagnostic::Exhausted);

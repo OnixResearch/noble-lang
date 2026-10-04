@@ -7,6 +7,7 @@ pub(super) fn ty(
     match ty {
         super::super::RawType::Bool => Ok(crate::component::Type::Boolean),
         super::super::RawType::S64 => Ok(crate::component::Type::S64),
+        super::super::RawType::U64 => Ok(crate::component::Type::CheckedU64),
         super::super::RawType::String => Ok(crate::component::Type::String),
         super::super::RawType::Bytes => Ok(crate::component::Type::Bytes),
         super::super::RawType::ResultS64String => Ok(crate::component::Type::ResultS64String),

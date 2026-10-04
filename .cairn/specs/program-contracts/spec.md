@@ -14,12 +14,12 @@ Scenario clauses declare designs; the conformance ledger records execution and e
 
 Document: SPEC-V002  
 Revision: 0.1.0-draft.5  
-Status: MC1 frontend/rules and verification CLI implemented; first-class companion interfaces selected, runtime implementation open  
+Status: MC1 frontend/rules and verification CLI plus bounded MC2-v1 pure first-class companions and proof-required builds implemented; wider profile and refinement open  
 Depends on: [SPEC-V001](../verification/spec.md), [IMPL-V001](../verification-toolchain/spec.md) at 0.1.0-draft.5
 
 [SOURCES.md](../../../specs/SOURCES.md) records inherited baseline citations.
 
-MC1 delivers the frontend, source/IR revision 1, and proof-rule/CLI fragment described below; first-class runtime companions remain a later deliverable.
+MC1 delivers the frontend, source/IR revision 1, and proof-rule/CLI fragment described below. MC2 separately delivers bounded resource-free first-class runtime companions and proof-required admission under its retained [completion record](../../../verification/mc2/evidence.json); new owner-law release policy VC-OWNER-01 is not part of that completion.
 
 ## 1. Scope
 
@@ -40,12 +40,22 @@ r[VC-SCOPE-01]
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: CONTRACT-16 for VC-SCOPE-01
+
+- GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-16](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-16` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-16`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: VC-SCOPE-02
 r[VC-SCOPE-02]
 
-**VC-SCOPE-02.** Noble MUST support typed contract declarations and first-class evidence companions through the optional `Contracts-Draft` profile. Lean proof modules remain separate from production execution. Ordinary `Program<S,T,e>` types and execution semantics MUST remain unchanged. This profile introduces no dependent `Program` parameters, implicit behavioral coercions, or general in-guest prover.
+**VC-SCOPE-02.**
+
+Noble MUST support typed contract declarations and first-class evidence companions through optional `Contracts-Draft`. The additional optional `Intrinsic-Proofs-Draft` selects checked proof declarations inside versioned Noble `.noble` modules, rather than only external Lean application proof files. Lean proof modules remain available as separately checked MC1 artifacts and Lean is the first independent target for compiled Noble proof terms. Ordinary `Program<S,T,e>` types and execution semantics MUST remain unchanged. Neither profile introduces dependent `Program` parameters, implicit behavioral coercions, mandatory proofs for ordinary execution, or an in-guest prover.
 
 
 <!-- cairn:scenario-links:start -->
@@ -64,7 +74,7 @@ r[VC-SCOPE-03]
 
 **VC-SCOPE-03.** A `Contracts-Draft` implementation MUST expose contracts and evidence companions as program inputs, outputs, and inspectable values, not only compiler metadata. Eligible companions MUST support aggregate storage and runtime-selected composition. Host-only proof reports do not satisfy this first-class requirement.
 
-Sections 9–13 select the compiler and companion API contracts. MC1 implements the versioned declaration grammar and typed IR in section 8.1 and the verification/explanation commands in section 12. Its proof-declaration JSON is an experimental host-verification format, not a portable guest companion encoding. First-class companion operations, representation, runtime replay, and proof-required admission remain future implementation work; MC1 implements only their interface/design selection, not VC-SCOPE-03's first-class runtime requirement. Unless explicitly labeled MC1 source, examples in this specification remain mathematical or harness notation. The profile is a required project deliverable but optional for application use.
+Sections 9–13 select the compiler and companion API contracts. MC1 implements the versioned declaration grammar and typed IR in section 8.1 and the verification/explanation commands in section 12. Its proof-declaration JSON is an experimental host-verification format, not a portable guest companion encoding. MC2 implements bounded first-class companion operations, representation, runtime replay, and proof-required admission in the resource-free Core-Bootstrap fragment, with execution and assurance scoped by its own evidence; this does not complete all Contracts-Draft obligations or general proof of source/backend correctness. Unless explicitly labeled MC1 source, examples in this specification remain mathematical or harness notation. The profile is a required project deliverable but optional for application use.
 
 The selected proof logic is Lean 4 over the reviewed Noble model. Aeneas connects Rust implementation functions to Lean contracts. Verus is optional for reviewed non-kernel exceptions, not an automatically available prover for arbitrary Noble source.
 
@@ -120,6 +130,14 @@ A false precondition makes a partial-correctness claim vacuous. The system must 
 - GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-07](../../../specs/conformance/contract-cases.json)
 - WHEN the `admission` procedure for case `CONTRACT-07` runs against those inputs
 - THEN the observations match every field of `expected` in case `CONTRACT-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-16 for VC-LOGIC-02
+
+- GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-16](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-16` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-16`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -410,6 +428,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: CONTRACT-20 for VC-ID-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-20](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-20` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-20`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: VC-ID-03
@@ -585,6 +611,14 @@ r[VC-ADMIT-03]
 - GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-13](../../../specs/conformance/contract-cases.json)
 - WHEN the `admission` procedure for case `CONTRACT-13` runs against those inputs
 - THEN the observations match every field of `expected` in case `CONTRACT-13`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-16 for VC-ADMIT-03
+
+- GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-16](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-16` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-16`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -1119,7 +1153,7 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 ### Requirement: VC-TOOL-01
 r[VC-TOOL-01]
 
-**VC-TOOL-01.** The toolchain MUST provide verification, proof explanation, and proof-required build operations. The selected CLI command families are `noble verify`, `noble explain-proof`, and `noble build --require-proof`. MC1 implements the first two with the argument grammar below; proof-required builds remain a future command. Reports MUST name source spans, the expected claim, assumptions, dependencies, scope, outstanding obligations, and artifact correspondence.
+**VC-TOOL-01.** The toolchain MUST provide verification, proof explanation, and proof-required build operations. The selected CLI command families are `noble verify`, `noble explain-proof`, and `noble build --require-proof`. MC1 implements the first two with the argument grammar below; MC2 implements proof-required builds for its separately evidenced pure fragment. Reports MUST name source spans, the expected claim, assumptions, dependencies, scope, outstanding obligations, and artifact correspondence.
 
 The `noble-cli` package builds the binary named `noble`:
 
@@ -1403,3 +1437,257 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN current Rust sources, selected tools and a reviewed extraction lock with disclosed external models and axioms
 - WHEN independent extraction, compiled audits, refusal controls and full unchanged source/compiler-policy gates pass
 - THEN the report accepts only the evidenced fragment, distinguishes native equations from strict proofs and leaves universal backend and other unproved claims open
+
+### Requirement: VC-OWNER-01
+r[VC-OWNER-01]
+
+**VC-OWNER-01.**
+
+For an explicitly proof-required release of an MC2-supported, resource-free Core-Bootstrap program, the release owner MUST freeze an immutable law record independently of and before candidate edits. The record MUST name the expected subject interface/schema and selected effect-free fragment, theorem declaration and expected statement (including initial/final observations and normal-return versus totality scope), explicit preconditions and model/host/quota assumptions, immutable owner-law revision, accepted proof-library requirements and independently selected consumer policy. It need not know the future candidate's body, recipe or artifact at authoring time. At release, a separately controlled gate MUST bind that frozen law to the exact submitted resolved program/recipe identity, generated proposition, independently checked theorem declaration and proof artifact, and final emitted artifact before admission. The candidate author or AI editor MUST NOT silently edit the law, substitute an easier theorem, forge evidence, or turn an ordinary runtime result into a proof; any owner-approved law change creates a new review subject and requires fresh proof/admission. Missing, stale, weakened, unproved or inapplicable bindings block only the proof-required release, not ordinary well-typed program execution under VC-SCOPE-01.
+
+An adversarial challenge MUST include a candidate that preserves an example output but violates the owner law, an altered law/proof statement, an unrelated or stale artifact, a vacuous precondition, and an owner-approved law revision. The expected gate rejects the first four without granting a proof claim; the last can proceed only after independent rechecking under the new law identity. This is an additional release-policy test, not a claim that MC2's already executed CONTRACT-09/11/13 scenarios or existing VC-ADMIT-01–05 failed, nor a proof of the compiler, backend or host. Do not claim general Noble source verification, resource/host protocols, termination, or backend correspondence from the pure MC2 fragment.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CONTRACT-16 for VC-OWNER-01
+
+- GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-16](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-16` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-16`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-23 for VC-OWNER-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-23](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-23` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-23`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: DX-13 for VC-OWNER-01
+
+- GIVEN the `Property-Test-Design` profile and every field of `input` in [DX-13](../../../specs/conformance/language-workflow-cases.json)
+- WHEN the `review` procedure for case `DX-13` runs against those inputs
+- THEN the observations match every field of `expected` in case `DX-13`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+#### Scenario: CONTRACT-16 independent owner-law challenge
+
+- GIVEN an owner-approved immutable pure law, exact expected theorem statement, recorded assumptions, separately accepted proof artifact and hostile candidate revisions
+- WHEN a proof-required release consumer compares the independently owned law and prepared claim to the checked declaration and emitted artifact
+- THEN changes to the candidate, law, statement, assumption, proof or artifact invalidate the prior admission; ordinary proof-free execution remains governed by its existing gate
+
+### Requirement: VC-INTRINSIC-01
+r[VC-INTRINSIC-01]
+
+**VC-INTRINSIC-01.**
+
+The `contract 1` module member specified by K-PROOF-01 MUST elaborate its `subject` from an actual independently accepted, closed, nonrecursive, resource-free, pure Core-Bootstrap definition into the same typed MC1-v1 logical semantics and exact subject claim as an equivalent MC1 contract. Inputs/outputs are ordered and named; `requires` and `ensures` use MC1's typed total/predicate vocabulary, including explicitly distinct `(in name)` and `(out name)` references, `I64` wrapping arithmetic, and undefined-predicate refusal. Only true-valued predicates establish claims. The consumer independently derives its normal-return partial-correctness obligation with preserved bottom-stack prefix, exact resolved recipe/dependencies, complete stack/effect/schema interface, contract/module/model revisions and immutable assumptions. It MUST refuse a contract with an incompatible subject/interface, host/resource references, unsupported claim kind or producer assumptions rather than weaken or silently copy the claim. A proof `for` refers to this separately generated obligation; renaming a law cannot change its semantic binding.
+
+For the additive `contract 2` named-call selection, the consumer MUST bind the contract to the accepted subject DEFINITION BODY and independently reconstruct its finite named-call environment from immutable versioned source, not substitute the submitted top-level invocation, an inlined proof author's copy, or merely a display name. The first selected subject is `twice [ d.step d.step ]`, where `d.step` imports the exported `step [ 1 + ]` from `Definitions@5` into `Subject@3`. Both uses retain the same original lexical definition provenance but MUST have distinct authentic occurrence identities and distinct freshly specialized rows/slots, each with the full checked instruction/type derivation, ordered source byte span and ordinal. The selected `paramTypes` is empty, including the typed empty actual parameter stack. Complete graph reachability and absence of orphan/extra rows, uniqueness of lexical call occurrences and slots, version/owner/source identities, and exact accepted interfaces MUST be checked; an `ExactClosure`-shaped graph alone does not authenticate source or occurrences. The host separately authenticates the submitted root as the selected single invocation of `twice`; this is not the definition-body root of the Lean theorem. Changed source, alias rebinding, row owner/span/ordinal/slot, incomplete instantiation or substituted call code MUST fail before proof admission. The same MC1-v1 `input`/`output`/`requires`/`ensures` fields are used, without a new parameter source form.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CONTRACT-18 for VC-INTRINSIC-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-18](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-18` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-18`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-20 for VC-INTRINSIC-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-20](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-20` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-20`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-26 for VC-INTRINSIC-01
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-26](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-26` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-26`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: VC-INTRINSIC-02
+r[VC-INTRINSIC-02]
+
+**VC-INTRINSIC-02.**
+
+The first logical fragment MUST typecheck `Γ ⊢ A : Type0`, `Γ ⊢ P : Prop`, and bidirectional proof judgments `Γ;Δ ⊢ t ⇐ P` / `Γ;Δ ⊢ t ⇒ P`. `Γ` contains total typed immutable terms and exact reviewed proof rules, while `Δ` contains only explicitly selected premise binders; no producer-added axiom can enter either environment. `Type0` denotes independently checked `PureTyCode` with `El` decoding, not unrestricted Lean `Type`: its only constructors are pure `Unit`, `Bool`, `I64`, `Text` and recursive `Pair`, `Sum`, `List` of valid eligible codes. A recursive `tyOf`/`encode` interpretation MUST relate `El(A)` to the actual reviewed MC1 `Ty`/`Value`/`HasType` definitions with faithful typed equality, never an unchecked type/value cast. `Type0` type binders and eligible total value binders introduce proof-level dependent `(Pi (A Type0) P)` and `(Pi (x A) P)`, with `intro` and `apply` elimination and capture-avoiding type/value substitution preserving code validity. `(Eq A a b)` requires total `a,b:El(A)`; `refl` establishes it only on bounded definitional equality; `subst` eliminates it with an explicit well-formed total motive `El(A) → Prop` and checked premise. Logical `Eq` does NOT automatically establish MC1's `(eq ...)` predicate, which may be undefined; a separately checked typed `Holds`/`evaluate` bridge is required before using equality for a contract. A closed source declaration such as `proof 1 polymorphic-reflexivity : [ (Pi (A Type0) (Pi (x A) (Eq A x x))) ] [ (intro (A Type0) (intro (x A) (refl x))) ]` MUST be expressible, with positive type instantiations and rejection of Resource, Program, Syntax, forged universe, wrong motive and mismatched type witnesses. Its Lean lowering quantifies over `PureTyCode` and `El(A)` exactly, not unconstrained `Type`. The type universal is predicative (`Type0 : Type1`, with no `Type1` quantification, `Type0 : Type0`, impredicativity or computational dependent runtime). Proof-level terms have no guest execution or implicit `Program` instantiation.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CONTRACT-17 for VC-INTRINSIC-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-17](../../../specs/conformance/contract-cases.json)
+- WHEN the `static` procedure for case `CONTRACT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-19 for VC-INTRINSIC-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-19](../../../specs/conformance/contract-cases.json)
+- WHEN the `static` procedure for case `CONTRACT-19` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-19`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-25 for VC-INTRINSIC-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-25](../../../specs/conformance/contract-cases.json)
+- WHEN the `static` procedure for case `CONTRACT-25` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-25`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: VC-INTRINSIC-03
+r[VC-INTRINSIC-03]
+
+**VC-INTRINSIC-03.**
+
+A proof of a Noble program claim MUST be a term checked against the exact independently derived accepted-subject obligation, not a raw Lean module, a textual `by` script or an arbitrary self-chosen `PC` proposition. For `[ 1 + ]` the bounded example is a source definition, module `contract 1` and `proof 1 ... for ... [ (export-unary-I64 (intro (tail Stack) (intro (x I64) (pc-sequence (pc-exact (exec-literal 1)) (pc-exact (exec-add)) (bridge (by-exact-append-assoc)) (join (by-exact-result))))) (mc1-true-eq-wrap)) ]`: `exec-literal` and `exec-add` recognize exact independently resolved subject slices, whole ordered stack, wrapping `I64` operands and complete normal-return effects. The fixed-initial-stack `pc_exact` is instantiated afresh under explicit logical `tail:Stack` and `x:I64` introductions; Stack is a dedicated contract-goal sort, never a Type0 code or guest value. These rules MUST expand to proof terms from the *actual reviewed* `NobleContracts.Rules.exec_lit_iff`, `exec_add_iff`, `pc_exact`, `pc_sequence` and equality/quantifier introductions, not newly postulated `pc-add` or a stamped preproved increment theorem. `pc-sequence` verifies compatible full intermediate predicates, explicit bridge and final join. With `s0=tail++[x]`, `m0=s0++[1]`, `m1=tail++[x,1]`, `t0=tail++[wrap64(x+1)]`, `by-exact-append-assoc` introduces the real bridge's `s,m` and hypotheses including exact `m=m0`, substitutes that checked equality and uses whitelisted `List.append_assoc` to prove `m=m1`; `by-exact-result` introduces the real join's `s,m,t` and hypotheses, returning only its checked exact `t=t0` premise. Neither can rewrite arbitrary predicates or prove an implication without matching exact-result premises. `by-defeq` discharges only an actually definitional reflexive goal, never symbolic append associativity. Missing bridge/join, forged/mismatched exact equality, foreign rewrites and swapped operands fail.
+
+The PC result is not automatically the exported MC1 claim. `export-unary-I64` extracts the universally quantified normal-return equality and uses the reviewed `NobleContracts.Obligation.exportedClaim_unaryI64` with actual accepted code; `mc1-true-eq-wrap` MUST reconstruct the separate typed/pre/post consequence from `exportedClaim_consequence` and `Expression.holds_true`, `holds_eq` and checked `evaluate` equations for the *exact independently generated MC1 IR* (input, output, wrapping add, literal 1). Neither form can discharge arbitrary predicates or fabricate an output-type witness. The result is the exact MC1 universal partial-correctness claim for every `I64` input and unchanged stack tail, with `wrap64(x+1)` including overflow, NOT termination, host/resource behavior or Wasm correctness.
+
+For `proof 2 ... for ...`, the exact expected selected claim has MC1-strength typed pre/post boundaries: for every bottom tail, `before`, and typed empty `params`, typed `before` and true `pre before [] params` imply that every normal named execution of the accepted `twice` DEFINITION BODY from `tail ++ before` ends at `tail ++ after`, with typed `after` and `post before after params`. `NamedV2.exportedNamedClaim` expresses this universal partial-correctness shape; `Holds₂` MUST interpret every existing MC1 `Term` constructor over the named value domain, including `maps` by quantifying over normal execution of the program on `[x]` with exact result `[y]`, and undefined evaluation MUST NOT count as true. The selected law has `I64 -- I64`, `requires [ true ]`, `ensures [ (eq (out y) (add (in x) 2)) ]` under BitVec64 wrapping. `NamedV1.Satisfies` is too weak to replace this typed claim. A strict Lean proof of this proposition over a modeled environment establishes neither authenticity of submitted source/graph nor source-to-Lean translation, host admission, execution termination, artifact correspondence or owner-law approval.
+
+The selected revision-2 source term is `(export-named-unary-I64 (pc-named-call 0 (exec-literal-1) (exec-add)) (pc-named-call 1 (exec-literal-1) (exec-add)) (by-exact-tail) (named-true-eq-wrap))`. Exact I64 input/output and True/`x+2` predicate shapes MUST be checked during statement preparation, before an independently generated claim is emitted, as well as proof acceptance. The checker MUST match both ordered call indices to independently accepted uses and their exact literal/add bodies, verify the exact-tail join and typed True/`x+2` wrap, then instantiate the reviewed two-call rule with actual source-bound rows. A bare `(named-two-call-I64)` theorem-name marker, reordered/missing call slice or unchecked expansion MUST NOT be accepted. This bounded source term does not add a general named-call proof calculus or alter revision-1 proof grammar.
+
+The host consumer MUST instantiate a reusable reviewed two-call rule with the *actual authenticated* accepted named graph, both source-checked fresh specialization rows and independently regenerated exact claim; it MUST NOT invoke the synthetic fixed-slot `NamedV2.Examples.proof` as a proof of a different source graph. A generic Lean rule alone also does not authenticate source. Admission remains unavailable until source origin, reusable rule and strict generated exact-claim check all succeed together.
+
+Lean 4 is the **first independent checking target**. Source elaboration MUST independently typecheck untrusted Noble terms and lower them to restricted closed Lean terms under pinned reviewed model/rules. The independently selected MC1 obligation, not generated proof text, supplies the expected exact theorem, model revision, transitive dependencies and permitted axioms to an isolated strict Lean checker. A Lean success alone does not prove the Noble-source parser/elaborator/lowering translation correct or its correspondence to the actual accepted subject: those remain separate open metatheory and Rust refinement obligations. Bend2 remains an optional comparative backend study, never a proof compiler/kernel. Unknown rule identifiers, unsound proof-library dependencies, native evaluation, tactics, solver status, raw user Lean imports, substitution of another accepted proof and mismatched expected claims MUST fail closed. A candidate-authored module `contract 1` MUST NOT select or amend an independent release owner's law: under VC-OWNER-01 the proof-required consumer additionally matches the complete elaborated proposition, precondition, statement, subject, assumptions, model and revision to the immutable owner-frozen law recorded *before* candidate edits. A false precondition or weakened ensures can yield a valid theorem but MUST fail that independent release comparison; an owner-approved new law needs a fresh exact proof/admission.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CONTRACT-18 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-18](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-18` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-18`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-20 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-20](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-20` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-20`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-23 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-23](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-23` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-23`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-24 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-24](../../../specs/conformance/contract-cases.json)
+- WHEN the `review` procedure for case `CONTRACT-24` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-24`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-26 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-26](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-26` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-26`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: VC-INTRINSIC-04
+r[VC-INTRINSIC-04]
+
+**VC-INTRINSIC-04.**
+
+Proof declarations MUST be erased in full before guest code/Wasm emission, leaving no guest proof value, word, program code, latent effect, runnable proof term, new runtime polymorphism or changed recipe/DefinitionId for an unchanged executable definition. Importing or inspecting a proof description does not run a verifier, execute a program or acquire authority. Separately inspectable MC2 evidence companions MAY retain exact proof/claim/source metadata and previously accepted evidence under their existing versioned admission rules, without putting proof terms on the guest stack. Ordinary rank-1 preparation, `quote`/`compose`/`run`/`reflect`, proof-free invocation and resource/host authorization remain unchanged. Proof-required invocation separately rechecks exact evidence, actual-input preconditions, artifact/build correspondence, current host policy and capability checks; a proof never self-authorizes those gates.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CONTRACT-22 for VC-INTRINSIC-04
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-22](../../../specs/conformance/contract-cases.json)
+- WHEN the `runtime` procedure for case `CONTRACT-22` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-22`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-23 for VC-INTRINSIC-04
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-23](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-23` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-23`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-26 for VC-INTRINSIC-04
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-26](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-26` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-26`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+### Requirement: VC-INTRINSIC-05
+r[VC-INTRINSIC-05]
+
+**VC-INTRINSIC-05.**
+
+Proof checking MUST be decidable for the advertised fragment and account for input bytes, nodes, nesting, finite dependency DAG, type/stack/term size, normalization and substitution work, time/memory and diagnostic output in a shared bounded admission request. The grammar and proof core forbid general recursion, cyclic `use` dependencies, `axiom`, `admit`, `sorry`, unchecked extensionality, tactics/solver search, arbitrary Noble program evaluation, partial selectors as equality witnesses, host effects and runtime proof callbacks. `use` refers only to a previously independently accepted exact immutable proof identity with inspected transitive assumptions/context; unsupported constants, stale model/library/module/subject revisions and forged evidence are refused. Reject, unsupported, timeout/exhaustion and internal failure MUST be distinct and MUST NOT be reported as proved. A test vector, copied Lean statement, unchecked reflection of a program or an inconsistent `Type0:Type0` derivation is never authority.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: CONTRACT-19 for VC-INTRINSIC-05
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-19](../../../specs/conformance/contract-cases.json)
+- WHEN the `static` procedure for case `CONTRACT-19` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-19`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-20 for VC-INTRINSIC-05
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-20](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-20` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-20`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-21 for VC-INTRINSIC-05
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-21](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-21` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-21`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: CONTRACT-26 for VC-INTRINSIC-05
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-26](../../../specs/conformance/contract-cases.json)
+- WHEN the `admission` procedure for case `CONTRACT-26` runs against those inputs
+- THEN the observations match every field of `expected` in case `CONTRACT-26`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->

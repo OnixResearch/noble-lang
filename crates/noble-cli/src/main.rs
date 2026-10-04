@@ -41,11 +41,20 @@ fn main() -> std::process::ExitCode {
     {
         return component::run(&arguments);
     }
+    if arguments.first().is_some_and(|argument| argument == "live") {
+        return core::live::run(&arguments);
+    }
     if arguments
         .first()
         .is_some_and(|argument| argument == "run" || argument == "session" || argument == "compile")
     {
         return core::entry::run(&arguments);
+    }
+    if arguments.first().is_some_and(|argument| argument == "admit-artifact") {
+        return core::artifact::run(&arguments);
+    }
+    if arguments.first().is_some_and(|argument| argument == "editor") {
+        return core::editor::run(&arguments);
     }
     if arguments
         .first()
@@ -58,6 +67,9 @@ fn main() -> std::process::ExitCode {
         .is_some_and(|argument| argument == "verify" || argument == "explain-proof")
     {
         return workflow::run(&arguments);
+    }
+    if arguments.first().is_some_and(|argument| argument == "verify-module") {
+        return workflow::intrinsic::run(&arguments);
     }
     if arguments
         .first()

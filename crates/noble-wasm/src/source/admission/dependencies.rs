@@ -150,6 +150,11 @@ fn inspect_node(
     if !seen.contains(&def) {
         seen.push(def);
     }
+    // Core's fixed test.abort and live operations have `Named` kernel
+    // behavior, but are canonical builtin rows, not submission definitions.
+    if def.0 < super::super::builtin_count(&submission.environment) {
+        return Ok(true);
+    }
     match submission.environment.kind(def) {
         Some(noble_kernel::contracts::Behavior::Named) => {
             let target = attempt!(super::definition_index(submission, def));

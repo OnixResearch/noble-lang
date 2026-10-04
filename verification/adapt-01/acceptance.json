@@ -1,0 +1,46 @@
+{
+  "schema": "noble-adaptation-case-receipt/v1",
+  "case_id": "ADAPT-01",
+  "revision": "0.1.0-draft.5",
+  "scope": "Three declared Core-Bootstrap static conditional-branch joins and one compatible compiled control; not a general soundness proof or whole-workspace acceptance",
+  "source_revision": "sha256:288e654748800226c3ecea8352a630d2b012efda3d0d3284e940c57adfd62b78",
+  "source_revision_algorithm": "SHA-256 of the ordered sha256sum lines for the seven files in source_files (paths included)",
+  "source_files": {
+    "crates/noble-contracts/src/lib.rs": "c9550c3bcb713a4a08e5efa647b62645efb64d49943a4e9ea865761c3749cbc6",
+    "crates/noble-contracts/src/inference/materialize.rs": "d734f10dc1269ae740a6aecb173c57088140003e7c56eaf72322265006015c2c",
+    "crates/noble-contracts/src/source/inference/operations.rs": "50362050ea31c384b0a2014c731955ede65b11af0db8041d66059e2d82e4814d",
+    "crates/noble-cli/src/core/output.rs": "4db0092b4f8f25313296973eb5f60383f5a303549d59cdea4408465f58398e80",
+    "crates/noble-contracts/tests/source.rs": "11404768f89688ff6f050d9d195b90c9ef35b7c8c7826544b1f3bca3a956d7f8",
+    "crates/noble-cli/tests/smoke.rs": "e4de91ae290a8174db2d7dad1d77d104b882384bc616a202944fc87d6ba3cac1",
+    "Cargo.lock": "918fbf668c6de38a4e9eb108d52ab51b1141e24a516b046014f0eb3d26e8b693"
+  },
+  "executable": {"path": "target/debug/noble", "sha256": "eaa5ea464a2e9e523c6079f240b01f385660abba3f38aac46dd47b50733c62c4"},
+  "rejection_run": {
+    "argv": ["target/debug/noble", "session"],
+    "stdin_utf8": "true [ 1 ] [ \"x\" ] if\ntrue [ 1 ] [ 1 2 ] if\ntrue [ 1 \"x\" ] [ \"x\" 1 ] if\n",
+    "exit_code": 2,
+    "stdout_sha256": "e4a2c9b3dc428fc09e1639855d92101a9e1d11eca16f892a19ab844d3dbab2b3",
+    "stderr_utf8": "",
+    "reports": [
+      {"source": "true [ 1 ] [ \"x\" ] if", "failure": "output-type", "stage": "check", "outcome": "type-reject", "join": "if", "expected_stack": "?stack Bool Program<?stack -- ?stack Text> Program<?stack -- ?stack Text>", "actual_stack": "[] Bool Program<?stack -- ?stack I64> Program<?stack -- ?stack Text>", "source_location": {"start": 19, "end": 21}, "guest_requests": 0, "protected_operations": 0},
+      {"source": "true [ 1 ] [ 1 2 ] if", "failure": "output-arity", "stage": "check", "outcome": "type-reject", "join": "if", "expected_stack": "?stack Bool Program<?stack -- ?stack I64 I64> Program<?stack -- ?stack I64 I64>", "actual_stack": "[] Bool Program<?stack I64 -- ?stack I64 I64> Program<?stack -- ?stack I64 I64>", "source_location": {"start": 19, "end": 21}, "guest_requests": 0, "protected_operations": 0},
+      {"source": "true [ 1 \"x\" ] [ \"x\" 1 ] if", "failure": "output-order", "stage": "check", "outcome": "type-reject", "join": "if", "expected_stack": "?stack Bool Program<?stack -- ?stack Text I64> Program<?stack -- ?stack Text I64>", "actual_stack": "[] Bool Program<?stack -- ?stack I64 Text> Program<?stack -- ?stack Text I64>", "source_location": {"start": 25, "end": 27}, "guest_requests": 0, "protected_operations": 0}
+    ]
+  },
+  "compatible_control": {
+    "argv": ["target/debug/noble", "session"],
+    "stdin_utf8": "true [ 1 ] [ 2 ] if\n",
+    "exit_code": 0,
+    "stdout_sha256": "b2878013418b37984c686267adf4dd764837406b5c9fc73cda37cebe1d149467",
+    "stage": "wasm",
+    "outcome": "normal",
+    "stack": [{"handle": null, "type": "I64", "value": "1"}],
+    "guest_requests": 0,
+    "protected_operations": 0
+  },
+  "targeted_tests": [
+    "cargo test -p noble-contracts --test source conditional_branch_joins_reject_incompatible_outputs_with_located_shapes -- --exact: passed 1/1",
+    "cargo test -p noble-cli --test smoke conditional_join_reports_are_located_and_never_execute -- --exact: passed 1/1"
+  ],
+  "proof": "open"
+}

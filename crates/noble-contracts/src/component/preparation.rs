@@ -24,7 +24,15 @@ impl super::World {
         };
         let operation = &self.exports[index];
         let session = attempt!(self.session());
-        let prepared = match session.prepare(source_bytes, &operation.input_types(), limits) {
+        let input = attempt!(operation.input_types(self).ok_or_else(|| super::error(
+            super::Stage::Binding, crate::DiagnosticKind::Invalid,
+            "unsigned WIT requires the selected checked boundary",
+        )));
+        let output = attempt!(operation.output_types(self).ok_or_else(|| super::error(
+            super::Stage::Binding, crate::DiagnosticKind::Invalid,
+            "unsigned WIT requires the selected checked boundary",
+        )));
+        let prepared = match session.prepare(source_bytes, &input, limits) {
             Ok(prepared) => prepared,
             Err(error) => {
                 return Err(super::Error {
@@ -33,7 +41,7 @@ impl super::World {
                 })
             }
         };
-        if prepared.is_definition() || prepared.output() != operation.output_types() {
+        if prepared.is_definition() || prepared.output() != output {
             return Err(super::error(
                 super::Stage::Export,
                 crate::DiagnosticKind::Invalid,

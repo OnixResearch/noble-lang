@@ -10,6 +10,7 @@ pub(super) enum Step<'a> {
     StackPatternParts(&'a [noble_kernel::shapes::Pattern], usize, usize),
     Pair,
     Sum,
+    GenericNominal(noble_kernel::types::NominalTypeId),
     List,
     Program(Option<u32>),
     Push,
@@ -21,6 +22,35 @@ pub(super) struct State<'a> {
 }
 
 impl super::Arena {
+    pub fn rigid_variables(
+        &mut self,
+        kinds: &[noble_kernel::words::VariableKind],
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<alloc::vec::Vec<super::Variable>, crate::Diagnostic> {
+        let mut variables = alloc::vec::Vec::with_capacity(kinds.len());
+        for kind in kinds {
+            attempt!(meter.node(span));
+            let identity = self.rigid_count;
+            self.rigid_count = attempt!(identity
+                .checked_add(1)
+                .ok_or_else(|| { crate::invalid(span, "rigid signature binder limit exceeded") }));
+            let variable = match kind {
+                noble_kernel::words::VariableKind::Value => super::Variable::Value(attempt!(
+                    self.add(super::Term::RigidValue(identity), span, meter)
+                )),
+                noble_kernel::words::VariableKind::Stack => super::Variable::Stack(attempt!(
+                    self.add(super::Term::RigidStack(identity), span, meter)
+                )),
+                noble_kernel::words::VariableKind::Effect => {
+                    super::Variable::EffectValue(attempt!(self.rigid_effect(identity, span, meter)))
+                }
+            };
+            variables.push(variable);
+        }
+        Ok(variables)
+    }
+
     pub fn stack(
         &mut self,
         stack: &[noble_kernel::types::Ty],
@@ -94,7 +124,7 @@ impl super::Arena {
             Step::StackPatternParts(stack, start, at) => {
                 stack::pattern_step(stack, start, at, state, span)
             }
-            Step::Pair | Step::Sum | Step::Program(_) | Step::Push => {
+            Step::Pair | Step::Sum | Step::GenericNominal(_) | Step::Program(_) | Step::Push => {
                 let b = attempt!(require_id(state.values.pop(), span));
                 let a = attempt!(require_id(state.values.pop(), span));
                 if let Step::Program(Some(effect)) = step {
@@ -112,6 +142,7 @@ impl super::Arena {
                 let term = match step {
                     Step::Pair => super::Term::Pair(a, b),
                     Step::Sum => super::Term::Sum(a, b),
+                    Step::GenericNominal(id) => super::Term::GenericNominal(id, a, b),
                     Step::Program(_) => super::Term::Program(a, b),
                     Step::Push => super::Term::Push(a, b),
                     Step::Ty(_)

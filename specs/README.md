@@ -4,7 +4,7 @@ Revision: 0.1.0-draft.5
 
 **Implement from [the Cairn specifications](../.cairn/README.md), not from the archived previews.** This is one canonical working family with explicit open contracts. It is not a stable language release.
 
-The twelve normative documents now live under `.cairn/specs/`. Their old paths contain generated compatibility views, not separate authority. This directory retains the scenario designs, proof ledger, roadmap, status, and supporting documents.
+The thirteen normative documents now live under `.cairn/specs/`. Their old paths contain generated compatibility views, not separate authority. This directory retains the scenario designs, proof ledger, roadmap, status, and supporting documents.
 
 The repository now contains the bounded checker, experimental MC1 contract frontend,
 M3 compiled-program representation experiment, M4 source-to-Wasm Core-Bootstrap,
@@ -18,6 +18,14 @@ for lowering, then executed as compiled Wasm. Persistent sessions retain compile
 Programs, captures, stack and immutable resolved bindings rather than replaying
 source. Static refusals preserve prior state and make no candidate-body host
 requests; runtime traps retain already observed request prefixes.
+
+The active [live Wasm reload design](../.cairn/changes/live-wasm-reload/proposal.md)
+specifies a separate opt-in in-process Wasm byte emitter and resident Node/V8
+REPL/watch transaction, not an implemented interpreter or changed M4 session.
+The [C11 backend design](../.cairn/specs/c-backend/spec.md) is a distinct,
+nonselected opt-in native AOT target requiring a pinned sandbox and separate
+artifact admission. All LIVE and CB scenarios remain absent/not-run, with
+proofs open; no historical acceptance receipt establishes either profile.
 
 The M4 data/control scope includes wrapping `I64`, Bool/Text/Unit,
 Pair/Sum/List, quotation/composition/execution, inert exact reflection and

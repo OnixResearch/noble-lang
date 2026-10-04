@@ -60,7 +60,7 @@ impl Report {
         if declared {
             Self::declared_static(failure.context, &failure.message, 0, None)
         } else {
-            Self::static_report(failure.context, &failure.message, 0, None)
+            Self::static_report(failure.context, &failure.message, 0, None, None)
         }
     }
 
@@ -74,13 +74,15 @@ impl Report {
             &diagnostic.message,
             submission,
             Some(diagnostic.span),
+            diagnostic.join(),
         )
     }
 
     pub fn backend_error(error: noble_wasm::Diagnostic, submission: u64) -> Self {
         let failure = Failure::backend(error);
-        Self::static_report(failure.context, &failure.message, submission, None)
+        Self::static_report(failure.context, &failure.message, submission, None, None)
     }
+
 
     pub fn defined(submission: u64) -> Self {
         Self::static_report(
@@ -90,6 +92,7 @@ impl Report {
             },
             "definition installed; body not executed",
             submission,
+            None,
             None,
         )
     }
@@ -103,64 +106,97 @@ impl Report {
         message: &str,
         submission: u64,
         span: Option<noble_contracts::Span>,
+        join: Option<&noble_contracts::JoinDiagnostic>,
     ) -> Self {
+        let mut json = crate::workflow::encoding::object([
+            (
+                "schema",
+                crate::workflow::encoding::string("noble-core-report/v1"),
+            ),
+            (
+                "profile",
+                crate::workflow::encoding::string("Core-Bootstrap"),
+            ),
+            (
+                "backend",
+                crate::workflow::encoding::string("managed-linear-memory"),
+            ),
+            (
+                "submission",
+                crate::workflow::encoding::Json::Number(submission),
+            ),
+            ("stage", crate::workflow::encoding::string(context.stage)),
+            (
+                "outcome",
+                crate::workflow::encoding::string(context.outcome),
+            ),
+            ("diagnostic", crate::workflow::encoding::string(message)),
+            ("source_span", source_span(span)),
+            ("guest_requests", crate::workflow::encoding::Json::Number(0)),
+            (
+                "protected_operations",
+                crate::workflow::encoding::Json::Number(0),
+            ),
+            (
+                "candidate_prepare_requests",
+                crate::workflow::encoding::Json::Number(0),
+            ),
+            (
+                "prior_stack",
+                crate::workflow::encoding::string("unchanged"),
+            ),
+            (
+                "prior_namespace",
+                crate::workflow::encoding::string(if context.outcome == "defined" {
+                    "extended"
+                } else {
+                    "unchanged"
+                }),
+            ),
+            (
+                "prior_session",
+                crate::workflow::encoding::string(if context.outcome == "defined" {
+                    "definition-installed"
+                } else {
+                    "unchanged"
+                }),
+            ),
+        ]);
+        if let (Some(join), Some(span), crate::workflow::encoding::Json::Object(entries)) =
+            (join, span, &mut json)
+        {
+            entries.extend([
+                ("join", crate::workflow::encoding::string(&join.word)),
+                (
+                    "expected_stack",
+                    crate::workflow::encoding::string(&join.expected_stack),
+                ),
+                (
+                    "actual_stack",
+                    crate::workflow::encoding::string(&join.actual_stack),
+                ),
+                ("source_location", source_span(Some(span))),
+                ("word_or_join", crate::workflow::encoding::string(&join.word)),
+                (
+                    "required_stack",
+                    crate::workflow::encoding::string(&join.expected_stack),
+                ),
+                (
+                    "constraint",
+                    crate::workflow::encoding::string(join.constraint),
+                ),
+                (
+                    "value_origin_or_unavailable",
+                    match join.value_origin {
+                        Some(origin) => source_span(Some(origin)),
+                        None => crate::workflow::encoding::string("unavailable"),
+                    },
+                ),
+            ]);
+        }
         Self {
             outcome: context.outcome.into(),
-            json: crate::workflow::encoding::object([
-                (
-                    "schema",
-                    crate::workflow::encoding::string("noble-core-report/v1"),
-                ),
-                (
-                    "profile",
-                    crate::workflow::encoding::string("Core-Bootstrap"),
-                ),
-                (
-                    "backend",
-                    crate::workflow::encoding::string("managed-linear-memory"),
-                ),
-                (
-                    "submission",
-                    crate::workflow::encoding::Json::Number(submission),
-                ),
-                ("stage", crate::workflow::encoding::string(context.stage)),
-                (
-                    "outcome",
-                    crate::workflow::encoding::string(context.outcome),
-                ),
-                ("diagnostic", crate::workflow::encoding::string(message)),
-                ("source_span", source_span(span)),
-                ("guest_requests", crate::workflow::encoding::Json::Number(0)),
-                (
-                    "protected_operations",
-                    crate::workflow::encoding::Json::Number(0),
-                ),
-                (
-                    "candidate_prepare_requests",
-                    crate::workflow::encoding::Json::Number(0),
-                ),
-                (
-                    "prior_stack",
-                    crate::workflow::encoding::string("unchanged"),
-                ),
-                (
-                    "prior_namespace",
-                    crate::workflow::encoding::string(if context.outcome == "defined" {
-                        "extended"
-                    } else {
-                        "unchanged"
-                    }),
-                ),
-                (
-                    "prior_session",
-                    crate::workflow::encoding::string(if context.outcome == "defined" {
-                        "definition-installed"
-                    } else {
-                        "unchanged"
-                    }),
-                ),
-            ])
-            .encode(),
+            json: json.encode(),
         }
     }
 

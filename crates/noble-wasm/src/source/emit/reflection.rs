@@ -82,7 +82,7 @@ const DECLARED_WITNESS: &str = r#" (if (i32.and (global.get $source_reflection)
        (i32.or (i32.eq (local.get $tag) (i32.const 2))
         (i32.or (i32.eq (local.get $tag) (i32.const 15))
          (i32.and (i32.ge_u (local.get $tag) (i32.const 26))
-                  (i32.le_u (local.get $tag) (i32.const 31)))))) (then
+                  (i32.le_u (local.get $tag) (i32.const 32)))))) (then
   (call $observe_atom (i32.const 20) (i64.extend_i32_u (call $y (local.get $recipe))))
   (call $observe_atom (i32.const 21) (i64.extend_i32_u (call $z (local.get $recipe))))
   (call $observe_atom (i32.const 22) (i64.extend_i32_u (call $w (local.get $recipe))))

@@ -3,6 +3,7 @@ impl super::materialize::State {
         mut self,
         term: super::Term,
         effects: noble_kernel::types::EffSet,
+        generics: &[noble_kernel::contracts::GenericVariantDecl],
         span: crate::Span,
     ) -> Result<Self, crate::Diagnostic> {
         let b = attempt!(self.pop(span));
@@ -16,11 +17,17 @@ impl super::materialize::State {
                 let a = attempt!(self.pop(span));
                 program(a, b, effects, span)
             }
+            super::Term::GenericNominal(id, _, _) => {
+                let a = attempt!(self.pop(span));
+                generic_nominal(id, a, b, generics, span)
+            }
             super::Term::Push(_, _) => {
                 let a = attempt!(self.pop(span));
                 push(a, b, span)
             }
             super::Term::Hole(_)
+            | super::Term::RigidValue(_)
+            | super::Term::RigidStack(_)
             | super::Term::Link(_)
             | super::Term::Unit
             | super::Term::Bool
@@ -37,6 +44,41 @@ impl super::materialize::State {
         self.values.push(attempt!(material));
         Ok(self)
     }
+}
+
+fn generic_nominal(
+    id: noble_kernel::types::NominalTypeId,
+    first: super::materialize::Material,
+    second: super::materialize::Material,
+    generics: &[noble_kernel::contracts::GenericVariantDecl],
+    span: crate::Span,
+) -> Result<super::materialize::Material, crate::Diagnostic> {
+    let Some(declaration) = generics.iter().find(|decl| decl.id == id) else {
+        return Err(crate::internal(span));
+    };
+    let (
+        super::materialize::Material::Value(a, a_size),
+        super::materialize::Material::Value(b, b_size),
+    ) = (first, second)
+    else {
+        return Err(crate::internal(span));
+    };
+    let arguments = [a, b];
+    let shape = noble_kernel::types::NominalShape::Variant(
+        alloc::boxed::Box::new(arguments[usize::from(declaration.payload_params[0])].clone()),
+        alloc::boxed::Box::new(arguments[usize::from(declaration.payload_params[1])].clone()),
+    );
+    Ok(super::materialize::Material::Value(
+        noble_kernel::types::Ty::GenericNominal(
+            id,
+            alloc::boxed::Box::new(arguments),
+            alloc::boxed::Box::new(shape),
+        ),
+        attempt!(type_size(
+            a_size.saturating_add(b_size).saturating_add(1),
+            span
+        )),
+    ))
 }
 
 fn list(

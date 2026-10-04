@@ -103,6 +103,34 @@ The user approved adaptation of Octet's boundary and evidence contracts. The ins
 
 ND-51 through ND-55 record original Noble adaptations of those contracts. No Octet code was copied, linked, or executed for this amendment. The source revision identifies design evidence, not a tested Noble toolchain pin. The existing Aeneas-first policy and all historical snapshots remain unchanged.
 
+## Optional Lean and proof-data references
+
+This section is nonnormative. It lists research references for possible future Lean automation and proof-data work.
+
+| Reference | Observed upstream role | Boundary |
+|---|---|---|
+| [mathlib4](https://github.com/leanprover-community/mathlib4) | Lean mathematics library and tactic infrastructure | Already inherited only through the reviewed Aeneas pin in [Lean backend inputs](../policy/lean-inputs.ncl); this entry adds no direct import or version change |
+| [lean-auto](https://github.com/leanprover-community/lean-auto) | Experimental automation interface, including SMT and TPTP solver paths without proof reconstruction | A solver result by itself is never an admitted proof |
+| [LeanTransitionCorpus](https://huggingface.co/datasets/HyperCactus0/LeanTransitionCorpus) | Tactic-state transitions with provenance, drawn from mixed sources | Mixed-source rows need per-source license and leakage review |
+| [NuminaMath-LEAN](https://huggingface.co/datasets/AI-MO/NuminaMath-LEAN) | Competition-mathematics Lean 4 statements and proofs; the card lists `ground_truth_type=with_sorry` and testing with mathlib v4.15.0 | Not every row is a checked proof; that mathlib differs from Noble's inherited `v4.31.0` input |
+| [NuminaMath-LEAN-Sol](https://huggingface.co/datasets/iiis-lean/NuminaMath-LEAN-Sol) | Adds matched natural-language solutions | The card states that its cleaned data has no Lean compilation verification |
+| [Lean-Workbook](https://huggingface.co/datasets/internlm/Lean-Workbook) | Contest-problem natural-language and formal examples tested with Lean v4.8.0-rc1 | Not Noble's pinned `leanprover/lean4:v4.31.0` toolchain |
+| [formal-math-autoformalization](https://huggingface.co/datasets/AgenticCommons/formal-math-autoformalization) | Natural-language ↔ Lean pairs; the card claims pinned compilation and axiom checks plus an LLM faithfulness gate | Upstream claims only; not independently verified here |
+
+These unpinned links select no new Noble dependency. They are not trusted proofs, compatible pins, imported training data, or verification evidence. The roles summarize static upstream page reads; no repository or dataset was downloaded, imported, or executed.
+
+Any future use requires an immutable pin, a license and source audit, a test-leakage audit, and an independent Lean check of the exact theorem and its assumptions under Noble's pinned toolchain.
+
+## Optional Bend owner-law example
+
+This section is nonnormative. The unpinned [winning_is_a_bug](https://github.com/VictorTaelin/winning_is_a_bug) repository is an upstream example that separates a program, human-authored claims, and AI-authored proofs.
+
+Upstream description, from static reads of its README, `laws.bend`, and `cert.bend`: `main.bend` is a tiny Bend game. `laws.bend` is the human-authored claim that no move sequence from the initial state wins, and `cert.bend` imports both and fills that assert. The README describes a safe-cell invariant whose finite geometric step case is certified by enumerating the whole map and letting the checker evaluate the result. It also claims that `bend cert.bend --check` checks 332 definitions. This revision did not run that gate or check the certificate, so none of this is a verified Noble proof.
+
+The file separation illustrates Noble's owner-law direction; it does not implement it. A law file in the same mutable repository, or check flags supplied with a candidate, cannot authenticate the owner-controlled immutable MC2 law record or the independently selected release policy that [VC-OWNER-01](PROGRAM-CONTRACTS.md) requires. VC-OWNER-01 and its [CONTRACT-16](conformance/contract-cases.json) challenge remain open.
+
+This entry selects no Bend dependency and adopts no Bend syntax or semantics into Noble. No upstream source was copied, and no upstream gate was executed. It does not change the pinned Bend/qcue comparisons in [DECISIONS.md](DECISIONS.md) or the active Bend/qcue change.
+
 ## Missing historical material
 
 | Historical reference | Current treatment |

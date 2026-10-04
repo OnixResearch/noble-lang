@@ -90,6 +90,7 @@ The experiment must report allocation and composition-depth limits. A quota fail
 
 [conformance/cases.json](conformance/cases.json) supplies newly authored source and structured harness cases. [EVIDENCE.md](EVIDENCE.md) defines their status and observation rules.
 
+**B-LIVE-01.** `Live-Wasm-Draft` is an optional post-M4, post-DXM1 profile, not Core-Bootstrap or an amendment to historical M4, MC1/MC2 or Declared-Modules-v1 acceptance. Its first selected source vocabulary is the resource-free Core-Bootstrap subset plus explicitly supplied immutable Declared-Modules-v1 files and typed bindings. Source/module reload MUST pass the same independent kernel acceptance with finite expected interfaces and limits; neither compiler emission nor VM validation replaces this check. No ordinary `noble run`/`session` invocation opts into live behavior implicitly. Previously accepted M4 compiled source execution and its evidence remain unchanged; the live profile's own in-process binary emitter, VM compatibility and next-call freshness require separate executed acceptance.
 **B-GATE-01.**
 
 The first end-to-end milestone requires positive acceptance and Wasm execution, negative rejection, runtime-selected builders, and recipe observations. Document validation alone MUST NOT close it.

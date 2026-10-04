@@ -70,13 +70,15 @@ impl Encoding {
                     attempt!(self.out.append(b"b"));
                     attempt!(self.out.number(u64::from(def.0)));
                 } else {
-                    match submission.environment.kind(*def) {
+                    let behavior = submission.environment.kind(*def);
+                    match behavior {
                         Some(noble_kernel::contracts::Behavior::Named) => {
                             attempt!(self.out.append(b"d"));
                             let index = attempt!(super::definition_index(submission, *def));
                             attempt!(self.out.number(submission.definitions[index].identity));
                         }
-                        Some(noble_kernel::contracts::Behavior::BoundEmit(slot)) => {
+                        Some(noble_kernel::contracts::Behavior::BoundEmit(slot)
+                            | noble_kernel::contracts::Behavior::BoundClock(slot)) => {
                             let mut found = None;
                             let mut at = 0usize;
                             while at < submission.environment.bound_adapters.len() {
@@ -92,7 +94,11 @@ impl Encoding {
                                 None => return Err(crate::Diagnostic::Invalid),
                             };
                             attempt!(work.entries(binding.adapter_identity.len()));
-                            attempt!(self.out.append(b"a"));
+                            let marker = if matches!(
+                                behavior,
+                                Some(noble_kernel::contracts::Behavior::BoundClock(_))
+                            ) { b"c" } else { b"a" };
+                            attempt!(self.out.append(marker));
                             attempt!(self.out.number(u64::from(slot)));
                             attempt!(self.out.append(b":"));
                             attempt!(self.out.index(binding.adapter_identity.len()));
@@ -106,6 +112,9 @@ impl Encoding {
                                 noble_kernel::contracts::Behavior::NominalLeft(id) => (b'L', id),
                                 noble_kernel::contracts::Behavior::NominalRight(id) => (b'R', id),
                                 noble_kernel::contracts::Behavior::NominalMatch(id) => (b'M', id),
+                                noble_kernel::contracts::Behavior::GenericLeft(id) => (b'l', id),
+                                noble_kernel::contracts::Behavior::GenericRight(id) => (b'r', id),
+                                noble_kernel::contracts::Behavior::GenericMatch(id) => (b'm', id),
                                 noble_kernel::contracts::Behavior::Dup
                                 | noble_kernel::contracts::Behavior::Drop
                                 | noble_kernel::contracts::Behavior::Swap
@@ -128,7 +137,8 @@ impl Encoding {
                                 | noble_kernel::contracts::Behavior::ListCase
                                 | noble_kernel::contracts::Behavior::TestEmit
                                 | noble_kernel::contracts::Behavior::Named
-                                | noble_kernel::contracts::Behavior::BoundEmit(_) => {
+                                | noble_kernel::contracts::Behavior::BoundEmit(_)
+                                | noble_kernel::contracts::Behavior::BoundClock(_) => {
                                     return Err(crate::Diagnostic::Invalid);
                                 }
                             };

@@ -162,10 +162,10 @@ pub(super) fn function(
         Some(submission) => &submission.body,
         None => return Err(crate::Diagnostic::Invalid),
     };
-    let mut state = attempt!(inputs::initial(&operation.parameters));
+    let mut state = attempt!(inputs::initial(world, &operation.parameters));
     attempt!(nodes(world, body, data, &mut state));
     let result = attempt!(super::abi::result(&operation.results));
-    attempt!(results::finish(result, operation.asynchronous, &mut state));
+    attempt!(results::finish(world, result, operation.asynchronous, &mut state));
     let ordinal = match u32::try_from(export.index()) {
         Ok(ordinal) => ordinal,
         Err(_) => return Err(crate::Diagnostic::Exhausted),

@@ -73,11 +73,15 @@ pub(crate) const fn data_slot(
         | Some(crate::contracts::Behavior::ListCase)
         | Some(crate::contracts::Behavior::TestEmit)
         | Some(crate::contracts::Behavior::BoundEmit(_))
+        | Some(crate::contracts::Behavior::BoundClock(_))
         | Some(crate::contracts::Behavior::NominalNew(_))
         | Some(crate::contracts::Behavior::NominalInto(_))
         | Some(crate::contracts::Behavior::NominalLeft(_))
         | Some(crate::contracts::Behavior::NominalRight(_))
         | Some(crate::contracts::Behavior::NominalMatch(_))
+        | Some(crate::contracts::Behavior::GenericLeft(_))
+        | Some(crate::contracts::Behavior::GenericRight(_))
+        | Some(crate::contracts::Behavior::GenericMatch(_))
         | Some(crate::contracts::Behavior::Named)
         | None => None,
     }

@@ -3,6 +3,7 @@
     reason = "Owner: noble-maintainers; each input's lane assignment and emitted value validation must succeed before the compiler state is returned; failures remain typed and unpublished."
 )]
 pub(super) fn initial(
+    world: &noble_contracts::component::World,
     parameters: &[noble_contracts::component::Type],
 ) -> Result<super::State, crate::Diagnostic> {
     let mut state = super::State {
@@ -17,7 +18,7 @@ pub(super) fn initial(
     let end = parameters.len();
     while at < end && failure.is_none() {
         let ty = parameters[at];
-        if let Err(error) = input(ty, &mut state) {
+        if let Err(error) = input(world, ty, &mut state) {
             failure = Some(error);
         }
         at = at.saturating_add(1);
@@ -29,10 +30,11 @@ pub(super) fn initial(
 }
 
 fn input(
+    world: &noble_contracts::component::World,
     ty: noble_contracts::component::Type,
     state: &mut super::State,
 ) -> Result<(), crate::Diagnostic> {
-    let value = attempt!(input_value(ty, &mut state.parameters));
+    let value = attempt!(input_value(world, ty, &mut state.parameters));
     attempt!(super::results::validate(ty, &value, &mut state.code));
     state.stack.push(value);
     Ok(())
@@ -43,6 +45,7 @@ fn input(
     reason = "Owner: noble-maintainers; lane indexing, integer conversion and the canonical flat-parameter ceiling are checked fallibly; missing or excessive lanes cannot become a default local."
 )]
 fn input_value(
+    world: &noble_contracts::component::World,
     ty: noble_contracts::component::Type,
     parameters: &mut usize,
 ) -> Result<super::Value, crate::Diagnostic> {
@@ -63,7 +66,7 @@ fn input_value(
         return Err(crate::Diagnostic::Unsupported);
     }
     Ok(super::Value {
-        ty: ty.noble(),
+        ty: attempt!(world.noble_type(ty).ok_or(crate::Diagnostic::Invalid)),
         storage: super::Storage::Flat(locals),
     })
 }

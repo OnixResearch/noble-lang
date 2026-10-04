@@ -86,6 +86,21 @@ fn lookup(
             return Ok(target);
         }
     }
+    if word == b"self.propose" {
+        if session.live_selected.as_deref() == declaration {
+            if declaration.is_some() {
+                return Ok(super::Target::Builtin(24));
+            }
+        }
+        return Err(crate::invalid(span, "self.propose requires the selected named definition"));
+    }
+    if word == b"self.generation" {
+        return if declaration.is_some() && session.live_selected.as_deref() == declaration {
+            Ok(super::Target::Builtin(25))
+        } else {
+            Err(crate::invalid(span, "self.generation requires the selected named definition"))
+        };
+    }
     if let Some(definition) = crate::program::bootstrap_word(word) {
         if definition.0 < 22 || session.hosts {
             return Ok(super::Target::Builtin(definition.0));

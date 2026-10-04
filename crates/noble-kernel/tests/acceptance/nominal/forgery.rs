@@ -41,6 +41,60 @@ fn forged_environment_contracts_and_bound_operations_fail_before_execution() -> 
     Ok(())
 }
 
+#[test]
+fn scripted_clock_contract_rejects_forged_rows_and_preserves_owner_visibility() -> Result<(), String> {
+    use noble_kernel::contracts::{BoundClockRegistration, ClockDecision, ClockPlan, NominalError, TEST_CLOCK};
+    use noble_kernel::types::Ty;
+    let env = required!(super::env(), "bootstrap");
+    let registration = || BoundClockRegistration {
+        adapter_identity: "clock-v1".to_owned(),
+        adapter_slot: 5,
+        owner: 31,
+        input: vec![],
+        output: vec![Ty::I64],
+        effects: super::super::support::ids(&[TEST_CLOCK.0]),
+    };
+    let mut incorrect = registration();
+    incorrect.effects = super::super::support::ids(&[0]);
+    assert_eq!(env.clone().declare_bound_clock(incorrect).err(),Some(NominalError::InvalidRepresentation));
+    let mut incorrect = registration();
+    incorrect.input.push(Ty::Unit);
+    assert_eq!(env.clone().declare_bound_clock(incorrect).err(),Some(NominalError::InvalidRepresentation));
+    let mut incorrect = registration();
+    incorrect.output.clear();
+    assert_eq!(env.clone().declare_bound_clock(incorrect).err(),Some(NominalError::InvalidRepresentation));
+    let (mut env, clock) = required!(env.declare_bound_clock(registration()),"valid scripted clock");
+    assert_eq!(env.kind(clock),Some(noble_kernel::contracts::Behavior::BoundClock(5)));
+    let request=super::super::support::request(vec![],vec![Ty::I64], &[TEST_CLOCK.0]);
+    let candidate=super::single(clock,vec![super::super::support::segment(vec![])]);
+    super::rejected(super::check(&env,request.clone(),candidate.clone()),
+        noble_kernel::untrusted::Constraint::PrivateDefinition(clock));
+    env.caller_module=Some(31);
+    assert!(matches!(super::check(&env,request.clone(),candidate.clone()),
+        noble_kernel::untrusted::Outcome::Accepted(_)));
+    let clock_index=required!(usize::try_from(clock.0),"scripted clock definition index");
+    for mutation in 0..5 {
+        let mut forged=env.clone();
+        match mutation {
+            0=>forged.bound_adapters[0].input.push(Ty::Unit),
+            1=>forged.bound_adapters[0].output.clear(),
+            2=>forged.bound_adapters[0].effects=super::super::support::ids(&[0]),
+            3=>required!(forged.defs.get_mut(clock_index),"scripted clock definition").effects.clear(),
+            _=>forged.bound_adapters[0].adapter_slot=6,
+        }
+        super::rejected(super::check(&forged,request.clone(),candidate.clone()),
+            noble_kernel::untrusted::Constraint::InvalidContract);
+    }
+    let plan=ClockPlan {operation:"test.clock",adapter_identity:"clock-v1",
+        input:&[],output:&[Ty::I64],effects:&[TEST_CLOCK],allowed:true,script:&[42]};
+    assert_eq!(plan.decide("test.clock",0),Ok(ClockDecision::Value(42)));
+    assert_eq!(plan.decide("test.clock",1),Ok(ClockDecision::ScriptExhausted));
+    assert_eq!(plan.decide("test.emit",0),Ok(ClockDecision::UnexpectedOperation));
+    let denied=ClockPlan {allowed:false,..plan};
+    assert_eq!(denied.decide("test.clock",0),Ok(ClockDecision::Denied));
+    Ok(())
+}
+
 fn reject_forged_nominals(
     env: &noble_kernel::contracts::Env,
     ops: noble_kernel::contracts::NominalOps,

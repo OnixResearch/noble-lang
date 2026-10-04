@@ -69,6 +69,11 @@ impl Clone for crate::types::Ty {
                     }
                 }),
             ),
+            crate::types::Ty::GenericNominal(id, args, shape) => crate::types::Ty::GenericNominal(
+                *id,
+                alloc::boxed::Box::new([args[0].clone(), args[1].clone()]),
+                alloc::boxed::Box::new((**shape).clone()),
+            ),
         }
     }
 }
@@ -141,6 +146,23 @@ fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
                 }
                 _ => return false,
             },
+            (
+                crate::types::Ty::GenericNominal(first_id, first_args, first_shape),
+                crate::types::Ty::GenericNominal(second_id, second_args, second_shape),
+            ) if first_id == second_id => {
+                work.push((first_args[0].clone(), second_args[0].clone()));
+                work.push((first_args[1].clone(), second_args[1].clone()));
+                match (*first_shape, *second_shape) {
+                    (
+                        crate::types::NominalShape::Variant(first_left, first_right),
+                        crate::types::NominalShape::Variant(second_left, second_right),
+                    ) => {
+                        work.push((*first_right, *second_right));
+                        work.push((*first_left, *second_left));
+                    }
+                    _ => return false,
+                }
+            }
             (
                 crate::types::Ty::Pair(first_head, first_tail),
                 crate::types::Ty::Pair(second_head, second_tail),
@@ -290,6 +312,15 @@ impl core::fmt::Debug for crate::types::Ty {
                     }
                 }
                 attempt!(core::fmt::Formatter::write_str(f, ")"));
+                core::fmt::Formatter::write_str(f, ")")
+            }
+            crate::types::Ty::GenericNominal(id, args, shape) => {
+                attempt!(core::fmt::Formatter::write_str(f, "GenericNominal("));
+                attempt!(core::fmt::Debug::fmt(id, f));
+                attempt!(core::fmt::Formatter::write_str(f, ", "));
+                attempt!(debug_stack(args.as_slice(), f));
+                attempt!(core::fmt::Formatter::write_str(f, ", "));
+                attempt!(core::fmt::Debug::fmt(&**shape, f));
                 core::fmt::Formatter::write_str(f, ")")
             }
         }

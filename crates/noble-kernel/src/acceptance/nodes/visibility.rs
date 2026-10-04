@@ -27,16 +27,56 @@ fn visible_behavior(
     if let Some((id, access)) = nominal_access(kind) {
         return nominal_visible(env, id, access);
     }
-    if let crate::contracts::Behavior::BoundEmit(_) = kind {
+    if let Some((id, access)) = generic_access(kind) {
+        return generic_visible(env, id, access);
+    }
+    if matches!(
+        kind,
+        crate::contracts::Behavior::BoundEmit(_) | crate::contracts::Behavior::BoundClock(_)
+    ) {
         return bound_emit_visible(env, def);
     }
     if let crate::contracts::Behavior::TestEmit = kind {
         return !env.declared_modules
             && env.nominals.is_empty()
+            && env.generic_variants.is_empty()
             && env.bound_adapters.is_empty()
             && env.caller_module.is_none();
     }
     ordinary_visible(kind)
+}
+
+const fn generic_access(
+    kind: crate::contracts::Behavior,
+) -> Option<(crate::types::NominalTypeId, Access)> {
+    match kind {
+        crate::contracts::Behavior::GenericLeft(id) => Some((id, Access::Left)),
+        crate::contracts::Behavior::GenericRight(id) => Some((id, Access::Right)),
+        crate::contracts::Behavior::GenericMatch(id) => Some((id, Access::Match)),
+        _ => None,
+    }
+}
+
+fn generic_visible(
+    env: &crate::contracts::Env,
+    id: crate::types::NominalTypeId,
+    access: Access,
+) -> bool {
+    if caller_is_owner(env.caller_module, id.module) {
+        return env.generic_variant(id).is_some();
+    }
+    let Some(decl) = env.generic_variant(id) else {
+        return false;
+    };
+    if !decl.exported {
+        return false;
+    }
+    match access {
+        Access::Left => decl.public[0],
+        Access::Right => decl.public[1],
+        Access::Match => decl.public[0] && decl.public[1],
+        Access::New | Access::Into => false,
+    }
 }
 
 /// A missing owner or out-of-range identity can never grant access.

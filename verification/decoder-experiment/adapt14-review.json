@@ -1,0 +1,35 @@
+{
+  "schema": "noble-adapt14-snapshot-review/v1",
+  "case": "ADAPT-14",
+  "kind": "review",
+  "result": "passed",
+  "claim": "Under the recorded nonnegative signed-I64/no-overflow premises, actual initial 100, amount 10 and final 110 make after=before+amount true and after=after+amount false. An altered final value fails both; zero amount makes both true and therefore is not a discriminating witness. This finite counterexample is not universal proof.",
+  "observations": {
+    "initial": "100",
+    "amount": "10",
+    "final": "110",
+    "preconditions": true,
+    "snapshot_condition": {
+      "expression": "after = before + amount",
+      "result": true
+    },
+    "incorrect_condition": {
+      "expression": "after = after + amount",
+      "result": false
+    },
+    "zero_amount_not_discriminating": true,
+    "wrong_final_120_rejected": true,
+    "universal_proof_claimed": false
+  },
+  "source": {
+    "input_sha256": {
+      "verification/decoder-experiment/review-snapshot.mjs": "8d4368929840f2297fe27a83a3dedcddd7e0d3a5c85d02f85e31dfd77b94e7d2",
+      "specs/conformance/adaptation-cases.json": "7fdda334d81e353279cca4c77e44d52b50c2a1defe499787a6f922ff46f8d1e6",
+      ".cairn/specs/program-contracts/spec.md": "64d0459c6dfdf8a53b96e8235a12a999250b4b31f43fd120c9ca5c5d24d470af"
+    }
+  },
+  "assumptions": [
+    "Only the exact finite I64 valuations in this review were evaluated; no Noble source program, state transition or universal theorem was proved.",
+    "Initial/final namespaces are distinct model coordinates. Substituting final for initial makes this recorded nonzero-amount law false."
+  ]
+}

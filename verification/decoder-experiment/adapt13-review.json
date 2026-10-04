@@ -1,0 +1,60 @@
+{
+  "schema": "noble-adapt13-assurance-review/v1",
+  "case": "ADAPT-13",
+  "kind": "review",
+  "result": "passed",
+  "claim": "All four native-boundary evidence-policy variants were classified. A cited safe-borrow/bounded-copy argument plus actual Noble-local pinned strict Miri and compile-fail controls yields scoped evidence only; missing argument, unsupported required Miri and upstream-only Miri cannot satisfy that lane.",
+  "observations": [
+    {
+      "safety_argument": "missing",
+      "miri": "passed-scoped",
+      "observed": "reject-claim"
+    },
+    {
+      "safety_argument": "cited-with-assumptions",
+      "miri": "required-but-unsupported",
+      "observed": "required-lane-unmet"
+    },
+    {
+      "safety_argument": "cited-with-assumptions",
+      "miri": "upstream-only",
+      "observed": "Noble-lane-unmet"
+    },
+    {
+      "safety_argument": "cited-with-assumptions",
+      "miri": "passed-scoped-pinned",
+      "observed": "scoped-evidence-only"
+    }
+  ],
+  "local_evidence": {
+    "tests": 3,
+    "target": "x86_64-unknown-linux-gnu",
+    "flags": "-Zmiri-strict-provenance",
+    "compileFailures": [
+      "E0515",
+      "E0502"
+    ],
+    "inputHash": "f802862594134183f549add7f2ac94e9003b35d6972d9073cbda24b4daf0ebcc",
+    "selectedTool": "/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18",
+    "verified": true,
+    "receipt_sha256": "a5f7082514426975068da5dc40891878d5308c1bbe41847524578db4a0acc176",
+    "wasm_correspondence_proven": false,
+    "all_targets_covered": false,
+    "zerocopy_crate_selected": false
+  },
+  "source": {
+    "input_sha256": {
+      "verification/decoder-experiment/review-native.mjs": "b69b02f4fca7848e902aba867764ed3801dfe3dcaa1c69ba2375c7ff5ec47e97",
+      "verification/decoder-experiment/acceptance.json": "a5f7082514426975068da5dc40891878d5308c1bbe41847524578db4a0acc176",
+      "verification/decoder-experiment/src/lib.rs": "f802862594134183f549add7f2ac94e9003b35d6972d9073cbda24b4daf0ebcc",
+      "verification/decoder-experiment/fixtures/escape.rs": "104066219029bbbde3de3d1c807355b93d438002e5751ee880cc4d284f2f6cac",
+      ".cairn/specs/verification-toolchain/spec.md": "560cb9fd5ee4a97499bf77ab4ab82a2001777731c2d84608a3cf1baa943a119c",
+      "specs/conformance/adaptation-cases.json": "7fdda334d81e353279cca4c77e44d52b50c2a1defe499787a6f922ff46f8d1e6",
+      "policy/tool-selection.json": "67318eadf5ea11b047ad0b24bd0dbbd14c9d1de09ce28d700564bd622e743c15"
+    }
+  },
+  "assumptions": [
+    "The local safety argument covers safe Rust slices, bounded record reads and explicit external refusal, not arbitrary foreign-memory stability or every target.",
+    "Three selected strict Miri tests and E0515/E0502 compile failures are scoped native observations. They do not prove Noble-to-Wasm correspondence, independent extraction/refinement, or zerocopy upstream behavior."
+  ]
+}

@@ -1,0 +1,14 @@
+## Why
+
+WI-03 currently requires a `u64` WIT boundary requesting implicit `I64` to reject at binding, but remains `absent/not-run` with no evidence. WI-WIT-02/06 already prohibit lossy conversion; this change selects a **bounded implementation and acceptance contract**, not a replacement for those general rules. The canonical all-ones value cannot become `-1` merely because both Canonical ABI scalars occupy an `i64` lane. r[WI-WIT-02] r[WI-WIT-06]
+
+## What Changes
+
+- Preserve parsed WIT `RawType::U64` and distinct resolved boundary `Type::CheckedU64`. Refuse default implicit `u64`→Noble `I64` at binding for WI-03, with no component publication or guest/host operation. The Canonical ABI's `i64` bit lane alone never authorizes signed reinterpretation. r[WI-WIT-02]
+- Select only a separate, **caller-explicit opt-in checked**, import-free synchronous single-scalar export `echo: func(value:u64)->u64` via public `noble component compile-checked-u64 WIT WORLD NEW_DIR EXPORT=SOURCE ...` or `World::parse_checked_u64`; the opt-in is not an authenticated host authority grant. Admit representable values `0` and `9223372036854775807` through the real component boundary with pre-source-body `U64`→`I64` and pre-publication `I64`→`U64` guards; reject `9223372036854775808` and `18446744073709551615` before signed `I64` source-body use. The emitted `$enter` prologue precedes the ingress guard, so this is not a literal before-all-guest-instructions claim; source-body nonentry is unmeasured. Reject every import in the selected world, including signed imports alongside a `u64` export; no silent wrapping, narrowing or fallback. r[WI-WIT-02] r[WI-WIT-06]
+- Require source-bound compiled guest/independent typed peer acceptance plus negative/positive controls and an immutable prepromotion receipt before changing WI-03's state/evidence. Stage 1 contains only this unsynced native delta and proposal/design/tasks gates; sync, canonical promotion, generated views, final replay and archive wait for the production gate to pass. r[WI-WIT-02] r[WI-WIT-06]
+
+## Impact
+
+- **Files**: This Stage 1 edit owns only `.cairn/changes/wit-exact-u64-adapter/`. Later coordinated work would touch the selected WIT/compiler/host/verification sources, the WI-03 canonical record, native `wit-wasi` specification and generated views/ledger; this change does not edit those now.
+- **Testing**: Native Cairn proposal/design/tasks gates and read-only validation check document structure only. Acceptance requires separately retained real compiled-component execution and binding refusal, exact case projection, source/peer/tool hashes, immutable raw outputs, proof-open assumptions and a later current-source replay. No `u64` imports, full Noble unsigned arithmetic, async, indirect aggregate, general WASI or Component-Draft claim.

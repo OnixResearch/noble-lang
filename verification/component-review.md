@@ -19,7 +19,9 @@ Octet's optional proof providers do not replace Noble's selected Aeneas input.
 The production quality lane uses `nightly-2026-03-21`, as required by Octet's compiler plugin.
 The extraction lane uses Charon's `nightly-2026-08-18`.
 Both lanes use `x86_64-unknown-linux-gnu` with all current features and explicit overflow checks.
-The workspace has no declared features or external production Cargo dependencies.
+The current CLI declares external production Cargo dependencies, including
+`anyhow` and `wasmtime`; these are not yet reviewed into the source/native
+dispositions. No current acceptance follows from the earlier dependency claim.
 
 ## Ownership and reuse
 
@@ -27,10 +29,17 @@ Noble owns the budget transition, CLI decoding, source scopes, policy, and accep
 The kernel has no host effects. The CLI reads arguments and writes diagnostics or outcomes.
 No generic port or shared infrastructure crate is necessary for this internal smoke route.
 
-The Nix gate runs the published `hooks/octet-deny-all.sh` with the pinned `cargo-octet` package.
-The pre-commit hook uses the same immutable revision and the same SSH repository transport as the Nix input.
-Its first HTTPS fetch failed authentication. The configured SSH transport fetched the required revision successfully.
-The development shell supplies the pinned Octet executable and clears ambient compiler flags and wrappers.
+The Nix gate runs the published `hooks/octet-deny-all.sh` with Noble's
+content-hashed local wrapper built from the pinned Octet source. The current
+path-provenance correction remains under review, not an accepted security
+claim.
+The pre-commit hook is now local/system with the absolute selected gate store
+executable, not the historical upstream SSH hook checkout. Run it from the
+reviewed devShell; if its selected output is absent, it fails closed instead
+of taking an ambient binary from `PATH`. The earlier HTTPS authentication
+failure and SSH fetch belong to the historical upstream-hook adoption only.
+The development shell supplies the selected Octet executable and clears
+ambient compiler flags and wrappers.
 The gate does not copy the lint catalog or accept warning-only results.
 The upstream `mkConsumerCheck` helper runs plain `cargo-octet check`, so it does not establish this deny-all contract alone.
 
@@ -138,8 +147,9 @@ Seven unrelated ignored runner tests remain outside this cohort.
 The provider synced both accepted specifications and archived the change under `.cairn/archive/2026-09-14-bind-integration-test-ownership/`.
 Its `no-std-evidence.md` records the exact scope and historical failures.
 
-Noble's published-provider deny-all runs now pass with zero lint or architecture findings.
-All six compiler units remain covered, including two independently bound integration tests.
+At that published-provider checkpoint, Noble's deny-all runs passed with zero
+lint or architecture findings. All six then-required compiler units were
+covered, including two independently bound integration tests.
 Console output remains explicitly unprotected. No target, declaration, lint, or production obligation was removed.
 The retained direct bundle passes full artifact replay. Replay establishes consistency, not independently authenticated acceptance.
 Noble's M1 acceptance remains open.
@@ -156,9 +166,9 @@ nix develop -c pre-commit run octet-deny-all --all-files
 nix flake check --keep-going -L
 ```
 
-All three commands passed against the published ownership revision.
+All three commands passed against that historical published ownership revision.
 The seven published-provider checks remain incremental gates, not the complete M1 acceptance matrix.
-Tool-selection work adds three checks; all ten pass together.
+Tool-selection work added three checks; all ten passed together at that checkpoint.
 The main repository retains the original failure and unchanged kernel extraction artifacts in `.pi/m1-quality/`.
 The earlier receipt repair remains recorded in `.pi/m1-octet-repair/`.
 Ownership implementation and failure history remain in `.pi/m1-test-ownership/`.
@@ -203,7 +213,8 @@ Real compiler controls retain constant callers, closures, memberships, and forbi
 The provider passed 879 scoped tests, strict Clippy, four UI harness tests, and thirty overlapping compiler-target tests.
 Tested, final-built, and published collector bytes match. Provider evidence is retained in `.pi/m1-inline-owner/`.
 
-Noble now pins that revision in Nix and pre-commit. Reviewed source, file, and tool identities were updated explicitly.
+Noble pinned that revision in Nix and pre-commit at the adoption checkpoint.
+Reviewed source, file, and tool identities were updated explicitly then.
 At that adoption, all eleven checks passed, including the unchanged required thread-local fixture.
 Two boundary baselines and eleven negatives matched. Five workspace Rust tests and 100 Bun regressions passed.
 No production source, architecture policy, target, fixture, or extraction input changed.
@@ -219,12 +230,59 @@ The published collector lacks its required randomness effect. The comparator rej
 No call-only expectation, policy allowance, dependency removal, or fabricated witness replaces that requirement.
 Provider repair remains separate from Noble adoption. Persistent observations are under `.pi/m1-boundary-random/`.
 
-## Published randomness repair adoption
+## Historical published randomness repair adoption
 
 Octet published `235255bc4972ced9128fd5b4d1ec66ff7508ded4` after byte-verifying its provider build.
-Noble now pins that revision in Nix and pre-commit. Reviewed source, file, and tool identities were regenerated explicitly.
-All eleven checks pass, including `boundary-controls`, which now matches two baselines and thirteen negatives.
-The published pre-commit deny-all and a direct gate run are clean with zero findings, and both retained bundles replay.
+At the time of that adoption, Noble pinned that revision in Nix and pre-commit.
+The then-reviewed source, file, and tool identities were regenerated explicitly.
+At that historical checkpoint all eleven checks passed, including
+`boundary-controls` against two baselines and thirteen negatives. The then-published
+pre-commit deny-all and direct gate were clean with zero findings, and both retained
+bundles replayed. Those results do not describe the current candidate.
 The randomness fixture and comparator were unchanged; no production source, architecture policy, target, or extraction input changed.
 Provider byte checks, retained bundles, and command records are under `.pi/m1-random-effects/`; the adoption record is under `.pi/m1-random-adoption/`.
 Task 2.2, foreign ownership, relocated-body exceptions, complete inventories, native assurance, CI, and independent acceptance remain open.
+
+## Current selected-source diagnostic (not the historical adoption receipt)
+
+The earlier clean receipts above are bound to their earlier 32-unit workspace;
+they do not transfer to the current source. On an unchanged `570ed67` source
+snapshot with **scratch-only** widened collector limits, the selected strict
+`octet-gate` exited 2 at the first kernel shard: 39 lint findings (37 errors,
+2 warnings), with no full architecture verdict. Its deny-all flags were not
+relaxed. A separate selected `octet` run without that deny-all hook exited 1
+with 39/39 complete compiler units, 778 lint warnings and 714 architecture
+findings: 712 required compiler unknowns plus two forbidden edges from
+`noble-cli` to unclassified external `anyhow` and `wasmtime`. The original
+`proofs/mc1/NobleContracts/Rules.lean:1:1` was reported twice as an
+`excessive_file_length` warning. The acyclic 41-unit positive remains red
+with 385 compiler unknowns; its reverse negative adds one forbidden role
+edge. The existing source classifier rejects 1,437 new and 91 stale unique
+production paths, and native assurance rejects two external dependencies
+against the reviewed zero. No waiver, classification approval or full check
+PASS follows from complete compiler collection.
+
+The subsequently selected, content-hashed Octet diagnostic-path correction
+was run against fresh COW `570ed67` mirrors with only the staged 41-unit
+architecture policy substituted. The actual selected app again collected
+39/39 normal and 41/41 acyclic-positive compiler units and shards without
+collection issues. Both checks exited 1: the normal receipt remained blocked
+on 712 required compiler unknowns and two forbidden external role edges; the
+acyclic-positive receipt remained blocked on 385 required compiler unknowns.
+The original `Rules.lean` excessive-length warning still appears twice on
+the normal run. Both corrected 12-artifact bundles replayed valid without
+diagnostics. This is diagnostic collection, not a clean deny-all, source
+classification, native-disposition, or M1 acceptance result.
+
+The corrected selected gate was also invoked directly, without Nix building,
+on a fresh copy with the same 41-unit policy. Strict deny-all exited 2 on
+the first kernel shard: 39 findings (37 errors, two warnings), before a full
+architecture verdict. A separate fresh acyclic reverse-dependency fixture
+under the corrected selected executable collected 41/41 units and shards
+without issues, then exited 1 with the same 385 compiler unknowns plus
+exactly one forbidden `noble-kernel` to `noble-cli` normal role edge; its
+12-artifact bundle replayed valid. Direct pure comparison of the corrected
+normal IR to the reviewed source and native policies rejected both: source
+subjects, tests, macros and dependency closure differ, and the two external
+production dependencies remain unreviewed. No whole-flake check or approval
+is implied by these bounded direct controls.

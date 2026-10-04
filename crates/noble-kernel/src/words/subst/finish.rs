@@ -1,3 +1,12 @@
+macro_rules! attempt_segment {
+    ($walk:expr, $segment:expr) => {
+        match crate::words::segments::single($segment) {
+            Ok(ty) => ty,
+            Err(problem) => return ($walk, Err(problem)),
+        }
+    };
+}
+
 /// Complete a pair, sum, or list from its finished segments.
 #[expect(
     tigerstyle::assertion_density,
@@ -5,6 +14,28 @@
     reason = "Owner: noble-maintainers; required children and constructor kind fail through InstError, preserving right-then-left pops. Every new Pattern must require a reviewed completion rule, not a fallback."
 )]
 pub(super) fn apply(node: crate::shapes::Pattern, mut walk: super::Walk) -> super::StepState {
+    if let crate::shapes::Pattern::GenericNominal(id, _, mapping) = node {
+        let (Some(second), Some(first)) = (walk.segments.pop(), walk.segments.pop()) else {
+            return (walk, Err(crate::words::InstError::OversizedType));
+        };
+        if !matches!(mapping, [0, 1] | [1, 0]) {
+            return (walk, Err(crate::words::InstError::KindMismatch));
+        }
+        let first = attempt_segment!(walk, first);
+        let second = attempt_segment!(walk, second);
+        let args = [first, second];
+        let shape = crate::types::NominalShape::Variant(
+            alloc::boxed::Box::new(args[usize::from(mapping[0])].clone()),
+            alloc::boxed::Box::new(args[usize::from(mapping[1])].clone()),
+        );
+        walk.segments
+            .push(alloc::vec![crate::types::Ty::GenericNominal(
+                id,
+                alloc::boxed::Box::new(args),
+                alloc::boxed::Box::new(shape),
+            )]);
+        return (walk, Ok(()));
+    }
     // A list completes from its single segment; pair and sum from two.
     if let crate::shapes::Pattern::List(_) = node {
         return match walk
@@ -47,6 +78,9 @@ pub(super) fn apply(node: crate::shapes::Pattern, mut walk: super::Walk) -> supe
         | crate::shapes::Pattern::Certified
         | crate::shapes::Pattern::Resource(_) => Err(crate::words::InstError::KindMismatch),
         crate::shapes::Pattern::Nominal(_, _) => Err(crate::words::InstError::KindMismatch),
+        crate::shapes::Pattern::GenericNominal(_, _, _) => {
+            Err(crate::words::InstError::KindMismatch)
+        }
     };
     match built {
         Ok(segment) => {

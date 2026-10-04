@@ -1,0 +1,15 @@
+## Phase 1: selected specification only
+
+- [x] [serial] Select the versioned `.noble` module `contract`/`proof` declaration grammar, predicative Type0/value Pi, equality and exact program-claim judgments; document Lean-first checker target and open translation correspondence. r[K-PROOF-01] r[VC-INTRINSIC-01] r[VC-INTRINSIC-02]
+- [x] [serial] Design the trusted reviewed-rule expansion, bounded checking, erasure and independent policy/authority boundaries with source-level positive and hostile scenario designs. r[VC-INTRINSIC-03] r[VC-INTRINSIC-04] r[VC-INTRINSIC-05]
+- [x] [serial] Sync new native requirements, regenerate compatible views and document ledger, run Cairn/document validation, without promoting implementation, execution or proof. r[V-INTRINSIC-01] r[DX-PROOF-01]
+
+## Phase 2: implementation and independent evidence pending
+
+The additive CONTRACT-26 `contract 2`/`proof 2 ... for` named-call slice has separate finite [source-bound acceptance](../../../verification/intrinsic-named-v2/acceptance.json) (SHA-256 `8ab64cf2856164dc3ed7f6126361ffa256593f2867dc2b150e93bc3fde5db4c0`) for two-call source/graph/Inst authentication, reviewed rule over actual rows, strict generated exact-claim checking, hostile variants and bounded compiled erasure. A synthetic NamedV2 model fixture alone is not host admission. Broader Phase 2 translation/refinement, erasure theorem and owner-frozen release remain open; keep this change active.
+
+- [x] [serial] Admit CONTRACT-26 actual `Definitions@5`/`Subject@3` source with two fresh source-authenticated step specializations, complete graph/Inst and submitted-root provenance; instantiate the reviewed two-call rule at real rows, strict-check the independently regenerated typed claim, exercise hostile/erasure controls and retain separate source-bound evidence. r[K-PROOF-01] r[VC-INTRINSIC-01] r[VC-INTRINSIC-03] r[VC-INTRINSIC-04] r[VC-INTRINSIC-05] r[V-INTRINSIC-01] r[V-INTRINSIC-02] r[DX-PROOF-01]
+- [ ] [serial] Implement opt-in real `.noble` module parsing/resolution, exact module contract-to-MC1 elaboration and an independently accepting bounded source proof checker; execute polymorphic identity/hostile Type0 and Eq cases. r[K-PROOF-01] r[VC-INTRINSIC-01] r[VC-INTRINSIC-02]
+- [ ] [serial] Implement typed Noble-term-to-restricted-Lean lowering over actually reviewed theorems; independently check the exact MC1 subject claim and establish translation correctness and actual Rust source/refinement scope separately. Execute compositional `[ 1 + ]` positive/hostile checks. r[VC-INTRINSIC-03] r[V-INTRINSIC-01]
+- [ ] [serial] Prove erasure/unchanged ordinary runtime observations in the selected fragment and execute failure/budget, dependency/claim tampering, applicability/artifact/host-boundary cases without weakening MC2. r[VC-INTRINSIC-04] r[VC-INTRINSIC-05]
+- [ ] [serial] Retain exact source-bound execution/proof/assurance receipts and promote only justified case/status/proof fields; revalidate and consider archive only after implementation, evidence and separately reviewed gates. r[V-INTRINSIC-02] r[DX-PROOF-01]

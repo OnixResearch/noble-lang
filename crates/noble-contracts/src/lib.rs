@@ -17,6 +17,7 @@ pub mod companion;
 pub mod component;
 mod frontend;
 mod inference;
+pub mod intrinsic;
 mod metering;
 mod predicate;
 mod program;
@@ -69,10 +70,24 @@ pub struct Diagnostic {
     pub kind: DiagnosticKind,
     pub span: Span,
     pub message: alloc::string::String,
+    join: Option<alloc::boxed::Box<JoinDiagnostic>>,
     ordinary_typing: Option<alloc::boxed::Box<noble_kernel::untrusted::Checked>>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct JoinDiagnostic {
+    pub word: alloc::string::String,
+    pub expected_stack: alloc::string::String,
+    pub actual_stack: alloc::string::String,
+    pub constraint: &'static str,
+    pub value_origin: Option<Span>,
+}
+
 impl Diagnostic {
+    pub fn join(&self) -> Option<&JoinDiagnostic> {
+        self.join.as_deref()
+    }
+
     pub fn ordinary_typing(&self) -> Option<&noble_kernel::untrusted::Checked> {
         self.ordinary_typing.as_deref()
     }
@@ -82,8 +97,14 @@ impl Diagnostic {
             kind,
             span,
             message: alloc::string::String::from(message),
+            join: None,
             ordinary_typing: None,
         }
+    }
+
+    pub(crate) fn with_join(mut self, join: JoinDiagnostic) -> Self {
+        self.join = Some(alloc::boxed::Box::new(join));
+        self
     }
 
     pub(crate) fn with_typing(mut self, checked: noble_kernel::untrusted::Checked) -> Self {

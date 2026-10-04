@@ -54,6 +54,7 @@ impl super::Context<'_> {
                 | crate::component::Type::ResultBytesString => 3,
                 crate::component::Type::Boolean
                 | crate::component::Type::S64
+                | crate::component::Type::CheckedU64
                 | crate::component::Type::StreamU8
                 | crate::component::Type::FutureS64
                 | crate::component::Type::FutureResultS64String

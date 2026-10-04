@@ -156,7 +156,7 @@ fn invoke(
                 Some(operation) => operation,
                 None => return Err(crate::Diagnostic::Invalid),
             };
-            super::calls::invoke(operation, state)
+            super::calls::invoke(world, operation, state)
         }
         _ => Err(crate::Diagnostic::Unsupported),
     }

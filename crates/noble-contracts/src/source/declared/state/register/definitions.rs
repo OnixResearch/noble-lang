@@ -9,6 +9,7 @@ pub(super) type Definition = (
 
 pub(super) struct Work<'a> {
     pub definitions: alloc::vec::Vec<Definition>,
+    pub signatures: alloc::vec::Vec<(alloc::string::String, noble_kernel::words::Scheme)>,
     pub exports: &'a [alloc::string::String],
     pub local_exports: alloc::vec::Vec<crate::source::declared::Export>,
     pub name: &'a str,
@@ -158,6 +159,7 @@ const fn definition_limits(count: u32, limits: crate::Limits) -> Option<crate::L
 
 struct DefinitionInput<'a> {
     name: alloc::string::String,
+    signature: Option<noble_kernel::words::Scheme>,
     source: alloc::vec::Vec<u8>,
     limits: crate::Limits,
     exports: &'a [alloc::string::String],
@@ -174,7 +176,12 @@ fn install_one(
     ),
     crate::source::Error,
 > {
-    let (mut session, target) = attempt!(commit_definition(session, &input.source, input.limits));
+    let (mut session, target) = attempt!(commit_definition(
+        session,
+        &input.source,
+        input.signature.as_ref(),
+        input.limits,
+    ));
     let Some(context) = session.source.declared.as_mut() else {
         return Err(crate::source::declared::error(
             crate::source::Stage::Check,
@@ -195,6 +202,7 @@ fn exported_definition(
     crate::source::declared::Export {
         name: alloc::string::String::from(name),
         ty: None,
+        generic: None,
         words: alloc::vec![(alloc::string::String::from(name), target)],
     }
 }
@@ -202,6 +210,7 @@ fn exported_definition(
 fn commit_definition(
     mut session: crate::source::declared::ModuleSession,
     definition_bytes: &[u8],
+    signature: Option<&noble_kernel::words::Scheme>,
     limits: crate::Limits,
 ) -> Result<
     (
@@ -210,7 +219,10 @@ fn commit_definition(
     ),
     crate::source::Error,
 > {
-    let prepared = attempt!(session.source.prepare(definition_bytes, &[], limits));
+    let prepared =
+        attempt!(session
+            .source
+            .prepare_signed(definition_bytes, &[], signature, limits));
     if !prepared.is_definition() || prepared.submission().is_some() {
         return Err(crate::source::declared::error(
             crate::source::Stage::Check,

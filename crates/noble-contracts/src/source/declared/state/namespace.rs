@@ -1,6 +1,35 @@
 mod words;
 
 impl super::ModuleSession {
+    /// The checked rank-1 interface exported by one immutable module version.
+    /// No parallel Rust signature table is consulted.
+    pub fn checked_signature(
+        &self,
+        module_name: &str,
+        version: u32,
+        exported_name: &str,
+    ) -> Option<&noble_kernel::words::Scheme> {
+        let module = self
+            .modules
+            .iter()
+            .find(|module| module.name == module_name && module.version == version)?;
+        let export = module
+            .exports
+            .iter()
+            .find(|export| export.name == exported_name)?;
+        let (_, crate::source::Target::Named(index)) = export
+            .words
+            .iter()
+            .find(|(name, _)| name == exported_name)?
+        else {
+            return None;
+        };
+        let definition = self.source.definitions.get(usize::try_from(*index).ok()?)?;
+        (definition.owner == Some(module.identity))
+            .then_some(definition.signature.as_ref())
+            .flatten()
+    }
+
     pub fn resolve_type(
         &self,
         spelling: &str,
@@ -41,14 +70,48 @@ impl super::ModuleSession {
         };
         let mut ty = None;
         if let Some(entry) = located {
+            let mut types = alloc::vec::Vec::new();
+            let mut families = alloc::vec::Vec::new();
             let mut at = 0usize;
             while at < entry.exports.len() {
                 let export = &entry.exports[at];
-                if export.name == type_name {
+                if export.name == type_name && export.ty.is_some() {
                     ty = export.ty.clone();
                     break;
                 }
+                if let Some(value) = &export.ty {
+                    // One entry per scanned export, so this bound is never reached.
+                    if types.len() >= entry.exports.len() {
+                        return Err(super::super::error(
+                            crate::source::Stage::Resolve,
+                            "type export scan exceeds module exports",
+                        ));
+                    }
+                    types.push((export.name.clone(), value.clone()));
+                }
+                if let Some(id) = export.generic {
+                    if families.len() >= entry.exports.len() {
+                        return Err(super::super::error(
+                            crate::source::Stage::Resolve,
+                            "type export scan exceeds module exports",
+                        ));
+                    }
+                    families.push((export.name.clone(), id));
+                }
                 at += 1;
+            }
+            if ty.is_none() && !families.is_empty() {
+                if let Some(context) = &self.source.declared {
+                    ty = super::super::types::parse_with_families(
+                        type_name,
+                        &types,
+                        &families,
+                        Some(&context.environment),
+                        super::super::SPAN,
+                    )
+                    .ok()
+                    .map(|parsed| parsed.ty);
+                }
             }
         }
         ty.ok_or_else(|| {

@@ -29,7 +29,7 @@ pub(super) fn register(
     env: super::Env,
     decl: super::NominalDecl,
 ) -> Result<(super::Env, super::NominalOps), super::NominalError> {
-    if env.nominal(decl.id).is_some() {
+    if env.nominal(decl.id).is_some() || env.generic_variant(decl.id).is_some() {
         return Err(super::NominalError::DuplicateIdentity);
     }
     if !valid_representation(&env, &decl) {
@@ -42,6 +42,97 @@ pub(super) fn register(
     env.nominals.push(decl);
     env.declared_modules = true;
     Ok((env, ops))
+}
+
+/// The descriptor of one instantiation is uniquely determined by the
+/// declaration and the two ordered type arguments.
+pub(super) fn generic_shape(
+    decl: &super::GenericVariantDecl,
+    args: &[crate::types::Ty; 2],
+) -> Option<crate::types::NominalShape> {
+    let [left, right] = decl.payload_params;
+    if !matches!((left, right), (0, 1) | (1, 0)) {
+        return None;
+    }
+    Some(crate::types::NominalShape::Variant(
+        alloc::boxed::Box::new(args[usize::from(left)].clone()),
+        alloc::boxed::Box::new(args[usize::from(right)].clone()),
+    ))
+}
+
+pub(super) fn generic_descriptor_matches(
+    decl: &super::GenericVariantDecl,
+    args: &[crate::types::Ty; 2],
+    shape: &crate::types::NominalShape,
+) -> bool {
+    let [left, right] = decl.payload_params;
+    let crate::types::NominalShape::Variant(first, second) = shape else {
+        return false;
+    };
+    matches!((left, right), (0, 1) | (1, 0))
+        && same_generic_arg(first, &args[usize::from(left)])
+        && same_generic_arg(second, &args[usize::from(right)])
+}
+
+fn same_generic_arg(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
+    match (left, right) {
+        (crate::types::Ty::Unit, crate::types::Ty::Unit)
+        | (crate::types::Ty::Bool, crate::types::Ty::Bool)
+        | (crate::types::Ty::I64, crate::types::Ty::I64)
+        | (crate::types::Ty::Text, crate::types::Ty::Text) => true,
+        _ => left == right,
+    }
+}
+
+pub(super) fn register_generic_variant(
+    env: super::Env,
+    decl: super::GenericVariantDecl,
+) -> Result<(super::Env, super::NominalOps), super::NominalError> {
+    if env.nominal(decl.id).is_some() || env.generic_variant(decl.id).is_some() {
+        return Err(super::NominalError::DuplicateIdentity);
+    }
+    if !matches!(decl.payload_params, [0, 1] | [1, 0]) {
+        return Err(super::NominalError::InvalidRepresentation);
+    }
+    if env
+        .defs
+        .len()
+        .checked_add(3)
+        .and_then(|n| u32::try_from(n).ok())
+        .is_none()
+    {
+        return Err(super::NominalError::TooManyDefinitions);
+    }
+    let (env, left) = attempt!(append(
+        env,
+        schemes::generic_arm(&decl, false),
+        super::Behavior::GenericLeft(decl.id),
+        decl.id.module,
+    ));
+    let (env, right) = attempt!(append(
+        env,
+        schemes::generic_arm(&decl, true),
+        super::Behavior::GenericRight(decl.id),
+        decl.id.module,
+    ));
+    let (mut env, matcher) = attempt!(append(
+        env,
+        schemes::generic_matcher(&decl),
+        super::Behavior::GenericMatch(decl.id),
+        decl.id.module,
+    ));
+    env.generic_variants.push(decl);
+    env.declared_modules = true;
+    Ok((
+        env,
+        super::NominalOps {
+            new: None,
+            into: None,
+            left: Some(left),
+            right: Some(right),
+            matcher: Some(matcher),
+        },
+    ))
 }
 
 fn register_ops(
@@ -105,7 +196,7 @@ fn append_conversion(
     decl: &super::NominalDecl,
     into: bool,
 ) -> Result<(super::Env, super::Definition), super::NominalError> {
-    let Some(scheme) = schemes::conversion(decl, into) else {
+    let Some(scheme) = schemes::conversion(&env, decl, into) else {
         return Err(super::NominalError::InvalidRepresentation);
     };
     let kind = if into {
@@ -140,7 +231,7 @@ fn append_arm(
     decl: &super::NominalDecl,
     right: bool,
 ) -> Result<(super::Env, super::Definition), super::NominalError> {
-    let Some(scheme) = schemes::arm(decl, right) else {
+    let Some(scheme) = schemes::arm(&env, decl, right) else {
         return Err(super::NominalError::InvalidRepresentation);
     };
     let kind = if right {
@@ -155,7 +246,7 @@ fn append_matcher(
     env: super::Env,
     decl: &super::NominalDecl,
 ) -> Result<(super::Env, super::Definition), super::NominalError> {
-    let Some(scheme) = schemes::matcher(decl) else {
+    let Some(scheme) = schemes::matcher(&env, decl) else {
         return Err(super::NominalError::InvalidRepresentation);
     };
     append(
@@ -178,6 +269,39 @@ pub(super) fn register_bound_emit(
         registration.owner,
     ));
     env.bound_adapters.push(bound_adapter(def, registration));
+    env.declared_modules = true;
+    Ok((env, def))
+}
+
+pub(super) fn register_bound_clock(
+    env: super::Env,
+    registration: super::BoundClockRegistration,
+) -> Result<(super::Env, super::Definition), super::NominalError> {
+    if registration.adapter_identity.is_empty()
+        || !registration.input.is_empty()
+        || registration.output.as_slice() != [crate::types::Ty::I64]
+        || registration.effects.as_slice() != [super::TEST_CLOCK]
+        || env.bound_adapters.iter().any(|row| row.adapter_slot == registration.adapter_slot)
+    {
+        return Err(super::NominalError::InvalidRepresentation);
+    }
+    let (mut env, def) = attempt!(append(
+        env,
+        schemes::clock_scheme(),
+        super::Behavior::BoundClock(registration.adapter_slot),
+        registration.owner,
+    ));
+    env.bound_adapters.push(super::BoundAdapter {
+        definition: def,
+        adapter_identity: registration.adapter_identity,
+        adapter_slot: registration.adapter_slot,
+        input: registration.input,
+        output: registration.output,
+        effects: registration.effects,
+    });
+    if !env.effects.contains(&super::TEST_CLOCK) {
+        env.effects.push(super::TEST_CLOCK);
+    }
     env.declared_modules = true;
     Ok((env, def))
 }

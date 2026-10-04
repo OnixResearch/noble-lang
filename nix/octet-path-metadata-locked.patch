@@ -1,0 +1,10 @@
+--- a/cargo-octet/src/engine.rs
++++ b/cargo-octet/src/engine.rs
+@@ -1010,6 +1010,7 @@
+         let mut command = Command::new(CARGO_COMMAND);
+         command
+             .args(["metadata", "--format-version", "1"])
++            .arg("--locked")
+             .current_dir(&root)
+             .env("RUSTUP_TOOLCHAIN", toolchain);
+         // Preserve options affecting the effective manifest and Cargo configuration.

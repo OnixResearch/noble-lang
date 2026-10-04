@@ -35,6 +35,12 @@ pub enum Type {
         Box<Type>,
         Option<Box<Type>>,
     ),
+    GenericNominal(
+        noble_kernel::types::NominalTypeId,
+        Box<[Type; 2]>,
+        Box<Type>,
+        Option<Box<Type>>,
+    ),
 }
 
 /// Each pending destination is filled exactly once before the mirror is
@@ -68,6 +74,39 @@ impl<'a> Mirror<'a> {
                     if let Type::Nominal(_, inner, Some(other)) = destination {
                         self.pending.push((right, other));
                         self.pending.push((left, inner));
+                    }
+                }
+            },
+            // The kernel shape alone selects the mirrored alternative, so each
+            // arm builds its own destination and needs no impossible fallback.
+            noble_kernel::types::Ty::GenericNominal(id, arguments, shape) => match shape.as_ref() {
+                noble_kernel::types::NominalShape::Opaque(representation) => {
+                    *destination = Type::GenericNominal(
+                        *id,
+                        Box::new([Type::Unit, Type::Unit]),
+                        Box::new(Type::Unit),
+                        None,
+                    );
+                    if let Type::GenericNominal(_, mirrored, first, None) = destination {
+                        let [argument_left, argument_right] = mirrored.as_mut();
+                        self.pending.push((&arguments[1], argument_right));
+                        self.pending.push((&arguments[0], argument_left));
+                        self.pending.push((representation, first));
+                    }
+                }
+                noble_kernel::types::NominalShape::Variant(left, right) => {
+                    *destination = Type::GenericNominal(
+                        *id,
+                        Box::new([Type::Unit, Type::Unit]),
+                        Box::new(Type::Unit),
+                        Some(Box::new(Type::Unit)),
+                    );
+                    if let Type::GenericNominal(_, mirrored, first, Some(other)) = destination {
+                        let [argument_left, argument_right] = mirrored.as_mut();
+                        self.pending.push((&arguments[1], argument_right));
+                        self.pending.push((&arguments[0], argument_left));
+                        self.pending.push((right, other));
+                        self.pending.push((left, first));
                     }
                 }
             },
@@ -134,7 +173,8 @@ pub fn oty(ty: &noble_kernel::types::Ty) -> Type {
         | noble_kernel::types::Ty::Sum(..)
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Program(..)
-        | noble_kernel::types::Ty::Nominal(..) => {}
+        | noble_kernel::types::Ty::Nominal(..)
+        | noble_kernel::types::Ty::GenericNominal(..) => {}
     }
     let mut mirrored = Type::Unit;
     let mut walk = Mirror {
@@ -161,7 +201,7 @@ pub fn oty_stack(stack: &[noble_kernel::types::Ty]) -> Vec<Type> {
 pub fn is_data(ty: &Type) -> bool {
     match ty {
         Type::Resource => return false,
-        Type::Nominal(_, _, _) => {}
+        Type::Nominal(_, _, _) | Type::GenericNominal(_, _, _, _) => {}
         Type::Unit
         | Type::Bool
         | Type::I64
@@ -193,6 +233,15 @@ pub fn is_data(ty: &Type) -> bool {
                 if let Some(other) = alternative {
                     pending.push(other);
                 }
+            }
+            Type::GenericNominal(_, arguments, representation, alternative) => {
+                let Some(other) = alternative else {
+                    return false;
+                };
+                pending.push(&arguments[0]);
+                pending.push(&arguments[1]);
+                pending.push(representation);
+                pending.push(other);
             }
             Type::Unit
             | Type::Bool

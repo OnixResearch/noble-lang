@@ -76,6 +76,7 @@ impl super::Cursor<'_> {
         match name {
             "bool" => Ok(super::RawType::Bool),
             "s64" => Ok(super::RawType::S64),
+            "u64" => Ok(super::RawType::U64),
             "string" => Ok(super::RawType::String),
             "list" | "stream" => {
                 attempt!(self.take("<"));
@@ -99,7 +100,7 @@ impl super::Cursor<'_> {
                     Ok(super::RawType::Borrow(resource))
                 }
             }
-            "u8" | "s8" | "u16" | "s16" | "u32" | "s32" | "u64" | "f32" | "f64" | "char"
+            "u8" | "s8" | "u16" | "s16" | "u32" | "s32" | "f32" | "f64" | "char"
             | "tuple" | "option" => Err(crate::component::unsupported(
                 "WIT type has no exact supported bounded adapter",
             )),

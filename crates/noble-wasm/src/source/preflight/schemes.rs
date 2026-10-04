@@ -7,9 +7,9 @@ const fn pattern_children(
     pattern: &noble_kernel::shapes::Pattern,
 ) -> Result<usize, crate::Diagnostic> {
     match pattern {
-        noble_kernel::shapes::Pattern::Pair(_, _) | noble_kernel::shapes::Pattern::Sum(_, _) => {
-            Ok(2)
-        }
+        noble_kernel::shapes::Pattern::Pair(_, _)
+        | noble_kernel::shapes::Pattern::Sum(_, _)
+        | noble_kernel::shapes::Pattern::GenericNominal(_, _, _) => Ok(2),
         noble_kernel::shapes::Pattern::List(_) => Ok(1),
         noble_kernel::shapes::Pattern::Program(input, output, effects) => {
             if input.len() > super::STACK_LIMIT
@@ -52,6 +52,7 @@ fn pattern_child(
                 Ok(right)
             }
         }
+        noble_kernel::shapes::Pattern::GenericNominal(_, arguments, _) => Ok(&arguments[child]),
         noble_kernel::shapes::Pattern::List(item) => Ok(item),
         noble_kernel::shapes::Pattern::Program(input, output, _) => {
             let selected = if child < input.len() {

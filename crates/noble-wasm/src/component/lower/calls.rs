@@ -8,16 +8,19 @@
     reason = "Owner: noble-maintainers; all arguments are checked before emitting an owned transfer or host call; exact retptr loading and dynamic result validation preserve runtime refusal paths, while bounded compiler failures return diagnostics rather than assertions."
 )]
 pub(super) fn invoke(
+    world: &noble_contracts::component::World,
     operation: &noble_contracts::component::Operation,
     state: &mut super::State,
 ) -> Result<(), crate::Diagnostic> {
-    let arguments = attempt!(arguments(operation, state));
+    let arguments = attempt!(arguments(world, operation, state));
     // Validate every argument before committing any owned transfer or calling
     // the host. Borrowed owners are absent from the guest stack throughout.
     attempt!(validate_arguments(operation, &arguments, &mut state.code));
     let result_type = attempt!(super::super::abi::result(&operation.results));
     let returned = match result_type {
-        Some(ty) => Some(attempt!(state.value(ty.noble()))),
+        Some(ty) => Some(attempt!(state.value(
+            attempt!(world.noble_type(ty).ok_or(crate::Diagnostic::Invalid))
+        ))),
         None => None,
     };
     let area = match result_type {
@@ -168,6 +171,7 @@ fn read_arguments(
 }
 
 fn arguments(
+    world: &noble_contracts::component::World,
     operation: &noble_contracts::component::Operation,
     state: &mut super::State,
 ) -> Result<alloc::vec::Vec<super::Value>, crate::Diagnostic> {
@@ -177,7 +181,7 @@ fn arguments(
     while at > 0 && failure.is_none() {
         at = at.saturating_sub(1);
         let ty = operation.parameters[at];
-        match argument(ty, state) {
+        match argument(world, ty, state) {
             Ok(value) => arguments.push(value),
             Err(error) => failure = Some(error),
         }
@@ -194,11 +198,12 @@ fn arguments(
     reason = "Owner: noble-maintainers; argument admission uses runtime stack pop and non-const polymorphic type equality before any host call is emitted."
 )]
 fn argument(
+    world: &noble_contracts::component::World,
     ty: noble_contracts::component::Type,
     state: &mut super::State,
 ) -> Result<super::Value, crate::Diagnostic> {
     let value = attempt!(state.pop());
-    if value.ty != ty.noble() {
+    if world.noble_type(ty).as_ref() != Some(&value.ty) {
         return Err(crate::Diagnostic::Invalid);
     }
     Ok(value)

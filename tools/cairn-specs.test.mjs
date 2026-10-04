@@ -42,6 +42,12 @@ function fixture() {
   };
 }
 
+function fixtureRequirementId(f, name) {
+  const match = f.read(canonicalPath(name)).match(/^### Requirement: (B-FIXTURE-\d+)$/m);
+  assert.ok(match, `missing fixture requirement in ${name}`);
+  return match[1];
+}
+
 const START = '<!-- cairn:scenario-links:start -->';
 const END = '<!-- cairn:scenario-links:end -->';
 for (const fence of ['```', '~~~~']) {
@@ -108,6 +114,7 @@ test('--write-views preserves encoded destinations and real generated scenario l
   const f = fixture();
   const name = 'CALCULATOR.md';
   const file = canonicalPath(name);
+  const calculatorId = fixtureRequirementId(f, name);
   const leaf = 'probe%20%23%25%28file%29.json';
   const link = `[artifact](../../../specs/${leaf}#details)`;
   f.write(file, f.read(file) + '\n' + link + '\n');
@@ -115,7 +122,7 @@ test('--write-views preserves encoded destinations and real generated scenario l
   family.scenario_files = ['probe file.json'];
   f.write('specs/spec-family.json', JSON.stringify(family));
   f.write('specs/probe file.json', JSON.stringify({ cases: [
-    { id: 'FIXTURE-01', requirements: ['B-FIXTURE-12'], profile: 'Fixture', kind: 'review' },
+    { id: 'FIXTURE-01', requirements: [calculatorId], profile: 'Fixture', kind: 'review' },
   ] }));
   const result = f.run();
   assert.equal(result.status, 0, result.stderr);
@@ -161,9 +168,9 @@ test('--write-views preserves a native requirement without a legacy label or led
 });
 
 for (const [name, corrupt, diagnostic] of [
-  ['mismatched legacy label', text => text.replace('**B-FIXTURE-12.**', '**B-WRONG-01.**'), /identity mismatch/],
-  ['mismatched native marker', text => text.replace('r[B-FIXTURE-12]', 'r[B-WRONG-01]'), /marker identity mismatch/],
-  ['missing native marker', text => text.replace('r[B-FIXTURE-12]\n', ''), /marker/],
+  ['mismatched legacy label', (text, id) => text.replace(`**${id}.**`, '**B-WRONG-01.**'), /identity mismatch/],
+  ['mismatched native marker', (text, id) => text.replace(`r[${id}]`, 'r[B-WRONG-01]'), /marker identity mismatch/],
+  ['missing native marker', (text, id) => text.replace(`r[${id}]\n`, ''), /marker/],
   ['duplicate native ID', text => text + addition + addition, /duplicate requirement/],
   ['cross-document duplicate', text => text + addition.replaceAll('B-NEW-01', 'B-FIXTURE-1'), /duplicate requirement/],
   ['nested generated region', text => text.replace(START, START + '\n' + START), /nested scenario region/],
@@ -176,7 +183,7 @@ for (const [name, corrupt, diagnostic] of [
     const first = canonicalPath('SPEC-0001.md');
     f.write(first, f.read(first).replace('reject invalid input', 'reject malformed input'));
     const last = canonicalPath('CALCULATOR.md');
-    f.write(last, corrupt(f.read(last)));
+    f.write(last, corrupt(f.read(last), fixtureRequirementId(f, 'CALCULATOR.md')));
     const before = f.snapshot();
     const result = f.run();
     assert.equal(result.status, 1, result.stderr);

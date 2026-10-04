@@ -114,12 +114,16 @@ M2 and later runtime milestones retain their separate obligations.
 
 ## Octet and architecture — VT-M1-05
 
-Current commands: `nix flake check`, the published pre-commit hook, the direct `noble-octet-gate`, and `cargo-octet artifact verify`.
+Current commands: `nix flake check`, the local pre-commit hook bound to the
+absolute selected `noble-octet-gate` store executable, the direct gate, and
+`cargo-octet artifact verify`. Run pre-commit from the reviewed devShell;
+missing selected output fails closed, and an ambient `PATH` executable is
+never a substitute.
 Reserved command: `m1-controls --family octet --all-required`. Tasks 4.1–4.4 own complete local and CI enforcement.
 
 | Control | Positive observation or separate rejected mutations | Current state |
 |---|---|---|
-| OCT-BASE | Full pinned deny-all catalog, fresh Nickel policy, all required targets/features, complete architecture collection, valid replay | Observed for task 4.1: `octet-controls` proves one immutable revision across `flake.nix`, `flake.lock`, `.pre-commit-config.yaml`, and the reviewed selection; the published hook and the direct gate both ran over `--workspace --all-targets --all-features` with 0 findings and a valid bundle replay. The Nix `octet` check runs the same gate in every `flake check` |
+| OCT-BASE | Full pinned deny-all catalog, fresh Nickel policy, all required targets/features, complete architecture collection, valid replay | Historical task 4.1: the upstream hook and direct gate ran over `--workspace --all-targets --all-features` with 0 findings and valid replay on their earlier source. Current `octet-controls` instead binds the Octet upstream revision to Nix/lock and the local pre-commit entry to the exact selected gate output. The current strict selected gate is **red** (exit 2, first kernel shard: 37 lint errors and 2 warnings); no complete strict-gate architecture receipt or full `flake check` PASS is claimed. |
 | OCT-LINT | Lint finding; disabled lint; warning/finding budget; broad suppression; stale source allowance | Observed: `octet-controls` rejects any lint downgrade, any missing `unsafe_code = "forbid"`, and any waiver in the reviewed policy; a kernel filesystem call is rejected by the published gate (exit 2, `impure_call_in_core`), and a crate-level `#![allow(unused, dead_code)]` does not hide it. Octet's internal waiver *matching* semantics remain provider-owned |
 | OCT-POLICY | Empty policy; stale export; stale manifest; inventory/advisory mode replacing gate mode | Observed: a stale JSON export fails the `policy` check comparison; an emptied policy is rejected by the published gate with named contract diagnostics (`invalid-effect-executor-scope`, `missing-capability-classification`); a required feature the packages do not define is rejected; dropping a required capability family blocks the gate (exit 1); and an advisory-mode policy is rejected by `octet-controls` as `architecture-mode-not-gate`. Advisory-mode execution was additionally rejected for a stale manifest, so "advisory exits 0" was not observed |
 | OCT-FACTS | Missing compiler fact/unit; unsupported required configuration; forged test exemption; missing per-unit no-std evidence | Observed for task 4.2: the compiler coverage artifact reports `complete`, the roster covers `lib`, `lib+test`, `bin`, `bin+test`, and two `test+test` units, the Nickel export and freshness manifest are re-generated and compared by the `policy` check, and `octet-controls` asserts the declared roles, packages, sources, targets, features, capability families, outbound authority, and core no-std scope. Forged test exemption and per-unit no-std negatives remain provider-owned |
@@ -127,6 +131,14 @@ Reserved command: `m1-controls --family octet --all-required`. Tasks 4.1–4.4 o
 
 Console output remains explicitly unprotected. No synthetic authorization witness can hide a missing protected-effect obligation.
 Native binary/library test configurations retain production roles. Only independently declared, compiler-bound integration tests can receive the test role.
+Separate selected `cargo-octet check` diagnostics on unchanged source with
+scratch-only cap widening produced 39/39 complete units and exit 1:
+712 `required-compiler-unknown` plus two forbidden-role-edge findings naming
+unclassified external `anyhow` and `wasmtime`. The acyclic 41/41 positive
+still exits 1 with 385 unknowns; its reverse negative adds exactly one
+forbidden-role-edge. Complete collection is not a waiver or architecture
+approval; source/native classifications remain unchanged. Any separately
+measured collector-limit renewal enables observation, not a PASS.
 
 ## Native assurance — VT-M1-06
 

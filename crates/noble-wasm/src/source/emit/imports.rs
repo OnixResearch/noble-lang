@@ -8,23 +8,29 @@ pub(super) fn write(
     plan: &super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(module\n(type $entry (func (param i32)))\n(import \"noble\" \"memory\" (memory 16 16))\n(import \"noble\" \"table\" (table 16384 16384 funcref))\n"));
-    if !plan.declared_modules {
+    if plan.has_core_emit {
         attempt!(out.append(
             b"(import \"noble\" \"test_emit\" (func $host_emit (param i32 i32) (result i32)))\n"
         ));
     }
-    attempt!(out.append(b"(import \"noble\" \"test_abort\" (func $host_abort (result i32)))\n"));
+    if plan.has_core_abort {
+        attempt!(out.append(b"(import \"noble\" \"test_abort\" (func $host_abort (result i32)))\n"));
+    }
     if plan.has_bound_emit {
         attempt!(out.append(b"(import \"noble\" \"test_emit_bound\" (func $host_emit_bound (param i32 i32 i32) (result i32)))\n"));
+    }
+    if plan.has_bound_clock {
+        attempt!(out.append(b"(import \"noble\" \"test_clock_bound\" (func $host_clock_bound (param i32) (result i32 i64)))\n"));
+    }
+    if plan.has_live_propose {
+        attempt!(out.append(b"(import \"noble\" \"live_propose\" (func $host_live_propose (param i64 i64 i32) (result i32)))\n"));
+    }
+    if plan.has_live_generation {
+        attempt!(out.append(b"(import \"noble\" \"live_generation\" (func $host_live_generation (result i64)))\n"));
     }
     attempt!(globals(out));
     attempt!(global_import(out, b"allocated_total", b"i64"));
     attempt!(global_import(out, b"released_total", b"i64"));
-    if plan.declared_modules {
-        // The historical source fragment retains $op_emit; this local stub
-        // never invokes a host and is unreachable under declared acceptance.
-        attempt!(out.append(b"(func $host_emit (param i32 i32) (result i32) (i32.const 1))\n"));
-    }
     out.append(b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n")
 }
 
@@ -118,11 +124,57 @@ pub(super) fn runtime(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat"))
     ));
+    if plan.has_core_emit {
+        attempt!(out.append(
+            b"(func $op_emit (local $text i32)
+ (local.set $text (i32.wrap_i64 (call $pop_kind (i32.const 11))))
+ (if (global.get $failure) (then (return)))
+ ;; A native host throw also leaves the session poisoned. Successful return is
+ ;; the only place this provisional host-call failure may be cleared.
+ (global.set $failure (i32.const 5))
+ (if (i32.eqz (call $host_emit (call $x (local.get $text)) (call $y (local.get $text))))
+  (then (global.set $failure (i32.const 0)))))
+"
+        ));
+    }
+    if plan.has_core_abort {
+        attempt!(out.append(
+            b"(func $op_abort
+ (if (global.get $failure) (then (return)))
+ (call $fail (i32.const 6))
+ (drop (call $host_abort)))
+"
+        ));
+    }
     if plan.has_nominals {
         attempt!(fragment(out, include_str!("nominal.wat")));
     }
     if plan.has_bound_emit {
         attempt!(fragment(out, include_str!("bound-emit.wat")));
+    }
+    if plan.has_bound_clock {
+        attempt!(out.append(b"(func $op_clock_bound (param $slot i32) (local $status i32) (local $value i64)\n (global.set $failure (i32.const 5))\n (call $host_clock_bound (local.get $slot))\n (local.set $value)\n (local.set $status)\n (if (i32.eqz (local.get $status)) (then\n   (global.set $failure (i32.const 0))\n   (call $push_i64 (local.get $value)))))\n"));
+    }
+    if plan.has_live_propose {
+        attempt!(out.append(b"(func $op_live_propose (param $owner i64)
+ (local $program i32) (local $expected i64)
+ (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))
+ (local.set $expected (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ ;; A rejected queue request or a native throw poisons this invocation.
+ (global.set $failure (i32.const 5))
+ (if (i32.eqz (call $host_live_propose (local.get $owner) (local.get $expected) (local.get $program)))
+  (then (global.set $failure (i32.const 0)) (call $push_unit))))
+"));
+    }
+    if plan.has_live_generation {
+        attempt!(out.append(b"(func $op_live_generation (local $current i64)
+ (if (global.get $failure) (then (return)))
+ (global.set $failure (i32.const 5))
+ (local.set $current (call $host_live_generation))
+ (global.set $failure (i32.const 0))
+ (call $push_i64 (local.get $current)))
+"));
     }
     attempt!(super::reflection::write(out, plan.declared_modules));
     attempt!(fragment(

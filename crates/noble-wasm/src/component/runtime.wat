@@ -6,12 +6,15 @@
   (global $allocated (mut i64) (i64.const 0))
   (global $copied (mut i64) (i64.const 0))
   (global $cleanups (mut i64) (i64.const 0))
+  (global $quota_exceeded (mut i32) (i32.const 0))
   ;; '$' cannot occur in a WIT identifier; diagnostics never alias guest exports.
   (func (export "noble$set-allocation-limit") (param $limit i32)
     global.get $busy if unreachable end
     global.get $heap i32.const 65536 i32.ne if unreachable end
     local.get $limit i32.const 983040 i32.gt_u if unreachable end
+    i32.const 0 global.set $quota_exceeded
     local.get $limit global.set $quota)
+  (func (export "noble$quota-exceeded") (result i32) global.get $quota_exceeded)
   (func (export "noble$allocation-count") (result i64) global.get $allocations)
   (func (export "noble$allocated-bytes") (result i64) global.get $allocated)
   (func (export "noble$copied-bytes") (result i64) global.get $copied)
@@ -37,7 +40,10 @@
     local.get $ptr i32.const 1048576 i32.gt_u if unreachable end
     local.get $size i32.const 1048576 local.get $ptr i32.sub i32.gt_u if unreachable end
     local.get $ptr local.get $size i32.add local.set $end
-    local.get $end i32.const 65536 i32.sub global.get $quota i32.gt_u if unreachable end
+    local.get $end i32.const 65536 i32.sub global.get $quota i32.gt_u if
+      i32.const 1 global.set $quota_exceeded
+      unreachable
+    end
     local.get $end global.set $heap
     global.get $allocations i64.const 1 i64.add global.set $allocations
     global.get $allocated local.get $size i64.extend_i32_u i64.add global.set $allocated

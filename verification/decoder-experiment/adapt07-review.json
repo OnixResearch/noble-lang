@@ -1,0 +1,43 @@
+{
+  "schema": "noble-adapt07-review/v1",
+  "case": "ADAPT-07",
+  "result": "passed",
+  "kind": "review",
+  "decision": "reject-native-IntoBytes-as-ProgramValueId",
+  "claim": "The proposed native-layout IntoBytes-to-program-identity shortcut is rejected. An executed safe Rust native ABI probe showed different field offsets for the same logical fields, while the declared 8-byte decoder explicitly fixes LE/order/version/limits and existing companion subject identity folds semantic signatures, recipe observations and captures. This does not establish canonical Noble encoding or select zerocopy.",
+  "observation": {
+    "layout_first": [
+      8,
+      4,
+      0,
+      4
+    ],
+    "layout_second": [
+      8,
+      4,
+      4,
+      0
+    ],
+    "native_layout_not_canonical": true,
+    "canonical_schema_selected": false,
+    "dependency_selected": false,
+    "accepted_program_created": false
+  },
+  "source": {
+    "input_sha256": {
+      "verification/decoder-experiment/native-layout-review.rs": "5e7314982b5ccbbdc9b2cd632ce0c8468930a816c29c556c28373cd0fe4642ee",
+      "verification/decoder-experiment/review.mjs": "a52d60cced990e74f559ebe9747e9b4703ab7675a3e70ee3ef5cced8d0ffa00f",
+      "specs/conformance/adaptation-cases.json": "3655e1d821cc5953d5534ef94fc5ee054e46cba990320ba8a7237980a4a0fa9a",
+      ".cairn/specs/safety/spec.md": "d7327a3fec8c08212da7f07b52a5346325cb6fb3bb5f015c0ed00f7ab559514a",
+      "crates/noble-contracts/src/companion/subject.rs": "3624b0d64fd9415cc3342ac478aa9f9755ce36d155513164caa53f3a90dafd84",
+      "Cargo.lock": "918fbf668c6de38a4e9eb108d52ab51b1141e24a516b046014f0eb3d26e8b693",
+      "policy/tool-selection.json": "67318eadf5ea11b047ad0b24bd0dbbd14c9d1de09ce28d700564bd622e743c15"
+    },
+    "binary_sha256": "42ae1bb0c98699287d19982573b90040e5ef8d50153c886af2384463dd9eb9df",
+    "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)"
+  },
+  "assumptions": [
+    "The probe demonstrates native Rust layout variability under declared repr(C) field order; it does not exercise a zerocopy IntoBytes derive or prove every target ABI.",
+    "The rejection is a design-policy review under S-DECODE-03, not a Noble runtime/decoder proof or an adopted canonical program format."
+  ]
+}

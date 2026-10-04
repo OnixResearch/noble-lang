@@ -1,0 +1,172 @@
+{
+  "schema": "noble-decoder-experiment/v1",
+  "result": "passed",
+  "cases": {
+    "ADAPT-04": {
+      "result": "passed",
+      "matrix": [
+        {
+          "variant": "valid",
+          "offset": 0,
+          "owned": "candidate:616263",
+          "view": "candidate:616263"
+        },
+        {
+          "variant": "valid",
+          "offset": 1,
+          "owned": "candidate:616263",
+          "view": "candidate:616263"
+        },
+        {
+          "variant": "short-header",
+          "offset": 0,
+          "owned": "reject:ShortHeader",
+          "view": "reject:ShortHeader"
+        },
+        {
+          "variant": "short-header",
+          "offset": 1,
+          "owned": "reject:ShortHeader",
+          "view": "reject:ShortHeader"
+        },
+        {
+          "variant": "short-payload",
+          "offset": 0,
+          "owned": "reject:ShortPayload",
+          "view": "reject:ShortPayload"
+        },
+        {
+          "variant": "short-payload",
+          "offset": 1,
+          "owned": "reject:ShortPayload",
+          "view": "reject:ShortPayload"
+        },
+        {
+          "variant": "unknown-version",
+          "offset": 0,
+          "owned": "reject:Version",
+          "view": "reject:Version"
+        },
+        {
+          "variant": "unknown-version",
+          "offset": 1,
+          "owned": "reject:Version",
+          "view": "reject:Version"
+        },
+        {
+          "variant": "unknown-tag",
+          "offset": 0,
+          "owned": "reject:Tag",
+          "view": "reject:Tag"
+        },
+        {
+          "variant": "unknown-tag",
+          "offset": 1,
+          "owned": "reject:Tag",
+          "view": "reject:Tag"
+        },
+        {
+          "variant": "reserved-bits",
+          "offset": 0,
+          "owned": "reject:Reserved",
+          "view": "reject:Reserved"
+        },
+        {
+          "variant": "reserved-bits",
+          "offset": 1,
+          "owned": "reject:Reserved",
+          "view": "reject:Reserved"
+        },
+        {
+          "variant": "length-limit",
+          "offset": 0,
+          "owned": "reject:LengthLimit",
+          "view": "reject:LengthLimit"
+        },
+        {
+          "variant": "length-limit",
+          "offset": 1,
+          "owned": "reject:LengthLimit",
+          "view": "reject:LengthLimit"
+        },
+        {
+          "variant": "trailing-byte",
+          "offset": 0,
+          "owned": "reject:TrailingBytes",
+          "view": "reject:TrailingBytes"
+        },
+        {
+          "variant": "trailing-byte",
+          "offset": 1,
+          "owned": "reject:TrailingBytes",
+          "view": "reject:TrailingBytes"
+        }
+      ],
+      "boundary_max16_and_refuse17_offsets": [
+        0,
+        1
+      ],
+      "optional_byte_view": "safe-Rust-borrowed-slice-selected",
+      "zerocopy_crate": "unselected-not-run-not-passed",
+      "accepted_program_created": false,
+      "unchecked_length_allocation": false
+    },
+    "ADAPT-05": {
+      "result": "passed",
+      "lifetime": [
+        {
+          "storage": "unprotected-external-view",
+          "event": "callback-mutates-payload",
+          "outcome": "reject-before-view-escapes"
+        },
+        {
+          "storage": "unprotected-external-view",
+          "event": "suspension",
+          "outcome": "reject-before-view-escapes"
+        },
+        {
+          "storage": "safely-copied-complete-record",
+          "event": "callback-mutates-source",
+          "outcome": "retain:616263"
+        },
+        {
+          "storage": "header-copy-with-unprotected-payload",
+          "event": "callback-mutates-payload",
+          "outcome": "reject-before-view-escapes"
+        }
+      ],
+      "immutable_marker_freezes_external_storage": false,
+      "use_after_invalidation": false
+    }
+  },
+  "tools": {
+    "quality_rust": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "miri": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)",
+    "miri_target": "x86_64-unknown-linux-gnu",
+    "miri_flags": "-Zmiri-strict-provenance",
+    "miri_tests_passed": 3,
+    "compile_fail_codes": [
+      "E0515",
+      "E0502"
+    ]
+  },
+  "source": {
+    "input_sha256": {
+      "verification/decoder-experiment/Cargo.toml": "284ff816110a0e26afd16d3a6b78220f11335ceb5a7792e5094c6964b1bb8fff",
+      "verification/decoder-experiment/src/lib.rs": "f802862594134183f549add7f2ac94e9003b35d6972d9073cbda24b4daf0ebcc",
+      "verification/decoder-experiment/src/main.rs": "b515fad7e89f9c3293b03372476311008e6cf14d56445ea4a1eaa06e8c2c2ac0",
+      "verification/decoder-experiment/fixtures/escape.rs": "104066219029bbbde3de3d1c807355b93d438002e5751ee880cc4d284f2f6cac",
+      "verification/decoder-experiment/gate.mjs": "a6214bcb3dbc247531b5d287825b4c27e96635d89ed05b385d441887b05d2d15",
+      "specs/conformance/adaptation-cases.json": "bfb89b2cdd2a59844f99018313a5e73d57e30932024b1ca62bb837ace1181d83",
+      "policy/tool-selection.json": "67318eadf5ea11b047ad0b24bd0dbbd14c9d1de09ce28d700564bd622e743c15",
+      ".cairn/specs/safety/spec.md": "d7327a3fec8c08212da7f07b52a5346325cb6fb3bb5f015c0ed00f7ab559514a",
+      ".cairn/specs/verification-toolchain/spec.md": "560cb9fd5ee4a97499bf77ab4ab82a2001777731c2d84608a3cf1baa943a119c"
+    },
+    "binary_sha256": "73501ccfb05b9db7a1b25280dc94c911b24496cf3afac312b30cf602cea61dcb"
+  },
+  "assumptions": [
+    "The safe std byte-slice view is not the unselected zerocopy crate; no crate feature, derive macro, native layout or unsafe cast enters this experiment.",
+    "External storage with callback mutation or suspension is refused before a borrowed view escapes; safe Rust borrowing protects only Rust-owned immutable borrows, not arbitrary foreign memory.",
+    "Decoded bytes remain untrusted candidate data. This experiment never constructs accepted Noble programs or grants effect, resource, proof or host authority; no canonical encoding or Wasm correspondence is claimed."
+  ]
+}

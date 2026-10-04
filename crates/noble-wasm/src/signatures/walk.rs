@@ -133,7 +133,14 @@ fn push_type(
         noble_kernel::types::Ty::Contract => attempt!(out.append(b"Contract")),
         noble_kernel::types::Ty::Evidence => attempt!(out.append(b"Evidence")),
         noble_kernel::types::Ty::Certified => attempt!(out.append(b"Certified")),
-        noble_kernel::types::Ty::Resource(_) => return Err(crate::Diagnostic::Unsupported),
+        noble_kernel::types::Ty::Resource(kind) => {
+            if !extended {
+                return Err(crate::Diagnostic::Unsupported);
+            }
+            attempt!(out.append(b"Resource("));
+            attempt!(out.number(u64::from(kind.0)));
+            attempt!(out.append(b")"));
+        }
         noble_kernel::types::Ty::Nominal(id, shape) => {
             attempt!(out.append(b"Nominal("));
             attempt!(out.number(id.module));
@@ -155,6 +162,18 @@ fn push_type(
                     work.push(Step::Type(*left));
                 }
             }
+        }
+        noble_kernel::types::Ty::GenericNominal(id, arguments, _) => {
+            attempt!(out.append(b"GenericNominal("));
+            attempt!(out.number(id.module));
+            attempt!(out.append(b":"));
+            attempt!(out.number(u64::from(id.ordinal)));
+            attempt!(out.append(b","));
+            let [first, second] = *arguments;
+            work.push(Step::Byte(b')'));
+            work.push(Step::Type(second));
+            work.push(Step::Byte(b','));
+            work.push(Step::Type(first));
         }
         noble_kernel::types::Ty::Pair(left, right) | noble_kernel::types::Ty::Sum(left, right) => {
             attempt!(out.append(if is_pair { b"Pair(" } else { b"Sum(" }));
@@ -194,7 +213,8 @@ fn unavailable_in_core(ty: &noble_kernel::types::Ty) -> bool {
         | noble_kernel::types::Ty::Contract
         | noble_kernel::types::Ty::Evidence
         | noble_kernel::types::Ty::Certified
-        | noble_kernel::types::Ty::Nominal(_, _) => true,
+        | noble_kernel::types::Ty::Nominal(_, _)
+        | noble_kernel::types::Ty::GenericNominal(_, _, _) => true,
         noble_kernel::types::Ty::Program(_, _, effects) => !effects.is_empty(),
         noble_kernel::types::Ty::Unit
         | noble_kernel::types::Ty::Bool

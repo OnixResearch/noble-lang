@@ -228,7 +228,9 @@ impl Cursor<'_> {
             attempt!(self.expect(b':'));
             self.skip_space();
             let value = attempt!(self.value(child_depth));
-            entries.insert(key, value);
+            if entries.insert(key, value).is_some() {
+                return Err("duplicate JSON object field".into());
+            }
             self.skip_space();
             match self.peek() {
                 Some(b',') => {

@@ -15,11 +15,51 @@ Scenario clauses declare designs; the conformance ledger records execution and e
 Document: SPEC-BE001  
 Revision: 0.1.0-draft.5  
 Depends on: SPEC-0001, SPEC-B001 and SPEC-S001 at 0.1.0-draft.5  
-Status: Required M3 investigation, not a selected ABI or completed backend
+Status: Bounded M3 comparison complete with managed-linear-memory selected for M4; optional post-M3 layout study unexecuted, universal backend refinement open
 
 ## Scope and selection
 
 The [external study](../../../review/EXTERNAL-DESIGN-STUDY.md) motivates this experiment. Zena supplies design examples, not a required dependency or Noble compatibility evidence.
+
+### Requirement: BE-LIVE-01
+r[BE-LIVE-01]
+
+**BE-LIVE-01.** The first `Live-Wasm-Draft` target MUST reuse the currently selected persistent Node 24.13.0/V8 13.6.233.17-node.37 Core WebAssembly engine and managed-linear-memory program representation, but implement a *new opt-in* in-process deterministic Wasm binary emission and validation path from independently accepted source. The existing Core engine prepares WAT using external `wasm-tools parse/validate`, optionally Binaryen `wasm-opt`, and `WebAssembly.Module` on each submission; that existing path is not instant reload and installing a candidate directly against its shared live imports is not transactional staging. The live emitter MUST pin a format/ABI revision and exact supported Wasm feature/opcode set, canonical instruction encodings and control/stack validation; the selected VM MUST validate exact bytes and exact import/export types and reject unknown versions, unsupported features, start sections, unauthorized imports, excessive module/section/function/table/memory sizes, mismatched ABI and invalid control/operand stacks before publication. No externally supplied Wasm, claimed manifest or arbitrary bytes become executable from a digest alone. The generation/admission record and build key MUST bind exact source/import bytes, resolved definitions, types, effects, capability contracts, limits, compiler/ABI/engine revision and emitted bytes; language-level semantic definition identities instead follow canonical resolved bodies and dependencies under P-ID-01/02/04, so formatting or build-only changes do not change them. Encoding and verification cost and VM compilation/instantiation time MUST be bounded and observed separately from execution.
+
+The binary envelope is standard WebAssembly core magic plus binary version `1` (little-endian `01 00 00 00`), not a Noble bytecode format. The first selected feature vocabulary is wasm32 memory32, `i32`/`i64`, finite control blocks/branches, locals/globals, calls and typed `call_indirect`, `funcref` table, and explicitly validated passive data/element bulk-memory initialization used by the selected managed-memory backend. Arithmetic uses WebAssembly's defined wrapping/trap semantics as constrained by checked Noble `I64`; source-level stack/effect typing remains the independent kernel's responsibility. SIMD, shared-memory threads/atomics, WasmGC, memory64, exceptions, tail calls and components are outside this core profile and MUST refuse rather than depend on an engine's broader support. Before implementation acceptance, the exact normative Wasm core/feature revision, allowed opcode inventory and byte encodings MUST be frozen alongside the emitter/validator and exercised by positive and unsupported-opcode controls; this draft does not pretend an as-yet-unwritten encoder has passed that gate.
+
+Node/V8 WebAssembly execution can compile/JIT Wasm; its pinned `--no-liftoff --no-wasm-lazy-compilation --no-wasm-tier-up` settings do not prove interpretation. A claim of *strictly interpreted* execution requires separately selected and pinned actual Wasm interpreter engine (Wasmi is a candidate, not an accepted or currently selected engine), demonstrated no-JIT mode, exact feature/ABI parity and same source-bound negative/positive conformance before `noble live repl --engine interpreter` is enabled. Missing or incompatible interpreter MUST explicitly refuse that engine choice; it MUST NOT silently fall back to V8, Wasmtime JIT or a custom Noble evaluator.
+
+The selected V8 path has no assumed native Wasm instruction fuel. Its binary emitter and verifier MUST enforce explicit bounded metering on all paths including backedges, nested calls and generated helpers, with a separately bounded recursion/operand stack and accounted allocations. A host watchdog provides a last-resort timeout by poisoning/ending the affected session, not claiming safe in-process rollback or transparent restart. The separately selected interpreter, if implemented, MUST account its actual steps under an equivalently declared budget; observed wall time and semantic step counts are different measures.
+
+No cross-arena `Program` bridge is selected. Only candidate staging has an isolated shadow VM; after admission, the same accepted no-init bytes install into disjoint slots of the long-lived *shared* live memory/table/global arena at a top-level safepoint. Old checked Program handles remain local to that single arena and retain old table indices and immutable captures, including inside aggregates. The emitter MUST exclude start functions, active data/element segments and any initialization-time mutation of imported state; its bounded host-owned fresh-slot installation must either complete without effects or restore all new slots before refusal, never overwrite an old callable slot. The host MUST retain old instances while referenced and reclaim only unreferenced new/old slots under exact generation ownership and a finite session table/cell budget. Stage-time host imports are inert, and live imported forwarding callbacks remain authorization-gated after publication: no preparation-stage host request, newly acquired authority, or stale grant survives a rebind.
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LIVE-02 for BE-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-02](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `runtime` procedure for case `LIVE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-04 for BE-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-04](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LIVE-07 for BE-LIVE-01
+
+- GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-07](../../../specs/conformance/live-wasm-cases.json)
+- WHEN the `admission` procedure for case `LIVE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `LIVE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
 
 ### Requirement: BE-COMPARE-01
 r[BE-COMPARE-01]
@@ -118,6 +158,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: ADAPT-17 for BE-DYNAMIC-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-17](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: BE-ARITY-01
@@ -178,6 +226,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: ADAPT-17 for BE-REFLECT-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-17](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: BE-LIMIT-01
@@ -196,6 +252,22 @@ The comparison uses left-associated, right-associated, and balanced trees over t
 - GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-09](../../../specs/conformance/adaptation-cases.json)
 - WHEN the `runtime` procedure for case `ADAPT-09` runs against those inputs
 - THEN the observations match every field of `expected` in case `ADAPT-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ADAPT-17 for BE-LIMIT-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-17](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ADAPT-18 for BE-LIMIT-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-18](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-18` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-18`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -285,3 +357,30 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN candidate records with exact configurations and declared workload outcomes
 - WHEN the selection policy evaluates passing, blocked, missing-pin, fabricated-metric and failed-correctness records
 - THEN only correctly executed candidates with valid scoped evidence are eligible and no failed or unsupported record becomes a performance success
+
+### Requirement: BE-LAYOUT-01
+r[BE-LAYOUT-01]
+
+**BE-LAYOUT-01.**
+
+An optional post-M3 experiment MAY compare the selected managed-linear-memory Wasm lowering with a type-directed finite algebraic-data layout and A-normal/call-lowering alternative over the same accepted, resource-free typed programs. Each candidate MUST retain exact ordered stack/call semantics, checked source and instantiated interface, resolved schema/program identity, observable normalized recipes and captures, and effect/request ordering. It MUST compare runtime-supplied inputs after compilation under matching declared limits and pinned compiler/optimizer/engine/feature configurations, both optimization off and on. The record MUST distinguish normal results, traps and construction/invocation quota failures; record guest logical allocation charges and retained linear-memory bytes separately, expose cleanup, and mark unavailable engine/process memory observations unknown or unsupported rather than report zero. It MUST include finite two-arm variant, nested product/list, runtime quotation/composition and reflection shapes, plus hostile quota and malformed-boundary controls. Type-directed specialization MUST NOT smuggle a new source-preparation step, change portable program identity, omit a dynamically reachable recipe, or erase a checked effect/owner obligation.
+
+Any later resource/component-positive candidate MUST independently preserve WIT canonical lowering/lifting, exact ABI ownership/post-return or trap cleanup, native-pin retirement and host authorization; resource-free measurements MUST NOT be advertised as this evidence. No unconditional observational equivalence, universal backend theorem or performance win follows from Bend's published examples or a faster finite trial. M3's existing completed WasmGC-versus-managed-memory results remain historical and unchanged; this study is not a reopened M3 gate.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: ADAPT-17 for BE-LAYOUT-01
+
+- GIVEN the `Backend-Experiment` profile and every field of `input` in [ADAPT-17](../../../specs/conformance/adaptation-cases.json)
+- WHEN the `runtime` procedure for case `ADAPT-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `ADAPT-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+#### Scenario: ADAPT-17 finite layout comparison
+
+- GIVEN identical checked resource-free workloads, fixed post-compilation inputs, two pinned managed-memory lowerings and declared resource limits
+- WHEN both configurations execute optimized and unoptimized runs with reflection, normal paths, traps and quota boundaries
+- THEN each run records complete ordered value/recipe/effect and allocation/quota observations; discrepancies remain visible, with no resource-positive or universal-proof promotion

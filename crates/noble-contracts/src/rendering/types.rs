@@ -114,6 +114,12 @@ fn value(out: &mut alloc::string::String, ty: &noble_kernel::types::Ty) {
         noble_kernel::types::Ty::Nominal(_, _) => {
             super::rejected(out, "unsupported nominal type in companion contract");
         }
+        noble_kernel::types::Ty::GenericNominal(_, _, _) => {
+            super::rejected(
+                out,
+                "unsupported generic nominal type in companion contract",
+            );
+        }
     }
 }
 

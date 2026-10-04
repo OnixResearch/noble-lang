@@ -1,0 +1,144 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {root,read,sha,caseFiles,caseRow,selectedCases,dxReceipt,replayReceipt,
+  older,prerequisites,inventory,revision,removeNewestEvidence}
+  from './source.mjs';
+import {restoreReplayEvidence} from './projection.mjs';
+
+const casePaths=[...new Set(Object.values(caseFiles))];
+const replayPaths=[...new Set(selectedCases.map(id=>caseFiles[id]))];
+const checkCommands=(commands,external,expected)=>{
+  assert.deepEqual(commands.map(item=>item.label),expected);
+  for(const item of commands) {
+    assert.equal(item.error,null);
+    assert.equal(item.signal,null);
+    assert.equal(item.status,item.label==='forged-empty-manifest'||
+      item.label==='dx01-session'||item.label==='adapt01-session'||
+      item.label==='cli-S-CASE-01'||item.label==='cli-S-CASE-14-0'||
+      item.label==='cli-S-CASE-14-1'?2:0,`${item.label} status`);
+    assert.equal(sha(fs.readFileSync(item.executable)),item.executable_sha256);
+    for(const kind of ['stdout','stderr']) assert.equal(
+      sha(fs.readFileSync(path.join(external,item[kind]))),
+      item[`${kind}_sha256`],`${item.label} ${kind}`);
+  }
+};
+const conditionalLabels=['compile-pure','compile-effect','forged-empty-manifest',
+  'trusted-effect-manifest','trusted-pure-manifest'];
+function verifyConditional(receipt,external) {
+  const observed=receipt.conditional_imports;
+  assert.deepEqual(observed.imports,{pure:[],effect:['noble.test_emit']});
+  assert.deepEqual(observed.forged,{stage:'admission',outcome:'effect-manifest-reject',
+    guest_requests:0,protected_operations:0});
+  assert.deepEqual(observed.trusted,{guest_requests:1,trace:['test.emit:audit']});
+  assert.equal(observed.pure.guest_requests,0);
+  assert.deepEqual(observed.pure.stack.map(item=>[item.type,item.value]),[['I64','3']]);
+  for(const [name,label] of [['pure','pure'],['effect','effect']]) {
+    const wasm=path.join(external,'conditional-imports',label,'engine','module-1.wasm');
+    assert.equal(sha(fs.readFileSync(wasm)),observed.compiled[name]);
+    assert.deepEqual(WebAssembly.Module.imports(new WebAssembly.Module(fs.readFileSync(wasm)))
+      .filter(item=>item.kind==='function').map(item=>`${item.module}.${item.name}`),
+    observed.imports[name]);
+  }
+}
+export function verifyDx06({caseTexts}={}) {
+  assert.equal(fs.realpathSync(process.cwd()),root);
+  const {editor,forged,initial}=prerequisites();
+  const bytes=read(dxReceipt),receipt=JSON.parse(bytes),digest=sha(bytes);
+  assert.deepEqual([receipt.schema,receipt.result,receipt.kind,receipt.case.id],
+    ['noble-scase16-dx06-current-source/v1','passed','test','DX-06']);
+  assert.deepEqual(receipt.prior_receipt_sha256,older);
+  assert.deepEqual(receipt.prerequisites['S-CASE-16'],{
+    receipt:'verification/scase16/acceptance.json',sha256:older['verification/scase16/acceptance.json'],
+    source_revision:`sha256:${initial.source_tree_sha256}`});
+  assert.equal(receipt.source_revision,revision(receipt.source_sha256));
+  assert.deepEqual(Object.keys(receipt.source_sha256).sort(),
+    Object.keys(inventory('dx06',editor,forged)).sort());
+  for(const [file,expected] of Object.entries(receipt.source_sha256)) {
+    if(!casePaths.includes(file)) assert.equal(sha(read(file)),expected,`frozen DX06 source: ${file}`);
+  }
+  const file=caseFiles['DX-06'];
+  for(const item of casePaths) {
+    const current=caseTexts?.[item]??read(item).toString('utf8');
+    const restored=item===file?removeNewestEvidence(current,'DX-06',3):current;
+    assert.equal(sha(restored),receipt.prepromotion_case_sha256[item],`DX06 preimage ${item}`);
+    if(item===file) {
+      const packet=JSON.parse(current),row=packet.cases.find(value=>value.id==='DX-06');
+      assert.equal(row.evidence.length,3);
+      assert.equal(sha(JSON.stringify(row.evidence.slice(0,2))),receipt.case.previous_evidence_sha256);
+      assert.deepEqual({id:row.id,input:row.input,expected:row.expected},
+        {id:receipt.case.id,input:receipt.case.input,expected:receipt.case.expected});
+      const external=path.dirname(receipt.smoke.directory);
+      assert.deepEqual(row.evidence[2],{kind:'test',subject:'DX-06',
+        claim:receipt.case.new_claim,revision:packet.revision,
+        source_revision:receipt.source_revision,result:'passed',
+        configuration:{receipt:path.posix.relative(path.posix.dirname(file),dxReceipt),
+          case_id:'DX-06',receipt_sha256:digest,external_raw_output:external,
+          prepromotion_case_sha256:receipt.prepromotion_case_sha256[file],
+          binary_sha256:receipt.binary.sha256},assumptions:receipt.assumptions});
+      assert.equal(sha(fs.readFileSync(path.join(external,'acceptance.json'))),digest);
+    }
+  }
+  const external=path.dirname(receipt.smoke.directory);
+  assert.equal(sha(fs.readFileSync(receipt.binary.path)),receipt.binary.sha256);
+  assert.equal(sha(fs.readFileSync(receipt.selected_node.path)),receipt.selected_node.sha256);
+  const smokeBytes=fs.readFileSync(path.join(receipt.smoke.directory,receipt.smoke.file));
+  assert.equal(sha(smokeBytes),receipt.smoke.sha256);
+  const smoke=JSON.parse(smokeBytes);
+  assert.equal(smoke.result,'six-controls-pass');
+  assert.equal(smoke.production_cli_sha256,receipt.binary.sha256);
+  assert.equal(smoke.source_revision,receipt.smoke.original_source_revision);
+  assert.deepEqual(smoke.controls,receipt.smoke.controls);
+  assert.deepEqual(smoke.latent_effect_witness,['test.clock']);
+  assert.equal(smoke.real_host_fallback_calls,0);
+  for(const [file,record] of Object.entries(receipt.smoke.retained))
+    assert.equal(sha(fs.readFileSync(path.join(receipt.smoke.directory,file))),record.sha256);
+  verifyConditional(receipt,external);
+  checkCommands(receipt.commands,external,['build','six-compiled-test-clock-controls',
+    ...conditionalLabels]);
+  return {receipt_sha256:digest,source_revision:receipt.source_revision};
+}
+export function verifyReplay() {
+  assert.equal(fs.realpathSync(process.cwd()),root);
+  const {editor,forged}=prerequisites();
+  const bytes=read(replayReceipt),receipt=JSON.parse(bytes),digest=sha(bytes);
+  assert.deepEqual([receipt.schema,receipt.result,receipt.kind],
+    ['noble-scase16-current-source-replay/v1','passed','test']);
+  assert.deepEqual(receipt.cases.map(item=>item.id),selectedCases);
+  assert.deepEqual(receipt.prior_receipt_sha256,older);
+  assert.equal(receipt.source_revision,revision(receipt.source_sha256));
+  assert.deepEqual(Object.keys(receipt.source_sha256).sort(),
+    Object.keys(inventory('replay',editor,forged)).sort());
+  const projected={};
+  for(const file of replayPaths) {
+    const text=read(file).toString('utf8');
+    const old=restoreReplayEvidence(text,file,bytes);
+    assert.notEqual(old,text,`${file} missing fourth evidence`);
+    assert.equal(sha(old),receipt.prepromotion_case_sha256[file]);
+    projected[file]=old;
+  }
+  const dx=verifyDx06({caseTexts:projected});
+  assert.deepEqual(receipt.prerequisites['DX-06-current'],{
+    receipt:dxReceipt,sha256:dx.receipt_sha256,source_revision:dx.source_revision});
+  for(const [file,expected] of Object.entries(receipt.source_sha256)) {
+    if(!replayPaths.includes(file)) assert.equal(sha(read(file)),expected,
+      `frozen six-case source: ${file}`);
+  }
+  const external=JSON.parse(read(replayPaths[0])).cases
+    .find(item=>item.id===selectedCases[0]).evidence[3].configuration.external_raw_output;
+  assert.equal(sha(fs.readFileSync(path.join(external,'acceptance.json'))),digest);
+  assert.equal(sha(fs.readFileSync(receipt.binary.path)),receipt.binary.sha256);
+  for(const peer of Object.values(receipt.peers))
+    assert.equal(sha(fs.readFileSync(peer.path)),peer.sha256);
+  verifyConditional(receipt,external);
+  checkCommands(receipt.commands,external,['build','build-diagnostic-check',
+    'build-safety-core-check','build-safety-handle-check','dx01-session',
+    'dx01-typed-resource','adapt01-session','adapt01-compatible',
+    'safety-source-and-kernel','cli-S-CASE-01','cli-S-CASE-14-0',
+    'cli-S-CASE-14-1','safety-handle-forgery',...conditionalLabels]);
+  return {receipt_sha256:digest,source_revision:receipt.source_revision,
+    cases:selectedCases,commands:receipt.commands.length,proof:'open'};
+}
+if(process.argv[1] && fileURLToPath(import.meta.url)===path.resolve(process.argv[1]))
+  console.log(JSON.stringify(process.argv[2]==='--dx06'?verifyDx06():verifyReplay()));

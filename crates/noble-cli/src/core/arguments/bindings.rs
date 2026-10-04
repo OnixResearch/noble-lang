@@ -6,12 +6,14 @@ mod adapter;
 struct Entry {
     module: std::string::String,
     version: u32,
+    operation: std::string::String,
     adapter: std::string::String,
     slot: u32,
     inputs: std::vec::Vec<noble_kernel::types::Ty>,
     outputs: std::vec::Vec<noble_kernel::types::Ty>,
     effects: std::vec::Vec<noble_kernel::types::EffId>,
     allowed: bool,
+    script: std::vec::Vec<i64>,
 }
 
 pub(in crate::core) struct Manifest {
@@ -48,21 +50,37 @@ pub(super) fn load(path: &std::path::Path) -> Result<Manifest, super::super::out
 
 fn parse_line(line: &str, slot: u32) -> Result<Entry, super::super::output::Failure> {
     let words = std::vec::Vec::from_iter(line.split_ascii_whitespace());
-    if words.len() < 8 || words.first() != Some(&"bind") || words.get(2) != Some(&"test.emit") {
-        return Err(invalid("binding line requires bind MODULE@VERSION test.emit ADAPTER INPUT -- OUTPUT ! EFFECT allow|deny"));
+    if words.len() < 8 || words.first() != Some(&"bind")
+        || !matches!(words.get(2), Some(&"test.emit" | &"test.clock")) {
+        return Err(invalid("binding line requires bind MODULE@VERSION test.emit|test.clock ADAPTER INPUT -- OUTPUT ! EFFECT allow|deny [script VALUES]"));
     }
     let (module, version) = attempt!(module_version(words[1]));
     let adapter = attempt!(adapter_identity(words[3]));
-    let signature = attempt!(adapter::Signature::parse(&words));
+    let signature = attempt!(adapter::Signature::parse(&words, words[2]));
+    if words[2] == "test.clock" {
+        let plan = noble_kernel::contracts::ClockPlan {
+            operation: words[2],
+            adapter_identity: adapter,
+            input: &signature.inputs,
+            output: &signature.outputs,
+            effects: std::slice::from_ref(&signature.effect),
+            allowed: signature.allowed,
+            script: &signature.script,
+        };
+        attempt!(plan.decide(words[2], 0)
+            .map_err(|_| invalid("test.clock binding requires [] -- I64 ! test.clock and a finite script")));
+    }
     Ok(Entry {
         module: module.into(),
         version,
+        operation: words[2].into(),
         adapter: adapter.into(),
         slot,
         inputs: signature.inputs,
         outputs: signature.outputs,
         effects: std::vec![signature.effect],
         allowed: signature.allowed,
+        script: signature.script,
     })
 }
 
@@ -163,7 +181,7 @@ impl Manifest {
             .map(|entry| noble_contracts::source::BoundOperation {
                 module_name: entry.module.clone(),
                 module_version: entry.version,
-                operation: "test.emit".into(),
+                operation: entry.operation.clone(),
                 adapter_identity: entry.adapter.clone(),
                 adapter_slot: entry.slot,
                 input: entry.inputs.clone(),
@@ -174,17 +192,15 @@ impl Manifest {
     }
 
     /// Worker-owned policy and immutable slot identity, never guest source.
-    pub fn worker(&self) -> crate::workflow::encoding::Json {
-        crate::workflow::encoding::Json::Array(
-            self.entries
-                .iter()
-                .map(|entry| {
-                    crate::workflow::encoding::object([
+    pub fn worker(&self) -> Result<crate::workflow::encoding::Json, super::super::output::Failure> {
+        let bindings = self.entries.iter().map(|entry| {
+                    Ok(crate::workflow::encoding::object([
                         (
                             "slot",
                             crate::workflow::encoding::Json::Number(u64::from(entry.slot)),
                         ),
                         ("adapter", crate::workflow::encoding::string(&entry.adapter)),
+                        ("operation", crate::workflow::encoding::string(&entry.operation)),
                         ("module", crate::workflow::encoding::string(&entry.module)),
                         (
                             "version",
@@ -194,9 +210,47 @@ impl Manifest {
                             "allowed",
                             crate::workflow::encoding::Json::Bool(entry.allowed),
                         ),
-                    ])
-                })
-                .collect(),
-        )
+                        ("script", crate::workflow::encoding::Json::Array(
+                            entry.script.iter().map(|value|
+                                crate::workflow::encoding::Json::String(value.to_string())
+                            ).collect(),
+                        )),
+                        ("dispatch", attempt!(dispatch(entry))),
+                    ]))
+                }).collect::<Result<std::vec::Vec<_>, _>>()?;
+        Ok(crate::workflow::encoding::Json::Array(bindings))
     }
+}
+
+fn dispatch(entry: &Entry) -> Result<crate::workflow::encoding::Json, super::super::output::Failure> {
+    if entry.operation != "test.clock" {
+        return Ok(crate::workflow::encoding::Json::Array(std::vec::Vec::new()));
+    }
+    let plan = noble_kernel::contracts::ClockPlan {
+        operation: &entry.operation,
+        adapter_identity: &entry.adapter,
+        input: &entry.inputs,
+        output: &entry.outputs,
+        effects: &entry.effects,
+        allowed: entry.allowed,
+        script: &entry.script,
+    };
+    let mut steps = std::vec::Vec::with_capacity(entry.script.len().saturating_add(1));
+    for index in 0..=entry.script.len() {
+        let decision = attempt!(plan.decide("test.clock", index)
+            .map_err(|_| invalid("test.clock dispatch contract is invalid")));
+        let (name, value) = match decision {
+            noble_kernel::contracts::ClockDecision::Value(value) =>
+                ("allow", Some(value.to_string())),
+            noble_kernel::contracts::ClockDecision::Denied => ("deny", None),
+            noble_kernel::contracts::ClockDecision::ScriptExhausted => ("script-exhausted", None),
+            noble_kernel::contracts::ClockDecision::UnexpectedOperation =>
+                return Err(invalid("test.clock dispatch unexpectedly changed operation")),
+        };
+        steps.push(crate::workflow::encoding::object([
+            ("decision",crate::workflow::encoding::string(name)),
+            ("value",crate::workflow::encoding::optional_string(value.as_deref())),
+        ]));
+    }
+    Ok(crate::workflow::encoding::Json::Array(steps))
 }

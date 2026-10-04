@@ -1,17 +1,38 @@
 //! Independently checked module definitions, bootstrap rows, and bound adapters.
 
 impl super::super::Env {
+    pub(crate) fn valid_generic_declarations(&self) -> bool {
+        let mut index = 0;
+        let mut valid = true;
+        while index < self.generic_variants.len() && valid {
+            let decl = &self.generic_variants[index];
+            valid = matches!(decl.payload_params, [0, 1] | [1, 0])
+                && self.nominal(decl.id).is_none();
+            let mut prior = 0;
+            while prior < index && valid {
+                valid = self.generic_variants[prior].id != decl.id;
+                prior += 1;
+            }
+            index += 1;
+        }
+        valid
+    }
+
     pub(crate) fn validate_contracts(&self) -> bool {
         if self.kinds.len() != self.defs.len() || self.bound_adapters.len() > self.defs.len() {
             return false;
         }
-        if (!self.nominals.is_empty() || !self.bound_adapters.is_empty()) && !self.declared_modules
+        if (!self.nominals.is_empty()
+            || !self.generic_variants.is_empty()
+            || !self.bound_adapters.is_empty())
+            && !self.declared_modules
         {
             return false;
         }
         bootstrap_matches(self)
             && (!self.declared_modules || fixed_definitions_match(self))
             && counts_match(self)
+            && generic_counts_match(self)
             && definitions_match(self)
             && bound_adapters_unique(self)
     }
@@ -27,6 +48,38 @@ impl super::super::Env {
         }
         matches
     }
+}
+
+fn generic_counts_match(env: &super::super::Env) -> bool {
+    if !env.valid_generic_declarations() {
+        return false;
+    }
+    let mut index = 0;
+    while index < env.generic_variants.len() {
+        let decl = &env.generic_variants[index];
+        let mut count = [0u8; 3];
+        let mut kind_index = 0;
+        while kind_index < env.kinds.len() {
+            match env.kinds[kind_index] {
+                super::super::Behavior::GenericLeft(id) if id == decl.id => {
+                    count[0] = count[0].saturating_add(1);
+                }
+                super::super::Behavior::GenericRight(id) if id == decl.id => {
+                    count[1] = count[1].saturating_add(1);
+                }
+                super::super::Behavior::GenericMatch(id) if id == decl.id => {
+                    count[2] = count[2].saturating_add(1);
+                }
+                _ => {}
+            }
+            kind_index += 1;
+        }
+        if count != [1, 1, 1] {
+            return false;
+        }
+        index += 1;
+    }
+    true
 }
 
 #[expect(
@@ -57,19 +110,12 @@ fn bound_row_contract(row: &super::super::BoundAdapter) -> bool {
     if row.adapter_identity.is_empty() {
         return false;
     }
-    if row.input.len() != 1 {
-        return false;
-    }
-    if row.input[0] != crate::types::Ty::Text {
-        return false;
-    }
-    if !row.output.is_empty() {
-        return false;
-    }
-    if row.effects.as_slice().len() != 1 {
-        return false;
-    }
-    row.effects.contains(super::super::TEST_EMIT)
+    (row.input.as_slice() == [crate::types::Ty::Text]
+        && row.output.is_empty()
+        && row.effects.as_slice() == [super::super::TEST_EMIT])
+        || (row.input.is_empty()
+            && row.output.as_slice() == [crate::types::Ty::I64]
+            && row.effects.as_slice() == [super::super::TEST_CLOCK])
 }
 
 #[expect(
@@ -80,10 +126,12 @@ fn bootstrap_matches(env: &super::super::Env) -> bool {
     if !env.declared_modules {
         return true;
     }
+    let has_clock = env.kinds.iter().any(|kind| matches!(kind, super::super::Behavior::BoundClock(_)));
     env.resource_kinds.len() == 1
         && env.resource_kinds[0].0 == super::super::FIXTURE_RESOURCE.0
-        && env.effects.len() == 1
+        && env.effects.len() == (if has_clock { 2 } else { 1 })
         && env.effects[0].0 == super::super::TEST_EMIT.0
+        && (!has_clock || env.effects[1].0 == super::super::TEST_CLOCK.0)
         && env.definition_owners.len() == env.defs.len()
         && env.deps.len() == env.defs.len()
 }
@@ -174,7 +222,11 @@ fn definitions_match(env: &super::super::Env) -> bool {
     while index < env.kinds.len() && is_matching {
         let kind = env.kinds[index];
         let is_matched = if let super::super::Behavior::BoundEmit(slot) = kind {
-            bound_definition_matches(env, index, slot)
+            bound_definition_matches(env, index, slot, false)
+        } else if let super::super::Behavior::BoundClock(slot) = kind {
+            bound_definition_matches(env, index, slot, true)
+        } else if let Some(id) = generic_operation_id(kind) {
+            generic_definition_matches(env, index, kind, id)
         } else if let Some((id, _)) = operation_identity_slot(kind) {
             declared_definition_matches(env, index, kind, id)
         } else {
@@ -184,6 +236,33 @@ fn definitions_match(env: &super::super::Env) -> bool {
         index += 1;
     }
     is_matching
+}
+
+const fn generic_operation_id(kind: super::super::Behavior) -> Option<crate::types::NominalTypeId> {
+    match kind {
+        super::super::Behavior::GenericLeft(id)
+        | super::super::Behavior::GenericRight(id)
+        | super::super::Behavior::GenericMatch(id) => Some(id),
+        _ => None,
+    }
+}
+
+fn generic_definition_matches(
+    env: &super::super::Env,
+    index: usize,
+    kind: super::super::Behavior,
+    id: crate::types::NominalTypeId,
+) -> bool {
+    if env.definition_owners.get(index) != Some(&Some(id.module)) {
+        return false;
+    }
+    let Some(decl) = env.generic_variant(id) else {
+        return false;
+    };
+    let Some(expected) = super::schemes::expected_generic_scheme(decl, kind) else {
+        return false;
+    };
+    super::schemes::same_scheme(&env.defs[index], &expected)
 }
 
 #[expect(
@@ -202,19 +281,36 @@ fn declared_definition_matches(
     let Some(decl) = env.nominal(id) else {
         return false;
     };
-    let Some(scheme) = super::schemes::expected_scheme(decl, kind) else {
+    let Some(scheme) = super::schemes::expected_scheme(env, decl, kind) else {
         return false;
     };
     super::schemes::same_scheme(&env.defs[index], &scheme)
 }
 
-fn bound_definition_matches(env: &super::super::Env, index: usize, slot: u32) -> bool {
-    if !super::schemes::valid_emit_scheme(&env.defs[index]) {
+fn bound_definition_matches(
+    env: &super::super::Env,
+    index: usize,
+    slot: u32,
+    clock: bool,
+) -> bool {
+    if !(if clock {
+        super::schemes::valid_clock_scheme(&env.defs[index])
+    } else {
+        super::schemes::valid_emit_scheme(&env.defs[index])
+    }) {
         return false;
     }
     let Ok(def) = u32::try_from(index) else {
         return false;
     };
+    let Some(row) = env.bound_adapters.iter().find(|row| {
+        row.definition == super::super::Definition(def) && row.adapter_slot == slot
+    }) else {
+        return false;
+    };
+    if clock != (row.effects.as_slice() == [super::super::TEST_CLOCK]) {
+        return false;
+    }
     matches!(
         env.matching_bound_rows(super::super::Definition(def), slot),
         1
@@ -227,7 +323,11 @@ fn bound_adapters_unique(env: &super::super::Env) -> bool {
     while index < env.bound_adapters.len() && is_unique {
         let definition = env.bound_adapters[index].definition;
         let slot = env.bound_adapters[index].adapter_slot;
-        is_unique = env.kind(definition) == Some(super::super::Behavior::BoundEmit(slot));
+        is_unique = matches!(
+            env.kind(definition),
+            Some(super::super::Behavior::BoundEmit(actual)
+                | super::super::Behavior::BoundClock(actual)) if actual == slot
+        );
         let mut prior = 0;
         while prior < index && is_unique {
             let prev = &env.bound_adapters[prior];

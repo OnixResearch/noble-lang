@@ -124,6 +124,12 @@ fn instruction(
                 },
             ),
         super::super::plan::Action::EmitBound(slot) => bound_call(out, slot),
+        super::super::plan::Action::ClockBound(slot) => clock_call(out, slot),
+        super::super::plan::Action::LivePropose(owner) => {
+            attempt!(out.append(b"(call $op_live_propose "));
+            out.i64(owner as i64)
+        }
+        super::super::plan::Action::LiveGeneration => out.append(b"(call $op_live_generation"),
     });
     out.append(b")\n")
 }
@@ -189,6 +195,11 @@ fn enqueue_program(
 
 fn bound_call(out: &mut crate::output::Buffer, slot: u32) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(call $op_emit_bound "));
+    out.i32(slot)
+}
+
+fn clock_call(out: &mut crate::output::Buffer, slot: u32) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(call $op_clock_bound "));
     out.i32(slot)
 }
 

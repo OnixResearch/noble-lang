@@ -7,10 +7,14 @@ This is scope accounting and interpreter evidence. It is not soundness, not depe
 ## Commands
 
 ```sh
-nix --option min-free 0 --option build-dir /nix/var/nix/builds --builders '' \
-  run .#native-assurance -- inventory --root "$ROOT" --selection "$ROOT/policy/tool-selection.json" \
+export NIX_CONFIG='min-free = 0
+max-free = 0
+builders =
+sandbox = true
+require-sigs = true'
+nix run --offline --no-write-lock-file .#native-assurance -- inventory --root "$ROOT" --selection "$ROOT/policy/tool-selection.json" \
     --artifact-dir "$EVIDENCE/inventory"
-nix run .#native-assurance -- check --root "$ROOT" --selection "$ROOT/policy/tool-selection.json" \
+nix run --offline --no-write-lock-file .#native-assurance -- check --root "$ROOT" --selection "$ROOT/policy/tool-selection.json" \
   --inventory "$EVIDENCE/inventory/inventory.json" --policy "$ROOT/policy/native-assurance.json" \
   --artifact-dir "$EVIDENCE/check"
 ```
@@ -33,7 +37,15 @@ nix run .#native-assurance -- check --root "$ROOT" --selection "$ROOT/policy/too
 
 The observed named M1 scope is 6 units, 46 production items, **0** function-safety facts, **0** unsafe sites, **0** foreign items, **0** production dependencies, and 6 fixture-lock packages (1 direct, 5 transitive).
 
-The current M3 inventory is retained under `verification/m3-wasm/assurance.tar.gz:octet`: 17 units, 2109 item facts across production and test units, zero function-safety/unsafe/foreign facts, and no external production dependencies. Its fixture lock contains eight packages: four current workspace packages and the four pinned registry packages. The older M1 counts above describe their original run, not current workspace coverage.
+The historical M3 inventory is retained under `verification/m3-wasm/assurance.tar.gz:octet`: 17 units, 2109 item facts across production and test units, zero function-safety/unsafe/foreign facts, and no external production dependencies. Its fixture lock contains eight packages: four then-current workspace packages and the four pinned registry packages. The older M1 counts above describe their original run, not current workspace coverage.
+The separate current boundary randomness fixture lock covers the five-package workspace and 75 checksum-bound registry packages; its 110 total package records do not renew either historical inventory.
+
+The selected Octet's current 39-unit candidate reports two normal production
+dependency edges from `noble-cli` to external `anyhow` and `wasmtime`, while the
+checked-in native classification expects zero. The comparator rejects it as
+`production-dependency-mismatch`. Neither historical zero-dependency receipt
+nor complete compiler collection approves these edges; no native policy
+record has been silently added.
 
 ## Empty owned-unsafe scope
 

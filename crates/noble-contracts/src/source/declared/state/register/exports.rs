@@ -26,7 +26,7 @@ pub(super) fn install(
 fn install_at(
     installed: Installed,
     schema: &crate::source::declared::Schema,
-    entry: Option<&Option<(noble_kernel::types::Ty, noble_kernel::contracts::NominalOps)>>,
+    entry: Option<&Option<super::schema::ResolvedSchema>>,
     exports: &[alloc::string::String],
 ) -> Result<Installed, crate::source::Error> {
     let Some(Some(entry)) = entry else {
@@ -85,17 +85,37 @@ fn take_words(
 fn install_schema(
     installed: Installed,
     schema: &crate::source::declared::Schema,
-    entry: &(noble_kernel::types::Ty, noble_kernel::contracts::NominalOps),
+    entry: &super::schema::ResolvedSchema,
     exports: &[alloc::string::String],
 ) -> Result<Installed, crate::source::Error> {
-    let (ty, ops) = entry;
+    let (ty, generic, ops, public) = match entry {
+        super::schema::ResolvedSchema::Concrete(ty, ops) => (
+            Some(ty),
+            None,
+            ops,
+            attempt!(super::schema::nominals::nominal_public(
+                &installed.session,
+                ty
+            )),
+        ),
+        super::schema::ResolvedSchema::Generic(id, ops) => {
+            let Some(context) = installed.session.source.declared.as_ref() else {
+                return Err(crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "missing declared context",
+                ));
+            };
+            let Some(declaration) = context.environment.generic_variant(*id) else {
+                return Err(crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "unregistered generic schema",
+                ));
+            };
+            (None, Some(*id), ops, declaration.public)
+        }
+    };
     debug_assert!(!schema.name.is_empty());
-    debug_assert!(matches!(ty, noble_kernel::types::Ty::Nominal(_, _)));
     let is_visible = exports.contains(&schema.name);
-    let public = attempt!(super::schema::nominals::nominal_public(
-        &installed.session,
-        ty
-    ));
     let builder = attempt!(super::publication::operations(
         schema,
         ops,
@@ -109,5 +129,12 @@ fn install_schema(
         local_exports,
         ..
     } = installed;
-    Ok(builder.record_export(&schema.name, session, local_exports, ty, is_visible))
+    Ok(builder.record_export(
+        &schema.name,
+        session,
+        local_exports,
+        ty,
+        generic,
+        is_visible,
+    ))
 }

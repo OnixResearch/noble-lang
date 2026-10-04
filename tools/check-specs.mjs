@@ -97,13 +97,14 @@ const STATES = {
   trust: ['unassessed', 'explicit'],
 };
 const KINDS = ['static', 'runtime', 'admission', 'adapter', 'identity', 'review'];
-const REQUIRED_DOCUMENTS = ['SPEC-0001', 'SPEC-S001', 'SPEC-W001', 'SPEC-V001', 'IMPL-V001', 'SPEC-V002', 'SPEC-B001', 'SPEC-BE001', 'SPEC-R001', 'SPEC-EV001', 'SPEC-DX001', 'SPEC-CALC001'];
+const REQUIRED_DOCUMENTS = ['SPEC-0001', 'SPEC-S001', 'SPEC-W001', 'SPEC-V001', 'IMPL-V001', 'SPEC-V002', 'SPEC-B001', 'SPEC-BE001', 'SPEC-BE002', 'SPEC-R001', 'SPEC-EV001', 'SPEC-DX001', 'SPEC-CALC001'];
 const EXECUTED = ['passed', 'failed', 'timeout'];
 const ROUTES = {
   K: ['semantic-test', 'model-proof', 'review'],
   P: ['semantic-test', 'model-proof', 'review'],
   B: ['semantic-test', 'model-proof', 'review'],
   BE: ['experiment-test', 'correspondence', 'review'],
+  CB: ['native-boundary-test', 'backend-correspondence', 'review'],
   W: ['boundary-test', 'correspondence', 'review'],
   H: ['boundary-test', 'correspondence', 'review'],
   S: ['boundary-test', 'correspondence', 'review'],
@@ -1243,6 +1244,7 @@ function selfTest(base) {
   }), 'local binding oracle: expected stack');
   const adaptation = (b, id, change) => changeJson(b, 'specs/conformance/adaptation-cases.json', p => change(p.cases.find(c => c.id === id)));
   run('removed-backend-document', b => changeJson(b, 'specs/spec-family.json', p => p.normative_documents = p.normative_documents.filter(d => d.id !== 'SPEC-BE001')), 'required document missing');
+  run('removed-C-backend-document', b => changeJson(b, 'specs/spec-family.json', p => p.normative_documents = p.normative_documents.filter(d => d.id !== 'SPEC-BE002')), 'required document missing');
   run('stale-roadmap-revision', b => changeJson(b, 'specs/roadmap.json', p => p.revision = 'obsolete'), 'revision: roadmap');
   run('stale-obligation-revision', b => changeJson(b, 'specs/verification/obligations.json', p => p.revision = 'obsolete'), 'revision: obligation');
   run('missing-native-gate', b => changeJson(b, 'specs/roadmap.json', p => {

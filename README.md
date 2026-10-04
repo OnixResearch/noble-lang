@@ -104,8 +104,83 @@ definition of `n`; the later direct call uses the second.
 A static rejection preserves the previous stack and namespace. A runtime trap
 or exhausted execution quota ends the session, retaining any host requests
 already observed. Sessions use a bounded arena that does not reclaim individual
-cells. See the [runtime guide](verification/implementation-guide.md#running-core-bootstrap-source)
-for quotas, framed multiline input, exit codes, and artifact formats.
+cells. Use `noble session --framed` for framed multiline input and
+`--emit NEW_DIR` to retain reports and emitted artifacts. Run `noble --help`
+for available CLI flags.
+
+### Guarded live REPL (opt-in, partial)
+
+`noble live repl` runs a separate resident Node/V8 session with an explicitly
+selected absolute source-file path. Given `/absolute/math.noble` containing
+`def addone [ 1 + ]` (replace `/absolute` with a real directory):
+
+```sh
+./result/bin/noble live repl --source /absolute/math.noble --engine v8
+# After the initial file ACK, enter:
+20 addone
+```
+
+In another shell, save a complete replacement in the same directory and
+atomically rename it onto the selected file. For example:
+
+```sh
+python3 - <<'PY'
+import os
+from pathlib import Path
+
+source = Path("/absolute/math.noble")
+temporary = source.with_name(source.name + ".tmp")
+with temporary.open("xb") as file:
+    file.write(b"def addone [ 2 + ]\n")
+    file.flush()
+    os.fsync(file.fileno())
+os.replace(temporary, source)
+PY
+```
+
+Back in the REPL, enter `:reload /absolute/math.noble`, wait for a
+`reload-committed` ACK, then enter `20 addone` to use the new definition.
+Replies are JSON lines. An ACK's `source_sha256` identifies the checked bytes
+committed as that generation, not a promise that a concurrently changed path
+still contains them; reload again after another save. Failed reloads preserve
+the prior stack and namespace. Existing saved pure Programs retain their old
+definition even when a new top-level call uses the replacement.
+
+An exact host grant can allow the selected named definition to propose its
+own *pure* replacement from an actual runtime input. Put this in
+`/absolute/evolve.noble` and start a separate session:
+
+```text
+def evolve [ dup 18 - quote [ + ] compose self.generation swap self.propose drop 1 + ]
+```
+
+```sh
+./result/bin/noble live repl --source /absolute/evolve.noble --engine v8 \
+  --self-edit evolve --expect-generation 1
+# After the file ACK and grant-selected report, enter:
+20 evolve
+# The old body returns 21; wait for proposal-committed (generation 2).
+20 evolve
+# The new pure body returns 22.
+```
+
+The first invocation captures `20 - 18 = 2` in a composed `Program`; an
+independent fresh session starting with `21 evolve` instead captures `3` and
+later makes `20 evolve` return `23`. The guest only queues a bounded snapshot
+during actual Wasm execution. After return, the host independently checks the
+candidate's restricted pure I64 arithmetic recipe and one-use generation
+grant before publication. `self.generation` and `self.propose` are live-only
+effects, not permissions for arbitrary code or file writes. The selected file
+remains unchanged: a guest-derived `source_sha256` is not the
+`selected_file_sha256`, and its freshness is `not-file-backed`.
+
+This is a **guarded partial** live profile, not watch, transitive dependent
+rebuilding, interpreter execution, general guest mutation, or PushGP
+evolution. `--engine interpreter` refuses rather than falling back to V8.
+Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
+remain `absent`/`not-run`, proof open, with no accepted source-bound assurance;
+see the [active change](.cairn/changes/live-wasm-reload/tasks.md) and
+[status ledger](specs/STATUS.json).
 
 ## What works today
 
@@ -114,13 +189,14 @@ does not make every other feature available in that runtime.
 
 | Area | Implemented scope |
 |---|---|
-| [Core language and Wasm sessions](verification/implementation-guide.md#running-core-bootstrap-source) | Wrapping `I64` arithmetic; Bool, Text, Unit, Pair, Sum, and List values; stack operations; checked branches; quotation, capture, composition, execution, and reflection; nonrecursive definitions. |
-| [Declared modules](verification/implementation-guide.md#declared-modules-v1-dxm1) | Opt-in opaque types, two-constructor variants, versioned session-local modules, imports and exports, and an explicit typed `test.emit` adapter. Available through `compile` and framed `session`. |
-| [Contracts and proof checking](verification/implementation-guide.md#using-mc1-contracts) | A pure contract language, Lean obligations, proof/refutation checking, and `verify` / `explain-proof`. |
-| [Evidence companions](verification/implementation-guide.md#mc2-companion-sessions-and-proof-required-builds) | Live certified programs, evidence composition, guarded invocation, and proof-required build admission for the selected core scope. |
-| [Synchronous components](verification/implementation-guide.md#compiling-synchronous-wit-components) | Selected WIT bindings, component compilation, host resources, ownership transfer, and authorization checks. |
-| [Native async components](verification/implementation-guide.md#compiling-native-async-wit-components) | A separate bounded component profile with native async execution and cancellation controls. General guest async syntax remains open. |
-| [Local services](verification/implementation-guide.md#m7-local-synchronous-syndicate-service) and [choreography](verification/implementation-guide.md#m8-finite-local-choreography-projection) | A bounded local synchronous publisher/subscriber service and finite one- or two-round protocols over that service. |
+| [Core language and Wasm sessions](specs/ROADMAP.md#m4-implementation-and-retained-acceptance) | Wrapping `I64` arithmetic; Bool, Text, Unit, Pair, Sum, and List values; stack operations; checked branches; quotation, capture, composition, execution, and reflection; nonrecursive definitions. |
+| [Guarded live REPL](#guarded-live-repl-opt-in-partial) | Explicit selected-file reload and host-granted, input-derived pure self-edit in a resident Node/V8 arena; partial and unaccepted, with no watch or dependent rebuild. |
+| [Declared modules](specs/ROADMAP.md#dxm1-selected-declared-modules-bounded-acceptance-complete) | Opt-in opaque types, two-constructor variants, versioned session-local modules, imports and exports, and an explicit typed `test.emit` adapter. Available through `compile` and framed `session`. |
+| [Contracts and proof checking](specs/PROGRAM-CONTRACTS.md#12-verification-tooling) | A pure contract language, Lean obligations, proof/refutation checking, and `verify` / `explain-proof`. |
+| [Evidence companions](specs/PROGRAM-CONTRACTS.md#83-mc2-companion-implementation-and-evidence-boundaries) | Live certified programs, evidence composition, guarded invocation, and proof-required build admission for the selected core scope. |
+| [Synchronous components](specs/WIT-WASI.md) | Selected WIT bindings, component compilation, host resources, ownership transfer, and authorization checks. |
+| [Native async components](specs/WIT-WASI.md#selected-native-async-boundary-and-compatibility) | A separate bounded component profile with native async execution and cancellation controls. General guest async syntax remains open. |
+| [Local services](specs/ROADMAP.md#m7-selected-local-synchronous-service-bounded-acceptance-complete) and [choreography](specs/ROADMAP.md#m8-selected-choreography-projection-bounded-acceptance-complete) | A bounded local synchronous publisher/subscriber service and finite one- or two-round protocols over that service. |
 
 Ordinary `run` and `session` use the **resource-free Core-Bootstrap** profile.
 Their host words are `test.emit` and `test.abort`. Resources and component
@@ -142,8 +218,9 @@ Application contracts are optional. The current pure contract profile checks
 claims about every normal return, including wrapping `I64` arithmetic. It does
 not establish termination or host behavior. `noble verify` checks supplied
 evidence; it does not automatically search for a proof. The
-[contract guide](verification/implementation-guide.md#using-mc1-contracts)
-covers the pinned Lean installation and required Linux isolation tools.
+[contract specification](specs/PROGRAM-CONTRACTS.md) states the bounded
+semantics; the [toolchain specification](specs/VERIFICATION-TOOLCHAIN.md#52-mc1-consumer-configuration-and-limits)
+lists the pinned Lean installation and required Linux isolation tools.
 
 Implementation verification follows **Rust → Charon → Aeneas → Lean 4**.
 That route is mandatory for the semantic kernel and the target for all
@@ -155,8 +232,8 @@ proofs are recorded separately.
 The [status ledger](specs/STATUS.json),
 [proof obligations](specs/verification/obligations.json), and
 [source inventory](verification/source-inventory.md) record the exact scope.
-The [implementation guide](verification/implementation-guide.md) links the
-milestone receipts, assumptions, and reproduction commands.
+The [roadmap](specs/ROADMAP.md) links milestone receipts and their scoped
+assumptions; retained verification runners carry reproduction commands.
 
 ## Working on Noble
 

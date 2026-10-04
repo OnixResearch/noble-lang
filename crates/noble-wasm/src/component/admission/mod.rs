@@ -119,10 +119,10 @@ fn one(
         return Err(crate::Diagnostic::Unsupported);
     }
     attempt!(same_environment(&submission.environment, environment));
-    if submission.request.expected.stack_in != operation.input_types() {
+    if operation.input_types(world).as_deref() != Some(submission.request.expected.stack_in.as_slice()) {
         return Err(crate::Diagnostic::Invalid);
     }
-    if submission.request.expected.stack_out != operation.output_types() {
+    if operation.output_types(world).as_deref() != Some(submission.request.expected.stack_out.as_slice()) {
         return Err(crate::Diagnostic::Invalid);
     }
     let candidate = &submission.body.candidate;

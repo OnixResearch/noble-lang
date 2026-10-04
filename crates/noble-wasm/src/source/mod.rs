@@ -19,11 +19,12 @@ const MEMORY_BYTES: u32 = 1_048_576;
 const NODE_LIMIT: usize = 4096;
 const DEFINITION_LIMIT: usize = 256;
 
-// The optional Core source `test.abort` occupies slot 23 only when its effect
-// is installed. Declared modules always reserve exactly the first 23 kernel
-// definitions and use slot 23 for their first validated declaration.
+// Core live sessions reserve 24/25 for their two checked operations.
+// Ordinary and declared sessions retain their original fixed prefixes.
 fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
-    if !env.declared_modules && env.effects.contains(&noble_kernel::types::EffId(1)) {
+    if !env.declared_modules && env.effects.contains(&noble_kernel::types::EffId(3)) {
+        26
+    } else if !env.declared_modules && env.effects.contains(&noble_kernel::types::EffId(1)) {
         24
     } else {
         23
@@ -61,6 +62,7 @@ impl Work {
 
 /// Persistent semantic identities and disjoint compiled-code allocations.
 pub struct Compiler {
+    live: bool,
     generation: u32,
     functions: u32,
     text_end: u32,
@@ -121,6 +123,7 @@ impl Compiler {
     /// A fresh compiler requires a fresh runtime import-object set.
     pub fn new() -> Self {
         Self {
+            live: false,
             generation: 0,
             functions: 4,
             text_end: TEXT_START,
@@ -128,6 +131,12 @@ impl Compiler {
             descriptors: alloc::vec::Vec::new(),
             identities: alloc::vec::Vec::new(),
         }
+    }
+
+    /// A separate admission profile: the ordinary compiler never emits the
+    /// proposal or generation imports.
+    pub fn new_live() -> Self {
+        Self { live: true, ..Self::new() }
     }
 
     /// Independently accept and lower without changing existing code identities.
@@ -139,7 +148,7 @@ impl Compiler {
             remaining: u64::from(submission.request.limits.work),
         };
         attempt!(preflight::check(submission, &mut work));
-        let checked = attempt!(admission::check(submission, &mut work));
+        let checked = attempt!(admission::check(submission, self.live, &mut work));
         attempt!(admission::meter::compilation(
             &checked,
             &self.signatures,
@@ -160,6 +169,7 @@ impl Compiler {
             return Err(problem);
         }
         let mut next = Self {
+            live: self.live,
             generation: match self.generation.checked_add(1) {
                 Some(value) => value,
                 None => return Err(crate::Diagnostic::Exhausted),
@@ -182,6 +192,12 @@ impl Compiler {
             next,
             wat,
         })
+    }
+
+    /// Check publication provenance before allowing a live worker to install
+    /// prospective bytes in a persistent arena. No compiler state is changed.
+    pub fn can_commit(&self, prepared: &Prepared) -> bool {
+        prepared.base.matches(self, &prepared.next)
     }
 
     /// Publish only after the shell has accepted/instantiated the complete module.
