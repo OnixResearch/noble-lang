@@ -285,15 +285,16 @@ class SlotEngine {
     const guarded = (fn, denied = 0) => (...args) => {
       try { return fn(...args); }
       catch (error) {
-        if (String(error).includes('live-slot trace capacity refused')) {
-          this.traceFailure = String(error);
-        }
+        if (error instanceof TraceCapacityError) this.traceFailure = error.message;
         const record = { operation: 'host-import-refused', moduleId, reason: String(error) };
         const bytes = Buffer.byteLength(JSON.stringify(record)) + 1;
         const pending = this.active ? this.registry.traceSize(this.active.root) : { bytes: 0, rows: 0 };
         if (this.traceBytes + pending.bytes + bytes
           + (this.replaying ? pending.rows * REPLAY_TRACE_BYTES : 0) > GLOBAL_TRACE_BYTES) {
-          throw Error(`live-slot trace capacity refused before host-import-refused record: ${error}`);
+          const failure = new TraceCapacityError(
+            'live-slot trace capacity refused before host-import-refused record');
+          this.traceFailure = failure.message;
+          throw failure;
         }
         this.trace.push(record);
         this.traceBytes += bytes;

@@ -77,6 +77,8 @@ class CommittedRetirementError extends Error {
   }
 }
 
+class TraceCapacityError extends Error {}
+
 export class SlotRegistry {
   #current = Object.freeze({ epoch: 0n, map: new Map() });
   #incarnations = new Map();
@@ -552,7 +554,7 @@ export class SlotRegistry {
     const bytes = Buffer.byteLength(JSON.stringify(record)) + 1;
     if (root.trace.length >= TRACE_LIMIT || root.traceBytes + bytes > ROOT_TRACE_BYTES
       || this.#traceAdmission?.(root.traceBytes + bytes, root.trace.length + 1) === false) {
-      throw Error('live-slot trace capacity refused before recording request');
+      throw new TraceCapacityError('live-slot trace capacity refused before recording request');
     }
     root.traceBytes += bytes;
     root.trace.push(Object.freeze(record));
@@ -728,7 +730,7 @@ export class SlotRegistry {
       Buffer.byteLength(JSON.stringify(failureRecord))) + 1;
     if (root.trace.length >= TRACE_LIMIT || root.traceBytes + nextBytes > ROOT_TRACE_BYTES
       || this.#traceAdmission?.(root.traceBytes + nextBytes, root.trace.length + 1) === false) {
-      throw Error('live-slot trace capacity refused before protected effect');
+      throw new TraceCapacityError('live-slot trace capacity refused before protected effect');
     }
     root.operations += 1;
     let response;
