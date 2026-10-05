@@ -5,7 +5,7 @@
 ### Requirement: K-LIVE-01
 r[K-LIVE-01]
 
-Reload MUST build a new immutable namespace and transitively rebuild affected checked dependent definitions. Only subsequent *new top-level* name resolution sees new identities. Old frames, saved Programs and lexical captures MUST keep exact old dependencies; no live slot inside prepared code or in-place Program mutation is introduced. Failed or incompatible rebuild publishes nothing.
+`Live-Wasm-Draft` reload MUST build a new immutable namespace and transitively rebuild affected checked dependent definitions. Only subsequent *new top-level* name resolution sees new identities. Old frames, saved Programs and lexical captures MUST keep exact old dependencies; this profile introduces no live slot inside prepared code or in-place Program mutation. Failed or incompatible rebuild publishes nothing.
 
 ### Requirement: K-LIVE-02
 r[K-LIVE-02]

@@ -1749,6 +1749,16 @@
       "implementation_scope": "Active design plus guarded partial resident Node/V8 REPL and in-process Wasm emission: explicit selected-file reload/direct admission exercise atomic transitive Core rebuild for acyclic dependents; old Programs retain their identities. Automatic watch is unavailable because a selected-basename rename event cannot authenticate inode bytes against later writable mappings or external hardlinks; automatic H-LIVE-01 and complete LIVE-05/watch acceptance remain open. Guest self-edit refuses any current effective dependent; indirect self-rebind/cycle refusal was exercised in scoped live-child checks without general proof or accepted LIVE case evidence. Declared modules, effectful watch, full in-flight source-change controls, code retirement, complete source-bound LIVE-02 acceptance and interpreter execution remain open. LIVE-01 through LIVE-10 remain absent/not-run/proof-open; no accepted source-bound execution or assurance claim."
     },
     {
+      "id": "explicit-live-references",
+      "implementation": "absent",
+      "execution": "not-run",
+      "proof": "open",
+      "trust": "unassessed",
+      "evidence": [],
+      "acceptance": "not-started",
+      "implementation_scope": "Issue #1 active design only: separate Live-Slot-Design typed generic dispatch over root-pinned persistent registry snapshots. LSLOT-01..09 are unexecuted designs; no Core or guarded Live-Wasm-Draft slot support, runtime acceptance or behavioral proof."
+    },
+    {
       "id": "c-backend",
       "implementation": "absent",
       "execution": "not-run",

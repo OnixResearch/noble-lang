@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "issue-1-explicit-live-slot-design-only",
+  "cases": [
+    {
+      "id": "LSLOT-01", "profile": "Live-Slot-Design", "kind": "runtime", "requirements": ["K-LSLOT-01", "K-LSLOT-02", "H-LSLOT-01", "DX-LSLOT-01"],
+      "input": {"harness": "saved-capture-versus-opt-in-generic-root", "definition": "def n [ 1 + ]", "saved_program": "[ n ]", "generic_caller": "checked Program<[I64, borrowed LiveRef<I64,I64,{}>] -> [I64] ! {live.dispatch}> containing generic slot.invoke", "slot": {"id": "increment", "incarnation": 1, "generation": 1, "target": "n-v1:[ 1 + ]"}, "publication": {"expected_epoch": 1, "expected_incarnation": 1, "expected_generation": 1, "candidate": "n-v2:[ 2 + ]", "host_authorized": true}, "calls_after_publication": [{"subject": "saved_program", "argument": 20}, {"subject": "generic_caller", "argument": 20, "host_issued_input_ref": "increment"}]},
+      "expected": {"stage": "live-slot-root", "outcome": "immutable-capture-and-explicit-fresh-target", "saved_result": 21, "generic_result": 22, "saved_target": "n-v1", "generic_selected_target": "n-v2", "caller_identity_unchanged": true, "ordinary_run_dynamic_lookup": false, "generic_recipe_embeds_slot_or_target": false, "new_global_epoch": 2},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "LSLOT-02", "profile": "Live-Slot-Design", "kind": "runtime", "requirements": ["K-LSLOT-02", "S-LSLOT-01", "H-LSLOT-01", "EV-LSLOT-01"],
+      "input": {
+        "harness": "parent-child-transitive-snapshot-and-new-root",
+        "base": {
+          "registry_epoch_1": {
+            "A": {"version": "A-v1", "interface": {"input": ["I64", "borrow LiveRef<I64,I64,{}>"], "output": ["I64"], "effects": ["live.dispatch"]}, "body": "borrow the second explicit input ref for two typed slot.invoke calls; no embedded B ID/name"},
+            "B": {"version": "B-v1:[ 1 + ]", "interface": {"input": ["I64"], "output": ["I64"], "effects": []}}
+          },
+          "root_A_entry": {"ordered_host_issued_inputs": ["I64:20", "borrow LiveRef<I64,I64,{}> issued for B", "borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>],[I64],{live.dispatch}> issued for A"], "pin_epoch": 1, "pin_operation": "O(1)-persistent-map-reference", "caller": "checked generic slot.invoke A with second input ref forwarded to A-v1"},
+          "interleaving": ["A-v1 borrows its explicit B ref and invokes B-v1 once", "authorized B-v2:[ 2 + ] publishes registry epoch 2", "A-v1 borrows same root-scoped B ref and invokes B again", "new root supplies a newly host-issued B ref and I64:20 to generic caller"],
+          "new_root_B_interface": {"input": ["I64"], "output": ["I64"], "effects": []}
+        },
+        "transitive_variant": {
+          "independent_fixture": "reset to distinct registry epoch 1 before variant",
+          "registry_epoch_1": {
+            "A": {"version": "A-v1", "interface": {"input": ["I64", "borrow LiveRef<I64,I64,{}>", "borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>],[I64],{live.dispatch}>"], "output": ["I64"], "effects": ["live.dispatch"]}, "body": "pass explicit C ref and borrow explicit B ref for nested invoke, no slot ID/name in recipe"},
+            "B": {"version": "B-v1", "interface": {"input": ["I64", "borrow LiveRef<I64,I64,{}>"], "output": ["I64"], "effects": ["live.dispatch"]}, "body": "borrow explicit C input ref and slot.invoke once"},
+            "C": {"version": "C-v1:[ 1 + ]", "interface": {"input": ["I64"], "output": ["I64"], "effects": []}}
+          },
+          "root_A_entry": {"ordered_host_issued_inputs": ["I64:20", "borrow C ref", "borrow B ref typed for I64+C-ref to I64", "borrow A ref typed for I64+C-ref+B-ref to I64"], "pin_epoch": 1, "borrow_pass_through": ["root passes C and B refs to A in that order", "A passes C ref to B", "B borrows C ref for slot.invoke"]},
+          "interleaving": ["A root pins epoch 1", "authorized C-v2:[ 2 + ] publishes epoch 2", "A invokes B which invokes C", "new root receives freshly host-issued C ref and I64:20"]
+        }
+      },
+      "expected": {"stage": "live-slot-root", "outcome": "one-map-per-root-with-explicit-typed-ref-pass-through", "base_root_A_B_selections": ["B-v1", "B-v1"], "base_root_A_result": 22, "base_next_root_B_selection": "B-v2", "base_next_root_B_result": 22, "variant_old_root_A_B_C_selections": ["A-v1", "B-v1", "C-v1"], "variant_old_root_result": 21, "variant_next_root_C_selection": "C-v2", "variant_next_root_C_result": 22, "mixed_registry_epochs_within_root": false, "implicit_source_name_or_captured_ref_lookup": false, "current_authorization_rechecked_at_each_dispatch": true, "registry_epoch_distinct_from_live_wasm_namespace_or_source_generation": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "LSLOT-03", "profile": "Live-Slot-Design", "kind": "admission", "requirements": ["K-LSLOT-02", "H-LSLOT-01", "S-LSLOT-01"],
+      "input": {"harness": "independent-exact-ordered-candidate-admission", "slot_contract": {"input": ["Account@1", "I64"], "output": ["Account@1", "I64"], "effect_ceiling": ["test.emit"]}, "current_epoch": 4, "variant_protocol": "each variant starts with same-exact-interface fields and overrides its named fields; run separately at epoch 4", "variants": [{"name": "same-exact-interface", "candidate_input": ["Account@1", "I64"], "candidate_output": ["Account@1", "I64"], "candidate_effects": ["test.emit"], "expected": "publish"}, {"name": "reversed-input", "candidate_input": ["I64", "Account@1"], "expected": "reject"}, {"name": "same-layout-different-resource-schema", "candidate_input": ["Account@2", "I64"], "expected": "reject"}, {"name": "effect-ceiling-widened", "candidate_effects": ["test.emit", "fs.write"], "expected": "reject"}, {"name": "unknown-host-contract", "candidate_effects": ["unknown.effect"], "expected": "reject"}, {"name": "generic-caller-underdeclares-dispatch", "claimed_caller_effects": ["test.emit"], "required_effects": ["test.emit", "live.dispatch"], "expected": "reject"}]},
+      "expected": {"stage": "slot-candidate-admission", "outcome": "only-exact-compatible-candidate-publishes", "success_epoch": 5, "rejected_variants_leave_epoch_and_map_unchanged": true, "candidate_body_executions_during_admission": 0, "candidate_host_requests_during_admission": 0, "generic_dispatch_effect": ["test.emit", "live.dispatch"], "ordered_nominal_resource_types_checked": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "LSLOT-04", "profile": "Live-Slot-Design", "kind": "admission", "requirements": ["H-LSLOT-01", "S-LSLOT-01", "EV-LSLOT-01"],
+      "input": {"harness": "global-epoch-slot-incarnation-CAS", "initial": {"global_epoch": 10, "slot_A": {"incarnation": 7, "generation": 3, "target": "A-v1"}, "slot_B": {"incarnation": 2, "generation": 1, "target": "B-v1"}}, "variants": [{"name": "same-slot-writers", "writers": ["A-v2 expecting epoch 10 A:7/3", "A-v3 expecting epoch 10 A:7/3"], "first_commit": "A-v2 at epoch 11", "second_result": "stale-reject"}, {"name": "unrelated-slot-race", "writers": ["B-v2 expecting epoch 10 B:2/1", "A-v2 expecting epoch 10 A:7/3"], "first_commit": "B-v2 at epoch 11", "second_result": "stale-reject"}, {"name": "delete-recreate-ABA", "steps": ["delete A:7/3 epoch 11", "recreate same visible ID A with new incarnation 8/1 and same target A-v1 epoch 12", "old A:7/3 epoch-10 writer submits"], "last_result": "stale-reject"}, {"name": "authorized-rollback", "steps": ["A-v2 committed at epoch 11", "independently readmit A-v1 and exact applicable evidence", "authorize new CAS expected epoch 11 A:7/4"], "result": "A-v1 new generation 5 and epoch 12"}, {"name": "rollback-denied", "steps": ["A-v2 committed", "A-v1 lacks current authorization or applicable evidence"], "result": "reject-before-publication"}]},
+      "expected": {"stage": "slot-publication", "outcome": "global-CAS-no-ABA", "every_committed_update_increments_epoch": true, "stale_same_or_unrelated_writer_publishes": false, "recreated_slot_reuses_incarnation": false, "rollback_restores_old_epoch_or_effects": false, "successful_rollback_requires_fresh_admission_authorization_and_evidence": true, "failed_candidate_executions": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "LSLOT-05", "profile": "Live-Slot-Design", "kind": "admission", "requirements": ["VC-LSLOT-01", "H-LSLOT-01", "EV-LSLOT-01"],
+      "input": {"harness": "proof-required-selected-target-admission", "policy": "proof-required-for-this-slot", "target": {"program_value_id": "P2", "definition_id": "D2", "captures": ["I64:2"], "context": "C2", "claim": "Q2", "assumptions": "A2", "artifact": "Wasm2"}, "variants": [{"name": "old-version-proof", "evidence_subject": "P1/D1", "result": "reject"}, {"name": "same-recipe-different-capture", "evidence_capture": "I64:1", "result": "reject"}, {"name": "wrong-context", "evidence_context": "C1", "result": "reject"}, {"name": "wrong-claim", "evidence_claim": "Q1", "result": "reject"}, {"name": "wrong-assumption", "evidence_assumptions": "A1", "result": "reject"}, {"name": "right-recipe-wrong-artifact", "evidence_artifact": "Wasm1", "result": "reject"}, {"name": "generic-wrapper-proof-only", "evidence_subject": "caller-generic", "result": "reject"}, {"name": "exact-selected-subject", "evidence_subject": "P2/D2", "evidence_capture": "I64:2", "evidence_context": "C2", "evidence_claim": "Q2", "evidence_assumptions": "A2", "evidence_artifact": "Wasm2", "result": "admit"}]},
+      "expected": {"stage": "selected-target-evidence", "outcome": "only-exact-applicable-evidence-admitted", "proof_transfer_from_old_or_wrapper": false, "failed_variants_publish_or_execute": false, "selected_version_identity_not_altered_by_proof": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "LSLOT-06", "profile": "Live-Slot-Design", "kind": "static", "requirements": ["K-LSLOT-01", "K-LSLOT-02", "S-LSLOT-01", "B-LSLOT-01"],
+      "input": {"harness": "host-issued-input-ref-noncapture-and-lifetime", "issued_ref": "LiveRef<I64,I64,{}> for slot increment in root R", "variants": [{"name": "direct-quotation-capture", "attempt": "[ ref slot.invoke ]", "result": "reject"}, {"name": "aggregate-capture", "attempt": "Pair<I64,LiveRef> then quote", "result": "reject"}, {"name": "aggregate-storage", "attempt": "List or Pair containing LiveRef", "result": "reject"}, {"name": "export-or-return", "attempt": "return/export ref from root R", "result": "reject"}, {"name": "serialize", "attempt": "encode ref as portable data", "result": "reject"}, {"name": "forge", "attempt": "decode slot ID/bytes as LiveRef", "result": "reject"}, {"name": "retain", "attempt": "reuse ref after R completes", "result": "reject"}, {"name": "valid-borrow", "attempt": "checked generic slot.invoke borrowing host-issued root input", "result": "accept"}]},
+      "expected": {"stage": "static-and-invocation-boundary", "outcome": "only-ephemeral-input-borrow-permitted", "ref_data": false, "ref_capture": false, "ref_authority": false, "generic_recipe_contains_slot_or_credential": false, "invalid_variants_guest_requests": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "LSLOT-07", "profile": "Live-Slot-Design", "kind": "runtime", "requirements": ["K-LSLOT-02", "S-LSLOT-01", "VC-LSLOT-01", "EV-LSLOT-01"],
+      "input": {"harness": "current-host-policy-at-publication-dispatch-and-effect", "slot": "emit", "pinned_epoch": 1, "old_target": "emit-v1 uses test.emit", "variants": [{"name": "publication-without-grant", "candidate": "emit-v2", "slot_id_and_proof_present": true, "host_publication_grant": false, "result": "deny"}, {"name": "dispatch-without-grant", "live_ref_and_effect_declaration_present": true, "host_dispatch_grant": false, "result": "deny"}, {"name": "revoked-after-root-pin", "host_dispatch_grant_at_pin": true, "revoke_dispatch_before_nested_call": true, "result": "deny"}, {"name": "old-version-effect-revoked-after-pin", "host_dispatch_grant": true, "effect_grant_at_pin": true, "revoke_test_emit_before_effect_request": true, "result": "deny-actual-effect"}]},
+      "expected": {"stage": "live-slot-policy", "outcome": "current-grant-is-independent", "publication_or_dispatch_authorized_by_id_ref_effect_or_evidence": false, "revoked_effect_protected_operations": 0, "revoked_effect_request_recorded": true, "old_pinned_target_may_bypass_revocation": false, "already_completed_prior_effects_rolled_back": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "LSLOT-08", "profile": "Live-Slot-Design", "kind": "runtime", "requirements": ["H-LSLOT-01", "S-LSLOT-01", "DX-LSLOT-01", "EV-LSLOT-01"],
+      "input": {
+        "harness": "last-pin-reclamation-reflection-and-hostile-replay",
+        "retention_fixture": {
+          "registry_epoch_1": {"slot": {"incarnation": 1, "generation": 1, "target": "v1"}},
+          "retained_version_quota": 1,
+          "owners": ["current registry map epoch 1", "in-flight-root-R pinned epoch 1", "independently saved exact Program v1"],
+          "phases": [
+            {"name": "both-old-owners-live", "attempt": "independently admitted host-authorized v2 publication at expected epoch 1 slot 1/1", "expected": "quota-refusal-no-candidate-execution"},
+            {"name": "root-only-exits", "release": "root R and all in-flight frames", "saved_program": "still independently pinned", "attempt": "fresh authorized v2 publication at expected epoch 1 slot 1/1", "expected": "quota-refusal-v1-still-callable"},
+            {"name": "last-old-owner-releases", "release": "saved exact Program v1", "attempt": "fresh candidate admission, current host authorization and CAS expected epoch 1 slot 1/1 for v2", "expected": "atomic-epoch-2-generation-2-publication; now-obsolete-unpinned-epoch-1-map-and-unowned-v1-code-retire; reclaim-v1-budget"}
+          ],
+          "reflection": "reflect the same generic caller before/after every phase"
+        },
+        "replay_fixture": {
+          "independent_from_retention_fixture": true,
+          "frozen_admitted_registry": {"epoch": 7, "slot_id": "emit", "incarnation": 4, "generation": 3, "target": "Ptrace/Dtrace"},
+          "root_inputs": ["I64:5", "host-issued LiveRef<[I64],[I64],{test.emit}> for emit"],
+          "selected_artifact": "Wtrace",
+          "captures": ["I64:5"],
+          "semantic_context": "Ctrace",
+          "host_policy_inputs": "current authorized scripted test.emit:A/B",
+          "ordered_trace": [{"request": "test.emit:A", "response": "ok-A", "accounting": "request-1/protected-operation-1"}, {"request": "test.emit:B", "response": "ok-B", "accounting": "request-2/protected-operation-2"}],
+          "variant_protocol": "each variant starts from this exact baseline, changes only named field, and independently admits every frozen target and artifact",
+          "variants": [
+            {"name": "bare-slot-id", "omit": "frozen admitted registry", "result": "reject"},
+            {"name": "bare-LiveRef", "omit": "frozen admitted registry", "result": "reject"},
+            {"name": "wrong-registry-epoch", "epoch": 8, "result": "reject"},
+            {"name": "wrong-slot-incarnation", "incarnation": 5, "result": "reject"},
+            {"name": "wrong-slot-generation", "generation": 4, "result": "reject"},
+            {"name": "substituted-selected-artifact", "selected_artifact": "Wother", "result": "reject"},
+            {"name": "substituted-captures", "captures": ["I64:6"], "result": "reject"},
+            {"name": "wrong-semantic-context", "semantic_context": "Cother", "result": "reject"},
+            {"name": "reordered-host-requests", "ordered_requests": ["test.emit:B", "test.emit:A"], "result": "reject"},
+            {"name": "substituted-host-response", "response_for_first_request": "ok-other", "result": "reject"},
+            {"name": "wrong-host-accounting", "protected_operations": 1, "result": "reject"},
+            {"name": "exact-frozen-admitted-and-ordered", "result": "eligible-deterministic-replay-not-proof-or-real-effect-authorization"}
+          ]
+        }
+      },
+      "expected": {"stage": "retention-reflection-and-replay", "outcome": "last-pin-reclamation-and-exact-replay", "first_two_publications_refused_without_candidate_execution": true, "old_root_and_saved_program_usable_until_own_release": true, "published_epoch_after_last_pin_release": 2, "published_slot_generation_after_last_pin_release": 2, "v1_retired_and_budget_reclaimed_after_new_commit": true, "reflection_all_phases": "inert typed generic slot.invoke and effect only", "hostile_replay_variants_all_refuse": true, "exact_variant_replay_eligibility_is_behavioral_proof": false, "exact_variant_authorizes_real_host_effects": false, "trace_fields": ["root_epoch", "slot_incarnation", "slot_generation", "selected_ProgramValueId", "selected_DefinitionId", "captures", "admitted_artifact", "semantic_context", "host_policy", "ordered_host_request_response_accounting"]},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "LSLOT-09", "profile": "Live-Slot-Design", "kind": "static", "requirements": ["B-LSLOT-01", "K-LSLOT-01", "EV-LSLOT-01"],
+      "input": {"harness": "legacy-profile-exclusion", "attempt": "checked caller with slot.invoke and input LiveRef<I64,I64,{}>", "profiles": ["Core-Bootstrap", "ordinary Core session", "guarded Live-Wasm-Draft"], "controls": [{"profile": "Core-Bootstrap", "source": "[ n ]", "expected": "ordinary-immutable-capture"}, {"profile": "guarded Live-Wasm-Draft", "source": "reload n then invoke saved [ n ]", "expected": "old-capture-not-slot"}]},
+      "expected": {"stage": "profile-admission", "outcome": "explicit-unsupported-in-all-legacy-profiles", "unsupported_produces_generic_run_or_empty_effect": false, "candidate_body_executions": 0, "historical_LIVE_01_to_10_changed": false, "old_capture_semantics_changed": false, "profile_supported_by_current_runtime": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    }
+  ]
+}
