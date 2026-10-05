@@ -68,6 +68,29 @@ fn selected_live_definition_is_independently_checked_but_not_a_proof_receipt() -
 }
 
 #[test]
+fn selected_quote_site_binds_original_token_and_checked_i64_operand() -> Result<(), String> {
+    let mut source = live()?;
+    let definition = source.prepare(b"def builder [ quote [ + ] compose ]", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    source.commit(definition).map_err(|error| format!("{error:?}"))?;
+    let prepared = source.prepare(b"builder", &[Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let selected = source.checked_selected_target(&prepared, "builder")
+        .map_err(|error| format!("{error:?}"))?;
+    let node = noble_kernel::untrusted::NodeId(0);
+    let site = selected.checked_quote_site(node).map_err(|error| format!("{error:?}"))?;
+    assert_eq!(site.definition_id(), selected.definition_id());
+    assert_eq!(site.source_generation(), selected.source_generation());
+    let span = site.span();
+    assert_eq!(&selected.source()[span.start as usize..span.end as usize], b"quote");
+    assert_eq!(site.node(), node);
+    assert_eq!(site.interface().stack_in.last(), Some(&Ty::I64));
+    assert!(matches!(selected.checked_quote_site(noble_kernel::untrusted::NodeId(1)),
+        Err(SourceProofRefusal::MismatchedSource)));
+    Ok(())
+}
+
+#[test]
 fn source_target_rejects_old_snapshot_and_wrappers() -> Result<(), String> {
     let mut source = live()?;
     let definition = source.prepare(b"def selected [ 1 + ]", &[], LIMITS)

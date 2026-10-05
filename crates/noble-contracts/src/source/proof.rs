@@ -44,6 +44,7 @@ pub struct CheckedSelectedTarget<'a> {
     definition: &'a noble_kernel::execution::Definition,
     root: noble_kernel::untrusted::Checked,
     body: noble_kernel::untrusted::Checked,
+    tree: &'a super::Tree,
 }
 
 impl CheckedSelectedTarget<'_> {
@@ -54,6 +55,73 @@ impl CheckedSelectedTarget<'_> {
     pub const fn definition(&self) -> &noble_kernel::execution::Definition { self.definition }
     pub const fn root(&self) -> &noble_kernel::untrusted::Checked { &self.root }
     pub const fn body(&self) -> &noble_kernel::untrusted::Checked { &self.body }
+
+    /// Authenticate a quote occurrence in the retained source and the
+    /// independently rechecked selected definition. The runtime value that
+    /// will be captured is not known until the VM executes this instruction.
+    pub fn checked_quote_site(
+        &self,
+        node: noble_kernel::untrusted::NodeId,
+    ) -> Result<CheckedQuoteSite<'_>, SourceProofRefusal> {
+        use noble_kernel::{contracts::Definition, types::Ty, untrusted::Node};
+        let candidate = &self.definition.body.candidate;
+        if self.tree.body.len() != candidate.body.len()
+            || !self.tree.body.iter().zip(&candidate.body)
+                .all(|(source, checked)| *source == checked.0)
+            || self.tree.body.iter().filter(|source| **source == node.0).count() != 1
+        {
+            return Err(SourceProofRefusal::MismatchedSource);
+        }
+        let source_node = self.tree.node(node.0)
+            .map_err(|_| SourceProofRefusal::MismatchedSource)?;
+        let (super::Kind::Call(super::Target::Builtin(8)),
+            Some(Node::Invocation { def: Definition(8), .. })) =
+            (&source_node.kind, usize::try_from(node.0).ok()
+                .and_then(|index| candidate.nodes.get(index))) else {
+            return Err(SourceProofRefusal::UnsupportedProfile);
+        };
+        let start = usize::try_from(source_node.span.start)
+            .map_err(|_| SourceProofRefusal::MismatchedSource)?;
+        let end = usize::try_from(source_node.span.end)
+            .map_err(|_| SourceProofRefusal::MismatchedSource)?;
+        if self.source.get(start..end) != Some(b"quote".as_slice()) {
+            return Err(SourceProofRefusal::MismatchedSource);
+        }
+        let mut derivations = self.body.derivations.iter().filter(|item| item.node == node);
+        let derived = derivations.next().ok_or(SourceProofRefusal::IndependentCheckFailed)?;
+        if derivations.next().is_some()
+            || derived.interface.stack_in.last() != Some(&Ty::I64)
+            || !matches!(derived.interface.stack_out.last(), Some(Ty::Program(..)))
+            || !derived.interface.effects.is_empty()
+        {
+            return Err(SourceProofRefusal::UnsupportedProfile);
+        }
+        Ok(CheckedQuoteSite {
+            definition_id: self.id,
+            source_generation: self.generation,
+            node,
+            span: source_node.span,
+            interface: &derived.interface,
+        })
+    }
+}
+
+/// Checked source/recipe occurrence only: not an observed capture, dynamic
+/// Program identity, admitted Wasm artifact, behavioral claim or host grant.
+pub struct CheckedQuoteSite<'a> {
+    definition_id: CheckedDefinitionId,
+    source_generation: u64,
+    node: noble_kernel::untrusted::NodeId,
+    span: crate::Span,
+    interface: &'a noble_kernel::untrusted::Interface,
+}
+
+impl CheckedQuoteSite<'_> {
+    pub const fn definition_id(&self) -> CheckedDefinitionId { self.definition_id }
+    pub const fn source_generation(&self) -> u64 { self.source_generation }
+    pub const fn node(&self) -> noble_kernel::untrusted::NodeId { self.node }
+    pub const fn span(&self) -> crate::Span { self.span }
+    pub const fn interface(&self) -> &noble_kernel::untrusted::Interface { self.interface }
 }
 
 /// Expected host context, not an attestation. The host must separately
@@ -157,7 +225,7 @@ impl super::Session {
         Ok(CheckedSelectedTarget {
             id: CheckedDefinitionId { index, identity: retained.identity },
             generation: self.generation,
-            source, submission, definition, root, body,
+            source, submission, definition, root, body, tree: &retained.tree,
         })
     }
 }
