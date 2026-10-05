@@ -8,7 +8,14 @@ pub(super) fn collect(
     let mut failure = None;
     while at < state.bodies.len() {
         match install_interface(&state.bodies[at], &state.arena, environment, meter) {
-            Ok(interface) => expected.push(interface),
+            Ok(mut interface) => {
+                if at == 0 {
+                    if let Some(logical) = &state.logical_inputs {
+                        interface.stack_in = logical.clone();
+                    }
+                }
+                expected.push(interface);
+            }
             Err(problem) => {
                 failure = Some(problem);
                 break;

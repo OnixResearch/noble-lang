@@ -27,6 +27,7 @@ pub(super) enum Action {
     ClockBound(u32),
     LivePropose(u64),
     LiveGeneration,
+    SlotInvoke(u32, u32),
 }
 
 pub(super) struct Operation {
@@ -57,9 +58,12 @@ pub(super) struct Layout {
     pub(super) types: super::types::Registry,
     pub(super) input_types: alloc::vec::Vec<u32>,
     pub(super) output_types: alloc::vec::Vec<u32>,
+    pub(super) borrowed_input_positions: alloc::vec::Vec<u32>,
     pub(super) text_witness: u32,
     pub(super) declared_modules: bool,
     pub(super) live: bool,
+    pub(super) live_slots: bool,
+    pub(super) live_sites: alloc::vec::Vec<super::LiveSiteMetadata>,
     pub(super) has_nominals: bool,
     pub(super) has_core_emit: bool,
     pub(super) has_core_abort: bool,
@@ -89,6 +93,7 @@ pub(super) fn effect_mask(effects: &noble_kernel::types::EffSet) -> Result<u32, 
             1 => mask |= 2,
             2 => mask |= 4,
             3 => mask |= 8,
+            5 => mask |= 32,
             4 => mask |= 16,
             _ => {
                 failure = Some(crate::Diagnostic::Unsupported);
@@ -157,9 +162,12 @@ fn start(
         types: super::types::Registry::new(),
         input_types: alloc::vec::Vec::new(),
         output_types: alloc::vec::Vec::new(),
+        borrowed_input_positions: alloc::vec::Vec::new(),
         text_witness: 0,
         declared_modules: submission.environment.declared_modules,
         live: submission.environment.effects.contains(&noble_kernel::types::EffId(3)),
+        live_slots: submission.environment.live_slots,
+        live_sites: alloc::vec::Vec::new(),
         has_nominals: !submission.environment.nominals.is_empty()
             || !submission.environment.generic_variants.is_empty(),
         has_core_emit: false,

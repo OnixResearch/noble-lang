@@ -60,6 +60,7 @@ pub(super) fn derivation(
 )]
 fn lower_sequence(
     input: Input<'_>,
+    program_id: usize,
     entries: &[noble_kernel::untrusted::NodeId],
     compiler: &mut super::super::Compiler,
     layout: &mut super::Layout,
@@ -69,7 +70,7 @@ fn lower_sequence(
     let mut index = 0usize;
     let mut failure = None;
     while index < entries.len() {
-        match lower_node(input, entries[index], compiler, layout, work) {
+        match lower_node(input, program_id, entries[index], compiler, layout, work) {
             Ok(operation) => {
                 operations.push(operation);
                 index += 1;
@@ -93,6 +94,7 @@ fn lower_sequence(
 )]
 fn lower_node(
     input: Input<'_>,
+    program_id: usize,
     id: noble_kernel::untrusted::NodeId,
     compiler: &mut super::super::Compiler,
     layout: &mut super::Layout,
@@ -141,6 +143,43 @@ fn lower_node(
                     interface,
                 },
             ))
+        }
+        noble_kernel::untrusted::Node::SlotInvoke { site_id, .. } => {
+            if !layout.live_slots || *site_id != id.0 {
+                return Err(crate::Diagnostic::Invalid);
+            }
+            let site = match input.checked.live_sites.iter().find(|site| site.site_id == *site_id) {
+                Some(site) => site,
+                None => return Err(crate::Diagnostic::Invalid),
+            };
+            let ordinal = attempt!(super::number(layout.live_sites.len()));
+            let input_signature = attempt!(compiler.signature(&site.stack_in, work));
+            let output_signature = attempt!(compiler.signature(&site.stack_out, work));
+            let effect_mask = attempt!(super::effect_mask(&site.allowed_effects));
+            let mut forwarded_target_positions = alloc::vec::Vec::new();
+            for (position, ty) in site.stack_in.iter().enumerate() {
+                if matches!(ty, noble_kernel::types::Ty::LiveRef(_, _, _)) {
+                    forwarded_target_positions.push(attempt!(super::number(position)));
+                }
+            }
+            if forwarded_target_positions.len() != site.forwarded_ref_ordinals.len() {
+                return Err(crate::Diagnostic::Invalid);
+            }
+            layout.live_sites.push(crate::source::LiveSiteMetadata {
+                site_id: ordinal,
+                caller_program_index: program_id,
+                source_node: id,
+                selected_ref_logical_position: site.root_logical_input_position,
+                forwarded_source_positions: site.forwarded_ref_ordinals.clone(),
+                forwarded_target_positions,
+                target_input: site.stack_in.clone(),
+                target_output: site.stack_out.clone(),
+                effect_ceiling: site.allowed_effects.clone(),
+                input_signature,
+                output_signature,
+                effect_mask,
+            });
+            super::Action::SlotInvoke(ordinal, site.ref_ordinal)
         }
     };
     Ok(super::Operation {
@@ -293,7 +332,7 @@ fn fill_quotation(
             None => return Err(crate::Diagnostic::Defective),
         };
         layout.programs[program].operations =
-            attempt!(lower_sequence(input, entries, compiler, layout, work));
+            attempt!(lower_sequence(input, program, entries, compiler, layout, work));
     }
     Ok(())
 }
@@ -310,6 +349,7 @@ pub(super) fn fill(
 ) -> Result<(), crate::Diagnostic> {
     layout.programs[input.arena.root].operations = attempt!(lower_sequence(
         input,
+        input.arena.root,
         &input.body.candidate.body,
         compiler,
         layout,

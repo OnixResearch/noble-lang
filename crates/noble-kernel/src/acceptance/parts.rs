@@ -58,11 +58,28 @@ pub(crate) fn join_cost(interface: &crate::untrusted::Interface) -> Result<u32, 
 }
 
 /// Validate one stack against the declared height and type-size limits.
+pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), super::Fail> {
+    limits_of_with(stack, ctx, false)
+}
+
+/// Entry input is the only stack permitted to carry borrowed references,
+/// which are subsequently moved into the frame's ordered sidecar.
+pub(crate) fn limits_of_entry(
+    stack: &[crate::types::Ty],
+    ctx: &Ctx,
+) -> Result<(), super::Fail> {
+    limits_of_with(stack, ctx, true)
+}
+
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; limits_of rejects unrepresentable or excessive stack height before checking each type size, preserving typed StackHeight/TypeSize exhaustion instead of assertions."
+    reason = "Owner: noble-maintainers; limits_of_with rejects unrepresentable or excessive stack height before checking each type size, preserving typed StackHeight/TypeSize exhaustion instead of assertions."
 )]
-pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), super::Fail> {
+fn limits_of_with(
+    stack: &[crate::types::Ty],
+    ctx: &Ctx,
+    allow_borrowed: bool,
+) -> Result<(), super::Fail> {
     let height = match u64::try_from(stack.len()) {
         Ok(height) => height,
         Err(_) => {
@@ -76,7 +93,21 @@ pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), sup
             crate::untrusted::LimitKind::StackHeight,
         ));
     }
-    if !valid_stack_types(stack, ctx.env) {
+    let mut valid = true;
+    let mut index = 0;
+    while index < stack.len() {
+        let next = if allow_borrowed && matches!(&stack[index], crate::types::Ty::LiveRef(_, _, _)) {
+            ctx.env.valid_live_ref(&stack[index])
+        } else {
+            ctx.env.valid_type(&stack[index], 512)
+        };
+        if !next {
+            valid = false;
+            break;
+        }
+        index += 1;
+    }
+    if !valid {
         return Err(invalid_without_stacks(
             site(None, None),
             crate::untrusted::Constraint::InvalidType,
@@ -124,6 +155,7 @@ pub(crate) fn definition_of(
     match candidate.nodes.get(index) {
         Some(crate::untrusted::Node::Invocation { def, .. }) => Some(*def),
         Some(crate::untrusted::Node::Literal { .. })
+        | Some(crate::untrusted::Node::SlotInvoke { .. })
         | Some(crate::untrusted::Node::Quotation { .. })
         | None => None,
     }

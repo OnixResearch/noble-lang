@@ -17,7 +17,7 @@ impl super::Ty {
                 break;
             }
             match node {
-                super::Ty::Resource(_) => {
+                super::Ty::Resource(_) | super::Ty::LiveRef(_, _, _) => {
                     is_data = false;
                     break;
                 }
@@ -73,6 +73,7 @@ impl super::Ty {
             | super::Ty::Syntax
             | super::Ty::Program(_, _, _) => return true,
             super::Ty::Resource(_)
+            | super::Ty::LiveRef(_, _, _)
             | super::Ty::Contract
             | super::Ty::Evidence
             | super::Ty::Certified => return false,
@@ -117,6 +118,7 @@ impl super::Ty {
                 | super::Ty::Syntax
                 | super::Ty::Program(_, _, _) => {}
                 super::Ty::Resource(_)
+                | super::Ty::LiveRef(_, _, _)
                 | super::Ty::Contract
                 | super::Ty::Evidence
                 | super::Ty::Certified => return false,

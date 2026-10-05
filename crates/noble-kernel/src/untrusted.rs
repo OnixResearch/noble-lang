@@ -47,8 +47,8 @@ impl Lit {
     }
 }
 
-/// The three fragment node forms; every node carries its instantiation
-/// witness, and every conclusion is derived from those premises.
+/// The fragment node forms. Ordinary nodes carry instantiation witnesses;
+/// live selection is derived instead from independently supplied root borrows.
 #[derive(Clone, Debug)]
 pub enum Node {
     /// A literal with its construction-stack instantiation.
@@ -58,12 +58,24 @@ pub enum Node {
         /// Instantiation of the literal's scheme.
         inst: crate::words::Inst,
     },
-    /// A resolved invocation with a fresh instantiation.
+    /// A resolved ordinary invocation with a fresh instantiation.
     Invocation {
         /// The exact environment definition.
         def: crate::contracts::Definition,
         /// Instantiation of the definition's scheme.
         inst: crate::words::Inst,
+    },
+    /// Select and invoke a previously admitted live program through a
+    /// borrowed root reference, never by a candidate-supplied handle.
+    SlotInvoke {
+        /// Dense ordinal among the host-supplied borrowed entry inputs.
+        ref_ordinal: u32,
+        /// Node identity within this candidate body; a module-level consumer
+        /// must additionally disambiguate distinct checked bodies.
+        site_id: u32,
+        /// Full logical entry positions supplying each borrowed formal in the
+        /// slot's ordered input signature (not dense borrowed ordinals).
+        forwarded_ref_ordinals: alloc::vec::Vec<u32>,
     },
     /// A quotation literal over a finite body.
     Quotation {
@@ -162,6 +174,35 @@ pub struct Checked {
     pub interface: Interface,
     /// One entry per checked node occurrence, in visit order.
     pub derivations: alloc::vec::Vec<Derivation>,
+    /// Checked dispatch sites, with exact host-admission contracts and root
+    /// provenance, in the order in which the body checker encounters them.
+    pub live_sites: alloc::vec::Vec<LiveSite>,
+}
+
+/// Independently checked information needed to preadmit every dispatch
+/// target before running the candidate body.
+#[derive(Clone, Debug)]
+pub struct LiveSite {
+    pub site_id: u32,
+    pub ref_ordinal: u32,
+    pub root_logical_input_position: u32,
+    pub forwarded_ref_ordinals: alloc::vec::Vec<u32>,
+    /// Full ordered logical input, including borrowed formal positions.
+    pub stack_in: alloc::vec::Vec<crate::types::Ty>,
+    pub stack_out: alloc::vec::Vec<crate::types::Ty>,
+    /// Exact target effect ceiling; dispatch adds `LIVE_DISPATCH` separately.
+    pub allowed_effects: crate::types::EffSet,
+}
+
+impl LiveSite {
+    /// Admit an independently checked target only when its ordered nominal
+    /// and resource schema is exact and its derived effects fit the ceiling.
+    /// No target body is executed by this comparison.
+    pub fn admits_target(&self, target: &Interface) -> bool {
+        target.stack_in == self.stack_in
+            && target.stack_out == self.stack_out
+            && target.effects.is_subset_of(&self.allowed_effects)
+    }
 }
 
 /// Which declared limit was exceeded.
@@ -232,6 +273,11 @@ pub enum Constraint {
     /// An instantiation witness refers to itself, directly or through a
     /// chain of reference bindings (B-CHECK-05).
     CyclicWitness,
+    /// A live slot referred to a non-root, wrong-type, or forged reference
+    /// instead of one of the independently supplied borrowed inputs.
+    BorrowProvenance,
+    /// A candidate attempted to alias another dispatch site.
+    SlotSite,
 }
 
 /// One rejection's diagnostic.

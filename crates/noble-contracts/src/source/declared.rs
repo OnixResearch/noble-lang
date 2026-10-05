@@ -4,7 +4,7 @@ mod links;
 mod parsing;
 mod signatures;
 mod state;
-mod types;
+pub(super) mod types;
 pub use state::{ModuleKind, ModulePrepared, ModuleSession};
 
 const SPAN: crate::Span = crate::Span { start: 0, end: 0 };

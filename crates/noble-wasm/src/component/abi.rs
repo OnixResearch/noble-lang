@@ -97,7 +97,8 @@ pub(super) fn value_type(
         | noble_kernel::types::Ty::Pair(_, _)
         | noble_kernel::types::Ty::Nominal(_, _)
         | noble_kernel::types::Ty::GenericNominal(_, _, _)
-        | noble_kernel::types::Ty::Program(_, _, _) => Err(crate::Diagnostic::Unsupported),
+        | noble_kernel::types::Ty::Program(_, _, _)
+        | noble_kernel::types::Ty::LiveRef(_, _, _) => Err(crate::Diagnostic::Unsupported),
     }
 }
 

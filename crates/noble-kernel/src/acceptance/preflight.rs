@@ -34,9 +34,20 @@ pub(super) fn check_request(
     let remaining = attempt!(super::validate::schemas(env, remaining));
     let remaining = attempt!(validate_nominals(env, request, remaining));
     attempt!(reject_ambient_emit(env, candidate));
+    if !env.live_slots {
+        let mut index = 0;
+        while index < candidate.nodes.len() {
+            if matches!(candidate.nodes[index], crate::untrusted::Node::SlotInvoke { .. }) {
+                return Err(super::Fail::Unsupported(
+                    crate::untrusted::UnsupportedKind::NodeForm,
+                ));
+            }
+            index += 1;
+        }
+    }
     attempt!(super::schemes::validate(env, request));
     let context = super::parts::Ctx { request, env };
-    attempt!(super::parts::limits_of(
+    attempt!(super::parts::limits_of_entry(
         &request.expected.stack_in,
         &context
     ));

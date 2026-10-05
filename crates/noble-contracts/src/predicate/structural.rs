@@ -42,6 +42,7 @@ fn step(
         noble_kernel::types::Ty::Pair(a, b) | noble_kernel::types::Ty::Sum(a, b) => { traversal.pending.push(*a); traversal.pending.push(*b); }
         noble_kernel::types::Ty::List(item) => traversal.pending.push(*item),
         noble_kernel::types::Ty::Program(_, _, _)
+        | noble_kernel::types::Ty::LiveRef(_, _, _)
         | noble_kernel::types::Ty::Syntax
         | noble_kernel::types::Ty::Contract
         | noble_kernel::types::Ty::Evidence

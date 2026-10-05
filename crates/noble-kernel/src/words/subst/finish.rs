@@ -68,6 +68,7 @@ pub(super) fn apply(node: crate::shapes::Pattern, mut walk: super::Walk) -> supe
         | crate::shapes::Pattern::StackVar(_)
         | crate::shapes::Pattern::List(_)
         | crate::shapes::Pattern::Program(_, _, _)
+        | crate::shapes::Pattern::LiveRef(_, _, _)
         | crate::shapes::Pattern::Unit
         | crate::shapes::Pattern::Bool
         | crate::shapes::Pattern::I64

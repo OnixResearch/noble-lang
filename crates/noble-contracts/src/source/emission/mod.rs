@@ -22,12 +22,14 @@ struct Assembly {
     root: Option<(
         noble_kernel::execution::Body,
         noble_kernel::untrusted::Request,
+        noble_kernel::untrusted::Checked,
     )>,
 }
 
 struct CheckedBody {
     body: noble_kernel::execution::Body,
     request: noble_kernel::untrusted::Request,
+    checked: noble_kernel::untrusted::Checked,
     identity: Option<u64>,
     span: crate::Span,
 }
@@ -65,7 +67,7 @@ impl Assembly {
                 // Backend admission is an independent bounded stage, not one
                 // more specialization sharing the frontend's reservation.
                 checked.request.limits.work = downstream_work;
-                self.root = Some((checked.body, checked.request));
+                self.root = Some((checked.body, checked.request, checked.checked));
             }
         }
         Ok(())
@@ -84,6 +86,7 @@ pub(super) fn emit(
 ) -> Result<
     (
         noble_kernel::execution::Submission,
+        noble_kernel::untrusted::Checked,
         alloc::vec::Vec<noble_kernel::types::Ty>,
     ),
     super::Error,
@@ -112,7 +115,7 @@ pub(super) fn emit(
         linked_slots: &linked_slots,
     };
     let assembly = attempt!(assemble(state, expected, admission, meter));
-    let (body, request) = match assembly.root {
+    let (body, request, checked) = match assembly.root {
         Some(root) => root,
         None => {
             return Err(super::Error::at(
@@ -129,6 +132,7 @@ pub(super) fn emit(
             body,
             request,
         },
+        checked,
         output,
     ))
 }
@@ -241,14 +245,16 @@ fn checked(
     }
     let mut caller_environment = admission.environment.clone();
     caller_environment.caller_module = draft_owner;
-    if let Err(error) =
-        crate::program::check(&caller_environment, &body.candidate, &request, &spans, span)
-    {
-        return Err(super::Error::at(crate::source::Stage::Acceptance, error));
-    }
+    let checked = match crate::program::check(
+        &caller_environment, &body.candidate, &request, &spans, span,
+    ) {
+        Ok(checked) => checked,
+        Err(error) => return Err(super::Error::at(crate::source::Stage::Acceptance, error)),
+    };
     Ok(CheckedBody {
         body,
         request,
+        checked,
         identity,
         span,
     })

@@ -20,6 +20,7 @@ pub enum ProjectionError {
     Revision,
     PayloadlessText,
     HostWord,
+    LiveSlot,
 }
 
 /// The executable graph plus entry order. No producer acceptance flag exists.
@@ -58,6 +59,7 @@ pub fn lower_node(node: &noble_kernel::untrusted::Node) -> Result<SemanticNode, 
         noble_kernel::untrusted::Node::Quotation { body, .. } => {
             Ok(SemanticNode::Quotation(lower_body(body)))
         }
+        noble_kernel::untrusted::Node::SlotInvoke { .. } => Err(ProjectionError::LiveSlot),
     }
 }
 

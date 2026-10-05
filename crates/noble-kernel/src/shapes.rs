@@ -52,6 +52,12 @@ pub enum Pattern {
         alloc::boxed::Box<alloc::vec::Vec<Pattern>>,
         alloc::boxed::Box<alloc::vec::Vec<EffectSlot>>,
     ),
+    /// A borrowed, non-capturable live program reference pattern.
+    LiveRef(
+        alloc::boxed::Box<alloc::vec::Vec<Pattern>>,
+        alloc::boxed::Box<alloc::vec::Vec<Pattern>>,
+        alloc::boxed::Box<alloc::vec::Vec<EffectSlot>>,
+    ),
     /// An opaque resource kind.
     Resource(crate::types::ResourceKind),
     /// A concrete resolved nominal descriptor (no type variables inside).
@@ -80,6 +86,19 @@ impl Pattern {
         effects: alloc::vec::Vec<EffectSlot>,
     ) -> Pattern {
         Pattern::Program(
+            alloc::boxed::Box::new(stack_in),
+            alloc::boxed::Box::new(stack_out),
+            alloc::boxed::Box::new(effects),
+        )
+    }
+
+    /// Build a borrowed live reference pattern.
+    pub fn live_ref(
+        stack_in: alloc::vec::Vec<Pattern>,
+        stack_out: alloc::vec::Vec<Pattern>,
+        effects: alloc::vec::Vec<EffectSlot>,
+    ) -> Pattern {
+        Pattern::LiveRef(
             alloc::boxed::Box::new(stack_in),
             alloc::boxed::Box::new(stack_out),
             alloc::boxed::Box::new(effects),
@@ -241,7 +260,8 @@ fn require_pattern(
             work.push(Step::Pattern(*item));
             Ok(work)
         }
-        Pattern::Program(stack_in, stack_out, effects) => {
+        Pattern::Program(stack_in, stack_out, effects)
+        | Pattern::LiveRef(stack_in, stack_out, effects) => {
             work.push(Step::Parts(*stack_in));
             work.push(Step::Parts(*stack_out));
             work.push(Step::Slots(*effects));

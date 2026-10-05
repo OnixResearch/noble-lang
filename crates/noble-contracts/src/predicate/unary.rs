@@ -81,6 +81,7 @@ fn pair(
         | noble_kernel::types::Ty::Sum(_, _)
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Program(_, _, _)
+        | noble_kernel::types::Ty::LiveRef(_, _, _)
         | noble_kernel::types::Ty::Syntax
         | noble_kernel::types::Ty::Contract
         | noble_kernel::types::Ty::Evidence
@@ -146,6 +147,7 @@ fn sum(
         | noble_kernel::types::Ty::Pair(_, _)
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Program(_, _, _)
+        | noble_kernel::types::Ty::LiveRef(_, _, _)
         | noble_kernel::types::Ty::Syntax
         | noble_kernel::types::Ty::Contract
         | noble_kernel::types::Ty::Evidence
@@ -207,6 +209,7 @@ fn list(
         | noble_kernel::types::Ty::Pair(_, _)
         | noble_kernel::types::Ty::Sum(_, _)
         | noble_kernel::types::Ty::Program(_, _, _)
+        | noble_kernel::types::Ty::LiveRef(_, _, _)
         | noble_kernel::types::Ty::Syntax
         | noble_kernel::types::Ty::Contract
         | noble_kernel::types::Ty::Evidence

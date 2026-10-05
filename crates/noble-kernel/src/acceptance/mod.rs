@@ -18,6 +18,12 @@ enum Fail {
     Internal,
 }
 
+/// One host-supplied borrowed input, ordered independently of Data values.
+struct BorrowedInput {
+    logical_position: usize,
+    ty: crate::types::Ty,
+}
+
 /// One frame: an in-progress body fold.
 struct Frame {
     depth: u32,
@@ -25,6 +31,7 @@ struct Frame {
     body: alloc::vec::Vec<crate::untrusted::NodeId>,
     index: usize,
     stack: alloc::vec::Vec<crate::types::Ty>,
+    borrowed: alloc::vec::Vec<BorrowedInput>,
     effects: crate::types::EffSet,
     claimed_out: alloc::vec::Vec<crate::types::Ty>,
     claimed_effects: crate::types::EffSet,
@@ -33,6 +40,7 @@ struct Frame {
 struct State {
     work: u32,
     derivations: alloc::vec::Vec<crate::untrusted::Derivation>,
+    live_sites: alloc::vec::Vec<crate::untrusted::LiveSite>,
 }
 
 /// The machine between steps: its meter and frame stack, and, once the run
@@ -75,6 +83,7 @@ fn run(
             derivations: alloc::vec::Vec::with_capacity(
                 usize::try_from(request.limits.nodes.min(64)).unwrap_or(0),
             ),
+            live_sites: alloc::vec::Vec::new(),
         },
         frames: alloc::vec::Vec::with_capacity(
             usize::try_from(request.limits.depth.min(64)).unwrap_or(0),
@@ -89,6 +98,7 @@ fn run(
         Some(Ok(interface)) => Ok(crate::untrusted::Checked {
             interface,
             derivations: machine.state.derivations,
+            live_sites: machine.state.live_sites,
         }),
         Some(Err(problem)) => Err(problem),
         None => Err(Fail::Internal),
@@ -126,7 +136,9 @@ fn step(
         Err(problem) => return halted(machine, Err(problem)),
     };
     match node {
-        crate::untrusted::Node::Literal { .. } | crate::untrusted::Node::Invocation { .. } => {
+        crate::untrusted::Node::Literal { .. }
+        | crate::untrusted::Node::Invocation { .. }
+        | crate::untrusted::Node::SlotInvoke { .. } => {
             fold_current(machine, frame, node_id, &node, context)
         }
         crate::untrusted::Node::Quotation { .. } => {
@@ -211,7 +223,7 @@ fn fold_current(
     node: &crate::untrusted::Node,
     context: &parts::Ctx,
 ) -> Machine {
-    let (cost, joined, interface) = match nodes::fold_node(frame, node_id, node, context) {
+    let (cost, joined, interface, live_site) = match nodes::fold_node(frame, node_id, node, context) {
         Ok(folded) => folded,
         Err(problem) => return halted(machine, Err(problem)),
     };
@@ -220,6 +232,9 @@ fn fold_current(
         Err(problem) => return halted(machine, Err(problem)),
     };
     machine.state.work = remaining;
+    if let Some(site) = live_site {
+        machine.state.live_sites.push(site);
+    }
     machine
         .state
         .derivations

@@ -254,6 +254,7 @@ impl ModuleSession {
                 hosts: false,
                 text_cursor: false,
                 live_selected: None,
+                live_slots: None,
                 bindings: None,
                 declared: self.source.declared.clone(),
             },

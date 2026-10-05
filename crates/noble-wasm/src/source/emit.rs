@@ -6,6 +6,7 @@
 mod functions;
 mod imports;
 mod initialize;
+mod live;
 mod metadata;
 mod reflection;
 
@@ -129,6 +130,14 @@ pub(super) fn module(
         b"$check_output",
         &plan.output_types
     ));
+    if plan.live_slots {
+        attempt!(live::sites(&mut out, &plan.live_sites));
+        attempt!(live::root_check(&mut out, &plan.borrowed_input_positions));
+        attempt!(live::program_accessors(&mut out, plan.programs.len()));
+        attempt!(live::exports(&mut out, plan, generation));
+        attempt!(out.append(b")\n"));
+        return Ok(out.finish());
+    }
     attempt!(out.append(b"(func (export \"submit\") (result i32)\n(if (global.get $failure) (then (return (global.get $failure))))\n(if (i32.or (global.get $cp) (i32.ne (global.get $generation) "));
     attempt!(out.i32(generation));
     attempt!(out.append(b")) (then (call $fail (i32.const 4)) (return (global.get $failure))))\n(call $check_input)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 0))\n(call $initialize)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 1))\n(call $enqueue_program "));

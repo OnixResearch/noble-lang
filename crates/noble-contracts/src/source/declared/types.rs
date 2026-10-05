@@ -1,9 +1,9 @@
-pub(super) struct ParsedType {
+pub(in crate::source) struct ParsedType {
     pub ty: noble_kernel::types::Ty,
     pub nodes: usize,
 }
 
-pub(super) fn parse_with_families(
+pub(in crate::source) fn parse_with_families(
     word: &str,
     types: &[(alloc::string::String, noble_kernel::types::Ty)],
     families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
@@ -118,8 +118,8 @@ impl Parser<'_> {
         }
         if self.text.get(self.at) == Some(&b'<') {
             self.at += 1;
-            if name == "Program" {
-                self = attempt!(self.read_program());
+            if name == "Program" || name == "LiveRef" {
+                self = attempt!(self.read_callable(name == "LiveRef"));
             } else if name == "Resource" {
                 let kind = b"test.counter";
                 if self.text.get(self.at..self.at.saturating_add(kind.len()))
@@ -175,7 +175,10 @@ impl Parser<'_> {
         Ok(self)
     }
 
-    fn read_program(mut self) -> Result<Self, crate::Diagnostic> {
+    fn read_callable(mut self, live_ref: bool) -> Result<Self, crate::Diagnostic> {
+        if live_ref && !self.environment.is_some_and(|environment| environment.live_slots) {
+            return Err(crate::invalid(self.span, "LiveRef requires the live-slot profile"));
+        }
         let start = self.at;
         let mut depth = 0usize;
         let mut end = None;
@@ -222,26 +225,9 @@ impl Parser<'_> {
             self.span,
             nested,
         ));
-        let effects = match fields[2] {
-            "pure" => noble_kernel::types::EffSet::empty(),
-            "test.emit"
-                if self.environment.is_some_and(|environment| {
-                    environment
-                        .effects
-                        .contains(&noble_kernel::contracts::TEST_EMIT)
-                }) =>
-            {
-                noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT])
-            }
-            "test.clock"
-                if self.environment.is_some_and(|environment| {
-                    environment.effects.contains(&noble_kernel::contracts::TEST_CLOCK)
-                }) =>
-            {
-                noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_CLOCK])
-            }
-            _ => return Err(crate::invalid(self.span, "unknown Program effect bound")),
-        };
+        let effects = attempt!(parse_callable_effects(
+            fields[2], self.environment, self.span,
+        ));
         self.nodes = self
             .nodes
             .saturating_add(input_nodes)
@@ -252,7 +238,15 @@ impl Parser<'_> {
         self.at = attempt!(end
             .checked_add(1)
             .ok_or_else(|| crate::invalid(self.span, "unclosed Program type")));
-        self.value = Some(noble_kernel::types::Ty::program(inputs, outputs, effects));
+        self.value = Some(if live_ref {
+            noble_kernel::types::Ty::LiveRef(
+                alloc::boxed::Box::new(inputs),
+                alloc::boxed::Box::new(outputs),
+                effects,
+            )
+        } else {
+            noble_kernel::types::Ty::program(inputs, outputs, effects)
+        });
         Ok(self)
     }
 
@@ -338,6 +332,35 @@ impl Parser<'_> {
             ))
         }
     }
+}
+
+fn parse_callable_effects(
+    text: &str,
+    environment: Option<&noble_kernel::contracts::Env>,
+    span: crate::Span,
+) -> Result<noble_kernel::types::EffSet, crate::Diagnostic> {
+    if text == "pure" {
+        return Ok(noble_kernel::types::EffSet::empty());
+    }
+    let mut effects = alloc::vec::Vec::new();
+    for word in attempt!(split_top_level(text, b'+', span)) {
+        let id = match word {
+            "test.emit" => noble_kernel::contracts::TEST_EMIT,
+            "test.clock" => noble_kernel::contracts::TEST_CLOCK,
+            "live.dispatch" => noble_kernel::contracts::LIVE_DISPATCH,
+            _ => return Err(crate::invalid(span, "unknown callable effect bound")),
+        };
+        if !environment.is_some_and(|environment| {
+            environment.effects.contains(&id)
+                && (id != noble_kernel::contracts::LIVE_DISPATCH || environment.live_slots)
+        })
+            || effects.contains(&id)
+        {
+            return Err(crate::invalid(span, "unregistered or duplicate callable effect"));
+        }
+        effects.push(id);
+    }
+    Ok(noble_kernel::types::EffSet::from_ids(&effects))
 }
 
 fn parse_program_stack(

@@ -160,6 +160,10 @@ impl Traversal {
                 self.schedule(input.len(), false);
                 return Ok(None);
             }
+            noble_kernel::types::Ty::LiveRef(..) => {
+                return Err(crate::invalid(span,
+                    "borrowed live reference cannot enter a reusable definition scheme"));
+            }
         };
         Ok(Some(value))
     }

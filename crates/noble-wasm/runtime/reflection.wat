@@ -90,7 +90,9 @@
   (call $walk_push (i32.sub (i32.const 0) (call $a (local.get $recipe)))) (return)))
  (call $observe_atom (local.get $tag) (call $payload (local.get $recipe)))
  (if (i32.and (global.get $source_reflection)
-       (i32.or (i32.eq (local.get $tag) (i32.const 2)) (i32.eq (local.get $tag) (i32.const 15)))) (then
+       (i32.or (i32.or (i32.eq (local.get $tag) (i32.const 2))
+                       (i32.eq (local.get $tag) (i32.const 15)))
+               (i32.eq (local.get $tag) (i32.const 33)))) (then
   (call $observe_atom (i32.const 20) (i64.extend_i32_u (call $y (local.get $recipe))))
   (call $observe_atom (i32.const 21) (i64.extend_i32_u (call $z (local.get $recipe))))
   (call $observe_atom (i32.const 22) (i64.extend_i32_u (call $w (local.get $recipe)))))))

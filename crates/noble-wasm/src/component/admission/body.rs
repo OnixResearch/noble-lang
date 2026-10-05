@@ -45,6 +45,9 @@ fn node(
             noble_kernel::untrusted::Node::Literal { .. }
             | noble_kernel::untrusted::Node::Invocation { .. },
         ) => Ok(()),
+        Some(noble_kernel::untrusted::Node::SlotInvoke { .. }) => {
+            Err(crate::Diagnostic::Unsupported)
+        }
         None => Err(crate::Diagnostic::Invalid),
     }
 }
@@ -129,6 +132,7 @@ const fn is_text(node: &noble_kernel::untrusted::Node) -> bool {
             matches!(lit, noble_kernel::untrusted::Lit::Text)
         }
         noble_kernel::untrusted::Node::Invocation { .. }
-        | noble_kernel::untrusted::Node::Quotation { .. } => false,
+        | noble_kernel::untrusted::Node::Quotation { .. }
+        | noble_kernel::untrusted::Node::SlotInvoke { .. } => false,
     }
 }

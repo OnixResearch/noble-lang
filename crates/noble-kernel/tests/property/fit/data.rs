@@ -48,6 +48,7 @@ pub(super) fn unpair(
         | noble_kernel::types::Ty::Sum(_, _)
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Program(_, _, _)
+        | noble_kernel::types::Ty::LiveRef(_, _, _)
         | noble_kernel::types::Ty::Resource(_)
         | noble_kernel::types::Ty::Nominal(_, _)
         | noble_kernel::types::Ty::GenericNominal(_, _, _) => return None,
@@ -141,6 +142,7 @@ pub(super) fn prepend(
         | noble_kernel::types::Ty::Pair(_, _)
         | noble_kernel::types::Ty::Sum(_, _)
         | noble_kernel::types::Ty::Program(_, _, _)
+        | noble_kernel::types::Ty::LiveRef(_, _, _)
         | noble_kernel::types::Ty::Resource(_)
         | noble_kernel::types::Ty::Nominal(_, _)
         | noble_kernel::types::Ty::GenericNominal(_, _, _) => return None,

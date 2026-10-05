@@ -47,8 +47,11 @@ impl super::super::super::Env {
             | crate::types::Ty::Text
             | crate::types::Ty::Syntax => return max_nodes > 0,
             crate::types::Ty::Resource(kind) => {
-                return max_nodes > 0 && self.resource_kinds.contains(kind);
+                return max_nodes > 0
+                    && self.resource_kinds.contains(kind)
+                    && (payload_only || !super::super::super::live::is_live_kind(self, *kind));
             }
+            crate::types::Ty::LiveRef(_, _, _) => return false,
             crate::types::Ty::Contract
             | crate::types::Ty::Evidence
             | crate::types::Ty::Certified => {
@@ -118,7 +121,10 @@ impl super::super::super::Env {
             crate::types::Ty::GenericNominal(id, args, shape) => {
                 self.enqueue_known_generic(*id, args, shape, payload_restricted, state, scope)
             }
-            crate::types::Ty::Resource(kind) => self.resource_kinds.contains(kind).then_some(state),
+            crate::types::Ty::Resource(kind) => (self.resource_kinds.contains(kind)
+                && (payload_restricted || !super::super::super::live::is_live_kind(self, *kind)))
+            .then_some(state),
+            crate::types::Ty::LiveRef(_, _, _) => None,
             crate::types::Ty::Pair(left, right) | crate::types::Ty::Sum(left, right) => {
                 Some(state.with_pair(left, right, payload_restricted))
             }
@@ -225,6 +231,17 @@ impl super::super::super::Env {
         }
         if prior < index || self.generic_variant(decl.id).is_some() {
             return false;
+        }
+        if self.live_slots && !self.live_resource_nominals.contains(&decl.id) {
+            let owns_resource = match &decl.shape {
+                crate::types::NominalShape::Opaque(representation) => !representation.is_data(),
+                crate::types::NominalShape::Variant(left, right) => {
+                    !left.is_data() || !right.is_data()
+                }
+            };
+            if owns_resource {
+                return false;
+            }
         }
         if let crate::types::NominalShape::Opaque(ty) = &decl.shape {
             return self.walk_type(ty, max_nodes, true, index, None);

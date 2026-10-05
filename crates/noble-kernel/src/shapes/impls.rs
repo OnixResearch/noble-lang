@@ -60,6 +60,13 @@ impl Clone for crate::shapes::Pattern {
                     alloc::boxed::Box::new(clone_slots(slots.as_slice())),
                 )
             }
+            crate::shapes::Pattern::LiveRef(parts_in, parts_out, slots) => {
+                crate::shapes::Pattern::LiveRef(
+                    alloc::boxed::Box::new(clone_parts(parts_in.as_slice())),
+                    alloc::boxed::Box::new(clone_parts(parts_out.as_slice())),
+                    alloc::boxed::Box::new(clone_slots(slots.as_slice())),
+                )
+            }
         }
     }
 }
@@ -217,6 +224,15 @@ impl core::fmt::Debug for crate::shapes::Pattern {
             }
             crate::shapes::Pattern::Program(parts_in, parts_out, slots) => {
                 attempt!(core::fmt::Formatter::write_str(f, "Program("));
+                attempt!(debug_parts(parts_in.as_slice(), f));
+                attempt!(core::fmt::Formatter::write_str(f, ", "));
+                attempt!(debug_parts(parts_out.as_slice(), f));
+                attempt!(core::fmt::Formatter::write_str(f, ", "));
+                attempt!(debug_slots(slots.as_slice(), f));
+                core::fmt::Formatter::write_str(f, ")")
+            }
+            crate::shapes::Pattern::LiveRef(parts_in, parts_out, slots) => {
+                attempt!(core::fmt::Formatter::write_str(f, "LiveRef("));
                 attempt!(debug_parts(parts_in.as_slice(), f));
                 attempt!(core::fmt::Formatter::write_str(f, ", "));
                 attempt!(debug_parts(parts_out.as_slice(), f));

@@ -56,6 +56,7 @@ fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     live: bool,
+    live_slots: bool,
     text_cursor: bool,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
@@ -80,10 +81,17 @@ pub(super) fn check(
     if env.nominals.len() > super::super::DEFINITION_LIMIT
         || env.generic_variants.len() > super::super::DEFINITION_LIMIT
         || env.bound_adapters.len() > super::super::DEFINITION_LIMIT
+        || env.live_resource_nominals.len() > super::super::DEFINITION_LIMIT
+        || env.resource_kinds.len() > super::super::DEFINITION_LIMIT.saturating_add(1)
     {
         return Err(crate::Diagnostic::Invalid);
     }
-    if env.text_cursor != text_cursor || (text_cursor && (live || env.declared_modules)) {
+    if env.live_slots != live_slots
+        || (live_slots && (live || text_cursor || !env.declared_modules))
+        || env.text_cursor != text_cursor
+        || (text_cursor && (live || env.declared_modules))
+        || (!live_slots && !env.live_resource_nominals.is_empty())
+    {
         return Err(crate::Diagnostic::Invalid);
     }
     let has_noncanonical_core_declarations = !env.declared_modules
@@ -92,25 +100,13 @@ pub(super) fn check(
             || !env.bound_adapters.is_empty());
     let has_invalid_metadata = !env.schemas.is_empty()
         || env.caller_module.is_some()
-        || env.resource_kinds != [noble_kernel::contracts::FIXTURE_RESOURCE];
+        || (!live_slots
+            && env.resource_kinds != [noble_kernel::contracts::FIXTURE_RESOURCE]);
     if has_invalid_metadata || has_noncanonical_core_declarations {
         return Err(crate::Diagnostic::Invalid);
     }
-    let (fixed, count) = attempt!(canonical_prefix(env, live, text_cursor));
-    let effects = if count == 23 || text_cursor {
-        alloc::vec![noble_kernel::types::EffId(0)]
-    } else {
-        alloc::vec![noble_kernel::types::EffId(0), noble_kernel::types::EffId(1)]
-    };
-    let mut effects = effects;
-    if env.kinds.iter().any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundClock(_))) {
-        effects.push(noble_kernel::contracts::TEST_CLOCK);
-    }
-    if count == 26 {
-        effects.push(noble_kernel::types::EffId(3));
-        effects.push(noble_kernel::types::EffId(4));
-    }
-    if env.effects != effects {
+    let (fixed, count) = attempt!(canonical_prefix(env, live, live_slots, text_cursor));
+    if !exact_effects(env, count, live_slots) {
         return Err(crate::Diagnostic::Invalid);
     }
     if live && (submission.request.expected.allowed_effects.as_slice().iter()
@@ -121,19 +117,66 @@ pub(super) fn check(
     {
         return Err(crate::Diagnostic::Invalid);
     }
-    replay::check(
-        env,
-        fixed,
-        replay::ExpectedRows {
-            prefix: count,
-            named: submission.definitions.len(),
-        },
-    )
+    let expected = replay::ExpectedRows {
+        prefix: count,
+        named: submission.definitions.len(),
+    };
+    if live_slots && !env.live_resource_nominals.is_empty() {
+        // A host resource is a type descriptor, not a guest constructor row.
+        // Replay the ordinary declarations without these already-reconstructed
+        // descriptors; replay still checks every actual definition in order.
+        let mut ordinary = env.clone();
+        ordinary.nominals.retain(|decl| {
+            !env.live_resource_nominals.contains(&decl.id)
+        });
+        if ordinary.nominals.len().saturating_add(env.live_resource_nominals.len())
+            != env.nominals.len()
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        replay::check(&ordinary, fixed, expected)
+    } else {
+        replay::check(env, fixed, expected)
+    }
+}
+
+fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: bool) -> bool {
+    use noble_kernel::contracts::{LIVE_DISPATCH, TEST_CLOCK, TEST_EMIT};
+    let has_clock = env.kinds.iter().any(|kind| {
+        matches!(kind, noble_kernel::contracts::Behavior::BoundClock(_))
+    });
+    if live_slots {
+        // Clock registration may precede or follow the host's slot opt-in.
+        // Both orderings are produced by the checked Env APIs, but no other
+        // identity, duplication, or slot effect is ambiently available.
+        return if has_clock {
+            env.effects == [TEST_EMIT, LIVE_DISPATCH, TEST_CLOCK]
+                || env.effects == [TEST_EMIT, TEST_CLOCK, LIVE_DISPATCH]
+        } else {
+            env.effects == [TEST_EMIT, LIVE_DISPATCH]
+        };
+    }
+    let mut effects = if count == 23 {
+        alloc::vec![TEST_EMIT]
+    } else if count == 27 {
+        alloc::vec![TEST_EMIT]
+    } else {
+        alloc::vec![TEST_EMIT, noble_kernel::types::EffId(1)]
+    };
+    if has_clock {
+        effects.push(TEST_CLOCK);
+    }
+    if count == 26 {
+        effects.push(noble_kernel::types::EffId(3));
+        effects.push(noble_kernel::types::EffId(4));
+    }
+    env.effects == effects
 }
 
 fn canonical_prefix(
     env: &noble_kernel::contracts::Env,
     live: bool,
+    live_slots: bool,
     text_cursor: bool,
 ) -> Result<(noble_kernel::contracts::Env, usize), crate::Diagnostic> {
     if text_cursor {
@@ -157,6 +200,25 @@ fn canonical_prefix(
     }
     let mut fixed = attempt!(bootstrap(env));
     attempt!(check_builtin_rows(env, &fixed));
+    if live_slots {
+        // Start with the immutable bootstrap and reconstruct only host
+        // registrations via the kernel's validated, constructor-free API.
+        // An unlisted catalog entry or altered resource kind cannot authorize
+        // a candidate's nominal/resource interface.
+        fixed = fixed.enable_live_slots();
+        for id in &env.live_resource_nominals {
+            let decl = env.nominal(*id).ok_or(crate::Diagnostic::Invalid)?;
+            fixed = fixed
+                .register_live_resource(decl.clone())
+                .map_err(|_| crate::Diagnostic::Invalid)?;
+        }
+        if fixed.resource_kinds != env.resource_kinds
+            || fixed.live_resource_nominals != env.live_resource_nominals
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        return Ok((fixed, 23));
+    }
     let has_abort = env.defs.len() > 23
         && env.kinds[23] == noble_kernel::contracts::Behavior::Named
         && same_scheme(&env.defs[23], &abort_scheme())

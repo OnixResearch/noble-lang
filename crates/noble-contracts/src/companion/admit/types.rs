@@ -21,6 +21,7 @@ const fn ty_tag(ty: &noble_kernel::types::Ty) -> u64 {
         noble_kernel::types::Ty::Resource(_) => 13,
         noble_kernel::types::Ty::Nominal(_, _) => 14,
         noble_kernel::types::Ty::GenericNominal(_, _, _) => 15,
+        noble_kernel::types::Ty::LiveRef(_, _, _) => 16,
     }
 }
 
@@ -43,7 +44,8 @@ pub(in crate::companion) fn fold(
                 pending.push(a);
             }
             noble_kernel::types::Ty::List(element) => pending.push(element),
-            noble_kernel::types::Ty::Program(input, output, effects) => {
+            noble_kernel::types::Ty::Program(input, output, effects)
+            | noble_kernel::types::Ty::LiveRef(input, output, effects) => {
                 fold.absorb_count(input.len());
                 fold.absorb_count(output.len());
                 fold.absorb_count(effects.as_slice().len());

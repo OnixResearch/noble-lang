@@ -7,7 +7,23 @@ pub(super) fn write(
     out: &mut crate::output::Buffer,
     plan: &super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
-    attempt!(out.append(b"(module\n(type $entry (func (param i32)))\n(import \"noble\" \"memory\" (memory 16 16))\n(import \"noble\" \"table\" (table 16384 16384 funcref))\n"));
+    attempt!(out.append(b"(module\n(type $entry (func (param i32)))\n"));
+    if plan.live_slots {
+        attempt!(out.append(b"(import \"noble\" \"memory\" (memory 20 20))\n"));
+    } else {
+        attempt!(out.append(b"(import \"noble\" \"memory\" (memory 16 16))\n"));
+    }
+    attempt!(out.append(b"(import \"noble\" \"table\" (table 16384 16384 funcref))\n"));
+    if plan.live_slots {
+        attempt!(out.append(
+            b"(import \"noble\" \"live_select\" (func $host_live_select (param i32 i32) (result i32)))\n\
+(import \"noble\" \"live_bind_validate\" (func $host_live_bind_validate (param i32 i32) (result i32)))\n\
+(import \"noble\" \"live_frame_enter\" (func $host_live_frame_enter (param i32 i32 i32) (result i32)))\n\
+(import \"noble\" \"live_frame_leave\" (func $host_live_frame_leave (param i32) (result i32)))\n\
+(import \"noble\" \"resource_validate\" (func $host_resource_validate (param i32 i32) (result i32)))\n\
+(import \"noble\" \"resource_bind_validate\" (func $host_resource_bind_validate (param i32 i32 i32 i32 i32 i32) (result i32)))\n"
+        ));
+    }
     if plan.has_core_emit {
         attempt!(out.append(
             b"(import \"noble\" \"test_emit\" (func $host_emit (param i32 i32) (result i32)))\n"
@@ -31,6 +47,11 @@ pub(super) fn write(
     attempt!(globals(out));
     attempt!(global_import(out, b"allocated_total", b"i64"));
     attempt!(global_import(out, b"released_total", b"i64"));
+    if plan.live_slots {
+        attempt!(global_import(out, b"live_target", b"i32"));
+        attempt!(global_import(out, b"live_frame", b"i32"));
+        attempt!(out.append(b"(global $live_module_installed (mut i32) (i32.const 0))\n"));
+    }
     out.append(b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n")
 }
 
@@ -91,24 +112,39 @@ pub(super) fn runtime(
     out: &mut crate::output::Buffer,
     plan: &super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
-    attempt!(fragment(
-        out,
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/runtime/accounting.wat"
-        ))
-    ));
-    attempt!(fragment(
-        out,
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/runtime/linear-storage.wat"
-        ))
-    ));
-    attempt!(fragment(
-        out,
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat"))
-    ));
+    if plan.live_slots {
+        attempt!(fragment(out, include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"), "/runtime/live-accounting.wat"
+        ))));
+        attempt!(fragment(out, include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"), "/runtime/live-linear-storage.wat"
+        ))));
+        attempt!(fragment(out, include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"), "/runtime/live-borrows.wat"
+        ))));
+        attempt!(fragment(out, include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"), "/runtime/live-stack.wat"
+        ))));
+    } else {
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/accounting.wat"
+            ))
+        ));
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/linear-storage.wat"
+            ))
+        ));
+        attempt!(fragment(
+            out,
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat"))
+        ));
+    }
     attempt!(fragment(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/programs.wat"))
@@ -190,5 +226,13 @@ pub(super) fn runtime(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat"))
     ));
+    if plan.live_slots {
+        attempt!(fragment(out, include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"), "/runtime/resource.wat"
+        ))));
+        attempt!(fragment(out, include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"), "/runtime/live-source.wat"
+        ))));
+    }
     Ok(())
 }

@@ -22,12 +22,30 @@ pub(super) fn entry_frame(
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
 ) -> super::Frame {
+    let mut values = alloc::vec::Vec::with_capacity(request.expected.stack_in.len());
+    let mut borrowed = alloc::vec::Vec::new();
+    let mut index = 0;
+    while index < request.expected.stack_in.len() {
+        if matches!(
+            &request.expected.stack_in[index],
+            crate::types::Ty::LiveRef(_, _, _)
+        ) {
+            borrowed.push(super::BorrowedInput {
+                logical_position: index,
+                ty: request.expected.stack_in[index].clone(),
+            });
+        } else {
+            values.push(request.expected.stack_in[index].clone());
+        }
+        index += 1;
+    }
     super::Frame {
         depth: 0,
         origin: None,
         body: candidate.body.clone(),
         index: 0,
-        stack: request.expected.stack_in.clone(),
+        stack: values,
+        borrowed,
         effects: crate::types::EffSet::empty(),
         claimed_out: request.expected.stack_out.clone(),
         claimed_effects: request.expected.allowed_effects.clone(),
@@ -86,6 +104,7 @@ pub(super) fn complete_frame(
                 Some(crate::untrusted::Node::Quotation { inst, .. }) => inst.clone(),
                 Some(crate::untrusted::Node::Literal { .. })
                 | Some(crate::untrusted::Node::Invocation { .. })
+                | Some(crate::untrusted::Node::SlotInvoke { .. })
                 | None => return Err(super::Fail::Internal),
             };
             let scheme = super::parts::instantiate::quotation_scheme();

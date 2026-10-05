@@ -11,7 +11,8 @@ const fn pattern_children(
         | noble_kernel::shapes::Pattern::Sum(_, _)
         | noble_kernel::shapes::Pattern::GenericNominal(_, _, _) => Ok(2),
         noble_kernel::shapes::Pattern::List(_) => Ok(1),
-        noble_kernel::shapes::Pattern::Program(input, output, effects) => {
+        noble_kernel::shapes::Pattern::Program(input, output, effects)
+        | noble_kernel::shapes::Pattern::LiveRef(input, output, effects) => {
             if input.len() > super::STACK_LIMIT
                 || output.len() > super::STACK_LIMIT
                 || effects.len() > 8
@@ -54,7 +55,8 @@ fn pattern_child(
         }
         noble_kernel::shapes::Pattern::GenericNominal(_, arguments, _) => Ok(&arguments[child]),
         noble_kernel::shapes::Pattern::List(item) => Ok(item),
-        noble_kernel::shapes::Pattern::Program(input, output, _) => {
+        noble_kernel::shapes::Pattern::Program(input, output, _)
+        | noble_kernel::shapes::Pattern::LiveRef(input, output, _) => {
             let selected = if child < input.len() {
                 input.get(child)
             } else {
