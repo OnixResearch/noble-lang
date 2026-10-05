@@ -34,6 +34,8 @@ const cas = (slot, id, epoch, incarnation = null, generation = null, operation =
 
 function session(name) {
   const path = join(artifactDir, `${name}.jsonl`);
+  const requests = join(artifactDir, `${name}.requests.jsonl`);
+  const requestFd = openSync(requests, 'wx', 0o600);
   const fd = openSync(path, 'wx', 0o600);
   // The selected host requires an anonymous pipe with one independent writer.
   const child = spawn('/bin/bash', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
@@ -62,6 +64,7 @@ function session(name) {
     });
   }
   async function issue(request) {
+    writeSync(requestFd, `${JSON.stringify(request)}\n`);
     child.stdin.write(`${JSON.stringify(request)}\n`);
     return next();
   }
@@ -69,10 +72,11 @@ function session(name) {
     child.stdin.end();
     if (exitCode === undefined) await new Promise(resolve => child.once('exit', resolve));
     closeSync(fd);
+    closeSync(requestFd);
     writeFileSync(join(artifactDir, `${name}.stderr.txt`), stderr, { mode: 0o600 });
     assert.ok(exitCode === 0 || exitCode === 2, `CLI exited ${exitCode}: ${stderr}`);
   }
-  return { name, child, next, issue, end, path };
+  return { name, child, next, issue, end, path, requestFd };
 }
 
 function outcome(row, expected) {
@@ -277,15 +281,20 @@ await runCase('LSLOT07-old-version-effect-revoked-after-pin', async (s, log) => 
     'checkpoint-hold-selected');
   s.child.stdin.write(JSON.stringify({ operation: 'invoke', id: 'callEmit',
     inputs: [input(20)], refs: [{ position: 1, ordinal: 0, slot: 'emit' }] }) + '\n');
+  writeSync(s.requestFd, JSON.stringify({ operation: 'invoke', id: 'callEmit',
+    inputs: [input(20)], refs: [{ position: 1, ordinal: 0, slot: 'emit' }] }) + '\n');
   const entered = outcome(await s.next(), 'checkpoint-entered');
   assert.equal(entered.import, 'test_emit');
   s.child.stdin.write(JSON.stringify({ operation: 'policy',
+    grant: { operation: 'effect', slotId: 'emit', allowed: false } }) + '\n');
+  writeSync(s.requestFd, JSON.stringify({ operation: 'policy',
     grant: { operation: 'effect', slotId: 'emit', allowed: false } }) + '\n');
   const committed = outcome(await s.next(), 'policy-updated');
   assert.equal(committed.control_id, '1');
   assert.equal(committed.root, entered.root);
   assert.equal(committed.checkpoint, entered.checkpoint);
   s.child.stdin.write(JSON.stringify({ operation: 'resume-checkpoint' }) + '\n');
+  writeSync(s.requestFd, JSON.stringify({ operation: 'resume-checkpoint' }) + '\n');
   const denied = outcome(await s.next(), 'execution-failed');
   assert.deepEqual(denied.request_trace.map(row => [row.operation, row.outcome]),
     [['dispatch', 'allowed'], ['effect', 'denied']]);
@@ -306,17 +315,22 @@ await runCase('LSLOT07-revoked-after-root-pin', async (s, log) => {
     'checkpoint-hold-selected');
   s.child.stdin.write(JSON.stringify({ operation: 'invoke', id: 'callEmit',
     inputs: [input(20)], refs: [{ position: 1, ordinal: 0, slot: 'emit' }] }) + '\n');
+  writeSync(s.requestFd, JSON.stringify({ operation: 'invoke', id: 'callEmit',
+    inputs: [input(20)], refs: [{ position: 1, ordinal: 0, slot: 'emit' }] }) + '\n');
   const entered = outcome(await s.next(), 'checkpoint-entered');
   assert.equal(entered.import, 'live_select');
   assert.equal(entered.ordinal, 0);
   assert.ok(Number.isInteger(entered.site), JSON.stringify(entered));
   s.child.stdin.write(JSON.stringify({ operation: 'policy',
     grant: { operation: 'dispatch', slotId: 'emit', allowed: false } }) + '\n');
+  writeSync(s.requestFd, JSON.stringify({ operation: 'policy',
+    grant: { operation: 'dispatch', slotId: 'emit', allowed: false } }) + '\n');
   const committed = outcome(await s.next(), 'policy-updated');
   assert.equal(committed.control_id, '1');
   assert.equal(committed.root, entered.root);
   assert.equal(committed.checkpoint, entered.checkpoint);
   s.child.stdin.write(JSON.stringify({ operation: 'resume-checkpoint' }) + '\n');
+  writeSync(s.requestFd, JSON.stringify({ operation: 'resume-checkpoint' }) + '\n');
   const denied = outcome(await s.next(), 'execution-failed');
   assert.equal(denied.epoch, undefined);
   assert.equal(denied.protected_operations, 0);

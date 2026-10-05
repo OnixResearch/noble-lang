@@ -25,6 +25,12 @@ assert.equal(homeStat.mode & 0o022, 0, 'authority home cannot be group or world 
 const directory = fs.mkdtempSync(path.join(home, '.noble-live-slot-capture-'));
 const authority = path.join(directory, 'authority.json');
 const sha256 = value => createHash('sha256').update(value).digest('hex');
+const evidenceDirectory = process.env.NOBLE_SLOT_EVIDENCE_DIR;
+if (evidenceDirectory) fs.mkdirSync(evidenceDirectory, { recursive: true, mode: 0o700 });
+const record = row => {
+  if (evidenceDirectory) fs.appendFileSync(path.join(evidenceDirectory, 'LSLOT01.jsonl'),
+    JSON.stringify(row) + '\n', { flag: 'a', mode: 0o600 });
+};
 fs.writeFileSync(authority, JSON.stringify({
   owner: 'capture-regression-host', quota: 8, effects: ['live.dispatch'],
   grants: [{ operation: 'publish', slotId: 'increment', allowed: true },
@@ -32,15 +38,18 @@ fs.writeFileSync(authority, JSON.stringify({
   resources: [], slots: [{ slotId: 'increment', input: ['I64'], output: ['I64'], effectCeiling: [], proofRequired: false }],
   sources: Object.entries(sources).map(([id, source]) => ({ id, sha256: sha256(source) })),
 }), { flag: 'wx', mode: 0o600 });
+record({ kind: 'authority', bytes: fs.readFileSync(authority, 'utf8'),
+  selected_binary: binary, selected_binary_sha256: sha256(fs.readFileSync(binary)) });
 // The child reads an anonymous pipe: cat owns its sole input end, never a file-backed stdin.
 const child = spawn('/bin/bash', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
   'sh', binary, authority], { stdio: ['pipe', 'pipe', 'pipe'] });
 let pending = '', stderr = '', rows = [], receive;
-child.stderr.on('data', bytes => { stderr += bytes.toString(); });
+child.stderr.on('data', bytes => { stderr += bytes.toString(); record({ kind: 'stderr', text: bytes.toString() }); });
 child.stdout.on('data', bytes => {
   pending += bytes.toString();
   for (let end; (end = pending.indexOf('\n')) >= 0;) {
     const row = JSON.parse(pending.slice(0, end));
+    record({ kind: 'cli', row });
     pending = pending.slice(end + 1);
     if (receive) { const resolve = receive; receive = undefined; resolve(row); }
     else rows.push(row);
@@ -51,6 +60,7 @@ const next = () => rows.length ? Promise.resolve(rows.shift()) : new Promise((re
   receive = row => { clearTimeout(timeout); resolve(row); };
 });
 const issue = async request => {
+  record({ kind: 'operator', request });
   child.stdin.write(JSON.stringify(request) + '\n');
   return next();
 };
@@ -104,6 +114,7 @@ try {
   assert.equal(latest.protected_operations, 0);
   child.stdin.end();
   const exit = child.exitCode ?? await new Promise(resolve => child.once('exit', resolve));
+  record({ kind: 'exit', code: exit, stderr });
   assert.equal(exit, 0, stderr);
   console.log('saved checked [ n ] owner remains 21; same opt-in generic selects fresh target 22 at epoch 2');
 } catch (error) {

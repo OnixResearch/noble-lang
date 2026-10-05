@@ -166,6 +166,17 @@ currently fails closed: there is no independently pinned Lean receipt for the
 exact selected, installed target. Neither this opt-in CLI nor its unit tests
 constitute LSLOT-01..09 canonical acceptance.
 
+Run the diagnostic `verification/live-slot-current-source/gate.mjs` with the
+Node executable pinned in `crates/noble-cli/src/core/runtime/config.json`;
+pass an absolute externally built `/tmp/.../debug/noble` and a **new** direct
+`/tmp` output directory as its two arguments. It rebuilds the selected CLI
+offline, records the source
+revision, fixture and authority inputs, tool/binary hashes, real CLI command
+streams and raw responses in `receipt.json` plus retained evidence. A
+nonzero `blocked` result is intentional while exact LSLOT-05 selected-target
+proof, captured LSLOT-08 replay, and other identified variants remain open;
+this external receipt must not be copied into canonical case evidence.
+
 ### Guarded live REPL (opt-in, partial)
 
 `noble live repl` runs a separate resident Node/V8 session with an explicitly

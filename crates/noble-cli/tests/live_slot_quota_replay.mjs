@@ -38,6 +38,7 @@ const ref = slot => [{ position: 1, ordinal: 0, slot }];
 function start(name) {
   const output = reportPath(name);
   const commands = path.join(evidenceDir, `${name}.requests.jsonl`);
+  const stderrFile = path.join(evidenceDir, `${name}.stderr.txt`);
   for (const file of [output, commands]) fs.closeSync(fs.openSync(file, 'wx', 0o600));
   const child = spawn('/bin/bash', [
     '-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
@@ -56,7 +57,10 @@ function start(name) {
       next ? next.resolve(row) : rows.push(row);
     }
   });
-  child.stderr.on('data', bytes => { stderr += bytes.toString(); });
+  child.stderr.on('data', bytes => {
+    stderr += bytes.toString();
+    fs.appendFileSync(stderrFile, bytes, { mode: 0o600 });
+  });
   child.on('close', () => {
     closed = true;
     for (const next of waiting.splice(0)) next.reject(Error(`CLI ended before receipt: ${stderr}`));
@@ -74,7 +78,7 @@ function start(name) {
     child.stdin.write(line);
   };
   return {
-    output, commands, next, write,
+    output, commands, stderrFile, next, write,
     issue: request => { write(request); return next(); },
     finish: async () => {
       child.stdin.end();
@@ -294,14 +298,28 @@ async function traceCapacity() {
   } catch (error) { session.abort(); throw error; }
 }
 
-try {
-  const retained = await retention();
-  const replayed = [];
-  for (const variant of variants) replayed.push(await replayVariant(variant));
-  const boundedTrace = await traceCapacity();
-  console.log(JSON.stringify({ retention: retained, replay: replayed, boundedTrace }));
-  if (!requestedEvidence) fs.rmSync(evidenceDir, { recursive: true });
-} catch (error) {
-  console.error(`quota/replay raw evidence preserved: ${evidenceDir}`);
-  throw error;
+const failures = [];
+let retained = null, boundedTrace = null;
+try { retained = await retention(); }
+catch (error) { failures.push({ name: 'retention', error: String(error.stack ?? error) }); }
+const replayed = [];
+for (const variant of variants) {
+  try { replayed.push(await replayVariant(variant)); }
+  catch (error) {
+    const failure = { name: variant.name, status: 'failed',
+      error: String(error.stack ?? error),
+      ...(requestedEvidence ? {
+        raw: reportPath(`replay-${variant.name}`),
+        requests: path.join(evidenceDir, `replay-${variant.name}.requests.jsonl`),
+      } : {}) };
+    failures.push(failure);
+    replayed.push(failure);
+  }
 }
+try { boundedTrace = await traceCapacity(); }
+catch (error) { failures.push({ name: 'bounded-trace-retention', error: String(error.stack ?? error) }); }
+console.log(JSON.stringify({ retention: retained, replay: replayed, boundedTrace, failures }));
+if (failures.length) {
+  console.error(`quota/replay failures preserved: ${evidenceDir}`);
+  process.exitCode = 1;
+} else if (!requestedEvidence) fs.rmSync(evidenceDir, { recursive: true });
