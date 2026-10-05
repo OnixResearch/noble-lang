@@ -188,6 +188,21 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "B-LSLOT-01",
+      "document": "../.cairn/specs/core-bootstrap/spec.md",
+      "document_id": "SPEC-B001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "LSLOT-06",
+        "LSLOT-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "B-RESULT-01",
       "document": "../.cairn/specs/core-bootstrap/spec.md",
       "document_id": "SPEC-B001",
@@ -1244,6 +1259,21 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "DX-LSLOT-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "LSLOT-01",
+        "LSLOT-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "DX-MODULE-01",
       "document": "../.cairn/specs/developer-experience/spec.md",
       "document_id": "SPEC-DX001",
@@ -1610,6 +1640,24 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "EV-LSLOT-01",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "LSLOT-02",
+        "LSLOT-04",
+        "LSLOT-05",
+        "LSLOT-07",
+        "LSLOT-08",
+        "LSLOT-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "EV-STATE-01",
       "document": "../.cairn/specs/evidence/spec.md",
       "document_id": "SPEC-EV001",
@@ -1896,6 +1944,25 @@
       ],
       "scenarios": [],
       "test_design": "test-design-open"
+    },
+    {
+      "id": "H-LSLOT-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "LSLOT-01",
+        "LSLOT-02",
+        "LSLOT-03",
+        "LSLOT-04",
+        "LSLOT-05",
+        "LSLOT-08"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "H-OUTCOME-01",
@@ -2401,6 +2468,40 @@
       "scenarios": [
         "LIVE-09",
         "LIVE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-LSLOT-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "LSLOT-01",
+        "LSLOT-06",
+        "LSLOT-09"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "K-LSLOT-02",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "semantic-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [
+        "LSLOT-01",
+        "LSLOT-02",
+        "LSLOT-03",
+        "LSLOT-06",
+        "LSLOT-07"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -3998,6 +4099,25 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "S-LSLOT-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "LSLOT-02",
+        "LSLOT-03",
+        "LSLOT-04",
+        "LSLOT-06",
+        "LSLOT-07",
+        "LSLOT-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "S-MEM-01",
       "document": "../.cairn/specs/safety/spec.md",
       "document_id": "SPEC-S001",
@@ -5264,6 +5384,21 @@
       ],
       "scenarios": [
         "ADAPT-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-LSLOT-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [
+        "LSLOT-05",
+        "LSLOT-07"
       ],
       "test_design": "scenario-described-not-executed"
     },

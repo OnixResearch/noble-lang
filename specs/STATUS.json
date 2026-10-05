@@ -1756,7 +1756,7 @@
       "trust": "unassessed",
       "evidence": [],
       "acceptance": "not-started",
-      "implementation_scope": "Issue #1 active design only: separate Live-Slot-Design typed generic dispatch over root-pinned persistent registry snapshots. LSLOT-01..09 are unexecuted designs; no Core or guarded Live-Wasm-Draft slot support, runtime acceptance or behavioral proof."
+      "implementation_scope": "Issue #1 Live-Slot-Design contract accepted in canonical Cairn specs while its implementation tasks remain active and open. Nine registered LSLOT-01..09 designs remain absent/not-run/open/unassessed with no evidence; no opt-in slot runtime, Core or guarded Live-Wasm-Draft slot support, runtime acceptance or behavioral proof."
     },
     {
       "id": "c-backend",

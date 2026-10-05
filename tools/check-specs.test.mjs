@@ -6,7 +6,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { loadBundle, validate, deriveLedger } from './check-specs.mjs';
-import { canonicalPath, regenerate, toLegacy, checkConversion } from './cairn-specs.mjs';
+import { canonicalPath, regenerate, toLegacy, checkConversion, view } from './cairn-specs.mjs';
 
 const baseline = loadBundle(fileURLToPath(new URL('../', import.meta.url)));
 const fixture = () => ({ texts: new Map(baseline.texts), paths: new Set(baseline.paths) });
@@ -66,6 +66,34 @@ test('document discovery omits private evidence and compiler caches, not runbook
 test('current family passes document validation', () => {
   assert.deepEqual(validate(baseline).errors, []);
 });
+
+test('dropping all live-slot scenarios fails after regenerating canonical links, views and ledger', () => {
+  const bundle = fixture();
+  changeJson(bundle, 'specs/spec-family.json', family => {
+    family.scenario_files = family.scenario_files.filter(file => file !== 'conformance/live-reference-cases.json');
+  });
+  const family = JSON.parse(bundle.texts.get('specs/spec-family.json'));
+  const cases = family.scenario_files.flatMap(file =>
+    JSON.parse(bundle.texts.get(`specs/${file}`)).cases.map(c => ({ ...c, file })));
+  const documents = family.normative_documents.map(doc => {
+    const name = doc.compatibility_path;
+    const canonical = regenerate(bundle.texts.get(canonicalPath(name)), name, cases);
+    const compatibility = view(canonical, name);
+    bundle.texts.set(canonicalPath(name), canonical);
+    bundle.texts.set(`specs/${name}`, compatibility);
+    return { name, canonical, compatibility };
+  });
+  assert.deepEqual(checkConversion(documents, cases), []);
+  bundle.texts.set('specs/requirements.json', JSON.stringify(deriveLedger(bundle), null, 2) + '\n');
+
+  const errors = validate(bundle).errors;
+  assert.equal(errors.length, 9, `missing conformance coverage must be the only error: ${errors}`);
+  for (let index = 1; index <= 9; index++) {
+    const id = `LSLOT-${String(index).padStart(2, '0')}`;
+    assert.ok(errors.some(error => error.includes(id)), `missing required ${id} coverage`);
+  }
+});
+
 for (const [name, mutate] of [
   ['reviewed purity erases request', c => c.input.variants.find(v => v.reviewed_pure_contract && !v.claimed_effects.length).outcome = 'accept'],
   ['missing matrix row', c => c.input.variants.pop()],

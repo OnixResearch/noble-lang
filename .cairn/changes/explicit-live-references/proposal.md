@@ -11,4 +11,4 @@ Noble issue #1 asks whether an explicitly live reference can coexist with immuta
 ## Impact
 
 - **Files**: this active Cairn change's language, safety, program-contracts, evidence, developer-experience and core-bootstrap deltas; the narrowly scoped existing `live-wasm-reload` exclusion; `specs/conformance/live-reference-cases.json`; supporting native README/roadmap/status only if needed to distinguish design from implementation.
-- **Testing**: document gates/validation, document self-tests and scoped document tests, plus JSON/state inspection. These establish structural design validity only; no LSLOT case is executed or proven. Runtime implementation, source-bound evidence, sync/promotion, archive and issue closure require later independent review.
+- **Testing**: document gates/validation, document self-tests and scoped document tests, plus JSON/state inspection. Canonical design sync, scenario registration and generated views/ledger establish structural design validity only; no LSLOT case is executed or proven. Runtime implementation, source-bound evidence, case-status promotion, archive and issue closure require later independent review.

@@ -402,3 +402,62 @@ bun tools/check-specs.mjs
 ```
 
 The refresh command changes only derived requirement metadata. It does not change scenario states or proof status. Selected oracle checks reject known specification regressions; they do not implement the referenced harnesses.
+
+### Requirement: EV-LSLOT-01
+r[EV-LSLOT-01]
+
+**EV-LSLOT-01.**
+
+Every LSLOT scenario MUST remain `implementation: absent`, `execution: not-run`, `proof: open`, `trust: unassessed`, `evidence: []` until a separate implementation and actual execution/proof are independently recorded. Later evidence MUST bind the generic caller identity and exact selected target ProgramValueId/DefinitionId, captures, context, claim, assumptions, admitted artifact, pinned slot-registry map/global epoch (distinct from `Live-Wasm-Draft` namespace/source generation), slot incarnation/generation, publication or refusal CAS inputs/outcome, current host policy decisions, nested version selections and actual effect requests/outcomes. Replay evidence MUST also bind exact host-issued typed root inputs and every ordered host request/response/accounting event, and MUST refuse wrong epoch/incarnation/generation, substituted artifact/captures, context or trace order/accounting even with a frozen admitted map. A design gate, wrapper proof, historical LIVE receipt or compatible interface MUST NOT count as live-target execution, replay, behavioral proof or acceptance. Existing LIVE-01..10 and accepted milestone receipts MUST remain unchanged.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LSLOT-02 for EV-LSLOT-01
+
+- GIVEN the `Live-Slot-Design` profile and every field of `input` in [LSLOT-02](../../../specs/conformance/live-reference-cases.json)
+- WHEN the `runtime` procedure for case `LSLOT-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `LSLOT-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LSLOT-04 for EV-LSLOT-01
+
+- GIVEN the `Live-Slot-Design` profile and every field of `input` in [LSLOT-04](../../../specs/conformance/live-reference-cases.json)
+- WHEN the `admission` procedure for case `LSLOT-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `LSLOT-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LSLOT-05 for EV-LSLOT-01
+
+- GIVEN the `Live-Slot-Design` profile and every field of `input` in [LSLOT-05](../../../specs/conformance/live-reference-cases.json)
+- WHEN the `admission` procedure for case `LSLOT-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `LSLOT-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LSLOT-07 for EV-LSLOT-01
+
+- GIVEN the `Live-Slot-Design` profile and every field of `input` in [LSLOT-07](../../../specs/conformance/live-reference-cases.json)
+- WHEN the `runtime` procedure for case `LSLOT-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `LSLOT-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LSLOT-08 for EV-LSLOT-01
+
+- GIVEN the `Live-Slot-Design` profile and every field of `input` in [LSLOT-08](../../../specs/conformance/live-reference-cases.json)
+- WHEN the `runtime` procedure for case `LSLOT-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `LSLOT-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LSLOT-09 for EV-LSLOT-01
+
+- GIVEN the `Live-Slot-Design` profile and every field of `input` in [LSLOT-09](../../../specs/conformance/live-reference-cases.json)
+- WHEN the `static` procedure for case `LSLOT-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `LSLOT-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->

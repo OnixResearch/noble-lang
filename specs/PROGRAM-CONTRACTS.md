@@ -497,3 +497,13 @@ Proof declarations MUST be erased in full before guest code/Wasm emission, leavi
 **VC-INTRINSIC-05.**
 
 Proof checking MUST be decidable for the advertised fragment and account for input bytes, nodes, nesting, finite dependency DAG, type/stack/term size, normalization and substitution work, time/memory and diagnostic output in a shared bounded admission request. The grammar and proof core forbid general recursion, cyclic `use` dependencies, `axiom`, `admit`, `sorry`, unchecked extensionality, tactics/solver search, arbitrary Noble program evaluation, partial selectors as equality witnesses, host effects and runtime proof callbacks. `use` refers only to a previously independently accepted exact immutable proof identity with inspected transitive assumptions/context; unsupported constants, stale model/library/module/subject revisions and forged evidence are refused. Reject, unsupported, timeout/exhaustion and internal failure MUST be distinct and MUST NOT be reported as proved. A test vector, copied Lean statement, unchecked reflection of a program or an inconsistent `Type0:Type0` derivation is never authority.
+
+**VC-LSLOT-01.**
+
+Optional behavioral evidence required by host policy for a live call MUST independently match the exact selected target ProgramValueId and DefinitionId, captures, instantiated ordered interface, semantic context, claim, assumptions and admitted executable artifact correspondence under P-ID-06. An unchanged generic caller's type-safety or proof, an older target's proof, a name or compatible effect interface MUST NOT transfer behavioral claims to a replacement. Missing or inapplicable evidence MUST refuse the proof-required selection without running the candidate; ordinary typed execution does not acquire a universal proof requirement. Pinned old versions MAY retain independently applicable old evidence only for that exact old subject and context, subject to current host policy.
+
+#### Scenario: LSLOT-05 exact selected-target evidence
+
+- GIVEN wrong-version, capture, context, claim, assumption, artifact and wrapper-only evidence in LSLOT-05
+- WHEN proof-required target admission checks each against the selected candidate
+- THEN only independently applicable exact subject/artifact evidence can pass

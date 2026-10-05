@@ -447,3 +447,36 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN every declared CORE-01 through CORE-18 source and structured harness plus the affected MC1 and M3 regressions
 - WHEN execution, negative controls, quality, inventory, extraction, dependency/axiom and refusal gates run against the final source and selected tools
 - THEN durable receipts record all outcomes and open obligations, and milestone completion follows passing acceptance rather than document validation alone
+
+### Requirement: B-LSLOT-01
+r[B-LSLOT-01]
+
+**B-LSLOT-01.**
+
+`Live-Slot-Design` MUST remain unsupported in current `Core-Bootstrap`, ordinary Core sessions and guarded `Live-Wasm-Draft` unless separately implemented, checked and advertised. Such attempts MUST fail explicitly, without interpreting `slot.invoke` as ordinary `run`, defaulting its effects to empty, invoking a candidate, or inheriting LIVE case acceptance. Historical M4, MC2, DXM1 and LIVE status/evidence MUST remain unchanged. This design alone supplies no executable slot representation or accepted profile.
+
+
+<!-- cairn:scenario-links:start -->
+#### Scenario: LSLOT-06 for B-LSLOT-01
+
+- GIVEN the `Live-Slot-Design` profile and every field of `input` in [LSLOT-06](../../../specs/conformance/live-reference-cases.json)
+- WHEN the `static` procedure for case `LSLOT-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `LSLOT-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: LSLOT-09 for B-LSLOT-01
+
+- GIVEN the `Live-Slot-Design` profile and every field of `input` in [LSLOT-09](../../../specs/conformance/live-reference-cases.json)
+- WHEN the `static` procedure for case `LSLOT-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `LSLOT-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+<!-- cairn:scenario-links:end -->
+
+#### Scenario: LSLOT-09 existing profiles remain unsupported
+
+- GIVEN the legacy profile attempts and ordinary captured controls in LSLOT-09
+- WHEN profile admission runs
+- THEN slot dispatch is explicitly unsupported, while ordinary capture semantics remain unchanged

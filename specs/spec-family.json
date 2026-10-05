@@ -100,6 +100,7 @@
     "conformance/calculator-cases.json",
     "conformance/worker-cases.json",
     "conformance/live-wasm-cases.json",
+    "conformance/live-reference-cases.json",
     "conformance/c-backend-cases.json",
     "conformance/octet-adoption-cases.json"
   ],

@@ -605,6 +605,18 @@ function validateWorkerOracles(get, check) {
   }, 'export authority invariant');
 }
 
+// Required live-slot designs must remain visible to the family validator even
+// when the scenario manifest and its generated ledger are changed together.
+function validateLiveSlotOracles(get, check) {
+  const kinds = ['runtime', 'runtime', 'admission', 'admission', 'admission',
+    'static', 'runtime', 'runtime', 'static'];
+  kinds.forEach((kind, index) => {
+    const id = `LSLOT-${String(index + 1).padStart(2, '0')}`;
+    check(get(id)?.profile === 'Live-Slot-Design' && get(id)?.kind === kind,
+      `live slot oracle: required case ${id}`);
+  });
+}
+
 // Document expectations only. This does not run Octet, validate credentials, or construct live witnesses.
 function validateOctetAdoptionOracles(get, check) {
   const matches = (actual, expected) => object(actual) && Object.entries(expected).every(([key, value]) =>
@@ -961,6 +973,7 @@ export function validate(bundle, { ignoreLedger = false } = {}) {
     validateContractOracles(get, check);
     validateCalculatorOracles(get, check);
     validateWorkerOracles(get, check);
+    validateLiveSlotOracles(get, check);
     validateOctetAdoptionOracles(get, check);
     const core = bundle.texts.get(CORE_SPEC) ?? '';
     check(core.includes('`#` begins a comment') && core.includes('**K-SYN-05.**'), 'surface: canonical lexer rule missing');
@@ -1365,6 +1378,10 @@ function selfTest(base) {
     changeJson(b, 'specs/spec-family.json', p => p.scenario_files = p.scenario_files.filter(f => f !== 'conformance/worker-cases.json'));
     refreshed(b);
   }, 'worker oracle: required case');
+  run('live-slot-scenarios-unregistered', b => {
+    changeJson(b, 'specs/spec-family.json', p => p.scenario_files = p.scenario_files.filter(f => f !== 'conformance/live-reference-cases.json'));
+    refreshed(b);
+  }, 'live slot oracle: required case');
   run('worker-false-runtime-claim', b => changeJson(b, 'specs/STATUS.json', p => {
     p.runtime_exists = false; p.worker_contracts.execution = 'passed';
   }), 'worker policy: false greenfield');
