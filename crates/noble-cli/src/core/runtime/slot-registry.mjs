@@ -3,6 +3,7 @@
 // worker; source text, slot IDs, references, and evidence are never authority.
 const SLOT_LIMIT = 128;
 const TRACE_LIMIT = 4096;
+const ROOT_TRACE_BYTES = 1024 * 1024;
 const U64_MAX = 0xffffffffffffffffn;
 const FRAME_START = 1077248;
 const FRAME_END = 1310720;
@@ -93,6 +94,7 @@ export class SlotRegistry {
   #poisoned = false;
   #authorize;
   #performEffect;
+  #previewEffect;
   #retireTarget;
   #retainProgram;
   #releaseProgramBackend;
@@ -100,14 +102,18 @@ export class SlotRegistry {
   #knownEffects;
   #quota;
   #maxSlots;
+  #traceAdmission;
 
-  constructor({ quota, knownEffects, authorize, performEffect, retireTarget,
-    retainProgram = null, releaseProgramBackend = null, verifyEvidence = null, maxSlots = 128 }) {
+  constructor({ quota, knownEffects, authorize, performEffect, previewEffect = null, retireTarget,
+    retainProgram = null, releaseProgramBackend = null, verifyEvidence = null, maxSlots = 128,
+    traceAdmission = null }) {
     if (!Number.isSafeInteger(quota) || quota < 1 || quota > 16384
       || !Number.isSafeInteger(maxSlots) || maxSlots < 1 || maxSlots > 16384
       || typeof authorize !== 'function' || typeof performEffect !== 'function'
+      || previewEffect !== null && typeof previewEffect !== 'function'
       || typeof retireTarget !== 'function'
-      || verifyEvidence !== null && typeof verifyEvidence !== 'function') {
+      || verifyEvidence !== null && typeof verifyEvidence !== 'function'
+      || traceAdmission !== null && typeof traceAdmission !== 'function') {
       throw Error('invalid live-slot host services');
     }
     this.#quota = quota;
@@ -115,10 +121,12 @@ export class SlotRegistry {
     this.#knownEffects = new Set(strings(knownEffects, 'known host contracts'));
     this.#authorize = authorize;
     this.#performEffect = performEffect;
+    this.#previewEffect = previewEffect;
     this.#retireTarget = retireTarget;
     this.#retainProgram = retainProgram;
     this.#releaseProgramBackend = releaseProgramBackend;
     this.#verifyEvidence = verifyEvidence;
+    this.#traceAdmission = traceAdmission;
   }
 
   get epoch() { return this.#current.epoch; }
@@ -384,7 +392,8 @@ export class SlotRegistry {
     const token = Object.freeze({});
     const root = { id: ++this.#nextRoot, state: frozen?.state ?? this.#current, refs: new Map(),
       callerHandle, callerModule, entered: false, boundRefs: new Set(), frames: [], pending: null,
-      resources: new Map(), selectedHandles: new Map(), trace: [], operations: 0 };
+      resources: new Map(), selectedHandles: new Map(), trace: [], traceBytes: 0,
+      operations: 0 };
     this.#roots.set(token, root);
     return token;
   }
@@ -540,8 +549,18 @@ export class SlotRegistry {
   }
 
   #trace(root, record) {
-    if (root.trace.length >= TRACE_LIMIT) throw Error('live-slot trace exhausted');
+    const bytes = Buffer.byteLength(JSON.stringify(record)) + 1;
+    if (root.trace.length >= TRACE_LIMIT || root.traceBytes + bytes > ROOT_TRACE_BYTES
+      || this.#traceAdmission?.(root.traceBytes + bytes, root.trace.length + 1) === false) {
+      throw Error('live-slot trace capacity refused before recording request');
+    }
+    root.traceBytes += bytes;
     root.trace.push(Object.freeze(record));
+  }
+
+  traceSize(token) {
+    const root = this.#root(token);
+    return { bytes: root.traceBytes, rows: root.trace.length };
   }
 
   #policyVersion(version) {
@@ -695,11 +714,29 @@ export class SlotRegistry {
       this.#trace(root, { ...record, outcome: 'denied', protectedOperations: root.operations });
       return { outcome: 'denied', protectedOperations: root.operations };
     }
-    if (root.trace.length >= TRACE_LIMIT) throw Error('live-slot trace exhausted');
+    // The adapter independently previews its deterministic bounded response.
+    // Reserve the full JSON row before an external operation, not after it.
+    const responseBound = this.#previewEffect?.(effect, request, selected.version);
+    if (typeof responseBound !== 'string' || Buffer.byteLength(responseBound) > 65544) {
+      throw Error('protected effect lacks a bounded trace response preview');
+    }
+    const nextRecord = { ...record, outcome: 'performed', response: responseBound,
+      protectedOperations: root.operations + 1 };
+    const failureRecord = { ...record, outcome: 'unknown-after-attempt',
+      protectedOperations: root.operations + 1 };
+    const nextBytes = Math.max(Buffer.byteLength(JSON.stringify(nextRecord)),
+      Buffer.byteLength(JSON.stringify(failureRecord))) + 1;
+    if (root.trace.length >= TRACE_LIMIT || root.traceBytes + nextBytes > ROOT_TRACE_BYTES
+      || this.#traceAdmission?.(root.traceBytes + nextBytes, root.trace.length + 1) === false) {
+      throw Error('live-slot trace capacity refused before protected effect');
+    }
     root.operations += 1;
     let response;
     try {
       response = this.#performEffect(effect, request, selected.version);
+      if (response !== responseBound) {
+        throw Error('protected effect response exceeds pre-authorized trace reservation');
+      }
     } catch (error) {
       this.#trace(root, { ...record, outcome: 'unknown-after-attempt',
         protectedOperations: root.operations });

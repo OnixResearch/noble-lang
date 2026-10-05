@@ -345,7 +345,14 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
                         }
                     }
                 }
-                let report = result.unwrap_or_else(|problem| refusal("command", &problem));
+                let report = result.unwrap_or_else(|problem| {
+                    let mut report = refusal("command", &problem);
+                    if !host.worker_invocation_started {
+                        report["guest_requests"] = json!(0);
+                        report["protected_operations"] = json!(0);
+                    }
+                    report
+                });
                 if writer.send(report).is_err() { return std::process::ExitCode::from(2); }
             }
             Ok(Input::Queued {control_id,scope}) => match host.control_receipt(&control_id, &scope) {
@@ -1727,9 +1734,16 @@ impl Host {
     }
 
     fn replay(&mut self, request: &Value) -> Result<Value, String> {
-        object(request, &["operation", "token", "inputs", "refs", "expected_trace", "expected_stack"])?;
+        object(request, &["operation", "token", "inputs", "refs",
+            "expected_trace", "expected_stack", "expected_identity"])?;
         let token = text(request, "token", 256)?;
         let replay = self.replays.get(token).ok_or_else(|| reject("unknown frozen replay owner"))?;
+        if request.get("expected_identity").is_some_and(|identity|
+            identity != &replay.frozen_identity) {
+            return Ok(json!({"schema":"noble-live-slot-report/v1","stage":"slot",
+                "outcome":"replay-diverged","guest_requests":0,"protected_operations":0,
+                "diagnostic":"frozen replay identity differs from the host-retained receipt"}));
+        }
         let mut invocation = self.invocation(request, &replay.caller_id)?;
         invocation["operation"] = json!("replay");
         invocation["token"] = json!(token);

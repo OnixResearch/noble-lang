@@ -1,6 +1,12 @@
 // Only the separately selected live-slot worker constructs this engine. The
 // ordinary Core and live-reload engines retain their original ABI and arena.
 const SLOT_LIMITS = Object.freeze([196608, 256, 256, 2048, 4096, 100000]);
+// Leave room in the 4 MiB worker frame for the response envelope and the
+// separate exact per-root request trace.
+const GLOBAL_TRACE_BYTES = 2 * 1024 * 1024;
+const ROOT_TRACE_RESERVATION_BYTES = 1024 * 1024;
+const REPLAY_TRACE_BYTES = Buffer.byteLength(',"replay":"scripted"');
+const TRACE_ROWS = 4096;
 
 function slotDecimal(value, label) {
   if (typeof value !== 'string' || !/^(0|[1-9][0-9]{0,19})$/.test(value)
@@ -81,7 +87,8 @@ class SlotEngine {
     this.rootSequence = 0;
     this.active = null;
     this.trace = [];
-    this.lastTraceStart = 0;
+    this.traceBytes = 0;
+    this.traceFailure = null;
     this.poisoned = false;
     this.proposalInspectionFailed = false;
   }
@@ -219,9 +226,16 @@ class SlotEngine {
     this.grants = grants;
     this.registry = new SlotRegistry({ quota: authority.quota, knownEffects: authority.effects,
       authorize: event => this.grants.get(`${event.operation}:${event.slotId ?? event.nominalId}`) === true,
+      traceAdmission: (bytes, rows) => this.traceBytes + bytes
+        + (this.replaying ? rows * REPLAY_TRACE_BYTES : 0) <= GLOBAL_TRACE_BYTES,
       performEffect: (effect, text) => {
         if (effect !== 'test.emit') throw Error('unavailable protected host effect');
         return `emitted:${text}`;
+      },
+      previewEffect: (effect, text) => {
+        if (effect === 'test.emit') return `emitted:${text}`;
+        if (effect === 'test.abort') return '';
+        throw Error('unavailable protected host effect');
       },
       retireTarget: handle => this.retireTarget(handle),
       retainProgram: (handle, version) => this.retainSaved(handle, version),
@@ -271,7 +285,18 @@ class SlotEngine {
     const guarded = (fn, denied = 0) => (...args) => {
       try { return fn(...args); }
       catch (error) {
-        this.trace.push({ operation: 'host-import-refused', moduleId, reason: String(error) });
+        if (String(error).includes('live-slot trace capacity refused')) {
+          this.traceFailure = String(error);
+        }
+        const record = { operation: 'host-import-refused', moduleId, reason: String(error) };
+        const bytes = Buffer.byteLength(JSON.stringify(record)) + 1;
+        const pending = this.active ? this.registry.traceSize(this.active.root) : { bytes: 0, rows: 0 };
+        if (this.traceBytes + pending.bytes + bytes
+          + (this.replaying ? pending.rows * REPLAY_TRACE_BYTES : 0) > GLOBAL_TRACE_BYTES) {
+          throw Error(`live-slot trace capacity refused before host-import-refused record: ${error}`);
+        }
+        this.trace.push(record);
+        this.traceBytes += bytes;
         return denied;
       }
     };
@@ -778,13 +803,29 @@ class SlotEngine {
     return slotReply('replay-released', { token });
   }
 
+  appendRootTrace(trace, size) {
+    const bytes = size.bytes + (this.replaying ? size.rows * REPLAY_TRACE_BYTES : 0);
+    if (size.rows !== trace.length || this.traceBytes + bytes > GLOBAL_TRACE_BYTES) {
+      throw Error('exact live-slot trace retention disagrees with recorded root');
+    }
+    if (this.replaying) this.trace.push(...trace.map(row => ({ ...row, replay: 'scripted' })));
+    else this.trace.push(...trace);
+    this.traceBytes += bytes;
+  }
+
   invoke(request) {
     this.controlEvents = [];
     this.checkpointFailure = null;
+    this.traceFailure = null;
     const module = this.modules.get(request.id);
     if (!module || !Array.isArray(request.inputs) || !Array.isArray(request.refs)
       || module.rootsReleased || this.active || request.record === true && this.replays.size >= 128) {
       return slotReply('invocation-refused');
+    }
+    if (this.traceBytes + ROOT_TRACE_RESERVATION_BYTES + TRACE_ROWS * REPLAY_TRACE_BYTES
+      > GLOBAL_TRACE_BYTES) {
+      return slotReply('trace-capacity-refused', {
+        diagnostic: 'exact host trace retention is full; release this session before invoking' });
     }
     const root = this.registry.pinRoot(module.handle, module.token, request._frozen_snapshot ?? null);
     if (this.rootSequence === Number.MAX_SAFE_INTEGER) throw Error('host root sequence exhausted');
@@ -792,7 +833,6 @@ class SlotEngine {
     this.checkpointIndex = 0;
     this.active = { root, module };
     const runtime = module.instance.exports;
-    this.lastTraceStart = this.trace.length;
     const createdOwners = [];
     let replayToken = null;
     try {
@@ -810,8 +850,9 @@ class SlotEngine {
       }
       const status = runtime.invoke_live();
       const trace = this.registry.trace(root);
-      if (this.poisoned || status !== 0) {
-        throw Error(`checked guest execution returned status ${status}; control lane poisoned=${this.poisoned}`);
+      if (this.poisoned || status !== 0 || this.traceFailure) {
+        throw Error(this.traceFailure
+          ?? `checked guest execution returned status ${status}; control lane poisoned=${this.poisoned}`);
       }
       const count = runtime.stack_length();
       if (!Number.isInteger(count) || count < 0 || count > 128) throw Error('invalid result stack length');
@@ -854,10 +895,11 @@ class SlotEngine {
         slots };
         this.replays.set(replayToken, { snapshot, id: module.id, trace, stack, identity });
       }
+      const traceSize = this.registry.traceSize(root);
       this.registry.finishRoot(root);
       this.active = null;
       for (const candidate of this.modules.values()) this.sweepRetirement(candidate);
-      this.trace.push(...trace.map(row => this.replaying ? { ...row, replay: 'scripted' } : row));
+      this.appendRootTrace(trace, traceSize);
       return slotReply('executed', { epoch: rootEpoch, stack,
         ...(replayToken === null ? {} : { replay_token: replayToken }),
         ...(replayToken === null ? {} : { frozen_identity: this.replays.get(replayToken).identity }),
@@ -876,10 +918,13 @@ class SlotEngine {
       let trace = [];
       try { trace = this.registry.trace(root); }
       catch (inspection) { error = inspection; }
+      let traceSize = { bytes: 0, rows: 0 };
+      try { traceSize = this.registry.traceSize(root); }
+      catch (inspection) { error = inspection; }
       try { this.registry.abortRoot(root); } catch (retired) { error = retired; }
       this.active = null;
       this.poisoned = true;
-      this.trace.push(...trace.map(row => this.replaying ? { ...row, replay: 'scripted' } : row));
+      this.appendRootTrace(trace, traceSize);
       return slotReply('execution-failed', { diagnostic: String(error)
         + (this.checkpointFailure === null ? '' : `; checkpoint: ${this.checkpointFailure}`),
         request_trace: trace, control_events: this.controlEvents.splice(0),
@@ -921,7 +966,7 @@ class SlotEngine {
       if (!module) return slotReply('unadmitted-site');
       return slotReply('reflected', { site: this.registry.reflectSite(module.token, request.site) });
     }
-    if (request.operation === 'trace') return slotReply('trace-observed', { trace: this.trace.slice() });
+    if (request.operation === 'trace') return slotReply('trace-observed', { trace: this.trace });
     if (request.operation === 'policy') {
       const grant = request.grant;
       if (!grant || typeof grant.operation !== 'string'

@@ -15,6 +15,7 @@ const host = quota => new SlotRegistry({
     performed.push(`${version.programValueId}:${effect}:${text}`);
     return `ok-${text}`;
   },
+  previewEffect: (effect, text) => effect === 'test.emit' ? `ok-${text}` : null,
   retireTarget: (handle, version) => { released.push(`${handle}:${version.programValueId}`); return true; },
   // Ledger unit test only: compiled Program retention is exercised by the
   // separate real-Wasm child, never inferred from these callbacks.

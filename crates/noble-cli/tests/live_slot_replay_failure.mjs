@@ -37,6 +37,10 @@ const expect = (row, outcome) => {
 };
 try {
   expect(await next(), 'configured');
+  const unadmitted = expect(await issue({ operation: 'install', id: 'unadmitted',
+    source: '1 +', inputs: ['I64'] }), 'refused');
+  assert.equal(unadmitted.guest_requests, 0);
+  assert.equal(unadmitted.protected_operations, 0);
   expect(await issue({ operation: 'install', id: 'caller', source: 'slot.invoke',
     inputs: ['I64', 'LiveRef<I64,Unit+I64,test.emit>'] }), 'installed');
   expect(await issue({ operation: 'define', id: 'definition', name: 'replay',
@@ -55,8 +59,22 @@ try {
     .map(row => row.request), ['first', 'second']);
   expect(await issue({ operation: 'policy',
     grant: { operation: 'effect', slotId: 'emitter', allowed: false } }), 'policy-updated');
+  const replayRequest = { operation: 'replay', token: recorded.replay_token,
+    inputs: [{ kind: 'i64', value: '1' }], refs,
+    expected_identity: recorded.frozen_identity,
+    expected_trace: recorded.request_trace, expected_stack: recorded.stack };
+  const wrongIdentity = structuredClone(recorded.frozen_identity);
+  wrongIdentity.slots[0].generation = '999';
+  const refused = expect(await issue({ ...replayRequest,
+    expected_identity: wrongIdentity }), 'replay-diverged');
+  assert.equal(refused.guest_requests, 0);
+  assert.equal(refused.protected_operations, 0);
+  const matched = expect(await issue(replayRequest), 'replay-matched');
+  assert.equal(matched.protected_operations, 0);
+  assert.equal(matched.scripted_operations, 2);
   const replay = await issue({ operation: 'replay', token: recorded.replay_token,
     inputs: [{ kind: 'i64', value: '0' }], refs,
+    expected_identity: recorded.frozen_identity,
     expected_trace: recorded.request_trace, expected_stack: recorded.stack });
   assert.ok(['replay-diverged', 'replay-refused'].includes(replay.outcome), JSON.stringify(replay));
   assert.equal(replay.actual?.outcome, 'execution-failed', JSON.stringify(replay));

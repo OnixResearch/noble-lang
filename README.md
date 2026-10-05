@@ -141,8 +141,15 @@ and epoch-CAS `publish`, `rollback`, and `delete`. `invoke` uses typed inputs
 and borrowed reference bindings; an actual returned Program receives an opaque
 saved owner token, which `release-program` retires at its last owner. `discard`
 removes an authorized never-published install. `reflect` and `trace` observe
-the host ledger. `hold-checkpoint` selects a protected import occurrence in the
-next checked root; after `checkpoint-entered`, a permitted publication or
+the host ledger. Exact trace retention is bounded by serialized UTF-8 bytes
+(1 MiB per root and 2 MiB across a session, including replay labels), not just
+request count. When retention fills, `invoke` returns `trace-capacity-refused`
+before starting a guest; a root that reaches its per-root limit fails closed
+before another protected effect and reports its retained exact request trace.
+No prior trace rows are silently discarded. Start a fresh session to continue
+after the global trace capacity is reached. `hold-checkpoint` selects a
+protected import occurrence in the next checked root; after
+`checkpoint-entered`, a permitted publication or
 revocation receives a committed `control_id` receipt before
 `resume-checkpoint`. The held root keeps its pinned epoch, while the next root
 observes the committed change. Frozen `record`/`replay` and `release-replay`
@@ -152,7 +159,9 @@ named selection requires `install` with `selected_name` after the corresponding
 `define`; anonymous targets have **no checked DefinitionId** and cannot be used for
 source-bound frozen replay. Recorded protected responses are replayed as an
 exact ordered script without executing another real host effect; they do not
-grant permission for a new live effect. Proof-required publication
+grant permission for a new live effect. An optional `expected_identity` on
+`replay` is compared with the host-retained frozen receipt before starting a
+guest; it cannot replace that retained authority. Proof-required publication
 currently fails closed: there is no independently pinned Lean receipt for the
 exact selected, installed target. Neither this opt-in CLI nor its unit tests
 constitute LSLOT-01..09 canonical acceptance.
