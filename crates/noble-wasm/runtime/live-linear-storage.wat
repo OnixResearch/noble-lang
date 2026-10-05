@@ -1,12 +1,13 @@
 ;; Opt-in source heap. Handle = (epoch << 12) | (physical_slot - 1),
 ;; initially epoch=1. The full handle survives retirement in the cell header;
 ;; exhausted epochs permanently retire that one physical slot rather than wrap.
-;; Scratch [8192,12288) and [20480,24576) contain u16 incoming/root counts.
-;; Scratch [57344,57352) holds live count and the free-list head (1-based).
-;; These regions are outside operands, continuations, reflection and registry.
+;; Dedicated sidecar [1052672,1077248) holds u16 incoming, saved and
+;; module-global root counts (4096 entries each). Recipe measurement uses
+;; [8192,12288); its scratch must never alias live reference counts.
+;; [57344,57356) holds live count, free-list head and dispatch guard.
 ;; Each cell's kind word stores the logical kind in its low byte and the
-;; independent external-root count in its high 24 bits. This distinguishes a
-;; genuine host release from an attempt to consume a live parent edge.
+;; independent ordinary external-root count in its high 24 bits. Saved and
+;; module roots have distinct counters so one release cannot consume another.
 (func $linear_address (param $h i32) (result i32)
  (if (i32.lt_u (local.get $h) (i32.const 4096)) (then unreachable))
  (i32.add (i32.const 65536)
@@ -33,11 +34,17 @@
  ;; mutable child edge exists, so reuse of physical slots cannot create cycles.
  (local.get $child))
 (func $storage_refs_address (param $slot i32) (result i32)
- (if (i32.le_u (local.get $slot) (i32.const 2048))
-  (then (return (i32.add (i32.const 8192)
-    (i32.mul (i32.sub (local.get $slot) (i32.const 1)) (i32.const 2))))))
- (i32.add (i32.const 20480)
-  (i32.mul (i32.sub (local.get $slot) (i32.const 2049)) (i32.const 2))))
+ (i32.add (i32.const 1052672)
+  (i32.mul (i32.sub (local.get $slot) (i32.const 1)) (i32.const 2))))
+(func $storage_saved_address (param $slot i32) (result i32)
+ (i32.add (i32.const 1060864)
+  (i32.mul (i32.sub (local.get $slot) (i32.const 1)) (i32.const 2))))
+(func $storage_module_address (param $slot i32) (result i32)
+ (i32.add (i32.const 1069056)
+  (i32.mul (i32.sub (local.get $slot) (i32.const 1)) (i32.const 2))))
+(func $storage_busy (result i32)
+ (i32.or (i32.or (global.get $cp) (global.get $rp))
+  (i32.load (i32.const 57352))))
 (func $storage_slot (param $h i32) (result i32)
  (i32.add (i32.and (local.get $h) (i32.const 4095)) (i32.const 1)))
 (func $storage_inc_ref (param $h i32)
@@ -62,9 +69,9 @@
 (func $storage_init
  ;; Live source modules have no start; this initializes only a new private heap.
  (memory.fill (i32.const 65536) (i32.const 0) (i32.const 196608))
- (memory.fill (i32.const 8192) (i32.const 0) (i32.const 4096))
- (memory.fill (i32.const 20480) (i32.const 0) (i32.const 4096))
- (i64.store (i32.const 57344) (i64.const 0)))
+ (memory.fill (i32.const 1052672) (i32.const 0) (i32.const 24576))
+ (i64.store (i32.const 57344) (i64.const 0))
+ (i32.store (i32.const 57352) (i32.const 0)))
 (func $storage_ensure (param $slot i32) (result i32)
  (i32.and (i32.le_u (i32.sub (local.get $slot) (i32.const 1)) (i32.const 4095))
   (i32.ge_u (memory.size) (i32.const 4))))
@@ -91,6 +98,8 @@
    (local.set $next (i32.add (i32.const 4096)
     (i32.sub (local.get $slot) (i32.const 1))))))
  (i32.store16 (call $storage_refs_address (local.get $slot)) (i32.const 0))
+ (i32.store16 (call $storage_saved_address (local.get $slot)) (i32.const 0))
+ (i32.store16 (call $storage_module_address (local.get $slot)) (i32.const 0))
  (i32.store (i32.const 57344) (i32.add (call $storage_live_count) (i32.const 1)))
  (local.get $next))
 (func $storage_discard (param $h i32)
@@ -98,6 +107,10 @@
  (local.set $p (call $linear_live_address (local.get $h)))
  (local.set $slot (call $storage_slot (local.get $h)))
  (if (i32.load16_u (call $storage_refs_address (local.get $slot))) (then unreachable))
+ (if (i32.or
+       (i32.load16_u (call $storage_saved_address (local.get $slot)))
+       (i32.load16_u (call $storage_module_address (local.get $slot))))
+  (then unreachable))
  ;; Preserve the full old id for the next epoch and invalidate the kind first.
  (i32.store (local.get $p) (i32.const 0))
  (if (i32.le_u (local.get $h) (i32.const -4097))
@@ -135,11 +148,11 @@
  (i32.store offset=4 (local.get $p) (local.get $h))
  (i32.store (local.get $p) (local.get $kind))
  (local.get $h))
-;; External roots are independently pinned by the host. Retain/release
-;; require an idle stack; graph edges need no host callbacks.
+;; External roots are independently pinned by the host. Graph and runtime
+;; roots are accounted by the backend itself, never by a host claim.
 (func $storage_retain_target (param $h i32) (result i32)
  (local $p i32) (local $cell i32) (local $kind i32)
- (if (i32.or (global.get $cp) (global.get $rp)) (then (return (i32.const 4))))
+ (if (call $storage_busy) (then (return (i32.const 4))))
  (if (i32.eqz (call $storage_is_live (local.get $h))) (then (return (i32.const 4))))
  (local.set $cell (call $linear_address (local.get $h)))
  (local.set $kind (i32.load (local.get $cell)))
@@ -153,13 +166,74 @@
  (i32.const 0))
 (func $storage_retire_target (param $h i32) (result i32)
  (local $cell i32) (local $kind i32)
- (if (i32.or (global.get $cp) (global.get $rp)) (then (return (i32.const 4))))
+ (if (call $storage_busy) (then (return (i32.const 4))))
  (if (i32.eqz (call $storage_is_live (local.get $h))) (then (return (i32.const 4))))
  (local.set $cell (call $linear_address (local.get $h)))
  (local.set $kind (i32.load (local.get $cell)))
  (if (i32.eqz (i32.shr_u (local.get $kind) (i32.const 8)))
   (then (return (i32.const 4))))
  (i32.store (local.get $cell) (i32.sub (local.get $kind) (i32.const 256)))
+ (drop (call $storage_dec_ref (local.get $h)))
+ (i32.const 0))
+;; Only a real Program in an operand slot can become a saved owner. The
+;; returned token is the full cell handle, including its non-wrapping epoch.
+(func $storage_save_stack_program (param $index i32) (result i32)
+ (local $h i32) (local $counter i32) (local $refs i32)
+ (if (i32.or (call $storage_busy) (i32.ge_u (local.get $index) (global.get $sp)))
+  (then (return (i32.const 0))))
+ (if (i32.ne (i32.load (i32.mul (local.get $index) (i32.const 16))) (i32.const 4))
+  (then (return (i32.const 0))))
+ (local.set $h (i32.wrap_i64 (i64.load offset=8
+  (i32.mul (local.get $index) (i32.const 16)))))
+ (if (i32.eqz (call $storage_is_live (local.get $h)))
+  (then (return (i32.const 0))))
+ (if (i32.ne (call $kind (local.get $h)) (i32.const 4))
+  (then (return (i32.const 0))))
+ (local.set $counter (call $storage_saved_address (call $storage_slot (local.get $h))))
+ (local.set $refs (call $storage_refs_address (call $storage_slot (local.get $h))))
+ (if (i32.or (i32.eq (i32.load16_u (local.get $counter)) (i32.const 65535))
+             (i32.eq (i32.load16_u (local.get $refs)) (i32.const 65535)))
+  (then (return (i32.const 0))))
+ (call $storage_inc_ref (local.get $h))
+ (i32.store16 (local.get $counter)
+  (i32.add (i32.load16_u (local.get $counter)) (i32.const 1)))
+ (local.get $h))
+(func $storage_release_saved_program (param $h i32) (result i32)
+ (local $counter i32)
+ (if (call $storage_busy) (then (return (i32.const 4))))
+ (if (i32.eqz (call $storage_is_live (local.get $h))) (then (return (i32.const 4))))
+ (if (i32.ne (call $kind (local.get $h)) (i32.const 4))
+  (then (return (i32.const 4))))
+ (local.set $counter (call $storage_saved_address (call $storage_slot (local.get $h))))
+ (if (i32.eqz (i32.load16_u (local.get $counter))) (then (return (i32.const 4))))
+ (i32.store16 (local.get $counter)
+  (i32.sub (i32.load16_u (local.get $counter)) (i32.const 1)))
+ (drop (call $storage_dec_ref (local.get $h)))
+ (call $storage_collect))
+(func $storage_root_program (param $h i32) (result i32)
+ (local $counter i32) (local $refs i32)
+ (if (i32.eqz (call $storage_is_live (local.get $h))) (then (return (i32.const 4))))
+ (if (i32.ne (call $kind (local.get $h)) (i32.const 4))
+  (then (return (i32.const 4))))
+ (local.set $counter (call $storage_module_address (call $storage_slot (local.get $h))))
+ (local.set $refs (call $storage_refs_address (call $storage_slot (local.get $h))))
+ (if (i32.or (i32.eq (i32.load16_u (local.get $counter)) (i32.const 65535))
+             (i32.eq (i32.load16_u (local.get $refs)) (i32.const 65535)))
+  (then (return (i32.const 4))))
+ (call $storage_inc_ref (local.get $h))
+ (i32.store16 (local.get $counter)
+  (i32.add (i32.load16_u (local.get $counter)) (i32.const 1)))
+ (i32.const 0))
+(func $storage_unroot_program (param $h i32) (result i32)
+ (local $counter i32)
+ (if (call $storage_busy) (then (return (i32.const 4))))
+ (if (i32.eqz (call $storage_is_live (local.get $h))) (then (return (i32.const 4))))
+ (if (i32.ne (call $kind (local.get $h)) (i32.const 4))
+  (then (return (i32.const 4))))
+ (local.set $counter (call $storage_module_address (call $storage_slot (local.get $h))))
+ (if (i32.eqz (i32.load16_u (local.get $counter))) (then (return (i32.const 4))))
+ (i32.store16 (local.get $counter)
+  (i32.sub (i32.load16_u (local.get $counter)) (i32.const 1)))
  (drop (call $storage_dec_ref (local.get $h)))
  (i32.const 0))
 ;; The work queue uses reflection's traversal scratch only while idle. It does
@@ -172,11 +246,11 @@
  (local $scan i32) (local $head i32) (local $tail i32)
  (local $slot i32) (local $p i32) (local $h i32)
  (local $a i32) (local $b i32) (local $c i32) (local $released i32)
- (if (i32.or (global.get $cp) (global.get $rp)) (then (return (i32.const 4))))
+ (if (call $storage_busy) (then (return (i32.const 4))))
  (block $scanned (loop $scan_cells
   (br_if $scanned (i32.ge_u (local.get $scan) (global.get $heap_cursor)))
   (local.set $p (i32.add (i32.const 65536) (i32.mul (local.get $scan) (i32.const 48))))
-  (if (i32.and (i32.load (local.get $p))
+  (if (i32.and (i32.ne (i32.load (local.get $p)) (i32.const 0))
                (i32.eqz (i32.load16_u (call $storage_refs_address
                  (i32.add (local.get $scan) (i32.const 1))))))
    (then (call $storage_queue (local.get $tail) (i32.add (local.get $scan) (i32.const 1)))
@@ -211,6 +285,32 @@
       (local.set $tail (i32.add (local.get $tail) (i32.const 1)))))))
   (br $drain)))
  (i32.const 0))
+;; Count physical Program owners after draining unrooted graph edges. All
+;; rooted Program cells in the span must disappear before code/table retirement.
+;; -1 is refusal, never "zero owners"; callers must treat it as fail-closed.
+(func $storage_code_owners (param $start i32) (param $length i32) (result i32)
+ (local $at i32) (local $p i32) (local $entry i32) (local $count i32)
+ (if (i32.or (i32.eqz (local.get $length))
+             (i32.gt_u (local.get $length) (i32.const 16384)))
+  (then (return (i32.const -1))))
+ (if (i32.or (i32.lt_u (local.get $start) (i32.const 4))
+             (i32.gt_u (local.get $start) (i32.sub (i32.const 16384) (local.get $length))))
+  (then (return (i32.const -1))))
+ (if (call $storage_collect) (then (return (i32.const -1))))
+ (block $done (loop $next
+  (br_if $done (i32.ge_u (local.get $at) (global.get $heap_cursor)))
+  (local.set $p (i32.add (i32.const 65536)
+   (i32.mul (local.get $at) (i32.const 48))))
+  (if (i32.eq (i32.and (i32.load (local.get $p)) (i32.const 255)) (i32.const 4))
+   (then
+    (local.set $entry (i32.load offset=28 (local.get $p)))
+    (if (i32.and (i32.ge_u (local.get $entry) (local.get $start))
+                 (i32.lt_u (i32.sub (local.get $entry) (local.get $start))
+                            (local.get $length)))
+     (then (local.set $count (i32.add (local.get $count) (i32.const 1)))))))
+  (local.set $at (i32.add (local.get $at) (i32.const 1)))
+  (br $next)))
+ (local.get $count))
 (func $kind (param $h i32) (result i32)
  (i32.and (i32.load (call $linear_live_address (local.get $h))) (i32.const 255)))
 (func $payload (param $h i32) (result i64)

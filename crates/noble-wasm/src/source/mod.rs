@@ -111,9 +111,44 @@ pub struct LiveSiteMetadata {
 #[derive(Clone, Debug)]
 pub struct TargetMetadata {
     pub root_program_index: usize,
+    pub input_signature: u32,
+    pub output_signature: u32,
+    pub effect_mask: u32,
     pub stack_in: alloc::vec::Vec<noble_kernel::types::Ty>,
     pub stack_out: alloc::vec::Vec<noble_kernel::types::Ty>,
     pub effects: noble_kernel::types::EffSet,
+}
+
+/// An independently rechecked, emitted named definition, not the submission's
+/// wrapper root. A source receipt must separately bind the exact retained
+/// definition identity/owner and source origin; runtime installation must
+/// confirm the actual `$sN` cell and the exact assembled artifact bytes.
+#[derive(Clone, Debug)]
+pub struct NamedTargetMetadata {
+    pub definition: noble_kernel::contracts::Definition,
+    pub definition_identity: u64,
+    pub program_index: usize,
+    pub entry: u32,
+    pub input_signature: u32,
+    pub output_signature: u32,
+    pub effect_mask: u32,
+    pub stack_in: alloc::vec::Vec<noble_kernel::types::Ty>,
+    pub stack_out: alloc::vec::Vec<noble_kernel::types::Ty>,
+    pub effects: noble_kernel::types::EffSet,
+    /// Canonical checked definition recipe, compared in full; a session-local
+    /// numeric identity or a digest alone cannot authorize a different body.
+    pub checked_recipe: alloc::vec::Vec<u8>,
+}
+
+/// Source-selected, independently checked named value in the exact WAT
+/// produced by `prepare_checked_selected`. This is not a Lean receipt or an
+/// installed ProgramValueId: the host must separately bind exact source and
+/// WAT/binary SHA256 and inspect the actual installed Program/capture graph.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SelectedTargetArtifact {
+    pub definition_id: noble_contracts::source::proof::CheckedDefinitionId,
+    pub source_generation: u64,
+    pub named_program_index: usize,
 }
 
 /// Exact admitted nominal/resource descriptor, not its host provenance.
@@ -144,6 +179,8 @@ pub struct Prepared {
     code_span: CodeSpan,
     live_sites: alloc::vec::Vec<LiveSiteMetadata>,
     target_metadata: Option<TargetMetadata>,
+    named_targets: alloc::vec::Vec<NamedTargetMetadata>,
+    selected_target: Option<SelectedTargetArtifact>,
     resource_catalog: alloc::vec::Vec<ResourceCatalogEntry>,
     wat: alloc::vec::Vec<u8>,
 }
@@ -168,6 +205,19 @@ impl Prepared {
     /// Full ordered logical root interface, including borrowed inputs.
     pub const fn target_metadata(&self) -> Option<&TargetMetadata> {
         self.target_metadata.as_ref()
+    }
+
+    /// Exact named Program globals compiled from independently accepted bodies.
+    /// A selected definition is `module_program_handle(program_index)`, never
+    /// the wrapper handle returned by `install_target()`.
+    pub fn named_targets(&self) -> &[NamedTargetMetadata] {
+        &self.named_targets
+    }
+
+    /// The exact selected named value, if this preparation consumed a
+    /// source-session checked selection rather than raw submission metadata.
+    pub const fn selected_target(&self) -> Option<SelectedTargetArtifact> {
+        self.selected_target
     }
 
     /// Compare these complete admitted descriptors against the independently
@@ -348,12 +398,47 @@ impl Compiler {
             length: plan.functions - plan.first_function,
             generation: next.generation,
         };
-        let target_metadata = self.live_slots.then(|| TargetMetadata {
-            root_program_index: plan.root,
-            stack_in: submission.request.expected.stack_in.clone(),
-            stack_out: submission.request.expected.stack_out.clone(),
-            effects: checked.root.interface.effects.clone(),
-        });
+        let target_metadata = if self.live_slots {
+            let root = attempt!(plan.programs.get(plan.root).ok_or(crate::Diagnostic::Invalid));
+            Some(TargetMetadata {
+                root_program_index: plan.root,
+                input_signature: root.input,
+                output_signature: root.output,
+                effect_mask: root.effects,
+                stack_in: submission.request.expected.stack_in.clone(),
+                stack_out: submission.request.expected.stack_out.clone(),
+                effects: checked.root.interface.effects.clone(),
+            })
+        } else {
+            None
+        };
+        let mut named_targets = alloc::vec::Vec::new();
+        if self.live_slots {
+            for (index, definition) in submission.definitions.iter().enumerate() {
+                let checked_body = attempt!(checked.definitions.get(index)
+                    .ok_or(crate::Diagnostic::Invalid));
+                let program_index = attempt!(plan.definition_roots.get(index).copied()
+                    .ok_or(crate::Diagnostic::Invalid));
+                let program = attempt!(plan.programs.get(program_index)
+                    .ok_or(crate::Diagnostic::Invalid));
+                let recipe = attempt!(next.identities.iter()
+                    .find(|identity| identity.id == definition.identity)
+                    .ok_or(crate::Diagnostic::Invalid));
+                named_targets.push(NamedTargetMetadata {
+                    definition: definition.definition,
+                    definition_identity: definition.identity,
+                    program_index,
+                    entry: program.entry,
+                    input_signature: program.input,
+                    output_signature: program.output,
+                    effect_mask: program.effects,
+                    stack_in: checked_body.interface.stack_in.clone(),
+                    stack_out: checked_body.interface.stack_out.clone(),
+                    effects: checked_body.interface.effects.clone(),
+                    checked_recipe: recipe.recipe.clone(),
+                });
+            }
+        }
         let mut resource_catalog = alloc::vec::Vec::new();
         if self.live_slots {
             for id in &submission.environment.live_resource_nominals {
@@ -379,9 +464,52 @@ impl Compiler {
             code_span,
             live_sites: plan.live_sites,
             target_metadata,
+            named_targets,
+            selected_target: None,
             resource_catalog,
             wat,
         })
+    }
+
+    /// Recompile the exact independently accepted source-selected target, and
+    /// bind its retained definition ID to the emitted *definition* Program,
+    /// not the root invocation wrapper. No arbitrary caller-supplied identity
+    /// or previously compiled artifact can be substituted through this API.
+    /// The host still authenticates its pinned checker and assembled bytes.
+    pub fn prepare_checked_selected(
+        &self,
+        selected: &noble_contracts::source::proof::CheckedSelectedTarget<'_>,
+    ) -> Result<Prepared, crate::Diagnostic> {
+        if !self.live_slots {
+            return Err(crate::Diagnostic::Unsupported);
+        }
+        let mut prepared = attempt!(self.prepare(selected.submission()));
+        let id = selected.definition_id();
+        let mut matches = prepared.named_targets.iter().filter(|named| {
+            named.definition == selected.definition().definition
+                && named.definition_identity == id.identity()
+        });
+        let Some(named) = matches.next() else {
+            return Err(crate::Diagnostic::Invalid);
+        };
+        if matches.next().is_some()
+            || named.stack_in != selected.body().interface.stack_in
+            || named.stack_out != selected.body().interface.stack_out
+            || named.effects != selected.body().interface.effects
+            || !prepared.target_metadata.as_ref().is_some_and(|root| {
+                root.stack_in == selected.root().interface.stack_in
+                    && root.stack_out == selected.root().interface.stack_out
+                    && root.effects == selected.root().interface.effects
+            })
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        prepared.selected_target = Some(SelectedTargetArtifact {
+            definition_id: id,
+            source_generation: selected.source_generation(),
+            named_program_index: named.program_index,
+        });
+        Ok(prepared)
     }
 
     /// Check publication provenance before allowing a live worker to install
@@ -407,10 +535,22 @@ impl Compiler {
         Ok(())
     }
 
-    /// Retire a complete, no-longer-owned installed code allocation. The
-    /// caller must first release its heap roots and clear these shared table
-    /// entries; a stale generation or a partial span is never accepted.
-    pub fn retire_code(&mut self, span: CodeSpan) -> Result<(), crate::Diagnostic> {
+    /// Retire an installed code allocation only after the trusted runtime
+    /// verifies zero backend Program owners and clears every entry of its
+    /// physical shared table span. The callback must query the backend's
+    /// `code_owners(start, length)` (a negative result is a refusal), verify
+    /// the installed entries and clear them before returning success.
+    /// Validation precedes the callback, so stale or partial spans cannot
+    /// cause table side effects.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; successful retirement explicitly clears trusted runtime table entries and publishes a revised compiler allocation state."
+    )]
+    pub fn retire_code(
+        &mut self,
+        span: CodeSpan,
+        verify_and_clear: impl FnOnce(CodeSpan) -> Result<(), crate::Diagnostic>,
+    ) -> Result<(), crate::Diagnostic> {
         if !self.live_slots || span.length == 0 || span.start < 4 {
             return Err(crate::Diagnostic::Invalid);
         }
@@ -423,6 +563,7 @@ impl Compiler {
         if end > self.functions || self.retention_revision == u64::MAX {
             return Err(crate::Diagnostic::Invalid);
         }
+        attempt!(verify_and_clear(span));
         self.installed_code.remove(index);
         let mut index = self.free_code.partition_point(|free| free.start < span.start);
         self.free_code.insert(
@@ -474,23 +615,23 @@ mod retention_tests {
         let pinned = compiler.reserve_code(2).ok().expect("pinned span");
         assert_eq!((former.start, pinned.start), (4, 7));
 
-        assert!(compiler.retire_code(former).is_ok());
+        assert!(compiler.retire_code(former, |_| Ok(())).is_ok());
         compiler.generation = 3;
         let reused = compiler.reserve_code(2).ok().expect("reused span");
         assert_eq!((reused.start, reused.length), (4, 2));
         assert_ne!(reused.generation, former.generation);
-        assert!(matches!(compiler.retire_code(former), Err(Diagnostic::Invalid)));
+        assert!(matches!(compiler.retire_code(former, |_| Ok(())), Err(Diagnostic::Invalid)));
         assert!(matches!(
             compiler.retire_code(CodeSpan {
                 length: 1,
                 ..pinned
-            }),
+            }, |_| Ok(())),
             Err(Diagnostic::Invalid)
         ));
         compiler.generation = 4;
         assert_eq!(compiler.reserve_code(1).ok().expect("last free slot").start, 6);
         assert_eq!(compiler.functions, 9);
-        assert!(compiler.retire_code(pinned).is_ok());
+        assert!(compiler.retire_code(pinned, |_| Ok(())).is_ok());
         assert_eq!(compiler.functions, 7);
         assert_eq!(compiler.installed_code.len(), 2);
     }
@@ -506,11 +647,38 @@ mod retention_tests {
         ));
         assert_eq!(compiler.functions, TABLE_LIMIT);
         assert_eq!(compiler.installed_code.len(), 1);
-        assert!(compiler.retire_code(installed).is_ok());
+        assert!(compiler.retire_code(installed, |_| Ok(())).is_ok());
         assert_eq!(compiler.functions, TABLE_LIMIT - 1);
         assert_eq!(
             compiler.reserve_code(1).ok().expect("reclaimed slot").start,
             installed.start
         );
+    }
+
+    #[test]
+    fn refusal_preserves_owners_and_never_reuses_uncleared_code() {
+        let mut compiler = Compiler::new_live_slots();
+        compiler.generation = 1;
+        let occupied = compiler.reserve_code(2).ok().expect("installed code");
+        let next = compiler.functions;
+        assert!(matches!(
+            compiler.retire_code(occupied, |_| Err(Diagnostic::Invalid)),
+            Err(Diagnostic::Invalid)
+        ));
+        assert_eq!(compiler.functions, next);
+        assert_eq!(compiler.installed_code.as_slice(), &[occupied]);
+        compiler.generation = 2;
+        assert_eq!(compiler.reserve_code(1).ok().expect("fresh span").start, next);
+
+        let mut called = false;
+        assert!(matches!(
+            compiler.retire_code(CodeSpan { generation: 0, ..occupied }, |_| {
+                called = true;
+                Ok(())
+            }),
+            Err(Diagnostic::Invalid)
+        ));
+        assert!(!called);
+        assert_eq!(compiler.installed_code[0], occupied);
     }
 }

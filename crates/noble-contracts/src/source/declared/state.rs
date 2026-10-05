@@ -1,5 +1,6 @@
 mod namespace;
 mod prepare;
+mod proof;
 mod register;
 
 macro_rules! present {

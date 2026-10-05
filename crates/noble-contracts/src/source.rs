@@ -13,6 +13,7 @@ mod lexer;
 mod parsing;
 mod preflight;
 mod preparation;
+pub mod proof;
 mod replacement;
 mod resolution;
 
@@ -182,6 +183,7 @@ pub struct Prepared {
     limits: crate::Limits,
     boundary: Option<alloc::vec::Vec<u8>>,
     definition: Option<Named>,
+    selected_root: Option<u32>,
     addition: alloc::vec::Vec<u8>,
     submission: Option<noble_kernel::execution::Submission>,
     checked: Option<noble_kernel::untrusted::Checked>,

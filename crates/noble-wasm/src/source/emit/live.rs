@@ -184,5 +184,19 @@ pub(super) fn exports(
 (global.set $live_module_installed (i32.const 1))\n\
 (global.set $generation (i32.add (global.get $generation) (i32.const 1)))\n\
 (call $invoke_live_internal))\n"));
-    Ok(())
+    // Releasing the module's own immutable Program globals is distinct from
+    // retiring its table span: a saved exact cell or map/frame owner may still
+    // keep that code reachable. The host reads code_owners before table.clear.
+    attempt!(out.append(b"(func (export \"release_module_roots\") (result i32)\n\
+(if (i32.or (i32.or (global.get $cp) (global.get $sp))\
+ (i32.or (global.get $rp) (global.get $live_frame)))\
+ (then (return (i32.const 4))))\n\
+(if (i32.eqz (global.get $live_module_installed))\
+ (then (return (i32.const 4))))\n"));
+    for id in 0..plan.programs.len() {
+        attempt!(out.append(b"(if (call $storage_unroot_program "));
+        attempt!(super::get_global(out, id));
+        attempt!(out.append(b") (then (return (i32.const 4))))\n"));
+    }
+    out.append(b"(global.set $live_module_installed (i32.const 0))\n(call $storage_collect))\n")
 }

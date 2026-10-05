@@ -30,18 +30,28 @@ impl super::Session {
             Ok(parsed) => parsed,
             Err(error) => return Err(super::Error::at(super::Stage::Parse, error)),
         };
-        if name.is_some() && self.live_slots.is_some() {
-            return Err(super::Error::at(super::Stage::Check, crate::invalid(
-                tree.span, "live-slot callers must be independently checked root submissions",
-            )));
-        }
         if let Err(error) = super::resolution::resolve(&mut tree, name.as_deref(), self, &mut meter)
         {
             return Err(super::Error::at(super::Stage::Resolve, error));
         }
+        if name.is_some() && self.live_slots.is_some() && tree.nodes.iter().any(|node| {
+            matches!(node.kind, super::Kind::Call(super::Target::SlotInvoke(_)))
+        }) {
+            return Err(super::Error::at(super::Stage::Check, crate::invalid(
+                tree.span, "live-slot declarations cannot contain borrowed dispatch",
+            )));
+        }
         if let Err(error) = super::preflight::check(inputs, self, tree.span, &mut meter) {
             return Err(super::Error::at(super::Stage::Check, error));
         }
+        let selected_root = if tree.body.len() == 1 {
+            tree.nodes.get(tree.body[0] as usize).and_then(|node| match &node.kind {
+                super::Kind::Call(super::Target::Named(index)) => Some(*index),
+                _ => None,
+            })
+        } else {
+            None
+        };
         let (extra, mode) = if name.is_some() {
             (
                 source_bytes.len().saturating_add(4),
@@ -100,6 +110,7 @@ impl super::Session {
             limits,
             boundary: self.bindings.as_ref().map(|bindings| bindings.key.clone()),
             definition,
+            selected_root,
             addition,
             submission,
             checked,

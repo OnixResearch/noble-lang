@@ -1,12 +1,13 @@
 ;; Live-Slot-Design borrow bindings are invocation-frame inputs, never Data cells.
 ;; Slot-only shared memory extends beyond the bounded source image (1 MiB).
 ;; Continuation shadows [1048576,1050624) hold one frame pointer per slot.
-;; Root bindings use [1050640,1051152), frames [1052672,1310720).
+;; Root bindings use [1050640,1051152), physical owner counters occupy
+;; [1052672,1077248), and frames [1077248,1310720).
 ;; Each frame is parent:i32, selected target:i32, count:i32, host token:i32, then ordered
 ;; (logical input position:i32, root-issued ordinal:i32) pairs.
 (func $live_frame_reset
  (i32.store (i32.const 1050624) (i32.const 0))
- (i32.store (i32.const 1050628) (i32.const 1052672))
+ (i32.store (i32.const 1050628) (i32.const 1077248))
  (i32.store (i32.const 1050632) (i32.const 0))
  (global.set $live_target (i32.const 0))
  (global.set $live_frame (i32.const 0)))
@@ -39,15 +40,23 @@
   (then (call $fail (i32.const 4)) (return (i32.const 0))))
  (i32.load offset=4 (i32.add (i32.const 1050640) (i32.mul (local.get $at) (i32.const 8)))))
 (func $live_frame_new (param $count i32) (param $target i32) (result i32)
- (local $at i32) (local $bytes i32) (local $end i32)
+ (local $at i32) (local $bytes i32) (local $end i32) (local $refs i32)
  (if (global.get $failure) (then (return (i32.const 0))))
  (if (i32.gt_u (local.get $count) (i32.const 64))
+  (then (call $fail (i32.const 4)) (return (i32.const 0))))
+ (if (i32.eqz (call $storage_is_live (local.get $target)))
+  (then (call $fail (i32.const 4)) (return (i32.const 0))))
+ (if (i32.ne (call $kind (local.get $target)) (i32.const 4))
+  (then (call $fail (i32.const 4)) (return (i32.const 0))))
+ (local.set $refs (call $storage_refs_address (call $storage_slot (local.get $target))))
+ (if (i32.eq (i32.load16_u (local.get $refs)) (i32.const 65535))
   (then (call $fail (i32.const 4)) (return (i32.const 0))))
  (local.set $bytes (i32.add (i32.const 16) (i32.mul (local.get $count) (i32.const 8))))
  (local.set $at (i32.load (i32.const 1050628)))
  (local.set $end (i32.add (local.get $at) (local.get $bytes)))
  (if (i32.gt_u (local.get $end) (i32.const 1310720))
   (then (call $quota (i32.const 5)) (return (i32.const 0))))
+ (call $storage_inc_ref (local.get $target))
  (i32.store (local.get $at) (i32.load (i32.const 1050624)))
  (i32.store offset=4 (local.get $at) (local.get $target))
  (i32.store offset=8 (local.get $at) (local.get $count))
@@ -84,7 +93,7 @@
  (i32.const 0))
 (func $live_frame_enter (param $frame i32)
  (if (global.get $failure) (then (return)))
- (if (i32.or (i32.lt_u (local.get $frame) (i32.const 1052672))
+ (if (i32.or (i32.lt_u (local.get $frame) (i32.const 1077248))
              (i32.ge_u (local.get $frame) (i32.load (i32.const 1050628))))
   (then (call $fail (i32.const 4)) (return)))
  (i32.store (i32.const 1050624) (local.get $frame))
@@ -93,7 +102,7 @@
 (func $live_frame_register (param $frame i32) (param $site i32)
  (local $token i32)
  (if (global.get $failure) (then (return)))
- (if (i32.or (i32.lt_u (local.get $frame) (i32.const 1052672))
+ (if (i32.or (i32.lt_u (local.get $frame) (i32.const 1077248))
              (i32.ge_u (local.get $frame) (i32.load (i32.const 1050628))))
   (then (call $fail (i32.const 4)) (return)))
  ;; A host exception leaves the provisional failure set. Zero is a refusal.
@@ -119,10 +128,11 @@
   (if (i32.ne (call $host_live_frame_leave
                 (i32.load offset=12 (local.get $walk))) (i32.const 0))
    (then (call $fail (i32.const 4)) (return)))
+  (drop (call $storage_dec_ref (i32.load offset=4 (local.get $walk))))
   (local.set $walk (i32.load (local.get $walk)))
   (br $release)))
  (if (i32.eqz (local.get $next))
-  (then (i32.store (i32.const 1050628) (i32.const 1052672)))
+  (then (i32.store (i32.const 1050628) (i32.const 1077248)))
   (else
    (local.set $end (i32.add (local.get $next)
     (i32.add (i32.const 16)

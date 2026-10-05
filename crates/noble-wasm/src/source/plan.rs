@@ -49,6 +49,9 @@ pub(super) struct Program {
 
 pub(super) struct Layout {
     pub(super) programs: alloc::vec::Vec<Program>,
+    /// Accepted definition index to its emitted, immutable Program global.
+    /// The submission root may be a wrapper invocation, not the proved value.
+    pub(super) definition_roots: alloc::vec::Vec<usize>,
     pub(super) order: alloc::vec::Vec<usize>,
     pub(super) first_function: u32,
     pub(super) functions: u32,
@@ -151,8 +154,14 @@ fn start(
         compiler,
         work
     )));
+    let definition_roots = if submission.environment.live_slots {
+        arenas[..index].iter().map(|arena| arena.root).collect()
+    } else {
+        alloc::vec::Vec::new()
+    };
     let layout = Layout {
         programs,
+        definition_roots,
         order: alloc::vec::Vec::new(),
         first_function: compiler.functions,
         functions: compiler.functions,

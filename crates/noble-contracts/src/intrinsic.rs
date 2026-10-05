@@ -1517,7 +1517,7 @@ fn prepare_checked_contract(contract: &ContractGoal, limits: Limits) -> Result<(
     Ok((result,literal))
 }
 
-fn canonical_wrapping_add(env: &noble_kernel::contracts::Env) -> bool {
+pub(crate) fn canonical_wrapping_add(env: &noble_kernel::contracts::Env) -> bool {
     use noble_kernel::{contracts::{Behavior,Definition},shapes::Pattern,words::{Variable,VariableKind}};
     let Some(scheme) = env.scheme(Definition(4)) else { return false; };
     env.kind(Definition(4)) == Some(Behavior::Arith) &&
@@ -1531,7 +1531,7 @@ fn canonical_wrapping_add(env: &noble_kernel::contracts::Env) -> bool {
         scheme.effects.is_empty()
 }
 
-fn same_inst(a: &noble_kernel::words::Inst, b: &noble_kernel::words::Inst) -> bool {
+pub(crate) fn same_inst(a: &noble_kernel::words::Inst, b: &noble_kernel::words::Inst) -> bool {
     use noble_kernel::words::Binding;
     a.bindings.len() == b.bindings.len() && a.bindings.iter().zip(&b.bindings).all(|(a,b)| match (a,b) {
         (Binding::Stack(a),Binding::Stack(b)) => a == b,

@@ -194,7 +194,18 @@ fn program(
     attempt!(out.i32(program.depth));
     attempt!(out.append(b" "));
     attempt!(out.i32(program.leaves));
-    out.append(b"))\n(if (global.get $failure) (then (return)))\n")
+    attempt!(out.append(b"))\n(if (global.get $failure) (then (return)))\n"));
+    if plan.live_slots {
+        // The module's immutable global is a real backend owner, independent
+        // of registry reachability and separately saved Program cells. Root
+        // every program, including quotation/named bodies, before publication.
+        attempt!(out.append(b"(if (call $storage_root_program "));
+        attempt!(super::get_global(out, id));
+        attempt!(out.append(
+            b") (then (call $fail (i32.const 4)) (return)))\n"
+        ));
+    }
+    Ok(())
 }
 
 fn operation(
