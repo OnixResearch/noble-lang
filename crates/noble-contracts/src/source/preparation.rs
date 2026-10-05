@@ -89,6 +89,7 @@ impl super::Session {
             generation: self.generation,
             history: self.history.clone(),
             hosts: self.hosts,
+            text_cursor: self.text_cursor,
             live_selected: self.live_selected.clone(),
             limits,
             boundary: self.bindings.as_ref().map(|bindings| bindings.key.clone()),
@@ -109,6 +110,8 @@ impl super::Session {
         }
         match &self.bindings {
             Some(bindings) => Ok(bindings.environment.clone()),
+            None if self.text_cursor => noble_kernel::contracts::text_cursor_environment()
+                .map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
             None if self.live_selected.is_some() => super::live_environment(),
             None => super::environment(),
         }

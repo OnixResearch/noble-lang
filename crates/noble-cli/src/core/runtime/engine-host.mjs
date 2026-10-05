@@ -1,6 +1,11 @@
 // Host-owned ABI, immutable adapter dispatch and effect accounting.
-function configureDeclaredAbi(engine, abi, declared_modules, declared_extension, bindings) {
-    engine.profile = declared_modules ? 'Declared-Modules-v1' : 'Core-Bootstrap';
+function configureDeclaredAbi(engine, abi, declared_modules, declared_extension, bindings, text_byte_cursor) {
+    if (typeof text_byte_cursor !== 'boolean'
+      || text_byte_cursor && (declared_modules || engine.inProcessLive)) {
+      fail('text byte cursor requires an ordinary session or compile');
+    }
+    engine.profile = declared_modules ? 'Declared-Modules-v1'
+      : text_byte_cursor ? 'Text-Byte-Cursor-v1' : 'Core-Bootstrap';
     if (declared_modules) {
       if (typeof declared_extension !== 'string') fail('missing declared module ABI extension');
       engine.declaredExtension = JSON.parse(declared_extension);
@@ -20,7 +25,7 @@ function configureDeclaredAbi(engine, abi, declared_modules, declared_extension,
         fail('invalid declared module ABI extension');
       }
     } else if (declared_extension !== null || !Array.isArray(bindings) || bindings.length !== 0) {
-      fail('declared host boundary is unavailable in Core-Bootstrap');
+      fail(`declared host boundary is unavailable in ${engine.profile}`);
     }
     if (engine.inProcessLive && (declared_modules
       || !Array.isArray(abi.live_host_functions)

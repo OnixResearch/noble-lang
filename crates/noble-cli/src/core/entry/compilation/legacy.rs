@@ -25,7 +25,11 @@ pub(super) fn compile(
         }
         input_index += 1;
     }
-    let frontend = noble_contracts::source::Session::new();
+    let frontend = if options.text_byte_cursor {
+        noble_contracts::source::Session::new_text_cursor()
+    } else {
+        noble_contracts::source::Session::new()
+    };
     let prepared = attempt!(frontend
         .prepare(source, &inputs, options.limits)
         .map_err(super::super::super::output::Failure::source));
@@ -38,7 +42,12 @@ pub(super) fn compile(
             "compile requires an expression submission",
         )
     }));
-    let compiled = attempt!(noble_wasm::source::Compiler::new()
+    let compiler = if options.text_byte_cursor {
+        noble_wasm::source::Compiler::new_text_cursor()
+    } else {
+        noble_wasm::source::Compiler::new()
+    };
+    let compiled = attempt!(compiler
         .prepare(submission)
         .map_err(super::super::super::output::Failure::backend));
     attempt!(

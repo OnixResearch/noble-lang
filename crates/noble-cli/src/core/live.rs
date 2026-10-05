@@ -1,7 +1,8 @@
 //! Opt-in, resource-free Core live session. Existing run/session paths do not enter here.
-//! A reload previews one checked definition, compiles an inert empty expression
-//! from that preview, and publishes only after isolated binary staging and an
-//! exact second file snapshot. The resident engine retains old Program slots.
+//! A reload previews one checked replacement and its transitive dependents,
+//! compiles an inert empty expression from that private successor, and publishes
+//! only after isolated binary staging and an exact second file snapshot.
+//! The resident engine retains old Program slots.
 
 mod encoding;
 
@@ -9,10 +10,13 @@ use std::os::unix::fs::MetadataExt;
 
 const LIMIT: u32 = super::SOURCE_LIMITS.bytes;
 
+type FileIdentity = (u64, u64, u64, i64, i64, i64, i64);
+
 struct Snapshot {
     bytes: std::vec::Vec<u8>,
     digest: std::string::String,
-    identity: (u64, u64, u64, i64, i64, i64, i64),
+    identity: FileIdentity,
+    directory: (u64, u64),
 }
 
 struct GrantSelection {
@@ -23,6 +27,7 @@ struct GrantSelection {
 enum ReloadDecision {
     Committed(serde_json::Value),
     Refused(std::string::String),
+    SelectedSourceRefused(noble_contracts::source::Error),
     HostEffect(std::string::String),
 }
 
@@ -107,13 +112,15 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             return std::process::ExitCode::from(2);
         }
     }
-    let mut input = std::io::BufReader::new(std::io::stdin().lock());
+    let mut input = std::io::BufReader::new(std::io::stdin());
     loop {
-        let bytes = match super::framing::read_line(&mut input, LIMIT) {
+        let next = super::framing::read_line(&mut input, LIMIT)
+            .map_err(|error| error.message);
+        let bytes = match next {
             Ok(Some(bytes)) => bytes,
             Ok(None) => return std::process::ExitCode::SUCCESS,
-            Err(error) => {
-                emit(&fatal(&error.message));
+            Err(problem) => {
+                emit(&fatal(&problem));
                 return std::process::ExitCode::from(2);
             }
         };
@@ -134,6 +141,19 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             if !live.respond_reload(std::path::Path::new(path)) {
                 return std::process::ExitCode::from(2);
             }
+            continue;
+        }
+        if line == ":generation" {
+            emit(&serde_json::json!({
+                "schema": "noble-live-report/v1",
+                "stage": "inspection",
+                "outcome": "generation-observed",
+                "generation": live.generation,
+                "engine": engine,
+                "stack": &live.last_stack,
+                "guest_requests": 0,
+                "protected_operations": 0,
+            }));
             continue;
         }
         if let Some(terms) = line.strip_prefix(":grant-self-edit ") {
@@ -209,16 +229,9 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
 
 fn parse(
     arguments: &[std::ffi::OsString],
-) -> Result<
-    (
-        Option<std::path::PathBuf>,
-        &'static str,
-        Option<GrantSelection>,
-    ),
-    std::string::String,
-> {
-    if arguments.get(1).is_none_or(|arg| arg != "repl") {
-        return Err("usage: noble live repl [--source ABS_PATH] [--engine v8|interpreter]".into());
+) -> Result<(Option<std::path::PathBuf>, &'static str, Option<GrantSelection>), std::string::String> {
+    if arguments.get(1).and_then(|argument| argument.to_str()) != Some("repl") {
+        return Err("usage: noble live repl [--source ABS_PATH]".into());
     }
     let mut source = None;
     let mut engine = None;
@@ -232,7 +245,9 @@ fn parse(
             .and_then(|value| value.to_str())
             .ok_or("missing live option value")?;
         match flag {
-            "--source" if source.is_none() => source = Some(std::path::PathBuf::from(value)),
+            "--source" if source.is_none() => {
+                source = Some(std::path::PathBuf::from(value))
+            }
             "--engine" if engine.is_none() => {
                 engine = Some(match value {
                     "v8" => "v8",
@@ -267,6 +282,18 @@ fn parse(
         }
     };
     Ok((source, engine.unwrap_or("v8"), grant))
+}
+
+fn source_identity(metadata: &std::fs::Metadata) -> FileIdentity {
+    (
+        metadata.dev(),
+        metadata.ino(),
+        metadata.len(),
+        metadata.mtime(),
+        metadata.mtime_nsec(),
+        metadata.ctime(),
+        metadata.ctime_nsec(),
+    )
 }
 
 impl Live {
@@ -411,6 +438,9 @@ impl Live {
                     Some(&proposal),
                     Some(&problem),
                 ),
+            Ok(ReloadDecision::SelectedSourceRefused(_)) => {
+                return Err(fatal_failure("guest proposal reported a selected-file source error"));
+            }
             Err(error) => return Err(error),
         };
         emit(&final_receipt);
@@ -461,6 +491,14 @@ impl Live {
         {
             return Ok(ReloadDecision::Refused(
                 "stale or foreign checked proposal owner".into(),
+            ));
+        }
+        // H-LIVE-04's bounded guest lane does not grant a dependent rebuild.
+        // Host-selected file reload/direct definitions use the full batch
+        // transaction; a guest proposal must refuse before candidate staging.
+        if self.session.frontend.live_definition_has_dependents(selected) {
+            return Ok(ReloadDecision::Refused(
+                "bounded guest self-edit refuses dependent definitions".into(),
             ));
         }
         let source = match candidate_source(selected, proposal, LIMIT as usize) {
@@ -687,6 +725,9 @@ impl Live {
                 ReloadDecision::Refused(problem) => {
                     Ok(self.admission_refusal(&problem, "definition-refused"))
                 }
+                ReloadDecision::SelectedSourceRefused(_) => {
+                    Err(fatal_failure("direct definition reported a selected-file source error"))
+                }
             };
         }
         let submission = prepared
@@ -778,6 +819,15 @@ impl Live {
             Ok(ReloadDecision::Refused(problem)) => {
                 refusal(self.generation, &self.last_stack, &problem)
             }
+            Ok(ReloadDecision::SelectedSourceRefused(error)) => {
+                match self.selected_source_refusal(&error) {
+                    Ok(report) => report,
+                    Err(error) => {
+                        emit(&fatal(&error.message));
+                        return false;
+                    }
+                }
+            }
             Ok(ReloadDecision::HostEffect(problem)) => {
                 refusal(self.generation, &self.last_stack, &problem)
             }
@@ -788,6 +838,44 @@ impl Live {
         };
         emit(&outcome);
         true
+    }
+
+    fn selected_source_refusal(
+        &self,
+        error: &noble_contracts::source::Error,
+    ) -> Result<serde_json::Value, super::output::Failure> {
+        let report = super::output::Report::source_error(error, 0);
+        let mut source: serde_json::Value = serde_json::from_str(&report.json)
+            .map_err(|_| fatal_failure("invalid checked source diagnostic"))?;
+        let source_fields = source
+            .as_object_mut()
+            .ok_or_else(|| fatal_failure("checked source diagnostic is not an object"))?;
+        let mut value = refusal(
+            self.generation,
+            &self.last_stack,
+            &error.diagnostic().message,
+        );
+        let fields = value
+            .as_object_mut()
+            .ok_or_else(|| fatal_failure("live refusal is not an object"))?;
+        for name in [
+            "source_span",
+            "source_location",
+            "word_or_join",
+            "required_stack",
+            "actual_stack",
+            "constraint",
+            "value_origin_or_unavailable",
+        ] {
+            if let Some(field) = source_fields.remove(name) {
+                fields.insert(name.into(), field);
+            }
+        }
+        fields.insert(
+            "source_span_basis".into(),
+            serde_json::json!("refused-candidate-file-byte-offsets"),
+        );
+        Ok(value)
     }
 
     fn reload(&mut self, path: &std::path::Path) -> Result<ReloadDecision, super::output::Failure> {
@@ -808,6 +896,19 @@ impl Live {
             Ok(candidate) => candidate,
             Err(error) => return Ok(ReloadDecision::Refused(error)),
         };
+        self.reload_candidate(selected, candidate)
+    }
+
+    fn reload_candidate(
+        &mut self,
+        selected: std::path::PathBuf,
+        candidate: Snapshot,
+    ) -> Result<ReloadDecision, super::output::Failure> {
+        if self.selected.as_ref().is_some_and(|prior| prior != &selected) {
+            return Ok(ReloadDecision::Refused(
+                "reload path differs from selected source".into(),
+            ));
+        }
         let definition = match self.session.frontend.prepare(
             &candidate.bytes,
             &self.session.stack,
@@ -819,7 +920,7 @@ impl Live {
                     "reload source must be one checked definition".into(),
                 ));
             }
-            Err(error) => return Ok(ReloadDecision::Refused(error.diagnostic().message.clone())),
+            Err(error) => return Ok(ReloadDecision::SelectedSourceRefused(error)),
         };
         let definition_name = definition
             .definition_name()
@@ -853,9 +954,9 @@ impl Live {
         Ok(result)
     }
 
-    /// File reload and direct definition admission share exactly one
-    /// source-checked, binary-staged publication path. Only a file reload has
-    /// an additional post-stage exact file snapshot requirement.
+    /// File reload, guest proposal and direct definition admission share one
+    /// checked dependent-rebuild and binary-staged publication path. Only a
+    /// file reload has an additional post-stage exact file snapshot requirement.
     fn install_definition(
         &mut self,
         definition: noble_contracts::source::Prepared,
@@ -872,7 +973,7 @@ impl Live {
                 "live profile has no host-effect grant for this definition".into(),
             ));
         }
-        let preview = match self.session.frontend.preview_core_definition(&definition) {
+        let preview = match self.session.frontend.preview_core_rebuild(&definition) {
             Ok(preview) => preview,
             Err(error) => return Ok(ReloadDecision::Refused(error.diagnostic().message.clone())),
         };
@@ -930,7 +1031,9 @@ impl Live {
         if let Some((selected, candidate)) = file {
             match snapshot(selected) {
                 Ok(after)
-                    if after.digest == candidate.digest && after.identity == candidate.identity => {
+                    if after.digest == candidate.digest
+                        && after.identity == candidate.identity
+                        && after.directory == candidate.directory => {
                 }
                 other => {
                     let discarded = self.worker()?.discard_binary()?;
@@ -988,7 +1091,9 @@ impl Live {
         let source_freshness = match file {
             Some((selected, candidate)) => match snapshot(selected) {
                 Ok(after)
-                    if after.digest == candidate.digest && after.identity == candidate.identity =>
+                    if after.digest == candidate.digest
+                        && after.identity == candidate.identity
+                        && after.directory == candidate.directory =>
                 {
                     "matched-at-postpublish-check"
                 }
@@ -1178,6 +1283,14 @@ fn snapshot(path: &std::path::Path) -> Result<Snapshot, std::string::String> {
         .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_CLOEXEC)
         .open(parent)
         .map_err(|error| error.to_string())?;
+    let directory_before = directory.metadata().map_err(|error| error.to_string())?;
+    let parent_before = std::fs::symlink_metadata(parent).map_err(|error| error.to_string())?;
+    let directory_identity = (directory_before.dev(), directory_before.ino());
+    if !parent_before.is_dir()
+        || directory_identity != (parent_before.dev(), parent_before.ino())
+    {
+        return Err("selected source directory changed before snapshot".into());
+    }
     let before = std::fs::symlink_metadata(path).map_err(|error| error.to_string())?;
     if !before.is_file() || before.len() > u64::from(LIMIT) {
         return Err("reload requires a bounded regular file, not a symlink".into());
@@ -1208,29 +1321,24 @@ fn snapshot(path: &std::path::Path) -> Result<Snapshot, std::string::String> {
     }
     let opened_after = opened.metadata().map_err(|error| error.to_string())?;
     let after = std::fs::symlink_metadata(path).map_err(|error| error.to_string())?;
-    let identity = |metadata: &std::fs::Metadata| {
-        (
-            metadata.dev(),
-            metadata.ino(),
-            metadata.len(),
-            metadata.mtime(),
-            metadata.mtime_nsec(),
-            metadata.ctime(),
-            metadata.ctime_nsec(),
-        )
-    };
+    let directory_after = directory.metadata().map_err(|error| error.to_string())?;
+    let parent_after = std::fs::symlink_metadata(parent).map_err(|error| error.to_string())?;
     if !after.is_file()
         || !opened_after.is_file()
-        || identity(&before) != identity(&opened_before)
-        || identity(&opened_before) != identity(&opened_after)
-        || identity(&opened_after) != identity(&after)
+        || !parent_after.is_dir()
+        || directory_identity != (directory_after.dev(), directory_after.ino())
+        || directory_identity != (parent_after.dev(), parent_after.ino())
+        || source_identity(&before) != source_identity(&opened_before)
+        || source_identity(&opened_before) != source_identity(&opened_after)
+        || source_identity(&opened_after) != source_identity(&after)
     {
         return Err("source changed during bounded snapshot".into());
     }
     Ok(Snapshot {
         digest: crate::workflow::intrinsic::sha256(&bytes),
         bytes,
-        identity: identity(&after),
+        identity: source_identity(&after),
+        directory: directory_identity,
     })
 }
 

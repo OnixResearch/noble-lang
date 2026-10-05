@@ -21,6 +21,7 @@ fn atom(
         super::super::plan::Action::Unit => (5, 0, None, 0),
         super::super::plan::Action::Program(child) => (3, 0, Some(child), 0),
         super::super::plan::Action::Word(definition) => (2, i64::from(definition), None, 0),
+        super::super::plan::Action::TextByte => (2, 26, None, 0),
         super::super::plan::Action::Quote(_, _, _) => (2, 8, None, 0),
         super::super::plan::Action::Call(_, identity) => {
             (15, i64::from_le_bytes(identity.to_le_bytes()), None, 0)

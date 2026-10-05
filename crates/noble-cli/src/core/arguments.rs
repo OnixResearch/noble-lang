@@ -6,6 +6,7 @@ pub(super) struct Options {
     pub inputs: std::vec::Vec<InputType>,
     pub modules: std::vec::Vec<std::path::PathBuf>,
     pub declared_modules: bool,
+    pub text_byte_cursor: bool,
     pub bindings: Option<std::path::PathBuf>,
     pub manifest: Option<bindings::Manifest>,
     pub framed: bool,
@@ -41,6 +42,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         inputs: std::vec::Vec::new(),
         modules: std::vec::Vec::new(),
         declared_modules: false,
+        text_byte_cursor: false,
         bindings: None,
         manifest: None,
         framed: false,
@@ -55,7 +57,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             .ok_or_else(usage))));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
     }
-    let mut seen = [""; 9];
+    let mut seen = [""; 10];
     let mut seen_count = 0_usize;
     while at < arguments.len() {
         let name = attempt!(arguments[at].to_str().ok_or_else(usage));
@@ -75,11 +77,21 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             options.declared_modules = true;
             continue;
         }
+        if name == "--text-byte-cursor" {
+            if !is_session && !options.compile_only {
+                return Err(usage());
+            }
+            options.text_byte_cursor = true;
+            continue;
+        }
         let value = attempt!(arguments.get(at).ok_or_else(usage));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
         attempt!(set(&mut options, name, value, maximum));
     }
     if options.declared_modules != options.bindings.is_some() {
+        return Err(usage());
+    }
+    if options.text_byte_cursor && options.declared_modules {
         return Err(usage());
     }
     if !options.declared_modules && !options.modules.is_empty() {

@@ -1377,7 +1377,19 @@ The [MLIVE milestone](roadmap.json) follows M4 and DXM1 and is specified by
 [the backend boundary](BACKEND-EXPERIMENTS.md) and its
 [active change](../.cairn/changes/live-wasm-reload/proposal.md). It proposes
 an opt-in persistent WebAssembly bytecode VM REPL/watch with atomic next-call
-source reload and narrowly host-granted guest self-edit. The guest may enqueue
+source reload and narrowly host-granted guest self-edit. A guarded resident
+Node/V8 REPL and in-process Wasm byte emitter support Core-only atomic rebuild
+for tested acyclic dependents under explicit host-selected file reload/direct
+admission. Automatic watch is unavailable: a directory rename notification
+does not authenticate the inode's bytes at rename time, and a writable mapping
+or external hardlink can alter them without a selected-basename content event.
+Use explicit `:reload`; automatic H-LIVE-01 and complete LIVE-05/watch
+acceptance, including declared modules, effectful watch, full in-flight
+source-change controls and code retirement, remain open.
+Bounded guest self-edit refuses any current effective dependent rather than
+rebuilding it. Indirect self-rebind/cycle refusal was exercised in scoped
+live-child checks; general proof and canonical LIVE case acceptance remain
+open. The guest may enqueue
 a checked pure Program candidate during Wasm execution, but only host-side
 post-return independent admission and a generation/definition-identity CAS
 may publish it. Guest publication leaves the selected file unchanged; LIVE-09
@@ -1388,6 +1400,9 @@ engine remains separately unselected. The [MCB milestone](roadmap.json) follows
 M4 only and is specified by [the C11 AOT contract](C-BACKEND.md) and its
 [active change](../.cairn/changes/c-backend/proposal.md); native execution
 requires a pinned sandbox and separately checked source/C/ELF admission.
+Full watch-case acceptance, declared-module snapshots, complete source-bound
+LIVE-02 acceptance and code retirement remain open despite the guarded
+Core-only rebuild.
 Neither complete opt-in backend profile is accepted: all
 [LIVE](conformance/live-wasm-cases.json) and
 [CB](conformance/c-backend-cases.json) cases are absent/not-run and proofs

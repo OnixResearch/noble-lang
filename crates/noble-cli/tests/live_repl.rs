@@ -3,8 +3,7 @@
 
 use std::fs::{self, DirBuilder, File};
 use std::io::{BufRead, BufReader, Read, Write};
-use std::os::unix::fs::DirBuilderExt;
-use std::os::unix::fs::symlink;
+use std::os::unix::fs::{symlink, DirBuilderExt};
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -51,6 +50,7 @@ impl Fixture {
         let mut file = File::create_new(&temporary)?;
         file.write_all(replacement.as_bytes())?;
         file.sync_all()?;
+        drop(file);
         fs::rename(temporary, &self.source)?;
         Ok(())
     }
@@ -98,6 +98,10 @@ impl LiveChild {
                 &generation.to_string(),
             ]);
         }
+        Self::spawn(command)
+    }
+
+    fn spawn(mut command: Command) -> Result<Self, Box<dyn std::error::Error>> {
         let mut child = command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -184,7 +188,7 @@ impl Drop for LiveChild {
 
 fn live_ack(report: &Value, expected_stack: &[&str]) -> (u64, String) {
     assert_eq!(text_field(report, "schema"), "noble-live-report/v1");
-    assert_eq!(text_field(report, "stage"), "wasm-live");
+    assert_eq!(text_field(report, "stage"), "wasm-live", "{report}");
     assert_eq!(text_field(report, "outcome"), "reload-committed");
     assert_eq!(number_field(report, "guest_requests"), 0);
     assert_eq!(number_field(report, "protected_operations"), 0);
@@ -201,6 +205,17 @@ fn live_ack(report: &Value, expected_stack: &[&str]) -> (u64, String) {
         "{report}"
     );
     (generation, digest.to_owned())
+}
+
+fn assert_generation_inspection(report: &Value, generation: u64, stack: &Value) {
+    assert_eq!(text_field(report, "schema"), "noble-live-report/v1");
+    assert_eq!(text_field(report, "stage"), "inspection");
+    assert_eq!(text_field(report, "outcome"), "generation-observed");
+    assert_eq!(text_field(report, "engine"), "v8");
+    assert_eq!(number_field(report, "generation"), generation);
+    assert_eq!(&report["stack"], stack);
+    assert_eq!(number_field(report, "guest_requests"), 0);
+    assert_eq!(number_field(report, "protected_operations"), 0);
 }
 
 fn number_field(report: &Value, key: &str) -> u64 {
@@ -238,7 +253,7 @@ fn assert_stack(report: &Value, values: &[&str]) {
 }
 
 fn normal(report: &Value, stack: &[&str]) {
-    assert_eq!(text_field(report, "outcome"), "normal");
+    assert_eq!(text_field(report, "outcome"), "normal", "{report}");
     assert_stack(report, stack);
 }
 
@@ -251,6 +266,13 @@ fn refused_reload(report: &Value, stack: &[&str]) -> u64 {
     assert_eq!(number_field(report, "protected_operations"), 0);
     assert_stack(report, stack);
     number_field(report, "generation")
+}
+
+fn assert_no_candidate_span(report: &Value) {
+    assert!(
+        report.get("source_span_basis").is_none() && report.get("source_span").is_none(),
+        "refusal without a selected-source diagnostic claimed candidate provenance: {report}"
+    );
 }
 
 fn effect_policy_refusal(report: &Value, stack: &[&str], generation: u64) {
@@ -272,6 +294,7 @@ fn current_generation(
     // A different selected path must fail before reading any candidate bytes.
     let other = fixture.directory.join("unselected.noble");
     let report = live.submit(&format!(":reload {}", other.display()))?;
+    assert_no_candidate_span(&report);
     Ok(refused_reload(&report, stack))
 }
 
@@ -296,6 +319,98 @@ fn live_01_reload_ack_precedes_fresh_next_top_level_call() -> Result<(), Box<dyn
 }
 
 #[test]
+fn generation_inspection_without_selected_source_is_exact_and_inert(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "repl", "--engine", "v8"]);
+    let mut live = LiveChild::spawn(command)?;
+    let empty = serde_json::json!([]);
+    assert_generation_inspection(&live.submit(":generation")?, 0, &empty);
+    for malformed in [":generation ", ":generation anything", ":generationX"] {
+        assert_eq!(refused_reload(&live.submit(malformed)?, &[]), 0);
+    }
+    assert_generation_inspection(&live.submit(":generation")?, 0, &empty);
+    live.finish()
+}
+
+#[test]
+fn generation_inspection_preserves_typed_program_and_tracks_only_publication(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    let (initial_generation, _) = live_ack(&live.report()?, &[]);
+    assert_eq!(initial_generation, 1);
+    assert_generation_inspection(&live.submit(":generation")?, 1, &serde_json::json!([]));
+
+    let defined = live.submit("def twice [ addone addone ]")?;
+    assert_eq!(text_field(&defined, "outcome"), "defined");
+    assert_generation_inspection(&live.submit(":generation")?, 2, &serde_json::json!([]));
+
+    let saved = live.submit("20 \"keep\" [ addone ]")?;
+    assert_eq!(text_field(&saved, "outcome"), "normal");
+    assert_eq!(saved["stack"][0]["value"], "20");
+    assert_eq!(saved["stack"][1]["type"], "Text");
+    assert_eq!(saved["stack"][1]["value"], "keep");
+    assert_eq!(saved["stack"][2]["type"], "Program");
+    assert_eq!(saved["stack"][2]["interface"]["stack_in"], "[I64]");
+    assert_eq!(saved["stack"][2]["interface"]["stack_out"], "[I64]");
+    assert_generation_inspection(&live.submit(":generation")?, 2, &saved["stack"]);
+
+    let next = live.submit("7")?;
+    assert_eq!(text_field(&next, "outcome"), "normal");
+    assert_eq!(next["stack"][3]["value"], "7");
+    assert_generation_inspection(&live.submit(":generation")?, 2, &next["stack"]);
+
+    fixture.replace("def addone [ 2 +")?;
+    let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&refused, "outcome"), "reload-refused");
+    assert_eq!(number_field(&refused, "generation"), 2);
+    assert_eq!(refused["stack"], next["stack"]);
+    assert_generation_inspection(&live.submit(":generation")?, 2, &next["stack"]);
+
+    fixture.replace("def addone [ 2 + ]")?;
+    let committed = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&committed, "outcome"), "reload-committed");
+    assert_eq!(number_field(&committed, "generation"), 3);
+    assert_eq!(committed["stack"], next["stack"]);
+    assert_generation_inspection(&live.submit(":generation")?, 3, &next["stack"]);
+
+    let old = live.submit("drop dip")?;
+    assert_eq!(text_field(&old, "outcome"), "normal");
+    assert_eq!(old["stack"][0]["value"], "21");
+    assert_eq!(old["stack"][1]["value"], "keep");
+    assert_generation_inspection(&live.submit(":generation")?, 3, &old["stack"]);
+
+    let fresh = live.submit("20 twice")?;
+    assert_eq!(text_field(&fresh, "outcome"), "normal");
+    assert_eq!(fresh["stack"][2]["value"], "24");
+    assert_generation_inspection(&live.submit(":generation")?, 3, &fresh["stack"]);
+    live.finish()
+}
+
+#[test]
+fn unsupported_live_subcommand_refuses_before_publication(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let output = Command::new(env!("CARGO_BIN_EXE_noble"))
+        .args(["live", "watch"])
+        .arg(&fixture.source)
+        .stdin(Stdio::null())
+        .output()?;
+    assert_eq!(output.status.code(), Some(2));
+    let reports = String::from_utf8(output.stdout)?;
+    let [refused] = reports.lines().map(serde_json::from_str::<Value>)
+        .collect::<Result<Vec<_>, _>>()?
+        .try_into()
+        .map_err(|_| "expected one unsupported-command refusal")?;
+    assert_eq!(text_field(&refused, "outcome"), "reload-refused");
+    assert_eq!(number_field(&refused, "generation"), 0);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    assert!(text_field(&refused, "diagnostic").contains("usage: noble live repl"));
+    Ok(())
+}
+
+#[test]
 fn malformed_reload_preserves_the_prior_namespace_and_typed_stack()
 -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
@@ -307,6 +422,35 @@ fn malformed_reload_preserves_the_prior_namespace_and_typed_stack()
     fixture.replace("def addone [ 2 +")?;
     let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
     assert_eq!(refused_reload(&refused, &["7"]), generation);
+    normal(&live.submit("addone")?, &["8"]);
+    live.finish()
+}
+
+#[test]
+fn wrong_type_reload_reports_candidate_origin_and_keeps_old_definition()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    let prior = live.submit("7")?;
+    normal(&prior, &["7"]);
+    let generation = current_generation(&mut live, &fixture, &["7"])?;
+
+    fixture.replace("def addone [ true + ]")?;
+    let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(refused_reload(&refused, &["7"]), generation);
+    assert_eq!(refused["stack"], prior["stack"]);
+    assert_eq!(refused["source_span_basis"], "refused-candidate-file-byte-offsets");
+    assert_eq!(refused["source_span"], serde_json::json!({"start": 18, "end": 19}));
+    assert_eq!(refused["word_or_join"], "+");
+    assert_eq!(refused["required_stack"], "?stack I64 I64");
+    assert_eq!(refused["actual_stack"], "?stack Bool");
+    assert_eq!(refused["constraint"], "stack-type");
+    assert_eq!(
+        refused["value_origin_or_unavailable"],
+        serde_json::json!({"start": 13, "end": 17})
+    );
+    assert_generation_inspection(&live.submit(":generation")?, generation, &prior["stack"]);
     normal(&live.submit("addone")?, &["8"]);
     live.finish()
 }
@@ -383,7 +527,7 @@ fn reload_preserves_text_and_old_program_while_new_calls_use_new_definition()
 
 fn rejected_replacement_keeps_old_addone(
     replacement: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<Value, Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
@@ -394,19 +538,23 @@ fn rejected_replacement_keeps_old_addone(
     let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
     assert_eq!(refused_reload(&refused, &["7"]), generation);
     normal(&live.submit("addone")?, &["8"]);
-    live.finish()
+    live.finish()?;
+    Ok(refused)
 }
 
 #[test]
 fn incompatible_definition_interface_refuses_without_changing_session()
 -> Result<(), Box<dyn std::error::Error>> {
-    rejected_replacement_keeps_old_addone("def addone [ dup ]")
+    let refused = rejected_replacement_keeps_old_addone("def addone [ dup ]")?;
+    assert_no_candidate_span(&refused);
+    Ok(())
 }
 
 #[test]
 fn effectful_definition_without_host_grant_refuses_without_guest_effects()
 -> Result<(), Box<dyn std::error::Error>> {
-    rejected_replacement_keeps_old_addone("def addone [ \"x\" test.emit 2 + ]")
+    rejected_replacement_keeps_old_addone("def addone [ \"x\" test.emit 2 + ]")?;
+    Ok(())
 }
 
 #[test]
@@ -437,25 +585,173 @@ fn direct_effectful_submission_without_binding_never_enters_guest()
 }
 
 #[test]
-fn dependent_definition_must_not_ack_a_stale_rebuild() -> Result<(), Box<dyn std::error::Error>> {
+fn dependent_rebuild_is_transitive_and_preserves_saved_old_program()
+-> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
-    let defined = live.submit("def twice [ addone addone ]")?;
-    assert_eq!(text_field(&defined, "outcome"), "defined");
+    assert_eq!(text_field(&live.submit("def twice [ addone addone ]")?, "outcome"), "defined");
+    assert_eq!(text_field(&live.submit("def four [ twice twice ]")?, "outcome"), "defined");
+    assert_eq!(text_field(&live.submit("def unrelated [ 10 + ]")?, "outcome"), "defined");
+    let saved = live.submit("[ addone ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program");
+    let other = fixture.directory.join("unselected.noble");
+    let probe = live.submit(&format!(":reload {}", other.display()))?;
+    assert_eq!(text_field(&probe, "outcome"), "reload-refused");
+    assert_eq!(probe["stack"], saved["stack"]);
+    let generation = number_field(&probe, "generation");
+
+    fixture.replace("def addone [ 2 + ]")?;
+    let ack = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    assert_eq!(number_field(&ack, "generation"), generation + 1);
+    assert_eq!(ack["stack"], saved["stack"]);
+    assert_eq!(number_field(&ack, "guest_requests"), 0);
+    normal(&live.submit("20 swap run")?, &["21"]);
+    normal(&live.submit("20 four")?, &["21", "28"]);
+    normal(&live.submit("20 unrelated")?, &["21", "28", "30"]);
+    live.finish()
+}
+
+#[test]
+fn dependent_inside_nested_quotation_resolves_new_identity()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(text_field(&live.submit("def wrapped [ [ addone ] ]")?, "outcome"), "defined");
+    normal(&live.submit("20 wrapped run")?, &["21"]);
+    fixture.replace("def addone [ 2 + ]")?;
+    live_ack(&live.submit(&format!(":reload {}", fixture.source.display()))?, &["21"]);
+    normal(&live.submit("20 wrapped run")?, &["21", "22"]);
+    live.finish()
+}
+
+#[test]
+fn queued_reload_ack_follows_prior_wasm_invocation()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    fixture.replace("def addone [ 2 + ]")?;
+    let input = live.stdin.as_mut().ok_or("missing live stdin")?;
+    input.write_all(format!("20 addone\n:reload {}\n", fixture.source.display()).as_bytes())?;
+    input.flush()?;
+    normal(&live.report()?, &["21"]);
+    live_ack(&live.report()?, &["21"]);
+    normal(&live.submit("20 addone")?, &["21", "22"]);
+    live.finish()
+}
+
+#[test]
+fn incompatible_replacement_with_dependents_never_acknowledges()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(text_field(&live.submit("def twice [ addone addone ]")?, "outcome"), "defined");
     normal(&live.submit("20 twice")?, &["22"]);
     let generation = current_generation(&mut live, &fixture, &["22"])?;
+    fixture.replace("def addone [ dup ]")?;
+    let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(refused_reload(&refused, &["22"]), generation);
+    assert_no_candidate_span(&refused);
+    normal(&live.submit("20 twice")?, &["22", "22"]);
+    live.finish()
+}
 
+#[test]
+fn indirect_self_rebind_via_existing_dependents_never_acknowledges()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def f [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(text_field(&live.submit("def g [ f ]")?, "outcome"), "defined");
+    assert_eq!(text_field(&live.submit("def h [ g ]")?, "outcome"), "defined");
+    normal(&live.submit("20 h")?, &["21"]);
+    let generation = current_generation(&mut live, &fixture, &["21"])?;
+    fixture.replace("def f [ h ]")?;
+    let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(refused_reload(&refused, &["21"]), generation);
+    assert!(
+        text_field(&refused, "diagnostic").contains("previous identity"),
+        "{refused}"
+    );
+    normal(&live.submit("20 f")?, &["21", "21"]);
+    normal(&live.submit("20 h")?, &["21", "21", "21"]);
+    live.finish()
+}
+
+#[test]
+fn old_program_keeps_shadowed_target_across_dependent_rebuilds()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def f [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(text_field(&live.submit("def offset [ 10 + ]")?, "outcome"), "defined");
+    assert_eq!(text_field(&live.submit("def use [ f offset ]")?, "outcome"), "defined");
+    // Capture before the explicit direct redefinition. That transaction
+    // rebuilds the current `use` while keeping this older Program immutable.
+    let saved = live.submit("[ use ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program");
+    assert_eq!(text_field(&live.submit("def offset [ 100 + ]")?, "outcome"), "defined");
+    fixture.replace("def f [ 2 + ]")?;
+    let ack = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    assert_eq!(ack["stack"], saved["stack"]);
+    normal(&live.submit("20 swap run")?, &["31"]);
+    normal(&live.submit("20 use")?, &["31", "122"]);
+    live.finish()
+}
+
+#[test]
+fn dependent_rebuild_exceeding_retained_source_budget_refuses_atomically()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    let dependent = format!("def twice [ addone addone \"{}\" drop ]", "x".repeat(33_000));
+    assert_eq!(text_field(&live.submit(&dependent)?, "outcome"), "defined");
+    normal(&live.submit("20 twice")?, &["22"]);
+    let generation = current_generation(&mut live, &fixture, &["22"])?;
     fixture.replace("def addone [ 2 + ]")?;
     let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
     assert_eq!(refused_reload(&refused, &["22"]), generation);
-    // This is a fail-closed gate, not LIVE-02's eventual positive rebuild.
+    assert!(
+        text_field(&refused, "diagnostic").contains("retained namespace byte limit"),
+        "{refused}"
+    );
     normal(&live.submit("20 twice")?, &["22", "22"]);
     live.finish()
 }
 
 const EVOLVE: &str =
     "def evolve [ dup 18 - quote [ + ] compose self.generation swap self.propose drop 1 + ]";
+
+#[test]
+fn generation_inspection_retains_grant_until_guest_publication(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(EVOLVE)?;
+    let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
+    live_ack(&live.report()?, &[]);
+    assert_grant(&live, 1)?;
+    assert_generation_inspection(&live.submit(":generation")?, 1, &serde_json::json!([]));
+
+    fixture.replace("def evolve [ 2 +")?;
+    let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(refused_reload(&refused, &[]), 1);
+    assert_generation_inspection(&live.submit(":generation")?, 1, &serde_json::json!([]));
+    fixture.replace(EVOLVE)?;
+
+    normal(&live.submit("20 evolve")?, &["21"]);
+    assert_eq!(text_field(&live.report()?, "outcome"), "proposal-pending");
+    let committed = live.report()?;
+    assert_eq!(text_field(&committed, "outcome"), "proposal-committed");
+    assert_eq!(number_field(&committed, "generation"), 2);
+    assert_generation_inspection(&live.submit(":generation")?, 2, &committed["stack"]);
+    normal(&live.submit("20 evolve")?, &["21", "22"]);
+    live.finish()
+}
 
 fn assert_grant(live: &LiveChild, generation: u64) -> Result<(), Box<dyn std::error::Error>> {
     let report = live.report()?;
@@ -573,7 +869,7 @@ fn named_guest_selects_a_different_captured_i64_from_runtime_input()
 }
 
 #[test]
-fn postreturn_dependent_refusal_keeps_completed_invocation_stack_and_grant()
+fn postreturn_guest_dependent_refusal_retains_stack_and_grant()
 -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new(EVOLVE)?;
     let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
@@ -589,24 +885,21 @@ fn postreturn_dependent_refusal_keeps_completed_invocation_stack_and_grant()
         "grant-selected",
         "{after_definition}"
     );
-    normal(&live.submit("20 evolve")?, &["21"]);
-    assert_eq!(text_field(&live.report()?, "outcome"), "proposal-pending");
-    let refused = live.report()?;
-    assert_eq!(
-        text_field(&refused, "outcome"),
-        "proposal-refused",
-        "{refused}"
-    );
-    assert_eq!(number_field(&refused, "generation"), 2);
-    assert_stack(&refused, &["21"]);
-    assert!(number_field(&refused, "guest_requests") >= 2);
-    assert!(
-        text_field(&refused, "diagnostic").contains("dependent"),
-        "{refused}"
-    );
-    normal(&live.submit("20 evolve")?, &["21", "21"]);
-    assert_eq!(text_field(&live.report()?, "outcome"), "proposal-pending");
-    assert_eq!(text_field(&live.report()?, "outcome"), "proposal-refused");
+    for (input, stack) in [(20, &["21"][..]), (21, &["21", "22"][..])] {
+        normal(&live.submit(&format!("{input} evolve"))?, stack);
+        assert_eq!(text_field(&live.report()?, "outcome"), "proposal-pending");
+        let refused = live.report()?;
+        assert_eq!(text_field(&refused, "outcome"), "proposal-refused", "{refused}");
+        assert_eq!(number_field(&refused, "generation"), 2);
+        assert_stack(&refused, stack);
+        assert!(number_field(&refused, "guest_requests") >= 2);
+        assert_eq!(number_field(&refused, "candidate_prepare_requests"), 0);
+        assert!(
+            text_field(&refused, "diagnostic").contains("dependent"),
+            "{refused}"
+        );
+    }
+    assert_eq!(fs::read_to_string(&fixture.source)?, EVOLVE);
     live.finish()
 }
 

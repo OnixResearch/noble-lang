@@ -22,7 +22,9 @@ const DEFINITION_LIMIT: usize = 256;
 // Core live sessions reserve 24/25 for their two checked operations.
 // Ordinary and declared sessions retain their original fixed prefixes.
 fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
-    if !env.declared_modules && env.effects.contains(&noble_kernel::types::EffId(3)) {
+    if env.text_cursor && !env.declared_modules {
+        27
+    } else if !env.declared_modules && env.effects.contains(&noble_kernel::types::EffId(3)) {
         26
     } else if !env.declared_modules && env.effects.contains(&noble_kernel::types::EffId(1)) {
         24
@@ -63,6 +65,7 @@ impl Work {
 /// Persistent semantic identities and disjoint compiled-code allocations.
 pub struct Compiler {
     live: bool,
+    text_cursor: bool,
     generation: u32,
     functions: u32,
     text_end: u32,
@@ -124,6 +127,7 @@ impl Compiler {
     pub fn new() -> Self {
         Self {
             live: false,
+            text_cursor: false,
             generation: 0,
             functions: 4,
             text_end: TEXT_START,
@@ -139,6 +143,11 @@ impl Compiler {
         Self { live: true, ..Self::new() }
     }
 
+    /// The pure byte cursor is a separate compiler admission profile.
+    pub fn new_text_cursor() -> Self {
+        Self { text_cursor: true, ..Self::new() }
+    }
+
     /// Independently accept and lower without changing existing code identities.
     pub fn prepare(
         &self,
@@ -148,7 +157,7 @@ impl Compiler {
             remaining: u64::from(submission.request.limits.work),
         };
         attempt!(preflight::check(submission, &mut work));
-        let checked = attempt!(admission::check(submission, self.live, &mut work));
+        let checked = attempt!(admission::check(submission, self.live, self.text_cursor, &mut work));
         attempt!(admission::meter::compilation(
             &checked,
             &self.signatures,
@@ -170,6 +179,7 @@ impl Compiler {
         }
         let mut next = Self {
             live: self.live,
+            text_cursor: self.text_cursor,
             generation: match self.generation.checked_add(1) {
                 Some(value) => value,
                 None => return Err(crate::Diagnostic::Exhausted),

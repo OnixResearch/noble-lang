@@ -590,7 +590,7 @@
       "required_requirements": ["K-LIVE-01", "H-LIVE-01", "H-LIVE-02", "H-LIVE-03", "B-LIVE-01", "BE-LIVE-01", "DX-LIVE-01", "S-LIVE-01", "V-LIVE-01", "EV-LIVE-01"],
       "acceptance_cases": ["LIVE-01", "LIVE-02", "LIVE-03", "LIVE-04", "LIVE-05", "LIVE-06", "LIVE-07", "LIVE-08"],
       "acceptance_status": "not-started",
-      "non_claims": ["No live CLI, in-process byte emitter, transactional reload, strict interpreter engine, executed LIVE cases, source-to-VM proof or revision to historical M4/MC1/MC2/DXM1 evidence exists."]
+      "non_claims": ["Automatic watch is unavailable: a selected-basename rename event cannot authenticate inode bytes against later writable mappings or out-of-directory hardlinks. Automatic H-LIVE-01 and complete LIVE-05/watch acceptance, including declared-module/effectful watch, full in-flight source-change controls and code retirement, remain open; complete source-bound LIVE-02 acceptance, interpreter execution, executed LIVE cases, source-to-VM proof and any revision to historical M4/MC1/MC2/DXM1 evidence also remain absent."]
     },
     {
       "id": "MCB",

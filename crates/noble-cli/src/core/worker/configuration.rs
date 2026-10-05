@@ -54,7 +54,7 @@ fn artifact_destination(
 
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; seven fixed ABI fields must be constructed in protocol order. The manifest and emission path remain checked data, so synthetic assertions would add no independent invariant."
+    reason = "Owner: noble-maintainers; the fixed ABI fields must be constructed in protocol order. The manifest and emission path remain checked data, so synthetic assertions would add no independent invariant."
 )]
 fn payload(
     options: &super::super::arguments::Options,
@@ -75,6 +75,10 @@ fn payload(
         (
             "declared_modules",
             crate::workflow::encoding::Json::Bool(options.declared_modules),
+        ),
+        (
+            "text_byte_cursor",
+            crate::workflow::encoding::Json::Bool(options.text_byte_cursor),
         ),
         ("bindings", bindings),
         (

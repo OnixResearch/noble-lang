@@ -84,6 +84,19 @@ To retain the source, reports, WAT, Wasm, and tool observations:
 both modes use the same source typing rules. `noble compile SOURCE` emits
 checked WAT without executing the program.
 
+Use `noble session --text-byte-cursor` or
+`noble compile SOURCE --text-byte-cursor` to select the **Text-Byte-Cursor-v1**
+experimental profile (contract in the active
+[cursor change](.cairn/changes/text-byte-cursor/design.md), not yet selected
+for the ordinary language). Only this opt-in profile resolves pure `text.byte`.
+It consumes `Text I64` and leaves the original Text and one `I64`: unsigned
+UTF-8 byte 0..255 for an in-range offset, -1 at exactly the byte length
+(including empty Text), -2 for a negative offset, or -3 for an offset beyond
+the length. Increment the offset only after a nonnegative byte. The operation
+does not copy a suffix, allocate an aggregate, or request a host effect.
+Ordinary `run`, declared modules, and live REPL cannot select this profile.
+Managed-Wasm reports from the opted-in session identify `Text-Byte-Cursor-v1`.
+
 ### Persistent sessions
 
 A session keeps its stack, definitions, captured values, and compiled programs
@@ -142,9 +155,42 @@ Back in the REPL, enter `:reload /absolute/math.noble`, wait for a
 `reload-committed` ACK, then enter `20 addone` to use the new definition.
 Replies are JSON lines. An ACK's `source_sha256` identifies the checked bytes
 committed as that generation, not a promise that a concurrently changed path
-still contains them; reload again after another save. Failed reloads preserve
-the prior stack and namespace. Existing saved pure Programs retain their old
-definition even when a new top-level call uses the replacement.
+remains at those bytes. Failed reloads preserve the prior stack and namespace.
+If the selected candidate fails source checking, its `reload-refused` report
+retains structured source diagnostics such as `source_span`, `word_or_join`,
+ordered stack constraints and value origin when available.
+`source_span_basis: "refused-candidate-file-byte-offsets"` means those spans
+refer to the refused candidate file's bytes, not the installed old definition.
+Existing saved pure Programs retain their old definition even when a new
+top-level call uses the replacement.
+
+The exact `:generation` line inspects the current Core-only live namespace
+without reloading, reading the source file, invoking the worker or consuming
+a self-edit grant. Its one `noble-live-report/v1` JSON line has
+`stage: "inspection"`, `outcome: "generation-observed"`, the host publication
+`generation` (not the Wasm submission count), `engine: "v8"` and an ordered
+`stack` of checked typed values, including retained Programs. Ordinary
+expression submissions and refused reloads do not advance this generation;
+direct host definition publication, successful selected-file reload and
+host-admitted guest proposal publication do. Extra text, including a trailing
+space, is not the command. This inspection is not a reload ACK or a current
+selected-file hash, and does not complete DX-LIVE-01 or any LIVE case.
+
+`noble live watch` is unavailable. A directory rename notification proves
+only that a pathname changed, not which bytes the renamed inode contained
+at that instant. A writable mapping or a hardlink outside the selected
+directory can change those bytes without a corresponding selected-basename
+content notification. Automatic publication could therefore ACK bytes
+written in place after the rename. Use `live repl --source` and explicit
+`:reload /absolute/math.noble` for a complete save; no automatic watch ACK
+or full H-LIVE-01/LIVE-05 acceptance is claimed.
+
+For the tested acyclic Core `addone→twice→four` chain, selected-file reload
+rebuilds transitive dependents in dependency order. New top-level calls see the
+rebuilt generation after one source-generation ACK; saved old Programs still
+use their original identities and dependencies. Scoped indirect self-rebind
+refusal was exercised in a live child, but this guarded in-process Wasm path
+does not establish general cycle safety, proof or declared-module snapshots.
 
 An exact host grant can allow the selected named definition to propose its
 own *pure* replacement from an actual runtime input. Put this in
@@ -169,14 +215,20 @@ independent fresh session starting with `21 evolve` instead captures `3` and
 later makes `20 evolve` return `23`. The guest only queues a bounded snapshot
 during actual Wasm execution. After return, the host independently checks the
 candidate's restricted pure I64 arithmetic recipe and one-use generation
-grant before publication. `self.generation` and `self.propose` are live-only
-effects, not permissions for arbitrary code or file writes. The selected file
-remains unchanged: a guest-derived `source_sha256` is not the
+grant before publication. `self.generation` and `self.propose` are live-only.
+The selected file remains unchanged: a guest-derived `source_sha256` is not the
 `selected_file_sha256`, and its freshness is `not-file-backed`.
+The bounded guest self-edit lane refuses a proposal when the selected name
+has any current effective dependent; it does not rebuild those dependents.
+Only host-selected file reload and direct host definition admission exercise
+the acyclic Core transitive rebuild. A rejected guest candidate publishes
+neither a successor nor a stale ACK.
 
-This is a **guarded partial** live profile, not watch, transitive dependent
-rebuilding, interpreter execution, general guest mutation, or PushGP
-evolution. `--engine interpreter` refuses rather than falling back to V8.
+This is a **guarded partial** live profile, not automatic H-LIVE-01/LIVE-05
+watch acceptance, selected declared-module snapshots, complete source-bound LIVE-02
+acceptance, interpreter execution, code retirement, general guest mutation,
+or PushGP evolution.
+`--engine interpreter` refuses rather than falling back to V8.
 Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
 remain `absent`/`not-run`, proof open, with no accepted source-bound assurance;
 see the [active change](.cairn/changes/live-wasm-reload/tasks.md) and
@@ -190,7 +242,7 @@ does not make every other feature available in that runtime.
 | Area | Implemented scope |
 |---|---|
 | [Core language and Wasm sessions](specs/ROADMAP.md#m4-implementation-and-retained-acceptance) | Wrapping `I64` arithmetic; Bool, Text, Unit, Pair, Sum, and List values; stack operations; checked branches; quotation, capture, composition, execution, and reflection; nonrecursive definitions. |
-| [Guarded live REPL](#guarded-live-repl-opt-in-partial) | Explicit selected-file reload and host-granted, input-derived pure self-edit in a resident Node/V8 arena; partial and unaccepted, with no watch or dependent rebuild. |
+| [Guarded live REPL](#guarded-live-repl-opt-in-partial) | In-process Wasm emission and explicit reload use one resident Node/V8 arena and checked publication; tested acyclic dependent rebuild and retained old Programs. Automatic watch is unavailable because rename events cannot authenticate bytes. Guest self-edit refuses current dependents; scoped indirect self-rebind/cycle refusal was exercised without general proof or canonical LIVE case acceptance. No declared-module snapshots or full LIVE-05 acceptance. |
 | [Declared modules](specs/ROADMAP.md#dxm1-selected-declared-modules-bounded-acceptance-complete) | Opt-in opaque types, two-constructor variants, versioned session-local modules, imports and exports, and an explicit typed `test.emit` adapter. Available through `compile` and framed `session`. |
 | [Contracts and proof checking](specs/PROGRAM-CONTRACTS.md#12-verification-tooling) | A pure contract language, Lean obligations, proof/refutation checking, and `verify` / `explain-proof`. |
 | [Evidence companions](specs/PROGRAM-CONTRACTS.md#83-mc2-companion-implementation-and-evidence-boundaries) | Live certified programs, evidence composition, guarded invocation, and proof-required build admission for the selected core scope. |
@@ -205,7 +257,10 @@ general libraries and capability modules, portable package identities, and
 general distributed services remain open.
 
 The [exact calculator](.cairn/specs/calculator/spec.md) is a planned reference
-application. The [typed-worker design](specs/WORKER-CONFORMANCE.md) describes
+application. Its [numeric error schema prerequisite](verification/calculator-errors/README.md)
+has a finite 18-case compiled-guest observation on a rebuilt binary, explicitly
+**not source-bound**; the opt-in byte cursor does not establish MA1 or CALC
+acceptance. The [typed-worker design](specs/WORKER-CONFORMANCE.md) describes
 future worker admission and lifecycle contracts. Neither is a completed
 application or agent runtime.
 

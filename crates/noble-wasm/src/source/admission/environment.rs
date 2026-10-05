@@ -56,9 +56,10 @@ fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     live: bool,
+    text_cursor: bool,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
-    let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(26);
+    let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(27);
     if env.defs.len() > maximum_rows
         || submission.definitions.len() > super::super::DEFINITION_LIMIT
     {
@@ -82,6 +83,9 @@ pub(super) fn check(
     {
         return Err(crate::Diagnostic::Invalid);
     }
+    if env.text_cursor != text_cursor || (text_cursor && (live || env.declared_modules)) {
+        return Err(crate::Diagnostic::Invalid);
+    }
     let has_noncanonical_core_declarations = !env.declared_modules
         && (!env.nominals.is_empty()
             || !env.generic_variants.is_empty()
@@ -92,8 +96,8 @@ pub(super) fn check(
     if has_invalid_metadata || has_noncanonical_core_declarations {
         return Err(crate::Diagnostic::Invalid);
     }
-    let (fixed, count) = attempt!(canonical_prefix(env, live));
-    let effects = if count == 23 {
+    let (fixed, count) = attempt!(canonical_prefix(env, live, text_cursor));
+    let effects = if count == 23 || text_cursor {
         alloc::vec![noble_kernel::types::EffId(0)]
     } else {
         alloc::vec![noble_kernel::types::EffId(0), noble_kernel::types::EffId(1)]
@@ -130,7 +134,27 @@ pub(super) fn check(
 fn canonical_prefix(
     env: &noble_kernel::contracts::Env,
     live: bool,
+    text_cursor: bool,
 ) -> Result<(noble_kernel::contracts::Env, usize), crate::Diagnostic> {
+    if text_cursor {
+        let fixed = attempt!(noble_kernel::contracts::text_cursor_environment()
+            .map_err(|_| crate::Diagnostic::Defective));
+        if env.defs.len() < 27 {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        let mut index = 0usize;
+        while index < 27 {
+            if !same_scheme(&env.defs[index], &fixed.defs[index])
+                || env.kinds[index] != fixed.kinds[index]
+                || !env.deps[index].is_empty()
+                || env.definition_owners[index].is_some()
+            {
+                return Err(crate::Diagnostic::Invalid);
+            }
+            index += 1;
+        }
+        return Ok((fixed, 27));
+    }
     let mut fixed = attempt!(bootstrap(env));
     attempt!(check_builtin_rows(env, &fixed));
     let has_abort = env.defs.len() > 23
@@ -250,7 +274,7 @@ pub(super) fn exact_contract(
     reason = "Owner: noble-maintainers; explicit row and component bounds precede saturating work accounting; oversized environments and unrepresentable costs must exhaust the shared budget rather than panic."
 )]
 pub(super) fn work(environment: &noble_kernel::contracts::Env) -> Result<u64, crate::Diagnostic> {
-    let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(26);
+    let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(27);
     if environment.defs.len() > maximum_rows || environment.deps.len() > maximum_rows {
         return Err(crate::Diagnostic::Exhausted);
     }

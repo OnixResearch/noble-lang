@@ -35,9 +35,9 @@ pub const USAGE: &str = "usage:
   --source and --allow-effects are selected by the host invoker, never by candidate claims.
   Admission rebuilds selected source and compares final Wasm bytes before fresh isolated execution.
   noble run SOURCE [--opt off|on] [--emit NEW_DIR]
-  noble compile SOURCE [--input-type I64|Bool|Text|Unit ...]
+  noble compile SOURCE [--text-byte-cursor] [--input-type I64|Bool|Text|Unit ...]
   noble compile SOURCE --declared-modules --bindings HOST_FILE [--module MODULE_FILE ...] [--input-type MODULE@VERSION.TYPE ...]
-  noble session [--framed] [--opt off|on] [--emit NEW_DIR]
+  noble session [--text-byte-cursor] [--framed] [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   HOST_FILE: bind MODULE@VERSION test.emit ADAPTER Text -- ! test.emit allow|deny
              bind MODULE@VERSION test.clock ADAPTER -- I64 ! test.clock allow|deny script I64[,I64...]
@@ -45,6 +45,10 @@ pub const USAGE: &str = "usage:
   Preparation limits: --source-bytes N --source-nodes N --source-depth N --source-work N
 
 Core-Bootstrap uses the selected managed-linear-memory backend.
+--text-byte-cursor selects Text-Byte-Cursor-v1 for ordinary compile/session only;
+it adds pure text.byte, retaining Text and returning unsigned byte 0..255,
+EOF -1 at the byte length, negative-offset -2 or past-end -3. Increment
+the offset only after a nonnegative byte. It cannot combine with --declared-modules.
 run checks one complete file before executing any of it.
 session reads one source submission per line; --framed reads a decimal byte count,
 newline, then exactly that many source bytes (permits multiline and invalid UTF-8).
@@ -74,9 +78,17 @@ impl Session {
             None => None,
         };
         Ok(Self {
-            frontend: noble_contracts::source::Session::new(),
+            frontend: if options.text_byte_cursor {
+                noble_contracts::source::Session::new_text_cursor()
+            } else {
+                noble_contracts::source::Session::new()
+            },
             declared,
-            compiler: noble_wasm::source::Compiler::new(),
+            compiler: if options.text_byte_cursor {
+                noble_wasm::source::Compiler::new_text_cursor()
+            } else {
+                noble_wasm::source::Compiler::new()
+            },
             stack: std::vec::Vec::new(),
             worker: None,
             submissions: 0,
@@ -106,7 +118,9 @@ impl Session {
         }
         let prepared = match self.frontend.prepare(source, &self.stack, options.limits) {
             Ok(prepared) => prepared,
-            Err(error) => return Ok(output::Report::source_error(&error, self.submissions)),
+            Err(error) => return Ok(output::Report::source_error_for_profile(
+                &error, self.submissions, options.text_byte_cursor,
+            )),
         };
         if prepared.is_definition() {
             attempt!(
@@ -114,7 +128,9 @@ impl Session {
                     .commit(prepared)
                     .map_err(output::Failure::source)
             );
-            return Ok(output::Report::defined(self.submissions));
+            return Ok(output::Report::defined_for_profile(
+                self.submissions, options.text_byte_cursor,
+            ));
         }
         let submission = attempt!(prepared.submission().ok_or_else(|| {
             output::Failure::new(
@@ -127,7 +143,9 @@ impl Session {
         }));
         let compiled = match self.compiler.prepare(submission) {
             Ok(compiled) => compiled,
-            Err(error) => return Ok(output::Report::backend_error(error, self.submissions)),
+            Err(error) => return Ok(output::Report::backend_error_for_profile(
+                error, self.submissions, options.text_byte_cursor,
+            )),
         };
         if self.worker.is_none() {
             self.worker = Some(attempt!(worker::Engine::start(options)));

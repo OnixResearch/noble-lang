@@ -5,11 +5,18 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let is_declared = parsed
         .as_ref()
         .is_ok_and(|options| options.declared_modules);
+    let is_cursor = parsed
+        .as_ref()
+        .is_ok_and(|options| options.text_byte_cursor);
     let result = parsed.and_then(execute);
     match result {
         Ok(exit) => std::process::ExitCode::from(exit),
         Err(error) => {
-            let report = super::output::Report::failure(&error, is_declared);
+            let report = if is_cursor {
+                super::output::Report::failure_with_profile(&error, "Text-Byte-Cursor-v1")
+            } else {
+                super::output::Report::failure(&error, is_declared)
+            };
             if let Err(write_error) = super::output::print(&report) {
                 eprintln!("noble: {}", write_error.message);
             }

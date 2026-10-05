@@ -164,6 +164,20 @@ impl Input<'_> {
         if def.0 == 8 {
             return quotation::lower(output.interface, output.compiler, output.work);
         }
+        if self.submission.environment.text_cursor {
+            if (22..=25).contains(&def.0) {
+                return Err(crate::Diagnostic::Invalid);
+            }
+            if def.0 == 26 {
+                return if self.submission.environment.kind(def)
+                    == Some(noble_kernel::contracts::Behavior::TextByte)
+                {
+                    Ok(super::Action::TextByte)
+                } else {
+                    Err(crate::Diagnostic::Invalid)
+                };
+            }
+        }
         if def.0 == 24 && super::super::builtin_count(&self.submission.environment) == 26 {
             return match self.owner {
                 Some(owner) => Ok(super::Action::LivePropose(owner)),
@@ -237,6 +251,8 @@ impl Input<'_> {
                 | noble_kernel::contracts::Behavior::Cons
                 | noble_kernel::contracts::Behavior::ListCase
                 | noble_kernel::contracts::Behavior::TestEmit
+                | noble_kernel::contracts::Behavior::Reserved
+                | noble_kernel::contracts::Behavior::TextByte
                 | noble_kernel::contracts::Behavior::Named => Err(crate::Diagnostic::Invalid),
             },
             None => Err(crate::Diagnostic::Invalid),

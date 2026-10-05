@@ -66,7 +66,17 @@ impl Encoding {
                 literal(&mut self.out, lit, body, node)
             }
             noble_kernel::untrusted::Node::Invocation { def, .. } => {
-                if def.0 < super::super::builtin_count(&submission.environment) {
+                if submission.environment.text_cursor && (22..=25).contains(&def.0) {
+                    return Err(crate::Diagnostic::Invalid);
+                }
+                if submission.environment.text_cursor && def.0 == 26 {
+                    if submission.environment.kind(*def)
+                        != Some(noble_kernel::contracts::Behavior::TextByte)
+                    {
+                        return Err(crate::Diagnostic::Invalid);
+                    }
+                    attempt!(self.out.append(b"b26"));
+                } else if def.0 < super::super::builtin_count(&submission.environment) {
                     attempt!(self.out.append(b"b"));
                     attempt!(self.out.number(u64::from(def.0)));
                 } else {
@@ -136,6 +146,8 @@ impl Encoding {
                                 | noble_kernel::contracts::Behavior::Cons
                                 | noble_kernel::contracts::Behavior::ListCase
                                 | noble_kernel::contracts::Behavior::TestEmit
+                                | noble_kernel::contracts::Behavior::Reserved
+                                | noble_kernel::contracts::Behavior::TextByte
                                 | noble_kernel::contracts::Behavior::Named
                                 | noble_kernel::contracts::Behavior::BoundEmit(_)
                                 | noble_kernel::contracts::Behavior::BoundClock(_) => {

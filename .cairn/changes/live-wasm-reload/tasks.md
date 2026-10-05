@@ -8,22 +8,42 @@
 
 ## Phase 2: Implementation underway; acceptance open
 
-Guarded partial `noble live repl` now stages checked, effect-free Core definitions
-and publishes explicit selected-file reloads in the resident Node/V8 arena.
-Its acknowledgments name the pinned committed source hash, not an assertion
-that a concurrently rewritten path still contains those bytes; a bounded
+Guarded partial `noble live repl` now stages checked Core definitions with an
+in-process Wasm byte emitter and publishes explicit selected-file reloads in
+the resident Node/V8 arena. Host-selected file reload and direct definition
+admission use bounded Core dependency-order rebuild and atomic publication,
+exercised for the acyclic `addone→twice→four` chain. A host-admitted guest
+proposal with any current effective dependent refuses instead of rebuilding
+it; eligible dependent-free candidates can publish. One
+source-generation ACK follows the host publication; a frontend-private
+successor may have multiple internal commits. Saved old Programs retain
+their original identities and dependencies. Exact `:generation` inspection
+reports the host publication generation, actual V8 engine and ordered
+checked typed stack without file access, worker submission or grant
+consumption; it is not full DX-LIVE-01 or accepted LIVE case evidence.
+Automatic `noble live watch SOURCE` is unavailable. `IN_MOVED_TO` gives
+pathname provenance but cannot authenticate bytes at rename time: writable
+mappings or external hardlinks can mutate a renamed inode without a selected
+basename content notification. The unsound automatic path was removed, not
+left as a no-op alias. Explicit `:reload` remains the host-controlled path;
+its ACK names pinned committed source bytes, not an assertion that a
+concurrently rewritten path still contains those bytes. A bounded
 postpublication path check reports its observation separately. Source reads
 pin a directory descriptor and reject symlink final components. Unselected
 or non-granted effectful definitions/submissions, incompatible
-replacements, unstable files and replacements with existing named dependents
-fail closed. A saved old pure `Program` can still execute against its original
-identity while a new top-level lookup uses the replacement; an effectful old
-Program requires current host authority, and typed values remain retained.
+replacements, unstable files and exhausted rebuild budgets fail closed before
+candidate worker staging. An effectful old Program requires current host
+authority, and typed values remain retained. Failed post-invocation guest
+admission retains the completed invocation's stack and unused grant.
 
-This is not the complete live profile: watch, declared-module snapshots,
-transitive dependent rebuild (LIVE-02), interpreter execution, code retirement,
-complete scenario receipts and source-bound proof/assurance remain absent.
-The canonical LIVE case states remain `absent`/`not-run`; none of the
+Indirect self-rebind/cycle refusal was exercised in scoped live-child checks;
+general proof and canonical LIVE case acceptance remain open. This is not the
+complete automatic H-LIVE-01/LIVE-05 watch profile: declared modules,
+effectful watch, full in-flight source-change controls, code retirement,
+complete source-bound LIVE-02 acceptance, interpreter execution, complete
+scenario receipts and
+source-bound proof/assurance remain absent.
+The canonical LIVE case states remain `absent`/`not-run`/proof `open`; none of the
 implementation or acceptance tasks below is complete.
 
 - [ ] [serial] Implement and test in-process Wasm encoder/verifier with independently accepted source, exact selected ABI and isolated staging. r[BE-LIVE-01] r[S-LIVE-01]

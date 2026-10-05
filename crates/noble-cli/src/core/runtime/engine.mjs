@@ -194,11 +194,12 @@ function checkLiveBytes(bytes, abi) {
 
 export class CoreEngine {
   constructor(selection, abi, { optimized = false, artifacts = null, bindings = [],
-    declared_modules = false, declared_extension = null, in_process_live = false } = {}) {
+    declared_modules = false, declared_extension = null, in_process_live = false,
+    text_byte_cursor = false } = {}) {
     this.selection = selection;
     this.abi = abi;
     this.inProcessLive = in_process_live === true;
-    configureDeclaredAbi(this, abi, declared_modules, declared_extension, bindings);
+    configureDeclaredAbi(this, abi, declared_modules, declared_extension, bindings, text_byte_cursor);
     this.optimized = optimized;
     initializeHostState(this, bindings);
     this.pending = null;

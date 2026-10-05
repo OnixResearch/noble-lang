@@ -86,6 +86,9 @@ fn lookup(
             return Ok(target);
         }
     }
+    if word == b"text.byte" && session.text_cursor {
+        return Ok(super::Target::Builtin(26));
+    }
     if word == b"self.propose" {
         if session.live_selected.as_deref() == declaration {
             if declaration.is_some() {

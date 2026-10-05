@@ -71,6 +71,8 @@ pub(crate) const fn data_slot(
         | Some(crate::contracts::Behavior::Nil)
         | Some(crate::contracts::Behavior::Cons)
         | Some(crate::contracts::Behavior::ListCase)
+        | Some(crate::contracts::Behavior::TextByte)
+        | Some(crate::contracts::Behavior::Reserved)
         | Some(crate::contracts::Behavior::TestEmit)
         | Some(crate::contracts::Behavior::BoundEmit(_))
         | Some(crate::contracts::Behavior::BoundClock(_))

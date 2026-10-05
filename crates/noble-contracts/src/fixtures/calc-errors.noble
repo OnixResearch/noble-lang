@@ -1,0 +1,67 @@
+module calc_errors@1 [
+    variant LimitIO InputBytes Unit public OutputSize Unit public
+    export LimitIO
+    export LimitIO.InputBytes
+    export LimitIO.OutputSize
+    export LimitIO.match
+
+    variant LimitNumeric NumericDigits Unit public IntermediateIntegerBits Unit public
+    export LimitNumeric
+    export LimitNumeric.NumericDigits
+    export LimitNumeric.IntermediateIntegerBits
+    export LimitNumeric.match
+
+    variant LimitDepth SyntaxDepth Unit public CallDepth Unit public
+    export LimitDepth
+    export LimitDepth.SyntaxDepth
+    export LimitDepth.CallDepth
+    export LimitDepth.match
+
+    variant LimitRemaining EvaluationWork Unit public NestedDepth LimitDepth public
+    export LimitRemaining
+    export LimitRemaining.EvaluationWork
+    export LimitRemaining.NestedDepth
+    export LimitRemaining.match
+
+    variant LimitPrimary IO LimitIO public Numeric LimitNumeric public
+    export LimitPrimary
+    export LimitPrimary.IO
+    export LimitPrimary.Numeric
+    export LimitPrimary.match
+
+    variant LimitCategory Primary LimitPrimary public Remaining LimitRemaining public
+    export LimitCategory
+    export LimitCategory.Primary
+    export LimitCategory.Remaining
+    export LimitCategory.match
+
+    variant DomainArithmetic ZeroDenominator Unit public DivisionByZero Unit public
+    export DomainArithmetic
+    export DomainArithmetic.ZeroDenominator
+    export DomainArithmetic.DivisionByZero
+    export DomainArithmetic.match
+
+    variant DomainConversion NonIntegral Unit public OutOfRange Unit public
+    export DomainConversion
+    export DomainConversion.NonIntegral
+    export DomainConversion.OutOfRange
+    export DomainConversion.match
+
+    variant DomainExtended NonIntegerExponent Unit public Arithmetic DomainArithmetic public
+    export DomainExtended
+    export DomainExtended.NonIntegerExponent
+    export DomainExtended.Arithmetic
+    export DomainExtended.match
+
+    variant DomainError Conversion DomainConversion public Extended DomainExtended public
+    export DomainError
+    export DomainError.Conversion
+    export DomainError.Extended
+    export DomainError.match
+
+    variant NumericError ResourceLimit LimitCategory public Domain DomainError public
+    export NumericError
+    export NumericError.ResourceLimit
+    export NumericError.Domain
+    export NumericError.match
+]

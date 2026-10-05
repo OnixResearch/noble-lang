@@ -60,11 +60,30 @@ impl Report {
         if declared {
             Self::declared_static(failure.context, &failure.message, 0, None)
         } else {
-            Self::static_report(failure.context, &failure.message, 0, None, None)
+            Self::static_report(
+                failure.context,
+                &failure.message,
+                0,
+                None,
+                None,
+                "Core-Bootstrap",
+            )
         }
     }
 
+    pub fn failure_with_profile(failure: &Failure, profile: &str) -> Self {
+        Self::static_report(failure.context, &failure.message, 0, None, None, profile)
+    }
+
     pub fn source_error(error: &noble_contracts::source::Error, submission: u64) -> Self {
+        Self::source_error_for_profile(error, submission, false)
+    }
+
+    pub fn source_error_for_profile(
+        error: &noble_contracts::source::Error,
+        submission: u64,
+        text_byte_cursor: bool,
+    ) -> Self {
         let diagnostic = error.diagnostic();
         Self::static_report(
             ErrorContext {
@@ -75,16 +94,35 @@ impl Report {
             submission,
             Some(diagnostic.span),
             diagnostic.join(),
+            profile(text_byte_cursor),
         )
     }
 
     pub fn backend_error(error: noble_wasm::Diagnostic, submission: u64) -> Self {
-        let failure = Failure::backend(error);
-        Self::static_report(failure.context, &failure.message, submission, None, None)
+        Self::backend_error_for_profile(error, submission, false)
     }
 
+    pub fn backend_error_for_profile(
+        error: noble_wasm::Diagnostic,
+        submission: u64,
+        text_byte_cursor: bool,
+    ) -> Self {
+        let failure = Failure::backend(error);
+        Self::static_report(
+            failure.context,
+            &failure.message,
+            submission,
+            None,
+            None,
+            profile(text_byte_cursor),
+        )
+    }
 
     pub fn defined(submission: u64) -> Self {
+        Self::defined_for_profile(submission, false)
+    }
+
+    pub fn defined_for_profile(submission: u64, text_byte_cursor: bool) -> Self {
         Self::static_report(
             ErrorContext {
                 stage: "check",
@@ -94,6 +132,7 @@ impl Report {
             submission,
             None,
             None,
+            profile(text_byte_cursor),
         )
     }
 
@@ -107,6 +146,7 @@ impl Report {
         submission: u64,
         span: Option<noble_contracts::Span>,
         join: Option<&noble_contracts::JoinDiagnostic>,
+        profile: &str,
     ) -> Self {
         let mut json = crate::workflow::encoding::object([
             (
@@ -115,7 +155,7 @@ impl Report {
             ),
             (
                 "profile",
-                crate::workflow::encoding::string("Core-Bootstrap"),
+                crate::workflow::encoding::string(profile),
             ),
             (
                 "backend",
@@ -209,6 +249,14 @@ impl Report {
             self.outcome.as_str(),
             "trap" | "runtime-exhausted" | "internal-failure"
         )
+    }
+}
+
+const fn profile(text_byte_cursor: bool) -> &'static str {
+    if text_byte_cursor {
+        "Text-Byte-Cursor-v1"
+    } else {
+        "Core-Bootstrap"
     }
 }
 

@@ -71,6 +71,10 @@ pub enum Behavior {
     Cons,
     /// `list.case`.
     ListCase,
+    /// Pure byte-offset inspection of an immutable Text in the opt-in cursor profile.
+    TextByte,
+    /// Non-callable slots preserving globally disjoint builtin identities.
+    Reserved,
     /// The supplied `test.emit` operation.
     TestEmit,
     /// A required `test.emit` binding, retaining the immutable adapter slot.
@@ -248,6 +252,8 @@ pub struct Env {
     /// Module registration also enables it; it is required for declarations
     /// with no nominal types or bound operations.
     pub declared_modules: bool,
+    /// Separately selected pure Text byte cursor profile; never part of Core or declared modules.
+    pub text_cursor: bool,
     /// Owner of each definition, supplied independently of a candidate.
     pub definition_owners: alloc::vec::Vec<Option<u64>>,
     /// Host-confirmed immutable dispatch identities for required operations.
@@ -442,8 +448,44 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
         resource_kinds: alloc::vec![FIXTURE_RESOURCE],
         caller_module: None,
         declared_modules: false,
+        text_cursor: false,
         definition_owners: alloc::vec![None; table.len()],
         bound_adapters: alloc::vec::Vec::new(),
         effects: alloc::vec![TEST_EMIT],
     })
+}
+
+/// Add the single pure Text cursor contract without changing the bootstrap table.
+pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
+    use crate::shapes::Pattern;
+    use crate::words::{Scheme, Variable, VariableKind};
+
+    let mut env = environment()?;
+    let reserved = Scheme {
+        var_kinds: alloc::vec![],
+        stack_in: alloc::vec![],
+        stack_out: alloc::vec![],
+        effects: alloc::vec![],
+    };
+    reserved.validate()?;
+    for _ in 23..26 {
+        env.defs.push(reserved.clone());
+        env.kinds.push(Behavior::Reserved);
+        env.deps.push(alloc::vec::Vec::new());
+        env.definition_owners.push(None);
+    }
+    let tail = Pattern::StackVar(Variable(0));
+    let scheme = Scheme {
+        var_kinds: alloc::vec![VariableKind::Stack],
+        stack_in: alloc::vec![tail.clone(), Pattern::Text, Pattern::I64],
+        stack_out: alloc::vec![tail, Pattern::Text, Pattern::I64],
+        effects: alloc::vec![],
+    };
+    scheme.validate()?;
+    env.defs.push(scheme);
+    env.kinds.push(Behavior::TextByte);
+    env.deps.push(alloc::vec::Vec::new());
+    env.definition_owners.push(None);
+    env.text_cursor = true;
+    Ok(env)
 }

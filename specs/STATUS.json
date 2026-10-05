@@ -1746,7 +1746,7 @@
       "evidence": [],
       "milestone": "MLIVE",
       "acceptance": "not-started",
-      "implementation_scope": "Active design plus guarded partial live REPL: host-selected file reload and retained old Programs are not the complete in-process Wasm emission, dependent rebuild, watch, interpreter, retirement or guest self-edit profile. LIVE-01 through LIVE-10 remain absent/not-run; no accepted source-bound execution or proof claim."
+      "implementation_scope": "Active design plus guarded partial resident Node/V8 REPL and in-process Wasm emission: explicit selected-file reload/direct admission exercise atomic transitive Core rebuild for acyclic dependents; old Programs retain their identities. Automatic watch is unavailable because a selected-basename rename event cannot authenticate inode bytes against later writable mappings or external hardlinks; automatic H-LIVE-01 and complete LIVE-05/watch acceptance remain open. Guest self-edit refuses any current effective dependent; indirect self-rebind/cycle refusal was exercised in scoped live-child checks without general proof or accepted LIVE case evidence. Declared modules, effectful watch, full in-flight source-change controls, code retirement, complete source-bound LIVE-02 acceptance and interpreter execution remain open. LIVE-01 through LIVE-10 remain absent/not-run/proof-open; no accepted source-bound execution or assurance claim."
     },
     {
       "id": "c-backend",
@@ -1770,7 +1770,7 @@
     "choreography": "selected-bounded-M8-local-synchronous-service; execution-passed; general-choreography-and-refinement-open",
     "durability": "optional-deferred",
     "declared_modules": "selected-bounded-DXM1-versioned-session-local-declarations-and-test.emit-adapter; execution-passed; proofs-and-general-module-interfaces-open",
-    "live_wasm_reload": "optional guarded partial resident Node/V8 REPL and host-granted self-edit runtime; ordinary run/session unchanged; canonical LIVE-01..10 absent/not-run/open with no accepted source-bound assurance; watch, dependent rebuild, interpreter and full profile open",
+    "live_wasm_reload": "optional guarded partial resident Node/V8 REPL and in-process Wasm emitter; explicit reload/direct admission use checked atomic Core rebuild for acyclic dependents; automatic watch unavailable because rename events cannot authenticate inode bytes; automatic H-LIVE-01 and complete LIVE-05/watch acceptance open; bounded guest self-edit refuses current dependents; scoped indirect self-rebind/cycle refusal exercised without general proof or accepted case evidence; ordinary run/session unchanged; canonical LIVE-01..10 absent/not-run/proof-open with no accepted source-bound assurance; declared modules, effects, full in-flight source-change controls, retirement, complete LIVE-02 acceptance and interpreter open",
     "c_backend": "optional-nonselected-C11-AOT-specification-only; absent/not-run; no native execution"
   },
   "next_milestone": null,

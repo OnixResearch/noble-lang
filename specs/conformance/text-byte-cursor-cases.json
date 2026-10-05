@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "active-text-byte-cursor-unpromoted-design",
+  "cases": [
+    {
+      "id": "TEXT-01",
+      "profile": "Text-Byte-Cursor-v1",
+      "kind": "runtime",
+      "requirements": ["DX-TEXT-01"],
+      "input": {
+        "harness": "compiled-managed-wasm-byte-cursor",
+        "optimization": ["off", "on"],
+        "same_text_sequence": "Aé offsets 0,1,2,3 yield 65,195,169,-1 with preserved original Text handle",
+        "vectors": [
+          {"text": "Aé", "offset": "0", "result": "65"},
+          {"text": "Aé", "offset": "1", "result": "195"},
+          {"text": "Aé", "offset": "2", "result": "169"},
+          {"text": "Aé", "offset": "3", "result": "-1"},
+          {"text": "", "offset": "0", "result": "-1"},
+          {"text": "Aé", "offset": "-1", "result": "-2"},
+          {"text": "Aé", "offset": "-9223372036854775808", "result": "-2"},
+          {"text": "Aé", "offset": "4", "result": "-3"},
+          {"text": "Aé", "offset": "4294967297", "result": "-3"},
+          {"text": "Aé", "offset": "9223372036854775807", "result": "-3"}
+        ],
+        "negative_controls": ["ordinary-text.byte-unbound", "forged-private-definition-23-rejected", "declared-plus-cursor-rejected", "ordinary-I64-wrapping-unchanged"]
+      },
+      "expected": {
+        "stage": "wasm",
+        "outcome": "exact-byte-or-disjoint-status-for-each-vector",
+        "original_text_unchanged": true,
+        "guest_requests": 0,
+        "copied_suffix": false,
+        "cursor_heap_allocation": false,
+        "native_trap": false,
+        "negative_controls": "all-rejected-or-unchanged-as-applicable",
+        "calculator_accepted": false
+      },
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
+    }
+  ]
+}

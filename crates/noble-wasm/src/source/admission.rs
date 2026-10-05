@@ -142,12 +142,13 @@ fn kernel_limits(
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     live: bool,
+    text_cursor: bool,
     work: &mut super::Work,
 ) -> Result<Accepted, crate::Diagnostic> {
     attempt!(work.charge(1));
     let environment_work = attempt!(environment::work(&submission.environment));
     attempt!(work.charge(environment_work));
-    attempt!(environment::check(submission, live));
+    attempt!(environment::check(submission, live, text_cursor));
     attempt!(bounds(submission, environment_work, work));
     let limits = attempt!(kernel_limits(submission, environment_work, work));
     let definitions = attempt!(definitions::accept(submission, limits, work));

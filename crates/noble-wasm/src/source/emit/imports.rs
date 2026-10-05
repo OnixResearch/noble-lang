@@ -124,6 +124,15 @@ pub(super) fn runtime(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat"))
     ));
+    if plan.has_text_byte {
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/text-byte.wat"
+            ))
+        ));
+    }
     if plan.has_core_emit {
         attempt!(out.append(
             b"(func $op_emit (local $text i32)
