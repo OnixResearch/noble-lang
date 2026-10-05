@@ -178,9 +178,18 @@ pub(super) fn runtime(
  ;; the only place this provisional host-call failure may be cleared.
  (global.set $failure (i32.const 5))
  (if (i32.eqz (call $host_emit (call $x (local.get $text)) (call $y (local.get $text))))
-  (then (global.set $failure (i32.const 0)))))
+  (then (global.set $failure (i32.const 0))))
 "
         ));
+        if plan.live_test_hosts {
+            // The kernel's live-slot bootstrap emits Unit; Core source keeps
+            // its historical no-result effect. Do not materialize a response
+            // when the independently authorized host call denied the effect.
+            attempt!(out.append(
+                b" (if (i32.eqz (global.get $failure)) (then (call $push_unit)))\n"
+            ));
+        }
+        attempt!(out.append(b")\n"));
     }
     if plan.has_core_abort {
         attempt!(out.append(

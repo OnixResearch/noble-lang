@@ -302,6 +302,17 @@ impl Session {
         })
     }
 
+    /// Only a trusted host which independently granted the bootstrap test
+    /// effects may select this profile. Source text cannot enable them, and
+    /// ordinary live-slot sessions remain unable to resolve `test.emit`.
+    pub fn new_live_slots_with_test_hosts(
+        environment: noble_kernel::contracts::Env,
+    ) -> Result<Self, Error> {
+        let mut session = Self::new_live_slots(environment.enable_live_test_hosts())?;
+        session.hosts = true;
+        Ok(session)
+    }
+
     /// Resolve a source spelling such as `Account@1` only to an already
     /// registered exact host nominal resource schema. This does not mint a
     /// resource or a borrowed live reference.

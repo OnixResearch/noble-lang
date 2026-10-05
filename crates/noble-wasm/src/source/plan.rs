@@ -74,6 +74,7 @@ pub(super) struct Layout {
     pub(super) declared_modules: bool,
     pub(super) live: bool,
     pub(super) live_slots: bool,
+    pub(super) live_test_hosts: bool,
     pub(super) live_sites: alloc::vec::Vec<super::LiveSiteMetadata>,
     pub(super) has_nominals: bool,
     pub(super) has_core_emit: bool,
@@ -184,6 +185,7 @@ fn start(
         declared_modules: submission.environment.declared_modules,
         live: submission.environment.effects.contains(&noble_kernel::types::EffId(3)),
         live_slots: submission.environment.live_slots,
+        live_test_hosts: submission.environment.live_test_hosts,
         live_sites: alloc::vec::Vec::new(),
         has_nominals: !submission.environment.nominals.is_empty()
             || !submission.environment.generic_variants.is_empty(),
@@ -209,7 +211,11 @@ fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
     for program in &layout.programs {
         for operation in &program.operations {
             match operation.action {
-                Action::Word(22 | 23) if layout.declared_modules || layout.live => {
+                Action::Word(22) if layout.live
+                    || (layout.declared_modules && !layout.live_test_hosts) => {
+                    return Err(crate::Diagnostic::Invalid);
+                }
+                Action::Word(23) if layout.declared_modules || layout.live => {
                     return Err(crate::Diagnostic::Invalid);
                 }
                 Action::Word(22) => layout.has_core_emit = true,

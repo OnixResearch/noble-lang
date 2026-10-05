@@ -22,6 +22,11 @@ impl super::super::Env {
         if self.kinds.len() != self.defs.len() || self.bound_adapters.len() > self.defs.len() {
             return false;
         }
+        if self.live_test_hosts
+            && (!self.live_slots || !self.declared_modules || self.text_cursor)
+        {
+            return false;
+        }
         if (!self.nominals.is_empty()
             || !self.generic_variants.is_empty()
             || !self.bound_adapters.is_empty())

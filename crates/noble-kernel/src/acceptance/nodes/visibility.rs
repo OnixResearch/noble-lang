@@ -40,12 +40,7 @@ fn visible_behavior(
         return env.text_cursor && !env.declared_modules && def.0 == 26;
     }
     if let crate::contracts::Behavior::TestEmit = kind {
-        return !env.declared_modules
-            && !env.text_cursor
-            && env.nominals.is_empty()
-            && env.generic_variants.is_empty()
-            && env.bound_adapters.is_empty()
-            && env.caller_module.is_none();
+        return env.ambient_test_emit_visible();
     }
     ordinary_visible(kind)
 }

@@ -254,6 +254,9 @@ pub struct Env {
     pub live_resource_nominals: alloc::vec::Vec<crate::types::NominalTypeId>,
     /// Independently selected live-slot profile; absent in Core and draft.
     pub live_slots: bool,
+    /// Host-selected permission to typecheck the bootstrap test emitter in
+    /// live-slot source. This flag is not a runtime effect authorization.
+    pub live_test_hosts: bool,
     /// Caller selected by the host for this independent acceptance run.
     pub caller_module: Option<u64>,
     /// Explicit opt-in profile selected outside the untrusted candidate.
@@ -279,6 +282,23 @@ impl Env {
             self.effects.push(LIVE_DISPATCH);
         }
         self
+    }
+
+    /// The host must select this independently of source text and authorize
+    /// each emitted effect separately at the execution boundary.
+    pub fn enable_live_test_hosts(mut self) -> Self {
+        self.live_test_hosts = true;
+        self
+    }
+
+    pub(crate) fn ambient_test_emit_visible(&self) -> bool {
+        !self.text_cursor
+            && self.caller_module.is_none()
+            && self.bound_adapters.is_empty()
+            && ((!self.declared_modules
+                && self.nominals.is_empty()
+                && self.generic_variants.is_empty())
+                || (self.live_slots && self.live_test_hosts))
     }
 
     /// Register a host-owned versioned nominal backed by a unique opaque
@@ -487,6 +507,7 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
         resource_kinds: alloc::vec![FIXTURE_RESOURCE],
         live_resource_nominals: alloc::vec::Vec::new(),
         live_slots: false,
+        live_test_hosts: false,
         caller_module: None,
         declared_modules: false,
         text_cursor: false,

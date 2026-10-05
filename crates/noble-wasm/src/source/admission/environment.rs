@@ -87,6 +87,7 @@ pub(super) fn check(
         return Err(crate::Diagnostic::Invalid);
     }
     if env.live_slots != live_slots
+        || (env.live_test_hosts && !live_slots)
         || (live_slots && (live || text_cursor || !env.declared_modules))
         || env.text_cursor != text_cursor
         || (text_cursor && (live || env.declared_modules))
