@@ -2,7 +2,7 @@
 #![register_tool(tigerstyle)]
 
 use noble_kernel::contracts::environment;
-use noble_kernel::types::Ty;
+use noble_kernel::types::{EffSet, Ty};
 
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
@@ -49,6 +49,42 @@ fn selected_named_artifact_binds_checked_definition_not_invocation_wrapper() -> 
         .map_err(|_| "raw independently checked candidate failed admission")?;
     if raw.selected_target().is_some() || raw.wat() != checked.wat() {
         return Err("source selection altered code or a raw submission gained authority".into());
+    }
+    Ok(())
+}
+
+#[test]
+fn quotation_program_has_its_own_checked_interface_and_code_owner() -> Result<(), String> {
+    let session = noble_contracts::source::Session::new_live_slots(
+        environment().map_err(|error| format!("{error:?}"))?.enable_live_slots(),
+    ).map_err(|error| error.diagnostic().message.clone())?;
+    let source = session.prepare(b"[ 1 + ]", &[], LIMITS)
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let prepared = noble_wasm::source::Compiler::new_live_slots()
+        .prepare(source.submission().ok_or("quotation submission missing")?)
+        .map_err(|_| "quotation failed independent Wasm admission")?;
+    let [wrapper, saved] = prepared.program_metadata() else {
+        return Err("quotation did not emit both wrapper and selected Program".into());
+    };
+    let program = Ty::program(vec![Ty::I64], vec![Ty::I64], EffSet::empty());
+    let span = prepared.code_span();
+    if wrapper.program_index == saved.program_index
+        || wrapper.stack_in != []
+        || wrapper.stack_out != [program]
+        || saved.stack_in != [Ty::I64]
+        || saved.stack_out != [Ty::I64]
+        || saved.effects != EffSet::empty()
+        || saved.capture_left != 0 || saved.capture_right != 0
+        || saved.recipe_leaves != 2
+        || saved.entry < span.start
+        || saved.entry >= span.start + span.length
+        || prepared.target_metadata().is_none_or(|root| {
+            root.root_program_index != wrapper.program_index
+                || root.input_signature != wrapper.input_signature
+                || root.output_signature != wrapper.output_signature
+        })
+    {
+        return Err("saved quote was conflated with its entry wrapper or had forgeable captures".into());
     }
     Ok(())
 }

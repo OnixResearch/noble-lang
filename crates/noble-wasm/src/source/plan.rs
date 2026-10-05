@@ -42,9 +42,17 @@ pub(super) struct Program {
     pub(super) input: u32,
     pub(super) output: u32,
     pub(super) effects: u32,
+    /// Moved into published metadata only in the opt-in profile.
+    pub(super) logical: Option<ProgramTypes>,
     pub(super) operations: alloc::vec::Vec<Operation>,
     pub(super) depth: u32,
     pub(super) leaves: u32,
+}
+
+pub(super) struct ProgramTypes {
+    pub(super) stack_in: alloc::vec::Vec<noble_kernel::types::Ty>,
+    pub(super) stack_out: alloc::vec::Vec<noble_kernel::types::Ty>,
+    pub(super) effects: noble_kernel::types::EffSet,
 }
 
 pub(super) struct Layout {

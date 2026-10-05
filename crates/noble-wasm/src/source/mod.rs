@@ -119,6 +119,27 @@ pub struct TargetMetadata {
     pub effects: noble_kernel::types::EffSet,
 }
 
+/// The independently checked type and immutable allocation of one emitted
+/// `$sN` Program, including quotation bodies. Runtime-created `quote` and
+/// `compose` values are not globals and must be checked by another route.
+#[derive(Clone, Debug)]
+pub struct ProgramMetadata {
+    pub program_index: usize,
+    pub entry: u32,
+    pub input_signature: u32,
+    pub output_signature: u32,
+    pub effect_mask: u32,
+    pub stack_in: alloc::vec::Vec<noble_kernel::types::Ty>,
+    pub stack_out: alloc::vec::Vec<noble_kernel::types::Ty>,
+    pub effects: noble_kernel::types::EffSet,
+    /// `$program` installation emits zero runtime capture children at a/b;
+    /// the c edge is its separately checked immutable recipe graph.
+    pub capture_left: u32,
+    pub capture_right: u32,
+    pub recipe_depth: u32,
+    pub recipe_leaves: u32,
+}
+
 /// An independently rechecked, emitted named definition, not the submission's
 /// wrapper root. A source receipt must separately bind the exact retained
 /// definition identity/owner and source origin; runtime installation must
@@ -179,6 +200,7 @@ pub struct Prepared {
     code_span: CodeSpan,
     live_sites: alloc::vec::Vec<LiveSiteMetadata>,
     target_metadata: Option<TargetMetadata>,
+    program_metadata: alloc::vec::Vec<ProgramMetadata>,
     named_targets: alloc::vec::Vec<NamedTargetMetadata>,
     selected_target: Option<SelectedTargetArtifact>,
     resource_catalog: alloc::vec::Vec<ResourceCatalogEntry>,
@@ -205,6 +227,12 @@ impl Prepared {
     /// Full ordered logical root interface, including borrowed inputs.
     pub const fn target_metadata(&self) -> Option<&TargetMetadata> {
         self.target_metadata.as_ref()
+    }
+
+    /// Every exact Program global, including saved quotation children whose
+    /// interface differs from the module's entry wrapper.
+    pub fn program_metadata(&self) -> &[ProgramMetadata] {
+        &self.program_metadata
     }
 
     /// Exact named Program globals compiled from independently accepted bodies.
@@ -391,7 +419,7 @@ impl Compiler {
             &mut next.identities,
             &mut work
         ));
-        let plan = attempt!(plan::lower(submission, &checked, &mut next, &mut work));
+        let mut plan = attempt!(plan::lower(submission, &checked, &mut next, &mut work));
         let wat = attempt!(emit::module(&plan, self.generation));
         let code_span = CodeSpan {
             start: plan.first_function,
@@ -439,6 +467,28 @@ impl Compiler {
                 });
             }
         }
+        let mut program_metadata = alloc::vec::Vec::new();
+        if self.live_slots {
+            program_metadata.reserve(plan.programs.len());
+            for (program_index, program) in plan.programs.iter_mut().enumerate() {
+                let logical = attempt!(program.logical.take()
+                    .ok_or(crate::Diagnostic::Defective));
+                program_metadata.push(ProgramMetadata {
+                    program_index,
+                    entry: program.entry,
+                    input_signature: program.input,
+                    output_signature: program.output,
+                    effect_mask: program.effects,
+                    stack_in: logical.stack_in,
+                    stack_out: logical.stack_out,
+                    effects: logical.effects,
+                    capture_left: 0,
+                    capture_right: 0,
+                    recipe_depth: program.depth,
+                    recipe_leaves: program.leaves,
+                });
+            }
+        }
         let mut resource_catalog = alloc::vec::Vec::new();
         if self.live_slots {
             for id in &submission.environment.live_resource_nominals {
@@ -464,6 +514,7 @@ impl Compiler {
             code_span,
             live_sites: plan.live_sites,
             target_metadata,
+            program_metadata,
             named_targets,
             selected_target: None,
             resource_catalog,
