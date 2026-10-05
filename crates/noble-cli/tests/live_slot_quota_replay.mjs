@@ -197,20 +197,43 @@ async function replayVariant(variant) {
       source: selectedSource.definition, inputs: [] }), 'definition-retained');
     counted(selected(await session.issue({ operation: 'install', id: 'named',
       source: selectedSource.named, inputs: ['I64'], selected_name: 'traced' }), 'installed'));
-    const published = counted(selected(await session.issue({ operation: 'publish', slot: 'emit',
+    let selectedId = 'named';
+    let published = counted(selected(await session.issue({ operation: 'publish', slot: 'emit',
       id: 'named', program_index: 0, expected_epoch: '0' }), 'published'));
     assert.deepEqual([published.epoch, published.incarnation, published.generation], ['1', '1', '1']);
+    let epoch = 1;
+    for (let incarnation = 1; incarnation <= 3; incarnation++) {
+      const deleted = counted(selected(await session.issue({ operation: 'delete', slot: 'emit',
+        expected_epoch: String(epoch), expected_incarnation: String(incarnation),
+        expected_generation: '1' }), 'deleted'));
+      assert.equal(deleted.epoch, String(++epoch));
+      selectedId = `named${incarnation + 1}`;
+      counted(selected(await session.issue({ operation: 'install', id: selectedId,
+        source: selectedSource.named, inputs: ['I64'], selected_name: 'traced' }), 'installed'));
+      published = counted(selected(await session.issue({ operation: 'publish', slot: 'emit',
+        id: selectedId, program_index: 0, expected_epoch: String(epoch) }), 'published'));
+      assert.deepEqual([published.epoch, published.incarnation, published.generation],
+        [String(++epoch), String(incarnation + 1), '1']);
+    }
+    for (let generation = 2; generation <= 3; generation++) {
+      published = counted(selected(await session.issue({ operation: 'publish', slot: 'emit',
+        id: selectedId, program_index: 0, expected_epoch: String(epoch),
+        expected_incarnation: '4', expected_generation: String(generation - 1) }), 'published'));
+      assert.deepEqual([published.epoch, published.incarnation, published.generation],
+        [String(++epoch), '4', String(generation)]);
+    }
+    assert.equal(epoch, 9, 'frozen replay must start at reachable incarnation 4/generation 3');
     const inputs = scalar(5), refs = ref('emit');
     const recorded = counted(selected(await session.issue({ operation: 'invoke', id: 'caller',
       inputs, refs, record: true }), 'executed'), 3, 2);
-    assert.equal(recorded.epoch, '1');
+    assert.equal(recorded.epoch, '9');
     assert.match(recorded.replay_token, /^replay-[1-9][0-9]*$/);
     assert.deepEqual(recorded.stack, [{ kind: 1, value: '42' }]);
     assert.deepEqual(recorded.request_trace.map(row => row.operation), ['dispatch', 'effect', 'effect']);
     assert.deepEqual(recorded.request_trace.slice(1).map(row => row.request), ['A', 'B']);
     assert.deepEqual(recorded.request_trace.slice(1).map(row => row.response), ['emitted:A', 'emitted:B']);
     assert.deepEqual(recorded.request_trace.slice(1).map(row => row.protectedOperations), [1, 2]);
-    assert.equal(recorded.request_trace[0].rootEpoch, '1');
+    assert.equal(recorded.request_trace[0].rootEpoch, '9');
     assert.ok(recorded.request_trace[0].definitionId, 'named selected target must have checked DefinitionId');
     assert.equal(recorded.frozen_identity.slots[0].definitionId, recorded.request_trace[0].definitionId);
     counted(selected(await session.issue({ operation: 'policy',

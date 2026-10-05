@@ -10,8 +10,6 @@
     {"operation":"publish","slotId":"B","allowed":true},
     {"operation":"delete","slotId":"B","allowed":true},
     {"operation":"dispatch","slotId":"B","allowed":true},
-    {"operation":"publish","slotId":"pad","allowed":true},
-    {"operation":"dispatch","slotId":"pad","allowed":true},
     {"operation":"publish","slotId":"emit","allowed":true},
     {"operation":"dispatch","slotId":"emit","allowed":true},
     {"operation":"effect","slotId":"emit","allowed":true},
@@ -23,7 +21,6 @@
   "slots": [
     {"slotId":"A","input":["I64"],"output":["I64"],"effectCeiling":[],"proofRequired":false},
     {"slotId":"B","input":["I64"],"output":["I64"],"effectCeiling":[],"proofRequired":false},
-    {"slotId":"pad","input":["I64"],"output":["I64"],"effectCeiling":[],"proofRequired":false},
     {"slotId":"emit","input":["I64"],"output":["I64"],"effectCeiling":["test.emit"],"proofRequired":false},
     {"slotId":"emitDeny","input":["I64"],"output":["I64"],"effectCeiling":["test.emit"],"proofRequired":false}
   ],
@@ -43,7 +40,6 @@
     {"id":"B1","sha256":"354d594a12b59e5b397387eccfe0168f5ef0d306c14ca64632d6ce6213bc81ed"},
     {"id":"B1fresh","sha256":"354d594a12b59e5b397387eccfe0168f5ef0d306c14ca64632d6ce6213bc81ed"},
     {"id":"B2","sha256":"e587aabc0d6f5e75daf6494fe20c5b7c8ea1359f228e0f0d2bfb2db44b493101"},
-    {"id":"pad1","sha256":"354d594a12b59e5b397387eccfe0168f5ef0d306c14ca64632d6ce6213bc81ed"},
     {"id":"emit1","sha256":"93f23ba96afe9ac0216dea74280f143bef9a54f2e7167e61415e22f7c01239d5"},
     {"id":"emit2","sha256":"28cb820bd3fa1334e88e31e0f5de2e32bf75aa84f656634b261a8b6793708586"}
   ]

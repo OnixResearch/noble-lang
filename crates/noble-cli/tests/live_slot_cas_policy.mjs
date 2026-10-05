@@ -15,7 +15,7 @@ const source = {
   A1: '1 +', A1fresh: '1 +', A2: '2 +', A3: '3 +',
   Ainc3: '1 +', Ainc4: '1 +', Ainc5: '1 +',
   Ainc6: '1 +', Ainc7: '1 +', Ainc8: '1 +',
-  B1: '1 +', B1fresh: '1 +', B2: '2 +', pad1: '1 +',
+  B1: '1 +', B1fresh: '1 +', B2: '2 +',
   emit1: '"touched" test.emit drop 1 +',
   emit2: '"touched-v2" test.emit drop 2 +',
 };
@@ -112,29 +112,35 @@ async function select(s, slot, expectedEpoch, expectedGeneration, expectedResult
 }
 async function baseline(s) {
   outcome(await s.next(), 'configured');
-  for (const id of ['callAB', 'A1', 'A2', 'A3', 'B1', 'B1fresh', 'B2', 'pad1']) await install(s, id,
+  for (const id of ['callAB', 'A1', 'A2', 'A3', 'B1', 'B1fresh', 'B2']) await install(s, id,
     id === 'callAB' ? ['I64', 'LiveRef<I64,I64,pure>'] : ['I64']);
-  // An empty registry cannot start at (epoch 10, A incarnation 7/3, B 2/1):
-  // A needs at least 15 commits and B another 3. Preserve observed counters.
   outcome(await publish(s, 'B', 'B1', 0), 'published');
   outcome(await s.issue({ operation: 'delete', slot: 'B', expected_epoch: '1',
     expected_incarnation: '1', expected_generation: '1' }), 'deleted');
   const b = outcome(await publish(s, 'B', 'B1fresh', 2), 'published');
   assert.deepEqual([b.epoch, b.incarnation, b.generation], ['3', '2', '1']);
-  for (let epoch = 3; epoch <= 5; epoch++) {
-    const row = outcome(await publish(s, 'A', 'A1', epoch,
-      epoch === 3 ? null : 1, epoch === 3 ? null : epoch - 3), 'published');
+  outcome(await publish(s, 'A', 'A1', 3), 'published');
+  let epoch = 4;
+  for (let incarnation = 2; incarnation <= 7; incarnation++) {
+    const removed = outcome(await s.issue({ operation: 'delete', slot: 'A',
+      expected_epoch: String(epoch), expected_incarnation: String(incarnation - 1),
+      expected_generation: '1' }), 'deleted');
+    assert.equal(removed.epoch, String(++epoch));
+    const id = incarnation === 2 ? 'A1fresh' : `Ainc${incarnation}`;
+    await install(s, id);
+    const published = outcome(await publish(s, 'A', id, epoch), 'published');
+    assert.deepEqual([published.epoch, published.incarnation, published.generation],
+      [String(++epoch), String(incarnation), '1']);
+  }
+  for (let generation = 2; generation <= 3; generation++) {
+    const row = outcome(await publish(s, 'A', 'Ainc7', epoch, 7, generation - 1), 'published');
     assert.deepEqual([row.epoch, row.incarnation, row.generation],
-      [String(epoch + 1), '1', String(epoch - 2)]);
+      [String(++epoch), '7', String(generation)]);
   }
-  for (let epoch = 6; epoch <= 9; epoch++) {
-    const row = outcome(await publish(s, 'pad', 'pad1', epoch,
-      epoch === 6 ? null : 1, epoch === 6 ? null : epoch - 6), 'published');
-    assert.equal(row.epoch, String(epoch + 1));
-  }
-  const before = await select(s, 'A', 10, 3, 21);
-  assert.equal(before.incarnation, '1');
-  const bBefore = await select(s, 'B', 10, 1, 21);
+  assert.equal(epoch, 18);
+  const before = await select(s, 'A', 18, 3, 21);
+  assert.equal(before.incarnation, '7');
+  const bBefore = await select(s, 'B', 18, 1, 21);
   assert.equal(bBefore.incarnation, '2');
   return { before, bBefore };
 }
@@ -158,74 +164,28 @@ async function runCase(name, test) {
 
 await runCase('LSLOT04-same-slot-writers', async (s, log) => {
   const { before } = await baseline(s);
-  const first = outcome(await publish(s, 'A', 'A2', 10, 1, 3), 'published');
-  assert.deepEqual([first.epoch, first.incarnation, first.generation], ['11', '1', '4']);
-  observedRefusal(log, outcome(await publish(s, 'A', 'A3', 10, 1, 3), 'stale-reject'));
-  const after = await select(s, 'A', 11, 4, 22);
+  const first = outcome(await publish(s, 'A', 'A2', 18, 7, 3), 'published');
+  assert.deepEqual([first.epoch, first.incarnation, first.generation], ['19', '7', '4']);
+  observedRefusal(log, outcome(await publish(s, 'A', 'A3', 18, 7, 3), 'stale-reject'));
+  const after = await select(s, 'A', 19, 4, 22);
   assert.notEqual(after.programValueId, before.programValueId);
   log.committed = first; log.after = after;
 });
 await runCase('LSLOT04-unrelated-slot-race', async (s, log) => {
   const { before, bBefore } = await baseline(s);
-  const first = outcome(await publish(s, 'B', 'B2', 10, 2, 1), 'published');
-  assert.deepEqual([first.epoch, first.incarnation, first.generation], ['11', '2', '2']);
-  observedRefusal(log, outcome(await publish(s, 'A', 'A2', 10, 1, 3), 'stale-reject'));
-  const after = await select(s, 'A', 11, 3, 21);
+  const first = outcome(await publish(s, 'B', 'B2', 18, 2, 1), 'published');
+  assert.deepEqual([first.epoch, first.incarnation, first.generation], ['19', '2', '2']);
+  observedRefusal(log, outcome(await publish(s, 'A', 'A2', 18, 7, 3), 'stale-reject'));
+  const after = await select(s, 'A', 19, 3, 21);
   assert.equal(after.programValueId, before.programValueId);
-  const bAfter = await select(s, 'B', 11, 2, 22);
+  const bAfter = await select(s, 'B', 19, 2, 22);
   assert.notEqual(bAfter.programValueId, bBefore.programValueId);
   log.committed = first; log.after = [after, bAfter];
 });
 await runCase('LSLOT04-delete-recreate-ABA', async (s, log) => {
   const { before } = await baseline(s);
-  const deleted = outcome(await s.issue({ operation: 'delete', slot: 'A', expected_epoch: '10',
-    expected_incarnation: '1', expected_generation: '3' }), 'deleted');
-  assert.equal(deleted.epoch, '11');
-  await install(s, 'A1fresh');
-  const recreated = outcome(await publish(s, 'A', 'A1fresh', 11), 'published');
-  assert.deepEqual([recreated.epoch, recreated.incarnation, recreated.generation], ['12', '2', '1']);
-  observedRefusal(log, outcome(await publish(s, 'A', 'A2', 10, 1, 3), 'stale-reject'));
-  observedRefusal(log, outcome(await publish(s, 'A', 'A2', 12, 1, 3), 'stale-reject'));
-  const after = await select(s, 'A', 12, 1, 21);
-  assert.equal(after.incarnation, '2');
-  assert.notEqual(after.programValueId, before.programValueId,
-    'same visible source must be fresh installed Program identity');
-  log.commits = [deleted, recreated]; log.after = after;
-});
-await runCase('LSLOT04-ABA-incarnation-seven', async (s, log) => {
-  outcome(await s.next(), 'configured');
-  await install(s, 'callAB', ['I64', 'LiveRef<I64,I64,pure>']);
-  for (const id of ['B1', 'B1fresh', 'A1', 'A2']) await install(s, id);
-  outcome(await publish(s, 'B', 'B1', 0), 'published');
-  outcome(await s.issue({ operation: 'delete', slot: 'B', expected_epoch: '1',
-    expected_incarnation: '1', expected_generation: '1' }), 'deleted');
-  const b = outcome(await publish(s, 'B', 'B1fresh', 2), 'published');
-  assert.deepEqual([b.epoch, b.incarnation, b.generation], ['3', '2', '1']);
-  outcome(await publish(s, 'A', 'A1', 3), 'published');
-  let epoch = 4;
-  for (let incarnation = 2; incarnation <= 7; incarnation++) {
-    const removed = outcome(await s.issue({ operation: 'delete', slot: 'A',
-      expected_epoch: String(epoch), expected_incarnation: String(incarnation - 1),
-      expected_generation: '1' }), 'deleted');
-    assert.equal(removed.epoch, String(++epoch));
-    const id = incarnation === 2 ? 'A1fresh' : `Ainc${incarnation}`;
-    await install(s, id);
-    const published = outcome(await publish(s, 'A', id, epoch), 'published');
-    assert.deepEqual([published.epoch, published.incarnation, published.generation],
-      [String(++epoch), String(incarnation), '1']);
-  }
-  assert.equal(epoch, 16);
-  for (let generation = 2; generation <= 3; generation++) {
-    const row = outcome(await publish(s, 'A', 'Ainc7', epoch, 7, generation - 1), 'published');
-    assert.deepEqual([row.epoch, row.incarnation, row.generation],
-      [String(++epoch), '7', String(generation)]);
-  }
-  assert.equal(epoch, 18);
-  const before = await select(s, 'A', 18, 3, 21);
-  assert.equal(before.incarnation, '7');
-  assert.equal((await select(s, 'B', 18, 1, 21)).incarnation, '2');
-  const deleted = outcome(await s.issue({ operation: 'delete', slot: 'A',
-    expected_epoch: '18', expected_incarnation: '7', expected_generation: '3' }), 'deleted');
+  const deleted = outcome(await s.issue({ operation: 'delete', slot: 'A', expected_epoch: '18',
+    expected_incarnation: '7', expected_generation: '3' }), 'deleted');
   assert.equal(deleted.epoch, '19');
   await install(s, 'Ainc8');
   const recreated = outcome(await publish(s, 'A', 'Ainc8', 19), 'published');
@@ -234,32 +194,32 @@ await runCase('LSLOT04-ABA-incarnation-seven', async (s, log) => {
   observedRefusal(log, outcome(await publish(s, 'A', 'A2', 20, 7, 3), 'stale-reject'));
   const after = await select(s, 'A', 20, 1, 21);
   assert.equal(after.incarnation, '8');
-  assert.notEqual(after.programValueId, before.programValueId);
-  assert.equal((await select(s, 'B', 20, 1, 21)).incarnation, '2');
-  log.commits = [deleted, recreated]; log.before = before; log.after = after;
+  assert.notEqual(after.programValueId, before.programValueId,
+    'same visible source must be fresh installed Program identity');
+  log.commits = [deleted, recreated]; log.after = after;
 });
 await runCase('LSLOT04-authorized-rollback', async (s, log) => {
   const { before } = await baseline(s);
-  const newer = outcome(await publish(s, 'A', 'A2', 10, 1, 3), 'published');
-  assert.deepEqual([newer.epoch, newer.incarnation, newer.generation], ['11', '1', '4']);
-  await install(s, 'A1fresh');
-  const rollback = outcome(await publish(s, 'A', 'A1fresh', 11, 1, 4, 'rollback'), 'published');
-  assert.deepEqual([rollback.epoch, rollback.incarnation, rollback.generation], ['12', '1', '5']);
-  const after = await select(s, 'A', 12, 5, 21);
+  const newer = outcome(await publish(s, 'A', 'A2', 18, 7, 3), 'published');
+  assert.deepEqual([newer.epoch, newer.incarnation, newer.generation], ['19', '7', '4']);
+  await install(s, 'Ainc8');
+  const rollback = outcome(await publish(s, 'A', 'Ainc8', 19, 7, 4, 'rollback'), 'published');
+  assert.deepEqual([rollback.epoch, rollback.incarnation, rollback.generation], ['20', '7', '5']);
+  const after = await select(s, 'A', 20, 5, 21);
   assert.notEqual(after.programValueId, before.programValueId,
     'freshly admitted same recipe must have a new selected Program identity');
   log.commits = [newer, rollback]; log.after = after;
 });
 await runCase('LSLOT04-rollback-denied', async (s, log) => {
   await baseline(s);
-  outcome(await publish(s, 'A', 'A2', 10, 1, 3), 'published');
-  await install(s, 'A1fresh');
+  outcome(await publish(s, 'A', 'A2', 18, 7, 3), 'published');
+  await install(s, 'Ainc8');
   outcome(await s.issue({ operation: 'policy',
     grant: { operation: 'rollback', slotId: 'A', allowed: false } }), 'policy-updated');
-  const denied = await publish(s, 'A', 'A1fresh', 11, 1, 4, 'rollback');
+  const denied = await publish(s, 'A', 'Ainc8', 19, 7, 4, 'rollback');
   assert.equal(denied.outcome, 'policy-denied', JSON.stringify(denied));
   observedRefusal(log, denied);
-  const after = await select(s, 'A', 11, 4, 22);
+  const after = await select(s, 'A', 19, 4, 22);
   log.denied = denied; log.after = after;
 });
 
