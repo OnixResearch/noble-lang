@@ -44,7 +44,7 @@
     },
     {
       "id": "LSLOT-04", "profile": "Live-Slot-Design", "kind": "admission", "requirements": ["H-LSLOT-01", "S-LSLOT-01", "EV-LSLOT-01"],
-      "input": {"harness": "global-epoch-slot-incarnation-CAS", "initial": {"global_epoch": 10, "slot_A": {"incarnation": 7, "generation": 3, "target": "A-v1"}, "slot_B": {"incarnation": 2, "generation": 1, "target": "B-v1"}}, "variants": [{"name": "same-slot-writers", "writers": ["A-v2 expecting epoch 10 A:7/3", "A-v3 expecting epoch 10 A:7/3"], "first_commit": "A-v2 at epoch 11", "second_result": "stale-reject"}, {"name": "unrelated-slot-race", "writers": ["B-v2 expecting epoch 10 B:2/1", "A-v2 expecting epoch 10 A:7/3"], "first_commit": "B-v2 at epoch 11", "second_result": "stale-reject"}, {"name": "delete-recreate-ABA", "steps": ["delete A:7/3 epoch 11", "recreate same visible ID A with new incarnation 8/1 and same target A-v1 epoch 12", "old A:7/3 epoch-10 writer submits"], "last_result": "stale-reject"}, {"name": "authorized-rollback", "steps": ["A-v2 committed at epoch 11", "independently readmit A-v1 and exact applicable evidence", "authorize new CAS expected epoch 11 A:7/4"], "result": "A-v1 new generation 5 and epoch 12"}, {"name": "rollback-denied", "steps": ["A-v2 committed", "A-v1 lacks current authorization or applicable evidence"], "result": "reject-before-publication"}]},
+      "input": {"harness": "global-epoch-slot-incarnation-CAS", "initial": {"global_epoch": 18, "slot_A": {"incarnation": 7, "generation": 3, "target": "A-v1"}, "slot_B": {"incarnation": 2, "generation": 1, "target": "B-v1"}}, "variants": [{"name": "same-slot-writers", "writers": ["A-v2 expecting epoch 18 A:7/3", "A-v3 expecting epoch 18 A:7/3"], "first_commit": "A-v2 at epoch 19", "second_result": "stale-reject"}, {"name": "unrelated-slot-race", "writers": ["B-v2 expecting epoch 18 B:2/1", "A-v2 expecting epoch 18 A:7/3"], "first_commit": "B-v2 at epoch 19", "second_result": "stale-reject"}, {"name": "delete-recreate-ABA", "steps": ["delete A:7/3 epoch 19", "recreate same visible ID A with new incarnation 8/1 and same target A-v1 epoch 20", "old A:7/3 epoch-18 writer submits"], "last_result": "stale-reject"}, {"name": "authorized-rollback", "steps": ["A-v2 committed at epoch 19", "independently readmit A-v1 and exact applicable evidence", "authorize new CAS expected epoch 19 A:7/4"], "result": "A-v1 new generation 5 and epoch 20"}, {"name": "rollback-denied", "steps": ["A-v2 committed", "A-v1 lacks current authorization or applicable evidence"], "result": "reject-before-publication"}]},
       "expected": {"stage": "slot-publication", "outcome": "global-CAS-no-ABA", "every_committed_update_increments_epoch": true, "stale_same_or_unrelated_writer_publishes": false, "recreated_slot_reuses_incarnation": false, "rollback_restores_old_epoch_or_effects": false, "successful_rollback_requires_fresh_admission_authorization_and_evidence": true, "failed_candidate_executions": 0, "guest_requests": 0, "protected_operations": 0},
       "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
     },
@@ -83,7 +83,7 @@
         },
         "replay_fixture": {
           "independent_from_retention_fixture": true,
-          "frozen_admitted_registry": {"epoch": 7, "slot_id": "emit", "incarnation": 4, "generation": 3, "target": "Ptrace/Dtrace"},
+          "frozen_admitted_registry": {"epoch": 9, "slot_id": "emit", "incarnation": 4, "generation": 3, "target": "Ptrace/Dtrace"},
           "root_inputs": ["I64:5", "host-issued LiveRef<[I64],[I64],{test.emit}> for emit"],
           "selected_artifact": "Wtrace",
           "captures": ["I64:5"],
@@ -94,7 +94,7 @@
           "variants": [
             {"name": "bare-slot-id", "omit": "frozen admitted registry", "result": "reject"},
             {"name": "bare-LiveRef", "omit": "frozen admitted registry", "result": "reject"},
-            {"name": "wrong-registry-epoch", "epoch": 8, "result": "reject"},
+            {"name": "wrong-registry-epoch", "epoch": 10, "result": "reject"},
             {"name": "wrong-slot-incarnation", "incarnation": 5, "result": "reject"},
             {"name": "wrong-slot-generation", "generation": 4, "result": "reject"},
             {"name": "substituted-selected-artifact", "selected_artifact": "Wother", "result": "reject"},

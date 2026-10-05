@@ -1840,7 +1840,7 @@
     },
     {
       "file": "specs/conformance/live-reference-cases.json",
-      "sha256": "a1b65881e32124967579dc8a2024477e5f71843d5025860909488111515fcaa3"
+      "sha256": "83b9a68e5aa0f6d0da202ba6ed29721ea4248ddb8a0c8abaa86a99f82c868a63"
     },
     {
       "file": "specs/conformance/live-wasm-cases.json",
