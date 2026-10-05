@@ -25,7 +25,8 @@ const host = quota => new SlotRegistry({
 const checked = (name, effects = [], input = ['I64'], output = ['I64']) => ({
   programValueId: `P-${name}`, definitionId: `D-${name}`, captures: [`I64:${name}`],
   interface: descriptor(input, output), effects, semanticContext: 'C1',
-  claim: 'Q1', assumptions: 'A1', artifactSha256: digest, resourceCatalog: [],
+  recipeSha256: digest, claim: 'Q1', assumptions: 'A1',
+  artifactSha256: digest, resourceCatalog: [],
 });
 const admit = (registry, name, handle, effects, input, output) =>
   registry.admitCandidate(checked(name, effects, input, output), handle, digest);
@@ -35,7 +36,8 @@ const site = (input, output, effectCeiling, borrowedInputPosition = 1) =>
     forwarded_source_positions: [], forwarded_target_positions: [] });
 const memory = new WebAssembly.Memory({ initial: 20, maximum: 20 });
 const view = new DataView(memory.buffer);
-const FRAME = 1052672;
+const FRAME = 1077248;
+const ROOT_BINDING_COUNT = 1050632;
 const frame = (address, parent, handle, pairs) => {
   view.setUint32(address, parent, true);
   view.setUint32(address + 4, handle, true);
@@ -254,12 +256,14 @@ const frame = (address, parent, handle, pairs) => {
   view.setUint32(1050632, 1, true);
   frame(FRAME + 896, 0, 299, [[1, 9]]);
   const oldFrame = registry.enterFrame(oldRoot, module, -1, FRAME + 896, 299, memory);
-  grants('publish', 'rollback', false);
+  grants('rollback', 'rollback', false);
   assert.equal(registry.publish({ slotId: 'rollback', expectedEpoch: 2n,
-    expectedIncarnation: 1n, expectedGeneration: 2n, version: v1 }).outcome, 'policy-denied');
-  grants('publish', 'rollback', true);
+    expectedIncarnation: 1n, expectedGeneration: 2n, version: v1,
+    operation: 'rollback' }).outcome, 'policy-denied');
+  grants('rollback', 'rollback', true); grants('publish', 'rollback', false);
   assert.deepEqual(registry.publish({ slotId: 'rollback', expectedEpoch: 2n,
-    expectedIncarnation: 1n, expectedGeneration: 2n, version: v1 }),
+    expectedIncarnation: 1n, expectedGeneration: 2n, version: v1,
+    operation: 'rollback' }),
   { outcome: 'published', epoch: 3n, incarnation: 1n, generation: 3n });
   assert.equal(registry.dispatch(oldRoot, 9, module, 3).handle, 252);
   frame(FRAME + 960, FRAME + 896, 252, []);
@@ -299,6 +303,93 @@ const frame = (address, parent, handle, pairs) => {
     expectedIncarnation: 1n, expectedGeneration: 2n, version: v1 }).outcome, 'unadmitted-target');
 }
 
+// One dynamically composed saved Program can own multiple selected versions,
+// but has precisely one physical saved backend root to release.
+{
+  const retained = [];
+  const freed = [];
+  const registry = new SlotRegistry({
+    quota: 2, knownEffects: [], authorize: () => true,
+    performEffect: () => { throw Error('saved graph cannot perform an effect'); },
+    retireTarget: handle => { freed.push(handle); return true; },
+    retainProgram: handle => { retained.push(handle); return true; },
+    releaseProgramBackend: handle => { freed.push(`saved:${handle}`); return true; },
+  });
+  const left = admit(registry, 'graph-left', 510);
+  const right = admit(registry, 'graph-right', 511);
+  assert.equal(registry.publish({ slotId: 'left', expectedEpoch: 0n,
+    version: left, interface: descriptor() }).outcome, 'published');
+  assert.equal(registry.publish({ slotId: 'right', expectedEpoch: 1n,
+    version: right, interface: descriptor() }).outcome, 'published');
+  const saved = registry.saveProgramGraph(777, [left, right]);
+  assert.deepEqual(retained, [777], 'one captured graph must retain one backend Program root');
+  assert.equal(registry.delete({ slotId: 'left', expectedEpoch: 2n,
+    expectedIncarnation: 1n, expectedGeneration: 1n }).outcome, 'deleted');
+  assert.equal(registry.delete({ slotId: 'right', expectedEpoch: 3n,
+    expectedIncarnation: 1n, expectedGeneration: 1n }).outcome, 'deleted');
+  assert.equal(registry.retainedVersions, 2, 'both captured versions survive their slot deletion');
+  assert.deepEqual(freed, []);
+  registry.releaseProgram(saved);
+  assert.deepEqual(freed, ['saved:777', 510, 511],
+    'last saved root releases actual backend cell once and both logical versions');
+  assert.equal(registry.retainedVersions, 0);
+}
+
+// Replay must account for the exact ordered protected requests and recorded
+// responses without asking the current live-effect grant or performing again.
+{
+  const registry = host(2);
+  grants('publish', 'script', true);
+  grants('dispatch', 'script', true);
+  grants('effect', 'script', true);
+  const iface = descriptor(['I64'], ['I64'], ['test.emit']);
+  const selected = admit(registry, 'script', 521, ['test.emit']);
+  assert.equal(registry.publish({ slotId: 'script', expectedEpoch: 0n,
+    interface: iface, version: selected }).outcome, 'published');
+  const module = registry.registerModule(digest, [site(iface.input, iface.output, iface.effectCeiling)]);
+  const enter = token => {
+    registry.bindRef(token, 1, 19, 'script', iface);
+    view.setUint32(ROOT_BINDING_COUNT, 1, true);
+    frame(FRAME + 2048, 0, 880, [[1, 19]]);
+    assert.equal(registry.validateBorrowBinding(token, module, 1, 19), 1);
+    const parent = registry.enterFrame(token, module, -1, FRAME + 2048, 880, memory);
+    assert.equal(registry.dispatch(token, 19, module, 3).handle, 521);
+    frame(FRAME + 2112, FRAME + 2048, 521, []);
+    const child = registry.enterFrame(token, module, 3, FRAME + 2112, 521, memory);
+    return [parent, child];
+  };
+  const original = registry.pinRoot(880, module);
+  const [parent, child] = enter(original);
+  const first = registry.requestEffect(original, child, 521, 'test.emit', 'A');
+  const second = registry.requestEffect(original, child, 521, 'test.emit', 'B');
+  assert.equal(first.response, 'ok-A');
+  assert.equal(second.response, 'ok-B');
+  const recordedTrace = registry.trace(original);
+  const scripted = recordedTrace.filter(row => row.operation === 'effect');
+  assert.deepEqual(scripted.map(row => row.protectedOperations), [1, 2]);
+  assert.deepEqual(scripted.map(row => row.policyInput.request), ['A', 'B']);
+  registry.leaveFrame(original, child); registry.leaveFrame(original, parent);
+  const frozen = registry.freezeRoot(original);
+  registry.finishRoot(original);
+  grants('effect', 'script', false);
+  const externalEffects = performed.length;
+  const replay = registry.pinRoot(880, module, frozen);
+  const [replayParent, replayChild] = enter(replay);
+  assert.equal(registry.replayEffect(replay, replayChild, 521, 'test.emit',
+    'A', scripted[0]).response, 'ok-A');
+  assert.throws(() => registry.replayEffect(replay, replayChild, 521, 'test.emit',
+    'different', scripted[1]), /scripted replay/,
+  'a second-request divergence after one scripted effect must not execute the real host adapter');
+  assert.equal(registry.replayEffect(replay, replayChild, 521, 'test.emit',
+    'B', scripted[1]).response, 'ok-B');
+  assert.equal(performed.length, externalEffects, 'scripted replay must not perform a real effect');
+  assert.deepEqual(registry.trace(replay), recordedTrace,
+    'frozen dispatch/effect traces bind identical selected values and policy inputs');
+  registry.leaveFrame(replay, replayChild); registry.leaveFrame(replay, replayParent);
+  registry.finishRoot(replay);
+  registry.releaseFrozen(frozen);
+}
+
 // Nominal resource identity, ordered inputs, ceiling, and exact selected
 // evidence refuse independently before publication or candidate execution.
 {
@@ -313,12 +404,12 @@ const frame = (address, parent, handle, pairs) => {
   for (const [index, resource] of resourceRows.entries()) {
     grants('register-resource', `${resource.module}:${resource.ordinal}`, true);
     registry.registerNominal({ ...resource, schemaFingerprint: 'd'.repeat(64),
-      owner: 'host-account-owner', sourceArtifactSha256: digest,
+      owner: 'host-account-owner', sourceArtifactSha256s: [digest],
       interfaceDescriptor: `Account@${index + 1}` });
   }
   assert.throws(() => registry.registerNominal({ ...resourceRows[0],
     shapeFingerprint: 'e'.repeat(64), schemaFingerprint: 'd'.repeat(64),
-    owner: 'host-account-owner', sourceArtifactSha256: digest,
+    owner: 'host-account-owner', sourceArtifactSha256s: [digest],
     interfaceDescriptor: 'Account@1' }), /duplicate/);
   assert.throws(() => registry.admitResourceCatalog('forged-owner', digest, resourceRows, sourceSchemas), /unregistered/);
   assert.throws(() => registry.admitResourceCatalog('host-account-owner', digest,

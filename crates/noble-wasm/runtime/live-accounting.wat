@@ -22,7 +22,13 @@
  (if (global.get $failure) (then (return (i32.const 0))))
  (local.set $slot (call $storage_next_slot))
  (local.set $live (i32.add (call $storage_live_count) (i32.const 1)))
- (local.set $bytes (i32.mul (i32.sub (local.get $live) (global.get $heap_baseline)) (i32.const 48)))
+ ;; Retiring old Program roots between independent calls can lower the live
+ ;; count beneath the previous call's baseline. Clamp that reclaimed space
+ ;; before checking the next install's quota; unsigned subtraction wraps.
+ (local.set $bytes (if (result i32)
+   (i32.ge_u (local.get $live) (global.get $heap_baseline))
+   (then (i32.mul (i32.sub (local.get $live) (global.get $heap_baseline)) (i32.const 48)))
+   (else (i32.const 0))))
  (if (i32.or (i32.or (i32.gt_u (local.get $slot) (i32.const 4096))
                       (i32.gt_u (local.get $live) (i32.const 4096)))
              (i32.gt_u (local.get $bytes) (global.get $allocation_limit)))

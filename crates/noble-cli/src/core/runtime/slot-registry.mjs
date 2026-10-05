@@ -4,7 +4,7 @@
 const SLOT_LIMIT = 128;
 const TRACE_LIMIT = 4096;
 const U64_MAX = 0xffffffffffffffffn;
-const FRAME_START = 1052672;
+const FRAME_START = 1077248;
 const FRAME_END = 1310720;
 const ROOT_BINDING_COUNT = 1050632;
 
@@ -81,6 +81,7 @@ export class SlotRegistry {
   #incarnations = new Map();
   #versions = new Map();
   #roots = new Map();
+  #frozen = new Map();
   #saved = new Map();
   #savedTokens = new WeakSet();
   #staged = new Set();
@@ -130,20 +131,23 @@ export class SlotRegistry {
   // A changed schema/owner gets a NEW module identity; an old identity cannot
   // be silently rebound while pinned callers still refer to it.
   registerNominal({ module, ordinal, kind, shapeFingerprint, schemaFingerprint,
-    owner, sourceArtifactSha256, interfaceDescriptor }) {
+    owner, sourceArtifactSha256s, interfaceDescriptor }) {
     this.#check();
+    const sources = strings(sourceArtifactSha256s, 'host-selected source hashes');
     if (typeof module !== 'string' || !/^(0|[1-9][0-9]*)$/.test(module)
       || BigInt(module) > U64_MAX || !Number.isInteger(ordinal) || ordinal < 0
       || ordinal > 0xffffffff || !Number.isInteger(kind) || kind < 1 || kind > 0xffffffff
       || !/^[0-9a-f]{64}$/.test(shapeFingerprint ?? '')
       || !/^[0-9a-f]{64}$/.test(schemaFingerprint ?? '')
-      || !/^[0-9a-f]{64}$/.test(sourceArtifactSha256 ?? '')) {
+      || !sources.length || new Set(sources).size !== sources.length
+      || sources.some(source => !/^[0-9a-f]{64}$/.test(source))) {
       throw Error('invalid host nominal registration');
     }
     const id = `${module}:${ordinal}`;
     const registration = Object.freeze({ module, ordinal, kind, shapeFingerprint,
       schemaFingerprint, owner: field(owner, 'resource owner'),
-      sourceArtifactSha256, interfaceDescriptor: field(interfaceDescriptor, 'nominal interface') });
+      sourceArtifactSha256s: sources,
+      interfaceDescriptor: field(interfaceDescriptor, 'nominal interface') });
     if (this.#nominals.has(id) || !this.#allowed({ operation: 'register-resource',
       nominalId: id, owner: registration.owner })) {
       throw Error('duplicate or unauthorized host nominal registration');
@@ -170,7 +174,7 @@ export class SlotRegistry {
       const source = sourceSchemas[index];
       if (!host || seen.has(id) || host.kind !== row.kind
         || host.shapeFingerprint !== row.shapeFingerprint
-        || host.owner !== owner || host.sourceArtifactSha256 !== sourceArtifactSha256
+        || host.owner !== owner || !host.sourceArtifactSha256s.includes(sourceArtifactSha256)
         || source?.module !== host.module || source?.ordinal !== host.ordinal
         || source?.schemaFingerprint !== host.schemaFingerprint) {
         throw Error('unregistered owner/schema/resource kind');
@@ -213,17 +217,23 @@ export class SlotRegistry {
       throw Error('unavailable host effect contract');
     }
     const captures = strings(checked.captures, 'exact captures');
+    const recipeSha256 = checked.recipeSha256;
+    if (typeof recipeSha256 !== 'string' || !/^[0-9a-f]{64}$/.test(recipeSha256)) {
+      throw Error('missing checked recipe digest');
+    }
     const version = Object.freeze({
       programValueId: field(checked.programValueId, 'ProgramValueId'),
-      definitionId: field(checked.definitionId, 'DefinitionId'),
+      definitionId: checked.definitionId === null
+        ? null : field(checked.definitionId, 'DefinitionId'),
       captures, input: interfaceContract.input, output: interfaceContract.output,
       effects, semanticContext: field(checked.semanticContext, 'semantic context'),
+      recipeSha256,
       claim: field(checked.claim, 'claim'), assumptions: field(checked.assumptions, 'assumptions'),
       artifactSha256, handle: installedHandle,
     });
     const key = JSON.stringify([version.programValueId, version.definitionId, version.captures,
       version.input, version.output, version.effects, version.semanticContext,
-      version.artifactSha256]);
+      version.recipeSha256, version.artifactSha256]);
     if (this.#versions.has(key)
       || [...this.#versions.values()].some(other => other.handle === installedHandle)) {
       throw Error('duplicate installed candidate identity or handle');
@@ -249,7 +259,8 @@ export class SlotRegistry {
       return 'ordered-interface-mismatch';
     }
     if (version.effects.some(effect => !required.ceiling.includes(effect))) return 'effect-ceiling-widened';
-    if (required.proofRequired && (!exactEvidence(evidence, version)
+    if (required.proofRequired && (version.definitionId === null
+      || !exactEvidence(evidence, version)
       || !this.#verifyEvidence || this.#verifyEvidence(evidence, version) !== true)) {
       return 'selected-target-evidence-refused';
     }
@@ -259,12 +270,13 @@ export class SlotRegistry {
   #versionKey(version) {
     return JSON.stringify([version.programValueId, version.definitionId, version.captures,
       version.input, version.output, version.effects, version.semanticContext,
-      version.artifactSha256]);
+      version.recipeSha256, version.artifactSha256]);
   }
 
   #reachable(next = this.#current.map) {
     const versions = mapValues(next);
     for (const root of this.#roots.values()) mapValues(root.state.map, versions);
+    for (const frozen of this.#frozen.values()) mapValues(frozen.state.map, versions);
     for (const [version, owners] of this.#saved) if (owners > 0) versions.add(version);
     return versions;
   }
@@ -287,8 +299,9 @@ export class SlotRegistry {
   // A new slot and a replacement both commit by the SAME global epoch CAS.
   // Recreating a deleted ID always receives a new incarnation.
   publish({ slotId, expectedEpoch, expectedIncarnation = null, expectedGeneration = null,
-    version, interface: selectedContract, evidence = null }) {
+    version, interface: selectedContract, evidence = null, operation = 'publish' }) {
     this.#check();
+    if (operation !== 'publish' && operation !== 'rollback') throw Error('invalid publication operation');
     const id = slotName(slotId);
     slotInteger(expectedEpoch, 'expected global epoch');
     if (expectedIncarnation !== null) slotInteger(expectedIncarnation, 'expected incarnation');
@@ -313,7 +326,7 @@ export class SlotRegistry {
     if (!previous && this.#current.map.size >= this.#maxSlots) {
       return { outcome: 'slot-budget-refused', epoch: this.epoch };
     }
-    if (!this.#allowed({ operation: 'publish', slotId: id, version })) {
+    if (!this.#allowed({ operation, slotId: id, version })) {
       return { outcome: 'policy-denied', epoch: this.epoch };
     }
     if (this.epoch === U64_MAX || previous?.generation === U64_MAX) {
@@ -356,15 +369,20 @@ export class SlotRegistry {
     return { outcome: 'deleted', epoch: this.epoch };
   }
 
-  pinRoot(callerHandle, callerModule) {
+  pinRoot(callerHandle, callerModule, frozenToken = null) {
     this.#check();
     if (!Number.isSafeInteger(callerHandle) || callerHandle <= 0 || callerHandle > 0xffffffff) {
       throw Error('invalid checked root caller handle');
     }
     if (!this.#modules.has(callerModule)) throw Error('unregistered checked root module');
+    const frozen = frozenToken === null ? null : this.#frozen.get(frozenToken);
+    if (frozenToken !== null && (!frozen || frozen.callerHandle !== callerHandle
+      || frozen.callerModule !== callerModule)) {
+      throw Error('invalid frozen caller root');
+    }
     if (this.#nextRoot === U64_MAX) throw Error('root identity exhausted');
     const token = Object.freeze({});
-    const root = { id: ++this.#nextRoot, state: this.#current, refs: new Map(),
+    const root = { id: ++this.#nextRoot, state: frozen?.state ?? this.#current, refs: new Map(),
       callerHandle, callerModule, entered: false, boundRefs: new Set(), frames: [], pending: null,
       resources: new Map(), selectedHandles: new Map(), trace: [], operations: 0 };
     this.#roots.set(token, root);
@@ -394,6 +412,15 @@ export class SlotRegistry {
       || !same(entry.contract.output, typed.output)
       || !same(entry.contract.ceiling, typed.ceiling)) throw Error('root ref interface mismatch');
     root.refs.set(ordinal, Object.freeze({ slotId: id, contract: typed, logicalInputPosition }));
+  }
+
+  bindSelectedRef(token, logicalInputPosition, ordinal, slotId) {
+    const root = this.#root(token);
+    const entry = root.state.map.get(slotName(slotId));
+    if (!entry) throw Error('root reference has no pinned published slot');
+    this.bindRef(token, logicalInputPosition, ordinal, slotId,
+      { input: entry.contract.input, output: entry.contract.output,
+        effectCeiling: entry.contract.ceiling, proofRequired: entry.contract.proofRequired });
   }
 
   // Called from the guarded `bind_live_ref` Wasm export's import, not from
@@ -517,6 +544,17 @@ export class SlotRegistry {
     root.trace.push(Object.freeze(record));
   }
 
+  #policyVersion(version) {
+    if (!version) return null;
+    return { programValueId: version.programValueId,
+      definitionId: version.definitionId, captures: version.captures.slice(),
+      semanticContext: version.semanticContext, recipeSha256: version.recipeSha256,
+      artifactSha256: version.artifactSha256,
+      input: version.input.slice(), output: version.output.slice(),
+      effects: version.effects.slice(), claim: version.claim,
+      assumptions: version.assumptions, handle: version.handle };
+  }
+
   // The Wasm import supplies only the two integer indices. The import closure
   // captures its exact installed module token and independently checked sites.
   dispatch(token, ordinal, module, siteId) {
@@ -531,9 +569,10 @@ export class SlotRegistry {
       || !frame || frame.bindings.get(site.borrowedInputPosition) !== ordinal
       || root.pending) throw Error('invalid checked dispatch site or active borrowed frame');
     const selected = root.state.map.get(ref.slotId);
+    const authorized = selected ? this.#allowed({ operation: 'dispatch', slotId: ref.slotId,
+      version: selected.version, rootEpoch: root.state.epoch }) : false;
     const reason = !selected ? 'slot-absent'
-      : !this.#allowed({ operation: 'dispatch', slotId: ref.slotId,
-        version: selected.version, rootEpoch: root.state.epoch }) ? 'policy-denied'
+      : !authorized ? 'policy-denied'
         : this.#candidate(selected.version, selected.contract, selected.evidence);
     this.#trace(root, { operation: 'dispatch', rootEpoch: root.state.epoch.toString(),
       slotId: ref.slotId, incarnation: selected?.incarnation?.toString() ?? null,
@@ -541,6 +580,12 @@ export class SlotRegistry {
       programValueId: selected?.version?.programValueId ?? null,
       definitionId: selected?.version?.definitionId ?? null,
       artifactSha256: selected?.version?.artifactSha256 ?? null,
+      captures: selected?.version?.captures.slice() ?? null,
+      semanticContext: selected?.version?.semanticContext ?? null,
+      recipeSha256: selected?.version?.recipeSha256 ?? null,
+      policyInput: { operation: 'dispatch', slotId: ref.slotId,
+        version: this.#policyVersion(selected?.version),
+        rootEpoch: root.state.epoch.toString() }, policyAllowed: authorized,
       outcome: reason ?? 'allowed' });
     if (reason) return { outcome: reason, handle: 0 };
     root.selectedHandles.set(selected.version.handle, selected);
@@ -636,7 +681,16 @@ export class SlotRegistry {
     const allowed = this.#allowed({ operation: 'effect', slotId: selected.id,
       version: selected.version, effect, request, rootEpoch: root.state.epoch });
     const record = { operation: 'effect', effect, request, slotId: selected.id,
-      programValueId: selected.version.programValueId, rootEpoch: root.state.epoch.toString() };
+      programValueId: selected.version.programValueId, rootEpoch: root.state.epoch.toString(),
+      definitionId: selected.version.definitionId,
+      captures: selected.version.captures.slice(),
+      semanticContext: selected.version.semanticContext,
+      recipeSha256: selected.version.recipeSha256,
+      artifactSha256: selected.version.artifactSha256,
+      policyInput: { operation: 'effect', slotId: selected.id,
+        version: this.#policyVersion(selected.version),
+        effect, request, rootEpoch: root.state.epoch.toString() },
+      policyAllowed: allowed };
     if (!allowed) {
       this.#trace(root, { ...record, outcome: 'denied', protectedOperations: root.operations });
       return { outcome: 'denied', protectedOperations: root.operations };
@@ -656,7 +710,76 @@ export class SlotRegistry {
     return { outcome: 'performed', response, protectedOperations: root.operations };
   }
 
+  // Frozen replay executes the same checked Program and frame/target identity,
+  // but consumes its recorded host response rather than authorizing or
+  // performing a second external effect.
+  replayEffect(token, frameToken, handle, effect, request, expected) {
+    const root = this.#root(token);
+    const current = root.frames.at(-1);
+    const selected = root.selectedHandles.get(handle >>> 0);
+    if (!current || current.token !== frameToken || current.targetHandle !== (handle >>> 0)
+      || !selected || !selected.version.effects.includes(effect)
+      || typeof request !== 'string' || Buffer.byteLength(request) > 65536) {
+      throw Error('replay effect is not selected by this frozen root and checked target');
+    }
+    const record = { operation: 'effect', effect, request, slotId: selected.id,
+      programValueId: selected.version.programValueId, rootEpoch: root.state.epoch.toString(),
+      definitionId: selected.version.definitionId,
+      captures: selected.version.captures.slice(),
+      semanticContext: selected.version.semanticContext,
+      recipeSha256: selected.version.recipeSha256,
+      artifactSha256: selected.version.artifactSha256,
+      policyInput: { operation: 'effect', slotId: selected.id,
+        version: this.#policyVersion(selected.version),
+        effect, request, rootEpoch: root.state.epoch.toString() },
+      policyAllowed: true };
+    if (!expected || expected.outcome !== 'performed'
+      || typeof expected.response !== 'string' || Buffer.byteLength(expected.response) > 65536
+      || expected.protectedOperations !== root.operations + 1
+      || JSON.stringify(record) !== JSON.stringify(Object.fromEntries(
+        Object.keys(record).map(key => [key, expected[key]])))) {
+      throw Error('scripted replay request, response, order or accounting diverged');
+    }
+    root.operations++;
+    this.#trace(root, { ...record, outcome: 'performed', response: expected.response,
+      protectedOperations: root.operations });
+    return { outcome: 'performed', response: expected.response,
+      protectedOperations: root.operations };
+  }
+
   trace(token) { return this.#root(token).trace.map(record => ({ ...record })); }
+
+  frozenIdentity(token) {
+    const root = this.#root(token);
+    return [...root.state.map.values()].map(row => ({
+      slotId: row.id, incarnation: row.incarnation.toString(),
+      generation: row.generation.toString(),
+      programValueId: row.version.programValueId,
+      definitionId: row.version.definitionId,
+      captures: row.version.captures.slice(),
+      semanticContext: row.version.semanticContext,
+      recipeSha256: row.version.recipeSha256,
+      artifactSha256: row.version.artifactSha256,
+      input: row.version.input.slice(), output: row.version.output.slice(),
+      effects: row.version.effects.slice(),
+    })).sort((left, right) => left.slotId.localeCompare(right.slotId));
+  }
+
+  freezeRoot(token) {
+    const root = this.#root(token);
+    if (root.frames.length || root.pending) throw Error('cannot freeze an active borrowed frame');
+    const snapshot = Object.freeze({});
+    this.#frozen.set(snapshot, Object.freeze({
+      state: root.state, callerHandle: root.callerHandle, callerModule: root.callerModule,
+    }));
+    return snapshot;
+  }
+
+  releaseFrozen(snapshot) {
+    this.#check();
+    if (!this.#frozen.delete(snapshot)) throw Error('invalid frozen root owner');
+    this.#retire('frozen-replay-release');
+  }
 
   finishRoot(token) {
     const root = this.#root(token);
@@ -676,32 +799,47 @@ export class SlotRegistry {
   }
 
   saveProgram(version) {
+    return this.saveProgramGraph(version.handle, [version]);
+  }
+
+  // One actual saved backend Program root can retain several admitted target
+  // Programs transitively through checked immutable capture/aggregate edges.
+  // Count each reachable logical version, but pin the real Wasm root ONCE.
+  saveProgramGraph(rootHandle, versions) {
     this.#check();
-    if (this.#versions.get(this.#versionKey(version)) !== version
+    if (!Number.isInteger(rootHandle) || rootHandle <= 0 || rootHandle > 0xffffffff
+      || !Array.isArray(versions) || versions.length > 128
+      || new Set(versions).size !== versions.length
+      || versions.some(version => this.#versions.get(this.#versionKey(version)) !== version)
       || typeof this.#retainProgram !== 'function'
       || typeof this.#releaseProgramBackend !== 'function') {
       throw Error('unadmitted saved Program');
     }
+    const reachable = Object.freeze(versions.slice());
     try {
-      if (this.#retainProgram(version.handle, version) !== true) {
+      if (this.#retainProgram(rootHandle, reachable) !== true) {
         throw Error('backend did not retain a real Program cell');
       }
     } catch (error) {
       this.#poisoned = true;
       throw Error('saved Program backend retention failed; session poisoned', { cause: error });
     }
-    this.#saved.set(version, (this.#saved.get(version) ?? 0) + 1);
-    const owner = Object.freeze({ version });
+    for (const version of reachable) {
+      this.#saved.set(version, (this.#saved.get(version) ?? 0) + 1);
+    }
+    const owner = Object.freeze({ rootHandle, versions: reachable });
     this.#savedTokens.add(owner);
     return owner;
   }
 
   releaseProgram(owner) {
     this.#check();
-    const count = this.#saved.get(owner?.version) ?? 0;
-    if (!this.#savedTokens.has(owner) || !count) throw Error('invalid saved Program owner');
+    if (!this.#savedTokens.has(owner)
+      || owner.versions.some(version => !this.#saved.get(version))) {
+      throw Error('invalid saved Program owner');
+    }
     try {
-      if (this.#releaseProgramBackend(owner.version.handle, owner.version) !== true) {
+      if (this.#releaseProgramBackend(owner.rootHandle, owner.versions) !== true) {
         throw Error('backend did not release a real Program cell');
       }
     } catch (error) {
@@ -709,8 +847,11 @@ export class SlotRegistry {
       throw Error('saved Program backend release failed; session poisoned', { cause: error });
     }
     this.#savedTokens.delete(owner);
-    if (count === 1) this.#saved.delete(owner.version);
-    else this.#saved.set(owner.version, count - 1);
+    for (const version of owner.versions) {
+      const count = this.#saved.get(version);
+      if (count === 1) this.#saved.delete(version);
+      else this.#saved.set(version, count - 1);
+    }
     this.#retire('saved-program-release');
   }
 }

@@ -22,7 +22,11 @@ async function protocol(config) {
     process.stdout.write(`${outcome} ${json.length}\n`);
     process.stdout.write(json);
   };
-  const reportError = error => ({ schema: 'noble-core-report/v1', profile: 'Core-Bootstrap',
+  const reportError = error => config.slot_mode === true
+    ? { ...slotReply('internal-failure'), diagnostic: `${error.name}: ${error.message}`,
+      request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
+      session_state: 'terminated-after-internal-failure' }
+    : ({ schema: 'noble-core-report/v1', profile: 'Core-Bootstrap',
     backend: 'managed-linear-memory', stage: 'wasm', outcome: 'internal-failure',
     diagnostic: `${error.name}: ${error.message}`,
     request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
@@ -31,7 +35,9 @@ async function protocol(config) {
     session_state: engine?.proposalInspectionFailed
       ? 'terminated-after-proposal-inspection-failure' : 'terminated-after-internal-failure' });
   try {
-    engine = new CoreEngine(JSON.parse(config.selection), JSON.parse(config.abi), config);
+    engine = config.slot_mode === true
+      ? new SlotEngine(JSON.parse(config.selection), JSON.parse(config.abi), config)
+      : new CoreEngine(JSON.parse(config.selection), JSON.parse(config.abi), config);
     emit('ready', { outcome: 'ready', tools: engine.tools });
     let pending = Buffer.alloc(0), command = null;
     for await (const chunk of process.stdin) {
@@ -49,6 +55,15 @@ async function protocol(config) {
           if (header === 'shutdown') {
             emit('closed', { outcome: 'closed' });
             return;
+          }
+          if (config.slot_mode === true) {
+            const slot = /^slot ([0-9]+) ([0-9]+)$/.exec(header);
+            if (!slot) fail('only bounded slot commands are accepted by slot worker');
+            command = { kind: 'slot',
+              json: integer(Number(slot[1]), MAX_FRAME, 'slot request'),
+              wat: integer(Number(slot[2]), MAX_FRAME, 'checked slot WAT') };
+            if (command.json === 0) fail('empty slot command');
+            continue;
           }
           if (engine.staged && header !== 'publish-bin' && header !== 'discard-bin') {
             fail('staged live reload requires publish or discard');
@@ -115,6 +130,19 @@ async function protocol(config) {
               if (command.kind !== 'compile' && command.bytes < 8) fail('invalid Wasm frame size');
             }
           }
+        }
+        if (command.kind === 'slot') {
+          if (pending.length < command.json + command.wat) break;
+          const json = pending.subarray(0, command.json);
+          const wat = pending.subarray(command.json, command.json + command.wat);
+          pending = pending.subarray(command.json + command.wat);
+          command = null;
+          try {
+            const report = engine.request(JSON.parse(utf8.decode(json)), wat);
+            emit(report.outcome, { ...report, retire_code_spans: engine.retireCodeSpans() });
+            if (engine.poisoned) return;
+          } catch (error) { emit('internal-failure', reportError(error)); return; }
+          continue;
         }
         if (command.kind === 'live-grant') {
           if (pending.length < command.bytes) break;

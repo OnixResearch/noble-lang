@@ -792,8 +792,8 @@ fn specialization_evidence(
                 ("slot",encoding::Json::Number(u64::from(def.0))),
                 ("inst",inst_evidence(inst)),
             ]),
-            Node::Quotation {..}=>return Err(output::Failure::error(
-                "named-report-graph","quoted step body is outside named rule".into())),
+            Node::Quotation {..} | Node::SlotInvoke {..} => return Err(output::Failure::error(
+                "named-report-graph","quoted or live-slot step body is outside named rule".into())),
         };
         nodes.push(encoding::object([
             ("candidate_node",encoding::Json::Number(u64::from(id.0))),

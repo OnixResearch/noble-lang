@@ -11,6 +11,13 @@ const HOST: &str = concat!(
     include_str!("runtime/engine.mjs"),
     include_str!("runtime/protocol.mjs"),
 );
+const SLOT_HOST: &str = concat!(
+    include_str!("runtime/preamble.mjs"),
+    include_str!("runtime/slot-policy.mjs"),
+    include_str!("runtime/slot-registry.mjs"),
+    include_str!("runtime/slot-engine.mjs"),
+    include_str!("runtime/protocol.mjs"),
+);
 const SELECTION: &str = include_str!("runtime/config.json");
 const ABI: &str = include_str!("runtime/abi.json");
 const DECLARED_ABI: &str = include_str!("runtime/declared-abi.json");
@@ -19,6 +26,7 @@ pub(super) struct Engine {
     child: std::process::Child,
     replies: std::sync::mpsc::Receiver<Result<super::output::Report, super::output::Failure>>,
     reader: Option<std::thread::JoinHandle<()>>,
+    control: Option<std::os::unix::net::UnixDatagram>,
     has_failed: bool,
 }
 
@@ -29,9 +37,10 @@ impl Engine {
         let config = configuration::admission(optimized);
         let (send, replies) = std::sync::mpsc::sync_channel(1);
         let mut engine = Self {
-            child: attempt!(launch(&config)),
+            child: attempt!(launch(&config, HOST, None)),
             replies,
             reader: None,
+            control: None,
             has_failed: false,
         };
         let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
@@ -80,12 +89,54 @@ impl Engine {
         Self::start_with_config(&configuration::live())
     }
 
+    pub fn start_slot() -> Result<Self, super::output::Failure> {
+        Self::start_with_host(&configuration::slot(), SLOT_HOST, true)
+    }
+
+    /// A separately framed, private host-operator datagram channel. Only the
+    /// selected slot profile owns it; normal engine modes keep stderr instead.
+    pub fn slot_control_sender(
+        &self,
+    ) -> Result<std::os::unix::net::UnixDatagram, super::output::Failure> {
+        attempt!(self.control.as_ref().ok_or_else(protocol::error))
+            .try_clone().map_err(super::framing::io_error)
+    }
+
+    /// Slot mode must report worker shutdown failures through JSONL and its
+    /// exit status, rather than leaving them to Drop's stderr diagnostic.
+    pub fn finish_slot(&mut self) -> Result<(), super::output::Failure> {
+        self.finish()
+    }
+
+    /// The slot host has parsed a source-bound nested terminal guest report.
+    /// No shutdown frame can be trusted after that terminal protocol state.
+    pub fn mark_slot_terminal(&mut self) {
+        if self.control.is_some() {
+            self.has_failed = true;
+        }
+    }
+
     fn start_with_config(config: &str) -> Result<Self, super::output::Failure> {
+        Self::start_with_host(config, HOST, false)
+    }
+
+    fn start_with_host(config: &str, host: &str, slot: bool) -> Result<Self, super::output::Failure> {
+        let (control, child_control) = if slot {
+            let (parent, child) = attempt!(std::os::unix::net::UnixDatagram::pair()
+                .map_err(super::framing::io_error));
+            attempt!(parent.set_nonblocking(true).map_err(super::framing::io_error));
+            attempt!(child.set_read_timeout(Some(std::time::Duration::from_secs(10)))
+                .map_err(super::framing::io_error));
+            (Some(parent), Some(child))
+        } else {
+            (None, None)
+        };
         let (send, replies) = std::sync::mpsc::sync_channel(1);
         let mut engine = Self {
-            child: attempt!(launch(config)),
+            child: attempt!(launch(config, host, child_control)),
             replies,
             reader: None,
+            control,
             has_failed: false,
         };
         let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
@@ -117,6 +168,37 @@ impl Engine {
         attempt!(self.write(header.as_bytes()));
         attempt!(self.write(wat));
         attempt!(self.write(source));
+        self.reply()
+    }
+
+    /// One bounded host-selected JSON command; only an install carries the
+    /// compiler's checked WAT. Source is never worker protocol input.
+    pub fn slot(
+        &mut self,
+        request: &serde_json::Value,
+        wat: &[u8],
+    ) -> Result<super::output::Report, super::output::Failure> {
+        const MAX_REQUEST: usize = 524_288;
+        const MAX_WAT: usize = 4_194_304;
+        let json = attempt!(serde_json::to_vec(request).map_err(|error| {
+            super::output::Failure::new(
+                super::output::ErrorContext { stage: "shell", outcome: "invalid-input" },
+                std::format!("cannot encode slot request: {error}"),
+            )
+        }));
+        if json.len() > MAX_REQUEST || wat.len() > MAX_WAT
+            || (request.get("operation").and_then(serde_json::Value::as_str) != Some("install")
+                && !wat.is_empty())
+        {
+            return Err(super::output::Failure::new(
+                super::output::ErrorContext { stage: "shell", outcome: "exhausted" },
+                "slot request exceeds bounded worker protocol",
+            ));
+        }
+        let header = std::format!("slot {} {}\n", json.len(), wat.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(&json));
+        attempt!(self.write(wat));
         self.reply()
     }
 
@@ -321,6 +403,9 @@ impl Engine {
         reason = "Owner: noble-maintainers; finish closes a process pipe, reaps the child and joins its output-reader thread before propagating errors. Resource destruction, process waiting and thread joining cannot be const."
     )]
     fn finish(&mut self) -> Result<(), super::output::Failure> {
+        if self.child.stdin.is_none() && self.reader.is_none() {
+            return Ok(());
+        }
         let mut can_wait = !self.has_failed && self.reader.is_some();
         let request = if can_wait { self.close() } else { Ok(()) };
         if request.is_err() {
@@ -357,9 +442,13 @@ impl Drop for Engine {
     }
 }
 
-fn launch(config: &str) -> Result<std::process::Child, super::output::Failure> {
-    std::process::Command::new(NODE)
-        .env_clear()
+fn launch(
+    config: &str,
+    host: &str,
+    child_control: Option<std::os::unix::net::UnixDatagram>,
+) -> Result<std::process::Child, super::output::Failure> {
+    let mut command = std::process::Command::new(NODE);
+    command.env_clear()
         .args([
             "--no-liftoff",
             "--no-wasm-lazy-compilation",
@@ -368,15 +457,20 @@ fn launch(config: &str) -> Result<std::process::Child, super::output::Failure> {
             "--max-old-space-size=256",
             "--input-type=module",
             "-e",
-            HOST,
+            host,
             "--",
             "--protocol",
             config,
         ])
         .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::inherit())
-        .spawn()
+        .stdout(std::process::Stdio::piped());
+    if let Some(control) = child_control {
+        command.env("NOBLE_SLOT_CONTROL_FD", "2");
+        command.stderr(std::process::Stdio::from(std::os::fd::OwnedFd::from(control)));
+    } else {
+        command.stderr(std::process::Stdio::inherit());
+    }
+    command.spawn()
         .map_err(|error| {
             super::output::Failure::new(
                 super::output::ErrorContext {

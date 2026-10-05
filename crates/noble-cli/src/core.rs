@@ -8,6 +8,7 @@ pub(crate) mod editor;
 pub(crate) mod entry;
 mod framing;
 pub(crate) mod live;
+pub(crate) mod live_slot;
 mod output;
 mod report;
 pub(crate) mod worker;
@@ -28,6 +29,16 @@ pub(crate) const EVIDENCE_LIMITS: noble_contracts::Limits = noble_contracts::Lim
 pub const USAGE: &str = "usage:
   noble live repl [--source ABS_PATH] [--engine v8|interpreter] [--self-edit NAME --expect-generation N]
   live repl: newline-delimited source, :reload ABS_PATH, or :grant-self-edit NAME N; interpreter is unavailable
+  noble live slot --engine v8 --authority ABS_PATH
+  live slot: bounded JSONL define/install/candidate/publish/delete/rollback/invoke/reflect/trace/
+    replay/policy/discard/release-program/release-replay/hold-checkpoint/resume-checkpoint;
+    stdin must be an anonymous OS pipe whose launcher retains the write end exclusively and
+    never delegates it to guest code; pipe metadata alone does not authenticate its writer;
+    a checked saved Program owner may be published instead of its expression wrapper,
+    but a dynamically composed owner without checked installed target metadata cannot;
+    authority JSON separately selects owner, exact source SHA-256 allowlist, nominal resources,
+    ordered slot contracts, effect ceiling and scoped grants. Proof-required publication refuses
+    without independent target evidence; source text is never a control command.
   noble editor analyze|admit JSON_FILE [--emit NEW_DIR (admit only)]
   JSON_FILE: editor AST format 1, nodes integer/boolean/word/quotation/hole
   noble admit-artifact WASM --effects CLAIMS_JSON [--source HOST_SOURCE] [--allow-effects test.emit,test.abort,test.clock] [--opt off|on]

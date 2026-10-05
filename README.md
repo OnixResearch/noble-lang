@@ -121,6 +121,42 @@ cells. Use `noble session --framed` for framed multiline input and
 `--emit NEW_DIR` to retain reports and emitted artifacts. Run `noble --help`
 for available CLI flags.
 
+### Experimental checked live slots (opt-in; acceptance not established)
+
+`noble live slot --engine v8 --authority ABS_PATH` selects a separate resident
+Node/V8 worker and reads one bounded host-operator JSON command per line from
+an anonymous OS pipe. The launcher must retain the pipe's write descriptor
+exclusively: passing it to a guest or an untrusted same-UID helper delegates
+operator authority. Pipe ownership/mode does **not** authenticate individual
+writers. The authority file must be an absolute path under trusted directories;
+symlinks and writable or non-owner-controlled path components are refused.
+Its `sources` list pairs each source ID with the SHA-256 of its exact UTF-8
+bytes. It separately declares the owner, retained-version quota, available
+effects, scoped operation grants, resource catalog, and slot interfaces.
+Candidate source text cannot grant itself a slot, resource, effect, or proof.
+
+Host commands include `define` for an allowlisted named declaration, `install`
+for a checked expression, `candidate` to stage a checked Program while idle,
+and epoch-CAS `publish`, `rollback`, and `delete`. `invoke` uses typed inputs
+and borrowed reference bindings; an actual returned Program receives an opaque
+saved owner token, which `release-program` retires at its last owner. `discard`
+removes an authorized never-published install. `reflect` and `trace` observe
+the host ledger. `hold-checkpoint` selects a protected import occurrence in the
+next checked root; after `checkpoint-entered`, a permitted publication or
+revocation receives a committed `control_id` receipt before
+`resume-checkpoint`. The held root keeps its pinned epoch, while the next root
+observes the committed change. Frozen `record`/`replay` and `release-replay`
+use retained roots rather than replacing live effect policy. Every reply is
+JSON; inspect each `outcome`, not only the process exit status. Source-bound
+named selection requires `install` with `selected_name` after the corresponding
+`define`; anonymous targets have **no checked DefinitionId** and cannot be used for
+source-bound frozen replay. Recorded protected responses are replayed as an
+exact ordered script without executing another real host effect; they do not
+grant permission for a new live effect. Proof-required publication
+currently fails closed: there is no independently pinned Lean receipt for the
+exact selected, installed target. Neither this opt-in CLI nor its unit tests
+constitute LSLOT-01..09 canonical acceptance.
+
 ### Guarded live REPL (opt-in, partial)
 
 `noble live repl` runs a separate resident Node/V8 session with an explicitly

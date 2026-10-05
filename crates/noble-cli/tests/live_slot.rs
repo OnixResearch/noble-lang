@@ -1,5 +1,5 @@
-//! Host-owned slot registry transitions in the selected real Node/V8 child.
-//! This does not claim a compiled Noble `slot.invoke` or LSLOT acceptance.
+//! Host-owned slot transitions and checked CLI replay in selected Node/V8.
+//! These tests do not claim an independently checked LSLOT05 proof.
 
 #[test]
 fn host_registry_pins_authorizes_and_retires_real_versions() {
@@ -15,8 +15,24 @@ fn host_registry_pins_authorizes_and_retires_real_versions() {
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
-    assert_eq!(
-        output.stdout,
-        b"live-slot host registry: pin/CAS/authority/quota/nominal/evidence transitions passed\n"
+}
+
+#[test]
+fn cli_scripted_effect_failure_counts_no_real_replay_operations() {
+    let node = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node";
+    let script = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/live_slot_replay_failure.mjs"
+    );
+    let output = std::process::Command::new(node)
+        .arg(script)
+        .arg(env!("CARGO_BIN_EXE_noble"))
+        .output()
+        .expect("launch selected CLI conditional replay child");
+    assert!(
+        output.status.success(),
+        "checked CLI scripted replay failed: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
     );
 }
