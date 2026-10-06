@@ -116,20 +116,44 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
     let mut function_types = Vec::new();
     let mut types = Vec::new();
     let mut code_elements = None;
+    let mut core_elements = None;
     let mut code_initializers = Vec::new();
     let mut named_segments = BTreeMap::new();
+    let mut table_imports = 0;
+    let mut exported_installer = None;
     for section in Parser::new(0).parse_all(bytes) {
         match section.map_err(|_| denied("unparseable WebAssembly section"))? {
             Payload::TypeSection(section) => for ty in section.into_iter_err_on_gc_types() {
                 types.push(ty.map_err(|_| denied("invalid selected function type"))?);
             },
             Payload::ImportSection(imports) => for import in imports {
-                match import.map_err(|_| denied("invalid import"))?.ty {
+                let import = import.map_err(|_| denied("invalid import"))?;
+                match import.ty {
                     wasmparser::TypeRef::Func(index) | wasmparser::TypeRef::FuncExact(index) => {
                         function_types.push(index);
                         imported_functions += 1;
                     }
+                    wasmparser::TypeRef::Table(_) => {
+                        if import.module != "noble" || import.name != "table" || table_imports != 0 {
+                            return Err(denied("unexpected dispatch table import"));
+                        }
+                        table_imports += 1;
+                    }
                     _ => {}
+                }
+            },
+            Payload::TableSection(_) => return Err(denied("selected module defines an alternate table")),
+            Payload::StartSection { .. } => return Err(denied("selected module has an unchecked start function")),
+            Payload::ExportSection(exports) => for export in exports {
+                let export = export.map_err(|_| denied("invalid export"))?;
+                if export.kind == wasmparser::ExternalKind::Table {
+                    return Err(denied("selected module exports its dispatch table"));
+                }
+                if export.name == "install_target" {
+                    if export.kind != wasmparser::ExternalKind::Func
+                        || exported_installer.replace(export.index).is_some() {
+                        return Err(denied("ambiguous target installer export"));
+                    }
                 }
             },
             Payload::FunctionSection(section) => for index in section {
@@ -138,7 +162,9 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
             Payload::CodeSectionEntry(body) => function_bodies.push(body),
             Payload::ElementSection(elements) => for (index, element) in elements.into_iter().enumerate() {
                 let element = element.map_err(|_| denied("invalid element segment"))?;
-                if !matches!(element.kind, ElementKind::Passive) { continue; }
+                if !matches!(element.kind, ElementKind::Passive) {
+                    return Err(denied("unchecked active or declared element segment"));
+                }
                 let ElementItems::Functions(items) = element.items else { continue; };
                 let entries = items.into_iter().collect::<Result<Vec<_>, _>>()
                     .map_err(|_| denied("invalid element function list"))?;
@@ -173,13 +199,26 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
         }
     }
     let unique_functions = functions.values().collect::<BTreeSet<_>>();
+    if table_imports != 1 { return Err(denied("selected module lacks the host dispatch table")); }
     if unique_functions.len() != functions.len() || globals.values().collect::<BTreeSet<_>>().len() != globals.len() {
         return Err(denied("ambiguous function or global name"));
     }
     let code_segment = named_segments.get("code").copied()
         .ok_or_else(|| denied("missing code element segment"))?;
+    let core_segment = named_segments.get("core").copied();
     for (segment, entries) in code_initializers {
         if segment == code_segment { code_elements = Some(entries); }
+        else if Some(segment) == core_segment { core_elements = Some(entries); }
+        else { return Err(denied("unrecognized passive element segment")); }
+    }
+    if core_segment.is_some() != core_elements.is_some() {
+        return Err(denied("missing native core element segment"));
+    }
+    if let Some(core) = &core_elements {
+        if core.iter().map(|index| named(&functions, *index)).collect::<Result<Vec<_>, _>>()?
+            != ["empty_entry", "quote_entry", "compose_entry", "restore_entry"] {
+            return Err(denied("native core element entries differ"));
+        }
     }
     let elements = code_elements.ok_or_else(|| denied("missing passive code segment"))?;
     if elements.len() != usize::try_from(span_end - span_start).unwrap_or(usize::MAX) {
@@ -192,6 +231,18 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
     }
     let initialize = functions.iter().find(|(_, name)| name.as_str() == "initialize")
         .map(|(index, _)| *index).ok_or_else(|| denied("missing initializer"))?;
+    let installer = exported_installer.ok_or_else(|| denied("selected target installer not exported"))?;
+    let install_body = function_bodies.get(installer.checked_sub(imported_functions)
+        .ok_or_else(|| denied("target installer resolves to an import"))? as usize)
+        .ok_or_else(|| denied("target installer lacks a code body"))?;
+    let mut calls_initialize = 0;
+    for operator in install_body.get_operators_reader().map_err(|_| denied("invalid installer"))? {
+        if matches!(operator.map_err(|_| denied("invalid installer instruction"))?,
+            Operator::Call { function_index } if function_index == initialize) {
+            calls_initialize += 1;
+        }
+    }
+    if calls_initialize != 1 { return Err(denied("exported installer does not call checked initializer exactly once")); }
     let mut verified_entries = BTreeSet::new();
     for (index, program) in programs.iter().enumerate() {
         if number(program, "program_index")? != index as u32
@@ -248,34 +299,48 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
         .ok_or_else(|| denied("initializer lacks code body"))?;
     let mut previous = Vec::new();
     let mut found = 0;
+    let mut found_core = 0;
     for operator in init.get_operators_reader().map_err(|_| denied("invalid initializer"))? {
         match operator.map_err(|_| denied("invalid initializer instruction"))? {
             Operator::I32Const { value } => { previous.push(value); if previous.len() > 3 { previous.remove(0); } },
             Operator::TableInit { elem_index, table } => {
                 if elem_index == code_segment && table == 0 && previous == [span_start as i32, 0, elements.len() as i32] {
                     found += 1;
-                } else if elem_index == code_segment { return Err(denied("incorrect code table initializer")); }
+                } else if Some(elem_index) == core_segment && table == 0
+                    && previous == [0, 0, 4] && found_core == 0 && found == 0 {
+                    found_core += 1;
+                } else { return Err(denied("alternate table initialization in initializer")); }
                 previous.clear();
             }
             Operator::TableSet { .. } | Operator::TableCopy { .. } => return Err(denied("alternate table mutation in initializer")),
             _ => { previous.clear(); }
         }
     }
-    if found != 1 { return Err(denied("code element segment not initialized at the checked table span")); }
+    if found != 1 || found_core != u32::from(core_segment.is_some()) {
+        return Err(denied("code and native core segments not initialized at checked table spans"));
+    }
     // The compiler's live source runtime has no other table writer. Reject a
     // binary that mutates dispatch after the checked initializer, even if all
     // selected function bodies and their element entries look correct.
+    let mut table_initializers = 0;
     for body in &function_bodies {
         for operator in body.get_operators_reader().map_err(|_| denied("invalid code body"))? {
             match operator.map_err(|_| denied("invalid decoded code body"))? {
                 Operator::TableSet { .. } | Operator::TableCopy { .. } | Operator::TableGrow { .. }
                 | Operator::TableFill { .. } => return Err(denied("alternate code table writer")),
-                Operator::TableInit { elem_index, .. } if elem_index == code_segment
-                    && body.range() != init.range() =>
-                    return Err(denied("code segment initialized outside checked initializer")),
+                Operator::TableInit { elem_index, table } => {
+                    if (elem_index != code_segment && Some(elem_index) != core_segment)
+                        || table != 0 || body.range() != init.range() {
+                        return Err(denied("alternate table initialization outside checked initializer"));
+                    }
+                    table_initializers += 1;
+                }
                 _ => {}
             }
         }
+    }
+    if table_initializers != 1 + u32::from(core_segment.is_some()) {
+        return Err(denied("ambiguous code table initialization"));
     }
     let outputs = rows(origin, "outputs")?;
     let checked_output = rows(&install["target_metadata"], "stack_out")?;
@@ -374,6 +439,29 @@ mod tests {
         if verify(&super::super::assemble_slot(changed_table.as_bytes())?,
             &origin, &install).is_ok() {
             return Err("changed passive-element table destination acquired checked origin".into());
+        }
+        let init_code = format!("(table.init $code (i32.const {}) (i32.const 0) (i32.const {}))",
+            span.start, span.length);
+        if !wat.contains(&init_code) { return Err("test could not locate checked table initializer".into()); }
+        let extra_init = format!("{init_code}\n(table.init $evil (i32.const {}) (i32.const 0) (i32.const 1))",
+            span.start);
+        let forged_initializer = wat.replacen(&init_code, &extra_init, 1);
+        let evil_segment = "(elem $evil func $restore_entry)\n";
+        let closing = forged_initializer.rfind(')').ok_or("module closing parenthesis missing")?;
+        let forged_initializer = format!("{}{}{}",
+            &forged_initializer[..closing], evil_segment, &forged_initializer[closing..]);
+        if verify(&super::super::assemble_slot(forged_initializer.as_bytes())?,
+            &origin, &install).is_ok() {
+            return Err("second passive element overwrote checked table entries".into());
+        }
+        let closing = wat.rfind(')').ok_or("module closing parenthesis missing")?;
+        let forged_helper = format!("{}{}(func $overwrite_checked_table {} )\n{}",
+            &wat[..closing], evil_segment,
+            format_args!("(table.init $evil (i32.const {}) (i32.const 0) (i32.const 1))", span.start),
+            &wat[closing..]);
+        if verify(&super::super::assemble_slot(forged_helper.as_bytes())?,
+            &origin, &install).is_ok() {
+            return Err("other function's passive element initializer acquired checked origin".into());
         }
         Ok(())
     }

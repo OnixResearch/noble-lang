@@ -36,11 +36,15 @@ const inputs = [fixtureFile, 'README.md', 'Cargo.toml', 'Cargo.lock', 'rust-tool
   'crates/noble-contracts/Cargo.toml', 'crates/noble-kernel/Cargo.toml',
   'crates/noble-wasm/Cargo.toml', 'crates/noble-cli/src/core/runtime/config.json',
   'crates/noble-wasm/tests/live_slot_admission.rs',
+  'crates/noble-wasm/tests/live_slot_artifact.rs',
+  'crates/noble-contracts/tests/source_proof.rs',
   'crates/noble-cli/tests/live_slot_capture_legacy.mjs',
   'crates/noble-cli/tests/live_slot_cas_policy.mjs',
   'crates/noble-cli/tests/live_slot_cas_policy_authority.json',
   'crates/noble-cli/tests/live_slot_direct_quote.mjs',
   'crates/noble-cli/tests/live_slot_direct_quote.rs',
+  'crates/noble-cli/tests/live_slot_selected_origin.mjs',
+  'crates/noble-cli/tests/live_slot_selected_origin.rs',
   'crates/noble-cli/tests/live_slot_resource_ref_cli.mjs',
   'crates/noble-cli/tests/live_slot_resource_ref_admission.mjs',
   'crates/noble-cli/tests/live_slot_resource_ref_static.mjs',
@@ -296,6 +300,59 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
     row(caseId(1), 'direct-quote-capture-control', 'failed', String(error),
       [raw, path.join(output, result.stdout), path.join(output, result.stderr)]
         .filter(fs.existsSync).map(receiptFile));
+  }
+  binaryStill();
+}
+
+// A selected, source-classified saved owner is a control, not P2/D2 approval,
+// captured target proof, publication, or replay authorization.
+{
+  const dir = fs.mkdtempSync('/tmp/noble-lslot-resource-selected-origin-');
+  fs.chmodSync(dir, 0o700);
+  evidenceDirectories.push(dir);
+  const result = execution('LSLOT01-selected-origin-control',
+    'crates/noble-cli/tests/live_slot_selected_origin.mjs', dir);
+  const stem = path.join(dir, 'LSLOT01-selected-origin-control');
+  const files = [`${stem}.jsonl`, `${stem}.requests.jsonl`, `${stem}.responses.jsonl`,
+    `${stem}.stderr.txt`, `${stem}.summary.json`,
+    path.join(output, result.stdout), path.join(output, result.stderr)];
+  try {
+    assert.equal(result.status, 0);
+    const records = jsonLines(`${stem}.jsonl`);
+    const summary = JSON.parse(fs.readFileSync(`${stem}.summary.json`));
+    assert.equal(records[0].kind, 'authority');
+    assert.equal(records[0].selected_binary_sha256, afterBinary);
+    assert.equal(summary.selected_binary_sha256, afterBinary);
+    assert.equal(records.at(-1).kind, 'exit');
+    assert.equal(records.at(-1).code, 0);
+    assert.ok(fs.existsSync(`${stem}.stderr.txt`));
+    const requests = records.filter(record => record.kind === 'operator')
+      .map(record => record.request);
+    const replies = records.filter(record => record.kind === 'cli')
+      .map(record => record.row);
+    assert.deepEqual(jsonLines(`${stem}.requests.jsonl`), requests);
+    assert.deepEqual(jsonLines(`${stem}.responses.jsonl`), replies);
+    assert.equal(replies.length, requests.length + 1);
+    assert.deepEqual([summary.guest_requests, summary.protected_operations], [0, 0]);
+    assert.equal(summary.owner_count, 9);
+    const variable = replies.find(row => row.stack?.[0]?.verified_origin?.caller_id === 'variable');
+    const opaque = replies.find(row => row.stack?.[0]?.capture_status
+      === 'backend-observed-source-occurrence-unavailable');
+    assert.ok(variable && opaque, 'source-classified and executable opaque observations required');
+    assert.equal(variable.stack[0].source_id, null);
+    assert.equal(variable.stack[0].program_index, null);
+    assert.equal(opaque.stack[0].verified_origin, undefined);
+    assert.ok(replies.some(row => row.outcome === 'refused'));
+    assert.equal(replies.filter(row => row.outcome === 'program-released').length, summary.owner_count);
+    row(caseId(1), 'selected-origin-saved-owner-control', 'passed',
+      'selected CLI checked bounded source/Wasm/graph saved owner provenance, independent captures and opaque refusal; no P2/D2 or proof claim',
+      files.map(receiptFile), { guest_requests: 0, protected_operations: 0 },
+      { owner_count: summary.owner_count, source_artifacts: summary.installed_artifacts,
+        opaque_status: opaque.stack[0].capture_status },
+      { claim: 'control_pass', session: summedCounters(replies) });
+  } catch (error) {
+    row(caseId(1), 'selected-origin-saved-owner-control', 'failed', String(error),
+      files.filter(fs.existsSync).map(receiptFile));
   }
   binaryStill();
 }
@@ -856,7 +913,7 @@ for (const [number, script, prefix] of [
 // Unrun canonical obligations are never inferred from a different refusal.
 for (const [id, names, reason] of [
   [caseId(5), fixture.cases[4].input.variants.map(item => item.name),
-    'no authenticated checked source-to-quote operand/capture provenance for selected P2/D2, and no real positive exact evidence; blanket proof-required denial is not an admission proof'],
+    'bounded checked selected source/Wasm/graph saved-owner origin is observed, but no independently approved D2 identity for returned P2 and no exact captured P/D/C/Q/A/Wasm positive Lean proof or applicability negatives; blanket proof-required denial is not admission proof'],
 ]) for (const name of names) row(id, name, 'blocked', reason);
 
 for (const id of fixture.cases.map(item => item.id)) {
@@ -927,7 +984,7 @@ const acceptance = {
   external_evidence_sha256: evidenceFiles, integrity_issues: issues,
   limitations: [
     'All nine canonical cases remain absent/not-run/open/unassessed; this external diagnostic does not promote any case.',
-    'LSLOT-05 lacks a positive genuine selected-target proof bound to authenticated capture-sensitive P/D identities.',
+    'LSLOT-05 has bounded selected saved-owner origin control but lacks independently approved P2/D2 identity and exact captured P/D/C/Q/A/Wasm Lean proof with applicability negatives.',
     'LSLOT-08 replay lacks the canonical dynamically captured I64:5 Dtrace and scripted ok-A/ok-B responses; exact replay never grants real effects.',
     'LSLOT-02 has observed held nested roots at reachable physical epochs 2/3, not its canonical simultaneous epoch-1 multi-slot registry; several admission/static negatives and the exact typed LSLOT-09 legacy caller remain profile-limited.',
   ],

@@ -177,17 +177,22 @@ code. For a selected named body with bounded, unambiguous I64
 quote/compose lineage, `verified_origin` reports its caller, artifact, and
 output position after
 the host matches the complete source operation map to decoded Wasm functions,
-passive element entries and table initialization, then the worker checks the
-actual epoch-qualified Program graph and ordered captured operand before
-retaining the owner. The host assembles once with the pinned wasm-tools binary;
-the worker instantiates those exact bytes after a SHA-256 cross-check. For
+passive element entries, the exported installer call to its initializer and
+the native core plus checked code table initialization, rejecting alternate
+table writers. The worker checks the actual epoch-qualified Program graph
+and ordered captured operand before retaining the owner. The host assembles
+once with the pinned wasm-tools binary; the worker instantiates those exact
+bytes after a SHA-256 cross-check. For
 example, `def builder [ quote [ + ] compose ]` captures root I64 `2` and
 returns a saved `Program<I64,I64,pure>` that a checked `run` caller can execute
 with `1` to obtain `3`; `def fixed [ 2 quote [ + ] compose ]` retains the same
 fixed capture even when the caller root differs. Ambiguous or unsupported
 dynamic Programs remain usable opaque owners without checked origin. A
-verified selected origin is **not** an installed target DefinitionId, proof,
-publication permission, or frozen replay authorization.
+verified selected origin proves only this supported saved owner's bounded
+source/Wasm/graph correspondence; it is **not** an independently approved
+P2/D2 target identity, captured P/D/C/Q/A/Wasm Lean proof, effect permission,
+publication permission, or frozen replay authorization. Canonical LSLOT-05
+and LSLOT-08 remain blocked.
 
 Run the diagnostic `verification/live-slot-current-source/gate.mjs` with the
 Node executable pinned in `crates/noble-cli/src/core/runtime/config.json`;
