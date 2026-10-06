@@ -306,6 +306,51 @@ export class SlotRegistry {
     }
   }
 
+  // Genesis is one physical map publication, not a series of CAS updates
+  // relabeled as epoch 1. Staged candidates may survive a refused attempt.
+  bootstrap({ expectedEpoch, members }) {
+    this.#check();
+    slotInteger(expectedEpoch, 'expected global epoch');
+    if (expectedEpoch !== 0n || this.epoch !== 0n || this.#current.map.size
+      || this.#incarnations.size || this.#roots.size || this.#nextRoot !== 0n
+      || this.#frozen.size || this.#saved.size
+      || this.#versions.size !== this.#staged.size) {
+      return { outcome: 'bootstrap-unavailable', epoch: this.epoch };
+    }
+    if (!Array.isArray(members) || (members.length !== 2 && members.length !== 3)
+      || members.length > this.#maxSlots) {
+      return { outcome: 'bootstrap-refused', epoch: this.epoch };
+    }
+    const map = new Map();
+    for (const member of members) {
+      const id = slotName(member.slotId);
+      if (map.has(id)) return { outcome: 'duplicate-slot', epoch: this.epoch };
+      const required = contract(member.interface);
+      const refusal = this.#candidate(member.version, required, member.evidence ?? null);
+      if (refusal) return { outcome: refusal, epoch: this.epoch };
+      if (!this.#allowed({ operation: 'publish', slotId: id, version: member.version })) {
+        return { outcome: 'policy-denied', epoch: this.epoch };
+      }
+      const evidence = member.evidence == null ? null
+        : Object.freeze({ ...member.evidence,
+          captures: Object.freeze(member.evidence.captures.slice()) });
+      map.set(id, Object.freeze({ id, incarnation: 1n, generation: 1n,
+        version: member.version, contract: required, evidence }));
+    }
+    if (this.#reachable(map).size > this.#quota) {
+      return { outcome: 'retention-budget-refused', epoch: this.epoch };
+    }
+    this.#current = Object.freeze({ epoch: 1n, map });
+    for (const [id, entry] of map) {
+      this.#incarnations.set(id, entry.incarnation);
+      this.#staged.delete(entry.version);
+    }
+    this.#retire('bootstrap');
+    return { outcome: 'bootstrapped', epoch: this.epoch,
+      slots: [...map.values()].map(({ id, incarnation, generation }) =>
+        ({ slot: id, incarnation, generation })) };
+  }
+
   // A new slot and a replacement both commit by the SAME global epoch CAS.
   // Recreating a deleted ID always receives a new incarnation.
   publish({ slotId, expectedEpoch, expectedIncarnation = null, expectedGeneration = null,

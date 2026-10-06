@@ -137,7 +137,15 @@ Candidate source text cannot grant itself a slot, resource, effect, or proof.
 
 Host commands include `define` for an allowlisted named declaration, `install`
 for a checked expression, `candidate` to stage a checked Program while idle,
-and epoch-CAS `publish`, `rollback`, and `delete`. `invoke` uses typed inputs
+and `bootstrap` for one physical epoch-1 genesis of exactly two or three
+independently authorized selected slots, for example
+`{"operation":"bootstrap","expected_epoch":"0","members":[{"slot":"B","id":"B1"},{"slot":"A","id":"A1"}]}`.
+Every member must match its host-selected ordered interface and effect
+ceiling; a refused member, duplicate slot, exhausted capacity, or previous
+registry/root state publishes nothing. Successful genesis reports epoch 1 and
+incarnation/generation 1 for every slot. Later `publish`, `rollback`, and
+`delete` retain their ordinary single-slot global epoch-CAS behavior; genesis
+does not supply a proof or independent guest authority. `invoke` uses typed inputs
 and borrowed reference bindings; an actual returned Program receives an opaque
 saved owner token, which `release-program` retires at its last owner. `discard`
 removes an authorized never-published install. `reflect` and `trace` observe
@@ -238,11 +246,13 @@ bytes, exact used test scripts/helpers, fixture, authority inputs and
 documentation. Its `receipt.json` records Git HEAD/selected dirty status
 as diagnostics and points to retained real command streams and raw responses.
 LSLOT-02 independently exercises a held A→B→B root and a held A→B→C root:
-committed publication leaves the old root pinned and the next root selects
-the new target. Their physical baseline epochs are 2 and 3 respectively;
-global CAS cannot install all two/three slots together at the canonical
-epoch 1, so those canonical rows remain blocked with null *canonical* counters
-but carry measured attempt/session counters separately. LSLOT-04 authorized
+each independently authorized two-/three-slot genesis publishes one physical
+epoch-1 map, and a refused invalid member leaves it at epoch 0. A committed
+leaf publication at epoch 2 leaves the old root pinned while a new root selects
+the new target. The base nested-site reflection still repeats `live.dispatch`
+rather than exposing a unique effect set, so the complete canonical LSLOT-02
+case remains blocked; its bounded controls carry measured counters separately
+from blocked canonical claims. LSLOT-04 authorized
 rollback and LSLOT-07 publication denial retain runnable controls but remain
 blocked canonically without their respective exact-evidence/proof premises. A
 separate LSLOT-05 control observes the real host's generic missing-proof

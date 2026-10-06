@@ -1239,6 +1239,10 @@ impl Host {
                     "expected_epoch", "expected_incarnation", "expected_generation"])?;
                 self.publication(request, op)?
             }
+            "bootstrap" => {
+                object(request, &["operation", "expected_epoch", "members"])?;
+                self.bootstrap(request)?
+            }
             "delete" => {
                 object(request, &["operation", "slot", "expected_epoch", "expected_incarnation", "expected_generation"])?;
                 let slot = id(request, "slot")?;
@@ -1752,6 +1756,48 @@ impl Host {
             message["program_index"] = json!(index);
         }
         self.cas(request, message)
+    }
+
+    fn bootstrap(&self, request: &Value) -> Result<Value, String> {
+        let epoch = numbers(request, "expected_epoch")?;
+        if epoch != 0 {
+            return Err(reject("bootstrap requires expected global epoch zero"));
+        }
+        let selected = request.get("members").and_then(Value::as_array)
+            .filter(|members| (2..=3).contains(&members.len()))
+            .ok_or_else(|| reject("bootstrap requires two or three checked slots"))?;
+        let mut slots = BTreeSet::new();
+        let mut members = Vec::with_capacity(selected.len());
+        for member in selected {
+            object(member, &["slot", "id", "program_index"])?;
+            let slot = id(member, "slot")?;
+            if !slots.insert(slot.clone()) {
+                return Err(reject("duplicate bootstrap slot"));
+            }
+            self.require_grant("publish", Some(&slot), None)?;
+            let contract = self.authority.slots.get(&slot)
+                .ok_or_else(|| reject("unregistered selected slot contract"))?;
+            if contract.proof_required {
+                return Err(reject("proof-required bootstrap slot lacks independently checked target evidence"));
+            }
+            let selected_id = id(member, "id")?;
+            let candidate = self.candidates.get(&selected_id)
+                .ok_or_else(|| reject("unknown checked installed candidate"))?;
+            let index = member.get("program_index").map(|_| uint(member, "program_index"))
+                .transpose()?.map(|value| value as usize).unwrap_or(candidate.root_index);
+            let program = candidate.programs.get(index)
+                .ok_or_else(|| reject("bootstrap Program index lacks checked target metadata"))?;
+            if program.input != contract.input || program.output != contract.output
+                || program.effects.iter().any(|effect| !contract.ceiling.contains(effect)) {
+                return Err(reject("checked bootstrap candidate differs from selected slot interface or effect ceiling"));
+            }
+            members.push(json!({"slot":slot,"id":selected_id,"program_index":index,
+                "proof_required":false,
+                "interface":{"input":contract.input,"output":contract.output,
+                    "effectCeiling":contract.ceiling,"proofRequired":false}}));
+        }
+        Ok(json!({"operation":"bootstrap","expected_epoch":epoch.to_string(),
+            "members":members}))
     }
 
     fn invoke(&mut self, request: &Value) -> Result<Value, String> {
