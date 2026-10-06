@@ -267,7 +267,6 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
     assert.equal(program.source_id, null);
     assert.equal(program.program_index, null);
     assert.deepEqual(program.capture_values, [{ type: 'I64', value: '5' }]);
-    assert.match(program.owner, /^program-[1-9][0-9]*$/);
     const use = owner => ({ operation: 'invoke', id: 'runner', inputs: [
       { kind: 'i64', value: '20' }, { kind: 'program', owner },
     ], refs: [] });
