@@ -743,17 +743,11 @@ class SlotEngine {
     }
     if (this.nextSavedOwner === Number.MAX_SAFE_INTEGER) throw Error('saved Program owner exhausted');
     const graph = this.observeProgramGraph(runtime, handle);
-    this.saving = { runtime, index, expectedHandle: handle };
-    let registryOwner;
-    try { registryOwner = this.registry.saveProgramGraph(handle, graph.versions); }
-    finally { this.saving = null; }
     const prior = this.savedCells.get(handle);
     if (prior && prior.runtime !== runtime) {
       this.poisoned = true;
       throw Error('saved backend Program owner crossed an untrusted runtime boundary');
     }
-    this.savedCells.set(handle, { runtime, count: (prior?.count ?? 0) + 1 });
-    const token = `program-${++this.nextSavedOwner}`;
     const installed = this.handles.get(handle);
     const module = this.modules.get(installed?.moduleId);
     const programIndex = module?.pinned.indexOf(handle) ?? -1;
@@ -762,13 +756,18 @@ class SlotEngine {
       const entry = runtime.cell_x(handle);
       if (entry === 1) {
         const recipe = runtime.cell_c(handle) >>> 0;
-        if (runtime.cell_a(handle) || runtime.cell_b(handle)
+        const captured = runtime.cell_a(handle) >>> 0;
+        if (!captured || runtime.cell_kind(captured) !== 1
+          || runtime.cell_a(captured) || runtime.cell_b(captured) || runtime.cell_c(captured)
+          || runtime.cell_b(handle) || runtime.cell_payload(handle) !== 0n
+          || !recipe
           || runtime.cell_kind(recipe) !== 8 || runtime.cell_x(recipe) !== 1
-          || runtime.cell_payload(recipe) !== runtime.cell_payload(handle)
+          || runtime.cell_a(recipe) || runtime.cell_b(recipe) || runtime.cell_c(recipe)
+          || runtime.cell_payload(recipe) !== runtime.cell_payload(captured)
           || runtime.cell_w(handle) !== 1 || runtime.cell_n(handle) !== 1) {
-          throw Error('dynamic scalar quote differs from checked backend capture layout');
+          throw Error('dynamic I64 quote differs from checked backend capture layout');
         }
-        observedCaptures = [{ type: 'I64', value: runtime.cell_payload(handle).toString() }];
+        observedCaptures = [{ type: 'I64', value: runtime.cell_payload(captured).toString() }];
       } else {
         observedCaptures = ['cell_a', 'cell_b'].flatMap(field => {
           const child = runtime[field](handle) >>> 0;
@@ -776,6 +775,14 @@ class SlotEngine {
         });
       }
     }
+    // All graph and capture observations must finish before saveProgramGraph
+    // acquires a backend root and charges the registry's retained versions.
+    this.saving = { runtime, index, expectedHandle: handle };
+    let registryOwner;
+    try { registryOwner = this.registry.saveProgramGraph(handle, graph.versions); }
+    finally { this.saving = null; }
+    this.savedCells.set(handle, { runtime, count: (prior?.count ?? 0) + 1 });
+    const token = `program-${++this.nextSavedOwner}`;
     this.savedOwners.set(token, { handle, moduleIds: graph.moduleIds, registryOwner,
       sourceId: programIndex < 0 ? null : module.id,
       programIndex: programIndex < 0 ? null : programIndex });

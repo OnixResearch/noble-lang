@@ -168,6 +168,14 @@ currently fails closed: there is no independently pinned Lean receipt for the
 exact selected, installed target. Neither this opt-in CLI nor its unit tests
 constitute LSLOT-01..09 canonical acceptance.
 
+A directly returned I64 `quote` is also a saved Program: its value is read from
+the actual boxed I64 capture, not from the Program's latent-effect payload.
+For example, a checked `def q [ quote ]` invoked with `5` returns an owner
+whose captured program can be passed to another checked caller with `20`;
+`swap [ run ] dip +` returns `25`. Release that owner before discarding unused
+code. Its observed capture does not establish a source occurrence or authorize
+dynamic Program publication, proof, or frozen replay.
+
 Run the diagnostic `verification/live-slot-current-source/gate.mjs` with the
 Node executable pinned in `crates/noble-cli/src/core/runtime/config.json`;
 pass an absolute externally built `/tmp/.../debug/noble` and a **new** direct
