@@ -249,10 +249,13 @@ LSLOT-02 independently exercises a held A→B→B root and a held A→B→C root
 each independently authorized two-/three-slot genesis publishes one physical
 epoch-1 map, and a refused invalid member leaves it at epoch 0. A committed
 leaf publication at epoch 2 leaves the old root pinned while a new root selects
-the new target. The base nested-site reflection still repeats `live.dispatch`
-rather than exposing a unique effect set, so the complete canonical LSLOT-02
-case remains blocked; its bounded controls carry measured counters separately
-from blocked canonical claims. LSLOT-04 authorized
+the new target. Checked nested-site reflection reports the exact effect set
+`E ∪ {live.dispatch}` without duplicating `live.dispatch` when E already
+contains it; exact slot effect ceilings and current per-dispatch host policy
+remain distinct checks. Both selected real-CLI LSLOT-02 variants match their
+canonical fixture inputs/expected observations in this external diagnostic;
+the canonical case records still remain absent/not-run/open/unassessed, with no
+evidence or proof promotion. LSLOT-04 authorized
 rollback and LSLOT-07 publication denial retain runnable controls but remain
 blocked canonically without their respective exact-evidence/proof premises. A
 separate LSLOT-05 control observes the real host's generic missing-proof

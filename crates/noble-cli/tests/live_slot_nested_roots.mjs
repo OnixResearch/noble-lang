@@ -83,9 +83,16 @@ for (const fixture of fixtures) {
     const initialEpoch = published.epoch;
     const outerSite = expectOutcome(await session.issue({ operation: 'reflect', id: 'callerA', site_id: 0 }), 'reflected');
     assert.equal(outerSite.site.instruction, 'slot.invoke');
-    assert.ok(outerSite.site.effects.length > 0 &&
-      outerSite.site.effects.every(effect => effect === 'live.dispatch'));
+    assert.deepEqual(outerSite.site.effects, ['live.dispatch'],
+      'E ∪ {live.dispatch} is a set even when the nested target E already contains dispatch');
+    assert.equal(outerSite.site.input.length, fixture.contracts.at(-1).input.length);
+    assert.deepEqual(outerSite.site.output, ['I64']);
     assert.ok(!JSON.stringify(outerSite.site).includes('slotId'));
+    for (const id of fixture.name === 'base-parent-child' ? ['A1'] : ['A1', 'B1']) {
+      const site = expectOutcome(await session.issue({ operation: 'reflect', id, site_id: 0 }), 'reflected');
+      assert.deepEqual(site.site.effects, ['live.dispatch']);
+      assert.ok(!JSON.stringify(site.site).includes('slotId'));
+    }
     // Base pauses before the second B; transitive pauses before the nested B
     // so C is still unselected when the operator commits its replacement.
     expectOutcome(await session.issue({ operation: 'hold-checkpoint',
@@ -115,7 +122,9 @@ for (const fixture of fixtures) {
     assert.deepEqual(old.stack, [{ kind: 1, value: String(fixture.oldResult) }]);
     assert.deepEqual([old.guest_requests, old.protected_operations], [3, 0]);
     assert.deepEqual(old.request_trace.map(item => item.slotId), fixture.oldTrace);
-    assert.ok(old.request_trace.every(item => item.rootEpoch === initialEpoch && item.policyAllowed === true));
+    assert.deepEqual(old.request_trace.map(item =>
+      [item.slotId, item.artifactSha256, item.generation]),
+    fixture.oldTrace.map(slot => [slot, installed[`${slot}1`].artifact_sha256, '1']));
     assert.deepEqual(old.control_events.map(item => [item.control_id, item.operation,
       item.scope, item.epoch, item.outcome]),
     [['1', 'publish', fixture.leaf, ack.epoch, 'published']]);
@@ -133,7 +142,20 @@ for (const fixture of fixtures) {
     assert.deepEqual(newOuter.stack, [{ kind: 1, value: String(fixture.newResult) }]);
     assert.deepEqual([newOuter.guest_requests, newOuter.protected_operations], [3, 0]);
     assert.deepEqual(newOuter.request_trace.map(item => item.slotId), fixture.newTrace);
-    assert.ok(newOuter.request_trace.every(item => item.rootEpoch === ack.epoch && item.policyAllowed === true));
+    assert.deepEqual(newOuter.request_trace.map(item =>
+      [item.slotId, item.artifactSha256, item.generation]),
+    fixture.newTrace.map(slot => [slot, installed[slot === fixture.leaf
+      ? fixture.replacement : `${slot}1`].artifact_sha256,
+    slot === fixture.leaf ? '2' : '1']));
+    for (const [trace, epoch] of [[old.request_trace, initialEpoch],
+      [newOuter.request_trace, ack.epoch]]) {
+      assert.ok(trace.every(item => item.rootEpoch === epoch && item.policyAllowed === true
+        && item.policyInput.operation === 'dispatch'
+        && item.policyInput.slotId === item.slotId
+        && item.policyInput.rootEpoch === epoch
+        && item.policyInput.version.artifactSha256 === item.artifactSha256),
+      'each actual dispatch must recheck current authority for its selected slot/version');
+    }
     const newLeaf = newOuter.request_trace.filter(item => item.slotId === fixture.leaf);
     assert.ok(newLeaf.every(item => item.generation === '2' &&
       item.artifactSha256 === installed[fixture.replacement].artifact_sha256));
@@ -144,13 +166,11 @@ for (const fixture of fixtures) {
     assert.deepEqual([leaf.guest_requests, leaf.protected_operations], [1, 0]);
     assert.deepEqual(leaf.request_trace.map(item => item.slotId), [fixture.leaf]);
     assert.equal(leaf.request_trace[0].programValueId, newLeaf[0].programValueId);
+    assert.equal(leaf.request_trace[0].policyAllowed, true);
     const afterSite = expectOutcome(await session.issue({ operation: 'reflect', id: 'callerA', site_id: 0 }), 'reflected');
     assert.deepEqual(afterSite.site, outerSite.site);
     assert.equal(await session.close(), 0);
     summary.push({ name: fixture.name, status: 'observed',
-      limitation: new Set(outerSite.site.effects).size !== outerSite.site.effects.length
-        ? 'nested site reflection repeats live.dispatch rather than reporting a unique effect set'
-        : null,
       initial_epoch: initialEpoch, committed_epoch: ack.epoch,
       bootstrap: published, invalid_refusal: invalid, reinit_refusal: reinit,
       old_root: { epoch: old.epoch, stack: old.stack, guest_requests: old.guest_requests,

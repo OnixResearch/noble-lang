@@ -579,9 +579,14 @@ export class SlotRegistry {
       if (new Set(forwarded.map(pair => pair.targetPosition)).size !== forwarded.length) {
         throw Error('duplicate checked forwarded target position');
       }
+      // The checked site's ceiling is the selected target E. Its invocation
+      // effect is E ∪ {live.dispatch}; retain E exactly for typed dispatch.
+      const effects = typed.ceiling.includes('live.dispatch')
+        ? typed.ceiling : Object.freeze([...typed.ceiling, 'live.dispatch']);
       sites.set(row.site_id, Object.freeze({ siteId: row.site_id,
         borrowedInputPosition: row.selected_ref_logical_position,
         input: typed.input, output: typed.output, effectCeiling: typed.ceiling,
+        effects,
         forwarded: Object.freeze(forwarded) }));
     }
     this.#modules.set(token, Object.freeze({ artifactSha256, sites, rootInput: input, catalog }));
@@ -592,7 +597,7 @@ export class SlotRegistry {
     const site = this.#modules.get(module)?.sites.get(siteId);
     if (!site) throw Error('unknown checked dispatch site');
     return { instruction: 'slot.invoke', siteId, input: [...site.input],
-      output: [...site.output], effects: [...site.effectCeiling, 'live.dispatch'] };
+      output: [...site.output], effects: [...site.effects] };
   }
 
   #trace(root, record) {

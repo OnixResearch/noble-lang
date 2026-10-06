@@ -458,14 +458,21 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
       assert.equal(item.status, 'observed', item.error);
       assert.equal(item.initial_epoch, '1');
       assert.equal(item.committed_epoch, '2');
+      const slotIds = name === 'base-parent-child' ? ['B', 'A'] : ['C', 'B', 'A'];
       assert.deepEqual(item.bootstrap.slots.map(slot =>
         [slot.slot, slot.incarnation, slot.generation]),
-      (name === 'base-parent-child' ? ['B', 'A'] : ['C', 'B', 'A'])
-        .map(slot => [slot, '1', '1']));
+      slotIds.map(slot => [slot, '1', '1']));
+      assert.deepEqual(item.generic_site.effects, ['live.dispatch']);
       assert.deepEqual([item.invalid_refusal.outcome, item.reinit_refusal.outcome],
         ['refused', 'bootstrap-unavailable']);
       const records = jsonLines(raw);
       assert.equal(records[0].kind, 'authority');
+      assert.deepEqual(records[0].authority.slots.map(slot => slot.slotId), slotIds);
+      assert.deepEqual(records[0].authority.effects, ['live.dispatch']);
+      assert.deepEqual(records[0].authority.grants.map(grant =>
+        [grant.slotId, grant.operation, grant.allowed]),
+      slotIds.flatMap(slot => [['publish', true], ['dispatch', true]]
+        .map(([operation, allowed]) => [slot, operation, allowed])));
       assert.equal(records.at(-1).kind, 'exit');
       assert.equal(records.at(-1).code, 0);
       const replies = records.filter(value => value.kind === 'cli').map(value => value.row);
@@ -493,27 +500,12 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
       assert.equal(item.new_root.epoch, item.committed_epoch);
       assert.equal(item.next_leaf.epoch, item.committed_epoch);
       const sessionCounters = summedCounters(replies);
-      if (item.limitation) {
-        row(caseId(2), name, 'blocked', item.limitation, files, null, item,
-          { attempt: { guest_requests: item.old_root.guest_requests,
-            protected_operations: item.old_root.protected_operations },
-          session: sessionCounters });
-      } else {
-        row(caseId(2), name, 'passed',
-          'physical epoch-1 multi-slot genesis and checked transitive pinned-root dispatch',
-          files, { guest_requests: 3, protected_operations: 0 }, item,
-          { claim: 'canonical_variant_pass', session: sessionCounters });
-      }
-      row(caseId(2), `${name}-held-control`, 'passed',
-        'real selected CLI atomic epoch-1 map, held root kept its pin across epoch-2 publication, fresh root selected new target',
+      row(caseId(2), name, 'passed',
+        'selected CLI matches the exact epoch-1 multi-slot fixture, effect-set reflection and per-dispatch host authority; canonical case records remain unpromoted',
         files, { guest_requests: 3, protected_operations: 0 },
-        { checkpoint: item.checkpoint, committed_ack: item.committed_ack,
-          old_root: item.old_root, new_root: item.new_root, next_leaf: item.next_leaf,
-          generic_site: item.generic_site },
-        { claim: 'control_pass', session: sessionCounters });
+        item, { claim: 'canonical_variant_pass', session: sessionCounters });
     } catch (error) {
       row(caseId(2), name, 'failed', String(error), files);
-      row(caseId(2), `${name}-held-control`, 'failed', String(error), files);
     }
   }
   binaryStill();
@@ -1180,7 +1172,7 @@ const acceptance = {
     'All nine canonical cases remain absent/not-run/open/unassessed; this external diagnostic does not promote any case.',
     'LSLOT-05 has bounded selected saved-owner origin control but lacks independently approved P2/D2 identity and exact captured P/D/C/Q/A/Wasm Lean proof with applicability negatives.',
     'LSLOT-08 now has a D-neutral selected dynamic owner transitive last-pin retention control, but replay still lacks canonical captured I64:5 Dtrace and scripted ok-A/ok-B responses; exact replay never grants real effects.',
-    'LSLOT-02 has independently authorized physical epoch-1 multi-slot genesis and held nested roots; its base nested site reflection still repeats live.dispatch, so the complete canonical case remains open. Several admission/static negatives and the exact typed LSLOT-09 legacy caller remain profile-limited.',
+    'LSLOT-02 has selected CLI matches for both complete epoch-1 multi-slot variants, including effect-set reflection and per-dispatch host authority; this external diagnostic does not promote unchanged canonical case states. Several admission/static negatives and the exact typed LSLOT-09 legacy caller remain profile-limited.',
   ],
 };
 save('receipt.json', JSON.stringify(acceptance, null, 2) + '\n');
