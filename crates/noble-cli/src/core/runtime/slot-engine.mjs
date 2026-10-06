@@ -583,6 +583,49 @@ class SlotEngine {
       generation: record.generation?.toString() ?? null });
   }
 
+  bootstrap(request) {
+    if (this.active || !Array.isArray(request.members)
+      || (request.members.length !== 2 && request.members.length !== 3)) {
+      return slotReply('bootstrap-refused', { epoch: this.registry.epoch.toString() });
+    }
+    if (this.registry.epoch !== 0n) {
+      return slotReply('bootstrap-unavailable', { epoch: this.registry.epoch.toString() });
+    }
+    // A refused batch may leave independently admitted candidates staged, but
+    // no registry member is visible until the registry validates the whole map.
+    const members = [];
+    const modules = [];
+    for (const member of request.members) {
+      if (!member || typeof member.slot !== 'string' || typeof member.id !== 'string'
+        || member.owner !== undefined || member.expected_incarnation !== undefined
+        || member.expected_generation !== undefined
+        || member.proof_required === true || member.interface?.proofRequired === true) {
+        return slotReply('bootstrap-refused', { epoch: this.registry.epoch.toString() });
+      }
+      const module = this.modules.get(member.id);
+      const index = member.program_index ?? module?.target_metadata.root_program_index;
+      if (!module || module.discardRequested || !Number.isInteger(index)
+        || index < 0 || index >= module.pinned.length) {
+        return slotReply('unadmitted-target', { epoch: this.registry.epoch.toString() });
+      }
+      const handle = module.pinned[index];
+      let version = this.versions.get(handle);
+      if (!version) {
+        version = this.candidate(module, handle);
+        this.versions.set(handle, version);
+      }
+      members.push({ slotId: member.slot, interface: member.interface, version });
+      modules.push(module);
+    }
+    const record = this.registry.bootstrap({
+      expectedEpoch: slotDecimal(request.expected_epoch, 'expected epoch'), members });
+    if (record.outcome === 'bootstrapped') for (const module of modules) module.published = true;
+    return slotReply(record.outcome, { epoch: record.epoch.toString(),
+      ...(record.slots === undefined ? {} : { slots: record.slots.map(slot =>
+        ({ slot: slot.slot, incarnation: slot.incarnation.toString(),
+          generation: slot.generation.toString() })) }) });
+  }
+
   retireTarget(handle) {
     const owner = this.handles.get(handle >>> 0);
     const module = this.modules.get(owner?.moduleId);
@@ -1202,6 +1245,7 @@ class SlotEngine {
     if (request.operation === 'release-program') return this.releaseProgram(request.owner);
     if (request.operation === 'release-replay') return this.releaseReplay(request.token);
     if (request.operation === 'publish' || request.operation === 'rollback') return this.publish(request);
+    if (request.operation === 'bootstrap') return this.bootstrap(request);
     if (request.operation === 'invoke') return this.invoke(request);
     if (request.operation === 'delete') {
       const result = this.registry.delete({ slotId: request.slot,

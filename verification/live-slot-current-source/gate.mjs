@@ -359,9 +359,8 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
   binaryStill();
 }
 
-// LSLOT-02: independent held-root A->B->B and A->B->C sessions. These are
-// physical epoch-2/3 baselines because the CLI's global-CAS registry must
-// publish each distinct slot separately; canonical epoch 1 remains unproved.
+// LSLOT-02: independent held-root A->B->B and A->B->C sessions start with
+// an authorized atomic physical epoch-1 map, not sequential CAS relabeling.
 {
   const dir = fs.mkdtempSync('/tmp/noble-lslot-resource-02-');
   fs.chmodSync(dir, 0o700);
@@ -386,8 +385,14 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
       assert.ok(item, `missing independent ${name} session`);
       assert.equal(item.selected_binary_sha256, afterBinary);
       assert.equal(item.status, 'observed', item.error);
-      assert.equal(item.initial_epoch, name === 'base-parent-child' ? '2' : '3');
-      assert.equal(item.committed_epoch, name === 'base-parent-child' ? '3' : '4');
+      assert.equal(item.initial_epoch, '1');
+      assert.equal(item.committed_epoch, '2');
+      assert.deepEqual(item.bootstrap.slots.map(slot =>
+        [slot.slot, slot.incarnation, slot.generation]),
+      (name === 'base-parent-child' ? ['B', 'A'] : ['C', 'B', 'A'])
+        .map(slot => [slot, '1', '1']));
+      assert.deepEqual([item.invalid_refusal.outcome, item.reinit_refusal.outcome],
+        ['refused', 'bootstrap-unavailable']);
       const records = jsonLines(raw);
       assert.equal(records[0].kind, 'authority');
       assert.equal(records.at(-1).kind, 'exit');
@@ -397,25 +402,39 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
       assert.deepEqual(jsonLines(requests), commands);
       assert.deepEqual(jsonLines(responses), replies);
       assert.ok(fs.existsSync(stderrFile));
+      const refused = replies.findIndex(value => value.outcome === 'refused'
+        && /checked bootstrap candidate differs/.test(value.diagnostic ?? ''));
+      const bootstrap = replies.findIndex(value => value.outcome === 'bootstrapped');
+      const reinit = replies.findIndex(value => value.outcome === 'bootstrap-unavailable');
       const entered = replies.findIndex(value => value.outcome === 'checkpoint-entered');
       const ack = replies.findIndex((value, index) => index > entered &&
         value.outcome === 'published' && value.control_id === '1');
       const oldRoot = replies.findIndex((value, index) => index > ack &&
         value.outcome === 'executed' && value.control_events?.length);
-      assert.ok(entered >= 0 && ack > entered && oldRoot > ack,
-        'physical checkpoint, committed ACK and pinned root must be ordered');
+      assert.ok(refused >= 0 && bootstrap > refused && reinit > bootstrap
+        && entered > reinit && ack > entered && oldRoot > ack,
+      'invalid atomic genesis must not commit; physical epoch-1 bootstrap, checkpoint,'
+        + ' committed epoch-2 ACK and pinned root must be ordered');
+      assert.equal(replies[bootstrap].epoch, '1');
       assert.deepEqual(replies[oldRoot].request_trace, item.old_root.request_trace);
       assert.deepEqual([item.old_root.guest_requests, item.old_root.protected_operations], [3, 0]);
       assert.equal(item.old_root.epoch, item.initial_epoch);
       assert.equal(item.new_root.epoch, item.committed_epoch);
       assert.equal(item.next_leaf.epoch, item.committed_epoch);
       const sessionCounters = summedCounters(replies);
-      row(caseId(2), name, 'blocked', item.limitation, files, null, item,
-        { attempt: { guest_requests: item.old_root.guest_requests,
-          protected_operations: item.old_root.protected_operations },
-        session: sessionCounters });
+      if (item.limitation) {
+        row(caseId(2), name, 'blocked', item.limitation, files, null, item,
+          { attempt: { guest_requests: item.old_root.guest_requests,
+            protected_operations: item.old_root.protected_operations },
+          session: sessionCounters });
+      } else {
+        row(caseId(2), name, 'passed',
+          'physical epoch-1 multi-slot genesis and checked transitive pinned-root dispatch',
+          files, { guest_requests: 3, protected_operations: 0 }, item,
+          { claim: 'canonical_variant_pass', session: sessionCounters });
+      }
       row(caseId(2), `${name}-held-control`, 'passed',
-        'real selected CLI held root kept its map across committed publication; fresh root selected new target',
+        'real selected CLI atomic epoch-1 map, held root kept its pin across epoch-2 publication, fresh root selected new target',
         files, { guest_requests: 3, protected_operations: 0 },
         { checkpoint: item.checkpoint, committed_ack: item.committed_ack,
           old_root: item.old_root, new_root: item.new_root, next_leaf: item.next_leaf,
@@ -1090,7 +1109,7 @@ const acceptance = {
     'All nine canonical cases remain absent/not-run/open/unassessed; this external diagnostic does not promote any case.',
     'LSLOT-05 has bounded selected saved-owner origin control but lacks independently approved P2/D2 identity and exact captured P/D/C/Q/A/Wasm Lean proof with applicability negatives.',
     'LSLOT-08 now has a D-neutral selected dynamic owner transitive last-pin retention control, but replay still lacks canonical captured I64:5 Dtrace and scripted ok-A/ok-B responses; exact replay never grants real effects.',
-    'LSLOT-02 has observed held nested roots at reachable physical epochs 2/3, not its canonical simultaneous epoch-1 multi-slot registry; several admission/static negatives and the exact typed LSLOT-09 legacy caller remain profile-limited.',
+    'LSLOT-02 has independently authorized physical epoch-1 multi-slot genesis and held nested roots; its base nested site reflection still repeats live.dispatch, so the complete canonical case remains open. Several admission/static negatives and the exact typed LSLOT-09 legacy caller remain profile-limited.',
   ],
 };
 save('receipt.json', JSON.stringify(acceptance, null, 2) + '\n');

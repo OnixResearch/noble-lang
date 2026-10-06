@@ -65,17 +65,22 @@ for (const fixture of fixtures) {
       assert.equal(installed[id].protected_operations, 0);
     }
     expectOutcome(await session.issue({ operation: 'candidate', id: fixture.replacement }), 'candidate-staged');
-    const published = [];
-    for (const slot of fixture.contracts) {
-      const id = `${slot.slotId}1`;
-      const report = expectOutcome(await session.issue({ operation: 'publish', slot: slot.slotId,
-        id, expected_epoch: String(published.length) }), 'published');
-      assert.deepEqual([report.epoch, report.incarnation, report.generation],
-        [String(published.length + 1), '1', '1']);
-      assert.deepEqual([report.guest_requests, report.protected_operations], [0, 0]);
-      published.push(report);
-    }
-    const initialEpoch = String(published.length);
+    const members = fixture.contracts.map(slot => ({ slot: slot.slotId, id: `${slot.slotId}1` }));
+    const invalid = await session.issue({ operation: 'bootstrap', expected_epoch: '0',
+      members: members.map((member, index) =>
+        index === members.length - 1 ? { ...member, id: 'callerA' } : member) });
+    expectOutcome(invalid, 'refused');
+    assert.match(invalid.diagnostic, /checked bootstrap candidate differs from selected slot interface/);
+    const published = expectOutcome(await session.issue({ operation: 'bootstrap',
+      expected_epoch: '0', members }), 'bootstrapped');
+    assert.deepEqual([published.epoch, published.guest_requests, published.protected_operations],
+      ['1', 0, 0]);
+    assert.deepEqual(published.slots, slots.map(slot =>
+      ({ slot, incarnation: '1', generation: '1' })));
+    const reinit = expectOutcome(await session.issue({ operation: 'bootstrap',
+      expected_epoch: '0', members }), 'bootstrap-unavailable');
+    assert.equal(reinit.epoch, '1');
+    const initialEpoch = published.epoch;
     const outerSite = expectOutcome(await session.issue({ operation: 'reflect', id: 'callerA', site_id: 0 }), 'reflected');
     assert.equal(outerSite.site.instruction, 'slot.invoke');
     assert.ok(outerSite.site.effects.length > 0 &&
@@ -100,7 +105,7 @@ for (const fixture of fixtures) {
     // before resuming the guest, independently of operator stdout latency.
     session.send({ operation: 'resume-checkpoint' });
     const ack = expectOutcome(await session.next(), 'published');
-    assert.equal(ack.epoch, String(published.length + 1));
+    assert.equal(ack.epoch, '2');
     assert.equal(ack.root, entered.root);
     assert.equal(ack.checkpoint, entered.checkpoint);
     assert.equal(ack.control_id, '1');
@@ -143,10 +148,11 @@ for (const fixture of fixtures) {
     assert.deepEqual(afterSite.site, outerSite.site);
     assert.equal(await session.close(), 0);
     summary.push({ name: fixture.name, status: 'observed',
-      limitation: `canonical concurrent registry epoch 1 for all ${slots.join(',')} entries cannot be constructed by sequential global-CAS publications; physical baseline epoch ${initialEpoch} and commit ${ack.epoch}` +
-        (new Set(outerSite.site.effects).size !== outerSite.site.effects.length
-          ? '; nested site reflection repeats live.dispatch rather than reporting a unique effect set' : ''),
+      limitation: new Set(outerSite.site.effects).size !== outerSite.site.effects.length
+        ? 'nested site reflection repeats live.dispatch rather than reporting a unique effect set'
+        : null,
       initial_epoch: initialEpoch, committed_epoch: ack.epoch,
+      bootstrap: published, invalid_refusal: invalid, reinit_refusal: reinit,
       old_root: { epoch: old.epoch, stack: old.stack, guest_requests: old.guest_requests,
         protected_operations: old.protected_operations, request_trace: old.request_trace,
         control_events: old.control_events },

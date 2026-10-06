@@ -8,8 +8,8 @@ const policy = new Map();
 const performed = [];
 const released = [];
 const grants = (operation, slotId, allowed) => policy.set(`${operation}:${slotId}`, allowed);
-const host = quota => new SlotRegistry({
-  quota, knownEffects: ['test.emit'],
+const host = (quota, maxSlots = 128) => new SlotRegistry({
+  quota, maxSlots, knownEffects: ['test.emit'],
   authorize: request => policy.get(`${request.operation}:${request.slotId ?? request.nominalId}`) === true,
   performEffect: (effect, text, version) => {
     performed.push(`${version.programValueId}:${effect}:${text}`);
@@ -49,6 +49,76 @@ const frame = (address, parent, handle, pairs) => {
     view.setUint32(address + 20 + index * 8, ordinal, true);
   });
 };
+
+// Genesis checks all members before one epoch-1 map commit. A rejected final
+// member cannot publish earlier members or consume their incarnation/stage.
+{
+  const registry = host(2);
+  for (const slot of ['genesis-B', 'genesis-A', 'genesis-C']) {
+    grants('publish', slot, true);
+  }
+  const b = admit(registry, 'genesis-B', 601);
+  const a = admit(registry, 'genesis-A', 602);
+  const c = admit(registry, 'genesis-C', 603);
+  const member = (slotId, version, selected = descriptor()) =>
+    ({ slotId, version, interface: selected });
+  const base = [member('genesis-B', b), member('genesis-A', a)];
+  const attempt = members => registry.bootstrap({ expectedEpoch: 0n, members });
+  assert.equal(attempt([base[0], member('genesis-A', a, descriptor(['Bool']))]).outcome,
+    'ordered-interface-mismatch');
+  assert.equal(registry.epoch, 0n);
+  assert.equal(registry.retainedVersions, 0);
+  assert.equal(attempt([base[0], base[0]]).outcome, 'duplicate-slot');
+  grants('publish', 'genesis-A', false);
+  assert.equal(attempt(base).outcome, 'policy-denied');
+  grants('publish', 'genesis-A', true);
+  assert.equal(attempt([...base, member('genesis-C', c)]).outcome, 'retention-budget-refused');
+  assert.equal(registry.epoch, 0n);
+  assert.deepEqual(attempt(base), { outcome: 'bootstrapped', epoch: 1n,
+    slots: [
+      { slot: 'genesis-B', incarnation: 1n, generation: 1n },
+      { slot: 'genesis-A', incarnation: 1n, generation: 1n },
+    ] });
+  assert.equal(registry.retainedVersions, 2);
+  assert.equal(attempt(base).outcome, 'bootstrap-unavailable');
+  assert.equal(registry.publish({ slotId: 'genesis-C', expectedEpoch: 1n, version: c,
+    interface: descriptor() }).outcome, 'retention-budget-refused');
+  registry.discardCandidate(c);
+  const b2 = admit(registry, 'genesis-B2', 604);
+  assert.deepEqual(registry.publish({ slotId: 'genesis-B', expectedEpoch: 1n,
+    expectedIncarnation: 1n, expectedGeneration: 1n, version: b2 }),
+  { outcome: 'published', epoch: 2n, incarnation: 1n, generation: 2n });
+  assert.equal(registry.retainedVersions, 2);
+  assert.ok(released.includes('601:P-genesis-B'), 'unpinned epoch-1 code retires after CAS');
+  assert.ok(!released.includes('602:P-genesis-A'), 'other slot remains owned by the current map');
+}
+
+{
+  const registry = host(3, 2);
+  for (const slot of ['genesis-B', 'genesis-A', 'genesis-C']) grants('publish', slot, true);
+  const selected = ['genesis-B', 'genesis-A', 'genesis-C']
+    .map((slotId, index) => ({ slotId, interface: descriptor(),
+      version: admit(registry, `capacity-${index}`, 620 + index) }));
+  assert.equal(registry.bootstrap({ expectedEpoch: 0n, members: selected }).outcome,
+    'bootstrap-refused');
+  assert.equal(registry.epoch, 0n);
+  assert.equal(registry.bootstrap({ expectedEpoch: 0n, members: selected.slice(0, 2) }).outcome,
+    'bootstrapped');
+}
+
+{
+  const registry = host(2);
+  const members = ['genesis-B', 'genesis-A'].map((slotId, index) => ({
+    slotId, interface: descriptor(), version: admit(registry, `prior-root-${index}`, 630 + index),
+  }));
+  const module = registry.registerModule(digest, []);
+  const root = registry.pinRoot(900, module);
+  assert.equal(registry.bootstrap({ expectedEpoch: 0n, members }).outcome,
+    'bootstrap-unavailable');
+  registry.finishRoot(root);
+  assert.equal(registry.bootstrap({ expectedEpoch: 0n, members }).outcome,
+    'bootstrap-unavailable', 'a completed pre-genesis root must not be retroactively pinned at epoch 1');
+}
 
 // One pinned root keeps its old B target across publication, and the SAME
 // borrowed ref selects B twice. The next root sees the newly published target.
