@@ -93,7 +93,8 @@ With the existing pinned Lake package cache and selected Nix tools available:
 
 ```sh
 NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
-"$NODE" verification/mathlib-i64/compare.mjs --output "$HOME/.cache/noble-i64-comparison-$(date +%s)"
+env -i "$NODE" verification/mathlib-i64/compare.mjs \
+  --output "$HOME/.cache/noble-i64-comparison-$(date +%s)"
 ```
 
 For another checkout, select `tool_paths.node.output` from
@@ -101,9 +102,21 @@ For another checkout, select `tool_paths.node.output` from
 requires a **new** directory and retains `comparison.json`, the generated
 Lean oracle, and each actual emitted `.noble`, `.wat`, `.wasm` and tool receipt.
 Without `--output`, the same check uses a disposable private directory.
-The local `TMPDIR` must have space, and the existing `proofs/m3/.lake/packages`
-Mathlib checkout and compiled import cache must match the pinned manifest;
-this command intentionally does not fetch or rebuild the whole Mathlib tree.
+The example removes all inherited variables; if passing an environment
+directly, the comparator explicitly refuses Lean/Lake, Node, Bash, loader,
+Cargo, Rust, Git and Nix overrides rather than letting them reach Lean, Lake,
+Cargo or the Wasm worker. The comparator creates its own
+temporary directory under the account's `.cache`, passes an explicit minimal
+child environment and requires the Noble worktree and pinned Mathlib Git
+checkout clean with unchanged HEAD/tree before and after. Its `source_tree`
+identifies the *whole committed Noble tree*, not merely the listed diagnostic
+file hashes. Ignored build outputs (`target`, `.lake`), the compiler's
+preexisting cache, and hostile changes that race or tamper with the verifier
+are not attested. The selected `proofs/m3/.lake/packages` Mathlib source
+checkout must match the pinned manifest; the already compiled Mathlib
+`.olean` import cache remains a **separate trust assumption**. This command
+checks the local import and Noble model with Lean but intentionally does not
+rebuild or formally recheck every Mathlib source file.
 
 This is a finite backend comparison, **not** a universal compiler/Wasm proof.
 The exact BigInt/Rat calculator and its error/state behavior are not

@@ -4,8 +4,8 @@
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { userInfo } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
@@ -14,6 +14,14 @@ const selection = JSON.parse(readFileSync(join(root, 'policy/tool-selection.json
 const leanBin = join(selection.tool_paths.lean.output, 'bin');
 const rustBin = join(selection.tool_paths.quality_rust.output, 'bin');
 const node = join(selection.tool_paths.node.output, 'bin/node');
+const git = realpathSync('/run/current-system/sw/bin/git');
+const { homedir: home, username } = userInfo();
+const path = [leanBin, rustBin, dirname(git),
+  `/etc/profiles/per-user/${username}/bin`, '/run/current-system/sw/bin', '/usr/bin', '/bin'].join(':');
+const childBase = Object.freeze({
+  HOME: home, USER: username, LOGNAME: username, PATH: path,
+  LANG: 'C.UTF-8', CI: '1', GIT_TERMINAL_PROMPT: '0',
+});
 const mathlibRevision = 'fabf563a7c95a166b8d7b6efca11c8b4dc9d911f';
 const operations = { add: '+', sub: '-', mul: '*' };
 const vectors = [
@@ -36,7 +44,7 @@ const fileHash = path => digest(readFileSync(path));
 const requireThat = (condition, message) => { if (!condition) throw Error(message); };
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024,
-    timeout: 180000, ...options });
+    timeout: 180000, env: childBase, ...options });
   if (result.error || result.status !== 0) {
     throw Error(`${command} ${args.join(' ')} failed: ${result.error?.message ?? result.status}\n${result.stderr}\n${result.stdout}`);
   }
@@ -45,10 +53,28 @@ function run(command, args, options = {}) {
 
 requireThat(process.argv.length === 2 || (process.argv.length === 4 && process.argv[2] === '--output'),
   'usage: compare.mjs [--output NEW_DIR]');
+// No caller-supplied code-loading, toolchain or shell overrides. NODE_OPTIONS
+// may have acted *before* this script starts: this is refusal, not hostile
+// process attestation. Children receive an explicit environment regardless.
+const forbidden = Object.keys(process.env).filter(key =>
+  /^(?:LEAN(?:_|$)|LAKE(?:_|$)|NODE(?:_|$)|BASH(?:_|$)|ENV$|LD_|DYLD_|CARGO_|RUST|GIT_|NIX_)/.test(key)
+  && process.env[key] !== '');
+if (forbidden.length) {
+  console.error(`[mathlib-i64] FAIL unsafe caller environment: ${forbidden.sort().join(', ')}`);
+  process.exit(1);
+}
 const retained = process.argv.length === 4;
-const scratch = retained ? resolve(process.argv[3]) : mkdtempSync(join(tmpdir(), 'noble-mathlib-i64-'));
+const scratch = retained ? resolve(process.argv[3]) :
+  mkdtempSync(join(home, '.cache/noble-mathlib-i64-'));
 if (retained) mkdirSync(scratch);
 try {
+  const gitState = cwd => ({
+    head: run(git, ['rev-parse', 'HEAD'], { cwd }),
+    tree: run(git, ['rev-parse', 'HEAD^{tree}'], { cwd }),
+    status: run(git, ['status', '--porcelain=v1', '--untracked-files=all'], { cwd }),
+  });
+  const initial = gitState(root);
+  requireThat(initial.status === '', `Noble source worktree dirty before comparison: ${initial.status}`);
   requireThat(realpathSync(process.execPath) === realpathSync(node), `use selected Node: ${node}`);
   const manifest = JSON.parse(readFileSync(join(proof, 'lake-manifest.json')));
   const mathlib = manifest.packages.find(pkg => pkg.name === 'mathlib');
@@ -57,16 +83,16 @@ try {
   requireThat(readFileSync(join(proof, 'lean-toolchain'), 'utf8').trim() === 'leanprover/lean4:v4.31.0',
     'Lean toolchain pin differs');
   const mathlibTree = join(proof, '.lake/packages/mathlib');
-  requireThat(run('git', ['rev-parse', 'HEAD'], { cwd: mathlibTree }) === mathlibRevision,
-    'checked-out Mathlib differs from manifest');
-  const commit = run('git', ['rev-parse', 'HEAD'], { cwd: root });
+  const mathlibBefore = gitState(mathlibTree);
+  requireThat(mathlibBefore.head === mathlibRevision && mathlibBefore.status === '',
+    `checked-out Mathlib revision/cleanliness differs from manifest: ${mathlibBefore.status}`);
   const lean = join(leanBin, 'lean');
   const lake = join(leanBin, 'lake');
   const version = run(lean, ['--version']);
   requireThat(version.includes('version 4.31.0') &&
     version.includes('68218e876d2a38b1985b8590fff244a83c321783'), 'wrong Lean executable');
-  const env = { ...process.env, PATH: `${leanBin}:${process.env.PATH}`, CI: '1',
-    TMPDIR: scratch, RUSTC_WRAPPER: '', CARGO_TARGET_DIR: join(root, 'target') };
+  const env = { ...childBase, TMPDIR: scratch,
+    CARGO_HOME: join(home, '.cargo'), RUSTC_WRAPPER: '', CARGO_TARGET_DIR: join(root, 'target') };
   run(lake, ['env', 'lean', '-DmaxHeartbeats=1000000', 'MathlibI64.lean'], { cwd: proof, env });
   const model = readFileSync(join(proof, 'MathlibI64.lean'), 'utf8');
   // Only decimal *inputs* and operator names cross this boundary; the
@@ -82,7 +108,7 @@ try {
 
   const cargo = join(rustBin, 'cargo');
   run(cargo, ['build', '--locked', '--offline', '-j', '4', '-p', 'noble-cli'],
-    { cwd: root, env: { ...env, PATH: `${rustBin}:${env.PATH}` }, timeout: 900000 });
+    { cwd: root, env, timeout: 900000 });
   const binary = join(root, 'target/debug/noble');
   const toolsExpected = {
     node,
@@ -123,6 +149,12 @@ try {
     `Mathlib mismatch: ${JSON.stringify(results.filter(result => !result.matched))}`);
   const wrong = compare(0, true); // Deliberately use subtraction for max + 1.
   requireThat(!wrong.matched, 'seeded wrong arithmetic escaped comparator');
+  const final = gitState(root);
+  const mathlibAfter = gitState(mathlibTree);
+  requireThat(final.status === '' && final.head === initial.head && final.tree === initial.tree,
+    `Noble source worktree/HEAD changed during comparison: ${final.status}`);
+  requireThat(mathlibAfter.status === '' && mathlibAfter.head === mathlibBefore.head &&
+    mathlibAfter.tree === mathlibBefore.tree, `Mathlib checkout changed during comparison: ${mathlibAfter.status}`);
   const sourceHashes = Object.fromEntries([
     'Cargo.lock', 'crates/noble-cli/src/core/worker.rs',
     'crates/noble-cli/src/core/runtime/config.json',
@@ -133,7 +165,9 @@ try {
     'policy/tool-selection.json', 'verification/mathlib-i64/compare.mjs',
   ].map(path => [path, fileHash(join(root, path))]));
   const result = { scope: 'finite-implemented-pure-I64-Wasm-only',
-    source_commit: commit, lean: version, mathlib_commit: mathlibRevision,
+    source_commit: initial.head, source_tree: initial.tree, clean_source_before_after: true,
+    lean: version, mathlib_commit: mathlibRevision, mathlib_tree: mathlibBefore.tree,
+    clean_mathlib_before_after: true, git_executable_sha256: fileHash(git),
     cli_sha256: fileHash(binary), sources_sha256: sourceHashes,
     cases: results, seeded_wrong_arithmetic_rejected: { ...wrong, matched: false },
     universal_backend_proof: false, exact_calculator_verified: false,
