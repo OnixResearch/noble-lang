@@ -133,6 +133,10 @@ const frame = (address, parent, handle, pairs) => {
   const genericReflection = registry.reflectSite(module, 3);
   assert.deepEqual(genericReflection, { instruction: 'slot.invoke', siteId: 3,
     input: ['I64'], output: ['I64'], effects: ['test.emit', 'live.dispatch'] });
+  const nested = registry.registerModule(digest,
+    [site(contract.input, contract.output, ['test.emit', 'live.dispatch'])]);
+  assert.deepEqual(registry.reflectSite(nested, 3).effects, ['test.emit', 'live.dispatch'],
+    'target effect ceiling and dispatch union remain distinct, sorted sets');
   assert.equal(registry.publish({ slotId: 'B', expectedEpoch: 0n, version: b1,
     interface: contract }).outcome, 'policy-denied');
   grants('publish', 'B', true);
