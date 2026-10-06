@@ -1778,6 +1778,7 @@
       "evidence": [],
       "milestone": "MEB",
       "acceptance": "not-started",
+      "change": "../.cairn/archive/2026-10-06-erlang-abstract-backend/",
       "implementation_scope": "Specification only: nonselected opt-in signed-I64 arithmetic subset via annotated Erlang abstract forms and pinned OTP compilation; no emitter, compiled BEAM execution, OS confinement or full Core-Bootstrap support."
     }
   ],

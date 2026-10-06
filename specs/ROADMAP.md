@@ -1421,7 +1421,7 @@ evidence remain unchanged; these designs inherit no M4 execution claim.
 
 The separate [MEB milestone](roadmap.json) follows M4 only and records the
 nonselected [Erlang abstract-form contract](ERLANG-ABSTRACT-BACKEND.md) and
-[active change](../.cairn/changes/erlang-abstract-backend/proposal.md).
+[archived specification-only change](../.cairn/archive/2026-10-06-erlang-abstract-backend/proposal.md).
 Its first positive slice is resource-free signed-I64 arithmetic, **not**
 complete Core-Bootstrap: Noble source must pass independent checking before
 bounded annotated abstract forms travel as a validated ETF *list of terms*

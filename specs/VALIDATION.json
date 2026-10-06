@@ -1383,6 +1383,22 @@
       "sha256": "a5f4d62f221e7d41a25bd55dafb20c25306cc3f8409cf07166861f72360aec50"
     },
     {
+      "file": ".cairn/archive/2026-10-06-erlang-abstract-backend/design.md",
+      "sha256": "aac0eb38c4d996f2f1155f496d6941cfb95520fb3e26e92349a3528c6d97b353"
+    },
+    {
+      "file": ".cairn/archive/2026-10-06-erlang-abstract-backend/proposal.md",
+      "sha256": "ff10d43ef8396f71cbaa0be4f5b1a01d0f883c4c358085d4d2fd8012d00b81ba"
+    },
+    {
+      "file": ".cairn/archive/2026-10-06-erlang-abstract-backend/specs/erlang-abstract-backend/spec.md",
+      "sha256": "9246638500166fe4e680831a741652332d3074360be8368bda9936301830b50b"
+    },
+    {
+      "file": ".cairn/archive/2026-10-06-erlang-abstract-backend/tasks.md",
+      "sha256": "3e61932aeaa4f0a5ad9a02808892862448b5cb8a43dfb43e09f3dddd748ae47c"
+    },
+    {
       "file": ".cairn/changes/bend-qcue-scoped-adaptations/design.md",
       "sha256": "050792bfe19d46148bc15d1b3b77f8910edbd23506fd3a17f249728736f1ca8b"
     },
@@ -1437,22 +1453,6 @@
     {
       "file": ".cairn/changes/editor-hole-transport/tasks.md",
       "sha256": "75a45a941525b05d6ae320e94d0ab63dd363fcb9b888ebff488c14eb8979ad20"
-    },
-    {
-      "file": ".cairn/changes/erlang-abstract-backend/design.md",
-      "sha256": "aac0eb38c4d996f2f1155f496d6941cfb95520fb3e26e92349a3528c6d97b353"
-    },
-    {
-      "file": ".cairn/changes/erlang-abstract-backend/proposal.md",
-      "sha256": "ff10d43ef8396f71cbaa0be4f5b1a01d0f883c4c358085d4d2fd8012d00b81ba"
-    },
-    {
-      "file": ".cairn/changes/erlang-abstract-backend/specs/erlang-abstract-backend/spec.md",
-      "sha256": "9246638500166fe4e680831a741652332d3074360be8368bda9936301830b50b"
-    },
-    {
-      "file": ".cairn/changes/erlang-abstract-backend/tasks.md",
-      "sha256": "3e61932aeaa4f0a5ad9a02808892862448b5cb8a43dfb43e09f3dddd748ae47c"
     },
     {
       "file": ".cairn/changes/explicit-live-references/design.md",
@@ -1740,7 +1740,7 @@
     },
     {
       "file": ".cairn/README.md",
-      "sha256": "ab6533ca9f7977e6a006f2c2af9d0bd852e37b8d5acf88dd73957dc07909646a"
+      "sha256": "e492996cf2e072afe198cfc88dab51dd7ec5915f886d56d167d734cf0bd7fef8"
     },
     {
       "file": ".cairn/specs/backend-experiments/spec.md",
@@ -1964,7 +1964,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "0fec91e12dea7fb79f41efa119d23915e11736d95ba72f4ac26e29c8e03f0132"
+      "sha256": "f7e05c56ff09aad25e9c96b5564134766d2dbbbe8561fdf1883c9c1474476aa3"
     },
     {
       "file": "specs/SAFETY.md",
@@ -1984,7 +1984,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "6551d0ac544ae10d0b7aede942fd4094f2a6310a79d00bce13ee8122048cc437"
+      "sha256": "a23f74c2c2ac160cdee3bd4f4cf7da7d452b5832c57d2c587f1a1628d0d2d6c5"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
