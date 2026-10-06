@@ -45,6 +45,8 @@ const inputs = [fixtureFile, 'README.md', 'Cargo.toml', 'Cargo.lock', 'rust-tool
   'crates/noble-cli/tests/live_slot_direct_quote.rs',
   'crates/noble-cli/tests/live_slot_selected_origin.mjs',
   'crates/noble-cli/tests/live_slot_selected_origin.rs',
+  'crates/noble-cli/tests/live_slot_selected_retention.mjs',
+  'crates/noble-cli/tests/live_slot_selected_retention.rs',
   'crates/noble-cli/tests/live_slot_resource_ref_cli.mjs',
   'crates/noble-cli/tests/live_slot_resource_ref_admission.mjs',
   'crates/noble-cli/tests/live_slot_resource_ref_static.mjs',
@@ -754,6 +756,108 @@ for (const [number, script, prefix] of [
   binaryStill();
 }
 
+// The independently checked static child is the published v1. The saved
+// selected dynamic quote/compose owner is only a real transitive last pin;
+// it is never a candidate, Dtrace, proof subject, or replay authorization.
+{
+  const dir = fs.mkdtempSync('/tmp/noble-lslot-resource-selected-retention-');
+  fs.chmodSync(dir, 0o700);
+  evidenceDirectories.push(dir);
+  const result = command('LSLOT08-selected-dynamic-owner-retention', cargo,
+    ['test', '-p', 'noble-cli', '--test', 'live_slot_selected_retention',
+      'selected_dynamic_owner_retains_actual_published_static_child',
+      '--locked', '--offline', '--', '--exact'],
+    { NOBLE_SLOT_EVIDENCE_DIR: dir });
+  const stem = path.join(dir, 'LSLOT08-selected-dynamic-owner-retention');
+  const files = [`${stem}.jsonl`, `${stem}.requests.jsonl`, `${stem}.responses.jsonl`,
+    `${stem}.stderr.txt`, `${stem}.summary.json`,
+    path.join(output, result.stdout), path.join(output, result.stderr)];
+  try {
+    assert.equal(result.status, 0);
+    const records = jsonLines(`${stem}.jsonl`);
+    const summary = JSON.parse(fs.readFileSync(`${stem}.summary.json`));
+    assert.equal(records[0].kind, 'authority');
+    assert.equal(records[0].selected_binary_sha256, afterBinary);
+    assert.equal(summary.selected_binary_sha256, afterBinary);
+    const source = { definition: 'def builder [ quote [ 1 + ] compose ]',
+      builder: 'builder', v2: '2 +', v2fresh: '2 +', runner: 'run', caller: 'slot.invoke' };
+    assert.deepEqual(records[0].authority, {
+      owner: 'resource-ref-fixture', quota: 1, effects: ['live.dispatch'],
+      grants: [{ operation: 'publish', slotId: 'Q', allowed: true },
+        { operation: 'dispatch', slotId: 'Q', allowed: true },
+        { operation: 'discard', slotId: 'v2', allowed: true }],
+      resources: [],
+      slots: [{ slotId: 'Q', input: ['I64'], output: ['I64'],
+        effectCeiling: [], proofRequired: false }],
+      sources: Object.entries(source).map(([id, text]) =>
+        ({ id, sha256: sha(Buffer.from(text)) })),
+    });
+    assert.equal(records.at(-1).kind, 'exit');
+    assert.equal(records.at(-1).code, 0);
+    assert.ok(fs.existsSync(`${stem}.stderr.txt`));
+    const requests = records.filter(record => record.kind === 'operator')
+      .map(record => record.request);
+    const replies = records.filter(record => record.kind === 'cli')
+      .map(record => record.row);
+    assert.deepEqual(jsonLines(`${stem}.requests.jsonl`), requests);
+    assert.deepEqual(jsonLines(`${stem}.responses.jsonl`), replies);
+    assert.equal(replies.length, requests.length + 1);
+    assert.ok(Number.isInteger(summary.static_child_program_index));
+    assert.ok(requests.some(request => request.operation === 'candidate'
+      && request.id === 'builder' && request.program_index === summary.static_child_program_index));
+    assert.ok(requests.some(request => request.operation === 'publish'
+      && request.id === 'builder' && request.program_index === summary.static_child_program_index));
+    const saved = replies.flatMap(reply => reply.stack ?? []).find(cell =>
+      cell.kind === 4 && cell.owner === summary.saved_owner);
+    assert.ok(saved);
+    assert.equal(saved.source_id, null);
+    assert.equal(saved.program_index, null);
+    assert.deepEqual(saved.verified_origin, summary.saved_origin);
+    assert.equal(saved.verified_origin.caller_id, 'builder');
+    assert.equal(saved.verified_origin.artifact_sha256, summary.static_child_artifact_sha256);
+    assert.equal(saved.capture_status, 'checked-selected-origin');
+    assert.equal(saved.capture_values.find(entry => entry.field === 'cell_a')?.value
+      ?.find(cell => cell.kind === 1)?.payload, '2');
+    const child = saved.capture_values.find(entry => entry.field === 'cell_b')?.value?.[0];
+    assert.equal(child?.kind, 4);
+    assert.equal(child.x, summary.static_child_entry);
+    assert.equal(replies.filter(reply => reply.outcome === 'retention-budget-refused').length, 2);
+    assert.ok(requests.some(request => request.operation === 'discard' && request.id === 'v2'));
+    assert.equal(replies.filter(reply => reply.outcome === 'program-released').length, 1);
+    assert.ok(requests.some(request => request.operation === 'candidate'
+      && request.id === 'v2fresh'));
+    assert.ok(requests.some(request => request.operation === 'publish'
+      && request.id === 'v2fresh'));
+    assert.deepEqual([summary.old_root.epoch, summary.new_root.epoch], ['1', '2']);
+    assert.deepEqual([summary.old_root.stack, summary.new_root.stack],
+      [[{ kind: 1, value: '6' }], [{ kind: 1, value: '7' }]]);
+    assert.deepEqual([summary.old_root.guest_requests, summary.new_root.guest_requests], [1, 1]);
+    assert.deepEqual([summary.old_root.protected_operations, summary.new_root.protected_operations], [0, 0]);
+    assert.equal(summary.old_root.request_trace[0].artifactSha256,
+      summary.static_child_artifact_sha256);
+    assert.ok(summary.old_root.request_trace[0].programValueId.startsWith(
+      `artifact:${summary.static_child_artifact_sha256}:cell:`));
+    assert.notEqual(summary.old_root.request_trace[0].programValueId,
+      summary.new_root.request_trace[0].programValueId);
+    assert.ok(summary.retire_code_spans.length > 0);
+    row(caseId(8), 'source-classified-transitive-owner-retention-control', 'passed',
+      'real selected dynamic saved owner pinned a separately admitted static v1 through held-root exit and blocked v2 quota until owner release; no dynamic target publication, proof or replay',
+      files.map(receiptFile),
+      { guest_requests: summary.new_root.guest_requests,
+        protected_operations: summary.new_root.protected_operations },
+      { static_child_program_index: summary.static_child_program_index,
+        static_child_entry: summary.static_child_entry,
+        saved_owner: summary.saved_owner, saved_origin: summary.saved_origin,
+        old_root: summary.old_root, new_root: summary.new_root,
+        retired: summary.retire_code_spans },
+      { claim: 'control_pass', session: summedCounters(replies) });
+  } catch (error) {
+    row(caseId(8), 'source-classified-transitive-owner-retention-control', 'failed', String(error),
+      files.filter(fs.existsSync).map(receiptFile));
+  }
+  binaryStill();
+}
+
 // The checked typed LiveRef caller can reach three legacy compiler-profile
 // boundaries through the selected Rust test, but not the legacy CLI surface.
 {
@@ -985,7 +1089,7 @@ const acceptance = {
   limitations: [
     'All nine canonical cases remain absent/not-run/open/unassessed; this external diagnostic does not promote any case.',
     'LSLOT-05 has bounded selected saved-owner origin control but lacks independently approved P2/D2 identity and exact captured P/D/C/Q/A/Wasm Lean proof with applicability negatives.',
-    'LSLOT-08 replay lacks the canonical dynamically captured I64:5 Dtrace and scripted ok-A/ok-B responses; exact replay never grants real effects.',
+    'LSLOT-08 now has a D-neutral selected dynamic owner transitive last-pin retention control, but replay still lacks canonical captured I64:5 Dtrace and scripted ok-A/ok-B responses; exact replay never grants real effects.',
     'LSLOT-02 has observed held nested roots at reachable physical epochs 2/3, not its canonical simultaneous epoch-1 multi-slot registry; several admission/static negatives and the exact typed LSLOT-09 legacy caller remain profile-limited.',
   ],
 };

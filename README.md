@@ -196,6 +196,19 @@ approved P2/D2 target identity, captured P/D/C/Q/A/Wasm Lean proof, effect
 permission, publication permission, or frozen replay authorization. Canonical
 LSLOT-05 and LSLOT-08 remain blocked.
 
+The selected dynamic owner also has a narrower retention consequence: with
+`def builder [ quote [ 1 + ] compose ]`, the same builder module's independently
+admitted pinned static `[ 1 + ]` child can be published to a non-proof pure slot.
+The saved composite captures I64 `2`, runs as a checked
+`Program<empty,I64,pure>` to return `3`, and
+transitively pins that exact published child across a held generic root. With
+a one-version quota, a new candidate cannot publish while the root is held
+or while only the composite owner survives; release the owner, freshly admit
+the replacement, and the slot advances with the old code span retired. This
+is a D-neutral transitive-code-owner control, **not** publication of the
+dynamic Program, the canonical saved exact v1, proof admission, or captured
+target frozen replay.
+
 Run the diagnostic `verification/live-slot-current-source/gate.mjs` with the
 Node executable pinned in `crates/noble-cli/src/core/runtime/config.json`;
 pass an absolute externally built `/tmp/.../debug/noble` and a **new** direct
