@@ -49,6 +49,8 @@ const inputs = [fixtureFile, 'README.md', 'Cargo.toml', 'Cargo.lock', 'rust-tool
   'crates/noble-cli/tests/live_slot_cas_policy_authority.json',
   'crates/noble-cli/tests/live_slot_direct_quote.mjs',
   'crates/noble-cli/tests/live_slot_direct_quote.rs',
+  'crates/noble-cli/tests/live_slot_late_control.mjs',
+  'crates/noble-cli/tests/live_slot_late_control.rs',
   'crates/noble-cli/tests/live_slot_selected_origin.mjs',
   'crates/noble-cli/tests/live_slot_selected_origin.rs',
   'crates/noble-cli/tests/live_slot_selected_retention.mjs',
@@ -438,6 +440,77 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
       { claim: 'control_pass', session: summedCounters(replies) });
   } catch (error) {
     row(caseId(1), 'selected-origin-saved-owner-control', 'failed', String(error),
+      files.filter(fs.existsSync).map(receiptFile));
+  }
+  binaryStill();
+}
+
+// A real selected Program-producing root has no protected imports. A policy
+// accepted for in-flight delivery with no checkpoint available must be refused
+// without changing the session, grant, epoch, or any subsequent root.
+{
+  const dir = fs.mkdtempSync('/tmp/noble-lslot-resource-late-control-');
+  fs.chmodSync(dir, 0o700);
+  evidenceDirectories.push(dir);
+  const result = execution('LSLOT01-late-control',
+    'crates/noble-cli/tests/live_slot_late_control.mjs', dir);
+  const stem = path.join(dir, 'LSLOT01-late-control');
+  const files = [`${stem}.jsonl`, `${stem}.requests.jsonl`, `${stem}.responses.jsonl`,
+    `${stem}.stderr.txt`, `${stem}.summary.json`,
+    path.join(output, result.stdout), path.join(output, result.stderr)];
+  try {
+    assert.equal(result.status, 0);
+    const records = jsonLines(`${stem}.jsonl`);
+    const summary = JSON.parse(fs.readFileSync(`${stem}.summary.json`));
+    assert.equal(records[0].kind, 'authority');
+    assert.equal(records[0].selected_binary_sha256, afterBinary);
+    assert.equal(records.at(-1).kind, 'exit');
+    assert.equal(records.at(-1).code, 0);
+    assert.equal(summary.selected_binary_sha256, afterBinary);
+    const requests = records.filter(record => record.kind === 'operator')
+      .map(record => record.request);
+    const replies = records.filter(record => record.kind === 'cli')
+      .map(record => record.row);
+    assert.deepEqual(jsonLines(`${stem}.requests.jsonl`), requests);
+    assert.deepEqual(jsonLines(`${stem}.responses.jsonl`), replies);
+    assert.equal(replies.length, requests.length + 1);
+    const policyIndex = requests.findIndex(request => request.operation === 'policy');
+    assert.ok(policyIndex > 0);
+    assert.equal(requests[policyIndex - 1].operation, 'invoke');
+    assert.equal(requests[policyIndex - 1].id, 'builder');
+    assert.equal(replies[policyIndex].outcome, 'executed');
+    assert.equal(replies[policyIndex].epoch, '0');
+    assert.equal(replies[policyIndex].guest_requests, 0);
+    assert.equal(replies[policyIndex].protected_operations, 0);
+    assert.ok(replies[policyIndex].stack[0].target_identity?.definition_id);
+    const late = replies[policyIndex + 1];
+    assert.deepEqual(late, summary.late);
+    assert.equal(late.outcome, 'refused');
+    assert.equal(late.when, 'too-late');
+    assert.equal(late.scope, 'publish:ordinary-control');
+    assert.match(late.diagnostic, /control was not applied/);
+    const publications = requests.flatMap((request, index) =>
+      request.operation === 'publish' ? [replies[index + 1]] : []);
+    assert.deepEqual(publications.map(report => [report.outcome, report.epoch]),
+      [['published', '1'], ['published', '2']]);
+    const next = requests.findIndex(request =>
+      request.operation === 'invoke' && request.id === 'caller');
+    assert.ok(next > policyIndex);
+    assert.equal(replies[next + 1].outcome, 'executed');
+    assert.equal(replies[next + 1].epoch, '1');
+    assert.deepEqual(replies[next + 1].stack, [{ kind: 1, value: '3' }]);
+    assert.equal(replies[next + 1].guest_requests, 1);
+    assert.equal(replies[next + 1].protected_operations, 0);
+    assert.equal(replies.filter(reply => reply.stage === 'operator-control').length, 1);
+    row(caseId(1), 'late-control-refusal-control', 'passed',
+      'selected in-flight policy with no remaining checkpoint is explicitly refused; publication stays authorized, next real dispatch checkpoint and subsequent publication retain exact epochs without extra effects',
+      files.map(receiptFile), { guest_requests: 1, protected_operations: 0 },
+      { control_id: late.control_id, when: late.when,
+        published_epochs: publications.map(report => report.epoch),
+        next_root: summary.next_root },
+      { claim: 'control_pass', session: summedCounters(replies) });
+  } catch (error) {
+    row(caseId(1), 'late-control-refusal-control', 'failed', String(error),
       files.filter(fs.existsSync).map(receiptFile));
   }
   binaryStill();

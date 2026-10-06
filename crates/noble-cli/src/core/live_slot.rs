@@ -228,6 +228,7 @@ enum Input {
 
 enum RouterAction {
     Control(Value),
+    CancelControl { control_id: String, removed: std::sync::mpsc::SyncSender<bool> },
     Hold { import: String, occurrence: u32,
         armed: std::sync::mpsc::SyncSender<()> },
     CancelHold,
@@ -483,7 +484,12 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
                 });
                 if writer.send(report).is_err() { return std::process::ExitCode::from(2); }
             }
-            Ok(Input::Queued {control_id,scope}) => match host.control_receipt(&control_id, &scope) {
+            Ok(Input::Queued {control_id,scope}) => match host.control_receipt(
+                &control_id, &scope, &main_router,
+            ) {
+                Ok(report) if report["when"] == "too-late" => {
+                    if writer.send(report).is_err() { return std::process::ExitCode::from(2); }
+                }
                 Ok(_) => {}
                 Err(problem) => {
                     let _ = writer.send(refusal("control", &problem));
@@ -1131,6 +1137,8 @@ fn route_checkpoints_inner(
                     Ok(RouterAction::Resume) => break,
                     Ok(RouterAction::Hold { .. }) => return Err(reject("nested checkpoint hold refused")),
                     Ok(RouterAction::CancelHold) => return Err(reject("root ended during held checkpoint")),
+                    Ok(RouterAction::CancelControl { .. }) =>
+                        return Err(reject("control cancellation during held checkpoint")),
                     Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
                     Err(std::sync::mpsc::RecvTimeoutError::Disconnected) =>
                         return Err(reject("operator lane closed during held checkpoint")),
@@ -1154,6 +1162,12 @@ fn drain_router_commands(
     while let Ok(action) = receiver.try_recv() {
         match action {
             RouterAction::Control(request) => pending.push_back(request),
+            RouterAction::CancelControl { control_id, removed } => {
+                let position = pending.iter().position(|request|
+                    request["control_id"].as_str() == Some(&control_id));
+                removed.send(position.and_then(|position| pending.remove(position)).is_some())
+                    .map_err(|_| reject("operator control cancellation acknowledgement failed"))?;
+            }
             RouterAction::Hold { import, occurrence, armed } => {
                 if hold.replace((import, occurrence)).is_some() {
                     return Err(reject("multiple outstanding checkpoint holds"));
@@ -1374,7 +1388,8 @@ impl Host {
         Ok(())
     }
 
-    fn control_receipt(&mut self, control_id: &str, scope: &str) -> Result<Value, String> {
+    fn control_receipt(&mut self, control_id: &str, scope: &str,
+        router: &std::sync::mpsc::SyncSender<RouterAction>) -> Result<Value, String> {
         let (event, when) = if let Some(event) = self.control_events.remove(control_id) {
             (event, "during-root")
         } else {
@@ -1384,8 +1399,28 @@ impl Host {
                 return Err(reject("worker refused the operator control barrier"));
             }
             let Some(event) = self.control_events.remove(control_id) else {
-                self.poisoned = true;
-                return Err(reject("operator command delivery is unacknowledged; host state unknown"));
+                // The worker has finished the root and the read-only barrier
+                // found no commit. Remove the still-queued router request
+                // before another root can reach a protected checkpoint.
+                let (removed, receipt) = std::sync::mpsc::sync_channel(0);
+                router.send(RouterAction::CancelControl {
+                    control_id: control_id.to_owned(), removed,
+                }).map_err(|_| {
+                    self.poisoned = true;
+                    reject("operator router closed before late control could be cancelled")
+                })?;
+                let cancelled = receipt.recv_timeout(std::time::Duration::from_secs(2))
+                    .map_err(|_| {
+                        self.poisoned = true;
+                        reject("operator router did not acknowledge late control cancellation")
+                    })?;
+                if !cancelled {
+                    self.poisoned = true;
+                    return Err(reject("operator command delivery is unacknowledged; host state unknown"));
+                }
+                return Ok(json!({"schema":"noble-live-slot-report/v1","stage":"operator-control",
+                    "outcome":"refused","when":"too-late","control_id":control_id,
+                    "scope":scope,"diagnostic":"no remaining protected checkpoint in this root; control was not applied"}));
             };
             (event, "after-root")
         };

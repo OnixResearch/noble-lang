@@ -160,8 +160,12 @@ protected import occurrence in the next checked root; after
 `checkpoint-entered`, a permitted publication or
 revocation receives a committed `control_id` receipt before
 `resume-checkpoint`. The held root keeps its pinned epoch, while the next root
-observes the committed change. Interrupted checkpoint reads retry only the
-unconsumed packet within the same eight-second deadline; other transport
+observes the committed change. An in-flight control with no remaining
+protected checkpoint receives an `operator-control` `refused` receipt with
+`when: "too-late"` after its pending router request is cancelled; it does
+not change the epoch or leak into the next root, and the session stays usable.
+An unaccounted-for delivery still fails closed. Interrupted checkpoint reads
+retry only the unconsumed packet within the same eight-second deadline; other transport
 failures poison the root. Frozen `record`/`replay` and `release-replay`
 use retained roots rather than replacing live effect policy. Every reply is
 JSON; inspect each `outcome`, not only the process exit status. Source-bound
