@@ -362,6 +362,121 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
     Ok(())
 }
 
+// Experimental local IDs for exactly one returned `quote(I64) [ + ] compose`
+// target. This is deliberately narrower than SelectedOriginMetadata: its
+// general quote/compose grammar has no checked logical-alias or lexical-owner
+// witness. A missing witness never becomes an anonymous target ID.
+pub(super) fn anonymous_target_identity(
+    origin: &Value,
+    contracts: &[super::ProgramContract],
+    position: usize,
+    descriptor: &str,
+    saved: &Value,
+    root_inputs: &[Value],
+) -> Result<Option<Value>, String> {
+    use serde_json::json;
+    let outputs = rows(origin, "outputs")?;
+    if outputs.len() != 1 || root_inputs.len() > 1
+        || descriptor != "Program([I64]->[I64]!{})" {
+        return Ok(None);
+    }
+    let selected = &outputs[0];
+    if number(selected, "stack_position")? as usize != position {
+        return Ok(None);
+    }
+    let result = &selected["result"];
+    if result["kind"] != "compose" || result["left"]["kind"] != "quote-i64"
+        || result["right"]["kind"] != "static-program" {
+        return Ok(None);
+    }
+    let right = number(&result["right"], "program_index")? as usize;
+    let static_program = rows(origin, "programs")?.get(right)
+        .ok_or_else(|| denied("anonymous target static dependency is missing"))?;
+    let static_operations = rows(static_program, "operations")?;
+    let static_contract = contracts.get(right)
+        .ok_or_else(|| denied("anonymous target static contract is missing"))?;
+    if static_operations.len() != 1 || static_operations[0]["kind"] != "add"
+        || static_program["source_artifact"] != "definition"
+        || static_contract.input != ["I64", "I64"]
+        || static_contract.output != ["I64"] || !static_contract.effects.is_empty() {
+        return Ok(None);
+    }
+    let operand = &result["left"]["operand"];
+    let (template_operand, actual) = match operand["kind"].as_str() {
+        Some("root-i64") if operand["position"] == 0 && root_inputs.len() == 1 => {
+            let input = &root_inputs[0];
+            if input["kind"] != "i64" {
+                return Err(denied("anonymous root capture is not checked I64"));
+            }
+            (json!({"capture_slot":0,"type":"I64"}), text(input, "value")?)
+        }
+        Some("fixed-i64") => (json!({"fixed_i64":text(operand, "value")?}),
+            text(operand, "value")?),
+        _ => return Ok(None),
+    };
+    let value = actual.parse::<i64>()
+        .map_err(|_| denied("anonymous I64 operand is out of range"))?;
+    let actual = value.to_string();
+    if operand["kind"] == "fixed-i64" && text(operand, "value")? != actual {
+        return Err(denied("checked fixed I64 operand lacks a canonical representation"));
+    }
+
+    // This snapshot was read independently from the actual saved VM graph,
+    // after the worker had checked its source-site and compiled-Wasm lineage.
+    // Do not use the source operand alone to mint P: recheck the quoted value
+    // and inert quote atom in the returned graph observation.
+    let captures = rows(saved, "capture_values")?;
+    if captures.len() != 2 || captures[0]["field"] != "cell_a"
+        || captures[1]["field"] != "cell_b" {
+        return Err(denied("anonymous target capture graph is truncated"));
+    }
+    let left = captures[0]["value"].as_array()
+        .ok_or_else(|| denied("anonymous quote graph is missing"))?;
+    let right_graph = captures[1]["value"].as_array()
+        .ok_or_else(|| denied("anonymous static child graph is missing"))?;
+    let quote = left.first().ok_or_else(|| denied("anonymous quote root is missing"))?;
+    let scalar_index = quote["a"].as_u64().and_then(|n| usize::try_from(n).ok())
+        .ok_or_else(|| denied("anonymous quote capture edge is missing"))?;
+    let atom_index = quote["c"].as_u64().and_then(|n| usize::try_from(n).ok())
+        .ok_or_else(|| denied("anonymous inert quote atom is missing"))?;
+    let scalar = left.get(scalar_index)
+        .ok_or_else(|| denied("anonymous quote capture is truncated"))?;
+    let atom = left.get(atom_index)
+        .ok_or_else(|| denied("anonymous quote atom is truncated"))?;
+    if quote["kind"] != 4 || quote["x"] != 1 || quote["payload"] != "0"
+        || quote["w"] != 1 || quote["n"] != 1
+        || scalar["kind"] != 1 || scalar["payload"] != actual
+        || atom["kind"] != 8 || atom["x"] != 1 || atom["payload"] != actual
+        || right_graph.first().is_none_or(|program|
+            program["kind"] != 4 || program["x"] != static_program["entry"]) {
+        return Err(denied("anonymous target graph disagrees with checked source operand"));
+    }
+
+    let interface = json!({"input":["I64"],"output":["I64"],"effects":[]});
+    let dependencies = json!(["builtin:i64.add"]);
+    let template = json!({
+        "domain":"noble-anonymous-template/experimental-v1",
+        "recipe":[{"quote_i64":template_operand},{"static_body":["i64.add"]},"compose"],
+        "interface":interface,"effects":[],"dependencies":dependencies,
+    });
+    let definition_id = format!("anonymous-template-experimental-v1:{}",
+        crate::workflow::intrinsic::sha256(
+            &serde_json::to_vec(&template).map_err(|_| denied("anonymous template cannot encode"))?));
+    let captured = json!([{"type":"I64","value":actual}]);
+    let program = json!({
+        "domain":"noble-anonymous-program/experimental-v1",
+        "definition_id":definition_id,"captures":captured,
+        "interface":interface,"effects":[],"dependencies":dependencies,
+    });
+    let program_value_id = format!("anonymous-program-experimental-v1:{}",
+        crate::workflow::intrinsic::sha256(
+            &serde_json::to_vec(&program).map_err(|_| denied("anonymous program cannot encode"))?));
+    Ok(Some(json!({"definition_id":definition_id,
+        "program_value_id":program_value_id,"captures":captured,
+        "interface":interface,"effects":[],"dependencies":dependencies,
+        "artifact_sha256":null})))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -412,6 +527,33 @@ mod tests {
         });
         let binary = super::super::assemble_slot(prepared.wat())?;
         verify(&binary, &origin, &install)?;
+
+        let contracts = prepared.program_metadata().iter().map(|program|
+            Ok(super::super::ProgramContract {
+                input: super::super::canonical_stack(&program.stack_in, 0)?,
+                output: super::super::canonical_stack(&program.stack_out, 0)?,
+                effects: super::super::effects(&program.effects)?,
+            })).collect::<Result<Vec<_>, String>>()?;
+        let right = number(&origin["outputs"][0]["result"]["right"], "program_index")? as usize;
+        let right_entry = origin["programs"][right]["entry"].clone();
+        let root_inputs = [serde_json::json!({"kind":"i64","value":"2"})];
+        let truncated = serde_json::json!({"capture_values":[
+            {"field":"cell_a","value":[{"kind":4,"x":1}]},
+            {"field":"cell_b","value":[{"kind":4,"x":right_entry}]}
+        ]});
+        if anonymous_target_identity(&origin, &contracts, 0,
+            "Program([I64]->[I64]!{})", &truncated, &root_inputs).is_ok() {
+            return Err("checked source alone minted a target ID without actual quote/capture/recipe".into());
+        }
+        let wrong_capture = serde_json::json!({"capture_values":[
+            {"field":"cell_a","value":[{"kind":4,"x":1,"payload":"0","w":1,"n":1,"a":1,"c":2},
+                {"kind":1,"payload":"3"},{"kind":8,"x":1,"payload":"3"}]},
+            {"field":"cell_b","value":[{"kind":4,"x":right_entry}]}
+        ]});
+        if anonymous_target_identity(&origin, &contracts, 0,
+            "Program([I64]->[I64]!{})", &wrong_capture, &root_inputs).is_ok() {
+            return Err("mismatched captured bits minted the source-classified target P".into());
+        }
 
         let mut wrong_site = origin.clone();
         wrong_site["programs"][0]["operations"][0]["table_entry"] = serde_json::json!(span.start + 1);

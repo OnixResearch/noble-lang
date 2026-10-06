@@ -158,8 +158,10 @@ failures poison the root. Frozen `record`/`replay` and `release-replay`
 use retained roots rather than replacing live effect policy. Every reply is
 JSON; inspect each `outcome`, not only the process exit status. Source-bound
 named selection requires `install` with `selected_name` after the corresponding
-`define`; anonymous targets have **no checked DefinitionId** and cannot be used for
-source-bound frozen replay. Recorded protected responses are replayed as an
+`define`. A narrow checked anonymous returned target can receive experimental
+local D/P in its saved-owner receipt, but has no independently installed
+captured-target Wasm candidate, proof, or source-bound frozen replay. Recorded
+protected responses are replayed as an
 exact ordered script without executing another real host effect; they do not
 grant permission for a new live effect. An optional `expected_identity` on
 `replay` is compared with the host-retained frozen receipt before starting a
@@ -186,14 +188,31 @@ bytes after a SHA-256 cross-check. For
 example, `def builder [ quote [ + ] compose ]` captures root I64 `2` and
 returns a saved `Program<I64,I64,pure>` that a checked `run` caller can execute
 with `1` to obtain `3`; `def fixed [ 2 quote [ + ] compose ]` retains the same
-fixed capture even when the caller root differs. Ambiguous or unsupported
-dynamic Programs remain usable opaque owners without checked origin. A
+fixed capture even when the caller root differs. For the exact pure returned
+`quote(I64) [ + ] compose` graph with one checked I64 capture and a checked
+static `+` child, the host independently reads the selected VM capture and
+inert quote atom against the source-to-compiled-site lineage before deriving
+`target_identity` in the saved-owner receipt. Varying root input 2→3 keeps
+the anonymous template D and changes P; source literal 2→3 and independently
+computed constant 2→3 each change D. These local, versioned experimental IDs
+bind the target's checked interface, empty effects, builtin addition
+dependency and exact I64 capture; `artifact_sha256` is null, not the builder
+artifact. Source locations, builder D, VM addresses and code-owner handles
+are not part of D. General logical source-binding aliases, independently
+named equal bindings, recursive lexical owners, other returned interfaces and
+effectful graph shapes have no identity-bearing witness here; they remain
+without target D/P rather than using bit equality or heap topology.
+Ambiguous or unsupported dynamic Programs remain usable opaque owners without
+checked origin. A
 verified selected origin proves only this supported saved owner's bounded
 source/Wasm/graph correspondence from compiler-emitted Wasm; the custom Wasm
 name section alone does not authenticate arbitrary replacement runtime helper
-bodies or the installer's complete control flow. It is **not** an independently
-approved P2/D2 target identity, captured P/D/C/Q/A/Wasm Lean proof, effect
-permission, publication permission, or frozen replay authorization. Canonical
+bodies or the installer's complete control flow. The bounded local D/P receipt
+is **not** symbolic P2/D2, captured P/D/C/Q/A/Wasm Lean proof, effect
+permission, publication permission, or frozen replay authorization. Saved
+dynamic targets still refuse publication even into a non-proof slot until the
+exact target's installed Wasm correspondence exists; proof-required slots
+also refuse without independently checked exact-target evidence. Canonical
 LSLOT-05 and LSLOT-08 remain blocked.
 
 The selected dynamic owner also has a narrower retention consequence: with

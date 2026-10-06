@@ -176,6 +176,7 @@ struct SelectedOrigin {
     definition_identity: String,
     source_generation: String,
     output_positions: BTreeSet<usize>,
+    checked_metadata: Value,
 }
 
 #[derive(Clone)]
@@ -1599,6 +1600,7 @@ impl Host {
                     .ok_or_else(|| reject("selected origin omitted output positions"))?
                     .iter().map(|row| uint(row, "stack_position").map(|value| value as usize))
                     .collect::<Result<_, _>>()?,
+                checked_metadata: row.clone(),
             })
         }).transpose()?;
         message["binary_sha256"] = json!(crate::workflow::intrinsic::sha256(&binary));
@@ -1765,9 +1767,9 @@ impl Host {
         let mut invocation = self.invocation(request, &module_id)?;
         invocation["record"] = json!(record);
         self.worker_invocation_started = true;
-        let report = self.send(&invocation, &[])?;
+        let mut report = self.send(&invocation, &[])?;
         if report["outcome"] == "executed" {
-            if let Err(problem) = self.retain_program_outputs(&module_id, &report) {
+            if let Err(problem) = self.retain_program_outputs(&module_id, &mut report, &invocation["inputs"]) {
                 self.poisoned = true;
                 return Err(problem);
             }
@@ -1809,19 +1811,23 @@ impl Host {
         Ok(report)
     }
 
-    fn retain_program_outputs(&mut self, module_id: &str, report: &Value) -> Result<(), String> {
+    fn retain_program_outputs(&mut self, module_id: &str, report: &mut Value, root_inputs: &Value) -> Result<(), String> {
         let candidate = self.candidates.get(module_id).ok_or_else(|| reject("checked caller retired during execution"))?;
-        let stack = report.get("stack").and_then(Value::as_array)
+        let stack = report.get_mut("stack").and_then(Value::as_array_mut)
             .filter(|stack| stack.len() == candidate.output.len())
             .ok_or_else(|| reject("worker returned a stack incompatible with checked caller"))?;
         for (position, descriptor) in candidate.output.iter().enumerate() {
-            let cell = &stack[position];
+            let cell = &mut stack[position];
             if descriptor.starts_with("Program(") {
                 if cell["kind"] != 4 || self.programs.len() >= MAX_SAVED_PROGRAMS {
                     self.poisoned = true;
                     return Err(reject("worker did not retain a checked Program output"));
                 }
-                let owner = text(cell, "owner", 256)?;
+                if cell.get("target_identity").is_some() {
+                    self.poisoned = true;
+                    return Err(reject("worker supplied an untrusted anonymous target identity"));
+                }
+                let owner = text(cell, "owner", 256)?.to_owned();
                 let classified = candidate.selected_origin.as_ref()
                     .is_some_and(|origin| origin.output_positions.contains(&position));
                 match (classified, cell.get("verified_origin")) {
@@ -1836,6 +1842,17 @@ impl Host {
                             || !cell["source_id"].is_null() || !cell["program_index"].is_null() {
                             self.poisoned = true;
                             return Err(reject("selected saved Program origin differs from independently checked caller/site"));
+                        }
+                        // The worker checked the actual epoch-qualified Program and
+                        // captured literal before saving it. Independently derive the
+                        // bounded target projection from the compiler's checked source
+                        // plan and inspect the separately returned graph snapshot.
+                        if let Some(identity) = origin::anonymous_target_identity(
+                            &origin.checked_metadata, &candidate.programs, position,
+                            descriptor, cell,
+                            root_inputs.as_array().ok_or_else(|| reject("root inputs missing"))?,
+                        )? {
+                            cell["target_identity"] = identity;
                         }
                     }
                     (false, None) => {}
