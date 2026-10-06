@@ -129,9 +129,11 @@ try {
     'crates/noble-wasm/src/component/lower/operations.rs',
     'crates/noble-wasm/runtime/operations.wat',
     'proofs/m3/MathlibI64.lean', 'proofs/m3/lake-manifest.json',
+    'proofs/m3/lakefile.toml', 'proofs/m3/lean-toolchain',
+    'policy/tool-selection.json', 'verification/mathlib-i64/compare.mjs',
   ].map(path => [path, fileHash(join(root, path))]));
   const result = { scope: 'finite-implemented-pure-I64-Wasm-only',
-    baseline_commit: commit, lean: version, mathlib_commit: mathlibRevision,
+    source_commit: commit, lean: version, mathlib_commit: mathlibRevision,
     cli_sha256: fileHash(binary), sources_sha256: sourceHashes,
     cases: results, seeded_wrong_arithmetic_rejected: { ...wrong, matched: false },
     universal_backend_proof: false, exact_calculator_verified: false,
