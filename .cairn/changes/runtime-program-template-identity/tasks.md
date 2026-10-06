@@ -1,7 +1,7 @@
 ## Phase 1: Draft and independent normative decision
 
 - [x] [serial] Propose the existing P-ID-03 delta and draft negative scenario vectors: fixed literal/checked computed constant versus varying root input, duplicated/recomposed same binding versus equal-valued independent bindings, lexical owner versus VM owner, missing/ambiguous compiler provenance. Preserve P-RECIPE-04's literal recipe and ID-05's unexecuted 2→3 relation; do not sync or promote canonical cases. r[P-ID-03] `P-RECIPE-04`
-- [ ] [serial] Obtain independent language-owner review of the anonymous D domain, fixed-versus-varying operand rule, source-binding alias equivalence and semantic lexical recursive owner; retain P-ID-04's experimental local-ID scope unless a separate portable encoding is approved. Revise the draft if that choice differs. No implementation may use a builder D or asserted string as a target D. r[P-ID-03] `P-ID-04`
+- [x] [serial] Record the owner's approval in this isolated draft of the anonymous D domain, fixed-versus-varying operand rule, source-binding alias equivalence and semantic lexical recursive owner. This decision does not sync canonical P-ID-03, implement returned-target admission or establish proof/source-bound acceptance. P-ID-04's portable encoding remains unselected; no implementation may use a builder D or asserted string as a target D. r[P-ID-03] `P-ID-04`
 
 ## Phase 2: Future source-bound implementation and acceptance (open)
 
@@ -10,3 +10,5 @@
 - [ ] [serial] Extend target compiler metadata and host selection to exact returned P/D/captures and installed Wasm, with tests for fixed2→3 D-different, checked computed2→3 D-different, verified root-input2→3 same-D/different-P, logical alias/lexical owner distinctions and all negative provenance cases. No positive LSLOT-05/08 outcome before actual target/proof/replay evidence. r[P-ID-03] `P-ID-07` `VC-LSLOT-01`
 - [ ] [serial] Add an actual-target Lean consumer with explicit statement/source/artifact premises; separately test ID-05 capture2→3 and LSLOT-05/08 proof-required versus replay-only adversarial boundaries without inheriting builder proof or real-effect authority. r[P-ID-03] `V-MODEL-01` `VC-LSLOT-01` `EV-LSLOT-01`
 - [ ] [serial] After independent source-bound review, decide any canonical sync, generated views/ledger/receipt, evidence/status promotion and archive under the existing gates; leave all nine LSLOT states and historical evidence untouched until then. r[P-ID-03] `EV-LSLOT-01`
+
+LSLOT-02's separate atomic epoch-1 A+B and A+B+C genesis is an approved implementation choice, not a P-ID-03 requirement or a completed task here. Its implementation and case execution remain open under `K-LSLOT-02`, `H-LSLOT-01` and `EV-LSLOT-01` in the existing `explicit-live-references` change; neither sequential publication nor rewriting the frozen fixture can close them.
