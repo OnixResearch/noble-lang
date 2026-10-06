@@ -2,12 +2,18 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { root, sha, sourceInventory, revision, frozen } from '../dx06-current-source/source.mjs';
 
 // A diagnostic execution receipt, never a canonical promotion or proof receipt.
 // Usage: pinned Node gate.mjs ABSOLUTE_PREBUILT_CLI NEW_EXTERNAL_TMP_DIRECTORY
+// This check cannot undo a preload that already ran (or hid its own variable).
+// Launch the pinned Node with env -i as documented in README.md.
+const unsafeStartup = Object.keys(process.env).filter(name =>
+  /^(?:NODE_OPTIONS|NODE_PATH|BASH_ENV|ENV|LD_.*|DYLD_.*|NIX_LD(?:_.*)?|GLIBC_TUNABLES|GCONV_PATH|SHLIB_PATH)$/.test(name));
+assert.deepEqual(unsafeStartup, [], `unsafe gate startup environment: ${unsafeStartup.join(', ')}`);
 const gate = fileURLToPath(import.meta.url);
 assert.equal(gate, path.join(root, 'verification/live-slot-current-source/gate.mjs'));
 assert.equal(process.argv.length, 4, 'usage: node gate.mjs ABSOLUTE_PREBUILT_CLI NEW_EXTERNAL_TMP_DIRECTORY');
@@ -85,11 +91,16 @@ assert.ok(standardLibrary, 'selected toolchain lacks target standard library');
 const standardLibraryPath = fs.realpathSync(path.join(rustlib, standardLibrary));
 const standardLibraryRoot = standardLibraryPath.split('/lib/rustlib/')[0];
 assert.ok(standardLibraryRoot.startsWith('/nix/store/'), 'selected standard library must be pinned');
-const env = { ...process.env, PATH: `${rustBin}:${selected.component_sync.linker_bin}:${process.env.PATH}`,
-  CARGO_TARGET_DIR: target, RUSTC_WRAPPER: '', RUSTC_WORKSPACE_WRAPPER: '',
-  RUSTFLAGS: `--sysroot=${standardLibraryRoot}` };
+const env = Object.freeze({
+  HOME: os.userInfo().homedir,
+  TMPDIR: '/tmp',
+  PATH: `${rustBin}:${selected.component_sync.linker_bin}:/run/current-system/sw/bin:/usr/bin:/bin`,
+  CARGO_TARGET_DIR: target, CARGO_NET_OFFLINE: 'true',
+  RUSTC_WRAPPER: '', RUSTC_WORKSPACE_WRAPPER: '',
+  RUSTFLAGS: `--sysroot=${standardLibraryRoot}`,
+});
 // The Nix toolchain bundle symlinks std from its separately pinned output.
-const sysroot = spawnSync(rustc, ['--print', 'sysroot'], { encoding: 'utf8' });
+const sysroot = spawnSync(rustc, ['--print', 'sysroot'], { encoding: 'utf8', env });
 assert.equal(sysroot.status, 0, sysroot.stderr);
 const commands = [];
 const issues = [];
@@ -106,7 +117,8 @@ function gitDiagnostic() {
 }
 const beforeGit = gitDiagnostic();
 function command(label, executable, args, extraEnv = {}, input = null, expectedStatus = 0) {
-  const response = spawnSync(executable, args, { cwd: root, env: { ...env, ...extraEnv },
+  const childEnv = { ...env, ...extraEnv };
+  const response = spawnSync(executable, args, { cwd: root, env: childEnv,
     ...(input === null ? {} : { input }),
     timeout: 900_000, maxBuffer: 128 * 1024 * 1024 });
   const stdout = response.stdout ?? Buffer.alloc(0), stderr = response.stderr ?? Buffer.alloc(0);
@@ -115,6 +127,7 @@ function command(label, executable, args, extraEnv = {}, input = null, expectedS
   save(`${stem}.stderr`, stderr);
   if (input !== null) save(`${stem}.stdin`, input);
   const result = { label, executable, executable_sha256: sha(fs.readFileSync(executable)), args,
+    environment: childEnv,
     status: response.status, signal: response.signal, error: response.error?.message ?? null,
     stdin: input === null ? null : `${stem}.stdin`,
     stdin_sha256: input === null ? null : sha(input),
@@ -467,6 +480,8 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
         ['refused', 'bootstrap-unavailable']);
       const records = jsonLines(raw);
       assert.equal(records[0].kind, 'authority');
+      assert.equal(records[0].selected_binary, binary);
+      assert.equal(records[0].selected_binary_sha256, afterBinary);
       assert.deepEqual(records[0].authority.slots.map(slot => slot.slotId), slotIds);
       assert.deepEqual(records[0].authority.effects, ['live.dispatch']);
       assert.deepEqual(records[0].authority.grants.map(grant =>
@@ -507,6 +522,69 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
     } catch (error) {
       row(caseId(2), name, 'failed', String(error), files);
     }
+  }
+  const name = 'later-member-budget-refusal';
+  const raw = path.join(dir, `LSLOT02-${name}.jsonl`);
+  const requests = path.join(dir, `LSLOT02-${name}.requests.jsonl`);
+  const responses = path.join(dir, `LSLOT02-${name}.responses.jsonl`);
+  const stderrFile = path.join(dir, `LSLOT02-${name}.stderr.txt`);
+  const files = [raw, requests, responses, stderrFile, summaryFile]
+    .filter(fs.existsSync).map(receiptFile);
+  try {
+    assert.ok([0, 1].includes(result.status));
+    assert.ok(summary);
+    const item = summary.results.find(value => value.name === name);
+    assert.equal(item.status, 'observed', item.error);
+    assert.equal(item.selected_binary_sha256, afterBinary);
+    const records = jsonLines(raw);
+    assert.equal(records[0].kind, 'authority');
+    assert.equal(records[0].selected_binary, binary);
+    assert.equal(records[0].selected_binary_sha256, afterBinary);
+    assert.equal(records[0].authority.quota, 1);
+    assert.deepEqual(records[0].authority.slots.map(slot => slot.slotId), ['B', 'A']);
+    assert.deepEqual(records[0].authority.sources.map(source => source.id), ['B1', 'A1']);
+    assert.deepEqual(records[0].authority.effects, ['live.dispatch']);
+    assert.deepEqual(records[0].authority.grants.map(grant =>
+      [grant.slotId, grant.operation, grant.allowed]),
+    ['B', 'A'].flatMap(slot => ['publish', 'dispatch', 'delete']
+      .map(operation => [slot, operation, true])));
+    assert.equal(records.at(-1).kind, 'exit');
+    assert.equal(records.at(-1).code, 0);
+    const commands = records.filter(value => value.kind === 'operator').map(value => value.request);
+    const replies = records.filter(value => value.kind === 'cli').map(value => value.row);
+    assert.deepEqual(jsonLines(requests), commands);
+    assert.deepEqual(jsonLines(responses), replies);
+    assert.equal(replies.length, commands.length + 1);
+    assert.deepEqual(commands.map(command => command.operation),
+      ['install', 'install', 'bootstrap', 'delete', 'delete', 'trace', 'bootstrap']);
+    assert.deepEqual(commands.filter(command => command.operation === 'bootstrap').map(command =>
+      [command.expected_epoch, command.members]),
+    Array.from({ length: 2 }, () => ['0', [
+      { slot: 'B', id: 'B1' }, { slot: 'A', id: 'A1' },
+    ]]));
+    assert.deepEqual(commands.filter(command => command.operation === 'delete').map(command =>
+      [command.slot, command.expected_epoch, command.expected_incarnation, command.expected_generation]),
+    [['B', '0', '1', '1'], ['A', '0', '1', '1']]);
+    assert.deepEqual(replies.map(reply => reply.outcome),
+      ['configured', 'installed', 'installed', 'retention-budget-refused',
+        'stale-reject', 'stale-reject', 'trace-observed', 'retention-budget-refused']);
+    assert.ok(replies.every(reply => reply.guest_requests === 0
+      && reply.protected_operations === 0));
+    for (const index of [0, 3, 4, 5, 7]) assert.equal(replies[index].epoch, '0');
+    assert.deepEqual(replies[6].trace, []);
+    assert.deepEqual(item.refusal, replies[3]);
+    assert.deepEqual(item.map_absence.map(value => [value.slot, value.outcome, value.epoch]),
+      [['B', 'stale-reject', '0'], ['A', 'stale-reject', '0']]);
+    assert.deepEqual(item.repeat_refusal, replies[7]);
+    assert.deepEqual(item.trace, replies[6]);
+    row(caseId(2), name, 'passed',
+      'selected worker rejected a Rust-preflight-valid later member; both slots remained absent at epoch 0 with no guest requests or effects',
+      files, { guest_requests: 0, protected_operations: 0 },
+      item, { claim: 'control_observation', attempt: {
+        guest_requests: replies[3].guest_requests,
+        protected_operations: replies[3].protected_operations }, session: summedCounters(replies) });
+  } catch (error) {
+    row(caseId(2), name, 'failed', String(error), files);
   }
   binaryStill();
 }
@@ -1155,6 +1233,7 @@ const acceptance = {
   fixture: { path: fixtureFile, sha256: sha(fixtureBytes), canonical_state_unchanged: true },
   tool_selection: { configuration_sha256: source['policy/tool-selection.json'],
     runtime_configuration_sha256: source['crates/noble-cli/src/core/runtime/config.json'],
+    child_environment: env,
     rust_sysroot: standardLibraryRoot, rustc_default_sysroot: sysroot.stdout.trim(),
     ...toolFacts },
   binary: binarySelection, commands, cases: rows, summary,
@@ -1170,6 +1249,7 @@ const acceptance = {
   external_evidence_sha256: evidenceFiles, integrity_issues: issues,
   limitations: [
     'All nine canonical cases remain absent/not-run/open/unassessed; this external diagnostic does not promote any case.',
+    'The startup-variable check and recorded child environment cannot attest to a preload that already ran and removed its own indicator; invoke the pinned Node with a clean env -i environment.',
     'LSLOT-05 has a bounded experimental anonymous D/P control after trusted-worker retained-owner graph reinspection, but the symbolic fixture P2/D2, selected captured-target Wasm and exact P/D/C/Q/A/artifact Lean proof with applicability negatives remain unestablished.',
     'LSLOT-08 now has a D-neutral selected dynamic owner transitive last-pin retention control, but replay still lacks canonical captured I64:5 Dtrace and scripted ok-A/ok-B responses; exact replay never grants real effects.',
     'LSLOT-02 has selected CLI matches for both complete epoch-1 multi-slot variants, including effect-set reflection and per-dispatch host authority; this external diagnostic does not promote unchanged canonical case states. Several admission/static negatives and the exact typed LSLOT-09 legacy caller remain profile-limited.',

@@ -195,6 +195,54 @@ for (const fixture of fixtures) {
       stderr: session.stderrFile, selected_binary_sha256: session.selectedBinarySha256 });
   }
 }
+// Distinct checked B1/A1 pass Rust bootstrap preflight. The worker must
+// reject the assembled two-member map under quota 1, not publish B first.
+{
+  const fixture = fixtures[0], name = 'later-member-budget-refusal';
+  const sources = { B1: fixture.sources.B1, A1: fixture.sources.A1 };
+  const grants = fixture.slots.flatMap(slot => ['publish', 'dispatch', 'delete']
+    .map(operation => ({ operation, slotId: slot, allowed: true })));
+  const session = await cli(binary, `LSLOT02-${name}`, selectedAuthority({
+    sources, slots: fixture.contracts, grants, effects: ['live.dispatch'], quota: 1,
+  }));
+  try {
+    const configured = expectOutcome(await session.configured, 'configured');
+    assert.deepEqual([configured.epoch, configured.guest_requests, configured.protected_operations],
+      ['0', 0, 0]);
+    for (const [id, source] of Object.entries(sources)) {
+      const installed = expectOutcome(await session.issue({ operation: 'install', id, source,
+        inputs: fixture.types[id] }), 'installed');
+      assert.deepEqual([installed.guest_requests, installed.protected_operations], [0, 0]);
+    }
+    const members = fixture.slots.map(slot => ({ slot, id: `${slot}1` }));
+    const attempt = { operation: 'bootstrap', expected_epoch: '0', members };
+    const refused = expectOutcome(await session.issue(attempt), 'retention-budget-refused');
+    assert.deepEqual([refused.epoch, refused.guest_requests, refused.protected_operations],
+      ['0', 0, 0]);
+    const absent = [];
+    for (const slot of fixture.slots) {
+      const probe = expectOutcome(await session.issue({ operation: 'delete', slot,
+        expected_epoch: '0', expected_incarnation: '1', expected_generation: '1' }), 'stale-reject');
+      assert.deepEqual([probe.epoch, probe.guest_requests, probe.protected_operations], ['0', 0, 0]);
+      absent.push({ slot, ...probe });
+    }
+    const trace = expectOutcome(await session.issue({ operation: 'trace' }), 'trace-observed');
+    assert.deepEqual(trace.trace, []);
+    const repeat = expectOutcome(await session.issue(attempt), 'retention-budget-refused');
+    assert.deepEqual([repeat.epoch, repeat.guest_requests, repeat.protected_operations], ['0', 0, 0]);
+    assert.equal(await session.close(), 0);
+    summary.push({ name, status: 'observed', refusal: refused, map_absence: absent,
+      repeat_refusal: repeat, trace, selected_binary_sha256: session.selectedBinarySha256,
+      raw: session.log, requests: session.requests, responses: session.responses,
+      stderr: session.stderrFile });
+  } catch (error) {
+    await session.abort();
+    summary.push({ name, status: 'failed', error: String(error.stack ?? error),
+      selected_binary_sha256: session.selectedBinarySha256,
+      raw: session.log, requests: session.requests, responses: session.responses,
+      stderr: session.stderrFile });
+  }
+}
 const summaryFile = path.join(evidenceDirectory, 'LSLOT02-summary.json');
 fs.writeFileSync(summaryFile, JSON.stringify({ selected_binary: binary,
   canonical: 'specs/conformance/live-reference-cases.json#LSLOT-02', results: summary }, null, 2));

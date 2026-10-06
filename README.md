@@ -247,15 +247,33 @@ target frozen replay.
 Run the diagnostic `verification/live-slot-current-source/gate.mjs` with the
 Node executable pinned in `crates/noble-cli/src/core/runtime/config.json`;
 pass an absolute externally built `/tmp/.../debug/noble` and a **new** direct
-`/tmp` output directory as its two arguments. It runs a selected offline
-Cargo build, records before/after binary hashes (unchanged bytes do **not**
-prove fresh recompilation), and freezes selected source-tree paths and
-bytes, exact used test scripts/helpers, fixture, authority inputs and
-documentation. Its `receipt.json` records Git HEAD/selected dirty status
-as diagnostics and points to retained real command streams and raw responses.
+`/tmp` output directory as its two arguments. Start that pinned Node from a
+clean environment, not from an inherited `NODE_OPTIONS`, `BASH_ENV`,
+`LD_PRELOAD`, `NODE_PATH`, `DYLD_*`, or loader-injected process:
+
+```sh
+env -i HOME="$HOME" TMPDIR=/tmp PATH=/run/current-system/sw/bin:/usr/bin:/bin \
+  /nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node \
+  verification/live-slot-current-source/gate.mjs \
+  /tmp/SELECTED_TARGET/debug/noble /tmp/NEW_RECEIPT_DIRECTORY
+```
+
+Use the current path in runtime `config.json` if the pinned selection changes;
+the final receipt directory must not already exist. The gate rejects visible
+dangerous startup variables and records its restricted child environment,
+but cannot attest to a preload that ran before gate JavaScript and concealed
+itself. It runs a selected offline Cargo build, records before/after binary
+hashes (unchanged bytes do **not** prove fresh recompilation), and freezes
+selected source-tree paths and bytes, exact used test scripts/helpers, fixture,
+authority inputs and documentation. Its `receipt.json` records Git
+HEAD/selected dirty status as diagnostics and points to retained real command
+streams and raw responses.
 LSLOT-02 independently exercises a held A→B→B root and a held A→B→C root:
 each independently authorized two-/three-slot genesis publishes one physical
-epoch-1 map, and a refused invalid member leaves it at epoch 0. A committed
+epoch-1 map. A Rust-preflight invalid member is refused before the worker;
+an independent quota-1 two-member session passes Rust preflight but the
+worker refuses the assembled map with `retention-budget-refused`: both slots
+remain absent at epoch 0 without guest requests or effects. A committed
 leaf publication at epoch 2 leaves the old root pinned while a new root selects
 the new target. Checked nested-site reflection reports the exact effect set
 `E ∪ {live.dispatch}` without duplicating `live.dispatch` when E already
