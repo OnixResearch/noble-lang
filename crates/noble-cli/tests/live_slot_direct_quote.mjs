@@ -87,6 +87,7 @@ try {
     'released dynamic output must leave no owner of its installed code span');
   child.stdin.end();
   const exit = child.exitCode ?? await new Promise(resolve => child.once('exit', resolve));
+  record({ kind: 'exit', code: exit, stderr });
   assert.equal(exit, 0, stderr);
   console.log('checked direct quote retained, ran with 20 to yield 25, released and retired');
 } catch (error) {

@@ -39,6 +39,8 @@ const inputs = [fixtureFile, 'README.md', 'Cargo.toml', 'Cargo.lock', 'rust-tool
   'crates/noble-cli/tests/live_slot_capture_legacy.mjs',
   'crates/noble-cli/tests/live_slot_cas_policy.mjs',
   'crates/noble-cli/tests/live_slot_cas_policy_authority.json',
+  'crates/noble-cli/tests/live_slot_direct_quote.mjs',
+  'crates/noble-cli/tests/live_slot_direct_quote.rs',
   'crates/noble-cli/tests/live_slot_resource_ref_cli.mjs',
   'crates/noble-cli/tests/live_slot_resource_ref_admission.mjs',
   'crates/noble-cli/tests/live_slot_resource_ref_static.mjs',
@@ -211,6 +213,90 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
         selected_dispatch: executed.at(-1).request_trace },
       { session: summedCounters(responses) });
   } catch (error) { row(caseId(1), 'saved-capture-versus-opt-in-generic-root', 'failed', String(error)); }
+  binaryStill();
+}
+
+// A direct scalar quote is an independent saved-owner control, not a positive
+// LSLOT-05 source-to-quote P/D provenance or evidence-applicability claim.
+{
+  const dir = work('direct-quote');
+  const raw = path.join(dir, 'selected-direct-quote.jsonl');
+  fs.writeFileSync(raw, '', { flag: 'wx', mode: 0o600 });
+  const result = execution('LSLOT01-direct-quote-control',
+    'crates/noble-cli/tests/live_slot_direct_quote.mjs', dir,
+    { NOBLE_SLOT_QUOTE_EVIDENCE: raw });
+  try {
+    assert.equal(result.status, 0);
+    const records = jsonLines(raw);
+    assert.equal(records[0].kind, 'authority');
+    assert.equal(records[0].binary_sha256, afterBinary);
+    const authority = JSON.parse(records[0].bytes);
+    assert.deepEqual(authority, {
+      owner: 'quote-owner-host', quota: 1, effects: [], resources: [], slots: [],
+      grants: [
+        { operation: 'discard', slotId: 'quoted', allowed: true },
+        { operation: 'discard', slotId: 'runner', allowed: true },
+      ],
+      sources: [
+        { id: 'definition', sha256: sha(Buffer.from('def q [ quote ]')) },
+        { id: 'quoted', sha256: sha(Buffer.from('q')) },
+        { id: 'runner', sha256: sha(Buffer.from('swap [ run ] dip +')) },
+      ],
+    });
+    assert.equal(records.at(-1).kind, 'exit');
+    assert.equal(records.at(-1).code, 0);
+    const requests = records.filter(record => record.kind === 'operator')
+      .map(record => record.request);
+    const replies = records.filter(record => record.kind === 'cli')
+      .map(record => record.row);
+    assert.deepEqual(requests.slice(0, 4), [
+      { operation: 'define', id: 'definition', name: 'q',
+        source: 'def q [ quote ]', inputs: [] },
+      { operation: 'install', id: 'quoted', source: 'q',
+        selected_name: 'q', inputs: ['I64'] },
+      { operation: 'install', id: 'runner', source: 'swap [ run ] dip +',
+        inputs: ['I64', 'Program<empty,I64,pure>'] },
+      { operation: 'invoke', id: 'quoted', inputs: [{ kind: 'i64', value: '5' }], refs: [] },
+    ]);
+    assert.deepEqual(replies.slice(0, 5).map(reply => reply.outcome),
+      ['configured', 'definition-retained', 'installed', 'installed', 'executed']);
+    const quoted = replies[4];
+    assert.equal(quoted.stack.length, 1);
+    const program = quoted.stack[0];
+    assert.equal(program.kind, 4);
+    assert.equal(program.source_id, null);
+    assert.equal(program.program_index, null);
+    assert.deepEqual(program.capture_values, [{ type: 'I64', value: '5' }]);
+    assert.match(program.owner, /^program-[1-9][0-9]*$/);
+    const use = owner => ({ operation: 'invoke', id: 'runner', inputs: [
+      { kind: 'i64', value: '20' }, { kind: 'program', owner },
+    ], refs: [] });
+    assert.deepEqual(requests.slice(4), [
+      use(program.owner), use('program-999999'),
+      { operation: 'release-program', owner: program.owner },
+      use(program.owner), { operation: 'discard', id: 'quoted' },
+    ]);
+    assert.deepEqual(replies.slice(5).map(reply => reply.outcome),
+      ['executed', 'refused', 'program-released', 'refused', 'discarded']);
+    assert.deepEqual(replies[5].stack, [{ kind: 1, value: '25' }]);
+    assert.equal(replies[9].retire_code_spans.length, 1);
+    assert.equal(replies.length, requests.length + 1);
+    for (const reply of replies)
+      assert.deepEqual([reply.guest_requests, reply.protected_operations], [0, 0]);
+    row(caseId(1), 'direct-quote-capture-control', 'passed',
+      'selected CLI saved a direct scalar quote with boxed I64:5 capture, ran it through a separate checked Program, refused invalid/released owners and retired the code span; not LSLOT-05 P/D evidence',
+      [receiptFile(raw), receiptFile(path.join(output, result.stdout)),
+        receiptFile(path.join(output, result.stderr))],
+      { guest_requests: 0, protected_operations: 0 },
+      { capture: program.capture_values, source_id: program.source_id,
+        program_index: program.program_index, owner: program.owner,
+        run: replies[5].stack, retired: replies[9].retire_code_spans },
+      { claim: 'control_pass', session: summedCounters(replies) });
+  } catch (error) {
+    row(caseId(1), 'direct-quote-capture-control', 'failed', String(error),
+      [raw, path.join(output, result.stdout), path.join(output, result.stderr)]
+        .filter(fs.existsSync).map(receiptFile));
+  }
   binaryStill();
 }
 
