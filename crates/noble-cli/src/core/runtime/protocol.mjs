@@ -61,7 +61,7 @@ async function protocol(config) {
             if (!slot) fail('only bounded slot commands are accepted by slot worker');
             command = { kind: 'slot',
               json: integer(Number(slot[1]), MAX_FRAME, 'slot request'),
-              wat: integer(Number(slot[2]), MAX_FRAME, 'checked slot WAT') };
+              binary: integer(Number(slot[2]), MAX_FRAME, 'checked slot binary') };
             if (command.json === 0) fail('empty slot command');
             continue;
           }
@@ -132,13 +132,13 @@ async function protocol(config) {
           }
         }
         if (command.kind === 'slot') {
-          if (pending.length < command.json + command.wat) break;
+          if (pending.length < command.json + command.binary) break;
           const json = pending.subarray(0, command.json);
-          const wat = pending.subarray(command.json, command.json + command.wat);
-          pending = pending.subarray(command.json + command.wat);
+          const binary = pending.subarray(command.json, command.json + command.binary);
+          pending = pending.subarray(command.json + command.binary);
           command = null;
           try {
-            const report = engine.request(JSON.parse(utf8.decode(json)), wat);
+            const report = engine.request(JSON.parse(utf8.decode(json)), binary);
             emit(report.outcome, { ...report, retire_code_spans: engine.retireCodeSpans() });
             if (engine.poisoned) return;
           } catch (error) { emit('internal-failure', reportError(error)); return; }

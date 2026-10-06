@@ -7,6 +7,126 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::os::unix::{fs::{FileTypeExt, MetadataExt, OpenOptionsExt}, io::AsRawFd};
 use std::sync::{Arc, Condvar, Mutex, atomic::{AtomicBool, Ordering}};
 
+#[path = "live_slot_origin.rs"]
+mod origin;
+
+fn selected_origin_json(
+    origin: &noble_wasm::source::SelectedOriginMetadata,
+    target: &Value,
+) -> Result<Value, String> {
+    use noble_wasm::source::{OriginAction, OriginI64, OriginProgramValue, OriginSource};
+    fn result(value: &OriginProgramValue) -> Value {
+        match value {
+            OriginProgramValue::QuoteI64 { node, table_entry, operand } => {
+                let operand = match operand {
+                    OriginI64::RootInput(position) => json!({"kind":"root-i64","position":position}),
+                    OriginI64::Fixed(value) => json!({"kind":"fixed-i64","value":value.to_string()}),
+                };
+                json!({"kind":"quote-i64","node":node.0,"table_entry":table_entry,"operand":operand})
+            }
+            OriginProgramValue::Compose { node, table_entry, left, right_node, right_program_index } =>
+                json!({"kind":"compose","node":node.0,"table_entry":table_entry,
+                    "left":result(left),"right":{"kind":"static-program","node":right_node.0,
+                        "program_index":right_program_index}}),
+        }
+    }
+    if target["definition_index"] != origin.definition_id.index()
+        || target["definition_identity"] != origin.definition_id.identity().to_string()
+        || target["source_generation"] != origin.source_generation.to_string()
+        || target["named_program_index"] != origin.named_program_index {
+        return Err(reject("classified origin differs from checked selected definition"));
+    }
+    let programs = origin.programs.iter().map(|program| {
+        let operations = program.operations.iter().map(|operation| {
+            let kind = match operation.action {
+                OriginAction::I64(_) => "i64",
+                OriginAction::Add => "add",
+                OriginAction::Sub => "sub",
+                OriginAction::Mul => "mul",
+                OriginAction::Dup => "dup",
+                OriginAction::Swap => "swap",
+                OriginAction::Drop => "drop",
+                OriginAction::StaticProgram(_) => "static-program",
+                OriginAction::QuoteI64 { .. } => "quote-i64",
+                OriginAction::Compose => "compose",
+                OriginAction::CallSelected(_) => "call-selected",
+            };
+            let mut row = json!({"node":operation.node.0,
+                "source_span":operation.source_span.map(|span|
+                    json!({"start":span.start,"end":span.end})),
+                "ordinal":operation.ordinal,"table_entry":operation.table_entry,
+                "input_signature":operation.input_signature,
+                "output_signature":operation.output_signature,
+                "effect_mask":operation.effect_mask,"kind":kind});
+            match operation.action {
+                OriginAction::I64(value) => row["value"] = json!(value.to_string()),
+                OriginAction::StaticProgram(index) | OriginAction::CallSelected(index) =>
+                    row["static_program_index"] = json!(index),
+                OriginAction::QuoteI64 { input, output, witness } => {
+                    row["quote_input_signature"] = json!(input);
+                    row["quote_output_signature"] = json!(output);
+                    row["quote_witness"] = json!(witness);
+                }
+                _ => {}
+            }
+            row
+        }).collect::<Vec<_>>();
+        json!({"source_artifact":match program.source_artifact {
+            OriginSource::Definition => "definition", OriginSource::Selection => "selection",
+        },"program_index":program.program_index,"entry":program.entry,
+            "input_signature":program.input_signature,"output_signature":program.output_signature,
+            "effect_mask":program.effect_mask,"operations":operations})
+    }).collect::<Vec<_>>();
+    Ok(json!({"definition_index":origin.definition_id.index(),
+        "definition_identity":origin.definition_id.identity().to_string(),
+        "source_generation":origin.source_generation.to_string(),
+        "selected_source_sha256":target["selected_source_sha256"],
+        "named_program_index":origin.named_program_index,
+        "root_program_index":origin.root_program_index,
+        "programs":programs,
+        "outputs":origin.outputs.iter().map(|output|
+            json!({"stack_position":output.stack_position,"result":result(&output.result)}))
+            .collect::<Vec<_>>() }))
+}
+
+fn assemble_slot(wat: &[u8]) -> Result<Vec<u8>, String> {
+    use std::io::Write;
+    static ASSEMBLER: std::sync::LazyLock<Result<String, String>> =
+        std::sync::LazyLock::new(|| {
+            let selection: Value = serde_json::from_str(include_str!("runtime/config.json"))
+                .map_err(|_| reject("invalid pinned slot tool selection"))?;
+            selection["tools"]["wasm_tools"]["path"].as_str()
+                .filter(|path| std::path::Path::new(path).is_absolute())
+                .map(str::to_owned).ok_or_else(|| reject("missing pinned slot assembler"))
+        });
+    let tool = ASSEMBLER.as_ref().map_err(Clone::clone)?;
+    let mut parser = std::process::Command::new(tool)
+        .args(["parse", "-", "-o", "/dev/stdout"])
+        .env_clear().stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn().map_err(|error| reject(&format!("pinned assembler unavailable: {error}")))?;
+    parser.stdin.take().ok_or_else(|| reject("assembler input unavailable"))?
+        .write_all(wat).map_err(|error| reject(&format!("assembler input failed: {error}")))?;
+    let result = parser.wait_with_output().map_err(|error| reject(&format!("assembler failed: {error}")))?;
+    if !result.status.success() || result.stdout.len() < 8 || result.stdout.len() > 4_194_304 {
+        return Err(reject("selected WAT assembly failed or exceeded binary bound"));
+    }
+    let mut validator = std::process::Command::new(tool)
+        .args(["validate", "-"]).env_clear()
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped())
+        .spawn().map_err(|error| reject(&format!("pinned validator unavailable: {error}")))?;
+    validator.stdin.take().ok_or_else(|| reject("validator input unavailable"))?
+        .write_all(&result.stdout).map_err(|error| reject(&format!("validator input failed: {error}")))?;
+    if !validator.wait_with_output().map_err(|error| reject(&format!("validator failed: {error}")))?
+        .status.success() {
+        return Err(reject("pinned validator refused assembled module"));
+    }
+    Ok(result.stdout)
+}
+
 const COMMAND_BYTES: u32 = 131_072;
 const AUTHORITY_BYTES: u32 = 65_536;
 const MAX_INSTALLS: usize = 128;
@@ -49,6 +169,13 @@ struct Candidate {
     span: noble_wasm::source::CodeSpan,
     root_index: usize,
     programs: Vec<ProgramContract>,
+    selected_origin: Option<SelectedOrigin>,
+}
+
+struct SelectedOrigin {
+    definition_identity: String,
+    source_generation: String,
+    output_positions: BTreeSet<usize>,
 }
 
 #[derive(Clone)]
@@ -1455,7 +1582,27 @@ impl Host {
         if let Some(selected) = selected_target {
             message["selected_target"] = selected;
         }
-        let result = self.send(&message, compiled.wat())?;
+        if let Some(checked_origin) = compiled.selected_origin() {
+            let selected = message.get("selected_target")
+                .ok_or_else(|| reject("unselected source cannot claim selected origin"))?;
+            message["selected_origin"] = selected_origin_json(checked_origin, selected)?;
+        }
+        let binary = assemble_slot(compiled.wat())?;
+        if let Some(selected_origin) = message.get("selected_origin") {
+            origin::verify(&binary, selected_origin, &message)?;
+        }
+        let selected_origin = message.get("selected_origin").map(|row| -> Result<SelectedOrigin, String> {
+            Ok(SelectedOrigin {
+                definition_identity: text(row, "definition_identity", 32)?.to_owned(),
+                source_generation: text(row, "source_generation", 32)?.to_owned(),
+                output_positions: row["outputs"].as_array()
+                    .ok_or_else(|| reject("selected origin omitted output positions"))?
+                    .iter().map(|row| uint(row, "stack_position").map(|value| value as usize))
+                    .collect::<Result<_, _>>()?,
+            })
+        }).transpose()?;
+        message["binary_sha256"] = json!(crate::workflow::intrinsic::sha256(&binary));
+        let result = self.send(&message, &binary)?;
         if result["outcome"] != "installed" { return Ok(result); }
         let artifact_sha256 = match text(&result, "artifact_sha256", 64) {
             Ok(digest) if digest.len() == 64
@@ -1494,6 +1641,7 @@ impl Host {
             input:typed, output,
             artifact_sha256, handle,
             span, root_index, programs,
+            selected_origin,
         });
         let mut state = self.control.state.lock().map_err(|_| {
             self.poisoned = true;
@@ -1674,6 +1822,28 @@ impl Host {
                     return Err(reject("worker did not retain a checked Program output"));
                 }
                 let owner = text(cell, "owner", 256)?;
+                let classified = candidate.selected_origin.as_ref()
+                    .is_some_and(|origin| origin.output_positions.contains(&position));
+                match (classified, cell.get("verified_origin")) {
+                    (true, Some(verified)) => {
+                        let origin = candidate.selected_origin.as_ref()
+                            .ok_or_else(|| reject("selected origin vanished"))?;
+                        if verified["caller_id"] != module_id
+                            || verified["artifact_sha256"] != candidate.artifact_sha256
+                            || verified["stack_position"] != position
+                            || verified["definition_identity"] != origin.definition_identity
+                            || verified["source_generation"] != origin.source_generation
+                            || !cell["source_id"].is_null() || !cell["program_index"].is_null() {
+                            self.poisoned = true;
+                            return Err(reject("selected saved Program origin differs from independently checked caller/site"));
+                        }
+                    }
+                    (false, None) => {}
+                    _ => {
+                        self.poisoned = true;
+                        return Err(reject("classified saved Program lacks independently verified origin"));
+                    }
+                }
                 let (source_id, program_index) = match (&cell["source_id"], &cell["program_index"]) {
                     (Value::Null, Value::Null) => (None, None),
                     (Value::String(_), Value::Number(_)) => {

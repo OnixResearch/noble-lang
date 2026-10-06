@@ -173,8 +173,21 @@ the actual boxed I64 capture, not from the Program's latent-effect payload.
 For example, a checked `def q [ quote ]` invoked with `5` returns an owner
 whose captured program can be passed to another checked caller with `20`;
 `swap [ run ] dip +` returns `25`. Release that owner before discarding unused
-code. Its observed capture does not establish a source occurrence or authorize
-dynamic Program publication, proof, or frozen replay.
+code. For a selected named body with bounded, unambiguous I64
+quote/compose lineage, `verified_origin` reports its caller, artifact, and
+output position after
+the host matches the complete source operation map to decoded Wasm functions,
+passive element entries and table initialization, then the worker checks the
+actual epoch-qualified Program graph and ordered captured operand before
+retaining the owner. The host assembles once with the pinned wasm-tools binary;
+the worker instantiates those exact bytes after a SHA-256 cross-check. For
+example, `def builder [ quote [ + ] compose ]` captures root I64 `2` and
+returns a saved `Program<I64,I64,pure>` that a checked `run` caller can execute
+with `1` to obtain `3`; `def fixed [ 2 quote [ + ] compose ]` retains the same
+fixed capture even when the caller root differs. Ambiguous or unsupported
+dynamic Programs remain usable opaque owners without checked origin. A
+verified selected origin is **not** an installed target DefinitionId, proof,
+publication permission, or frozen replay authorization.
 
 Run the diagnostic `verification/live-slot-current-source/gate.mjs` with the
 Node executable pinned in `crates/noble-cli/src/core/runtime/config.json`;

@@ -49,7 +49,6 @@ class SlotEngine {
     }
     this.tools = { node: { ...selection.tools.node, sha256: sha256(fs.readFileSync(process.execPath)) },
       wasm_tools: { ...assembler, sha256: sha256(fs.readFileSync(assembler.path)) } };
-    this.assembler = assembler.path;
     this.memory = new WebAssembly.Memory({ ...baseAbi.memory, initial: 20, maximum: 20 });
     this.table = new WebAssembly.Table(baseAbi.table);
     this.abi = { ...baseAbi,
@@ -262,29 +261,19 @@ class SlotEngine {
     return slotReply('configured', { epoch: '0' });
   }
 
-  compile(wat) {
-    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'noble-slot-'));
-    const output = path.join(directory, 'checked.wasm');
-    const result = spawnSync(this.assembler, ['parse', '-', '-o', output], {
-      input: wat, env: {}, timeout: 30000, maxBuffer: 65536 });
-    try {
-      if (result.error || result.status !== 0) throw Error(`selected WAT parse refused: ${result.stderr ?? result.error}`);
-      const checked = spawnSync(this.assembler, ['validate', output], {
-        env: {}, timeout: 30000, maxBuffer: 65536 });
-      if (checked.error || checked.status !== 0) throw Error(`selected Wasm validate refused: ${checked.stderr ?? checked.error}`);
-      const bytes = fs.readFileSync(output);
-      if (bytes.length > MAX_FRAME) throw Error('slot binary exceeds bounded worker frame');
-      const policy = checkSlotBytes(bytes, this.abi);
-      const module = new WebAssembly.Module(bytes);
-      for (const [actual, expected] of [[WebAssembly.Module.imports(module), policy.imports],
-        [WebAssembly.Module.exports(module), policy.exports]]) {
-        if (actual.length !== expected.length || actual.some((entry, index) =>
-          Object.keys(expected[index]).some(key => entry[key] !== expected[index][key]))) {
-          throw Error('V8 disagrees with checked live-slot binary ABI');
-        }
+  compile(bytes, expectedDigest) {
+    if (!Buffer.isBuffer(bytes) || bytes.length < 8 || bytes.length > MAX_FRAME
+      || sha256(bytes) !== expectedDigest) throw Error('installed binary differs from host-verified bytes');
+    const policy = checkSlotBytes(bytes, this.abi);
+    const module = new WebAssembly.Module(bytes);
+    for (const [actual, expected] of [[WebAssembly.Module.imports(module), policy.imports],
+      [WebAssembly.Module.exports(module), policy.exports]]) {
+      if (actual.length !== expected.length || actual.some((entry, index) =>
+        Object.keys(expected[index]).some(key => entry[key] !== expected[index][key]))) {
+        throw Error('V8 disagrees with checked live-slot binary ABI');
       }
-      return { module, digest: sha256(bytes) };
-    } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+    }
+    return { module, digest: expectedDigest };
   }
 
   imports(moduleId) {
@@ -359,9 +348,10 @@ class SlotEngine {
     };
   }
 
-  install(request, wat) {
-    if (!this.registry || this.modules.has(request.id) || !Buffer.isBuffer(wat)
-      || wat.length < 8 || wat.length > 1048576 || sha256(wat) !== request.wat_sha256
+  install(request, binary) {
+    if (!this.registry || this.modules.has(request.id) || !Buffer.isBuffer(binary)
+      || binary.length < 8 || binary.length > MAX_FRAME
+      || typeof request.binary_sha256 !== 'string'
       || this.sources.get(request.id) !== request.source_sha256
       || request.source_artifact_sha256 !== request.source_sha256
       || this.modules.size >= 128 || !Number.isInteger(request.code_span?.length)
@@ -371,7 +361,7 @@ class SlotEngine {
       return slotReply('install-refused');
     }
     let compiled;
-    try { compiled = this.compile(wat); }
+    try { compiled = this.compile(binary, request.binary_sha256); }
     catch (error) { return slotReply('install-refused', { diagnostic: String(error) }); }
     const checked = request.target_metadata;
     if (!checked || !Array.isArray(checked.stack_in) || !Array.isArray(checked.stack_out)
@@ -394,6 +384,17 @@ class SlotEngine {
       return slotReply('install-refused', {
         diagnostic: 'checked selected definition/source/WAT identity does not match admitted authority',
       });
+    }
+    const origin = request.selected_origin;
+    if (origin != null && (!selected || origin.definition_index !== selected.definition_index
+      || origin.definition_identity !== selected.definition_identity
+      || origin.source_generation !== selected.source_generation
+      || origin.selected_source_sha256 !== selected.selected_source_sha256
+      || origin.root_program_index !== checked.root_program_index
+      || origin.named_program_index !== selected.named_program_index
+      || !Array.isArray(origin.programs) || origin.programs.length !== request.program_metadata.length
+      || !Array.isArray(origin.outputs))) {
+      return slotReply('install-refused', { diagnostic: 'host-selected origin differs from installed selected target' });
     }
     const sourceCatalog = this.registry.admitResourceCatalog(request.host_owner,
       request.source_artifact_sha256, request.resource_catalog, request.source_schemas);
@@ -440,6 +441,17 @@ class SlotEngine {
       || instance.exports.cell_z(handle) !== checked.output_signature
       || instance.exports.cell_payload(handle) !== BigInt(checked.effect_mask)) {
       throw Error('installed Program is inconsistent with checked root metadata/code span');
+    }
+    if (origin) {
+      for (const [index, program] of origin.programs.entries()) {
+        if (program?.program_index !== index
+          || !Array.isArray(program.operations) || !program.operations.length) {
+          throw Error('selected installed Program lacks complete ordered recipe operations');
+        }
+        this.verifySelectedRecipe(instance.exports,
+          instance.exports.cell_c(pinned[index]), program.operations, pinned,
+          origin.definition_identity);
+      }
     }
     const token = this.registry.registerModule(compiled.digest, request.live_sites,
       checked.stack_in, sourceCatalog, request.source_artifact_sha256);
@@ -736,10 +748,211 @@ class SlotEngine {
     return { moduleIds, versions: [...versions] };
   }
 
-  saveOutput(runtime, index) {
+  evaluateSelectedOrigin(module, inputs) {
+    const origin = module.selected_origin;
+    if (!origin) return null;
+    if (inputs.length !== module.target_metadata.stack_in.length
+      || inputs.some(input => input.kind !== 'i64' || !/^-?(0|[1-9][0-9]*)$/.test(input.value))) {
+      throw Error('selected origin requires exact I64 root operands');
+    }
+    const program = origin.programs[origin.named_program_index];
+    if (program?.program_index !== origin.named_program_index) {
+      throw Error('selected origin has no exact named program');
+    }
+    const stack = inputs.map((input, position) =>
+      ({ kind: 'scalar', value: BigInt(input.value), operand: { kind: 'root-i64', position } }));
+    const pop = kind => {
+      const item = stack.pop();
+      if (item?.kind !== kind) throw Error('selected origin operand kind/order differs');
+      return item;
+    };
+    for (const op of program.operations) {
+      const fixed = value => ({ kind: 'scalar', value: BigInt.asIntN(64, value),
+        operand: { kind: 'fixed-i64', value: BigInt.asIntN(64, value).toString() } });
+      switch (op.kind) {
+        case 'i64': stack.push(fixed(BigInt(op.value))); break;
+        case 'dup': {
+          const top = stack.at(-1);
+          if (!top || top.kind !== 'scalar' && top.result?.kind !== 'static-program') {
+            throw Error('selected dup lacks copyable scalar/static operand');
+          }
+          stack.push(top); break;
+        }
+        case 'drop': {
+          if (!stack.length) throw Error('selected drop lacks operand');
+          stack.pop(); break;
+        }
+        case 'swap': {
+          if (stack.length < 2) throw Error('selected swap lacks operands');
+          const right = stack.pop(), left = stack.pop();
+          stack.push(right, left); break;
+        }
+        case 'add': case 'sub': case 'mul': {
+          const right = pop('scalar'), left = pop('scalar');
+          if (left.operand.kind !== 'fixed-i64' || right.operand.kind !== 'fixed-i64') {
+            throw Error('unclassified selected root arithmetic cannot acquire origin');
+          }
+          stack.push(fixed(op.kind === 'add' ? left.value + right.value
+            : op.kind === 'sub' ? left.value - right.value : left.value * right.value));
+          break;
+        }
+        case 'quote-i64': {
+          const input = pop('scalar');
+          stack.push({ kind: 'program', result: { kind: 'quote-i64', node: op.node,
+            table_entry: op.table_entry, operand: input.operand }, op });
+          break;
+        }
+        case 'static-program':
+          stack.push({ kind: 'program', result: { kind: 'static-program',
+            node: op.node, program_index: op.static_program_index }, op });
+          break;
+        case 'compose': {
+          const right = pop('program'), left = pop('program');
+          if (right.result.kind !== 'static-program'
+            || !['quote-i64', 'compose'].includes(left.result.kind)) {
+            throw Error('selected compose has unsupported operand lineage');
+          }
+          stack.push({ kind: 'program', result: { kind: 'compose', node: op.node,
+            table_entry: op.table_entry, left: left.result, right: {
+              kind: 'static-program', node: right.result.node,
+              program_index: right.result.program_index } }, op });
+          break;
+        }
+        default: throw Error('unclassified selected operation cannot acquire origin');
+      }
+    }
+    const expected = new Map(origin.outputs.map(row => [row.stack_position, row.result]));
+    if (expected.size !== origin.outputs.length || stack.length !== module.target_metadata.stack_out.length
+      || stack.some((cell, position) => (cell.kind === 'program') !== expected.has(position)
+        || cell.kind === 'program' && !sameSlotJSON(cell.result, expected.get(position)))) {
+      throw Error('selected output lineage differs from independently checked source actions');
+    }
+    return expected;
+  }
+
+  verifySelectedRecipe(runtime, root, operations, pinned, definitionIdentity) {
+    const check = (id, kind) => {
+      if (!Number.isInteger(id) || id < 4096 || runtime.cell_kind(id) !== kind) {
+        throw Error('selected recipe contains stale or differently typed epoch handle');
+      }
+    };
+    const word = { add: 4, sub: 5, mul: 6, dup: 0, drop: 1, swap: 2, compose: 9 };
+    const checkRange = (id, end, lastIndex = 0) => {
+      if (end === 1) {
+        const op = operations[lastIndex];
+        check(id, 8);
+        const tag = op.kind === 'i64' ? 1 : op.kind === 'static-program' ? 3
+          : op.kind === 'call-selected' ? 15 : 2;
+        const value = op.kind === 'i64' ? BigInt(op.value)
+          : op.kind === 'call-selected' ? BigInt.asIntN(64, BigInt(definitionIdentity))
+          : tag === 3 ? 0n : BigInt(op.kind === 'quote-i64' ? 8 : word[op.kind]);
+        if (runtime.cell_x(id) !== tag || runtime.cell_payload(id) !== value
+          || runtime.cell_y(id) !== (tag === 2 || tag === 15 ? op.input_signature : 0)
+          || runtime.cell_z(id) !== (tag === 2 || tag === 15 ? op.output_signature : 0)
+          || runtime.cell_w(id) !== (tag === 2 || tag === 15 ? op.effect_mask : 0)
+          || runtime.cell_n(id) !== 0 || runtime.cell_b(id) || runtime.cell_c(id)
+          || runtime.cell_a(id) !== (tag === 3 ? pinned[op.static_program_index] : 0)) {
+          throw Error('selected installed recipe atom differs from checked source operation');
+        }
+        return;
+      }
+      check(id, 9);
+      if (runtime.cell_payload(id) !== 0n || runtime.cell_x(id) || runtime.cell_y(id)
+        || runtime.cell_z(id) || runtime.cell_w(id) || runtime.cell_n(id) || runtime.cell_c(id)) {
+        throw Error('selected recipe concatenation has extra state');
+      }
+      checkRange(runtime.cell_a(id), end - 1);
+      const last = runtime.cell_b(id);
+      check(last, 8);
+      // Reuse the one-atom validation without slicing or copying the checked
+      // operation list for every node of a long left-associated recipe.
+      checkRange(last, 1, end - 1);
+    };
+    checkRange(root, operations.length);
+  }
+
+  verifySelectedGraph(runtime, handle, result, module, inputs) {
+    const cell = (id, kind) => {
+      if (!Number.isInteger(id) || id < 4096 || runtime.cell_kind(id) !== kind) {
+        throw Error('selected origin graph contains stale or differently typed epoch handle');
+      }
+    };
+    const walk = (id, description) => {
+      if (description.kind === 'quote-i64') {
+        cell(id, 4);
+        const op = module.selected_origin.programs[module.selected_origin.named_program_index]
+          .operations.find(row => row.table_entry === description.table_entry && row.node === description.node);
+        if (op?.kind !== 'quote-i64' || runtime.cell_x(id) !== 1
+          || runtime.cell_y(id) !== op.quote_input_signature
+          || runtime.cell_z(id) !== op.quote_output_signature
+          || runtime.cell_payload(id) !== 0n || runtime.cell_b(id)
+          || runtime.cell_w(id) !== 1 || runtime.cell_n(id) !== 1) {
+          throw Error('selected quote differs from exact source site/signatures');
+        }
+        const captured = runtime.cell_a(id), atom = runtime.cell_c(id);
+        cell(captured, 1); cell(atom, 8);
+        const operand = description.operand;
+        const value = operand.kind === 'root-i64'
+          ? inputs[operand.position]?.value : operand.value;
+        if (value === undefined || runtime.cell_payload(captured) !== BigInt(value)
+          || runtime.cell_a(captured) || runtime.cell_b(captured) || runtime.cell_c(captured)
+          || runtime.cell_x(captured) || runtime.cell_y(captured) || runtime.cell_z(captured)
+          || runtime.cell_w(captured) || runtime.cell_n(captured)
+          || runtime.cell_x(atom) !== 1 || runtime.cell_payload(atom) !== BigInt(value)
+          || runtime.cell_a(atom) || runtime.cell_b(atom) || runtime.cell_c(atom)
+          || runtime.cell_y(atom) || runtime.cell_z(atom) || runtime.cell_w(atom) || runtime.cell_n(atom)) {
+          throw Error('selected quote captures wrong ordered root/fixed I64 operand');
+        }
+        return;
+      }
+      if (description.kind === 'static-program') {
+        const selected = module.pinned[description.program_index];
+        cell(id, 4);
+        if (id !== selected || this.handles.get(id)?.moduleId !== module.id) {
+          throw Error('selected static child is not the exact pinned installed Program');
+        }
+        const source = module.selected_origin.programs[description.program_index];
+        if (source?.program_index !== description.program_index || source.source_artifact !== 'definition') {
+          throw Error('selected static child lacks exact checked source body');
+        }
+        this.verifySelectedRecipe(runtime, runtime.cell_c(id), source.operations, module.pinned,
+          module.selected_origin.definition_identity);
+        return;
+      }
+      if (description.kind !== 'compose') throw Error('unsupported selected output graph');
+      cell(id, 4);
+      const composeOp = module.selected_origin.programs[module.selected_origin.named_program_index]
+        .operations.find(row => row.table_entry === description.table_entry && row.node === description.node);
+      if (composeOp?.kind !== 'compose') {
+        throw Error('selected compose differs from checked source site');
+      }
+      const left = runtime.cell_a(id), right = runtime.cell_b(id);
+      walk(left, description.left); walk(right, description.right);
+      const lRecipe = runtime.cell_c(left), rRecipe = runtime.cell_c(right);
+      const combined = runtime.cell_c(id);
+      cell(combined, 9);
+      if (runtime.cell_x(id) !== 2 || runtime.cell_payload(id) !== 0n
+        || runtime.cell_y(id) !== runtime.cell_y(left)
+        || runtime.cell_z(id) !== runtime.cell_z(right)
+        || runtime.cell_w(id) !== Math.max(runtime.cell_w(left), runtime.cell_w(right)) + 1
+        || runtime.cell_n(id) !== runtime.cell_n(left) + runtime.cell_n(right)
+        || runtime.cell_a(combined) !== lRecipe || runtime.cell_b(combined) !== rRecipe
+        || runtime.cell_c(combined) || runtime.cell_payload(combined) !== 0n
+        || runtime.cell_x(combined) || runtime.cell_y(combined) || runtime.cell_z(combined)
+        || runtime.cell_w(combined) || runtime.cell_n(combined)) {
+        throw Error('selected compose child or recipe graph differs from checked operand lineage');
+      }
+    };
+    walk(handle, result);
+  }
+
+  saveOutput(runtime, index, selectedResult = null, rootInputs = null) {
     const handle = Number(runtime.stack_value(index)) >>> 0;
     if (!handle || runtime.cell_kind(handle) !== 4) {
       throw Error('backend returned no live Program stack cell');
+    }
+    if (selectedResult !== null) {
+      this.verifySelectedGraph(runtime, handle, selectedResult, this.active.module, rootInputs);
     }
     if (this.nextSavedOwner === Number.MAX_SAFE_INTEGER) throw Error('saved Program owner exhausted');
     const graph = this.observeProgramGraph(runtime, handle);
@@ -788,7 +1001,12 @@ class SlotEngine {
       programIndex: programIndex < 0 ? null : programIndex });
     return { kind: 4, owner: token, source_id: programIndex < 0 ? null : module.id,
       program_index: programIndex < 0 ? null : programIndex,
-      ...(programIndex < 0 ? { capture_status: 'backend-observed-source-occurrence-unavailable',
+      ...(selectedResult === null ? {} : { verified_origin: {
+        caller_id: this.active.module.id, artifact_sha256: this.active.module.artifactSha256,
+        stack_position: index, definition_identity: this.active.module.selected_origin.definition_identity,
+        source_generation: this.active.module.selected_origin.source_generation } }),
+      ...(programIndex < 0 ? { capture_status: selectedResult === null
+        ? 'backend-observed-source-occurrence-unavailable' : 'checked-selected-origin',
         capture_values: observedCaptures } : {}) };
   }
 
@@ -863,6 +1081,13 @@ class SlotEngine {
         const status = this.inject(runtime, input);
         if (status !== 0) throw Error(`host root injection returned status ${status}`);
       }
+      const originInputs = module.selected_origin ? request.inputs.map((input, index) => {
+        if (input.kind !== 'i64' || runtime.stack_kind(index) !== 1
+          || runtime.stack_value(index) !== BigInt(input.value)) {
+          throw Error('actual injected root operand differs from selected I64 source lineage');
+        }
+        return { kind: 'i64', value: runtime.stack_value(index).toString() };
+      }) : null;
       for (const ref of request.refs) {
         const status = runtime.bind_live_ref(ref.position, ref.ordinal);
         if (status !== 0) throw Error(`checked root ref binding returned status ${status}`);
@@ -875,11 +1100,16 @@ class SlotEngine {
       }
       const count = runtime.stack_length();
       if (!Number.isInteger(count) || count < 0 || count > 128) throw Error('invalid result stack length');
+      const selectedOutputs = originInputs === null ? null : this.evaluateSelectedOrigin(module, originInputs);
       const stack = [];
       for (let index = 0; index < count; index++) {
         const kind = runtime.stack_kind(index);
         if (kind === 4) {
-          const saved = this.saveOutput(runtime, index);
+          if (selectedOutputs && !selectedOutputs.has(index)) {
+            throw Error('selected Program output lacks checked origin lineage');
+          }
+          const saved = this.saveOutput(runtime, index,
+            selectedOutputs?.get(index) ?? null, originInputs);
           createdOwners.push(saved.owner);
           stack.push(saved);
         } else stack.push({ kind, value: runtime.stack_value(index).toString() });
@@ -954,18 +1184,18 @@ class SlotEngine {
     }
   }
 
-  request(request, wat) {
+  request(request, binary) {
     if (!request || typeof request !== 'object' || Array.isArray(request)
       || typeof request.operation !== 'string' || this.poisoned) {
       return slotReply('session-refused');
     }
     if (request.operation === 'configure') return this.configure(request);
     if (!this.registry) return slotReply('authority-required');
-    if (request.operation !== 'install' && wat.length !== 0) return slotReply('unexpected-module-frame');
+    if (request.operation !== 'install' && binary.length !== 0) return slotReply('unexpected-module-frame');
     if (request.operation === 'control-barrier') {
       return slotReply('control-barrier', { control_events: this.controlEvents.splice(0) });
     }
-    if (request.operation === 'install') return this.install(request, wat);
+    if (request.operation === 'install') return this.install(request, binary);
     if (request.operation === 'candidate') return this.stageCandidate(request);
     if (request.operation === 'discard') return this.discard(request);
     if (request.operation === 'retire-code') return this.retireCode(request);

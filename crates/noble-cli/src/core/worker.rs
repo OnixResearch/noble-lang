@@ -172,33 +172,34 @@ impl Engine {
     }
 
     /// One bounded host-selected JSON command; only an install carries the
-    /// compiler's checked WAT. Source is never worker protocol input.
+    /// host-assembled Wasm (source-classified origins are also structurally
+    /// checked). Source is never worker protocol input.
     pub fn slot(
         &mut self,
         request: &serde_json::Value,
-        wat: &[u8],
+        binary: &[u8],
     ) -> Result<super::output::Report, super::output::Failure> {
         const MAX_REQUEST: usize = 524_288;
-        const MAX_WAT: usize = 4_194_304;
+        const MAX_BINARY: usize = 4_194_304;
         let json = attempt!(serde_json::to_vec(request).map_err(|error| {
             super::output::Failure::new(
                 super::output::ErrorContext { stage: "shell", outcome: "invalid-input" },
                 std::format!("cannot encode slot request: {error}"),
             )
         }));
-        if json.len() > MAX_REQUEST || wat.len() > MAX_WAT
+        if json.len() > MAX_REQUEST || binary.len() > MAX_BINARY
             || (request.get("operation").and_then(serde_json::Value::as_str) != Some("install")
-                && !wat.is_empty())
+                && !binary.is_empty())
         {
             return Err(super::output::Failure::new(
                 super::output::ErrorContext { stage: "shell", outcome: "exhausted" },
                 "slot request exceeds bounded worker protocol",
             ));
         }
-        let header = std::format!("slot {} {}\n", json.len(), wat.len());
+        let header = std::format!("slot {} {}\n", json.len(), binary.len());
         attempt!(self.write(header.as_bytes()));
         attempt!(self.write(&json));
-        attempt!(self.write(wat));
+        attempt!(self.write(binary));
         self.reply()
     }
 
