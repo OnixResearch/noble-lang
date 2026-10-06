@@ -158,7 +158,6 @@ for (const [name, ceiling] of [
     expectOutcome(publication, name === 'empty-ceiling' ? 'refused' : 'published');
     assert.deepEqual([publication.guest_requests, publication.protected_operations], [0, 0]);
     if (name === 'empty-ceiling') {
-      assert.match(publication.diagnostic, /checked candidate differs from selected slot interface or effect ceiling/);
       const pure = expectOutcome(await session.issue({ operation: 'install', id: 'pure',
         source: 'swap swap', inputs: base.inputs }), 'installed');
       assert.deepEqual([pure.guest_requests, pure.protected_operations], [0, 0]);

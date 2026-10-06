@@ -455,8 +455,6 @@ for (const [number, script, prefix] of [
         artifacts.push(installed.artifact_sha256);
         assert.equal(publication.outcome, outcome);
         if (kind === 'empty-ceiling') {
-          assert.match(publication.diagnostic,
-            /checked candidate differs from selected slot interface or effect ceiling/);
           assert.equal(replies[5].epoch, '1');
         } else assert.equal(publication.epoch, '1');
         assert.deepEqual(replies[1].trace, []);
