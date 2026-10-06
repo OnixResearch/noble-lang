@@ -208,6 +208,11 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
     let code_segment = named_segments.get("code").copied()
         .ok_or_else(|| denied("missing code element segment"))?;
     let core_segment = named_segments.get("core").copied();
+    // Prepared.code_span.generation names the *next* committed compiler
+    // generation; emit::module received the preceding generation.
+    if core_segment.is_some() != (number(span, "generation")? == 1) {
+        return Err(denied("native core segment differs from compiler generation"));
+    }
     for (segment, entries) in code_initializers {
         if segment == code_segment { code_elements = Some(entries); }
         else if Some(segment) == core_segment { core_elements = Some(entries); }
@@ -402,7 +407,7 @@ mod tests {
             "target_metadata":{"root_program_index":prepared.target_metadata()
                 .ok_or("missing root metadata")?.root_program_index,
                 "stack_out":["Program([I64]->[I64]!{})"]},
-            "code_span":{"start":span.start,"length":span.length},
+            "code_span":{"start":span.start,"length":span.length,"generation":span.generation},
             "program_metadata":metadata
         });
         let binary = super::super::assemble_slot(prepared.wat())?;
@@ -464,6 +469,42 @@ mod tests {
         if verify(&super::super::assemble_slot(forged_helper.as_bytes())?,
             &origin, &install).is_ok() {
             return Err("other function's passive element initializer acquired checked origin".into());
+        }
+        // The first prepared code span is labeled generation 1 even though
+        // emit::module used generation 0. A later compiler emission must not
+        // accept a newly forged native-core segment and its table writer.
+        let mut compiler = noble_wasm::source::Compiler::new_live_slots();
+        let first = compiler.prepare_checked_selected(&selected)
+            .map_err(|_| "first checked compiler emission refused".to_owned())?;
+        compiler.commit(first).map_err(|_| "first checked emission did not commit".to_owned())?;
+        let later = compiler.prepare_checked_selected(&selected)
+            .map_err(|_| "later checked compiler emission refused".to_owned())?;
+        let later_span = later.code_span();
+        let later_origin = super::super::selected_origin_json(
+            later.selected_origin().ok_or("later selected source lacks classified origin")?, &target)?;
+        let mut later_install = install.clone();
+        later_install["code_span"] = serde_json::json!({
+            "start":later_span.start,"length":later_span.length,"generation":later_span.generation
+        });
+        later_install["program_metadata"] = serde_json::json!(later.program_metadata().iter().map(|program|
+            serde_json::json!({
+                "entry":program.entry,"program_index":program.program_index,
+                "input_signature":program.input_signature,
+                "output_signature":program.output_signature,"effect_mask":program.effect_mask
+            })).collect::<Vec<_>>());
+        let later_wat = std::str::from_utf8(later.wat()).map_err(|error| error.to_string())?;
+        verify(&super::super::assemble_slot(later_wat.as_bytes())?, &later_origin, &later_install)?;
+        let late_init = format!("(table.init $core (i32.const 0) (i32.const 0) (i32.const 4))\n\
+            (table.init $code (i32.const {})", later_span.start);
+        let real_init = format!("(table.init $code (i32.const {})", later_span.start);
+        let forged = later_wat.replacen(&real_init, &late_init, 1);
+        if forged == later_wat { return Err("later initializer lacks checked code entry".into()); }
+        let closing = forged.rfind(')').ok_or("later module closing parenthesis missing")?;
+        let forged = format!("{}(elem $core func $empty_entry $quote_entry $compose_entry $restore_entry)\n{}",
+            &forged[..closing], &forged[closing..]);
+        if verify(&super::super::assemble_slot(forged.as_bytes())?,
+            &later_origin, &later_install).is_ok() {
+            return Err("later-generation forged native core segment acquired selected origin".into());
         }
         Ok(())
     }
