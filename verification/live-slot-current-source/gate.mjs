@@ -336,21 +336,92 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
     assert.deepEqual(jsonLines(`${stem}.responses.jsonl`), replies);
     assert.equal(replies.length, requests.length + 1);
     assert.deepEqual([summary.guest_requests, summary.protected_operations], [0, 0]);
-    assert.equal(summary.owner_count, 9);
-    const variable = replies.find(row => row.stack?.[0]?.verified_origin?.caller_id === 'variable');
-    const opaque = replies.find(row => row.stack?.[0]?.capture_status
-      === 'backend-observed-source-occurrence-unavailable');
-    assert.ok(variable && opaque, 'source-classified and executable opaque observations required');
-    assert.equal(variable.stack[0].source_id, null);
-    assert.equal(variable.stack[0].program_index, null);
-    assert.equal(opaque.stack[0].verified_origin, undefined);
-    assert.ok(replies.some(row => row.outcome === 'refused'));
-    assert.equal(replies.filter(row => row.outcome === 'program-released').length, summary.owner_count);
+    const saved = (id, values, position = 0) => {
+      const matches = requests.flatMap((request, index) =>
+        request.operation === 'invoke' && request.id === id
+          && JSON.stringify(request.inputs) === JSON.stringify(values.map(value =>
+            ({ kind: 'i64', value: String(value) })))
+          ? [replies[index + 1]] : []);
+      assert.equal(matches.length, 1, `one selected ${id} invocation for ${values}`);
+      assert.equal(matches[0].outcome, 'executed');
+      return matches[0].stack[position];
+    };
+    const variable2 = saved('variable', [2]), variable3 = saved('variable', [3]);
+    const renamed2 = saved('renamed', [2]);
+    const fixed2 = saved('fixed', [3], 1), fixed3 = saved('fixed3', [3], 1);
+    const computed2 = saved('computed', [3], 1);
+    const computed3 = saved('computed3', [3], 1);
+    const identity = cell => {
+      assert.equal(cell.kind, 4);
+      assert.equal(cell.source_id, null);
+      assert.equal(cell.program_index, null);
+      assert.equal(cell.capture_status, 'checked-selected-origin');
+      assert.ok(cell.verified_origin?.artifact_sha256);
+      assert.match(cell.target_identity?.definition_id ?? '',
+        /^anonymous-template-experimental-v1:[a-f0-9]{64}$/);
+      assert.match(cell.target_identity?.program_value_id ?? '',
+        /^anonymous-program-experimental-v1:[a-f0-9]{64}$/);
+      assert.notEqual(cell.target_identity.definition_id, cell.verified_origin.definition_identity);
+      assert.notEqual(cell.target_identity.program_value_id, cell.verified_origin.definition_identity);
+      assert.equal(cell.target_identity.artifact_sha256, null);
+      assert.deepEqual(cell.target_identity.interface,
+        { input: ['I64'], output: ['I64'], effects: [] });
+      assert.deepEqual(cell.target_identity.dependencies, ['builtin:i64.add']);
+      assert.deepEqual(cell.target_identity.effects, []);
+      const quote = cell.capture_values.find(entry => entry.field === 'cell_a')?.value;
+      assert.ok(Array.isArray(quote));
+      assert.equal(quote.find(node => node.kind === 1)?.payload,
+        cell.target_identity.captures[0].value);
+      assert.equal(quote.find(node => node.kind === 8 && node.x === 1)?.payload,
+        cell.target_identity.captures[0].value);
+      return cell.target_identity;
+    };
+    const variableD2 = identity(variable2), variableD3 = identity(variable3);
+    assert.deepEqual(variableD2.captures, [{ type: 'I64', value: '2' }]);
+    assert.deepEqual(variableD3.captures, [{ type: 'I64', value: '3' }]);
+    assert.equal(variableD2.definition_id, variableD3.definition_id);
+    assert.notEqual(variableD2.program_value_id, variableD3.program_value_id);
+    assert.equal(identity(renamed2).program_value_id, variableD2.program_value_id);
+    const fixedD2 = identity(fixed2), fixedD3 = identity(fixed3);
+    const computedD2 = identity(computed2), computedD3 = identity(computed3);
+    assert.notEqual(fixedD2.definition_id, fixedD3.definition_id);
+    assert.notEqual(computedD2.definition_id, computedD3.definition_id);
+    assert.notEqual(variableD2.definition_id, fixedD2.definition_id);
+    assert.equal(identity(saved('fixed', [2], 1)).program_value_id, fixedD2.program_value_id);
+    assert.equal(identity(saved('computed', [2], 1)).program_value_id, computedD2.program_value_id);
+    const dual = saved('dual', [2, 3]), copy = saved('copy', [7]);
+    const unsupported = [dual, saved('dual', [2, 3], 1),
+      copy, saved('copy', [7], 1), saved('ambiguous', [2])];
+    assert.ok(unsupported.every(cell => cell?.kind === 4 && cell.target_identity === undefined));
+    assert.equal(unsupported.at(-1).capture_status,
+      'backend-observed-source-occurrence-unavailable');
+    const publication = (slot, owner) => {
+      const index = requests.findIndex(request => request.operation === 'publish'
+        && request.slot === slot && request.owner === owner);
+      assert.ok(index >= 0, `missing ${slot} target publication refusal`);
+      assert.equal(replies[index + 1].outcome, 'refused');
+      return replies[index + 1].diagnostic;
+    };
+    assert.match(publication('ordinary-control', variable2.owner),
+      /dynamic saved Program lacks independently checked installed target metadata/);
+    assert.match(publication('proof-required', variable2.owner),
+      /proof-required slot lacks independently checked target evidence/);
+    const owners = replies.flatMap(reply => reply.stack ?? [])
+      .filter(cell => cell.kind === 4).map(cell => cell.owner);
+    assert.equal(new Set(owners).size, owners.length);
+    assert.equal(summary.owner_count, owners.length);
+    assert.deepEqual(requests.filter(request => request.operation === 'release-program')
+      .map(request => request.owner).sort(), owners.slice().sort());
+    assert.equal(replies.filter(reply => reply.outcome === 'program-released').length, owners.length);
     row(caseId(1), 'selected-origin-saved-owner-control', 'passed',
-      'selected CLI checked bounded compiler-emitted source/Wasm/graph saved owner provenance, independent captures and opaque refusal; no P2/D2 or proof claim',
+      'selected CLI independently checked bounded source/Wasm/actual graph before experimental returned-target D/P; varying input changes P only, fixed/computed source constants change D, unsupported lineage has no target ID and saved dynamic publication/proof refuse; not canonical LSLOT-05',
       files.map(receiptFile), { guest_requests: 0, protected_operations: 0 },
       { owner_count: summary.owner_count, source_artifacts: summary.installed_artifacts,
-        opaque_status: opaque.stack[0].capture_status },
+        varying_template: variableD2.definition_id,
+        varying_program_values: [variableD2.program_value_id, variableD3.program_value_id],
+        fixed_templates: [fixedD2.definition_id, fixedD3.definition_id],
+        computed_templates: [computedD2.definition_id, computedD3.definition_id],
+        opaque_status: unsupported.at(-1).capture_status },
       { claim: 'control_pass', session: summedCounters(replies) });
   } catch (error) {
     row(caseId(1), 'selected-origin-saved-owner-control', 'failed', String(error),
