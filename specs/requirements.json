@@ -1519,6 +1519,112 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "EA-ADMIT-01",
+      "document": "../.cairn/specs/erlang-abstract-backend/spec.md",
+      "document_id": "SPEC-BE003",
+      "evidence_routes": [
+        "form-admission-test",
+        "isolated-backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "EA-CASE-04",
+        "EA-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EA-BUILD-01",
+      "document": "../.cairn/specs/erlang-abstract-backend/spec.md",
+      "document_id": "SPEC-BE003",
+      "evidence_routes": [
+        "form-admission-test",
+        "isolated-backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "EA-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EA-FORMS-01",
+      "document": "../.cairn/specs/erlang-abstract-backend/spec.md",
+      "document_id": "SPEC-BE003",
+      "evidence_routes": [
+        "form-admission-test",
+        "isolated-backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "EA-CASE-03",
+        "EA-CASE-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EA-GATE-01",
+      "document": "../.cairn/specs/erlang-abstract-backend/spec.md",
+      "document_id": "SPEC-BE003",
+      "evidence_routes": [
+        "form-admission-test",
+        "isolated-backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "EA-CASE-01",
+        "EA-CASE-06",
+        "EA-CASE-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EA-I64-01",
+      "document": "../.cairn/specs/erlang-abstract-backend/spec.md",
+      "document_id": "SPEC-BE003",
+      "evidence_routes": [
+        "form-admission-test",
+        "isolated-backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "EA-CASE-01"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EA-ISOLATE-01",
+      "document": "../.cairn/specs/erlang-abstract-backend/spec.md",
+      "document_id": "SPEC-BE003",
+      "evidence_routes": [
+        "form-admission-test",
+        "isolated-backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "EA-CASE-02",
+        "EA-CASE-03",
+        "EA-CASE-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "EA-SCOPE-01",
+      "document": "../.cairn/specs/erlang-abstract-backend/spec.md",
+      "document_id": "SPEC-BE003",
+      "evidence_routes": [
+        "form-admission-test",
+        "isolated-backend-correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "EA-CASE-01",
+        "EA-CASE-02",
+        "EA-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
       "id": "EV-BIND-01",
       "document": "../.cairn/specs/evidence/spec.md",
       "document_id": "SPEC-EV001",

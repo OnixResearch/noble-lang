@@ -2,10 +2,10 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "2976cfd7dea1bf917a21a682b68215ac14b7c2dbc0f97d64a274bc30acb1514a",
+    "sha256": "e6c01cce6b0b868b24a7f00d933b32b607332c177e957f5b9a0f687359be71a3",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
-      "sha256": "5a75c586f7ab4d3065a71c1259ea1d835d896b663173a8c83300c6c47f7feeea"
+      "sha256": "98cc360fc506ed092b62ef232a19cc9a6ef61805e9d9f2d8c467bea714735129"
     }
   },
   "lane": "document-validation-only",
@@ -14,9 +14,9 @@
     "bun": "1.4.2",
     "node_api": "26.3.0"
   },
-  "documents": 13,
-  "requirements": 531,
-  "scenarios": 198,
+  "documents": 14,
+  "requirements": 538,
+  "scenarios": 205,
   "scenarios_executed": 116,
   "open_test_design": 193,
   "proof_obligations": 30,
@@ -1439,6 +1439,22 @@
       "sha256": "75a45a941525b05d6ae320e94d0ab63dd363fcb9b888ebff488c14eb8979ad20"
     },
     {
+      "file": ".cairn/changes/erlang-abstract-backend/design.md",
+      "sha256": "aac0eb38c4d996f2f1155f496d6941cfb95520fb3e26e92349a3528c6d97b353"
+    },
+    {
+      "file": ".cairn/changes/erlang-abstract-backend/proposal.md",
+      "sha256": "ff10d43ef8396f71cbaa0be4f5b1a01d0f883c4c358085d4d2fd8012d00b81ba"
+    },
+    {
+      "file": ".cairn/changes/erlang-abstract-backend/specs/erlang-abstract-backend/spec.md",
+      "sha256": "9246638500166fe4e680831a741652332d3074360be8368bda9936301830b50b"
+    },
+    {
+      "file": ".cairn/changes/erlang-abstract-backend/tasks.md",
+      "sha256": "3e61932aeaa4f0a5ad9a02808892862448b5cb8a43dfb43e09f3dddd748ae47c"
+    },
+    {
       "file": ".cairn/changes/explicit-live-references/design.md",
       "sha256": "693f98e1df8041106ef5d87000c2533e96e7b8d338916fac9b772944c5c40a7f"
     },
@@ -1541,6 +1557,22 @@
     {
       "file": ".cairn/changes/live-wasm-reload/tasks.md",
       "sha256": "fdde2d45feb8a466b51b47879d58b961e142909a43a4a1629f1ea74d93c1c0b5"
+    },
+    {
+      "file": ".cairn/changes/runtime-program-template-identity/design.md",
+      "sha256": "014f3cb1920902547f1d0f49fa989b3763e24c1909c7aa9662ab18379d90af9e"
+    },
+    {
+      "file": ".cairn/changes/runtime-program-template-identity/proposal.md",
+      "sha256": "6e22a285b3e153872c75789c30b7cba65e6fbba52db8829671d1fc740ac9bf86"
+    },
+    {
+      "file": ".cairn/changes/runtime-program-template-identity/specs/language/spec.md",
+      "sha256": "6eb0da24662b827b1bfb651eb3367ea7de77346097c8eacaff01503562401ed4"
+    },
+    {
+      "file": ".cairn/changes/runtime-program-template-identity/tasks.md",
+      "sha256": "c0a331d6a9231e59007779a195fcd892caa35eaeebced7261dc5822c3ab344a0"
     },
     {
       "file": ".cairn/changes/safety-artifact-correspondence/design.md",
@@ -1708,7 +1740,7 @@
     },
     {
       "file": ".cairn/README.md",
-      "sha256": "ff977a055f82fc657abe6e64bbb7dfc3c528319e1d1149424f6fd56aa33c4951"
+      "sha256": "ab6533ca9f7977e6a006f2c2af9d0bd852e37b8d5acf88dd73957dc07909646a"
     },
     {
       "file": ".cairn/specs/backend-experiments/spec.md",
@@ -1729,6 +1761,10 @@
     {
       "file": ".cairn/specs/developer-experience/spec.md",
       "sha256": "c0610264379ed0874cf4200f06e7fd8596d5d75bfa54d46f1c59d555523ed00f"
+    },
+    {
+      "file": ".cairn/specs/erlang-abstract-backend/spec.md",
+      "sha256": "373620f479dc935f9df23e3583a9dca6099707781f22e73d42a4e3d643b11de4"
     },
     {
       "file": ".cairn/specs/evidence/spec.md",
@@ -1792,7 +1828,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "db2dba430dff1dfaa8a63bab35dbd7a8293ad645bd7d855ecd599eb7fef3658d"
+      "sha256": "f45c65c218d25a340bf57eb11da832b7c5ef2503cbca05d05738c756a5600063"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1829,6 +1865,10 @@
     {
       "file": "specs/conformance/developer-experience-cases.json",
       "sha256": "760239624d082559738a7ae2f3018f8960bea1cf9ab7666e3a22e80e7e55e89e"
+    },
+    {
+      "file": "specs/conformance/erlang-abstract-cases.json",
+      "sha256": "7e0daf547a964834603e81d3c7087b241b1031c3163b20b1e5acf13a136bec01"
     },
     {
       "file": "specs/conformance/identity-cases.json",
@@ -1887,6 +1927,10 @@
       "sha256": "840b02c090d0cd93636ba2104d835ab5ce702204ebca8e182a786010b2ceb5a4"
     },
     {
+      "file": "specs/ERLANG-ABSTRACT-BACKEND.md",
+      "sha256": "f2f2bc5316c907e60bd99fd5b1265f600cd1d07e1ad1f6919aef60e062fde582"
+    },
+    {
       "file": "specs/EVIDENCE.md",
       "sha256": "3841c8a3fdd90a969d2cdd795af37c91ee353ed8b3c226ac6f2af1c137a0e829"
     },
@@ -1900,11 +1944,11 @@
     },
     {
       "file": "specs/README.md",
-      "sha256": "d701488a0cc64616818f3bf3b81136924c1bccb70e4be64b7e51c989325a5014"
+      "sha256": "d7e8364a4311e198f8916f0f6d48aa7bfae3f0e1384c7840073fd5f401819315"
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "62a84774cf58e8a5affda64656cbf813455f6dec754afe8b85789081c24489b6"
+      "sha256": "de31345670e4a48eb59af30a603011e8e38ba6937c8de742046a1349d414f909"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1916,11 +1960,11 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "f86e49497dce6d3bd6cd37848bd1abddfab9be25ff566ec79bb668cf262f3e3b"
+      "sha256": "77e1a65ad6daaf5698c224f3da154e1c0c63ca672bc778d9ef779c697dbae22e"
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "9a91a344be906f121f961437fdd59526c594341accd11a03960ee6dbb03d410c"
+      "sha256": "0fec91e12dea7fb79f41efa119d23915e11736d95ba72f4ac26e29c8e03f0132"
     },
     {
       "file": "specs/SAFETY.md",
@@ -1936,11 +1980,11 @@
     },
     {
       "file": "specs/spec-family.json",
-      "sha256": "a2a28076b64823be8d42e5bd8b7a04ce193e3e1fccb0804d4a4fabd9d622e6ca"
+      "sha256": "c912b5065c6ed37566409559cd53076acc906a99e3fad90f3ff82ea53c2d11ba"
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "5c8c4c0f647bb48ff9ebe4be7bfeabf1dbad671dc67d9ddcd94280b2517c65ee"
+      "sha256": "6551d0ac544ae10d0b7aede942fd4094f2a6310a79d00bce13ee8122048cc437"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",

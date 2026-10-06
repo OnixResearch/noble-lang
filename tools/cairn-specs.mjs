@@ -17,6 +17,7 @@ export const SPEC_SLUGS = {
   'CORE-BOOTSTRAP.md': 'core-bootstrap',
   'BACKEND-EXPERIMENTS.md': 'backend-experiments',
   'C-BACKEND.md': 'c-backend',
+  'ERLANG-ABSTRACT-BACKEND.md': 'erlang-abstract-backend',
   'RESOURCE-ADAPTERS.md': 'resource-adapters',
   'EVIDENCE.md': 'evidence',
   'DEVELOPER-EXPERIENCE.md': 'developer-experience',

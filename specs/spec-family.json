@@ -62,6 +62,12 @@
       "cairn_id": "c-backend"
     },
     {
+      "id": "SPEC-BE003",
+      "path": "../.cairn/specs/erlang-abstract-backend/spec.md",
+      "compatibility_path": "ERLANG-ABSTRACT-BACKEND.md",
+      "cairn_id": "erlang-abstract-backend"
+    },
+    {
       "id": "SPEC-R001",
       "path": "../.cairn/specs/resource-adapters/spec.md",
       "compatibility_path": "RESOURCE-ADAPTERS.md",
@@ -102,6 +108,7 @@
     "conformance/live-wasm-cases.json",
     "conformance/live-reference-cases.json",
     "conformance/c-backend-cases.json",
+    "conformance/erlang-abstract-cases.json",
     "conformance/octet-adoption-cases.json"
   ],
   "lifecycle": ".cairn"

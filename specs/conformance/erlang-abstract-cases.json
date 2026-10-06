@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "erlang-abstract-backend-new-unexecuted-designs",
+  "cases": [
+    {
+      "id": "EA-CASE-01", "profile": "Erlang-Abstract-Draft", "kind": "runtime", "requirements": ["EA-SCOPE-01", "EA-I64-01", "EA-GATE-01"],
+      "input": {
+        "harness": "actual-source-to-checked-forms-to-pinned-OTP-BEAM-versus-selected-managed-linear-memory-Wasm",
+        "build_command": "noble build SOURCE --target erlang-abstract --out DIR --contract CONTRACT_JSON --policy POLICY_JSON",
+        "execute_command": "noble execute --target erlang-abstract --artifact DIR --input INPUT_JSON",
+        "contract": {"expected_interface": "-- I64 (or -- Bool for equality)", "resolved_builtin_contracts": ["i64.literal", "i64.add", "i64.subtract", "i64.multiply", "i64.equal"]},
+        "policy": {"profile": "Erlang-Abstract-Draft", "allowed_effects": [], "otp": "future-pinned-OTP-compiler-and-ERTS", "limits": {"source_bytes": 128, "stack_slots": 4, "steps": 20, "output_bytes": 1024}},
+        "variants": [
+          {"source": "20 1 +", "interface": "-- I64", "expected_stack": [{"type": "I64", "value": "21"}]},
+          {"source": "9223372036854775807 1 +", "interface": "-- I64", "expected_stack": [{"type": "I64", "value": "-9223372036854775808"}]},
+          {"source": "-9223372036854775808 -1 *", "interface": "-- I64", "expected_stack": [{"type": "I64", "value": "-9223372036854775808"}]},
+          {"source": "9223372036854775807 1 + -9223372036854775808 =", "interface": "-- Bool", "expected_stack": [{"type": "Bool", "value": true}]},
+          {"source": "9223372036854775808", "interface": "-- I64", "outcome": "static-range-refuse"},
+          {"source": "20 [ 1 + ] run", "interface": "-- I64", "outcome": "unsupported-Program-refuse"}
+        ]
+      },
+      "expected": {"stage": "source-or-actual-BEAM-versus-Wasm-runtime", "outcome": "four-exact-accepted-stacks-two-static-refusals", "normal_results_by_variant": ["21", "-9223372036854775808", "-9223372036854775808", "true"], "negative_variants_load_BEAM": false, "normal_guest_requests": 0, "negative_guest_requests": 0, "protected_operations": 0, "fallback_to_Wasm": false, "general_Program_support": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "EA-CASE-02", "profile": "Erlang-Abstract-Draft", "kind": "admission", "requirements": ["EA-ISOLATE-01", "EA-SCOPE-01"],
+      "input": {"harness": "pure-admission-and-unsupported-effect-refusal", "pure_source": "20 1 +", "contract": {"expected_interface": "-- I64", "allowed_effects": []}, "variants": [
+        {"source": "20 1 +", "outcome": "admitted-then-actual-BEAM-returns-I64-21"},
+        {"source": "\"A\" test.emit", "outcome": "unsupported-effect-static-refuse"},
+        {"source": "\"A\" test.emit", "candidate_claimed_effects": [], "actual_effect": "test.emit", "outcome": "forged-effect-admission-refuse"}
+      ]},
+      "expected": {"stage": "source-check-or-BEAM-admission-and-isolated-runtime", "outcome": "pure-21-and-both-effectful-variants-refused-before-load", "pure_stack": [{"type": "I64", "value": "21"}], "guest_requests": 0, "protected_operations": 0, "effect_bound_grants_authority": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "EA-CASE-03", "profile": "Erlang-Abstract-Draft", "kind": "runtime", "requirements": ["EA-FORMS-01", "EA-ISOLATE-01"],
+      "input": {"harness": "original-Noble-source-annotation-and-classified-quota-trace", "source_file": "source/arith.noble", "source": "20\n1 +", "quota_variants": [{"steps": 4, "outcome": "normal", "stack": [{"type": "I64", "value": "21"}]}, {"steps": 2, "outcome": "runtime-quota-at-second-line"}], "test_only_malformed_form": {"source_location": "source/arith.noble:2", "error": "compiler-reject", "must_not_load": true}, "annotation_forgery": {"file": "other.noble", "line": 999, "outcome": "source-map-refuse"}},
+      "expected": {"stage": "pinned-compiler-or-isolated-runtime", "outcome": "normal-21-or-classified-quota-or-controlled-compiler-refusal", "original_file": "source/arith.noble", "original_line": 2, "generated_erl_file_reported_as_Noble_source": false, "untrusted_annotation_authoritative": false, "compiler_refusal_loads_BEAM": false, "quota_not_reported_as_normal": true},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "EA-CASE-04", "profile": "Erlang-Abstract-Draft", "kind": "admission", "requirements": ["EA-FORMS-01", "EA-ADMIT-01"],
+      "input": {"harness": "bounded-ETF-list-to-noenv_forms-compiler-and-forgery-matrix", "accepted_source": "20 1 +", "transport": "ETF-encoded-list-of-validated-annotated-abstract-forms-not-direct-compile:forms-input", "max_input_bytes": 4096, "max_depth": 24, "max_terms": 128, "module_atom_pool": ["noble_ea_0"], "compiler_call": "compile:noenv_forms(Forms, pinned_whitelisted_options)", "variants": [
+        {"id": "valid", "outcome": "candidate-compiled-BEAM-admitted-without-load"},
+        {"id": "truncated-ETF", "outcome": "decode-refuse"},
+        {"id": "oversized-ETF", "outcome": "limit-refuse"},
+        {"id": "nested-term-over-depth", "outcome": "limit-refuse"},
+        {"id": "unknown-module-atom", "outcome": "atom-refuse-before-creation"},
+        {"id": "compile-attribute-parse-transform", "outcome": "form-refuse"},
+        {"id": "unapproved-BIF-call", "outcome": "form-refuse"},
+        {"id": "ambient-ERL_COMPILER_OPTIONS-export_all", "outcome": "no-option-inheritance"},
+        {"id": "forged-source-annotation", "outcome": "source-map-refuse"},
+        {"id": "changed-ETF-after-manifest", "outcome": "subject-mismatch-refuse"}
+      ]},
+      "expected": {"stage": "bounded-decode-form-check-or-compiler-admission", "outcome": "valid-forms-compile-candidate-only-all-hostile-inputs-refused-or-ambient-option-ignored", "compile_input_is_decoded_forms_list": true, "compiler_ambient_options_used": false, "new_unapproved_atoms_created": 0, "hostile_BEAM_loaded": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "EA-CASE-05", "profile": "Erlang-Abstract-Draft", "kind": "admission", "requirements": ["EA-BUILD-01", "EA-ADMIT-01", "EA-SCOPE-01"],
+      "input": {"harness": "source-form-BEAM-correspondence-target-selection", "source": "20 1 +", "build_command": "noble build SOURCE --target erlang-abstract --out DIR --contract CONTRACT_JSON --policy POLICY_JSON", "execute_command": "noble execute --target erlang-abstract --artifact DIR --input INPUT_JSON", "variants": [
+        {"id": "valid", "outcome": "admit-only-in-disposable-worker"},
+        {"id": "changed-BEAM-byte", "outcome": "byte-mismatch-refuse"},
+        {"id": "wrong-module", "outcome": "module-refuse"},
+        {"id": "stale-source", "outcome": "subject-mismatch-refuse"},
+        {"id": "wrong-OTP-pin", "outcome": "tool-refuse"},
+        {"id": "wrong-target-c", "outcome": "no-backend-fallback"},
+        {"id": "conflicting-require-proof-mode", "outcome": "grammar-refuse-without-changing-old-proof-build"}
+      ]},
+      "expected": {"stage": "build-selection-or-independent-BEAM-admission", "outcome": "only-exact-valid-subject-admitted", "hostile_BEAM_loaded": false, "proof_build_grammar_unchanged": true, "Wasm_session_mutated": false, "guest_requests": 0, "protected_operations": 0},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "EA-CASE-06", "profile": "Erlang-Abstract-Draft", "kind": "adapter", "requirements": ["EA-ISOLATE-01", "EA-GATE-01"],
+      "input": {"harness": "isolated-disposable-ERTS-OS-boundary-test-only-hostile-controls", "positive_source": "20 1 +", "hostile_artifacts": "sealed-test-only-BEAM-in-runner-NOT-admitted-as-production-Noble-source", "protected_file": "/sealed/secret", "protected_network": "127.0.0.1:9", "attempts": ["file-read", "network-connect", "unrelated-module-load", "inherited-secret-FD-read"], "runner_absent": "execution-blocked"},
+      "expected": {"stage": "isolated-worker-and-production-admission", "outcome": "positive-actual-admitted-BEAM-21-hostile-test-only-attempts-denied", "positive_stack": [{"type": "I64", "value": "21"}], "hostile_disclosed_bytes": 0, "hostile_protected_operations": 0, "hostile_code_admitted_for_production": false, "BEAM_process_alone_is_sandbox": false, "runner_absent": "blocked-not-fallback"},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    },
+    {
+      "id": "EA-CASE-07", "profile": "Erlang-Abstract-Draft", "kind": "review", "requirements": ["EA-GATE-01"],
+      "input": {"harness": "selection-receipt-authority-refusal", "claimed_receipts": [
+        {"kind": "stale-BEAM-subject", "source": "21 1 +", "result": "passed"},
+        {"kind": "existing-M4-Wasm", "target": "managed-linear-memory", "result": "passed"},
+        {"kind": "C-backend-scenario-design", "target": "c", "result": "passed"},
+        {"kind": "candidate-manifest-self-claim", "target": "erlang-abstract", "result": "passed"}
+      ], "actual_pinned_OTP_Beam_execution": "not-run", "candidate_claim": "production-target-selected"},
+      "expected": {"stage": "backend-selection-review", "outcome": "each-inapplicable-claim-rejected-for-exact-subject-or-unexecuted-scope", "Erlang_abstract_backend_selected": false, "selected_Wasm_target_changed": false, "backend_proof": "open", "document_validation_is_execution": false},
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+    }
+  ]
+}

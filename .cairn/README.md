@@ -4,7 +4,7 @@
 
 Revision: `0.1.0-draft.5`
 
-This directory owns the thirteen normative draft specifications and their requirement IDs.
+This directory owns the fourteen normative draft specifications and their requirement IDs.
 Accepted specifications describe selected contracts. They do not establish completed code, executed scenarios, or accepted proofs.
 
 ## Core and execution
@@ -15,6 +15,7 @@ Accepted specifications describe selected contracts. They do not establish compl
 | `core-bootstrap` | SPEC-B001 | [First implementation subset](specs/core-bootstrap/spec.md) |
 | `backend-experiments` | SPEC-BE001 | [Wasm representation comparison](specs/backend-experiments/spec.md) |
 | `c-backend` | SPEC-BE002 | [Opt-in nonselected C11 backend design](specs/c-backend/spec.md) |
+| `erlang-abstract-backend` | SPEC-BE003 | [Opt-in nonselected Erlang abstract-form backend design](specs/erlang-abstract-backend/spec.md) |
 | `safety` | SPEC-S001 | [Safety invariants](specs/safety/spec.md) |
 
 ## Boundaries and applications
@@ -47,6 +48,7 @@ The worker and Octet maps remain supporting documents, not additional normative 
 
 Conversion began with empty `changes/` and `archive/` directories; it did not fabricate implementation tasks, completed changes, or archive evidence.
 Subsequent implementation changes have their own lifecycle records. Active changes belong in `changes/<slug>/`, with explicit requirement deltas.
+`changes/erlang-abstract-backend/` is a specification-only active change for a nonselected arithmetic subset lowered through bounded annotated Erlang abstract forms and pinned OTP compilation. EA cases remain absent/not-run/proof-open/unassessed; no compiler, isolated VM, runtime acceptance or production selection is implemented.
 `changes/explicit-live-references/` remains active for future implementation after the separate issue #1 `Live-Slot-Design` contract was accepted into the canonical Cairn specifications. Its nine registered LSLOT scenario designs remain absent/not-run/open/unassessed with empty evidence; canonical design acceptance does not supply an opt-in slot runtime, accepted proof or LIVE case promotion.
 `changes/live-wasm-reload/` is an active design with guarded partial runtime: a resident Node/V8 REPL, in-process Wasm byte emission and atomic transitive Core rebuild exercised for acyclic dependents under explicit host-selected file reload/direct admission. Automatic watch is unavailable because a rename event cannot authenticate inode bytes against later writable mappings or external hardlinks; automatic H-LIVE-01 and complete LIVE-05/watch acceptance remain open. Bounded host-granted guest self-edit refuses any current effective dependent rather than rebuilding it. Indirect self-rebind/cycle refusal was exercised in scoped live-child checks, not established by general proof or accepted LIVE case evidence. Declared modules, effects, full in-flight source-change controls, code retirement, interpreter execution and complete source-bound LIVE-02 acceptance remain open. `changes/c-backend/` remains a specification-only active design. Their canonical scenarios remain absent/not-run with proof open, their roadmap acceptance milestones not-started, and neither complete profile changes historical M4 or Declared-Modules-v1 claims.
 

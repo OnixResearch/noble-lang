@@ -4,7 +4,7 @@ Revision: 0.1.0-draft.5
 
 **Implement from [the Cairn specifications](../.cairn/README.md), not from the archived previews.** This is one canonical working family with explicit open contracts. It is not a stable language release.
 
-The thirteen normative documents now live under `.cairn/specs/`. Their old paths contain generated compatibility views, not separate authority. This directory retains the scenario designs, proof ledger, roadmap, status, and supporting documents.
+The fourteen normative documents now live under `.cairn/specs/`. Their old paths contain generated compatibility views, not separate authority. This directory retains the scenario designs, proof ledger, roadmap, status, and supporting documents.
 
 The repository now contains the bounded checker, experimental MC1 contract frontend,
 M3 compiled-program representation experiment, M4 source-to-Wasm Core-Bootstrap,
