@@ -74,6 +74,56 @@ The runtime uses pinned Node/V8, wasm-tools, and Binaryen paths from
 incompatible tools produce an explicit refusal. The development shell alone
 does not install these runtime tools.
 
+### Independent Mathlib comparison for implemented I64 arithmetic
+
+`verification/mathlib-i64/compare.mjs` compiles
+[`MathlibI64.lean`](proofs/m3/MathlibI64.lean) with pinned Lean 4.31.0 and
+explicitly imports Mathlib4 at `fabf563a7c95a166b8d7b6efca11c8b4dc9d911f`
+(the existing `proofs/m3/lake-manifest.json` dependency). The mathematical
+model takes an `Int` through `ZMod (2^64)`, then interprets residues below
+`2^63` as nonnegative and residues above it as negative. The Lean module
+checks the general model identities for addition, subtraction and
+multiplication and three signed-boundary examples. The comparator asks Lean
+to calculate finite expected values, rebuilds the actual Noble CLI from
+this checkout, executes Noble-compiled managed Wasm for those same inputs,
+checks emitted source/WAT/Wasm hashes and selected tool identities, and
+rejects a deliberately wrong subtraction in place of addition.
+
+With the existing pinned Lake package cache and selected Nix tools available:
+
+```sh
+NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
+env -i "$NODE" verification/mathlib-i64/compare.mjs \
+  --output "$HOME/.cache/noble-i64-comparison-$(date +%s)"
+```
+
+For another checkout, select `tool_paths.node.output` from
+`policy/tool-selection.json` and invoke its `bin/node` directly. `--output`
+requires a **new** directory and retains `comparison.json`, the generated
+Lean oracle, and each actual emitted `.noble`, `.wat`, `.wasm` and tool receipt.
+Without `--output`, the same check uses a disposable private directory.
+The example removes all inherited variables; if passing an environment
+directly, the comparator explicitly refuses Lean/Lake, Node, Bash, loader,
+Cargo, Rust, Git and Nix overrides rather than letting them reach Lean, Lake,
+Cargo or the Wasm worker. The comparator creates its own
+temporary directory under the account's `.cache`, passes an explicit minimal
+child environment and requires the Noble worktree and pinned Mathlib Git
+checkout clean with unchanged HEAD/tree before and after. Its `source_tree`
+identifies the *whole committed Noble tree*, not merely the listed diagnostic
+file hashes. Ignored build outputs (`target`, `.lake`), the compiler's
+preexisting cache, and hostile changes that race or tamper with the verifier
+are not attested. The selected `proofs/m3/.lake/packages` Mathlib source
+checkout must match the pinned manifest; the already compiled Mathlib
+`.olean` import cache remains a **separate trust assumption**. This command
+checks the local import and Noble model with Lean but intentionally does not
+rebuild or formally recheck every Mathlib source file.
+
+This is a finite backend comparison, **not** a universal compiler/Wasm proof.
+The exact BigInt/Rat calculator and its error/state behavior are not
+implemented or verified by this check; CALC-EVIDENCE-01/02 remain open,
+CALC-01 and related scenario statuses remain unchanged, and the separate
+VC-NUM-01 contract obligation does not inherit a calculator proof.
+
 To retain the source, reports, WAT, Wasm, and tool observations:
 
 ```sh
