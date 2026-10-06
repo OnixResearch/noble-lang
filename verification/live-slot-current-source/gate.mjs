@@ -281,7 +281,8 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
     assert.deepEqual(replies[5].stack, [{ kind: 1, value: '25' }]);
     assert.equal(replies[9].retire_code_spans.length, 1);
     assert.equal(replies.length, requests.length + 1);
-    for (const reply of replies)
+    assert.equal(replies[1].stage, 'source');
+    for (const reply of replies.filter(item => item.stage !== 'source'))
       assert.deepEqual([reply.guest_requests, reply.protected_operations], [0, 0]);
     row(caseId(1), 'direct-quote-capture-control', 'passed',
       'selected CLI saved a direct scalar quote with boxed I64:5 capture, ran it through a separate checked Program, refused invalid/released owners and retired the code span; not LSLOT-05 P/D evidence',
