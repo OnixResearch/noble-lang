@@ -41,6 +41,11 @@ export async function cli(binary, variant, authority) {
   const authorityPath = path.join(fixture, 'selected.json');
   fs.writeFileSync(authorityPath, JSON.stringify(authority), { mode: 0o600 });
   const log = path.join(evidenceDirectory, `${variant}.jsonl`);
+  const requests = path.join(evidenceDirectory, `${variant}.requests.jsonl`);
+  const responses = path.join(evidenceDirectory, `${variant}.responses.jsonl`);
+  const stderrFile = path.join(evidenceDirectory, `${variant}.stderr.txt`);
+  for (const file of [requests, responses, stderrFile])
+    fs.writeFileSync(file, '', { flag: 'wx', mode: 0o600 });
   fs.writeFileSync(log, JSON.stringify({
     kind: 'authority', path: authorityPath, authority,
     selected_binary: binary, selected_binary_sha256: selectedBinarySha256,
@@ -52,8 +57,13 @@ export async function cli(binary, variant, authority) {
   const queued = [];
   let awaiting;
   const append = row => fs.appendFileSync(log, JSON.stringify(row) + '\n');
-  child.stderr.on('data', bytes => { stderr += bytes.toString(); append({ kind: 'stderr', text: bytes.toString() }); });
+  child.stderr.on('data', bytes => {
+    stderr += bytes.toString();
+    fs.appendFileSync(stderrFile, bytes);
+    append({ kind: 'stderr', text: bytes.toString() });
+  });
   child.stdout.on('data', bytes => {
+    fs.appendFileSync(responses, bytes);
     buffer += bytes.toString();
     for (let end; (end = buffer.indexOf('\n')) >= 0;) {
       const line = buffer.slice(0, end);
@@ -73,11 +83,13 @@ export async function cli(binary, variant, authority) {
     const timeout = setTimeout(() => { awaiting = undefined; reject(Error(`CLI receipt timeout for ${variant}: ${stderr}`)); }, 30000);
     awaiting = row => { clearTimeout(timeout); resolve(row); };
   });
-  const issue = async request => {
+  const send = request => {
     append({ kind: 'operator', request });
-    child.stdin.write(JSON.stringify(request) + '\n');
-    return next();
+    const line = JSON.stringify(request) + '\n';
+    fs.appendFileSync(requests, line);
+    child.stdin.write(line);
   };
+  const issue = async request => { send(request); return next(); };
   const close = async () => {
     child.stdin.end();
     const code = child.exitCode === null ? await new Promise(resolve => child.once('exit', resolve)) : child.exitCode;
@@ -94,7 +106,8 @@ export async function cli(binary, variant, authority) {
     append({ kind: 'aborted', stderr });
     fs.rmSync(fixture, { recursive: true });
   };
-  return { configured: next(), issue, close, abort, log, selectedBinarySha256 };
+  return { configured: next(), send, next, issue, close, abort,
+    log, requests, responses, stderrFile, selectedBinarySha256 };
 }
 
 export function selectedAuthority({ sources, resources = [], slots, grants = [], effects = ['live.dispatch'], quota = 24 }) {

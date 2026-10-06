@@ -152,7 +152,9 @@ protected import occurrence in the next checked root; after
 `checkpoint-entered`, a permitted publication or
 revocation receives a committed `control_id` receipt before
 `resume-checkpoint`. The held root keeps its pinned epoch, while the next root
-observes the committed change. Frozen `record`/`replay` and `release-replay`
+observes the committed change. Interrupted checkpoint reads retry only the
+unconsumed packet within the same eight-second deadline; other transport
+failures poison the root. Frozen `record`/`replay` and `release-replay`
 use retained roots rather than replacing live effect policy. Every reply is
 JSON; inspect each `outcome`, not only the process exit status. Source-bound
 named selection requires `install` with `selected_name` after the corresponding
@@ -169,13 +171,26 @@ constitute LSLOT-01..09 canonical acceptance.
 Run the diagnostic `verification/live-slot-current-source/gate.mjs` with the
 Node executable pinned in `crates/noble-cli/src/core/runtime/config.json`;
 pass an absolute externally built `/tmp/.../debug/noble` and a **new** direct
-`/tmp` output directory as its two arguments. It rebuilds the selected CLI
-offline, records the source
-revision, fixture and authority inputs, tool/binary hashes, real CLI command
-streams and raw responses in `receipt.json` plus retained evidence. A
-nonzero `blocked` result is intentional while exact LSLOT-05 selected-target
-proof, captured LSLOT-08 replay, and other identified variants remain open;
-this external receipt must not be copied into canonical case evidence.
+`/tmp` output directory as its two arguments. It runs a selected offline
+Cargo build, records before/after binary hashes (unchanged bytes do **not**
+prove fresh recompilation), and freezes selected source-tree paths and
+bytes, exact used test scripts/helpers, fixture, authority inputs and
+documentation. Its `receipt.json` records Git HEAD/selected dirty status
+as diagnostics and points to retained real command streams and raw responses.
+LSLOT-02 independently exercises a held A→B→B root and a held A→B→C root:
+committed publication leaves the old root pinned and the next root selects
+the new target. Their physical baseline epochs are 2 and 3 respectively;
+global CAS cannot install all two/three slots together at the canonical
+epoch 1, so those canonical rows remain blocked with null *canonical* counters
+but carry measured attempt/session counters separately. LSLOT-04 authorized
+rollback and LSLOT-07 publication denial retain runnable controls but remain
+blocked canonically without their respective exact-evidence/proof premises. A
+separate LSLOT-05 control observes the real host's generic missing-proof
+refusal, not selective evidence applicability; a typed checked legacy-compiler
+control does not substitute for LSLOT-09's typed CLI caller. A nonzero
+`blocked` result is also intentional while exact LSLOT-05 selected-target
+proof, captured LSLOT-08 replay, and other variants remain open; this external
+receipt must not be copied into canonical case evidence.
 
 ### Guarded live REPL (opt-in, partial)
 

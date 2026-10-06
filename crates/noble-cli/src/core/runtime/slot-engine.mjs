@@ -150,6 +150,7 @@ class SlotEngine {
     }
     const root = String(this.rootSequence);
     const index = ++this.checkpointIndex;
+    const checkpointDeadline = performance.now() + 8000;
     const send = payload => {
       const bytes = Buffer.from(JSON.stringify(payload));
       if (bytes.length > 4096 || fs.writeSync(this.controlFd, bytes) !== bytes.length) {
@@ -158,7 +159,17 @@ class SlotEngine {
     };
     const receive = () => {
       const packet = Buffer.allocUnsafe(4097);
-      const size = fs.readSync(this.controlFd, packet, 0, packet.length, null);
+      let size;
+      for (;;) {
+        try {
+          size = fs.readSync(this.controlFd, packet, 0, packet.length, null);
+          break;
+        } catch (error) {
+          // No packet is consumed on EINTR. Retrying the same bounded read is
+          // safe; every other channel failure still poisons this root.
+          if (error.code !== 'EINTR' || performance.now() >= checkpointDeadline) throw error;
+        }
+      }
       if (!size || size > 4096) throw Error('host checkpoint timed out or was malformed');
       return JSON.parse(packet.toString('utf8', 0, size));
     };

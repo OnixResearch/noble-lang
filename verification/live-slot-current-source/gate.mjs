@@ -35,21 +35,25 @@ const inputs = [fixtureFile, 'README.md', 'Cargo.toml', 'Cargo.lock', 'rust-tool
   'policy/tool-selection.json', 'crates/noble-cli/Cargo.toml',
   'crates/noble-contracts/Cargo.toml', 'crates/noble-kernel/Cargo.toml',
   'crates/noble-wasm/Cargo.toml', 'crates/noble-cli/src/core/runtime/config.json',
+  'crates/noble-wasm/tests/live_slot_admission.rs',
   'crates/noble-cli/tests/live_slot_capture_legacy.mjs',
   'crates/noble-cli/tests/live_slot_cas_policy.mjs',
   'crates/noble-cli/tests/live_slot_cas_policy_authority.json',
   'crates/noble-cli/tests/live_slot_resource_ref_cli.mjs',
   'crates/noble-cli/tests/live_slot_resource_ref_admission.mjs',
   'crates/noble-cli/tests/live_slot_resource_ref_static.mjs',
+  'crates/noble-cli/tests/live_slot_nested_roots.mjs',
+  'crates/noble-cli/tests/live_slot_proof_refusal.mjs',
   'crates/noble-cli/tests/live_slot_quota_replay.mjs',
   'crates/noble-cli/tests/live_slot_quota_replay_authority.json',
   'verification/live-slot-current-source/gate.mjs',
   'verification/dx06-current-source/source.mjs'];
-const source = sourceInventory(inputs, [
+const selectedTrees = [
   'crates/noble-kernel/src', 'crates/noble-contracts/src', 'crates/noble-wasm/src',
   'crates/noble-wasm/runtime', 'crates/noble-wasm/wit', 'crates/noble-cli/src',
   'proofs/mc1/NobleContracts',
-]);
+];
+const source = sourceInventory(inputs, selectedTrees);
 const sourceRevision = revision(source);
 save('source.json', JSON.stringify({ revision: sourceRevision, sha256: source }, null, 2) + '\n');
 save('canonical-fixture.json', fixtureBytes);
@@ -81,6 +85,18 @@ const sysroot = spawnSync(rustc, ['--print', 'sysroot'], { encoding: 'utf8' });
 assert.equal(sysroot.status, 0, sysroot.stderr);
 const commands = [];
 const issues = [];
+function gitDiagnostic() {
+  const run = args => {
+    const result = spawnSync('git', args, { cwd: root, env, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+  const selectedStatus = run(['status', '--porcelain=v1', '--untracked-files=all',
+    '--', ...selectedTrees, 'crates/noble-cli/tests', ...inputs]);
+  return { head: run(['rev-parse', 'HEAD']), selected_status: selectedStatus,
+    selected_clean: selectedStatus.length === 0 };
+}
+const beforeGit = gitDiagnostic();
 function command(label, executable, args, extraEnv = {}, input = null, expectedStatus = 0) {
   const response = spawnSync(executable, args, { cwd: root, env: { ...env, ...extraEnv },
     ...(input === null ? {} : { input }),
@@ -132,8 +148,11 @@ if (built.status === 0) {
   } catch (error) { issues.push(`source-to-binary build binding: ${error}`); }
 }
 const binarySelection = { path: binary, sha256: afterBinary, before_build_sha256: beforeBinary,
-  rebuilt_selected_binary: beforeBinary !== afterBinary,
-  offline_build_status: built.status, cargo_target_dir: target };
+  changed_during_offline_cargo_build: beforeBinary !== afterBinary,
+  offline_build_status: built.status, cargo_target_dir: target,
+  build_claim: beforeBinary === afterBinary
+    ? 'offline Cargo reported the selected bin artifact; unchanged bytes do not prove a fresh bytewise compilation'
+    : 'offline Cargo reported the selected bin artifact and its selected bytes changed' };
 const evidenceDirectories = [];
 const work = name => {
   const dir = path.join(output, name);
@@ -143,13 +162,24 @@ const work = name => {
 };
 const observed = new Map();
 const caseId = number => `LSLOT-0${number}`;
-function row(id, name, status, reason, evidence = [], counters = null, observation = null) {
+function row(id, name, status, reason, evidence = [], counters = null, observation = null,
+  diagnostic = {}) {
   assert.ok(!observed.has(`${id}/${name}`), `duplicate evidence row ${id}/${name}`);
   assert.ok(['passed', 'failed', 'blocked'].includes(status));
   observed.set(`${id}/${name}`, { case_id: id, variant: name, status, reason,
+    claim: diagnostic.claim ?? (status === 'passed' ? 'canonical_variant_pass' : null),
     guest_requests: counters?.guest_requests ?? null,
     protected_operations: counters?.protected_operations ?? null,
+    counter_scope: diagnostic.counter_scope ?? (counters ? 'selected observed attempt' : 'not asserted'),
+    observed_attempt: diagnostic.attempt ?? counters ?? null,
+    observed_session: diagnostic.session ?? null,
     evidence, observation });
+}
+function summedCounters(reports) {
+  return reports.reduce((total, report) => ({
+    guest_requests: total.guest_requests + (report.guest_requests ?? 0),
+    protected_operations: total.protected_operations + (report.protected_operations ?? 0),
+  }), { guest_requests: 0, protected_operations: 0 });
 }
 const execution = (name, script, evidence, extraEnv = {}) =>
   command(name, node, [script, binary], { NOBLE_SLOT_EVIDENCE_DIR: evidence, ...extraEnv });
@@ -178,8 +208,124 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
       [receiptFile(file)], { guest_requests: executed.at(-1).guest_requests,
         protected_operations: executed.at(-1).protected_operations },
       { owners: executed.map(item => item.stack?.[0]?.owner ?? null),
-        selected_dispatch: executed.at(-1).request_trace });
+        selected_dispatch: executed.at(-1).request_trace },
+      { session: summedCounters(responses) });
   } catch (error) { row(caseId(1), 'saved-capture-versus-opt-in-generic-root', 'failed', String(error)); }
+  binaryStill();
+}
+
+// LSLOT-02: independent held-root A->B->B and A->B->C sessions. These are
+// physical epoch-2/3 baselines because the CLI's global-CAS registry must
+// publish each distinct slot separately; canonical epoch 1 remains unproved.
+{
+  const dir = fs.mkdtempSync('/tmp/noble-lslot-resource-02-');
+  fs.chmodSync(dir, 0o700);
+  evidenceDirectories.push(dir);
+  const result = execution('LSLOT02-nested-roots',
+    'crates/noble-cli/tests/live_slot_nested_roots.mjs', dir);
+  const summaryFile = path.join(dir, 'LSLOT02-summary.json');
+  let summary;
+  try { summary = JSON.parse(fs.readFileSync(summaryFile)); }
+  catch (error) { issues.push(`LSLOT-02: summary unavailable: ${error}`); }
+  for (const name of ['base-parent-child', 'transitive-A-B-C']) {
+    const raw = path.join(dir, `LSLOT02-${name}.jsonl`);
+    const requests = path.join(dir, `LSLOT02-${name}.requests.jsonl`);
+    const responses = path.join(dir, `LSLOT02-${name}.responses.jsonl`);
+    const stderrFile = path.join(dir, `LSLOT02-${name}.stderr.txt`);
+    const files = [raw, requests, responses, stderrFile, summaryFile]
+      .filter(fs.existsSync).map(receiptFile);
+    try {
+      assert.ok([0, 1].includes(result.status), 'real nested CLI script did not finish with a scenario summary');
+      assert.ok(summary, 'real nested CLI script omitted its per-variant scenario summary');
+      const item = summary.results.find(value => value.name === name);
+      assert.ok(item, `missing independent ${name} session`);
+      assert.equal(item.selected_binary_sha256, afterBinary);
+      assert.equal(item.status, 'observed', item.error);
+      assert.equal(item.initial_epoch, name === 'base-parent-child' ? '2' : '3');
+      assert.equal(item.committed_epoch, name === 'base-parent-child' ? '3' : '4');
+      const records = jsonLines(raw);
+      assert.equal(records[0].kind, 'authority');
+      assert.equal(records.at(-1).kind, 'exit');
+      assert.equal(records.at(-1).code, 0);
+      const replies = records.filter(value => value.kind === 'cli').map(value => value.row);
+      const commands = records.filter(value => value.kind === 'operator').map(value => value.request);
+      assert.deepEqual(jsonLines(requests), commands);
+      assert.deepEqual(jsonLines(responses), replies);
+      assert.ok(fs.existsSync(stderrFile));
+      const entered = replies.findIndex(value => value.outcome === 'checkpoint-entered');
+      const ack = replies.findIndex((value, index) => index > entered &&
+        value.outcome === 'published' && value.control_id === '1');
+      const oldRoot = replies.findIndex((value, index) => index > ack &&
+        value.outcome === 'executed' && value.control_events?.length);
+      assert.ok(entered >= 0 && ack > entered && oldRoot > ack,
+        'physical checkpoint, committed ACK and pinned root must be ordered');
+      assert.deepEqual(replies[oldRoot].request_trace, item.old_root.request_trace);
+      assert.deepEqual([item.old_root.guest_requests, item.old_root.protected_operations], [3, 0]);
+      assert.equal(item.old_root.epoch, item.initial_epoch);
+      assert.equal(item.new_root.epoch, item.committed_epoch);
+      assert.equal(item.next_leaf.epoch, item.committed_epoch);
+      const sessionCounters = summedCounters(replies);
+      row(caseId(2), name, 'blocked', item.limitation, files, null, item,
+        { attempt: { guest_requests: item.old_root.guest_requests,
+          protected_operations: item.old_root.protected_operations },
+        session: sessionCounters });
+      row(caseId(2), `${name}-held-control`, 'passed',
+        'real selected CLI held root kept its map across committed publication; fresh root selected new target',
+        files, { guest_requests: 3, protected_operations: 0 },
+        { checkpoint: item.checkpoint, committed_ack: item.committed_ack,
+          old_root: item.old_root, new_root: item.new_root, next_leaf: item.next_leaf,
+          generic_site: item.generic_site },
+        { claim: 'control_pass', session: sessionCounters });
+    } catch (error) {
+      row(caseId(2), name, 'failed', String(error), files);
+      row(caseId(2), `${name}-held-control`, 'failed', String(error), files);
+    }
+  }
+  binaryStill();
+}
+
+// LSLOT-05 can execute only the generic missing-evidence refusal, not an
+// applicability judgment for P2/D2 or any of its eight canonical variants.
+{
+  const dir = fs.mkdtempSync('/tmp/noble-lslot-resource-05-');
+  fs.chmodSync(dir, 0o700);
+  evidenceDirectories.push(dir);
+  const result = execution('LSLOT05-proof-required-control',
+    'crates/noble-cli/tests/live_slot_proof_refusal.mjs', dir);
+  const raw = path.join(dir, 'LSLOT05-proof-required-refusal-control.jsonl');
+  const summaryFile = path.join(dir, 'LSLOT05-proof-required-refusal-control.summary.json');
+  const requests = path.join(dir, 'LSLOT05-proof-required-refusal-control.requests.jsonl');
+  const responses = path.join(dir, 'LSLOT05-proof-required-refusal-control.responses.jsonl');
+  const stderrFile = path.join(dir, 'LSLOT05-proof-required-refusal-control.stderr.txt');
+  const files = [raw, requests, responses, stderrFile, summaryFile]
+    .filter(fs.existsSync).map(receiptFile);
+  try {
+    assert.equal(result.status, 0);
+    const item = JSON.parse(fs.readFileSync(summaryFile));
+    assert.equal(item.selected_binary_sha256, afterBinary);
+    assert.equal(item.proof_required.outcome, 'refused');
+    assert.equal(item.ordinary_control.outcome, 'published');
+    assert.equal(item.ordinary_control.epoch, '1');
+    assert.deepEqual([item.proof_required.guest_requests, item.proof_required.protected_operations], [0, 0]);
+    const records = jsonLines(raw);
+    assert.equal(records[0].kind, 'authority');
+    assert.equal(records.at(-1).kind, 'exit');
+    assert.equal(records.at(-1).code, 0);
+    const replies = records.filter(value => value.kind === 'cli').map(value => value.row);
+    assert.deepEqual(jsonLines(requests),
+      records.filter(value => value.kind === 'operator').map(value => value.request));
+    assert.deepEqual(jsonLines(responses), replies);
+    assert.ok(fs.existsSync(stderrFile));
+    assert.ok(replies.some(value => value.outcome === 'refused' &&
+      value.diagnostic === item.proof_required.diagnostic));
+    assert.ok(replies.some(value => value.outcome === 'published' && value.epoch === '1'));
+    row(caseId(5), 'proof-required-refusal-control', 'passed',
+      'real selected CLI refused missing independent proof while the same candidate published to a non-proof slot; this does not test evidence applicability',
+      files, { guest_requests: 0, protected_operations: 0 }, item,
+      { claim: 'control_pass', session: summedCounters(replies) });
+  } catch (error) {
+    row(caseId(5), 'proof-required-refusal-control', 'failed', String(error), files);
+  }
   binaryStill();
 }
 
@@ -209,13 +355,22 @@ for (const [number, script, prefix] of [
       assert.ok(records.some(record => record.kind === 'cli'));
       assert.equal(records.at(-1).kind, 'exit');
       assert.equal(records.at(-1).code, 0);
-      row(id, variant.name, item.status === 'pass' ? 'passed' : 'blocked',
+      const attempted = number === 3
+        ? { guest_requests: item.guest_requests, protected_operations: item.protected_operations }
+        : variant.name === 'valid-borrow'
+          ? { guest_requests: item.valid_guest_requests,
+            protected_operations: item.valid_protected_operations }
+          : item.negative_guest_requests === null ? null
+            : { guest_requests: item.negative_guest_requests,
+              protected_operations: item.negative_protected_operations };
+      const status = item.status === 'pass' ? 'passed' : 'blocked';
+      row(id, variant.name, status,
         item.limitation ?? (item.status === 'pass' ? 'exact CLI variant observed'
           : `source protocol did not reach canonical attempt: ${item.status}`),
         [receiptFile(raw), receiptFile(path.join(dir, `${prefix}-summary.json`))],
-        item.status === 'pass' ? { guest_requests: item.guest_requests ?? item.negative_guest_requests,
-          protected_operations: item.protected_operations ?? item.negative_protected_operations } : null,
-        item);
+        status === 'passed' ? attempted : null, item,
+        { attempt: attempted, session: summedCounters(records.filter(record =>
+          record.kind === 'cli').map(record => record.row)) });
     } catch (error) { row(id, variant.name, 'failed', String(error),
       fs.existsSync(raw) ? [receiptFile(raw)] : []); }
   }
@@ -248,8 +403,28 @@ for (const [number, script, prefix] of [
           guest_requests: refusal.guest_requests,
           protected_operations: refusal.protected_operations,
         } : { guest_requests: 0, protected_operations: 0 };
-        row(id, variant.name, 'passed', 'real selected CLI CAS/policy interleaving',
-          [summaryFile, raw, requests, stderr].map(receiptFile), counters, item);
+        const evidence = [summaryFile, raw, requests, stderr].map(receiptFile);
+        const session = summedCounters(responses);
+        const missingEvidence = number === 4 && variant.name === 'authorized-rollback';
+        const missingProof = number === 7 && variant.name === 'publication-without-grant';
+        if (missingProof) {
+          const authority = JSON.parse(fs.readFileSync(path.join(root,
+            'crates/noble-cli/tests/live_slot_cas_policy_authority.json')));
+          assert.equal(authority.slots.find(slot => slot.slotId === 'emit').proofRequired, false);
+        }
+        if (missingEvidence || missingProof) {
+          const reason = missingEvidence
+            ? 'newly installed Ainc8 rolled back by CAS, but no independently applicable exact evidence for this selected target was supplied'
+            : 'publication denial observed with proofRequired=false and no admitted proof; canonical slot_id_and_proof_present premise is absent';
+          row(id, variant.name, 'blocked', reason, evidence, null, item,
+            { attempt: counters, session });
+          row(id, `${variant.name}-unauthenticated-control`, 'passed',
+            'real selected CLI CAS/policy behavior only; canonical evidence/proof premise missing',
+            evidence, counters, item, { claim: 'control_pass', session });
+        } else {
+          row(id, variant.name, 'passed', 'real selected CLI CAS/policy interleaving',
+            evidence, counters, item, { session });
+        }
       } catch (error) {
         row(id, variant.name, 'failed', String(error),
           [summaryFile, raw, requests, stderr].filter(fs.existsSync).map(receiptFile));
@@ -286,11 +461,23 @@ for (const [number, script, prefix] of [
           ? 'replay-matched' : name === 'replay-bare-slot-id' ? 'refused' : 'replay-diverged');
         assert.equal(responses.find(row => row.outcome === 'executed' && row.replay_token)?.epoch, '9');
       }
+      const attempt = name === 'retention'
+        ? responses.find(row => row.outcome === 'executed' && row.epoch === '2' &&
+          row.request_trace?.some(trace => trace.operation === 'dispatch'))
+        : { guest_requests: item.guest_requests,
+          protected_operations: item.protected_operations,
+          scripted_operations: item.scripted_operations };
+      assert.ok(attempt, `missing ${name} observed attempt counters`);
+      const attemptCounters = { guest_requests: attempt.guest_requests,
+        protected_operations: attempt.protected_operations,
+        ...(attempt.scripted_operations === undefined ? {} :
+          { scripted_operations: attempt.scripted_operations }) };
       row(caseId(8), name, name === 'retention' ? 'passed' : 'blocked',
         name === 'retention' ? 'real retained-owner last-pin quota and retirement observed'
           : 'real replay observation is partial: selected named static definition lacks canonical captured I64:5 Dtrace and scripted ok-A/ok-B',
         [raw, requests, ...(fs.existsSync(stderr) ? [stderr] : [])].map(receiptFile),
-        name === 'retention' ? { guest_requests: 0, protected_operations: 0 } : null, item);
+        name === 'retention' ? attemptCounters : null, item,
+        { attempt: attemptCounters, session: summedCounters(responses) });
     } catch (error) { row(caseId(8), name, 'failed', String(error),
       [raw, requests, stderr].filter(fs.existsSync).map(receiptFile)); }
   }
@@ -302,14 +489,43 @@ for (const [number, script, prefix] of [
     assert.ok(summary?.boundedTrace, summary?.failures.find(item =>
       item.name === 'bounded-trace-retention')?.error ?? 'bounded trace summary missing');
     assert.ok(trace.some(item => item.outcome === 'trace-capacity-refused'));
+    assert.equal(trace.filter(item => item.outcome === 'executed').length,
+      summary.boundedTrace.completed);
     row(caseId(8), 'bounded-trace-retention-control', 'passed',
       'bounded trace refuses rather than truncating prior committed trace',
       [capacity, capacityRequests].map(receiptFile),
-      { guest_requests: 0, protected_operations: 0 }, summary.boundedTrace);
+      { guest_requests: summary.boundedTrace.completed, protected_operations: 0 },
+      summary.boundedTrace,
+      { claim: 'control_pass', session: summedCounters(trace),
+        counter_scope: 'all successful roots in bounded-capacity control' });
   } catch (error) {
     row(caseId(8), 'bounded-trace-retention-control', 'failed', String(error),
       [capacity, capacityRequests].filter(fs.existsSync).map(receiptFile),
       summary?.failures.find(item => item.name === 'bounded-trace-retention') ?? null);
+  }
+  binaryStill();
+}
+
+// The checked typed LiveRef caller can reach three legacy compiler-profile
+// boundaries through the selected Rust test, but not the legacy CLI surface.
+{
+  const checked = command('LSLOT09-typed-legacy-compiler', cargo,
+    ['test', '-p', 'noble-wasm', '--test', 'live_slot_admission',
+      'legacy_profiles_and_forged_slot_metadata_are_rejected',
+      '--locked', '--offline', '--', '--exact']);
+  const files = [checked.stdout, checked.stderr].map(file =>
+    receiptFile(path.join(output, file)));
+  try {
+    assert.equal(checked.status, 0);
+    assert.match(checked.text, /legacy_profiles_and_forged_slot_metadata_are_rejected \.\.\. ok/);
+    assert.match(checked.text, /test result: ok\. 1 passed;/);
+    row(caseId(9), 'typed-checked-compiler-control', 'passed',
+      'selected Rust checker rejected a genuine checked typed LiveRef caller in legacy compilers; this is not the canonical CLI attempt',
+      files, null, { test: 'legacy_profiles_and_forged_slot_metadata_are_rejected',
+        profiles: ['Core', 'Live-Wasm-Draft', 'Text-Byte-Cursor'] },
+      { claim: 'control_pass' });
+  } catch (error) {
+    row(caseId(9), 'typed-checked-compiler-control', 'failed', String(error), files);
   }
   binaryStill();
 }
@@ -338,7 +554,10 @@ for (const [number, script, prefix] of [
         [receiptFile(sourceFile), receiptFile(path.join(output, result.stdout)),
           receiptFile(path.join(output, result.stderr)),
           ...(result.stdin ? [receiptFile(path.join(output, result.stdin))] : [])],
-        null, refusal);
+        null, refusal, { attempt: { guest_requests: refusal.guest_requests,
+          protected_operations: refusal.protected_operations },
+        session: { guest_requests: refusal.guest_requests,
+          protected_operations: refusal.protected_operations } });
     } catch (error) {
       row(caseId(9), name, 'failed', String(error),
         [receiptFile(path.join(output, result.stdout)), receiptFile(path.join(output, result.stderr))]);
@@ -359,7 +578,8 @@ for (const [number, script, prefix] of [
       'saved Core quotation still selects pre-redefinition n despite current definition n-v2',
       [core.stdin, core.stdout, core.stderr].map(name => receiptFile(path.join(output, name))),
       { guest_requests: 0, protected_operations: 0 },
-      { saved_program: receipts[1].stack[0], old_result: receipts[3].stack });
+      { saved_program: receipts[1].stack[0], old_result: receipts[3].stack },
+      { claim: 'control_pass', session: summedCounters(receipts) });
   } catch (error) {
     row(caseId(9), 'control:Core-Bootstrap', 'failed', String(error),
       [core.stdin, core.stdout, core.stderr].map(name => receiptFile(path.join(output, name))));
@@ -437,14 +657,14 @@ for (const [number, script, prefix] of [
     failure ?? 'guarded :reload rebinds current n while saved quotation retains old n',
     [transcript, selectedSource, path.join(output, 'draft-v1.noble'),
       path.join(output, 'draft-v2.noble')].map(receiptFile),
-    failure ? null : { guest_requests: 0, protected_operations: 0 }, witness);
+    failure ? null : { guest_requests: 0, protected_operations: 0 }, witness,
+    { claim: 'control_pass', session: summedCounters(jsonLines(transcript)
+      .filter(item => item.kind === 'cli').map(item => item.report)) });
   binaryStill();
 }
 
 // Unrun canonical obligations are never inferred from a different refusal.
 for (const [id, names, reason] of [
-  [caseId(2), ['base-parent-child', 'transitive-A-B-C'],
-    'no real held nested A/B/C selected CLI root establishes one pinned map across publication'],
   [caseId(5), fixture.cases[4].input.variants.map(item => item.name),
     'no authenticated checked source-to-quote operand/capture provenance for selected P2/D2, and no real positive exact evidence; blanket proof-required denial is not an admission proof'],
 ]) for (const name of names) row(id, name, 'blocked', reason);
@@ -467,11 +687,30 @@ for (const dir of evidenceDirectories) {
   }
   walk(dir);
 }
-try { frozen(source); } catch (error) { issues.push(`source freeze: ${error}`); }
+try {
+  frozen(source);
+  assert.deepEqual(sourceInventory(inputs, selectedTrees), source,
+    'selected source tree paths or bytes changed during execution');
+} catch (error) { issues.push(`source freeze: ${error}`); }
+const afterGit = gitDiagnostic();
+if (beforeGit.head !== afterGit.head || beforeGit.selected_status !== afterGit.selected_status)
+  issues.push('selected Git HEAD or dirty/clean status changed during source-bound execution');
 if (sha(fs.readFileSync(binary)) !== afterBinary) issues.push('selected binary changed after execution');
 if (sha(fs.readFileSync(path.join(root, fixtureFile))) !== sha(fixtureBytes))
   issues.push('canonical fixture bytes changed during gate');
 const rows = [...observed.values()];
+for (const observedRow of rows) {
+  if (observedRow.status === 'blocked') {
+    assert.equal(observedRow.guest_requests, null,
+      `blocked ${observedRow.case_id}/${observedRow.variant} cannot claim canonical counters`);
+    assert.equal(observedRow.protected_operations, null);
+  }
+  if (observedRow.claim === 'canonical_variant_pass') {
+    assert.ok(Number.isSafeInteger(observedRow.guest_requests) &&
+      Number.isSafeInteger(observedRow.protected_operations),
+    `passed canonical variant lacks measured counters: ${observedRow.case_id}/${observedRow.variant}`);
+  }
+}
 const summary = { passed: rows.filter(row => row.status === 'passed').length,
   failed: rows.filter(row => row.status === 'failed').length,
   blocked: rows.filter(row => row.status === 'blocked').length };
@@ -486,12 +725,21 @@ const acceptance = {
     rust_sysroot: standardLibraryRoot, rustc_default_sysroot: sysroot.stdout.trim(),
     ...toolFacts },
   binary: binarySelection, commands, cases: rows, summary,
+  counter_definition: {
+    guest_requests_and_protected_operations:
+      'selected observed attempt or explicitly named control scope only on passed rows; null for blocked canonical variants and unmeasured static checks',
+    observed_attempt:
+      'measured CLI attempt even if its full canonical premises are blocked; scripted_operations counts replay-only scripted effects, not real protected operations',
+    observed_session:
+      'sum of guest_requests/protected_operations fields on each real CLI reply of this independent variant session, including setup/control roots; not a canonical-case counter',
+  },
+  version_control: { before: beforeGit, after: afterGit },
   external_evidence_sha256: evidenceFiles, integrity_issues: issues,
   limitations: [
     'All nine canonical cases remain absent/not-run/open/unassessed; this external diagnostic does not promote any case.',
     'LSLOT-05 lacks a positive genuine selected-target proof bound to authenticated capture-sensitive P/D identities.',
     'LSLOT-08 replay lacks the canonical dynamically captured I64:5 Dtrace and scripted ok-A/ok-B responses; exact replay never grants real effects.',
-    'Several admission/static negative variants and the exact typed LSLOT-09 legacy caller are profile-limited; LSLOT-02 has no complete selected nested-root session.',
+    'LSLOT-02 has observed held nested roots at reachable physical epochs 2/3, not its canonical simultaneous epoch-1 multi-slot registry; several admission/static negatives and the exact typed LSLOT-09 legacy caller remain profile-limited.',
   ],
 };
 save('receipt.json', JSON.stringify(acceptance, null, 2) + '\n');
