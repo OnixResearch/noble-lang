@@ -131,6 +131,31 @@ fn selected_returned_program_distinguishes_input_from_fixed_literal_and_computat
 }
 
 #[test]
+fn selected_origin_keeps_equal_input_values_distinct_and_refuses_root_dependent_arithmetic() -> Result<(), String> {
+    use noble_wasm::source::{OriginI64, OriginProgramValue};
+    let both = selected_builder(b"def builder [ quote swap quote ]", &[Ty::I64, Ty::I64])?;
+    let origin = both.selected_origin().ok_or("independent quote origins absent")?;
+    let [first, second] = origin.outputs.as_slice() else {
+        return Err("distinct root inputs did not produce two returned Programs".into());
+    };
+    if first.stack_position != 0 || second.stack_position != 1
+        || !matches!(&first.result, OriginProgramValue::QuoteI64 {
+            operand: OriginI64::RootInput(1), ..
+        })
+        || !matches!(&second.result, OriginProgramValue::QuoteI64 {
+            operand: OriginI64::RootInput(0), ..
+        })
+    {
+        return Err("identical input bits would be conflated instead of binding their positions".into());
+    }
+    let unsupported = selected_builder(b"def builder [ 1 + quote [ + ] compose ]", &[Ty::I64])?;
+    if unsupported.selected_origin().is_some() {
+        return Err("root-varying arithmetic was mislabeled as a fixed captured literal".into());
+    }
+    Ok(())
+}
+
+#[test]
 fn quotation_program_has_its_own_checked_interface_and_code_owner() -> Result<(), String> {
     let session = noble_contracts::source::Session::new_live_slots(
         environment().map_err(|error| format!("{error:?}"))?.enable_live_slots(),
