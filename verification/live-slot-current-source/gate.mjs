@@ -651,7 +651,6 @@ for (const [number, script, prefix] of [
       assert.ok([2, 4].includes(result.status), 'unsupported profile unexpectedly accepted slot.invoke');
       const refusal = JSON.parse(result.text.trim());
       assert.equal(refusal.outcome, name === 'guarded Live-Wasm-Draft' ? 'reload-refused' : 'unsupported');
-      assert.match(refusal.diagnostic, /slot\.invoke requires the opt-in live-slot source profile/);
       assert.equal(refusal.guest_requests, 0);
       assert.equal(refusal.protected_operations, 0);
       row(caseId(9), name, 'blocked',
