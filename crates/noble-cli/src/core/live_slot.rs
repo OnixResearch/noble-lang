@@ -1859,9 +1859,11 @@ impl Host {
 
     fn retain_program_outputs(&mut self, module_id: &str, report: &mut Value, root_inputs: &Value) -> Result<(), String> {
         let candidate = self.candidates.get(module_id).ok_or_else(|| reject("checked caller retired during execution"))?;
+        let inputs = root_inputs.as_array().ok_or_else(|| reject("root inputs missing"))?;
         let stack = report.get_mut("stack").and_then(Value::as_array_mut)
             .filter(|stack| stack.len() == candidate.output.len())
             .ok_or_else(|| reject("worker returned a stack incompatible with checked caller"))?;
+        let mut to_inspect = Vec::new();
         for (position, descriptor) in candidate.output.iter().enumerate() {
             let cell = &mut stack[position];
             if descriptor.starts_with("Program(") {
@@ -1880,26 +1882,24 @@ impl Host {
                     (true, Some(verified)) => {
                         let origin = candidate.selected_origin.as_ref()
                             .ok_or_else(|| reject("selected origin vanished"))?;
+                        let saved_handle = uint(verified, "saved_handle")?;
                         if verified["caller_id"] != module_id
                             || verified["artifact_sha256"] != candidate.artifact_sha256
                             || verified["stack_position"] != position
                             || verified["definition_identity"] != origin.definition_identity
                             || verified["source_generation"] != origin.source_generation
+                            || saved_handle < 4096
                             || !cell["source_id"].is_null() || !cell["program_index"].is_null() {
                             self.poisoned = true;
                             return Err(reject("selected saved Program origin differs from independently checked caller/site"));
                         }
-                        // The worker checked the actual epoch-qualified Program and
-                        // captured literal before saving it. Independently derive the
-                        // bounded target projection from the compiler's checked source
-                        // plan and inspect the separately returned graph snapshot.
-                        if let Some(identity) = origin::anonymous_target_identity(
-                            &origin.checked_metadata, &candidate.programs, position,
-                            descriptor, cell,
-                            root_inputs.as_array().ok_or_else(|| reject("root inputs missing"))?,
-                        )? {
-                            cell["target_identity"] = identity;
+                        if origin::supports_anonymous_target(&origin.checked_metadata,
+                            &candidate.programs, position, descriptor, inputs)? {
+                            to_inspect.push((position, owner.clone(), saved_handle));
                         }
+                        cell["verified_origin"].as_object_mut()
+                            .ok_or_else(|| reject("selected origin is not a structured receipt"))?
+                            .remove("saved_handle");
                     }
                     (false, None) => {}
                     _ => {
@@ -1938,6 +1938,29 @@ impl Host {
                 self.poisoned = true;
                 return Err(reject("worker returned an untyped saved Program"));
             }
+        }
+        for (position, owner, saved_handle) in to_inspect {
+            // This is a second, read-only worker roundtrip after the backend
+            // stack has been cleared. The token must still resolve to the same
+            // retained handle before any target identity is attached.
+            let inspected = self.send(&json!({"operation":"inspect-saved-program","owner":owner}), &[])?;
+            let graph = match origin::checked_saved_owner_inspection(&owner, saved_handle, &inspected) {
+                Ok(graph) => graph,
+                Err(problem) => {
+                    self.poisoned = true;
+                    return Err(problem);
+                }
+            };
+            let candidate = self.candidates.get(module_id)
+                .ok_or_else(|| reject("selected caller retired before target inspection"))?;
+            let origin = candidate.selected_origin.as_ref()
+                .ok_or_else(|| reject("selected source vanished before target inspection"))?;
+            let cell = &report["stack"][position];
+            let identity = origin::anonymous_target_identity(
+                &origin.checked_metadata, &candidate.programs, position,
+                &candidate.output[position], cell, graph, inputs)?
+                .ok_or_else(|| reject("checked anonymous target shape changed during inspection"))?;
+            report["stack"][position]["target_identity"] = identity;
         }
         Ok(())
     }

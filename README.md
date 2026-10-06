@@ -198,9 +198,17 @@ returns a saved `Program<I64,I64,pure>` that a checked `run` caller can execute
 with `1` to obtain `3`; `def fixed [ 2 quote [ + ] compose ]` retains the same
 fixed capture even when the caller root differs. For the exact pure returned
 `quote(I64) [ + ] compose` graph with one checked I64 capture and a checked
-static `+` child, the host independently reads the selected VM capture and
-inert quote atom against the source-to-compiled-site lineage before deriving
-`target_identity` in the saved-owner receipt. Varying root input 2→3 keeps
+static `+` child, the trusted worker checks the selected VM capture and inert
+quote atom against the source-to-compiled-site lineage. After retaining
+the owner and clearing the root stack, the trusted resident worker resolves
+that owner back to its saved backend handle and re-reads the complete bounded
+Program, capture and inert recipe graph without guest execution or host
+effects. Rust compares the owner/handle correspondence and every returned
+node, edge, signature and effect against checked source/compiled-site
+metadata before deriving `target_identity` in the saved-owner receipt. This
+separate Rust check still trusts the resident worker to report the VM graph
+and owner mapping faithfully; it is not malicious-worker attestation or a
+proof of arbitrary replacement Wasm helpers. Varying root input 2→3 keeps
 the anonymous template D and changes P; source literal 2→3 and independently
 computed constant 2→3 each change D. These local, versioned experimental IDs
 bind the target's checked interface, empty effects, builtin addition

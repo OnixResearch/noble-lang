@@ -366,15 +366,13 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
 // target. This is deliberately narrower than SelectedOriginMetadata: its
 // general quote/compose grammar has no checked logical-alias or lexical-owner
 // witness. A missing witness never becomes an anonymous target ID.
-pub(super) fn anonymous_target_identity(
-    origin: &Value,
+fn anonymous_shape<'a>(
+    origin: &'a Value,
     contracts: &[super::ProgramContract],
     position: usize,
     descriptor: &str,
-    saved: &Value,
     root_inputs: &[Value],
-) -> Result<Option<Value>, String> {
-    use serde_json::json;
+) -> Result<Option<(&'a Value, &'a Value, &'a Value)>, String> {
     let outputs = rows(origin, "outputs")?;
     if outputs.len() != 1 || root_inputs.len() > 1
         || descriptor != "Program([I64]->[I64]!{})" {
@@ -398,10 +396,54 @@ pub(super) fn anonymous_target_identity(
     if static_operations.len() != 1 || static_operations[0]["kind"] != "add"
         || static_program["source_artifact"] != "definition"
         || static_contract.input != ["I64", "I64"]
-        || static_contract.output != ["I64"] || !static_contract.effects.is_empty() {
+        || static_contract.output != ["I64"] || !static_contract.effects.is_empty()
+        || static_program["effect_mask"] != 0 || static_operations[0]["effect_mask"] != 0 {
         return Ok(None);
     }
     let operand = &result["left"]["operand"];
+    if !(operand["kind"] == "fixed-i64" || operand["kind"] == "root-i64"
+        && operand["position"] == 0 && root_inputs.len() == 1) {
+        return Ok(None);
+    }
+    Ok(Some((result, static_program, operand)))
+}
+
+pub(super) fn supports_anonymous_target(
+    origin: &Value,
+    contracts: &[super::ProgramContract],
+    position: usize,
+    descriptor: &str,
+    root_inputs: &[Value],
+) -> Result<bool, String> {
+    Ok(anonymous_shape(origin, contracts, position, descriptor, root_inputs)?.is_some())
+}
+
+pub(super) fn checked_saved_owner_inspection<'a>(
+    owner: &str, saved_handle: u32, receipt: &'a Value,
+) -> Result<&'a Value, String> {
+    if receipt["outcome"] != "saved-program-inspected"
+        || receipt["owner"] != owner || receipt["saved_handle"] != saved_handle
+        || receipt["guest_requests"] != 0 || receipt["protected_operations"] != 0 {
+        return Err(denied("retained owner or backend handle changed before graph inspection"));
+    }
+    receipt.get("selected_graph")
+        .ok_or_else(|| denied("retained owner has no complete graph observation"))
+}
+
+pub(super) fn anonymous_target_identity(
+    origin: &Value,
+    contracts: &[super::ProgramContract],
+    position: usize,
+    descriptor: &str,
+    saved: &Value,
+    inspected_graph: &Value,
+    root_inputs: &[Value],
+) -> Result<Option<Value>, String> {
+    use serde_json::json;
+    let Some((result, static_program, operand)) =
+        anonymous_shape(origin, contracts, position, descriptor, root_inputs)? else {
+        return Ok(None);
+    };
     let (template_operand, actual) = match operand["kind"].as_str() {
         Some("root-i64") if operand["position"] == 0 && root_inputs.len() == 1 => {
             let input = &root_inputs[0];
@@ -421,10 +463,51 @@ pub(super) fn anonymous_target_identity(
         return Err(denied("checked fixed I64 operand lacks a canonical representation"));
     }
 
-    // This snapshot was read independently from the actual saved VM graph,
-    // after the worker had checked its source-site and compiled-Wasm lineage.
-    // Do not use the source operand alone to mint P: recheck the quoted value
-    // and inert quote atom in the returned graph observation.
+    // The trusted worker re-reads the complete immutable VM graph from the
+    // retained saved owner after the root stack is cleared. Check its entire
+    // topology, node payloads, packed interfaces and effects, and inert recipe
+    // against the separately checked source/compiled-site plan. This is not
+    // attestation against a malicious worker or arbitrary replacement helpers.
+    let named = rows(origin, "programs")?.get(number(origin, "named_program_index")? as usize)
+        .ok_or_else(|| denied("anonymous builder operation map is missing"))?;
+    let operations = rows(named, "operations")?;
+    let quote_op = operations.iter().find(|op|
+        op["kind"] == "quote-i64" && op["node"] == result["left"]["node"]
+            && op["table_entry"] == result["left"]["table_entry"])
+        .ok_or_else(|| denied("anonymous quote lacks checked source site"))?;
+    let compose_op = operations.iter().find(|op|
+        op["kind"] == "compose" && op["node"] == result["node"]
+            && op["table_entry"] == result["table_entry"])
+        .ok_or_else(|| denied("anonymous compose lacks checked source site"))?;
+    if quote_op["effect_mask"] != 0 || compose_op["effect_mask"] != 0 {
+        return Err(denied("anonymous target is not pure"));
+    }
+    let add = &rows(static_program, "operations")?[0];
+    let expected = json!([
+        {"kind":4,"payload":"0","x":2,"y":quote_op["quote_input_signature"],
+            "z":static_program["output_signature"],"w":2,"n":2,
+            "a":1,"b":2,"c":3,"textBytes":null},
+        {"kind":4,"payload":"0","x":1,"y":quote_op["quote_input_signature"],
+            "z":quote_op["quote_output_signature"],"w":1,"n":1,
+            "a":4,"b":null,"c":5,"textBytes":null},
+        {"kind":4,"payload":"0","x":static_program["entry"],
+            "y":static_program["input_signature"],"z":static_program["output_signature"],
+            "w":1,"n":1,"a":null,"b":null,"c":6,"textBytes":null},
+        {"kind":9,"payload":"0","x":0,"y":0,"z":0,"w":0,"n":0,
+            "a":5,"b":6,"c":null,"textBytes":null},
+        {"kind":1,"payload":actual,"x":0,"y":0,"z":0,"w":0,"n":0,
+            "a":null,"b":null,"c":null,"textBytes":null},
+        {"kind":8,"payload":actual,"x":1,"y":0,"z":0,"w":0,"n":0,
+            "a":null,"b":null,"c":null,"textBytes":null},
+        {"kind":8,"payload":"4","x":2,"y":add["input_signature"],
+            "z":add["output_signature"],"w":0,"n":0,
+            "a":null,"b":null,"c":null,"textBytes":null}
+    ]);
+    if inspected_graph != &expected {
+        return Err(denied("retained anonymous owner graph differs from checked source and interface"));
+    }
+    // Existing public child observations must agree with the separately
+    // re-read full owner graph; they never substitute for it.
     let captures = rows(saved, "capture_values")?;
     if captures.len() != 2 || captures[0]["field"] != "cell_a"
         || captures[1]["field"] != "cell_b" {
@@ -434,22 +517,24 @@ pub(super) fn anonymous_target_identity(
         .ok_or_else(|| denied("anonymous quote graph is missing"))?;
     let right_graph = captures[1]["value"].as_array()
         .ok_or_else(|| denied("anonymous static child graph is missing"))?;
-    let quote = left.first().ok_or_else(|| denied("anonymous quote root is missing"))?;
-    let scalar_index = quote["a"].as_u64().and_then(|n| usize::try_from(n).ok())
-        .ok_or_else(|| denied("anonymous quote capture edge is missing"))?;
-    let atom_index = quote["c"].as_u64().and_then(|n| usize::try_from(n).ok())
-        .ok_or_else(|| denied("anonymous inert quote atom is missing"))?;
-    let scalar = left.get(scalar_index)
-        .ok_or_else(|| denied("anonymous quote capture is truncated"))?;
-    let atom = left.get(atom_index)
-        .ok_or_else(|| denied("anonymous quote atom is truncated"))?;
-    if quote["kind"] != 4 || quote["x"] != 1 || quote["payload"] != "0"
-        || quote["w"] != 1 || quote["n"] != 1
-        || scalar["kind"] != 1 || scalar["payload"] != actual
-        || atom["kind"] != 8 || atom["x"] != 1 || atom["payload"] != actual
-        || right_graph.first().is_none_or(|program|
-            program["kind"] != 4 || program["x"] != static_program["entry"]) {
-        return Err(denied("anonymous target graph disagrees with checked source operand"));
+    let expected = expected.as_array()
+        .ok_or_else(|| denied("internal anonymous graph projection is missing"))?;
+    let rebased = |observed: &Value, original: &Value, a: Option<u32>, c: u32| {
+        observed.as_object().zip(original.as_object()).is_some_and(|(node, checked)| {
+            node.len() == checked.len() && checked.iter().all(|(field, value)|
+                match field.as_str() {
+                    "a" if a.is_some() => node[field] == a.unwrap_or_default(),
+                    "c" => node[field] == c,
+                    _ => node[field] == *value,
+                })
+        })
+    };
+    if left.len() != 3 || right_graph.len() != 2
+        || !rebased(&left[0], &expected[1], Some(1), 2)
+        || left[1] != expected[4] || left[2] != expected[5]
+        || !rebased(&right_graph[0], &expected[2], None, 1)
+        || right_graph[1] != expected[6] {
+        return Err(denied("public capture graphs differ from retained owner graph"));
     }
 
     let interface = json!({"input":["I64"],"output":["I64"],"effects":[]});
@@ -527,33 +612,6 @@ mod tests {
         });
         let binary = super::super::assemble_slot(prepared.wat())?;
         verify(&binary, &origin, &install)?;
-
-        let contracts = prepared.program_metadata().iter().map(|program|
-            Ok(super::super::ProgramContract {
-                input: super::super::canonical_stack(&program.stack_in, 0)?,
-                output: super::super::canonical_stack(&program.stack_out, 0)?,
-                effects: super::super::effects(&program.effects)?,
-            })).collect::<Result<Vec<_>, String>>()?;
-        let right = number(&origin["outputs"][0]["result"]["right"], "program_index")? as usize;
-        let right_entry = origin["programs"][right]["entry"].clone();
-        let root_inputs = [serde_json::json!({"kind":"i64","value":"2"})];
-        let truncated = serde_json::json!({"capture_values":[
-            {"field":"cell_a","value":[{"kind":4,"x":1}]},
-            {"field":"cell_b","value":[{"kind":4,"x":right_entry}]}
-        ]});
-        if anonymous_target_identity(&origin, &contracts, 0,
-            "Program([I64]->[I64]!{})", &truncated, &root_inputs).is_ok() {
-            return Err("checked source alone minted a target ID without actual quote/capture/recipe".into());
-        }
-        let wrong_capture = serde_json::json!({"capture_values":[
-            {"field":"cell_a","value":[{"kind":4,"x":1,"payload":"0","w":1,"n":1,"a":1,"c":2},
-                {"kind":1,"payload":"3"},{"kind":8,"x":1,"payload":"3"}]},
-            {"field":"cell_b","value":[{"kind":4,"x":right_entry}]}
-        ]});
-        if anonymous_target_identity(&origin, &contracts, 0,
-            "Program([I64]->[I64]!{})", &wrong_capture, &root_inputs).is_ok() {
-            return Err("mismatched captured bits minted the source-classified target P".into());
-        }
 
         let mut wrong_site = origin.clone();
         wrong_site["programs"][0]["operations"][0]["table_entry"] = serde_json::json!(span.start + 1);
@@ -647,6 +705,124 @@ mod tests {
         if verify(&super::super::assemble_slot(forged.as_bytes())?,
             &later_origin, &later_install).is_ok() {
             return Err("later-generation forged native core segment acquired selected origin".into());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn returned_target_refuses_forged_complete_graph_and_wrong_saved_owner() -> Result<(), String> {
+        use serde_json::json;
+        let environment = noble_kernel::contracts::environment()
+            .map_err(|error| format!("environment: {error:?}"))?.enable_live_slots();
+        let mut source = noble_contracts::source::Session::new_live_slots(environment)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let definition = source.prepare(b"def builder [ quote [ + ] compose ]", &[], LIMITS)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        source.commit(definition).map_err(|error| error.diagnostic().message.clone())?;
+        let call = source.prepare(b"builder", &[Ty::I64], LIMITS)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let selected = source.checked_selected_target(&call, "builder")
+            .map_err(|error| format!("selected source: {error:?}"))?;
+        let prepared = noble_wasm::source::Compiler::new_live_slots()
+            .prepare_checked_selected(&selected)
+            .map_err(|_| "selected compiler refused checked source".to_owned())?;
+        let bound = prepared.selected_target().ok_or("missing checked selection")?;
+        let target = json!({
+            "definition_index":bound.definition_id.index(),
+            "definition_identity":bound.definition_id.identity().to_string(),
+            "source_generation":bound.source_generation.to_string(),
+            "named_program_index":bound.named_program_index,
+            "selected_source_sha256":crate::workflow::intrinsic::sha256(selected.source())
+        });
+        let origin = super::super::selected_origin_json(
+            prepared.selected_origin().ok_or("missing checked origin")?, &target)?;
+        let contracts = prepared.program_metadata().iter().map(|program|
+            Ok(super::super::ProgramContract {
+                input: super::super::canonical_stack(&program.stack_in, 0)?,
+                output: super::super::canonical_stack(&program.stack_out, 0)?,
+                effects: super::super::effects(&program.effects)?,
+            })).collect::<Result<Vec<_>, String>>()?;
+        let result = &origin["outputs"][0]["result"];
+        let right = number(&result["right"], "program_index")? as usize;
+        let static_program = &origin["programs"][right];
+        let add = &static_program["operations"][0];
+        let named = number(&origin, "named_program_index")? as usize;
+        let quote = origin["programs"][named]["operations"].as_array()
+            .ok_or("checked named operations missing")?.iter()
+            .find(|op| op["kind"] == "quote-i64")
+            .ok_or("checked quote operation missing")?;
+        let graph = json!([
+            {"kind":4,"payload":"0","x":2,"y":quote["quote_input_signature"],
+                "z":static_program["output_signature"],"w":2,"n":2,
+                "a":1,"b":2,"c":3,"textBytes":null},
+            {"kind":4,"payload":"0","x":1,"y":quote["quote_input_signature"],
+                "z":quote["quote_output_signature"],"w":1,"n":1,
+                "a":4,"b":null,"c":5,"textBytes":null},
+            {"kind":4,"payload":"0","x":static_program["entry"],
+                "y":static_program["input_signature"],"z":static_program["output_signature"],
+                "w":1,"n":1,"a":null,"b":null,"c":6,"textBytes":null},
+            {"kind":9,"payload":"0","x":0,"y":0,"z":0,"w":0,"n":0,
+                "a":5,"b":6,"c":null,"textBytes":null},
+            {"kind":1,"payload":"2","x":0,"y":0,"z":0,"w":0,"n":0,
+                "a":null,"b":null,"c":null,"textBytes":null},
+            {"kind":8,"payload":"2","x":1,"y":0,"z":0,"w":0,"n":0,
+                "a":null,"b":null,"c":null,"textBytes":null},
+            {"kind":8,"payload":"4","x":2,"y":add["input_signature"],
+                "z":add["output_signature"],"w":0,"n":0,
+                "a":null,"b":null,"c":null,"textBytes":null}
+        ]);
+        let mut left = graph[1].clone();
+        left["a"] = json!(1);
+        left["c"] = json!(2);
+        let mut static_child = graph[2].clone();
+        static_child["c"] = json!(1);
+        let saved = json!({"capture_values":[
+            {"field":"cell_a","value":[left, graph[4], graph[5]]},
+            {"field":"cell_b","value":[static_child, graph[6]]}
+        ]});
+        let input = [json!({"kind":"i64","value":"2"})];
+        let admitted = |graph: &Value| anonymous_target_identity(&origin, &contracts, 0,
+            "Program([I64]->[I64]!{})", &saved, graph, &input);
+        if admitted(&graph)?.is_none() {
+            return Err("checked bounded graph fixture did not reach the anonymous target".into());
+        }
+        for (name, node, field, forged) in [
+            ("extra recipe edge", 3, "c", json!(4)),
+            ("wrong installed static entry", 2, "x", json!(number(static_program, "entry")? + 1)),
+            ("wrong captured value", 4, "payload", json!("3")),
+            ("wrong static output signature", 2, "z", json!(123456)),
+            ("wrong effect mask", 2, "payload", json!("1")),
+            ("wrong outer interface", 0, "y", json!(123456)),
+        ] {
+            let mut wrong = graph.clone();
+            wrong[node][field] = forged;
+            if admitted(&wrong).is_ok() {
+                return Err(format!("{name} acquired an anonymous target identity"));
+            }
+        }
+        let mut truncated = graph.clone();
+        truncated.as_array_mut().ok_or("graph is not an array")?.pop();
+        if admitted(&truncated).is_ok() {
+            return Err("truncated retained graph acquired an anonymous target identity".into());
+        }
+        let receipt = json!({"outcome":"saved-program-inspected","owner":"program-1",
+            "saved_handle":4096,"guest_requests":0,"protected_operations":0,
+            "selected_graph":graph});
+        checked_saved_owner_inspection("program-1", 4096, &receipt)?;
+        let mut wrong_owner = receipt.clone();
+        wrong_owner["owner"] = json!("program-2");
+        let mut wrong_handle = receipt.clone();
+        wrong_handle["saved_handle"] = json!(4097);
+        let mut protected = receipt.clone();
+        protected["protected_operations"] = json!(1);
+        for (name, row) in [
+            ("different retained owner", wrong_owner),
+            ("different backend handle", wrong_handle),
+            ("inspection with protected effects", protected),
+        ] {
+            if checked_saved_owner_inspection("program-1", 4096, &row).is_ok() {
+                return Err(format!("{name} acquired a saved owner identity"));
+            }
         }
         Ok(())
     }

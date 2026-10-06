@@ -1170,7 +1170,7 @@ const acceptance = {
   external_evidence_sha256: evidenceFiles, integrity_issues: issues,
   limitations: [
     'All nine canonical cases remain absent/not-run/open/unassessed; this external diagnostic does not promote any case.',
-    'LSLOT-05 has bounded selected saved-owner origin control but lacks independently approved P2/D2 identity and exact captured P/D/C/Q/A/Wasm Lean proof with applicability negatives.',
+    'LSLOT-05 has a bounded experimental anonymous D/P control after trusted-worker retained-owner graph reinspection, but the symbolic fixture P2/D2, selected captured-target Wasm and exact P/D/C/Q/A/artifact Lean proof with applicability negatives remain unestablished.',
     'LSLOT-08 now has a D-neutral selected dynamic owner transitive last-pin retention control, but replay still lacks canonical captured I64:5 Dtrace and scripted ok-A/ok-B responses; exact replay never grants real effects.',
     'LSLOT-02 has selected CLI matches for both complete epoch-1 multi-slot variants, including effect-set reflection and per-dispatch host authority; this external diagnostic does not promote unchanged canonical case states. Several admission/static negatives and the exact typed LSLOT-09 legacy caller remain profile-limited.',
   ],

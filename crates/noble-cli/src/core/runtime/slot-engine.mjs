@@ -1047,10 +1047,26 @@ class SlotEngine {
       ...(selectedResult === null ? {} : { verified_origin: {
         caller_id: this.active.module.id, artifact_sha256: this.active.module.artifactSha256,
         stack_position: index, definition_identity: this.active.module.selected_origin.definition_identity,
-        source_generation: this.active.module.selected_origin.source_generation } }),
+        source_generation: this.active.module.selected_origin.source_generation,
+        saved_handle: handle } }),
       ...(programIndex < 0 ? { capture_status: selectedResult === null
         ? 'backend-observed-source-occurrence-unavailable' : 'checked-selected-origin',
         capture_values: observedCaptures } : {}) };
+  }
+
+  inspectSavedProgram(owner) {
+    // This internal host request runs after the root has saved and cleared its
+    // stack. Re-read the complete graph through the retained owner, rather
+    // than treating the source plan or two child summaries as the actual
+    // returned target. Rust checks every node and edge before attaching D/P.
+    const saved = this.savedOwners.get(owner);
+    const retained = this.savedCells.get(saved?.handle);
+    if (!saved || !retained || retained.count < 1
+      || retained.runtime.cell_kind(saved.handle) !== 4) {
+      return slotReply('saved-program-inspection-refused');
+    }
+    return slotReply('saved-program-inspected', { owner, saved_handle: saved.handle,
+      selected_graph: JSON.parse(this.captureValue(retained.runtime, saved.handle, 32, 4096)) });
   }
 
   releaseProgram(token) {
@@ -1242,6 +1258,8 @@ class SlotEngine {
     if (request.operation === 'candidate') return this.stageCandidate(request);
     if (request.operation === 'discard') return this.discard(request);
     if (request.operation === 'retire-code') return this.retireCode(request);
+    if (request.operation === 'inspect-saved-program')
+      return this.inspectSavedProgram(request.owner);
     if (request.operation === 'release-program') return this.releaseProgram(request.owner);
     if (request.operation === 'release-replay') return this.releaseReplay(request.token);
     if (request.operation === 'publish' || request.operation === 'rollback') return this.publish(request);
