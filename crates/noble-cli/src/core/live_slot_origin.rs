@@ -1,6 +1,8 @@
-//! Independent binary correspondence for the bounded, source-classified saved-Program grammar.
-//! A name section locates functions, but never supplies authority: every selected
-//! table entry and its *entire* decoded function body must match the source plan.
+//! Binary checks for the bounded, compiler-emitted, source-classified saved-Program grammar.
+//! The name section locates functions; every selected table entry and its
+//! entire decoded function body must match the source plan. Runtime helpers
+//! and installer control flow are trusted compiler emission, not an
+//! arbitrary-binary authenticity proof derived from custom names alone.
 use std::collections::{BTreeMap, BTreeSet};
 use serde_json::Value;
 use wasmparser::{ElementItems, ElementKind, KnownCustom, Name, Operator, Parser, Payload, Validator};

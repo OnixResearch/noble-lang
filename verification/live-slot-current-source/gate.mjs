@@ -345,7 +345,7 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
     assert.ok(replies.some(row => row.outcome === 'refused'));
     assert.equal(replies.filter(row => row.outcome === 'program-released').length, summary.owner_count);
     row(caseId(1), 'selected-origin-saved-owner-control', 'passed',
-      'selected CLI checked bounded source/Wasm/graph saved owner provenance, independent captures and opaque refusal; no P2/D2 or proof claim',
+      'selected CLI checked bounded compiler-emitted source/Wasm/graph saved owner provenance, independent captures and opaque refusal; no P2/D2 or proof claim',
       files.map(receiptFile), { guest_requests: 0, protected_operations: 0 },
       { owner_count: summary.owner_count, source_artifacts: summary.installed_artifacts,
         opaque_status: opaque.stack[0].capture_status },
