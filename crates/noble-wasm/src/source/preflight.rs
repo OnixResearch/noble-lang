@@ -64,6 +64,15 @@ fn node(
             attempt!(work.entries(body.len()));
             inst
         }
+        noble_kernel::untrusted::Node::SlotInvoke {
+            forwarded_ref_ordinals,
+            ..
+        } => {
+            if forwarded_ref_ordinals.len() > STACK_LIMIT {
+                return Err(crate::Diagnostic::Exhausted);
+            }
+            return work.entries(forwarded_ref_ordinals.len().saturating_add(1));
+        }
     };
     if inst.bindings.len() > 8 {
         return Err(crate::Diagnostic::Exhausted);
@@ -99,7 +108,7 @@ fn binding(
         noble_kernel::words::Binding::Stack(value) => concrete::stack(value, limits, work),
         noble_kernel::words::Binding::Value(value) => concrete::ty(value, limits.type_size, work),
         noble_kernel::words::Binding::Effect(value) => {
-            if value.as_slice().len() > 2 {
+            if value.as_slice().len() > 6 {
                 Err(crate::Diagnostic::Exhausted)
             } else {
                 Ok(())
@@ -118,7 +127,7 @@ fn expected(
     limits: noble_kernel::untrusted::Limits,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
-    if expected.allowed_effects.as_slice().len() > 2 {
+    if expected.allowed_effects.as_slice().len() > 6 {
         return Err(crate::Diagnostic::Exhausted);
     }
     attempt!(concrete::stack(&expected.stack_in, limits, work));

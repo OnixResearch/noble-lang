@@ -163,7 +163,8 @@ fn is_ambient_forbidden(
             noble_kernel::untrusted::Node::Invocation { def, .. } if def.0 == 22 => return true,
             noble_kernel::untrusted::Node::Invocation { .. }
             | noble_kernel::untrusted::Node::Literal { .. }
-            | noble_kernel::untrusted::Node::Quotation { .. } => {}
+            | noble_kernel::untrusted::Node::Quotation { .. }
+            | noble_kernel::untrusted::Node::SlotInvoke { .. } => {}
         }
         index += 1;
     }

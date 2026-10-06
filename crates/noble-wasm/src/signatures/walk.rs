@@ -198,6 +198,17 @@ fn push_type(
             work.push(Step::Byte(b'-'));
             work.push(Step::Stack(*input_stack));
         }
+        noble_kernel::types::Ty::LiveRef(input_stack, output_stack, effects) => {
+            attempt!(out.append(b"LiveRef("));
+            work.push(Step::Byte(b')'));
+            if !effects.is_empty() {
+                work.push(Step::Effects(effects));
+            }
+            work.push(Step::Stack(*output_stack));
+            work.push(Step::Byte(b'>'));
+            work.push(Step::Byte(b'-'));
+            work.push(Step::Stack(*input_stack));
+        }
     }
     Ok(())
 }
@@ -214,7 +225,8 @@ fn unavailable_in_core(ty: &noble_kernel::types::Ty) -> bool {
         | noble_kernel::types::Ty::Evidence
         | noble_kernel::types::Ty::Certified
         | noble_kernel::types::Ty::Nominal(_, _)
-        | noble_kernel::types::Ty::GenericNominal(_, _, _) => true,
+        | noble_kernel::types::Ty::GenericNominal(_, _, _)
+        | noble_kernel::types::Ty::LiveRef(_, _, _) => true,
         noble_kernel::types::Ty::Program(_, _, effects) => !effects.is_empty(),
         noble_kernel::types::Ty::Unit
         | noble_kernel::types::Ty::Bool

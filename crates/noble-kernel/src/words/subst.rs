@@ -154,12 +154,18 @@ fn expand_task(
     inst: &crate::words::Inst,
     mut walk: Walk,
 ) -> StepState {
-    let (parts_in, parts_out, slots) = match node {
+    let (parts_in, parts_out, slots, is_live_ref) = match node {
         crate::shapes::Pattern::Program(stack_in, stack_out, effects) => {
             let parts_in: alloc::vec::Vec<crate::shapes::Pattern> = *stack_in;
             let parts_out: alloc::vec::Vec<crate::shapes::Pattern> = *stack_out;
             let slots: alloc::vec::Vec<crate::shapes::EffectSlot> = *effects;
-            (parts_in, parts_out, slots)
+            (parts_in, parts_out, slots, false)
+        }
+        crate::shapes::Pattern::LiveRef(stack_in, stack_out, effects) => {
+            let parts_in: alloc::vec::Vec<crate::shapes::Pattern> = *stack_in;
+            let parts_out: alloc::vec::Vec<crate::shapes::Pattern> = *stack_out;
+            let slots: alloc::vec::Vec<crate::shapes::EffectSlot> = *effects;
+            (parts_in, parts_out, slots, true)
         }
         _ => return (walk, Err(crate::words::InstError::KindMismatch)),
     };
@@ -211,9 +217,12 @@ fn expand_task(
         Ok(effects) => effects,
         Err(problem) => return (walk, Err(problem)),
     };
-    walk.segments.push(alloc::vec![crate::types::Ty::program(
-        stack_in, stack_out, effects
-    )]);
+    let ty = if is_live_ref {
+        crate::types::Ty::live_ref(stack_in, stack_out, effects)
+    } else {
+        crate::types::Ty::program(stack_in, stack_out, effects)
+    };
+    walk.segments.push(alloc::vec![ty]);
     (walk, Ok(()))
 }
 
@@ -281,7 +290,8 @@ fn part_task(node: crate::shapes::Pattern, inst: &crate::words::Inst, mut walk: 
             walk.work.push(Task::Finish(marker));
             walk.work.push(Task::Part(*item));
         }
-        crate::shapes::Pattern::Program(stack_in, stack_out, _) => {
+        crate::shapes::Pattern::Program(stack_in, stack_out, _)
+        | crate::shapes::Pattern::LiveRef(stack_in, stack_out, _) => {
             walk.work.push(Task::Expand(marker));
             walk = schedule::queue(&stack_in, &stack_out, walk);
         }

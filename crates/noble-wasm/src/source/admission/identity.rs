@@ -164,6 +164,27 @@ impl Encoding {
                 }
                 self.out.append(b";")
             }
+            noble_kernel::untrusted::Node::SlotInvoke {
+                ref_ordinal,
+                forwarded_ref_ordinals,
+                ..
+            } => {
+                if !submission.environment.live_slots {
+                    return Err(crate::Diagnostic::Unsupported);
+                }
+                // Only typed formal positions shape generic caller identity.
+                // Node-local site IDs, slot names, target versions and issued
+                // root credentials never enter the immutable recipe.
+                attempt!(self.out.append(b"slot("));
+                attempt!(self.out.number(u64::from(*ref_ordinal)));
+                attempt!(self.out.append(b":"));
+                attempt!(work.entries(forwarded_ref_ordinals.len()));
+                for ordinal in forwarded_ref_ordinals {
+                    attempt!(self.out.number(u64::from(*ordinal)));
+                    attempt!(self.out.append(b","));
+                }
+                self.out.append(b");")
+            }
             noble_kernel::untrusted::Node::Quotation { body, .. } => {
                 attempt!(self.out.append(b"["));
                 self.todo.reserve(body.len().saturating_add(1));

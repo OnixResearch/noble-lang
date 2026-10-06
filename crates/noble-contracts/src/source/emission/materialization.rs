@@ -131,20 +131,35 @@ impl Nodes {
         let node_id =
             noble_kernel::untrusted::NodeId(attempt!(crate::index(self.nodes.len(), draft.span)));
         let variables = core::mem::take(&mut draft.variables);
-        let inst = attempt!(arena.instantiation(&variables, draft.span, meter));
+        let inst = if matches!(&draft.kind, crate::source::inference::DraftKind::SlotInvoke { .. }) {
+            None
+        } else {
+            Some(attempt!(arena.instantiation(&variables, draft.span, meter)))
+        };
         let node = match &mut draft.kind {
             crate::source::inference::DraftKind::Literal(lit) => {
-                noble_kernel::untrusted::Node::Literal { lit: *lit, inst }
+                noble_kernel::untrusted::Node::Literal {
+                    lit: *lit, inst: inst.ok_or_else(|| crate::internal(draft.span))?,
+                }
             }
             crate::source::inference::DraftKind::Invocation(def) => {
-                noble_kernel::untrusted::Node::Invocation { def: *def, inst }
+                noble_kernel::untrusted::Node::Invocation {
+                    def: *def, inst: inst.ok_or_else(|| crate::internal(draft.span))?,
+                }
             }
             crate::source::inference::DraftKind::Quotation(body) => {
                 noble_kernel::untrusted::Node::Quotation {
                     body: core::mem::take(body),
-                    inst,
+                    inst: inst.ok_or_else(|| crate::internal(draft.span))?,
                 }
             }
+            crate::source::inference::DraftKind::SlotInvoke {
+                ref_ordinal, forwarded_ref_ordinals,
+            } => noble_kernel::untrusted::Node::SlotInvoke {
+                ref_ordinal: *ref_ordinal,
+                site_id: node_id.0,
+                forwarded_ref_ordinals: core::mem::take(forwarded_ref_ordinals),
+            },
         };
         if let Some(bytes) = draft.text.take() {
             self.texts.reserve(1);

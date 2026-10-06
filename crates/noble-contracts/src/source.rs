@@ -13,6 +13,7 @@ mod lexer;
 mod parsing;
 mod preflight;
 mod preparation;
+pub mod proof;
 mod replacement;
 mod resolution;
 
@@ -54,6 +55,7 @@ impl Error {
 enum Target {
     Builtin(u32),
     Named(u32),
+    SlotInvoke(Option<u32>),
 }
 
 #[derive(Clone, Debug)]
@@ -149,6 +151,7 @@ fn replay_preserves_targets(
             (Kind::Text(a), Kind::Text(b)) => a == b,
             (Kind::Quotation(a), Kind::Quotation(b)) => a == b,
             (Kind::Call(Target::Builtin(a)), Kind::Call(Target::Builtin(b))) => a == b,
+            (Kind::Call(Target::SlotInvoke(a)), Kind::Call(Target::SlotInvoke(b))) => a == b,
             (Kind::Call(Target::Named(a)), Kind::Call(Target::Named(b))) => {
                 replacements.get(*a as usize).is_some_and(|replacement| {
                     replacement.unwrap_or(*a as usize) == *b as usize
@@ -176,17 +179,28 @@ pub struct Prepared {
     hosts: bool,
     text_cursor: bool,
     live_selected: Option<alloc::string::String>,
+    live_slots: bool,
     limits: crate::Limits,
     boundary: Option<alloc::vec::Vec<u8>>,
     definition: Option<Named>,
+    selected_root: Option<u32>,
     addition: alloc::vec::Vec<u8>,
     submission: Option<noble_kernel::execution::Submission>,
+    checked: Option<noble_kernel::untrusted::Checked>,
     output: alloc::vec::Vec<noble_kernel::types::Ty>,
 }
 
 impl Prepared {
     pub const fn submission(&self) -> Option<&noble_kernel::execution::Submission> {
         self.submission.as_ref()
+    }
+    /// The kernel-accepted derivation, including immutable typed live-site
+    /// descriptors. A candidate or source ordinal alone is never authority.
+    pub const fn checked(&self) -> Option<&noble_kernel::untrusted::Checked> {
+        self.checked.as_ref()
+    }
+    pub fn live_sites(&self) -> Option<&[noble_kernel::untrusted::LiveSite]> {
+        self.checked.as_ref().map(|checked| checked.live_sites.as_slice())
     }
     pub fn definition_name(&self) -> Option<&str> {
         self.definition.as_ref().map(|definition| definition.name.as_str())
@@ -210,8 +224,15 @@ pub struct Session {
     hosts: bool,
     text_cursor: bool,
     live_selected: Option<alloc::string::String>,
+    live_slots: Option<LiveSlots>,
     bindings: Option<crate::component::Bindings>,
     declared: Option<declared::Context>,
+}
+
+#[derive(Debug)]
+struct LiveSlots {
+    environment: noble_kernel::contracts::Env,
+    resources: alloc::vec::Vec<(alloc::string::String, noble_kernel::types::Ty)>,
 }
 
 impl Default for Session {
@@ -229,6 +250,7 @@ impl Session {
             hosts: true,
             text_cursor: false,
             live_selected: None,
+            live_slots: None,
             bindings: None,
             declared: None,
         }
@@ -241,6 +263,7 @@ impl Session {
             hosts: false,
             text_cursor: false,
             live_selected: None,
+            live_slots: None,
             bindings: None,
             declared: None,
         }
@@ -259,6 +282,116 @@ impl Session {
             live_selected: Some(alloc::string::String::from(selected_name)),
             ..Self::without_test_hosts()
         }
+    }
+    /// A separate, host-selected profile. The environment must already have
+    /// been enabled and its versioned resource schemas registered by the host.
+    /// Core and guarded Live-Wasm-Draft environments cannot gain slot syntax.
+    pub fn new_live_slots(environment: noble_kernel::contracts::Env) -> Result<Self, Error> {
+        if !environment.live_slots || environment.text_cursor {
+            return Err(Error::at(Stage::Acceptance, crate::invalid(
+                crate::Span { start: 0, end: 0 },
+                "live slots require a host-enabled independent source environment",
+            )));
+        }
+        Ok(Self {
+            live_slots: Some(LiveSlots {
+                environment,
+                resources: alloc::vec::Vec::new(),
+            }),
+            ..Self::without_test_hosts()
+        })
+    }
+
+    /// Only a trusted host which independently granted the bootstrap test
+    /// effects may select this profile. Source text cannot enable them, and
+    /// ordinary live-slot sessions remain unable to resolve `test.emit`.
+    pub fn new_live_slots_with_test_hosts(
+        environment: noble_kernel::contracts::Env,
+    ) -> Result<Self, Error> {
+        let mut session = Self::new_live_slots(environment.enable_live_test_hosts())?;
+        session.hosts = true;
+        Ok(session)
+    }
+
+    /// Resolve a source spelling such as `Account@1` only to an already
+    /// registered exact host nominal resource schema. This does not mint a
+    /// resource or a borrowed live reference.
+    pub fn register_live_resource(
+        &mut self,
+        name: &str,
+        id: noble_kernel::types::NominalTypeId,
+    ) -> Result<(), Error> {
+        let span = crate::Span { start: 0, end: 0 };
+        let Some((base, version)) = name.rsplit_once('@') else {
+            return Err(Error::at(Stage::Acceptance, crate::invalid(
+                span, "live resource name requires a version suffix",
+            )));
+        };
+        if base.is_empty() || !base.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+            || !base.as_bytes()[0].is_ascii_alphabetic()
+            || version.is_empty() || (version.len() > 1 && version.starts_with('0'))
+            || !version.bytes().all(|byte| byte.is_ascii_digit())
+            || version.parse::<u32>().is_err()
+        {
+            return Err(Error::at(Stage::Acceptance, crate::invalid(
+                span, "invalid versioned live resource name",
+            )));
+        }
+        let Some(profile) = self.live_slots.as_mut() else {
+            return Err(Error::at(Stage::Acceptance, crate::invalid(
+                span, "live resource registration requires the live-slot profile",
+            )));
+        };
+        let Some(declaration) = profile.environment.nominal(id) else {
+            return Err(Error::at(Stage::Acceptance, crate::invalid(
+                span, "unregistered nominal resource schema",
+            )));
+        };
+        let noble_kernel::types::NominalShape::Opaque(payload) = &declaration.shape else {
+            return Err(Error::at(Stage::Acceptance, crate::invalid(
+                span, "live resource schema must be opaque",
+            )));
+        };
+        let noble_kernel::types::Ty::Resource(kind) = &**payload else {
+            return Err(Error::at(Stage::Acceptance, crate::invalid(
+                span, "live resource schema must own a registered resource",
+            )));
+        };
+        if !profile.environment.live_resource_nominals.contains(&id)
+            || !profile.environment.resource_kinds.contains(kind)
+            || !declaration.exported
+            || declaration.public != [false, false]
+            || profile.resources.iter().any(|(existing, ty)| {
+                existing == name || matches!(ty, noble_kernel::types::Ty::Nominal(other, _) if *other == id)
+            })
+        {
+            return Err(Error::at(Stage::Acceptance, crate::invalid(
+                span, "duplicate or constructible live resource schema",
+            )));
+        }
+        let next = self.generation.checked_add(1).ok_or_else(|| Error::at(
+            Stage::Acceptance, exhausted(span, "session generation limit exceeded"),
+        ))?;
+        profile.resources.push((
+            alloc::string::String::from(name),
+            noble_kernel::types::Ty::Nominal(id, alloc::boxed::Box::new(declaration.shape.clone())),
+        ));
+        self.generation = next;
+        Ok(())
+    }
+
+    /// Parse a bounded type expression against this profile's registered
+    /// versioned names; unregistered versions never alias a same-layout schema.
+    pub fn parse_live_type(&self, text: &str) -> Result<noble_kernel::types::Ty, Error> {
+        let span = crate::Span { start: 0, end: 0 };
+        let Some(profile) = &self.live_slots else {
+            return Err(Error::at(Stage::Check, crate::invalid(
+                span, "live reference types require the live-slot profile",
+            )));
+        };
+        declared::types::parse_with_families(
+            text, &profile.resources, &[], Some(&profile.environment), span,
+        ).map(|parsed| parsed.ty).map_err(|error| Error::at(Stage::Check, error))
     }
     pub const fn generation(&self) -> u64 {
         self.generation
@@ -356,6 +489,7 @@ impl Session {
             hosts: self.hosts,
             text_cursor: self.text_cursor,
             live_selected: self.live_selected.clone(),
+            live_slots: None,
             bindings: None,
             declared: None,
         };
@@ -507,6 +641,11 @@ impl Session {
     }
 
     fn effect_universe(&self) -> u64 {
+        if let Some(profile) = &self.live_slots {
+            return profile.environment.effects.iter().fold(0u64, |mask, id| {
+                mask | 1u64.checked_shl(id.0).unwrap_or(0)
+            });
+        }
         if let Some(context) = &self.declared {
             return if context.environment.effects.contains(&noble_kernel::contracts::TEST_CLOCK) {
                 1 | (1 << noble_kernel::contracts::TEST_CLOCK.0)
@@ -578,6 +717,7 @@ impl Session {
             || prepared.hosts != self.hosts
             || prepared.text_cursor != self.text_cursor
             || prepared.live_selected != self.live_selected
+            || prepared.live_slots != self.live_slots.is_some()
             || prepared.history != self.history
         {
             return false;
@@ -660,6 +800,176 @@ fn live_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic>
 #[cfg(test)]
 mod tests {
     use super::Session;
+
+    fn live_limits() -> crate::Limits {
+        crate::Limits {
+            bytes: 65_536,
+            nodes: 16_384,
+            depth: 64,
+            work: 2_000_000,
+        }
+    }
+
+    fn borrowed(
+        input: alloc::vec::Vec<noble_kernel::types::Ty>,
+        output: alloc::vec::Vec<noble_kernel::types::Ty>,
+        effects: &[noble_kernel::types::EffId],
+    ) -> noble_kernel::types::Ty {
+        noble_kernel::types::Ty::LiveRef(
+            alloc::boxed::Box::new(input),
+            alloc::boxed::Box::new(output),
+            noble_kernel::types::EffSet::from_ids(effects),
+        )
+    }
+
+    #[test]
+    fn live_slots_forward_ordered_borrows_and_reuse_the_same_input() {
+        use noble_kernel::types::Ty;
+        let session = Session::new_live_slots(
+            noble_kernel::contracts::environment().unwrap().enable_live_slots(),
+        ).unwrap();
+        let c = borrowed(alloc::vec![Ty::I64], alloc::vec![Ty::I64], &[]);
+        let b = borrowed(
+            alloc::vec![Ty::I64, c.clone()], alloc::vec![Ty::I64],
+            &[noble_kernel::contracts::LIVE_DISPATCH],
+        );
+        let a = borrowed(
+            alloc::vec![Ty::I64, c.clone(), b.clone()], alloc::vec![Ty::I64],
+            &[noble_kernel::contracts::LIVE_DISPATCH],
+        );
+        let root = session.prepare(
+            b"slot.invoke", &[Ty::I64, c.clone(), b.clone(), a], live_limits(),
+        ).unwrap();
+        let root_submission = root.submission().unwrap();
+        assert!(matches!(crate::wire::lower_subject(&root_submission.body.candidate),
+            Err(crate::wire::ProjectionError::LiveSlot)));
+        assert_eq!(root_submission.request.expected.stack_in.len(), 4);
+        assert_eq!(root_submission.request.expected.stack_out, [Ty::I64]);
+        assert_eq!(root.live_sites().unwrap().len(), 1);
+        let site = &root.live_sites().unwrap()[0];
+        assert_eq!(site.ref_ordinal, 2);
+        assert_eq!(site.root_logical_input_position, 3);
+        assert_eq!(site.forwarded_ref_ordinals, [1, 2]);
+        assert_eq!(site.stack_in, [Ty::I64, c.clone(), b.clone()]);
+        assert_eq!(site.allowed_effects,
+            noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::LIVE_DISPATCH]));
+        assert_eq!(root.checked().unwrap().interface.effects,
+            noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::LIVE_DISPATCH]));
+
+        let reversed = session.prepare(
+            b"slot.invoke.0", &[Ty::I64, b.clone(), c.clone()], live_limits(),
+        ).unwrap();
+        assert!(!site.admits_target(&reversed.checked().unwrap().interface));
+        let nested = session.prepare(
+            b"slot.invoke slot.invoke", &[Ty::I64, c.clone(), b], live_limits(),
+        ).unwrap();
+        assert!(site.admits_target(&nested.checked().unwrap().interface));
+        let sites = nested.live_sites().unwrap();
+        assert_eq!(sites.len(), 2);
+        assert_ne!(sites[0].site_id, sites[1].site_id);
+        assert_eq!(sites[0].ref_ordinal, 1);
+        assert_eq!(sites[1].ref_ordinal, 1);
+        assert_eq!(sites[0].root_logical_input_position, 2);
+        assert_eq!(sites[1].root_logical_input_position, 2);
+        assert_eq!(sites[0].forwarded_ref_ordinals, [1]);
+        assert_eq!(sites[1].forwarded_ref_ordinals, [1]);
+        let leaf = session.prepare(b"slot.invoke", &[Ty::I64, c], live_limits()).unwrap();
+        assert!(sites[0].admits_target(&leaf.checked().unwrap().interface));
+        assert_eq!(leaf.live_sites().unwrap()[0].forwarded_ref_ordinals, []);
+    }
+
+    #[test]
+    fn live_slot_rejects_capture_forgery_ambiguity_and_legacy_profiles() {
+        use noble_kernel::types::Ty;
+        let session = Session::new_live_slots(
+            noble_kernel::contracts::environment().unwrap().enable_live_slots(),
+        ).unwrap();
+        let reference = borrowed(alloc::vec![Ty::I64], alloc::vec![Ty::I64], &[]);
+        let inputs = [Ty::I64, reference.clone()];
+        for source in [b"[ slot.invoke ]".as_slice(), b"def f [ slot.invoke ]"] {
+            assert!(session.prepare(source, &inputs, live_limits()).is_err());
+        }
+        assert!(session.prepare(
+            b"slot.invoke", &[Ty::I64, Ty::Pair(
+                alloc::boxed::Box::new(Ty::I64),
+                alloc::boxed::Box::new(reference.clone()),
+            )], live_limits(),
+        ).is_err());
+        assert!(session.prepare(
+            b"slot.invoke", &[Ty::I64, reference.clone(), reference.clone()], live_limits(),
+        ).is_err());
+        let selected = session.prepare(
+            b"slot.invoke.1", &[Ty::I64, reference.clone(), reference.clone()],
+            live_limits(),
+        ).unwrap();
+        assert_eq!(selected.live_sites().unwrap()[0].ref_ordinal, 1);
+        for core in [Session::new(), Session::new_live("f")] {
+            assert!(core.prepare(b"slot.invoke", &[Ty::I64], live_limits()).is_err());
+            assert!(core.prepare(b"1", &[reference.clone()], live_limits()).is_err());
+        }
+        let escaping = borrowed(alloc::vec![Ty::I64],
+            alloc::vec![reference.clone()], &[]);
+        assert!(session.prepare(b"slot.invoke", &[Ty::I64, escaping], live_limits()).is_err());
+    }
+
+    #[test]
+    fn versioned_resource_names_resolve_only_registered_exact_schema() {
+        use noble_kernel::types::{NominalShape, NominalTypeId, ResourceKind, Ty};
+        let mut environment = noble_kernel::contracts::environment().unwrap().enable_live_slots();
+        let make = |module, kind| noble_kernel::contracts::NominalDecl {
+            id: NominalTypeId { module, ordinal: 0 },
+            shape: NominalShape::Opaque(alloc::boxed::Box::new(Ty::Resource(ResourceKind(kind)))),
+            exported: true,
+            public: [false, false],
+        };
+        let one = make(110, 41);
+        let two = make(111, 42);
+        environment = environment.register_live_resource(one.clone()).unwrap();
+        environment = environment.register_live_resource(two.clone()).unwrap();
+        let mut session = Session::new_live_slots(environment).unwrap();
+        session.register_live_resource("Account@1", one.id).unwrap();
+        session.register_live_resource("Account@2", two.id).unwrap();
+        let account_one = session.parse_live_type("Account@1").unwrap();
+        let account_two = session.parse_live_type("Account@2").unwrap();
+        assert_ne!(account_one, account_two);
+        assert!(session.parse_live_type("Account@3").is_err());
+        assert!(session.register_live_resource("Account@3", one.id).is_err());
+        let reference = borrowed(
+            alloc::vec![account_one.clone(), Ty::I64],
+            alloc::vec![account_one.clone(), Ty::I64],
+            &[noble_kernel::contracts::TEST_EMIT],
+        );
+        assert_eq!(
+            session.parse_live_type(
+                "LiveRef<Account@1+I64,Account@1+I64,test.emit>"
+            ).unwrap(),
+            reference,
+        );
+        let prepared = session.prepare(b"slot.invoke",
+            &[account_one.clone(), Ty::I64, reference.clone()], live_limits()).unwrap();
+        assert_eq!(prepared.output(), &[account_one.clone(), Ty::I64]);
+        assert_eq!(prepared.checked().unwrap().interface.effects,
+            noble_kernel::types::EffSet::from_ids(&[
+                noble_kernel::contracts::TEST_EMIT, noble_kernel::contracts::LIVE_DISPATCH,
+            ]));
+        let exact_target = session.prepare(
+            b"1 +", &[account_one.clone(), Ty::I64], live_limits(),
+        ).unwrap();
+        assert!(prepared.live_sites().unwrap()[0]
+            .admits_target(&exact_target.checked().unwrap().interface));
+        let wrong_schema = session.prepare(
+            b"1 +", &[account_two.clone(), Ty::I64], live_limits(),
+        ).unwrap();
+        assert!(!prepared.live_sites().unwrap()[0]
+            .admits_target(&wrong_schema.checked().unwrap().interface));
+        let wrong_order = session.prepare(
+            b"", &[Ty::I64, account_one], live_limits(),
+        ).unwrap();
+        assert!(!prepared.live_sites().unwrap()[0]
+            .admits_target(&wrong_order.checked().unwrap().interface));
+        assert!(session.prepare(b"slot.invoke",
+            &[account_two, Ty::I64, reference], live_limits()).is_err());
+    }
 
     #[test]
     fn live_batch_rebinds_only_effective_transitive_dependents() {

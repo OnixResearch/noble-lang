@@ -5,6 +5,7 @@
 //! Contracts are rank-1 schemes; the bootstrap table lives in `bootstrap`.
 
 pub mod bootstrap;
+mod live;
 mod nominal;
 
 /// Identity of one environment definition.
@@ -15,6 +16,8 @@ pub struct Definition(pub u32);
 pub const TEST_EMIT: crate::types::EffId = crate::types::EffId(0);
 /// The reserved identity of the opt-in scripted `test.clock` effect.
 pub const TEST_CLOCK: crate::types::EffId = crate::types::EffId(2);
+/// The reserved, opt-in effect of selecting a preadmitted live program.
+pub const LIVE_DISPATCH: crate::types::EffId = crate::types::EffId(5);
 
 /// The reserved resource kind used by negative eligibility fixtures.
 pub const FIXTURE_RESOURCE: crate::types::ResourceKind = crate::types::ResourceKind(0);
@@ -246,6 +249,14 @@ pub struct Env {
     pub generic_variants: alloc::vec::Vec<GenericVariantDecl>,
     /// Kinds actually admitted by the host; the fixture is explicit.
     pub resource_kinds: alloc::vec::Vec<crate::types::ResourceKind>,
+    /// Host-registered, versioned opaque resource identities without guest
+    /// constructors. Each has a distinct kind in `resource_kinds`.
+    pub live_resource_nominals: alloc::vec::Vec<crate::types::NominalTypeId>,
+    /// Independently selected live-slot profile; absent in Core and draft.
+    pub live_slots: bool,
+    /// Host-selected permission to typecheck the bootstrap test emitter in
+    /// live-slot source. This flag is not a runtime effect authorization.
+    pub live_test_hosts: bool,
     /// Caller selected by the host for this independent acceptance run.
     pub caller_module: Option<u64>,
     /// Explicit opt-in profile selected outside the untrusted candidate.
@@ -263,6 +274,45 @@ pub struct Env {
 }
 
 impl Env {
+    /// Select live-slot checking outside the untrusted candidate.
+    pub fn enable_live_slots(mut self) -> Self {
+        if !self.live_slots {
+            self.live_slots = true;
+            self.declared_modules = true;
+            self.effects.push(LIVE_DISPATCH);
+        }
+        self
+    }
+
+    /// The host must select this independently of source text and authorize
+    /// each emitted effect separately at the execution boundary.
+    pub fn enable_live_test_hosts(mut self) -> Self {
+        self.live_test_hosts = true;
+        self
+    }
+
+    pub(crate) fn ambient_test_emit_visible(&self) -> bool {
+        !self.text_cursor
+            && self.caller_module.is_none()
+            && self.bound_adapters.is_empty()
+            && ((!self.declared_modules
+                && self.nominals.is_empty()
+                && self.generic_variants.is_empty())
+                || (self.live_slots && self.live_test_hosts))
+    }
+
+    /// Register a host-owned versioned nominal backed by a unique opaque
+    /// resource kind. No guest-accessible `new` or `into` operation is made.
+    pub fn register_live_resource(self, decl: NominalDecl) -> Result<Self, NominalError> {
+        live::register_resource(self, decl)
+    }
+
+    /// Validate a live reference's full ordered interface, including nested
+    /// borrowed inputs but never borrowed outputs or captured values.
+    pub fn valid_live_ref(&self, ty: &crate::types::Ty) -> bool {
+        live::valid_ref(self, ty)
+    }
+
     /// Find one resolved nominal descriptor, without treating an alias as an identity.
     pub fn nominal(&self, id: crate::types::NominalTypeId) -> Option<&NominalDecl> {
         let mut index = 0;
@@ -334,6 +384,15 @@ impl Env {
     /// Register a validated nonrecursive type and its typed operations.
     /// Ownership transfers into the updated environment on success.
     pub fn declare_nominal(self, decl: NominalDecl) -> Result<(Self, NominalOps), NominalError> {
+        let resource_payload = match &decl.shape {
+            crate::types::NominalShape::Opaque(inner) => !inner.is_data(),
+            crate::types::NominalShape::Variant(left, right) => {
+                !left.is_data() || !right.is_data()
+            }
+        };
+        if self.live_slots && resource_payload {
+            return Err(NominalError::InvalidRepresentation);
+        }
         nominal::register(self, decl)
     }
 
@@ -446,6 +505,9 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
         nominals: alloc::vec::Vec::new(),
         generic_variants: alloc::vec::Vec::new(),
         resource_kinds: alloc::vec![FIXTURE_RESOURCE],
+        live_resource_nominals: alloc::vec::Vec::new(),
+        live_slots: false,
+        live_test_hosts: false,
         caller_module: None,
         declared_modules: false,
         text_cursor: false,

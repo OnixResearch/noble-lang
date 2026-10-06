@@ -14,7 +14,8 @@ pub(super) fn apply(
     let (program, argument, result) = operands;
     let (inputs, outputs, effects) = match &program.expr.ty {
         noble_kernel::types::Ty::Program(inputs, outputs, effects) => (inputs, outputs, effects),
-        noble_kernel::types::Ty::Unit
+        noble_kernel::types::Ty::LiveRef(..)
+        | noble_kernel::types::Ty::Unit
         | noble_kernel::types::Ty::Bool
         | noble_kernel::types::Ty::I64
         | noble_kernel::types::Ty::Text

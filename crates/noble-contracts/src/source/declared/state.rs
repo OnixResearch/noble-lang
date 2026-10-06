@@ -1,5 +1,6 @@
 mod namespace;
 mod prepare;
+mod proof;
 mod register;
 
 macro_rules! present {
@@ -254,6 +255,7 @@ impl ModuleSession {
                 hosts: false,
                 text_cursor: false,
                 live_selected: None,
+                live_slots: None,
                 bindings: None,
                 declared: self.source.declared.clone(),
             },

@@ -108,6 +108,9 @@ fn value(out: &mut alloc::string::String, ty: &noble_kernel::types::Ty) {
                 out.push(')');
             }
         }
+        noble_kernel::types::Ty::LiveRef(..) => {
+            super::rejected(out, "borrowed live reference cannot be serialized in a contract");
+        }
         noble_kernel::types::Ty::Resource(_) => {
             super::rejected(out, "unsupported resource in contract");
         }

@@ -119,6 +119,105 @@ pub(super) fn builtin(
     Ok(())
 }
 
+/// A ref is selected from the root's typed borrowed-input sidecar, never
+/// constructed from a value or literal. The unqualified spelling chooses the
+/// uniquely most-specific compatible interface; ambiguous peers require the
+/// explicit borrowed formal ordinal (`slot.invoke.N`).
+pub(super) fn slot_invoke(
+    selected: Option<u32>,
+    span: crate::Span,
+    frame: &mut super::Frame,
+    state: &mut super::State,
+    meter: &mut crate::Meter,
+) -> Result<(), crate::Diagnostic> {
+    let actual = attempt!(state.arena.stack_value(frame.stack, span, meter));
+    let mut choice: Option<(u32, alloc::vec::Vec<u32>, usize)> = None;
+    let mut ambiguous = false;
+    for borrowed in &state.borrows {
+        attempt!(meter.charge(1, span));
+        if selected.is_some_and(|ordinal| ordinal != borrowed.ordinal) {
+            continue;
+        }
+        let noble_kernel::types::Ty::LiveRef(input, _, _) = &borrowed.ty else {
+            return Err(crate::internal(span));
+        };
+        let value_count = input.iter()
+            .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..))).count();
+        if value_count > actual.len()
+            || !input.iter()
+                .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
+                .zip(&actual[actual.len() - value_count..])
+                .all(|(left, right)| left == right)
+        {
+            continue;
+        }
+        let mut forwarded = alloc::vec::Vec::new();
+        let mut compatible = true;
+        for formal in input.iter().filter(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(..))) {
+            let mut positions = state.borrows.iter()
+                .filter(|candidate| &candidate.ty == formal)
+                .map(|candidate| candidate.logical_position);
+            match (positions.next(), positions.next()) {
+                (Some(position), None) => forwarded.push(position),
+                (None, _) | (Some(_), Some(_)) => {
+                    compatible = false;
+                    break;
+                }
+            }
+        }
+        if !compatible {
+            continue;
+        }
+        let specificity = forwarded.len();
+        if selected.is_some() || choice.as_ref().is_none_or(|(_, _, previous)| specificity > *previous) {
+            choice = Some((borrowed.ordinal, forwarded, specificity));
+            ambiguous = false;
+        } else if choice.as_ref().is_some_and(|(_, _, previous)| specificity == *previous) {
+            ambiguous = true;
+        }
+    }
+    if ambiguous {
+        return Err(crate::invalid(span,
+            "ambiguous compatible borrowed references; select slot.invoke.N"));
+    }
+    let Some((ordinal, forwarded, _)) = choice else {
+        return Err(crate::invalid(span,
+            "slot.invoke requires a compatible host-issued borrowed input and exact forwarded refs"));
+    };
+    let noble_kernel::types::Ty::LiveRef(input, output, ceiling) =
+        &state.borrows[ordinal as usize].ty else {
+        return Err(crate::internal(span));
+    };
+    // Source preflight excludes refs from output; only values enter the stack.
+    if output.iter().any(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(..))) {
+        return Err(crate::invalid(span, "live reference cannot be returned"));
+    }
+    let value_count = input.iter()
+        .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..))).count();
+    let prefix = &actual[..actual.len() - value_count];
+    let mut resulting = alloc::vec::Vec::with_capacity(prefix.len().saturating_add(output.len()));
+    resulting.extend_from_slice(prefix);
+    resulting.extend_from_slice(output);
+    let after = attempt!(state.arena.stack(&resulting, span, meter));
+    let invoked = ceiling.union(&noble_kernel::types::EffSet::from_ids(
+        &[noble_kernel::contracts::LIVE_DISPATCH],
+    ));
+    let effect = attempt!(state.arena.effect_constant(&invoked, span, meter));
+    frame.effect = attempt!(state.arena.effect_union(frame.effect, effect, span, meter));
+    let node = attempt!(super::add(frame.body, super::Draft {
+        kind: super::DraftKind::SlotInvoke {
+            ref_ordinal: ordinal,
+            forwarded_ref_ordinals: forwarded,
+        },
+        variables: alloc::vec::Vec::new(),
+        text: None,
+        span,
+    }, state, meter));
+    frame.sequence.push(node);
+    frame.stack = after;
+    Ok(())
+}
+
 fn mismatched_literal_origin(
     frame: &super::Frame,
     state: &super::State,

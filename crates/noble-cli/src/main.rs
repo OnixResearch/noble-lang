@@ -41,6 +41,11 @@ fn main() -> std::process::ExitCode {
     {
         return component::run(&arguments);
     }
+    if arguments.first().is_some_and(|argument| argument == "live")
+        && arguments.get(1).is_some_and(|argument| argument == "slot")
+    {
+        return core::live_slot::run(&arguments);
+    }
     if arguments.first().is_some_and(|argument| argument == "live") {
         return core::live::run(&arguments);
     }

@@ -160,6 +160,7 @@ pub(super) fn exported(signature: &Scheme, environment: &noble_kernel::contracts
                 pending.extend(inputs.iter());
                 pending.extend(outputs.iter());
             }
+            Pattern::LiveRef(..) => return false,
             Pattern::Unit
             | Pattern::Bool
             | Pattern::I64

@@ -12,6 +12,10 @@ pub(super) enum DraftKind {
     Literal(noble_kernel::untrusted::Lit),
     Invocation(noble_kernel::contracts::Definition),
     Quotation(alloc::vec::Vec<noble_kernel::untrusted::NodeId>),
+    SlotInvoke {
+        ref_ordinal: u32,
+        forwarded_ref_ordinals: alloc::vec::Vec<u32>,
+    },
 }
 
 pub(super) struct Draft {
@@ -39,6 +43,14 @@ pub(super) struct State {
     text_bytes: u32,
     pub(super) definition_base: usize,
     pub(super) holes: alloc::vec::Vec<Hole>,
+    pub(super) logical_inputs: Option<alloc::vec::Vec<noble_kernel::types::Ty>>,
+    pub(super) borrows: alloc::vec::Vec<Borrowed>,
+}
+
+pub(super) struct Borrowed {
+    pub ordinal: u32,
+    pub logical_position: u32,
+    pub ty: noble_kernel::types::Ty,
 }
 
 pub(super) struct Hole {
@@ -247,7 +259,7 @@ fn initial(
 ) -> Result<State, crate::Diagnostic> {
     let mut arena = crate::inference::Arena::source(
         session.effect_universe(),
-        session.bindings.is_some() || session.declared.is_some(),
+        session.bindings.is_some() || session.declared.is_some() || session.live_slots.is_some(),
     );
     if let Some(context) = &session.declared {
         let mut nominals = alloc::vec::Vec::with_capacity(context.environment.nominals.len());
@@ -259,13 +271,35 @@ fn initial(
         }
         arena.nominals = nominals;
         arena.generic_nominals = context.environment.generic_variants.clone();
+    } else if let Some(profile) = &session.live_slots {
+        arena.nominals = profile.environment.nominals.iter()
+            .map(|decl| (decl.id, decl.shape.clone())).collect();
+        arena.generic_nominals = profile.environment.generic_variants.clone();
+    }
+    let mut borrows = alloc::vec::Vec::new();
+    let mut value_inputs = alloc::vec::Vec::new();
+    if session.live_slots.is_some() {
+        for (position, ty) in inputs.iter().enumerate() {
+            if matches!(ty, noble_kernel::types::Ty::LiveRef(..)) {
+                borrows.push(Borrowed {
+                    ordinal: attempt!(crate::index(borrows.len(), tree.span)),
+                    logical_position: attempt!(crate::index(position, tree.span)),
+                    ty: ty.clone(),
+                });
+            } else {
+                value_inputs.push(ty.clone());
+            }
+        }
     }
     #[expect(
         tigerstyle::fragile_exhaustive_enum_match,
         reason = "Owner: noble-maintainers; declarations must retain quantified stack holes while executable submissions use their supplied stack; any new inference mode must make this choice explicitly."
     )]
     let input = match mode {
-        Mode::Submission => attempt!(arena.stack(inputs, tree.span, meter)),
+        Mode::Submission => attempt!(arena.stack(
+            if session.live_slots.is_some() { &value_inputs } else { inputs },
+            tree.span, meter
+        )),
         Mode::EditorAnalysis => {
             let mut stack = attempt!(arena.add(
                 crate::inference::Term::Hole(crate::inference::Sort::Stack),
@@ -302,8 +336,10 @@ fn initial(
         bodies,
         span: tree.span,
         text_bytes: 0,
-        definition_base: 24,
+        definition_base: 0,
         holes: alloc::vec::Vec::new(),
+        logical_inputs: session.live_slots.as_ref().map(|_| inputs.to_vec()),
+        borrows,
     })
 }
 

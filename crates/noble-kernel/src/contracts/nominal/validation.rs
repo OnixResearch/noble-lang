@@ -22,6 +22,11 @@ impl super::super::Env {
         if self.kinds.len() != self.defs.len() || self.bound_adapters.len() > self.defs.len() {
             return false;
         }
+        if self.live_test_hosts
+            && (!self.live_slots || !self.declared_modules || self.text_cursor)
+        {
+            return false;
+        }
         if (!self.nominals.is_empty()
             || !self.generic_variants.is_empty()
             || !self.bound_adapters.is_empty())
@@ -30,6 +35,7 @@ impl super::super::Env {
             return false;
         }
         bootstrap_matches(self)
+            && super::super::live::catalog_valid(self)
             && (!self.declared_modules || fixed_definitions_match(self))
             && counts_match(self)
             && generic_counts_match(self)
@@ -127,11 +133,12 @@ fn bootstrap_matches(env: &super::super::Env) -> bool {
         return true;
     }
     let has_clock = env.kinds.iter().any(|kind| matches!(kind, super::super::Behavior::BoundClock(_)));
-    env.resource_kinds.len() == 1
+    env.resource_kinds.len() == 1 + env.live_resource_nominals.len()
         && env.resource_kinds[0].0 == super::super::FIXTURE_RESOURCE.0
-        && env.effects.len() == (if has_clock { 2 } else { 1 })
+        && env.effects.len() == 1 + usize::from(has_clock) + usize::from(env.live_slots)
         && env.effects[0].0 == super::super::TEST_EMIT.0
-        && (!has_clock || env.effects[1].0 == super::super::TEST_CLOCK.0)
+        && env.effects.contains(&super::super::TEST_CLOCK) == has_clock
+        && env.effects.contains(&super::super::LIVE_DISPATCH) == env.live_slots
         && env.definition_owners.len() == env.defs.len()
         && env.deps.len() == env.defs.len()
 }
@@ -171,7 +178,9 @@ fn declaration_counts_match(env: &super::super::Env, decl: &super::super::Nomina
         }
         index += 1;
     }
-    let expected = if matches!(decl.shape, crate::types::NominalShape::Opaque(_)) {
+    let expected = if env.live_resource_nominals.contains(&decl.id) {
+        [0, 0, 0, 0, 0]
+    } else if matches!(decl.shape, crate::types::NominalShape::Opaque(_)) {
         [1, 1, 0, 0, 0]
     } else if matches!(decl.shape, crate::types::NominalShape::Variant(_, _)) {
         [0, 0, 1, 1, 1]

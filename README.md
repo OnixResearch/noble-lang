@@ -121,6 +121,180 @@ cells. Use `noble session --framed` for framed multiline input and
 `--emit NEW_DIR` to retain reports and emitted artifacts. Run `noble --help`
 for available CLI flags.
 
+### Experimental checked live slots (opt-in; acceptance not established)
+
+`noble live slot --engine v8 --authority ABS_PATH` selects a separate resident
+Node/V8 worker and reads one bounded host-operator JSON command per line from
+an anonymous OS pipe. The launcher must retain the pipe's write descriptor
+exclusively: passing it to a guest or an untrusted same-UID helper delegates
+operator authority. Pipe ownership/mode does **not** authenticate individual
+writers. The authority file must be an absolute path under trusted directories;
+symlinks and writable or non-owner-controlled path components are refused.
+Its `sources` list pairs each source ID with the SHA-256 of its exact UTF-8
+bytes. It separately declares the owner, retained-version quota, available
+effects, scoped operation grants, resource catalog, and slot interfaces.
+Candidate source text cannot grant itself a slot, resource, effect, or proof.
+
+Host commands include `define` for an allowlisted named declaration, `install`
+for a checked expression, `candidate` to stage a checked Program while idle,
+and `bootstrap` for one physical epoch-1 genesis of exactly two or three
+independently authorized selected slots, for example
+`{"operation":"bootstrap","expected_epoch":"0","members":[{"slot":"B","id":"B1"},{"slot":"A","id":"A1"}]}`.
+Every member must match its host-selected ordered interface and effect
+ceiling; a refused member, duplicate slot, exhausted capacity, or previous
+registry/root state publishes nothing. Successful genesis reports epoch 1 and
+incarnation/generation 1 for every slot. Later `publish`, `rollback`, and
+`delete` retain their ordinary single-slot global epoch-CAS behavior; genesis
+does not supply a proof or independent guest authority. `invoke` uses typed inputs
+and borrowed reference bindings; an actual returned Program receives an opaque
+saved owner token, which `release-program` retires at its last owner. `discard`
+removes an authorized never-published install. `reflect` and `trace` observe
+the host ledger. Exact trace retention is bounded by serialized UTF-8 bytes
+(1 MiB per root and 2 MiB across a session, including replay labels), not just
+request count. When retention fills, `invoke` returns `trace-capacity-refused`
+before starting a guest; a root that reaches its per-root limit fails closed
+before another protected effect and reports its retained exact request trace.
+No prior trace rows are silently discarded. Start a fresh session to continue
+after the global trace capacity is reached. `hold-checkpoint` selects a
+protected import occurrence in the next checked root; after
+`checkpoint-entered`, a permitted publication or
+revocation receives a committed `control_id` receipt before
+`resume-checkpoint`. The held root keeps its pinned epoch, while the next root
+observes the committed change. An in-flight control with no remaining
+protected checkpoint receives an `operator-control` `refused` receipt with
+`when: "too-late"` after its pending router request is cancelled; it does
+not change the epoch or leak into the next root, and the session stays usable.
+An unaccounted-for delivery still fails closed. Interrupted checkpoint reads
+retry only the unconsumed packet within the same eight-second deadline; other transport
+failures poison the root. Frozen `record`/`replay` and `release-replay`
+use retained roots rather than replacing live effect policy. Every reply is
+JSON; inspect each `outcome`, not only the process exit status. Source-bound
+named selection requires `install` with `selected_name` after the corresponding
+`define`. A narrow checked anonymous returned target can receive experimental
+local D/P in its saved-owner receipt, but has no independently installed
+captured-target Wasm candidate, proof, or source-bound frozen replay. Recorded
+protected responses are replayed as an
+exact ordered script without executing another real host effect; they do not
+grant permission for a new live effect. An optional `expected_identity` on
+`replay` is compared with the host-retained frozen receipt before starting a
+guest; it cannot replace that retained authority. Proof-required publication
+currently fails closed: there is no independently pinned Lean receipt for the
+exact selected, installed target. Neither this opt-in CLI nor its unit tests
+constitute LSLOT-01..09 canonical acceptance.
+
+A directly returned I64 `quote` is also a saved Program: its value is read from
+the actual boxed I64 capture, not from the Program's latent-effect payload.
+For example, a checked `def q [ quote ]` invoked with `5` returns an owner
+whose captured program can be passed to another checked caller with `20`;
+`swap [ run ] dip +` returns `25`. Release that owner before discarding unused
+code. For a selected named body with bounded, unambiguous I64
+quote/compose lineage, `verified_origin` reports its caller, artifact, and
+output position after
+the host matches the complete source operation map to decoded Wasm functions,
+passive element entries, the exported installer call to its initializer and
+the native core plus checked code table initialization, rejecting alternate
+table writers. The worker checks the actual epoch-qualified Program graph
+and ordered captured operand before retaining the owner. The host assembles
+once with the pinned wasm-tools binary; the worker instantiates those exact
+bytes after a SHA-256 cross-check. For
+example, `def builder [ quote [ + ] compose ]` captures root I64 `2` and
+returns a saved `Program<I64,I64,pure>` that a checked `run` caller can execute
+with `1` to obtain `3`; `def fixed [ 2 quote [ + ] compose ]` retains the same
+fixed capture even when the caller root differs. For the exact pure returned
+`quote(I64) [ + ] compose` graph with one checked I64 capture and a checked
+static `+` child, the trusted worker checks the selected VM capture and inert
+quote atom against the source-to-compiled-site lineage. After retaining
+the owner and clearing the root stack, the trusted resident worker resolves
+that owner back to its saved backend handle and re-reads the complete bounded
+Program, capture and inert recipe graph without guest execution or host
+effects. Rust compares the owner/handle correspondence and every returned
+node, edge, signature and effect against checked source/compiled-site
+metadata before deriving `target_identity` in the saved-owner receipt. This
+separate Rust check still trusts the resident worker to report the VM graph
+and owner mapping faithfully; it is not malicious-worker attestation or a
+proof of arbitrary replacement Wasm helpers. Varying root input 2→3 keeps
+the anonymous template D and changes P; source literal 2→3 and independently
+computed constant 2→3 each change D. These local, versioned experimental IDs
+bind the target's checked interface, empty effects, builtin addition
+dependency and exact I64 capture; `artifact_sha256` is null, not the builder
+artifact. Source locations, builder D, VM addresses and code-owner handles
+are not part of D. General logical source-binding aliases, independently
+named equal bindings, recursive lexical owners, other returned interfaces and
+effectful graph shapes have no identity-bearing witness here; they remain
+without target D/P rather than using bit equality or heap topology.
+Ambiguous or unsupported dynamic Programs remain usable opaque owners without
+checked origin. A
+verified selected origin proves only this supported saved owner's bounded
+source/Wasm/graph correspondence from compiler-emitted Wasm; the custom Wasm
+name section alone does not authenticate arbitrary replacement runtime helper
+bodies or the installer's complete control flow. The bounded local D/P receipt
+is **not** symbolic P2/D2, captured P/D/C/Q/A/Wasm Lean proof, effect
+permission, publication permission, or frozen replay authorization. Saved
+dynamic targets still refuse publication even into a non-proof slot until the
+exact target's installed Wasm correspondence exists; proof-required slots
+also refuse without independently checked exact-target evidence. Canonical
+LSLOT-05 and LSLOT-08 remain blocked.
+
+The selected dynamic owner also has a narrower retention consequence: with
+`def builder [ quote [ 1 + ] compose ]`, the same builder module's independently
+admitted pinned static `[ 1 + ]` child can be published to a non-proof pure slot.
+The saved composite captures I64 `2`, runs as a checked
+`Program<empty,I64,pure>` to return `3`, and
+transitively pins that exact published child across a held generic root. With
+a one-version quota, a new candidate cannot publish while the root is held
+or while only the composite owner survives; release the owner, freshly admit
+the replacement, and the slot advances with the old code span retired. This
+is a D-neutral transitive-code-owner control, **not** publication of the
+dynamic Program, the canonical saved exact v1, proof admission, or captured
+target frozen replay.
+
+Run the diagnostic `verification/live-slot-current-source/gate.mjs` with the
+Node executable pinned in `crates/noble-cli/src/core/runtime/config.json`;
+pass an absolute externally built `/tmp/.../debug/noble` and a **new** direct
+`/tmp` output directory as its two arguments. Start that pinned Node from a
+clean environment, not from an inherited `NODE_OPTIONS`, `BASH_ENV`,
+`LD_PRELOAD`, `NODE_PATH`, `DYLD_*`, or loader-injected process:
+
+```sh
+env -i HOME="$HOME" TMPDIR=/tmp PATH=/run/current-system/sw/bin:/usr/bin:/bin \
+  /nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node \
+  verification/live-slot-current-source/gate.mjs \
+  /tmp/SELECTED_TARGET/debug/noble /tmp/NEW_RECEIPT_DIRECTORY
+```
+
+Use the current path in runtime `config.json` if the pinned selection changes;
+the final receipt directory must not already exist. The gate rejects visible
+dangerous startup variables and records its restricted child environment,
+but cannot attest to a preload that ran before gate JavaScript and concealed
+itself. It runs a selected offline Cargo build, records before/after binary
+hashes (unchanged bytes do **not** prove fresh recompilation), and freezes
+selected source-tree paths and bytes, exact used test scripts/helpers, fixture,
+authority inputs and documentation. Its `receipt.json` records Git
+HEAD/selected dirty status as diagnostics and points to retained real command
+streams and raw responses.
+LSLOT-02 independently exercises a held A→B→B root and a held A→B→C root:
+each independently authorized two-/three-slot genesis publishes one physical
+epoch-1 map. A Rust-preflight invalid member is refused before the worker;
+an independent quota-1 two-member session passes Rust preflight but the
+worker refuses the assembled map with `retention-budget-refused`: both slots
+remain absent at epoch 0 without guest requests or effects. A committed
+leaf publication at epoch 2 leaves the old root pinned while a new root selects
+the new target. Checked nested-site reflection reports the exact effect set
+`E ∪ {live.dispatch}` without duplicating `live.dispatch` when E already
+contains it; exact slot effect ceilings and current per-dispatch host policy
+remain distinct checks. Both selected real-CLI LSLOT-02 variants match their
+canonical fixture inputs/expected observations in this external diagnostic;
+the canonical case records still remain absent/not-run/open/unassessed, with no
+evidence or proof promotion. LSLOT-04 authorized
+rollback and LSLOT-07 publication denial retain runnable controls but remain
+blocked canonically without their respective exact-evidence/proof premises. A
+separate LSLOT-05 control observes the real host's generic missing-proof
+refusal, not selective evidence applicability; a typed checked legacy-compiler
+control does not substitute for LSLOT-09's typed CLI caller. A nonzero
+`blocked` result is also intentional while exact LSLOT-05 selected-target
+proof, captured LSLOT-08 replay, and other variants remain open; this external
+receipt must not be copied into canonical case evidence.
+
 ### Guarded live REPL (opt-in, partial)
 
 `noble live repl` runs a separate resident Node/V8 session with an explicitly

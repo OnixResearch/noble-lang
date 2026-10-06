@@ -249,6 +249,12 @@ pub(crate) fn check(
                 noble_kernel::untrusted::Constraint::PrivateDefinition(_) => {
                     "kernel rejected a private module operation"
                 }
+                noble_kernel::untrusted::Constraint::BorrowProvenance => {
+                    "kernel rejected a missing, mistyped, or incorrectly forwarded borrowed live input"
+                }
+                noble_kernel::untrusted::Constraint::SlotSite => {
+                    "kernel rejected a live slot site that differs from its checked source node"
+                }
                 noble_kernel::untrusted::Constraint::EffectInclusion(_)
                 | noble_kernel::untrusted::Constraint::UnknownEffect(_)
                 | noble_kernel::untrusted::Constraint::InstantiationKind

@@ -34,9 +34,20 @@ pub(super) fn check_request(
     let remaining = attempt!(super::validate::schemas(env, remaining));
     let remaining = attempt!(validate_nominals(env, request, remaining));
     attempt!(reject_ambient_emit(env, candidate));
+    if !env.live_slots {
+        let mut index = 0;
+        while index < candidate.nodes.len() {
+            if matches!(candidate.nodes[index], crate::untrusted::Node::SlotInvoke { .. }) {
+                return Err(super::Fail::Unsupported(
+                    crate::untrusted::UnsupportedKind::NodeForm,
+                ));
+            }
+            index += 1;
+        }
+    }
     attempt!(super::schemes::validate(env, request));
     let context = super::parts::Ctx { request, env };
-    attempt!(super::parts::limits_of(
+    attempt!(super::parts::limits_of_entry(
         &request.expected.stack_in,
         &context
     ));
@@ -58,16 +69,13 @@ pub(super) fn check_request(
 }
 
 /// No candidate arena node, including an unreachable one, may smuggle the
-/// historical fixed host operation into an opt-in module transaction.
+/// historical fixed host operation outside the explicitly selected test-host
+/// profile. Runtime authorization remains the independent host's obligation.
 fn reject_ambient_emit(
     env: &crate::contracts::Env,
     candidate: &crate::untrusted::Candidate,
 ) -> Result<(), super::Fail> {
-    if !env.declared_modules
-        && env.nominals.is_empty()
-        && env.generic_variants.is_empty()
-        && env.bound_adapters.is_empty()
-    {
+    if env.ambient_test_emit_visible() {
         return Ok(());
     }
     let Some((index, def)) = ambient_emit(env, candidate) else {

@@ -201,6 +201,10 @@ theorem wrong_output_refuted : ¬ wrongClaim := by
   simp [Holds₂, evaluate₂, NamedV2.binaryI64] at post
 
 #print axioms twoStepClaim
+#print axioms NobleContracts.NamedV2.capturedIncrementConstruction
+#print axioms NobleContracts.NamedV2.capturedIncrementResult
+#print axioms NobleContracts.NamedV2.capturedIncrementClaim
+#print axioms NobleContracts.NamedV2.capturedTwoNotOne
 #print axioms proof
 #print axioms maps_two_calls
 #print axioms forged_call_has_no_result

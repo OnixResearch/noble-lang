@@ -125,6 +125,30 @@ impl EffSet {
         EffSet(out)
     }
 
+    /// Include one effect, preserving sorted uniqueness with one result
+    /// allocation rather than allocating a temporary singleton set.
+    pub fn with_id(&self, id: EffId) -> EffSet {
+        let mut out = alloc::vec::Vec::with_capacity(self.0.len().saturating_add(1));
+        let mut inserted = false;
+        let mut index = 0;
+        while index < self.0.len() {
+            let existing = self.0[index];
+            if !inserted && id.0 < existing.0 {
+                out.push(id);
+                inserted = true;
+            }
+            if existing == id {
+                inserted = true;
+            }
+            out.push(existing);
+            index += 1;
+        }
+        if !inserted {
+            out.push(id);
+        }
+        EffSet(out)
+    }
+
     /// Inclusion: every identity here is present in `other`.
     pub fn is_subset_of(&self, other: &EffSet) -> bool {
         let mut index = 0;
@@ -202,6 +226,14 @@ pub enum Ty {
         alloc::boxed::Box<alloc::vec::Vec<Ty>>,
         EffSet,
     ),
+    /// A borrowed live program reference. Its ordered logical input may name
+    /// further borrowed references; neither it nor those references are stack
+    /// values. Its output must contain only values.
+    LiveRef(
+        alloc::boxed::Box<alloc::vec::Vec<Ty>>,
+        alloc::boxed::Box<alloc::vec::Vec<Ty>>,
+        EffSet,
+    ),
     /// An opaque resource kind; never data-eligible.
     Resource(ResourceKind),
     /// Resolved nominal identity with its exact opaque representation or two
@@ -224,6 +256,19 @@ impl Ty {
         effects: EffSet,
     ) -> Ty {
         Ty::Program(
+            alloc::boxed::Box::new(stack_in),
+            alloc::boxed::Box::new(stack_out),
+            effects,
+        )
+    }
+
+    /// Build a borrowed live program reference type.
+    pub fn live_ref(
+        stack_in: alloc::vec::Vec<Ty>,
+        stack_out: alloc::vec::Vec<Ty>,
+        effects: EffSet,
+    ) -> Ty {
+        Ty::LiveRef(
             alloc::boxed::Box::new(stack_in),
             alloc::boxed::Box::new(stack_out),
             effects,

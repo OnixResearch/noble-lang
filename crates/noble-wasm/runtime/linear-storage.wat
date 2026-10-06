@@ -21,6 +21,20 @@
     (then unreachable))
   (local.get $p))
 
+(func $storage_is_live (param $h i32) (result i32)
+  (local $p i32)
+  (if (i32.or (i32.eqz (local.get $h))
+              (i32.gt_u (local.get $h) (global.get $heap_cursor)))
+    (then (return (i32.const 0))))
+  (local.set $p (call $linear_address (local.get $h)))
+  (i32.and
+    (i32.eq (i32.load offset=4 (local.get $p)) (local.get $h))
+    (i32.le_u (i32.sub (i32.load (local.get $p)) (i32.const 1))
+              (i32.const 15))))
+
+(func $storage_live_count (result i32)
+  (global.get $heap_cursor))
+
 ;; Nullable edges point only backward to existing cells, preserving acyclicity.
 (func $linear_child (param $child i32) (param $parent i32) (result i32)
   (if (i32.eqz (local.get $child))

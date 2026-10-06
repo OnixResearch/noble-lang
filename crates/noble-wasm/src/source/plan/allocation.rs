@@ -15,6 +15,11 @@ fn signature(
         input: attempt!(compiler.signature(input, work)),
         output: attempt!(compiler.signature(output, work)),
         effects: attempt!(super::effect_mask(effects)),
+        logical: compiler.live_slots.then(|| super::ProgramTypes {
+            stack_in: input.to_vec(),
+            stack_out: output.to_vec(),
+            effects: effects.clone(),
+        }),
         operations: alloc::vec::Vec::new(),
         depth: 0,
         leaves: 0,
@@ -123,9 +128,6 @@ fn entry(program: &mut super::Program, functions: &mut u32) -> Result<(), crate:
         Some(value) => value,
         None => return Err(crate::Diagnostic::Exhausted),
     };
-    if *functions > super::super::TABLE_LIMIT {
-        return Err(crate::Diagnostic::Exhausted);
-    }
     Ok(())
 }
 
@@ -139,10 +141,20 @@ pub(super) fn finish(
     checked: &noble_kernel::untrusted::Checked,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
+    let mut count = 0u32;
+    for program in &layout.programs {
+        count = match count.checked_add(attempt!(super::number(program.operations.len()))) {
+            Some(next) => next,
+            None => return Err(crate::Diagnostic::Exhausted),
+        };
+    }
+    let span = attempt!(compiler.reserve_code(count));
+    layout.first_function = span.start;
+    let mut function = span.start;
     let mut index = 0usize;
     let mut failure = None;
     while index < layout.programs.len() {
-        match entry(&mut layout.programs[index], &mut compiler.functions) {
+        match entry(&mut layout.programs[index], &mut function) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -153,10 +165,22 @@ pub(super) fn finish(
     if let Some(problem) = failure {
         return Err(problem);
     }
-    layout.functions = compiler.functions;
-    layout.input_types = attempt!(layout
-        .types
-        .stack(&checked.interface.stack_in, compiler, work));
+    layout.functions = function;
+    if layout.live_slots {
+        let mut value_inputs = alloc::vec::Vec::new();
+        for (position, ty) in checked.interface.stack_in.iter().enumerate() {
+            if matches!(ty, noble_kernel::types::Ty::LiveRef(_, _, _)) {
+                layout.borrowed_input_positions.push(attempt!(super::number(position)));
+            } else {
+                value_inputs.push(ty.clone());
+            }
+        }
+        layout.input_types = attempt!(layout.types.stack(&value_inputs, compiler, work));
+    } else {
+        layout.input_types = attempt!(layout
+            .types
+            .stack(&checked.interface.stack_in, compiler, work));
+    }
     layout.output_types =
         attempt!(layout
             .types

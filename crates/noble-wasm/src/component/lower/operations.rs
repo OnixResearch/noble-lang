@@ -32,6 +32,9 @@ pub(super) fn node(
         noble_kernel::untrusted::Node::Quotation { .. } => {
             return Err(crate::Diagnostic::Unsupported)
         }
+        noble_kernel::untrusted::Node::SlotInvoke { .. } => {
+            return Err(crate::Diagnostic::Unsupported)
+        }
     }
     if state.stack.len() > super::super::STACK_LIMIT {
         return Err(crate::Diagnostic::Exhausted);

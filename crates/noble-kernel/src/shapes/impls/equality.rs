@@ -114,6 +114,10 @@ fn compare(
         (
             crate::shapes::Pattern::Program(a_in, a_out, a_eff),
             crate::shapes::Pattern::Program(b_in, b_out, b_eff),
+        )
+        | (
+            crate::shapes::Pattern::LiveRef(a_in, a_out, a_eff),
+            crate::shapes::Pattern::LiveRef(b_in, b_out, b_eff),
         ) => {
             let (next, is_program_equal) = push_pattern_program(work, &a_in, &a_out, &b_in, &b_out);
             work = next;

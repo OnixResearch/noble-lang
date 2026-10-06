@@ -159,6 +159,7 @@ fn pure_type(ty: &noble_kernel::types::Ty) -> bool {
             Ty::Pair(left, right) | Ty::Sum(left, right) => [Some(&**right), Some(&**left)],
             Ty::List(item) => [Some(&**item), None],
             Ty::Syntax | Ty::Contract | Ty::Evidence | Ty::Certified | Ty::Program(..)
+            | Ty::LiveRef(..)
             | Ty::Resource(..) | Ty::Nominal(..) | Ty::GenericNominal(..) => return false,
         };
         for child in children.into_iter().flatten() {

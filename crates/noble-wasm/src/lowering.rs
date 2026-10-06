@@ -156,6 +156,7 @@ fn operation(
         noble_kernel::untrusted::Node::Quotation { .. } => {
             Ok(Operation::Program(attempt!(pool.produced_program(checked))))
         }
+        noble_kernel::untrusted::Node::SlotInvoke { .. } => Err(crate::Diagnostic::Unsupported),
         noble_kernel::untrusted::Node::Invocation { def, .. } => {
             if def.0 == 8 {
                 attempt!(scalar_capture(&checked.stack_in));

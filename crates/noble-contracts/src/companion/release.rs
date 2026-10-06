@@ -111,7 +111,8 @@ fn is_quotation_root(candidate: &noble_kernel::untrusted::Candidate) -> bool {
         Some(node) => match node {
             noble_kernel::untrusted::Node::Quotation { .. } => true,
             noble_kernel::untrusted::Node::Literal { .. }
-            | noble_kernel::untrusted::Node::Invocation { .. } => false,
+            | noble_kernel::untrusted::Node::Invocation { .. }
+            | noble_kernel::untrusted::Node::SlotInvoke { .. } => false,
         },
         None => false,
     }

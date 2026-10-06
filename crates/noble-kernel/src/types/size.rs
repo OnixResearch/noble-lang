@@ -69,7 +69,8 @@ const fn count_children(node: &crate::types::Ty) -> usize {
             crate::types::NominalShape::Opaque(_) => 1,
         },
         crate::types::Ty::List(_) => 1,
-        crate::types::Ty::Program(stack_in, stack_out, _) => {
+        crate::types::Ty::Program(stack_in, stack_out, _)
+        | crate::types::Ty::LiveRef(stack_in, stack_out, _) => {
             (**stack_in).len() + (**stack_out).len()
         }
         crate::types::Ty::Unit
@@ -142,7 +143,8 @@ fn queue_children(
             todo.push((node.clone(), true));
             todo.push(((**item).clone(), false));
         }
-        crate::types::Ty::Program(stack_in, stack_out, _) => {
+        crate::types::Ty::Program(stack_in, stack_out, _)
+        | crate::types::Ty::LiveRef(stack_in, stack_out, _) => {
             todo.push((node.clone(), true));
             let mut index = 0;
             while index < stack_in.len() {

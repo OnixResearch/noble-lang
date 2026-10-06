@@ -14,8 +14,10 @@ impl super::super::Env {
             | crate::shapes::Pattern::Sum(_, _)
             | crate::shapes::Pattern::List(_)
             | crate::shapes::Pattern::Program(_, _, _) => {}
+            crate::shapes::Pattern::LiveRef(_, _, _) => return false,
             crate::shapes::Pattern::Resource(kind) => {
-                return max_nodes > 0 && self.resource_kinds.contains(kind);
+                return max_nodes > 0 && self.resource_kinds.contains(kind)
+                    && !super::super::live::is_live_kind(self, *kind);
             }
             crate::shapes::Pattern::Unit
             | crate::shapes::Pattern::Bool
@@ -106,8 +108,10 @@ impl super::super::Env {
                 Some(work)
             }
             crate::shapes::Pattern::Resource(kind) => {
-                self.resource_kinds.contains(kind).then_some(work)
+                (self.resource_kinds.contains(kind)
+                    && !super::super::live::is_live_kind(self, *kind)).then_some(work)
             }
+            crate::shapes::Pattern::LiveRef(_, _, _) => None,
             crate::shapes::Pattern::Pair(left, right)
             | crate::shapes::Pattern::Sum(left, right) => {
                 work.push(left);

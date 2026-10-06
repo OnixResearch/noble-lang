@@ -59,6 +59,7 @@ impl super::super::Arena {
                 | noble_kernel::shapes::Pattern::Sum(_, _)
                 | noble_kernel::shapes::Pattern::List(_)
                 | noble_kernel::shapes::Pattern::Program(_, _, _)
+                | noble_kernel::shapes::Pattern::LiveRef(_, _, _)
                 | noble_kernel::shapes::Pattern::Var(_)
                 | noble_kernel::shapes::Pattern::Resource(_)
                 | noble_kernel::shapes::Pattern::Nominal(_, _)

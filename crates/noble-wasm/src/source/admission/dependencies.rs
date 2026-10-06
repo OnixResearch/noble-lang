@@ -145,7 +145,8 @@ fn inspect_node(
     let def = match node {
         noble_kernel::untrusted::Node::Invocation { def, .. } => *def,
         noble_kernel::untrusted::Node::Literal { .. }
-        | noble_kernel::untrusted::Node::Quotation { .. } => return Ok(true),
+        | noble_kernel::untrusted::Node::Quotation { .. }
+        | noble_kernel::untrusted::Node::SlotInvoke { .. } => return Ok(true),
     };
     if !seen.contains(&def) {
         seen.push(def);

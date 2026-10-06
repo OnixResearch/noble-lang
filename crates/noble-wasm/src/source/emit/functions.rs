@@ -131,6 +131,10 @@ fn instruction(
             out.i64(owner as i64)
         }
         super::super::plan::Action::LiveGeneration => out.append(b"(call $op_live_generation"),
+        super::super::plan::Action::SlotInvoke(site, _) => {
+            attempt!(out.append(b"(call $slot_site_"));
+            out.number(u64::from(site))
+        }
     });
     out.append(b")\n")
 }

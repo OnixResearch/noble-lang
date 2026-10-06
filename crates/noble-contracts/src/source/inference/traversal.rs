@@ -36,6 +36,15 @@ pub(super) fn visit(
                 meter
             ));
         }
+        crate::source::Kind::Call(crate::source::Target::SlotInvoke(ordinal)) => {
+            if !matches!(frame.origin, super::Origin::Root) {
+                return Err(crate::invalid(node.span,
+                    "slot.invoke cannot capture a borrowed reference in a quotation or definition"));
+            }
+            attempt!(super::operations::slot_invoke(
+                *ordinal, node.span, &mut frame, state, meter,
+            ));
+        }
         crate::source::Kind::Call(crate::source::Target::Named(_))
         | crate::source::Kind::Quotation(_) => {
             attempt!(meter.depth(

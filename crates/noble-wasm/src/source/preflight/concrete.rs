@@ -19,10 +19,11 @@ fn type_children(ty: &noble_kernel::types::Ty) -> Result<usize, crate::Diagnosti
             noble_kernel::types::NominalShape::Opaque(_) => Err(crate::Diagnostic::Invalid),
             noble_kernel::types::NominalShape::Variant(_, _) => Ok(4),
         },
-        noble_kernel::types::Ty::Program(input, output, effects) => {
+        noble_kernel::types::Ty::Program(input, output, effects)
+        | noble_kernel::types::Ty::LiveRef(input, output, effects) => {
             if input.len() > super::STACK_LIMIT
                 || output.len() > super::STACK_LIMIT
-                || effects.as_slice().len() > 2
+                || effects.as_slice().len() > 6
             {
                 return Err(crate::Diagnostic::Exhausted);
             }
@@ -82,7 +83,8 @@ fn type_child(
                 }
             }
         }
-        noble_kernel::types::Ty::Program(input, output, _) => {
+        noble_kernel::types::Ty::Program(input, output, _)
+        | noble_kernel::types::Ty::LiveRef(input, output, _) => {
             let selected = if child < input.len() {
                 input.get(child)
             } else {

@@ -29,6 +29,8 @@ pub enum Type {
     List(Box<Type>),
     /// Required stack, result stack, latent identities.
     Program(Vec<Type>, Vec<Type>, Vec<u32>),
+    /// Borrowed live reference, never a capturable Data value.
+    LiveRef(Vec<Type>, Vec<Type>, Vec<u32>),
     Resource,
     Nominal(
         noble_kernel::types::NominalTypeId,
@@ -133,13 +135,17 @@ impl<'a> Mirror<'a> {
                     self.pending.push((item, element));
                 }
             }
-            noble_kernel::types::Ty::Program(input, output, effects) => {
-                *destination = Type::Program(
-                    vec![Type::Unit; input.len()],
-                    vec![Type::Unit; output.len()],
-                    effects.as_slice().iter().map(|id| id.0).collect(),
-                );
-                if let Type::Program(start, end, _) = destination {
+            noble_kernel::types::Ty::Program(input, output, effects)
+            | noble_kernel::types::Ty::LiveRef(input, output, effects) => {
+                let start = vec![Type::Unit; input.len()];
+                let end = vec![Type::Unit; output.len()];
+                let ids = effects.as_slice().iter().map(|id| id.0).collect();
+                *destination = if matches!(source, noble_kernel::types::Ty::LiveRef(_, _, _)) {
+                    Type::LiveRef(start, end, ids)
+                } else {
+                    Type::Program(start, end, ids)
+                };
+                if let Type::Program(start, end, _) | Type::LiveRef(start, end, _) = destination {
                     #[expect(
                         tigerstyle::raw_arithmetic_overflow,
                         reason = "Owner: noble-maintainers; input and output are vectors of nonzero-sized Ty values, each length at most isize::MAX, so their combined child count fits usize; reassess if representation changes."
@@ -173,6 +179,7 @@ pub fn oty(ty: &noble_kernel::types::Ty) -> Type {
         | noble_kernel::types::Ty::Sum(..)
         | noble_kernel::types::Ty::List(_)
         | noble_kernel::types::Ty::Program(..)
+        | noble_kernel::types::Ty::LiveRef(..)
         | noble_kernel::types::Ty::Nominal(..)
         | noble_kernel::types::Ty::GenericNominal(..) => {}
     }
@@ -200,7 +207,7 @@ pub fn oty_stack(stack: &[noble_kernel::types::Ty]) -> Vec<Type> {
 )]
 pub fn is_data(ty: &Type) -> bool {
     match ty {
-        Type::Resource => return false,
+        Type::Resource | Type::LiveRef(..) => return false,
         Type::Nominal(_, _, _) | Type::GenericNominal(_, _, _, _) => {}
         Type::Unit
         | Type::Bool
@@ -218,7 +225,7 @@ pub fn is_data(ty: &Type) -> bool {
     let mut pending = vec![ty];
     while let Some(next) = pending.pop() {
         match next {
-            Type::Resource => return false,
+            Type::Resource | Type::LiveRef(..) => return false,
             Type::Pair(left, right) | Type::Sum(left, right) => {
                 pending.reserve(2);
                 pending.push(right);

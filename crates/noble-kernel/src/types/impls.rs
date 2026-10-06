@@ -52,6 +52,11 @@ impl Clone for crate::types::Ty {
                 alloc::boxed::Box::new(clone_stack(stack_out.as_slice())),
                 effects.clone(),
             ),
+            crate::types::Ty::LiveRef(stack_in, stack_out, effects) => crate::types::Ty::LiveRef(
+                alloc::boxed::Box::new(clone_stack(stack_in.as_slice())),
+                alloc::boxed::Box::new(clone_stack(stack_out.as_slice())),
+                effects.clone(),
+            ),
             crate::types::Ty::Resource(kind) => crate::types::Ty::Resource(*kind),
             crate::types::Ty::Nominal(id, shape) => crate::types::Ty::Nominal(
                 *id,
@@ -180,6 +185,10 @@ fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
             (
                 crate::types::Ty::Program(a_in, a_out, a_eff),
                 crate::types::Ty::Program(b_in, b_out, b_eff),
+            )
+            | (
+                crate::types::Ty::LiveRef(a_in, a_out, a_eff),
+                crate::types::Ty::LiveRef(b_in, b_out, b_eff),
             ) if a_eff == b_eff => {
                 let (next, is_program_equal) =
                     push_type_program(work, &a_in, &a_out, &b_in, &b_out);
@@ -283,6 +292,15 @@ impl core::fmt::Debug for crate::types::Ty {
             }
             crate::types::Ty::Program(stack_in, stack_out, effects) => {
                 attempt!(core::fmt::Formatter::write_str(f, "Program("));
+                attempt!(debug_stack(stack_in.as_slice(), f));
+                attempt!(core::fmt::Formatter::write_str(f, ", "));
+                attempt!(debug_stack(stack_out.as_slice(), f));
+                attempt!(core::fmt::Formatter::write_str(f, ", "));
+                attempt!(core::fmt::Debug::fmt(effects, f));
+                core::fmt::Formatter::write_str(f, ")")
+            }
+            crate::types::Ty::LiveRef(stack_in, stack_out, effects) => {
+                attempt!(core::fmt::Formatter::write_str(f, "LiveRef("));
                 attempt!(debug_stack(stack_in.as_slice(), f));
                 attempt!(core::fmt::Formatter::write_str(f, ", "));
                 attempt!(debug_stack(stack_out.as_slice(), f));

@@ -257,4 +257,81 @@ theorem twoStepClaim (subject : NamedV1.Subject)
         exact .cons .i64 .nil
       · simp [Holds₂, evaluate₂, binaryI64]
 
+/-- The normal result of a quotation whose I64 payload was captured at
+construction time. The capture is a BitVec value, not a numeral selected by
+the proof producer; its addition has the language's wrapping semantics.
+Binding this recipe to a concrete source occurrence and installed Program
+remains a separate correspondence obligation. -/
+theorem capturedIncrementConstruction (env : NamedV1.Environment)
+    (capture : BitVec 64) (tail : NamedV1.Stack) :
+    NamedV1.Step env (.word 8) (.i64 capture :: tail)
+      (.program [.lit (.i64 capture)] :: tail) ∧
+    NamedV1.Step env (.word 9)
+      (.program [.word 4] :: .program [.lit (.i64 capture)] :: tail)
+      (.program [.lit (.i64 capture), .word 4] :: tail) := by
+  exact ⟨.quote, .compose⟩
+
+theorem capturedIncrementResult (env : NamedV1.Environment)
+    (capture input : BitVec 64) (tail final : NamedV1.Stack)
+    (execution : NamedV1.Exec env
+      [.lit (.i64 capture), .word 4] (tail ++ [.i64 input]) final) :
+    final = tail ++ [.i64 (input + capture)] := by
+  have run : NamedV1.Run env [.lit (.i64 capture), .word 4]
+      (.i64 input :: tail.reverse) final.reverse := by
+    change NamedV1.Run env [.lit (.i64 capture), .word 4]
+      (tail ++ [NamedV1.Value.i64 input]).reverse final.reverse at execution
+    simpa using execution
+  cases run with
+  | cons first rest =>
+    cases first
+    cases rest with
+    | cons second done =>
+      cases second
+      have endEq : final.reverse = .i64 (input + capture) :: tail.reverse :=
+        emptyRun env done
+      have flipped := congrArg List.reverse endEq
+      simpa [List.reverse_cons] using flipped
+
+/-- A captured program's exact claim is indexed by its own immutable payload.
+The proof cannot be reused at another captured value without establishing
+equality of the actual value and this index. This is only normal-return
+semantics, not a source/installed-Wasm certificate. -/
+theorem capturedIncrementClaim (subject : NamedV1.Subject)
+    (capture : BitVec 64)
+    (input : subject.input = [.i64]) (output : subject.output = [.i64])
+    (root : subject.root = [.lit (.i64 capture), .word 4]) :
+    exportedNamedClaim subject []
+      (fun before after params => Holds₂ subject.env (.bool true) before after params)
+      (fun before after params =>
+        Holds₂ subject.env
+          (.eq (.output 0) (.add (.input 0) (.i64 capture.toInt)))
+          before after params) := by
+  intro tail before params hi hp _ final execution
+  rw [input] at hi
+  cases hi with
+  | cons hv rest =>
+    cases hv with
+    | i64 =>
+      cases rest
+      cases hp
+      rename_i inputValue hpre
+      refine ⟨[.i64 (inputValue + capture)], ?_, ?_, ?_⟩
+      · rw [root] at execution
+        exact capturedIncrementResult subject.env capture _ tail final execution
+      · rw [output]
+        exact .cons .i64 .nil
+      · simp [Holds₂, evaluate₂, binaryI64, BitVec.ofInt_toInt]
+
+/-- A normal result witnesses why changing the capture from 2 to 1 cannot
+inherit the same arithmetic claim, even though the program shape is equal. -/
+theorem capturedTwoNotOne (env : NamedV1.Environment) :
+    ¬ (∀ final, NamedV1.Exec env [.lit (.i64 2), .word 4]
+        [.i64 0] final → final = [.i64 1]) := by
+  intro alleged
+  have run : NamedV1.Exec env [.lit (.i64 2), .word 4]
+      [.i64 0] [.i64 2] :=
+    NamedV1.Run.cons .lit (NamedV1.Run.cons .add .nil)
+  have wrong := alleged [.i64 2] run
+  simp at wrong
+
 end NobleContracts.NamedV2

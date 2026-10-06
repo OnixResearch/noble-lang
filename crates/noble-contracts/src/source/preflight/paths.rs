@@ -52,13 +52,15 @@ fn child(
             super::PathStep::GenericArgument(index),
             noble_kernel::types::Ty::GenericNominal(_, arguments, _),
         ) => arguments.get(index).ok_or_else(|| crate::internal(span)),
-        (super::PathStep::Input(index), noble_kernel::types::Ty::Program(input, _, _)) => {
+        (super::PathStep::Input(index), noble_kernel::types::Ty::Program(input, _, _)
+            | noble_kernel::types::Ty::LiveRef(input, _, _)) => {
             match input.get(index) {
                 Some(child) => Ok(child),
                 None => Err(crate::internal(span)),
             }
         }
-        (super::PathStep::Output(index), noble_kernel::types::Ty::Program(_, output, _)) => {
+        (super::PathStep::Output(index), noble_kernel::types::Ty::Program(_, output, _)
+            | noble_kernel::types::Ty::LiveRef(_, output, _)) => {
             match output.get(index) {
                 Some(child) => Ok(child),
                 None => Err(crate::internal(span)),

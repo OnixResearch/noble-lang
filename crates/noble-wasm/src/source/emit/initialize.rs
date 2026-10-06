@@ -45,6 +45,9 @@ fn atom(
         super::super::plan::Action::ClockBound(slot) => (32, i64::from(slot), None, 0),
         super::super::plan::Action::LivePropose(_) => (2, 24, None, 0),
         super::super::plan::Action::LiveGeneration => (2, 25, None, 0),
+        super::super::plan::Action::SlotInvoke(_, borrowed_ordinal) => {
+            (33, i64::from(borrowed_ordinal), None, 0)
+        }
         super::super::plan::Action::Text(address, length) => {
             return text_atom(out, (address, length), witness);
         }
@@ -58,7 +61,7 @@ fn atom(
     }
     attempt!(out.append(b" (i32.const 0) (i32.const 0) "));
     attempt!(out.i32(tag));
-    if tag == 2 || tag == 15 || tag.wrapping_sub(26) <= 6 {
+    if tag == 2 || tag == 15 || tag == 33 || tag.wrapping_sub(26) <= 6 {
         attempt!(out.append(b" "));
         attempt!(out.i32(operation.input));
         attempt!(out.append(b" "));
@@ -83,6 +86,9 @@ pub(super) fn write(
     generation: u32,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func $initialize (local $recipe i32) (local $atom i32)\n"));
+    if plan.live_slots && generation == 0 {
+        attempt!(out.append(b"(if (i32.eqz (global.get $heap_cursor)) (then (call $storage_init)))\n"));
+    }
     if generation == 0 {
         attempt!(out.append(b"(table.init $core (i32.const 0) (i32.const 0) (i32.const 4))\n"));
     }
@@ -188,7 +194,18 @@ fn program(
     attempt!(out.i32(program.depth));
     attempt!(out.append(b" "));
     attempt!(out.i32(program.leaves));
-    out.append(b"))\n(if (global.get $failure) (then (return)))\n")
+    attempt!(out.append(b"))\n(if (global.get $failure) (then (return)))\n"));
+    if plan.live_slots {
+        // The module's immutable global is a real backend owner, independent
+        // of registry reachability and separately saved Program cells. Root
+        // every program, including quotation/named bodies, before publication.
+        attempt!(out.append(b"(if (call $storage_root_program "));
+        attempt!(super::get_global(out, id));
+        attempt!(out.append(
+            b") (then (call $fail (i32.const 4)) (return)))\n"
+        ));
+    }
+    Ok(())
 }
 
 fn operation(

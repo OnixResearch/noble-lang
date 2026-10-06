@@ -10,9 +10,23 @@ pub(super) fn shape(
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func $t"));
     attempt!(out.index(index));
-    attempt!(out.append(b" (param $tag i32) (param $value i64) (result i32) (local $h i32)\n(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n"));
+    attempt!(out.append(b" (param $tag i32) (param $value i64) (result i32) (local $h i32)\n"));
+    if let super::Shape::Resource(_) = shape {
+        attempt!(out.append(b"(local $resource_ordinal i64) (local $resource_valid i32)\n"));
+    }
+    attempt!(out.append(b"(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n"));
     match shape {
         super::Shape::Scalar(tag) => attempt!(scalar(out, tag)),
+        super::Shape::Resource(kind) => {
+            attempt!(reference(out, 17));
+            attempt!(out.append(b"(if (i32.ne (call $x (local.get $h)) "));
+            attempt!(out.i32(kind.0));
+            attempt!(out.append(b") (then (return (i32.const 0))))\n"));
+            attempt!(out.append(b"(local.set $resource_ordinal (call $payload (local.get $h)))\n(if (i64.gt_u (local.get $resource_ordinal) (i64.const 4294967295)) (then (return (i32.const 0))))\n"));
+            attempt!(out.append(b"(global.set $failure (i32.const 5))\n(local.set $resource_valid (call $host_resource_validate (i32.wrap_i64 (local.get $resource_ordinal)) "));
+            attempt!(out.i32(kind.0));
+            attempt!(out.append(b"))\n(global.set $failure (i32.const 0))\n(i32.eq (local.get $resource_valid) (i32.const 1))\n"));
+        }
         super::Shape::Program(input, output_signature, effects) => {
             attempt!(reference(out, 4));
             attempt!(out.append(b"(i32.and (i32.eq (call $y (local.get $h)) "));

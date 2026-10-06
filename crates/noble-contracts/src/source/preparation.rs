@@ -34,9 +34,24 @@ impl super::Session {
         {
             return Err(super::Error::at(super::Stage::Resolve, error));
         }
+        if name.is_some() && self.live_slots.is_some() && tree.nodes.iter().any(|node| {
+            matches!(node.kind, super::Kind::Call(super::Target::SlotInvoke(_)))
+        }) {
+            return Err(super::Error::at(super::Stage::Check, crate::invalid(
+                tree.span, "live-slot declarations cannot contain borrowed dispatch",
+            )));
+        }
         if let Err(error) = super::preflight::check(inputs, self, tree.span, &mut meter) {
             return Err(super::Error::at(super::Stage::Check, error));
         }
+        let selected_root = if tree.body.len() == 1 {
+            tree.nodes.get(tree.body[0] as usize).and_then(|node| match &node.kind {
+                super::Kind::Call(super::Target::Named(index)) => Some(*index),
+                _ => None,
+            })
+        } else {
+            None
+        };
         let (extra, mode) = if name.is_some() {
             (
                 source_bytes.len().saturating_add(4),
@@ -63,7 +78,7 @@ impl super::Session {
             Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
         };
         let mut addition = alloc::vec::Vec::new();
-        let (definition, submission, output) = match name {
+        let (definition, submission, checked, output) = match name {
             Some(name) => {
                 let definition =
                     match declaration(tree, name, source_bytes, signature, self, &mut meter) {
@@ -73,16 +88,16 @@ impl super::Session {
                         }
                         Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
                     };
-                (Some(definition), None, inputs.to_vec())
+                (Some(definition), None, None, inputs.to_vec())
             }
             None => {
-                let (submission, output) = attempt!(super::emission::emit(
+                let (submission, checked, output) = attempt!(super::emission::emit(
                     state,
                     environment,
                     source_bytes.len(),
                     &mut meter
                 ));
-                (None, Some(submission), output)
+                (None, Some(submission), Some(checked), output)
             }
         };
         Ok(super::Prepared {
@@ -91,11 +106,14 @@ impl super::Session {
             hosts: self.hosts,
             text_cursor: self.text_cursor,
             live_selected: self.live_selected.clone(),
+            live_slots: self.live_slots.is_some(),
             limits,
             boundary: self.bindings.as_ref().map(|bindings| bindings.key.clone()),
             definition,
+            selected_root,
             addition,
             submission,
+            checked,
             output,
         })
     }
@@ -107,6 +125,9 @@ impl super::Session {
     pub(super) fn environment(&self) -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
         if let Some(declared) = &self.declared {
             return Ok(declared.environment.clone());
+        }
+        if let Some(profile) = &self.live_slots {
+            return Ok(profile.environment.clone());
         }
         match &self.bindings {
             Some(bindings) => Ok(bindings.environment.clone()),
