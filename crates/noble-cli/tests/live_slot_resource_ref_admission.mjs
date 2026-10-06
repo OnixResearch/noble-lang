@@ -123,7 +123,69 @@ for (const variant of variants) {
     throw Error(`${name}: ${error} raw=${session.log}`, { cause: error });
   }
 }
+// A non-canonical widening control: the decoy slot selects the checked test
+// host, but only the independently selected account slot is published.
+const ceilingControl = [];
+for (const [name, ceiling] of [
+  ['empty-ceiling', []], ['matching-ceiling', ['test.emit']],
+]) {
+  const authority = selectedAuthority({
+    sources: { candidate: base.source, decoy: '"decoy" test.emit drop',
+      pure: 'swap swap' },
+    resources: resourceRows,
+    slots: [
+      { slotId: 'account', input: base.inputs, output: chosen.input.slot_contract.output,
+        effectCeiling: ceiling, proofRequired: false },
+      { slotId: 'decoy', input: base.inputs, output: chosen.input.slot_contract.output,
+        effectCeiling: ['test.emit'], proofRequired: false },
+    ],
+    grants: [...resourceGrants,
+      { operation: 'effect', slotId: 'decoy', allowed: true },
+      { operation: 'publish', slotId: 'account', allowed: true }],
+    effects: ['test.emit', 'live.dispatch'],
+  });
+  const session = await cli(binary, `LSLOT03-ceiling-control-${name}`, authority);
+  try {
+    expectOutcome(await session.configured, 'configured');
+    const before = expectOutcome(await session.issue({ operation: 'trace' }), 'trace-observed');
+    assert.deepEqual(before.trace, []);
+    const installed = expectOutcome(await session.issue({ operation: 'install',
+      id: 'candidate', source: base.source, inputs: base.inputs }), 'installed');
+    assert.match(installed.artifact_sha256, /^[0-9a-f]{64}$/);
+    assert.deepEqual([installed.guest_requests, installed.protected_operations], [0, 0]);
+    const publication = await session.issue({ operation: 'publish', slot: 'account',
+      id: 'candidate', expected_epoch: '0' });
+    expectOutcome(publication, name === 'empty-ceiling' ? 'refused' : 'published');
+    assert.deepEqual([publication.guest_requests, publication.protected_operations], [0, 0]);
+    if (name === 'empty-ceiling') {
+      assert.match(publication.diagnostic, /checked candidate differs from selected slot interface or effect ceiling/);
+      const pure = expectOutcome(await session.issue({ operation: 'install', id: 'pure',
+        source: 'swap swap', inputs: base.inputs }), 'installed');
+      assert.deepEqual([pure.guest_requests, pure.protected_operations], [0, 0]);
+      const control = expectOutcome(await session.issue({ operation: 'publish', slot: 'account',
+        id: 'pure', expected_epoch: '0' }), 'published');
+      assert.equal(control.epoch, '1');
+      assert.deepEqual([control.guest_requests, control.protected_operations], [0, 0]);
+    } else {
+      assert.equal(publication.epoch, '1');
+    }
+    const after = expectOutcome(await session.issue({ operation: 'trace' }), 'trace-observed');
+    assert.deepEqual(after.trace, before.trace);
+    assert.equal(await session.close(), 0);
+    ceilingControl.push({ name, account_ceiling: ceiling, installed: installed.outcome,
+      candidate_artifact_sha256: installed.artifact_sha256, publication: publication.outcome,
+      refusal: name === 'empty-ceiling' ? publication.diagnostic : null,
+      epoch_after: '1', guest_requests: publication.guest_requests,
+      protected_operations: publication.protected_operations,
+      trace: after.trace, selected_binary_sha256: session.selectedBinarySha256,
+      raw: session.log });
+  } catch (error) {
+    await session.abort();
+    throw Error(`ceiling-control-${name}: ${error} raw=${session.log}`, { cause: error });
+  }
+}
 const summary = path.join(evidenceDirectory, 'LSLOT03-summary.json');
 fs.writeFileSync(summary, JSON.stringify({ selected_binary: binary,
-  canonical: 'specs/conformance/live-reference-cases.json#LSLOT-03', results }, null, 2));
-console.log(JSON.stringify({ summary, results }));
+  canonical: 'specs/conformance/live-reference-cases.json#LSLOT-03',
+  results, ceiling_control: ceilingControl }, null, 2));
+console.log(JSON.stringify({ summary, results, ceiling_control: ceilingControl }));

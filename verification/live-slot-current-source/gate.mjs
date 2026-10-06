@@ -374,6 +374,113 @@ for (const [number, script, prefix] of [
     } catch (error) { row(id, variant.name, 'failed', String(error),
       fs.existsSync(raw) ? [receiptFile(raw)] : []); }
   }
+  if (number === 3) {
+    const name = 'noncanonical-effect-ceiling-control';
+    const summaryFile = path.join(dir, 'LSLOT03-summary.json');
+    const files = [summaryFile];
+    for (const kind of ['empty-ceiling', 'matching-ceiling']) {
+      const stem = path.join(dir, `LSLOT03-ceiling-control-${kind}`);
+      files.push(`${stem}.jsonl`, `${stem}.requests.jsonl`,
+        `${stem}.responses.jsonl`, `${stem}.stderr.txt`);
+    }
+    const evidence = files.filter(fs.existsSync).map(receiptFile);
+    try {
+      assert.equal(result.status, 0);
+      assert.deepEqual(variants.find(variant => variant.name === 'effect-ceiling-widened')
+        .candidate_effects, ['test.emit', 'fs.write']);
+      const canonicalRecords = jsonLines(path.join(dir, 'LSLOT03-effect-ceiling-widened.jsonl'));
+      assert.ok(canonicalRecords.some(record => record.kind === 'operator'
+        && record.request.operation === 'install'
+        && record.request.source === '"admit" test.emit drop "path" fs.write'));
+      assert.equal(observed.get(`${id}/effect-ceiling-widened`)?.status, 'blocked');
+      assert.deepEqual(summary.ceiling_control.map(item => item.name),
+        ['empty-ceiling', 'matching-ceiling']);
+      const artifacts = [];
+      const observations = [];
+      for (const [kind, ceiling, outcome] of [
+        ['empty-ceiling', [], 'refused'], ['matching-ceiling', ['test.emit'], 'published'],
+      ]) {
+        const stem = path.join(dir, `LSLOT03-ceiling-control-${kind}`);
+        const records = jsonLines(`${stem}.jsonl`);
+        const selected = records[0];
+        assert.equal(selected.kind, 'authority');
+        assert.equal(selected.selected_binary, binary);
+        assert.equal(selected.selected_binary_sha256, afterBinary);
+        const authority = selected.authority;
+        assert.deepEqual(authority.sources.map(source => source.id),
+          ['candidate', 'decoy', 'pure']);
+        assert.equal(authority.sources[0].sha256, sha(Buffer.from('"admit" test.emit drop')));
+        assert.equal(authority.sources[1].sha256, sha(Buffer.from('"decoy" test.emit drop')));
+        assert.equal(authority.sources[2].sha256, sha(Buffer.from('swap swap')));
+        assert.deepEqual(authority.slots.map(slot => [slot.slotId, slot.input, slot.output,
+          slot.effectCeiling, slot.proofRequired]), [
+          ['account', ['Account@1', 'I64'], ['Account@1', 'I64'], ceiling, false],
+          ['decoy', ['Account@1', 'I64'], ['Account@1', 'I64'], ['test.emit'], false],
+        ]);
+        assert.ok(authority.grants.some(grant => grant.operation === 'publish'
+          && grant.slotId === 'account' && grant.allowed === true));
+        assert.ok(authority.grants.some(grant => grant.operation === 'effect'
+          && grant.slotId === 'decoy' && grant.allowed === true));
+        assert.ok(!authority.grants.some(grant => grant.operation === 'effect'
+          && grant.slotId === 'account'));
+        assert.deepEqual(authority.effects, ['test.emit', 'live.dispatch']);
+        assert.equal(records.at(-1).kind, 'exit');
+        assert.equal(records.at(-1).code, 0);
+        const requests = records.filter(record => record.kind === 'operator')
+          .map(record => record.request);
+        const replies = records.filter(record => record.kind === 'cli')
+          .map(record => record.row);
+        assert.deepEqual(jsonLines(`${stem}.requests.jsonl`), requests);
+        assert.deepEqual(jsonLines(`${stem}.responses.jsonl`), replies);
+        assert.ok(fs.existsSync(`${stem}.stderr.txt`));
+        assert.deepEqual(requests, [
+          { operation: 'trace' },
+          { operation: 'install', id: 'candidate', source: '"admit" test.emit drop',
+            inputs: ['Account@1', 'I64'] },
+          { operation: 'publish', slot: 'account', id: 'candidate', expected_epoch: '0' },
+          ...(kind === 'empty-ceiling' ? [
+            { operation: 'install', id: 'pure', source: 'swap swap',
+              inputs: ['Account@1', 'I64'] },
+            { operation: 'publish', slot: 'account', id: 'pure', expected_epoch: '0' },
+          ] : []),
+          { operation: 'trace' },
+        ]);
+        assert.deepEqual(replies.map(reply => reply.outcome),
+          kind === 'empty-ceiling'
+            ? ['configured', 'trace-observed', 'installed', 'refused',
+              'installed', 'published', 'trace-observed']
+            : ['configured', 'trace-observed', 'installed', 'published', 'trace-observed']);
+        const installed = replies[2], publication = replies[3];
+        assert.match(installed.artifact_sha256, /^[0-9a-f]{64}$/);
+        artifacts.push(installed.artifact_sha256);
+        assert.equal(publication.outcome, outcome);
+        if (kind === 'empty-ceiling') {
+          assert.match(publication.diagnostic,
+            /checked candidate differs from selected slot interface or effect ceiling/);
+          assert.equal(replies[5].epoch, '1');
+        } else assert.equal(publication.epoch, '1');
+        assert.deepEqual(replies[1].trace, []);
+        assert.deepEqual(replies.at(-1).trace, []);
+        for (const reply of replies)
+          assert.deepEqual([reply.guest_requests, reply.protected_operations], [0, 0]);
+        const item = summary.ceiling_control.find(control => control.name === kind);
+        assert.equal(item.selected_binary_sha256, afterBinary);
+        assert.equal(item.raw, `${stem}.jsonl`);
+        assert.equal(item.candidate_artifact_sha256, installed.artifact_sha256);
+        assert.equal(item.publication, outcome);
+        assert.equal(item.epoch_after, '1');
+        assert.deepEqual([item.guest_requests, item.protected_operations, item.trace], [0, 0, []]);
+        observations.push({ kind, publication, committed: kind === 'empty-ceiling'
+          ? replies[5] : publication, artifact_sha256: installed.artifact_sha256 });
+      }
+      assert.equal(artifacts[0], artifacts[1],
+        'two ceiling policies must select identical checked candidate artifacts');
+      row(id, name, 'passed',
+        'independent decoy-enabled host sessions refuse the effectful candidate under an empty account ceiling and publish it under a matching ceiling; pure candidate publishes after refusal',
+        evidence, { guest_requests: 0, protected_operations: 0 }, observations,
+        { claim: 'control_pass', session: { guest_requests: 0, protected_operations: 0 } });
+    } catch (error) { row(id, name, 'failed', String(error), evidence); }
+  }
   binaryStill();
 }
 
