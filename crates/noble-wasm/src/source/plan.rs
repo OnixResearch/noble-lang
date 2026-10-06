@@ -31,6 +31,7 @@ pub(super) enum Action {
 }
 
 pub(super) struct Operation {
+    pub(super) node: noble_kernel::untrusted::NodeId,
     pub(super) action: Action,
     pub(super) input: u32,
     pub(super) output: u32,

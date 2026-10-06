@@ -53,6 +53,83 @@ fn selected_named_artifact_binds_checked_definition_not_invocation_wrapper() -> 
     Ok(())
 }
 
+fn selected_builder(
+    definition_source: &[u8],
+    inputs: &[Ty],
+) -> Result<noble_wasm::source::Prepared, String> {
+    let mut source = noble_contracts::source::Session::new_live_slots(
+        environment().map_err(|error| format!("{error:?}"))?.enable_live_slots(),
+    ).map_err(|error| error.diagnostic().message.clone())?;
+    let definition = source.prepare(definition_source, &[], LIMITS)
+        .map_err(|error| error.diagnostic().message.clone())?;
+    source.commit(definition).map_err(|error| error.diagnostic().message.clone())?;
+    let call = source.prepare(b"builder", inputs, LIMITS)
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let selected = source.checked_selected_target(&call, "builder")
+        .map_err(|error| format!("source selection: {error:?}"))?;
+    noble_wasm::source::Compiler::new_live_slots().prepare_checked_selected(&selected)
+        .map_err(|_| "selected compiler refused checked source".to_owned())
+}
+
+#[test]
+fn selected_returned_program_distinguishes_input_from_fixed_literal_and_computation() -> Result<(), String> {
+    use noble_wasm::source::{OriginAction, OriginI64, OriginProgramValue, OriginSource};
+    let varying = selected_builder(b"def builder [ quote [ + ] compose ]", &[Ty::I64])?;
+    let fixed = selected_builder(b"def builder [ 2 quote [ + ] compose ]", &[Ty::I64])?;
+    let computed = selected_builder(b"def builder [ 1 1 + quote [ + ] compose ]", &[Ty::I64])?;
+    for (prepared, expected, position) in [
+        (&varying, OriginI64::RootInput(0), 0),
+        (&fixed, OriginI64::Fixed(2), 1),
+        (&computed, OriginI64::Fixed(2), 1),
+    ] {
+        let origin = prepared.selected_origin().ok_or("source-bound output lineage absent")?;
+        let [output] = origin.outputs.as_slice() else {
+            return Err("selected builder does not return exactly one dynamic Program".into());
+        };
+        let OriginProgramValue::Compose { left, right_node, right_program_index, .. } = &output.result
+        else { return Err("selected compose output lost its checked children".into()); };
+        let OriginProgramValue::QuoteI64 { operand, .. } = left.as_ref() else {
+            return Err("selected quote operand was replaced by a static child".into());
+        };
+        if *operand != expected || output.stack_position != position
+            || origin.root_program_index == origin.named_program_index
+            || origin.programs.len() != prepared.program_metadata().len()
+            || !origin.programs.iter().any(|program| program.program_index == *right_program_index
+                && program.source_artifact == OriginSource::Definition
+                && program.operations.iter().any(|operation|
+                    matches!(operation.action, OriginAction::Add)))
+            || !origin.programs[origin.named_program_index].operations.iter().any(|operation|
+                operation.node == *right_node
+                    && matches!(operation.action,
+                        OriginAction::StaticProgram(index) if index == *right_program_index))
+            || origin.programs.iter().any(|program|
+                program.operations.iter().enumerate().any(|(ordinal, operation)|
+                    operation.ordinal as usize != ordinal
+                        || operation.table_entry != program.entry + operation.ordinal))
+        {
+            return Err("fixed, variable or static operation was misattributed".into());
+        }
+        let root = origin.programs.get(origin.root_program_index)
+            .ok_or("selection wrapper missing")?;
+        if root.source_artifact != OriginSource::Selection
+            || root.operations.len() != 1
+            || root.operations[0].source_span.is_some()
+            || !matches!(root.operations[0].action,
+                OriginAction::CallSelected(index) if index == origin.named_program_index)
+        {
+            return Err("source selected wrapper gained a forged body origin".into());
+        }
+    }
+    let named = &computed.selected_origin().ok_or("computed lineage absent")?.programs[0];
+    if !named.operations.iter().any(|operation| matches!(operation.action, OriginAction::Add))
+        || named.operations.iter().filter(|operation| matches!(operation.action, OriginAction::I64(1)))
+            .count() != 2
+    {
+        return Err("fixed computed capture omitted its executable provenance".into());
+    }
+    Ok(())
+}
+
 #[test]
 fn quotation_program_has_its_own_checked_interface_and_code_owner() -> Result<(), String> {
     let session = noble_contracts::source::Session::new_live_slots(

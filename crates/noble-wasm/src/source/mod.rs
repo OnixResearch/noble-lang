@@ -8,6 +8,7 @@
 
 mod admission;
 mod emit;
+mod origin;
 mod plan;
 mod preflight;
 mod transaction;
@@ -140,6 +141,91 @@ pub struct ProgramMetadata {
     pub recipe_leaves: u32,
 }
 
+/// D-neutral, source-checked lineage for a selected named caller's returned
+/// dynamic Program. This describes no target DefinitionId or proof claim.
+#[derive(Clone, Debug)]
+pub struct SelectedOriginMetadata {
+    pub definition_id: noble_contracts::source::proof::CheckedDefinitionId,
+    pub source_generation: u64,
+    pub named_program_index: usize,
+    pub root_program_index: usize,
+    pub programs: alloc::vec::Vec<OriginProgram>,
+    pub outputs: alloc::vec::Vec<OriginOutput>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OriginSource {
+    Definition,
+    Selection,
+}
+
+#[derive(Clone, Debug)]
+pub struct OriginProgram {
+    pub source_artifact: OriginSource,
+    pub program_index: usize,
+    pub entry: u32,
+    pub input_signature: u32,
+    pub output_signature: u32,
+    pub effect_mask: u32,
+    pub operations: alloc::vec::Vec<OriginOperation>,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum OriginAction {
+    I64(i64),
+    Add,
+    Sub,
+    Mul,
+    Dup,
+    Swap,
+    Drop,
+    StaticProgram(usize),
+    QuoteI64 { input: u32, output: u32, witness: u32 },
+    Compose,
+    CallSelected(usize),
+}
+
+#[derive(Clone, Debug)]
+pub struct OriginOperation {
+    pub node: noble_kernel::untrusted::NodeId,
+    /// None exclusively for the independently checked selection wrapper.
+    pub source_span: Option<noble_contracts::Span>,
+    pub ordinal: u32,
+    pub table_entry: u32,
+    pub input_signature: u32,
+    pub output_signature: u32,
+    pub effect_mask: u32,
+    pub action: OriginAction,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OriginI64 {
+    RootInput(u32),
+    Fixed(i64),
+}
+
+#[derive(Clone, Debug)]
+pub enum OriginProgramValue {
+    QuoteI64 {
+        node: noble_kernel::untrusted::NodeId,
+        table_entry: u32,
+        operand: OriginI64,
+    },
+    Compose {
+        node: noble_kernel::untrusted::NodeId,
+        table_entry: u32,
+        left: alloc::boxed::Box<Self>,
+        right_node: noble_kernel::untrusted::NodeId,
+        right_program_index: usize,
+    },
+}
+
+#[derive(Clone, Debug)]
+pub struct OriginOutput {
+    pub stack_position: usize,
+    pub result: OriginProgramValue,
+}
+
 /// An independently rechecked, emitted named definition, not the submission's
 /// wrapper root. A source receipt must separately bind the exact retained
 /// definition identity/owner and source origin; runtime installation must
@@ -203,6 +289,7 @@ pub struct Prepared {
     program_metadata: alloc::vec::Vec<ProgramMetadata>,
     named_targets: alloc::vec::Vec<NamedTargetMetadata>,
     selected_target: Option<SelectedTargetArtifact>,
+    selected_origin: Option<SelectedOriginMetadata>,
     resource_catalog: alloc::vec::Vec<ResourceCatalogEntry>,
     wat: alloc::vec::Vec<u8>,
 }
@@ -246,6 +333,12 @@ impl Prepared {
     /// source-session checked selection rather than raw submission metadata.
     pub const fn selected_target(&self) -> Option<SelectedTargetArtifact> {
         self.selected_target
+    }
+
+    /// Only a complete, unambiguous checked linear lineage is exposed. A
+    /// missing origin never changes ordinary Program execution or retention.
+    pub const fn selected_origin(&self) -> Option<&SelectedOriginMetadata> {
+        self.selected_origin.as_ref()
     }
 
     /// Compare these complete admitted descriptors against the independently
@@ -367,6 +460,14 @@ impl Compiler {
         &self,
         submission: &noble_kernel::execution::Submission,
     ) -> Result<Prepared, crate::Diagnostic> {
+        self.prepare_with_origin(submission, None)
+    }
+
+    fn prepare_with_origin(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        selected: Option<&noble_contracts::source::proof::CheckedSelectedTarget<'_>>,
+    ) -> Result<Prepared, crate::Diagnostic> {
         let mut work = Work {
             remaining: u64::from(submission.request.limits.work),
         };
@@ -467,6 +568,7 @@ impl Compiler {
                 });
             }
         }
+        let selected_origin = selected.and_then(|selected| origin::build(selected, &plan));
         let mut program_metadata = alloc::vec::Vec::new();
         if self.live_slots {
             program_metadata.reserve(plan.programs.len());
@@ -517,6 +619,7 @@ impl Compiler {
             program_metadata,
             named_targets,
             selected_target: None,
+            selected_origin,
             resource_catalog,
             wat,
         })
@@ -534,7 +637,7 @@ impl Compiler {
         if !self.live_slots {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let mut prepared = attempt!(self.prepare(selected.submission()));
+        let mut prepared = attempt!(self.prepare_with_origin(selected.submission(), Some(selected)));
         let id = selected.definition_id();
         let mut matches = prepared.named_targets.iter().filter(|named| {
             named.definition == selected.definition().definition

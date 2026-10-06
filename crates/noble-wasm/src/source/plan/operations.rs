@@ -183,6 +183,7 @@ fn lower_node(
         }
     };
     Ok(super::Operation {
+        node: id,
         action,
         input: attempt!(compiler.signature(&interface.stack_in, work)),
         output: attempt!(compiler.signature(&interface.stack_out, work)),

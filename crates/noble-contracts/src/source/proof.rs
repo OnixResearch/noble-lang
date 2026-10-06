@@ -56,6 +56,72 @@ impl CheckedSelectedTarget<'_> {
     pub const fn root(&self) -> &noble_kernel::untrusted::Checked { &self.root }
     pub const fn body(&self) -> &noble_kernel::untrusted::Checked { &self.body }
 
+    /// Locate an operation in the original selected definition, including a
+    /// quotation body's operations. This is source correspondence only; the
+    /// compiler and host must still bind the emitted instruction and value.
+    pub fn checked_operation_span(
+        &self,
+        node: noble_kernel::untrusted::NodeId,
+    ) -> Result<crate::Span, SourceProofRefusal> {
+        use noble_kernel::untrusted::{Lit, Node};
+        let candidate = &self.definition.body.candidate;
+        // Parsing `def name [ body ]` retains the declaration's final,
+        // emptied quotation wrapper after extracting its body. Emission
+        // contains only its preceding executable nodes.
+        if self.tree.nodes.len() != candidate.nodes.len().saturating_add(1)
+            || !matches!(self.tree.nodes.last(),
+                Some(super::Node { kind: super::Kind::Quotation(body), .. })
+                    if body.is_empty())
+            || self.tree.body.len() != candidate.body.len()
+            || !self.tree.body.iter().zip(&candidate.body)
+                .all(|(source, checked)| *source == checked.0)
+        {
+            return Err(SourceProofRefusal::MismatchedSource);
+        }
+        let source = self.tree.node(node.0)
+            .map_err(|_| SourceProofRefusal::MismatchedSource)?;
+        let checked = usize::try_from(node.0).ok()
+            .and_then(|index| candidate.nodes.get(index))
+            .ok_or(SourceProofRefusal::MismatchedSource)?;
+        let start = usize::try_from(source.span.start)
+            .map_err(|_| SourceProofRefusal::MismatchedSource)?;
+        let end = usize::try_from(source.span.end)
+            .map_err(|_| SourceProofRefusal::MismatchedSource)?;
+        let bytes = self.source.get(start..end).filter(|bytes| !bytes.is_empty())
+            .ok_or(SourceProofRefusal::MismatchedSource)?;
+        let valid = match (&source.kind, checked) {
+            (super::Kind::Literal(Lit::I64(a)), Node::Literal { lit: Lit::I64(b), .. }) =>
+                a == b,
+            (super::Kind::Call(super::Target::Builtin(a)), Node::Invocation { def, .. })
+                if *a == def.0 => {
+                    let expected = match a {
+                        0 => b"dup".as_slice(),
+                        1 => b"drop".as_slice(),
+                        2 => b"swap".as_slice(),
+                        4 => b"+".as_slice(),
+                        5 => b"-".as_slice(),
+                        6 => b"*".as_slice(),
+                        8 => b"quote".as_slice(),
+                        9 => b"compose".as_slice(),
+                        _ => return Err(SourceProofRefusal::UnsupportedProfile),
+                    };
+                    bytes == expected
+                }
+            (super::Kind::Quotation(source_body), Node::Quotation { body, .. }) =>
+                bytes.first() == Some(&b'[') && bytes.last() == Some(&b']')
+                    && source_body.len() == body.len()
+                    && source_body.iter().zip(body).all(|(a, b)| *a == b.0),
+            _ => false,
+        };
+        if !valid {
+            return Err(SourceProofRefusal::MismatchedSource);
+        }
+        if self.body.derivations.iter().filter(|item| item.node == node).count() != 1 {
+            return Err(SourceProofRefusal::IndependentCheckFailed);
+        }
+        Ok(source.span)
+    }
+
     /// Authenticate a quote occurrence in the retained source and the
     /// independently rechecked selected definition. The runtime value that
     /// will be captured is not known until the VM executes this instruction.
