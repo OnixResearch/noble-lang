@@ -3,6 +3,21 @@
 let
   rev = "235255bc4972ced9128fd5b4d1ec66ff7508ded4";
   gate = "/nix/store/18bpmd4pnam032fa428sdfqnxbvzq1v1-noble-octet-gate/bin/noble-octet-gate";
+  provider = package: kind: {
+    inherit package kind;
+    permitted_caller_roles = [ "composition-root" ];
+    edge_kinds = [ "normal" ];
+    rationale = "synthetic selector fixture";
+  };
+  providers = [
+    (provider "anyhow" "infrastructure")
+    (provider "blake3" "pure-value")
+    (provider "libc" "infrastructure")
+    (provider "serde_json" "pure-value")
+    (provider "wasmparser" "pure-value")
+    (provider "wasmtime" "infrastructure")
+    (provider "wat" "pure-value")
+  ];
   policyBase = {
     mode = "gate";
     waivers = [ ];
@@ -102,7 +117,7 @@ let
       { scope = "noble-wasm"; }
     ];
     ports = [ ];
-    provider_classifications = [ ];
+    provider_classifications = providers;
   };
   withArchitecture = change: builtins.toJSON (policyBase // change);
   src = {
@@ -451,7 +466,37 @@ let
       architecturePolicyJson = builtins.toJSON (
         builtins.removeAttrs policyBase [ "provider_classifications" ]
       );
-    } "policy-providers-not-declared-empty")
+    } "policy-composition-root-providers-mismatch")
+    (reject "domain core cannot use classified providers" {
+      architecturePolicyJson = withArchitecture {
+        provider_classifications = [ ((builtins.elemAt providers 0) // {
+          permitted_caller_roles = [ "composition-root" "domain-core" ];
+        }) ] ++ builtins.tail providers;
+      };
+    } "policy-composition-root-providers-mismatch")
+    (reject "classified providers cannot gain build edges" {
+      architecturePolicyJson = withArchitecture {
+        provider_classifications = [ ((builtins.elemAt providers 0) // {
+          edge_kinds = [ "normal" "build" ];
+        }) ] ++ builtins.tail providers;
+      };
+    } "policy-composition-root-providers-mismatch")
+    (reject "classified provider kind is exact" {
+      architecturePolicyJson = withArchitecture {
+        provider_classifications = builtins.map (item:
+          if item.package == "libc" then item // { kind = "pure-value"; }
+          else item
+        ) providers;
+      };
+    } "policy-composition-root-providers-mismatch")
+    (reject "provider rationale cannot be blank" {
+      architecturePolicyJson = withArchitecture {
+        provider_classifications = builtins.map (item:
+          if item.package == "libc" then item // { rationale = "  "; }
+          else item
+        ) providers;
+      };
+    } "policy-composition-root-providers-mismatch")
     (assert (evaluate { }).policy_summary.mode == "gate"; "policy summary reports the mode")
     (assert (evaluate { }).policy_summary.forbidden_families == [
       "environment"

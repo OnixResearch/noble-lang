@@ -6,7 +6,7 @@ repos:
     hooks:
       - id: octet-deny-all
         name: Noble selected Octet deny-all
-        entry: /nix/store/18bpmd4pnam032fa428sdfqnxbvzq1v1-noble-octet-gate/bin/noble-octet-gate
+        entry: /nix/store/7wnkbj8pyhhpc28j7rczssgq80lsk8hg-noble-octet-gate/bin/noble-octet-gate
         language: system
         pass_filenames: false
         always_run: true

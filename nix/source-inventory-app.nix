@@ -178,10 +178,10 @@ pkgs.writeShellApplication {
               selection = '"$(read_file "$selection")"';
             }' > "$artifacts/coverage.json"
           if grep -q '"valid":true' "$artifacts/coverage.json"; then
-            echo "source-inventory: coverage passed (not M1 acceptance)"
+            echo "source-inventory: supplied-inventory diagnostic passed (not rederived compiler evidence or M1 acceptance)"
             exit 0
           fi
-          echo "source-inventory: coverage rejected" >&2
+          echo "source-inventory: supplied-inventory diagnostic rejected (not rederived compiler evidence)" >&2
           grep -o '"diagnostics":\[[^]]*\]' "$artifacts/coverage.json" >&2 || true
           exit 1
           ;;

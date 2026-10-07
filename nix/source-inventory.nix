@@ -44,16 +44,21 @@ let
   structural = filter (s: s.category == "structural") subjects;
   reviewedPaths = unique (map (s: s.qualified_path) subjects);
   observedPaths = unique (map (s: s.qualified_path) inventory.production_subjects);
-  observedProduction = listToAttrs (
-    map (s: {
-      name = s.qualified_path;
-      value = s;
-    }) inventory.production_subjects
-  );
+  observedProduction = builtins.groupBy (s: s.qualified_path) inventory.production_subjects;
+  validSpan = s:
+    s ? span_id && builtins.isString s.span_id && s.span_id != ""
+    && s ? from_expansion && builtins.isBool s.from_expansion;
+  generatedWithAuthoredFact = filter (
+    s:
+    let rows = observedProduction.${s.qualified_path} or [ ];
+    # An empty group is already rejected by subject-stale; do not call
+    # absent historical derive rows authored current compiler observations.
+    in rows != [ ] && !(all (row: validSpan row && row.from_expansion) rows)
+  ) generated;
   packageOf =
     path:
     let
-      subject = observedProduction.${path};
+      subject = head observedProduction.${path};
       owner = filter (u: elem u.unit_id subject.units) inventory.units;
     in
     if owner == [ ] then "<unowned>" else (head owner).package_name;
@@ -124,7 +129,11 @@ let
     future_components = length policy.future_components;
   };
   diagnostics =
-    require (inventory.coverage.status == "complete") "coverage-status"
+    require (inventory ? schema && inventory.schema == "noble-source-inventory/v2") "inventory-schema"
+    ++ require (all validSpan (inventory.production_subjects ++ inventory.test_subjects))
+      "subject-span-provenance"
+    ++ require (empty generatedWithAuthoredFact) "generated-authored-subject"
+    ++ require (inventory.coverage.status == "complete") "coverage-status"
     ++ require (empty inventory.coverage.missing_units) "coverage-missing-units"
     ++ require (empty inventory.coverage.unexpected_units) "coverage-unexpected-units"
     ++ require (empty inventory.coverage.duplicate_units) "coverage-duplicate-units"

@@ -466,6 +466,10 @@
         octet = mkCheck "noble-octet-deny-all" [ octetGate ] ''
           noble-octet-gate --workspace --artifact-dir "$out" -- --all-targets --all-features
         '';
+        source-inventory-controls = pkgs.runCommand "noble-source-inventory-controls" { } ''
+          mkdir -p "$out"
+          printf '%s\n' ${pkgs.lib.escapeShellArg (builtins.concatStringsSep "\n" sourceInventoryTests)} > "$out/self-tests.txt"
+        '';
         source-coverage =
           assert
             inventoryResult.valid

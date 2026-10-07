@@ -23,6 +23,11 @@ let
     name = "octet-path-metadata-locked.patch";
     sha256 = "sha256-m+1Bv2CQ2VTSdFzSoJjSmz7GS4f+ypqFa0NKWT67qwo=";
   };
+  resolvedPlanPatch = builtins.path {
+    path = ./octet-path-resolved-plan-only.patch;
+    name = "octet-path-resolved-plan-only.patch";
+    sha256 = "sha256-nOkA4KIPJ48fcccQye40qOanfixNO0eyu0u+gir9xlo=";
+  };
   fixtureLockPatch = builtins.path {
     path = ./octet-path-test-lock-fixtures.patch;
     name = "octet-path-test-lock-fixtures.patch";
@@ -31,7 +36,7 @@ let
   preFixtureSource = pkgs.applyPatches {
     name = "octet-pinned-235255bc-diagnostic-path-source";
     src = selected.octet.src;
-    patches = [ enginePatch libcPatch metadataLockedPatch ];
+    patches = [ enginePatch libcPatch metadataLockedPatch resolvedPlanPatch ];
   };
   patchedSource = pkgs.runCommand "octet-pinned-235255bc-locked-fixtures-source" {
     nativeBuildInputs = [ pkgs.git ];

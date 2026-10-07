@@ -373,9 +373,9 @@ const binaryStill = () => assert.equal(sha(fs.readFileSync(binary)), afterBinary
       assert.equal(cell.capture_status, 'checked-selected-origin');
       assert.ok(cell.verified_origin?.artifact_sha256);
       assert.match(cell.target_identity?.definition_id ?? '',
-        /^anonymous-template-experimental-v1:[a-f0-9]{64}$/);
+        /^anonymous-template-experimental-v2-blake3:[a-f0-9]{64}$/);
       assert.match(cell.target_identity?.program_value_id ?? '',
-        /^anonymous-program-experimental-v1:[a-f0-9]{64}$/);
+        /^anonymous-program-experimental-v2-blake3:[a-f0-9]{64}$/);
       assert.notEqual(cell.target_identity.definition_id, cell.verified_origin.definition_identity);
       assert.notEqual(cell.target_identity.program_value_id, cell.verified_origin.definition_identity);
       assert.equal(cell.target_identity.artifact_sha256, null);

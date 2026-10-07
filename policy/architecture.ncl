@@ -41,7 +41,15 @@ let contracts = import "./architecture.contracts.ncl" in
       edge_kinds = ["normal", "build"],
     },
   ],
-  # The workspace has no third-party Cargo providers or application-owned ports.
+  # The observed Cargo graph has seven direct third-party normal edges, all
+  # from noble-cli; no application-owned ports are declared. Provider
+  # permission is role-granular: noble-syndicate is also composition-root, so
+  # this policy alone would allow its future normal edges to these providers.
+  # The separate native and source comparisons bind exact observed callers:
+  # seven CLI external edges are now source-reviewed, and a new syndicate
+  # external edge would fail source dependency closure. Source comparison
+  # remains red on other classifications; neither downstream comparator runs
+  # after the blocked Octet architecture gate or attests native safety.
   # The CLI owns consumer I/O; no domain-core crate executes host effects.
   # noble-contracts includes the MC2 companion admission, derivation, registry,
   # guard and release core. Contract/proof text, guest handles, reported tags,
@@ -66,7 +74,57 @@ let contracts = import "./architecture.contracts.ncl" in
   # The independent Rust/Wasmtime peer is verification-only, outside production
   # workspace accounting. Its engine/native release and credential provenance
   # remain explicit host assumptions, not consequences of pure Rust refinement.
-  provider_classifications = [],
+  provider_classifications = [
+    {
+      package = "anyhow",
+      kind = "infrastructure",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI error/context reporting may consult ambient backtrace settings and capture host backtraces. Role-granular normal permission is not domain-core use or an audit of transitive/native implementation.",
+    },
+    {
+      package = "blake3",
+      kind = "pure-value",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI byte-digest computation. Digest implementation and any optimized or native code retain separate unproved safety assumptions.",
+    },
+    {
+      package = "libc",
+      kind = "infrastructure",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI use of libc open flags for no-follow path walking via Rust OpenOptions; this static edge permission does not establish FFI or native safety.",
+    },
+    {
+      package = "serde_json",
+      kind = "pure-value",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI JSON value parsing and serialization; external input remains untrusted and this is not a semantic acceptance witness.",
+    },
+    {
+      package = "wasmparser",
+      kind = "pure-value",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI Wasm byte parsing; parser output is not proof of engine, guest, or native safety.",
+    },
+    {
+      package = "wasmtime",
+      kind = "infrastructure",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI guest engine boundary; engine, trap, linked C helper, and transitive native implementation remain explicit external host assumptions.",
+    },
+    {
+      package = "wat",
+      kind = "pure-value",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI WAT byte parsing; parser output does not certify guest semantics or native safety.",
+    },
+  ],
   ports = [],
   capability_classifications = [
     {
@@ -238,13 +296,14 @@ let contracts = import "./architecture.contracts.ncl" in
   admission = null,
   waivers = [],
   collection_limits = {
-    # Full current-source collection on Noble HEAD 570ed67be7b9ef79e8bffb247f5ddea78430cf8b
-    # emitted 39 normal shards; positive and reverse acyclic boundary controls
-    # emitted 41 each. Allow exactly 39 + 2 units/shards, with no spare units.
-    # These measured limits are candidate WIP collection capacity, NOT source
-    # or native classification approval and NOT a gate PASS.
-    max_units = 41,
-    max_shards = 41,
+    # The candidate's pinned offline all-targets/all-features Cargo plan selects
+    # exactly 54 workspace units. Earlier acyclic controls on a different source
+    # selected 56, but the candidate's fixture currently has a duplicate Cargo
+    # dev-dependencies table and cannot establish those two extra units here.
+    # This exact candidate capacity is not a classification waiver, source/native
+    # assurance approval, or a gate PASS.
+    max_units = 54,
+    max_shards = 54,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,
@@ -253,8 +312,9 @@ let contracts = import "./architecture.contracts.ncl" in
     max_traits = 512,
     max_implementations = 1024,
     max_signatures = 4096,
-    # Current-source shard maxima: 11,642 calls, 8,903 constructors and
-    # 4,166 expansions. Preserve complete facts without clipping.
+    # A different, non-ancestor 54-unit source measured 16,646 CLI bin+test
+    # calls. That does not measure this candidate; retain the existing bound
+    # until a fresh candidate shard demonstrates any necessary renewal.
     max_calls = 16384,
     max_constructors = 16384,
     max_effects = 4096,
@@ -270,13 +330,13 @@ let contracts = import "./architecture.contracts.ncl" in
     max_value_flow_steps = 65536,
     max_value_flow_rounds = 64,
     max_unknowns = 4096,
-    # Complete selected collection observed 8,573 spans in each contracts
-    # library shard; the former 8,192 cap produced invalid references.
-    max_spans = 16384,
+    # This candidate's sealed-source CLI bin+test shard reached the 16,384-span
+    # cap and omitted at least 541 distinct referenced spans (minimum 16,925).
+    # Permit one bounded re-collection; the incomplete shard is not an inventory.
+    max_spans = 32768,
     max_span_bytes = 1048576,
-    # Maximum current shard is 20,108,151 bytes; canonical normalized IR is
-    # 78,653,995 bytes (pretty IR 94,092,630; boundary IR 76,649,131).
-    # The artifact cap accommodates one canonical IR, not combined outputs.
+    # The candidate's incomplete CLI shard was 22,854,847 bytes; its complete
+    # size and normalized IR remain unmeasured. Keep the independent byte caps.
     max_shard_bytes = 33554432,
     max_artifact_bytes = 134217728,
   },

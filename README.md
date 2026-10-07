@@ -267,11 +267,21 @@ the anonymous template D and changes P; source literal 2→3 and independently
 computed constant 2→3 each change D. These local, versioned experimental IDs
 bind the target's checked interface, empty effects, builtin addition
 dependency and exact I64 capture; `artifact_sha256` is null, not the builder
-artifact. Source locations, builder D, VM addresses and code-owner handles
-are not part of D. General logical source-binding aliases, independently
-named equal bindings, recursive lexical owners, other returned interfaces and
-effectful graph shapes have no identity-bearing witness here; they remain
-without target D/P rather than using bit equality or heap topology.
+artifact. The local `v2-blake3` IDs use BLAKE3 1.8.7 with separate template
+and captured-value domains, over this strict checked I64 projection only;
+they are not the canonical portable P-ID-04 encoding. The eight-lock offline
+vendor closure contains 237 archives, five beyond the formerly reviewed 232:
+`unicode-width` 0.2.2 and four BLAKE3-related crates. A hash-checked candidate
+vendor was realized locally, with its measured path and NAR bound by M5/M6
+in this WIP selection, without source-bound assurance. That is not a selected
+Nix, source-inventory or native-assurance gate pass. Source locations, builder
+D, VM addresses and code-owner handles are not part of D. General logical
+source-binding aliases, independently named equal bindings, recursive lexical
+owners, other returned interfaces and effectful graph shapes have no
+identity-bearing witness here; they remain without target D/P rather than
+using bit equality or heap topology.
+The same-interface pure `quote [ - ] compose` result remains an executable
+checked owner but cannot borrow the add-only anonymous D/P.
 Ambiguous or unsupported dynamic Programs remain usable opaque owners without
 checked origin. A
 verified selected origin proves only this supported saved owner's bounded

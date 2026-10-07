@@ -1,6 +1,21 @@
 {
   "dependencies": [
     {
+      "callee": "anyhow",
+      "caller": "noble-cli",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "blake3",
+      "caller": "noble-cli",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "libc",
+      "caller": "noble-cli",
+      "edge_kind": "normal"
+    },
+    {
       "callee": "noble-contracts",
       "caller": "noble-cli",
       "edge_kind": "normal"
@@ -12,6 +27,26 @@
     },
     {
       "callee": "noble-wasm",
+      "caller": "noble-cli",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "serde_json",
+      "caller": "noble-cli",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "wasmparser",
+      "caller": "noble-cli",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "wasmtime",
+      "caller": "noble-cli",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "wat",
       "caller": "noble-cli",
       "edge_kind": "normal"
     },
@@ -49,7 +84,12 @@
   ],
   "macro_origins": [
     "<builtin>",
+    "alloc::format",
     "alloc::vec",
+    "anyhow::__anyhow",
+    "anyhow::__fallback_ensure",
+    "anyhow::anyhow",
+    "anyhow::bail",
     "attempt",
     "core::assert",
     "core::assert_eq",
@@ -57,12 +97,34 @@
     "core::clone::Clone",
     "core::cmp::Eq",
     "core::cmp::PartialEq",
+    "core::const_format_args",
     "core::default::Default",
     "core::fmt::Debug",
+    "core::format_args",
     "core::marker::Copy",
+    "core::panic::panic_2021",
     "core::panic::unreachable_2021",
+    "core::prelude::v1::test",
+    "core::write",
+    "intrinsic::advance",
+    "intrinsic::lean_text::append",
+    "intrinsic::lean_text::push",
+    "intrinsic::parsed::{closure#0}::push_frame",
+    "intrinsic::parsed::{closure#0}::push_value",
+    "intrinsic::proof_walk::{closure#0}::finish_apply",
+    "intrinsic::proof_walk::{closure#0}::schedule",
+    "intrinsic::proof_walk::{closure#0}::take_checked",
+    "intrinsic::proof_walk::{closure#0}::take_inferred",
+    "intrinsic::push_rewrite_frame",
+    "intrinsic::push_rewritten",
+    "intrinsic::take_code",
+    "intrinsic::take_prop",
+    "intrinsic::take_sort",
+    "intrinsic::work_pop",
+    "intrinsic::work_push",
     "nominal::declare",
     "nominal::required",
+    "serde_json::json_internal",
     "std::assert",
     "std::assert_eq",
     "std::assert_ne",
@@ -70,6 +132,7 @@
     "std::cmp::Eq",
     "std::cmp::PartialEq",
     "std::const_format_args",
+    "std::default::Default",
     "std::eprintln",
     "std::fmt::Debug",
     "std::format",
@@ -79,11 +142,13 @@
     "std::panic::panic_2021",
     "std::prelude::v1::test",
     "std::println",
-    "std::vec"
+    "std::vec",
+    "std::writeln",
+    "words::subst::finish::attempt_segment"
   ],
   "owner": "noble-maintainers",
   "schema_version": "noble-source-inventory-policy/v1",
-  "scope_note": "Reviewed complete 32-unit selected Declared-Modules-v1 compiler inventory: noble-kernel, noble-contracts and noble-wasm remain domain-core; noble-cli and noble-syndicate remain composition roots. Source-derived nominal declarations, versioned import and explicit bounded host operations, recursive kernel eligibility, Wasm admission/emission and frontend/worker integration introduce authored bodies with OPEN extraction and refinement obligations. The independent typed Wasmtime kernel peer is verification-only outside production. Pinned Aeneas erases core.fmt.Arguments to Unit; formatted-string construction, diagnostic text and naming semantics are an external assumption, not proved by generated Lean, and their authored source bodies remain OPEN. Finite compiled-Wasm DX acceptance provides bounded execution evidence only. Retained M7 strict Lean roots remain separately bound and do not prove nominal source-to-Wasm, host, engine or whole-program refinement.",
+  "scope_note": "Historical complete 32-unit selected Declared-Modules-v1 compiler inventory: noble-kernel, noble-contracts and noble-wasm remain domain-core; noble-cli and noble-syndicate remain composition roots. Source-derived nominal declarations, versioned import and explicit bounded host operations, recursive kernel eligibility, Wasm admission/emission and frontend/worker integration introduce authored bodies with OPEN extraction and refinement obligations. The independent typed Wasmtime kernel peer is verification-only outside production. Pinned Aeneas erases core.fmt.Arguments to Unit; formatted-string construction, diagnostic text and naming semantics are an external assumption, not proved by generated Lean, and their authored source bodies remain OPEN. Finite compiled-Wasm DX acceptance provides bounded execution evidence only. Retained M7 strict Lean roots remain separately bound and do not prove nominal source-to-Wasm, host, engine or whole-program refinement. The partial 54-unit candidate file reviews add 253 exact production paths (183 body/open, 2 generated, 68 structural) to reach 6069 reviewed paths (2778 body/open, 2133 generated, 1158 structural); 2284 observed paths remain unreviewed and 105 historical paths are stale. No candidate source-coverage acceptance or proof is claimed.",
   "subjects": [
     {
       "category": "body",
@@ -41278,20 +41343,20 @@
       "refinement": "not-applicable"
     },
     {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Hand-written PartialEq implementation block for Module; eq is a separate authored open body, not derived or proved.",
       "package": "noble-contracts",
       "qualified_path": "noble_contracts::<source::declared::Module as core::cmp::PartialEq>",
       "refinement": "not-applicable"
     },
     {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+      "category": "body",
+      "disposition": "open",
+      "note": "Hand-written Module equality comparing retained source and published host results; extraction and refinement remain open, with no proof transferred from the historical derive.",
       "package": "noble-contracts",
       "qualified_path": "noble_contracts::<source::declared::Module as core::cmp::PartialEq>::eq",
-      "refinement": "not-applicable"
+      "refinement": "open"
     },
     {
       "category": "generated",
@@ -46612,6 +46677,3414 @@
       "package": "noble-kernel",
       "qualified_path": "noble-kernel::closure@crates/noble-kernel/src/contracts/nominal/inspection.rs:5810:5817",
       "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:772:775",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:819:821",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:979:981",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:1173:1175",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:1344:1346",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:1741:1744",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:1972:1975",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:2045:2048",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:3652:3655",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:5153:5156",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:5258:5260",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:6193:6195",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:6803:6806",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:6984:6987",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:7163:7166",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:8180:8183",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:8844:8847",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:9134:9137",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:9543:9546",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:9847:9850",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:10014:10017",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:10411:10414",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:10803:10806",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:11640:11642",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:12529:12536",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:12808:12810",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:13326:13337",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:13414:13416",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:13500:13502",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:13660:13662",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:13744:13746",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:13893:13896",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:13966:13969",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:15228:15230",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:16488:16490",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:16622:16629",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:16686:16688",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:17056:17058",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:17150:17152",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:17763:17765",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:17850:17852",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:18036:18039",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:18105:18108",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:19545:19548",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:19616:19619",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:20642:20649",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:20677:20680",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:21054:21057",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:22395:22397",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:22589:22591",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:24118:24120",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:25164:25167",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:25935:25937",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:26251:26253",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:26501:26503",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:28521:28523",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:28644:28646",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:28759:28761",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:28840:28900",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:28970:28987",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:29052:29068",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Compiler-generated #[test] wrapper closure; inherited body/refinement obligations remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:31667:40534",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:31845:31852",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:32018:32025",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:32178:32185",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:32266:32273",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:32399:32406",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:32538:32545",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:32727:32730",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:33493:33502",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:35402:35409",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:38271:38274",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:38370:38373",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:38514:38517",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:39100:39109",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:39475:39482",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Compiler-generated #[test] wrapper closure; inherited body/refinement obligations remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:40552:47202",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:40765:40772",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:40938:40945",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:41098:41105",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:41186:41193",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:41319:41326",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:41458:41465",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:41647:41650",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:42396:42405",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/live_slot_origin.rs:44971:44986",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::denied",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::number",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::text",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::rows",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::named",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::decode",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::function_plan",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::verify",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::anonymous_shape",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::supports_anonymous_target",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::checked_saved_owner_inspection",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::anonymous_target_identity",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Named source constant initializer; this inventory does not discharge extraction or refinement.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::tests::LIMITS",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::tests::selected_binary_rejects_wrong_operation_body_and_table_binding",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Noble-authored source body; extraction and refinement require separately bound evidence and remain open in this inventory.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::tests::returned_target_refuses_forged_complete_graph_and_wrong_saved_owner",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated test harness; no independent Noble-authored source body.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::tests::test",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source test module declaration; its observed bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::tests",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#3}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#4}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#5}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#6}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#7}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#8}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#9}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#10}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#11}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::{use#12}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::anonymous_target_identity::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::tests::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::tests::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::live_slot::origin::tests::returned_target_refuses_forged_complete_graph_and_wrong_saved_owner::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored map_err closure in logical-form parsing; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/parsing/logic.rs:1637:1640",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored ok_or_else closure in logical-form parsing; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/parsing/logic.rs:2340:2342",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Compiler-generated #[test] wrapper closure; inherited body/refinement obligations remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/parsing/logic.rs:3079:4588",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored logical-form parser; extraction and refinement remain open in this inventory.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::parsing::logic::parse",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated parser body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::parsing::logic::parse::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source test module declaration in a production-role lib+test unit; its observed bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::parsing::logic::tests",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-generated test harness; no independent Noble-authored source body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::parsing::logic::tests::test",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored #[test] function shares its path with a generated registration constant; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::parsing::logic::tests::nested_form_preserves_order_and_rejects_excess_depth",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated test body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::parsing::logic::tests::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated test body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::parsing::logic::tests::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated test body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::parsing::logic::tests::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated test body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::parsing::logic::tests::{use#3}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored checked-target/source-proof correspondence; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::<impl source::declared::state::ModuleSession>::correspond_checked_target",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored candidate shape and instruction comparison; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::same_candidate",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source implementation declaration; its method body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::<impl source::declared::state::ModuleSession>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#3}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#4}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#5}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#6}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#7}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#8}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#9}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#10}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#11}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::proof::{use#12}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source-origin mismatch diagnostic helper; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::origin::mismatch",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored retained imported-alias binding; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::origin::imports",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored resolved named-use origin trace; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::origin::trace",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source record declaration; its containing trace body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::origin::PendingUse",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored retained-alias closure in imports; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:1041:1066",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing-import error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:1515:1517",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing-original-module error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:1885:1887",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source-definition lookup closure in trace; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:2478:2485",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored root candidate-node lookup closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:3107:3114",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored pending source-definition lookup closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:4076:4083",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing-owner error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:4441:4443",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing-specialization error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:5061:5064",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored slot-conversion error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:5481:5484",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source-node diagnostic conversion closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:7526:7535",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored accepted candidate-node lookup closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:7724:7731",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source-span start overflow error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:8590:8592",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source-span end overflow error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:8832:8834",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source-range lookup closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical/origin.rs:9177:9191",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source-origin program bound initializer; extraction and refinement remain open.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::MAX_ORIGIN_PROGRAMS",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source-origin operation bound initializer; extraction and refinement remain open.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::MAX_ORIGIN_OPERATIONS",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source-origin composition depth bound initializer; extraction and refinement remain open.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::MAX_ORIGIN_DEPTH",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored checked source-origin action conversion; extraction and refinement remain open.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::action",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored bounded origin-program construction; extraction and refinement remain open.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::programs",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored dynamic origin-value projection; extraction and refinement remain open.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::dynamic",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored returned-output origin reconstruction; extraction and refinement remain open.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::returned_outputs",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored selected origin-metadata construction; extraction and refinement remain open.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::build",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source enum declaration; its consuming bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::Value",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#3}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#4}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#5}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#6}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#7}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#8}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#9}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#10}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#11}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#12}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#13}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#14}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#15}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#16}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#17}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated bodies are classified separately.",
+      "package": "noble-wasm",
+      "qualified_path": "noble_wasm::source::origin::{use#18}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored staged proof diagnostic helper; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::at",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored contract and proof staging against resolved source; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::stage",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored dependency snapshot byte accounting; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::dependency_bytes",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored bounded type-walk stack initializer; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::TYPE_STACK",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored pure Type0 stack check; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::pure_type",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored contract binding type resolution; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::types",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored retained original-module and definition occurrence lookup; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::source_origin",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored bounded original definition source slice; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::SourceOrigin::<'_>::definition_source",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source-bound subject, owner and dependency binding; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::bind_subject",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored local or imported contract claim resolution; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::resolve_contract",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored current module-version scope comparison; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::is_current",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored immutable imported-module lookup; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::imported_module",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored bounded logical-use frame initializer; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::USE_FRAMES",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored preorder proof-use and dependency resolution; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::resolve_uses",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source staging record declaration; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::Staged",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source request record declaration; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::Request",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source origin record declaration; associated bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::SourceOrigin",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source implementation declaration; its method body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::SourceOrigin<'_>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source module declaration; origin.rs bodies are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::origin",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated type-check body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::pure_type::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated resolution body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::resolve_uses::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated resolution body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::resolve_uses::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; associated resolution body is classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::register::logical::resolve_uses::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored contract-input binding clone closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:1425:1434",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored contract-output binding clone closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:1539:1548",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored prepared-claim diagnostic closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:2126:2135",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored proof-export filter closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:2502:2509",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored proof-export name clone closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:2572:2579",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored proof byte-limit conversion error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:4042:4045",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored proof dependency count-overflow error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:4365:4367",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored dependency byte-overflow error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:5432:5434",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored contract type diagnostic conversion closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:8348:8357",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing immutable owner error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:9090:9092",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored source ordinal conversion error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:10187:10190",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored original source-span start conversion error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:10873:10876",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored original source-span end conversion error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:11070:11073",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored out-of-bounds original source error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:11253:11255",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored resolved definition index lookup closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:12359:12366",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored dependency slot index conversion error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:13856:13859",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing dependency owner error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:14125:14127",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored local contract goal clone closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:17166:17176",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing local contract error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:17224:17226",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored current contract goal clone closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:17429:17439",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing current contract error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:17487:17489",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored imported contract goal clone closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:17745:17755",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing imported contract error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:17799:17801",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored current versioned-scope predicate closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:17984:18001",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored imported versioned-module lookup closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:18444:18452",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored aliased-module lookup closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:18619:18626",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing imported module error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:18691:18693",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored logical frame child-iterator lookup closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:19994:20001",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored logical depth-overflow error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/logical.rs:20726:20728",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored immutable module-version checked export signature lookup; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::declared::state::namespace::<impl source::declared::state::ModuleSession>::checked_signature",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing versioned type error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:1297:1299",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored invalid module version error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:1602:1605",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing exported type error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:4482:4484",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored retained byte-count overflow error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:5597:5599",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored retained limit conversion error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:5813:5816",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored missing immutable import error closure; extraction/refinement remain open, including compiler effect evaluation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/namespace.rs:7432:7434",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::CheckedDefinitionId as core::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::ProofContext<'a> as core::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::ProofContext<'a> as core::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::ProofContext<'a> as core::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::ProofContext<'a> as core::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::clone::Clone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::clone::Clone>::clone",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::clone::TrivialClone>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::cmp::Eq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::cmp::Eq>::assert_fields_are_eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::cmp::PartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::cmp::PartialEq>::eq",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::fmt::Debug>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::fmt::Debug>::fmt",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::marker::Copy>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Compiler-derived implementation or method from reviewed derive input; not an authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::<source::proof::SourceProofRefusal as core::marker::StructuralPartialEq>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::<impl source::Session>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::<impl source::Session>::checked_selected_target",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::<impl source::Session>::checked_selected_target::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::<impl source::Session>::checked_selected_target::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::<impl source::Session>::checked_selected_target::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::<impl source::Session>::checked_selected_target::{use#3}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::<impl source::Session>::checked_selected_target::{use#4}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::<impl source::Session>::checked_selected_target::{use#5}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::<impl source::Session>::checked_selected_target::{use#6}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::<impl source::Session>::checked_selected_target::{use#7}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedDefinitionId",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedDefinitionId::identity",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedDefinitionId::index",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedQuoteSite",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedQuoteSite::<'_>::definition_id",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedQuoteSite::<'_>::interface",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedQuoteSite::<'_>::node",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedQuoteSite::<'_>::source_generation",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedQuoteSite::<'_>::span",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedQuoteSite<'_>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget::<'_>::body",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget::<'_>::checked_operation_span",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget::<'_>::checked_quote_site",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget::<'_>::definition",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget::<'_>::definition_id",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget::<'_>::root",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget::<'_>::source",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget::<'_>::source_generation",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget::<'_>::submission",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget<'_>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget<'_>::checked_operation_span::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget<'_>::checked_operation_span::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget<'_>::checked_operation_span::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget<'_>::checked_quote_site::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget<'_>::checked_quote_site::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget<'_>::checked_quote_site::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::CheckedSelectedTarget<'_>::checked_quote_site::{use#3}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::ProofContext",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceCorrespondenceCandidate",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceCorrespondenceCandidate::<'_>::assumptions",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceCorrespondenceCandidate::<'_>::captures",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceCorrespondenceCandidate::<'_>::definition_id",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceCorrespondenceCandidate::<'_>::goal",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceCorrespondenceCandidate::<'_>::interface",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceCorrespondenceCandidate::<'_>::module_generation",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceCorrespondenceCandidate::<'_>::retained_proof",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceCorrespondenceCandidate::<'_>::target_generation",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceCorrespondenceCandidate<'_>",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type, implementation or use marker; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::proof::SourceProofRefusal",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/proof.rs:12411:12417",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/proof.rs:3744:3751",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/proof.rs:4130:4137",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/proof.rs:6899:6906",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/workflow/verification/named_v2.rs:503:505",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored production source body; extraction and refinement remain open.",
+      "package": "noble-cli",
+      "qualified_path": "noble::workflow::verification::named_v2::verify",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Authored source type; body obligations are classified separately.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::Graph",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::invalid",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::at",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::unary",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::checked",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::node",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::empty_inst",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::named_scheme",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::source_origin",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::source_call",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::body_request",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::same_derived",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::source_step",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::verify",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::bytes",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::provenance",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::statement",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::prepare_named_contract",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::exact_eq_add",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::selected_assertion",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source source body; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::check_contract",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#0}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#1}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#2}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#3}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#4}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#5}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#6}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#7}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#8}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#9}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#10}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#11}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#12}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#13}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#14}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#15}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#16}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#17}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#18}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#19}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#20}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#21}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#22}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#23}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#24}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#25}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#26}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#27}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#28}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#29}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#30}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#31}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#32}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#33}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#34}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#35}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#36}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Source import marker; no independent authored body.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::intrinsic::named_v2::{use#37}",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:841:844",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:947:950",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:1043:1045",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:2015:2018",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:3532:3534",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:3653:3656",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:3719:3721",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:4010:4017",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:4114:4122",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:4541:4543",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:5564:5566",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:5698:5700",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:6301:6303",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:6940:6956",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:9069:9072",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:9204:9207",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:9385:9388",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:9522:9524",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:10621:10628",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:15640:15646",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:15756:15763",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:18786:18788",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:18959:18961",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:19411:19418",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:20083:20090",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:22371:22373",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:23518:23520",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored named-source closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/intrinsic/named_v2.rs:27783:27820",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored selected-root and immutable namespace preparation; extraction and refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::preparation::<impl source::Session>::prepare_signed",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored selected-root lookup closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/preparation.rs:2151:2157",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored binding-key clone closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/preparation.rs:4697:4707",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Authored environment failure closure; extraction/refinement remain open.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/preparation.rs:5666:5669",
+      "refinement": "open"
     }
   ],
   "test_subjects": [
@@ -47947,7 +51420,93 @@
     "noble-contracts::closure@crates/noble-contracts/tests/declared/cases.rs:9782:9785",
     "noble-contracts::closure@crates/noble-contracts/tests/declared/cases.rs:9988:9991",
     "acceptance::nominal::identity::first_declaration_failure_precedes_later_fault",
-    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/nominal/identity.rs:6769:8376"
+    "noble-kernel::closure@crates/noble-kernel/tests/acceptance/nominal/identity.rs:6769:8376",
+    "checked_u64::LIMITS",
+    "checked_u64::checked_unsigned_export_requires_its_exact_world_recipe",
+    "checked_u64::main",
+    "checked_u64::main::test",
+    "checked_u64::std",
+    "checked_u64::test",
+    "checked_u64::{use#0}",
+    "noble-wasm::closure@crates/noble-wasm/tests/checked_u64.rs:152:1165",
+    "noble-wasm::closure@crates/noble-wasm/tests/checked_u64.rs:447:454",
+    "noble-wasm::closure@crates/noble-wasm/tests/checked_u64.rs:560:567",
+    "noble-wasm::closure@crates/noble-wasm/tests/checked_u64.rs:962:969",
+    "named_v2::<Fixture as std::ops::Drop>",
+    "named_v2::<Fixture as std::ops::Drop>::drop",
+    "named_v2::DEFINITIONS",
+    "named_v2::Fixture",
+    "named_v2::Fixture::command",
+    "named_v2::Fixture::new",
+    "named_v2::IMPORT",
+    "named_v2::LIMITS",
+    "named_v2::SOURCE",
+    "named_v2::SUBJECT",
+    "named_v2::checked_named_v2_two_distinct_source_calls",
+    "named_v2::children",
+    "named_v2::copy_lean_tree",
+    "named_v2::copy_lean_tree::PATH_BUDGET",
+    "named_v2::copy_lean_tree::SOURCE_BUDGET",
+    "named_v2::dying_real_named_consumer_cannot_report_acceptance",
+    "named_v2::exact_named_source_uses_pinned_kernel_and_library",
+    "named_v2::fixture",
+    "named_v2::fixture_for",
+    "named_v2::framed_session_publishes_only_the_strict_named_proof",
+    "named_v2::library_path",
+    "named_v2::main",
+    "named_v2::main::test",
+    "named_v2::named_consumer",
+    "named_v2::named_v2_rejects_forged_owner_slot_and_ordinal",
+    "named_v2::named_v2_rejects_partial_word_wrong_token_and_alias_rebind",
+    "named_v2::named_v2_rejects_weak_or_mismatched_source_proof",
+    "named_v2::named_v2_rejects_wrong_inst_and_unreachable_graph",
+    "named_v2::named_v2_rejects_wrong_precondition_or_output_claim",
+    "named_v2::named_v2_requires_original_imported_step",
+    "named_v2::quoted_named_call_cannot_use_two_direct_call_rule",
+    "named_v2::run",
+    "named_v2::std",
+    "named_v2::test",
+    "named_v2::wrong_output_weak_claim_and_cross_version_cannot_verify",
+    "named_v2::{use#0}",
+    "named_v2::{use#10}",
+    "named_v2::{use#11}",
+    "named_v2::{use#12}",
+    "named_v2::{use#13}",
+    "named_v2::{use#14}",
+    "named_v2::{use#1}",
+    "named_v2::{use#2}",
+    "named_v2::{use#3}",
+    "named_v2::{use#4}",
+    "named_v2::{use#5}",
+    "named_v2::{use#6}",
+    "named_v2::{use#7}",
+    "named_v2::{use#8}",
+    "named_v2::{use#9}",
+    "noble-cli::closure@crates/noble-cli/tests/named_v2.rs:2600:2615",
+    "noble-cli::closure@crates/noble-cli/tests/named_v2.rs:3928:3930",
+    "noble-cli::closure@crates/noble-cli/tests/named_v2.rs:4208:5159",
+    "noble-cli::closure@crates/noble-cli/tests/named_v2.rs:5169:6904",
+    "noble-cli::closure@crates/noble-cli/tests/named_v2.rs:5359:5364",
+    "noble-cli::closure@crates/noble-cli/tests/named_v2.rs:6914:8732",
+    "noble-cli::closure@crates/noble-cli/tests/named_v2.rs:7107:7112",
+    "noble-cli::closure@crates/noble-cli/tests/named_v2.rs:9795:11477",
+    "noble-cli::closure@crates/noble-cli/tests/named_v2.rs:9986:9991",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:10215:10628",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:10353:10360",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:1071:1078",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:1187:1194",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:1311:1318",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:1778:2547",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:1944:1951",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:2040:2047",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:2557:2977",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:2686:2693",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:2987:3684",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:3694:5960",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:5970:8319",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:8329:9450",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:834:841",
+    "noble-contracts::closure@crates/noble-contracts/tests/named_v2.rs:9460:10205"
   ],
   "tools": [
     {

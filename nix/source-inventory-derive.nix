@@ -29,6 +29,8 @@ let
   units = ir.units;
   memberships = ir.unit_memberships;
   unitById = listToAttrs (map (u: { name = u.unit_id; value = u; }) units);
+  spanById = listToAttrs (map (s: { name = s.span_id; value = s; }) ir.spans);
+  factIds = listToAttrs (map (f: { name = f.fact_id; value = null; }) ir.facts);
   has = attrs: name: attrs ? ${name};
   ownerUnits =
     factId:
@@ -36,13 +38,34 @@ let
   roleOf = unitId: unitById.${unitId}.role;
   # A subject is test-only when every observing unit carries the test role.
   isTestOnly = subject: all (unitId: roleOf unitId == "test") subject.units;
-  itemSubjects = map (f: {
-    qualified_path = f.qualified_path;
-    item_kind = f.item_kind;
-    origin_crate = f.origin_crate;
-    visibility = f.visibility;
-    units = ownerUnits f.fact_id;
-  }) (filter (f: f.kind == "item") ir.facts);
+  itemSubjects = map (
+    f:
+    let
+      spanId = if f ? span_id && builtins.isString f.span_id && f.span_id != "" then
+        f.span_id
+      else
+        throw "source inventory item has no span_id: ${f.fact_id}";
+      span = if has spanById spanId then spanById.${spanId} else
+        throw "source inventory item references missing span: ${spanId}";
+    in
+    {
+      qualified_path = f.qualified_path;
+      item_kind = f.item_kind;
+      origin_crate = f.origin_crate;
+      visibility = f.visibility;
+      units =
+        let observed = ownerUnits f.fact_id;
+        in if observed == [ ] then
+          throw "source inventory item has no observing unit: ${f.fact_id}"
+        else
+          observed;
+      span_id = spanId;
+      from_expansion = if span ? from_expansion && builtins.isBool span.from_expansion then
+        span.from_expansion
+      else
+        throw "source inventory item span lacks boolean from_expansion: ${spanId}";
+    }
+  ) (filter (f: f.kind == "item") ir.facts);
   production = filter (s: !isTestOnly s) itemSubjects;
   tests = filter isTestOnly itemSubjects;
   macroOrigins = uniqueSorted (
@@ -73,8 +96,13 @@ let
     edge_kind = e.edge_kind;
   }) edges;
 in
+if length (attrNames spanById) != length ir.spans then
+  throw "source inventory IR contains duplicate span IDs"
+else if length (attrNames factIds) != length ir.facts then
+  throw "source inventory IR contains duplicate fact IDs"
+else
 {
-  schema = "noble-source-inventory/v1";
+  schema = "noble-source-inventory/v2";
   generated_by = {
     tool = "cargo-octet";
     toolchain = if length units == 0 then "<none>" else (head units).toolchain_blake3;

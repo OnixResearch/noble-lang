@@ -30,7 +30,57 @@
         "version": "0.4.3"
       }
     ],
-    "production": []
+    "production": [
+      {
+        "assumption": "CLI error/context formatting and propagation rely on this external crate; a reported error is not proof that every host effect was avoided.",
+        "edge_kind": "normal",
+        "name": "anyhow",
+        "role": "noble-cli",
+        "version": "1.0.100"
+      },
+      {
+        "assumption": "CLI experimental identity digests use the selected std/pure features; collision resistance, origin authenticity and external implementation safety are not established here.",
+        "edge_kind": "normal",
+        "name": "blake3",
+        "role": "noble-cli",
+        "version": "1.8.7"
+      },
+      {
+        "assumption": "CLI authority path walking uses Linux O_NOFOLLOW/O_DIRECTORY flags through std OpenOptions; kernel and /proc/self/fd behavior and external libc safety remain host assumptions.",
+        "edge_kind": "normal",
+        "name": "libc",
+        "role": "noble-cli",
+        "version": "0.2.189"
+      },
+      {
+        "assumption": "CLI JSON parsing and serialization require separate bounded-input and authority/schema checks; syntactic parsing and external implementation safety do not establish trusted commands or receipts.",
+        "edge_kind": "normal",
+        "name": "serde_json",
+        "role": "noble-cli",
+        "version": "1.0.151"
+      },
+      {
+        "assumption": "CLI Wasm validation and decoding depend on the external parser; its behavior does not prove binary correspondence, ABI semantics, or guest execution safety.",
+        "edge_kind": "normal",
+        "name": "wasmparser",
+        "role": "noble-cli",
+        "version": "0.243.0"
+      },
+      {
+        "assumption": "CLI host adapters execute through the selected absolute Wasmtime source; engine/trap behavior, native dependencies and host resource lifetime remain unproved assumptions, not a trusted proof boundary.",
+        "edge_kind": "normal",
+        "name": "wasmtime",
+        "role": "noble-cli",
+        "version": "40.0.2"
+      },
+      {
+        "assumption": "CLI converts selected UTF-8 WAT to Wasm before separate byte/ABI checks; parser correctness and the resulting guest semantics are not proved by this inventory.",
+        "edge_kind": "normal",
+        "name": "wat",
+        "role": "noble-cli",
+        "version": "1.243.0"
+      }
+    ]
   },
   "foreign_libraries": [],
   "miri": {
@@ -72,23 +122,23 @@
   ],
   "safety_arguments": [
     {
-      "argument": "Safe sequential Rust with explicit owned inputs. The workspace forbids unsafe_code, and no compiler function-safety or foreign-item fact exists for this crate.",
+      "argument": "Safe sequential Rust with explicit owned inputs. The workspace unsafe_code forbid lint is the owned-unsafe basis, and no compiler foreign-item fact exists for this crate; absent function-safety facts are not unsafe evidence.",
       "scope": "noble-kernel"
     },
     {
-      "argument": "Safe no_std frontend with explicit owned source bytes and an inward dependency on noble-kernel. The workspace forbids unsafe_code; native accounting must confirm the absence of unsafe and foreign-item facts.",
+      "argument": "Safe no_std frontend with explicit owned source bytes and an inward dependency on noble-kernel. The workspace unsafe_code forbid lint is the owned-unsafe basis; native accounting must confirm the absence of foreign-item facts.",
       "scope": "noble-contracts"
     },
     {
-      "argument": "Safe no_std emitter with explicit owned checked-kernel and checked WIT export inputs and allocation limits, depending inward on noble-kernel and noble-contracts. The workspace forbids unsafe_code; native accounting must confirm the absence of unsafe and foreign-item facts. Emitting or byte-binding owned WAT does not prove those fragments, backend lowering, loader binding or Wasm execution semantics. The selected Miri subject remains the kernel budget test and does not establish emitter execution coverage.",
+      "argument": "Safe no_std emitter with explicit owned checked-kernel and checked WIT export inputs and allocation limits, depending inward on noble-kernel and noble-contracts. The workspace unsafe_code forbid lint is the owned-unsafe basis; native accounting must confirm the absence of foreign-item facts. Emitting or byte-binding owned WAT does not prove those fragments, backend lowering, loader binding or Wasm execution semantics. The selected Miri subject remains the kernel budget test and does not establish emitter execution coverage.",
       "scope": "noble-wasm"
     },
     {
-      "argument": "Shell-only orchestration and unprotected console output. The workspace forbids unsafe_code in this crate too.",
+      "argument": "Composition-root orchestration invokes external JSON/Wasm parsers, Wasmtime execution, digest generation and Linux filesystem flags. The workspace forbids owned unsafe_code in this crate, but does not audit external unsafe implementations, engine behavior, host resource lifetime or command authority; those require the caller checks and explicit assumptions above.",
       "scope": "noble-cli"
     },
     {
-      "argument": "Safe std composition-root policy serializes bounded M7 table access with a Mutex and host-owned AtomicU64 session identity. The workspace forbids unsafe_code; compiler accounting must confirm no owned unsafe or foreign-item facts and no third-party production dependencies. Host-assigned facets and engine trap authenticity remain explicit assumptions; source inventory leaves new choreography/parser/refinement bodies open.",
+      "argument": "Safe std composition-root policy serializes bounded M7 table access with a Mutex and host-owned AtomicU64 session identity. The workspace unsafe_code forbid lint is the owned-unsafe basis; compiler accounting must confirm no foreign-item facts and no third-party production dependencies. Host-assigned facets and engine trap authenticity remain explicit assumptions; source inventory leaves new choreography/parser/refinement bodies open.",
       "scope": "noble-syndicate"
     }
   ],
@@ -99,7 +149,7 @@
       "assumptions": [
         "64-bit little-endian target",
         "strict provenance is the required Miri model",
-        "no target-specific native library is linked",
+        "The compiler/Cargo inventory does not audit linked system libraries or transitive native/unsafe dependency implementations; no owned foreign-item fact is not a linker-closure or host-ABI proof",
         "Core-Bootstrap managed-linear-memory execution, Component-Sync-Bootstrap and the two M3 Wasm experiments are separately scoped guest execution, not additional claimed native Rust targets",
         "Verification-only Wasmtime peers and their dependencies are not included in the five-crate production unsafe-code or native dependency inventory"
       ],

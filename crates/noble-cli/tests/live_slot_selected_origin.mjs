@@ -7,6 +7,7 @@ const binary = process.argv[2];
 assert.ok(binary, 'pass the selected noble CLI binary');
 const definitions = [
   ['variable', 'builder', 'def builder [ quote [ + ] compose ]'],
+  ['subtract', 'subtract', 'def subtract [ quote [ - ] compose ]'],
   ['renamed', 'renamed', 'def renamed [ quote [ + ] compose ]'],
   ['fixed', 'fixed', 'def fixed [ 2 quote [ + ] compose ]'],
   ['fixed3', 'fixed3', 'def fixed3 [ 3 quote [ + ] compose ]'],
@@ -88,11 +89,23 @@ try {
   const varying2 = saved(await invoke('variable', [input(2)]), 0, 'variable', installations.variable);
   assert.equal(composedCapture(varying2), '2');
   assert.ok(varying2.target_identity?.definition_id, 'checked anonymous target D is absent');
+  assert.match(varying2.target_identity.definition_id,
+    /^anonymous-template-experimental-v2-blake3:[a-f0-9]{64}$/);
+  assert.match(varying2.target_identity.program_value_id,
+    /^anonymous-program-experimental-v2-blake3:[a-f0-9]{64}$/);
+  // Independently derived with `b3sum --derive-key` over the strict binary
+  // projection (including the domain-specific context and LE I64 capture).
+  assert.equal(varying2.target_identity.definition_id,
+    'anonymous-template-experimental-v2-blake3:effbd15ea069fc0d952e38024efebca823c96c2b0d7db7b41214957543602268');
+  assert.equal(varying2.target_identity.program_value_id,
+    'anonymous-program-experimental-v2-blake3:c6cd72597427ab4586b858614b13a2838cb99d855f748ade658f0248df233248');
   assert.deepEqual((await run(varying2.owner, 1)).stack, [{ kind: 1, value: '3' }]);
   const varying3 = saved(await invoke('variable', [input(3)]), 0, 'variable', installations.variable);
   assert.equal(composedCapture(varying3), '3');
   assert.equal(varying2.target_identity.definition_id, varying3.target_identity.definition_id);
   assert.notEqual(varying2.target_identity.program_value_id, varying3.target_identity.program_value_id);
+  assert.equal(varying3.target_identity.program_value_id,
+    'anonymous-program-experimental-v2-blake3:c54691eb93f0847326198765a609aaef63686214545b542dd60e71a9f9cd37d3');
   assert.notEqual(varying2.target_identity.definition_id, varying2.verified_origin.definition_identity);
   assert.notEqual(varying2.target_identity.program_value_id, varying2.verified_origin.definition_identity);
   assert.deepEqual(varying2.target_identity.captures, [{ type: 'I64', value: '2' }]);
@@ -117,6 +130,12 @@ try {
     owner: varying2.owner, expected_epoch: '0' }, 'refused');
   assert.match(noProof.diagnostic, /proof-required slot lacks independently checked target evidence/);
   assert.deepEqual((await run(varying3.owner, 1)).stack, [{ kind: 1, value: '4' }]);
+  const subtract = saved(await invoke('subtract', [input(2)]), 0, 'subtract',
+    installations.subtract);
+  assert.equal(composedCapture(subtract), '2');
+  assert.equal(subtract.target_identity, undefined,
+    'same-interface pure subtraction must not borrow the checked addition identity');
+  assert.deepEqual((await run(subtract.owner, 9)).stack, [{ kind: 1, value: '7' }]);
   const fixed = {};
   for (const id of ['fixed', 'computed', 'fixed3', 'computed3']) {
     const row = await invoke(id, [input(3)]);
@@ -125,6 +144,12 @@ try {
     const literal = id.endsWith('3') ? 3 : 2;
     assert.equal(composedCapture(program), String(literal));
     assert.deepEqual(program.target_identity.captures, [{ type: 'I64', value: String(literal) }]);
+    if (id === 'fixed' || id === 'computed') {
+      assert.equal(program.target_identity.definition_id,
+        'anonymous-template-experimental-v2-blake3:318c102d0313f5a7ea5c93c36c6bf8c51883a6c974fe73820e709abe9be8c21a');
+      assert.equal(program.target_identity.program_value_id,
+        'anonymous-program-experimental-v2-blake3:46f4308d213416a663e5a6e876eaf4d149e2b4378fb1a746fbe4d9b21999f972');
+    }
     assert.deepEqual((await run(program.owner, 1)).stack, [{ kind: 1, value: String(literal + 1) }]);
     fixed[id] = program.target_identity;
   }
@@ -181,7 +206,7 @@ try {
       protected_operations: replies.reduce((n, row) => n + (row.protected_operations ?? 0), 0) }, null, 2) + '\n',
     { flag: 'wx', mode: 0o600 });
   complete = true;
-  console.log('selected source origin and experimental anonymous D/P: varying, fixed, computed, rename, opaque/alias refusal, no artifact/proof and owner lifecycle');
+  console.log('selected source origin and experimental anonymous D/P: varying, fixed, computed, rename, pure subtraction identity refusal, opaque/alias refusal, no artifact/proof and owner lifecycle');
 } finally {
   if (!complete) await session.abort();
 }

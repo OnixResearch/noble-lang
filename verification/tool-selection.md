@@ -25,10 +25,11 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-The reviewed selection compares 129 file digests across the flake and
+This isolated candidate selection compares 142 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
-pins, the content-hashed Octet correction recipe and four patches,
-source-bound verification/build recipes, and all eight Cargo locks
+pins, the content-hashed Octet correction recipe and five patches,
+source-bound verification/build recipes, the architecture capacity policy,
+its typed export dependencies and manifest, and all eight Cargo locks
 consumed by the reviewed offline vendor, plus the separate test-only boundary
 fixture lock. These are source identities,
 not an executed proof.
@@ -52,13 +53,22 @@ The additional M2, checker-M3, MC1 and Wasm-emitter Lake files are exact byte bi
 The selected extractor applies `nix/aeneas-string-escaping.patch` to the pinned Aeneas source: complete string literals use OCaml `String.escaped`, not per-character `Char.escaped`, which leaves embedded double quotes unescaped. The patch is a separately named Nix input, so changing the containing flake path does not recursively change the tool pin. Fresh M3 and MC1 extraction/Lean compilation validate this patched executable; generated Lean is not hand-repaired. The upstream Charon and Lean-library revisions are unchanged.
 
 The Octet flake input and lock retain revision `235255bc4972ced9128fd5b4d1ec66ff7508ded4`.
-`nix/octet-patched-source.nix` applies four content-hashed engine, libc-path,
-locked-metadata, and test-fixture corrections to that source, reusing the
+`nix/octet-patched-source.nix` applies five content-hashed engine, libc-path,
+locked-metadata, resolved-plan identity, and test-fixture corrections to that source, reusing the
 original Crane artifacts/vendor and the upstream wrapper's post-build/runtime
 inputs. Every `cargo-octet` consumer (gate, inventory, boundary check,
 devShell and exported package) uses `patchedWrapped`; the reviewed tool path
 binds its derivation and output. Nickel and Octet standards stay at their
 original pinned packages.
+The resolved-plan correction distinguishes equal `serde_json` descriptions and
+features when their resolved `memchr` dependencies differ; indistinguishable
+complete units, bad references, and cycles remain rejected. Reordering and
+reindexing a complete plan do not alter its identity. Permanent tests also
+cross-wire the same dependency variants and transitive `memchr` grandchildren
+to require distinct identities. The production lines match post-pin Octet
+commit `684f6a18`; the patch's fixture is adapted for Noble's observed Cargo
+plan, so its post-image Git blob is `97ff02d3baa83d8a864b785c730f887602672e33`,
+not that upstream commit's whole-file blob.
 This is a selected build identity, not approval of Noble's architecture,
 source classification or native dependency findings. The local system
 pre-commit hook runs the absolute selected `noble-octet-gate` store executable
@@ -76,12 +86,14 @@ Noble owns the exact selection policy and the Nix composition code.
 [`nix/reviewed-vendor.nix`](../nix/reviewed-vendor.nix) reads the root Cargo
 lock and the independent M5, M6, M7, intrinsic-proofs, intrinsic-named-v2,
 Result-library, and declared-modules-v1 peer locks: eight locks in all. It
-rejects conflicting or missing registry checksums, checks all 232 distinct
+rejects conflicting or missing registry checksums, checks all 237 distinct
 crate archive SHA-256 values, and produces `source-registry-0` plus a
-lock/archive provenance manifest. The reviewed output
-`/nix/store/f1l57k6wmrq5r7mclybqn1ybbrhyiqsh-noble-reviewed-offline-vendor`
-has NAR `sha256-q2ogc6HJX8hTQWIJgXQJ4cfNwrOhfcvb8OmeduAFAPY=`, pinned
-together in both [`M5`](m5/pins.json) and [`M6`](m6/pins.json).
+lock/archive provenance manifest. The locally realized candidate output
+`/nix/store/3sl4kjvccw33wbrhb7qf57myyrzj371c-noble-reviewed-offline-vendor`
+has measured NAR `sha256-23BKxkztQ6megprdki32gwDS8LXsqQPIsCnI1CYGHTQ=`,
+bound in both candidate [`M5`](m5/pins.json) and [`M6`](m6/pins.json).
+These candidate-only pins are not a selected Nix, source-inventory, or
+native-assurance gate pass or independently verified signed-substitute proof.
 [`selectedVendor`](selected-vendor.mjs) verifies that NAR at each migrated
 gate before selecting Cargo's exact offline source replacement. Merely
 having a registry directory is not evidence of the reviewed vendor.

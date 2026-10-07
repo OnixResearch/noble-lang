@@ -444,16 +444,15 @@ pub(super) fn anonymous_target_identity(
         anonymous_shape(origin, contracts, position, descriptor, root_inputs)? else {
         return Ok(None);
     };
-    let (template_operand, actual) = match operand["kind"].as_str() {
+    let (varying, actual) = match operand["kind"].as_str() {
         Some("root-i64") if operand["position"] == 0 && root_inputs.len() == 1 => {
             let input = &root_inputs[0];
             if input["kind"] != "i64" {
                 return Err(denied("anonymous root capture is not checked I64"));
             }
-            (json!({"capture_slot":0,"type":"I64"}), text(input, "value")?)
+            (true, text(input, "value")?)
         }
-        Some("fixed-i64") => (json!({"fixed_i64":text(operand, "value")?}),
-            text(operand, "value")?),
+        Some("fixed-i64") => (false, text(operand, "value")?),
         _ => return Ok(None),
     };
     let value = actual.parse::<i64>()
@@ -537,25 +536,34 @@ pub(super) fn anonymous_target_identity(
         return Err(denied("public capture graphs differ from retained owner graph"));
     }
 
+    // This is an explicitly local, strict I64 quote/add/compose projection,
+    // NOT the portable G-03 encoding. Domain separation prevents a template
+    // digest from being mistaken for the captured program-value digest.
+    // The checked source lineage decides the operand tag; the identical VM
+    // literal alone cannot distinguish a fixed source constant from an input.
+    let mut template = blake3::Hasher::new_derive_key(
+        "noble experimental anonymous definition template v2");
+    template.update(b"core-bootstrap:i64-quote-add-compose\0");
+    template.update(b"I64--I64!{}\0builtin:i64.add:4\0");
+    if varying {
+        template.update(b"root-input:0:I64");
+    } else {
+        template.update(b"fixed:I64");
+        template.update(&value.to_le_bytes());
+    }
+    let definition_digest = template.finalize();
+    let definition_id = format!("anonymous-template-experimental-v2-blake3:{}",
+        definition_digest.to_hex());
     let interface = json!({"input":["I64"],"output":["I64"],"effects":[]});
     let dependencies = json!(["builtin:i64.add"]);
-    let template = json!({
-        "domain":"noble-anonymous-template/experimental-v1",
-        "recipe":[{"quote_i64":template_operand},{"static_body":["i64.add"]},"compose"],
-        "interface":interface,"effects":[],"dependencies":dependencies,
-    });
-    let definition_id = format!("anonymous-template-experimental-v1:{}",
-        crate::workflow::intrinsic::sha256(
-            &serde_json::to_vec(&template).map_err(|_| denied("anonymous template cannot encode"))?));
     let captured = json!([{"type":"I64","value":actual}]);
-    let program = json!({
-        "domain":"noble-anonymous-program/experimental-v1",
-        "definition_id":definition_id,"captures":captured,
-        "interface":interface,"effects":[],"dependencies":dependencies,
-    });
-    let program_value_id = format!("anonymous-program-experimental-v1:{}",
-        crate::workflow::intrinsic::sha256(
-            &serde_json::to_vec(&program).map_err(|_| denied("anonymous program cannot encode"))?));
+    let mut program = blake3::Hasher::new_derive_key(
+        "noble experimental anonymous program value v2");
+    program.update(b"template-blake3:32\0capture:I64:1\0");
+    program.update(definition_digest.as_bytes());
+    program.update(&value.to_le_bytes());
+    let program_value_id = format!("anonymous-program-experimental-v2-blake3:{}",
+        program.finalize().to_hex());
     Ok(Some(json!({"definition_id":definition_id,
         "program_value_id":program_value_id,"captures":captured,
         "interface":interface,"effects":[],"dependencies":dependencies,

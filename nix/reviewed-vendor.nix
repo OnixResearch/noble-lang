@@ -53,7 +53,7 @@ let
   };
 in
 assert builtins.length lockNames == 8;
-assert builtins.length tuples == 232;
+assert builtins.length tuples == 237;
 pkgs.runCommand "noble-reviewed-offline-vendor" {
   nativeBuildInputs = [ pkgs.gnutar pkgs.gzip pkgs.coreutils pkgs.jq ];
   archiveInputs = map (row: row.archive) tuples;
@@ -79,6 +79,6 @@ pkgs.runCommand "noble-reviewed-offline-vendor" {
     tar -xzf "$archive" --strip-components=1 --no-same-owner --no-same-permissions -C "$dest"
     printf '{"files":{},"package":"%s"}\n' "$checksum" > "$dest/.cargo-checksum.json"
   done
-  test "$(find "$out/source-registry-0" -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 232
+  test "$(find "$out/source-registry-0" -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 237
   cp "$manifestPath" "$out/vendor-provenance.json"
 ''

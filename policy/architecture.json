@@ -56,14 +56,14 @@
     "max_items": 4096,
     "max_modules": 2048,
     "max_shard_bytes": 33554432,
-    "max_shards": 41,
+    "max_shards": 54,
     "max_signatures": 4096,
     "max_span_bytes": 1048576,
-    "max_spans": 16384,
+    "max_spans": 32768,
     "max_traits": 512,
     "max_type_shapes": 4096,
     "max_types": 4096,
-    "max_units": 41,
+    "max_units": 54,
     "max_unknowns": 4096,
     "max_value_flow_bodies": 4096,
     "max_value_flow_rounds": 64,
@@ -264,7 +264,85 @@
     ]
   },
   "project_id": "noble",
-  "provider_classifications": [],
+  "provider_classifications": [
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "infrastructure",
+      "package": "anyhow",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI error/context reporting may consult ambient backtrace settings and capture host backtraces. Role-granular normal permission is not domain-core use or an audit of transitive/native implementation."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "pure-value",
+      "package": "blake3",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI byte-digest computation. Digest implementation and any optimized or native code retain separate unproved safety assumptions."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "infrastructure",
+      "package": "libc",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI use of libc open flags for no-follow path walking via Rust OpenOptions; this static edge permission does not establish FFI or native safety."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "pure-value",
+      "package": "serde_json",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI JSON value parsing and serialization; external input remains untrusted and this is not a semantic acceptance witness."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "pure-value",
+      "package": "wasmparser",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI Wasm byte parsing; parser output is not proof of engine, guest, or native safety."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "infrastructure",
+      "package": "wasmtime",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI guest engine boundary; engine, trap, linked C helper, and transitive native implementation remain explicit external host assumptions."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "pure-value",
+      "package": "wat",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI WAT byte parsing; parser output does not certify guest semantics or native safety."
+    }
+  ],
   "roles": [
     {
       "role": "domain-core",

@@ -89,6 +89,24 @@ let
   forbiddenFamilies = map (c: c.family) (filter (c: c.core_handling == "forbidden") (policy.capability_classifications or [ ]));
   outbound = policy.outbound_effects or [ ];
   coreNoStd = policy.core_no_std or [ ];
+  providers = policy.provider_classifications or [ ];
+  providerPermissions = map (provider: {
+    inherit (provider) package kind permitted_caller_roles edge_kinds;
+  }) providers;
+  expectedProviders = map (provider: {
+    package = provider.package;
+    kind = provider.kind;
+    permitted_caller_roles = [ "composition-root" ];
+    edge_kinds = [ "normal" ];
+  }) [
+    { package = "anyhow"; kind = "infrastructure"; }
+    { package = "blake3"; kind = "pure-value"; }
+    { package = "libc"; kind = "infrastructure"; }
+    { package = "serde_json"; kind = "pure-value"; }
+    { package = "wasmparser"; kind = "pure-value"; }
+    { package = "wasmtime"; kind = "infrastructure"; }
+    { package = "wat"; kind = "pure-value"; }
+  ];
   targetComplete = all (t: t ? triple && t ? features && t ? default_features) declaredTargets;
 
   diagnostics =
@@ -146,8 +164,9 @@ let
       "policy-core-no-std-missing"
     ++ require (policy ? ports && policy.ports == [ ]) "policy-ports-not-declared-empty"
     ++ require (
-      policy ? provider_classifications && policy.provider_classifications == [ ]
-    ) "policy-providers-not-declared-empty";
+      policy ? provider_classifications && providerPermissions == expectedProviders
+      && all (provider: provider ? rationale && builtins.match ".*[^[:space:]].*" provider.rationale != null) providers
+    ) "policy-composition-root-providers-mismatch";
 in
 {
   inherit diagnostics rev narHash;
