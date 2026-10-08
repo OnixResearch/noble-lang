@@ -1412,7 +1412,7 @@
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
-      "sha256": "af445c5e9f469788406c7f3543766f54f7ee1c5a153a103996c6b3f3aea996c4"
+      "sha256": "3e54f8a42bf87dcc987cc3a17ae81cfbe3ce1117a9fcf56c10c8ea72d7adbe50"
     },
     {
       "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
@@ -1760,7 +1760,7 @@
     },
     {
       "file": ".cairn/specs/c-backend/spec.md",
-      "sha256": "f6c35caf200c386b8515d895c572449d75cdeb650508af152d34a7b5a7fd33da"
+      "sha256": "a86a5bffa73a71eafa6b377ba99e8c8b46696823b2e80d14713c931d54f3c8b8"
     },
     {
       "file": ".cairn/specs/calculator/spec.md",
@@ -1844,7 +1844,7 @@
     },
     {
       "file": "specs/C-BACKEND.md",
-      "sha256": "e1272a7e060d649a2a831495898f2b07feb9dfc7ff77c45766ffaedf349ead9a"
+      "sha256": "a8d396b0565a296e25a99e32ca5abc694491bfc4928db9dbe93ba1cf3caa24d1"
     },
     {
       "file": "specs/CALCULATOR.md",
@@ -1960,7 +1960,7 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "f86e49497dce6d3bd6cd37848bd1abddfab9be25ff566ec79bb668cf262f3e3b"
+      "sha256": "397ca526507a55efcee95e0def0fc759479f637673314ab0046e067255f1a269"
     },
     {
       "file": "specs/ROADMAP.md",
