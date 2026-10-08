@@ -215,6 +215,10 @@ not introduce exact BigInt/Rat values, the calculator's seven numeric budgets,
 or any CALC acceptance status. The compiled signed decimal-fold and lexical
 parameter precursors under `verification/calculator-precursor/` still use
 **wrapping** I64 arithmetic and are not exact-number implementations.
+The signed lexical countdown there executes 600 checked self calls in each
+optimization mode with 12,661 guest steps and a 40-byte peak continuation
+queue. This scalar tail witness is not an exact numeric width or general
+nominal-match tail-recursion claim.
 
 ### Persistent sessions
 
@@ -232,6 +236,18 @@ printf '%s\n' \
 
 The final stack contains `1 2`. The saved program still uses the first
 definition of `n`; the later direct call uses the second.
+
+For declared modules, `import m@2 as m` may replace an earlier `m@1` alias
+only after replaying each current outside definition that used `m.*`, plus
+its current transitive dependents, from the exact retained source. The
+replacement must preserve ordered stack types and not increase effects.
+The alias and all rebuilt bodies publish together; a previously captured
+program, version-qualified calls, and another alias to `m@1` still use
+their original owners. Missing provenance, incompatible exports, or a
+current body reaching a shadowed old alias owner rejects the import without
+changing the previous namespace. The opt-off/on guest scenarios under
+`verification/calculator-precursor/` exercise old captured `21`, another
+alias's `21`, new transitive `24`, and incompatible-import recovery.
 
 A static rejection preserves the previous stack and namespace. A runtime trap
 or exhausted execution quota ends the session, retaining any host requests
