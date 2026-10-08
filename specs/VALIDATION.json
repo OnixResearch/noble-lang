@@ -1408,19 +1408,19 @@
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "ba980572157f9a15d1300b42b1df47cf5fe649710830d315588fdfebd64b9782"
+      "sha256": "18a1bf44fb90730a334e2daf20f640503a729f87d3e905d8227e770b9e97b309"
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
-      "sha256": "e2077f3f6729d5f1059f74eb76b10171677b4e7a27c8d3c0a9b5a2834a338464"
+      "sha256": "4619ac8b9d80decb79594ec72d62bd9a228057dc865d96ebcbb100048b448450"
     },
     {
       "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
-      "sha256": "ae043efba3d0dc4502e453ed12beb3aff573909ee376763dce5647c1eddb1470"
+      "sha256": "a7691692ccf276f3ebd9d200a0aa176a5058245783a6de4376fe37b5e64990d1"
     },
     {
       "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "2489ed133bc8925878bf500475bfc06cd625a837f85668d0c8b2aa403cabeba5"
+      "sha256": "ad562aaf78793e6b1d0a5bc81f15d65e487595498471c2750b8672565acf1dff"
     },
     {
       "file": ".cairn/changes/declared-retained-source-budget/design.md",
@@ -1747,6 +1747,22 @@
       "sha256": "6de7ef9938777ba920fd4cb62ecd8144ece64d051a117f645a2961b18e3d7546"
     },
     {
+      "file": ".cairn/changes/typed-worker-program-v2-native/design.md",
+      "sha256": "9c34c6cc0a07491cdc056ba4cc01902364215997cf6665885172c81f3f89d9dc"
+    },
+    {
+      "file": ".cairn/changes/typed-worker-program-v2-native/proposal.md",
+      "sha256": "d2573e68273e7fd8ab34ea12232f6ca4e0bc18e6bd0df939eaf6ea07b2d4b43a"
+    },
+    {
+      "file": ".cairn/changes/typed-worker-program-v2-native/specs/language/spec.md",
+      "sha256": "a24d70b8954762d022b8ad23965c4693809cf8523a8c0e7f946cecd927ed0637"
+    },
+    {
+      "file": ".cairn/changes/typed-worker-program-v2-native/tasks.md",
+      "sha256": "7d3c94e49e0ea8668831bfde1620603a380ad67ccd07def0383edfd32e164a38"
+    },
+    {
       "file": ".cairn/changes/wit-exact-u64-adapter/design.md",
       "sha256": "6954f83de816eff75e6a27d2b3228fd546a884f11bbd543a57bb9fe02e6af219"
     },
@@ -1761,6 +1777,22 @@
     {
       "file": ".cairn/changes/wit-exact-u64-adapter/tasks.md",
       "sha256": "6fbca773acce8e9dcced42bce3418d33caeba01249d8f2731b35ddfb9722a6a4"
+    },
+    {
+      "file": ".cairn/changes/worker-code-export-bound-effect/design.md",
+      "sha256": "1df285fbdadb5e66d97202e2781ee0fdafd0a513a4ce18072e2246411da3029e"
+    },
+    {
+      "file": ".cairn/changes/worker-code-export-bound-effect/proposal.md",
+      "sha256": "0612ed789d9abccba9496cc755badf982b8d6ae2f17b5bcaafe30c122610b449"
+    },
+    {
+      "file": ".cairn/changes/worker-code-export-bound-effect/specs/language/spec.md",
+      "sha256": "0aece58a6912ad501092435c17d631ff3869b92299d295e05d6efd3d6377e680"
+    },
+    {
+      "file": ".cairn/changes/worker-code-export-bound-effect/tasks.md",
+      "sha256": "334d7d55835847f94693cee838c2a28030d541a93cfb53a09818a09ded8aa33d"
     },
     {
       "file": ".cairn/MIGRATION.md",
@@ -1852,7 +1884,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "290d16475075f5f554bd4ffd27bcb4e572c8fbb7bafce2293cb3b2fdbf7c0fc0"
+      "sha256": "d6819c8f2de2ae140408bd8cf390229c26fffffe1e47abe28b90a0703cc94f1e"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1976,11 +2008,11 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "3739b58ae850948982c6c9570e424d9dd36256000127d1f695b0579d3036fa6f"
+      "sha256": "ff1bff8910b46c14e53f68f550c508299b37270da84f0dc36af1a7b564c62c0a"
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "6a262641e4b1e6ac81ac3edfc59021718c3a83a92bfd77ab7d40a6c886403af3"
+      "sha256": "0ce37600a75639655703b01aa240a81cfad1c14be602eb831f05ee9adf97ae44"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2000,7 +2032,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "85bec1e8fc84da04054cc37c94326da15ef2a40cef0094c5b5d4167b6d5fcfa7"
+      "sha256": "5fb4765dd228252ccb50b360741775af30ae2652a1ebe568eae53fcb590f864b"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2116,7 +2148,7 @@
     },
     {
       "file": "verification/tool-selection.md",
-      "sha256": "921a54103bfe2ade0ae65bdeb6b497ce3ba156574d5506e949d2a50482b3b19e"
+      "sha256": "6d32cab31458393fc49450979941cf3f77e67fc14af2d873f15420f216aa1434"
     },
     {
       "file": "verification/wi03/README.md",

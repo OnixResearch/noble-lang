@@ -15,40 +15,44 @@ The selected M4 target compiles checked Noble computation to managed-linear-memo
 
 The native normative family `.cairn/specs/c-backend/spec.md` and ten
 unexecuted `specs/conformance/c-backend-cases.json` designs already exist.
-The document passes **directly edited canonical** requirements outside
-generated regions, rather than safely applying a Cairn delta:
+The donor canonical contains direct edits outside generated regions; the
+planned first-parent canonical retains obligations that an eventual Cairn
+sync MUST NOT erase. The open delta records, without syncing:
 
 - CB-BUILD-01 discloses the narrower, nonadmitted source-only path,
   exact ordered checked Core interface matching and recursive
   duplicate-key refusal. The active delta additionally records internal
   Pair/Sum/List WIP without claiming final aggregate results or native
   quota-policy admission. r[CB-BUILD-01]
-- CB-LIMIT-01 binds any supplied `limits.list_length` exactly and requires
+- CB-LIMIT-01 preserves the first-parent CB-CASE-01 supplied-bound OPEN
+  sentence, binds any supplied `limits.list_length` exactly and requires
   rejecting duplicate JSON object members at every nesting level before
   policy validation. CB-CASE-06 now supplies this field in each
   `quota_controls[].policy.limits` and expects exact manifest retention.
   r[CB-LIMIT-01]
-- CB-SANDBOX-01 corrects initial ELF load versus post-load no-exec
-  ordering; **retains** the prior MUST that direct syscall, inherited-FD
+- CB-SANDBOX-01 preserves the first-parent VM/virtualized-clock-or-equivalent
+  barrier and initial ELF load versus post-load no-exec ordering; **retains**
+  the prior MUST that direct syscall, inherited-FD
   and namespace/sandbox escape attempts refuse or terminate with zero
   protected operations; and adds vDSO/coarse/vvar/TSC host-time and
   elapsed-time controls. TSC-only isolation is not a complete clock
   barrier. r[CB-SANDBOX-01]
-- CB-ADMIT-01 scopes descriptor-bound sealed admission to requests
-  seeking native admission and discloses source-only ancestor and output
-  re-resolution races without declaring native correspondence.
+- CB-ADMIT-01 retains the first-parent descriptor-bound obligation for
+  every build and execution request, while disclosing the source-only
+  ancestor and output re-resolution gaps without claiming conformance.
   r[CB-ADMIT-01]
 
-All eleven already-canonical requirement blocks in the active delta are
-MODIFIED: ten normative bodies now match current canonical prose exactly;
-CB-BUILD-01 additionally records the unreviewed internal Pair/Sum/List WIP.
+All eleven requirement blocks in the active delta are MODIFIED: seven
+normative bodies match the planned first-parent canonical, while CB-BUILD-01,
+CB-LIMIT-01, CB-SANDBOX-01 and CB-ADMIT-01 retain its obligations and add
+explicit source-only disclosures or narrower hostile controls.
 The delta retains all 25 canonical linked scenario designs, with paths
 relative to its own location. Independent owner review of the direct
 canonical edits, the expanded source-only scope and case designs remains
 REQUIRED **before integration**, without automatic owner acceptance.
 The complete native implementation/evidence tasks remain undone. A
 structurally nonblocked sync preview is not permission to replace the
-held canonical CB-BUILD-01 or to archive. Generated compatibility views
+held canonical requirements or to archive. Generated compatibility views
 and the ledger follow canonical text until legal sync and regeneration.
 
 The isolated WIP includes restricted inert source emission only, not

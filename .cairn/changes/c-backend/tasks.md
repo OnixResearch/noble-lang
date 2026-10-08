@@ -20,9 +20,11 @@ syntax-only diagnostic is not native execution, compiler correspondence or
 C/Wasm acceptance. The requirements below remain open; no CB case is promoted.
 Text payloads bind exactly to checked source-body node identities; recursive
 contract/policy duplicate member names refuse before source-only emission.
-All eleven active MODIFIED delta bodies now retain canonical normative
-requirements and linked scenario designs, with only the unreviewed
-CB-BUILD-01 source-only internal Pair/Sum/List extension; this is not owner
+All eleven active MODIFIED delta bodies retain the planned first-parent
+canonical obligations and linked scenario designs. Seven bodies match its
+normative text; CB-BUILD-01, CB-LIMIT-01, CB-SANDBOX-01 and CB-ADMIT-01
+add scoped source-only disclosures or hostile controls without relaxing
+the first-parent bound, clock or descriptor requirements. This is not owner
 approval or legal sync while the eight remaining gates are undone.
 
 CB-CASE-01 still supplies `limits.list_length: 2`; the current exact
