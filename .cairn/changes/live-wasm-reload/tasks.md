@@ -128,13 +128,36 @@ implementation or acceptance tasks below is complete.
 
 The separate graft onto tested returned-identity source
 `1d5ac07674389c7a344d187762f991ed18ca1db9` preserves this LIVE06
-donor's code and historical 66/66, 69/69 and direct-CLI receipts, but the
-**combined successor is source-only and untested**. Its reviewed source hashes
-cannot substitute for a compiled CLI, checked guest trace, independent source
-security GO or renewed document-validation receipt. The universal Wasm lane
-owns the exclusive Cargo/Node24 V8 slot until release; request a distinct
-combined tested CLI slot afterward. Do not relabel the donor CLI or any
-canonical LIVE/LSLOT evidence as a combined result.
+donor's code and *historical donor-only* 66/66, 69/69 and direct-CLI receipts.
+The clean combined source `ac3f60c9820acd0103a017ca8aad8fe17c3a6041` passed
+independent static security and selected-byte provenance review before a
+separately authorized, offline **bounded** CLI test slot. Its pinned-nightly
+default CLI SHA-256 is
+`4024a0c6a1cb5b132f15be7beccd0756a899d2aba017e55bf46a490c8804a63b`;
+Node 24.13.0 SHA-256 is
+`ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b`.
+Targeted Rust real-child
+`live06_host_revokes_old_effect_before_actual_retained_wasm_request`,
+`revoked_declared_adapter_cannot_reauthorize_on_later_import` and
+`revoked_declared_clock_denies_remaining_scripted_effect` all passed, not the
+complete combined `live_repl` suite. A separate direct Node/V8 test script
+SHA-256 `542938a7c3b7f809706ab8c60362e31634fc89103033c3f20e50758f3504f4e0`
+rejected noncanonical versions, wrong adapter/effect and extra host terms,
+then revoked exact `ledger@1 emit-a test.emit` from allowed/active to
+denied/inactive with no guest or protected operation. B still executed with
+one request/one protected operation through `emit-b`; after alias rebind, the
+saved A `Program` trapped through `emit-a` with one guest/host request,
+zero protected operations, no emitted Text and terminal exit 2. Raw JSONL
+reports and the script remain under
+`/tmp/noble-ac3f-combined-2dFTCMG6/`; the direct receipt
+`live06-exact-host-revoke.receipt.json` has SHA-256
+`ea233d815daf2c4f54c8aa06eb06be4d5641c6bc8c76cf0d64a9a81606718094`.
+The bounded returned-target/epoch, Worker root and Signed source-epoch checks
+are specified in `../runtime-program-template-identity/design.md`. No full
+combined suite, Nix/Nickel export, new document-validation gate or seal ran.
+The `passed` in `specs/VALIDATION.json` is the donor's historical input set
+and is **not** current for these edited documents. Canonical LIVE/LSLOT
+cases remain absent/not-run/open, with no Octet/Lean proof claim.
 
 - [ ] [serial] Implement and test in-process Wasm encoder/verifier with independently accepted source, exact selected ABI and isolated staging. r[BE-LIVE-01] r[S-LIVE-01]
 - [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]

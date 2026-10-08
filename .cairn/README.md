@@ -63,8 +63,15 @@ declared REPL now has an exact host-stdin binding revocation; default and
 feature actual V8 child suites and one direct CLI run observed a retained A
 Program denied after B import and A host revocation, while B stayed allowed.
 Those V8 child and direct CLI observations belong to the separate LIVE06 donor
-source; the successor combining it with returned-target identity is source-only
-and has no joint runtime or document-validation result.
+source. The isolated combined successor `ac3f60c9820acd0103a017ca8aad8fe17c3a6041`
+subsequently passed *bounded*, separately authorized Rust and direct Node 24/V8
+checks on its own binary SHA-256
+`4024a0c6a1cb5b132f15be7beccd0756a899d2aba017e55bf46a490c8804a63b`:
+exact host revocation denied saved A without a protected operation, B remained
+allowed, and selected returned-target D/P, alias, old/new source and epoch CAS
+controls ran. This is not the donor's full suite, a current document-validation
+result or canonical LIVE/LSLOT acceptance. `specs/VALIDATION.json` still records
+only the older donor's inputs and must not be read as a pass for this checkout.
 Bounded host-granted guest self-edit refuses any current effective dependent
 rather than rebuilding it. Indirect self-rebind/cycle refusal is scoped, not
 established by general proof or accepted LIVE case evidence. General

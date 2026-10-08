@@ -58,11 +58,72 @@ Live-slot `define` keeps its selected-authority rule: a second declaration of th
 
 **Choice:** The owner approved initializing each independent LSLOT-02 registry fixture as one complete persistent map at physical epoch 1: base A-v1+B-v1 together, and transitive variant A-v1+B-v1+C-v1 together after its independent reset. Subsequent B-v2 or C-v2 publication advances to epoch 2. Do not create the fixtures by sequential per-slot publications, whose global epoch increments would invalidate the frozen epoch-1 root pin, and do not renumber or edit the canonical LSLOT-02 inputs/expectations. The integrated selected CLI harness now establishes both complete physical epoch-1 maps atomically before refs/root admission, pins an old root across epoch-2 publication and refuses a worker-side later-member quota-1 genesis without partial installation; future fixtures must likewise preserve candidate admission, CAS, authorization, retention and epoch checks. This setup choice adds no identity requirement. Selected diagnostic exercise is not canonical LSLOT-02 execution, evidence or promotion. `K-LSLOT-02` `H-LSLOT-01` `EV-LSLOT-01`
 
-### Isolated LIVE06 graft: source-only, not yet exercised
+### Isolated LIVE06 graft: scoped combined CLI/V8 observations, not acceptance
 
-A separate successor branch starts at tested returned-identity commit `1d5ac07674389c7a344d187762f991ed18ca1db9` and grafts clean, separately tested LIVE06 host-policy commit `8483c17b6ac2d3c6e0d3e876216fbe92c09e09f4` from their common `34f254c1ded3cd080ea0fcd0dfc276897bef7603` base. The graft applied without textual conflicts; LIVE06 changes the declared REPL host command, manifest lookup, declared Worker policy and live protocol, while the returned-target changes remain in the distinct live-slot host/worker route. Source inspection finds the slot-mode protocol branch precedes the declared-only `revoke-live-effect` command; no donor change replaced the slot registry and its original global epoch/CAS, Worker34f root authority, or the separate Signed-Declared-Text source-epoch implementation. This is a source relationship, **not** a tested joint runtime guarantee. The host command remains limited to exact, host-selected `MODULE@VERSION ADAPTER EFFECT`, checked immutable root identity/source bytes and an initially allowed adapter slot; the Worker removes current permission rather than changing its root, slot or grant. The old returned-target CLI SHA-256/receipts and separately tested donor LIVE06 CLI/guest receipts authenticate their **separate** trees only; no combined binary, V8 guest, replay or acceptance gate has run.
+A separate successor `ac3f60c9820acd0103a017ca8aad8fe17c3a6041` starts at
+tested returned-identity commit `1d5ac07674389c7a344d187762f991ed18ca1db9`
+and cleanly grafts separately tested LIVE06 host-policy commit
+`8483c17b6ac2d3c6e0d3e876216fbe92c09e09f4` from their common
+`34f254c1ded3cd080ea0fcd0dfc276897bef7603` base. LIVE06 changes
+declared REPL host commands, manifest lookup, Worker policy and live protocol;
+returned-target identity remains in the distinct slot host/worker route.
+Static independent security review found the slot-mode protocol branch
+precedes declared-only `revoke-live-effect`, without donor changes to the
+registry's global epoch/CAS, Worker34f selected root or separate Signed
+source epoch. Revocation requires exact host-selected
+`MODULE@VERSION ADAPTER EFFECT`, checked immutable root identity/source bytes
+and an initially allowed adapter slot; the Worker removes current permission
+without changing its root, slot or grant. These inspected boundaries and
+the bounded executions below are **not** a complete joint acceptance or
+independent source-bound proof. The older returned-target and LIVE06 donor
+CLI hashes/receipts continue to authenticate only their respective trees.
 
-The combined successor's selected source map was source-only rehashed from the checkout: `nix/tool-selection-files.nix`, `policy/tool-selection-files.ncl` and its manually synchronized JSON view now name the same 270 exact-byte entries, including the returned-target DAG, slot engine, local-binder/source-resolution implementation and relevant selected tests missing from the donor's 263-entry map. This cross-inventory and file-byte comparison is **not** a Nix selection evaluation, Nickel export, compile, runtime verification or seal. The existing generated `specs/VALIDATION.json` remains the historical donor document-validation receipt, not a re-executed combined document gate; its original `passed` applies only to its recorded input hashes, not these changed design/README/task documents. The combined successor needs independent read-only source security review, then a separately authorized tested CLI slot after the universal Wasm owner releases its exclusive Cargo/Node24 slot. Canonical LSLOT cases, Lean proof and proof-required admission remain open.
+The selected source map was rehashed from this exact checkout:
+`nix/tool-selection-files.nix`, `policy/tool-selection-files.ncl` and its
+manually synchronized JSON view name the same 270 exact-byte entries,
+including the returned-target DAG, slot engine, local-binder/source-resolution
+implementation and selected tests missing from the donor's 263-entry map.
+This cross-inventory comparison is **not** a Nix selection evaluation,
+Nickel export, document-validation gate or seal. Independent source-only
+security and provenance review permitted a separately authorized, bounded
+offline CLI slot after the universal owner released it; no source changed
+from `ac3f60c` during the checks. `specs/VALIDATION.json` still contains the
+**historical donor-only** generated document receipt. Its `passed` applies
+only to its recorded input hashes, not these changed design/README/task
+documents: no combined document validator or full selected-source assurance
+gate ran. Canonical LSLOT cases, Lean proof and proof-required admission
+remain open.
+
+The pinned nightly default CLI built from clean `ac3f60c` has SHA-256
+`4024a0c6a1cb5b132f15be7beccd0756a899d2aba017e55bf46a490c8804a63b`;
+the pinned Node 24.13.0 executable has SHA-256
+`ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b`.
+The direct selected-origin guest asserted 27 independently saved owners,
+three guest requests, zero protected operations, identical local D/P for
+physical sharing versus distinct allocation of the same logical binder,
+distinct D/P for independent equal-valued bindings, old/new source with
+equal D/P but different installed donor-manifest digests, old saved dispatch,
+stale global-epoch CAS, frozen replay and missing-core refusal. The
+two-donor returned manifest SHA-256 was
+`3cd3b429ab8ad29d9ad222e28d70b858a09aedfae1c97519386546c7eaea7af1`.
+Its `/tmp/noble-lslot-resource-ac3f-origin-oC1Prvvc/LSLOT01-selected-origin-control.summary.json`
+has SHA-256 `07b1ac552580c23f532b99031658410f271d03dab4e2084d6a4effd15c56fb92`;
+the distinct-source and missing-core raw JSONL receipts have SHA-256
+`4e9891a849ce287e4e066f1af2f4d60a51050c80cc3ec00570647fabe215af27`
+and `30bb429ad0d9214ae50cba8f38143223872c3ba298044cd656448011a4bdc9b4`.
+The separate direct LSLOT04/07 guest runner passed same- and unrelated-slot
+stale writers, delete/recreate ABA, rollback and pinned-root effect policy
+controls in `/tmp/noble-lslot-resource-ac3f-cas-GGk301g9/`; the unrelated
+slot and ABA counters have SHA-256
+`740df9e871b7bd61843b5f1cfecd3dfbc37d15d6ee60cfd6223a75f33e84c3d6`
+and `4263f7f7d84bb94462ff4364b94bad1581d57a5acf0540dc1cd10952a62d2d55`.
+These slot authority controls are distinct from LIVE06's declared REPL
+revocation. Targeted Rust checks passed the selected-origin CLI wrapper,
+Worker34f exact selected-root package/forged-Named refusal and installed
+host-child grant, Signed declared source-epoch monotonic retirement and
+framed signed old/new alias behavior; the separate LIVE06 tests and direct
+receipt are recorded in `../live-wasm-reload/tasks.md`. No full combined
+test matrix, canonical LSLOT receipt, proof or seal follows.
 
 A read-only snapshot of the in-progress universal Wasm worktree shows edits overlapping this graft in `core/runtime/engine.mjs`, `core/runtime/protocol.mjs`, `core/worker.rs`, `noble-contracts/src/source.rs` and `noble-wasm/src/source/mod.rs`. Do not overwrite or merge its dirty files. If a later combined integration is authorized, start a **new** isolated worktree from the universal owner's committed, released source revision; three-way integrate the reviewed identity1d5 and LIVE06 deltas, resolving the protocol's slot-mode fence before declared-only revocation, immutable root/source/adapter/effect authorization and signed source epoch by semantics rather than copying an old engine/protocol/policy/WIT file. Independently recheck hash inventories and runtime behavior on that final tree in a separately allocated CLI slot. This branch and either ancestor's separate execution receipts do not attest that future merge.
 

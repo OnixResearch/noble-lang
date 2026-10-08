@@ -675,10 +675,24 @@ proof remain open, with canonical cases absent/not-run.
 
 The separate successor that combines the tested returned-identity source
 `1d5ac07674389c7a344d187762f991ed18ca1db9` with LIVE06 donor
-`8483c17b6ac2d3c6e0d3e876216fbe92c09e09f4` has only a source-only graft.
-The LIVE06 and returned-target binaries and guest receipts above are for
-their respective original trees; this combined checkout has not been built,
-run, document-validated, security-cleared or sealed.
+`8483c17b6ac2d3c6e0d3e876216fbe92c09e09f4` is isolated at
+`ac3f60c9820acd0103a017ca8aad8fe17c3a6041`. Its separately authorized,
+offline scoped CLI/V8 run produced binary SHA-256
+`4024a0c6a1cb5b132f15be7beccd0756a899d2aba017e55bf46a490c8804a63b`.
+A direct same-process Node 24.13.0 child revoked exact
+`ledger@1 emit-a test.emit`: the saved old A request was denied with one
+guest/host request and **zero** protected operations, while B still dispatched
+through `emit-b` with one request/one protected operation. The raw direct
+receipt is `/tmp/noble-ac3f-combined-2dFTCMG6/live06-exact-host-revoke.receipt.json`
+(SHA-256 `ea233d815daf2c4f54c8aa06eb06be4d5641c6bc8c76cf0d64a9a81606718094`).
+Separate selected real-guest runs exercised returned-target D/P, physical
+aliasing, distinct-source old/new publication, replay and stale global-epoch
+CAS; targeted Worker package-root and Signed source-epoch checks also passed.
+The earlier donor binaries and suites above remain historical, not results
+of a full combined suite. This successor has **no current document-validation
+receipt**: `specs/VALIDATION.json` is donor-only, with stale input hashes.
+These checks neither seal the branch nor establish canonical LIVE/LSLOT,
+Octet, or Lean acceptance or proof.
 
 For a separate **opt-in source-change execution gate**, start the same REPL
 with `--verify-source-before-execute`. Before each source submission, after
