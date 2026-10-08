@@ -18,8 +18,18 @@ pub mod proof;
 mod replacement;
 mod resolution;
 
-pub use declared::{BoundOperation, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, SignedSourceOwner};
+pub use declared::{BoundOperation, CheckedNominal, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, SignedSourceOwner};
 pub(crate) use declared::{DefinitionOrigin, verify_definition_origin, verify_named_call_origin, verify_named_export};
+
+/// Core vocabulary resolved by the same checker as a worker's pure source.
+/// Test-host, live and selected cursor operations have different authority.
+pub const fn pure_builtin_spelling(identity: u32) -> Option<&'static str> {
+    if identity < 22 {
+        crate::program::bootstrap_spelling(identity)
+    } else {
+        None
+    }
+}
 
 /// Immutable source authority for the versioned Result interface. The same
 /// declaration bytes are checked through ordinary module registration.

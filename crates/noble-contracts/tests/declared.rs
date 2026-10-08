@@ -60,6 +60,66 @@ fn assert_pure_candidate(session: &noble_contracts::source::ModuleSession) -> Re
 }
 
 #[test]
+fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Result<(), String> {
+    use noble_contracts::source::{pure_builtin_spelling, ModuleSession};
+    assert_eq!(pure_builtin_spelling(0), Some("dup"));
+    assert_eq!(pure_builtin_spelling(21), Some("list.case"));
+    for forbidden in [22, 23, 26, 27] {
+        assert_eq!(pure_builtin_spelling(forbidden), None);
+    }
+    let session = ModuleSession::new_declared_text(&[], false)
+        .map_err(|error| format!("{error:?}"))?;
+    let package = b"module package@1 [ variant Choice Good I64 public Bad Text public export Choice export Choice.Good export helper def helper [ 1 + ] export root def root [ let value [ value helper ] run ] ]";
+    let prepared = session.prepare(package, &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let owner = prepared.resolved_module().ok_or("new package lost resolved module")?;
+    let nominal = prepared.checked_nominals().ok_or("new package lost checked nominals")?
+        .collect::<Vec<_>>();
+    assert_eq!(nominal.len(), 1);
+    assert_eq!(nominal[0].module_identity(), owner.0);
+    assert_eq!(nominal[0].module_version(), 1);
+    assert_eq!(nominal[0].declaration().id.module, owner.0);
+    assert!(prepared.resolve_type("package@1.Choice").is_ok());
+    assert!(prepared.resolve_type("package@2.Choice").is_err());
+    let root = prepared.checked_program_owner("root").ok_or("exported root lost source identity")?;
+    assert_eq!(root.module_identity(), owner.0);
+    assert_eq!(root.module_version(), 1);
+    assert_eq!(root.definition_ordinal(), 1);
+    assert!(prepared.checked_program_owner("missing").is_none());
+    let closure = prepared.checked_program_closure("root").ok_or("closed package refused")?;
+    assert_eq!(closure.iter().map(|entry| entry.definition_ordinal()).collect::<Vec<_>>(),
+        vec![0, 1]);
+    assert_eq!(closure[1].definition_identity(), root.definition_identity());
+    assert_eq!(closure[1].definition_slot(), root.definition_slot());
+    assert_ne!(closure[0].definition_slot(), closure[1].definition_slot());
+    let decoy = b"module decoy@1 [ export helper def helper [ 1 + ] export root def root [ 1 helper ] def unused [ 0 ] ]";
+    let decoy = session.prepare(decoy, &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(decoy.checked_program_owner("root").is_some());
+    assert!(decoy.checked_program_closure("root").is_none(),
+        "an uncalled source definition cannot enter a closed worker package");
+    let external = commit(session,
+        b"module external@1 [ export bump def bump [ 1 + ] ]")?;
+    let foreign = external.prepare(
+        b"module foreign@1 [ export root def root [ 1 external@1.bump ] ]",
+        &[], LIMITS,
+    ).map_err(|error| format!("{error:?}"))?;
+    assert!(foreign.checked_program_owner("root").is_some());
+    assert!(foreign.checked_program_closure("root").is_none(),
+        "a foreign checked source owner is not inside this worker package");
+    let signed = ModuleSession::new_declared_text(&[], true)
+        .map_err(|error| format!("{error:?}"))?;
+    let unchecked_self = signed.prepare(
+        b"module spin@1 [ signature forever forall<S:stack> [ S -- S ! pure ] export forever def forever [ forever ] ]",
+        &[], LIMITS,
+    ).map_err(|error| format!("{error:?}"))?;
+    assert!(unchecked_self.checked_program_owner("forever").is_none());
+    assert!(unchecked_self.checked_program_closure("forever").is_none(),
+        "an unverified signed self cycle cannot enter a closed worker package");
+    Ok(())
+}
+
+#[test]
 fn link_rejects_bad_contract_and_ambient_emit() -> Result<(), String> {
     let source=b"module ledger@1 [ require emit Text -- ! test.emit export handle def handle [ \"audit\" emit ] ]";
     let missing = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;

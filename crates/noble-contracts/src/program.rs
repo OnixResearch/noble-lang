@@ -13,6 +13,10 @@ pub(crate) fn bootstrap_word(word: &[u8]) -> Option<noble_kernel::contracts::Def
     words::bootstrap(word)
 }
 
+pub(crate) const fn bootstrap_spelling(identity: u32) -> Option<&'static str> {
+    words::spelling(identity)
+}
+
 #[expect(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-maintainers; spelling appends directly to the caller-owned diagnostic String, requiring growable capacity rather than a borrowed str and avoiding an intermediate allocation."
