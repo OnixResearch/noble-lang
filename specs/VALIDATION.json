@@ -1408,19 +1408,19 @@
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "dbb94593b16a5d0617b5c25a7b462e8f642cc4da64eccd74868374dd28c087a7"
+      "sha256": "ba980572157f9a15d1300b42b1df47cf5fe649710830d315588fdfebd64b9782"
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
-      "sha256": "c82da1ae75faeb1fc53b94d7038a0e0d0e4b20591a3a1723f778d9829b195646"
+      "sha256": "107651d9d167b8cf36d499d50eae02386b0ed327352be8b8fd923b3000746a59"
     },
     {
       "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
-      "sha256": "aa28257753cf118886d3568cb9df0ece1b6323cc3cffdfa5d4469a10e0b7295d"
+      "sha256": "ae043efba3d0dc4502e453ed12beb3aff573909ee376763dce5647c1eddb1470"
     },
     {
       "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "fa95eb814dc6c29164e9d6647baef2981c3d4d20ff4a96d9563645c107209367"
+      "sha256": "26f85a970b046c7999d5fba6b8fdb1e76a9d0f1ae7ffdab64cd4c94ad89ff529"
     },
     {
       "file": ".cairn/changes/editor-hole-transport/design.md",
@@ -1732,7 +1732,7 @@
     },
     {
       "file": ".cairn/specs/c-backend/spec.md",
-      "sha256": "1a3384f4dac0c627361eb1659094e024cc98d7f8b742bfed8397cf7407967a9e"
+      "sha256": "78d5ce4936d273064ca076d610f70eb9b4007446f30b51f8957b773a38a1cebd"
     },
     {
       "file": ".cairn/specs/calculator/spec.md",
@@ -1816,7 +1816,7 @@
     },
     {
       "file": "specs/C-BACKEND.md",
-      "sha256": "f699cc21c94d7eea892a1b346f31db18775a6f9e97d95d8819f360e2f9efebba"
+      "sha256": "31a08b3975694297d1127e5eee96b3aea6c6e2a80950464ea5b5578b457368d0"
     },
     {
       "file": "specs/CALCULATOR.md",
@@ -1828,7 +1828,7 @@
     },
     {
       "file": "specs/conformance/c-backend-cases.json",
-      "sha256": "d38844c6dcd3b0103d57063889fc22141053006fe032c33596fd0d63c5f7dd34"
+      "sha256": "713aab9db90d13ebd4bbac222780b873645732bd9a3dcdcb36accf2b5af66ced"
     },
     {
       "file": "specs/conformance/calculator-cases.json",

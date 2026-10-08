@@ -9,22 +9,40 @@ The selected M4 target compiles checked Noble computation to managed-linear-memo
 - Maintain SPEC-BE002 as a distinct *nonselected*, opt-in C11 AOT candidate after independent Core-Bootstrap acceptance. The currently implemented `noble build SOURCE --target c --out DIR --contract CONTRACT_JSON --policy POLICY_JSON` emits checked source and a manifest only for effect-free I64/Bool; `--native` and `execute --target c` refuse. The broader proposed build takes host-owned source, exact checked expected interface/operation contracts and allowed-effect/limit/tool policy; only explicit `noble execute --target c --artifact DIR --input INPUT_JSON [--bindings HOST_FILE]` could later invoke separately admitted bytes in a pinned native sandbox. Current binding grants would be checked per request, not inferred from build policy. r[CB-SCOPE-01] r[CB-BUILD-01]
 - Specify build-key versus semantic identities, unsigned-word arithmetic for wrapping I64, checked aggregate/program representations, immutable captures, left-to-right sequencing, exact limits and typed `test.emit` ABI. r[CB-IDENTITY-01] r[CB-NUM-01] r[CB-VALUE-01] r[CB-ORDER-01] r[CB-LIMIT-01] r[CB-HOST-01]
 - Require independently validated C source and exact corresponding admitted ELF, separately pinned native sandbox with hostile direct-syscall controls, and real emitted-C versus selected Node/V8 Wasm differential evidence before any future explicit selection. r[CB-ADMIT-01] r[CB-SANDBOX-01] r[CB-GATE-01]
-- Extend only the unexecuted CB-CASE-08 test-only negative source design to vDSO `__vdso_clock_gettime` via `AT_SYSINFO_EHDR` and x86 `rdtsc`/`rdtscp`, without claiming those probes or a benign control ran. r[CB-SANDBOX-01] r[CB-GATE-01]
+- Extend only the unexecuted CB-CASE-08 test-only negative source design to namespace escape, vDSO `__vdso_clock_gettime`/`__vdso_time`/`__vdso_gettimeofday`, coarse clocks, direct vvar reads and x86 `rdtsc`/`rdtscp`, without claiming those probes or a benign control ran. r[CB-SANDBOX-01] r[CB-GATE-01]
 
 ## Impact
 
 The native normative family `.cairn/specs/c-backend/spec.md` and ten
 unexecuted `specs/conformance/c-backend-cases.json` designs already exist.
-The previous document pass **directly edited canonical** CB-LIMIT-01,
-CB-SANDBOX-01 and CB-ADMIT-01 outside generated regions, rather than
-safely applying a Cairn delta. This pass further clarifies canonical
-CB-BUILD-01, the native-only scope of CB-ADMIT-01, and the clock probes.
+The document passes **directly edited canonical** requirements outside
+generated regions, rather than safely applying a Cairn delta:
+
+- CB-BUILD-01 discloses the narrower, nonadmitted source-only path and
+  its duplicate-key last-wins gap. r[CB-BUILD-01]
+- CB-LIMIT-01 binds any supplied `limits.list_length` exactly and requires
+  rejecting duplicate JSON object members at every nesting level before
+  policy validation. CB-CASE-06 now supplies this field in each
+  `quota_controls[].policy.limits` and expects exact manifest retention.
+  r[CB-LIMIT-01]
+- CB-SANDBOX-01 corrects initial ELF load versus post-load no-exec
+  ordering; **retains** the prior MUST that direct syscall, inherited-FD
+  and namespace/sandbox escape attempts refuse or terminate with zero
+  protected operations; and adds vDSO/coarse/vvar/TSC host-time and
+  elapsed-time controls. TSC-only isolation is not a complete clock
+  barrier. r[CB-SANDBOX-01]
+- CB-ADMIT-01 scopes descriptor-bound sealed admission to requests
+  seeking native admission and discloses source-only ancestor and output
+  re-resolution races without declaring native correspondence.
+  r[CB-ADMIT-01]
+
 All eleven already-canonical requirement blocks in the active delta are
 MODIFIED, with normative text reconciled against current canonical prose;
-scenario-link reconciliation and an independent review still precede any
-whole-change sync or archive. Generated compatibility views and the ledger
-follow canonical text, not an unreviewed sync preview. r[CB-LIMIT-01]
-r[CB-SANDBOX-01] r[CB-ADMIT-01]
+independent owner review of these four direct canonical edits and their
+case designs is REQUIRED **before integration**, without automatic owner
+acceptance. Scenario-link reconciliation and another explicit review
+precede any whole-change sync or archive. Generated compatibility views
+and the ledger follow canonical text, not an unreviewed sync preview.
 
 The isolated WIP includes restricted inert source emission only, not
 native compilation/execution, sandbox or C/Wasm refinement. `CB-CASE-01`

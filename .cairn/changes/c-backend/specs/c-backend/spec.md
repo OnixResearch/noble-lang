@@ -109,7 +109,7 @@ bound cannot be overwritten by a later value before validation.
 
 #### Scenario: CB-CASE-06 bounded list/compose and test-only index controls
 
-- GIVEN the actual CORE-05 list and Core composition sources, the exactly supplied `limits.list_length`, explicit quotas and test-only runtime ABI index probes in CB-CASE-06
+- GIVEN the actual CORE-05 list and Core composition sources, each `quota_controls[].policy.limits.list_length` supplied before build and retained in the manifest, and test-only runtime ABI index probes in CB-CASE-06
 - WHEN at-bound and one-over cases execute
 - THEN in-bound results match selected Wasm; excess and out-of-range native accesses refuse without fabricated Noble index words
 
@@ -131,7 +131,7 @@ r[CB-SANDBOX-01]
 
 **CB-SANDBOX-01.**
 
-Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD, vDSO `__vdso_clock_gettime` and x86 `rdtsc`/`rdtscp` attempts MUST refuse or be contained without host-clock disclosure or protected operations, with a benign authorized `test.emit` control under the same confinement. A native crash cannot become a successful Noble result.
+Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and namespace/sandbox escape attempts MUST refuse or terminate with zero protected operations. vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse clocks, direct vvar reads and x86 `rdtsc`/`rdtscp` attempts MUST refuse or be demonstrably contained without host time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient. The benign authorized `test.emit` control MUST run under the same confinement. A native crash cannot become a successful Noble result.
 
 The native runner MUST select a reviewed immutable derivation and policy
 separate from the proof-only Lean runner and any package merely cached on
@@ -144,16 +144,16 @@ before untrusted instructions; a filter denying all `execve` before the
 initial load cannot launch the worker, and leaving `execve`/`execveat`
 available afterward permits substitution. It MUST deny unreviewed imports,
 loader escapes, direct file/network/process access and host-clock reads.
-Seccomp denial alone does NOT stop vDSO clock calls or x86 `rdtsc`/`rdtscp`; without
-an owner-selected and verified VM/virtualized-clock or equivalent clock/TSC
-and loader barrier, native execution MUST remain unavailable. A parent-owned
-cgroup/process-tree memory, CPU, task, output and monotonic wall deadline
+Seccomp denial alone does NOT stop vDSO clock calls, direct vvar reads or
+x86 `rdtsc`/`rdtscp`; without an owner-selected and verified complete
+clock/vvar/TSC and loader barrier, native execution MUST remain unavailable.
+A parent-owned cgroup/process-tree memory, CPU, task, output and monotonic wall deadline
 MUST kill and reap the entire worker tree; signal, crash, timeout or partial
 output MUST NOT count as success or authorize protected operations.
 
 #### Scenario: CB-CASE-08 direct-syscall sandbox control
 
-- GIVEN sealed test-only openat/connect/clock/exec/FD/fork, vDSO `__vdso_clock_gettime` via `AT_SYSINFO_EHDR`, and x86 `rdtsc`/`rdtscp` probes, plus a separately production-admitted benign emit source under the same pinned runner profile
+- GIVEN sealed test-only openat/connect/clock/exec/FD/fork and namespace escape probes, vDSO `__vdso_clock_gettime`/`__vdso_time`/`__vdso_gettimeofday` via `AT_SYSINFO_EHDR`, coarse-clock and direct-vvar probes, and x86 `rdtsc`/`rdtscp` probes, plus a separately production-admitted benign emit source under the same pinned runner profile
 - WHEN hostile and benign programs run in their separated lanes
 - THEN every hostile action is contained with zero protected operations while the benign authorized request succeeds
 

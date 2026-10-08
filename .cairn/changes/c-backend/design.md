@@ -60,11 +60,14 @@ on the flag spelling. `--share-net` can override network isolation and
 in a confinement claim.
 Initial executable load and later no-exec filtering need independently
 reviewed ordering before candidate instructions. Seccomp cannot intercept
-vDSO clock reads or x86 `rdtsc`/`rdtscp`; a static ELF does not close these
-paths. Until the owner selects and reviews a VM/virtualized-clock boundary,
-or an equally demonstrated native clock/loader barrier, native execution
-MUST refuse. Do not run a hostile test ELF outside a separately authorized
-sealed test-only lane. r[CB-SANDBOX-01]
+vDSO clock reads, direct vvar mapping reads or x86 `rdtsc`/`rdtscp`; a
+static ELF or TSC-only trap/offset does not close all host time and
+elapsed-time paths. Until the owner selects and reviews a complete
+VM/virtualized-clock boundary or equally demonstrated native
+clock/vvar/TSC and loader barrier, native execution MUST refuse.
+Namespace/sandbox escape attempts MUST refuse or terminate with zero
+protected operations. Do not run a hostile test ELF outside a
+separately authorized sealed test-only lane. r[CB-SANDBOX-01]
 
 | Negative control (not executed) | Insufficient shortcut | Required gate |
 |---|---|---|
@@ -73,7 +76,7 @@ sealed test-only lane. r[CB-SANDBOX-01]
 | Forged C comment or ELF inert-section change | Syntax, manifest flag or `.text` hash cannot establish native correspondence | Trusted C re-emission and reproducible full-ELF byte equality |
 | `PT_INTERP`, `LD_PRELOAD`, writable loader or executable mapping | Outside code runs despite admitted ELF bytes | Reviewed static startup or exact immutable loader/ABI closure and post-load filter |
 | Deny all `execve` before initial load, or allow it afterward | First prevents launch; second permits substitution | Trusted initial-load versus final no-exec stage before guest instructions |
-| vDSO `clock_gettime` or x86 `rdtsc`/`rdtscp` | All bypass syscall seccomp/bubblewrap namespace flags | Reviewed virtualized clock/TSC or equivalent; otherwise no native launch |
+| vDSO `clock_gettime`/`time`/`gettimeofday`, coarse clocks, direct vvar reads, x86 `rdtsc`/`rdtscp` | All bypass syscall seccomp/bubblewrap namespace flags; TSC-only trap/offset leaves host time or elapsed time | Reviewed complete clock/vvar/TSC barrier or equivalent; otherwise no native launch |
 | Inherited secret FD, `/proc/self/fd` or revoked `test.emit` grant | Direct disclosure or forged/stale protected request | Fixed private FD allowlist, bounded IPC, independent mediator checking current authority on every request |
 | Crash, timeout, leaked descendant or partial JSON | Partial output is not Noble completion | Parent-owned cgroup limits, kill/reap entire worker set and typed failure without post-failure effects |
 
