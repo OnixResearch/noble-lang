@@ -223,7 +223,7 @@ impl World {
             || self.imports[1].parameters != [Type::Own(kind),Type::S64]
             || self.imports[1].results != [Type::S64]
             || self.exports[0].identity != "noble-test:worker-program/guest@2.0.0#compute"
-            || !self.exports[0].parameters.is_empty()
+            || self.exports[0].parameters != [Type::S64]
             || self.exports[0].results != [Type::S64] {
             return Err(unsupported("Worker Program WIT operation or ownership shape differs"));
         }

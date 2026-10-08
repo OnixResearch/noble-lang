@@ -611,7 +611,7 @@ impl Compiler {
             length: plan.functions - plan.first_function,
             generation: next.generation,
         };
-        let target_metadata = if self.live_slots {
+        let target_metadata = if self.live_slots || self.worker_inputs {
             let root = attempt!(plan.programs.get(plan.root).ok_or(crate::Diagnostic::Invalid));
             Some(TargetMetadata {
                 root_program_index: plan.root,
@@ -626,7 +626,7 @@ impl Compiler {
             None
         };
         let mut named_targets = alloc::vec::Vec::new();
-        if self.live_slots {
+        if self.live_slots || self.worker_inputs {
             for (index, definition) in submission.definitions.iter().enumerate() {
                 let checked_body = attempt!(checked.definitions.get(index)
                     .ok_or(crate::Diagnostic::Invalid));
@@ -654,7 +654,7 @@ impl Compiler {
         }
         let selected_origin = selected.and_then(|selected| origin::build(selected, &plan));
         let mut program_metadata = alloc::vec::Vec::new();
-        if self.live_slots {
+        if self.live_slots || self.worker_inputs {
             program_metadata.reserve(plan.programs.len());
             for (program_index, program) in plan.programs.iter_mut().enumerate() {
                 let logical = attempt!(program.logical.take()

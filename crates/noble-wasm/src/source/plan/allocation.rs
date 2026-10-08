@@ -15,7 +15,7 @@ fn signature(
         input: attempt!(compiler.signature(input, work)),
         output: attempt!(compiler.signature(output, work)),
         effects: attempt!(super::effect_mask(effects)),
-        logical: compiler.live_slots.then(|| super::ProgramTypes {
+        logical: (compiler.live_slots || compiler.worker_inputs).then(|| super::ProgramTypes {
             stack_in: input.to_vec(),
             stack_out: output.to_vec(),
             effects: effects.clone(),

@@ -7,6 +7,7 @@ pub(super) fn initial(
     parameters: &[noble_contracts::component::Type],
 ) -> Result<super::State, crate::Diagnostic> {
     let mut state = super::State {
+        worker_program: world.worker_program_kind(),
         locals: alloc::vec::Vec::new(),
         parameters: 0,
         stack: alloc::vec::Vec::with_capacity(parameters.len()),

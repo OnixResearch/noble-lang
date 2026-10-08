@@ -7,14 +7,17 @@ use noble_wasm::source::{NamedTargetMetadata, Prepared as Compiled};
 use serde_json::{Value, json};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-const SOURCE_LIMITS: noble_contracts::Limits = noble_contracts::Limits {
+pub(super) const SOURCE_LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536, nodes: 4_096, depth: 32, work: 3_000_000,
 };
 const GRAPH_LIMIT: usize = 4_096;
 const WITNESS_LIMIT: usize = 4_096;
+const RECIPE_DEPTH_LIMIT: u32 = 32;
+const RECIPE_LEAF_LIMIT: u32 = 256;
 const PACKAGE_BYTES: usize = 262_144;
 const PACKAGE_DEPTH: usize = 32;
-const PACKAGE_REVISION: &str = "0.1.0-draft.5";
+const PACKAGE_REVISION: &str = "0.1.0-draft.9";
+const WIT_WORLD: &str = "noble-test:worker-program/guest@2.0.0";
 static NEXT_INSTANCE: AtomicU64 = AtomicU64::new(1);
 
 /// The host, never package source, selects this exact operation contract.
@@ -41,6 +44,8 @@ pub(crate) enum Refusal {
 struct Node {
     recipe: Recipe,
     original: usize,
+    depth: u32,
+    leaves: u32,
 }
 
 enum Recipe {
@@ -60,6 +65,12 @@ struct Owner {
     version: u32,
     ordinal: u32,
     identity: u64,
+}
+
+pub(crate) struct CheckedTextAlias {
+    pub(crate) owner_identity: u64,
+    pub(crate) node: u32,
+    pub(crate) bytes: Vec<u8>,
 }
 
 impl Owner {
@@ -97,6 +108,8 @@ pub(crate) struct Store {
     root_owner: Owner,
     root_index: usize,
     closure: Vec<Owner>,
+    text_aliases: Vec<CheckedTextAlias>,
+    attested_capture_hash: Option<[u8; 32]>,
     host_contract: Option<HostContract>,
     selected_effects: EffSet,
     nodes: Vec<Node>,
@@ -146,24 +159,50 @@ impl Store {
         let mut nodes = Vec::with_capacity(closure.len());
         let mut witnesses = Vec::with_capacity(closure.len());
         let mut owners = Vec::with_capacity(closure.len());
+        let mut text_aliases = Vec::new();
         let mut root = None;
         for dependency in &closure {
-            let named = compiled.named_targets().iter().filter(|target|
+            let mut named = compiled.named_targets().iter().filter(|target|
                 target.definition.0 == dependency.definition_slot()
                 && target.definition_identity == dependency.definition_identity()
                 && submission.environment.definition_owners.get(target.definition.0 as usize)
-                    == Some(&Some(owner.module_identity()))).collect::<Vec<_>>();
-            let [target] = named.as_slice() else { return Err(Refusal::Invalid) };
+                    == Some(&Some(owner.module_identity())));
+            let (Some(target), None) = (named.next(), named.next())
+                else { return Err(Refusal::Invalid) };
             if target.stack_in.len() > 64 || target.stack_out.len() > 64
                 || !target.effects.is_empty() || target.checked_recipe.is_empty() {
                 return Err(Refusal::Invalid);
             }
             let index = nodes.len();
+            let metadata = compiled.program_metadata().get(target.program_index)
+                .ok_or(Refusal::Invalid)?;
+            if metadata.recipe_depth > RECIPE_DEPTH_LIMIT
+                || metadata.recipe_leaves > RECIPE_LEAF_LIMIT {
+                return Err(Refusal::Exhausted);
+            }
             nodes.push(Node { recipe: Recipe::Named { program_index: target.program_index },
-                original: index });
+                original: index, depth: metadata.recipe_depth,
+                leaves: metadata.recipe_leaves });
             owners.push(Owner { module_id: dependency.module_identity(),
                 version: dependency.module_version(), ordinal: dependency.definition_ordinal(),
                 identity: dependency.definition_identity() });
+            let source_definition = submission.definitions.iter()
+                .find(|definition| definition.definition == target.definition
+                    && definition.identity == target.definition_identity)
+                .ok_or(Refusal::Invalid)?;
+            for text in &source_definition.body.texts {
+                let node = usize::try_from(text.node.0).map_err(|_| Refusal::Exhausted)?;
+                if text_aliases.len() >= GRAPH_LIMIT || text.bytes.len() > SOURCE_LIMITS.bytes as usize
+                    || !matches!(source_definition.body.candidate.nodes
+                        .get(node),
+                        Some(noble_kernel::untrusted::Node::Literal {
+                            lit: noble_kernel::untrusted::Lit::Text, ..
+                        })) {
+                    return Err(Refusal::Invalid);
+                }
+                text_aliases.push(CheckedTextAlias { owner_identity: dependency.definition_identity(),
+                    node: text.node.0, bytes: text.bytes.clone() });
+            }
             witnesses.push(Witness { node: index, input: target.stack_in.clone(),
                 output: target.stack_out.clone(), effects: target.effects.clone() });
             if dependency.definition_slot() == owner.definition_slot() {
@@ -185,12 +224,56 @@ impl Store {
                 version: owner.module_version(), ordinal: owner.definition_ordinal(),
                 identity: owner.definition_identity() },
             root_index: root,
-            closure: owners, host_contract: contract,
+            closure: owners, text_aliases, attested_capture_hash: None,
+            host_contract: contract,
             nodes, witnesses, compiled, work_left: work };
         Ok((store, Handle { instance, node: root, witness: root }))
     }
 
     pub(crate) fn wat(&self) -> &[u8] { self.compiled.wat() }
+    pub(crate) fn compiled(&self) -> &Compiled { &self.compiled }
+    pub(crate) fn instance_id(&self) -> u64 { self.instance }
+    pub(crate) fn source(&self) -> &[u8] { &self.source }
+    pub(crate) fn text_aliases(&self) -> &[CheckedTextAlias] { &self.text_aliases }
+
+    fn capture_wire(&self) -> Result<Value, Refusal> {
+        let mut values = Vec::with_capacity(self.text_aliases.len());
+        for alias in &self.text_aliases {
+            let text = std::str::from_utf8(&alias.bytes).map_err(|_| Refusal::Invalid)?;
+            values.push(json!({"owner_identity":alias.owner_identity.to_string(),
+                "source_node":alias.node,"text_utf8":text}));
+        }
+        Ok(Value::Array(values))
+    }
+
+    fn selected_graph_blake3(&self, selected: usize) -> Result<String, Refusal> {
+        let mut digest = blake3::Hasher::new();
+        digest.update(b"noble-worker-checked-graph-v2\0");
+        digest.update(&self.source);
+        digest.update(&u64::try_from(selected).map_err(|_| Refusal::Exhausted)?.to_le_bytes());
+        for (index, node) in self.nodes.iter().enumerate() {
+            match &node.recipe {
+                Recipe::Named { program_index } => {
+                    digest.update(b"named\0");
+                    digest.update(&self.closure.get(index).ok_or(Refusal::Invalid)?
+                        .identity.to_le_bytes());
+                    digest.update(&self.compiled.named_targets().iter()
+                        .find(|named| named.program_index == *program_index)
+                        .ok_or(Refusal::Invalid)?.checked_recipe);
+                }
+                Recipe::Compose { first, second } => {
+                    digest.update(b"compose\0");
+                    digest.update(&u64::try_from(*first).map_err(|_| Refusal::Exhausted)?
+                        .to_le_bytes());
+                    digest.update(&u64::try_from(*second).map_err(|_| Refusal::Exhausted)?
+                        .to_le_bytes());
+                }
+            }
+            digest.update(&node.depth.to_le_bytes());
+            digest.update(&node.leaves.to_le_bytes());
+        }
+        Ok(crate::workflow::encoding::hex(digest.finalize().as_bytes()))
+    }
 
     /// This source-authenticated WIT type map is inert. Actual WIT resource
     /// creation still requires source-to-installed-cell correspondence and a
@@ -205,8 +288,8 @@ impl Store {
 
     fn package(&self, handle: Handle) -> Result<Value, Refusal> {
         if handle.instance != self.instance { return Err(Refusal::Invalid) }
-        if handle.node != self.root_index { return Err(Refusal::Unsupported) }
-        let target = self.named(handle).ok_or(Refusal::Unsupported)?;
+        let root = self.node_handle(self.root_index).ok_or(Refusal::Invalid)?;
+        let target = self.named(root).ok_or(Refusal::Invalid)?;
         if self.nodes.get(handle.node).is_none_or(|node| node.original != handle.witness) {
             return Err(Refusal::Unsupported);
         }
@@ -223,17 +306,43 @@ impl Store {
             || !witness.effects.is_empty() {
             return Err(Refusal::Unsupported);
         }
+        if self.nodes.iter().any(|node| self.witnesses.get(node.original)
+            .is_none_or(|original| !original.effects.is_empty())) {
+            return Err(Refusal::Unsupported);
+        }
+        let mut graph = Vec::with_capacity(self.nodes.len());
+        for (index, node) in self.nodes.iter().enumerate() {
+            graph.push(match &node.recipe {
+                Recipe::Named { program_index } => json!({
+                    "kind":"named","program_index":program_index,
+                    "owner":self.closure.get(index).ok_or(Refusal::Invalid)?.wire(),
+                    "depth":node.depth,"leaves":node.leaves}),
+                Recipe::Compose { first, second } => json!({
+                    "kind":"compose","first":first,"second":second,
+                    "depth":node.depth,"leaves":node.leaves}),
+            });
+        }
+        let captures = self.capture_wire()?;
+        let capture_binding_blake3 = match self.attested_capture_hash {
+            Some(hash) => Some(crate::workflow::encoding::hex(&hash)),
+            None if self.text_aliases.is_empty() => None,
+            None => return Err(Refusal::Invalid),
+        };
         Ok(json!({
             "format":"noble-worker-program-package/v2",
             "semantic_revision":PACKAGE_REVISION,
+            "wit_world":WIT_WORLD,
             "source_utf8":source,
             "root":{"name":self.root_name,"owner":self.root_owner.wire(),
                 "recipe_sha256":crate::workflow::intrinsic::sha256(&target.checked_recipe)},
+            "graph":graph,"selected_node":handle.node,
+            "selected_graph_blake3":self.selected_graph_blake3(handle.node)?,
             "definitions":definitions,
             "interface":{"input":["I64"],"output":["I64"],"effects":[]},
             "host_contracts":self.host_contract.map_or_else(Vec::new,
                 |_| vec!["test.emit@1.0.0"]),
-            "captures":[],
+            "captures":captures,
+            "capture_binding_blake3":capture_binding_blake3,
             "artifact":null
         }))
     }
@@ -242,12 +351,18 @@ impl Store {
     /// A grant to another destination or capture digest never transfers.
     pub(crate) fn export(&mut self, handle: Handle, destination: &str,
                          grant: &ExportGrant<'_>) -> Result<Vec<u8>, Refusal> {
+        let captures = serde_json::to_vec(&self.capture_wire()?)
+            .map_err(|_| Refusal::Invalid)?;
         if !grant.allowed || destination != grant.destination
             || grant.source_sha256 != crate::workflow::intrinsic::sha256(&self.source)
-            || grant.capture_sha256 != crate::workflow::intrinsic::sha256(b"[]") {
+            || grant.capture_sha256 != crate::workflow::intrinsic::sha256(&captures) {
             return Err(Refusal::Invalid);
         }
         self.charge(1)?;
+        if !self.text_aliases.is_empty() {
+            self.attested_capture_hash = Some(super::worker_program_guest::attest(self, handle)
+                .map_err(|_| Refusal::Invalid)?);
+        }
         let package = self.package(handle)?;
         let encoded = serde_json::to_vec(&package).map_err(|_| Refusal::Invalid)?;
         if encoded.len() > PACKAGE_BYTES { return Err(Refusal::Exhausted) }
@@ -308,15 +423,36 @@ impl Store {
             || document["semantic_revision"] != PACKAGE_REVISION {
             return Err(Refusal::Unsupported);
         }
-        if document["artifact"] != Value::Null || document["captures"] != json!([])
-            || document.as_object().is_none_or(|fields| fields.len() != 9) {
+        if document["artifact"] != Value::Null
+            || document["wit_world"] != WIT_WORLD
+            || document.as_object().is_none_or(|fields| fields.len() != 14) {
             return Err(Refusal::Unsupported);
         }
         let source = document["source_utf8"].as_str().ok_or(Refusal::Invalid)?;
         let name = document["root"]["name"].as_str().ok_or(Refusal::Invalid)?;
-        let (store, root) = Self::prepare(source.as_bytes(), name, &[Ty::I64], contract, remaining)?;
-        if store.package(root)? != document { return Err(Refusal::Invalid) }
-        Ok((store, root))
+        let (mut store, _root) = Self::prepare(source.as_bytes(), name, &[Ty::I64], contract, remaining)?;
+        let graph = document["graph"].as_array().ok_or(Refusal::Invalid)?;
+        if graph.len() < store.recipe_nodes() { return Err(Refusal::Invalid) }
+        if graph.len() > GRAPH_LIMIT { return Err(Refusal::Exhausted) }
+        for row in graph.iter().skip(store.recipe_nodes()) {
+            if row["kind"] != "compose" { return Err(Refusal::Invalid) }
+            let first = row["first"].as_u64()
+                .and_then(|index| usize::try_from(index).ok())
+                .and_then(|index| store.node_handle(index)).ok_or(Refusal::Invalid)?;
+            let second = row["second"].as_u64()
+                .and_then(|index| usize::try_from(index).ok())
+                .and_then(|index| store.node_handle(index)).ok_or(Refusal::Invalid)?;
+            store.compose(first, second)?;
+        }
+        let selected = document["selected_node"].as_u64()
+            .and_then(|index| usize::try_from(index).ok())
+            .and_then(|index| store.node_handle(index)).ok_or(Refusal::Invalid)?;
+        if !store.text_aliases.is_empty() {
+            store.attested_capture_hash = Some(super::worker_program_guest::attest(&store, selected)
+                .map_err(|_| Refusal::Invalid)?);
+        }
+        if store.package(selected)? != document { return Err(Refusal::Invalid) }
+        Ok((store, selected))
     }
 
     /// A second candidate must be an independently checked reachable named
@@ -325,6 +461,15 @@ impl Store {
         matches!(self.nodes.get(index)?.recipe, Recipe::Named { .. })
             .then_some(Handle { instance: self.instance, node: index,
                 witness: self.nodes[index].original })
+    }
+
+    pub(crate) fn node_handle(&self, index: usize) -> Option<Handle> {
+        Some(Handle { instance: self.instance, node: index,
+            witness: self.nodes.get(index)?.original })
+    }
+
+    pub(crate) fn node_index(&self, handle: Handle) -> Option<usize> {
+        self.interface(handle).map(|_| handle.node)
     }
 
     pub(crate) fn named(&self, handle: Handle) -> Option<&NamedTargetMetadata> {
@@ -395,6 +540,13 @@ impl Store {
             return Err(Refusal::Invalid)
         }
         if left.output != right.input { return Err(Refusal::Invalid) }
+        let depth = self.nodes[first.node].depth.max(self.nodes[second.node].depth)
+            .checked_add(1).ok_or(Refusal::Exhausted)?;
+        let leaves = self.nodes[first.node].leaves
+            .checked_add(self.nodes[second.node].leaves).ok_or(Refusal::Exhausted)?;
+        if depth > RECIPE_DEPTH_LIMIT || leaves > RECIPE_LEAF_LIMIT {
+            return Err(Refusal::Exhausted);
+        }
         if self.nodes.len() >= GRAPH_LIMIT || self.witnesses.len() >= WITNESS_LIMIT {
             return Err(Refusal::Exhausted);
         }
@@ -407,7 +559,7 @@ impl Store {
         let position = self.witnesses.len();
         self.witnesses.push(witness);
         self.nodes.push(Node { recipe: Recipe::Compose { first: first.node,
-            second: second.node }, original: position });
+            second: second.node }, original: position, depth, leaves });
         Ok(Handle { instance: self.instance, node, witness: position })
     }
 
@@ -513,19 +665,44 @@ fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'st
         .map_err(refusal)?;
     Ok(json!({"schema":"noble-worker-program-import/v2","stage":"import-admission",
         "outcome":"ready","source_sha256":crate::workflow::intrinsic::sha256(&store.source),
-        "recipe_sha256":store.named(root).map(|target|
-            crate::workflow::intrinsic::sha256(&target.checked_recipe)),
+        "selected_graph_blake3":store.selected_graph_blake3(root.node).map_err(refusal)?,
         "dependencies":store.closure.len(),"guest_requests":0,
         "protected_operations":0,"executable_guest_installed":false}))
 }
 
-/// Selected local builders and separately authorized finite pure packages.
-/// Neither path claims a guest-installed Program or host-effect execution.
+fn guest(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'static str)> {
+    if arguments.len() != 10 || arguments[4] != "--name"
+        || arguments[6] != "--operand" || arguments[8] != "--effect-ceiling"
+        || arguments[9] != "pure" {
+        return Err(("invalid-input",
+            "usage: noble worker program guest SOURCE --name NAME --operand I64 --effect-ceiling pure"));
+    }
+    let name = arguments[5].to_str().ok_or(("invalid-input", "invalid named Program"))?;
+    let operand = arguments[7].to_str().ok_or(("invalid-input", "invalid signed operand"))?
+        .parse::<i64>().map_err(|_| ("invalid-input", "invalid signed operand"))?;
+    let source = super::worker_typed::read_bounded_regular_file(
+        std::path::Path::new(&arguments[3]), SOURCE_LIMITS.bytes as usize)
+        .map_err(|_| ("invalid-input", "source file admission failed"))?;
+    let (store, root) = Store::prepare(&source, name, &[Ty::I64], None, 1_000_000)
+        .map_err(refusal)?;
+    let observed = super::worker_program_guest::execute(&store, root, operand)
+        .map_err(|_| ("invalid-input", "source-bound Worker guest installation or execution refused"))?;
+    Ok(json!({"schema":"noble-worker-program-guest/v2",
+        "stage":"guest-execution", "outcome":"normal",
+        "source_sha256":crate::workflow::intrinsic::sha256(store.source()),
+        "operand":operand,"value":observed.value,"guest_requests":observed.admits,
+        "protected_operations":observed.invokes,"live_owners":observed.live_owners,
+        "executable_guest_installed":true}))
+}
+
+/// Source-checked builders/packages remain inert; only the explicitly selected
+/// pure guest path installs a source-bound Program cell and links WIT ownership.
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let result = (|| {
         match arguments.get(2).and_then(|value| value.to_str()) {
             Some("export") => return export(arguments),
             Some("import") => return import(arguments),
+            Some("guest") => return guest(arguments),
             _ => {}
         }
         if arguments.len() != 8 || arguments[1] != "program"
@@ -627,6 +804,52 @@ mod tests {
     }
 
     #[test]
+    fn text_capture_is_runtime_bound_before_portable_export_or_import() {
+        let source = b"module Worker@1 [ def plus [ \"tag\" drop 1 + ] export plus ]";
+        let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], None, 1_000_000)
+            .expect("checked Text source");
+        let captures = serde_json::to_vec(&store.capture_wire().unwrap()).unwrap();
+        let source_sha256 = crate::workflow::intrinsic::sha256(source);
+        let capture_sha256 = crate::workflow::intrinsic::sha256(&captures);
+        let denied = ExportGrant { destination: "private", source_sha256: &source_sha256,
+            capture_sha256: &crate::workflow::intrinsic::sha256(b"[]"), allowed: true };
+        assert_eq!(store.export(root, "private", &denied), Err(Refusal::Invalid));
+        let grant = ExportGrant { destination: "private", source_sha256: &source_sha256,
+            capture_sha256: &capture_sha256, allowed: true };
+        let encoded = store.export(root, "private", &grant)
+            .expect("authorized runtime Text rebind");
+        let mut document: Value = serde_json::from_slice(&encoded).unwrap();
+        assert_eq!(document["captures"][0]["text_utf8"], "tag");
+        assert!(document["capture_binding_blake3"].as_str().is_some());
+        assert!(Store::import(&encoded, None, 1_000_000).is_ok());
+        document["captures"][0]["text_utf8"] = json!("forged");
+        let forged = serde_json::to_vec(&document).unwrap();
+        assert!(matches!(Store::import(&forged, None, 1_000_000),
+            Err(Refusal::Invalid)));
+    }
+
+    #[test]
+    fn composed_program_package_reconstructs_checked_graph_not_claimed_edges() {
+        let source = b"module Worker@1 [ def double [ 2 * ] export plus def plus [ double 1 + ] ]";
+        let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], None, 1_000_000)
+            .unwrap();
+        let double = store.checked_root(0).unwrap();
+        let composed = store.compose(root, double).unwrap();
+        let source_sha256 = crate::workflow::intrinsic::sha256(source);
+        let capture_sha256 = crate::workflow::intrinsic::sha256(b"[]");
+        let grant = ExportGrant { destination: "private", source_sha256: &source_sha256,
+            capture_sha256: &capture_sha256, allowed: true };
+        let package = store.export(composed, "private", &grant).unwrap();
+        let (imported, selected) = Store::import(&package, None, 1_000_000).unwrap();
+        assert_eq!(imported.recipe_edges(selected), Some((root.node,double.node)));
+        let mut claim: Value = serde_json::from_slice(&package).unwrap();
+        claim["graph"][2]["first"] = json!(0);
+        let forged = serde_json::to_vec(&claim).unwrap();
+        assert!(matches!(Store::import(&forged, None, 1_000_000),
+            Err(Refusal::Invalid)));
+    }
+
+    #[test]
     fn checked_named_program_adapts_selects_and_composes_without_changing_its_recipe() {
         let (mut store, original) = Store::prepare(
             b"module Worker@1 [ def minus [ 1 - ] export plus def plus [ minus 1 + ] ]",
@@ -651,7 +874,7 @@ mod tests {
         assert_eq!(ordinary.noble_type(noble_contracts::component::Type::Own(kind)),
             Some(Ty::Resource(kind)), "ordinary WIT resource must stay untrusted");
         assert!(selected.prepare_export("compute",
-            b"programs.admit 1 programs.invoke", SOURCE_LIMITS).is_ok(),
+            b"programs.admit swap programs.invoke", SOURCE_LIMITS).is_ok(),
             "selected source can type the host-admitted Program");
         let destination = EffSet::from_ids(&[TEST_EMIT]);
         let wider = store.adapt(original, &destination).expect("checked effect inclusion");

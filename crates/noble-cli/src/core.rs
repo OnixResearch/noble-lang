@@ -15,6 +15,7 @@ pub(crate) mod worker;
 pub(crate) mod worker_scalar;
 pub(crate) mod worker_package;
 pub(crate) mod worker_program;
+mod worker_program_guest;
 pub(crate) mod worker_typed;
 pub(crate) mod worker_value;
 pub(crate) mod worker_shell;
@@ -57,12 +58,17 @@ pub const USAGE: &str = "usage:
   reachable, compatible named Programs once, then
   adapt, select, duplicate and compose typed handles under an explicit bound.
   This local builder does not execute a guest, import/export packages or grant effects.
+  noble worker program guest SOURCE --name NAME --operand I64 --effect-ceiling pure
+  Selected pure WIT owner invokes the actual checked named Program cell in a
+  fresh, bounded source Wasm instance. Guest source and component are rebuilt;
+  this source-only path is not yet execution evidence without scoped Wasm tests.
   noble worker program export SOURCE --name NAME --destination DEST --authority HOST_GRANT
   Export only an original source-checked pure named Program with a matching
-  host-selected grant for destination, exact source and empty capture digest.
+  host-selected grant for destination, exact source and checked Text capture digest.
   noble worker program import PACKAGE --effect-ceiling pure|test.emit@1.0.0
   Freshly recheck a finite local v2 package's source, complete named closure
-  and checked recipe. Runtime Text captures and guest installation remain unsupported.
+  and checked recipe; Text aliases require fresh installed-cell rechecking.
+  Inert package test.emit ceiling does not authorize guest effects.
   noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON
   Typed worker: host-select a source-checked WorkerData@1 module and two canonical
   nominal values; check one exact local no-capture package and exported transition

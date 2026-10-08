@@ -8,5 +8,5 @@ interface programs {
 
 world guest {
   import programs;
-  export compute: func() -> s64;
+  export compute: func(operand: s64) -> s64;
 }

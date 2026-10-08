@@ -169,7 +169,7 @@ fn start(
         compiler,
         work
     )));
-    let definition_roots = if submission.environment.live_slots {
+    let definition_roots = if submission.environment.live_slots || compiler.worker_inputs {
         arenas[..index].iter().map(|arena| arena.root).collect()
     } else {
         alloc::vec::Vec::new()
