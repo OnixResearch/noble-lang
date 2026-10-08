@@ -125,7 +125,7 @@ when it resolves to immutable
 with artifact-owned Cargo home and target; it never copies a curated source
 subset. Their `check` commands read the supplied inventory and policy without
 invoking Cargo.
-Boundary randomness cases retain their own ninth, test-only lock and
+Boundary randomness cases retain their separate test-only lock and
 complete fixture vendor; they do not change the nine-lock reviewed
 production/peer vendor.
 
