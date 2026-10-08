@@ -3,6 +3,7 @@
 //! its component index nor the source-Wasm address is accepted as authority.
 
 use anyhow::{Context, Result, bail, ensure};
+use std::sync::atomic::{AtomicU64, Ordering};
 use wasmtime::{Caller, Config, Engine, ExternType, Global, Linker as CoreLinker, Memory, Module,
     Ref, Store, StoreLimits, StoreLimitsBuilder, Table, Val};
 use wasmtime::component::{Component, Linker, Resource, ResourceTable, ResourceType};
@@ -14,6 +15,7 @@ pub(super) const FUEL: u64 = 10_000_000;
 const EFFECT_REQUEST_LIMIT: u32 = 256;
 const EFFECT_TEXT_LIMIT: usize = 65_536;
 const LEDGER_BYTES_LIMIT: usize = 262_144;
+static NEXT_INSTALLATION: AtomicU64 = AtomicU64::new(1);
 
 /// Host-selected synthetic `test.emit` ledger. Selection cannot grant: the
 /// exact installed Program cell must be issued after checked installation.
@@ -101,16 +103,14 @@ impl WorkerHostPolicy {
             && source.root_owner_identity() == self.inner.owner_identity
             && cell.scope == source.instance_id()
             && cell.address != 0
+            && cell.installation != 0
             && cell.definition_identity == self.inner.owner_identity,
             "Worker issuer subject differs from checked installed Program");
         let mut state = self.inner.state.lock()
             .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
         ensure!(task.running()?
             && !state.revoked && state.current_epoch == self.inner.epoch
-            && state.issued.is_none_or(|previous|
-                previous.scope == cell.scope && previous.address == cell.address
-                    && previous.capture_hash == cell.capture_hash
-                    && previous.definition_identity == cell.definition_identity),
+            && state.issued.is_none(),
             "Worker host issue is stale or revoked");
         state.issued = Some(cell);
         Ok(())
@@ -288,6 +288,23 @@ struct ProgramCell {
     address: u32,
     definition_identity: u64,
     capture_hash: [u8; 32],
+    // An address/source can recur in a fresh Wasmtime Store. This token cannot.
+    installation: u64,
+}
+/// One exact installed cell's grant ends on every execution exit, including
+/// guest traps and component instantiation errors. A poisoned policy denies.
+struct IssuedInstallation {
+    policy: WorkerHostPolicy,
+    cell: ProgramCell,
+}
+impl Drop for IssuedInstallation {
+    fn drop(&mut self) {
+        if let Ok(mut state) = self.policy.inner.state.lock() {
+            if state.issued == Some(self.cell) {
+                state.issued = None;
+            }
+        }
+    }
 }
 #[derive(Clone, Copy)]
 struct Installed {
@@ -625,7 +642,7 @@ fn bind_named(store: &mut Store<Host>, instance: wasmtime::Instance,
     ensure!(named.checked_recipe.len() <= 65_536,
         "source Program recipe exceeds bound");
     Ok(ProgramCell { scope: source.instance_id(), address,
-        definition_identity: owner_identity, capture_hash })
+        definition_identity: owner_identity, capture_hash, installation: 0 })
 }
 
 fn bind_installed(store: &mut Store<Host>, instance: wasmtime::Instance,
@@ -692,7 +709,7 @@ fn bind_installed(store: &mut Store<Host>, instance: wasmtime::Instance,
             0
         };
         cells.push(ProgramCell { scope: source.instance_id(), address,
-            definition_identity, capture_hash });
+            definition_identity, capture_hash, installation: 0 });
     }
     cells.get(index).copied().context("selected Program cell not materialized")
 }
@@ -734,10 +751,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                 ensure!(!cx.data().task.cancelled()?, "Program task cancelled");
                                 let installed = cx.data().installed.context("uninstalled source")?;
                                 ensure!(cell.scope == cx.data().scope
-                                    && cell.scope == installed.cell.scope
-                                    && cell.address == installed.cell.address
-                                    && cell.definition_identity == installed.cell.definition_identity
-                                    && cell.capture_hash == installed.cell.capture_hash,
+                                    && cell == installed.cell,
                                     "foreign or stale Program owner");
                                 let begin = installed.instance.get_typed_func::<
                                     (i32,i32,i32,i32,i32,i32),i32>(&mut cx,"begin")?;
@@ -821,6 +835,8 @@ enum GuestAction<'a> { Invoke, CodeExport(&'a str) }
 fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: TaskOwner,
                     grant: bool)
     -> Result<Store<Host>> {
+    let installation = NEXT_INSTALLATION.fetch_update(Ordering::Relaxed, Ordering::Relaxed,
+        |next| next.checked_add(1)).context("Worker installation IDs exhausted")?;
     let core = core_module(&engine, source.wat())?;
     let mut store = Store::new(&engine, Host {
         table: ResourceTable::new(), installed: None, export_capture: None,
@@ -843,7 +859,8 @@ fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: 
         "checked source installation budget refused");
     let install = instance.get_typed_func::<(),i32>(&mut store,"worker_install")?;
     ensure!(install.call(&mut store,())? == 0,"source Program install failed");
-    let cell = bind_installed(&mut store, instance, source, root)?;
+    let mut cell = bind_installed(&mut store, instance, source, root)?;
+    cell.installation = installation;
     if grant {
         source.host_policy().context("no selected Worker host grant")?
             .issue_installed(source, root, cell, &store.data().task)?;
@@ -962,6 +979,12 @@ fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
     let mut linker = Linker::new(&engine);
     link(&engine, &guest, &mut linker)?;
     let mut store = install_selected(&engine, source, root, task.clone(), grant)?;
+    let _issued = if grant {
+        Some(IssuedInstallation {
+            policy: source.host_policy().context("missing issued Worker policy")?.clone(),
+            cell: store.data().installed.context("missing issued Worker cell")?.cell,
+        })
+    } else { None };
     store.set_fuel(FUEL)?;
     let guest = linker.instantiate(&mut store, &guest)?;
     let compute = guest.get_typed_func::<(i64,),(i64,)>(&mut store,"compute")?;
@@ -1032,7 +1055,7 @@ mod tests {
         let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
         let policy = host_selected_policy(source, false);
         let (mut selected, root) = ProgramStore::prepare_with_policy(
-            source, "plus", &[Ty::I64], policy.clone(), 100_000_000).unwrap();
+            source, "plus", &[Ty::I64], policy.clone(), 160_000_000).unwrap();
         assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))),
             "selection before checked installation is never an effect grant");
         assert_eq!(policy.counts().unwrap(), (1, 0));
@@ -1042,12 +1065,18 @@ mod tests {
         assert_eq!(policy.counts().unwrap(), (2, 1));
         assert_eq!(policy.ledger().unwrap(),
             [("local-test-destination".into(), "audit".into())]);
+        assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))),
+            "a fresh installation with the same source, slot and address has no grant");
+        assert_eq!(policy.counts().unwrap(), (3, 1));
+        assert_eq!(execute_with_host_grant(&mut selected, root, 41, &policy)
+            .unwrap().value, 42);
+        assert_eq!(policy.counts().unwrap(), (4, 2));
         policy.revoke().unwrap();
         assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))),
             "the same source and WIT owner cannot reuse a revoked host grant");
-        assert_eq!(policy.counts().unwrap(), (3, 1));
-        assert_eq!(policy.receipt().unwrap()["denied_requests"], 2);
-        assert_eq!(policy.ledger().unwrap().len(), 1);
+        assert_eq!(policy.counts().unwrap(), (5, 2));
+        assert_eq!(policy.receipt().unwrap()["denied_requests"], 3);
+        assert_eq!(policy.ledger().unwrap().len(), 2);
 
         let denied = host_selected_policy(source, false);
         let (mut selected, root) = ProgramStore::prepare_with_policy(
@@ -1229,6 +1258,48 @@ mod tests {
             Err(super::super::worker_program::Refusal::Invalid)));
         assert!(policy.ledger().unwrap().is_empty());
         assert_eq!(policy.counts().unwrap(), (0, 0));
+    }
+
+    #[test]
+    fn failed_issued_installation_cannot_grant_an_identical_retry() {
+        let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
+        let policy = host_selected_policy(source, false);
+        let (selected, root) = ProgramStore::prepare_with_policy(
+            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
+        let mut config = Config::new();
+        config.wasm_component_model(true).consume_fuel(true).epoch_interruption(true);
+        let engine = Engine::new(&config).unwrap();
+        let task = TaskOwner::for_source(&selected);
+        task.start(&engine).unwrap();
+        let mut first = None;
+        let failed = (|| -> Result<()> {
+            let installed = install_selected(&engine, &selected, root, task.clone(), true)?;
+            let cell = installed.data().installed.context("missing first cell")?.cell;
+            first = Some(cell);
+            let _issued = IssuedInstallation { policy: policy.clone(), cell };
+            let other = install_selected(&engine, &selected, root, task.clone(), false)?;
+            let other = other.data().installed.context("missing second cell")?.cell;
+            ensure!(cell.scope == other.scope && cell.address == other.address
+                && cell.definition_identity == other.definition_identity
+                && cell.capture_hash == other.capture_hash
+                && cell.installation != other.installation,
+                "fresh installed cell must have distinct installation identity");
+            ensure!(matches!(policy.emit(other, 4, "audit", &task)?,
+                EffectOutcome::Denied), "stale issue authorized a fresh installation");
+            bail!("guest failed after installation, before invoking the source");
+        })();
+        assert!(failed.is_err());
+        let first = first.unwrap();
+        assert!(policy.inner.state.lock().unwrap().issued.is_none());
+        let retry = install_selected(&engine, &selected, root, task.clone(), false).unwrap();
+        let second = retry.data().installed.unwrap().cell;
+        assert_eq!((first.scope, first.address, first.definition_identity, first.capture_hash),
+            (second.scope, second.address, second.definition_identity, second.capture_hash));
+        assert_ne!(first.installation, second.installation);
+        assert!(matches!(policy.emit(second, 4, "audit", &task).unwrap(),
+            EffectOutcome::Denied), "retry without a new issue must not append");
+        assert_eq!(policy.counts().unwrap(), (2, 0));
+        assert!(policy.ledger().unwrap().is_empty());
     }
 
     #[test]
