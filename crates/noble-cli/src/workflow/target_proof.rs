@@ -49,10 +49,23 @@ fn lower(checked: &Value) -> Result<(String, String), output::Failure> {
         || digest(&native_bodies["native"], "module_sha256")? != native
         || digest(&native_bodies["static"], "module_sha256")? != static_sha
         || native_bodies["checked_direct_bodies"] != serde_json::json!([
-            "quote_entry","compose_entry","op_add"])
+            "quote_entry","compose_entry","op_add","dispatch","selected_add_table_wrappers"])
     {
         return Err(invalid("exact installed native body witness is missing or inconsistent"));
     }
+    let state = &subject["one_state_replay"];
+    if state["schema"] != "noble-live-slot-one-idle-state-replay/v1"
+        || state["scope"] != "one-state-layout-only; native helper/dispatch semantics not established"
+        || state["memory_length"] != 20 * 65536
+        || state["owner_handle"] != subject["manifest"]["owner"]["handle"]
+        || state["retained_graph_sha256"] != subject["manifest"]["graph_sha256"]
+        || state["physical_literals"] != subject["literal_values"]
+    {
+        return Err(invalid("exact target idle memory/roots witness is missing or inconsistent"));
+    }
+    let initial_memory = digest(state, "memory_sha256")?;
+    let owner_root = state["owner_handle"].as_u64()
+        .ok_or_else(|| invalid("exact target idle memory owner root is missing"))?;
     let byte_donors = &subject["installed_donor_bytes"];
     if digest(&byte_donors["native"], "sha256")? != native
         || digest(&byte_donors["static"], "sha256")? != static_sha {
@@ -108,6 +121,9 @@ structure Subject where
   staticWasmSHA256 : String
   nativeWasmBytes : Nat
   staticWasmBytes : Nat
+  initialMemorySHA256 : String
+  ownerRoot : Nat
+  initialStateScope : String
   first : Int
   second : Int
   code : List Op
@@ -121,6 +137,9 @@ def subject : Subject := {{
   staticWasmSHA256 := "{static_sha}"
   nativeWasmBytes := {native_len}
   staticWasmBytes := {static_len}
+  initialMemorySHA256 := "{initial_memory}"
+  ownerRoot := {owner_root}
+  initialStateScope := "one-state-layout-only; native helper/dispatch semantics not established"
   first := ({first})
   second := ({second})
   code := generatedCode ({first}) ({second})
@@ -138,6 +157,9 @@ def claim : Prop :=
   subject.staticWasmSHA256 = "{static_sha}" ∧
   subject.nativeWasmBytes = {native_len} ∧
   subject.staticWasmBytes = {static_len} ∧
+  subject.initialMemorySHA256 = "{initial_memory}" ∧
+  subject.ownerRoot = {owner_root} ∧
+  subject.initialStateScope = "one-state-layout-only; native helper/dispatch semantics not established" ∧
   CodeTyped subject.code [.i64, .i64] [.i64] ∧
   ∀ (x y : BitVec 64) (tail result : Stack),
     Exec subject.code (tail ++ [.i64 x, .i64 y]) result →
@@ -147,7 +169,7 @@ end LiveSlotTargetObligation
 "#);
     let term = format!(r#"by
   unfold LiveSlotTargetObligation.claim LiveSlotTargetObligation.subject
-  refine ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, ?_, ?_⟩
+  refine ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, ?_, ?_⟩
   · change NobleContracts.CodeTyped
       (LiveSlotTargetObligation.generatedCode ({first}) ({second}))
       [.i64, .i64] [.i64]

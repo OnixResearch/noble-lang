@@ -1385,8 +1385,15 @@ mod tests {
         let wat = std::str::from_utf8(prepared.wat())
             .map_err(|error| error.to_string())?;
         let binary_sha = crate::workflow::intrinsic::sha256(&binary);
+        let static_add = rows(&origin, "programs")?.iter().find(|program|
+            program["operations"].as_array().is_some_and(|operations|
+                operations.len() == 3 && operations.iter().all(|operation|
+                    operation["kind"] == "add")))
+            .ok_or("selected alias has no three-add source program")?;
+        let add_start = number(static_add, "entry")?;
+        let add_entries = [add_start, add_start + 1, add_start + 2];
         let checked_native = super::super::native::attest(
-            &binary, &binary_sha, &binary, &binary_sha)?;
+            &binary, &binary_sha, &binary, &binary_sha, span.start, &add_entries)?;
         for (old, replacement, label) in [
             ("(i64.add (local.get $left) (local.get $right))",
                 "(i64.sub (local.get $left) (local.get $right))", "add"),
@@ -1394,12 +1401,20 @@ mod tests {
                 "(else (call $push_i64 (call $measure_data (local.get $environment))))", "quote"),
             ("(call $enqueue_program (call $b (local.get $environment)))\n (call $enqueue_program (call $a (local.get $environment)))",
                 "(call $enqueue_program (call $a (local.get $environment)))\n (call $enqueue_program (call $b (local.get $environment)))", "compose"),
+            ("(call $op_add)", "(call $op_sub)", "selected-add-table-wrapper"),
+            ("(call_indirect (type $entry) (local.get $environment) (local.get $index))",
+                "(call_indirect (type $entry) (local.get $environment) (i32.const 1))",
+                "dispatch-table-body"),
+            ("(import \"noble\" \"live_select\" (func $host_live_select (param i32 i32) (result i32)))",
+                "(import \"noble\" \"live_bind_validate\" (func $host_live_select (param i32 i32) (result i32)))",
+                "host-import"),
         ] {
             let changed = wat.replacen(old, replacement, 1);
             if changed == wat { return Err(format!("{label} native mutation did not match selected Wasm source")); }
             let binary = super::super::assemble_slot(changed.as_bytes())?;
             let sha = crate::workflow::intrinsic::sha256(&binary);
-            if super::super::native::attest(&binary, &sha, &binary, &sha).is_ok() {
+            if super::super::native::attest(
+                &binary, &sha, &binary, &sha, span.start, &add_entries).is_ok() {
                 return Err(format!("rewritten installed native {label} body acquired exact proof witness"));
             }
         }
@@ -1410,7 +1425,8 @@ mod tests {
         let changed_binary = super::super::assemble_slot(changed_unbox.as_bytes())?;
         let changed_sha = crate::workflow::intrinsic::sha256(&changed_binary);
         let changed_native = super::super::native::attest(
-            &changed_binary, &changed_sha, &changed_binary, &changed_sha)?;
+            &changed_binary, &changed_sha, &changed_binary, &changed_sha,
+            span.start, &add_entries)?;
         let unbox_sha = |witness: &Value| witness["native"]["functions"].as_array()
             .and_then(|rows| rows.iter().find(|row| row["name"] == "unbox"))
             .and_then(|row| row["body_sha256"].as_str())

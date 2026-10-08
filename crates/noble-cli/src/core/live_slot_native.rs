@@ -95,6 +95,29 @@ impl<'a> Module<'a> {
             || module.function_types.len() > 4096 {
             return Err(denied("incomplete or unbounded installed function map"));
         }
+        // This bounded returned target is pure. A changed/duplicated host
+        // import is not part of its semantic closure, even if signatures
+        // happen to match and the altered binary remains valid WebAssembly.
+        let expected_imports: &[(&str, &[ValType])] = &[
+            ("live_select", &[ValType::I32, ValType::I32]),
+            ("live_bind_validate", &[ValType::I32, ValType::I32]),
+            ("live_frame_enter", &[ValType::I32, ValType::I32, ValType::I32]),
+            ("live_frame_leave", &[ValType::I32]),
+            ("resource_validate", &[ValType::I32, ValType::I32]),
+            ("resource_bind_validate", &[ValType::I32, ValType::I32, ValType::I32,
+                ValType::I32, ValType::I32, ValType::I32]),
+        ];
+        if module.imports.len() != expected_imports.len() {
+            return Err(denied("selected pure target has a different host-function import set"));
+        }
+        for (index, (name, params)) in expected_imports.iter().enumerate() {
+            let imported = module.imports.get(&(index as u32))
+                .ok_or_else(|| denied("selected host-function import order is incomplete"))?;
+            if imported.0 != "noble" || imported.1 != *name {
+                return Err(denied("selected host-function import changed identity"));
+            }
+            module.signature(index as u32, params, &[ValType::I32])?;
+        }
         Ok(module)
     }
 
@@ -141,22 +164,49 @@ impl<'a> Module<'a> {
         let mut actual = Vec::new();
         for op in body.get_operators_reader().map_err(|_| denied("native body is invalid"))? {
             let token = match op.map_err(|_| denied("native operator cannot be decoded"))? {
-                Operator::GlobalGet { global_index } => format!("global.get {global_index}"),
-                Operator::GlobalSet { global_index } => format!("global.set {global_index}"),
+                Operator::GlobalGet { global_index } => format!("global.get {}", self.globals.get(&global_index)
+                    .ok_or_else(|| denied("native global read has no installed name"))?),
+                Operator::GlobalSet { global_index } => format!("global.set {}", self.globals.get(&global_index)
+                    .ok_or_else(|| denied("native global write has no installed name"))?),
                 Operator::LocalGet { local_index } => format!("local.get {local_index}"),
                 Operator::LocalSet { local_index } => format!("local.set {local_index}"),
                 Operator::I32Const { value } => format!("i32.const {value}"),
+                Operator::I64Const { value } => format!("i64.const {value}"),
                 Operator::Call { function_index } => format!("call {}", self.names.get(&function_index)
                     .ok_or_else(|| denied("native direct call target has no installed name"))?),
+                Operator::CallIndirect { type_index, table_index, .. } => {
+                    let ty = self.types.get(type_index as usize)
+                        .ok_or_else(|| denied("native indirect call type is invalid"))?;
+                    if table_index != 0 || ty.params() != [ValType::I32] || !ty.results().is_empty() {
+                        return Err(denied("native dispatch calls a different table or entry type"));
+                    }
+                    "call_indirect entry".to_owned()
+                }
                 Operator::I32Add => "i32.add".to_owned(),
+                Operator::I32Sub => "i32.sub".to_owned(),
+                Operator::I32Mul => "i32.mul".to_owned(),
+                Operator::I32Or => "i32.or".to_owned(),
+                Operator::I32Eqz => "i32.eqz".to_owned(),
                 Operator::I64Add => "i64.add".to_owned(),
+                Operator::I32Load { memarg } if memarg.memory == 0 && memarg.align == 2 =>
+                    format!("i32.load {}", memarg.offset),
+                Operator::I32Store { memarg } if memarg.memory == 0 && memarg.align == 2 =>
+                    format!("i32.store {}", memarg.offset),
+                Operator::I64Store { memarg } if memarg.memory == 0 && memarg.align == 3 =>
+                    format!("i64.store {}", memarg.offset),
+                Operator::Block { blockty: wasmparser::BlockType::Empty } => "block".to_owned(),
+                Operator::Loop { blockty: wasmparser::BlockType::Empty } => "loop".to_owned(),
+                Operator::Br { relative_depth } => format!("br {relative_depth}"),
+                Operator::BrIf { relative_depth } => format!("br_if {relative_depth}"),
                 Operator::If { blockty: wasmparser::BlockType::Empty } => "if".to_owned(),
                 Operator::Else => "else".to_owned(),
+                Operator::Drop => "drop".to_owned(),
+                Operator::Return => "return".to_owned(),
                 Operator::End => "end".to_owned(),
                 _ => return Err(denied("unexpected native direct-body opcode")),
             };
             actual.push(token);
-            if actual.len() > 32 { return Err(denied("native direct body exceeds finite instruction bound")); }
+            if actual.len() > 96 { return Err(denied("native direct body exceeds finite instruction bound")); }
         }
         // Global numbers are resolved against actual imported global names by
         // the original source/byte validator. Only the quote counter is read;
@@ -166,9 +216,10 @@ impl<'a> Module<'a> {
         Ok(())
     }
 
-    fn closure(&self, roots: &[&str]) -> Result<Value, String> {
+    fn closure(&self, roots: &[&str], table_roots: &[u32]) -> Result<Value, String> {
         let mut pending = VecDeque::new();
         for name in roots { pending.push_back(self.index(name)?); }
+        for index in table_roots { pending.push_back(*index); }
         let mut seen = BTreeSet::new();
         let mut rows = Vec::new();
         let mut total_bytes = 0usize;
@@ -212,12 +263,14 @@ impl<'a> Module<'a> {
                 "body_length":bytes.len(),"calls":calls,"indirect_calls":indirect_calls}));
         }
         rows.sort_by_key(|row| row["function_index"].as_u64().unwrap_or(u64::MAX));
-        Ok(json!({"module_sha256":self.sha256,"roots":roots,"functions":rows}))
+        Ok(json!({"module_sha256":self.sha256,"roots":roots,
+            "selected_table_function_indices":table_roots,"functions":rows}))
     }
 }
 
 pub(super) fn attest(
     core_bytes: &[u8], core_sha: &str, static_bytes: &[u8], static_sha: &str,
+    static_span_start: u32, add_entries: &[u32],
 ) -> Result<Value, String> {
     let core = Module::parse(core_bytes, core_sha)?;
     let static_donor = Module::parse(static_bytes, static_sha)?;
@@ -244,10 +297,9 @@ pub(super) fn attest(
     if globals.len() != 1 || core.globals.get(&globals[0]).map(String::as_str) != Some("quote_invocations") {
         return Err(denied("quote counter has an ambiguous installed global source"));
     }
-    let counter = globals[0];
     core.direct_body("quote_entry", &[
-        &format!("global.get {counter}"), "i32.const 1", "i32.add",
-        &format!("global.set {counter}"), "local.get 0", "call a", "if",
+        "global.get quote_invocations", "i32.const 1", "i32.add",
+        "global.set quote_invocations", "local.get 0", "call a", "if",
         "local.get 0", "call a", "call unbox", "else", "local.get 0",
         "call payload", "call push_i64", "end", "end",
     ], &[])?;
@@ -260,13 +312,70 @@ pub(super) fn attest(
         "i32.const 1", "call pop_kind", "local.set 1",
         "local.get 1", "local.get 0", "i64.add", "call push_i64", "end",
     ], &[ValType::I64, ValType::I64])?;
+    static_donor.signature(static_donor.index("dispatch")?, &[], &[])?;
+    static_donor.direct_body("dispatch", &[
+        "i32.const 57352", "i32.load 0", "if", "i32.const 4", "call fail",
+        "return", "end", "i32.const 57352", "i32.const 1", "i32.store 0",
+        "block", "loop", "global.get failure", "global.get cp", "i32.eqz",
+        "i32.or", "br_if 1", "call runtime_tick", "i32.eqz", "if",
+        "br 2", "end", "global.get cp", "i32.const 1", "i32.sub",
+        "global.set cp", "i32.const 4096", "global.get cp", "i32.const 8",
+        "i32.mul", "i32.add", "local.set 2", "local.get 2", "i32.load 0",
+        "local.set 0", "local.get 2", "i32.load 4", "local.set 1",
+        "i32.const 1048576", "global.get cp", "i32.const 4", "i32.mul",
+        "i32.add", "i32.load 0", "local.set 3", "local.get 2",
+        "i64.const 0", "i64.store 0", "i32.const 1048576",
+        "global.get cp", "i32.const 4", "i32.mul", "i32.add",
+        "i32.const 0", "i32.store 0", "local.get 3",
+        "call live_frame_restore", "global.get failure", "br_if 1",
+        "local.get 1", "local.get 0", "call_indirect entry",
+        "local.get 1", "call storage_dec_ref", "drop", "br 0",
+        "end", "end", "i32.const 57352", "i32.const 0",
+        "i32.store 0", "end",
+    ], &[ValType::I32, ValType::I32, ValType::I32, ValType::I32])?;
+    // Do not infer that a checked helper is what the live table actually
+    // enters: resolve every selected static index through its installed
+    // passive element segment and check all three source operation wrappers.
+    let code_segment = *static_donor.segments.get("code")
+        .ok_or_else(|| denied("static native code element segment is missing"))?;
+    let code = static_donor.elements.get(code_segment as usize)
+        .ok_or_else(|| denied("static native code element functions are missing"))?;
+    if add_entries.len() != 3 { return Err(denied("expected three selected add table entries")); }
+    let mut static_table_roots = Vec::with_capacity(3);
+    for (ordinal, entry) in add_entries.iter().enumerate() {
+        let offset = entry.checked_sub(static_span_start)
+            .ok_or_else(|| denied("selected add table entry precedes installed code span"))?;
+        let index = *code.get(offset as usize)
+            .ok_or_else(|| denied("selected add table entry has no installed element"))?;
+        let name = format!("f{entry}");
+        if static_donor.index(&name)? != index {
+            return Err(denied("selected table function differs from installed source operation"));
+        }
+        static_donor.signature(index, &[ValType::I32], &[])?;
+        let mut plan = vec!["global.get failure".to_owned(), "if".to_owned(),
+            "return".to_owned(), "end".to_owned()];
+        if ordinal < 2 {
+            let next = add_entries[ordinal + 1];
+            if *entry == u32::MAX || next != *entry + 1 {
+                return Err(denied("selected add continuations are not sequential"));
+            }
+            plan.extend([format!("i32.const {next}"), "local.get 0".to_owned(),
+                "call enqueue".to_owned()]);
+        }
+        plan.extend(["global.get failure".to_owned(), "i32.eqz".to_owned(),
+            "if".to_owned(), "call op_add".to_owned(), "end".to_owned(), "end".to_owned()]);
+        let expected = plan.iter().map(String::as_str).collect::<Vec<_>>();
+        static_donor.direct_body(&name, &expected, &[])?;
+        static_table_roots.push(index);
+    }
     // Every transitive helper byte is tied to the exact installed module.
     // This witness does not prove that storage, stack, dispatcher or helpers
     // refine the pure Lean model; that must be discharged separately.
     Ok(json!({"schema":"noble-live-slot-native-byte-closure/v1",
-        "native":core.closure(&["quote_entry","compose_entry"])?,
+        "native":core.closure(&["quote_entry","compose_entry"], &[entries[1],entries[2]])?,
         "static":static_donor.closure(&[
-            "op_add","op_quote_typed","op_compose","dispatch"])?,
-        "checked_direct_bodies":["quote_entry","compose_entry","op_add"],
+            "op_add","op_quote_typed","op_compose","dispatch"], &static_table_roots)?,
+        "checked_direct_bodies":["quote_entry","compose_entry","op_add","dispatch",
+            "selected_add_table_wrappers"],
         "semantic_refinement":"not-established"}))
 }

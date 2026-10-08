@@ -11,6 +11,8 @@ use std::sync::{Arc, Condvar, Mutex, atomic::{AtomicBool, Ordering}};
 mod origin;
 #[path = "live_slot_native.rs"]
 mod native;
+#[path = "live_slot_snapshot.rs"]
+mod snapshot;
 
 fn selected_origin_json(
     origin: &noble_wasm::source::SelectedOriginMetadata,
@@ -1816,7 +1818,7 @@ impl Host {
     fn checked_exact_target_proof_subject(&mut self, owner: &str) -> Result<Value, String> {
         let manifest = self.checked_composite_for_publication(owner)?;
         let live = self.send(&json!({"operation":"inspect-native-donors",
-            "owner":owner,"target_manifest":&manifest}), &[])?;
+            "owner":owner,"target_manifest":&manifest,"snapshot_state":true}), &[])?;
         if live["outcome"] != "native-donors-inspected"
             || live["owner"] != owner
             || live["manifest_sha256"] != manifest["manifest_sha256"]
@@ -1839,9 +1841,21 @@ impl Host {
             .ok_or_else(|| reject("original selected native donor bytes were not retained"))?;
         let caller_bytes = caller.proof_bytes.as_ref()
             .ok_or_else(|| reject("original selected static donor bytes were not retained"))?;
+        let selected_static = &manifest["descriptor"]["donors"]["static"];
+        let static_span_start = selected_static["span"]["start"].as_u64()
+            .and_then(|entry| u32::try_from(entry).ok())
+            .ok_or_else(|| reject("selected static donor has no checked code span"))?;
+        let add_entries = selected_static["entries"].as_array()
+            .ok_or_else(|| reject("selected static donor has no checked add table entries"))?
+            .iter().map(|entry| entry.as_u64().and_then(|entry| u32::try_from(entry).ok())
+                .ok_or_else(|| reject("selected add table entry is out of range")))
+            .collect::<Result<Vec<_>, _>>()?;
         let native_bodies = native::attest(
-            core_bytes, &core.artifact_sha256, caller_bytes, &caller.artifact_sha256)?;
-        let subject = origin::alias_exact_target_subject(&manifest, caller, core, &native_bodies)?;
+            core_bytes, &core.artifact_sha256, caller_bytes, &caller.artifact_sha256,
+            static_span_start, &add_entries)?;
+        let mut subject = origin::alias_exact_target_subject(&manifest, caller, core, &native_bodies)?;
+        subject["one_state_replay"] = snapshot::check(
+            &live["state_snapshot"], &manifest, &subject)?;
         origin::key_exact_target_subject(&subject)
     }
 

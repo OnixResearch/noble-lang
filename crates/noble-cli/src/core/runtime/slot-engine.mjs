@@ -1364,12 +1364,40 @@ class SlotEngine {
       // snapshotted from each installed immutable Wasm module.
       const { core, caller, donor, manifestSha256 } =
         this.returnedManifest(request.owner, saved, request.target_manifest);
+      let stateSnapshot = null;
+      if (request.snapshot_state === true) {
+        const roots = module => {
+          const count = module.instance.exports.module_program_count();
+          if (!Number.isInteger(count) || count < 0 || count > 128) {
+            throw Error('selected installed module has unbounded private Program roots');
+          }
+          return Array.from({ length: count }, (_, index) =>
+            module.instance.exports.module_program_handle(index) >>> 0);
+        };
+        const nativeRoots = roots(core), staticRoots = roots(caller);
+        const memory = Buffer.from(this.memory.buffer);
+        if (memory.length !== 20 * 65536 || this.shared.failure.value !== 0
+          || this.shared.sp.value !== 0 || this.shared.cp.value !== 0
+          || !this.compositeCodeIsInstalled(donor)) {
+          throw Error('selected target has no idle, completely bounded live memory snapshot');
+        }
+        stateSnapshot = {
+          schema: 'noble-live-slot-idle-memory-snapshot/v1',
+          memory_hex: memory.toString('hex'), memory_sha256: sha256(memory),
+          owner_handle: saved.handle,
+          imported_globals: this.abi.globals.map(({ name, type }) =>
+            ({ name, type, value: String(this.shared[name].value) })),
+          native_roots: nativeRoots, static_roots: staticRoots,
+          scope: 'one-idle-state-only; not future-invocation semantics',
+        };
+      }
       return slotReply('native-donors-inspected', {
         owner: request.owner, manifest_sha256: manifestSha256,
         native: { module_id: core.id, artifact_sha256: core.artifactSha256,
           table_entries: [1, 2] },
         static: { module_id: caller.id, artifact_sha256: caller.artifactSha256,
           table_entries: donor.addEntries },
+        ...(stateSnapshot === null ? {} : { state_snapshot: stateSnapshot }),
       });
     } catch (error) {
       return slotReply('native-donor-inspection-refused', { diagnostic: String(error) });
