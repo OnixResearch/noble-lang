@@ -12,6 +12,95 @@ const maxFileBytes = 256 * 1024 * 1024;
 const maxNarBytes = 3 * 1024 * 1024 * 1024;
 const maxDepth = 64;
 
+export const reviewedLockNames = Object.freeze([
+  'Cargo.lock',
+  'verification/m5/peer/Cargo.lock',
+  'verification/m6/peer/Cargo.lock',
+  'verification/m7/peer/Cargo.lock',
+  'verification/intrinsic-proofs/peer/Cargo.lock',
+  'verification/intrinsic-named-v2/peer/Cargo.lock',
+  'verification/result-library/peer/Cargo.lock',
+  'verification/declared-modules-v1/peer/Cargo.lock',
+  'verification/worker-send/peer/Cargo.lock',
+]);
+
+function registryRows(source, lock) {
+  const entries = new Map();
+  for (const block of source.split(/^\[\[package\]\]\s*$/mu).slice(1)) {
+    const field = key => block.match(new RegExp(`^${key} = "([^"\\n]+)"$`, 'mu'))?.[1];
+    if (field('source') !== 'registry+https://github.com/rust-lang/crates.io-index')
+      continue;
+    const name = field('name');
+    const version = field('version');
+    const checksum = field('checksum');
+    assert.match(name ?? '', /^[a-zA-Z0-9_-]+$/u, `${lock}: invalid registry name`);
+    assert.match(version ?? '', /^[0-9A-Za-z.+-]+$/u, `${lock}: invalid registry version`);
+    assert.match(checksum ?? '', /^[0-9a-f]{64}$/u, `${lock}: invalid registry checksum`);
+    const id = `${name}-${version}`;
+    assert.ok(!entries.has(id), `${lock}: duplicate registry package ${id}`);
+    entries.set(id, { name, version, checksum });
+  }
+  return entries;
+}
+
+// The NAR authenticates bytes, not correspondence with the selected nine
+// source locks. Validate the complete package/checksum/membership closure
+// before starting offline Cargo or accepting its production build receipt.
+export function reviewedVendorRecipe(root, vendor) {
+  const manifestPath = path.join(path.dirname(vendor.directory), 'vendor-provenance.json');
+  assert.ok(fs.lstatSync(manifestPath).isFile(), 'selected vendor manifest is not regular');
+  const bytes = fs.readFileSync(manifestPath);
+  const manifest = JSON.parse(bytes);
+  assert.equal(manifest.schema, 'noble-reviewed-offline-vendor/v1');
+  assert.equal(Object.keys(manifest.locks).sort().join('\0'),
+    [...reviewedLockNames].sort().join('\0'),
+    'selected vendor omitted or added a reviewed Cargo lock');
+  const expected = new Map();
+  let registryCount = 0;
+  const locks = {};
+  for (const name of reviewedLockNames) {
+    const source = fs.readFileSync(path.join(root, name));
+    const digest = createHash('sha256').update(source).digest('hex');
+    assert.equal(manifest.locks[name], digest,
+      `${name}: selected vendor provenance differs from current Cargo lock`);
+    locks[name] = { source_sha256: digest, manifest_sha256: digest, exact: true };
+    for (const [id, packageRow] of registryRows(source.toString('utf8'), name)) {
+      registryCount++;
+      const previous = expected.get(id);
+      if (previous) {
+        assert.equal(previous.checksum, packageRow.checksum,
+          `${id}: conflicting reviewed registry checksums`);
+        previous.locks.push(name);
+      } else {
+        expected.set(id, { ...packageRow, locks: [name] });
+      }
+    }
+  }
+  assert.equal(registryCount, 615, 'reviewed vendor needs exactly 615 registry rows');
+  assert.equal(expected.size, 241, 'reviewed vendor needs exactly 241 unique registry packages');
+  assert.equal(manifest.packages.length, expected.size,
+    'selected vendor manifest package count differs from lock closure');
+  const seen = new Set();
+  for (const row of manifest.packages) {
+    const id = `${row.name}-${row.version}`;
+    assert.ok(expected.has(id) && !seen.has(id), `${id}: extra or duplicated vendor package`);
+    seen.add(id);
+    const packageRow = expected.get(id);
+    assert.equal(row.checksum, packageRow.checksum,
+      `${id}: selected vendor package checksum differs from lock closure`);
+    assert.deepEqual(row.locks, packageRow.locks,
+      `${id}: selected vendor lock membership differs from lock closure`);
+    assert.match(row.archive, /^\/nix\/store\/[0-9a-z]{32}-[^\s/]+\.crate$/u,
+      `${id}: selected vendor archive is not an exact Nix store path`);
+    assert.ok(row.archive.endsWith(`-${id}.crate`),
+      `${id}: selected vendor archive does not name the reviewed package`);
+  }
+  return { manifest_path: manifestPath,
+    manifest_sha256: createHash('sha256').update(bytes).digest('hex'),
+    locks, registry_rows: registryCount, registry_unique: expected.size,
+    exact_nine_lock_recipe: true };
+}
+
 function directoryNames(name, remaining) {
   const directory = fs.opendirSync(name, { encoding: 'buffer', bufferSize: 32 });
   const names = [];

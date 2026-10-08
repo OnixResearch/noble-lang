@@ -88,17 +88,27 @@ Noble owns the exact selection policy and the Nix composition code.
 
 [`nix/reviewed-vendor.nix`](../nix/reviewed-vendor.nix) reads the root Cargo
 lock and the independent M5, M6, M7, intrinsic-proofs, intrinsic-named-v2,
-Result-library, and declared-modules-v1 peer locks: eight locks in all. It
-rejects conflicting or missing registry checksums, checks all 237 distinct
-crate archive SHA-256 values, and produces `source-registry-0` plus a
-lock/archive provenance manifest. The locally realized candidate output
+Result-library, declared-modules-v1, and Worker Send peer locks: nine locks
+in all. The source-only recipe fixes the root lock SHA-256 to
+`414f95bc62d57849a6411aed8d848bd93fe00111dba2c19be4a77e1b6e0161aa`
+and the Worker Send peer lock to
+`91e75cfc90112d55765e7598527f151677076902c2b3434cc5af77069931f7c2`.
+It requires exactly 615 registry rows and 241 unique checked packages,
+rejects missing/conflicting checksums, verifies archive SHA-256, and restricts
+archive extraction to safe regular files/directories under the exact package
+root. The derivation writes `source-registry-0` and a nine-lock
+lock/archive provenance manifest. This source recipe has **not** been realized
+or approved as a selected vendor. The previous eight-lock output
 `/nix/store/3sl4kjvccw33wbrhb7qf57myyrzj371c-noble-reviewed-offline-vendor`
 has measured NAR `sha256-23BKxkztQ6megprdki32gwDS8LXsqQPIsCnI1CYGHTQ=`,
-bound in both candidate [`M5`](m5/pins.json) and [`M6`](m6/pins.json).
-These candidate-only pins are not a selected Nix, source-inventory, or
-native-assurance gate pass or independently verified signed-substitute proof.
+still bound in [`M5`](m5/pins.json) and [`M6`](m6/pins.json), but it cannot
+certify the nine-lock recipe. Keep those pins held until a separately reviewed
+new derivation and measured NAR are available; do not relabel the old output.
+This candidate-only source selection is not a selected Nix, source-inventory,
+numeric guest, or native-assurance gate pass.
 [`selectedVendor`](selected-vendor.mjs) verifies that NAR at each migrated
-gate before selecting Cargo's exact offline source replacement. Merely
+gate; the Result build additionally compares all nine lock hashes and the
+615-row/241-package provenance closure before invoking Cargo. Merely
 having a registry directory is not evidence of the reviewed vendor.
 Sandboxed Rust checks and the published inventory/native-assurance collectors
 declare the same hash-bound Wasmtime source and reviewed vendor, then install
@@ -113,33 +123,20 @@ when it resolves to immutable
 `/nix/store/7y0cmn79ilsaq0g7lgpmpa7sqjrkii16-cargo-config.toml`,
 with artifact-owned Cargo home and target; it never copies a curated source
 subset. Their `check` commands read the supplied inventory and policy without
-invoking Cargo. Boundary randomness cases retain their own ninth, test-only lock and
-complete fixture vendor; they do not change the eight-lock reviewed
+invoking Cargo.
+Boundary randomness cases retain their own ninth, test-only lock and
+complete fixture vendor; they do not change the nine-lock reviewed
 production/peer vendor.
 
-On a host with the locked Nix inputs and all fixed-output archives already
-available, re-evaluate the recipe from the repository's locked Nixpkgs and
-realize its derivation offline:
-
-```sh
-export NIX_CONFIG='min-free = 0
-max-free = 0
-builders =
-sandbox = true
-require-sigs = true'
-drv="$(nix eval --offline --impure --raw --expr \
-  'let flake = builtins.getFlake ("path:" + toString ./.);
-       pkgs = import flake.inputs.nixpkgs { system = "x86_64-linux"; };
-   in (import ./nix/reviewed-vendor.nix { inherit pkgs; root = ./.; }).drvPath')"
-nix build --offline --no-link --print-out-paths "$drv^out"
-```
-
-The path-flake expression can see worktree-only files. Git-flake evaluation
-requires the recipe and verifier to be tracked in the same reviewed commit,
-while the source pins must still match those exact committed bytes. Offline
-reconstruction fails closed if a fixed archive is missing.
-Do not substitute a mutable Cargo registry, invoke shared Nix GC, or build
-without at least 5 GiB free disk and 20 GiB `MemAvailable` throughout.
+`nix/vendor-only.nix` is a parameterized vendor-only expression. Its caller
+must supply an independently NAR-matched selected Nixpkgs store source; it
+does not choose a local candidate, evaluate the entire flake, or authorize a
+build. Source-origin coverage now includes the Worker peer lock/manifest and
+the LIVE06 production-role feature body
+`crates/noble-cli/src/core/runtime/live-test-barrier.mjs`, together with
+`core/live.rs`, `core/worker.rs`, and the `live_repl.rs` integration test.
+The embedded JavaScript is a source input, not a Rust Octet package envelope.
+No vendor realization, pin rebind, Cargo or guest execution is claimed here.
 
 The source-bound intrinsic collector builds the production CLI and its
 independent peer from fresh external Cargo home/target directories. It pins
