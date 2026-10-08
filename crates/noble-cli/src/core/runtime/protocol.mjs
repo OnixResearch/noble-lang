@@ -100,6 +100,13 @@ async function protocol(config) {
           } else if (/^execute [0-9]+$/.test(header)) {
             const count = Number(header.slice('execute '.length));
             command = { kind: 'execute', inputs: integer(count, MAX_FRAME, 'injection frame') };
+          } else if (/^execute-scalar [0-9]+$/.test(header)) {
+            const count = Number(header.slice('execute-scalar '.length));
+            command = { kind: 'execute-scalar', inputs: integer(count, 256, 'scalar input frame') };
+          } else if (/^execute-typed [0-9]+$/.test(header)) {
+            const count = Number(header.slice('execute-typed '.length));
+            command = { kind: 'execute-typed',
+              inputs: integer(Number(count), 131072, 'typed worker input frame') };
           } else if (/^observe [0-9]+$/.test(header)) {
             try { emit('observed', engine.observe(Number(header.slice('observe '.length)))); }
             catch (error) { emit('internal-failure', reportError(error)); return; }
@@ -121,12 +128,17 @@ async function protocol(config) {
                 claims: integer(Number(admission[4]), 1024, 'claim frame'),
                 allowed: integer(Number(admission[5]), 1024, 'host-policy frame') };
             } else {
-              const match = /^(compile|compile-bin|stage-bin) ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+              const match = /^(compile|compile-bin|stage-bin|compile-typed) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+) ([0-9]+))?$/.exec(header);
               if (!match) fail('invalid engine command');
               command = { kind: match[1],
                 bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
                 source: integer(Number(match[3]), 65536, 'source frame'),
                 submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission') };
+              if (command.kind === 'compile-typed') {
+                if (match[5] === undefined || match[6] === undefined) fail('worker manifest absent');
+                command.literalEnd = integer(Number(match[5]), 983040, 'worker literal end');
+                command.catalog = integer(Number(match[6]), 65536, 'worker schema frame');
+              } else if (match[5] !== undefined || match[6] !== undefined) fail('unexpected worker manifest');
               if (command.kind !== 'compile' && command.bytes < 8) fail('invalid Wasm frame size');
             }
           }
@@ -153,7 +165,10 @@ async function protocol(config) {
           emit(report.outcome, report);
           continue;
         }
-        if (command.kind === 'execute') {
+        if (command.kind === 'execute' || command.kind === 'execute-scalar'
+          || command.kind === 'execute-typed') {
+          const scalar = command.kind === 'execute-scalar';
+          const typed = command.kind === 'execute-typed';
           if (pending.length < command.inputs) break;
           const bytes = pending.subarray(0, command.inputs);
           pending = pending.subarray(command.inputs);
@@ -164,7 +179,18 @@ async function protocol(config) {
             catch (error) { emit('internal-failure', reportError(error)); return; }
           }
           try {
-            const report = engine.execute({ inputs });
+            if (scalar && (!Array.isArray(inputs) || inputs.length !== 2
+              || inputs.some(input => input?.type !== 'I64'
+                || typeof input.value !== 'string'
+                || !/^(0|-[1-9][0-9]*|[1-9][0-9]*)$/.test(input.value)
+                || BigInt.asIntN(64, BigInt(input.value)) !== BigInt(input.value)))) {
+              fail('invalid scalar worker inputs');
+            }
+            const report = engine.execute(typed
+              ? { typedValues: inputs,
+                limits: { steps: Math.min(4096, engine.abi.limits_maximum.steps) } }
+              : { inputs,
+                ...(scalar ? { limits: { steps: Math.min(4096, engine.abi.limits_maximum.steps) } } : {}) });
             emit(report.outcome, report);
           } catch (error) { emit('internal-failure', reportError(error)); return; }
           if (engine.poisoned) return;
@@ -201,12 +227,18 @@ async function protocol(config) {
           } catch (error) { emit('internal-failure', reportError(error)); return; }
           continue;
         }
-        if (pending.length < command.bytes + command.source) break;
+        if (pending.length < command.bytes + command.source + (command.catalog ?? 0)) break;
         const bytes = pending.subarray(0, command.bytes);
         const source = pending.subarray(command.bytes, command.bytes + command.source);
-        pending = pending.subarray(command.bytes + command.source);
+        const policy = command.kind === 'compile-typed'
+          ? pending.subarray(command.bytes + command.source,
+            command.bytes + command.source + command.catalog) : null;
+        pending = pending.subarray(command.bytes + command.source + (command.catalog ?? 0));
         try {
-          const report = command.kind === 'compile' ? engine.prepare(bytes, source, command.submission)
+          const report = command.kind === 'compile' || command.kind === 'compile-typed'
+            ? engine.prepare(bytes, source, command.submission,
+              command.kind === 'compile-typed' ? command.literalEnd : null,
+              policy === null ? null : JSON.parse(utf8.decode(policy)))
             : command.kind === 'compile-bin' ? engine.compileBinary(bytes, source, command.submission)
               : engine.stageBinary(bytes, source, command.submission);
           emit(report.outcome, report);

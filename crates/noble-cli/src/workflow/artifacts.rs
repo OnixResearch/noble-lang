@@ -163,10 +163,29 @@ impl Temporary {
     }
 
     #[allow(
+        tigerstyle::ambient_env,
+        reason = "Owner: noble-maintainers. The shell selects the temporary parent for a private worker-owned workspace."
+    )]
+    pub(crate) fn create_named(prefix: &'static str) -> Result<Self, super::output::Failure> {
+        Self::create_in_prefix(&std::env::temp_dir(), prefix)
+    }
+
+    #[allow(
         tigerstyle::ambient_clock,
         reason = "Owner: noble-maintainers. The shell timestamps private unique disposable workspace names before exclusive directory creation."
     )]
     pub(crate) fn create_in(parent: &std::path::Path) -> Result<Self, super::output::Failure> {
+        Self::create_in_prefix(parent, "noble-mc1-")
+    }
+
+    #[allow(
+        tigerstyle::ambient_clock,
+        reason = "Owner: noble-maintainers. The shell timestamps private unique disposable workspace names before exclusive directory creation."
+    )]
+    fn create_in_prefix(
+        parent: &std::path::Path,
+        prefix: &str,
+    ) -> Result<Self, super::output::Failure> {
         let timestamp = attempt!(std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_err(|error| super::output::Failure::error("temporary-root", error.to_string())))
@@ -176,7 +195,7 @@ impl Temporary {
         let mut attempt = 0;
         while attempt < 128 {
             let path = parent.join(std::format!(
-                "noble-mc1-{}-{timestamp}-{attempt}",
+                "{prefix}{}-{timestamp}-{attempt}",
                 std::process::id()
             ));
             let mut builder = std::fs::DirBuilder::new();
@@ -198,11 +217,20 @@ impl Temporary {
             "could not allocate a fresh temporary directory".into(),
         ))
     }
+
+    pub(crate) fn remove(&mut self) -> std::io::Result<()> {
+        if self.path.as_os_str().is_empty() {
+            return Ok(());
+        }
+        std::fs::remove_dir_all(&self.path)?;
+        self.path.clear();
+        Ok(())
+    }
 }
 
 impl Drop for Temporary {
     fn drop(&mut self) {
-        if let Err(error) = std::fs::remove_dir_all(&self.path) {
+        if let Err(error) = self.remove() {
             // Best-effort private-workspace cleanup cannot replace the already
             // determined caller result, including while unwinding another error.
             drop(error);

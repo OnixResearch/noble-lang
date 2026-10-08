@@ -2,6 +2,13 @@
 function readText(engine, offset, count) {
     integer(offset, engine.memory.buffer.byteLength, 'text offset');
     integer(count, engine.memory.buffer.byteLength - offset, 'text length');
+    if (engine.workerObservation) {
+      // Charge before decoding. UTF-16 representation plus worst-case JSON
+      // escaping can amplify one observed byte by more than its raw length.
+      const charge = count * 12;
+      if (charge > 1048576 - engine.observationBytes) fail('typed observation byte limit exhausted');
+      engine.observationBytes += charge;
+    }
     return utf8.decode(new Uint8Array(engine.memory.buffer, offset, count));
   }
 
@@ -13,6 +20,7 @@ function readSignature(engine, runtime, identity) {
 function readStack(engine, runtime) {
     const count = integer(runtime.stack_length(), 128, 'stack height');
     engine.observationWork = 0;
+    engine.observationBytes = 0;
     // Every slot also reports its live cell handle (null for immediate
     // values), so a consumer can project a Program or pass a companion cell to
     // a later push without re-deriving the handle from the value's shape.
@@ -27,6 +35,14 @@ function readStack(engine, runtime) {
   }
 
 function chargeObservation(engine, depth) {
+    if (engine.workerObservation) {
+      // Charge before constructing the next JS object/array entry; even a
+      // guest's enormous non-Text list must not be materialized first.
+      if (depth > 32 || ++engine.observationWork > 4096) fail('typed observation work limit exhausted');
+      if (256 > 1048576 - engine.observationBytes) fail('typed observation byte limit exhausted');
+      engine.observationBytes += 256;
+      return;
+    }
     if (depth > 512 || ++engine.observationWork > MAX_OBSERVATION_WORK) fail('observation limit exhausted');
   }
 
