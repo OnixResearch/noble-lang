@@ -9,6 +9,9 @@ mod multiset;
 pub(crate) struct Ctx<'a> {
     pub(crate) request: &'a crate::untrusted::Request,
     pub(crate) env: &'a crate::contracts::Env,
+    /// Structural checking only; the source-bound Wasm entry separately
+    /// authenticates the owner and every lexical occurrence.
+    pub(crate) signed_owner: Option<crate::contracts::Definition>,
 }
 
 /// The failing site: a node and, for invocations, its definition.
@@ -153,7 +156,8 @@ pub(crate) fn definition_of(
         Err(_) => return None,
     };
     match candidate.nodes.get(index) {
-        Some(crate::untrusted::Node::Invocation { def, .. }) => Some(*def),
+        Some(crate::untrusted::Node::Invocation { def, .. }
+            | crate::untrusted::Node::SignedSelf { def, .. }) => Some(*def),
         Some(crate::untrusted::Node::Literal { .. })
         | Some(crate::untrusted::Node::SlotInvoke { .. })
         | Some(crate::untrusted::Node::Quotation { .. })

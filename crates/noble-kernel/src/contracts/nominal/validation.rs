@@ -35,6 +35,7 @@ impl super::super::Env {
             return false;
         }
         bootstrap_matches(self)
+            && (!self.text_cursor || !self.declared_modules || declared_text_prefix_matches(self))
             && super::super::live::catalog_valid(self)
             && (!self.declared_modules || fixed_definitions_match(self))
             && counts_match(self)
@@ -54,6 +55,25 @@ impl super::super::Env {
         }
         matches
     }
+}
+
+fn declared_text_prefix_matches(env: &super::super::Env) -> bool {
+    let Ok(fixed) = super::super::declared_text_environment() else {
+        return false;
+    };
+    if env.defs.len() < fixed.defs.len() {
+        return false;
+    }
+    for index in 23..fixed.defs.len() {
+        if env.kinds[index] != fixed.kinds[index]
+            || !super::schemes::same_scheme(&env.defs[index], &fixed.defs[index])
+            || !env.deps[index].is_empty()
+            || env.definition_owners[index].is_some()
+        {
+            return false;
+        }
+    }
+    true
 }
 
 fn generic_counts_match(env: &super::super::Env) -> bool {

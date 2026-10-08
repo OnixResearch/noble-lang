@@ -169,6 +169,15 @@ pub(super) fn runtime(
             ))
         ));
     }
+    if plan.has_i64_less {
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/i64-less.wat"
+            ))
+        ));
+    }
     if plan.has_core_emit {
         attempt!(out.append(
             b"(func $op_emit (local $text i32)

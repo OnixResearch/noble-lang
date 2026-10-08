@@ -4,13 +4,14 @@ pub(super) fn blocked(
     tree: &crate::source::Tree,
     names: &[alloc::string::String],
     installed: &[bool],
+    signed_owner: Option<&str>,
     mut meter: crate::Meter,
 ) -> (crate::Meter, Result<bool, crate::source::Error>) {
     let mut node_at = 0;
     let mut is_blocked = false;
     let mut failure = None;
     while node_at < tree.nodes.len() && !is_blocked && failure.is_none() {
-        let (next, result) = blocked_at(&tree.nodes[node_at], names, installed, meter);
+        let (next, result) = blocked_at(&tree.nodes[node_at], names, installed, signed_owner, meter);
         meter = next;
         match result {
             Ok(blocked) => is_blocked = blocked,
@@ -32,6 +33,7 @@ fn blocked_at(
     node: &crate::source::Node,
     names: &[alloc::string::String],
     installed: &[bool],
+    signed_owner: Option<&str>,
     meter: crate::Meter,
 ) -> (crate::Meter, Result<bool, crate::source::Error>) {
     let (meter, charged) = charge_dependency(meter);
@@ -41,7 +43,8 @@ fn blocked_at(
     if let crate::source::Kind::Word(word) = &node.kind {
         let (meter, found) = dependency(word, names, meter);
         return match found {
-            Ok(Some(index)) => (meter, Ok(!installed[index])),
+            Ok(Some(index)) => (meter, Ok(!installed[index]
+                && signed_owner != Some(names[index].as_str()))),
             Ok(None) => (meter, Ok(false)),
             Err(problem) => (meter, Err(problem)),
         };

@@ -1,17 +1,32 @@
 // Host-owned ABI, immutable adapter dispatch and effect accounting.
-function configureDeclaredAbi(engine, abi, declared_modules, declared_extension, bindings, text_byte_cursor) {
+function configureDeclaredAbi(engine, abi, declared_modules, declared_extension, bindings,
+    text_byte_cursor, signed_self_recursion) {
+    const declaredText = text_byte_cursor && declared_modules;
     if (typeof text_byte_cursor !== 'boolean'
-      || text_byte_cursor && (declared_modules || engine.inProcessLive)) {
-      fail('text byte cursor requires an ordinary session or compile');
+      || text_byte_cursor && engine.inProcessLive) {
+      fail('text byte cursor requires a session or compile');
     }
-    engine.profile = declared_modules ? 'Declared-Modules-v1'
+    if (declaredText
+        && (engine.inProcessLive
+        || !Array.isArray(bindings) || bindings.length !== 0)) {
+      fail('declared text requires pure modules without host bindings');
+    }
+    if (typeof signed_self_recursion !== 'boolean'
+      || signed_self_recursion && (!declared_modules || engine.inProcessLive)) {
+      fail('signed recursion requires the declared module host boundary');
+    }
+    engine.declaredModules = declared_modules;
+    engine.profile = declaredText ? signed_self_recursion
+      ? 'Signed-Declared-Text-v1' : 'Declared-Text-v1'
+      : signed_self_recursion ? 'Signed-Self-Modules-v1'
+      : declared_modules ? 'Declared-Modules-v1'
       : text_byte_cursor ? 'Text-Byte-Cursor-v1' : 'Core-Bootstrap';
     if (declared_modules) {
       if (typeof declared_extension !== 'string') fail('missing declared module ABI extension');
       engine.declaredExtension = JSON.parse(declared_extension);
       if (engine.declaredExtension.schema !== 'noble-declared-module-abi/v1'
         || engine.declaredExtension.base_profile !== abi.profile
-        || engine.declaredExtension.profile !== engine.profile
+        || engine.declaredExtension.profile !== 'Declared-Modules-v1'
         || !Array.isArray(engine.declaredExtension.host_functions)
         || engine.declaredExtension.host_functions.length !== 2
         || engine.declaredExtension.host_functions[0].name !== 'test_emit_bound'
@@ -35,7 +50,8 @@ function configureDeclaredAbi(engine, abi, declared_modules, declared_extension,
         || fn.result !== ['i32', 'i64'][index]))) {
       fail('invalid live host ABI');
     }
-    engine.hostFunctions = declared_modules
+    engine.hostFunctions = declaredText ? []
+      : declared_modules
       ? [...abi.host_functions.filter(fn => fn.name !== 'test_emit'), ...engine.declaredExtension.host_functions]
       : engine.inProcessLive ? [...abi.host_functions, ...abi.live_host_functions] : abi.host_functions;
 

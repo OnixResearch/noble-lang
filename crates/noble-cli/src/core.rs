@@ -48,18 +48,26 @@ pub const USAGE: &str = "usage:
   noble run SOURCE [--opt off|on] [--emit NEW_DIR]
   noble compile SOURCE [--text-byte-cursor] [--input-type I64|Bool|Text|Unit ...]
   noble compile SOURCE --declared-modules --bindings HOST_FILE [--module MODULE_FILE ...] [--input-type MODULE@VERSION.TYPE ...]
+  noble compile SOURCE --declared-modules --signed-self-recursion --bindings HOST_FILE [--module MODULE_FILE ...]
+  noble compile SOURCE --declared-modules --text-byte-cursor [--signed-self-recursion] [--module MODULE_FILE ...]
   noble session [--text-byte-cursor] [--framed] [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
+  noble session --framed --declared-modules --signed-self-recursion --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
+  noble session --framed --declared-modules --text-byte-cursor [--signed-self-recursion] [--opt off|on] [--emit NEW_DIR]
   HOST_FILE: bind MODULE@VERSION test.emit ADAPTER Text -- ! test.emit allow|deny
              bind MODULE@VERSION test.clock ADAPTER -- I64 ! test.clock allow|deny script I64[,I64...]
   Declared-Modules-v1 module/import/definition units link without running guest code.
   Preparation limits: --source-bytes N --source-nodes N --source-depth N --source-work N
 
 Core-Bootstrap uses the selected managed-linear-memory backend.
---text-byte-cursor selects Text-Byte-Cursor-v1 for ordinary compile/session only;
+--text-byte-cursor alone selects Text-Byte-Cursor-v1 for ordinary compile/session;
 it adds pure text.byte, retaining Text and returning unsigned byte 0..255,
 EOF -1 at the byte length, negative-offset -2 or past-end -3. Increment
-the offset only after a nonnegative byte. It cannot combine with --declared-modules.
+the offset only after a nonnegative byte. With --declared-modules it selects a
+new pure declared-text profile with text.byte, signed I64 <, and no host
+bindings or ambient test effects. --signed-self-recursion also requires
+--declared-modules, an exported self word and an explicit fixed signature.
+Existing ordinary declared modules retain their explicit --bindings file.
 run checks one complete file before executing any of it.
 session reads one source submission per line; --framed reads a decimal byte count,
 newline, then exactly that many source bytes (permits multiline and invalid UTF-8).
@@ -81,12 +89,22 @@ struct Session {
 
 impl Session {
     fn new(options: &arguments::Options) -> Result<Self, output::Failure> {
-        let declared = match &options.manifest {
-            Some(manifest) => Some(attempt!(
-                noble_contracts::source::ModuleSession::new(&manifest.operations())
-                    .map_err(output::Failure::source)
-            )),
-            None => None,
+        let declared = if options.declared_modules {
+            let bindings = options.manifest.as_ref().map(|manifest| manifest.operations())
+                .unwrap_or_default();
+            Some(attempt!(
+                if options.declared_text() {
+                    noble_contracts::source::ModuleSession::new_declared_text(
+                        &bindings, options.signed_self_recursion,
+                    )
+                } else if options.signed_self_recursion {
+                    noble_contracts::source::ModuleSession::new_signed_self(&bindings)
+                } else {
+                    noble_contracts::source::ModuleSession::new(&bindings)
+                }.map_err(output::Failure::source)
+            ))
+        } else {
+            None
         };
         Ok(Self {
             frontend: if options.text_byte_cursor {
@@ -95,7 +113,9 @@ impl Session {
                 noble_contracts::source::Session::new()
             },
             declared,
-            compiler: if options.text_byte_cursor {
+            compiler: if options.declared_text() {
+                noble_wasm::source::Compiler::new_declared_text()
+            } else if options.text_byte_cursor {
                 noble_wasm::source::Compiler::new_text_cursor()
             } else {
                 noble_wasm::source::Compiler::new()

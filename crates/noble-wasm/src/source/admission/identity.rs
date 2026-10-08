@@ -16,6 +16,7 @@ struct Encoding {
 fn encode(
     submission: &noble_kernel::execution::Submission,
     body: &noble_kernel::execution::Body,
+    owner: Option<noble_kernel::contracts::Definition>,
     work: &mut super::super::Work,
 ) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
     let mut encoding = Encoding {
@@ -30,7 +31,7 @@ fn encode(
     }
     let mut failure = None;
     while let Some(step) = encoding.todo.pop() {
-        match encoding.step(submission, body, step, work) {
+        match encoding.step(submission, body, owner, step, work) {
             Ok(()) => {}
             Err(problem) => {
                 failure = Some(problem);
@@ -49,6 +50,7 @@ impl Encoding {
         &mut self,
         submission: &noble_kernel::execution::Submission,
         body: &noble_kernel::execution::Body,
+        owner: Option<noble_kernel::contracts::Definition>,
         step: Option<noble_kernel::untrusted::NodeId>,
         work: &mut super::super::Work,
     ) -> Result<(), crate::Diagnostic> {
@@ -65,6 +67,15 @@ impl Encoding {
             noble_kernel::untrusted::Node::Literal { lit, .. } => {
                 literal(&mut self.out, lit, body, node)
             }
+            noble_kernel::untrusted::Node::SignedSelf { def, .. } => {
+                if owner != Some(*def) {
+                    return Err(crate::Diagnostic::Invalid);
+                }
+                let index = attempt!(super::definition_index(submission, *def));
+                attempt!(self.out.append(b"S"));
+                attempt!(self.out.number(submission.definitions[index].identity));
+                self.out.append(b";")
+            }
             noble_kernel::untrusted::Node::Invocation { def, .. } => {
                 if submission.environment.text_cursor && (22..=25).contains(&def.0) {
                     return Err(crate::Diagnostic::Invalid);
@@ -76,6 +87,14 @@ impl Encoding {
                         return Err(crate::Diagnostic::Invalid);
                     }
                     attempt!(self.out.append(b"b26"));
+                } else if submission.environment.text_cursor && def.0 == 27 {
+                    if !submission.environment.declared_modules
+                        || submission.environment.kind(*def)
+                            != Some(noble_kernel::contracts::Behavior::I64Less)
+                    {
+                        return Err(crate::Diagnostic::Invalid);
+                    }
+                    attempt!(self.out.append(b"b27"));
                 } else if def.0 < super::super::builtin_count(&submission.environment) {
                     attempt!(self.out.append(b"b"));
                     attempt!(self.out.number(u64::from(def.0)));
@@ -148,6 +167,7 @@ impl Encoding {
                                 | noble_kernel::contracts::Behavior::TestEmit
                                 | noble_kernel::contracts::Behavior::Reserved
                                 | noble_kernel::contracts::Behavior::TextByte
+                                | noble_kernel::contracts::Behavior::I64Less
                                 | noble_kernel::contracts::Behavior::Named
                                 | noble_kernel::contracts::Behavior::BoundEmit(_)
                                 | noble_kernel::contracts::Behavior::BoundClock(_) => {
@@ -235,11 +255,12 @@ pub(in crate::source) fn check(
     submission: &noble_kernel::execution::Submission,
     identities: &mut alloc::vec::Vec<super::super::Identity>,
     work: &mut super::super::Work,
+    signed: bool,
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
     let mut failure = None;
     while index < submission.definitions.len() {
-        match admit(submission, index, identities, work) {
+        match admit(submission, index, identities, work, signed) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -263,9 +284,14 @@ fn admit(
     index: usize,
     identities: &mut alloc::vec::Vec<super::super::Identity>,
     work: &mut super::super::Work,
+    signed: bool,
 ) -> Result<(), crate::Diagnostic> {
     let definition = &submission.definitions[index];
-    let recipe = attempt!(encode(submission, &definition.body, work));
+    if !signed && definition.body.candidate.nodes.iter()
+        .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })) {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    let recipe = attempt!(encode(submission, &definition.body, Some(definition.definition), work));
     attempt!(work.entries(identities.len()));
     let mut found = 0usize;
     while found < identities.len() && identities[found].id != definition.identity {

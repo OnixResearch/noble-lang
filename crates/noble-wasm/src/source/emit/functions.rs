@@ -82,6 +82,7 @@ fn instruction(
         super::super::plan::Action::Program(program) => push_program(out, program),
         super::super::plan::Action::Word(definition) => word_call(out, definition),
         super::super::plan::Action::TextByte => out.append(b"(call $op_text_byte"),
+        super::super::plan::Action::I64Less => out.append(b"(call $op_i64_less"),
         super::super::plan::Action::Quote(input, output_signature, witness) => typed_quote(
             out,
             QuoteOperands {

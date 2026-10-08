@@ -75,7 +75,7 @@ function readValue(engine, runtime, kind, value, depth) {
       const marker = runtime.cell_w(handle);
       if (marker === 0) return { type: 'Sum', variant: kind === 12 ? 'left' : 'right',
         value: readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1) };
-      if (engine.profile !== 'Declared-Modules-v1') fail('nominal value is outside Core-Bootstrap');
+      if (!engine.declaredModules) fail('nominal value is outside Core-Bootstrap');
       if (marker !== 1 && marker !== 2) fail('invalid nominal representation marker');
       if (marker === 1 && kind !== 12) fail('opaque wrapper uses an invalid sum tag');
       const module = (BigInt(runtime.cell_y(handle) >>> 0) << 32n) | BigInt(runtime.cell_x(handle) >>> 0);
@@ -142,7 +142,7 @@ function readRecipe(engine, runtime, root, depth) {
         ...readBoxed(engine, runtime, child, depth + 1),
         schema: readSignature(engine, runtime, runtime.cell_y(handle)),
       } });
-      else if (atom >= 26 && atom <= 32 && engine.profile !== 'Declared-Modules-v1') {
+      else if (atom >= 26 && atom <= 32 && !engine.declaredModules) {
         fail('nominal or bound operation recipe is outside Core-Bootstrap');
       }
       else if (atom >= 26 && atom <= 30) result.push({ invoke: {

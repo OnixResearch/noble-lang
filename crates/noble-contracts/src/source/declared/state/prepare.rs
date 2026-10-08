@@ -35,7 +35,18 @@ impl super::ModuleSession {
                 .snapshot()
                 .stage_unit(unit, input_bytes, inputs, limits));
         attempt!(staged.retained(limits));
-        Ok(super::ModulePrepared {
+        let signed_expression = if kind == super::ModuleKind::Expression
+            && (self.source.declared.as_ref()
+                .is_some_and(|context| context.declared_text)
+            || submission.as_ref().is_some_and(|program| {
+                program.definitions.iter().any(|definition| definition.body.candidate.nodes.iter()
+                    .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })))
+            })) {
+            input_bytes.to_vec()
+        } else {
+            alloc::vec::Vec::new()
+        };
+        let mut prepared = super::ModulePrepared {
             kind,
             generation: self.generation,
             limits,
@@ -46,7 +57,18 @@ impl super::ModuleSession {
             submission,
             output,
             pending,
-        })
+            signed_expression,
+        };
+        if !prepared.signed_expression.is_empty() {
+            attempt!(prepared.verify_signed_origins());
+            let submission = prepared.submission.as_ref().ok_or_else(|| {
+                crate::source::declared::error(crate::source::Stage::Check,
+                    "signed expression lacks its concrete checked submission")
+            })?;
+            prepared.staged = attempt!(prepared.staged.record_signed_certified(submission));
+            attempt!(prepared.staged.retained(limits));
+        }
+        Ok(prepared)
     }
 
     fn stage_unit(
@@ -56,6 +78,8 @@ impl super::ModuleSession {
         inputs: &[noble_kernel::types::Ty],
         limits: crate::Limits,
     ) -> Result<StagedUnit, crate::source::Error> {
+        let expression = matches!(&unit,
+            crate::source::declared::parsing::ParsedUnit::Expression);
         let (kind, submission, output, pending) = match unit {
             crate::source::declared::parsing::ParsedUnit::Module {
                 name,
@@ -83,12 +107,21 @@ impl super::ModuleSession {
             }
             crate::source::declared::parsing::ParsedUnit::Definition
             | crate::source::declared::parsing::ParsedUnit::Expression => {
+                if expression {
+                    self = attempt!(self.pending_signed_expression_words());
+                }
                 let mut prepared = attempt!(self.source.prepare(input_bytes, inputs, limits));
                 let kind = if prepared.is_definition() {
                     super::ModuleKind::Definition
                 } else {
                     super::ModuleKind::Expression
                 };
+                if expression != (kind == super::ModuleKind::Expression) {
+                    return Err(crate::source::declared::error(
+                        crate::source::Stage::Check,
+                        "source unit changed between module and expression parsing",
+                    ));
+                }
                 if prepared
                     .definition
                     .as_ref()
@@ -102,7 +135,7 @@ impl super::ModuleSession {
                 let submission = prepared.submission.take();
                 let output = core::mem::take(&mut prepared.output);
                 attempt!(self.source.commit(prepared));
-                if kind == super::ModuleKind::Definition {
+                if kind == super::ModuleKind::Definition || expression {
                     self = attempt!(self.outside_words());
                 }
                 (kind, submission, output, None)

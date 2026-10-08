@@ -217,6 +217,7 @@ const fn bindings(node: &noble_kernel::untrusted::Node) -> &[noble_kernel::words
     match node {
         noble_kernel::untrusted::Node::Literal { inst, .. }
         | noble_kernel::untrusted::Node::Invocation { inst, .. }
+        | noble_kernel::untrusted::Node::SignedSelf { inst, .. }
         | noble_kernel::untrusted::Node::Quotation { inst, .. } => inst.bindings.as_slice(),
         noble_kernel::untrusted::Node::SlotInvoke { .. } => {
             panic!("legacy property generator cannot carry a live-slot node")
@@ -228,6 +229,7 @@ const fn inst_of(node: &mut noble_kernel::untrusted::Node) -> &mut noble_kernel:
     match node {
         noble_kernel::untrusted::Node::Literal { inst, .. }
         | noble_kernel::untrusted::Node::Invocation { inst, .. }
+        | noble_kernel::untrusted::Node::SignedSelf { inst, .. }
         | noble_kernel::untrusted::Node::Quotation { inst, .. } => inst,
         noble_kernel::untrusted::Node::SlotInvoke { .. } => {
             panic!("legacy property generator cannot carry a live-slot node")

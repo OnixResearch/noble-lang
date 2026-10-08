@@ -56,7 +56,8 @@ fn node(
 ) -> Result<(), crate::Diagnostic> {
     let inst = match node {
         noble_kernel::untrusted::Node::Literal { inst, .. }
-        | noble_kernel::untrusted::Node::Invocation { inst, .. } => inst,
+        | noble_kernel::untrusted::Node::Invocation { inst, .. }
+        | noble_kernel::untrusted::Node::SignedSelf { inst, .. } => inst,
         noble_kernel::untrusted::Node::Quotation { inst, body } => {
             if body.len() > super::NODE_LIMIT {
                 return Err(crate::Diagnostic::Exhausted);
@@ -74,6 +75,14 @@ fn node(
             return work.entries(forwarded_ref_ordinals.len().saturating_add(1));
         }
     };
+    check_inst(inst, limits, work)
+}
+
+fn check_inst(
+    inst: &noble_kernel::words::Inst,
+    limits: noble_kernel::untrusted::Limits,
+    work: &mut super::Work,
+) -> Result<(), crate::Diagnostic> {
     if inst.bindings.len() > 8 {
         return Err(crate::Diagnostic::Exhausted);
     }
@@ -140,6 +149,9 @@ fn definition(
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(expected(&definition.expected, limits, work));
+    if let Some(inst) = definition.owner_inst.as_ref() {
+        attempt!(check_inst(inst, limits, work));
+    }
     body(&definition.body, limits, work)
 }
 

@@ -163,7 +163,7 @@ impl<'a> Schedule<'a> {
         reason = "Owner: noble-maintainers; E0277/E0658 Vec Index and Deref plus E0015 blocked and declared::error prevent const on both pinned Rust compilers; reassess const graph APIs."
     )]
     fn ready(mut self, position: usize) -> (Self, Result<bool, crate::source::Error>) {
-        let Some((_, _, tree)) = self.pending[position].as_ref() else {
+        let Some((name, _, tree)) = self.pending[position].as_ref() else {
             return (
                 self,
                 Err(crate::source::declared::error(
@@ -172,8 +172,16 @@ impl<'a> Schedule<'a> {
                 )),
             );
         };
-        let (meter, blocked) =
-            super::scheduling::blocked(tree, &self.names, &self.installed, self.work.meter);
+        let signed_owner = self
+            .session
+            .as_ref()
+            .and_then(|session| session.source.declared.as_ref())
+            .is_some_and(|context| context.signed_self)
+            && self.work.signatures.iter().any(|(declared, _)| declared == name);
+        let (meter, blocked) = super::scheduling::blocked(
+            tree, &self.names, &self.installed,
+            signed_owner.then_some(name.as_str()), self.work.meter,
+        );
         self.work.meter = meter;
         let result = match blocked {
             Ok(is_blocked) => Ok(!is_blocked),

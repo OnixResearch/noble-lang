@@ -25,8 +25,15 @@ pub struct Definition {
     pub definition: crate::contracts::Definition,
     /// Session-local immutable semantic identity, independent of source names.
     pub identity: u64,
+    /// Untrusted original source identity before concrete adapter specialization.
+    pub source_identity: u64,
     pub body: Body,
     pub expected: crate::untrusted::Expected,
+    /// Untrusted source namespace row; sealed ingress authenticates it.
+    pub owner_slot: Option<u32>,
+    /// Untrusted concrete witness for the owner body's rank-1 binders. Only
+    /// source-bound signed ingress may authorize it; kernel checks structure.
+    pub owner_inst: Option<crate::words::Inst>,
 }
 
 /// A source submission ready for independent acceptance and lowering.

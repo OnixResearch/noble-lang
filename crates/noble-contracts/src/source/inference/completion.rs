@@ -116,6 +116,15 @@ fn named(
         None => return Err(crate::internal(frame.span)),
     };
     body.root = frame.sequence;
+    let variables = if body.nodes.iter().any(|node| {
+        matches!(node.kind, super::DraftKind::SignedSelf(_))
+    }) {
+        body.owner_variables.as_ref().ok_or_else(|| crate::invalid(
+            frame.span, "signed invocation has no source owner substitution",
+        ))?.clone()
+    } else {
+        alloc::vec::Vec::new()
+    };
     let definition = noble_kernel::contracts::Definition(attempt!(crate::index(
         frame
             .body
@@ -131,7 +140,7 @@ fn named(
         parent.body,
         super::Draft {
             kind: super::DraftKind::Invocation(definition),
-            variables: alloc::vec::Vec::new(),
+            variables,
             text: None,
             span: frame.span
         },
