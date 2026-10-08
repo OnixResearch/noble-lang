@@ -71,6 +71,7 @@ pub struct Compiler {
     live_slots: bool,
     text_cursor: bool,
     declared_text: bool,
+    worker_inputs: bool,
     generation: u32,
     functions: u32,
     retention_revision: u64,
@@ -309,6 +310,19 @@ impl Prepared {
         &self.wat
     }
 
+    /// End of checked source literals before the disjoint host-only Text arena.
+    pub const fn literal_end(&self) -> u32 {
+        self.next.text_end
+    }
+
+    pub const fn worker_literal_end(&self) -> Option<u32> {
+        if self.next.worker_inputs {
+            Some(self.next.text_end)
+        } else {
+            None
+        }
+    }
+
     /// The exact table span installed by this module's successful submission.
     /// An empty span installs no code and must not be retired.
     pub const fn code_span(&self) -> CodeSpan {
@@ -420,6 +434,7 @@ impl Compiler {
             live_slots: false,
             text_cursor: false,
             declared_text: false,
+            worker_inputs: false,
             generation: 0,
             functions: 4,
             retention_revision: 0,
@@ -456,6 +471,11 @@ impl Compiler {
         Self { text_cursor: true, declared_text: true, ..Self::new() }
     }
 
+    /// Opt-in pure declared-module ingress with host-owned value constructors.
+    pub fn new_worker() -> Self {
+        Self { worker_inputs: true, ..Self::new() }
+    }
+
     /// Independently accept and lower without changing existing code identities.
     pub fn prepare(
         &self,
@@ -473,7 +493,8 @@ impl Compiler {
         &self,
         source: &noble_contracts::source::SignedSourceOwner<'_>,
     ) -> Result<Prepared, crate::Diagnostic> {
-        if self.live || self.live_slots || self.text_cursor || self.declared_text {
+        if self.live || self.live_slots || self.text_cursor || self.declared_text
+            || self.worker_inputs {
             return Err(crate::Diagnostic::Unsupported);
         }
         let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
@@ -493,7 +514,8 @@ impl Compiler {
         &self,
         source: &noble_contracts::source::DeclaredTextSourceOwner<'_>,
     ) -> Result<Prepared, crate::Diagnostic> {
-        if !self.declared_text || !self.text_cursor || self.live || self.live_slots {
+        if !self.declared_text || !self.text_cursor || self.live || self.live_slots
+            || self.worker_inputs {
             return Err(crate::Diagnostic::Unsupported);
         }
         let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
@@ -518,6 +540,11 @@ impl Compiler {
         };
         attempt!(preflight::check(submission, &mut work));
         if self.declared_text != declared_text {
+            return Err(crate::Diagnostic::Unsupported);
+        }
+        if self.worker_inputs && (!submission.environment.declared_modules
+            || submission.environment.live_slots || submission.environment.text_cursor
+            || self.live || self.live_slots || self.text_cursor || signed) {
             return Err(crate::Diagnostic::Unsupported);
         }
         let checked = attempt!(admission::check(
@@ -553,6 +580,7 @@ impl Compiler {
             live_slots: self.live_slots,
             text_cursor: self.text_cursor,
             declared_text: self.declared_text,
+            worker_inputs: self.worker_inputs,
             generation: match self.generation.checked_add(1) {
                 Some(value) => value,
                 None => return Err(crate::Diagnostic::Exhausted),
@@ -573,6 +601,9 @@ impl Compiler {
             signed,
         ));
         let mut plan = attempt!(plan::lower(submission, &checked, &mut next, &mut work));
+        if self.worker_inputs && next.text_end > 983_040 {
+            return Err(crate::Diagnostic::Exhausted);
+        }
         let wat = attempt!(emit::module(&plan, self.generation));
         let code_span = CodeSpan {
             start: plan.first_function,

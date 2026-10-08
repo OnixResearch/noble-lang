@@ -244,6 +244,12 @@ pub(super) fn runtime(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat"))
     ));
+    if plan.worker_inputs {
+        attempt!(fragment(
+            out,
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/worker-input.wat"))
+        ));
+    }
     if plan.live_slots {
         attempt!(fragment(out, include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"), "/runtime/resource.wat"
