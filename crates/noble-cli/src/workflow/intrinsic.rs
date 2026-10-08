@@ -33,7 +33,7 @@ fn pinned_import(owner: &str, imported: &str) -> Result<(),output::Failure> {
             std::format!("{owner} imports unreviewed module {imported}")))
     }
 }
-fn pinned_library(library: &super::rules::Library) -> Result<(),output::Failure> {
+pub(super) fn pinned_library(library: &super::rules::Library) -> Result<(),output::Failure> {
     for (name,source) in MODEL {
         let module = library.modules.iter().find(|module| module.name == *name && module.source == *source)
             .ok_or_else(||output::Failure::unsupported("intrinsic-model-mismatch",

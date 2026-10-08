@@ -28,6 +28,7 @@ pub(crate) const MAX_TIMEOUT: u64 = 600_000;
 pub(crate) mod admission;
 mod arguments;
 pub(crate) mod intrinsic;
+pub(crate) mod target_proof;
 pub(crate) mod artifacts;
 pub(crate) mod encoding;
 pub(crate) mod output;

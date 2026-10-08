@@ -1353,6 +1353,29 @@ class SlotEngine {
       selected_graph: JSON.parse(this.captureValue(retained.runtime, saved.handle, 32, 4096)) });
   }
 
+  inspectNativeDonors(request) {
+    const saved = this.savedOwners.get(request.owner);
+    if (!saved?.selected || !request.target_manifest) {
+      return slotReply('native-donor-inspection-refused');
+    }
+    try {
+      // This recomputes the complete saved graph and selected source sites,
+      // then compares actual live table function identities with those
+      // snapshotted from each installed immutable Wasm module.
+      const { core, caller, donor, manifestSha256 } =
+        this.returnedManifest(request.owner, saved, request.target_manifest);
+      return slotReply('native-donors-inspected', {
+        owner: request.owner, manifest_sha256: manifestSha256,
+        native: { module_id: core.id, artifact_sha256: core.artifactSha256,
+          table_entries: [1, 2] },
+        static: { module_id: caller.id, artifact_sha256: caller.artifactSha256,
+          table_entries: donor.addEntries },
+      });
+    } catch (error) {
+      return slotReply('native-donor-inspection-refused', { diagnostic: String(error) });
+    }
+  }
+
   releaseProgram(token) {
     const saved = this.savedOwners.get(token);
     if (!saved) return slotReply('program-owner-refused');
@@ -1544,6 +1567,8 @@ class SlotEngine {
     if (request.operation === 'retire-code') return this.retireCode(request);
     if (request.operation === 'inspect-saved-program')
       return this.inspectSavedProgram(request.owner);
+    if (request.operation === 'inspect-native-donors')
+      return this.inspectNativeDonors(request);
     if (request.operation === 'release-program') return this.releaseProgram(request.owner);
     if (request.operation === 'release-replay') return this.releaseReplay(request.token);
     if (request.operation === 'publish' || request.operation === 'rollback') return this.publish(request);

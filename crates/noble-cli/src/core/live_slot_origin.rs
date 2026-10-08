@@ -1081,6 +1081,84 @@ pub(super) fn alias_code_donor_manifest(
         "manifest_sha256":crate::workflow::intrinsic::sha256(&bytes)})))
 }
 
+// The Lean key is deliberately neither the builder Wasm SHA nor D/P nor the
+// composite descriptor's SHA. Host-only bytes are retained from the exact
+// selected binaries sent at installation; the worker never supplies this key.
+// The proof is of the pure returned code below. The separate selected source,
+// binary-body, and installed-table checks justify applying it to this owner.
+pub(super) fn alias_exact_target_subject(
+    manifest: &Value, caller: &super::Candidate, core: &super::Candidate,
+    native_bodies: &Value,
+) -> Result<Value, String> {
+    let descriptor = &manifest["descriptor"];
+    if descriptor["schema"] != "noble-live-slot-composite-code-donors/v1"
+        || descriptor["donors"]["native"]["artifact_sha256"] != core.artifact_sha256
+        || descriptor["donors"]["static"]["artifact_sha256"] != caller.artifact_sha256
+        || descriptor["identity"]["lexical_recursive_owner"] != Value::Null
+        || descriptor["identity"]["interface"] != serde_json::json!({
+            "input":["I64","I64"],"output":["I64"],"effects":[]})
+    {
+        return Err(denied("exact target theorem subject differs from checked composite descriptor"));
+    }
+    let native_bytes = core.proof_bytes.as_ref()
+        .ok_or_else(|| denied("selected native code donor has no retained original binary"))?;
+    let static_bytes = caller.proof_bytes.as_ref()
+        .ok_or_else(|| denied("selected static code donor has no retained original binary"))?;
+    if native_bodies["native"]["module_sha256"] != core.artifact_sha256
+        || native_bodies["static"]["module_sha256"] != caller.artifact_sha256 {
+        return Err(denied("selected installed donor bytes differ from native body witness"));
+    }
+    let captures = rows(&descriptor["identity"], "captures")?;
+    if !(captures.len() == 1 || captures.len() == 2) {
+        return Err(denied("exact target has an unsupported capture alias class"));
+    }
+    let physical = captures.iter().map(|capture| {
+        if capture["type"] != "I64" {
+            return Err(denied("exact target captured value has a different type"));
+        }
+        text(capture, "value")?.parse::<i64>()
+            .map_err(|_| denied("exact target captured I64 is out of range"))
+    }).collect::<Result<Vec<_>, String>>()?;
+    let literals = [physical[0], *physical.get(1).unwrap_or(&physical[0])];
+    let literal_values = [literals[0].to_string(), literals[1].to_string()];
+    // This exact claim names the two-quote/three-add target, never the builder.
+    // Do not assert that Lean proves Wasm correctness: the pure arithmetic
+    // fragment has no installed-runtime premise, and its byte witness alone
+    // cannot establish the separate native operator semantic refinement.
+    // In particular, a checked native core *entry name* does not prove the
+    // quote/compose Wasm body implements the pure model.
+    let subject = serde_json::json!({
+        "schema":"noble-live-slot-returned-target-lean/v1",
+        "claim":"pure-i64-i64-to-i64-two-literal-three-wrapping-add/v1",
+        "assumptions":[],
+        "manifest_sha256":manifest["manifest_sha256"],
+        "manifest":descriptor,
+        "installed_donor_bytes":{
+            "native":{"sha256":core.artifact_sha256,"length":native_bytes.len()},
+            "static":{"sha256":caller.artifact_sha256,"length":static_bytes.len()}},
+        "native_body_witness":native_bodies,
+        "literal_values":[literal_values[0].as_str(),literal_values[1].as_str()],
+        "target_code":[
+            {"op":"lit-i64","value":literal_values[0].as_str()},
+            {"op":"lit-i64","value":literal_values[1].as_str()},
+            {"op":"word","index":4},
+            {"op":"word","index":4},
+            {"op":"word","index":4}
+        ]
+    });
+    Ok(subject)
+}
+
+pub(super) fn key_exact_target_subject(subject: &Value) -> Result<Value, String> {
+    let mut keyed = b"noble live-slot exact returned target lean theorem v1\0".to_vec();
+    keyed.extend_from_slice(&serde_json::to_vec(subject)
+        .map_err(|_| denied("exact target theorem subject is not serializable"))?);
+    Ok(serde_json::json!({
+        "theorem_key":crate::workflow::intrinsic::sha256(&keyed),
+        "subject":subject
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1306,6 +1384,41 @@ mod tests {
         }
         let wat = std::str::from_utf8(prepared.wat())
             .map_err(|error| error.to_string())?;
+        let binary_sha = crate::workflow::intrinsic::sha256(&binary);
+        let checked_native = super::super::native::attest(
+            &binary, &binary_sha, &binary, &binary_sha)?;
+        for (old, replacement, label) in [
+            ("(i64.add (local.get $left) (local.get $right))",
+                "(i64.sub (local.get $left) (local.get $right))", "add"),
+            ("(else (call $push_i64 (call $payload (local.get $environment))))",
+                "(else (call $push_i64 (call $measure_data (local.get $environment))))", "quote"),
+            ("(call $enqueue_program (call $b (local.get $environment)))\n (call $enqueue_program (call $a (local.get $environment)))",
+                "(call $enqueue_program (call $a (local.get $environment)))\n (call $enqueue_program (call $b (local.get $environment)))", "compose"),
+        ] {
+            let changed = wat.replacen(old, replacement, 1);
+            if changed == wat { return Err(format!("{label} native mutation did not match selected Wasm source")); }
+            let binary = super::super::assemble_slot(changed.as_bytes())?;
+            let sha = crate::workflow::intrinsic::sha256(&binary);
+            if super::super::native::attest(&binary, &sha, &binary, &sha).is_ok() {
+                return Err(format!("rewritten installed native {label} body acquired exact proof witness"));
+            }
+        }
+        let old_unbox = "(if (i32.lt_u (local.get $tag) (i32.const 4))";
+        let changed_unbox = wat.replacen(old_unbox,
+            "(if (i32.lt_u (local.get $tag) (i32.const 2))", 1);
+        if changed_unbox == wat { return Err("native unbox helper mutation did not match".into()); }
+        let changed_binary = super::super::assemble_slot(changed_unbox.as_bytes())?;
+        let changed_sha = crate::workflow::intrinsic::sha256(&changed_binary);
+        let changed_native = super::super::native::attest(
+            &changed_binary, &changed_sha, &changed_binary, &changed_sha)?;
+        let unbox_sha = |witness: &Value| witness["native"]["functions"].as_array()
+            .and_then(|rows| rows.iter().find(|row| row["name"] == "unbox"))
+            .and_then(|row| row["body_sha256"].as_str())
+            .map(str::to_owned);
+        if unbox_sha(&checked_native).is_none()
+            || unbox_sha(&checked_native) == unbox_sha(&changed_native) {
+            return Err("changed native unbox helper did not change exact reachable body witness".into());
+        }
         let native = "(elem $core func $empty_entry $quote_entry $compose_entry $restore_entry)";
         if !wat.contains(native) { return Err("selected native donor has no core entry list".into()); }
         let swapped = wat.replacen(native,

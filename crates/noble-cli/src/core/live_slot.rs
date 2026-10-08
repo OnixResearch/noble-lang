@@ -9,6 +9,8 @@ use std::sync::{Arc, Condvar, Mutex, atomic::{AtomicBool, Ordering}};
 
 #[path = "live_slot_origin.rs"]
 mod origin;
+#[path = "live_slot_native.rs"]
+mod native;
 
 fn selected_origin_json(
     origin: &noble_wasm::source::SelectedOriginMetadata,
@@ -135,6 +137,10 @@ const AUTHORITY_BYTES: u32 = 65_536;
 const MAX_INSTALLS: usize = 128;
 const MAX_TYPES: usize = 128;
 const MAX_SAVED_PROGRAMS: usize = 4096;
+// Only selected sessions with a proof-required slot retain the exact original
+// donor Wasm bytes for a future independent theorem subject. No worker-reported
+// SHA or recompiled builder is a substitute for those installed bytes.
+const MAX_TARGET_PROOF_BYTES: usize = 16 * 1024 * 1024;
 
 struct Resource {
     name: String,
@@ -169,6 +175,7 @@ struct Candidate {
     output: Vec<String>,
     source_sha256: String,
     artifact_sha256: String,
+    proof_bytes: Option<Arc<Vec<u8>>>,
     handle: u32,
     span: noble_wasm::source::CodeSpan,
     root_index: usize,
@@ -1661,6 +1668,17 @@ impl Host {
                 checked_metadata: row.clone(),
             })
         }).transpose()?;
+        let retain_proof_bytes = selected_origin.is_some()
+            && self.authority.slots.values().any(|slot| slot.proof_required);
+        if retain_proof_bytes {
+            let held = self.candidates.values()
+                .filter_map(|candidate| candidate.proof_bytes.as_ref())
+                .try_fold(binary.len(), |sum, bytes| sum.checked_add(bytes.len()))
+                .ok_or_else(|| reject("selected proof byte retention overflows"))?;
+            if held > MAX_TARGET_PROOF_BYTES {
+                return Err(reject("selected exact installed proof bytes exceed retention bound"));
+            }
+        }
         message["binary_sha256"] = json!(crate::workflow::intrinsic::sha256(&binary));
         let result = self.send(&message, &binary)?;
         if result["outcome"] != "installed" { return Ok(result); }
@@ -1698,9 +1716,10 @@ impl Host {
                 error.diagnostic().message));
         }
         let installed_id = id.clone();
+        let proof_bytes = retain_proof_bytes.then(|| Arc::new(binary));
         self.candidates.insert(id, Candidate {
             input:typed, output,
-            source_sha256:source_hash, artifact_sha256, handle,
+            source_sha256:source_hash, artifact_sha256, proof_bytes, handle,
             span, root_index, programs,
             selected_origin,
         });
@@ -1792,6 +1811,38 @@ impl Host {
             return Err(reject("selected returned target or immutable code donor changed before publication"));
         }
         Ok(manifest)
+    }
+
+    fn checked_exact_target_proof_subject(&mut self, owner: &str) -> Result<Value, String> {
+        let manifest = self.checked_composite_for_publication(owner)?;
+        let live = self.send(&json!({"operation":"inspect-native-donors",
+            "owner":owner,"target_manifest":&manifest}), &[])?;
+        if live["outcome"] != "native-donors-inspected"
+            || live["owner"] != owner
+            || live["manifest_sha256"] != manifest["manifest_sha256"]
+            || live["native"]["module_id"] != manifest["descriptor"]["donors"]["native"]["module_id"]
+            || live["native"]["artifact_sha256"] != manifest["descriptor"]["donors"]["native"]["artifact_sha256"]
+            || live["native"]["table_entries"] != manifest["descriptor"]["donors"]["native"]["entries"]
+            || live["static"]["module_id"] != manifest["descriptor"]["donors"]["static"]["module_id"]
+            || live["static"]["artifact_sha256"] != manifest["descriptor"]["donors"]["static"]["artifact_sha256"]
+            || live["static"]["table_entries"] != manifest["descriptor"]["donors"]["static"]["entries"] {
+            return Err(reject("actual installed target table donors differ from reconstructed graph and binaries"));
+        }
+        let saved = self.programs.get(owner).and_then(|row| row.composite.as_ref())
+            .ok_or_else(|| reject("exact target theorem has no retained composite owner"))?;
+        let caller = self.candidates.get(&saved.caller_id)
+            .ok_or_else(|| reject("selected static target donor was retired"))?;
+        let core = self.native_core_owner.as_ref()
+            .and_then(|id| self.candidates.get(id))
+            .ok_or_else(|| reject("selected native target donor was retired"))?;
+        let core_bytes = core.proof_bytes.as_ref()
+            .ok_or_else(|| reject("original selected native donor bytes were not retained"))?;
+        let caller_bytes = caller.proof_bytes.as_ref()
+            .ok_or_else(|| reject("original selected static donor bytes were not retained"))?;
+        let native_bodies = native::attest(
+            core_bytes, &core.artifact_sha256, caller_bytes, &caller.artifact_sha256)?;
+        let subject = origin::alias_exact_target_subject(&manifest, caller, core, &native_bodies)?;
+        origin::key_exact_target_subject(&subject)
     }
 
     fn publication(&mut self, request: &Value, op: &str) -> Result<Value, String> {

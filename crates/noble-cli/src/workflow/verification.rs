@@ -1,6 +1,7 @@
 mod compilation;
 mod evidence;
 pub(super) mod named_v2;
+pub(super) mod lslot_target;
 
 pub(crate) struct Acceptance {
     pub(crate) axioms: std::vec::Vec<std::string::String>,
