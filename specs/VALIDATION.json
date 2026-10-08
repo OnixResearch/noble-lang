@@ -1540,7 +1540,7 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/tasks.md",
-      "sha256": "fb1de2c737b086f617c15d526c270bb5582d303654c494558e9dfcf7bff50ee3"
+      "sha256": "f82b2df6df7ef07be9456d9dc1d3e46ef373fd89ae352d998f65382d7c9e1af0"
     },
     {
       "file": ".cairn/changes/ma-language-prerequisites/design.md",
@@ -1836,7 +1836,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "a62f8ee1aaea6dc7199b99e7465c2f884d0663a77bc42d94a46af3dc3e21f43d"
+      "sha256": "0d9f4db7c149710ee27ba8163b22939d98e889ce69772840ca48674f1f7d76c8"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1960,11 +1960,11 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "1939801d15a0309fe4b4d2d7db884a10ab3fd2cec2e648fcfb7a31385cf70f06"
+      "sha256": "3739b58ae850948982c6c9570e424d9dd36256000127d1f695b0579d3036fa6f"
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "e9dffd128ab0b948f87a907dd397554a4dddc8e6a89633accc044e60e35f7e89"
+      "sha256": "7e414a2d5d8fb227abe8edb13f134ef1c5587ac7588ce7f95ff400f252290fe2"
     },
     {
       "file": "specs/SAFETY.md",
@@ -1984,7 +1984,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "3526a37e57a177d14ef2db7801924cf5060cda138af2e51a2a0e57ccfddb84c1"
+      "sha256": "85bec1e8fc84da04054cc37c94326da15ef2a40cef0094c5b5d4167b6d5fcfa7"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",

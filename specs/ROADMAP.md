@@ -1393,21 +1393,22 @@ Node/V8 REPL and in-process Wasm byte emitter support atomic Core rebuild
 for tested acyclic dependents under explicit host-selected file reload/direct
 admission. A cooperative Linux paired `.tmp` rename watch checks bounded
 selected bytes again before publication, but an outside writable mapping
-or hardlink remains unobservable to the selected-directory watcher. Selected
-declared-module snapshots and zero-owner Core table-span retirement/reuse
-have separately scoped isolated-donor execution; complete H-LIVE-01 and
-LIVE-05/watch acceptance, effectful/general transitions, and combined-tree
-guest assurance remain open.
+or hardlink remains unobservable to the selected-directory watcher.
+Selected declared-module snapshots and zero-owner Core table-span
+retirement/reuse passed the integrated 55-test CLI suite at source `8b1504b`.
+The same compiled binary SHA-256
+`2de6d8ebb2f99c48e370866a9e13892c96fbb8c0af0ec568a7ce4dbb505b4e39`
+passed five finite selected live guest traces; complete H-LIVE-01 and
+LIVE-05/watch acceptance and effectful/general transitions remain open.
 Bounded guest self-edit refuses any current effective dependent rather than
 rebuilding it. Indirect self-rebind/cycle refusal was exercised in scoped
 live-child checks; general proof and canonical LIVE case acceptance remain
 open. The guest may enqueue
 a checked pure Program candidate during Wasm execution, but only host-side
 post-return independent admission and a generation/definition-identity CAS
-may publish it. Guest publication leaves the selected file unchanged; scoped
-isolated donor guest execution does not promote canonical LIVE-09 or LIVE-10.
-The first target reuses selected
-Node/V8, which may JIT and
+may publish it. Guest publication leaves the selected file unchanged;
+integrated scoped guest execution does not promote canonical LIVE-09 or LIVE-10.
+The first target reuses selected Node/V8, which may JIT and
 does **not** establish strictly interpreted execution. A genuine interpreter
 engine remains separately unselected. The [MCB milestone](roadmap.json) follows
 M4 only and is specified by [the C11 AOT contract](C-BACKEND.md) and its
@@ -1417,11 +1418,19 @@ Only restricted inert checked I64/Bool C11 source emission is implemented;
 `--native` and `execute --target c` refuse. CB-CASE-01's supplied
 `limits.list_length` is not accepted by that source-only policy, so the
 case remains open rather than treating the bound as an ignored field.
+The active C specification delta remains safety-blocked pending
+requirement-level reconciliation; direct structural Cairn validity is not
+native admission, case promotion or authorization to archive the change.
 Full watch-case acceptance and complete source-bound LIVE-02 remain open
-despite the guarded partial runtime. The grafted guest fault fix releases
-only the exact queued proposal root after a terminal trap or quota; isolated
-donor real-guest controls observe one root fall to zero. Combined-tree
-execution and general LIVE-10 cancellation/retirement assurance remain open.
+despite the guarded partial runtime. Integrated real guests observed only
+the exact queued proposal root released after a terminal trap (62 guest
+steps) or quota (300 guest steps), each from one root to zero; the paired
+watch save advanced sequence zero to one. LIVE-02 active in-flight reload,
+LIVE-05 forced overlap, LIVE-06 explicit host revoke and general LIVE-10
+cancellation/retirement assurance remain open. The scoped source manifest
+SHA-256 is `33317914fd0f057b9eb45047ac21f052833334ad25910c30fce2154e7c40fd5a`;
+guest receipt SHA-256 is
+`9376b0d13aa1c0cd2f852925fc9af528821428ee36cb6cdc6044dc6bc7eab5d5`.
 Neither complete opt-in backend profile is accepted: all
 [LIVE](conformance/live-wasm-cases.json) and
 [CB](conformance/c-backend-cases.json) cases are absent/not-run and proofs

@@ -37,15 +37,19 @@ authority, and typed values remain retained. Failed post-invocation guest
 admission retains the completed invocation's stack and unused grant.
 
 Indirect self-rebind/cycle refusal was exercised in scoped live-child checks;
-general proof remains open. Selected declared snapshots and Core zero-owner
-table-span reuse have finite
-guest controls, as does the isolated donor's exact queued-proposal root
-release after terminal guest trap/quota. The preceding combined source
-`418209f` passed its 53 live tests; the newly merged fix still requires
-combined-tree guest replay. Complete automatic H-LIVE-01/LIVE-05 watch,
-effectful/general transitions, full in-flight source-change controls,
-general LIVE-10 cancellation/retirement, complete source-bound LIVE-02,
-interpreter execution, scenario receipts and source-bound proof remain open.
+general proof remains open. Integrated source `8b1504b` passed 55 scoped
+live CLI tests and five selected real guest traces on CLI SHA-256
+`2de6d8ebb2f99c48e370866a9e13892c96fbb8c0af0ec568a7ce4dbb505b4e39`.
+They cover selected declared snapshots, Core zero-owner table-span reuse,
+one paired watch save and exact queued-proposal root release one-to-zero
+after trap/quota. The source manifest SHA-256 is
+`33317914fd0f057b9eb45047ac21f052833334ad25910c30fce2154e7c40fd5a`;
+the combined scoped guest receipt SHA-256 is
+`9376b0d13aa1c0cd2f852925fc9af528821428ee36cb6cdc6044dc6bc7eab5d5`.
+Complete H-LIVE-01/LIVE-05 watch, LIVE-02 active in-flight reload,
+LIVE-05 forced overlap, LIVE-06 explicit host revoke, effectful/general
+transitions, general LIVE-10 cancellation/retirement, interpreter
+execution, canonical scenario receipts and source-bound proof remain open.
 The canonical LIVE case states remain `absent`/`not-run`/proof `open`; none of the
 implementation or acceptance tasks below is complete.
 

@@ -627,12 +627,19 @@ Core's append-only 4096-cell heap or text allocation. The checked compiler's
 one 2-million-work submission cap is unchanged: exact contract checking
 charges the selected scheme, while the full environment remains charged for
 its own scan and each independently admitted kernel body.
-The preceding combined tree `418209f` passed 53 scoped live tests and ten
-reloads. The grafted terminal queued-root fix has separate isolated MLIVE
-donor evidence at `594218e`: 55 live CLI tests and real selected guest
-trap/quota controls report its queued root moving from one to zero. This
-new combined source has not been rebuilt or guest-replayed; cancellation
-beyond that finite control and canonical LIVE-10 acceptance remain **open**.
+The integrated source `8b1504b` passed all 55 scoped live CLI tests, including
+terminal guest trap and 300-step quota after a real queued proposal. The
+selected compiled CLI (SHA-256
+`2de6d8ebb2f99c48e370866a9e13892c96fbb8c0af0ec568a7ce4dbb505b4e39`)
+also passed five finite actual-guest traces: dependent rebuild with an old
+Program, old-adapter denial after alias rebind, trap and quota queued-root
+release (both one to zero), and one paired watch save (sequence zero to one).
+The private source manifest SHA-256 is
+`33317914fd0f057b9eb45047ac21f052833334ad25910c30fce2154e7c40fd5a`;
+the scoped guest receipt SHA-256 is
+`9376b0d13aa1c0cd2f852925fc9af528821428ee36cb6cdc6044dc6bc7eab5d5`.
+LIVE-02 active in-flight reload, LIVE-05 forced overlap, LIVE-06 explicit
+host revoke, general cancellation and canonical LIVE-01–10 remain **open**.
 
 `--engine interpreter` refuses rather than falling back to V8.
 Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
@@ -690,12 +697,17 @@ cancellation with retained task/resource pins. These are local-only controls:
 there is no external destination, rollback claim, owner-selected portable
 G-03/G-05 package/export, or canonical WORKER-01–12 acceptance. Neither the
 calculator nor Worker is a completed application or agent runtime.
-This source includes `58b9d6c` host-fault cleanup and the `9c687ed` source
-binding/fault assertions. Its isolated Worker r3 donor exercised nine real
-local WIT/UnixDatagram cases, including two receive faults with settled task,
-resource and native pins; these cases have **not** been replayed on this new
-combined source. Portable Worker acceptance, broader host-fault proof and
-canonical WORKER-01–12 remain open.
+This source includes `58b9d6c` host-fault cleanup and `9c687ed` source
+binding/fault assertions. Nine fresh local WIT/UnixDatagram cases passed
+against the integrated CLI above and a fresh offline-locked peer (SHA-256
+`49b86d5362a5d442c6011a869837b0623502201f9c0aaeee29371fc5bc88b20c`);
+the component SHA-256 was
+`798bf9b3a0114aebd9954f62a5352a284df2cb24d94d760e7fd93edc443dc826`.
+Both injected receive faults saw one datagram, retired the task and resource,
+and left zero outstanding/native pins, reserved bytes and result deliveries.
+The external peer used its own pinned Cargo.lock and offline cached registry,
+not Noble's selected vendor or a source-bound Nix gate. Portable G-03/G-05,
+broader host-fault proof and canonical WORKER-01–12 remain open.
 
 ## Verification
 
