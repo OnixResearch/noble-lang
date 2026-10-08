@@ -333,6 +333,45 @@ fn duplicate_control_members_refuse_before_emission(
 }
 
 #[test]
+fn checked_nested_contracts_do_not_enable_unsupported_c_values(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let scratch = Scratch::new()?;
+    let policy = scratch.file(
+        "policy.json",
+        br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#,
+    )?;
+    for (index, (source, interface, diagnostic)) in [
+        ("1 true pair", "-- Pair<I64,Bool>", "unsupported"),
+        ("1 nil swap cons", "-- List<I64>", "unsupported"),
+        ("[ 1 ] reflect", "-- Syntax", "unsupported"),
+        ("[ 1 ]", "-- Program<empty,I64,pure>", "unsupported"),
+        ("1 true pair", "-- Pair<I64>", "invalid Core interface"),
+        ("[ 1 ]", "-- Program<empty,I64,test.emit>", "invalid Core interface"),
+        ("1", "I64 -- Bool", "runtime input"),
+        ("1", "-- I64 -- Bool", "invalid Core interface"),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let source_path = scratch.file(&format!("{index}.noble"), source.as_bytes())?;
+        let contract = scratch.file(
+            &format!("{index}-contract.json"),
+            format!(
+                r#"{{"expected_interface":"{interface}","resolved_host_contracts":{{}}}}"#
+            )
+            .as_bytes(),
+        )?;
+        let out = scratch.0.join(format!("{index}-out"));
+        let refusal = build(&source_path, &contract, &policy, &out)?;
+        assert_eq!(refusal.status.code(), Some(2));
+        assert!(String::from_utf8_lossy(&refusal.stderr).contains(diagnostic));
+        assert!(refusal.stdout.is_empty());
+        assert!(!out.exists());
+    }
+    Ok(())
+}
+
+#[test]
 fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let scratch = Scratch::new()?;

@@ -86,6 +86,11 @@ bodies, runtime `quote` capture,
 Program values. Text literals are bound by node identity to exactly one
 host-selected checked `Body.texts` payload; static C bytes and bounded JSON
 output preserve escapes and UTF-8 without retaining a borrowed buffer.
+The host-supplied `expected_interface` is parsed into ordered Core `Ty`
+values with the existing bounded source type grammar, then compared with
+independent kernel acceptance. That parser recognizes nested Pair/Sum/List,
+Syntax and pure Program contracts, but recognizing a contract does not enable
+their C value lowering or output: all such source-only builds still refuse.
 It refuses Pair/Sum/List/Syntax, `reflect`, host effects, named definitions,
 runtime input and other profiles; there is no Wasm fallback.
 

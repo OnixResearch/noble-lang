@@ -449,7 +449,10 @@ fn unique_json(bytes: &[u8]) -> Result<Value, String> {
     Ok(value)
 }
 
-fn controls(contract: &[u8], policy: &[u8]) -> Result<(Ty, Limits), String> {
+fn controls(
+    contract: &[u8],
+    policy: &[u8],
+) -> Result<(noble_contracts::source::CoreInterface, Limits), String> {
     let contract = unique_json(contract)?;
     let policy = unique_json(policy)?;
     let fields = contract.as_object().ok_or("contract must be an object")?;
@@ -462,13 +465,17 @@ fn controls(contract: &[u8], policy: &[u8]) -> Result<(Ty, Limits), String> {
     {
         return Err("C slice requires an exact interface and empty host contracts".into());
     }
-    let expected = match contract["expected_interface"].as_str() {
-        Some("-- I64") => Ty::I64,
-        Some("-- Bool") => Ty::Bool,
-        Some("-- Unit") => Ty::Unit,
-        Some("-- Text") => Ty::Text,
-        _ => return Err("C slice requires no runtime input and one I64, Bool, Unit or Text output".into()),
-    };
+    let interface = contract["expected_interface"]
+        .as_str()
+        .ok_or("expected_interface must be an ordered Core stack interface")?;
+    let expected = noble_contracts::source::parse_core_interface(interface)
+        .map_err(|error| format!("invalid Core interface: {:?}", error.diagnostic()))?;
+    if !expected.stack_in.is_empty() || expected.stack_out.len() != 1 {
+        return Err("C slice requires no runtime input and one output".into());
+    }
+    if !matches!(expected.stack_out.as_slice(), [Ty::I64 | Ty::Bool | Ty::Unit | Ty::Text]) {
+        return Err("checked aggregate, Syntax or Program C output is unsupported".into());
+    }
     let fields = policy.as_object().ok_or("policy must be an object")?;
     if fields.len() != 4
         || policy["profile"] != "Core-Bootstrap"
@@ -622,7 +629,11 @@ fn lower_body(
     Ok((leaves, depth))
 }
 
-fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, String, String), String> {
+fn emit(
+    source: &[u8],
+    expected: &noble_contracts::source::CoreInterface,
+    limits: &Limits,
+) -> Result<(String, Value, String, String), String> {
     let frontend = noble_contracts::source::Session::without_test_hosts();
     let prepared = frontend
         .prepare(
@@ -640,9 +651,8 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
         .submission()
         .ok_or("C build requires an expression")?;
     if !submission.definitions.is_empty()
-        || !submission.request.expected.stack_in.is_empty()
-        || submission.request.expected.stack_out.len() != 1
-        || submission.request.expected.stack_out[0] != expected
+        || submission.request.expected.stack_in != expected.stack_in
+        || submission.request.expected.stack_out != expected.stack_out
         || !submission
             .request
             .expected
@@ -664,8 +674,8 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
         noble_kernel::untrusted::Outcome::Accepted(checked) => checked,
         outcome => return Err(format!("independent kernel acceptance: {outcome:?}")),
     };
-    if checked.interface.stack_in != submission.request.expected.stack_in
-        || checked.interface.stack_out != submission.request.expected.stack_out
+    if checked.interface.stack_in != expected.stack_in
+        || checked.interface.stack_out != expected.stack_out
         || !checked.interface.effects.as_slice().is_empty()
         || !checked.live_sites.is_empty()
     {
@@ -733,22 +743,22 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
     }
     c.push_str("};\n");
     c.push_str(RUNTIME);
-    c.push_str(match expected {
-        Ty::I64 => "    if (height != 1 || stack[0].tag != TAG_I64) fail(\"output interface\");\n",
-        Ty::Bool => "    if (height != 1 || stack[0].tag != TAG_BOOL) fail(\"output interface\");\n",
-        Ty::Unit => "    if (height != 1 || stack[0].tag != TAG_UNIT) fail(\"output interface\");\n",
-        Ty::Text => "    if (height != 1 || stack[0].tag != TAG_TEXT) fail(\"output interface\");\n",
+    c.push_str(match expected.stack_out.as_slice() {
+        [Ty::I64] => "    if (height != 1 || stack[0].tag != TAG_I64) fail(\"output interface\");\n",
+        [Ty::Bool] => "    if (height != 1 || stack[0].tag != TAG_BOOL) fail(\"output interface\");\n",
+        [Ty::Unit] => "    if (height != 1 || stack[0].tag != TAG_UNIT) fail(\"output interface\");\n",
+        [Ty::Text] => "    if (height != 1 || stack[0].tag != TAG_TEXT) fail(\"output interface\");\n",
         _ => return Err("unsupported C result type".into()),
     });
     c.push_str("    emit_stack();\n    return 0;\n}\n");
     if c.len() > C_MAX {
         return Err("C source output exhausted".into());
     }
-    let interface = match &expected {
-        Ty::I64 => "-- I64",
-        Ty::Bool => "-- Bool",
-        Ty::Unit => "-- Unit",
-        Ty::Text => "-- Text",
+    let interface = match expected.stack_out.as_slice() {
+        [Ty::I64] => "-- I64",
+        [Ty::Bool] => "-- Bool",
+        [Ty::Unit] => "-- Unit",
+        [Ty::Text] => "-- Text",
         _ => return Err("unsupported C result type".into()),
     };
     let recipes = programs.into_iter().map(|program| program.map(|item| item.recipe))
@@ -767,7 +777,7 @@ fn build(arguments: &[std::ffi::OsString]) -> Result<Value, String> {
     let contract = read_bounded(&options.contract, CONTROL_MAX)?;
     let policy = read_bounded(&options.policy, CONTROL_MAX)?;
     let (expected, limits) = controls(&contract, &policy)?;
-    let (c, recipe, candidate, environment) = emit(&source, expected, &limits)?;
+    let (c, recipe, candidate, environment) = emit(&source, &expected, &limits)?;
     let digest = crate::workflow::intrinsic::sha256;
     let semantic_recipe = serde_json::to_vec(&recipe).map_err(|error| error.to_string())?;
     let mut subject = b"noble-c11-source-only/v1\0".to_vec();
