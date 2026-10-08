@@ -354,6 +354,16 @@ impl ModulePrepared {
     pub fn bindings(&self) -> &[super::BoundOperation] {
         &self.staged.bindings
     }
+    /// The final checked alias introduced by this import, not a source
+    /// spelling re-parsed by a consumer or an alias from an earlier session.
+    pub fn resolved_import_alias(&self) -> Option<&str> {
+        if self.kind != ModuleKind::Import {
+            return None;
+        }
+        self.staged.aliases.last()
+            .filter(|alias| !alias.pending)
+            .map(|alias| alias.spelling.as_str())
+    }
     pub fn resolved_module(&self) -> Option<(u64, alloc::string::String, u32)> {
         let module = match self.kind {
             ModuleKind::Module => present!(self.staged.modules.last()),

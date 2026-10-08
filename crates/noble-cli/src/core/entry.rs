@@ -18,16 +18,9 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     match result {
         Ok(exit) => std::process::ExitCode::from(exit),
         Err(error) => {
-            let report = if is_declared_text {
-                super::output::Report::failure_with_profile(&error,
-                    if is_signed { "Signed-Declared-Text-v1" } else { "Declared-Text-v1" })
-            } else if is_signed {
-                super::output::Report::failure_with_profile(&error, "Signed-Self-Modules-v1")
-            } else if is_cursor {
-                super::output::Report::failure_with_profile(&error, "Text-Byte-Cursor-v1")
-            } else {
-                super::output::Report::failure(&error, is_declared)
-            };
+            let report = super::output::Report::failure(
+                &error, is_declared, is_signed, is_declared_text, is_cursor,
+            );
             if let Err(write_error) = super::output::print(&report) {
                 eprintln!("noble: {}", write_error.message);
             }
