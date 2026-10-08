@@ -89,6 +89,13 @@ impl Engine {
         Self::start_with_config(&configuration::live())
     }
 
+    pub fn start_live_declared(
+        manifest: &super::arguments::bindings::Manifest,
+    ) -> Result<Self, super::output::Failure> {
+        let config = attempt!(configuration::live_declared(manifest));
+        Self::start_with_config(&config)
+    }
+
     pub fn start_slot() -> Result<Self, super::output::Failure> {
         Self::start_with_host(&configuration::slot(), SLOT_HOST, true)
     }
@@ -244,6 +251,84 @@ impl Engine {
 
     pub fn discard_binary(&mut self) -> Result<super::output::Report, super::output::Failure> {
         attempt!(self.write(b"discard-bin\n"));
+        self.reply()
+    }
+
+    pub fn register_live_code(
+        &mut self,
+        span: noble_wasm::source::CodeSpan,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        self.live_code("register-live-code", span)
+    }
+
+    pub fn inspect_live_code(
+        &mut self,
+        span: noble_wasm::source::CodeSpan,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        self.live_code("inspect-live-code", span)
+    }
+
+    pub fn retire_live_code(
+        &mut self,
+        span: noble_wasm::source::CodeSpan,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        self.live_code("retire-live-code", span)
+    }
+
+    fn live_code(
+        &mut self,
+        operation: &str,
+        span: noble_wasm::source::CodeSpan,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!(
+            "{operation} {} {} {}\n", span.start, span.length, span.generation,
+        );
+        attempt!(self.write(header.as_bytes()));
+        self.reply()
+    }
+
+    /// Only the frontend selects this bounded root/alias snapshot. The worker
+    /// validates it without mutation and retains all older roots on publication.
+    pub fn stage_live_declared(
+        &mut self,
+        state: &serde_json::Value,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        const MAX_REQUEST: usize = 524_288;
+        if !state.get("roots").and_then(serde_json::Value::as_array)
+            .is_some_and(|roots| roots.len() <= 64)
+            || !state.get("aliases").and_then(serde_json::Value::as_array)
+                .is_some_and(|aliases| aliases.len() <= 64)
+        {
+            return Err(super::output::Failure::new(
+                super::output::ErrorContext { stage: "shell", outcome: "invalid-input" },
+                "declared live state requires at most 64 roots and aliases",
+            ));
+        }
+        let json = attempt!(serde_json::to_vec(state).map_err(|error| {
+            super::output::Failure::new(
+                super::output::ErrorContext { stage: "shell", outcome: "invalid-input" },
+                std::format!("cannot encode declared live state: {error}"),
+            )
+        }));
+        if json.len() > MAX_REQUEST {
+            return Err(super::output::Failure::new(
+                super::output::ErrorContext { stage: "shell", outcome: "exhausted" },
+                "declared live state exceeds bounded worker protocol",
+            ));
+        }
+        let header = std::format!("stage-live-declared {}\n", json.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(&json));
+        self.reply()
+    }
+
+    pub fn publish_live_declared(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"publish-live-declared\n"));
+        self.reply()
+    }
+
+    pub fn discard_live_declared(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"discard-live-declared\n"));
         self.reply()
     }
 

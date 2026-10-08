@@ -19,10 +19,10 @@ function readStack(engine, runtime) {
     return Array.from({ length: count }, (_, at) => {
       const kind = runtime.stack_kind(at);
       const raw = runtime.stack_value(at);
-      return {
-        handle: kind < 4 ? null : Number(BigInt.asUintN(64, raw)),
-        ...readValue(engine, runtime, kind, raw, 0),
-      };
+      const handle = kind < 4 ? null : Number(BigInt.asUintN(64, raw));
+      const value = readValue(engine, runtime, kind, raw, 0);
+      if (handle !== null) engine.retainExternalCodeRoot(runtime, handle);
+      return { handle, ...value };
     });
   }
 
@@ -36,7 +36,10 @@ function readBoxed(engine, runtime, handle, depth) {
     const kind = runtime.cell_kind(handle);
     // A boxed value also reports its own live handle, so a consumer can pass the
     // same cell to a later push without re-deriving the handle from its shape.
-    return { handle, ...readValue(engine, runtime, kind, kind < 4 ? runtime.cell_payload(handle) : BigInt(handle), depth) };
+    const value = readValue(engine, runtime, kind,
+      kind < 4 ? runtime.cell_payload(handle) : BigInt(handle), depth);
+    if (kind >= 4) engine.retainExternalCodeRoot(runtime, handle);
+    return { handle, ...value };
   }
 
 function readValue(engine, runtime, kind, value, depth) {

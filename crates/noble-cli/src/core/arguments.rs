@@ -129,6 +129,13 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
     Ok(options)
 }
 
+/// Share the same bounded host-manifest admission with the live frontend.
+pub(super) fn load_live_manifest(
+    path: &std::path::Path,
+) -> Result<bindings::Manifest, super::output::Failure> {
+    bindings::load(path)
+}
+
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; set decodes OsStr values, appends input types to a Vec and allocates an emission PathBuf. These OS string, allocation and parsing APIs are not const on the pinned compiler."

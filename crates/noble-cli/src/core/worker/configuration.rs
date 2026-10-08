@@ -34,6 +34,25 @@ pub(super) fn live() -> std::string::String {
     .encode()
 }
 
+/// Host-selected declared profile: bindings are the parsed manifest's original
+/// immutable slot identities and permissions, not guest-provided policy.
+pub(super) fn live_declared(
+    manifest: &super::super::arguments::bindings::Manifest,
+) -> Result<std::string::String, super::super::output::Failure> {
+    let bindings = attempt!(manifest.worker());
+    Ok(crate::workflow::encoding::object([
+        ("selection", crate::workflow::encoding::string(super::SELECTION)),
+        ("abi", crate::workflow::encoding::string(super::ABI)),
+        ("optimized", crate::workflow::encoding::Json::Bool(false)),
+        ("artifacts", crate::workflow::encoding::Json::Null),
+        ("declared_modules", crate::workflow::encoding::Json::Bool(true)),
+        ("bindings", bindings),
+        ("declared_extension", crate::workflow::encoding::string(super::DECLARED_ABI)),
+        ("in_process_live", crate::workflow::encoding::Json::Bool(true)),
+    ])
+    .encode())
+}
+
 /// Independent opt-in slot profile; Core and legacy live modes are unchanged.
 pub(super) fn slot() -> std::string::String {
     crate::workflow::encoding::object([
