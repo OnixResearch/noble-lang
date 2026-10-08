@@ -1408,19 +1408,19 @@
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "40eb2429301b1fb9520ae231766b7d8cb1032025fef5e897d75b8f5adcc84197"
+      "sha256": "dbb94593b16a5d0617b5c25a7b462e8f642cc4da64eccd74868374dd28c087a7"
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
-      "sha256": "3e54f8a42bf87dcc987cc3a17ae81cfbe3ce1117a9fcf56c10c8ea72d7adbe50"
+      "sha256": "c82da1ae75faeb1fc53b94d7038a0e0d0e4b20591a3a1723f778d9829b195646"
     },
     {
       "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
-      "sha256": "247b5178f16b09676367bff372548866819c9ebb426787db9d97d2bc1bbb7c10"
+      "sha256": "aa28257753cf118886d3568cb9df0ece1b6323cc3cffdfa5d4469a10e0b7295d"
     },
     {
       "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "9fd2a508df71c3fac3e84efe74d175712d1552af43ceca4d59464ccbbb0e4fd7"
+      "sha256": "fa95eb814dc6c29164e9d6647baef2981c3d4d20ff4a96d9563645c107209367"
     },
     {
       "file": ".cairn/changes/editor-hole-transport/design.md",
@@ -1732,7 +1732,7 @@
     },
     {
       "file": ".cairn/specs/c-backend/spec.md",
-      "sha256": "a86a5bffa73a71eafa6b377ba99e8c8b46696823b2e80d14713c931d54f3c8b8"
+      "sha256": "1a3384f4dac0c627361eb1659094e024cc98d7f8b742bfed8397cf7407967a9e"
     },
     {
       "file": ".cairn/specs/calculator/spec.md",
@@ -1816,7 +1816,7 @@
     },
     {
       "file": "specs/C-BACKEND.md",
-      "sha256": "a8d396b0565a296e25a99e32ca5abc694491bfc4928db9dbe93ba1cf3caa24d1"
+      "sha256": "f699cc21c94d7eea892a1b346f31db18775a6f9e97d95d8819f360e2f9efebba"
     },
     {
       "file": "specs/CALCULATOR.md",
@@ -1828,7 +1828,7 @@
     },
     {
       "file": "specs/conformance/c-backend-cases.json",
-      "sha256": "904246ed09cabb510ae843a334732790f2dae1c4c53531e2d7615c55df85d698"
+      "sha256": "d38844c6dcd3b0103d57063889fc22141053006fe032c33596fd0d63c5f7dd34"
     },
     {
       "file": "specs/conformance/calculator-cases.json",
@@ -1932,11 +1932,11 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "397ca526507a55efcee95e0def0fc759479f637673314ab0046e067255f1a269"
+      "sha256": "5e48a46f9ade06815e137d377fb44e8db21481bc225b7cd38316e6f659b39b16"
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "80798a4ad2ac4293f6e46ff32d3d0ddc8c4ec567f726f218c545283787a1adeb"
+      "sha256": "3800609ccec8c4aa2c22332e5a0a9a305260974632adc67dfc9aa320d73fa364"
     },
     {
       "file": "specs/SAFETY.md",
@@ -1956,7 +1956,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "4639aeff8461ff57273e1e0124f4ae583c63c3262a1442de8522eea601644664"
+      "sha256": "461d5cedb5c927b9e8f11924cd01ebef96f748ba5dfd2f4566ff5e74ff21e89b"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",

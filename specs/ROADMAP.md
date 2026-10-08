@@ -1413,6 +1413,9 @@ Only restricted inert checked I64/Bool C11 source emission is implemented;
 `--native` and `execute --target c` refuse. CB-CASE-01's supplied
 `limits.list_length` is not accepted by that source-only policy, so the
 case remains open rather than treating the bound as an ignored field.
+The current source-only path does not satisfy CB-ADMIT-01's sealed,
+ancestor-anchored native build contract, and duplicate JSON keys still
+permit last-wins policy decoding; neither gap is case evidence.
 Full watch-case acceptance, declared-module snapshots, complete source-bound
 LIVE-02 acceptance and code retirement remain open despite the guarded
 Core-only rebuild.
