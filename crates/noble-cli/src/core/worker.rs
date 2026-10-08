@@ -355,6 +355,12 @@ impl Engine {
         self.reply()
     }
 
+    #[cfg(feature = "live-test-barrier")]
+    pub fn inspect_live06_test_emit(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"test-host-inspect-ledger1-emit\n"));
+        self.reply()
+    }
+
     pub fn discard_prepared_live(
         &mut self,
     ) -> Result<super::output::Report, super::output::Failure> {

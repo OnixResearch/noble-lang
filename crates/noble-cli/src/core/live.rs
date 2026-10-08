@@ -258,8 +258,12 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             continue;
         }
         #[cfg(feature = "live-test-barrier")]
-        if line == ":test-host-revoke-ledger1-emit" {
-            match live.revoke_live06_test_emit() {
+        if let Some(inspect) = match line {
+            ":test-host-inspect-ledger1-emit" => Some(true),
+            ":test-host-revoke-ledger1-emit" => Some(false),
+            _ => None,
+        } {
+            match live.live06_policy_event(inspect) {
                 Ok(report) => emit(&report),
                 Err(error) => {
                     emit(&fatal(&error.message));
@@ -900,14 +904,19 @@ impl Live {
     }
 
     #[cfg(feature = "live-test-barrier")]
-    fn revoke_live06_test_emit(&mut self) -> Result<serde_json::Value, super::output::Failure> {
+    fn live06_policy_event(&mut self, inspect: bool)
+        -> Result<serde_json::Value, super::output::Failure> {
         if self.declared.is_none() {
             return Ok(refusal(
                 self.generation, &self.last_stack,
-                "LIVE06 host revocation requires selected declared modules",
+                "LIVE06 host policy inspection or revocation requires selected declared modules",
             ));
         }
-        let worker = self.worker()?.revoke_live06_test_emit()?;
+        let worker = if inspect {
+            self.worker()?.inspect_live06_test_emit()?
+        } else {
+            self.worker()?.revoke_live06_test_emit()?
+        };
         let mut report: serde_json::Value = serde_json::from_str(&worker.json)
             .map_err(|_| fatal_failure("invalid LIVE06 host policy event receipt"))?;
         let fields = report.as_object_mut()
