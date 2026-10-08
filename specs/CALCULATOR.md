@@ -144,4 +144,19 @@ Zero-divisor preconditions and numeric error branches must remain explicit in th
 
 The [calculator scenarios](conformance/calculator-cases.json) are unexecuted harness designs. `Calculator-Design` and `AI-Authoring-Design` label application/test lanes, not Noble language conformance profiles. JSON exact-number fields use decimal strings. They do not define portable Noble serialization.
 
+The source-only MA2 candidate in `verification/calculator-app/` has a
+`--vectors-only` source-contract gate; that mode does not execute a guest or
+establish conformance. The executable gate requires the actual Noble CLI, the
+matching numeric module directory and language root, and (for this 28-module
+graph) `--retained-source-bytes 262144 --compiled-retention-receipt
+MA1_VERIFICATION_JSON`. Before probing that CLI option, it checks the committed
+MA1 full-library verification, source-bound CLI build, raw numeric guest
+receipt, binary, selected toolchain, HEAD, and original source bytes. Run
+`node verification/calculator-app/gate.mjs NOBLE_BINARY NUMERIC_MODULE_DIR
+LANGUAGE_ROOT --retained-source-bytes 262144 --compiled-retention-receipt
+MA1_VERIFICATION_JSON` only when those exact artifacts exist. A missing or
+mismatched receipt is a refusal, not a calculator result. `CALC-07`'s
+resource-capability checker control and the actual Wasm guest observations
+remain open; do not promote `CALC-07` or `CALC-08` on source vectors alone.
+
 [Source provenance](SOURCES.md) records the mathematical-computing references and their limits. No calculator, benchmark, or proof execution is claimed by this amendment.

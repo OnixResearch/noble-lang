@@ -1,0 +1,145 @@
+module calc_bind@1 [
+    # One immutable declaration context is carried through each instruction,
+    # rather than recapturing five names in every result quotation.
+    opaque Context Pair<Text,Pair<calc_env@1.Environment,Pair<List<calc_name@1.Name>,Pair<Bool,calc_name@1.Name>>>> private
+    signature context forall<S:stack>
+        [ S Text calc_env@1.Environment List<calc_name@1.Name> Bool calc_name@1.Name -- S Context ! pure ]
+    def context [
+        let self_name let defining let params let environment let source
+        source environment params defining self_name pair pair pair pair Context.new
+    ]
+    signature context_source forall<S:stack> [ S Context -- S Text ! pure ]
+    def context_source [ Context.into unpair drop ]
+    signature context_environment forall<S:stack> [ S Context -- S calc_env@1.Environment ! pure ]
+    def context_environment [ Context.into unpair swap drop unpair drop ]
+    signature context_params forall<S:stack> [ S Context -- S List<calc_name@1.Name> ! pure ]
+    def context_params [ Context.into unpair swap drop unpair swap drop unpair drop ]
+    signature context_defining forall<S:stack> [ S Context -- S Bool ! pure ]
+    def context_defining [ Context.into unpair swap drop unpair swap drop unpair swap drop unpair drop ]
+    signature context_self forall<S:stack> [ S Context -- S calc_name@1.Name ! pure ]
+    def context_self [ Context.into unpair swap drop unpair swap drop unpair swap drop unpair swap drop ]
+
+    signature params_find forall<S:stack>
+        [ S List<calc_name@1.Name> calc_name@1.Name I64 -- S I64 ! pure ]
+    def params_find [
+        let position let wanted
+        [ -1 ]
+        [ let rest let candidate
+          candidate wanted calc_name@1.equal
+          [ position ] [ rest wanted position 1 + params_find ] if ] list.case
+    ]
+
+    signature arity forall<S:stack> [ S List<calc_name@1.Name> -- S I64 ! pure ]
+    def arity [ [ 0 ] [ let rest let first rest arity 1 + ] list.case ]
+
+    signature unknown forall<S:stack>
+        [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def unknown [
+        dup calc_code@1.start swap calc_code@1.finish
+        calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.UnknownName
+    ]
+
+    signature definition_error forall<S:stack>
+        [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def definition_error [
+        dup calc_code@1.start swap calc_code@1.finish
+        calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.DefinitionError
+    ]
+
+    signature wrong_arity forall<S:stack>
+        [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def wrong_arity [
+        dup calc_code@1.start swap calc_code@1.finish
+        calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.WrongArity
+    ]
+
+    signature rewrite forall<S:stack>
+        [ S calc_code@1.Instruction I64 I64 -- S calc_code@1.Instruction ! pure ]
+    def rewrite [
+        let identity let kind let original
+        kind identity original calc_code@1.start original calc_code@1.finish calc_code@1.make
+    ]
+
+    signature check_call forall<S:stack>
+        [ S calc_env@1.Entry calc_code@1.Instruction --
+          S result@1.Result<calc_code@1.Instruction,calc_diagnostic@1.Diagnostic> ! pure ]
+    def check_call [
+        let original let resolved
+        resolved calc_env@1.binding
+        [ drop original unknown result@1.Result.Err ]
+        [ unpair let body let source
+          body unpair let program let params
+          params arity original calc_code@1.count =
+          [ original 261 resolved calc_env@1.identity rewrite result@1.Result.Ok ]
+          [ original wrong_arity result@1.Result.Err ] if ]
+        calc_env@1.Binding.match
+    ]
+
+    signature bind_one forall<S:stack>
+        [ S calc_code@1.Instruction Context --
+          S result@1.Result<calc_code@1.Instruction,calc_diagnostic@1.Diagnostic> ! pure ]
+    def bind_one [
+        let scope let original
+        original calc_code@1.kind let kind
+        kind 257 =
+        [ scope context_source original calc_code@1.start original calc_code@1.finish calc_name@1.make
+          let wanted
+          scope context_params wanted 0 params_find let local
+          local 0 <
+          [ scope context_environment wanted calc_env@1.resolve let global
+            global 0 <
+            [ original unknown result@1.Result.Err ]
+            [ scope context_environment global calc_env@1.get
+              [ let entry
+                entry calc_env@1.binding
+                [ drop original 259 global rewrite result@1.Result.Ok ]
+                [ drop original unknown result@1.Result.Err ]
+                calc_env@1.Binding.match ]
+              [ drop original unknown result@1.Result.Err ] result@1.Result.match ] if ]
+          [ original 260 local rewrite result@1.Result.Ok ] if ]
+        [ kind 258 =
+          [ scope context_source original calc_code@1.start original calc_code@1.finish calc_name@1.make
+            let wanted
+            scope context_defining [ wanted scope context_self calc_name@1.equal ] [ false ] if
+            [ original definition_error result@1.Result.Err ]
+            [ scope context_params wanted 0 params_find 0 <
+              [ scope context_environment wanted calc_env@1.resolve let global
+                global 0 <
+                [ original unknown result@1.Result.Err ]
+                [ scope context_environment global calc_env@1.get
+                  [ original check_call ]
+                  [ drop original unknown result@1.Result.Err ] result@1.Result.match ] if ]
+              [ original unknown result@1.Result.Err ] if ] if ]
+          [ original result@1.Result.Ok ] if ] if
+    ]
+
+    signature bind_all forall<S:stack>
+        [ S List<calc_code@1.Instruction> List<calc_code@1.Instruction>
+          Context numeric_budget@1.Budget --
+          S result@1.Result<Pair<List<calc_code@1.Instruction>,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def bind_all [
+        let budget let scope let reversed
+        [ reversed nil calc_code@1.reverse budget pair result@1.Result.Ok ]
+        [ let remaining let instruction
+          budget 1 numeric_budget@1.charge_work
+          [ let charged
+            instruction scope bind_one
+            [ reversed cons let next
+              remaining next scope charged bind_all ]
+            [ result@1.Result.Err ] result@1.Result.match ]
+          [ let cause
+            instruction calc_code@1.start instruction calc_code@1.finish
+            cause calc_diagnostic@1.numeric result@1.Result.Err ]
+          result@1.Result.match ] list.case
+    ]
+
+    signature bind forall<S:stack>
+        [ S List<calc_code@1.Instruction> Text calc_env@1.Environment
+          List<calc_name@1.Name> Bool calc_name@1.Name numeric_budget@1.Budget --
+          S result@1.Result<Pair<List<calc_code@1.Instruction>,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    export bind
+    def bind [
+        let budget let self_name let defining let params let environment let source let code
+        code nil source environment params defining self_name context budget bind_all
+    ]
+]

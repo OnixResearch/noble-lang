@@ -1,0 +1,145 @@
+module calc_lex@1 [
+    # The guest owns the byte scan. No host tokenization, slicing, implicit
+    # multiplication, comment, exponent notation or Unicode name recognition.
+    signature byte forall<S:stack> [ S Text I64 -- S I64 ! pure ]
+    def byte [ text.byte swap drop ]
+
+    signature syntax forall<S:stack>
+        [ S I64 I64 -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def syntax [ calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.Syntax ]
+
+    signature input_limit forall<S:stack>
+        [ S I64 -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def input_limit [
+        let at
+        at 1 +
+        unit calc_errors@1.LimitIO.InputBytes
+        calc_errors@1.LimitPrimary.IO
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit
+        calc_diagnostic@1.numeric
+    ]
+
+    # A fixed implementation ceiling bounds recursion independently of a
+    # caller-supplied counter. A smaller caller budget remains authoritative.
+    signature measure forall<S:stack>
+        [ S Text I64 numeric_budget@1.Budget --
+          S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def measure [
+        let budget let at let source
+        source at byte -1 =
+        [ at budget pair result@1.Result.Ok ]
+        [ at 512 <
+          [ budget 1 numeric_budget@1.charge_input_bytes
+            [ let charged
+              source at 1 + charged measure ]
+            [ let cause at at 1 + cause calc_diagnostic@1.numeric
+              result@1.Result.Err ]
+            result@1.Result.match ]
+          [ at input_limit result@1.Result.Err ] if ] if
+    ]
+
+    signature digits_end forall<S:stack>
+        [ S Text I64 -- S I64 ! pure ]
+    def digits_end [
+        let at let source
+        source at byte calc_chars@1.digit
+        [ source at 1 + digits_end ] [ at ] if
+    ]
+
+    signature identifier_end forall<S:stack>
+        [ S Text I64 -- S I64 ! pure ]
+    def identifier_end [
+        let at let source
+        source at byte calc_chars@1.ident_continue
+        [ source at 1 + identifier_end ] [ at ] if
+    ]
+
+    signature number_end forall<S:stack>
+        [ S Text I64 -- S result@1.Result<I64,calc_diagnostic@1.Diagnostic> ! pure ]
+    def number_end [
+        let begin let source
+        source begin digits_end let integer_end
+        source integer_end byte 46 =
+        [ source integer_end 1 + byte calc_chars@1.digit
+          [ source integer_end 1 + digits_end result@1.Result.Ok ]
+          [ integer_end integer_end 1 + syntax result@1.Result.Err ] if ]
+        [ integer_end result@1.Result.Ok ] if
+    ]
+
+    signature punctuation forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def punctuation [
+        let ch
+        ch 43 = [ true ] [
+        ch 45 = [ true ] [
+        ch 42 = [ true ] [
+        ch 47 = [ true ] [
+        ch 94 = [ true ] [
+        ch 40 = [ true ] [
+        ch 41 = [ true ] [ ch 44 = ] if
+        ] if ] if ] if ] if ] if ] if
+    ]
+
+    signature continuation_end forall<S:stack> [ S Text I64 -- S I64 ! pure ]
+    def continuation_end [
+        let at let source
+        source at byte let ch
+        ch 128 <
+        [ at ]
+        [ ch 192 <
+          [ source at 1 + continuation_end ] [ at ] if ] if
+    ]
+
+    signature invalid_finish forall<S:stack> [ S Text I64 -- S I64 ! pure ]
+    def invalid_finish [
+        let at let source
+        source at byte 128 <
+        [ at 1 + ]
+        [ source at 1 + continuation_end ] if
+    ]
+
+    # List is accumulated in reverse and reversed once at EOF. The caller
+    # has already measured and charged every input byte, so all lookahead
+    # offsets are within [0,length] and every recursive scanner is bounded.
+    signature scan forall<S:stack>
+        [ S Text I64 List<calc_token@1.Token> numeric_budget@1.Budget --
+          S result@1.Result<Pair<List<calc_token@1.Token>,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def scan [
+        let budget let reversed let at let source
+        source at byte let ch
+        ch -1 =
+        [ reversed nil calc_token@1.reverse budget pair result@1.Result.Ok ]
+        [ ch calc_chars@1.whitespace
+          [ source at 1 + reversed budget scan ]
+          [ ch calc_chars@1.digit
+            [ source at number_end
+              [ let end
+                257 at end calc_token@1.make reversed cons
+                let next
+                source end next budget scan ]
+              [ result@1.Result.Err ] result@1.Result.match ]
+            [ ch calc_chars@1.ident_start
+              [ source at identifier_end let end
+                256 at end calc_token@1.make reversed cons let next
+                source end next budget scan ]
+              [ ch punctuation
+                [ ch at at 1 + calc_token@1.make reversed cons let next
+                  source at 1 + next budget scan ]
+                [ at source at invalid_finish syntax result@1.Result.Err ] if ] if ] if ] if ] if
+    ]
+
+    signature tokenize forall<S:stack>
+        [ S Text numeric_budget@1.Budget --
+          S result@1.Result<Pair<Pair<List<calc_token@1.Token>,I64>,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    export tokenize
+    def tokenize [
+        let budget let source
+        source 0 budget measure
+        [ unpair let charged let length
+          source 0 nil charged scan
+          [ unpair let after let tokens
+            tokens length pair after pair result@1.Result.Ok ]
+          [ result@1.Result.Err ] result@1.Result.match ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+]

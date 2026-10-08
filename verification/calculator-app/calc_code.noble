@@ -1,0 +1,39 @@
+module calc_code@1 [
+    # Reverse-postfix program. Kinds: 256 literal, 257 bound name, 258
+    # call, 128 unary plus, 129 unary minus; ASCII bytes for binary operators.
+    # Calls retain source-name span and explicit arity. A program is not run
+    # until the complete input has parsed and all references are validated.
+    opaque Instruction Pair<I64,Pair<I64,Pair<I64,I64>>> private
+    export Instruction
+
+    signature make forall<S:stack>
+        [ S I64 I64 I64 I64 -- S Instruction ! pure ]
+    export make
+    def make [ pair pair pair Instruction.new ]
+
+    signature fields forall<S:stack>
+        [ S Instruction -- S I64 I64 I64 I64 ! pure ]
+    export fields
+    def fields [ Instruction.into unpair unpair unpair ]
+
+    signature kind forall<S:stack> [ S Instruction -- S I64 ! pure ]
+    export kind
+    def kind [ fields drop drop drop ]
+
+    signature count forall<S:stack> [ S Instruction -- S I64 ! pure ]
+    export count
+    def count [ fields drop drop swap drop ]
+
+    signature start forall<S:stack> [ S Instruction -- S I64 ! pure ]
+    export start
+    def start [ fields drop swap drop swap drop ]
+
+    signature finish forall<S:stack> [ S Instruction -- S I64 ! pure ]
+    export finish
+    def finish [ Instruction.into unpair swap drop unpair swap drop unpair swap drop ]
+
+    signature reverse forall<S:stack>
+        [ S List<Instruction> List<Instruction> -- S List<Instruction> ! pure ]
+    export reverse
+    def reverse [ swap [ ] [ [ swap ] dip [ cons ] dip swap reverse ] list.case ]
+]
