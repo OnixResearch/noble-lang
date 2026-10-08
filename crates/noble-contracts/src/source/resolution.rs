@@ -9,13 +9,14 @@ pub(super) fn resolve(
     tree: &mut super::Tree,
     declaration: Option<&str>,
     session: &super::Session,
+    signed_owner: bool,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
     let mut at = 0usize;
     let mut failure = None;
     while at < tree.nodes.len() {
         let result = match tree.nodes.get_mut(at) {
-            Some(node) => resolve_node(node, declaration, session, meter),
+            Some(node) => resolve_node(node, declaration, session, signed_owner, meter),
             None => Err(crate::internal(tree.span)),
         };
         if let Err(problem) = result {
@@ -34,11 +35,12 @@ fn resolve_node(
     node: &mut super::Node,
     declaration: Option<&str>,
     session: &super::Session,
+    signed_owner: bool,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(meter.charge(1, node.span));
     if let super::Kind::Word(word) = &node.kind {
-        let target = attempt!(lookup(word, declaration, session, node.span, meter));
+        let target = attempt!(lookup(word, declaration, session, signed_owner, node.span, meter));
         node.kind = super::Kind::Call(target);
     }
     Ok(())
@@ -52,6 +54,7 @@ fn lookup(
     word: &[u8],
     declaration: Option<&str>,
     session: &super::Session,
+    signed_owner: bool,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<super::Target, crate::Diagnostic> {
@@ -82,7 +85,7 @@ fn lookup(
         return Ok(super::Target::SlotInvoke(ordinal));
     }
     if let Some(context) = &session.declared {
-        return declared_lookup(word, declaration, context, span, meter);
+        return declared_lookup(word, declaration, context, signed_owner, span, meter);
     }
     let mut at = session.definitions.len();
     let mut found = None;
@@ -165,9 +168,15 @@ fn declared_lookup(
     word: &[u8],
     declaration: Option<&str>,
     context: &super::declared::Context,
+    signed_owner: bool,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<super::Target, crate::Diagnostic> {
+    if signed_owner && context.signed_self
+        && declaration.is_some_and(|name| name.as_bytes() == word)
+    {
+        return Ok(super::Target::SelfOwner);
+    }
     let mut at = context.words.len();
     let mut found = None;
     let mut failure = None;
@@ -188,6 +197,12 @@ fn declared_lookup(
     }
     if let Some(target) = found {
         return Ok(target);
+    }
+    if context.declared_text && word == b"text.byte" {
+        return Ok(super::Target::Builtin(26));
+    }
+    if context.declared_text && word == b"<" {
+        return Ok(super::Target::Builtin(27));
     }
     if let Some(definition) = crate::program::bootstrap_word(word) {
         if definition.0 < 22 {

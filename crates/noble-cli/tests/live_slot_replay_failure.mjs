@@ -7,7 +7,7 @@ assert.ok(binary, 'pass the checked noble CLI binary path');
 const authority = fileURLToPath(new URL('./live_slot_replay_failure_authority.json', import.meta.url));
 // The CLI deliberately refuses file-backed stdin: cat owns the sole writer of
 // an anonymous pipe for this separate opt-in worker.
-const child = spawn('/bin/bash', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
+const child = spawn('bash', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
   'sh', binary, authority], { stdio: ['pipe', 'pipe', 'pipe'] });
 let buffer = '';
 const rows = [];

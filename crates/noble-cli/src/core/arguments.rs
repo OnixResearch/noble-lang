@@ -6,6 +6,7 @@ pub(super) struct Options {
     pub inputs: std::vec::Vec<InputType>,
     pub modules: std::vec::Vec<std::path::PathBuf>,
     pub declared_modules: bool,
+    pub signed_self_recursion: bool,
     pub text_byte_cursor: bool,
     pub bindings: Option<std::path::PathBuf>,
     pub manifest: Option<bindings::Manifest>,
@@ -19,6 +20,12 @@ pub(super) struct Options {
 pub(super) enum InputType {
     Concrete(noble_kernel::types::Ty),
     Nominal(std::string::String),
+}
+
+impl Options {
+    pub const fn declared_text(&self) -> bool {
+        self.declared_modules && self.text_byte_cursor
+    }
 }
 
 #[expect(
@@ -42,6 +49,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         inputs: std::vec::Vec::new(),
         modules: std::vec::Vec::new(),
         declared_modules: false,
+        signed_self_recursion: false,
         text_byte_cursor: false,
         bindings: None,
         manifest: None,
@@ -57,7 +65,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             .ok_or_else(usage))));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
     }
-    let mut seen = [""; 10];
+    let mut seen = [""; 12];
     let mut seen_count = 0_usize;
     while at < arguments.len() {
         let name = attempt!(arguments[at].to_str().ok_or_else(usage));
@@ -77,6 +85,10 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             options.declared_modules = true;
             continue;
         }
+        if name == "--signed-self-recursion" {
+            options.signed_self_recursion = true;
+            continue;
+        }
         if name == "--text-byte-cursor" {
             if !is_session && !options.compile_only {
                 return Err(usage());
@@ -88,10 +100,16 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         at = attempt!(at.checked_add(1).ok_or_else(usage));
         attempt!(set(&mut options, name, value, maximum));
     }
-    if options.declared_modules != options.bindings.is_some() {
+    if options.declared_text() && options.bindings.is_some() {
         return Err(usage());
     }
-    if options.text_byte_cursor && options.declared_modules {
+    if !options.declared_text() && options.declared_modules != options.bindings.is_some() {
+        return Err(usage());
+    }
+    if options.signed_self_recursion
+        && (!options.declared_modules
+            || is_session && !options.framed
+            || !is_session && !options.compile_only) {
         return Err(usage());
     }
     if !options.declared_modules && !options.modules.is_empty() {

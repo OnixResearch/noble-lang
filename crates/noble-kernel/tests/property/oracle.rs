@@ -34,7 +34,8 @@ fn face(node: &noble_kernel::untrusted::Node) -> Option<super::table::Interface>
         noble_kernel::untrusted::Node::Invocation { def, inst } => {
             super::table::word_face(def.0, inst)
         }
-        noble_kernel::untrusted::Node::SlotInvoke { .. } => None,
+        noble_kernel::untrusted::Node::SlotInvoke { .. }
+        | noble_kernel::untrusted::Node::SignedSelf { .. } => None,
         noble_kernel::untrusted::Node::Quotation { inst, .. } => {
             super::table::exact_arity(inst, 4)?;
             let (around, start, end, claimed) = (
@@ -153,7 +154,8 @@ impl<'a> Machine<'a> {
                 };
                 self.frames.push(next);
             }
-            noble_kernel::untrusted::Node::SlotInvoke { .. } => {
+            noble_kernel::untrusted::Node::SlotInvoke { .. }
+            | noble_kernel::untrusted::Node::SignedSelf { .. } => {
                 return Some(super::otypes::Decision::Reject);
             }
         }
@@ -213,7 +215,8 @@ fn has_eligible_value(node: &noble_kernel::untrusted::Node) -> bool {
         noble_kernel::untrusted::Node::Literal { .. }
         | noble_kernel::untrusted::Node::Quotation { .. }
         | noble_kernel::untrusted::Node::Invocation { .. } => true,
-        noble_kernel::untrusted::Node::SlotInvoke { .. } => false,
+        noble_kernel::untrusted::Node::SlotInvoke { .. }
+        | noble_kernel::untrusted::Node::SignedSelf { .. } => false,
     }
 }
 

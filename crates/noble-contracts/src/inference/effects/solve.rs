@@ -54,7 +54,10 @@ pub(super) fn rigid(
             super::Effect::Union(_, _) => Symbolic::empty(),
         });
     }
-    let mut remaining = arena.effects.len().saturating_add(1);
+    // Each fact gains at most 64 concrete and 64 rigid bits. A union can first
+    // become unknown, then resolve, so allow two changes to that flag per node.
+    // A pass may propagate just one change across an equation chain.
+    let mut remaining = arena.effects.len().saturating_mul(130).saturating_add(1);
     let mut changed = true;
     while changed && remaining != 0 {
         attempt!(meter.charge(1, span));
@@ -102,8 +105,18 @@ pub(super) fn rigid(
     for (a, b) in &arena.effect_equations {
         let left = attempt!(symbol(&facts, *a, span));
         let right = attempt!(symbol(&facts, *b, span));
-        if !left.unknown && !right.unknown && left != right {
-            return Err(crate::invalid(span, "signature narrows a universal effect"));
+        // Assign every still-open hole the union of its accumulated concrete
+        // effects and rigid binders. Equal summaries give one simultaneous
+        // symbolic witness for all equations under every binder instantiation.
+        // An unequal open equation may have another existential solution, but
+        // without a verified witness it cannot authorize a signed body.
+        if left.concrete != right.concrete || left.rigid != right.rigid {
+            let reason = if left.unknown || right.unknown {
+                "unresolved universal effect equation has no verified witness"
+            } else {
+                "signature narrows a universal effect"
+            };
+            return Err(crate::invalid(span, reason));
         }
     }
     for (body, declared) in &arena.rigid_effect_goals {
@@ -136,8 +149,17 @@ fn equate_through_pure(
         let index = attempt!(crate::offset(id, span));
         match effects.get(index) {
             Some(super::Effect::Hole) => {
-                if facts[index] != value {
-                    facts[index] = value;
+                // Equality to an unresolved union is not evidence that a
+                // previously resolved hole became unknown again. In
+                // particular, two quotations can constrain one hole through
+                // pure and another through a union in the same pass.
+                let next = Symbolic {
+                    concrete: facts[index].concrete | value.concrete,
+                    rigid: facts[index].rigid | value.rigid,
+                    unknown: facts[index].unknown && value.unknown,
+                };
+                if facts[index] != next {
+                    facts[index] = next;
                     return Ok(true);
                 }
                 return Ok(false);
@@ -389,4 +411,110 @@ fn close_term(
         _ => {}
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    const SPAN: crate::Span = crate::Span { start: 0, end: 0 };
+
+    #[test]
+    fn independent_universals_cannot_hide_in_an_open_effect_equation()
+    -> Result<(), crate::Diagnostic> {
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let mut arena = crate::inference::Arena::source(1, false);
+        let a = arena.rigid_effect(0, SPAN, &mut meter)?;
+        let b = arena.rigid_effect(1, SPAN, &mut meter)?;
+        let hole = arena.effect_hole(SPAN, &mut meter)?;
+        let joined = arena.effect_union(b, hole, SPAN, &mut meter)?;
+        arena.equate_effects(a, joined, SPAN, &mut meter)?;
+        let pure = arena.effect_empty(SPAN, &mut meter)?;
+        arena.require_rigid_effect(pure, pure, SPAN, &mut meter)?;
+        assert!(matches!(
+            super::rigid(&arena, SPAN, &mut meter),
+            Err(error) if error.kind == crate::DiagnosticKind::Invalid
+        ));
+        Ok(())
+    }
+
+    #[test]
+    fn mandatory_host_effect_cannot_hide_in_an_open_effect_equation()
+    -> Result<(), crate::Diagnostic> {
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let mut arena = crate::inference::Arena::source(1, false);
+        let pure = arena.effect_empty(SPAN, &mut meter)?;
+        let emit = arena.effect_constant(
+            &noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT]),
+            SPAN,
+            &mut meter,
+        )?;
+        let hole = arena.effect_hole(SPAN, &mut meter)?;
+        let joined = arena.effect_union(emit, hole, SPAN, &mut meter)?;
+        arena.equate_effects(joined, pure, SPAN, &mut meter)?;
+        arena.require_rigid_effect(pure, pure, SPAN, &mut meter)?;
+        assert!(matches!(
+            super::rigid(&arena, SPAN, &mut meter),
+            Err(error) if error.kind == crate::DiagnosticKind::Invalid
+        ));
+        Ok(())
+    }
+
+    #[test]
+    fn a_shared_hole_cannot_bypass_two_universal_constraints()
+    -> Result<(), crate::Diagnostic> {
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let mut arena = crate::inference::Arena::source(1, false);
+        let a = arena.rigid_effect(0, SPAN, &mut meter)?;
+        let b = arena.rigid_effect(1, SPAN, &mut meter)?;
+        let hole = arena.effect_hole(SPAN, &mut meter)?;
+        let a_joined = arena.effect_union(a, hole, SPAN, &mut meter)?;
+        let b_joined = arena.effect_union(b, hole, SPAN, &mut meter)?;
+        arena.equate_effects(a, a_joined, SPAN, &mut meter)?;
+        arena.equate_effects(hole, b_joined, SPAN, &mut meter)?;
+        let pure = arena.effect_empty(SPAN, &mut meter)?;
+        arena.require_rigid_effect(pure, pure, SPAN, &mut meter)?;
+        assert!(matches!(
+            super::rigid(&arena, SPAN, &mut meter),
+            Err(error) if error.kind == crate::DiagnosticKind::Invalid
+        ));
+        Ok(())
+    }
+
+    #[test]
+    fn distributed_holes_cannot_claim_an_independent_universal()
+    -> Result<(), crate::Diagnostic> {
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let mut arena = crate::inference::Arena::source(1, false);
+        let a = arena.rigid_effect(0, SPAN, &mut meter)?;
+        let b = arena.rigid_effect(1, SPAN, &mut meter)?;
+        let c = arena.rigid_effect(2, SPAN, &mut meter)?;
+        let first = arena.effect_hole(SPAN, &mut meter)?;
+        let second = arena.effect_hole(SPAN, &mut meter)?;
+        let a_joined = arena.effect_union(a, first, SPAN, &mut meter)?;
+        let b_joined = arena.effect_union(b, second, SPAN, &mut meter)?;
+        let holes_joined = arena.effect_union(first, second, SPAN, &mut meter)?;
+        arena.equate_effects(a, a_joined, SPAN, &mut meter)?;
+        arena.equate_effects(b, b_joined, SPAN, &mut meter)?;
+        arena.equate_effects(c, holes_joined, SPAN, &mut meter)?;
+        let pure = arena.effect_empty(SPAN, &mut meter)?;
+        arena.require_rigid_effect(pure, pure, SPAN, &mut meter)?;
+        assert!(matches!(
+            super::rigid(&arena, SPAN, &mut meter),
+            Err(error) if error.kind == crate::DiagnosticKind::Invalid
+        ));
+        Ok(())
+    }
+
+    #[test]
+    fn same_universal_may_join_a_neutral_hole()
+    -> Result<(), crate::Diagnostic> {
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let mut arena = crate::inference::Arena::source(1, false);
+        let a = arena.rigid_effect(0, SPAN, &mut meter)?;
+        let hole = arena.effect_hole(SPAN, &mut meter)?;
+        let joined = arena.effect_union(a, hole, SPAN, &mut meter)?;
+        arena.equate_effects(a, joined, SPAN, &mut meter)?;
+        let pure = arena.effect_empty(SPAN, &mut meter)?;
+        arena.require_rigid_effect(pure, pure, SPAN, &mut meter)?;
+        super::rigid(&arena, SPAN, &mut meter)
+    }
 }

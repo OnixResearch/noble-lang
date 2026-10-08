@@ -58,7 +58,7 @@ pub(super) struct Report {
 impl Report {
     pub fn failure(failure: &Failure, declared: bool) -> Self {
         if declared {
-            Self::declared_static(failure.context, &failure.message, 0, None)
+            Self::declared_static(failure.context, &failure.message, 0, None, false, false)
         } else {
             Self::static_report(
                 failure.context,

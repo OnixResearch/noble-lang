@@ -229,6 +229,16 @@ fn commit_definition(
             "module definition has executable initializer",
         ));
     }
+    if prepared.definition.as_ref()
+        .and_then(|definition| definition.signed.as_ref())
+        .is_some_and(|relation| usize::try_from(relation.source_slot).ok()
+            != Some(session.source.definitions.len()))
+    {
+        return Err(crate::source::declared::error(
+            crate::source::Stage::Check,
+            "prospective signed owner slot changed before module installation",
+        ));
+    }
     attempt!(session.source.commit(prepared));
     let Some(index) = session.source.definitions.len().checked_sub(1) else {
         return Err(crate::source::declared::error(

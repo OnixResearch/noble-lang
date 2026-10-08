@@ -79,7 +79,7 @@ fn payload(
     let abi = crate::workflow::encoding::string(super::ABI);
     let artifacts = crate::workflow::encoding::optional_string(destination);
     let bindings = attempt!(bindings(options));
-    Ok(crate::workflow::encoding::object([
+    let mut configuration = crate::workflow::encoding::object([
         ("selection", selection),
         ("abi", abi),
         (
@@ -102,8 +102,15 @@ fn payload(
                 options.declared_modules.then_some(super::DECLARED_ABI),
             ),
         ),
-    ])
-    .encode())
+    ]);
+    // Ordinary worker configuration bytes retain their exact prior shape.
+    if options.signed_self_recursion {
+        if let crate::workflow::encoding::Json::Object(fields) = &mut configuration {
+            fields.push(("signed_self_recursion",
+                crate::workflow::encoding::Json::Bool(true)));
+        }
+    }
+    Ok(configuration.encode())
 }
 
 fn bindings(options: &super::super::arguments::Options) -> Result<crate::workflow::encoding::Json, super::super::output::Failure> {

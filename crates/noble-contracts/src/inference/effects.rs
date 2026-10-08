@@ -94,6 +94,11 @@ impl super::Arena {
         self.add_effect(Effect::Rigid(identity), span, meter)
     }
 
+    pub(crate) fn is_rigid_effect(&self, id: u32, identity: u32) -> bool {
+        usize::try_from(id).ok().and_then(|index| self.effects.get(index))
+            .is_some_and(|effect| matches!(effect, Effect::Rigid(index) if *index == identity))
+    }
+
     pub fn effect_empty(
         &mut self,
         span: crate::Span,

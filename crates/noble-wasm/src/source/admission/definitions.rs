@@ -5,13 +5,14 @@
 pub(super) fn bounds(
     submission: &noble_kernel::execution::Submission,
     environment_work: u64,
+    signed: bool,
     totals: &mut super::metadata::Totals,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
     let mut failure = None;
     while index < submission.definitions.len() {
-        match definition_bounds(submission, index, environment_work, totals, work) {
+        match definition_bounds(submission, index, environment_work, signed, totals, work) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -34,16 +35,26 @@ fn definition_bounds(
     submission: &noble_kernel::execution::Submission,
     index: usize,
     environment_work: u64,
+    signed: bool,
     totals: &mut super::metadata::Totals,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let definition = &submission.definitions[index];
     attempt!(check_identity(submission, index, work));
     attempt!(work.charge(environment_work));
+    let signed_body = definition.body.candidate.nodes.iter().any(|node| {
+        matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })
+    });
+    let owner_inst = match (signed, signed_body, definition.owner_inst.as_ref()) {
+        (true, true, Some(inst)) => Some(inst),
+        (_, false, None) => None,
+        _ => return Err(crate::Diagnostic::Invalid),
+    };
     attempt!(super::environment::exact_contract(
         &submission.environment,
         definition.definition,
-        &definition.expected
+        &definition.expected,
+        owner_inst,
     ));
     super::metadata::check(&definition.body, totals, work)
 }
@@ -78,13 +89,14 @@ fn check_identity(
 pub(super) fn accept(
     submission: &noble_kernel::execution::Submission,
     limits: noble_kernel::untrusted::Limits,
+    signed: bool,
     work: &mut super::super::Work,
 ) -> Result<alloc::vec::Vec<noble_kernel::untrusted::Checked>, crate::Diagnostic> {
     let mut definitions = alloc::vec::Vec::with_capacity(submission.definitions.len());
     let mut index = 0usize;
     let mut failure = None;
     while index < submission.definitions.len() {
-        match accept_definition(submission, index, limits, work) {
+        match accept_definition(submission, index, limits, signed, work) {
             Ok(checked) => {
                 definitions.push(checked);
                 index += 1;
@@ -109,6 +121,7 @@ fn accept_definition(
     submission: &noble_kernel::execution::Submission,
     index: usize,
     limits: noble_kernel::untrusted::Limits,
+    signed: bool,
     work: &mut super::super::Work,
 ) -> Result<noble_kernel::untrusted::Checked, crate::Diagnostic> {
     let definition = &submission.definitions[index];
@@ -122,7 +135,18 @@ fn accept_definition(
     if is_ambient_forbidden(&env, &definition.body) {
         return Err(crate::Diagnostic::Invalid);
     }
-    let checked = attempt!(super::accept(&env, &request, &definition.body));
+    let signed_owner = if definition.body.candidate.nodes.iter().any(|node| {
+        matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })
+    }) {
+        if !signed {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        Some((definition.definition, definition.owner_inst.as_ref()
+            .ok_or(crate::Diagnostic::Invalid)?))
+    } else {
+        None
+    };
+    let checked = attempt!(super::accept(&env, &request, &definition.body, signed_owner));
     if checked.interface.effects != definition.expected.allowed_effects {
         return Err(crate::Diagnostic::Invalid);
     }
@@ -162,6 +186,7 @@ fn is_ambient_forbidden(
         match &body.candidate.nodes[index] {
             noble_kernel::untrusted::Node::Invocation { def, .. } if def.0 == 22 => return true,
             noble_kernel::untrusted::Node::Invocation { .. }
+            | noble_kernel::untrusted::Node::SignedSelf { .. }
             | noble_kernel::untrusted::Node::Literal { .. }
             | noble_kernel::untrusted::Node::Quotation { .. }
             | noble_kernel::untrusted::Node::SlotInvoke { .. } => {}

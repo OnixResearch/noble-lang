@@ -2,6 +2,8 @@ impl super::Report {
     /// A module/import is a checked namespace transition, never guest work.
     pub fn declared_link(
         submission: u64,
+        signed: bool,
+        calculator: bool,
         name: &str,
         module: Option<(u64, std::string::String, u32)>,
         binding: Option<(std::string::String, u32)>,
@@ -42,7 +44,7 @@ impl super::Report {
             ),
             (
                 "profile",
-                crate::workflow::encoding::string("Declared-Modules-v1"),
+                crate::workflow::encoding::string(Self::declared_profile(signed, calculator)),
             ),
             (
                 "backend",
@@ -93,7 +95,7 @@ impl super::Report {
         }
     }
 
-    pub fn declared_definition(submission: u64) -> Self {
+    pub fn declared_definition(submission: u64, signed: bool, calculator: bool) -> Self {
         Self::declared_static(
             super::ErrorContext {
                 stage: "check",
@@ -102,10 +104,12 @@ impl super::Report {
             "definition installed; body not executed",
             submission,
             None,
+            signed,
+            calculator,
         )
     }
 
-    pub fn declared_source_error(error: &noble_contracts::source::Error, submission: u64) -> Self {
+    pub fn declared_source_error(error: &noble_contracts::source::Error, submission: u64, signed: bool, calculator: bool) -> Self {
         Self::declared_static(
             super::ErrorContext {
                 stage: super::source_stage(error.stage()),
@@ -114,12 +118,20 @@ impl super::Report {
             &error.diagnostic().message,
             submission,
             Some(error.diagnostic().span),
+            signed,
+            calculator,
         )
     }
 
-    pub fn declared_backend_error(error: noble_wasm::Diagnostic, submission: u64) -> Self {
+    pub fn declared_backend_error(error: noble_wasm::Diagnostic, submission: u64, signed: bool, calculator: bool) -> Self {
         let failure = super::Failure::backend(error);
-        Self::declared_static(failure.context, &failure.message, submission, None)
+        Self::declared_static(failure.context, &failure.message, submission, None, signed, calculator)
+    }
+
+    const fn declared_profile(signed: bool, declared_text: bool) -> &'static str {
+        if declared_text {
+            if signed { "Signed-Declared-Text-v1" } else { "Declared-Text-v1" }
+        } else if signed { "Signed-Self-Modules-v1" } else { "Declared-Modules-v1" }
     }
 
     pub(super) fn declared_static(
@@ -127,6 +139,8 @@ impl super::Report {
         message: &str,
         submission: u64,
         span: Option<noble_contracts::Span>,
+        signed: bool,
+        calculator: bool,
     ) -> Self {
         Self {
             outcome: context.outcome.into(),
@@ -137,7 +151,7 @@ impl super::Report {
                 ),
                 (
                     "profile",
-                    crate::workflow::encoding::string("Declared-Modules-v1"),
+                    crate::workflow::encoding::string(Self::declared_profile(signed, calculator)),
                 ),
                 (
                     "backend",

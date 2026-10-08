@@ -1,0 +1,17 @@
+module decimal_digit@1 [
+    signature digit forall<S:stack> [ S I64 -- S I64 Bool ! pure ]
+    export digit
+    def digit [
+        48 -
+        dup 0 = [ true ] [
+        dup 1 = [ true ] [
+        dup 2 = [ true ] [
+        dup 3 = [ true ] [
+        dup 4 = [ true ] [
+        dup 5 = [ true ] [
+        dup 6 = [ true ] [
+        dup 7 = [ true ] [
+        dup 8 = [ true ] [ dup 9 = ] if
+        ] if ] if ] if ] if ] if ] if ] if ] if
+    ]
+]

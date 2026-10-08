@@ -57,7 +57,24 @@ pub fn check(
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
 ) -> crate::untrusted::Outcome {
-    match run(env, request, candidate) {
+    outcome(run(env, request, candidate, None))
+}
+
+/// Type and effect derivation for a signed owner. This publicly callable
+/// structural result does NOT authenticate source provenance or authorize
+/// emission: only a separately source-bound compiler ingress may use it.
+pub fn check_signed_structure(
+    env: &crate::contracts::Env,
+    request: &crate::untrusted::Request,
+    candidate: &crate::untrusted::Candidate,
+    owner: crate::contracts::Definition,
+    owner_inst: &crate::words::Inst,
+) -> crate::untrusted::Outcome {
+    outcome(run(env, request, candidate, Some((owner, owner_inst))))
+}
+
+fn outcome(result: Result<crate::untrusted::Checked, Fail>) -> crate::untrusted::Outcome {
+    match result {
         Ok(checked) => crate::untrusted::Outcome::Accepted(checked),
         Err(Fail::Invalid(diagnostic)) => crate::untrusted::Outcome::Invalid(diagnostic),
         Err(Fail::Unsupported(kind)) => crate::untrusted::Outcome::Unsupported(kind),
@@ -74,9 +91,10 @@ fn run(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
+    signed_owner: Option<(crate::contracts::Definition, &crate::words::Inst)>,
 ) -> Result<crate::untrusted::Checked, Fail> {
-    let remaining = attempt!(preflight::check_request(env, request, candidate));
-    let context = parts::Ctx { request, env };
+    let remaining = attempt!(preflight::check_request(env, request, candidate, signed_owner));
+    let context = parts::Ctx { request, env, signed_owner: signed_owner.map(|(owner, _)| owner) };
     let mut machine = Machine {
         state: State {
             work: remaining,
@@ -138,6 +156,7 @@ fn step(
     match node {
         crate::untrusted::Node::Literal { .. }
         | crate::untrusted::Node::Invocation { .. }
+        | crate::untrusted::Node::SignedSelf { .. }
         | crate::untrusted::Node::SlotInvoke { .. } => {
             fold_current(machine, frame, node_id, &node, context)
         }
