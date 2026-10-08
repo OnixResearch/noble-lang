@@ -49,6 +49,52 @@ fn build(
 }
 
 #[test]
+fn checked_c_source_is_c11_syntax_valid_without_native_execution(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let scratch = Scratch::new()?;
+    let policy = scratch.file("policy.json", br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#)?;
+    // This is a development compiler diagnostic, not a selected toolchain,
+    // source-to-ELF admission, C/Wasm comparison, or a runtime test.
+    for (name, source, interface) in [
+        ("captured-compose", "40 2 quote [ + ] compose run", "-- I64"),
+        (
+            "boundary-bool",
+            "9223372036854775807 1 + -1 * -9223372036854775808 =",
+            "-- Bool",
+        ),
+    ] {
+        let source = scratch.file(&format!("{name}.noble"), source.as_bytes())?;
+        let contract = scratch.file(
+            &format!("{name}-contract.json"),
+            format!(r#"{{"expected_interface":"{interface}","resolved_host_contracts":{{}}}}"#)
+                .as_bytes(),
+        )?;
+        let out = scratch.0.join(format!("{name}-out"));
+        let built = build(&source, &contract, &policy, &out)?;
+        assert!(
+            built.status.success(),
+            "{name}: checked C source build: {}",
+            String::from_utf8_lossy(&built.stderr)
+        );
+        let artifact = out.join("artifact.c");
+        let diagnostic = Command::new("cc")
+            .args(["-std=c11", "-pedantic-errors", "-fsyntax-only"])
+            .arg(&artifact)
+            .output()
+            .map_err(|error| format!(
+                "C11 syntax diagnostic requires a development 'cc' supporting -fsyntax-only: {error}"
+            ))?;
+        assert!(
+            diagnostic.status.success(),
+            "{name}: C11 syntax diagnostic for {}: {}",
+            artifact.display(),
+            String::from_utf8_lossy(&diagnostic.stderr)
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn source_bytes_change_build_identity_without_rebinding_numeric_recipe(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let scratch = Scratch::new()?;

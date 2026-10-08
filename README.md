@@ -96,8 +96,11 @@ The new directory contains the exact source, contract, policy, `artifact.c`,
 and `manifest.json` with exact-byte file digests and a build key. The checked
 candidate and resolved-environment digest fields hash this toolchain's Rust
 Debug rendering, not a canonical external encoding. This is candidate
-evidence, **not** independent admission or C/Wasm equivalence. Input files are
-read through one bounded file descriptor each, then the observed bytes are
+evidence, **not** independent admission or C/Wasm equivalence. Contract and
+policy JSON currently use last-wins duplicate-member decoding, so an earlier
+bound can be overwritten; the source-only route does not satisfy complete
+CB-LIMIT-01 input-integrity admission. Input files are read through one
+bounded file descriptor each, then the observed bytes are
 copied; this does not authenticate the host-selected pathname against ancestor
 symlinks, hard links or concurrent replacement, nor seal output files against
 subsequent mutation. Output child paths are also re-resolved after creating the
@@ -110,6 +113,18 @@ These are source-level bounds, not native runtime acceptance. Both `--native`
 and `execute --target c` refuse: no compiler/ELF execution is authorized until
 a separately reviewed pinned native toolchain, complete source-to-ELF
 correspondence, sandbox, loader, and clock barrier are selected.
+The existing bubblewrap runner is for Lean proofs, not C; installed QEMU/KVM
+or host compiler binaries do not supply a selected VM image, immutable
+runner/filter/loader/mediator pins or a verified vDSO/vvar/TSC barrier.
+For a **developer-only, nonexecuting** C11 syntax diagnostic on emitted source,
+`cc -std=c11 -pedantic-errors -fsyntax-only NEW_OUTPUT_DIRECTORY/artifact.c`
+can check whether the local compiler accepts the C text. This host `cc` is
+not a selected/pinned C compiler or a native artifact admission check. It
+produces no admitted ELF and cannot establish C/Wasm differential results.
+All CB-CASE-01..10 remain absent/not-run/open/unassessed; the canonical C
+edits are HOLD pending independent owner review before integration. No
+native runner, clock/vvar/TSC nondisclosure barrier or C selection follows
+from source syntax diagnostics.
 
 ### Independent Mathlib comparison for implemented I64 arithmetic
 
