@@ -5,6 +5,9 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use serde_json::{Value, json};
 use wasmparser::{ElementItems, KnownCustom, Name, Operator, Parser, Payload, ValType, Validator};
 
+#[path = "live_slot_native_storage.rs"]
+mod storage;
+
 fn denied(reason: &str) -> String { format!("selected native body witness refused: {reason}") }
 
 struct Module<'a> {
@@ -266,6 +269,20 @@ impl<'a> Module<'a> {
         Ok(json!({"module_sha256":self.sha256,"roots":roots,
             "selected_table_function_indices":table_roots,"functions":rows}))
     }
+}
+
+pub(super) fn probe_storage(
+    core_bytes: &[u8], core_sha: &str, static_bytes: &[u8], static_sha: &str,
+    memory: &[u8], cursor: u32, handles: &[u32],
+) -> Result<Value, String> {
+    let core = Module::parse(core_bytes, core_sha)?;
+    let static_donor = Module::parse(static_bytes, static_sha)?;
+    storage::probe(&core, memory, cursor, handles)?;
+    storage::probe(&static_donor, memory, cursor, handles)?;
+    Ok(json!({"schema":"noble-live-slot-installed-storage-one-state/v1",
+        "scope":"exact selected storage reads and stale-epoch negatives only; writes/refcounts/future calls unproved",
+        "native_module_sha256":core_sha,"static_module_sha256":static_sha,
+        "selected_handles":handles,"heap_cursor":cursor}))
 }
 
 pub(super) fn attest(

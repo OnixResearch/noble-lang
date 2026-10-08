@@ -1855,7 +1855,8 @@ impl Host {
             static_span_start, &add_entries)?;
         let mut subject = origin::alias_exact_target_subject(&manifest, caller, core, &native_bodies)?;
         subject["one_state_replay"] = snapshot::check(
-            &live["state_snapshot"], &manifest, &subject)?;
+            &live["state_snapshot"], &manifest, &subject, core_bytes,
+            &core.artifact_sha256, caller_bytes, &caller.artifact_sha256)?;
         origin::key_exact_target_subject(&subject)
     }
 

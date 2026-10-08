@@ -64,6 +64,17 @@ fn lower(checked: &Value) -> Result<(String, String), output::Failure> {
         return Err(invalid("exact target idle memory/roots witness is missing or inconsistent"));
     }
     let initial_memory = digest(state, "memory_sha256")?;
+    let installed_storage = &state["installed_storage_probe"];
+    if installed_storage["schema"] != "noble-live-slot-installed-storage-one-state/v1"
+        || installed_storage["scope"] != "exact selected storage reads and stale-epoch negatives only; writes/refcounts/future calls unproved"
+        || installed_storage["native_module_sha256"] != native
+        || installed_storage["static_module_sha256"] != static_sha
+        || installed_storage["selected_handles"].as_array()
+            .is_none_or(|handles| handles.is_empty() || handles.len() > 32)
+        || installed_storage["selected_handles"][0] != state["owner_handle"]
+        || installed_storage["heap_cursor"].as_u64().is_none_or(|cursor| cursor == 0 || cursor > 4096) {
+        return Err(invalid("installed helper one-state execution witness is missing or inconsistent"));
+    }
     let owner_root = state["owner_handle"].as_u64()
         .ok_or_else(|| invalid("exact target idle memory owner root is missing"))?;
     let byte_donors = &subject["installed_donor_bytes"];

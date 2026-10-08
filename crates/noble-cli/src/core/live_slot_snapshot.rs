@@ -119,7 +119,7 @@ fn cell(memory: &[u8], handle: u32, cursor: u32) -> Result<([u32; 3], Value), St
         "textBytes":null})))
 }
 
-fn complete_graph(memory: &[u8], root: u32, cursor: u32) -> Result<Value, String> {
+fn complete_graph(memory: &[u8], root: u32, cursor: u32) -> Result<(Value, Vec<u32>), String> {
     let mut handles = vec![root];
     let mut indices = BTreeMap::from([(root, 0usize)]);
     let mut rows = Vec::new();
@@ -142,7 +142,7 @@ fn complete_graph(memory: &[u8], root: u32, cursor: u32) -> Result<Value, String
         rows.push(row);
         next += 1;
     }
-    Ok(json!(rows))
+    Ok((json!(rows), handles))
 }
 
 fn roots(snapshot: &Value, key: &str, memory: &[u8], cursor: u32) -> Result<Value, String> {
@@ -157,23 +157,17 @@ fn roots(snapshot: &Value, key: &str, memory: &[u8], cursor: u32) -> Result<Valu
     Ok(snapshot[key].clone())
 }
 
-/// This *executes* the selected 48-byte cell layout over actual imported
-/// memory, not over the worker's exported accessor claims. Its output binds
-/// one immutable snapshot only; a full Wasm helper/dispatch semantics theorem
-/// and a later fresh-state relation remain separate, mandatory prerequisites.
-pub(super) fn check(snapshot: &Value, manifest: &Value, subject: &Value) -> Result<Value, String> {
-    if snapshot["schema"] != "noble-live-slot-idle-memory-snapshot/v1"
-        || snapshot["scope"] != "one-idle-state-only; not future-invocation semantics" {
-        return Err(denied("snapshot does not declare its one-state scope"));
-    }
+fn selected_owner(snapshot: &Value, manifest: &Value) -> Result<u32, String> {
     let owner = manifest["descriptor"]["owner"]["handle"].as_u64()
         .and_then(|n| u32::try_from(n).ok())
         .ok_or_else(|| denied("checked owner has no physical root handle"))?;
     if snapshot["owner_handle"] != owner {
         return Err(denied("idle snapshot root differs from retained owner"));
     }
-    let memory = memory(snapshot)?;
-    let (globals, cursor) = globals(snapshot)?;
+    Ok(owner)
+}
+
+fn retained_owner(memory: &[u8], owner: u32, cursor: u32) -> Result<(), String> {
     let slot = owner & 4095;
     let saved = SAVED_ROOTS_BASE + slot as usize * 2;
     let saved_count = memory.get(saved..saved + 2)
@@ -182,13 +176,10 @@ pub(super) fn check(snapshot: &Value, manifest: &Value, subject: &Value) -> Resu
     if slot >= cursor || saved_count == 0 {
         return Err(denied("retained owner has no saved root in imported memory"));
     }
-    let graph = complete_graph(&memory, owner, cursor)?;
-    let graph_bytes = serde_json::to_vec(&graph)
-        .map_err(|_| denied("imported memory graph is not serializable"))?;
-    let graph_sha = crate::workflow::intrinsic::sha256(&graph_bytes);
-    if manifest["descriptor"]["graph_sha256"] != graph_sha {
-        return Err(denied("imported linear memory graph differs from saved source target"));
-    }
+    Ok(())
+}
+
+fn observed_literals(graph: &Value) -> Result<Value, String> {
     let literal = |quote: &Value| -> Result<Value, String> {
         let quote_at = quote.as_u64().and_then(|n| usize::try_from(n).ok())
             .ok_or_else(|| denied("snapshot has no quote edge"))?;
@@ -204,18 +195,46 @@ pub(super) fn check(snapshot: &Value, manifest: &Value, subject: &Value) -> Resu
     let inner = rows.first().and_then(|row| row["a"].as_u64())
         .and_then(|index| rows.get(index as usize))
         .ok_or_else(|| denied("snapshot has no nested composition"))?;
-    let literals = json!([literal(&inner["a"])?, literal(&inner["b"])?]);
+    Ok(json!([literal(&inner["a"])?, literal(&inner["b"])?]))
+}
+
+/// This *executes* the selected 48-byte cell layout over actual imported
+/// memory, not over the worker's exported accessor claims. Its output binds
+/// one immutable snapshot only; a full Wasm helper/dispatch semantics theorem
+/// and a later fresh-state relation remain separate, mandatory prerequisites.
+pub(super) fn check(snapshot: &Value, manifest: &Value, subject: &Value,
+    core_bytes: &[u8], core_sha: &str, static_bytes: &[u8], static_sha: &str,
+) -> Result<Value, String> {
+    if snapshot["schema"] != "noble-live-slot-idle-memory-snapshot/v1"
+        || snapshot["scope"] != "one-idle-state-only; not future-invocation semantics" {
+        return Err(denied("snapshot does not declare its one-state scope"));
+    }
+    let owner = selected_owner(snapshot, manifest)?;
+    let memory = memory(snapshot)?;
+    let (globals, cursor) = globals(snapshot)?;
+    retained_owner(&memory, owner, cursor)?;
+    let (graph, handles) = complete_graph(&memory, owner, cursor)?;
+    let graph_bytes = serde_json::to_vec(&graph)
+        .map_err(|_| denied("imported memory graph is not serializable"))?;
+    let graph_sha = crate::workflow::intrinsic::sha256(&graph_bytes);
+    if manifest["descriptor"]["graph_sha256"] != graph_sha {
+        return Err(denied("imported linear memory graph differs from saved source target"));
+    }
+    let literals = observed_literals(&graph)?;
     if subject["literal_values"] != literals {
         return Err(denied("snapshot memory literals differ from checked source captures"));
     }
     let native_roots = roots(snapshot, "native_roots", &memory, cursor)?;
     let static_roots = roots(snapshot, "static_roots", &memory, cursor)?;
+    let installed_storage = super::native::probe_storage(
+        core_bytes, core_sha, static_bytes, static_sha, &memory, cursor, &handles)?;
     Ok(json!({"schema":"noble-live-slot-one-idle-state-replay/v1",
         "scope":"one-state-layout-only; native helper/dispatch semantics not established",
         "memory_sha256":snapshot["memory_sha256"],"memory_length":memory.len(),
         "owner_handle":owner,"imported_globals":globals,
         "native_roots":native_roots,"static_roots":static_roots,
-        "retained_graph_sha256":graph_sha,"physical_literals":literals}))
+        "retained_graph_sha256":graph_sha,"physical_literals":literals,
+        "installed_storage_probe":installed_storage}))
 }
 
 #[cfg(test)]
@@ -233,13 +252,57 @@ mod tests {
         imported[child..child + 4].copy_from_slice(&1u32.to_le_bytes());
         imported[child + 4..child + 8].copy_from_slice(&4097u32.to_le_bytes());
         imported[child + 8..child + 16].copy_from_slice(&(-7i64).to_le_bytes());
-        let graph = complete_graph(&imported, 4096, 2)?;
-        if graph[0]["a"] != 1 || graph[1]["payload"] != "-7" {
+        let (graph, handles) = complete_graph(&imported, 4096, 2)?;
+        if handles != [4096, 4097] || graph[0]["a"] != 1 || graph[1]["payload"] != "-7" {
             return Err("raw imported memory did not reconstruct the selected child".into());
         }
         imported[child + 4..child + 8].copy_from_slice(&8193u32.to_le_bytes());
         if complete_graph(&imported, 4096, 2).is_ok() {
             return Err("recycled physical child slot passed an obsolete epoch handle".into());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn selected_shape_capture_and_owner_do_not_transfer() -> Result<(), String> {
+        let graph = json!([
+            {"kind":4,"a":1}, {"kind":4,"a":2,"b":3},
+            {"kind":4,"x":1,"a":4}, {"kind":4,"x":1,"a":5},
+            {"kind":1,"payload":"2"}, {"kind":1,"payload":"-7"}
+        ]);
+        if observed_literals(&graph)? != json!(["2","-7"]) {
+            return Err("selected quote shape lost physical captured values".into());
+        }
+        let mut wrong_shape = graph.clone();
+        wrong_shape[2]["x"] = json!(2);
+        if observed_literals(&wrong_shape).is_ok() {
+            return Err("changed native quote entry shape acquired captured literals".into());
+        }
+        let mut wrong_capture = graph.clone();
+        wrong_capture[4]["kind"] = json!(4);
+        if observed_literals(&wrong_capture).is_ok() {
+            return Err("non-I64 captured cell acquired selected I64 literal".into());
+        }
+        let mut substituted_value = graph.clone();
+        substituted_value[4]["payload"] = json!("3");
+        if observed_literals(&substituted_value)? == json!(["2","-7"]) {
+            return Err("changed captured I64 retained the old physical literal witness".into());
+        }
+        let manifest = json!({"descriptor":{"owner":{"handle":4097}}});
+        let snapshot = json!({"owner_handle":4097});
+        if selected_owner(&snapshot, &manifest)? != 4097
+            || selected_owner(&json!({"owner_handle":8193}), &manifest).is_ok() {
+            return Err("different epoch owner borrowed selected root".into());
+        }
+        let mut imported = vec![0; MEMORY_BYTES];
+        if retained_owner(&imported, 4097, 2).is_ok() {
+            return Err("owner without saved pin passed retained-root guard".into());
+        }
+        let saved = SAVED_ROOTS_BASE + 2;
+        imported[saved..saved + 2].copy_from_slice(&1u16.to_le_bytes());
+        retained_owner(&imported, 4097, 2)?;
+        if retained_owner(&imported, 8193, 1).is_ok() {
+            return Err("owner outside heap cursor passed retained-root guard".into());
         }
         Ok(())
     }

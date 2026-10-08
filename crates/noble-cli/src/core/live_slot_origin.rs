@@ -1394,6 +1394,25 @@ mod tests {
         let add_entries = [add_start, add_start + 1, add_start + 2];
         let checked_native = super::super::native::attest(
             &binary, &binary_sha, &binary, &binary_sha, span.start, &add_entries)?;
+        let mut imported = vec![0; 20 * 65536];
+        let cell = 65536 + 48;
+        imported[cell..cell + 4].copy_from_slice(&4u32.to_le_bytes());
+        imported[cell + 4..cell + 8].copy_from_slice(&4097u32.to_le_bytes());
+        imported[cell + 8..cell + 16].copy_from_slice(&(-7i64).to_le_bytes());
+        super::super::native::probe_storage(
+            &binary, &binary_sha, &binary, &binary_sha, &imported, 2, &[4097])?;
+        let old_address_mask = "(i32.and (local.get $h) (i32.const 4095))";
+        let rewritten_address = wat.replacen(old_address_mask,
+            "(i32.and (local.get $h) (i32.const 4094))", 1);
+        if rewritten_address == wat {
+            return Err("live storage helper mutation did not match selected source".into());
+        }
+        let altered = super::super::assemble_slot(rewritten_address.as_bytes())?;
+        let altered_sha = crate::workflow::intrinsic::sha256(&altered);
+        if super::super::native::probe_storage(
+            &altered, &altered_sha, &altered, &altered_sha, &imported, 2, &[4097]).is_ok() {
+            return Err("rewritten installed linear-address helper passed physical odd-slot probe".into());
+        }
         for (old, replacement, label) in [
             ("(i64.add (local.get $left) (local.get $right))",
                 "(i64.sub (local.get $left) (local.get $right))", "add"),
