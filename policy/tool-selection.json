@@ -166,7 +166,7 @@
     "nix/reviewed-vendor.nix": "c2866e74bbce2d3596f96cd36c0cf86c5d8020e573ab290b731d433a47dcb5fe",
     "nix/source-inventory-app.nix": "00739ae64f6291dfe0fc1bc218cb42ed9bf381824075348cc0203620c1bf8601",
     "nix/tool-selection-files.nix": "9d95449ac2901b8ecf4dd2650c74ed3b329c1544b7f3b59b1a9a30603dfc6db9",
-    "nix/vendor-only.nix": "7110b15b72bb7343a1b5fa481dc1854f818b50ee05992d7753ec1d092a4dfc49",
+    "nix/vendor-only.nix": "d7743c80ac4fc913be61aa54629c75fd7182eaa6b7d0a9b289c08a210dde1546",
     "policy/architecture-export-spec.ncl": "e32a2c75f975e768b292702500ca902bb944f07a5ce156bcbfa00bff576681bd",
     "policy/architecture.contracts.ncl": "afc38f939e83744d5963b766c783c3de4d98a4362f95190464f912c672db1104",
     "policy/architecture.json": "f6425dd4426b5b53d02733916777453f6cc86a582c673951b32cbbe9d8f2aa46",

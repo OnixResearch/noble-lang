@@ -130,7 +130,8 @@ complete fixture vendor; they do not change the nine-lock reviewed
 production/peer vendor.
 
 `nix/vendor-only.nix` is a parameterized vendor-only expression. Its caller
-must supply an independently NAR-matched selected Nixpkgs store source; it
+must supply an independently NAR-matched selected Nixpkgs source at an
+explicit absolute path (including an owner-only private rootless store); it
 does not choose a local candidate, evaluate the entire flake, or authorize a
 build. Source-origin coverage now includes the Worker peer lock/manifest and
 the LIVE06 production-role feature body
