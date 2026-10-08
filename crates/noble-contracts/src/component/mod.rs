@@ -339,7 +339,10 @@ impl World {
 pub(crate) struct Bindings {
     pub(crate) environment: noble_kernel::contracts::Env,
     pub(crate) words: alloc::vec::Vec<(alloc::string::String, noble_kernel::contracts::Definition)>,
+    /// Only independently imported WIT operations are callable guest effects.
     pub(crate) effects: u64,
+    /// The selected Program's latent type effect is not a callable import.
+    pub(crate) program_type_effects: u64,
     pub(crate) key: alloc::vec::Vec<u8>,
 }
 

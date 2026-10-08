@@ -271,6 +271,9 @@ fn initial(
         session.effect_universe(),
         session.bindings.is_some() || session.declared.is_some() || session.live_slots.is_some(),
     );
+    if let Some(bindings) = &session.bindings {
+        arena.allow_program_type_effects(bindings.program_type_effects);
+    }
     if let Some(context) = &session.declared {
         let mut nominals = alloc::vec::Vec::with_capacity(context.environment.nominals.len());
         let mut at = 0usize;

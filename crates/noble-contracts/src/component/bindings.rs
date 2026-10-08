@@ -45,11 +45,16 @@ pub(super) fn make(world: &super::World) -> Result<super::Bindings, super::Error
             environment.effects.push(effect);
         }
     }
+    let program_type_effects = match world.worker_program_effect {
+        Some(effect) => 1u64.checked_shl(effect.0).ok_or_else(super::exhausted)?,
+        None => 0,
+    };
     environment.resource_kinds = resource_kinds(world);
     Ok(super::Bindings {
         environment,
         words,
         effects,
+        program_type_effects,
         key: world.build_context(),
     })
 }

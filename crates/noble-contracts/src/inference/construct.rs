@@ -77,7 +77,7 @@ impl<'a> super::build::State<'a> {
                     ));
                 }
                 let effect = if arena.effectful {
-                    Some(attempt!(arena.effect_constant(effects, span, meter)))
+                    Some(attempt!(arena.program_type_effect_constant(effects, span, meter)))
                 } else {
                     None
                 };
@@ -172,7 +172,7 @@ impl<'a> super::build::State<'a> {
             noble_kernel::shapes::Pattern::Program(inputs, outputs, effects) => {
                 let effect = if arena.effectful {
                     Some(attempt!(
-                        arena.effect_pattern(effects, variables, span, meter)
+                        arena.program_type_effect_pattern(effects, variables, span, meter)
                     ))
                 } else {
                     attempt!(super::pure_effects(effects, variables, span, meter));

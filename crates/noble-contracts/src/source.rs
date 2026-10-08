@@ -910,15 +910,9 @@ impl Session {
                 .fold(0u64, |mask, id| mask | 1u64.checked_shl(id.0).unwrap_or(0));
         }
         if let Some(context) = &self.declared {
-            return if context
-                .environment
-                .effects
-                .contains(&noble_kernel::contracts::TEST_CLOCK)
-            {
-                1 | (1 << noble_kernel::contracts::TEST_CLOCK.0)
-            } else {
-                1
-            };
+            // Kernel validation binds non-bootstrap IDs to exact host-selected adapters.
+            return context.environment.effects.iter().fold(0u64, |mask, id|
+                mask | 1u64.checked_shl(id.0).unwrap_or(0));
         }
         match &self.bindings {
             Some(bindings) => bindings.effects,
@@ -932,6 +926,11 @@ impl Session {
                 }
             }
         }
+    }
+
+    fn program_type_effect_universe(&self) -> u64 {
+        self.effect_universe() | self.bindings.as_ref()
+            .map_or(0, |bindings| bindings.program_type_effects)
     }
 
     /// Consume a preparation as an explicit deterministic namespace transition.

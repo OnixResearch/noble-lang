@@ -61,6 +61,7 @@ pub(crate) struct Arena {
     terms: alloc::vec::Vec<Term>,
     effectful: bool,
     effect_universe: u64,
+    program_type_effects: u64,
     resources: bool,
     pub(crate) nominals: alloc::vec::Vec<(
         noble_kernel::types::NominalTypeId,
@@ -81,6 +82,7 @@ impl Arena {
             terms: alloc::vec::Vec::new(),
             effectful: false,
             effect_universe: 0,
+            program_type_effects: 0,
             resources: false,
             nominals: alloc::vec::Vec::new(),
             generic_nominals: alloc::vec::Vec::new(),
@@ -99,6 +101,10 @@ impl Arena {
         arena.effect_universe = effect_universe;
         arena.resources = resources;
         arena
+    }
+
+    pub(crate) fn allow_program_type_effects(&mut self, effects: u64) {
+        self.program_type_effects = effects;
     }
 
     pub fn add(

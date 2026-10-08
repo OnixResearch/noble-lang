@@ -409,6 +409,20 @@ fn worker_test_emit_selection_requires_exact_checked_effect_and_world_shape() ->
         vec![Pattern::I64], vec![Pattern::I64],
         vec![EffectSlot::Effect(TEST_EMIT)])),
         "the generated import must carry the selected latent effect");
+    let guest = selected.prepare_export("compute",
+        b"programs.admit swap programs.invoke", LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let expected = EffSet::from_ids(&[
+        selected.imports()[0].effect.ok_or("missing admit effect")?,
+        selected.imports()[1].effect.ok_or("missing invoke effect")?,
+    ]);
+    assert_eq!(guest.submission().ok_or("missing checked Worker guest")?
+        .request.expected.allowed_effects, expected);
+    let direct_run = selected.prepare_export("compute", b"programs.admit run", LIMITS)
+        .err().ok_or("a latent test.emit effect escaped the WIT callable set")?;
+    assert_eq!(direct_run.stage, noble_contracts::component::Stage::Export);
+    assert!(selected.prepare_export("compute", b"\"private\" emit", LIMITS).is_err(),
+        "the selected Program type is not a direct test.emit import");
 
     let pure_session = ModuleSession::new(&[], retained())
         .map_err(|error| format!("{error:?}"))?;
@@ -490,6 +504,21 @@ fn worker_code_export_requires_exact_checked_effect_and_consumed_program_owner()
         "the selected latent effect must be known without granting a host import");
     assert!(selected.check_import_effect(&selected.imports()[2].word, &[]).is_err(),
         "a checked effect witness never grants export destination/capture authority");
+    let guest = selected.prepare_export("compute",
+        b"programs.admit \"denied-destination\" programs.request-code-export drop", LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let expected = EffSet::from_ids(&[
+        selected.imports()[0].effect.ok_or("missing admit effect")?,
+        selected.imports()[2].effect.ok_or("missing request effect")?,
+    ]);
+    assert_eq!(guest.submission().ok_or("missing checked code-export guest")?
+        .request.expected.allowed_effects, expected);
+    let direct_run = selected.prepare_export("compute", b"programs.admit run", LIMITS)
+        .err().ok_or("a latent code-export effect escaped the WIT callable set")?;
+    assert_eq!(direct_run.stage, noble_contracts::component::Stage::Export);
+    assert!(selected.prepare_export("compute",
+        b"\"private\" \"denied-destination\" code_export", LIMITS).is_err(),
+        "the selected Program type is not a direct code-export import");
     let changed = std::str::from_utf8(WORKER_WIT)
         .map_err(|error| error.to_string())?
         .replace("request-code-export: func(owner: own<program>, destination: string) -> bool",
