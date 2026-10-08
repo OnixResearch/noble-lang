@@ -15,6 +15,7 @@ pub(super) const FUEL: u64 = 10_000_000;
 const EFFECT_REQUEST_LIMIT: u32 = 256;
 const EFFECT_TEXT_LIMIT: usize = 65_536;
 const LEDGER_BYTES_LIMIT: usize = 262_144;
+const BATCH_ITERATION_LIMIT: u16 = 512;
 static NEXT_INSTALLATION: AtomicU64 = AtomicU64::new(1);
 
 /// Host-selected synthetic `test.emit` ledger. Selection cannot grant: the
@@ -135,6 +136,15 @@ impl WorkerHostPolicy {
         Ok(())
     }
 
+    fn continue_issued(&self, cell: ProgramCell, task: &TaskOwner) -> Result<()> {
+        let state = self.inner.state.lock()
+            .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
+        ensure!(state.issued == Some(cell) && !state.revoked
+            && state.current_epoch == self.inner.epoch && task.running()?,
+            "Worker batch grant or task retired between iterations");
+        Ok(())
+    }
+
     pub(crate) fn revoke(&self) -> Result<()> {
         self.inner.state.lock().map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?
             .revoked = true;
@@ -249,9 +259,10 @@ impl HostWorkerIssuer {
             &[noble_kernel::types::Ty::I64], self.policy.clone(), work)
     }
 
-    pub(crate) fn invoke(&self, source: &mut ProgramStore, root: Handle, operand: i64)
+    pub(crate) fn invoke(&self, source: &mut ProgramStore, root: Handle, operand: i64,
+                         iterations: i64)
         -> std::result::Result<Observation, GuestFailure> {
-        execute_with_host_grant(source, root, operand, &self.policy)
+        execute_with_host_grant(source, root, operand, iterations, &self.policy)
     }
 
     pub(crate) fn revoke(&self) -> Result<()> { self.policy.revoke() }
@@ -270,12 +281,17 @@ pub(super) struct TaskOwner {
     scope: u64,
     state: std::sync::Arc<std::sync::Mutex<TaskState>>,
     policy: Option<WorkerHostPolicy>,
+    #[cfg(test)]
+    between_steps: Option<(std::sync::mpsc::Sender<()>,
+        std::sync::Arc<std::sync::Mutex<std::sync::mpsc::Receiver<()>>>)>,
 }
 impl TaskOwner {
     pub(super) fn new(scope: u64) -> Self {
         Self { scope, state: std::sync::Arc::new(std::sync::Mutex::new(
             TaskState { phase: Phase::Ready, result: None, engine: None })),
-            policy: None }
+            policy: None,
+            #[cfg(test)]
+            between_steps: None }
     }
     fn for_source(source: &ProgramStore) -> Self {
         let mut task = Self::new(source.instance_id());
@@ -722,7 +738,7 @@ fn bind_named(store: &mut Store<Host>, instance: wasmtime::Instance,
 
 fn bind_installed(store: &mut Store<Host>, instance: wasmtime::Instance,
                   source: &ProgramStore, root: Handle) -> Result<ProgramCell> {
-    let index = source.node_index(root).context("foreign or stale Program node")?;
+    let index = source.node_index(root).ok_or(ForeignOrStaleProgramNode)?;
     let (input, output, effects) = source.interface(root)
         .context("missing selected Program witness")?;
     let selected_effects = match source.host_policy() {
@@ -904,6 +920,29 @@ pub(super) enum GuestFailure {
     Invalid(anyhow::Error),
 }
 
+#[derive(Debug)]
+struct ForeignOrStaleProgramNode;
+impl std::fmt::Display for ForeignOrStaleProgramNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("foreign or stale Program node")
+    }
+}
+impl std::error::Error for ForeignOrStaleProgramNode {}
+
+#[derive(Clone, Copy)]
+struct BatchIterations(u16);
+impl BatchIterations {
+    const ONE: Self = Self(1);
+
+    fn checked(value: i64) -> std::result::Result<Self, GuestFailure> {
+        u16::try_from(value).ok()
+            .filter(|count| (1..=BATCH_ITERATION_LIMIT).contains(count))
+            .map(Self)
+            .ok_or_else(|| GuestFailure::Invalid(anyhow::anyhow!(
+                "Worker batch iteration count must be 1..=512")))
+    }
+}
+
 #[derive(Clone, Copy)]
 enum GuestAction<'a> { Invoke, CodeExport(&'a str), CoreCodeExport }
 
@@ -958,36 +997,43 @@ pub(super) fn attest(source: &ProgramStore, root: Handle) -> Result<[u8;32]> {
 
 /// The selected guest is always rebuilt from the WIT and Noble body retained
 /// here; no package or caller-supplied component binary is installed.
-pub(super) fn execute(source: &mut ProgramStore, root: Handle, operand: i64)
+pub(super) fn execute(source: &mut ProgramStore, root: Handle, operand: i64, iterations: i64)
     -> std::result::Result<Observation, GuestFailure> {
+    let iterations = BatchIterations::checked(iterations)?;
+    source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
     let task = TaskOwner::for_source(source);
-    execute_with_task(source, root, operand, &task)
+    execute_reserved_with_task(source, root, operand, iterations, &task,
+        GuestAction::Invoke, false, false).map_err(GuestFailure::Invalid)
 }
 
 /// Only an embedder holding the selected policy may explicitly issue a fresh
 /// installed source cell; CLI entrypoints always use `execute` instead.
 pub(crate) fn execute_with_host_grant(source: &mut ProgramStore, root: Handle, operand: i64,
-                                     policy: &WorkerHostPolicy)
+                                     iterations: i64, policy: &WorkerHostPolicy)
     -> std::result::Result<Observation, GuestFailure> {
+    let iterations = BatchIterations::checked(iterations)?;
     if !source.host_policy().is_some_and(|selected|
         std::sync::Arc::ptr_eq(&selected.inner, &policy.inner)) {
         return Err(GuestFailure::Invalid(anyhow::anyhow!("foreign Worker host policy")));
     }
-    let task = TaskOwner::for_source(source);
     source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
-    execute_reserved_with_task(source, root, operand, &task, GuestAction::Invoke, true, false)
+    let task = TaskOwner::for_source(source);
+    execute_reserved_with_task(source, root, operand, iterations, &task,
+        GuestAction::Invoke, true, false)
         .map_err(GuestFailure::Invalid)
 }
 
 pub(super) fn execute_with_task(source: &mut ProgramStore, root: Handle,
-                                operand: i64, task: &TaskOwner)
+                                operand: i64, iterations: i64, task: &TaskOwner)
     -> std::result::Result<Observation, GuestFailure> {
+    let iterations = BatchIterations::checked(iterations)?;
     if source.host_policy().is_some_and(|policy| !task.policy.as_ref().is_some_and(
         |selected| std::sync::Arc::ptr_eq(&selected.inner, &policy.inner))) {
         return Err(GuestFailure::Invalid(anyhow::anyhow!("unbound Worker policy task")));
     }
     source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
-    execute_reserved_with_task(source, root, operand, task, GuestAction::Invoke, false, false)
+    execute_reserved_with_task(source, root, operand, iterations, task,
+        GuestAction::Invoke, false, false)
         .map_err(GuestFailure::Invalid)
 }
 
@@ -1008,7 +1054,7 @@ pub(crate) fn request_code_export(source: &mut ProgramStore, root: Handle, opera
     }
     source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
     let task = TaskOwner::for_source(source);
-    let observation = execute_reserved_with_task(source, root, operand, &task,
+    let observation = execute_reserved_with_task(source, root, operand, BatchIterations::ONE, &task,
         GuestAction::CodeExport(destination), false, false).map_err(GuestFailure::Invalid)?;
     Ok(serde_json::json!({
         "schema":"noble-worker-program-code-export/v2",
@@ -1031,7 +1077,7 @@ pub(crate) fn request_core_code_export(source: &mut ProgramStore, root: Handle, 
         "unselected source export effect");
     source.reserve_guest().map_err(|_| anyhow::anyhow!("Core export work exhausted"))?;
     let task = TaskOwner::for_source(source);
-    let observed = execute_reserved_with_task(source, root, operand, &task,
+    let observed = execute_reserved_with_task(source, root, operand, BatchIterations::ONE, &task,
         GuestAction::CoreCodeExport, false, false)?;
     Ok(serde_json::json!({
         "schema":"noble-worker-program-core-code-export/v1",
@@ -1069,6 +1115,7 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
         || -> Result<serde_json::Value> {
         use std::io::Read;
         ensure!(arguments.len() == 4 && ["emit", "emit-wrong", "emit-ledger-denied",
+            "emit-request-denied",
             "emit-panic", "emit-revoked",
             "wit-export", "core-export"].iter().any(|mode| arguments[3] == *mode),
             "unsupported Worker test host mode");
@@ -1077,7 +1124,7 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
         // The fixture source, unlike stdin, is chosen before evaluating any
         // candidate bytes. No arbitrary checked candidate can select a grant.
         let trusted_source = match mode {
-            "emit" => HOST_EMIT_SOURCE.to_vec(),
+            "emit" | "emit-request-denied" => HOST_EMIT_SOURCE.to_vec(),
             "emit-wrong" => HOST_WRONG_RESULT_SOURCE.to_vec(),
             "emit-ledger-denied" => host_ledger_denial_source(),
             "emit-panic" | "emit-revoked" => HOST_EMIT_SOURCE.to_vec(),
@@ -1132,17 +1179,28 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
         });
         if emit {
             let issuer = HostWorkerIssuer { policy };
-            if mode == "emit-ledger-denied" {
-                // The fifth actual callback exceeds the unchanged ledger-byte
-                // quota after four committed appends; no result is delivered.
+            if mode == "emit-ledger-denied" || mode == "emit-request-denied" {
+                // These controls have distinct unchanged quotas. One source
+                // invocation reaches the fifth ledger-byte refusal; 257
+                // checked invocations reach the effect-request refusal.
+                let request_limit = mode == "emit-request-denied";
                 guest_attempted = true;
-                let invocation = issuer.invoke(&mut selected, root, 41);
+                let invocation = issuer.invoke(&mut selected, root, 41,
+                    if request_limit { 257 } else { 1 });
                 let receipt = issuer.receipt()?;
-                let exact_denial = receipt["effect_requests"] == 5
-                    && receipt["protected_operations"] == 4
-                    && receipt["denied_requests"] == 1
-                    && receipt["ledger_entries"] == 4
-                    && receipt["ledger_bytes"] == 209_716;
+                let exact_denial = if request_limit {
+                    receipt["effect_requests"] == 257
+                        && receipt["protected_operations"] == 256
+                        && receipt["denied_requests"] == 1
+                        && receipt["ledger_entries"] == 256
+                        && receipt["ledger_bytes"] == 5_376
+                } else {
+                    receipt["effect_requests"] == 5
+                        && receipt["protected_operations"] == 4
+                        && receipt["denied_requests"] == 1
+                        && receipt["ledger_entries"] == 4
+                        && receipt["ledger_bytes"] == 209_716
+                };
                 return Ok(match invocation {
                     Err(GuestFailure::Invalid(_)) if exact_denial => serde_json::json!({
                         "schema":"noble-worker-program-test-host/v1","outcome":"guest-trapped",
@@ -1164,7 +1222,7 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
             }
             if mode == "emit-panic" {
                 guest_attempted = true;
-                let observed = issuer.invoke(&mut selected, root, 41)
+                let observed = issuer.invoke(&mut selected, root, 41, 1)
                     .map_err(|_| anyhow::anyhow!("pre-panic Worker invocation refused"))?;
                 ensure!(observed.protected_operations == 1,
                     "host panic fixture never committed its protected effect");
@@ -1175,8 +1233,7 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
                     .map_err(|_| anyhow::anyhow!("revoked Worker work exhausted"))?;
                 let task = TaskOwner::for_source(&selected);
                 guest_attempted = true;
-                let denied = execute_reserved_with_task(&selected, root, 41, &task,
-                    GuestAction::Invoke, true, true).is_err();
+                let denied = execute_reserved_with_task(&selected, root, 41, BatchIterations::ONE, &task, GuestAction::Invoke, true, true).is_err();
                 let receipt = issuer.receipt()?;
                 ensure!(denied && receipt["effect_requests"] == 1
                     && receipt["protected_operations"] == 0
@@ -1190,17 +1247,17 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
             }
             let cancelled_task = TaskOwner::for_source(&selected);
             cancelled_task.cancel(selected.instance_id())?;
-            let cancelled = execute_with_task(&mut selected, root, 41, &cancelled_task).is_err();
+            let cancelled = execute_with_task(&mut selected, root, 41, 1, &cancelled_task).is_err();
             guest_attempted = true;
-            let before = execute(&mut selected, root, 41).is_err();
-            let issued = issuer.invoke(&mut selected, root, 41)
+            let before = execute(&mut selected, root, 41, 1).is_err();
+            let issued = issuer.invoke(&mut selected, root, 41, 1)
                 .map_err(|_| anyhow::anyhow!("issued Worker invocation refused"))?;
-            let stale_install = execute(&mut selected, root, 41).is_err();
+            let stale_install = execute(&mut selected, root, 41, 1).is_err();
             let (mut fresh, fresh_root) = issuer.prepare(&source, name, 70_000_000)
                 .map_err(|_| anyhow::anyhow!("fresh Worker session refused"))?;
-            let cross_install = execute(&mut fresh, fresh_root, 41).is_err();
+            let cross_install = execute(&mut fresh, fresh_root, 41, 1).is_err();
             issuer.revoke()?;
-            let revoked = execute(&mut selected, root, 41).is_err();
+            let revoked = execute(&mut selected, root, 41, 1).is_err();
             let receipt = issuer.receipt()?;
             ensure!(cancelled && before && stale_install && cross_install && revoked
                 && issued.effect_requests == 1
@@ -1272,10 +1329,12 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
 }
 
 fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
-                              operand: i64, task: &TaskOwner,
+                              operand: i64, iterations: BatchIterations, task: &TaskOwner,
                               action: GuestAction<'_>, grant: bool,
                               revoke_after_issue: bool) -> Result<Observation> {
     ensure!(!revoke_after_issue || grant, "cannot revoke an unissued Program");
+    ensure!(matches!(action, GuestAction::Invoke) || iterations.0 == 1,
+        "only checked Program invocation supports a Worker batch");
     ensure!(task.scope == source.instance_id(), "foreign Program task context");
     let mut scope = ExecutionScope::new(task, source.host_policy());
     ensure!(!task.cancelled()?, "Program task cancelled before guest admission");
@@ -1312,36 +1371,59 @@ fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
     store.set_fuel(FUEL)?;
     let guest = linker.instantiate(&mut store, &guest)?;
     let compute = guest.get_typed_func::<(i64,),(i64,)>(&mut store,"compute")?;
-    let (value,) = match compute.call(&mut store,(operand,)) {
-        Ok(value) if !matches!(action, GuestAction::CoreCodeExport) => value,
-        Ok(_) => bail!("source code-export effect unexpectedly returned"),
-        Err(_) if matches!(action, GuestAction::CoreCodeExport) => {
-            let host = store.data();
-            ensure!(host.admits == 1 && host.code_export_requests == 1
-                && host.code_export_denials == 1 && host.protected_operations == 0
-                && !host.capture_published && host.invokes == 0,
-                "source effect failed without an exact denied Core export request");
-            return Ok(Observation { value: operand, admits: host.admits,
-                invokes: host.invokes, live_owners: host.live_owners,
-                effect_requests: host.effect_requests,
-                protected_operations: host.protected_operations,
-                code_export_requests: host.code_export_requests,
-                code_export_denials: host.code_export_denials,
-                capture_published: host.capture_published })
+    let mut value = operand;
+    for step in 0..u32::from(iterations.0) {
+        #[cfg(test)]
+        if step == 1 {
+            if let Some((ready, resume)) = &task.between_steps {
+                ready.send(()).context("batch step test synchronization failed")?;
+                resume.lock().map_err(|_| anyhow::anyhow!("batch step test lock poisoned"))?
+                    .recv_timeout(std::time::Duration::from_secs(30))
+                    .context("batch step test continuation timed out")?;
+            }
         }
-        Err(problem) => return Err(problem),
-    };
-    compute.post_return(&mut store)?;
-    let host = store.data();
-    if matches!(action, GuestAction::Invoke) {
-        ensure!(host.admits == 1 && host.invokes == 1 && host.live_owners == 0
-            && host.code_export_requests == 0, "guest did not consume its Program owner");
-    } else {
-        ensure!(host.admits == 1 && host.invokes == 0 && host.live_owners == 0
-            && host.code_export_requests == 1 && host.code_export_denials == 1
-            && host.protected_operations == 0 && !host.capture_published,
-            "code-export request did not remain a single protected-work-free denial");
+        if step != 0 {
+            if grant {
+                scope.policy.context("missing Worker batch issuer")?.continue_issued(
+                    scope.issued.context("missing issued Worker batch cell")?, task)?;
+            } else {
+                ensure!(task.running()?, "Worker batch task retired between iterations");
+            }
+        }
+        let (next,) = match compute.call(&mut store,(value,)) {
+            Ok(next) if !matches!(action, GuestAction::CoreCodeExport) => next,
+            Ok(_) => bail!("source code-export effect unexpectedly returned"),
+            Err(_) if matches!(action, GuestAction::CoreCodeExport) => {
+                let host = store.data();
+                ensure!(host.admits == 1 && host.code_export_requests == 1
+                    && host.code_export_denials == 1 && host.protected_operations == 0
+                    && !host.capture_published && host.invokes == 0,
+                    "source effect failed without an exact denied Core export request");
+                return Ok(Observation { value: operand, admits: host.admits,
+                    invokes: host.invokes, live_owners: host.live_owners,
+                    effect_requests: host.effect_requests,
+                    protected_operations: host.protected_operations,
+                    code_export_requests: host.code_export_requests,
+                    code_export_denials: host.code_export_denials,
+                    capture_published: host.capture_published })
+            }
+            Err(problem) => return Err(problem),
+        };
+        compute.post_return(&mut store)?;
+        let host = store.data();
+        if matches!(action, GuestAction::Invoke) {
+            ensure!(host.admits == step + 1 && host.invokes == step + 1
+                && host.live_owners == 0 && host.code_export_requests == 0,
+                "guest did not consume exactly one checked Program owner per iteration");
+        } else {
+            ensure!(host.admits == 1 && host.invokes == 0 && host.live_owners == 0
+                && host.code_export_requests == 1 && host.code_export_denials == 1
+                && host.protected_operations == 0 && !host.capture_published,
+                "code-export request did not remain a single protected-work-free denial");
+        }
+        value = next;
     }
+    let host = store.data();
     task.complete(value)?;
     let value = task.recall(source.instance_id())?
         .context("Program completion retired before recall")?;
@@ -1399,23 +1481,23 @@ mod tests {
         let policy = host_selected_policy(source, false);
         let (mut selected, root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], policy.clone(), 160_000_000).unwrap();
-        assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))),
+        assert!(matches!(execute(&mut selected, root, 41, 1), Err(GuestFailure::Invalid(_))),
             "selection before checked installation is never an effect grant");
         assert_eq!(policy.counts().unwrap(), (1, 0));
-        let observed = execute_with_host_grant(&mut selected, root, 41, &policy).unwrap();
+        let observed = execute_with_host_grant(&mut selected, root, 41, 1, &policy).unwrap();
         assert_eq!(observed.value, 42);
         assert_eq!((observed.effect_requests, observed.protected_operations), (1, 1));
         assert_eq!(policy.counts().unwrap(), (2, 1));
         assert_eq!(policy.ledger().unwrap(),
             [("local-test-destination".into(), "audit".into())]);
-        assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))),
+        assert!(matches!(execute(&mut selected, root, 41, 1), Err(GuestFailure::Invalid(_))),
             "a fresh installation with the same source, slot and address has no grant");
         assert_eq!(policy.counts().unwrap(), (3, 1));
-        assert_eq!(execute_with_host_grant(&mut selected, root, 41, &policy)
+        assert_eq!(execute_with_host_grant(&mut selected, root, 41, 1, &policy)
             .unwrap().value, 42);
         assert_eq!(policy.counts().unwrap(), (4, 2));
         policy.revoke().unwrap();
-        assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))),
+        assert!(matches!(execute(&mut selected, root, 41, 1), Err(GuestFailure::Invalid(_))),
             "the same source and WIT owner cannot reuse a revoked host grant");
         assert_eq!(policy.counts().unwrap(), (5, 2));
         assert_eq!(policy.receipt().unwrap()["denied_requests"], 3);
@@ -1424,7 +1506,7 @@ mod tests {
         let denied = host_selected_policy(source, false);
         let (mut selected, root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], denied.clone(), 70_000_000).unwrap();
-        assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))));
+        assert!(matches!(execute(&mut selected, root, 41, 1), Err(GuestFailure::Invalid(_))));
         assert_eq!(denied.counts().unwrap(), (1, 0));
         assert_eq!(denied.receipt().unwrap()["denied_requests"], 1);
         assert!(denied.ledger().unwrap().is_empty());
@@ -1433,7 +1515,7 @@ mod tests {
         let (mut selected, root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], revoked.clone(), 70_000_000).unwrap();
         revoked.revoke().unwrap();
-        assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))));
+        assert!(matches!(execute(&mut selected, root, 41, 1), Err(GuestFailure::Invalid(_))));
         assert_eq!(revoked.counts().unwrap(), (1, 0));
         assert!(revoked.ledger().unwrap().is_empty());
 
@@ -1441,7 +1523,7 @@ mod tests {
         let (mut selected, root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], expired.clone(), 70_000_000).unwrap();
         expired.advance_epoch(2).unwrap();
-        assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))));
+        assert!(matches!(execute(&mut selected, root, 41, 1), Err(GuestFailure::Invalid(_))));
         assert_eq!(expired.counts().unwrap(), (1, 0));
         assert!(expired.ledger().unwrap().is_empty());
 
@@ -1450,7 +1532,7 @@ mod tests {
             source, "plus", &[Ty::I64], cancelled.clone(), 70_000_000).unwrap();
         let task = TaskOwner::for_source(&selected);
         assert!(task.cancel(selected.instance_id()).unwrap());
-        assert!(matches!(execute_with_task(&mut selected, root, 41, &task),
+        assert!(matches!(execute_with_task(&mut selected, root, 41, 1, &task),
             Err(GuestFailure::Invalid(_))));
         assert_eq!(cancelled.counts().unwrap(), (0, 0));
         assert!(cancelled.ledger().unwrap().is_empty());
@@ -1530,7 +1612,7 @@ mod tests {
         let (mut selected, root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
         let composed = selected.compose(root, root).unwrap();
-        let observed = execute_with_host_grant(&mut selected, composed, 41, &policy).unwrap();
+        let observed = execute_with_host_grant(&mut selected, composed, 41, 1, &policy).unwrap();
         assert_eq!(observed.value, 43);
         assert_eq!((observed.effect_requests, observed.protected_operations), (2, 2));
         assert_eq!(policy.ledger().unwrap(), [
@@ -1585,7 +1667,7 @@ mod tests {
         assert!(!report.to_string().contains("module ledger"));
         assert_eq!(policy.counts().unwrap(), (0, 0));
         assert!(policy.ledger().unwrap().is_empty());
-        let denied_source_invoke = match execute(&mut selected, root, 41) {
+        let denied_source_invoke = match execute(&mut selected, root, 41, 1) {
             Ok(_) => panic!("unissued code-export source effect unexpectedly succeeded"),
             Err(error) => error,
         };
@@ -1703,12 +1785,12 @@ mod tests {
         let policy = host_selected_policy(source, false);
         let (mut first, first_root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
-        assert_eq!(execute_with_host_grant(&mut first, first_root, 41, &policy)
+        assert_eq!(execute_with_host_grant(&mut first, first_root, 41, 1, &policy)
             .unwrap().value, 42);
         let (mut fresh, fresh_root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
         assert_ne!(first.instance_id(), fresh.instance_id());
-        assert!(matches!(execute(&mut fresh, fresh_root, 41),
+        assert!(matches!(execute(&mut fresh, fresh_root, 41, 1),
             Err(GuestFailure::Invalid(_))));
         assert_eq!(policy.counts().unwrap(), (2, 1));
         assert_eq!(policy.ledger().unwrap().len(), 1);
@@ -1739,11 +1821,120 @@ mod tests {
         let (mut source, root) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
             "increment", &[Ty::I64], 70_000_000).unwrap();
-        let observed = execute(&mut source, root, 41).unwrap();
+        let observed = execute(&mut source, root, 41, 1).unwrap();
         assert_eq!(observed.value, 42);
         assert_eq!((observed.admits, observed.invokes, observed.live_owners), (1,1,0));
-        let observed = execute(&mut source, root, -2).unwrap();
+        let observed = execute(&mut source, root, -2, 1).unwrap();
         assert_eq!(observed.value, -1);
+    }
+
+    #[test]
+    fn checked_pure_batch_feeds_each_result_through_a_fresh_linear_owner() {
+        let (mut source, root) = ProgramStore::prepare(
+            b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
+            "increment", &[Ty::I64], 70_000_000).unwrap();
+        let two = execute(&mut source, root, 41, 2).unwrap();
+        assert_eq!(two.value, 43);
+        assert_eq!((two.admits, two.invokes, two.live_owners), (2, 2, 0));
+        assert_eq!((two.effect_requests, two.protected_operations), (0, 0));
+        let three = execute(&mut source, root, 41, 3).unwrap();
+        assert_eq!(three.value, 44);
+        assert_eq!((three.admits, three.invokes, three.live_owners), (3, 3, 0));
+    }
+
+    #[test]
+    fn checked_pure_batch_accepts_512_real_guest_invocations() {
+        let (mut source, root) = ProgramStore::prepare(
+            b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
+            "increment", &[Ty::I64], 70_000_000).unwrap();
+        let observed = execute(&mut source, root, 41, 512).unwrap();
+        assert_eq!(observed.value, 553);
+        assert_eq!((observed.admits, observed.invokes, observed.live_owners), (512, 512, 0));
+        assert_eq!((observed.effect_requests, observed.protected_operations), (0, 0));
+    }
+
+    #[test]
+    fn invalid_batch_counts_and_foreign_grants_never_reach_effect_callback() {
+        let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
+        let policy = host_selected_policy(source, false);
+        let (mut selected, root) = ProgramStore::prepare_with_policy(
+            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
+        for count in [0, -1, 513] {
+            assert!(matches!(execute_with_host_grant(&mut selected, root, 41, count, &policy),
+                Err(GuestFailure::Invalid(_))));
+        }
+        assert_eq!(policy.counts().unwrap(), (0, 0));
+        assert!(policy.ledger().unwrap().is_empty());
+
+        let foreign = host_selected_policy(source, false);
+        assert!(matches!(execute_with_host_grant(&mut selected, root, 41, 2, &foreign),
+            Err(GuestFailure::Invalid(_))));
+        assert_eq!(policy.counts().unwrap(), (0, 0));
+        assert_eq!(foreign.counts().unwrap(), (0, 0));
+        let observed = execute_with_host_grant(&mut selected, root, 41, 2, &policy).unwrap();
+        assert_eq!(observed.value, 43);
+        assert_eq!((observed.admits, observed.invokes, observed.live_owners), (2, 2, 0));
+        assert_eq!((observed.effect_requests, observed.protected_operations), (2, 2));
+        assert_eq!(policy.ledger().unwrap().len(), 2);
+
+        let (mut pure, pure_root) = ProgramStore::prepare(
+            b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
+            "increment", &[Ty::I64], 70_000_000).unwrap();
+        for count in [0, -1, 513] {
+            assert!(matches!(execute(&mut pure, pure_root, 41, count),
+                Err(GuestFailure::Invalid(_))));
+        }
+        assert_eq!(execute(&mut pure, pure_root, 41, 2).unwrap().value, 43);
+    }
+
+    fn interrupted_batch_cannot_deliver_or_append_after_ack(cancel: bool) {
+        use std::sync::{Arc, Mutex, mpsc};
+        use std::time::Duration;
+
+        let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
+        let policy = host_selected_policy(source, false);
+        let (mut selected, root) = ProgramStore::prepare_with_policy(
+            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
+        selected.reserve_guest().unwrap();
+        let (ready, arrived) = mpsc::channel();
+        let (resume, release) = mpsc::channel();
+        let mut task = TaskOwner::for_source(&selected);
+        task.between_steps = Some((ready, Arc::new(Mutex::new(release))));
+        let instance = selected.instance_id();
+        let result = std::thread::scope(|threads| {
+            let stop_policy = &policy;
+            let stop_task = &task;
+            let stop = threads.spawn(move || {
+                arrived.recv_timeout(Duration::from_secs(30)).unwrap();
+                assert_eq!(stop_policy.counts().unwrap(), (1, 1));
+                if cancel {
+                    assert!(stop_task.cancel(instance).unwrap());
+                } else {
+                    stop_policy.revoke().unwrap();
+                }
+                resume.send(()).unwrap();
+            });
+            let result = execute_reserved_with_task(&selected, root, 41, BatchIterations(3),
+                &task, GuestAction::Invoke, true, false);
+            stop.join().unwrap();
+            result
+        });
+        assert!(result.is_err(), "a stopped batch must not deliver a partial I64");
+        assert_eq!(policy.counts().unwrap(), (1, 1));
+        assert_eq!(policy.receipt().unwrap()["denied_requests"], 0);
+        assert_eq!(policy.ledger().unwrap().len(), 1);
+        assert!(task.recall(selected.instance_id()).unwrap().is_none());
+        assert!(policy.inner.state.lock().unwrap().issued.is_none());
+    }
+
+    #[test]
+    fn cancelled_batch_stops_between_committed_steps() {
+        interrupted_batch_cannot_deliver_or_append_after_ack(true);
+    }
+
+    #[test]
+    fn revoked_batch_stops_between_committed_steps() {
+        interrupted_batch_cannot_deliver_or_append_after_ack(false);
     }
 
     #[test]
@@ -1754,10 +1945,10 @@ mod tests {
         let double = source.checked_root(0).unwrap();
         let adapted = source.adapt(root, &noble_kernel::types::EffSet::empty()).unwrap();
         let chosen = source.select(&[adapted, double], 1).unwrap();
-        assert_eq!(execute(&mut source, chosen, 3).unwrap().value, 6);
+        assert_eq!(execute(&mut source, chosen, 3, 1).unwrap().value, 6);
         let composed = source.compose(root, double).unwrap();
         assert!(source.recipe_edges(composed).is_some());
-        let observed = execute(&mut source, composed, 3).unwrap();
+        let observed = execute(&mut source, composed, 3, 1).unwrap();
         assert_eq!(observed.value, 14);
         assert_eq!(observed.live_owners, 0);
     }
@@ -1769,7 +1960,7 @@ mod tests {
             "increment", &[Ty::I64], 50_000_000).unwrap();
         let widened = source.adapt(root, &noble_kernel::types::EffSet::from_ids(
             &[noble_kernel::contracts::TEST_EMIT])).unwrap();
-        assert!(matches!(execute(&mut source, widened, 41), Err(GuestFailure::Invalid(_))),
+        assert!(matches!(execute(&mut source, widened, 41, 1), Err(GuestFailure::Invalid(_))),
             "an adapted effect witness alone cannot enter the pure Worker guest");
     }
 
@@ -1780,7 +1971,7 @@ mod tests {
             "increment", &[Ty::I64], 50_000_000).unwrap();
         assert_eq!(source.text_aliases().len(), 2);
         assert_ne!(source.text_aliases()[0].node, source.text_aliases()[1].node);
-        assert_eq!(execute(&mut source, root, 41).unwrap().value, 42);
+        assert_eq!(execute(&mut source, root, 41, 1).unwrap().value, 42);
     }
 
     #[test]
@@ -1792,15 +1983,17 @@ mod tests {
         assert_ne!(source.source_owner_identity(helper), source.source_owner_identity(root));
         assert_eq!(source.text_aliases().len(), 2);
         assert_eq!(source.text_aliases()[0].bytes, source.text_aliases()[1].bytes);
-        assert_eq!(execute(&mut source, root, 3).unwrap().value, 7);
-        assert_eq!(execute(&mut source, helper, 3).unwrap().value, 6);
+        assert_eq!(execute(&mut source, root, 3, 1).unwrap().value, 7);
+        assert_eq!(execute(&mut source, helper, 3, 1).unwrap().value, 6);
         let composed = source.compose(helper, root).unwrap();
         assert!(source.source_owner_identity(composed).is_none(),
             "a composition is not a source-named owner");
-        assert_eq!(execute(&mut source, composed, 3).unwrap().value, 13);
+        assert_eq!(execute(&mut source, composed, 3, 1).unwrap().value, 13);
         let (mut fresh, _) = ProgramStore::prepare(
             bytes, "plus", &[Ty::I64], 50_000_000).unwrap();
-        assert!(matches!(execute(&mut fresh, helper, 3), Err(GuestFailure::Invalid(_))),
+        assert!(matches!(execute(&mut fresh, helper, 3, 1),
+            Err(GuestFailure::Invalid(problem))
+                if problem.downcast_ref::<ForeignOrStaleProgramNode>().is_some()),
             "a dependency handle cannot cross a fresh source installation");
     }
 
@@ -1808,13 +2001,17 @@ mod tests {
     fn checked_foreign_instance_handle_cannot_be_installed_in_guest() {
         let (first, root) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
-            "increment", &[Ty::I64], 1_000_000).unwrap();
+            "increment", &[Ty::I64], 50_000_000).unwrap();
         let (mut other, _) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def decrement [ 1 - ] export decrement ]",
             "decrement", &[Ty::I64], 50_000_000).unwrap();
         assert!(first.named(root).is_some());
-        assert!(execute(&mut other, root, 3).is_err(),
-            "another checked module cannot receive a foreign Program owner");
+        assert_ne!(first.instance_id(), other.instance_id());
+        assert!(other.interface(root).is_none());
+        assert!(matches!(execute(&mut other, root, 3, 1),
+            Err(GuestFailure::Invalid(problem))
+                if problem.downcast_ref::<ForeignOrStaleProgramNode>().is_some()),
+            "another checked module must reject its foreign Program owner before guest admission");
     }
 
     #[test]
@@ -1824,10 +2021,10 @@ mod tests {
             "increment", &[Ty::I64], 80_000_000).unwrap();
         let cancelled = TaskOwner::new(source.instance_id());
         assert!(cancelled.cancel(source.instance_id()).unwrap());
-        assert!(execute_with_task(&mut source, root, 41, &cancelled).is_err());
+        assert!(execute_with_task(&mut source, root, 41, 1, &cancelled).is_err());
         let delivered = TaskOwner::new(source.instance_id());
-        assert_eq!(execute_with_task(&mut source, root, 41, &delivered).unwrap().value, 42);
-        assert!(execute_with_task(&mut source, root, 7, &delivered).is_err(),
+        assert_eq!(execute_with_task(&mut source, root, 41, 1, &delivered).unwrap().value, 42);
+        assert!(execute_with_task(&mut source, root, 7, 1, &delivered).is_err(),
             "one delivered task must not mint a second Program owner");
     }
 }

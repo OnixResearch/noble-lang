@@ -106,6 +106,34 @@ fn selected_host_ledger_denial_and_failures_preserve_committed_effects()
     Ok(())
 }
 
+#[test]
+fn effect_request_quota_denies_257th_checked_callback_after_256_commits()
+    -> Result<(), Box<dyn std::error::Error>> {
+    let changed = EMIT.replace("1 +", "2 +");
+    let (unselected, stdout, stderr) = child("emit-request-denied", &changed)?;
+    assert!(unselected["outcome"] == "invalid-input");
+    assert!(unselected["receipt"]["effect_requests"] == 0);
+    assert!(unselected["receipt"]["protected_operations"] == 0);
+    redacted(&stdout, &stderr, &changed, &["private-ledger-marker"]);
+
+    let (failure, stdout, stderr) = child("emit-request-denied", EMIT)?;
+    assert!(failure["outcome"] == "guest-trapped");
+    assert!(failure["operation"] == "test.emit");
+    assert!(failure["guest_trapped"] == true);
+    assert!(failure["guest_failure_kind"] == "source-effect-denied");
+    assert!(failure["receipt"]["effect_requests"] == 257);
+    assert!(failure["receipt"]["protected_operations"] == 256);
+    assert!(failure["receipt"]["denied_requests"] == 1);
+    assert!(failure["receipt"]["succeeded"] == 256);
+    assert!(failure["receipt"]["ledger_entries"] == 256);
+    assert!(failure["receipt"]["ledger_bytes"] == 5_376);
+    assert!(failure["receipt"]["unknown_after_attempt"] == 0);
+    assert!(failure.get("issued_value").is_none(),
+        "the denied callback must not deliver the prior successful I64");
+    redacted(&stdout, &stderr, EMIT, &["private-ledger-marker"]);
+    Ok(())
+}
+
 fn redacted(stdout: &[u8], stderr: &[u8], source: &str, markers: &[&str]) {
     let combined = [stdout, stderr].concat();
     let text = String::from_utf8(combined).unwrap_or_else(|_|

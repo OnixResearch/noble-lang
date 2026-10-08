@@ -764,7 +764,7 @@ fn guest_package(arguments: &[std::ffi::OsString])
 
 fn guest_report(store: &mut Store, root: Handle, operand: i64, origin: &'static str)
     -> Result<Value, (&'static str, &'static str)> {
-    let observed = super::worker_program_guest::execute(store, root, operand)
+    let observed = super::worker_program_guest::execute(store, root, operand, 1)
         .map_err(|failure| match failure {
             super::worker_program_guest::GuestFailure::Exhausted => refusal(Refusal::Exhausted),
             super::worker_program_guest::GuestFailure::Invalid(problem) =>
@@ -921,7 +921,7 @@ mod tests {
         assert!(document["capture_binding_blake3"].as_str().is_some());
         let (mut imported, selected) = Store::import(&encoded, RUNTIME_REQUEST_WORK)
             .expect("freshly attested Text package");
-        assert_eq!(crate::core::worker_program_guest::execute(&mut imported, selected, 41)
+        assert_eq!(crate::core::worker_program_guest::execute(&mut imported, selected, 41, 1)
             .unwrap().value, 42, "imported Text must rebind before guest invocation");
         document["captures"][0]["text_utf8"] = json!("forged");
         let forged = serde_json::to_vec(&document).unwrap();
@@ -943,7 +943,7 @@ mod tests {
         let package = store.export(composed, "private", &grant).unwrap();
         let (mut imported, selected) = Store::import(&package, RUNTIME_REQUEST_WORK).unwrap();
         assert_eq!(imported.recipe_edges(selected), Some((root.node,double.node)));
-        assert_eq!(crate::core::worker_program_guest::execute(&mut imported, selected, 3)
+        assert_eq!(crate::core::worker_program_guest::execute(&mut imported, selected, 3, 1)
             .unwrap().value, 14, "freshly imported graph must execute its selected composition");
         let mut claim: Value = serde_json::from_slice(&package).unwrap();
         claim["graph"][2]["first"] = json!(0);

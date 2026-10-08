@@ -74,15 +74,19 @@ pub const USAGE: &str = "usage:
   CLI until an authenticated host-owned grant exists; file JSON cannot grant it.
   A test.emit package/ceiling is refused: the host-only bound adapter and
   revocable effect policy require an explicit embedder, never a CLI argument.
-  noble worker program test-host emit|emit-wrong|emit-ledger-denied|emit-panic|emit-revoked|wit-export|core-export < FIXTURE_SOURCE
+  noble worker program test-host emit|emit-wrong|emit-ledger-denied|emit-request-denied|emit-panic|emit-revoked|wit-export|core-export < FIXTURE_SOURCE
   Dedicated finite synthetic test embedder: built-in exact fixture source,
   checked owner, adapter, destination and epoch are chosen before bounded
   untrusted stdin; source mismatch denies before any issue. Only an installed
   allowlisted test.emit cell may be issued. Both export paths always deny.
   The ledger-byte-denial control retains four committed appends before the
   fifth request fails without delivering a result; a caught after-append host
-  panic retains the prior append. The effect-request 257th-call criterion
-  remains open. emit-revoked revokes an issued cell before invocation.
+  panic retains the prior append. The separate request-count control uses one
+  checked source cell and 257 host-selected iterations of the existing WIT
+  guest under one task, Store and issuer; the scoped real child observed 256
+  protected appends, a denied 257th request and no delivered final I64.
+  Canonical WORKER acceptance remains open.
+  emit-revoked revokes an issued cell before invocation.
   It accepts no authority document or caller-selected export destination.
   noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON
   Typed worker: host-select a source-checked WorkerData@1 module and two canonical
