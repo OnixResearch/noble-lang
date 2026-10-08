@@ -112,7 +112,7 @@ function committedApplicationSources() {
   const revision = head.stdout.trim();
   assert.match(revision, /^[0-9a-f]{40}$/);
   const relativeFiles = [
-    ...fs.readdirSync(here).filter(name => /\.(noble|mjs|json)$/.test(name))
+    ...fs.readdirSync(here).filter(name => /\.(noble|mjs|py|json)$/.test(name))
       .map(name => `verification/calculator-app/${name}`),
     'crates/noble-contracts/tests/calculator_capability.rs',
     'specs/CALCULATOR.md',
@@ -133,6 +133,23 @@ function committedApplicationSources() {
   return { head: revision, sources };
 }
 const applicationCommit = committedApplicationSources();
+const oraclePath = path.join(here, 'oracle.py');
+const oracleBinary = process.env.PYTHON3 ?? 'python3';
+function applicationOracle(mode, input, count) {
+  const run = spawnSync(oracleBinary, ['-I', oraclePath, mode,
+    ...(count === undefined ? [] : [String(count)])], {
+    input: input === undefined ? undefined : JSON.stringify(input),
+    encoding: 'utf8', timeout: 30_000, maxBuffer: 1024 * 1024,
+  });
+  assert.equal(run.error, undefined, `application oracle unavailable: ${run.error}`);
+  assert.equal(run.signal, null, `application oracle timeout: ${run.stderr}`);
+  assert.equal(run.status, 0, `application oracle refused: ${run.stderr}`);
+  return JSON.parse(run.stdout);
+}
+const oracleSelfcheck = applicationOracle('--selfcheck');
+const oracleCommands = applicationOracle('--cases');
+assert.equal(oracleSelfcheck.outcome, 'independent-application-oracle-selfcheck');
+assert.equal(oracleSelfcheck.cases, oracleCommands.length);
 const vectors = JSON.parse(fs.readFileSync(path.join(here, 'cases.json')));
 const capabilityFixture = path.join(here, '../../crates/noble-contracts/tests/calculator_capability.rs');
 const capabilityFixtureSha256 = await digestFile(capabilityFixture);
@@ -254,6 +271,8 @@ if (sourceOnly) {
   console.log(JSON.stringify({ outcome: 'source-vectors-reviewed',
     execution: 'not-run', canonical_sha256: await digestFile(selectedCanonicalPath),
     application_commit: applicationCommit,
+    application_oracle: { ...oracleSelfcheck, guest_comparison: 'not-run',
+      implementation_mutant: 'not-run' },
     capability_checker_fixture_sha256: capabilityFixtureSha256,
     retained_replay_accounting: replayAccounting,
     ...(sourceAudit ? { retained_sources: auditReceipt(sourceAudit),
@@ -359,6 +378,7 @@ const commands = [
     const { fraction, category, state_unchanged, display, ...command } = test;
     return command;
   }),
+  ...oracleCommands,
 ];
 const rawControls = [
   { wire: Buffer.from('{"op":"eval","expression":'),
@@ -391,7 +411,7 @@ const compilerBinarySha256 = await digestFile(binary);
 const numericRevisionSha256 = await sourceRevision(numericModules,
   name => name.endsWith('.noble'));
 const applicationRevisionSha256 = await sourceRevision(here,
-  name => /\.(noble|mjs|json)$/.test(name));
+  name => /\.(noble|mjs|py|json)$/.test(name));
 const run = spawnSync(process.execPath,
   [path.join(here, 'shell.mjs'), binary, numericModules, languageRoot,
     ...(opted ? ['--retained-source-bytes', String(OPTED_RETAINED),
@@ -452,7 +472,7 @@ assert.equal(await sourceRevision(numericModules,
   name => name.endsWith('.noble')), numericRevisionSha256,
   'numeric guest source changed during execution');
 assert.equal(await sourceRevision(here,
-  name => /\.(noble|mjs|json)$/.test(name)), applicationRevisionSha256,
+  name => /\.(noble|mjs|py|json)$/.test(name)), applicationRevisionSha256,
   'application guest source changed during execution');
 assert.equal(await digestFile(capabilityFixture), capabilityFixtureSha256,
   'typed capability checker fixture changed during guest execution');
@@ -542,6 +562,10 @@ for (const test of vectors.import_fixtures) {
     if (test.fraction) assert.deepEqual(actual.fraction, test.fraction);
   }
 }
+const independentReplies = replies.slice(cursor, cursor + oracleCommands.length);
+const oracleAgreement = applicationOracle('--check', independentReplies);
+assert.equal(oracleAgreement.outcome, 'application-oracle-agreement');
+cursor += oracleCommands.length;
 for (const control of rawControls) {
   const actual = replies[cursor++];
   if (control.error) {
@@ -558,11 +582,78 @@ for (const control of rawControls) {
     if (control.display) assert.equal(actual.display, control.display);
   }
 }
+// Mutation is applied only to a disposable copy of a committed source module.
+// Run the SAME real shell/guest with its original numeric receipt, then require
+// the independent application oracle to kill the resulting wrong arithmetic.
+function rejectApplicationMutant() {
+  const temporary = fs.mkdtempSync(path.join(process.env.TMPDIR ?? os.tmpdir(),
+    'noble-calculator-mutant-'));
+  try {
+    const copied = fs.readdirSync(here).filter(name => /\.(noble|mjs|py|json)$/.test(name));
+    for (const name of copied) fs.copyFileSync(path.join(here, name), path.join(temporary, name));
+    const mutantModule = path.join(temporary, 'calc_parse.noble');
+    const original = fs.readFileSync(mutantModule, 'utf8');
+    const anchor = 'kind 42 = [ 20 21 ] [';
+    assert.equal(original.split(anchor).length, 2, 'unique multiplication binding-power mutation site absent');
+    const mutated = original.replace(anchor, 'kind 42 = [ 5 6 ] [');
+    fs.writeFileSync(mutantModule, mutated);
+    const mutatedSha = createHash('sha256').update(mutated).digest('hex');
+    for (const name of copied.filter(name => name !== 'calc_parse.noble'))
+      assert.equal(fs.readFileSync(path.join(temporary, name)).compare(fs.readFileSync(path.join(here, name))), 0,
+        `isolated mutant unexpectedly changed ${name}`);
+    const input = Buffer.from(`${JSON.stringify(oracleCommands[0])}\n`);
+    const run = spawnSync(process.execPath,
+      [path.join(temporary, 'shell.mjs'), binary, numericModules, languageRoot,
+        '--retained-source-bytes', String(OPTED_RETAINED),
+        '--compiled-retention-receipt', retainedArgs[3], '--verify-state'], {
+        input, encoding: 'utf8', timeout: 180_000, maxBuffer: 32 * 1024 * 1024,
+      });
+    assert.equal(run.error, undefined, `actual application mutant guest stopped: ${run.error}`);
+    assert.equal(run.signal, null, `actual application mutant guest timed out: ${run.stderr}`);
+    assert.equal(run.status, 0, `actual application mutant guest refused:\n${run.stderr}`);
+    const receipts = run.stderr.split('\n')
+      .filter(line => line.startsWith('calculator-source-receipt '))
+      .map(line => JSON.parse(line.slice('calculator-source-receipt '.length)));
+    assert.equal(receipts.length, 1, 'mutant guest omitted source receipt');
+    assert.equal(receipts[0].modules.find(module => module.name === 'calc_parse')?.source_sha256,
+      mutatedSha, 'mutant guest did not link the perturbed implementation');
+    const mutantReplies = run.stdout.trim().split('\n').map(line => JSON.parse(line));
+    assert.equal(mutantReplies.length, 1, 'mutant guest returned wrong reply count');
+    assert.equal(mutantReplies[0].accepted, true, 'mutant did not reach a successful application result');
+    assert.deepEqual(mutantReplies[0].fraction, ['20', '1'],
+      'precedence mutant did not perturb the actual application implementation');
+    assert.equal(mutantReplies[0].guest_frames?.length, 2,
+      'mutant lacks actual compiled stage and commit guest frames');
+    checkedGuestFrame(mutantReplies[0].guest_frames[0], 'stage', 'mutant application');
+    checkedGuestFrame(mutantReplies[0].guest_frames[1], 'commit', 'mutant application');
+    const killed = spawnSync(oracleBinary, ['-I', oraclePath, '--check', '1'], {
+      input: JSON.stringify(mutantReplies), encoding: 'utf8',
+      timeout: 30_000, maxBuffer: 1024 * 1024,
+    });
+    assert.equal(killed.error, undefined, `mutant oracle unavailable: ${killed.error}`);
+    assert.equal(killed.signal, null, `mutant oracle stopped: ${killed.stderr}`);
+    assert.equal(killed.status, 1, 'independent application oracle accepted incorrect implementation');
+    assert.match(killed.stderr, /exact result mismatch at 0/,
+      'mutant was killed for a reason other than its incorrect result');
+    return { outcome: 'actual-application-mutant-killed',
+      mutation: 'calc_parse multiplication binding power 20/21 to 5/6',
+      original_sha256: createHash('sha256').update(original).digest('hex'),
+      mutant_sha256: mutatedSha,
+      mutant_stage_wasm_sha256: mutantReplies[0].guest_frames[0].wasm_sha256,
+      mutant_fraction: mutantReplies[0].fraction,
+      independent_oracle_rejection: killed.stderr.trim() };
+  } finally {
+    fs.rmSync(temporary, { recursive: true, force: true });
+  }
+}
+const applicationMutant = rejectApplicationMutant();
 console.log(JSON.stringify({ outcome: 'supported-guest-vectors-passed',
   vectors: replies.length, compiler_binary_sha256: compilerBinarySha256,
   numeric_revision_sha256: numericRevisionSha256,
   application_revision_sha256: applicationRevisionSha256,
   application_commit: applicationCommit,
+  application_oracle: { ...oracleAgreement, cases: oracleCommands.length,
+    implementation_mutant: applicationMutant },
   capability_checker_fixture_sha256: capabilityFixtureSha256,
   capability_checker: capabilityChecker,
   guest_frames: guestFrames,
