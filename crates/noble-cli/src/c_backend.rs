@@ -15,6 +15,10 @@ use serde_json::{json, Value};
 const SOURCE_MAX: usize = 4096;
 const CONTROL_MAX: usize = 4096;
 const C_MAX: usize = 65536;
+const PROGRAM_MAX: usize = 256;
+const FRAME_MAX: usize = 512;
+const RECIPE_MAX: usize = 256;
+const PROGRAM_DEPTH_MAX: usize = 256;
 const EMITTER_SOURCE: &str = include_str!("c_backend.rs");
 const USAGE: &str = "usage: noble build SOURCE --target c --out NEW_DIR --contract CONTRACT_JSON --policy POLICY_JSON (C source only; no native execution)";
 const RUNTIME_HEADER: &str = r#"/* Noble nonselected C11 source; requires separately admitted native execution. */
@@ -27,9 +31,10 @@ _Static_assert(CHAR_BIT == 8 && sizeof(uint64_t) == 8 && UINT64_MAX == UINT64_C(
 enum { TAG_I64 = 1, TAG_BOOL = 2, TAG_PROGRAM = 3 };
 typedef struct { unsigned tag; uint64_t bits; } Value;
 typedef struct { unsigned op; uint64_t bits; } Instruction;
-typedef struct { const Instruction *code; size_t count; unsigned valid; } StaticProgram;
+typedef struct { const Instruction *code; size_t count; unsigned valid; size_t leaves, depth; } StaticProgram;
 enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN };
-typedef struct { unsigned kind; uint64_t left, right; Value capture; } Program;
+typedef struct { unsigned kind; uint64_t left, right; Value capture; size_t leaves, depth; } Program;
+typedef struct { size_t leaves, depth; } Metrics;
 typedef struct { uint64_t program; size_t pc; unsigned phase; } Frame;
 "#;
 const RUNTIME: &str = r#"
@@ -77,10 +82,23 @@ static uint64_t pop_i64(void) {
     if (value.tag != TAG_I64) fail("invalid I64 tag");
     return value.bits;
 }
-static uint64_t new_program(unsigned kind, uint64_t left, uint64_t right, Value capture) {
+static Metrics metrics(uint64_t id) {
+    if (id < STATIC_PROGRAMS) {
+        const StaticProgram *program = &static_programs[id];
+        if (!program->valid) fail("invalid static Program");
+        return (Metrics){program->leaves, program->depth};
+    }
+    size_t index = (size_t)(id - STATIC_PROGRAMS);
+    if (index >= program_count) fail("invalid Program reference");
+    return (Metrics){programs[index].leaves, programs[index].depth};
+}
+static uint64_t new_program(unsigned kind, uint64_t left, uint64_t right, Value capture,
+                            size_t leaves, size_t depth) {
+    if (leaves > RECIPE_LIMIT) fail("recipe leaves exhausted");
+    if (depth > DEPTH_LIMIT) fail("program depth exhausted");
     if (program_count == PROGRAM_SLOTS) fail("program slots exhausted");
     size_t index = program_count++;
-    programs[index] = (Program){kind, left, right, capture};
+    programs[index] = (Program){kind, left, right, capture, leaves, depth};
     return STATIC_PROGRAMS + index;
 }
 static void enter(uint64_t program) {
@@ -97,7 +115,6 @@ static void arith(unsigned operation) {
     else push(TAG_BOOL, left == right);
 }
 static void execute(Instruction instruction) {
-    tick();
     switch (instruction.op) {
     case OP_I64: push(TAG_I64, instruction.bits); break;
     case OP_BOOL: if (instruction.bits > 1) fail("invalid Bool"); push(TAG_BOOL, instruction.bits); break;
@@ -118,14 +135,29 @@ static void execute(Instruction instruction) {
     case OP_QUOTE: {
         Value capture = pop();
         if (capture.tag != TAG_I64 && capture.tag != TAG_BOOL && capture.tag != TAG_PROGRAM) fail("invalid capture");
-        uint64_t program = new_program(1, 0, 0, capture);
+        size_t leaves = 1, depth = 1;
+        if (capture.tag == TAG_PROGRAM) {
+            Metrics subject = metrics(capture.bits);
+            if (subject.leaves >= RECIPE_LIMIT) fail("recipe leaves exhausted");
+            if (subject.depth >= DEPTH_LIMIT) fail("program depth exhausted");
+            leaves += subject.leaves;
+            depth += subject.depth;
+        }
+        uint64_t program = new_program(1, 0, 0, capture, leaves, depth);
         push(TAG_PROGRAM, program);
         break;
     }
     case OP_COMPOSE: {
         Value right = pop_program();
         Value left = pop_program();
-        uint64_t program = new_program(2, left.bits, right.bits, (Value){0, 0});
+        Metrics lhs = metrics(left.bits);
+        Metrics rhs = metrics(right.bits);
+        if (rhs.leaves > RECIPE_LIMIT || lhs.leaves > RECIPE_LIMIT - rhs.leaves)
+            fail("recipe leaves exhausted");
+        size_t depth = lhs.depth > rhs.depth ? lhs.depth : rhs.depth;
+        if (depth >= DEPTH_LIMIT) fail("program depth exhausted");
+        uint64_t program = new_program(2, left.bits, right.bits, (Value){0, 0},
+                                       lhs.leaves + rhs.leaves, depth + 1);
         push(TAG_PROGRAM, program);
         break;
     }
@@ -140,25 +172,27 @@ static void execute(Instruction instruction) {
 static void run_program(void) {
     enter(0);
     while (frame_count) {
+        /* Charge every transition, including empty bodies and compose phases. */
+        tick();
         Frame *frame = &frames[frame_count - 1];
         if (frame->program < STATIC_PROGRAMS) {
-            StaticProgram body = static_programs[frame->program];
-            if (!body.valid) fail("invalid static Program");
-            if (frame->pc == body.count) { --frame_count; continue; }
-            if (frame->pc > body.count) fail("invalid program counter");
-            Instruction instruction = body.code[frame->pc++];
+            const StaticProgram *body = &static_programs[frame->program];
+            if (!body->valid) fail("invalid static Program");
+            if (frame->pc == body->count) { --frame_count; continue; }
+            if (frame->pc > body->count) fail("invalid program counter");
+            Instruction instruction = body->code[frame->pc++];
             execute(instruction);
             continue;
         }
         size_t index = (size_t)(frame->program - STATIC_PROGRAMS);
         if (index >= program_count) fail("invalid Program reference");
-        Program program = programs[index];
-        if (program.kind == 1) {
-            if (frame->phase++ == 0) { tick(); push_value(program.capture); }
+        const Program *program = &programs[index];
+        if (program->kind == 1) {
+            if (frame->phase++ == 0) push_value(program->capture);
             else --frame_count;
-        } else if (program.kind == 2) {
-            if (frame->phase == 0) { frame->phase = 1; enter(program.left); }
-            else if (frame->phase == 1) { frame->phase = 2; enter(program.right); }
+        } else if (program->kind == 2) {
+            if (frame->phase == 0) { frame->phase = 1; enter(program->left); }
+            else if (frame->phase == 1) { frame->phase = 2; enter(program->right); }
             else --frame_count;
         } else fail("invalid Program kind");
     }
@@ -332,17 +366,25 @@ fn controls(contract: &[u8], policy: &[u8]) -> Result<(Ty, Limits), String> {
     ))
 }
 
+struct LoweredProgram {
+    code: String,
+    recipe: Value,
+    leaves: usize,
+    depth: usize,
+}
+
 fn lower_body(
     candidate: &Candidate,
     body: &[NodeId],
     kinds: &[Behavior],
     visited: &mut [bool],
-    programs: &mut [Option<String>],
-    recipes: &mut [Option<Value>],
+    programs: &mut [Option<LoweredProgram>],
     slot: usize,
-) -> Result<(), String> {
+) -> Result<(usize, usize), String> {
     let mut code = String::new();
     let mut recipe = Vec::new();
+    let mut leaves = 0usize;
+    let mut depth = 1usize;
     for id in body {
         let index = id.0 as usize;
         let seen = visited.get_mut(index).ok_or("invalid checked node reference")?;
@@ -356,7 +398,11 @@ fn lower_body(
             Node::Literal { lit: Lit::Bool(value), .. } =>
                 ("OP_BOOL", u64::from(*value), json!(["bool", value])),
             Node::Quotation { body, .. } => {
-                lower_body(candidate, body, kinds, visited, programs, recipes, index + 1)?;
+                let (child_leaves, child_depth) = lower_body(
+                    candidate, body, kinds, visited, programs, index + 1,
+                )?;
+                leaves = leaves.checked_add(child_leaves).ok_or("recipe leaves exhausted")?;
+                depth = depth.max(child_depth.checked_add(1).ok_or("program depth exhausted")?);
                 ("OP_STATIC", (index + 1) as u64, json!(["quotation", index + 1]))
             }
             Node::Invocation { def: Definition(word), .. } => {
@@ -381,13 +427,21 @@ fn lower_body(
         };
         code.push_str(&format!("    {{{op}, UINT64_C({bits})}},\n"));
         recipe.push(atom);
+        leaves = leaves.checked_add(1).ok_or("recipe leaves exhausted")?;
+        if leaves > RECIPE_MAX || depth > PROGRAM_DEPTH_MAX {
+            return Err("static C program recipe exhausted".into());
+        }
         if code.len() > C_MAX {
             return Err("C instruction output exhausted".into());
         }
     }
-    programs[slot] = Some(code);
-    recipes[slot] = Some(json!(recipe));
-    Ok(())
+    programs[slot] = Some(LoweredProgram {
+        code,
+        recipe: json!(recipe),
+        leaves,
+        depth,
+    });
+    Ok((leaves, depth))
 }
 
 fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, String, String), String> {
@@ -440,11 +494,11 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
         return Err("checked C body differs from its expected interface or order".into());
     }
     let mut visited = vec![false; candidate.nodes.len()];
-    let mut programs = vec![None; candidate.nodes.len() + 1];
-    let mut recipes = vec![None; candidate.nodes.len() + 1];
+    let mut programs = Vec::with_capacity(candidate.nodes.len() + 1);
+    programs.resize_with(candidate.nodes.len() + 1, || None);
     lower_body(
         candidate, &candidate.body, &submission.environment.kinds,
-        &mut visited, &mut programs, &mut recipes, 0,
+        &mut visited, &mut programs, 0,
     )?;
     if visited.iter().any(|seen| !seen)
         || checked.derivations.len() != visited.len()
@@ -453,25 +507,28 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
         return Err("checked C body omits or duplicates an accepted node".into());
     }
     let mut c = format!(
-        "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS 256\n#define FRAME_SLOTS 256\n#define STATIC_PROGRAMS {}\n",
-        limits.slots, limits.steps, limits.output, programs.len()
+        "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS {}\n#define FRAME_SLOTS {}\n#define RECIPE_LIMIT {}\n#define DEPTH_LIMIT {}\n#define STATIC_PROGRAMS {}\n",
+        limits.slots, limits.steps, limits.output,
+        PROGRAM_MAX, FRAME_MAX, RECIPE_MAX, PROGRAM_DEPTH_MAX, programs.len()
     );
     c.push_str(RUNTIME_HEADER);
-    for (index, code) in programs.iter().enumerate() {
-        if let Some(code) = code {
+    for (index, program) in programs.iter().enumerate() {
+        if let Some(program) = program {
             // An empty quotation is an actual zero-instruction program.
-            if !code.is_empty() {
-                c.push_str(&format!("static const Instruction instructions_{index}[] = {{\n{code}}};\n"));
+            if !program.code.is_empty() {
+                c.push_str(&format!("static const Instruction instructions_{index}[] = {{\n{}}};\n", program.code));
             }
         }
     }
     c.push_str("static const StaticProgram static_programs[STATIC_PROGRAMS] = {\n");
-    for (index, code) in programs.iter().enumerate() {
-        match code {
-            Some(code) if !code.is_empty() =>
-                c.push_str(&format!("    {{instructions_{index}, {}, 1}},\n", code.lines().count())),
-            Some(_) => c.push_str("    {NULL, 0, 1},\n"),
-            None => c.push_str("    {NULL, 0, 0},\n"),
+    for (index, program) in programs.iter().enumerate() {
+        match program {
+            Some(program) if !program.code.is_empty() =>
+                c.push_str(&format!("    {{instructions_{index}, {}, 1, {}, {}}},\n",
+                    program.code.lines().count(), program.leaves, program.depth)),
+            Some(program) => c.push_str(&format!("    {{NULL, 0, 1, {}, {}}},\n",
+                program.leaves, program.depth)),
+            None => c.push_str("    {NULL, 0, 0, 0, 0},\n"),
         }
     }
     c.push_str("};\n");
@@ -490,6 +547,8 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
         Ty::Bool => "-- Bool",
         _ => return Err("unsupported C result type".into()),
     };
+    let recipes = programs.into_iter().map(|program| program.map(|item| item.recipe))
+        .collect::<Vec<_>>();
     Ok((
         c,
         json!({"interface":interface, "programs":recipes}),
@@ -532,6 +591,10 @@ fn build(arguments: &[std::ffi::OsString]) -> Result<Value, String> {
         "emitter_source_sha256":digest(EMITTER_SOURCE.as_bytes()),
         "semantic_recipe_sha256":digest(&semantic_recipe),
         "build_key":digest(&subject), "native_artifact":null,
+        "runtime_limits":{"stack_slots":limits.slots, "steps":limits.steps,
+            "output_bytes":limits.output, "program_slots":PROGRAM_MAX,
+            "frame_slots":FRAME_MAX, "recipe_leaves":RECIPE_MAX,
+            "program_depth":PROGRAM_DEPTH_MAX},
         "source_to_elf_admitted":false, "native_execution":"blocked-no-pinned-sandbox"});
     std::fs::create_dir(&options.out).map_err(|error| format!("new output directory: {error}"))?;
     let write_new = |name: &str, bytes: &[u8]| -> Result<(), String> {

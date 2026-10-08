@@ -93,13 +93,21 @@ noble build capture.noble --target c --contract c-contract.json \
 ```
 
 The new directory contains the exact source, contract, policy, `artifact.c`,
-and `manifest.json` with exact-byte digests and a build key. This is candidate
+and `manifest.json` with exact-byte file digests and a build key. The checked
+candidate and resolved-environment digest fields hash this toolchain's Rust
+Debug rendering, not a canonical external encoding. This is candidate
 evidence, **not** independent admission or C/Wasm equivalence. Input files are
 read through one bounded file descriptor each, then the observed bytes are
 copied; this does not authenticate the host-selected pathname against ancestor
 symlinks, hard links or concurrent replacement, nor seal output files against
-subsequent mutation. `--native` and
-`execute --target c` refuse: no compiler/ELF execution is authorized until
+subsequent mutation. Output child paths are also re-resolved after creating the
+directory, so a concurrently replaced output directory is not authenticated.
+The manifest declares fixed ceilings: 256 dynamic Program slots, 512 frames,
+256 recipe leaves, and depth 256. Every C dispatch iteration consumes the
+policy step budget, including empty quotations and composition traversal.
+Finishing a frame also costs a step; these counts do not claim Wasm parity.
+These are source-level bounds, not native runtime acceptance. Both `--native`
+and `execute --target c` refuse: no compiler/ELF execution is authorized until
 a separately reviewed pinned native toolchain, complete source-to-ELF
 correspondence, sandbox, loader, and clock barrier are selected.
 
