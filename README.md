@@ -77,9 +77,10 @@ does not install these runtime tools.
 ### Inert C11 source candidate (nonselected)
 
 The explicit `build SOURCE --target c` route emits **source only**, not an
-executable or an alternative to the selected Wasm runtime. It independently
-checks an effect-free Core-Bootstrap expression with one I64 or Bool result,
-then lowers ordered stack operations, immutable quotation bodies, runtime
+executable or an alternative to the selected Wasm runtime. This isolated
+WIP independently checks an effect-free Core-Bootstrap expression with one
+I64, Bool or Unit result, then lowers ordered stack operations and the `unit`
+constructor, immutable quotation bodies, runtime
 `quote` capture, `compose`, and `run` into bounded C11 instructions and
 Program values. It refuses unsupported types, host effects, named definitions,
 runtime input and other profiles; there is no Wasm fallback.
@@ -122,8 +123,11 @@ can check whether the local compiler accepts the C text. This host `cc` is
 not a selected/pinned C compiler or a native artifact admission check. It
 produces no admitted ELF and cannot establish C/Wasm differential results.
 All CB-CASE-01..10 remain absent/not-run/open/unassessed; the canonical C
-edits are HOLD pending independent owner review before integration. No
-native runner, clock/vvar/TSC nondisclosure barrier or C selection follows
+edits are HOLD pending independent owner review before integration. The
+source-only Unit extension is WIP and does not promote any case or update
+the held canonical C wording. The [review-only native security design](.cairn/changes/c-backend/design.md)
+lists prerequisites, not a selected
+runner. No clock/vvar/TSC nondisclosure barrier or C selection follows
 from source syntax diagnostics.
 
 ### Independent Mathlib comparison for implemented I64 arithmetic

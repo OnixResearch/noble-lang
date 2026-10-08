@@ -28,11 +28,11 @@ const RUNTIME_HEADER: &str = r#"/* Noble nonselected C11 source; requires separa
 #include <stdlib.h>
 #include <string.h>
 _Static_assert(CHAR_BIT == 8 && sizeof(uint64_t) == 8 && UINT64_MAX == UINT64_C(18446744073709551615), "unsupported I64 target");
-enum { TAG_I64 = 1, TAG_BOOL = 2, TAG_PROGRAM = 3 };
+enum { TAG_I64 = 1, TAG_BOOL = 2, TAG_PROGRAM = 3, TAG_UNIT = 4 };
 typedef struct { unsigned tag; uint64_t bits; } Value;
 typedef struct { unsigned op; uint64_t bits; } Instruction;
 typedef struct { const Instruction *code; size_t count; unsigned valid; size_t leaves, depth; } StaticProgram;
-enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN };
+enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_UNIT };
 typedef struct { unsigned kind; uint64_t left, right; Value capture; size_t leaves, depth; } Program;
 typedef struct { size_t leaves, depth; } Metrics;
 typedef struct { uint64_t program; size_t pc; unsigned phase; } Frame;
@@ -118,6 +118,7 @@ static void execute(Instruction instruction) {
     switch (instruction.op) {
     case OP_I64: push(TAG_I64, instruction.bits); break;
     case OP_BOOL: if (instruction.bits > 1) fail("invalid Bool"); push(TAG_BOOL, instruction.bits); break;
+    case OP_UNIT: push(TAG_UNIT, 0); break;
     case OP_DUP:
         if (!height) fail("stack underflow");
         push_value(stack[height - 1]);
@@ -134,7 +135,7 @@ static void execute(Instruction instruction) {
         break;
     case OP_QUOTE: {
         Value capture = pop();
-        if (capture.tag != TAG_I64 && capture.tag != TAG_BOOL && capture.tag != TAG_PROGRAM) fail("invalid capture");
+        if (capture.tag != TAG_I64 && capture.tag != TAG_BOOL && capture.tag != TAG_UNIT && capture.tag != TAG_PROGRAM) fail("invalid capture");
         size_t leaves = 1, depth = 1;
         if (capture.tag == TAG_PROGRAM) {
             Metrics subject = metrics(capture.bits);
@@ -218,6 +219,8 @@ static void emit_stack(void) {
             append("\"}");
         } else if (stack[i].tag == TAG_BOOL) {
             append(stack[i].bits ? "{\"type\":\"Bool\",\"value\":true}" : "{\"type\":\"Bool\",\"value\":false}");
+        } else if (stack[i].tag == TAG_UNIT) {
+            append("{\"type\":\"Unit\"}");
         } else fail("invalid output tag");
     }
     append("]}");
@@ -316,12 +319,13 @@ fn controls(contract: &[u8], policy: &[u8]) -> Result<(Ty, Limits), String> {
             .and_then(Value::as_object)
             .is_none_or(|v| !v.is_empty())
     {
-        return Err("C I64 slice requires an exact interface and empty host contracts".into());
+        return Err("C slice requires an exact interface and empty host contracts".into());
     }
     let expected = match contract["expected_interface"].as_str() {
         Some("-- I64") => Ty::I64,
         Some("-- Bool") => Ty::Bool,
-        _ => return Err("C I64 slice requires no runtime input and one I64 or Bool output".into()),
+        Some("-- Unit") => Ty::Unit,
+        _ => return Err("C slice requires no runtime input and one I64, Bool or Unit output".into()),
     };
     let fields = policy.as_object().ok_or("policy must be an object")?;
     if fields.len() != 4
@@ -354,7 +358,7 @@ fn controls(contract: &[u8], policy: &[u8]) -> Result<(Ty, Limits), String> {
         || !(128..=16384).contains(&output)
         || output < 128 + slots * 64
     {
-        return Err("C limits exceed the supported bounded I64 slice".into());
+        return Err("C limits exceed the supported bounded slice".into());
     }
     Ok((
         expected,
@@ -397,6 +401,8 @@ fn lower_body(
                 ("OP_I64", *value as u64, json!(["i64", value.to_string()])),
             Node::Literal { lit: Lit::Bool(value), .. } =>
                 ("OP_BOOL", u64::from(*value), json!(["bool", value])),
+            Node::Literal { lit: Lit::Unit, .. } =>
+                ("OP_UNIT", 0, json!(["unit"])),
             Node::Quotation { body, .. } => {
                 let (child_leaves, child_depth) = lower_body(
                     candidate, body, kinds, visited, programs, index + 1,
@@ -418,6 +424,7 @@ fn lower_body(
                     (8, Behavior::Quote) => "OP_QUOTE",
                     (9, Behavior::Compose) => "OP_COMPOSE",
                     (10, Behavior::Run) => "OP_RUN",
+                    (12, Behavior::Unit) => "OP_UNIT",
                     _ => return Err(format!("unsupported checked C operation {word}")),
                 };
                 (op, 0, json!(["word", word]))
@@ -536,6 +543,7 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
     c.push_str(match expected {
         Ty::I64 => "    if (height != 1 || stack[0].tag != TAG_I64) fail(\"output interface\");\n",
         Ty::Bool => "    if (height != 1 || stack[0].tag != TAG_BOOL) fail(\"output interface\");\n",
+        Ty::Unit => "    if (height != 1 || stack[0].tag != TAG_UNIT) fail(\"output interface\");\n",
         _ => return Err("unsupported C result type".into()),
     });
     c.push_str("    emit_stack();\n    return 0;\n}\n");
@@ -545,6 +553,7 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
     let interface = match &expected {
         Ty::I64 => "-- I64",
         Ty::Bool => "-- Bool",
+        Ty::Unit => "-- Unit",
         _ => return Err("unsupported C result type".into()),
     };
     let recipes = programs.into_iter().map(|program| program.map(|item| item.recipe))

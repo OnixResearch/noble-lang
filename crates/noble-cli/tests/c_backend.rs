@@ -62,6 +62,9 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
             "9223372036854775807 1 + -1 * -9223372036854775808 =",
             "-- Bool",
         ),
+        ("unit", "unit", "-- Unit"),
+        ("captured-unit", "unit quote run", "-- Unit"),
+        ("retained-unit", "unit quote 7 drop run", "-- Unit"),
     ] {
         let source = scratch.file(&format!("{name}.noble"), source.as_bytes())?;
         let contract = scratch.file(
@@ -160,6 +163,54 @@ fn checked_boundary_arithmetic_requires_the_exact_result_interface(
 }
 
 #[test]
+fn checked_unit_results_require_the_exact_stack_interface(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let scratch = Scratch::new()?;
+    let policy = scratch.file("policy.json", br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#)?;
+    let unit_contract = scratch.file(
+        "unit-contract.json",
+        br#"{"expected_interface":"-- Unit","resolved_host_contracts":{}}"#,
+    )?;
+    let i64_contract = scratch.file(
+        "i64-contract.json",
+        br#"{"expected_interface":"-- I64","resolved_host_contracts":{}}"#,
+    )?;
+    let retained = scratch.file("retained.noble", b"unit dup drop")?;
+    let admitted = build(&retained, &unit_contract, &policy, &scratch.0.join("retained-unit"))?;
+    assert!(
+        admitted.status.success(),
+        "checked retained Unit: {}",
+        String::from_utf8_lossy(&admitted.stderr)
+    );
+    let dropped = scratch.file("dropped.noble", b"unit drop 1")?;
+    let admitted = build(&dropped, &i64_contract, &policy, &scratch.0.join("dropped-unit"))?;
+    assert!(
+        admitted.status.success(),
+        "checked Unit consumption before I64 result: {}",
+        String::from_utf8_lossy(&admitted.stderr)
+    );
+    let captured = scratch.file("captured.noble", b"unit quote run")?;
+    let extra_value = scratch.file("extra-value.noble", b"unit true")?;
+    for (source, contract, name) in [
+        (&captured, &i64_contract, "wrong-unit-type"),
+        (&extra_value, &unit_contract, "wrong-unit-arity"),
+    ] {
+        let refused_dir = scratch.0.join(name);
+        let refused = build(source, contract, &policy, &refused_dir)?;
+        assert_eq!(
+            refused.status.code(),
+            Some(2),
+            "{} unexpectedly admitted: {}",
+            source.display(),
+            String::from_utf8_lossy(&refused.stderr)
+        );
+        assert!(refused.stdout.is_empty());
+        assert!(!refused_dir.exists());
+    }
+    Ok(())
+}
+
+#[test]
 fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let scratch = Scratch::new()?;
@@ -175,7 +226,7 @@ fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
     let out_of_range = scratch.file("out-of-range.noble", b"9223372036854775808")?;
     let invalid_utf8 = scratch.file("invalid-utf8.noble", b"\xff")?;
     let bad_type = scratch.file("bad-type.noble", b"1 true +")?;
-    let unsupported_value = scratch.file("unsupported-value.noble", b"unit drop 1")?;
+    let unsupported_value = scratch.file("unsupported-value.noble", b"\"text\" drop 1")?;
     let host_effect = scratch.file("host-effect.noble", b"\"A\" test.emit 1")?;
     let named = scratch.file("named.noble", b"def twice [ dup compose ]\n20 [ 1 + ] twice run")?;
     let reflect = scratch.file("reflect.noble", b"[ 1 ] reflect drop 1")?;

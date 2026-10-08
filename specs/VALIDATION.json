@@ -1408,11 +1408,11 @@
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "ba980572157f9a15d1300b42b1df47cf5fe649710830d315588fdfebd64b9782"
+      "sha256": "d15a37e8ee9af50535b7ace3dae43f8335d6378d6a74a1135841faa9b083a912"
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
-      "sha256": "107651d9d167b8cf36d499d50eae02386b0ed327352be8b8fd923b3000746a59"
+      "sha256": "c4a057def62a2603be6ae90c62838950a5e843c0c6b1fb32cdfb9e01a5c422a8"
     },
     {
       "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
@@ -1420,7 +1420,7 @@
     },
     {
       "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "26f85a970b046c7999d5fba6b8fdb1e76a9d0f1ae7ffdab64cd4c94ad89ff529"
+      "sha256": "aab8cb414a0cabe2d3f91856176c05e34214ad85c87bc0ae9cfcd9192145f614"
     },
     {
       "file": ".cairn/changes/editor-hole-transport/design.md",
@@ -1808,7 +1808,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "8096536bba99c3df9f7a76d749e24a7d0e81fab6a05215956d236dfdd69d9323"
+      "sha256": "2425679b6ca01e71e66e4fe873be4a6de3f8684e264b5108b9c6c339c0945589"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1932,11 +1932,11 @@
     },
     {
       "file": "specs/roadmap.json",
-      "sha256": "5e48a46f9ade06815e137d377fb44e8db21481bc225b7cd38316e6f659b39b16"
+      "sha256": "9affbb7a210369517ed99bb77a93e2c1cbff35284f1171854c57f46226aad4ed"
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "3800609ccec8c4aa2c22332e5a0a9a305260974632adc67dfc9aa320d73fa364"
+      "sha256": "e9258a0ed9d791986d9ae0ab4f80f48a5f6b75a65c622ed65be95eb6325b9471"
     },
     {
       "file": "specs/SAFETY.md",
@@ -1956,7 +1956,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "461d5cedb5c927b9e8f11924cd01ebef96f748ba5dfd2f4566ff5e74ff21e89b"
+      "sha256": "e353c316a1c7405bc139e58af195a99464e80d312e57b6c0de8f9785053e6d74"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",

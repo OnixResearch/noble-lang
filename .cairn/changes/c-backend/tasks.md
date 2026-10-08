@@ -11,7 +11,7 @@
 ## Remaining native implementation and evidence gates
 
 This isolated WIP adds only an inert, nonselected, checked source emitter for a
-restricted effect-free I64/Bool Core subset, including bounded runtime
+restricted effect-free I64/Bool/Unit Core subset, including bounded runtime
 quotation/capture/compose/run code. The host C11 syntax-only diagnostic is not
 native execution, compiler correspondence or C/Wasm acceptance. The full
 requirements below remain open; no CB case is promoted.
