@@ -617,6 +617,11 @@ charges the selected scheme, while the full environment remains charged for
 its own scan and each independently admitted kernel body.
 The 53 scoped tests and ten reloads are observations on isolated MLIVE donor
 `fc0fb8c`, not a combined-tree guest replay or canonical LIVE acceptance.
+A LIVE-10 failure path remains **open**: after a guest queues a self-proposal,
+a later execution trap can clear that queued proposal without releasing its
+code root. The selected guest trap-after-enqueue and owner-release control
+must pass on a corrected source before claiming cancellation/retirement
+completeness.
 
 `--engine interpreter` refuses rather than falling back to V8.
 Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
@@ -665,7 +670,8 @@ The seven-case local WIT receipt predates a known `finish_native` fault:
 receive, payload, or duplicate-datagram validation can return before native
 stop, resource completion and pin settlement. Those host-fault paths are
 **open**, not covered by the passing cancellation/denial controls. The
-separate fix `58b9d6c` is not integrated or nine-case guest-verified.
+separate fix `58b9d6c` and its reported nine-case r3 guest run are not
+integrated here; this tree retains the pre-fix fault.
 
 ## Verification
 

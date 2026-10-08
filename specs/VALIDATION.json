@@ -1408,7 +1408,7 @@
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "7329d733cab6d71d800e2c499da865f4f5f8fc59b6a2daf3f028b5ebf9dc71e3"
+      "sha256": "40eb2429301b1fb9520ae231766b7d8cb1032025fef5e897d75b8f5adcc84197"
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
@@ -1416,11 +1416,11 @@
     },
     {
       "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
-      "sha256": "ba1b47fc0c7b147baa6b093f155bdc21cd999c2e6ede91a4b57dc902b2607c61"
+      "sha256": "247b5178f16b09676367bff372548866819c9ebb426787db9d97d2bc1bbb7c10"
     },
     {
       "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "16529a9c01019e1ed39e9ac953458a01e0d88179ac38c6ef18953afbc8410dfc"
+      "sha256": "890a6cea03197db8653e64c885c82b6017cfd3d22b25dc81b33a5db145097e47"
     },
     {
       "file": ".cairn/changes/editor-hole-transport/design.md",
@@ -1504,7 +1504,7 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/design.md",
-      "sha256": "c43fc11cc1622e30fe1fbaf8f7e533cb533dc4e0a538df85239c38a77e5e4574"
+      "sha256": "ffca2e1422605363877ab08096c7f277ae93fd48c35cca0ffda480e897c9440c"
     },
     {
       "file": ".cairn/changes/live-wasm-reload/proposal.md",
@@ -1836,7 +1836,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "17ca096b57fb133d41a2a02437757fe625f52ef1ba016e8b38e0001d502e4597"
+      "sha256": "2614cff9481c5d700c05e41824a390bc45ff9eb23f4dff2c628d415fe0dd7f4b"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1964,7 +1964,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "ce7e63fd0871f96689ab175dcb7632106ac1e94baf6022fe994841ba8a455aee"
+      "sha256": "041338e1a8bcc2dc07c29d4b8694dd8e30996abb7131337485b94ee064fec55d"
     },
     {
       "file": "specs/SAFETY.md",
@@ -1984,7 +1984,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "9cbbbefee049e62705a8ab7b2f6d671b3b4f5119a5def3190a8c562d97dec423"
+      "sha256": "6d3c980d025d570c4ed8892f54c6a4ef54658f51a7280c7c2f56a7a08487266e"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",

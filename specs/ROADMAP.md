@@ -1389,14 +1389,15 @@ The [MLIVE milestone](roadmap.json) follows M4 and DXM1 and is specified by
 [active change](../.cairn/changes/live-wasm-reload/proposal.md). It proposes
 an opt-in persistent WebAssembly bytecode VM REPL/watch with atomic next-call
 source reload and narrowly host-granted guest self-edit. A guarded resident
-Node/V8 REPL and in-process Wasm byte emitter support Core-only atomic rebuild
+Node/V8 REPL and in-process Wasm byte emitter support atomic Core rebuild
 for tested acyclic dependents under explicit host-selected file reload/direct
-admission. Automatic watch is unavailable: a directory rename notification
-does not authenticate the inode's bytes at rename time, and a writable mapping
-or external hardlink can alter them without a selected-basename content event.
-Use explicit `:reload`; automatic H-LIVE-01 and complete LIVE-05/watch
-acceptance, including declared modules, effectful watch, full in-flight
-source-change controls and code retirement, remain open.
+admission. A cooperative Linux paired `.tmp` rename watch checks bounded
+selected bytes again before publication, but an outside writable mapping
+or hardlink remains unobservable to the selected-directory watcher. Selected
+declared-module snapshots and zero-owner Core table-span retirement/reuse
+have separately scoped isolated-donor execution; complete H-LIVE-01 and
+LIVE-05/watch acceptance, effectful/general transitions, and combined-tree
+guest assurance remain open.
 Bounded guest self-edit refuses any current effective dependent rather than
 rebuilding it. Indirect self-rebind/cycle refusal was exercised in scoped
 live-child checks; general proof and canonical LIVE case acceptance remain
@@ -1415,9 +1416,10 @@ Only restricted inert checked I64/Bool C11 source emission is implemented;
 `--native` and `execute --target c` refuse. CB-CASE-01's supplied
 `limits.list_length` is not accepted by that source-only policy, so the
 case remains open rather than treating the bound as an ignored field.
-Full watch-case acceptance, declared-module snapshots, complete source-bound
-LIVE-02 acceptance and code retirement remain open despite the guarded
-Core-only rebuild.
+Full watch-case acceptance and complete source-bound LIVE-02 remain open
+despite the guarded partial runtime. In the current source a guest can queue
+a self-proposal and then trap before the host takes it, clearing the proposal
+without releasing its code root; LIVE-10 failure-path retirement remains open.
 Neither complete opt-in backend profile is accepted: all
 [LIVE](conformance/live-wasm-cases.json) and
 [CB](conformance/c-backend-cases.json) cases are absent/not-run and proofs
