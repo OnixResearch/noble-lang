@@ -422,7 +422,7 @@ fn lower_body(
                 };
                 (op, 0, json!(["word", word]))
             }
-            Node::SlotInvoke { .. } | Node::Literal { .. } =>
+            Node::SlotInvoke { .. } | Node::SignedSelf { .. } | Node::Literal { .. } =>
                 return Err("unsupported checked C value, effect or live operation".into()),
         };
         code.push_str(&format!("    {{{op}, UINT64_C({bits})}},\n"));
