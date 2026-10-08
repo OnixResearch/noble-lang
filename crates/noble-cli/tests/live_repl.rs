@@ -960,6 +960,33 @@ fn declared_nested_captured_transitive_alias_keeps_first_owner_across_two_rebind
 }
 
 #[test]
+fn core_observed_root_release_before_first_guest_keeps_repl_usable(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "repl", "--engine", "v8"]);
+    let mut live = LiveChild::spawn(command)?;
+    let empty_release = live.submit(":release-observed-roots")?;
+    assert_eq!(text_field(&empty_release, "outcome"), "observed-roots-released", "{empty_release}");
+    assert_eq!(number_field(&empty_release, "generation"), 0);
+    assert_eq!(number_field(&empty_release, "released_observed_roots"), 0);
+    assert_eq!(empty_release["retired_code_spans"], serde_json::json!([]), "{empty_release}");
+    assert_eq!(number_field(&empty_release, "guest_requests"), 0);
+    assert_eq!(number_field(&empty_release, "protected_operations"), 0);
+
+    let saved = live.submit("[ 40 2 + ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    let saved_span = saved["installed_code_span"].clone();
+    let observations = live.submit(":release-observed-roots")?;
+    assert_eq!(text_field(&observations, "outcome"), "observed-roots-released", "{observations}");
+    assert!(number_field(&observations, "released_observed_roots") > 0, "{observations}");
+    assert!(!observations["retired_code_spans"].as_array()
+        .ok_or("observed root release omitted checked retirement receipts")?
+        .iter().any(|entry| entry["code_span"] == saved_span), "{observations}");
+    normal(&live.submit("run")?, &["42"]);
+    live.finish()
+}
+
+#[test]
 fn declared_old_code_retires_after_last_nested_program_then_reimports_exact_old_source(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;

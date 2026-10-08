@@ -556,9 +556,10 @@ impl Live {
     fn retire_unowned_live_code(
         &mut self,
     ) -> Result<std::vec::Vec<serde_json::Value>, super::output::Failure> {
-        // A module/alias declaration may precede the first executable; an
-        // already installed zero-length module still has globals to release.
-        if self.declared.is_some() && !self.live_module_installed {
+        // Source declarations and host-only controls can precede the first
+        // executable in either profile. An installed zero-length module
+        // still has globals to release.
+        if !self.live_module_installed {
             return Ok(std::vec::Vec::new());
         }
         let released = self.worker()?.release_superseded_live_module_roots()?;
