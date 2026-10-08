@@ -104,7 +104,7 @@ fn link(engine:&Engine,component:&Component,linker:&mut Linker<Runtime>)->Result
 
 async fn execute(arguments:&[String])->Result<Value> {
     let [_,component_path,cli_path,package_path,schema_path,state_path,submit_path,cancel_path,grant_path,mode]=arguments else {
-        bail!("usage: noble-worker-send-peer COMPONENT NOBLE PACKAGE SCHEMA STATE SUBMIT CANCEL HOST_GRANT send-then-cancel|cancel-before-send")
+        bail!("usage: noble-worker-send-peer COMPONENT NOBLE PACKAGE SCHEMA STATE SUBMIT CANCEL HOST_GRANT send-then-cancel|cancel-before-send|inject-receive-error|inject-receive-corruption")
     };
     let selected=verified::run(Path::new(cli_path),Path::new(package_path),Path::new(schema_path),
         Path::new(state_path),Path::new(submit_path),Path::new(cancel_path))?;
@@ -145,24 +145,39 @@ async fn execute(arguments:&[String])->Result<Value> {
     // remain alive until explicit join, completion, resource cleanup and pin settlement.
     host.lock().abort_unconsumed()?;
     let joined={host.lock().take_native()};
-    if let Some(joined)=joined {
+    let native_completion_diagnostic=if let Some(joined)=joined {
         let native=joined.join().map_err(|_|anyhow::anyhow!("native Send producer panicked"))?;
-        host.lock().finish_native(native)?;
+        host.lock().finish_native(native).err().map(|error|format!("{error:#}"))
     } else {
         host.lock().release_unused()?;
-    }
+        None
+    };
     let observed=host.lock().observation();
     let outcome=if observed["denied"]==true {"denied"}
+        else if native_completion_diagnostic.is_some() {
+            let retired_without_delivery=observed["late_completion_retired"]==true
+                && observed["task_retired"]==1 && observed["resource_retired"]==1
+                && observed["task_outstanding_pins"]==0 && observed["resource_native_pins"]==0
+                && observed["task_reserved_bytes"]==0
+                && observed["successful_result_deliveries"]==0;
+            if retired_without_delivery && call.is_ok() && future_consumed {
+                "native-validation-failure-retired"
+            } else {"internal-failure"}
+        }
         else if observed["native_error"].as_str().is_some() {"native-failure-retired"}
         else if call.is_ok() && future_consumed {"cancelled-retired"}
         else {"internal-failure"};
-    Ok(json!({"schema":"noble-worker-send-wit-integration/v1",
+    let mut report=json!({"schema":"noble-worker-send-wit-integration/v1",
         "profile":"Worker-Send-WIT-Local", "stage":"component-retirement",
         "outcome":outcome, "world":"noble-test:worker-send/worker-shell@1.0.0",
         "source_sha256":source_sha256,"first_guest":checked_first,"cancel_guest":checked_second,
         "guest_component_error":call.err().map(|error|format!("{error:#}")),
         "future_consumed":future_consumed,"native_pins_at_guest_exit":pins_at_guest_exit,
-        "host":observed}))
+        "host":observed});
+    if let Some(diagnostic)=native_completion_diagnostic {
+        report["native_completion_diagnostic"]=Value::String(diagnostic);
+    }
+    Ok(report)
 }
 
 #[tokio::main(flavor="current_thread")]
