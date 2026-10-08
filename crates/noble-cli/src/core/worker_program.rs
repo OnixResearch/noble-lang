@@ -794,6 +794,9 @@ fn guest_report(store: &mut Store, root: Handle, operand: i64, origin: &'static 
 /// Source-checked builders/packages remain inert; only the explicitly selected
 /// pure guest path installs a source-bound Program cell and links WIT ownership.
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
+    if arguments.get(2).is_some_and(|value| value == "test-host") {
+        return super::worker_program_guest::run_test_host(arguments);
+    }
     let result = (|| {
         match arguments.get(2).and_then(|value| value.to_str()) {
             Some("import") => return import(arguments),

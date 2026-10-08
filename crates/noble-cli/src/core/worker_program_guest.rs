@@ -47,6 +47,23 @@ struct PolicyState {
 }
 enum EffectOutcome { Denied, Committed }
 impl WorkerHostPolicy {
+    /// Bind a host-selected adapter to the exact independently checked named
+    /// definition. Source bytes are an untrusted candidate, never a policy row.
+    fn select_checked(source: &[u8], name: &str, destination: &str, epoch: u64,
+                      binding: noble_contracts::source::BoundOperation) -> Result<Self> {
+        let session = noble_contracts::source::ModuleSession::new(&[binding.clone()])
+            .map_err(|_| anyhow::anyhow!("selected Worker binding refused"))?;
+        let module = session.prepare(source, &[], super::SOURCE_LIMITS)
+            .map_err(|_| anyhow::anyhow!("selected Worker candidate refused"))?;
+        let owner = module.checked_program_owner_for_binding(name, &binding)
+            .context("selected Worker definition absent")?;
+        let (session, committed) = session.commit(module);
+        committed.map_err(|_| anyhow::anyhow!("selected Worker commit refused"))?;
+        Self::select(crate::workflow::intrinsic::sha256(source),
+            owner.definition_identity(), session.generation(),
+            destination.to_owned(), epoch, binding)
+    }
+
     pub(crate) fn select(
         source_sha256: String, owner_identity: u64, source_generation: u64,
         destination: String, epoch: u64, binding: noble_contracts::source::BoundOperation,
@@ -185,9 +202,16 @@ impl WorkerHostPolicy {
         Ok(serde_json::json!({
             "schema":"noble-worker-host-effect/v1",
             "effect":"test.emit","policy_epoch":self.inner.epoch,
+            "source_sha256":self.inner.source_sha256,
+            "definition_identity":self.inner.owner_identity.to_string(),
+            "source_generation":self.inner.source_generation,
+            "destination":self.inner.destination,
+            "adapter_identity":self.inner.binding.adapter_identity,
+            "adapter_slot":self.inner.binding.adapter_slot,
             "effect_requests":state.attempted,"protected_operations":state.protected,
             "denied_requests":state.denied,"succeeded":state.protected,
-            "unknown_after_attempt":0
+            "unknown_after_attempt":0,
+            "ledger_entries":state.ledger.len(),"ledger_bytes":state.ledger_bytes,
         }))
     }
 
@@ -198,6 +222,38 @@ impl WorkerHostPolicy {
         Ok(state.ledger.iter().map(|text|
             (self.inner.destination.clone(), text.clone())).collect())
     }
+}
+
+/// Explicit host capability for the finite synthetic ledger. Construction
+/// checks the independently selected source binding; it does not issue it.
+/// Only `invoke` can issue, after the actual checked cell is installed.
+pub(crate) struct HostWorkerIssuer {
+    policy: WorkerHostPolicy,
+}
+impl HostWorkerIssuer {
+    pub(crate) fn select_checked(source: &[u8], name: &str, destination: &str,
+                                 epoch: u64,
+                                 binding: noble_contracts::source::BoundOperation)
+        -> Result<Self> {
+        ensure!(binding.operation == "test.emit",
+            "Worker host issuer is restricted to the synthetic emit ledger");
+        Ok(Self { policy: WorkerHostPolicy::select_checked(
+            source, name, destination, epoch, binding)? })
+    }
+
+    pub(crate) fn prepare(&self, source: &[u8], name: &str, work: usize)
+        -> std::result::Result<(ProgramStore, Handle), super::worker_program::Refusal> {
+        ProgramStore::prepare_with_policy(source, name,
+            &[noble_kernel::types::Ty::I64], self.policy.clone(), work)
+    }
+
+    pub(crate) fn invoke(&self, source: &mut ProgramStore, root: Handle, operand: i64)
+        -> std::result::Result<Observation, GuestFailure> {
+        execute_with_host_grant(source, root, operand, &self.policy)
+    }
+
+    pub(crate) fn revoke(&self) -> Result<()> { self.policy.revoke() }
+    pub(crate) fn receipt(&self) -> Result<serde_json::Value> { self.policy.receipt() }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -847,7 +903,7 @@ pub(super) enum GuestFailure {
 }
 
 #[derive(Clone, Copy)]
-enum GuestAction<'a> { Invoke, CodeExport(&'a str) }
+enum GuestAction<'a> { Invoke, CodeExport(&'a str), CoreCodeExport }
 
 fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: TaskOwner)
     -> Result<Store<Host>> {
@@ -916,7 +972,7 @@ pub(crate) fn execute_with_host_grant(source: &mut ProgramStore, root: Handle, o
     }
     let task = TaskOwner::for_source(source);
     source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
-    execute_reserved_with_task(source, root, operand, &task, GuestAction::Invoke, true)
+    execute_reserved_with_task(source, root, operand, &task, GuestAction::Invoke, true, false)
         .map_err(GuestFailure::Invalid)
 }
 
@@ -928,7 +984,7 @@ pub(super) fn execute_with_task(source: &mut ProgramStore, root: Handle,
         return Err(GuestFailure::Invalid(anyhow::anyhow!("unbound Worker policy task")));
     }
     source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
-    execute_reserved_with_task(source, root, operand, task, GuestAction::Invoke, false)
+    execute_reserved_with_task(source, root, operand, task, GuestAction::Invoke, false, false)
         .map_err(GuestFailure::Invalid)
 }
 
@@ -950,7 +1006,7 @@ pub(crate) fn request_code_export(source: &mut ProgramStore, root: Handle, opera
     source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
     let task = TaskOwner::for_source(source);
     let observation = execute_reserved_with_task(source, root, operand, &task,
-        GuestAction::CodeExport(destination), false).map_err(GuestFailure::Invalid)?;
+        GuestAction::CodeExport(destination), false, false).map_err(GuestFailure::Invalid)?;
     Ok(serde_json::json!({
         "schema":"noble-worker-program-code-export/v2",
         "stage":"export-authorization","outcome":"denied",
@@ -963,16 +1019,258 @@ pub(crate) fn request_code_export(source: &mut ProgramStore, root: Handle, opera
     }))
 }
 
+/// Unlike WIT's owner request, this executes the checked source body and
+/// inspects the separate, always-denied Core adapter's actual callback count.
+pub(crate) fn request_core_code_export(source: &mut ProgramStore, root: Handle, operand: i64)
+    -> Result<serde_json::Value> {
+    ensure!(source.host_policy().is_some_and(|policy|
+        policy.binding().operation == "test.code-export"),
+        "unselected source export effect");
+    source.reserve_guest().map_err(|_| anyhow::anyhow!("Core export work exhausted"))?;
+    let task = TaskOwner::for_source(source);
+    let observed = execute_reserved_with_task(source, root, operand, &task,
+        GuestAction::CoreCodeExport, false, false)?;
+    Ok(serde_json::json!({
+        "schema":"noble-worker-program-core-code-export/v1",
+        "outcome":"denied","core_requests":observed.code_export_requests,
+        "core_denials":observed.code_export_denials,
+        "protected_operations":observed.protected_operations,
+        "capture_published":observed.capture_published,
+        "completed_invocations":observed.invokes,
+    }))
+}
+
+/// Dedicated test embedder: source is the only untrusted input. Modes select
+/// fixed host code paths, never an authority document, destination or grant.
+/// This is not the ordinary Worker CLI/package issuer.
+const HOST_EMIT_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"private-ledger-marker\" emit 1 + ] ]";
+const HOST_WRONG_RESULT_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"private-ledger-marker\" emit 2 + ] ]";
+const HOST_EXPORT_SOURCE: &[u8] = b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-export-marker\" \"hidden-capture-destination\" code_export ] ]";
+
+pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
+    let mut selected_policy = None;
+    let mut guest_attempted = false;
+    let previous_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| eprintln!("noble: Worker host panic (redacted)")));
+    let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(
+        || -> Result<serde_json::Value> {
+        use std::io::Read;
+        ensure!(arguments.len() == 4 && ["emit", "emit-wrong", "emit-trap",
+            "emit-panic", "emit-revoked",
+            "wit-export", "core-export"].iter().any(|mode| arguments[3] == *mode),
+            "unsupported Worker test host mode");
+        let mode = arguments[3].to_str().context("invalid Worker test host mode")?;
+        let emit = mode.starts_with("emit");
+        // The fixture source, unlike stdin, is chosen before evaluating any
+        // candidate bytes. No arbitrary checked candidate can select a grant.
+        let trusted_source = match mode {
+            "emit" => HOST_EMIT_SOURCE.to_vec(),
+            "emit-wrong" => HOST_WRONG_RESULT_SOURCE.to_vec(),
+            "emit-trap" => format!(
+                "module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ {} 1 + ] ]",
+                "\"private-ledger-marker\" emit ".repeat(257)).into_bytes(),
+            "emit-panic" | "emit-revoked" => HOST_EMIT_SOURCE.to_vec(),
+            _ => HOST_EXPORT_SOURCE.to_vec(),
+        };
+        let (name, binding) = if emit {
+            ("plus", noble_contracts::source::BoundOperation {
+                module_name: "Ledger".into(), module_version: 1,
+                operation: "test.emit".into(),
+                adapter_identity: "worker-test-emit@1.0.0".into(),
+                adapter_slot: 4, input: vec![noble_kernel::types::Ty::Text],
+                output: vec![], effects: vec![noble_kernel::contracts::TEST_EMIT],
+            })
+        } else {
+            ("capture", noble_contracts::source::BoundOperation {
+                module_name: "ledger".into(), module_version: 1,
+                operation: "test.code-export".into(),
+                adapter_identity: noble_kernel::contracts::TEST_CODE_EXPORT_ADAPTER_IDENTITY.into(),
+                adapter_slot: 4, input: vec![noble_kernel::types::Ty::Text,
+                    noble_kernel::types::Ty::Text], output: vec![],
+                effects: vec![noble_kernel::contracts::TEST_CODE_EXPORT],
+            })
+        };
+        let destination = "synthetic-ledger";
+        let epoch = 1;
+        let policy = if emit {
+            HostWorkerIssuer::select_checked(&trusted_source, name, destination, epoch,
+                binding.clone())?.policy
+        } else {
+            WorkerHostPolicy::select_checked(&trusted_source, name, destination, epoch,
+                binding.clone())?
+        };
+        selected_policy = Some(policy.clone());
+        let mut source = Vec::new();
+        std::io::stdin().lock()
+            .take(u64::from(super::SOURCE_LIMITS.bytes) + 1)
+            .read_to_end(&mut source)?;
+        ensure!(!source.is_empty() && source.len() <= super::SOURCE_LIMITS.bytes as usize,
+            "Worker candidate source byte bound");
+        ensure!(source == trusted_source,
+            "Worker candidate differs from the preselected fixture source");
+        let (mut selected, root) = ProgramStore::prepare_with_policy(&source, name,
+            &[noble_kernel::types::Ty::I64], policy.clone(), 160_000_000)
+            .map_err(|_| anyhow::anyhow!("Worker candidate Program refused"))?;
+        let subject = serde_json::json!({
+            "source_sha256":crate::workflow::intrinsic::sha256(&source),
+            "definition_identity":policy.inner.owner_identity.to_string(),
+            "source_generation":policy.inner.source_generation,
+            "destination":destination,"policy_epoch":epoch,
+            "adapter_identity":binding.adapter_identity,
+            "adapter_slot":binding.adapter_slot,
+        });
+        if emit {
+            let issuer = HostWorkerIssuer { policy };
+            if mode == "emit-trap" {
+                // Keep this fixture's quota independent of the unissued
+                // control: its 257th callback follows 256 committed appends.
+                guest_attempted = true;
+                let invocation = issuer.invoke(&mut selected, root, 41);
+                let receipt = issuer.receipt()?;
+                let exact_denial = receipt["effect_requests"] == 257
+                    && receipt["protected_operations"] == 256
+                    && receipt["denied_requests"] == 1;
+                return Ok(match invocation {
+                    Err(GuestFailure::Invalid(_)) if exact_denial => serde_json::json!({
+                        "schema":"noble-worker-program-test-host/v1","outcome":"guest-trapped",
+                        "operation":"test.emit","subject":subject,"guest_trapped":true,
+                        "guest_failure_kind":"source-effect-denied","receipt":receipt,
+                    }),
+                    Ok(observed) => serde_json::json!({
+                        "schema":"noble-worker-program-test-host/v1",
+                        "outcome":"unexpected-guest-success","operation":"test.emit",
+                        "subject":subject,"guest_trapped":false,
+                        "issued_value":observed.value,"receipt":receipt,
+                    }),
+                    Err(_) => serde_json::json!({
+                        "schema":"noble-worker-program-test-host/v1",
+                        "outcome":"unexpected-guest-failure","operation":"test.emit",
+                        "subject":subject,"guest_trapped":false,"receipt":receipt,
+                    }),
+                });
+            }
+            if mode == "emit-panic" {
+                guest_attempted = true;
+                let observed = issuer.invoke(&mut selected, root, 41)
+                    .map_err(|_| anyhow::anyhow!("pre-panic Worker invocation refused"))?;
+                ensure!(observed.protected_operations == 1,
+                    "host panic fixture never committed its protected effect");
+                std::panic::panic_any("host-controlled Worker failure after protected append");
+            }
+            if mode == "emit-revoked" {
+                selected.reserve_guest()
+                    .map_err(|_| anyhow::anyhow!("revoked Worker work exhausted"))?;
+                let task = TaskOwner::for_source(&selected);
+                guest_attempted = true;
+                let denied = execute_reserved_with_task(&selected, root, 41, &task,
+                    GuestAction::Invoke, true, true).is_err();
+                let receipt = issuer.receipt()?;
+                ensure!(denied && receipt["effect_requests"] == 1
+                    && receipt["protected_operations"] == 0
+                    && receipt["denied_requests"] == 1,
+                    "issued revoked cell did not deny its real callback");
+                return Ok(serde_json::json!({
+                    "schema":"noble-worker-program-test-host/v1","outcome":"denied",
+                    "operation":"test.emit","subject":subject,
+                    "issued_then_revoked_denied":denied,"receipt":receipt,
+                }));
+            }
+            let cancelled_task = TaskOwner::for_source(&selected);
+            cancelled_task.cancel(selected.instance_id())?;
+            let cancelled = execute_with_task(&mut selected, root, 41, &cancelled_task).is_err();
+            guest_attempted = true;
+            let before = execute(&mut selected, root, 41).is_err();
+            let issued = issuer.invoke(&mut selected, root, 41)
+                .map_err(|_| anyhow::anyhow!("issued Worker invocation refused"))?;
+            let stale_install = execute(&mut selected, root, 41).is_err();
+            let (mut fresh, fresh_root) = issuer.prepare(&source, name, 70_000_000)
+                .map_err(|_| anyhow::anyhow!("fresh Worker session refused"))?;
+            let cross_install = execute(&mut fresh, fresh_root, 41).is_err();
+            issuer.revoke()?;
+            let revoked = execute(&mut selected, root, 41).is_err();
+            let receipt = issuer.receipt()?;
+            ensure!(cancelled && before && stale_install && cross_install && revoked
+                && issued.effect_requests == 1
+                && issued.protected_operations == 1
+                && receipt["effect_requests"] == 5 && receipt["protected_operations"] == 1
+                && receipt["denied_requests"] == 4,
+                "Worker host effect transition differed from selected ledger");
+            Ok(serde_json::json!({
+                "schema":"noble-worker-program-test-host/v1","outcome":"normal",
+                "operation":"test.emit","subject":subject,
+                "cancelled_denied":cancelled,"unissued_denied":before,
+                "issued_value":issued.value,
+                "stale_install_denied":stale_install,"cross_session_denied":cross_install,
+                "revoked_denied":revoked,"receipt":receipt,
+            }))
+        } else if mode == "wit-export" {
+            let denial = request_code_export(&mut selected, root, 41, "blocked-destination")
+                .map_err(|_| anyhow::anyhow!("Worker WIT export denial failed"))?;
+            Ok(serde_json::json!({
+                "schema":"noble-worker-program-test-host/v1","outcome":"denied",
+                "operation":"wit.request-code-export","subject":subject,
+                "denial":denial,
+            }))
+        } else {
+            let denial = request_core_code_export(&mut selected, root, 41)
+                .map_err(|_| anyhow::anyhow!("Worker Core export denial failed"))?;
+            Ok(serde_json::json!({
+                "schema":"noble-worker-program-test-host/v1","outcome":"denied",
+                "operation":"core.test.code-export","subject":subject,
+                "denial":denial,
+            }))
+        }
+    }));
+    std::panic::set_hook(previous_hook);
+    let panicked = caught.is_err();
+    let result = caught.unwrap_or_else(|_| Err(anyhow::anyhow!("Worker host panic")));
+    let (outcome, value) = match result {
+        Ok(value) => (value["outcome"].as_str().unwrap_or("invalid-input").to_owned(), value),
+        Err(_) => {
+            let outcome = if panicked { "execution-panicked" }
+                else if guest_attempted { "execution-refused" } else { "invalid-input" };
+            let receipt = selected_policy.as_ref().filter(|policy|
+                policy.binding().operation == "test.emit").map(WorkerHostPolicy::receipt);
+            match receipt {
+                Some(Ok(receipt)) => (outcome.to_owned(), serde_json::json!({
+                    "schema":"noble-worker-program-test-host/v1","outcome":outcome,
+                    "operation":"test.emit","diagnostic":"Worker candidate or host execution refused",
+                    "receipt":receipt,
+                })),
+                Some(Err(_)) => ("receipt-unavailable".to_owned(), serde_json::json!({
+                    "schema":"noble-worker-program-test-host/v1",
+                    "outcome":"receipt-unavailable","operation":"test.emit",
+                    "diagnostic":"Worker policy state unavailable; protected effects are unknown",
+                })),
+                None => (outcome.to_owned(), serde_json::json!({
+                    "schema":"noble-worker-program-test-host/v1","outcome":outcome,
+                    "diagnostic":"Worker candidate or host execution refused",
+                    "effect_requests":0,"protected_operations":0,
+                })),
+            }
+        }
+    };
+    let report = super::output::Report { outcome, json:value.to_string() };
+    if let Err(error) = super::output::print(&report) {
+        eprintln!("noble: {}", error.message);
+        return std::process::ExitCode::from(error.exit());
+    }
+    std::process::ExitCode::from(report.exit())
+}
+
 fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
                               operand: i64, task: &TaskOwner,
-                              action: GuestAction<'_>, grant: bool) -> Result<Observation> {
+                              action: GuestAction<'_>, grant: bool,
+                              revoke_after_issue: bool) -> Result<Observation> {
+    ensure!(!revoke_after_issue || grant, "cannot revoke an unissued Program");
     ensure!(task.scope == source.instance_id(), "foreign Program task context");
     let mut scope = ExecutionScope::new(task, source.host_policy());
     ensure!(!task.cancelled()?, "Program task cancelled before guest admission");
     let world = source.selected_world()
         .map_err(|_| anyhow::anyhow!("source Program WIT binding refused"))?;
     let guest_source = match action {
-        GuestAction::Invoke => "programs.admit swap programs.invoke".to_owned(),
+        GuestAction::Invoke | GuestAction::CoreCodeExport =>
+            "programs.admit swap programs.invoke".to_owned(),
         GuestAction::CodeExport(destination) =>
             format!("programs.admit \"{destination}\" programs.request-code-export drop"),
     };
@@ -994,11 +1292,32 @@ fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
     if grant {
         scope.issue(source, root,
             store.data().installed.context("missing installed Worker cell")?.cell)?;
+        if revoke_after_issue {
+            scope.policy.context("missing issued Worker policy")?.revoke()?;
+        }
     }
     store.set_fuel(FUEL)?;
     let guest = linker.instantiate(&mut store, &guest)?;
     let compute = guest.get_typed_func::<(i64,),(i64,)>(&mut store,"compute")?;
-    let (value,) = compute.call(&mut store,(operand,))?;
+    let (value,) = match compute.call(&mut store,(operand,)) {
+        Ok(value) if !matches!(action, GuestAction::CoreCodeExport) => value,
+        Ok(_) => bail!("source code-export effect unexpectedly returned"),
+        Err(_) if matches!(action, GuestAction::CoreCodeExport) => {
+            let host = store.data();
+            ensure!(host.admits == 1 && host.code_export_requests == 1
+                && host.code_export_denials == 1 && host.protected_operations == 0
+                && !host.capture_published && host.invokes == 0,
+                "source effect failed without an exact denied Core export request");
+            return Ok(Observation { value: operand, admits: host.admits,
+                invokes: host.invokes, live_owners: host.live_owners,
+                effect_requests: host.effect_requests,
+                protected_operations: host.protected_operations,
+                code_export_requests: host.code_export_requests,
+                code_export_denials: host.code_export_denials,
+                capture_published: host.capture_published })
+        }
+        Err(problem) => return Err(problem),
+    };
     compute.post_return(&mut store)?;
     let host = store.data();
     if matches!(action, GuestAction::Invoke) {
