@@ -78,7 +78,7 @@ pub(super) fn atom_metadata(
             (33, i64::from(borrowed_ordinal), None, None, 0),
     };
     let (input, output, effects) = if text.is_some() {
-        (8, text_witness, 0)
+        (text_witness, 0, 0)
     } else if tag == 2 || tag == 15 || tag == 33 || tag == 34 || (26..=32).contains(&tag) {
         (operation.input, operation.output, operation.effects)
     } else {
