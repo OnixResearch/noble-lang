@@ -261,19 +261,24 @@ for (const opt of ['off', 'on']) {
   const first = Buffer.from('module m@1 [ export addone def addone [ 1 + ] ]');
   const second = Buffer.from('module m@2 [ export addone def addone [ 2 + ] ]');
   const source = [first, second, Buffer.from('import m@1 as m'),
+    Buffer.from('import m@1 as other'),
     Buffer.from('def once [ m.addone ]'), Buffer.from('def twice [ once once ]'),
     Buffer.from('[ once ]'), Buffer.from('import m@2 as m'),
-    Buffer.from('20 swap run'), Buffer.from('drop'), Buffer.from('20 twice')];
+    Buffer.from('20 swap run'), Buffer.from('drop'),
+    Buffer.from('20 other.addone'), Buffer.from('drop'), Buffer.from('20 twice')];
   const observed = run(`rebind-${opt}-retained-old-and-current-new`,
     ['session', ...localFlags, '--opt', opt], Buffer.concat(source.map(frame)));
   assert.equal(observed.status, 0, `checked transitive import rebind/${opt}`);
   assert.deepEqual(observed.reports.map(report => report.outcome),
-    ['linked', 'linked', 'linked', 'defined', 'defined',
-      'normal', 'linked', 'normal', 'normal', 'normal']);
-  assert.equal(observed.reports[7].stack.at(-1).value, '21',
+    ['linked', 'linked', 'linked', 'linked', 'defined', 'defined',
+      'normal', 'linked', 'normal', 'normal', 'normal', 'normal', 'normal']);
+  assert.equal(observed.reports[8].stack.at(-1).value, '21',
     'old captured Program must retain old immutable once owner');
-  assert.deepEqual(observed.reports[8].stack, []);
-  assert.equal(observed.reports[9].stack.at(-1).value, '24',
+  assert.deepEqual(observed.reports[9].stack, []);
+  assert.equal(observed.reports[10].stack.at(-1).value, '21',
+    'unchanged second alias must retain its own old immutable module snapshot');
+  assert.deepEqual(observed.reports[11].stack, []);
+  assert.equal(observed.reports[12].stack.at(-1).value, '24',
     'new twice must transitively invoke newly checked once owner');
   for (const report of observed.reports) {
     assert.equal(report.host_requests, 0);
