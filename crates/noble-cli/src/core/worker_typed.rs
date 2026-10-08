@@ -26,10 +26,20 @@ fn value_failure(problem: Refusal) -> Failure {
 }
 
 fn bounded_diagnostic(message: &str) -> &str {
-    // JSON can expand an ASCII control byte to six escaped bytes.
-    if message.len() <= 512 { return message; }
-    let mut end = 512;
-    while !message.is_char_boundary(end) { end -= 1; }
+    // Bound the serialized JSON string, including its quotes. Escaping a
+    // control byte can cost six bytes even when the input is shorter than 512.
+    let mut encoded = 2;
+    let mut end = 0;
+    for (index, character) in message.char_indices() {
+        let width = match character {
+            '\u{0008}' | '\t' | '\n' | '\u{000c}' | '\r' | '"' | '\\' => 2,
+            '\u{0000}'..='\u{001f}' => 6,
+            _ => character.len_utf8(),
+        };
+        if encoded + width > 512 { break; }
+        encoded += width;
+        end = index + character.len_utf8();
+    }
     &message[..end]
 }
 
@@ -332,6 +342,29 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn worker_diagnostics_bound_serialized_bytes_at_utf8_and_escape_boundaries() {
+        let ascii = "x".repeat(511);
+        let at_limit = bounded_diagnostic(&ascii);
+        assert_eq!(at_limit.len(), 510);
+        assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
+
+        let control = "\u{001f}".repeat(86);
+        let at_limit = bounded_diagnostic(&control);
+        assert_eq!(at_limit.chars().count(), 85);
+        assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
+
+        let escaped = format!("{}\"tail", "x".repeat(508));
+        let at_limit = bounded_diagnostic(&escaped);
+        assert!(at_limit.ends_with('"'));
+        assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
+
+        let unicode = format!("{}😀tail", "x".repeat(506));
+        let at_limit = bounded_diagnostic(&unicode);
+        assert!(at_limit.ends_with('😀'));
+        assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
+    }
 
     const SCHEMA: &str = "module WorkerData@1 [ \
         opaque AttemptId Text public \

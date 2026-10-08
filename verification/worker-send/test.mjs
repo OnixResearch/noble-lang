@@ -18,6 +18,7 @@ const compilation = JSON.parse(compiled.stdout);
 assert.equal(compilation.outcome, 'compiled');
 assert.equal(compilation.component_emitted, true);
 const component = path.join(componentDir, 'component.wasm');
+const componentSha256 = createHash('sha256').update(fs.readFileSync(component)).digest('hex');
 const selected = name => path.join(fixtures, name);
 const worker = JSON.parse(fs.readFileSync(selected('package.json'), 'utf8'));
 const selectedSourceSha256 = createHash('sha256').update(worker.root.source_utf8).digest('hex');
@@ -54,6 +55,8 @@ function run(name, mode, submit, selectedGrant, expectedStatus = 0) {
   fs.writeFileSync(path.join(output, `${name.replaceAll(' ', '-')}.report.json`),
     invoked.stdout, { flag: 'wx', mode: 0o600 });
   assert.equal(report.schema, 'noble-worker-send-wit-integration/v1', name);
+  assert.equal(report.component_sha256, componentSha256,
+    `${name}: peer did not report the exact selected component bytes`);
   assert.equal(report.first_guest.outcome, 'normal', name);
   assert.equal(report.cancel_guest.outcome, 'normal', name);
   assert.equal(report.source_sha256, selectedSourceSha256,
@@ -73,10 +76,12 @@ assert.equal(allowed.host.native_send_bytes, 12);
 assert.equal(allowed.host.protected_operation_attempts, 1);
 assert.equal(allowed.host.pins_at_cancel, 1);
 assert.equal(allowed.host.late_completion_retired, true);
+assert.equal(allowed.host.late_task_outcome, 'success');
 assert.equal(allowed.host.task_retired, 1);
 assert.equal(allowed.host.resource_retired, 1);
 assert.equal(allowed.host.task_outstanding_pins, 0);
 assert.equal(allowed.host.resource_native_pins, 0);
+assert.equal(allowed.host.task_reserved_bytes, 0);
 assert.equal(allowed.host.successful_result_deliveries, 0);
 assert.equal(allowed.native_pins_at_guest_exit, 1);
 assert.equal(Object.hasOwn(allowed, 'native_completion_diagnostic'), false);
@@ -90,7 +95,11 @@ assert.equal(cancelled.native_pins_at_guest_exit, 1);
 assert.equal(cancelled.host.task_retired, 1);
 assert.equal(cancelled.host.resource_retired, 1);
 assert.equal(cancelled.host.late_completion_retired, true);
+assert.equal(cancelled.host.late_task_outcome, 'domain-error');
+assert.equal(cancelled.host.task_reserved_bytes, 0);
 assert.equal(cancelled.host.successful_result_deliveries, 0);
+assert.equal(cancelled.host.native_error, null);
+assert.equal(Object.hasOwn(cancelled, 'native_completion_diagnostic'), false);
 for (const [name, mode, diagnostic] of [
   ['injected receiver error', 'inject-receive-error', /native receiver read failed/],
   ['injected receiver corruption', 'inject-receive-corruption',
@@ -107,6 +116,7 @@ for (const [name, mode, diagnostic] of [
   assert.equal(fault.host.protected_operation_attempts, 1, name);
   assert.equal(fault.host.pins_at_cancel, 1, name);
   assert.equal(fault.host.late_completion_retired, true, name);
+  assert.equal(fault.host.late_task_outcome, 'domain-error', name);
   assert.equal(fault.host.task_retired, 1, name);
   assert.equal(fault.host.resource_retired, 1, name);
   assert.equal(fault.host.task_outstanding_pins, 0, name);
@@ -116,6 +126,68 @@ for (const [name, mode, diagnostic] of [
   assert.equal(fault.host.native_error, null, name);
   assert.match(fault.native_completion_diagnostic, diagnostic, name);
 }
+const producerPanic = run('native producer panic after send', 'inject-producer-panic',
+  selected('submit.json'), approvedGrant, 2);
+assert.equal(producerPanic.outcome, 'native-validation-failure-retired');
+assert.equal(producerPanic.future_consumed, true);
+assert.equal(producerPanic.guest_component_error, null);
+assert.equal(producerPanic.native_pins_at_guest_exit, 1);
+assert.equal(producerPanic.host.native_send_bytes, 12);
+assert.equal(producerPanic.host.receiver_datagrams, 1);
+assert.equal(producerPanic.host.native_error, 'native Send producer panicked');
+assert.equal(producerPanic.host.protected_operation_attempts, 1);
+assert.equal(producerPanic.host.successful_result_deliveries, 0);
+assert.equal(producerPanic.host.pins_at_cancel, 1);
+assert.equal(producerPanic.host.late_completion_retired, true);
+assert.equal(producerPanic.host.late_task_outcome, 'domain-error');
+assert.equal(producerPanic.host.task_retired, 1);
+assert.equal(producerPanic.host.resource_retired, 1);
+assert.equal(producerPanic.host.task_outstanding_pins, 0);
+assert.equal(producerPanic.host.resource_native_pins, 0);
+assert.equal(producerPanic.host.task_reserved_bytes, 0);
+assert.match(producerPanic.native_completion_diagnostic,
+  /failed native Send unexpectedly reached receiver/);
+for (const [name, mode, failure] of [
+  ['rejected native cancellation', 'inject-cancel-error', /WrongContext/],
+  ['unwound native cancellation', 'inject-cancel-panic', /host Send cancellation panicked/],
+]) {
+  const fault = run(name, mode, selected('submit.json'), approvedGrant, 2);
+  assert.equal(fault.outcome, 'internal-failure', name);
+  assert.match(fault.guest_component_error, failure, name);
+  assert.equal(fault.future_consumed, true, name);
+  assert.equal(fault.native_pins_at_guest_exit, 1, name);
+  assert.equal(fault.host.receiver_datagrams, 1, name);
+  assert.equal(fault.host.native_send_bytes, 12, name);
+  assert.equal(fault.host.protected_operation_attempts, 1, name);
+  assert.equal(fault.host.successful_result_deliveries, 0, name);
+  assert.equal(fault.host.late_completion_retired, true, name);
+  assert.equal(fault.host.late_task_outcome, 'success', name);
+  assert.equal(fault.host.task_retired, 1, name);
+  assert.equal(fault.host.resource_retired, 1, name);
+  assert.equal(fault.host.task_outstanding_pins, 0, name);
+  assert.equal(fault.host.resource_native_pins, 0, name);
+  assert.equal(fault.host.task_reserved_bytes, 0, name);
+  assert.equal(Object.hasOwn(fault, 'native_completion_diagnostic'), false, name);
+}
+const bufferQuota = run('buffer quota preflight', 'buffer-quota-preflight',
+  selected('submit.json'), approvedGrant, 2);
+assert.equal(bufferQuota.outcome, 'quota-denied');
+assert.match(bufferQuota.guest_component_error,
+  /task buffer reservation denied before Send admission/);
+assert.equal(bufferQuota.future_consumed, true);
+assert.equal(bufferQuota.native_pins_at_guest_exit, 0);
+assert.equal(bufferQuota.host.quota_refusal, 'byte-capacity');
+assert.equal(bufferQuota.host.task_retired, 0);
+assert.equal(bufferQuota.host.task_outstanding_pins, 0);
+assert.equal(bufferQuota.host.task_reserved_bytes, 0);
+assert.equal(bufferQuota.host.resource_retired, 1);
+assert.equal(bufferQuota.host.resource_native_pins, 0);
+assert.equal(bufferQuota.host.protected_operation_attempts, 0);
+assert.equal(bufferQuota.host.successful_result_deliveries, 0);
+assert.equal(bufferQuota.host.native_send_bytes, 0);
+assert.equal(bufferQuota.host.receiver_datagrams, 0);
+assert.equal(bufferQuota.host.late_task_outcome, null);
+assert.equal(Object.hasOwn(bufferQuota, 'native_completion_diagnostic'), false);
 for (const [name, submit, selection] of [
   ['no-grant', selected('submit.json'), deniedGrant],
   ['mismatched-attempt-grant', selected('submit.json'), wrongAttemptGrant],
@@ -130,6 +202,7 @@ for (const [name, submit, selection] of [
   assert.equal(refused.host.resource_retired, 1, name);
   assert.equal(refused.host.task_outstanding_pins, 0, name);
   assert.equal(refused.host.resource_native_pins, 0, name);
+  assert.equal(refused.host.task_reserved_bytes, 0, name);
 }
 const wrongSource = spawnSync(peer, [component, cli, selected('package.json'),
   selected('schema.noble'), selected('state.json'), selected('submit.json'),
@@ -148,5 +221,7 @@ console.log(JSON.stringify({ schema: 'noble-worker-send-wit-smoke/v1',
   scope: 'local-socket-only-not-canonical-WORKER-01',
   cases: ['authorized socket send', 'cancel before native send',
     'injected receiver error', 'injected receiver corruption',
+    'native producer panic after send', 'rejected native cancellation',
+    'unwound native cancellation', 'buffer quota preflight',
     'no-grant', 'mismatched-attempt-grant', 'expired-grant', 'candidate-generated-grant',
     'mismatched-source-grant'] }));

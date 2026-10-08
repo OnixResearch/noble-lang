@@ -25,11 +25,12 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-This isolated candidate selection compares 142 file digests across the flake and
+This isolated candidate selection compares 144 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
 source-bound verification/build recipes, the architecture capacity policy,
-its typed export dependencies and manifest, and all eight Cargo locks
+its typed export dependencies and manifest, the worker-send peer manifest,
+and all nine Cargo locks
 consumed by the reviewed offline vendor, plus the separate test-only boundary
 fixture lock. These are source identities,
 not an executed proof.
@@ -85,15 +86,32 @@ Noble owns the exact selection policy and the Nix composition code.
 
 [`nix/reviewed-vendor.nix`](../nix/reviewed-vendor.nix) reads the root Cargo
 lock and the independent M5, M6, M7, intrinsic-proofs, intrinsic-named-v2,
-Result-library, and declared-modules-v1 peer locks: eight locks in all. It
-rejects conflicting or missing registry checksums, checks all 237 distinct
+Result-library, declared-modules-v1, and worker-send peer locks: nine locks in
+all. It rejects conflicting or missing registry checksums, checks all 241 distinct
 crate archive SHA-256 values, and produces `source-registry-0` plus a
-lock/archive provenance manifest. The locally realized candidate output
+lock/archive provenance manifest when realized. The earlier eight-lock output
 `/nix/store/3sl4kjvccw33wbrhb7qf57myyrzj371c-noble-reviewed-offline-vendor`
 has measured NAR `sha256-23BKxkztQ6megprdki32gwDS8LXsqQPIsCnI1CYGHTQ=`,
 bound in both candidate [`M5`](m5/pins.json) and [`M6`](m6/pins.json).
+It does not select or validate the nine-lock recipe: its new output path,
+provenance manifest, and NAR hash require separate realization and review
+before those pins or the source-bound selection can be renewed.
 These candidate-only pins are not a selected Nix, source-inventory, or
 native-assurance gate pass or independently verified signed-substitute proof.
+The worker-send WIT peer and the host-owned `own<program>` Worker Program use
+separate interfaces and lifetimes: a Program cell is not the Send task or its
+native socket pin. The peer checks the typed worker's package, schema, source,
+and checked source-Program owner record (not an MW1 `own<program>` handle)
+before its own exact-action host grant. Cancellation revokes that grant and
+native access before releasing a blocked producer; the socket pin remains
+until native join and retirement. A changed root or peer
+Cargo lock requires renewed vendor-manifest and selected NAR binding before
+any direct worker-send run can count as selected evidence.
+The isolated peer pins SHA-256 0.10.2 already present in the older reviewed
+vendor archive set. It hashes its private package/schema snapshots and the
+same bounded component byte slice it hands to Wasmtime, rather than hashing
+one path and compiling a later reopening of that path. This source-only
+binding is not a selected offline build or an executed WIT result.
 [`selectedVendor`](selected-vendor.mjs) verifies that NAR at each migrated
 gate before selecting Cargo's exact offline source replacement. Merely
 having a registry directory is not evidence of the reviewed vendor.
@@ -110,8 +128,8 @@ when it resolves to immutable
 `/nix/store/7y0cmn79ilsaq0g7lgpmpa7sqjrkii16-cargo-config.toml`,
 with artifact-owned Cargo home and target; it never copies a curated source
 subset. Their `check` commands read the supplied inventory and policy without
-invoking Cargo. Boundary randomness cases retain their own ninth, test-only lock and
-complete fixture vendor; they do not change the eight-lock reviewed
+invoking Cargo. Boundary randomness cases retain their own separate test-only lock and
+complete fixture vendor; they do not change the nine-lock reviewed
 production/peer vendor.
 
 On a host with the locked Nix inputs and all fixed-output archives already

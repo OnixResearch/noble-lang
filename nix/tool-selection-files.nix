@@ -139,6 +139,8 @@
   "verification/result-library/plan.mjs"
   "verification/result-library/peer/Cargo.lock"
   "verification/selected-vendor.mjs"
+  "verification/worker-send/peer/Cargo.lock"
+  "verification/worker-send/peer/Cargo.toml"
   "verification/wi03-final/gate.mjs"
   "verification/wi03/gate.mjs"
 ]

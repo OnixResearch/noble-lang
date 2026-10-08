@@ -6,7 +6,8 @@ use host::{Grant, Host, Mode};
 use noble_kernel::async_tasks as task;
 use parking_lot::Mutex;
 use serde_json::{Value, json};
-use std::{path::Path, sync::Arc, time::Duration};
+use sha2::{Digest, Sha256};
+use std::{io::Read, os::unix::fs::OpenOptionsExt, path::Path, sync::Arc, time::Duration};
 use wasmtime::component::{Component, FutureReader, Linker, Val, types::ComponentItem};
 use wasmtime::{Config, Engine, Store, StoreContextMut, StoreLimits, StoreLimitsBuilder};
 
@@ -62,9 +63,16 @@ fn cancel(mut store:StoreContextMut<'_,Runtime>,params:&[Val],results:&mut [Val]
         store.data_mut().live=Some((live,callback));
         bail!("foreign Send future cannot cancel retained task");
     }
-    store.data().host.lock().cancel(callback)?;
-    FutureReader::<std::result::Result<i64,String>>::from_val(&mut store,&live)?
-        .close(&mut store);
+    let cancellation=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||
+        store.data().host.lock().cancel(callback)))
+        .map_err(|_|anyhow::anyhow!("host Send cancellation panicked"))
+        .and_then(|result|result);
+    // The guest has relinquished the future even when the native cancellation
+    // fails or unwinds; do not leave a callback capable of delivering success.
+    let closed=FutureReader::<std::result::Result<i64,String>>::from_val(&mut store,&live)
+        .map(|future|future.close(&mut store));
+    cancellation?;
+    closed?;
     Ok(())
 }
 
@@ -102,18 +110,35 @@ fn link(engine:&Engine,component:&Component,linker:&mut Linker<Runtime>)->Result
     Ok(())
 }
 
+fn read_component_file(mut file:std::fs::File)->Result<(Vec<u8>,String)> {
+    let metadata=file.metadata()?;
+    ensure!(metadata.is_file() && metadata.len()<=4_194_304,
+        "selected component must be a bounded regular file");
+    let mut bytes=vec![0;usize::try_from(metadata.len())?];
+    file.read_exact(&mut bytes).context("reading selected component")?;
+    let mut extra=[0];
+    ensure!(file.read(&mut extra)?==0,"selected component grew beyond its byte bound");
+    let sha256=format!("{:x}",Sha256::digest(&bytes));
+    Ok((bytes,sha256))
+}
+
+fn read_component(path:&Path)->Result<(Vec<u8>,String)> {
+    let file=std::fs::OpenOptions::new().read(true).custom_flags(libc::O_NONBLOCK)
+        .open(path).context("selected component unavailable")?;
+    read_component_file(file)
+}
+
 async fn execute(arguments:&[String])->Result<Value> {
     let [_,component_path,cli_path,package_path,schema_path,state_path,submit_path,cancel_path,grant_path,mode]=arguments else {
-        bail!("usage: noble-worker-send-peer COMPONENT NOBLE PACKAGE SCHEMA STATE SUBMIT CANCEL HOST_GRANT send-then-cancel|cancel-before-send|inject-receive-error|inject-receive-corruption")
+        bail!("usage: noble-worker-send-peer COMPONENT NOBLE PACKAGE SCHEMA STATE SUBMIT CANCEL HOST_GRANT send-then-cancel|cancel-before-send|inject-receive-error|inject-receive-corruption|inject-producer-panic|inject-cancel-error|inject-cancel-panic|buffer-quota-preflight")
     };
     let selected=verified::run(Path::new(cli_path),Path::new(package_path),Path::new(schema_path),
         Path::new(state_path),Path::new(submit_path),Path::new(cancel_path))?;
     let grant=Grant::selected(Path::new(grant_path))?;
     let mode=Mode::parse(mode)?;
-    let meta=std::fs::metadata(component_path)?;
-    ensure!(meta.is_file() && meta.len()<=4_194_304,"selected component exceeds bounded input");
+    let (component_bytes,component_sha256)=read_component(Path::new(component_path))?;
     let engine=Engine::new(&config())?;
-    let component=Component::from_file(&engine,component_path)?;
+    let component=Component::new(&engine,&component_bytes)?;
     let host=Arc::new(Mutex::new(Host::new(grant,mode,&selected.source_sha256)?));
     let mut store=Store::new(&engine,Runtime {
         limits:StoreLimitsBuilder::new().memory_size(4_194_304).instances(16).tables(16).build(),
@@ -143,17 +168,26 @@ async fn execute(arguments:&[String])->Result<Value> {
     drop(store);
     // Store disposal is not native-stop. Host table/callback and producer job
     // remain alive until explicit join, completion, resource cleanup and pin settlement.
-    host.lock().abort_unconsumed()?;
+    let abort_diagnostic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||
+        host.lock().abort_unconsumed()))
+        .map_err(|_|anyhow::anyhow!("host Send abort panicked"))
+        .and_then(|result|result).err().map(|error|format!("{error:#}"));
     let joined={host.lock().take_native()};
     let native_completion_diagnostic=if let Some(joined)=joined {
-        let native=joined.join().map_err(|_|anyhow::anyhow!("native Send producer panicked"))?;
+        // A producer panic ends native access but not the host's retained
+        // task/resource obligations. Finish retirement even when no native
+        // result can be trusted or delivered to the closed guest future.
+        let native=joined.join().unwrap_or_else(|_|
+            Err("native Send producer panicked".to_owned()));
         host.lock().finish_native(native).err().map(|error|format!("{error:#}"))
     } else {
         host.lock().release_unused()?;
         None
     };
     let observed=host.lock().observation();
-    let outcome=if observed["denied"]==true {"denied"}
+    let outcome=if abort_diagnostic.is_some() {"internal-failure"}
+        else if observed["denied"]==true {"denied"}
+        else if observed["quota_refusal"]=="byte-capacity" {"quota-denied"}
         else if native_completion_diagnostic.is_some() {
             let retired_without_delivery=observed["late_completion_retired"]==true
                 && observed["task_retired"]==1 && observed["resource_retired"]==1
@@ -170,12 +204,16 @@ async fn execute(arguments:&[String])->Result<Value> {
     let mut report=json!({"schema":"noble-worker-send-wit-integration/v1",
         "profile":"Worker-Send-WIT-Local", "stage":"component-retirement",
         "outcome":outcome, "world":"noble-test:worker-send/worker-shell@1.0.0",
+        "component_sha256":component_sha256,
         "source_sha256":source_sha256,"first_guest":checked_first,"cancel_guest":checked_second,
         "guest_component_error":call.err().map(|error|format!("{error:#}")),
         "future_consumed":future_consumed,"native_pins_at_guest_exit":pins_at_guest_exit,
         "host":observed});
     if let Some(diagnostic)=native_completion_diagnostic {
         report["native_completion_diagnostic"]=Value::String(diagnostic);
+    }
+    if let Some(diagnostic)=abort_diagnostic {
+        report["abort_diagnostic"]=Value::String(diagnostic);
     }
     Ok(report)
 }
@@ -194,5 +232,40 @@ async fn main() {
                 "outcome":"internal-failure","diagnostic":format!("{error:#}")}));
             std::process::exit(2)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{fs, os::unix::fs::DirBuilderExt, path::PathBuf,
+        sync::atomic::{AtomicU64, Ordering}};
+
+    static NEXT_TEST:AtomicU64=AtomicU64::new(1);
+    struct PrivateDir(PathBuf);
+    impl Drop for PrivateDir {
+        fn drop(&mut self) { let _=fs::remove_dir_all(&self.0); }
+    }
+
+    #[test]
+    fn replaced_component_path_cannot_change_opened_bytes_or_compiled_component() {
+        let id=NEXT_TEST.fetch_add(1,Ordering::Relaxed);
+        let dir=std::env::temp_dir().join(format!("noble-worker-send-component-{}-{id}",
+            std::process::id()));
+        fs::DirBuilder::new().mode(0o700).create(&dir).unwrap();
+        let private=PrivateDir(dir);
+        let path=private.0.join("selected.wasm");
+        let replacement=private.0.join("replacement.wasm");
+        fs::write(&path,b"(component)").unwrap();
+        fs::write(&replacement,b"not a component").unwrap();
+        let opened=fs::OpenOptions::new().read(true).custom_flags(libc::O_NONBLOCK)
+            .open(&path).unwrap();
+        fs::rename(&replacement,&path).unwrap();
+        let (bytes,sha256)=read_component_file(opened).unwrap();
+        assert_eq!(bytes,b"(component)");
+        assert_eq!(sha256,"fa69abd0e355ea21aeaf9cd3b36e1bf6a4944ee9df0be50d1c764b43eaa1dce6");
+        assert_eq!(fs::read(&path).unwrap(),b"not a component");
+        let engine=Engine::new(&config()).unwrap();
+        Component::new(&engine,&bytes).unwrap();
     }
 }
