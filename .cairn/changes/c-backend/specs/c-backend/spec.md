@@ -5,7 +5,11 @@
 ### Requirement: CB-SCOPE-01
 r[CB-SCOPE-01]
 
-`C-Backend-Draft` MUST be a distinct nonselected opt-in AOT target only for independently accepted full requested Core-Bootstrap computation (resource-free, with only exact checked `test.emit` operation contract when effectful). Expected interface, finite limits, immutable resolved operation contracts and allowed effect bound MUST be checked before emission; current host authorization MUST instead be checked at native invocation and on every out-of-process mediator request. It MUST refuse unsupported profiles, resources, arbitrary FFI, recursion and components rather than silently narrow, interpret source or fall back to Wasm. M4 managed-linear-memory Wasm, Node/V8 and W-EXEC-01's `Wasm-Draft` contract remain selected and unchanged. No live VM reload or previous Wasm proof/evidence transfers.
+**CB-SCOPE-01.**
+
+`C-Backend-Draft` MUST be a separate, explicit, nonselected ahead-of-time target for independently accepted `Core-Bootstrap` computation. Its first positive subset is the resource-free bootstrap vocabulary (`I64`, `Bool`, `Text`, `Unit`, homogeneous `List`, `Pair`, `Sum`, inert `Syntax`, and monomorphic `Program` values), with nonrecursive checked definitions, resolved invocation, quotation, `quote`, `compose`, `run`, `reflect`, and optionally the *exact* checked `test.emit : Text -- ! {test.emit}` effect identity. The supplied expected stack interface, finite limits, resolved immutable host operation contracts and allowed effect bound MUST be independently checked before emission; current invocation host authority MUST instead be checked at launch and at each mediator request. Generated C, candidate metadata, a C compiler, and native artifact validation are not acceptance checkers. The checker MAY reject any explicitly unsupported profile, architecture, ABI, foreign operation or resource-bearing input; it MUST NOT silently narrow the accepted input or claim full language coverage. No `Resource`, WIT component, declared-module extension, arbitrary FFI, recursion, source/recipe evaluator, VM hot reload, or implicit fallback to C/Wasm is in this first C subset.
+
+`Wasm-Draft`'s production target remains WebAssembly under W-EXEC-01. M4's managed-linear-memory Wasm, selected persistent Node 24.13.0/V8 engine, current CLI/session behavior and historical evidence remain unchanged. C is neither an alternative interpretation of Noble source nor a replacement for live Wasm REPL. This proposal grants no production selection and inherits neither Wasm results nor PO-17/PO-18 proof.
 
 #### Scenario: CB-CASE-09 unsupported scope
 
@@ -16,7 +20,24 @@ r[CB-SCOPE-01]
 ### Requirement: CB-BUILD-01
 r[CB-BUILD-01]
 
-The proposed `noble build SOURCE --target c --out DIR --contract CONTRACT_JSON --policy POLICY_JSON [--native]` MUST accept explicit host-owned positional SOURCE and mandatory bounded host-owned contract/policy inputs, independently validated before candidate acceptance. Contract supplies complete ordered expected interface and exact resolved environment identities; policy supplies supported subset, allowed effect bound, target/ABI/tool pins and finite limits. An effect bound is NOT host authority. It MUST produce C11 source and pinned build manifest with exact SOURCE byte digest; `--native` builds ELF with a pinned argument-vector compiler/linker invocation, never a candidate shell command. Existing build syntax without `--target c` MUST remain unchanged. Building MUST NOT run native output. Only explicit `noble execute --target c --artifact DIR --input INPUT_JSON [--bindings HOST_FILE]` MAY launch independently admitted bytes under the pinned native sandbox/private-IPC runner, after host-side typed input and binding validation. Missing `HOST_FILE` grants no protected action; current invocation authority is checked on each mediator request, including after revocation. Typed normal, trap, quota, denial or non-success refusal outcomes MUST be distinguished. It MUST NOT pass host file paths, FDs or arbitrary arguments to the guest; ordinary `noble run`/`noble session` never opt into C. First target is exactly x86_64-unknown-linux-gnu with pinned Linux loader/libc, compiler, linker, sysroot, options, ABI/runtime and finite limits; absent/wrong target/tool MUST refuse without fallback. Missing confinement blocks `noble execute` while leaving source or ELF outputs nonrunnable. Source and executable remain distinct artifacts and compiler-service effects remain separate from candidate effects.
+**CB-BUILD-01.**
+
+The proposed *only* native invocation is explicit `noble execute --target c --artifact DIR --input INPUT_JSON [--bindings HOST_FILE]`: the invoker reads host-selected typed runtime input and host-owned current authority bindings before launch, independently reapplies CB-ADMIT-01 to the build contract/policy, then runs admitted bytes solely under CB-SANDBOX-01 through CB-HOST-01 private IPC. An allowed `test.emit` effect bound at build is not a runtime grant: the trusted mediator rechecks current invocation authorization on every request, including revocation after earlier requests. Absent `HOST_FILE` grants no protected operation even if the build allows an effect. It MUST report a typed normal outcome, specified trap, classified quota failure, authorization denial or admission/sandbox refusal with non-success status; the native program cannot receive host file paths/FDs or arbitrary process arguments. Neither ordinary `noble run`/`noble session` nor `noble build` opts into native execution implicitly.
+
+The proposed explicit interface is `noble build SOURCE --target c --out DIR --contract CONTRACT_JSON --policy POLICY_JSON [--native]` for host-selected SOURCE and C11 source plus a machine-readable build manifest. The host-owned `CONTRACT_JSON` supplies the exact ordered expected input/output stack interface, resolved immutable definition/schema/test-host contracts and candidate/environment revision; `POLICY_JSON` supplies supported subset, allowed *effect bound*, target/ABI/tool pins and finite checking/emission/runtime limits. Both are bounded, validated independently of candidate-provided metadata and required even for effect-free source (empty allowed bound), not ambient defaults or inferred grants. `--native` additionally invokes only the pinned compiler and linker with an argument vector, never a candidate-provided command or shell. `SOURCE` is the existing positional host-owned source input (not a path supplied by the emitted guest); the existing build grammar without `--target c` MUST remain unchanged. No C artifact runs as a side effect of building. The first possible native target is `x86_64-unknown-linux-gnu`, pinned Linux loader/libc and C11 compiler/linker revisions, fixed options, compile mode and exact runtime/ABI revision. The build manifest MUST record these pins, exact host-selected SOURCE byte digest, the checked candidate/environment and source correspondence, a content digest of the emitted C, compile argv, target, executable digest if built, and finite limits. Native source and binary bytes are distinct artifacts; source-only output MUST NOT be advertised as a runnable binary. Unsupported target/toolchain/ABI/options, absent pin, incompatible architecture or failed build MUST refuse explicitly without switching compilers, linker flags, targets or backends. Missing confinement blocks `noble execute` even when C source or an ELF can be emitted; that output remains nonrunnable. Build-side filesystem and subprocess effects are compiler-service effects, not candidate-body authority.
+
+The current nonselected **source-only** route is narrower: it accepts checked,
+effect-free Core-Bootstrap expressions with no runtime inputs, definitions
+or host contracts and one I64/Bool result, with the exact three-key
+`stack_slots`/`steps`/`output_bytes` limits policy. It emits source and
+manifest without compiler/ELF pin or compile argv, and `--native` and
+`execute --target c` refuse. This MUST NOT be represented as satisfying
+the complete proposed C/native build contract. Its ordinary unsupported
+contract, policy, type, effect and target inputs refuse, but current JSON
+decoding accepts duplicate member names with last-wins semantics. That
+permits an earlier bound to disappear from the decoded limits and manifest;
+the source-only path is nonconforming to the complete duplicate-key and
+limit-integrity contract, not evidence that CB-BUILD-01 is fulfilled.
 
 #### Scenario: CB-CASE-04 wrong target and tool
 
@@ -27,12 +48,16 @@ The proposed `noble build SOURCE --target c --out DIR --contract CONTRACT_JSON -
 ### Requirement: CB-IDENTITY-01
 r[CB-IDENTITY-01]
 
-Versioned domain-separated C build identity MUST bind exact host-selected SOURCE byte digest in addition to accepted candidate/semantic recipe, independently expected interface, exact resolved immutable dependencies/host effect *contract* identities from host-owned `CONTRACT_JSON`, policy, emitter/runtime, pinned compiler/linker/sysroot, target, ABI, options and bounds. Display alias changes MUST NOT rebind old immutable captures; referenced contract identity changes MUST invalidate the old subject. Revocable runtime `HOST_FILE` authorization is NOT part of semantic/build identity; compatible new grants are checked per request, incompatible host operation contracts refuse before launch. Changed source spelling or optimization/target changes build key, not Noble semantic program identity if resolved recipe is unchanged. Stale or self-asserted metadata cannot authorize an executable.
+**CB-IDENTITY-01.**
+
+A domain-separated versioned C build key MUST bind exact host-selected SOURCE byte digest *in addition to* canonical semantic recipe and checked candidate revision, independently supplied expected interface, exact resolved definition/schema/host-effect **contract** identities from `CONTRACT_JSON` and acceptance policy, C emitter/runtime revision, target triple, ABI, compiler/linker/sysroot/runtime-byte identities, options, and limit policy. It MUST preserve Noble definition/program identities independently of source spelling, optimizer choice or native layout: renaming a display alias cannot rebind a captured or previously compiled program; a changed referenced resolved operation *contract* changes semantic identity; changed source bytes, option/ABI/compiler change the build key rather than the language identity when the resolved recipe is unchanged. Runtime `HOST_FILE` grants are replaceable/revocable and MUST NOT be part of semantic/build identity: a compatible new authorization is checked per request, while an incompatible host operation contract refuses before launch. Content hashes and self-reported manifests are identifiers, not proof of acceptance, correspondence or authorization. Old artifacts are immutable; a stale artifact for a changed immutable policy, referenced host operation contract, ABI or target MUST be refused before execution.
 
 ### Requirement: CB-NUM-01
 r[CB-NUM-01]
 
-C11 `I64` MUST require eight-bit bytes and exact `uint64_t`; unsigned modulo-2^64 addition/subtraction/multiplication and bit equality MUST implement checked Core numeric semantics without signed overflow or implementation-defined casts. Range-checked literals, signed comparisons and exact decimal output including `-9223372036854775808` MUST avoid `INT64_MIN` negation. Division and floating point are unsupported; optimized and unoptimized outcomes MUST agree.
+**CB-NUM-01.**
+
+The C11 representation of `I64` MUST require `CHAR_BIT == 8`, `sizeof(uint64_t) == 8` and `UINT64_MAX == 18446744073709551615`, or reject the target at build admission. Parse range-checked signed Noble literals into 64-bit bit patterns without out-of-range signed C literals or implementation-defined unsigned-to-signed casts. Implement Noble `+`, `-`, `*` using `uint64_t` modulo-2^64 operations, not overflowing signed arithmetic; equality compares bits. Signed ordering (where a checked supported word requires it), serialization and decimal output MUST interpret the high bit and magnitude explicitly, including `0x8000000000000000` as `-9223372036854775808`, without signed overflow, negating `INT64_MIN`, or implementation-defined conversion. Division and floating point remain unsupported. Optimization on/off MUST yield identical Noble observations.
 
 #### Scenario: CB-CASE-01 signed boundary program
 
@@ -43,7 +68,9 @@ C11 `I64` MUST require eight-bit bytes and exact `uint64_t`; unsigned modulo-2^6
 ### Requirement: CB-VALUE-01
 r[CB-VALUE-01]
 
-C11 `Unit`, `Bool`, `I64`, UTF-8 `Text`, inert `Syntax`, homogeneous `List`, `Pair`, `Sum` and `Program` values MUST have initialized checked tags, lengths, offsets and ownership. No unchecked access, overflow, forged/cyclic value, expired capture or native layout as semantic identity is allowed. Compiled `quote`, `compose`, `run` and `reflect` MUST retain exact immutable resolved interface, identity and normalized finite recipe, including runtime input after compilation, without source/recipe interpretation.
+**CB-VALUE-01.**
+
+C11 runtime values MUST use tagged, initialized, type-checked representations for `Unit`, `Bool`, `I64`, UTF-8 `Text`, inert `Syntax`, homogeneous `List`, `Pair`, `Sum` and `Program`; an aggregate holds explicit length/tag and checked offsets, not guessed C struct layout as canonical Noble identity. Reads, writes, length arithmetic, capacity growth and indexes MUST check overflow/bounds before dereference or allocation. Immutable program values MUST capture owned or correctly retained immutable data and exact resolved definition/effect identity, interface witnesses and finite recipe DAG; `quote` and `compose` construct values after compilation without recompiling Noble source. `run` dispatches only accepted compiled operations through the checked complete ordered interface. `reflect` preserves normalized quotation boundaries, full recipe and identity independently of C addresses, allocation order, optimizer or display-name rebinding. Freed captures, dangling pointers, unchecked recursion depth and cycle-forged candidate graphs MUST never become defined Noble values.
 
 #### Scenario: CB-CASE-02 concrete program-value sources
 
@@ -54,7 +81,9 @@ C11 `Unit`, `Bool`, `I64`, UTF-8 `Text`, inert `Syntax`, homogeneous `List`, `Pa
 ### Requirement: CB-ORDER-01
 r[CB-ORDER-01]
 
-Emitted C MUST explicitly sequence left-to-right Noble operations, deeper/top operand order, effects, traps, branches and quotation through temporaries/statements independent of unspecified C evaluation order and optimization; static rejection produces zero candidate-body requests and no Wasm session mutation.
+**CB-ORDER-01.**
+
+Every emitted operation MUST evaluate Noble nodes left to right, pop deeper/top operands in their declared order, sequence effects and traps in that order, and commit stack transitions at specified semantic boundaries. C function-argument order, expression side effects, short-circuiting and undefined/unspecified evaluation order MUST NOT choose an observable order. Emission uses explicit temporaries and sequenced statements; neither optimizer mode may reorder host requests around traps, quotation construction, branch selection or reflection. A rejected candidate produces zero candidate-body requests and cannot mutate an existing Wasm session or namespace.
 
 #### Scenario: CB-CASE-03 ordered denied effects
 
@@ -65,18 +94,31 @@ Emitted C MUST explicitly sequence left-to-right Noble operations, deeper/top op
 ### Requirement: CB-LIMIT-01
 r[CB-LIMIT-01]
 
-Emission/runtime MUST check finite candidate/output, stack, aggregate, list, recipe, composition, step, text, diagnostic and native CPU/memory/wall bounds before growth or access; it MUST avoid unbounded C recursion. Successful results, traps, quota exhaustion and native termination remain distinct, with retained effect prefix and bounded cleanup, never partial success.
+**CB-LIMIT-01.**
+
+The C lowering and runtime MUST assign finite checked limits and distinguished outcomes for input/candidate size, output C/binary bytes, stack slots, aggregate allocation/retained recipe bytes, list length, composition depth, steps, host text buffers, diagnostic output, and process memory/CPU/wall time. Charge before growth/traversal and avoid unbounded native call-stack recursion. An in-budget execution returns exactly its checked stack/recipe/effect trace; an exhausted execution reports its stage and exhausted quota, preserves already-issued effect prefix and performs bounded cleanup; a specified runtime trap is separate from quota and native signal/UB. No host request after a failed bound or fabricated success from partial output. The wrapper MAY terminate an isolated native process on a resource bound; it MUST distinguish that outcome from a language trap and record partial trace safely.
+
+A supplied `limits.list_length` is an exact policy value even for a source
+whose values happen to be only I64/Bool. Any profile accepting it MUST retain
+that exact supplied bound in its manifest/build subject and enforce it before
+list growth when lists are supported; a profile that cannot honor the field
+MUST refuse the policy before emission rather than silently strip the bound
+or advertise an unenforced no-op. Contract and policy JSON MUST reject
+duplicate object member names at every nesting level so an earlier supplied
+bound cannot be overwritten by a later value before validation.
 
 #### Scenario: CB-CASE-06 bounded list/compose and test-only index controls
 
-- GIVEN the actual CORE-05 list and Core composition sources, explicit quotas and test-only runtime ABI index probes in CB-CASE-06
+- GIVEN the actual CORE-05 list and Core composition sources, each `quota_controls[].policy.limits.list_length` supplied before build and retained in the manifest, and test-only runtime ABI index probes in CB-CASE-06
 - WHEN at-bound and one-over cases execute
 - THEN in-bound results match selected Wasm; excess and out-of-range native accesses refuse without fabricated Noble index words
 
 ### Requirement: CB-HOST-01
 r[CB-HOST-01]
 
-Only independently checked `test.emit` may be requested through a sandbox-local checked C shim with an opaque guest context. It MUST copy bounded stable text into length-delimited PRIVATE request/response IPC over allowlisted FDs; guest pointers/function pointers and host authority MUST NOT cross processes. A separate trusted mediator MUST validate complete framing, UTF-8, operation, effect, invocation and current authorization and copy into host-owned memory before dispatch. Partial/oversized/trailing/forged frames, expired/revoked identity and unsafe lifetime MUST fail closed with zero protected actions; denied requests retain trace. No arbitrary FFI or ambient host operations are authorized.
+**CB-HOST-01.**
+
+The only first-subset candidate-body host operation is the independently checked exact `test.emit` identity where explicitly authorized. A versioned C ABI inside the sandbox MUST pass typed, bounds-checked text bytes and a sandbox-local opaque guest context to a checked local shim. The shim copies bounded bytes into a length-delimited request over only the allowlisted private protocol FDs to an **out-of-process trusted host mediator**; no guest pointer, callable function pointer or host authority crosses the process boundary. The mediator independently validates complete frame length/encoding, operation identity, checked effect, invocation identity and *current* authorization before copying request bytes into host-owned storage and dispatching any protected action. Partial/oversized frames, forged operations/contexts, stale or revoked authority and extra trailing bytes fail closed; denied requests remain traceable with zero protected operations. The ABI MUST specify byte encoding, alignment, ownership, guest input stability during synchronous copy, reentrancy policy, return status and cleanup; no shim/mediator retains a guest pointer, and borrowed guest storage cannot escape the native frame. No arbitrary FFI, host pointer cast, direct libc access, process environment, inherited descriptor or ambient filesystem/time/process/network operation is an authorized Noble effect.
 
 #### Scenario: CB-CASE-07 forged and revoked private IPC
 
@@ -87,55 +129,65 @@ Only independently checked `test.emit` may be requested through a sandbox-local 
 ### Requirement: CB-SANDBOX-01
 r[CB-SANDBOX-01]
 
-Native ELF can call syscalls directly. Runnable C therefore MUST require a separately pinned x86_64 Linux native sandbox runner isolating admitted worker address space from host mediator, closing unrelated inherited FDs and secrets, confining filesystem, network, clock, process/exec and direct syscalls while bounding memory/CPU/wall time. Runtime/shim, runner, private IPC, mediator, loader/static-link assumptions, target and syscall profile MUST be separately pinned/tested. Absent confinement blocks execution even if C syntax is valid. Direct-syscall hostile controls run only through a sealed test-only runner entry without production source-to-ELF admission; production hostile ELF substitution MUST fail admission. No crash counts as success.
+**CB-SANDBOX-01.**
 
-The runner MUST select a reviewed immutable derivation and policy independent
-of the proof-only Lean runner or any package merely present in the host Nix
-closure. Its launch boundary MUST enumerate the exact immutable executable and
-loader/library closure, mount it read-only without a writable executable path,
-seal guest bytes before use, clear environment and credentials, and close all
-FDs other than fixed, private, explicitly reviewed protocol/output endpoints.
-An initial ELF `execve` cannot be denied by a filter installed before that
-exec: the reviewed design MUST distinguish initial load from a fail-closed
-post-load syscall policy installed before untrusted candidate instructions.
-It MUST reject unrestricted later `execve`/`execveat`, writable executable
-mappings, unreviewed imports/loaders, namespace escape and direct file,
-network, process or host-clock access. Seccomp syscall denial alone does NOT
-deny vDSO clock reads or x86 timestamp instructions; unless a separately
-reviewed and verified boundary closes those paths too, runnable C remains
-unavailable. A parent-owned cgroup/process-tree memory, CPU, task, output and
-monotonic wall deadline MUST kill and reap the entire worker tree, classify
-signal/crash/timeout as refusal rather than success, and forbid any protected
-operation from partial or post-failure output.
+Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and namespace/sandbox escape attempts MUST refuse or terminate with zero protected operations. vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse clocks, direct vvar reads and x86 `rdtsc`/`rdtscp` attempts MUST refuse or be demonstrably contained without host time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient. The benign authorized `test.emit` control MUST run under the same confinement. A native crash cannot become a successful Noble result.
+
+The native runner MUST select a reviewed immutable derivation and policy
+separate from the proof-only Lean runner and any package merely cached on
+the host. It MUST enumerate and mount the exact sealed executable and
+loader/library closure read-only, with no writable executable path, close
+all but fixed private protocol/output FDs, and clear ambient secrets and
+credentials. Its initial ELF load requires a separately reviewed transition
+to a fail-closed post-load no-exec/no-writable-executable-mapping filter
+before untrusted instructions; a filter denying all `execve` before the
+initial load cannot launch the worker, and leaving `execve`/`execveat`
+available afterward permits substitution. It MUST deny unreviewed imports,
+loader escapes, direct file/network/process access and host-clock reads.
+Seccomp denial alone does NOT stop vDSO clock calls, direct vvar reads or
+x86 `rdtsc`/`rdtscp`; without an owner-selected and verified complete
+clock/vvar/TSC and loader barrier, native execution MUST remain unavailable.
+A parent-owned cgroup/process-tree memory, CPU, task, output and monotonic wall deadline
+MUST kill and reap the entire worker tree; signal, crash, timeout or partial
+output MUST NOT count as success or authorize protected operations.
 
 #### Scenario: CB-CASE-08 direct-syscall sandbox control
 
-- GIVEN sealed test-only openat/connect/clock/exec/FD/fork probes and a separately production-admitted benign emit source under the same pinned runner profile
+- GIVEN sealed test-only openat/connect/clock/exec/FD/fork and namespace escape probes, vDSO `__vdso_clock_gettime`/`__vdso_time`/`__vdso_gettimeofday` via `AT_SYSINFO_EHDR`, coarse-clock and direct-vvar probes, and x86 `rdtsc`/`rdtscp` probes, plus a separately production-admitted benign emit source under the same pinned runner profile
 - WHEN hostile and benign programs run in their separated lanes
 - THEN every hostile action is contained with zero protected operations while the benign authorized request succeeds
 
 ### Requirement: CB-ADMIT-01
 r[CB-ADMIT-01]
 
-Prior to launch independently accept host-selected source/candidate/policy; separately validate C11 source and its exact pinned emitter/runtime inventory, and ELF target/ABI/loader/imports and exact trusted reproducible native bytes (or separately reviewed authenticated trusted-build equivalent). Trusted source emission must byte-match candidate C; native build must byte-match candidate ELF. Candidate digest, manifest flag, self-claimed source or successful compiler exit cannot establish correspondence. Wrong/stale source, modified inert/executable sections, malformed C/ELF, target, tool, ABI or missing sandbox MUST refuse before effects. This finite byte correspondence is not a semantic lowering proof.
+**CB-ADMIT-01.**
 
-For every build and execution request, the verifier MUST obtain its own
-host-selected source, contract, policy, current authority and candidate files
-through bounded, lexically absolute and normalized paths under trusted
-descriptor-relative anchors. It MUST refuse `.`/`..`, symlink and magic-link
-traversal, unreviewed hard-linked mutable artifacts, directory retargeting
-and file replacement; ownership or a digest observed through a pathname is
-not sufficient. It MUST snapshot the exact checked bytes into sealed,
-read-only descriptors and use those same bytes for independent kernel
-acceptance, pinned C re-emission, reproducible native compilation, ELF
-validation, byte comparison and eventual runner launch, without reopening
-mutable candidate paths. The independently rebuilt ELF MUST be compared in
-full, including nominally inert sections, against the sealed candidate, under
-recorded deterministic flags, sysroot, linker, runtime, ABI and build
-environment; any nondeterminism or mismatch blocks launch. Independent
-admission MUST reject unsupported architecture, interpreter, dynamic import,
-load segment, relocation or executable/writable mapping rather than relying
-on a manifest digest, successful C syntax check or compiler exit.
+Before native launch, the invoker MUST independently accept host-selected source/candidate/environment and compare emitted C bytes against its trusted pinned emission of that accepted subject. It MUST separately validate C11 syntax and the exact constrained emitter/runtime inventory; this source validation is not a backend correctness proof. Native ELF MUST separately pass target/ABI/loader checks and byte-for-byte comparison with a trusted reproducible build of that accepted C and pinned toolchain, or a separately reviewed equivalent authenticated trusted-build route. A claimed digest, declared source, manifest flag, parse-valid C, successful compiler exit or signature supplied by the candidate MUST NOT make forged bytes executable. Fail closed for malformed C, altered source/ELF (including executable and inert sections), wrong or stale subject, mismatched compiler/options, target and ABI, absent sandbox, and unexpected imports/relocations before any candidate-body effect. Record exact source, candidate, policy, emitted-C and ELF byte identities and admission decisions as separately scoped evidence. Reproducible-build or trusted-build correspondence is a gate, not an assertion that C lowering is semantically correct.
+
+For every build or execution request seeking CB-ADMIT-01 native admission,
+the verifier MUST open the host-selected source, contract, policy, current
+authority and candidate through bounded, lexically absolute normalized
+paths under trusted descriptor-relative anchors. It MUST reject `.`/`..`,
+ancestor symlinks and magic links, unreviewed mutable hard links,
+directory retargeting and file replacement;
+path ownership or a prior pathname digest is insufficient. It MUST snapshot
+the exact bytes into sealed read-only descriptors and use those same bytes
+for independent kernel acceptance, trusted C re-emission, reproducible
+native compilation, full ELF inspection and comparison, and launch without
+reopening mutable candidate paths. The independent build MUST compare the
+complete ELF, including inert sections, under pinned deterministic flags,
+compiler, linker, sysroot, startup/runtime, ABI and environment. Unsupported
+architecture, interpreter, dynamic import, load segment, relocation or
+executable/writable mapping MUST refuse before effects, not pass because
+a manifest or syntax check succeeded.
+
+The restricted source-only emitter is not CB-ADMIT-01 admission. Its current
+final-component `O_NOFOLLOW` reads do not authenticate ancestor components
+or seal inputs, and its output child paths are re-resolved after directory
+creation; it MUST NOT turn those file digests into a claim of native
+correspondence or permit native execution. This gap remains OPEN until a
+separately admitted native build/launch path implements the descriptor-bound
+contract above.
 
 #### Scenario: CB-CASE-05 forged C and ELF
 
@@ -146,7 +198,9 @@ on a manifest digest, successful C syntax check or compiler exit.
 ### Requirement: CB-GATE-01
 r[CB-GATE-01]
 
-Before any C selection, the project MUST execute actual emitted C compiled under the pinned C11 toolchain in the pinned sandbox and compare it with independently accepted selected managed-linear-memory Wasm executed by the existing Node/V8 profile on the same finite source/runtime inputs: ordered stacks, signed I64, recipes, identities, effect/trap/exhaustion prefixes, controls under off/on optimization, hostile ABI/direct syscall, tool/target/identity mismatch and sanitizer observations. Exact source/emitter/compiler/ELF/runner/mediator subjects and all failures MUST be recorded. Finite tests, sanitizer success and existing Wasm PO-17/18 evidence do not establish C lowering/compiler/native loader/host/sandbox refinement; these remain OPEN until independently discharged and an explicit later acceptance and selection decision occurs.
+**CB-GATE-01.**
+
+Before any C selection, the project MUST execute actual emitted C compiled under the pinned C11 toolchain in the pinned sandbox and compare it with independently accepted selected managed-linear-memory Wasm executed by the existing Node/V8 profile on the same finite source/runtime inputs. Compare ordered stack values, exact signed I64 text, normalized recipes/identities, ordered capability requests, denied protected operations, effect prefix, traps and quota classification under declared common bounds; exercise both optimizer modes, runtime-built programs, data constructors, empty/boundary/exhausted collections, stale captures, malformed artifacts, direct-syscall adversaries and target/tool mismatches. Record compiler/emitter/runtime/host/runner versions and actual bytes, failures and separately observable limits; an unsupported feature remains unsupported rather than silently routing to Wasm. Passing finite scenarios or C sanitizer/UBSan/ASan runs and adversarial ABI lifetime controls do not prove universal source-to-C semantics, native compiler correctness, loader/host refinement, or confinement completeness. PO-17/PO-18 for the selected Wasm backend do not transfer: C-specific lowering, C compiler, native artifact/loading, ABI, sandbox and host correspondence obligations remain OPEN until independently discharged. Only an explicit later source-bound acceptance gate and selection decision could promote the candidate; document validation alone does not.
 
 #### Scenario: CB-CASE-10 stale and forged receipt review
 

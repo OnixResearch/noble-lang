@@ -1408,19 +1408,19 @@
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "40eb2429301b1fb9520ae231766b7d8cb1032025fef5e897d75b8f5adcc84197"
+      "sha256": "ba980572157f9a15d1300b42b1df47cf5fe649710830d315588fdfebd64b9782"
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
-      "sha256": "3e54f8a42bf87dcc987cc3a17ae81cfbe3ce1117a9fcf56c10c8ea72d7adbe50"
+      "sha256": "e2077f3f6729d5f1059f74eb76b10171677b4e7a27c8d3c0a9b5a2834a338464"
     },
     {
       "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
-      "sha256": "247b5178f16b09676367bff372548866819c9ebb426787db9d97d2bc1bbb7c10"
+      "sha256": "ae043efba3d0dc4502e453ed12beb3aff573909ee376763dce5647c1eddb1470"
     },
     {
       "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "890a6cea03197db8653e64c885c82b6017cfd3d22b25dc81b33a5db145097e47"
+      "sha256": "2489ed133bc8925878bf500475bfc06cd625a837f85668d0c8b2aa403cabeba5"
     },
     {
       "file": ".cairn/changes/editor-hole-transport/design.md",
@@ -1856,7 +1856,7 @@
     },
     {
       "file": "specs/conformance/c-backend-cases.json",
-      "sha256": "904246ed09cabb510ae843a334732790f2dae1c4c53531e2d7615c55df85d698"
+      "sha256": "713aab9db90d13ebd4bbac222780b873645732bd9a3dcdcb36accf2b5af66ced"
     },
     {
       "file": "specs/conformance/calculator-cases.json",
