@@ -994,8 +994,25 @@ fn declared_old_code_retires_after_last_nested_program_then_reimports_exact_old_
     fs::write(&bindings, "")?;
     let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
     let original = live.report()?;
-    assert_eq!(text_field(&original, "outcome"), "reload-committed",
-        "synthetic m@1 startup diagnostic: {}", original["diagnostic"]);
+    let startup_stage = match original.get("stage").and_then(Value::as_str) {
+        Some("wasm-live") => "wasm-live",
+        Some("admission") => "admission",
+        _ => "unknown",
+    };
+    let startup_outcome = match original.get("outcome").and_then(Value::as_str) {
+        Some("reload-committed") => "reload-committed",
+        Some("internal-failure") => "internal-failure",
+        Some("reload-refused") => "reload-refused",
+        _ => "unknown",
+    };
+    let startup_phase = match original.get("startup_phase_code").and_then(Value::as_str) {
+        Some("worker-start") => "worker-start",
+        Some("declared-stage") => "declared-stage",
+        Some("declared-publish") => "declared-publish",
+        _ => "unknown",
+    };
+    assert_eq!(startup_outcome, "reload-committed",
+        "synthetic m@1 startup stage={startup_stage}, outcome={startup_outcome}, phase={startup_phase}");
     live_ack(&original, &[]);
     let generation = number_field(&original, "generation");
     let empty_release = live.submit(":release-observed-roots")?;

@@ -1286,7 +1286,12 @@ impl Live {
                 true
             }
             Err(error) => {
-                emit(&fatal(&error.message));
+                let report = if self.declared.is_some() {
+                    fatal_declared_reload_failure(&error)
+                } else {
+                    fatal(&error.message)
+                };
+                emit(&report);
                 false
             }
         }
@@ -1979,6 +1984,18 @@ fn refusal(generation: u64, stack: &serde_json::Value, diagnostic: &str) -> serd
 
 fn fatal(diagnostic: &str) -> serde_json::Value {
     serde_json::json!({"schema":"noble-live-report/v1", "stage":"wasm-live", "outcome":"internal-failure", "diagnostic":diagnostic})
+}
+
+fn fatal_declared_reload_failure(error: &super::output::Failure) -> serde_json::Value {
+    let mut report = fatal(&error.message);
+    let phase = match error.context.stage {
+        "declared-worker-start" => "worker-start",
+        "declared-worker-stage" => "declared-stage",
+        "declared-worker-publish" => "declared-publish",
+        _ => "unknown",
+    };
+    report["startup_phase_code"] = serde_json::json!(phase);
+    report
 }
 
 fn fatal_failure(message: impl Into<std::string::String>) -> super::output::Failure {
