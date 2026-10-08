@@ -48,6 +48,45 @@ pub struct ModulePrepared {
     signed_expression: alloc::vec::Vec<u8>,
 }
 
+/// Borrowed nominal declared by the newly prepared, proof-free module.
+/// Its kernel declaration and source-checked module identity cannot be
+/// constructed from a worker-supplied schema row.
+pub struct CheckedNominal<'a> {
+    declaration: &'a noble_kernel::contracts::NominalDecl,
+    module_identity: u64,
+    module_version: u32,
+}
+
+impl CheckedNominal<'_> {
+    pub const fn declaration(&self) -> &noble_kernel::contracts::NominalDecl {
+        self.declaration
+    }
+    pub const fn module_identity(&self) -> u64 {
+        self.module_identity
+    }
+    pub const fn module_version(&self) -> u32 {
+        self.module_version
+    }
+}
+
+/// One exported named definition from the staged module's checked source.
+/// The slot is a session-local source index, not a package-provided owner.
+pub struct CheckedProgramOwner {
+    module_identity: u64,
+    module_version: u32,
+    definition_ordinal: u32,
+    definition_identity: u64,
+    definition_slot: u32,
+}
+
+impl CheckedProgramOwner {
+    pub const fn module_identity(&self) -> u64 { self.module_identity }
+    pub const fn module_version(&self) -> u32 { self.module_version }
+    pub const fn definition_ordinal(&self) -> u32 { self.definition_ordinal }
+    pub const fn definition_identity(&self) -> u64 { self.definition_identity }
+    pub const fn definition_slot(&self) -> u32 { self.definition_slot }
+}
+
 /// Borrowed, unforgeable-from-DTO ingress for signed source rederivation.
 /// Neither an Env, a Candidate, nor the structural kernel result can make one.
 pub struct SignedSourceOwner<'a> {
@@ -111,6 +150,124 @@ impl SignedSourceOwner<'_> {
 }
 
 impl ModulePrepared {
+    /// Resolve against the staged checked namespace, not a display spelling
+    /// guessed from a package. Unchecked proof-bearing modules cannot lend it.
+    pub fn resolve_type(&self, spelling: &str) -> Result<noble_kernel::types::Ty, crate::source::Error> {
+        if self.pending.is_some() {
+            return Err(super::error(crate::source::Stage::Acceptance,
+                "unchecked proof module cannot supply a worker type"));
+        }
+        self.staged.resolve_type(spelling)
+    }
+
+    /// Only the newly prepared module's nominal declarations are exposed.
+    pub fn checked_nominals(&self) -> Option<impl Iterator<Item = CheckedNominal<'_>> + '_> {
+        if self.kind != ModuleKind::Module || self.pending.is_some() {
+            return None;
+        }
+        let module = self.staged.modules.last()?;
+        let environment = &self.staged.source.declared.as_ref()?.environment;
+        Some(environment.nominals.iter()
+            .filter(|declaration| declaration.id.module == module.identity)
+            .map(move |declaration| CheckedNominal {
+                declaration,
+                module_identity: module.identity,
+                module_version: module.version,
+            }))
+    }
+
+    /// This owner comes from an exported, matching module-owned checked
+    /// definition; an unverified signed self owner is not a worker capability.
+    pub fn checked_program_owner(&self, name: &str) -> Option<CheckedProgramOwner> {
+        if self.kind != ModuleKind::Module || self.pending.is_some() {
+            return None;
+        }
+        let module = self.staged.modules.last()?;
+        let ordinal = module.definition_spans.iter()
+            .position(|definition| definition.name == name)?;
+        let exported = module.exports.iter().find(|entry| entry.name == name)?;
+        let (_, crate::source::Target::Named(index)) =
+            exported.words.iter().find(|(word, _)| word == name)? else { return None; };
+        let definition = self.staged.source.definitions.get(usize::try_from(*index).ok()?)?;
+        if definition.owner != Some(module.identity)
+            || definition.name != name
+            || definition.signed.is_some() && !module.verified_signed_slots.contains(index)
+        {
+            return None;
+        }
+        Some(CheckedProgramOwner {
+            module_identity: module.identity,
+            module_version: module.version,
+            definition_ordinal: u32::try_from(ordinal).ok()?,
+            definition_identity: definition.identity,
+            definition_slot: *index,
+        })
+    }
+
+    /// A closed package must contain exactly the named definitions reachable
+    /// from its exported root, including calls inside quotations and checked
+    /// lexical expansions. Foreign owners, unverified lexical self and unused
+    /// decoy rows fail closed.
+    pub fn checked_program_closure(&self, root: &str) -> Option<alloc::vec::Vec<CheckedProgramOwner>> {
+        let owner = self.checked_program_owner(root)?;
+        let module = self.staged.modules.last()?;
+        if module.definition_spans.is_empty()
+            || module.definition_spans.len() > super::MODULE_CAP {
+            return None;
+        }
+        let named = &self.staged.source.definitions;
+        let root_index = usize::try_from(owner.definition_slot).ok()?;
+        let mut visited = alloc::vec![false; named.len()];
+        let mut enqueued = alloc::vec![false; named.len()];
+        let mut pending = alloc::vec![root_index];
+        let mut meter = crate::Meter::new(self.limits);
+        enqueued[root_index] = true;
+        while let Some(index) = pending.pop() {
+            let definition = named.get(index)?;
+            if definition.owner != Some(module.identity)
+                || definition.signed.is_some()
+                    && !module.verified_signed_slots.contains(&u32::try_from(index).ok()?)
+            {
+                return None;
+            }
+            if visited[index] { continue; }
+            visited[index] = true;
+            for node in &definition.tree.nodes {
+                meter.charge(1, node.span).ok()?;
+                match &node.kind {
+                    crate::source::Kind::Call(crate::source::Target::Named(target)) => {
+                        let next = usize::try_from(*target).ok()?;
+                        if !*enqueued.get(next)? {
+                            enqueued[next] = true;
+                            pending.push(next);
+                        }
+                    }
+                    crate::source::Kind::Call(crate::source::Target::SlotInvoke(_)
+                        | crate::source::Target::SelfOwner) => return None,
+                    _ => {}
+                }
+            }
+        }
+        let mut closure = alloc::vec::Vec::with_capacity(module.definition_spans.len());
+        for (ordinal, entry) in module.definition_spans.iter().enumerate() {
+            meter.charge(1, super::SPAN).ok()?;
+            let index = named.iter().position(|definition| definition.name == entry.name
+                && definition.owner == Some(module.identity))?;
+            if !visited[index] {
+                return None;
+            }
+            closure.push(CheckedProgramOwner {
+                module_identity: module.identity,
+                module_version: module.version,
+                definition_ordinal: u32::try_from(ordinal).ok()?,
+                definition_identity: named[index].identity,
+                definition_slot: u32::try_from(index).ok()?,
+            });
+        }
+        (visited.iter().filter(|seen| **seen).count() == closure.len())
+            .then_some(closure)
+    }
+
     pub fn declared_text_source_owner(&self) -> Option<DeclaredTextSourceOwner<'_>> {
         if self.kind != ModuleKind::Expression || self.signed_expression.is_empty()
             || !self.staged.source.declared.as_ref()

@@ -5,7 +5,7 @@ mod parsing;
 mod signatures;
 mod state;
 pub(super) mod types;
-pub use state::{DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, SignedSourceOwner};
+pub use state::{CheckedNominal, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, SignedSourceOwner};
 
 const SPAN: crate::Span = crate::Span { start: 0, end: 0 };
 const MODULE_CAP: usize = 128;
