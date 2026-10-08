@@ -27,7 +27,7 @@ pub(crate) const EVIDENCE_LIMITS: noble_contracts::Limits = noble_contracts::Lim
 };
 
 pub const USAGE: &str = "usage:
-  noble live repl [--source ABS_PATH] [--engine v8|interpreter] [--self-edit NAME --expect-generation N]
+  noble live repl [--source ABS_PATH] [--engine v8|interpreter] [--self-edit NAME --expect-generation N] [--verify-source-before-execute]
   live repl: newline-delimited source, :reload ABS_PATH, or :grant-self-edit NAME N; interpreter is unavailable
   noble live slot --engine v8 --authority ABS_PATH
   live slot: bounded JSONL define/install/candidate/publish/delete/rollback/invoke/reflect/trace/

@@ -73,6 +73,15 @@ impl LiveChild {
         Self::start_with_options(source, None)
     }
 
+    fn start_verified(source: &Path) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command
+            .args(["live", "repl", "--source"])
+            .arg(source)
+            .args(["--engine", "v8", "--verify-source-before-execute"]);
+        Self::spawn(command)
+    }
+
     fn start_with_grant(
         source: &Path,
         name: &str,
@@ -315,6 +324,155 @@ fn live_01_reload_ack_precedes_fresh_next_top_level_call() -> Result<(), Box<dyn
     assert!(after > before, "committed generation must advance");
     assert_ne!(old_hash, new_hash, "changed source must have a new digest");
     normal(&live.submit("20 addone")?, &["21", "22"]);
+    live.finish()
+}
+
+fn assert_source_change_refused(report: &Value, generation: u64, stack: &[&str], old_hash: &str) {
+    assert_eq!(text_field(report, "schema"), "noble-live-report/v1");
+    assert_eq!(text_field(report, "stage"), "admission");
+    assert_eq!(text_field(report, "outcome"), "source-change-refused", "{report}");
+    assert_eq!(number_field(report, "generation"), generation);
+    assert_eq!(text_field(report, "selected_file_sha256"), old_hash);
+    assert_eq!(number_field(report, "guest_requests"), 0);
+    assert_eq!(number_field(report, "protected_operations"), 0);
+    assert_eq!(number_field(report, "candidate_prepare_requests"), 0);
+    assert_eq!(text_field(report, "prior_namespace"), "unchanged");
+    assert_stack(report, stack);
+}
+
+#[test]
+fn source_verification_requires_explicit_selected_file() -> Result<(), Box<dyn std::error::Error>> {
+    let output = Command::new(env!("CARGO_BIN_EXE_noble"))
+        .args(["live", "repl", "--verify-source-before-execute"])
+        .stdin(Stdio::null())
+        .output()?;
+    assert_eq!(output.status.code(), Some(2));
+    let reports = String::from_utf8(output.stdout)?
+        .lines()
+        .map(serde_json::from_str::<Value>)
+        .collect::<Result<Vec<_>, _>>()?;
+    assert_eq!(reports.len(), 1);
+    assert_eq!(text_field(&reports[0], "outcome"), "reload-refused");
+    assert_eq!(number_field(&reports[0], "guest_requests"), 0);
+    assert_eq!(number_field(&reports[0], "protected_operations"), 0);
+    Ok(())
+}
+
+#[test]
+fn verified_submission_refuses_atomic_rename_until_explicit_reload() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    normal(&live.submit("20 addone")?, &["21"]);
+    fixture.replace("def addone [ 2 + ]")?;
+    let refused = live.submit("20 addone")?;
+    assert_source_change_refused(&refused, generation, &["21"], &old_hash);
+    assert_ne!(text_field(&refused, "observed_source_sha256"), old_hash);
+    assert_generation_inspection(&live.submit(":generation")?, generation, &refused["stack"]);
+    let (after, next_hash) = live_ack(
+        &live.submit(&format!(":reload {}", fixture.source.display()))?, &["21"],
+    );
+    assert_eq!(after, generation + 1);
+    assert_eq!(text_field(&refused, "observed_source_sha256"), next_hash);
+    normal(&live.submit("20 addone")?, &["21", "22"]);
+    live.finish()
+}
+
+#[test]
+fn verified_definition_cannot_extend_namespace_while_selected_file_changed() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    fixture.replace("def addone [ 2 + ]")?;
+    let refused = live.submit("def another [ 3 + ]")?;
+    assert_source_change_refused(&refused, generation, &[], &old_hash);
+    let (next, _) = live_ack(
+        &live.submit(&format!(":reload {}", fixture.source.display()))?, &[],
+    );
+    assert_eq!(next, generation + 1);
+    let unknown = live.submit("20 another")?;
+    assert_eq!(text_field(&unknown, "outcome"), "unbound-word", "{unknown}");
+    assert_eq!(text_field(&unknown, "stage"), "resolve");
+    assert_eq!(number_field(&unknown, "guest_requests"), 0);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[test]
+fn verified_reload_retains_old_program_capture_after_source_change_refusal() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    let saved = live.submit("20 [ addone ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program");
+    fixture.replace("def addone [ 2 + ]")?;
+    let refused = live.submit("run")?;
+    assert_eq!(text_field(&refused, "outcome"), "source-change-refused", "{refused}");
+    assert_eq!(refused["stack"], saved["stack"]);
+    assert_eq!(number_field(&refused, "generation"), generation);
+    assert_eq!(text_field(&refused, "selected_file_sha256"), old_hash);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    let ack = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    assert_eq!(number_field(&ack, "generation"), generation + 1);
+    assert_eq!(ack["stack"], saved["stack"]);
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 addone")?, &["21", "22"]);
+    live.finish()
+}
+
+#[test]
+fn verified_submission_detects_external_hardlink_mutation() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let external = Fixture::new("unused")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    fs::remove_file(&external.source)?;
+    fs::hard_link(&fixture.source, &external.source)?;
+    fs::write(&external.source, "def addone [ 9 + ]")?;
+    let refused = live.submit("20 addone")?;
+    assert_source_change_refused(&refused, generation, &[], &old_hash);
+    assert_ne!(text_field(&refused, "observed_source_sha256"), old_hash);
+    fixture.replace("def addone [ 1 + ]")?;
+    normal(&live.submit("20 addone")?, &["21"]);
+    assert_eq!(number_field(&live.submit(":generation")?, "generation"), generation);
+    live.finish()
+}
+
+#[test]
+fn verified_submission_refuses_unverifiable_selected_path_without_guest() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    let displaced = fixture.directory.join("displaced.noble");
+    fs::rename(&fixture.source, &displaced)?;
+    let refused = live.submit("20 addone")?;
+    assert_source_change_refused(&refused, generation, &[], &old_hash);
+    assert_eq!(refused["observed_source_sha256"], Value::Null);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    fs::rename(displaced, &fixture.source)?;
+    normal(&live.submit("20 addone")?, &["21"]);
+    live.finish()
+}
+
+#[test]
+fn verified_submission_refuses_partial_in_place_bytes_before_guest() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_verified(&fixture.source)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    fs::write(&fixture.source, "def addone [ 2 +")?;
+    let refused = live.submit("20 addone")?;
+    assert_source_change_refused(&refused, generation, &[], &old_hash);
+    let stale = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&stale, "outcome"), "reload-refused", "{stale}");
+    assert_eq!(number_field(&stale, "generation"), generation);
+    assert_eq!(number_field(&stale, "guest_requests"), 0);
+    fixture.replace("def addone [ 2 + ]")?;
+    let (next, _) = live_ack(
+        &live.submit(&format!(":reload {}", fixture.source.display()))?, &[],
+    );
+    assert_eq!(next, generation + 1);
+    normal(&live.submit("20 addone")?, &["22"]);
     live.finish()
 }
 

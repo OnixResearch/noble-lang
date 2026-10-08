@@ -75,6 +75,13 @@ async function protocol(config) {
             } catch (error) { emit('internal-failure', reportError(error)); return; }
             continue;
           }
+          if (header === 'discard-prepared-live') {
+            try {
+              const report = engine.discardPreparedLive();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
           if (header === 'take-live-proposal') {
             try {
               const report = engine.takeLiveProposal();

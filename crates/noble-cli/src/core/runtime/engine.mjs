@@ -346,6 +346,20 @@ export class CoreEngine {
     }
   }
 
+  discardPreparedLive() {
+    if (!this.inProcessLive || !this.pending || this.staged || this.parked
+      || this.poisoned || this.liveExecuting) {
+      fail('no idle prepared live module to discard');
+    }
+    // Preparation checked the candidate's imports and instantiated it, but
+    // execution has not installed its table entries or run its guest body.
+    this.pending = null;
+    return { schema: 'noble-core-report/v1', profile: this.profile,
+      backend: 'managed-linear-memory', stage: 'wasm', outcome: 'discarded',
+      generation: this.shared.generation.value, guest_requests: 0,
+      protected_operations: 0, candidate_prepare_requests: 0 };
+  }
+
   liveRefusal(diagnostic, outcome = 'reload-refused') {
     const previousWork = this.observationWork;
     const previousGuard = this.liveInstalling;
