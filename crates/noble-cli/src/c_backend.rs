@@ -41,7 +41,7 @@ typedef struct { const unsigned char *bytes; size_t length; unsigned valid; } St
 enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_UNIT, OP_IF, OP_DIP, OP_TEXT,
        OP_PAIR, OP_UNPAIR, OP_INL, OP_INR, OP_CASE };
 typedef struct { unsigned kind; uint64_t left, right; Value capture; size_t leaves, depth; } Program;
-typedef struct { unsigned kind; Value left, right; } Aggregate;
+typedef struct { unsigned kind; size_t length; Value left, right; } Aggregate;
 typedef struct { size_t leaves, depth; } Metrics;
 typedef struct { Value value; size_t depth; } DataVisit;
 typedef struct { uint64_t program; size_t pc; unsigned phase; Value restore; } Frame;
@@ -106,7 +106,8 @@ static unsigned pop_bool(void) {
 static const Aggregate *aggregate(Value value, unsigned kind) {
     if (value.tag != kind || value.bits >= aggregate_count) fail("invalid aggregate tag");
     const Aggregate *item = &aggregates[value.bits];
-    if (item->kind != kind) fail("invalid aggregate reference");
+    if (item->kind != kind || item->length != (kind == TAG_PAIR ? 2u : 1u))
+        fail("invalid aggregate reference");
     return item;
 }
 static void check_value(Value value) {
@@ -135,7 +136,7 @@ static void new_aggregate(unsigned kind, Value left, Value right) {
     check_value(left);
     if (kind == TAG_PAIR) check_value(right);
     size_t index = aggregate_count;
-    aggregates[index] = (Aggregate){kind, left, right};
+    aggregates[index] = (Aggregate){kind, kind == TAG_PAIR ? 2u : 1u, left, right};
     ++aggregate_count;
     push(kind, index);
 }

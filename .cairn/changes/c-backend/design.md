@@ -2,7 +2,7 @@
 
 ## Context
 
-`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles only checked, effect-free Core-Bootstrap I64/Bool/Unit/Text expressions; it does not compile or execute native ELF. The held canonical status paragraph still describes the earlier I64/Bool slice and needs independent owner review before any integration. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
+`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap I64/Bool/Unit/Text-result expressions plus internal Pair/Sum operations; it does not compile or execute native ELF. The held canonical CB-BUILD-01 status paragraph still excludes the new internal Pair/Sum slice, pending independent owner review and legal delta sync. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
 
 The isolated source-only emitter now lowers checked pure `dip` and `if`
 as well as literal/stack/arithmetic/Unit/quotation/`quote`/`compose`/`run`.
@@ -21,8 +21,11 @@ The source-only path now verifies one UTF-8 `Body.texts` payload per checked
 static bytes with bounded JSON escaping. Contract/policy JSON now rejects
 duplicate member names recursively before interpretation. These corrections
 are not native admission or executed C semantics.
-The complete CB-SCOPE/CB-VALUE/CB-LIMIT contracts are still open: Pair/Sum/List,
-inert Syntax/`reflect`, typed runtime input, definitions, `test.emit`
+The source-only WIP also lowers checked internal `pair`/`unpair` and
+`inl`/`inr`/`case` with immutable bounded tagged arena references and
+iterative nested capture accounting, but still refuses final aggregate
+results. The complete CB-SCOPE/CB-VALUE/CB-LIMIT contracts remain open:
+List, inert Syntax/`reflect`, typed runtime input, definitions, `test.emit`
 and current host authority require distinct checked representations
 or a real mediator. The source-only policy has only
 `stack_slots`/`steps`/`output_bytes`, not the native list/aggregate/
@@ -224,7 +227,7 @@ Program recipes), traces and protected-action prefixes, normal/trap/quota/
 denial classifications and both C optimization modes. Preserve the
 different accounting of C source-only steps and Wasm fuel rather than
 falsely calling unequal budgets equal. CB-01's supplied `list_length: 2`
-still refuses under the present exact I64/Bool policy; CB-02 needs values
+still refuses under the present exact three-key source-only policy; CB-02 needs values
 and runtime inputs not yet emitted; CB-03/07 need a real mediator; CB-04/05
 need exact tool/ELF admission; CB-06 needs list quotas; CB-08 needs the
 sealed hostile VM lane; CB-09/10 need scope and stale-receipt review.

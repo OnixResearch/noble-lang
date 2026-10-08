@@ -1414,8 +1414,8 @@ is present in this isolated WIP, now including internal Pair/Sum
 construction/elimination and bounded immutable aggregate captures.
 Pair/Sum/List/Syntax/Program final results, lists, reflect, runtime inputs
 and host mediation remain unsupported. The held canonical CB-BUILD-01
-still describes a narrower route; the active delta is stale and cannot
-replace it before independent owner review and reconciliation.
+still describes a narrower route; the reconciled active delta cannot
+replace it before independent owner review and legal sync.
 `--native` and `execute --target c` refuse. CB-CASE-01's supplied
 `limits.list_length` is not accepted by that source-only policy, so the
 case remains open rather than treating the bound as an ignored field.

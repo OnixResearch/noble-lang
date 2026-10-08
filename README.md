@@ -99,8 +99,8 @@ Syntax and pure Program contracts, but source-only final Pair/Sum/List/Syntax/
 Program outputs still refuse. List construction and `list.case`, `reflect`,
 host effects, named definitions, runtime inputs and other profiles refuse;
 there is no Wasm fallback. The new internal Pair/Sum path is unreviewed
-source-only WIP, not yet synced into the held canonical CB-BUILD-01 paragraph
-or its stale active change delta.
+source-only WIP, reconciled in the active change delta but not yet synced
+into the held canonical CB-BUILD-01 paragraph.
 
 ```sh
 printf '20 2 quote [ + ] compose run\n' > capture.noble
@@ -145,10 +145,11 @@ the isolated CLI test uses the existing pinned component GCC15 wrapper with
 pin is not a selected C backend compiler or a native artifact admission. It
 produces no admitted ELF and cannot establish C/Wasm differential results.
 All CB-CASE-01..10 remain absent/not-run/open/unassessed; the active C delta
-still contains stale I64/Bool and last-wins prose, so structural Cairn
-proposal/design/tasks gates and a nonblocked *preview* are not permission to
-sync it over stronger canonical text. Independent owner review and
-reconciliation of all eleven modified requirements remain required. The
+has been reconciled against all eleven canonical requirement bodies and
+their linked scenario designs, but structural Cairn proposal/design/tasks
+gates and a nonblocked *preview* are not independent owner approval or
+permission to sync it. The eight remaining implementation, owner-review
+and assurance tasks stay open. The
 canonical CB-BUILD-01 still describes the earlier narrower source-only slice,
 not the unreviewed internal Pair/Sum WIP. The [review-only native security design](.cairn/changes/c-backend/design.md)
 lists prerequisites, not a selected
