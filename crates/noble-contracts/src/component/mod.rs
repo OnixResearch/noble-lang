@@ -223,6 +223,18 @@ impl World {
         self.select_worker_program_shape(Some(noble_kernel::contracts::TEST_EMIT))
     }
 
+    /// The deny-only captured-Text export request has its own exact checked
+    /// source effect. WIT selection alone does not authorize publication.
+    pub fn select_worker_program_for_test_code_export(
+        self,
+        source: &crate::source::CheckedProgramInterface,
+    ) -> Result<Self, Error> {
+        if !source.is_test_code_export_i64_endomorphism() {
+            return Err(unsupported("Worker WIT requires checked test.code-export Program"));
+        }
+        self.select_worker_program_shape(Some(noble_kernel::contracts::TEST_CODE_EXPORT))
+    }
+
     fn select_worker_program_shape(
         mut self,
         effect: Option<noble_kernel::types::EffId>,
@@ -246,7 +258,7 @@ impl World {
             || self.imports[1].results != [Type::S64]
             || self.imports[2].identity !=
                 "noble-test:worker-program/programs@2.0.0#request-code-export"
-            || self.imports[2].parameters != [Type::String]
+            || self.imports[2].parameters != [Type::Own(kind), Type::String]
             || self.imports[2].results != [Type::Boolean]
             || self.exports[0].identity != "noble-test:worker-program/guest@2.0.0#compute"
             || self.exports[0].parameters != [Type::S64]

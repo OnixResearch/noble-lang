@@ -145,9 +145,12 @@ pub(super) fn check(
 }
 
 fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: bool) -> bool {
-    use noble_kernel::contracts::{LIVE_DISPATCH, TEST_CLOCK, TEST_EMIT};
+    use noble_kernel::contracts::{LIVE_DISPATCH, TEST_CLOCK, TEST_CODE_EXPORT, TEST_EMIT};
     let has_clock = env.kinds.iter().any(|kind| {
         matches!(kind, noble_kernel::contracts::Behavior::BoundClock(_))
+    });
+    let has_code_export = env.kinds.iter().any(|kind| {
+        matches!(kind, noble_kernel::contracts::Behavior::BoundCodeExport(_))
     });
     if live_slots {
         // Clock registration may precede or follow the host's slot opt-in.
@@ -167,12 +170,23 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
     } else {
         alloc::vec![TEST_EMIT, noble_kernel::types::EffId(1)]
     };
-    if has_clock {
-        effects.push(TEST_CLOCK);
-    }
     if count == 26 {
         effects.push(noble_kernel::types::EffId(3));
         effects.push(noble_kernel::types::EffId(4));
+    }
+    if has_clock && has_code_export {
+        let Some(tail) = env.effects.get(effects.len()..) else {
+            return false;
+        };
+        return env.effects.starts_with(&effects)
+            && (tail == [TEST_CLOCK, TEST_CODE_EXPORT]
+                || tail == [TEST_CODE_EXPORT, TEST_CLOCK]);
+    }
+    if has_clock {
+        effects.push(TEST_CLOCK);
+    }
+    if has_code_export {
+        effects.push(TEST_CODE_EXPORT);
     }
     env.effects == effects
 }

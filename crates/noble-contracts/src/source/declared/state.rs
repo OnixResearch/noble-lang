@@ -118,6 +118,12 @@ impl CheckedProgramInterface {
             && self.effects.as_slice() == [noble_kernel::contracts::TEST_EMIT]
     }
 
+    pub fn is_test_code_export_i64_endomorphism(&self) -> bool {
+        self.input.as_slice() == [noble_kernel::types::Ty::I64]
+            && self.output.as_slice() == [noble_kernel::types::Ty::I64]
+            && self.effects.as_slice() == [noble_kernel::contracts::TEST_CODE_EXPORT]
+    }
+
     pub fn ty(&self) -> noble_kernel::types::Ty {
         noble_kernel::types::Ty::program(
             self.input.clone(), self.output.clone(), self.effects.clone())
@@ -322,7 +328,7 @@ impl ModulePrepared {
     ) -> Option<&noble_kernel::contracts::BoundAdapter> {
         if self.pending.is_some()
             || self.staged.bindings.as_slice() != core::slice::from_ref(binding)
-            || binding.operation != "test.emit"
+            || !matches!(binding.operation.as_str(), "test.emit" | "test.code-export")
             || module.name != binding.module_name
             || module.version != binding.module_version
             || module.adapter_slot != Some(binding.adapter_slot) {
@@ -337,9 +343,14 @@ impl ModulePrepared {
                 && adapter.effects.as_slice() == binding.effects.as_slice()
                 && environment.definition_owners.get(adapter.definition.0 as usize)
                     == Some(&Some(module.identity))
-                && matches!(environment.kind(adapter.definition),
+                && (matches!(environment.kind(adapter.definition),
                     Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
-                        if *slot == binding.adapter_slot)
+                        if *slot == binding.adapter_slot
+                            && binding.operation == "test.emit")
+                    || matches!(environment.kind(adapter.definition),
+                        Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
+                            if *slot == binding.adapter_slot
+                                && binding.operation == "test.code-export"))
         });
         let adapter = matching.next()?;
         matching.next().is_none().then_some(adapter)
@@ -653,7 +664,7 @@ impl ModulePrepared {
         })
     }
 
-    /// Source-checked interface for an independently selected `test.emit`
+    /// Source-checked interface for an independently selected bound effect
     /// binding. This type token does not authorize a host operation.
     pub fn checked_program_interface_for_binding(
         &self, owner: &CheckedProgramOwner, binding: &super::BoundOperation,
@@ -671,9 +682,14 @@ impl ModulePrepared {
                     && actual.input == binding.input
                     && actual.output == binding.output
                     && actual.effects == adapter.effects
-                    && matches!(submission.environment.kind(actual.definition),
+                    && (matches!(submission.environment.kind(actual.definition),
                         Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
-                            if *slot == binding.adapter_slot))
+                            if *slot == binding.adapter_slot
+                                && binding.operation == "test.emit")
+                    || matches!(submission.environment.kind(actual.definition),
+                        Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
+                            if *slot == binding.adapter_slot
+                                && binding.operation == "test.code-export")))
                 .count() != 1 {
             return None;
         }
@@ -839,7 +855,8 @@ impl ModulePrepared {
                     if let noble_kernel::untrusted::Node::Invocation { def, .. } = node {
                         if let Some(
                             noble_kernel::contracts::Behavior::BoundEmit(slot)
-                            | noble_kernel::contracts::Behavior::BoundClock(slot),
+                            | noble_kernel::contracts::Behavior::BoundClock(slot)
+                            | noble_kernel::contracts::Behavior::BoundCodeExport(slot),
                         ) = submission.environment.kind(*def) {
                             if selected.is_some_and(|previous| previous != slot) {
                                 is_ambiguous = true;

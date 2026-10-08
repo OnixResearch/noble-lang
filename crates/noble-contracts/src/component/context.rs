@@ -12,10 +12,12 @@ impl super::World {
         reason = "Owner: noble-maintainers; the two private call sites pair fixed profile and ABI constants in an exhaustive Profile match, in wire order. Separate borrowed parameters avoid Aeneas's unsupported nested-borrow join for a branch-selected tuple without copying either string."
     )]
     fn context(&self, profile: &str, abi: &str) -> alloc::vec::Vec<u8> {
-        let worker_schema: &[u8] = if self.worker_program_effect.is_some() {
-            b"worker-program-v2:Program([I64]->[I64]!{test.emit})"
-        } else {
-            b"worker-program-v2:Program([I64]->[I64]!{})"
+        let worker_schema: &[u8] = match self.worker_program_effect {
+            Some(noble_kernel::contracts::TEST_EMIT) =>
+                b"worker-program-v2:Program([I64]->[I64]!{test.emit})",
+            Some(noble_kernel::contracts::TEST_CODE_EXPORT) =>
+                b"worker-program-v2:Program([I64]->[I64]!{test.code-export})",
+            _ => b"worker-program-v2:Program([I64]->[I64]!{})",
         };
         let capacity_bytes = profile
             .len()

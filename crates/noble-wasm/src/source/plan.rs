@@ -26,6 +26,7 @@ pub(super) enum Action {
     NominalMatch(u64, u32, u32, u32, u32),
     EmitBound(u32),
     ClockBound(u32),
+    CodeExportBound(u32),
     LivePropose(u64),
     LiveGeneration,
     SlotInvoke(u32, u32),
@@ -70,6 +71,7 @@ pub(super) fn atom_metadata(
             i64::from_le_bytes(module.to_le_bytes()), None, None, ordinal),
         Action::EmitBound(slot) => (31, i64::from(slot), None, None, 0),
         Action::ClockBound(slot) => (32, i64::from(slot), None, None, 0),
+        Action::CodeExportBound(slot) => (34, i64::from(slot), None, None, 0),
         Action::LivePropose(_) => (2, 24, None, None, 0),
         Action::LiveGeneration => (2, 25, None, None, 0),
         Action::SlotInvoke(_, borrowed_ordinal) =>
@@ -77,7 +79,7 @@ pub(super) fn atom_metadata(
     };
     let (input, output, effects) = if text.is_some() {
         (8, text_witness, 0)
-    } else if tag == 2 || tag == 15 || tag == 33 || (26..=32).contains(&tag) {
+    } else if tag == 2 || tag == 15 || tag == 33 || tag == 34 || (26..=32).contains(&tag) {
         (operation.input, operation.output, operation.effects)
     } else {
         (0, 0, 0)
@@ -137,6 +139,7 @@ pub(super) struct Layout {
     pub(super) has_i64_less: bool,
     pub(super) has_bound_emit: bool,
     pub(super) has_bound_clock: bool,
+    pub(super) has_bound_code_export: bool,
     pub(super) has_live_propose: bool,
     pub(super) has_live_generation: bool,
 }
@@ -162,6 +165,7 @@ pub(super) fn effect_mask(effects: &noble_kernel::types::EffSet) -> Result<u32, 
             3 => mask |= 8,
             5 => mask |= 32,
             4 => mask |= 16,
+            6 => mask |= 64,
             _ => {
                 failure = Some(crate::Diagnostic::Unsupported);
                 break;
@@ -252,6 +256,7 @@ fn start(
         has_i64_less: false,
         has_bound_emit: false,
         has_bound_clock: false,
+        has_bound_code_export: false,
         has_live_propose: false,
         has_live_generation: false,
     };
@@ -282,6 +287,7 @@ fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
                 Action::I64Less => layout.has_i64_less = true,
                 Action::EmitBound(_) => layout.has_bound_emit = true,
                 Action::ClockBound(_) => layout.has_bound_clock = true,
+                Action::CodeExportBound(_) => layout.has_bound_code_export = true,
                 Action::LivePropose(_) => layout.has_live_propose = true,
                 Action::LiveGeneration => layout.has_live_generation = true,
                 _ => {}

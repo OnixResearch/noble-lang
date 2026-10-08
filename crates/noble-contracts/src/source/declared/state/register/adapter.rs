@@ -47,6 +47,7 @@ type Requirement = (
 enum Registration {
     Emit(noble_kernel::contracts::BoundEmitRegistration),
     Clock(noble_kernel::contracts::BoundClockRegistration),
+    CodeExport(noble_kernel::contracts::BoundCodeExportRegistration),
 }
 
 struct BindingStep {
@@ -148,6 +149,15 @@ fn bound_registration(
             output: binding.output.clone(),
             effects: noble_kernel::types::EffSet::from_ids(&binding.effects),
         })
+    } else if binding.operation == "test.code-export" {
+        Registration::CodeExport(noble_kernel::contracts::BoundCodeExportRegistration {
+            adapter_identity: binding.adapter_identity.clone(),
+            adapter_slot: binding.adapter_slot,
+            owner: identity,
+            input: binding.input.clone(),
+            output: binding.output.clone(),
+            effects: noble_kernel::types::EffSet::from_ids(&binding.effects),
+        })
     } else {
         Registration::Emit(noble_kernel::contracts::BoundEmitRegistration {
             adapter_identity: binding.adapter_identity.clone(),
@@ -171,7 +181,8 @@ fn binding_index(
     debug_assert!(version != 0);
     let (_, input, operation) = requirement;
     if !((input == "Text" && operation == "test.emit")
-        || (input.is_empty() && operation == "test.clock")) {
+        || (input.is_empty() && operation == "test.clock")
+        || (input == "Text Text" && operation == "test.code-export")) {
         return Err(crate::source::declared::error(
             crate::source::Stage::Link,
             "unsupported or mismatched required operation contract",
@@ -230,6 +241,7 @@ fn install_registration(
     let result = match registration {
         Registration::Emit(binding) => environment.declare_bound_emit(binding),
         Registration::Clock(binding) => environment.declare_bound_clock(binding),
+        Registration::CodeExport(binding) => environment.declare_bound_code_export(binding),
     };
     let (environment, target) =
         attempt!(result.map_err(|_| {

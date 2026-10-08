@@ -313,6 +313,46 @@ fn largest_module_version_survives_direct_and_imported_resolution() -> Result<()
 }
 
 #[test]
+fn code_export_binding_checks_capture_destination_and_owner_effect() -> Result<(), String> {
+    use noble_contracts::source::{BoundOperation, ModuleSession, Stage};
+    use noble_kernel::contracts::TEST_CODE_EXPORT;
+    use noble_kernel::types::Ty;
+    let binding = BoundOperation {
+        module_name: "ledger".into(), module_version: 1,
+        operation: "test.code-export".into(),
+        adapter_identity: "worker-test-code-export@1.0.0".into(),
+        adapter_slot: 9, input: vec![Ty::Text, Ty::Text],
+        output: vec![], effects: vec![TEST_CODE_EXPORT],
+    };
+    let source = b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-capture\" \"local-destination\" code_export ] ]";
+    let session = ModuleSession::new(core::slice::from_ref(&binding))
+        .map_err(|e| format!("{e:?}"))?;
+    let prepared = session.prepare(source, &[], super::LIMITS)
+        .map_err(|e| format!("{e:?}"))?;
+    let owner = prepared.checked_program_owner_for_binding("capture", &binding)
+        .ok_or("missing bound checked Program owner")?;
+    let (session, linked) = session.commit(prepared);
+    linked.map_err(|e| format!("{e:?}"))?;
+    let invoked = session.prepare(b"ledger@1.capture", &[Ty::I64], super::LIMITS)
+        .map_err(|e| format!("{e:?}"))?;
+    let interface = invoked.checked_program_interface_for_binding(&owner, &binding)
+        .ok_or("missing source-checked code-export interface")?;
+    assert!(interface.is_test_code_export_i64_endomorphism());
+    assert!(!interface.is_test_emit_i64_endomorphism());
+    let mut wrong = binding.clone();
+    wrong.input.pop();
+    assert!(matches!(ModuleSession::new(&[wrong]).and_then(|session|
+        session.prepare(source, &[], super::LIMITS)), Err(error)
+        if error.stage() == Stage::Link));
+    let mut wrong = binding;
+    wrong.effects.clear();
+    assert!(matches!(ModuleSession::new(&[wrong]).and_then(|session|
+        session.prepare(source, &[], super::LIMITS)), Err(error)
+        if error.stage() == Stage::Link));
+    Ok(())
+}
+
+#[test]
 fn scoped_generic_types_resolve_forward_ordinals_without_cycles() -> Result<(), String> {
     let mut session =
         noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;

@@ -276,6 +276,7 @@ impl Store {
     pub(crate) fn wat(&self) -> &[u8] { self.compiled.wat() }
     pub(crate) fn compiled(&self) -> &Compiled { &self.compiled }
     pub(crate) fn instance_id(&self) -> u64 { self.instance }
+    pub(crate) fn root_owner_identity(&self) -> u64 { self.root_owner.identity }
     pub(crate) fn source(&self) -> &[u8] { &self.source }
     pub(crate) fn host_policy(&self) -> Option<&super::worker_program_guest::WorkerHostPolicy> {
         self.host_policy.as_ref()
@@ -329,7 +330,11 @@ impl Store {
         let world = noble_contracts::component::World::parse(bytes, "guest", SOURCE_LIMITS)
             .map_err(|_| Refusal::Unsupported)?;
         match &self.host_policy {
-            Some(_) => world.select_worker_program_for_test_emit(&self.checked_interface),
+            Some(policy) if policy.binding().operation == "test.emit" =>
+                world.select_worker_program_for_test_emit(&self.checked_interface),
+            Some(policy) if policy.binding().operation == "test.code-export" =>
+                world.select_worker_program_for_test_code_export(&self.checked_interface),
+            Some(_) => return Err(Refusal::Unsupported),
             None => world.select_worker_program(&self.checked_interface),
         }
             .map_err(|_| Refusal::Invalid)

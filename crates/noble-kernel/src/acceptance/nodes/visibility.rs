@@ -32,7 +32,9 @@ fn visible_behavior(
     }
     if matches!(
         kind,
-        crate::contracts::Behavior::BoundEmit(_) | crate::contracts::Behavior::BoundClock(_)
+        crate::contracts::Behavior::BoundEmit(_)
+            | crate::contracts::Behavior::BoundClock(_)
+            | crate::contracts::Behavior::BoundCodeExport(_)
     ) {
         return bound_emit_visible(env, def);
     }

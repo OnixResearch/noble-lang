@@ -13,10 +13,10 @@ const INTERFACE: &str = "noble-test:worker-program/programs@2.0.0";
 pub(super) const FUEL: u64 = 10_000_000;
 const EFFECT_REQUEST_LIMIT: u32 = 256;
 const EFFECT_TEXT_LIMIT: usize = 65_536;
+const LEDGER_BYTES_LIMIT: usize = 262_144;
 
-/// The host embedder chooses this subject and sink independently of source,
-/// CLI arguments and package bytes. Selecting a typed adapter is not itself
-/// permission; the current revocable policy is consulted at every callback.
+/// Host-selected synthetic `test.emit` ledger. Selection cannot grant: the
+/// exact installed Program cell must be issued after checked installation.
 #[derive(Clone)]
 pub(crate) struct WorkerHostPolicy {
     inner: std::sync::Arc<PolicyInner>,
@@ -29,23 +29,25 @@ struct PolicyInner {
     epoch: u64,
     binding: noble_contracts::source::BoundOperation,
     state: std::sync::Mutex<PolicyState>,
-    sink: std::sync::Arc<dyn Fn(&str) -> Result<()> + Send + Sync>,
 }
 struct PolicyState {
-    allowed: bool,
+    issued: Option<ProgramCell>,
     revoked: bool,
     current_epoch: u64,
     attempted: u32,
     protected: u32,
     denied: u32,
-    failed_after_attempt: u32,
+    ledger_bytes: usize,
+    ledger: Vec<String>,
+    #[cfg(test)]
+    pre_commit: Option<(std::sync::Arc<std::sync::Barrier>,
+                        std::sync::Arc<std::sync::Barrier>)>,
 }
-enum EffectOutcome { Denied, Attempted(bool) }
+enum EffectOutcome { Denied, Committed }
 impl WorkerHostPolicy {
     pub(crate) fn select(
         source_sha256: String, owner_identity: u64, source_generation: u64,
         destination: String, epoch: u64, binding: noble_contracts::source::BoundOperation,
-        allowed: bool, sink: std::sync::Arc<dyn Fn(&str) -> Result<()> + Send + Sync>,
     ) -> Result<Self> {
         ensure!(source_sha256.len() == 64
             && source_sha256.bytes().all(|byte| byte.is_ascii_hexdigit()
@@ -54,19 +56,27 @@ impl WorkerHostPolicy {
             && !destination.is_empty() && destination.len() <= 128
             && !destination.as_bytes().contains(&0) && epoch != 0,
             "invalid selected Worker host subject");
-        ensure!(binding.operation == "test.emit"
-            && binding.module_version != 0 && binding.adapter_slot != 0
-            && binding.adapter_identity == "worker-test-emit@1.0.0"
-            && binding.input == [noble_kernel::types::Ty::Text]
+        ensure!(binding.module_version != 0 && binding.adapter_slot != 0
             && binding.output.is_empty()
-            && binding.effects == [noble_kernel::contracts::TEST_EMIT],
+            && ((binding.operation == "test.emit"
+                && binding.adapter_identity == "worker-test-emit@1.0.0"
+                && binding.input == [noble_kernel::types::Ty::Text]
+                && binding.effects == [noble_kernel::contracts::TEST_EMIT])
+                || (binding.operation == "test.code-export"
+                && binding.adapter_identity
+                    == noble_kernel::contracts::TEST_CODE_EXPORT_ADAPTER_IDENTITY
+                && binding.input == [noble_kernel::types::Ty::Text,
+                    noble_kernel::types::Ty::Text]
+                && binding.effects == [noble_kernel::contracts::TEST_CODE_EXPORT])),
             "unsupported selected Worker bound adapter");
         Ok(Self { inner: std::sync::Arc::new(PolicyInner {
             source_sha256, owner_identity, source_generation, destination, epoch,
             binding, state: std::sync::Mutex::new(PolicyState {
-                allowed, revoked: false, current_epoch: epoch, attempted: 0, protected: 0,
-                denied: 0, failed_after_attempt: 0,
-            }), sink,
+                issued: None, revoked: false, current_epoch: epoch, attempted: 0, protected: 0,
+                denied: 0, ledger_bytes: 0, ledger: Vec::new(),
+                #[cfg(test)]
+                pre_commit: None,
+            }),
         }) })
     }
 
@@ -79,6 +89,31 @@ impl WorkerHostPolicy {
         self.inner.source_sha256 == crate::workflow::intrinsic::sha256(source)
             && self.inner.owner_identity == owner_identity
             && self.inner.source_generation == source_generation
+    }
+
+    fn issue_installed(&self, source: &ProgramStore, root: Handle, cell: ProgramCell,
+                       task: &TaskOwner)
+        -> Result<()> {
+        ensure!(source.host_policy().is_some_and(|selected|
+            std::sync::Arc::ptr_eq(&selected.inner, &self.inner))
+            && self.inner.binding.operation == "test.emit"
+            && source.node_index(root).is_some()
+            && source.root_owner_identity() == self.inner.owner_identity
+            && cell.scope == source.instance_id()
+            && cell.address != 0
+            && cell.definition_identity == self.inner.owner_identity,
+            "Worker issuer subject differs from checked installed Program");
+        let mut state = self.inner.state.lock()
+            .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
+        ensure!(task.running()?
+            && !state.revoked && state.current_epoch == self.inner.epoch
+            && state.issued.is_none_or(|previous|
+                previous.scope == cell.scope && previous.address == cell.address
+                    && previous.capture_hash == cell.capture_hash
+                    && previous.definition_identity == cell.definition_identity),
+            "Worker host issue is stale or revoked");
+        state.issued = Some(cell);
+        Ok(())
     }
 
     pub(crate) fn revoke(&self) -> Result<()> {
@@ -95,31 +130,45 @@ impl WorkerHostPolicy {
         Ok(())
     }
 
-    fn emit(&self, slot: u32, text: &str, task: &TaskOwner) -> Result<EffectOutcome> {
+    fn emit(&self, cell: ProgramCell, slot: u32, text: &str, task: &TaskOwner)
+        -> Result<EffectOutcome> {
         let mut state = self.inner.state.lock()
             .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
         state.attempted = state.attempted.checked_add(1)
             .context("Worker effect request count overflow")?;
+        let next_bytes = state.ledger_bytes.checked_add(text.len());
         if state.attempted > EFFECT_REQUEST_LIMIT
-            || !state.allowed || state.revoked || state.current_epoch != self.inner.epoch
-            || !task.running()?
+            || state.issued != Some(cell)
+            || state.revoked || state.current_epoch != self.inner.epoch
+            || !task.running().unwrap_or(false)
             || slot != self.inner.binding.adapter_slot
-            || text.len() > EFFECT_TEXT_LIMIT {
+            || text.len() > EFFECT_TEXT_LIMIT
+            || next_bytes.is_none_or(|bytes| bytes > LEDGER_BYTES_LIMIT) {
             state.denied = state.denied.checked_add(1)
                 .context("Worker effect denial count overflow")?;
             return Ok(EffectOutcome::Denied)
         }
-        state.protected = state.protected.checked_add(1)
-            .context("Worker protected attempt count overflow")?;
-        drop(state);
-        let performed = (self.inner.sink)(text).is_ok();
-        if !performed {
-            let mut state = self.inner.state.lock()
-                .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
-            state.failed_after_attempt = state.failed_after_attempt.checked_add(1)
-                .context("Worker effect failure count overflow")?;
+        let completed = state.protected.checked_add(1)
+            .context("Worker protected completion count overflow")?;
+        #[cfg(test)]
+        if let Some((entered, release)) = &state.pre_commit {
+            entered.wait();
+            release.wait();
         }
-        Ok(EffectOutcome::Attempted(performed))
+        state.ledger.push(text.to_owned());
+        state.ledger_bytes = next_bytes.context("Worker ledger quota overflow")?;
+        state.protected = completed;
+        Ok(EffectOutcome::Committed)
+    }
+
+    fn deny_malformed_request(&self) -> Result<()> {
+        let mut state = self.inner.state.lock()
+            .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
+        state.attempted = state.attempted.checked_add(1)
+            .context("Worker malformed request count overflow")?;
+        state.denied = state.denied.checked_add(1)
+            .context("Worker malformed denial count overflow")?;
+        Ok(())
     }
 
     fn counts(&self) -> Result<(u32, u32)> {
@@ -129,17 +178,25 @@ impl WorkerHostPolicy {
     }
 
     pub(crate) fn receipt(&self) -> Result<serde_json::Value> {
+        ensure!(self.inner.binding.operation == "test.emit",
+            "only the synthetic ledger publishes an effect receipt");
         let state = self.inner.state.lock()
             .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
-        let succeeded = state.protected.checked_sub(state.failed_after_attempt)
-            .context("Worker protected completion count underflow")?;
         Ok(serde_json::json!({
             "schema":"noble-worker-host-effect/v1",
             "effect":"test.emit","policy_epoch":self.inner.epoch,
             "effect_requests":state.attempted,"protected_operations":state.protected,
-            "denied_requests":state.denied,"succeeded":succeeded,
-            "unknown_after_attempt":state.failed_after_attempt
+            "denied_requests":state.denied,"succeeded":state.protected,
+            "unknown_after_attempt":0
         }))
+    }
+
+    #[cfg(test)]
+    fn ledger(&self) -> Result<Vec<(String, String)>> {
+        let state = self.inner.state.lock()
+            .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))?;
+        Ok(state.ledger.iter().map(|text|
+            (self.inner.destination.clone(), text.clone())).collect())
     }
 }
 
@@ -154,11 +211,18 @@ struct TaskState {
 pub(super) struct TaskOwner {
     scope: u64,
     state: std::sync::Arc<std::sync::Mutex<TaskState>>,
+    policy: Option<WorkerHostPolicy>,
 }
 impl TaskOwner {
     pub(super) fn new(scope: u64) -> Self {
         Self { scope, state: std::sync::Arc::new(std::sync::Mutex::new(
-            TaskState { phase: Phase::Ready, result: None, engine: None })) }
+            TaskState { phase: Phase::Ready, result: None, engine: None })),
+            policy: None }
+    }
+    fn for_source(source: &ProgramStore) -> Self {
+        let mut task = Self::new(source.instance_id());
+        task.policy = source.host_policy().cloned();
+        task
     }
     fn start(&self, engine: &Engine) -> Result<()> {
         let mut state = self.state.lock().map_err(|_| anyhow::anyhow!("task owner poisoned"))?;
@@ -192,6 +256,10 @@ impl TaskOwner {
     }
     pub(super) fn cancel(&self, scope: u64) -> Result<bool> {
         ensure!(scope == self.scope, "foreign Program task cancellation");
+        // Same lock order as emit: policy before task. The acknowledgement
+        // cannot overtake an admitted ledger append still holding policy.
+        let _policy = self.policy.as_ref().map(|policy| policy.inner.state.lock()
+            .map_err(|_| anyhow::anyhow!("Worker policy poisoned"))).transpose()?;
         let mut state = self.state.lock().map_err(|_| anyhow::anyhow!("task owner poisoned"))?;
         match state.phase {
             Phase::Ready | Phase::Running | Phase::Completed => {
@@ -214,7 +282,7 @@ impl TaskOwner {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 struct ProgramCell {
     scope: u64,
     address: u32,
@@ -229,6 +297,7 @@ struct Installed {
 struct Host {
     table: ResourceTable,
     installed: Option<Installed>,
+    export_capture: Option<ProgramCell>,
     policy: Option<WorkerHostPolicy>,
     scope: u64,
     task: TaskOwner,
@@ -240,6 +309,7 @@ struct Host {
     protected_operations: u32,
     code_export_requests: u32,
     code_export_denials: u32,
+    capture_published: bool,
 }
 impl Host {
     fn release(&mut self, owner: Resource<ProgramCell>) -> Result<ProgramCell> {
@@ -281,17 +351,34 @@ fn bound_emit(mut caller: Caller<'_, Host>, offset: i32, length: i32, slot: i32)
         let text = std::str::from_utf8(memory.data(&caller)
             .get(start..end).context("Worker effect Text out of memory bounds")?)
             .context("Worker effect Text is not UTF-8")?;
-        policy.emit(u32::try_from(slot)?, text, &task)
+        policy.emit(installed.cell, u32::try_from(slot)?, text, &task)
     })();
     match request {
-        Ok(EffectOutcome::Attempted(performed)) => {
+        Ok(EffectOutcome::Committed) => {
             let host = caller.data_mut();
             let Some(next) = host.protected_operations.checked_add(1) else { return 1 };
             host.protected_operations = next;
-            if performed { 0 } else { 1 }
+            0
         }
-        Ok(EffectOutcome::Denied) | Err(_) => 1,
+        Ok(EffectOutcome::Denied) => 1,
+        Err(_) => {
+            if let Some(policy) = &caller.data().policy {
+                let _ = policy.deny_malformed_request();
+            }
+            1
+        }
     }
+}
+
+/// There is no authorized source-side code exporter. Even a valid checked
+/// adapter receives a typed denial before reading either Text argument.
+fn denied_code_export_bound(mut caller: Caller<'_, Host>, _slot: i32) -> i32 {
+    let host = caller.data_mut();
+    let (Some(requests), Some(denials)) = (host.code_export_requests.checked_add(1),
+        host.code_export_denials.checked_add(1)) else { return 1 };
+    host.code_export_requests = requests;
+    host.code_export_denials = denials;
+    1
 }
 
 /// Fresh memory/table/globals are kept in this one Store for this one source
@@ -324,8 +411,14 @@ fn install_core(store: &mut Store<Host>, module: &Module) -> Result<wasmtime::In
                 linker.define(&*store, "noble", name, global)?;
             }
             ExternType::Func(_) if name == "test_emit_bound"
-                && store.data().policy.is_some() => {
+                && store.data().policy.as_ref().is_some_and(|policy|
+                    policy.binding().operation == "test.emit") => {
                 linker.func_wrap("noble", name, bound_emit)?;
+            }
+            ExternType::Func(_) if name == "test_code_export_bound"
+                && store.data().policy.as_ref().is_some_and(|policy|
+                    policy.binding().operation == "test.code-export") => {
+                linker.func_wrap("noble", name, denied_code_export_bound)?;
             }
             _ => bail!("unapproved Worker source Wasm import {name}"),
         }
@@ -497,7 +590,7 @@ fn bind_named(store: &mut Store<Host>, instance: wasmtime::Instance,
     let owner_identity = source.source_owner_identity(root)
         .context("missing checked source identity")?;
     let ceiling = match source.host_policy() {
-        Some(_) => noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT]),
+        Some(policy) => noble_kernel::types::EffSet::from_ids(&policy.binding().effects),
         None => noble_kernel::types::EffSet::empty(),
     };
     ensure!(named.effects.is_subset_of(&ceiling),
@@ -541,7 +634,7 @@ fn bind_installed(store: &mut Store<Host>, instance: wasmtime::Instance,
     let (input, output, effects) = source.interface(root)
         .context("missing selected Program witness")?;
     let selected_effects = match source.host_policy() {
-        Some(_) => noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT]),
+        Some(policy) => noble_kernel::types::EffSet::from_ids(&policy.binding().effects),
         None => noble_kernel::types::EffSet::empty(),
     };
     ensure!(input == [noble_kernel::types::Ty::I64]
@@ -591,8 +684,15 @@ fn bind_installed(store: &mut Store<Host>, instance: wasmtime::Instance,
             && cell_field(store,instance,"cell_n",address)? == leaves
             && payload == (left_effects | right_effects),
             "installed composition differs from checked graph");
+        let owner_identity = source.root_owner_identity();
+        let definition_identity = if first.definition_identity == owner_identity
+            || second.definition_identity == owner_identity {
+            owner_identity
+        } else {
+            0
+        };
         cells.push(ProgramCell { scope: source.instance_id(), address,
-            definition_identity: 0, capture_hash });
+            definition_identity, capture_hash });
     }
     cells.get(index).copied().context("selected Program cell not materialized")
 }
@@ -661,18 +761,25 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                         wasmtime::component::types::ComponentItem::ComponentFunc(_)
                             if function == "request-code-export" => {
                             imports.func_wrap("request-code-export", |mut cx,
-                                (destination,): (String,)| {
+                                (owner, destination): (Resource<ProgramCell>, String)| {
                                 let host = cx.data_mut();
                                 host.code_export_requests = host.code_export_requests.checked_add(1)
                                     .context("Worker export request count overflow")?;
-                                let installed = host.installed.context("uninstalled export subject")?;
-                                ensure!(installed.cell.scope == host.scope,
-                                    "foreign code-export subject");
-                                // There is intentionally NO positive exporter. Record the
-                                // denial before touching any source or captured Text bytes;
-                                // neither destination nor secret enters an error/receipt.
+                                // Record the default denial before even resolving the
+                                // supplied owner; invalid owners cannot cause publication.
                                 host.code_export_denials = host.code_export_denials.checked_add(1)
                                     .context("Worker export denial count overflow")?;
+                                let cell = host.release(owner)?;
+                                let installed = host.installed.context("uninstalled export subject")?;
+                                ensure!(cell == installed.cell && cell.scope == host.scope
+                                    && host.export_capture == Some(cell)
+                                    && host.policy.as_ref().is_some_and(|policy|
+                                        policy.binding().operation == "test.code-export"),
+                                    "foreign or unbound private capture export subject");
+                                // The owner refers to the actual checked, installed Text
+                                // capture. The typed destination is received, but this
+                                // deny-only host cannot authorize either destination or
+                                // capture and never serializes their content.
                                 let _ = destination;
                                 Ok((false,))
                             })?;
@@ -699,6 +806,7 @@ pub(super) struct Observation {
     pub(super) protected_operations: u32,
     pub(super) code_export_requests: u32,
     pub(super) code_export_denials: u32,
+    pub(super) capture_published: bool,
 }
 
 #[derive(Debug)]
@@ -708,18 +816,21 @@ pub(super) enum GuestFailure {
 }
 
 #[derive(Clone, Copy)]
-enum GuestAction { Invoke, CodeExport }
+enum GuestAction<'a> { Invoke, CodeExport(&'a str) }
 
-fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: TaskOwner)
+fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: TaskOwner,
+                    grant: bool)
     -> Result<Store<Host>> {
     let core = core_module(&engine, source.wat())?;
     let mut store = Store::new(&engine, Host {
-        table: ResourceTable::new(), installed: None, policy: source.host_policy().cloned(),
+        table: ResourceTable::new(), installed: None, export_capture: None,
+        policy: source.host_policy().cloned(),
         scope: source.instance_id(), task,
         limits: StoreLimitsBuilder::new().memory_size(4_194_304)
             .table_elements(16_384).instances(8).tables(8).build(),
         admits: 0, invokes: 0, live_owners: 0, effect_requests: 0,
         protected_operations: 0, code_export_requests: 0, code_export_denials: 0,
+        capture_published: false,
     });
     store.limiter(|host| &mut host.limits);
     store.epoch_deadline_trap();
@@ -733,7 +844,16 @@ fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: 
     let install = instance.get_typed_func::<(),i32>(&mut store,"worker_install")?;
     ensure!(install.call(&mut store,())? == 0,"source Program install failed");
     let cell = bind_installed(&mut store, instance, source, root)?;
-    store.data_mut().installed = Some(Installed { instance, cell });
+    if grant {
+        source.host_policy().context("no selected Worker host grant")?
+            .issue_installed(source, root, cell, &store.data().task)?;
+    }
+    let host = store.data_mut();
+    if source.host_policy().is_some_and(|policy|
+        policy.binding().operation == "test.code-export") && !source.text_aliases().is_empty() {
+        host.export_capture = Some(cell);
+    }
+    host.installed = Some(Installed { instance, cell });
     Ok(store)
 }
 
@@ -743,7 +863,7 @@ pub(super) fn attest(source: &ProgramStore, root: Handle) -> Result<[u8;32]> {
     let mut config = Config::new();
     config.wasm_component_model(true).consume_fuel(true).epoch_interruption(true);
     let engine = Engine::new(&config)?;
-    let store = install_selected(&engine, source, root, TaskOwner::new(source.instance_id()))?;
+    let store = install_selected(&engine, source, root, TaskOwner::for_source(source), false)?;
     Ok(store.data().installed.context("missing installed Program cell")?
         .cell.capture_hash)
 }
@@ -752,51 +872,82 @@ pub(super) fn attest(source: &ProgramStore, root: Handle) -> Result<[u8;32]> {
 /// here; no package or caller-supplied component binary is installed.
 pub(super) fn execute(source: &mut ProgramStore, root: Handle, operand: i64)
     -> std::result::Result<Observation, GuestFailure> {
-    let task = TaskOwner::new(source.instance_id());
+    let task = TaskOwner::for_source(source);
     execute_with_task(source, root, operand, &task)
+}
+
+/// Only an embedder holding the selected policy may explicitly issue a fresh
+/// installed source cell; CLI entrypoints always use `execute` instead.
+pub(crate) fn execute_with_host_grant(source: &mut ProgramStore, root: Handle, operand: i64,
+                                     policy: &WorkerHostPolicy)
+    -> std::result::Result<Observation, GuestFailure> {
+    if !source.host_policy().is_some_and(|selected|
+        std::sync::Arc::ptr_eq(&selected.inner, &policy.inner)) {
+        return Err(GuestFailure::Invalid(anyhow::anyhow!("foreign Worker host policy")));
+    }
+    let task = TaskOwner::for_source(source);
+    source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
+    execute_reserved_with_task(source, root, operand, &task, GuestAction::Invoke, true)
+        .map_err(GuestFailure::Invalid)
 }
 
 pub(super) fn execute_with_task(source: &mut ProgramStore, root: Handle,
                                 operand: i64, task: &TaskOwner)
     -> std::result::Result<Observation, GuestFailure> {
+    if source.host_policy().is_some_and(|policy| !task.policy.as_ref().is_some_and(
+        |selected| std::sync::Arc::ptr_eq(&selected.inner, &policy.inner))) {
+        return Err(GuestFailure::Invalid(anyhow::anyhow!("unbound Worker policy task")));
+    }
     source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
-    execute_reserved_with_task(source, root, operand, task, GuestAction::Invoke)
+    execute_reserved_with_task(source, root, operand, task, GuestAction::Invoke, false)
         .map_err(GuestFailure::Invalid)
 }
 
 /// Real typed WIT host request, but no positive production exporter exists:
 /// the bound private source cell is checked and installed before the one
 /// default-denied request; no capture/source/package bytes are serialized.
-pub(crate) fn request_code_export(source: &mut ProgramStore, root: Handle, operand: i64)
+pub(crate) fn request_code_export(source: &mut ProgramStore, root: Handle, operand: i64,
+                                  destination: &str)
     -> std::result::Result<serde_json::Value, GuestFailure> {
+    if source.text_aliases().is_empty()
+        || !source.host_policy().is_some_and(|policy|
+            policy.binding().operation == "test.code-export")
+        || destination.is_empty() || destination.len() > 128
+        || !destination.bytes().all(|byte|
+            byte.is_ascii_alphanumeric() || matches!(byte, b'/' | b'.' | b'_' | b'-' | b':')) {
+        return Err(GuestFailure::Invalid(anyhow::anyhow!(
+            "unbound Worker private Text export request")));
+    }
     source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
-    let task = TaskOwner::new(source.instance_id());
+    let task = TaskOwner::for_source(source);
     let observation = execute_reserved_with_task(source, root, operand, &task,
-        GuestAction::CodeExport).map_err(GuestFailure::Invalid)?;
+        GuestAction::CodeExport(destination), false).map_err(GuestFailure::Invalid)?;
     Ok(serde_json::json!({
         "schema":"noble-worker-program-code-export/v2",
         "stage":"export-authorization","outcome":"denied",
         "guest_requests":observation.code_export_requests,
         "protected_operations":observation.protected_operations,
-        "capture_published":false,"denial_recorded":observation.code_export_denials == 1,
-        "candidate_body_requests":0
+        "capture_published":observation.capture_published,
+        "capturability_grants_export_authority":observation.protected_operations != 0,
+        "denial_recorded":observation.code_export_denials == 1,
+        "candidate_body_requests":observation.invokes
     }))
 }
 
 fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
                               operand: i64, task: &TaskOwner,
-                              action: GuestAction) -> Result<Observation> {
+                              action: GuestAction<'_>, grant: bool) -> Result<Observation> {
     ensure!(task.scope == source.instance_id(), "foreign Program task context");
     ensure!(!task.cancelled()?, "Program task cancelled before guest admission");
     let world = source.selected_world()
         .map_err(|_| anyhow::anyhow!("source Program WIT binding refused"))?;
     let guest_source = match action {
-        GuestAction::Invoke => &b"programs.admit swap programs.invoke"[..],
-        GuestAction::CodeExport =>
-            &b"\"local-destination\" programs.request-code-export drop"[..],
+        GuestAction::Invoke => "programs.admit swap programs.invoke".to_owned(),
+        GuestAction::CodeExport(destination) =>
+            format!("programs.admit \"{destination}\" programs.request-code-export drop"),
     };
     let checked = world.prepare_export("compute",
-        guest_source, super::worker_program::SOURCE_LIMITS)
+        guest_source.as_bytes(), super::worker_program::SOURCE_LIMITS)
         .map_err(|_| anyhow::anyhow!("selected guest source check refused"))?;
     let guest = noble_wasm::component::compile(&world, &[checked])
         .map_err(|_| anyhow::anyhow!("selected guest compile refused"))?;
@@ -810,7 +961,7 @@ fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
     let guest = Component::new(&engine, component)?;
     let mut linker = Linker::new(&engine);
     link(&engine, &guest, &mut linker)?;
-    let mut store = install_selected(&engine, source, root, task.clone())?;
+    let mut store = install_selected(&engine, source, root, task.clone(), grant)?;
     store.set_fuel(FUEL)?;
     let guest = linker.instantiate(&mut store, &guest)?;
     let compute = guest.get_typed_func::<(i64,),(i64,)>(&mut store,"compute")?;
@@ -821,9 +972,9 @@ fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
         ensure!(host.admits == 1 && host.invokes == 1 && host.live_owners == 0
             && host.code_export_requests == 0, "guest did not consume its Program owner");
     } else {
-        ensure!(host.admits == 0 && host.invokes == 0 && host.live_owners == 0
+        ensure!(host.admits == 1 && host.invokes == 0 && host.live_owners == 0
             && host.code_export_requests == 1 && host.code_export_denials == 1
-            && host.protected_operations == 0,
+            && host.protected_operations == 0 && !host.capture_published,
             "code-export request did not remain a single protected-work-free denial");
     }
     task.complete(value)?;
@@ -833,7 +984,8 @@ fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
         live_owners: host.live_owners, effect_requests: host.effect_requests,
         protected_operations: host.protected_operations,
         code_export_requests: host.code_export_requests,
-        code_export_denials: host.code_export_denials })
+        code_export_denials: host.code_export_denials,
+        capture_published: host.capture_published })
     })();
     if result.is_err() { task.retire(); }
     result
@@ -844,111 +996,226 @@ mod tests {
     use super::*;
     use noble_kernel::types::Ty;
 
-    fn host_selected_policy(
-        source: &[u8], allowed: bool, observed: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
-    ) -> WorkerHostPolicy {
-        let binding = noble_contracts::source::BoundOperation {
-            module_name: "Ledger".into(), module_version: 1,
-            operation: "test.emit".into(), adapter_identity: "worker-test-emit@1.0.0".into(),
-            adapter_slot: 4, input: vec![Ty::Text], output: vec![],
-            effects: vec![noble_kernel::contracts::TEST_EMIT],
+    fn host_selected_policy(source: &[u8], export: bool) -> WorkerHostPolicy {
+        let binding = if export {
+            noble_contracts::source::BoundOperation {
+                module_name: "ledger".into(), module_version: 1,
+                operation: "test.code-export".into(),
+                adapter_identity: "worker-test-code-export@1.0.0".into(),
+                adapter_slot: 4, input: vec![Ty::Text, Ty::Text], output: vec![],
+                effects: vec![noble_kernel::contracts::TEST_CODE_EXPORT],
+            }
+        } else {
+            noble_contracts::source::BoundOperation {
+                module_name: "Ledger".into(), module_version: 1,
+                operation: "test.emit".into(),
+                adapter_identity: "worker-test-emit@1.0.0".into(),
+                adapter_slot: 4, input: vec![Ty::Text], output: vec![],
+                effects: vec![noble_kernel::contracts::TEST_EMIT],
+            }
         };
         let session = noble_contracts::source::ModuleSession::new(&[binding.clone()]).unwrap();
         let module = session.prepare(source, &[], super::super::worker_program::SOURCE_LIMITS)
             .expect("host independently checks selected source bytes");
-        let owner = module.checked_program_owner_for_binding("plus", &binding)
+        let owner = module.checked_program_owner_for_binding(
+            if export { "capture" } else { "plus" }, &binding)
             .expect("host-selected exact checked owner");
         let (session, committed) = session.commit(module);
         committed.unwrap();
         WorkerHostPolicy::select(crate::workflow::intrinsic::sha256(source),
             owner.definition_identity(), session.generation(), "local-test-destination".into(),
-            1, binding, allowed, std::sync::Arc::new(move |text| {
-                observed.lock().unwrap().push(text.to_owned());
-                Ok(())
-            })).unwrap()
+            1, binding).unwrap()
     }
 
     #[test]
     fn checked_bound_guest_emits_only_under_current_host_grant() {
         let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
-        let events = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-        let policy = host_selected_policy(source, true, events.clone());
+        let policy = host_selected_policy(source, false);
         let (mut selected, root) = ProgramStore::prepare_with_policy(
-            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
-        let observed = execute(&mut selected, root, 41).unwrap();
+            source, "plus", &[Ty::I64], policy.clone(), 100_000_000).unwrap();
+        assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))),
+            "selection before checked installation is never an effect grant");
+        assert_eq!(policy.counts().unwrap(), (1, 0));
+        let observed = execute_with_host_grant(&mut selected, root, 41, &policy).unwrap();
         assert_eq!(observed.value, 42);
         assert_eq!((observed.effect_requests, observed.protected_operations), (1, 1));
-        assert_eq!(policy.counts().unwrap(), (1, 1));
-        assert_eq!(*events.lock().unwrap(), ["audit"]);
+        assert_eq!(policy.counts().unwrap(), (2, 1));
+        assert_eq!(policy.ledger().unwrap(),
+            [("local-test-destination".into(), "audit".into())]);
         policy.revoke().unwrap();
         assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))),
             "the same source and WIT owner cannot reuse a revoked host grant");
-        assert_eq!(policy.counts().unwrap(), (2, 1));
-        assert_eq!(policy.receipt().unwrap()["denied_requests"], 1);
-        assert_eq!(*events.lock().unwrap(), ["audit"]);
+        assert_eq!(policy.counts().unwrap(), (3, 1));
+        assert_eq!(policy.receipt().unwrap()["denied_requests"], 2);
+        assert_eq!(policy.ledger().unwrap().len(), 1);
 
-        let denied_events = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-        let denied = host_selected_policy(source, false, denied_events.clone());
+        let denied = host_selected_policy(source, false);
         let (mut selected, root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], denied.clone(), 70_000_000).unwrap();
         assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))));
         assert_eq!(denied.counts().unwrap(), (1, 0));
         assert_eq!(denied.receipt().unwrap()["denied_requests"], 1);
-        assert!(denied_events.lock().unwrap().is_empty());
+        assert!(denied.ledger().unwrap().is_empty());
 
-        let revoked = host_selected_policy(source, true, denied_events.clone());
+        let revoked = host_selected_policy(source, false);
         let (mut selected, root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], revoked.clone(), 70_000_000).unwrap();
         revoked.revoke().unwrap();
         assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))));
         assert_eq!(revoked.counts().unwrap(), (1, 0));
-        assert!(denied_events.lock().unwrap().is_empty());
+        assert!(revoked.ledger().unwrap().is_empty());
 
-        let expired = host_selected_policy(source, true, denied_events.clone());
+        let expired = host_selected_policy(source, false);
         let (mut selected, root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], expired.clone(), 70_000_000).unwrap();
         expired.advance_epoch(2).unwrap();
         assert!(matches!(execute(&mut selected, root, 41), Err(GuestFailure::Invalid(_))));
         assert_eq!(expired.counts().unwrap(), (1, 0));
-        assert!(denied_events.lock().unwrap().is_empty());
+        assert!(expired.ledger().unwrap().is_empty());
 
-        let cancelled = host_selected_policy(source, true, denied_events.clone());
+        let cancelled = host_selected_policy(source, false);
         let (mut selected, root) = ProgramStore::prepare_with_policy(
             source, "plus", &[Ty::I64], cancelled.clone(), 70_000_000).unwrap();
-        let task = TaskOwner::new(selected.instance_id());
+        let task = TaskOwner::for_source(&selected);
         assert!(task.cancel(selected.instance_id()).unwrap());
         assert!(matches!(execute_with_task(&mut selected, root, 41, &task),
             Err(GuestFailure::Invalid(_))));
         assert_eq!(cancelled.counts().unwrap(), (0, 0));
-        assert!(denied_events.lock().unwrap().is_empty());
+        assert!(cancelled.ledger().unwrap().is_empty());
+    }
+
+    #[test]
+    fn revocation_and_cancellation_ack_only_after_atomic_ledger_commit() {
+        use std::sync::{Barrier, mpsc};
+        use std::time::Duration;
+
+        let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
+        let policy = host_selected_policy(source, false);
+        let (selected, root) = ProgramStore::prepare_with_policy(
+            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
+        let task = TaskOwner::for_source(&selected);
+        let mut config = Config::new();
+        config.consume_fuel(true).epoch_interruption(true);
+        let engine = Engine::new(&config).unwrap();
+        task.start(&engine).unwrap();
+        let installed = install_selected(&engine, &selected, root, task.clone(), true).unwrap();
+        let cell = installed.data().installed.unwrap().cell;
+        let scope = selected.instance_id();
+        let entered = std::sync::Arc::new(Barrier::new(2));
+        let release = std::sync::Arc::new(Barrier::new(2));
+        policy.inner.state.lock().unwrap().pre_commit =
+            Some((entered.clone(), release.clone()));
+        std::thread::scope(|threads| {
+            let emitter = threads.spawn(|| policy.emit(cell, 4, "audit", &task).unwrap());
+            entered.wait();
+            let (started, started_rx) = mpsc::channel();
+            let (ack, ack_rx) = mpsc::channel();
+            let revoker = threads.spawn(|| {
+                started.send(()).unwrap();
+                policy.revoke().unwrap();
+                ack.send("revoked").unwrap();
+            });
+            let canceler = threads.spawn(|| {
+                started.send(()).unwrap();
+                task.cancel(scope).unwrap();
+                ack.send("cancelled").unwrap();
+            });
+            let both_started = started_rx.recv_timeout(Duration::from_secs(2)).is_ok()
+                && started_rx.recv_timeout(Duration::from_secs(2)).is_ok();
+            let serialized = policy.inner.state.try_lock().is_err();
+            let no_early_ack = ack_rx.recv_timeout(Duration::from_millis(40)).is_err();
+            release.wait();
+            assert!(matches!(emitter.join().unwrap(), EffectOutcome::Committed));
+            revoker.join().unwrap();
+            canceler.join().unwrap();
+            assert!(both_started && serialized && no_early_ack,
+                "revoke/cancel must not acknowledge ahead of serialized append");
+            let first = ack_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+            let second = ack_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+            assert_ne!(first, second);
+            assert!(matches!(first, "revoked" | "cancelled"));
+            assert!(matches!(second, "revoked" | "cancelled"));
+        });
+        assert_eq!(policy.ledger().unwrap(),
+            [("local-test-destination".into(), "audit".into())]);
+        assert_eq!(policy.receipt().unwrap()["succeeded"], 1);
+        assert!(matches!(policy.emit(cell, 4, "late", &task).unwrap(),
+            EffectOutcome::Denied));
+        assert_eq!(policy.receipt().unwrap()["denied_requests"], 1);
+        assert_eq!(policy.ledger().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn selected_effectful_composition_rebinds_original_checked_host_owner() {
+        let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
+        let policy = host_selected_policy(source, false);
+        let (mut selected, root) = ProgramStore::prepare_with_policy(
+            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
+        let composed = selected.compose(root, root).unwrap();
+        let observed = execute_with_host_grant(&mut selected, composed, 41, &policy).unwrap();
+        assert_eq!(observed.value, 43);
+        assert_eq!((observed.effect_requests, observed.protected_operations), (2, 2));
+        assert_eq!(policy.ledger().unwrap(), [
+            ("local-test-destination".into(), "audit".into()),
+            ("local-test-destination".into(), "audit".into()),
+        ]);
+    }
+
+    #[test]
+    fn synthetic_ledger_refuses_the_first_byte_over_its_shared_quota() {
+        let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
+        let policy = host_selected_policy(source, false);
+        let (selected, root) = ProgramStore::prepare_with_policy(
+            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
+        let task = TaskOwner::for_source(&selected);
+        let mut config = Config::new();
+        config.consume_fuel(true).epoch_interruption(true);
+        let engine = Engine::new(&config).unwrap();
+        task.start(&engine).unwrap();
+        let installed = install_selected(&engine, &selected, root, task.clone(), true).unwrap();
+        let cell = installed.data().installed.unwrap().cell;
+        let full = "a".repeat(EFFECT_TEXT_LIMIT);
+        for _ in 0..(LEDGER_BYTES_LIMIT / EFFECT_TEXT_LIMIT) {
+            assert!(matches!(policy.emit(cell, 4, &full, &task).unwrap(),
+                EffectOutcome::Committed));
+        }
+        assert!(matches!(policy.emit(cell, 4, "z", &task).unwrap(),
+            EffectOutcome::Denied));
+        assert_eq!(policy.receipt().unwrap()["succeeded"], 4);
+        assert_eq!(policy.receipt().unwrap()["denied_requests"], 1);
+        assert_eq!(policy.ledger().unwrap().len(), 4);
     }
 
     #[test]
     fn checked_private_text_code_export_request_is_redacted_and_default_denied() {
-        let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"synthetic-private-text\" drop \"audit\" emit 1 + ] ]";
-        let events = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-        let policy = host_selected_policy(source, true, events.clone());
+        let source = b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"synthetic-private-text\" \"local-destination\" code_export ] ]";
+        let policy = host_selected_policy(source, true);
         let (mut selected, root) = ProgramStore::prepare_with_policy(
-            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
-        let report = request_code_export(&mut selected, root, 41).unwrap();
+            source, "capture", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
+        let report = request_code_export(&mut selected, root, 41,
+            "denied-destination").unwrap();
         assert_eq!(report["stage"], "export-authorization");
         assert_eq!(report["outcome"], "denied");
         assert_eq!(report["guest_requests"], 1);
         assert_eq!(report["protected_operations"], 0);
         assert_eq!(report["capture_published"], false);
+        assert_eq!(report["capturability_grants_export_authority"], false);
         assert_eq!(report["denial_recorded"], true);
         assert!(!report.to_string().contains("synthetic-private-text"));
-        assert!(!report.to_string().contains("module Ledger"));
+        assert!(!report.to_string().contains("module ledger"));
         assert_eq!(policy.counts().unwrap(), (0, 0));
-        assert!(events.lock().unwrap().is_empty());
+        assert!(policy.ledger().unwrap().is_empty());
+        let denied_source_invoke = execute(&mut selected, root, 41).unwrap_err();
+        assert!(!format!("{denied_source_invoke:?}").contains("synthetic-private-text"),
+            "a direct checked code-export effect must deny without spilling capture bytes");
+        assert!(policy.ledger().unwrap().is_empty());
     }
 
     #[test]
     fn host_grant_is_bound_to_exact_source_and_generation_before_guest_admission() {
         let selected = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
         let changed = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"different\" emit 1 + ] ]";
-        let events = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-        let policy = host_selected_policy(selected, true, events.clone());
+        let policy = host_selected_policy(selected, false);
         assert!(matches!(ProgramStore::prepare_with_policy(
             changed, "plus", &[Ty::I64], policy.clone(), 70_000_000),
             Err(super::super::worker_program::Refusal::Invalid)));
@@ -956,12 +1223,29 @@ mod tests {
             crate::workflow::intrinsic::sha256(selected),
             policy.inner.owner_identity, policy.inner.source_generation + 1,
             policy.inner.destination.clone(), policy.inner.epoch,
-            policy.binding().clone(), true, policy.inner.sink.clone()).unwrap();
+            policy.binding().clone()).unwrap();
         assert!(matches!(ProgramStore::prepare_with_policy(
             selected, "plus", &[Ty::I64], stale, 70_000_000),
             Err(super::super::worker_program::Refusal::Invalid)));
-        assert!(events.lock().unwrap().is_empty());
+        assert!(policy.ledger().unwrap().is_empty());
         assert_eq!(policy.counts().unwrap(), (0, 0));
+    }
+
+    #[test]
+    fn fresh_source_session_cannot_reuse_another_installed_scope_grant() {
+        let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
+        let policy = host_selected_policy(source, false);
+        let (mut first, first_root) = ProgramStore::prepare_with_policy(
+            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
+        assert_eq!(execute_with_host_grant(&mut first, first_root, 41, &policy)
+            .unwrap().value, 42);
+        let (mut fresh, fresh_root) = ProgramStore::prepare_with_policy(
+            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
+        assert_ne!(first.instance_id(), fresh.instance_id());
+        assert!(matches!(execute(&mut fresh, fresh_root, 41),
+            Err(GuestFailure::Invalid(_))));
+        assert_eq!(policy.counts().unwrap(), (2, 1));
+        assert_eq!(policy.ledger().unwrap().len(), 1);
     }
 
     #[test]

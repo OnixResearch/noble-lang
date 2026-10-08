@@ -142,6 +142,10 @@ fn bound_row_contract(row: &super::super::BoundAdapter) -> bool {
         || (row.input.is_empty()
             && row.output.as_slice() == [crate::types::Ty::I64]
             && row.effects.as_slice() == [super::super::TEST_CLOCK])
+        || (row.adapter_identity == super::super::TEST_CODE_EXPORT_ADAPTER_IDENTITY
+            && row.input.as_slice() == [crate::types::Ty::Text, crate::types::Ty::Text]
+            && row.output.is_empty()
+            && row.effects.as_slice() == [super::super::TEST_CODE_EXPORT])
 }
 
 #[expect(
@@ -153,11 +157,15 @@ fn bootstrap_matches(env: &super::super::Env) -> bool {
         return true;
     }
     let has_clock = env.kinds.iter().any(|kind| matches!(kind, super::super::Behavior::BoundClock(_)));
+    let has_code_export = env.kinds.iter().any(|kind| matches!(kind,
+        super::super::Behavior::BoundCodeExport(_)));
     env.resource_kinds.len() == 1 + env.live_resource_nominals.len()
         && env.resource_kinds[0].0 == super::super::FIXTURE_RESOURCE.0
-        && env.effects.len() == 1 + usize::from(has_clock) + usize::from(env.live_slots)
+        && env.effects.len() == 1 + usize::from(has_clock)
+            + usize::from(has_code_export) + usize::from(env.live_slots)
         && env.effects[0].0 == super::super::TEST_EMIT.0
         && env.effects.contains(&super::super::TEST_CLOCK) == has_clock
+        && env.effects.contains(&super::super::TEST_CODE_EXPORT) == has_code_export
         && env.effects.contains(&super::super::LIVE_DISPATCH) == env.live_slots
         && env.definition_owners.len() == env.defs.len()
         && env.deps.len() == env.defs.len()
@@ -251,9 +259,11 @@ fn definitions_match(env: &super::super::Env) -> bool {
     while index < env.kinds.len() && is_matching {
         let kind = env.kinds[index];
         let is_matched = if let super::super::Behavior::BoundEmit(slot) = kind {
-            bound_definition_matches(env, index, slot, false)
+            bound_definition_matches(env, index, slot, super::super::TEST_EMIT)
         } else if let super::super::Behavior::BoundClock(slot) = kind {
-            bound_definition_matches(env, index, slot, true)
+            bound_definition_matches(env, index, slot, super::super::TEST_CLOCK)
+        } else if let super::super::Behavior::BoundCodeExport(slot) = kind {
+            bound_definition_matches(env, index, slot, super::super::TEST_CODE_EXPORT)
         } else if let Some(id) = generic_operation_id(kind) {
             generic_definition_matches(env, index, kind, id)
         } else if let Some((id, _)) = operation_identity_slot(kind) {
@@ -320,13 +330,17 @@ fn bound_definition_matches(
     env: &super::super::Env,
     index: usize,
     slot: u32,
-    clock: bool,
+    effect: crate::types::EffId,
 ) -> bool {
-    if !(if clock {
+    let valid_scheme = if effect == super::super::TEST_EMIT {
+        super::schemes::valid_emit_scheme(&env.defs[index])
+    } else if effect == super::super::TEST_CLOCK {
         super::schemes::valid_clock_scheme(&env.defs[index])
     } else {
-        super::schemes::valid_emit_scheme(&env.defs[index])
-    }) {
+        effect == super::super::TEST_CODE_EXPORT
+            && super::schemes::valid_code_export_scheme(&env.defs[index])
+    };
+    if !valid_scheme {
         return false;
     }
     let Ok(def) = u32::try_from(index) else {
@@ -337,7 +351,7 @@ fn bound_definition_matches(
     }) else {
         return false;
     };
-    if clock != (row.effects.as_slice() == [super::super::TEST_CLOCK]) {
+    if row.effects.as_slice() != [effect] {
         return false;
     }
     matches!(
@@ -355,7 +369,8 @@ fn bound_adapters_unique(env: &super::super::Env) -> bool {
         is_unique = matches!(
             env.kind(definition),
             Some(super::super::Behavior::BoundEmit(actual)
-                | super::super::Behavior::BoundClock(actual)) if actual == slot
+                | super::super::Behavior::BoundClock(actual)
+                | super::super::Behavior::BoundCodeExport(actual)) if actual == slot
         );
         let mut prior = 0;
         while prior < index && is_unique {

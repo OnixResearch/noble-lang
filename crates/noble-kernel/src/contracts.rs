@@ -16,6 +16,10 @@ pub struct Definition(pub u32);
 pub const TEST_EMIT: crate::types::EffId = crate::types::EffId(0);
 /// The reserved identity of the opt-in scripted `test.clock` effect.
 pub const TEST_CLOCK: crate::types::EffId = crate::types::EffId(2);
+/// The reserved identity of the required, deny-only `test.code-export` effect.
+pub const TEST_CODE_EXPORT: crate::types::EffId = crate::types::EffId(6);
+/// Host-selected identity of the deny-only WORKER-12 source adapter.
+pub const TEST_CODE_EXPORT_ADAPTER_IDENTITY: &str = "worker-test-code-export@1.0.0";
 /// The reserved, opt-in effect of selecting a preadmitted live program.
 pub const LIVE_DISPATCH: crate::types::EffId = crate::types::EffId(5);
 
@@ -86,6 +90,8 @@ pub enum Behavior {
     BoundEmit(u32),
     /// A required scripted `test.clock` binding, retaining its immutable slot.
     BoundClock(u32),
+    /// A required `test.code-export` binding, retaining its immutable slot.
+    BoundCodeExport(u32),
     /// Explicit opaque construction and conversion.
     NominalNew(crate::types::NominalTypeId),
     NominalInto(crate::types::NominalTypeId),
@@ -178,6 +184,16 @@ pub struct BoundEmitRegistration {
 
 /// Pending scripted clock binding; not authority to consult a real clock.
 pub struct BoundClockRegistration {
+    pub adapter_identity: alloc::string::String,
+    pub adapter_slot: u32,
+    pub owner: u64,
+    pub input: alloc::vec::Vec<crate::types::Ty>,
+    pub output: alloc::vec::Vec<crate::types::Ty>,
+    pub effects: crate::types::EffSet,
+}
+
+/// Pending code-export request; its checked effect is not export authority.
+pub struct BoundCodeExportRegistration {
     pub adapter_identity: alloc::string::String,
     pub adapter_slot: u32,
     pub owner: u64,
@@ -424,6 +440,15 @@ impl Env {
         registration: BoundClockRegistration,
     ) -> Result<(Self, Definition), NominalError> {
         nominal::register_bound_clock(self, registration)
+    }
+
+    /// Register only `Text Text -- ! test.code-export`. This checks a request,
+    /// never grants permission to serialize or export either Text.
+    pub fn declare_bound_code_export(
+        self,
+        registration: BoundCodeExportRegistration,
+    ) -> Result<(Self, Definition), NominalError> {
+        nominal::register_bound_code_export(self, registration)
     }
 
     /// The scheme of a definition.

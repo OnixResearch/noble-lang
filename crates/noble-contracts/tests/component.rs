@@ -429,11 +429,65 @@ fn worker_test_emit_selection_requires_exact_checked_effect_and_world_shape() ->
 
     let changed = std::str::from_utf8(WORKER_WIT)
         .map_err(|error| error.to_string())?
-        .replace("request-code-export: func(destination: string) -> bool",
-            "request-code-export: func(destination: string) -> s64");
+        .replace("request-code-export: func(owner: own<program>, destination: string) -> bool",
+            "request-code-export: func(owner: own<program>, destination: string) -> s64");
     assert!(World::parse(changed.as_bytes(), "guest", LIMITS)
         .map_err(|error| format!("{error:?}"))?
         .select_worker_program_for_test_emit(&checked).is_err(),
         "the effectful selector must not accept a different host interface");
+    Ok(())
+}
+
+#[test]
+fn worker_code_export_requires_exact_checked_effect_and_consumed_program_owner()
+    -> Result<(), String> {
+    use noble_contracts::component::{Type, World};
+    use noble_contracts::source::{BoundOperation, ModuleSession};
+    use noble_kernel::contracts::TEST_CODE_EXPORT;
+    use noble_kernel::types::{EffSet, Ty};
+
+    const WORKER_WIT: &[u8] = include_bytes!("../../noble-wasm/wit/worker-program.wit");
+    let binding = BoundOperation {
+        module_name: "ledger".into(), module_version: 1,
+        operation: "test.code-export".into(),
+        adapter_identity: "worker-test-code-export@1.0.0".into(),
+        adapter_slot: 4, input: vec![Ty::Text, Ty::Text], output: vec![],
+        effects: vec![TEST_CODE_EXPORT],
+    };
+    let session = ModuleSession::new(&[binding.clone()])
+        .map_err(|error| format!("{error:?}"))?;
+    let source = b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-capture\" \"local-destination\" code_export ] ]";
+    let module = session.prepare(source, &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let owner = module.checked_program_owner_for_binding("capture", &binding)
+        .ok_or("missing checked private-capture Program")?;
+    let (session, committed) = session.commit(module);
+    committed.map_err(|error| format!("{error:?}"))?;
+    let invocation = session.prepare(b"ledger@1.capture", &[Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let checked = invocation.checked_program_interface_for_binding(&owner, &binding)
+        .ok_or("missing exact checked code-export interface")?;
+    assert!(world(WORKER_WIT, "guest")?.select_worker_program(&checked).is_err());
+    assert!(world(WORKER_WIT, "guest")?
+        .select_worker_program_for_test_emit(&checked).is_err());
+    let selected = world(WORKER_WIT, "guest")?
+        .select_worker_program_for_test_code_export(&checked)
+        .map_err(|error| format!("{error:?}"))?;
+    let kind = selected.resources().first().ok_or("missing WIT Program owner")?.kind;
+    assert_eq!(selected.imports()[2].parameters,
+        [Type::Own(kind), Type::String]);
+    assert_eq!(selected.imports()[2].results, [Type::Boolean]);
+    assert_eq!(selected.noble_type(Type::Own(kind)), Some(Ty::program(
+        vec![Ty::I64], vec![Ty::I64], EffSet::from_ids(&[TEST_CODE_EXPORT]))));
+    assert!(selected.check_import_effect(&selected.imports()[2].word, &[]).is_err(),
+        "a checked effect witness never grants export destination/capture authority");
+    let changed = std::str::from_utf8(WORKER_WIT)
+        .map_err(|error| error.to_string())?
+        .replace("request-code-export: func(owner: own<program>, destination: string) -> bool",
+            "request-code-export: func(destination: string) -> bool");
+    assert!(World::parse(changed.as_bytes(), "guest", LIMITS)
+        .map_err(|error| format!("{error:?}"))?
+        .select_worker_program_for_test_code_export(&checked).is_err(),
+        "a string-only request cannot identify checked captured Program data");
     Ok(())
 }
