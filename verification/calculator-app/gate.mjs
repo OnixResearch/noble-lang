@@ -2,10 +2,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { Readable } from 'node:stream';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { auditSources, modulePaths, DEFAULT_RETAINED, OPTED_RETAINED,
-  MAX_SOURCE, RetainedNamespace, selectedCompilerReceipt } from './retention.mjs';
+  MAX_SOURCE, MAX_COMMAND_BYTES, RetainedNamespace,
+  selectedCompilerReceipt } from './retention.mjs';
+import { boundedLines } from './transport.mjs';
 
 // The default gate executes the real Noble/Wasm guest through the thin shell.
 // --vectors-only checks source contracts without executing or accepting a guest.
@@ -66,6 +69,15 @@ function checkReplayAccounting(audit) {
 }
 const replayAccounting = sourceAudit && retainedBound === OPTED_RETAINED
   ? checkReplayAccounting(sourceAudit) : null;
+const recovered = [];
+for await (const line of boundedLines(Readable.from([
+  Buffer.alloc(MAX_COMMAND_BYTES - 1, 0x61),
+  Buffer.from('bb\n{"op":"eval","expression":"x"}\n'),
+]), MAX_COMMAND_BYTES)) recovered.push(line);
+assert.equal(recovered.length, 2, 'overlong line swallowed a later command');
+assert.equal(recovered[0], null, 'overlong command line was not refused');
+assert.equal(recovered[1].toString('utf8'), '{"op":"eval","expression":"x"}',
+  'overlong command damaged the next complete line');
 const auditReceipt = audit => ({
   default_retained_source_bytes: audit.default_retained_source_bytes,
   selected_retained_source_bytes: audit.selected_retained_source_bytes,
@@ -90,6 +102,37 @@ async function sourceRevision(directory, include) {
   }
   return hash.digest('hex');
 }
+function committedApplicationSources() {
+  const root = path.resolve(import.meta.dirname, '../..');
+  const git = '/run/current-system/sw/bin/git';
+  const head = spawnSync(git, ['rev-parse', 'HEAD'], {
+    cwd: root, encoding: 'utf8', timeout: 30_000,
+  });
+  assert.equal(head.status, 0, 'calculator app checkout has no committed HEAD');
+  const revision = head.stdout.trim();
+  assert.match(revision, /^[0-9a-f]{40}$/);
+  const relativeFiles = [
+    ...fs.readdirSync(here).filter(name => /\.(noble|mjs|json)$/.test(name))
+      .map(name => `verification/calculator-app/${name}`),
+    'crates/noble-contracts/tests/calculator_capability.rs',
+    'specs/CALCULATOR.md',
+  ].sort();
+  const sources = relativeFiles.map(relative => {
+    const file = path.join(root, relative);
+    assert.equal(fs.lstatSync(file).isFile(), true, `unbound application source: ${relative}`);
+    const bytes = fs.readFileSync(file);
+    const committed = spawnSync(git, ['show', `${revision}:${relative}`], {
+      cwd: root, timeout: 30_000, maxBuffer: MAX_SOURCE + 16_384,
+    });
+    assert.equal(committed.status, 0, `application source not committed: ${relative}`);
+    const digest = createHash('sha256').update(bytes).digest('hex');
+    assert.equal(createHash('sha256').update(committed.stdout).digest('hex'), digest,
+      `application source differs from committed HEAD: ${relative}`);
+    return { path: relative, sha256: digest };
+  });
+  return { head: revision, sources };
+}
+const applicationCommit = committedApplicationSources();
 const vectors = JSON.parse(fs.readFileSync(path.join(here, 'cases.json')));
 const capabilityFixture = path.join(here, '../../crates/noble-contracts/tests/calculator_capability.rs');
 const capabilityFixtureSha256 = await digestFile(capabilityFixture);
@@ -210,6 +253,7 @@ for (const item of required['CALC-09'].input.vectors) {
 if (sourceOnly) {
   console.log(JSON.stringify({ outcome: 'source-vectors-reviewed',
     execution: 'not-run', canonical_sha256: await digestFile(selectedCanonicalPath),
+    application_commit: applicationCommit,
     capability_checker_fixture_sha256: capabilityFixtureSha256,
     retained_replay_accounting: replayAccounting,
     ...(sourceAudit ? { retained_sources: auditReceipt(sourceAudit),
@@ -316,6 +360,33 @@ const commands = [
     return command;
   }),
 ];
+const rawControls = [
+  { wire: Buffer.from('{"op":"eval","expression":'),
+    error: 'InvalidCommand' },
+  { wire: Buffer.from([0xff]), category: 'SyntaxError', span: [0, 1] },
+  { wire: Buffer.from(JSON.stringify({ op: 'eval', expression: '1',
+    budget: { input: 'invalid' } })), error: 'InvalidCommand' },
+  { command: { op: 'eval', expression: '1'.repeat(32_769) },
+    category: 'ResourceLimit', limit: 'InputBytes' },
+  { wire: Buffer.alloc(MAX_COMMAND_BYTES + 1, 0x61),
+    error: 'InvalidCommand', message: 'command line exceeds transport bound' },
+  { command: { op: 'eval', expression: 'x' }, fraction: ['20', '1'] },
+  { command: { op: 'eval', expression: 'f(1)' }, fraction: ['201', '1'] },
+  { command: { op: 'eval', expression: '3/10', budget: { output: 3 } },
+    category: 'ResourceLimit', limit: 'OutputSize' },
+  { command: { op: 'eval', expression: 'x' }, fraction: ['20', '1'] },
+  { command: { op: 'eval', expression: '3/10',
+    display: 'finite-decimal', budget: { output: 2 } },
+    category: 'ResourceLimit', limit: 'OutputSize' },
+  { command: { op: 'eval', expression: '3/10',
+    display: 'finite-decimal', budget: { output: 3 } },
+    fraction: ['3', '10'], display: '0.3' },
+];
+const wire = Buffer.concat([
+  ...commands.map(command => Buffer.from(`${JSON.stringify(command)}\n`)),
+  ...rawControls.map(control => Buffer.concat([
+    control.wire ?? Buffer.from(JSON.stringify(control.command)), Buffer.from('\n')])),
+]);
 const compilerBinarySha256 = await digestFile(binary);
 const numericRevisionSha256 = await sourceRevision(numericModules,
   name => name.endsWith('.noble'));
@@ -326,7 +397,7 @@ const run = spawnSync(process.execPath,
     ...(opted ? ['--retained-source-bytes', String(OPTED_RETAINED),
       '--compiled-retention-receipt', retainedArgs[3]] : []),
     '--definition-fixtures', '--verify-state'], {
-    input: commands.map(command => JSON.stringify(command)).join('\n') + '\n',
+    input: wire,
     encoding: 'utf8', timeout: 180000, maxBuffer: 32 * 1024 * 1024,
   });
 assert.equal(run.error, undefined, `guest execution error: ${run.error}`);
@@ -338,10 +409,33 @@ const shellReceipts = run.stderr.split('\n')
 assert.equal(shellReceipts.length, 1, 'guest shell omitted its source-bound retention receipt');
 const { compiled_flag_tested: flagTested, flag_proof: flagProof,
   selected_compiled_receipt: shellSelectedReceipt,
+  initial_guest_frame: initialGuestFrame,
   initial_state_sha256: initialStateSha, ...linkedSources } = shellReceipts[0];
 assert.deepEqual(linkedSources, auditReceipt(sourceAudit),
   'linked exact module sources differ from source preflight');
 assert.match(initialStateSha, /^[0-9a-f]{64}$/, 'guest initial environment identity absent');
+function checkedGuestFrame(frame, role, where) {
+  assert.equal(frame?.role, role, `missing ${role} guest frame: ${where}`);
+  assert.ok(Number.isSafeInteger(frame.source_bytes) &&
+    frame.source_bytes > 0 && frame.source_bytes <= MAX_SOURCE,
+  `unbounded checked guest source: ${where}`);
+  assert.match(frame.source_sha256, /^[0-9a-f]{64}$/, `guest source SHA absent: ${where}`);
+  assert.match(frame.wasm_sha256, /^[0-9a-f]{64}$/, `Wasm SHA absent: ${where}`);
+  assert.equal(frame.backend, 'managed-linear-memory', `nonselected backend: ${where}`);
+  assert.equal(frame.metrics?.status, 0, `non-normal managed guest metrics: ${where}`);
+  assert.equal(frame.metrics?.quota_reason, 0, `physical guest quota masked: ${where}`);
+  for (const [field, limit] of [
+    ['execution_steps', 100000], ['allocation_peak_bytes', 196608],
+    ['continuation_peak_bytes', 4096]]) {
+    assert.ok(Number.isSafeInteger(frame.metrics[field]) &&
+      frame.metrics[field] >= 0 && frame.metrics[field] <= limit,
+    `guest ${field} absent/out of selected ceiling: ${where}`);
+  }
+}
+checkedGuestFrame(initialGuestFrame, 'empty', 'initial state');
+assert.equal(initialGuestFrame.source_sha256,
+  createHash('sha256').update('calc_session@1.empty').digest('hex'),
+  'initial guest source did not match the exact calculator state constructor');
 assert.deepEqual(shellSelectedReceipt, selectedReceipt,
   'selected compiler receipt differed between gate and linked shell');
 assert.equal(flagTested, opted, 'selected binary retention flag was not tested as requested');
@@ -362,11 +456,27 @@ assert.equal(await sourceRevision(here,
   'application guest source changed during execution');
 assert.equal(await digestFile(capabilityFixture), capabilityFixtureSha256,
   'typed capability checker fixture changed during guest execution');
+assert.deepEqual(committedApplicationSources(), applicationCommit,
+  'application committed source changed during guest execution');
 const replies = run.stdout.trim().split('\n').map(line => JSON.parse(line));
-assert.equal(replies.length, commands.length, 'one guest outcome per submitted command');
+assert.equal(replies.length, commands.length + rawControls.length,
+  'one guest outcome per submitted command or malformed transport line');
 let priorStateSha = initialStateSha;
 let priorHistoryBytes = sourceAudit.outside_history_bytes;
+const guestFrames = [{ command: 'initial', frames: [initialGuestFrame] }];
 for (const [index, reply] of replies.entries()) {
+  assert.ok(Array.isArray(reply.guest_frames), `guest frame list absent at command ${index}`);
+  const hostRefusal = index >= commands.length &&
+    [0, 1, 2, 4].includes(index - commands.length);
+  assert.equal(reply.guest_frames.length, hostRefusal ? 0 : 2,
+    `command ${index} did not retain its exact stage/commit guest observations`);
+  if (!hostRefusal) {
+    checkedGuestFrame(reply.guest_frames[0], 'stage', `command ${index}`);
+    checkedGuestFrame(reply.guest_frames[1],
+      reply.error?.category === 'FormatterFailure' ? 'rollback' : 'commit',
+      `command ${index}`);
+  }
+  guestFrames.push({ command: index, frames: reply.guest_frames });
   assert.match(reply.state_sha256, /^[0-9a-f]{64}$/,
     `missing guest environment identity after command ${index}`);
   if (!reply.accepted)
@@ -432,12 +542,30 @@ for (const test of vectors.import_fixtures) {
     if (test.fraction) assert.deepEqual(actual.fraction, test.fraction);
   }
 }
+for (const control of rawControls) {
+  const actual = replies[cursor++];
+  if (control.error) {
+    assert.equal(actual.error, control.error, 'transport refusal changed category');
+    if (control.message) assert.equal(actual.message, control.message);
+  } else if (control.category) {
+    assert.equal(actual.error?.category, control.category,
+      'typed transport/output refusal changed category');
+    if (control.limit) assert.equal(actual.error.limit, control.limit);
+    if (control.span) assert.deepEqual(actual.error.span, control.span);
+  } else {
+    assert.equal(actual.accepted, true, 'valid command after refusal was not accepted');
+    assert.deepEqual(actual.fraction, control.fraction);
+    if (control.display) assert.equal(actual.display, control.display);
+  }
+}
 console.log(JSON.stringify({ outcome: 'supported-guest-vectors-passed',
   vectors: replies.length, compiler_binary_sha256: compilerBinarySha256,
   numeric_revision_sha256: numericRevisionSha256,
   application_revision_sha256: applicationRevisionSha256,
+  application_commit: applicationCommit,
   capability_checker_fixture_sha256: capabilityFixtureSha256,
   capability_checker: capabilityChecker,
+  guest_frames: guestFrames,
   retained_sources: auditReceipt(sourceAudit),
   selected_compiled_receipt: selectedReceipt,
   initial_state_sha256: initialStateSha, final_state_sha256: priorStateSha,

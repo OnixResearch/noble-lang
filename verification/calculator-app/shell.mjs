@@ -7,8 +7,10 @@ import { TextDecoder } from 'node:util';
 import { createHash } from 'node:crypto';
 import { nominal, pair, result, variantIndex, rational, displayExact, diagnostic } from './display.mjs';
 import { literal } from './literal.mjs';
+import { boundedLines } from './transport.mjs';
 import { auditSources, modulePaths, DEFAULT_RETAINED, OPTED_RETAINED,
-  MAX_SOURCE, RetainedNamespace, selectedCompilerReceipt, verifyRetainedSourceFlag } from './retention.mjs';
+  MAX_SOURCE, MAX_COMMAND_BYTES, RetainedNamespace,
+  selectedCompilerReceipt, verifyRetainedSourceFlag } from './retention.mjs';
 
 // Invocation: node shell.mjs NOBLE_BINARY NUMERIC_MODULE_DIR LANGUAGE_ROOT
 //   [--retained-source-bytes 262144 --compiled-retention-receipt MA1_VERIFICATION_JSON]
@@ -33,6 +35,7 @@ if (!binary || !numericDir || !languageRoot || retainedArgs.length && !opted) {
 const here = import.meta.dirname;
 const output = value => process.stdout.write(`${JSON.stringify(value)}\n`);
 const stateDigest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+const sourceDigest = bytes => createHash('sha256').update(bytes).digest('hex');
 const frame = source => {
   const bytes = Buffer.isBuffer(source) ? source : Buffer.from(source);
   return Buffer.concat([Buffer.from(`${bytes.length}\n`), bytes]);
@@ -83,6 +86,28 @@ function executed(report) {
       !/^[0-9a-f]{64}$/.test(report.module?.wasm_sha256 ?? ''))
     throw Error('Noble guest lacks a normal source-compiled Wasm observation');
 }
+function guestFrame(role, source, report) {
+  executed(report);
+  const bytes = Buffer.from(source);
+  if (report.module.source_sha256 !== sourceDigest(bytes) ||
+      report.backend !== 'managed-linear-memory')
+    throw Error('Noble guest did not execute the exact submitted source in managed Wasm');
+  const metrics = report.metrics;
+  if (metrics?.status !== 0 || metrics.quota_reason !== 0)
+    throw Error('Noble managed-Wasm execution lacks normal physical metrics');
+  for (const [name, ceiling] of [
+    ['execution_steps', 100000], ['allocation_peak_bytes', 196608],
+    ['continuation_peak_bytes', 4096]]) {
+    if (!Number.isSafeInteger(metrics[name]) || metrics[name] < 0 || metrics[name] > ceiling)
+      throw Error(`Noble managed-Wasm ${name} is absent or exceeds its physical ceiling`);
+  }
+  return { role, source_bytes: bytes.length, source_sha256: sourceDigest(bytes),
+    wasm_sha256: report.module.wasm_sha256, backend: report.backend,
+    metrics: { status: metrics.status, quota_reason: metrics.quota_reason,
+      execution_steps: metrics.execution_steps,
+      allocation_peak_bytes: metrics.allocation_peak_bytes,
+      continuation_peak_bytes: metrics.continuation_peak_bytes } };
+}
 function fields(input, keys) {
   if (!input || typeof input !== 'object' || Array.isArray(input) ||
       Object.keys(input).some(key => !keys.includes(key))) throw Error('invalid command fields');
@@ -125,21 +150,6 @@ function proposedReply(report) {
   if (kind !== 0) throw Error('unexpected guest reply');
   return { fraction: rational(payload) };
 }
-async function* commandLines() {
-  let pending = Buffer.alloc(0);
-  for await (const chunk of process.stdin) {
-    let offset = 0;
-    while (offset < chunk.length) {
-      const newline = chunk.indexOf(10, offset);
-      const end = newline < 0 ? chunk.length : newline;
-      pending = Buffer.concat([pending, chunk.subarray(offset, end)]);
-      if (pending.length > 16384) throw Error('command line exceeds bound');
-      if (newline >= 0) { yield pending; pending = Buffer.alloc(0); }
-      offset = end + (newline < 0 ? 0 : 1);
-    }
-  }
-  if (pending.length) yield pending;
-}
 async function main() {
   for (const { file, source, source_sha256 } of audited.modules) {
     const plan = namespace.planModule(source);
@@ -152,7 +162,7 @@ async function main() {
       namespace.outsideHistoryBytes !== audited.outside_history_bytes)
     throw Error('linked namespace retention differs from exact source audit');
   const initial = await submit('calc_session@1.empty');
-  executed(initial);
+  const initialFrame = guestFrame('empty', 'calc_session@1.empty', initial);
   if (initial.outcome !== 'normal' || initial.stack?.length !== 1) throw Error('guest state initialization failed');
   let stateSha = verifyState ? stateDigest(initial.stack[0]) : null;
   console.error(`calculator-source-receipt ${JSON.stringify({
@@ -160,15 +170,23 @@ async function main() {
       ({ file, name, depends_on, bytes, source_sha256 })),
     compiled_flag_tested: flagProof !== null, flag_proof: flagProof,
     selected_compiled_receipt: selectedReceipt,
+    initial_guest_frame: initialFrame,
     initial_state_sha256: stateSha,
   })}`);
   const reply = value => output(verifyState ? {
     ...value, state_sha256: stateSha,
+    guest_frames: frames,
     namespace_retained_total_bytes: namespace.retainedTotalBytes,
     namespace_outside_history_bytes: namespace.outsideHistoryBytes,
   } : value);
   let previous = false, definitions = 0, storedBytes = 0;
-  for await (const bytes of commandLines()) {
+  let frames = [];
+  for await (const bytes of boundedLines(process.stdin, MAX_COMMAND_BYTES)) {
+    frames = [];
+    if (bytes === null) {
+      reply({ error: 'InvalidCommand', message: 'command line exceeds transport bound' });
+      continue;
+    }
     let line;
     try { line = new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
     catch {
@@ -212,15 +230,16 @@ async function main() {
         throw Error('session storage limit');
     } catch (error) { reply({ error: 'InvalidCommand', message: error.message }); continue; }
     const staged = await submit(source);
-    executed(staged);
+    frames.push(guestFrame('stage', source, staged));
     let candidate, text;
     try {
       candidate = proposedReply(staged);
       text = candidate.error ? '' : candidate.definition ? candidate.text :
         displayExact(...candidate.fraction, command.display);
     } catch (error) {
-      const restored = await submit('calc_session@1.rollback');
-      executed(restored);
+      const rollbackSource = 'calc_session@1.rollback';
+      const restored = await submit(rollbackSource);
+      frames.push(guestFrame('rollback', rollbackSource, restored));
       if (restored.outcome !== 'normal' || restored.stack?.length !== 2 ||
           restored.stack[1].type !== 'Unit')
         throw Error('guest rollback refused after formatter failure');
@@ -232,8 +251,9 @@ async function main() {
     }
     // The output count is charged by the Noble guest before publication. No
     // new session state is selected if formatting or the charge fails.
-    const committed = await submit(`${Buffer.byteLength(text)} calc_session@1.commit`);
-    executed(committed);
+    const commitSource = `${Buffer.byteLength(text)} calc_session@1.commit`;
+    const committed = await submit(commitSource);
+    frames.push(guestFrame('commit', commitSource, committed));
     if (committed.outcome !== 'normal' || committed.stack?.length !== 2)
       throw Error('guest commit refused; previous state cannot be assumed');
     previous = true;
