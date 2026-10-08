@@ -35,6 +35,7 @@ struct LiveOptions {
     manifest: Option<super::arguments::bindings::Manifest>,
     watch: bool,
     retained_generation_limit: Option<u64>,
+    guest_step_budget: Option<u32>,
 }
 
 enum ReloadDecision {
@@ -60,6 +61,7 @@ struct Live {
     // Source/namespace publication generation, not the Wasm submission count.
     generation: u64,
     retained_generation_limit: Option<u64>,
+    guest_step_budget: Option<u32>,
     live_code_spans: std::vec::Vec<noble_wasm::source::CodeSpan>,
     #[cfg(target_os = "linux")]
     watch: Option<watch::Watcher>,
@@ -74,6 +76,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         manifest,
         watch,
         retained_generation_limit,
+        guest_step_budget,
     } = match parse(arguments) {
         Ok(options) => options,
         Err(message) => {
@@ -152,6 +155,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         invocation_prior_stack: None,
         generation: 0,
         retained_generation_limit,
+        guest_step_budget,
         live_code_spans: std::vec::Vec::new(),
         #[cfg(target_os = "linux")]
         watch: watcher,
@@ -344,6 +348,7 @@ fn parse(
     let mut declared_modules = false;
     let mut bindings = None;
     let mut retained_generation_limit = None;
+    let mut guest_step_budget = None;
     let mut at = 2;
     while at < arguments.len() {
         let flag = arguments[at].to_str().ok_or("invalid live option")?;
@@ -387,6 +392,14 @@ fn parse(
                     return Err("retained generation budget must be between 1 and 64".into());
                 }
                 retained_generation_limit = Some(limit);
+            }
+            "--max-guest-steps" if guest_step_budget.is_none() => {
+                let limit = value.parse::<u32>()
+                    .map_err(|_| "invalid guest execution step budget")?;
+                if !(1..=100_000).contains(&limit) {
+                    return Err("guest execution step budget must be between 1 and 100000".into());
+                }
+                guest_step_budget = Some(limit);
             }
             "--engine" if engine.is_none() => {
                 engine = Some(match value {
@@ -447,6 +460,7 @@ fn parse(
         manifest,
         watch,
         retained_generation_limit,
+        guest_step_budget,
     })
 }
 
@@ -1098,7 +1112,11 @@ impl Live {
             .frontend
             .commit(prepared)
             .map_err(super::output::Failure::source)?;
-        let mut report = self.worker()?.execute()?;
+        let guest_step_budget = self.guest_step_budget;
+        let mut report = match guest_step_budget {
+            Some(steps) => self.worker()?.execute_with_steps(steps)?,
+            None => self.worker()?.execute()?,
+        };
         if report.outcome == "normal" {
             self.session.stack = output;
             self.register_live_code(code_span)?;

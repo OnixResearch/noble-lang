@@ -144,6 +144,11 @@ async function protocol(config) {
             continue;
           } else if (header === 'execute') {
             command = { kind: 'execute', inputs: 0 };
+          } else if (/^execute-steps [0-9]+$/.test(header)) {
+            const steps = Number(header.slice('execute-steps '.length));
+            command = { kind: 'execute', inputs: 0,
+              steps: integer(steps, 100000, 'guest execution steps') };
+            if (command.steps === 0) fail('guest execution steps must be positive');
           } else if (/^execute [0-9]+$/.test(header)) {
             const count = Number(header.slice('execute '.length));
             command = { kind: 'execute', inputs: integer(count, MAX_FRAME, 'injection frame') };
@@ -228,6 +233,7 @@ async function protocol(config) {
           const scalar = command.kind === 'execute-scalar';
           const typed = command.kind === 'execute-typed';
           if (pending.length < command.inputs) break;
+          const steps = command.steps;
           const bytes = pending.subarray(0, command.inputs);
           pending = pending.subarray(command.inputs);
           command = null;
@@ -248,7 +254,8 @@ async function protocol(config) {
               ? { typedValues: inputs,
                 limits: { steps: Math.min(4096, engine.abi.limits_maximum.steps) } }
               : { inputs,
-                ...(scalar ? { limits: { steps: Math.min(4096, engine.abi.limits_maximum.steps) } } : {}) });
+                ...((scalar || steps) ? { limits: { steps: scalar
+                  ? Math.min(4096, engine.abi.limits_maximum.steps) : steps } } : {}) });
             emit(report.outcome, report);
           } catch (error) { emit('internal-failure', reportError(error)); return; }
           if (engine.poisoned) return;

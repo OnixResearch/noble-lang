@@ -55,7 +55,8 @@ pub(super) fn write(
     if plan.core_live {
         attempt!(out.append(b"(global $core_live_module_installed (mut i32) (i32.const 0))\n\
 (global $core_live_adapter_leases (mut i32) (i32.const 0))\n\
-(global $core_live_proposal_callback_active (mut i32) (i32.const 0))\n"));
+(global $core_live_proposal_callback_active (mut i32) (i32.const 0))\n\
+(global $core_live_queued_proposal_root (mut i32) (i32.const 0))\n"));
     }
     out.append(b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n")
 }

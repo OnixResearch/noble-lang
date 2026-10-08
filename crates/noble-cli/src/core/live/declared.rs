@@ -381,7 +381,11 @@ impl Live {
             .map_err(super::super::output::Failure::backend)?;
         let committed = self.session.commit_declared(prepared)?;
         committed.map_err(super::super::output::Failure::source)?;
-        let mut report = self.worker()?.execute()?;
+        let guest_step_budget = self.guest_step_budget;
+        let mut report = match guest_step_budget {
+            Some(steps) => self.worker()?.execute_with_steps(steps)?,
+            None => self.worker()?.execute()?,
+        };
         if report.outcome == "normal" {
             self.session.stack = output;
         }
