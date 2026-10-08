@@ -60,7 +60,7 @@ for (const [name, bytes] of [['result.noble', resultModule],
   fs.writeFileSync(path.join(output, name), bytes, { flag: 'wx' });
 }
 const run = (name, args, input) => {
-  const artifactDir = /^(fold-|cursor-|less-|local-|digit-version-|same-session-|recover-source-)/.test(name)
+  const artifactDir = /^(fold-|cursor-|less-|local-|rebind-|digit-version-|same-session-|recover-source-)/.test(name)
     ? path.join(output, `${name}.artifacts`) : null;
   if (artifactDir) args = [...args, '--emit', artifactDir];
   const execution = spawnSync(binary, args, { cwd: root, input, encoding: null,
@@ -256,6 +256,47 @@ for (const opt of ['off', 'on']) {
   assert.equal(failed.reports[0].prior_stack, 'unchanged');
   assert.equal(failed.reports[0].prior_namespace, 'unchanged');
   assert.equal(failed.reports[1].stack.at(-1).value, '1');
+}
+for (const opt of ['off', 'on']) {
+  const first = Buffer.from('module m@1 [ export addone def addone [ 1 + ] ]');
+  const second = Buffer.from('module m@2 [ export addone def addone [ 2 + ] ]');
+  const source = [first, second, Buffer.from('import m@1 as m'),
+    Buffer.from('def once [ m.addone ]'), Buffer.from('def twice [ once once ]'),
+    Buffer.from('[ once ]'), Buffer.from('import m@2 as m'),
+    Buffer.from('20 swap run'), Buffer.from('drop'), Buffer.from('20 twice')];
+  const observed = run(`rebind-${opt}-retained-old-and-current-new`,
+    ['session', ...localFlags, '--opt', opt], Buffer.concat(source.map(frame)));
+  assert.equal(observed.status, 0, `checked transitive import rebind/${opt}`);
+  assert.deepEqual(observed.reports.map(report => report.outcome),
+    ['linked', 'linked', 'linked', 'defined', 'defined',
+      'normal', 'linked', 'normal', 'normal', 'normal']);
+  assert.equal(observed.reports[7].stack.at(-1).value, '21',
+    'old captured Program must retain old immutable once owner');
+  assert.deepEqual(observed.reports[8].stack, []);
+  assert.equal(observed.reports[9].stack.at(-1).value, '24',
+    'new twice must transitively invoke newly checked once owner');
+  for (const report of observed.reports) {
+    assert.equal(report.host_requests, 0);
+    assert.equal(report.guest_requests, 0);
+    assert.equal(report.acquired_authority, false);
+    if (report.module) {
+      assert.equal(report.native_trap, null);
+      assert.ok(report.module.imports.every(entry => entry.kind !== 'function'));
+    }
+  }
+  const incompatible = run(`rebind-${opt}-incompatible-then-recover`,
+    ['session', ...localFlags, '--opt', opt],
+    Buffer.concat([first,
+      Buffer.from('module m@2 [ export addone def addone [ drop true ] ]'),
+      Buffer.from('import m@1 as m'), Buffer.from('def once [ m.addone ]'),
+      Buffer.from('import m@2 as m'), Buffer.from('20 once')].map(frame)));
+  assert.notEqual(incompatible.status, 0);
+  assert.deepEqual(incompatible.reports.slice(0, 4).map(report => report.outcome),
+    ['linked', 'linked', 'linked', 'defined']);
+  assert.ok(['check', 'acceptance'].includes(incompatible.reports[4].stage));
+  assert.equal(incompatible.reports[4].prior_namespace, 'unchanged');
+  assert.equal(incompatible.reports[5].outcome, 'normal');
+  assert.equal(incompatible.reports[5].stack.at(-1).value, '21');
 }
 for (const opt of ['off', 'on']) {
   const source = [resultModule, digitModule, foldModule,

@@ -5,7 +5,7 @@ mod parsing;
 mod signatures;
 mod state;
 pub(super) mod types;
-pub use state::{CheckedNominal, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, SignedSourceOwner};
+pub use state::{CheckedNominal, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition, SignedSourceOwner};
 
 const SPAN: crate::Span = crate::Span { start: 0, end: 0 };
 const MODULE_CAP: usize = 128;
@@ -27,6 +27,9 @@ pub struct BoundOperation {
 pub(super) struct Context {
     pub environment: noble_kernel::contracts::Env,
     pub words: alloc::vec::Vec<(alloc::string::String, crate::source::Target)>,
+    /// Active outside alias owners copied from the checked module namespace.
+    /// Module-owned definitions are tied to their own immutable alias snapshot.
+    pub aliases: alloc::vec::Vec<(alloc::string::String, u64)>,
     pub owner: Option<u64>,
     /// Source selection only. Not an authority field in public kernel Env.
     pub signed_self: bool,

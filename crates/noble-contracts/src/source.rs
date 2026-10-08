@@ -18,7 +18,7 @@ pub mod proof;
 mod replacement;
 mod resolution;
 
-pub use declared::{BoundOperation, CheckedNominal, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, SignedSourceOwner};
+pub use declared::{BoundOperation, CheckedNominal, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition, SignedSourceOwner};
 pub(crate) use declared::{DefinitionOrigin, verify_definition_origin, verify_named_call_origin, verify_named_export};
 
 /// Core vocabulary resolved by the same checker as a worker's pure source.
@@ -206,6 +206,20 @@ struct Named {
     tree: Tree,
     signature: Option<noble_kernel::words::Scheme>,
     signed: Option<SignedRelation>,
+    /// Original alias spellings and exact source nodes bound to their
+    /// independently resolved module owners at definition admission.
+    alias_uses: alloc::vec::Vec<AliasUse>,
+    /// Exact length-prefixed retained source offset assigned at successful
+    /// outside-definition publication. Module definitions instead retain
+    /// their own immutable whole-module source and have no history offset.
+    history_start: Option<usize>,
+}
+
+#[derive(Clone, Debug)]
+struct AliasUse {
+    spelling: alloc::string::String,
+    owner: u64,
+    nodes: alloc::vec::Vec<(u32, Target)>,
 }
 
 /// An immutable preparation. A declaration deliberately has no executable root.
@@ -579,42 +593,32 @@ impl Session {
         Ok(successor)
     }
 
-    /// Definition history is length-prefixed in precisely the append order of
-    /// `definitions`. Never reconstruct a dependent from its already-resolved
-    /// tree: that would silently keep calls to the prior generation.
+    /// Never reconstruct a dependent from its already-resolved tree: the
+    /// source offset was fixed when its original checked definition committed.
     fn definition_source(&self, index: usize) -> Result<&[u8], Error> {
         let span = crate::Span { start: 0, end: 0 };
-        if index >= self.definitions.len() {
-            return Err(Error::at(Stage::Acceptance, crate::invalid(
-                span, "retained dependent has no source provenance",
-            )));
-        }
-        let mut at = 0usize;
-        for position in 0..=index {
-            let header = self.history.get(at..at.saturating_add(4)).ok_or_else(|| {
-                Error::at(Stage::Acceptance, crate::invalid(
-                    span, "retained dependent has no source provenance",
-                ))
-            })?;
-            let length = u32::from_le_bytes(
-                <[u8; 4]>::try_from(header).map_err(|_| Error::at(
-                    Stage::Acceptance, crate::invalid(span, "invalid retained source length"),
-                ))?,
-            ) as usize;
-            at += 4;
-            let bytes = self.history.get(at..at.saturating_add(length)).ok_or_else(|| {
-                Error::at(Stage::Acceptance, crate::invalid(
-                    span, "retained dependent source is incomplete",
-                ))
-            })?;
-            if position == index {
-                return Ok(bytes);
-            }
-            at += length;
-        }
-        Err(Error::at(Stage::Acceptance, crate::invalid(
-            span, "retained dependent has no source provenance",
-        )))
+        let offset = self.definitions.get(index).and_then(|definition| definition.history_start)
+            .ok_or_else(|| Error::at(Stage::Acceptance, crate::invalid(
+                span, "retained dependent has no outside source provenance",
+            )))?;
+        let header_end = offset.checked_add(4).ok_or_else(|| Error::at(
+            Stage::Acceptance, crate::invalid(span, "retained source header overflows"),
+        ))?;
+        let header = self.history.get(offset..header_end).ok_or_else(|| Error::at(
+            Stage::Acceptance, crate::invalid(span, "retained source header is missing"),
+        ))?;
+        let length = usize::try_from(u32::from_le_bytes(<[u8; 4]>::try_from(header)
+            .map_err(|_| Error::at(Stage::Acceptance, crate::invalid(
+                span, "invalid retained source length",
+            )))?)).map_err(|_| Error::at(Stage::Acceptance, crate::invalid(
+            span, "retained source length exceeds address space",
+        )))?;
+        let end = header_end.checked_add(length).ok_or_else(|| Error::at(
+            Stage::Acceptance, crate::invalid(span, "retained source length overflows"),
+        ))?;
+        self.history.get(header_end..end).ok_or_else(|| Error::at(
+            Stage::Acceptance, crate::invalid(span, "retained dependent source is incomplete"),
+        ))
     }
 
     /// A definition declaration has no executable root; checking only an
@@ -737,7 +741,10 @@ impl Session {
                 ))
             }
         };
-        if let Some(definition) = prepared.definition {
+        if let Some(mut definition) = prepared.definition {
+            if definition.owner.is_none() {
+                definition.history_start = Some(self.history.len());
+            }
             self.definitions.push(definition);
             self.history.extend_from_slice(&prepared.addition);
         }
