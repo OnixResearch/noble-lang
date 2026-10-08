@@ -4,7 +4,6 @@
 )]
 pub(super) fn bounds(
     submission: &noble_kernel::execution::Submission,
-    environment_work: u64,
     signed: bool,
     totals: &mut super::metadata::Totals,
     work: &mut super::super::Work,
@@ -12,7 +11,7 @@ pub(super) fn bounds(
     let mut index = 0usize;
     let mut failure = None;
     while index < submission.definitions.len() {
-        match definition_bounds(submission, index, environment_work, signed, totals, work) {
+        match definition_bounds(submission, index, signed, totals, work) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -34,14 +33,12 @@ pub(super) fn bounds(
 fn definition_bounds(
     submission: &noble_kernel::execution::Submission,
     index: usize,
-    environment_work: u64,
     signed: bool,
     totals: &mut super::metadata::Totals,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let definition = &submission.definitions[index];
     attempt!(check_identity(submission, index, work));
-    attempt!(work.charge(environment_work));
     let signed_body = definition.body.candidate.nodes.iter().any(|node| {
         matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })
     });
@@ -55,6 +52,7 @@ fn definition_bounds(
         definition.definition,
         &definition.expected,
         owner_inst,
+        work,
     ));
     super::metadata::check(&definition.body, totals, work)
 }

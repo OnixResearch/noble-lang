@@ -442,14 +442,21 @@ host-admitted guest proposal publication do. Extra text, including a trailing
 space, is not the command. This inspection is not a reload ACK or a current
 selected-file hash, and does not complete DX-LIVE-01 or any LIVE case.
 
-`noble live watch` is unavailable. A directory rename notification proves
-only that a pathname changed, not which bytes the renamed inode contained
-at that instant. A writable mapping or a hardlink outside the selected
-directory can change those bytes without a corresponding selected-basename
-content notification. Automatic publication could therefore ACK bytes
-written in place after the rename. Use `live repl --source` and explicit
-`:reload /absolute/math.noble` for a complete save; no automatic watch ACK
-or full H-LIVE-01/LIVE-05 acceptance is claimed.
+On Linux, `noble live watch --source /absolute/math.noble --engine v8`
+also accepts a **cooperative** complete save: write and `fsync` its
+same-directory `math.noble.tmp` sibling, then atomically rename it onto
+`math.noble`. The host pairs the inotify rename events, pins the selected
+directory and file, requires a regular single-link final inode, hashes the
+bounded candidate bytes, and checks that exact version again before
+publication. A later complete save supersedes an in-flight candidate rather
+than receiving a false ACK. The `watch_sequence`, `watch_save_protocol`,
+`source_sha256`, and `source_freshness` report fields identify what was
+actually published and whether a later save was observed at ACK time.
+Unpaired renames, in-place writes, symlinks, hardlinks, and a changed
+candidate refuse; an outside writable mapping or alias can still mutate a
+file without a selected-directory event. This cooperative watch is *not*
+proof of immutable file bytes after ACK or full H-LIVE-01/LIVE-05
+acceptance. Explicit `live repl --source` and `:reload` remain available.
 
 For a separate **opt-in source-change execution gate**, start the same REPL
 with `--verify-source-before-execute`. Before each source submission, after
@@ -465,10 +472,11 @@ rename, an external hardlink, or a writable shared mapping is compared by
 bytes at the next source submission. Identical bytes remain executable even
 after an inode replacement; retained old Programs still execute after a checked
 reload. `:generation` remains an inert inspection without file access. This
-gate is **not an idle filesystem watcher**, does not detect a change between
-its finite snapshot and the subsequent guest invocation, and makes no claim
-that an external writer's in-place bytes are a complete save. The default
-REPL continues to allow old-namespace execution after a refused `:reload`.
+optional gate is **not itself an idle filesystem watcher**, does not detect
+a change between its finite snapshot and the subsequent guest invocation,
+and makes no claim that an external writer's in-place bytes are a complete
+save. The default REPL continues to allow old-namespace execution after a
+refused `:reload`.
 The `MAP_SHARED` adversarial control is a separate real-child smoke, not an
 ambient compiler dependency of `cargo test`: `tools/live-mmap-smoke.mjs`
 requires absolute `--noble` and `--cc` paths, an explicitly selected Nix-store
@@ -480,7 +488,26 @@ rebuilds transitive dependents in dependency order. New top-level calls see the
 rebuilt generation after one source-generation ACK; saved old Programs still
 use their original identities and dependencies. Scoped indirect self-rebind
 refusal was exercised in a live child, but this guarded in-process Wasm path
-does not establish general cycle safety, proof or declared-module snapshots.
+does not establish general cycle safety or source-bound proof acceptance.
+
+The separate selected declared-module lane uses:
+
+```sh
+noble live repl --source /absolute/module.noble --engine v8 \
+  --declared-modules --bindings /absolute/bindings.txt \
+  --verify-source-before-execute
+```
+
+It keeps checked module/version/import snapshots and a saved old Program through a selected
+module replacement; a fresh import sees the new version. Rebinding an alias
+rebuilds compatible transitive dependents without rewriting old Programs;
+incompatible replacements refuse that import. The old bound adapter identity
+stays fixed while invocation checks the **current** host authorization.
+Candidate source, import version, source-history and proof requirements are
+checked on a private frontend snapshot before a candidate is published; a
+refusal preserves the old session. This is scoped runtime evidence, not
+canonical LIVE-05 proof or a claim that all declared/effectful transitions
+are accepted.
 
 An exact host grant can allow the selected named definition to propose its
 own *pure* replacement from an actual runtime input. Put this in
@@ -514,20 +541,24 @@ Only host-selected file reload and direct host definition admission exercise
 the acyclic Core transitive rebuild. A rejected guest candidate publishes
 neither a successor nor a stale ACK.
 
-This is a **guarded partial** live profile, not automatic H-LIVE-01/LIVE-05
-watch acceptance, selected declared-module snapshots, complete source-bound LIVE-02
-acceptance, interpreter execution, code retirement, general guest mutation,
-or PushGP evolution.
-Separately, the `Compiler::new_live()` backend now emits a **Core 16-page**
-code-owner API exercised in a direct Node/V8 guest: saved Program and nested
-aggregate roots keep old code callable until their final release. The backend
-refuses table-span reuse until zero owners, exact installed table verification,
-stale-handle invalidation and table clearance complete in one idle generation;
-installed adapter leases prevent premature module-root release. This is a
-backend control, **not a selected CLI code-retirement path**. The host must
-register every external raw handle before it leaves the worker and fail closed
-on an unknown owner inventory. Reusing table indices does not reclaim Core's
-append-only 4096-cell heap or text allocation.
+This is a **guarded partial** live profile, not complete source-bound
+LIVE-01–10 acceptance, interpreter execution, general guest mutation, or
+PushGP evolution. Plain Core live now uses its own **16-page code-owner
+API**, not the slot profile's separate 20-page ABI. The selected CLI registers
+each installed code span, retains externally observed raw Program roots,
+releases superseded module roots only at idle, and asks the worker for an
+exact owner inventory. Only zero-owned spans receive stale-handle
+invalidation, exact physical table clearance and
+`Compiler::retire_code` reuse. Normal execution reports
+`installed_code_span`; selected reload reports `retired_code_spans` with the
+worker's `code_owners: 0` and `table_cleared: true` receipts. Ten real
+selected reloads and a following top-level call exercised first-fit reuse
+after clearance; a saved old Program remains callable instead of being
+retired. Unknown owners refuse retirement. Code-table reuse does not reclaim
+Core's append-only 4096-cell heap or text allocation. The checked compiler's
+one 2-million-work submission cap is unchanged: exact contract checking
+charges the selected scheme, while the full environment remains charged for
+its own scan and each independently admitted kernel body.
 
 `--engine interpreter` refuses rather than falling back to V8.
 Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
@@ -543,7 +574,7 @@ does not make every other feature available in that runtime.
 | Area | Implemented scope |
 |---|---|
 | [Core language and Wasm sessions](specs/ROADMAP.md#m4-implementation-and-retained-acceptance) | Wrapping `I64` arithmetic; Bool, Text, Unit, Pair, Sum, and List values; stack operations; checked branches; quotation, capture, composition, execution, and reflection; nonrecursive definitions. |
-| [Guarded live REPL](#guarded-live-repl-opt-in-partial) | In-process Wasm emission and explicit reload use one resident Node/V8 arena and checked publication; tested acyclic dependent rebuild and retained old Programs. An optional pre-submission selected-file byte gate refuses changed bytes without running the guest. Automatic watch remains unavailable because rename events cannot authenticate completed bytes. Guest self-edit refuses current dependents; scoped indirect self-rebind/cycle refusal was exercised without general proof or canonical LIVE case acceptance. No declared-module snapshots or full LIVE-05 acceptance. |
+| [Guarded live REPL](#guarded-live-repl-opt-in-partial) | One resident Node/V8 arena supports explicit checked reload, cooperative Linux paired-rename watch, optional before-execution selected-byte verification, old Program preservation, Core zero-owner table-span retirement/reuse, and separately selected declared-module snapshots with current bound-adapter policy. Scoped source/guest regressions do not establish complete LIVE-01–10 acceptance or source-bound proof. |
 | [Declared modules](specs/ROADMAP.md#dxm1-selected-declared-modules-bounded-acceptance-complete) | Opt-in opaque types, two-constructor variants, versioned session-local modules, imports and exports, and an explicit typed `test.emit` adapter. Available through `compile` and framed `session`. |
 | [Contracts and proof checking](specs/PROGRAM-CONTRACTS.md#12-verification-tooling) | A pure contract language, Lean obligations, proof/refutation checking, and `verify` / `explain-proof`. |
 | [Evidence companions](specs/PROGRAM-CONTRACTS.md#83-mc2-companion-implementation-and-evidence-boundaries) | Live certified programs, evidence composition, guarded invocation, and proof-required build admission for the selected core scope. |

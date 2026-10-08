@@ -122,10 +122,11 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     }
     let mut live = Live {
         session: super::Session {
-            frontend: match selected_grant_name {
-                Some(name) => noble_contracts::source::Session::new_live(name),
-                None => noble_contracts::source::Session::new(),
-            },
+            // An empty selected spelling is not a source identifier: it keeps
+            // the Core-live ABI while granting no body self-edit authority.
+            frontend: noble_contracts::source::Session::new_live(
+                selected_grant_name.unwrap_or(""),
+            ),
             declared,
             compiler: if manifest.is_some() {
                 noble_wasm::source::Compiler::new()
@@ -467,9 +468,6 @@ impl Live {
         &mut self,
         span: noble_wasm::source::CodeSpan,
     ) -> Result<(), super::output::Failure> {
-        if span.length == 0 {
-            return Ok(());
-        }
         let registered = self.worker()?.register_live_code(span)?;
         let receipt: serde_json::Value = serde_json::from_str(&registered.json)
             .map_err(|_| fatal_failure("invalid installed live code owner receipt"))?;
@@ -482,14 +480,26 @@ impl Live {
         {
             return Err(fatal_failure("worker did not register the exact checked installed code span"));
         }
-        self.live_code_spans.push(span);
+        if span.length != 0 {
+            self.live_code_spans.push(span);
+        }
         Ok(())
     }
 
-    fn retire_unowned_live_code(&mut self) -> Result<(), super::output::Failure> {
+    fn retire_unowned_live_code(
+        &mut self,
+    ) -> Result<std::vec::Vec<serde_json::Value>, super::output::Failure> {
         if self.declared.is_some() {
-            return Ok(());
+            return Ok(std::vec::Vec::new());
         }
+        let released = self.worker()?.release_superseded_live_module_roots()?;
+        let receipt: serde_json::Value = serde_json::from_str(&released.json)
+            .map_err(|_| fatal_failure("invalid superseded Core module root receipt"))?;
+        if released.outcome != "module-roots-released"
+            || receipt["released"].as_u64().is_none() {
+            return Err(fatal_failure("worker did not release superseded Core module roots"));
+        }
+        let mut retired_receipts = std::vec::Vec::new();
         let mut at = 0;
         while let Some(&span) = self.live_code_spans.get(at) {
             let inspected = self.worker()?.inspect_live_code(span)?;
@@ -511,6 +521,7 @@ impl Live {
                 continue;
             }
             let mut problem = None;
+            let mut retirement_receipt = None;
             let worker = self.session.worker.as_mut()
                 .ok_or_else(|| fatal_failure("live worker disappeared before code retirement"))?;
             let retired = self.session.compiler.retire_code(span, |checked| {
@@ -537,15 +548,18 @@ impl Live {
                     problem = Some("worker did not prove exact zero-owned code tombstones and table clearance".into());
                     return Err(noble_wasm::Diagnostic::Invalid);
                 }
+                retirement_receipt = acknowledged;
                 Ok(())
             });
             if retired.is_err() {
                 return Err(fatal_failure(problem.unwrap_or_else(||
                     "compiler refused exact installed live code retirement".into())));
             }
+            retired_receipts.push(retirement_receipt
+                .ok_or_else(|| fatal_failure("compiler retirement omitted worker clearance receipt"))?);
             self.live_code_spans.remove(at);
         }
-        Ok(())
+        Ok(retired_receipts)
     }
 
     fn retained_generation_budget_refusal(&self) -> Option<String> {
@@ -1097,6 +1111,15 @@ impl Live {
                 "source_generation".into(),
                 serde_json::json!(self.generation),
             );
+            if report.outcome == "normal" {
+                fields.insert(
+                    "installed_code_span".into(),
+                    serde_json::json!({
+                        "start": code_span.start, "length": code_span.length,
+                        "generation": code_span.generation,
+                    }),
+                );
+            }
             if let Some(wasm_generation) = wasm_generation {
                 fields.insert("wasm_submission_generation".into(), wasm_generation);
             }
@@ -1564,7 +1587,7 @@ impl Live {
         self.session.submissions = number;
         self.generation = next_generation;
         self.register_live_code(code_span)?;
-        self.retire_unowned_live_code()?;
+        let retired_code_spans = self.retire_unowned_live_code()?;
         // Publication is irreversible: a later rename cannot be reported as a
         // recoverable refusal. ACK the pinned bytes actually installed, and
         // disclose a bounded observation of the path after publication. Even
@@ -1590,6 +1613,11 @@ impl Live {
             "source_sha256": crate::workflow::intrinsic::sha256(source),
             "source_version": "pinned-at-prepublish-check",
             "source_freshness": source_freshness,
+            "installed_code_span": {
+                "start": code_span.start, "length": code_span.length,
+                "generation": code_span.generation,
+            },
+            "retired_code_spans": retired_code_spans,
             "guest_requests": 0, "protected_operations": 0,
         })))
     }

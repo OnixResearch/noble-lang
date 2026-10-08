@@ -310,11 +310,16 @@ pub(super) fn exact_contract(
     def: noble_kernel::contracts::Definition,
     expected: &noble_kernel::untrusted::Expected,
     signed_owner_inst: Option<&noble_kernel::words::Inst>,
+    work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let scheme = match env.scheme(def) {
         Some(value) => value,
         None => return Err(crate::Diagnostic::Invalid),
     };
+    // The one-time full environment scan and each independent kernel
+    // acceptance reserve environment_work. This check substitutes only the
+    // selected definition's scheme, not every row in the environment.
+    attempt!(work.charge(attempt!(scheme_work(scheme))));
     let empty = noble_kernel::words::Inst {
         bindings: alloc::vec::Vec::new(),
     };
@@ -489,4 +494,50 @@ fn scheme_work(scheme: &noble_kernel::words::Scheme) -> Result<u64, crate::Diagn
         Err(_) => return Err(crate::Diagnostic::Exhausted),
     };
     Ok(parts.saturating_mul(512))
+}
+
+#[cfg(test)]
+mod contract_meter_tests {
+    use super::{exact_contract, scheme_work, work};
+    use crate::{source::Work, Diagnostic};
+    use noble_kernel::{
+        contracts::Definition,
+        types::{EffSet, Ty},
+        untrusted::Expected,
+    };
+
+    #[test]
+    fn local_contract_check_charges_its_scheme_without_rechecking_all_environment_rows() {
+        let env = noble_kernel::contracts::environment().expect("fixed environment");
+        let checked = Definition(0);
+        let cost = scheme_work(env.scheme(checked).expect("fixed scheme"))
+            .ok().expect("bounded scheme");
+        let mismatched = Expected {
+            stack_in: alloc::vec![Ty::Text],
+            stack_out: alloc::vec::Vec::new(),
+            allowed_effects: EffSet::empty(),
+        };
+        let mut insufficient = Work { remaining: cost - 1 };
+        assert!(matches!(
+            exact_contract(&env, checked, &mismatched, None, &mut insufficient),
+            Err(Diagnostic::Exhausted)
+        ));
+        let mut sufficient = Work { remaining: cost };
+        assert!(matches!(
+            exact_contract(&env, checked, &mismatched, None, &mut sufficient),
+            Err(Diagnostic::Invalid)
+        ));
+        assert_eq!(sufficient.remaining, 0);
+        assert!(work(&env).ok().expect("full environment budget") > cost);
+    }
+
+    #[test]
+    fn oversized_scheme_still_exhausts_before_contract_or_kernel_checks() {
+        let mut env = noble_kernel::contracts::environment().expect("fixed environment");
+        let selected = env.defs.get_mut(0).expect("fixed scheme");
+        selected.stack_out = (0..=crate::source::NODE_LIMIT)
+            .map(|_| noble_kernel::shapes::Pattern::Unit)
+            .collect();
+        assert!(matches!(work(&env), Err(Diagnostic::Exhausted)));
+    }
 }
