@@ -962,6 +962,203 @@ fn declared_nested_captured_transitive_alias_keeps_first_owner_across_two_rebind
 }
 
 #[test]
+fn declared_old_code_retires_after_last_nested_program_then_reimports_exact_old_source(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let original = live.report()?;
+    live_ack(&original, &[]);
+    assert_eq!(text_field(&live.submit("import m@1 as m")?, "outcome"), "namespace-committed");
+    let saved = live.submit("20 [ [ m.addone ] ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    let saved_span = saved["installed_code_span"].clone();
+    assert!(number_field(&saved_span, "length") > 0, "{saved}");
+    let original_source = saved["source_module_versions"][0].clone();
+    assert_eq!(original_source["module"], "m", "{saved}");
+    assert_eq!(original_source["version"], 1, "{saved}");
+    assert_eq!(original_source["sha256"], original["source_sha256"], "{saved}");
+
+    fixture.replace("module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&updated, "outcome"), "reload-committed", "{updated}");
+    let rebound = live.submit("import m@2 as m")?;
+    assert_eq!(text_field(&rebound, "outcome"), "namespace-committed", "{rebound}");
+    assert_eq!(rebound["stack"], saved["stack"]);
+    for receipt in [&updated, &rebound] {
+        assert!(!receipt["retired_code_spans"].as_array()
+            .ok_or("declared namespace omitted checked retirement receipts")?
+            .iter().any(|entry| entry["code_span"] == saved_span), "{receipt}");
+    }
+
+    let unwrapped = live.submit("run")?;
+    assert_eq!(text_field(&unwrapped, "outcome"), "normal", "{unwrapped}");
+    assert_eq!(unwrapped["stack"][1]["type"], "Program", "{unwrapped}");
+    assert!(!unwrapped["retired_code_spans"].as_array()
+        .ok_or("declared execution omitted checked retirement receipts")?
+        .iter().any(|entry| entry["code_span"] == saved_span), "{unwrapped}");
+
+    let released = live.submit("run")?;
+    normal(&released, &["21"]);
+    assert!(released["retired_code_spans"].as_array()
+        .ok_or("declared execution omitted checked retirement receipts")?
+        .iter().any(|entry| entry["code_span"] == saved_span
+            && entry["code_owners"] == 0 && entry["table_cleared"] == true), "{released}");
+
+    let old_import = live.submit("import m@1 as old")?;
+    assert_eq!(text_field(&old_import, "outcome"), "namespace-committed", "{old_import}");
+    assert_eq!(number_field(&old_import, "retained_module_roots"), 2, "{old_import}");
+    let recompiled = live.submit("20 old.addone")?;
+    normal(&recompiled, &["21", "21"]);
+    assert_eq!(recompiled["source_module_versions"][0], original_source, "{recompiled}");
+    assert!(number_field(&recompiled["installed_code_span"], "generation")
+        > number_field(&saved_span, "generation"), "{recompiled}");
+    assert_ne!(recompiled["installed_code_span"], saved_span, "{recompiled}");
+    assert_eq!(number_field(&recompiled, "guest_requests"), 0, "{recompiled}");
+    assert_eq!(number_field(&recompiled, "protected_operations"), 0, "{recompiled}");
+    normal(&live.submit("20 m.addone")?, &["21", "21", "22"]);
+    fixture.replace("module m@3 [ export addone def addone [ 3 + ] ]")?;
+    assert_eq!(text_field(&live.submit(&format!(":reload {}", fixture.source.display()))?,
+        "outcome"), "reload-committed");
+    assert_eq!(text_field(&live.submit("import m@3 as m")?, "outcome"), "namespace-committed");
+    normal(&live.submit("20 m.addone")?, &["21", "21", "22", "23"]);
+    live.finish()
+}
+
+#[test]
+fn declared_namespace_reload_retires_unreferenced_current_code_without_source_eviction(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(text_field(&live.submit("import m@1 as m")?, "outcome"), "namespace-committed");
+    let old = live.submit("20 m.addone")?;
+    normal(&old, &["21"]);
+    let old_span = old["installed_code_span"].clone();
+    let original_source = old["source_module_versions"][0].clone();
+    assert!(number_field(&old_span, "length") > 0, "{old}");
+
+    fixture.replace("module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&updated, "outcome"), "reload-committed", "{updated}");
+    assert_eq!(number_field(&updated, "retained_module_roots"), 2, "{updated}");
+    assert!(updated["retired_code_spans"].as_array()
+        .ok_or("declared reload omitted exact code retirement receipts")?
+        .iter().any(|entry| entry["code_span"] == old_span
+            && entry["code_owners"] == 0 && entry["table_cleared"] == true), "{updated}");
+
+    let rebound = live.submit("import m@2 as m")?;
+    assert_eq!(text_field(&rebound, "outcome"), "namespace-committed", "{rebound}");
+    normal(&live.submit("20 m.addone")?, &["21", "22"]);
+    assert_eq!(text_field(&live.submit("import m@1 as old")?, "outcome"),
+        "namespace-committed");
+    let recompiled = live.submit("20 old.addone")?;
+    normal(&recompiled, &["21", "22", "21"]);
+    assert_eq!(recompiled["source_module_versions"][0], original_source, "{recompiled}");
+    assert!(number_field(&recompiled["installed_code_span"], "generation")
+        > number_field(&old_span, "generation"), "{recompiled}");
+    assert_eq!(number_field(&recompiled, "guest_requests"), 0, "{recompiled}");
+    assert_eq!(number_field(&recompiled, "protected_operations"), 0, "{recompiled}");
+    live.finish()
+}
+
+#[test]
+fn declared_ownerless_code_retires_after_last_nested_program_is_consumed(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    let saved = live.submit("20 [ [ 1 + ] ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    assert_eq!(saved["source_module_versions"], serde_json::json!([]), "{saved}");
+    let saved_span = saved["installed_code_span"].clone();
+    assert!(number_field(&saved_span, "length") > 0, "{saved}");
+
+    let unwrapped = live.submit("run")?;
+    assert_eq!(text_field(&unwrapped, "outcome"), "normal", "{unwrapped}");
+    assert_eq!(unwrapped["stack"][1]["type"], "Program", "{unwrapped}");
+    assert!(!unwrapped["retired_code_spans"].as_array()
+        .ok_or("declared execution omitted checked retirement receipts")?
+        .iter().any(|entry| entry["code_span"] == saved_span), "{unwrapped}");
+
+    let released = live.submit("run")?;
+    normal(&released, &["21"]);
+    assert!(released["retired_code_spans"].as_array()
+        .ok_or("declared execution omitted checked retirement receipts")?
+        .iter().any(|entry| entry["code_span"] == saved_span
+            && entry["code_owners"] == 0 && entry["table_cleared"] == true), "{released}");
+    assert_eq!(number_field(&released, "protected_operations"), 0);
+    assert_eq!(text_field(&live.submit("import m@1 as m")?, "outcome"),
+        "namespace-committed");
+    normal(&live.submit("20 m.addone")?, &["21", "21"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn declared_active_effect_frame_refuses_code_inventory_until_queued_reload_ack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n")?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "in-flight-declared-emit", "emit-a")?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "repl", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8", "--declared-modules", "--bindings"])
+        .arg(&bindings).arg("--verify-source-before-execute");
+    barrier.configure(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(text_field(&live.submit("import ledger@1 as l")?, "outcome"),
+        "namespace-committed");
+    let saved = live.submit("[ l.send ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(b"run\n")?;
+    stdin.flush()?;
+    let active = barrier.wait()?;
+    assert_eq!(text_field(&active, "source_generation"), "2", "{active}");
+    assert_eq!(active["guest_frame_active"], true, "{active}");
+    assert_eq!(active["active_code_query"], -1, "{active}");
+    fixture.replace(
+        "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
+    )?;
+    stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
+    stdin.flush()?;
+    assert!(matches!(live.reports.try_recv(), Err(mpsc::TryRecvError::Empty)),
+        "an active declared Wasm frame acknowledged its queued reload");
+    barrier.release()?;
+
+    let old = live.report()?;
+    normal(&old, &[]);
+    assert_eq!(number_field(&old, "guest_requests"), 1);
+    assert_eq!(number_field(&old, "protected_operations"), 1);
+    assert_eq!(old["request_trace"][0]["adapter_identity"], "emit-a");
+    assert_eq!(old["request_trace"][0]["text"], "A");
+    let ack = live.report()?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    assert_eq!(number_field(&ack, "guest_requests"), 0);
+    let rebound = live.submit("import ledger@2 as l")?;
+    assert_eq!(text_field(&rebound, "outcome"), "namespace-committed", "{rebound}");
+    let fresh = live.submit("l.send")?;
+    normal(&fresh, &[]);
+    assert_eq!(number_field(&fresh, "guest_requests"), 1);
+    assert_eq!(fresh["request_trace"][0]["adapter_identity"], "emit-b");
+    assert_eq!(fresh["request_trace"][0]["text"], "B");
+    live.finish()
+}
+
+#[test]
 fn declared_same_version_changed_bytes_refuse_without_losing_old_owner() -> Result<(), Box<dyn std::error::Error>> {
     let original = "module Definitions@5 [ export step def step [ 1 + ] ]";
     let fixture = Fixture::new(original)?;

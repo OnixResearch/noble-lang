@@ -68,6 +68,7 @@ impl Work {
 /// Persistent semantic identities and disjoint compiled-code allocations.
 pub struct Compiler {
     live: bool,
+    declared_live: bool,
     live_slots: bool,
     text_cursor: bool,
     declared_text: bool,
@@ -381,7 +382,7 @@ impl Compiler {
             });
         }
         let mut start = self.functions;
-        if self.live || self.live_slots {
+        if self.live || self.declared_live || self.live_slots {
             if let Some(index) = self.free_code.iter().position(|free| free.length >= length) {
                 let free = &mut self.free_code[index];
                 start = free.start;
@@ -407,7 +408,7 @@ impl Compiler {
             length,
             generation: self.generation,
         };
-        if self.live || self.live_slots {
+        if self.live || self.declared_live || self.live_slots {
             self.installed_code.push(span);
         }
         Ok(span)
@@ -431,6 +432,7 @@ impl Compiler {
     pub fn new() -> Self {
         Self {
             live: false,
+            declared_live: false,
             live_slots: false,
             text_cursor: false,
             declared_text: false,
@@ -452,6 +454,12 @@ impl Compiler {
     /// separate 20-page live-slot backend acquires these root exports.
     pub fn new_live() -> Self {
         Self { live: true, ..Self::new() }
+    }
+
+    /// The opt-in declared live worker uses the checked 16-page Program owner
+    /// graph without acquiring Core's self-edit effect/profile.
+    pub fn new_declared_live() -> Self {
+        Self { declared_live: true, ..Self::new() }
     }
 
     /// Opt in to checked live references and generation-safe physical reuse.
@@ -482,7 +490,7 @@ impl Compiler {
         &self,
         submission: &noble_kernel::execution::Submission,
     ) -> Result<Prepared, crate::Diagnostic> {
-        if self.declared_text {
+        if self.declared_text || (self.declared_live && !submission.environment.declared_modules) {
             return Err(crate::Diagnostic::Unsupported);
         }
         self.prepare_with_origin(submission, None, false, false)
@@ -578,6 +586,7 @@ impl Compiler {
         }
         let mut next = Self {
             live: self.live,
+            declared_live: self.declared_live,
             live_slots: self.live_slots,
             text_cursor: self.text_cursor,
             declared_text: self.declared_text,
@@ -793,7 +802,9 @@ impl Compiler {
         span: CodeSpan,
         verify_and_clear: impl FnOnce(CodeSpan) -> Result<(), crate::Diagnostic>,
     ) -> Result<(), crate::Diagnostic> {
-        if !(self.live || self.live_slots) || span.length == 0 || span.start < 4 {
+        if !(self.live || self.declared_live || self.live_slots)
+            || span.length == 0 || span.start < 4
+        {
             return Err(crate::Diagnostic::Invalid);
         }
         let Some(index) = self.installed_code.iter().position(|owned| *owned == span) else {

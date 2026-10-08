@@ -10,10 +10,11 @@
     'NOBLE_LIVE_TEST_BARRIER_EXPECTED']) delete process.env[key];
   if (directory || point || expected) {
     if (typeof directory !== 'string' || !path.isAbsolute(directory)
-      || !['in-flight-generation', 'candidate-compiled'].includes(point)
+      || !['in-flight-generation', 'candidate-compiled', 'in-flight-declared-emit'].includes(point)
       || typeof expected !== 'string'
       || point === 'candidate-compiled' && !/^[a-f0-9]{64}$/.test(expected)
-      || point === 'in-flight-generation' && !/^[1-9][0-9]*$/.test(expected)) {
+      || point === 'in-flight-generation' && !/^[1-9][0-9]*$/.test(expected)
+      || point === 'in-flight-declared-emit' && expected !== 'emit-a') {
       fail('invalid private live test barrier selection');
     }
     const metadata = fs.lstatSync(directory);
@@ -27,15 +28,19 @@
         || (entry.mode & 0o077) !== 0) fail('untrusted private live test barrier FIFO');
     }
     let used = false;
-    const pause = (owner, location, value, checkedWasmModule = false, wasmSha256 = null) => {
-      if (used || !owner.inProcessLive || owner.declaredLive
+    const pause = (owner, location, value, checkedWasmModule = false, wasmSha256 = null,
+      activeCodeQuery = null) => {
+      if (used || !owner.inProcessLive
+        || owner.declaredLive !== (location === 'in-flight-declared-emit')
         || location !== point || value !== expected) return;
       used = true;
       const event = Buffer.from(JSON.stringify({ point: location, matched: value,
-        source_generation: owner.liveSourceGeneration.toString(),
+        source_generation: (owner.declaredLive
+          ? owner.declaredLiveState.generation : owner.liveSourceGeneration).toString(),
         guest_frame_active: owner.liveExecuting,
         checked_wasm_module: checkedWasmModule,
-        checked_wasm_sha256: wasmSha256 }) + '\n');
+        checked_wasm_sha256: wasmSha256,
+        ...(activeCodeQuery === null ? {} : { active_code_query: activeCodeQuery }) }) + '\n');
       const notified = fs.openSync(reached, fs.constants.O_WRONLY | fs.constants.O_NOFOLLOW);
       try { if (fs.writeSync(notified, event) !== event.length) fail('short live barrier event'); }
       finally { fs.closeSync(notified); }
@@ -47,7 +52,31 @@
         }
       } finally { fs.closeSync(permitted); }
     };
-    if (point === 'candidate-compiled') {
+    if (point === 'in-flight-declared-emit') {
+      const original = installTestHosts;
+      installTestHosts = function (owner, declaredModules) {
+        original(owner, declaredModules);
+        if (!owner.declaredLive) return;
+        const emit = owner.shared.test_emit_bound;
+        // Wrap the actual imported callback before any Wasm instance is
+        // created. The host remains serial while this old frame is active.
+        owner.shared.test_emit_bound = (offset, count, slot) => {
+          const binding = owner.boundAdapters.get(slot);
+          if (binding?.module === 'ledger' && binding?.version === 1
+            && binding?.operation === 'test.emit' && binding?.adapter === expected) {
+            const spans = Array.from(owner.liveCodeSpans.values(), record => record.span);
+            if (spans.length === 0) fail('declared callback has no installed old code');
+            const observations = spans.map(span =>
+              owner.runtime().code_owners(span.start, span.length));
+            if (observations.some(owners => owners !== -1)) {
+              fail('active declared frame exposed an idle code-owner count');
+            }
+            pause(owner, point, binding.adapter, false, null, -1);
+          }
+          return emit(offset, count, slot);
+        };
+      };
+    } else if (point === 'candidate-compiled') {
       const original = CoreEngine.prototype.liveModule;
       CoreEngine.prototype.liveModule = function (...args) {
         const result = original.apply(this, args);

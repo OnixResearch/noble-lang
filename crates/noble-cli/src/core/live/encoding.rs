@@ -242,7 +242,6 @@ fn check_export(
     manifest: &Value,
     functions: &[u32],
     types: &[FuncType],
-    profile: ImportProfile,
 ) -> Result<(), String> {
     if name == string(&manifest["memory"], "name")? {
         if kind != ExternalKind::Memory || index != 0 {
@@ -253,12 +252,9 @@ fn check_export(
     let descriptor = manifest["exports"]
         .get(name)
         .and_then(Value::as_str)
-        .or_else(|| match profile {
-            ImportProfile::CoreLive => CORE_LIVE_EXPORTS.iter()
-                .find(|(entry, _)| *entry == name)
-                .map(|(_, signature)| *signature),
-            ImportProfile::DeclaredLive => None,
-        })
+        .or_else(|| CORE_LIVE_EXPORTS.iter()
+            .find(|(entry, _)| *entry == name)
+            .map(|(_, signature)| *signature))
         .ok_or_else(|| format!("undeclared Wasm export: {name}"))?;
     if kind != ExternalKind::Func {
         return Err(format!("invalid ABI export kind: {name}"));
@@ -331,7 +327,6 @@ fn check_binary(bytes: &[u8], manifest: &Value, profile: ImportProfile) -> Resul
                         manifest,
                         &functions,
                         &types,
-                        profile,
                     )?;
                 }
             }
@@ -391,11 +386,9 @@ fn check_binary(bytes: &[u8], manifest: &Value, profile: ImportProfile) -> Resul
             return Err(format!("missing core function export: {name}").into());
         }
     }
-    if matches!(profile, ImportProfile::CoreLive) {
-        for (name, _) in CORE_LIVE_EXPORTS {
-            if !exports.contains(name) {
-                return Err(format!("missing Core-live code owner export: {name}").into());
-            }
+    for (name, _) in CORE_LIVE_EXPORTS {
+        if !exports.contains(name) {
+            return Err(format!("missing live code owner export: {name}").into());
         }
     }
     Ok(())

@@ -133,7 +133,8 @@ async function protocol(config) {
               const span = { start: Number(liveCode[2]), length: Number(liveCode[3]),
                 generation: Number(liveCode[4]) };
               const report = liveCode[1] === 'register-live-code'
-                ? engine.registerLiveCode(span) : liveCode[1] === 'inspect-live-code'
+                ? engine.registerLiveCode(span)
+                : liveCode[1] === 'inspect-live-code'
                   ? engine.inspectLiveCode(span) : engine.retireLiveCode(span);
               emit(report.outcome, report);
             } catch (error) { emit('internal-failure', reportError(error)); return; }

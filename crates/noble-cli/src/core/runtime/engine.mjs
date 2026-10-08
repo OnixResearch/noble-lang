@@ -253,19 +253,18 @@ export class CoreEngine {
     configureDeclaredAbi(this, abi, declared_modules, declared_extension, bindings,
       text_byte_cursor, signed_self_recursion);
     this.declaredLive = this.inProcessLive && declared_modules === true;
-    this.liveCodeOwners = this.inProcessLive && !this.declaredLive;
+    this.liveCodeOwners = this.inProcessLive;
     this.externalCodeRoots = new Set();
     this.liveCodeSpans = new Map();
     this.liveModuleOwner = null;
+    this.liveModuleNamespaceGeneration = null;
     this.supersededLiveModules = [];
     this.optimized = optimized;
     initializeHostState(this, bindings);
     this.declaredLiveState = { generation: 0n, roots: [], aliases: [], activeSlots: new Set() };
     this.stagedDeclared = null;
-    // Declared modules still use ownerless Core. Do not release their instances
-    // or table entries on an alias switch without a checked owner inventory.
-    this.retainedDeclaredCode = [];
     this.pending = null;
+    this.last = null;
     this.parked = null;
     this.poisoned = false;
     this.compilations = 0;
@@ -596,21 +595,43 @@ export class CoreEngine {
     if (span.length !== 0) this.liveCodeSpans.set(key, record);
     if (this.liveModuleOwner) this.supersededLiveModules.push(this.liveModuleOwner);
     this.liveModuleOwner = this.last;
+    this.liveModuleNamespaceGeneration = this.declaredLive
+      ? this.declaredLiveState.generation : null;
     return { outcome: 'code-registered', code_span: record.span,
-      table_installed: true, source_generation: this.liveSourceGeneration.toString() };
+      table_installed: true,
+      source_generation: (this.declaredLive
+        ? this.declaredLiveState.generation : this.liveSourceGeneration).toString() };
   }
 
   sweepSupersededLiveModules() {
     if (!this.liveCodeIdle()) fail('module root release requires an idle checked live worker');
-    const count = this.supersededLiveModules.length;
+    let released = 0;
     for (const instance of this.supersededLiveModules) {
-      if (instance === this.liveModuleOwner || instance.exports.release_module_roots() !== 0) {
+      if (instance === this.liveModuleOwner) {
         this.poisoned = true;
         fail('backend refused superseded Core module root release');
       }
+      if (instance.exports.release_module_roots() !== 0) {
+        this.poisoned = true;
+        fail('backend refused superseded Core module root release');
+      }
+      released += 1;
     }
-    this.supersededLiveModules.length = 0;
-    return { outcome: 'module-roots-released', released: count };
+    this.supersededLiveModules = [];
+    // A published declared namespace does not own its predecessor's physical
+    // Wasm code: retained source can be rechecked on a later explicit import.
+    // Stack/capture roots independently protect old code during this release.
+    if (this.declaredLive && this.liveModuleOwner
+      && this.liveModuleNamespaceGeneration < this.declaredLiveState.generation) {
+      if (this.liveModuleOwner.exports.release_module_roots() !== 0) {
+        this.poisoned = true;
+        fail('backend refused obsolete declared module root release');
+      }
+      this.liveModuleOwner = null;
+      this.liveModuleNamespaceGeneration = null;
+      released += 1;
+    }
+    return { outcome: 'module-roots-released', released };
   }
 
   recordedLiveCode(span) {
@@ -1119,7 +1140,6 @@ export class CoreEngine {
       this.lastTraceStart = this.trace.length;
       this.liveSourceGeneration += 1n;
       this.liveGrant = null;
-      if (this.declaredLive) this.retainedDeclaredCode.push(instance);
       return { schema: 'noble-core-report/v1', profile: this.profile,
         backend: 'managed-linear-memory', stage: 'wasm', outcome: 'normal',
         status: 0, submission: record.submission, generation: this.shared.generation.value,
@@ -1461,7 +1481,6 @@ export class CoreEngine {
       session_state: this.poisoned ? 'terminated-after-runtime-failure' : 'retained',
       metrics, module: record };
     if (record.stem) this.save(`${record.stem}-execution.json`, report);
-    if (this.declaredLive && !this.poisoned) this.retainedDeclaredCode.push(instance);
     return report;
   }
 
