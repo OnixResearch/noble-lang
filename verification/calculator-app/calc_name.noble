@@ -1,0 +1,65 @@
+module calc_name@1 [
+    opaque Name Pair<Text,Pair<I64,I64>> private
+    export Name
+
+    signature make forall<S:stack> [ S Text I64 I64 -- S Name ! pure ]
+    export make
+    def make [ pair pair Name.new ]
+
+    signature fields forall<S:stack> [ S Name -- S Text I64 I64 ! pure ]
+    export fields
+    def fields [ Name.into unpair unpair ]
+
+    signature bytes_equal forall<S:stack>
+        [ S Text I64 Text I64 I64 -- S Bool ! pure ]
+    def bytes_equal [
+        let remaining let right_at let right let left_at let left
+        remaining 0 =
+        [ true ]
+        [ left left_at text.byte swap drop
+          right right_at text.byte swap drop =
+          [ left left_at 1 + right right_at 1 + remaining 1 - bytes_equal ]
+          [ false ] if ] if
+    ]
+
+    signature equal forall<S:stack> [ S Name Name -- S Bool ! pure ]
+    export equal
+    def equal [
+        fields let right_end let right_begin let right
+        fields let left_end let left_begin let left
+        left_end left_begin - right_end right_begin - =
+        [ left left_begin right right_begin left_end left_begin - bytes_equal ]
+        [ false ] if
+    ]
+
+    # Definition command identifiers pass the same guest lexer as expression
+    # identifiers. Trailing whitespace, calls, digits at start and punctuation
+    # cannot be silently repaired by the host shell.
+    signature whole forall<S:stack>
+        [ S Text numeric_budget@1.Budget --
+          S result@1.Result<Pair<Name,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    export whole
+    def whole [
+        let budget let text
+        text budget calc_lex@1.tokenize
+        [ unpair let charged unpair let length
+          [ 0 0 calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.DefinitionError
+            result@1.Result.Err ]
+          [ let rest let first
+            first calc_token@1.kind 256 =
+            [ first calc_token@1.start 0 =
+              [ first calc_token@1.finish length =
+                [ rest
+                  [ text 0 length make charged pair result@1.Result.Ok ]
+                  [ drop drop
+                    0 length calc_diagnostic@1.span
+                    calc_diagnostic@1.Diagnostic.DefinitionError result@1.Result.Err ] list.case ]
+                [ 0 length calc_diagnostic@1.span
+                  calc_diagnostic@1.Diagnostic.DefinitionError result@1.Result.Err ] if ]
+              [ 0 length calc_diagnostic@1.span
+                calc_diagnostic@1.Diagnostic.DefinitionError result@1.Result.Err ] if ]
+            [ 0 length calc_diagnostic@1.span
+              calc_diagnostic@1.Diagnostic.DefinitionError result@1.Result.Err ] if ] list.case ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+]

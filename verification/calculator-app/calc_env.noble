@@ -1,0 +1,101 @@
+module calc_env@1 [
+    # Each binding has a monotonically allocated identity. Rebinding a name
+    # only prepends a new entry; pre-existing compiled instructions retain the
+    # older identity, not a mutable lookup by display spelling.
+    variant Binding Value rat@1.Rat public Function Pair<Text,Pair<List<calc_name@1.Name>,List<calc_code@1.Instruction>>> public
+    export Binding
+    export Binding.Value
+    export Binding.Function
+    export Binding.match
+
+    opaque Entry Pair<I64,Pair<calc_name@1.Name,Binding>> private
+    export Entry
+    signature entry forall<S:stack> [ S I64 calc_name@1.Name Binding -- S Entry ! pure ]
+    export entry
+    def entry [ pair pair Entry.new ]
+    signature identity forall<S:stack> [ S Entry -- S I64 ! pure ]
+    export identity
+    def identity [ Entry.into unpair drop ]
+    signature name forall<S:stack> [ S Entry -- S calc_name@1.Name ! pure ]
+    export name
+    def name [ Entry.into unpair swap drop unpair drop ]
+    signature binding forall<S:stack> [ S Entry -- S Binding ! pure ]
+    export binding
+    def binding [ Entry.into unpair swap drop unpair swap drop ]
+
+    opaque Environment Pair<I64,List<Entry>> private
+    export Environment
+    signature empty forall<S:stack> [ S -- S Environment ! pure ]
+    export empty
+    def empty [ 0 nil pair Environment.new ]
+
+    signature next_identity forall<S:stack> [ S Environment -- S I64 ! pure ]
+    export next_identity
+    def next_identity [ Environment.into unpair drop ]
+
+    signature install forall<S:stack>
+        [ S Environment calc_name@1.Name Binding -- S Environment ! pure ]
+    export install
+    def install [
+        let value let display
+        Environment.into unpair let entries let next
+        next display value entry entries cons let latest
+        next 1 + latest pair Environment.new
+    ]
+
+    signature replace_entry forall<S:stack>
+        [ S List<Entry> I64 Binding -- S List<Entry> ! pure ]
+    def replace_entry [
+        let replacement let wanted
+        [ nil ]
+        [ let rest let candidate
+          candidate identity wanted =
+          [ wanted candidate name replacement entry rest cons ]
+          [ candidate rest wanted replacement replace_entry cons ] if ] list.case
+    ]
+    # Replace only the preallocated provisional entry; unlike install this
+    # preserves the identity resolved by all other imported function bodies.
+    signature replace forall<S:stack>
+        [ S Environment I64 Binding -- S Environment ! pure ]
+    export replace
+    def replace [
+        let replacement let wanted
+        Environment.into unpair let entries let next
+        next entries wanted replacement replace_entry pair Environment.new
+    ]
+
+    signature search_name forall<S:stack>
+        [ S List<Entry> calc_name@1.Name -- S I64 ! pure ]
+    def search_name [
+        let wanted
+        [ -1 ]
+        [ let rest let candidate
+          candidate name wanted calc_name@1.equal
+          [ candidate identity ] [ rest wanted search_name ] if ] list.case
+    ]
+    signature resolve forall<S:stack>
+        [ S Environment calc_name@1.Name -- S I64 ! pure ]
+    export resolve
+    def resolve [
+        let wanted
+        Environment.into unpair swap drop wanted search_name
+    ]
+
+    signature search_identity forall<S:stack>
+        [ S List<Entry> I64 -- S result@1.Result<Entry,Unit> ! pure ]
+    def search_identity [
+        let wanted
+        [ unit result@1.Result.Err ]
+        [ let rest let candidate
+          candidate identity wanted =
+          [ candidate result@1.Result.Ok ]
+          [ rest wanted search_identity ] if ] list.case
+    ]
+    signature get forall<S:stack>
+        [ S Environment I64 -- S result@1.Result<Entry,Unit> ! pure ]
+    export get
+    def get [
+        let wanted
+        Environment.into unpair swap drop wanted search_identity
+    ]
+]
