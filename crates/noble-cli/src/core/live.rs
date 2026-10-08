@@ -62,6 +62,7 @@ struct Live {
     generation: u64,
     retained_generation_limit: Option<u64>,
     guest_step_budget: Option<u32>,
+    live_module_installed: bool,
     live_code_spans: std::vec::Vec<noble_wasm::source::CodeSpan>,
     #[cfg(target_os = "linux")]
     watch: Option<watch::Watcher>,
@@ -94,13 +95,13 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             "protected_operations": 0,
         }));
         return std::process::ExitCode::from(2);
-    }
+    };
     let selected_grant_name = initial_grant.as_ref().map(|grant| grant.name.as_str());
     let declared = match manifest.as_ref() {
         Some(manifest) => match noble_contracts::source::ModuleSession::new(
             &manifest.operations(),
             noble_contracts::source::RetainedSourceLimit::new(super::SOURCE_LIMITS.bytes)
-                .expect("live source limit is within declared retained maximum"),
+                .expect("the fixed live source byte bound is valid"),
         ) {
             Ok(frontend) => Some(frontend),
             Err(error) => {
@@ -136,7 +137,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             ),
             declared,
             compiler: if manifest.is_some() {
-                noble_wasm::source::Compiler::new()
+                noble_wasm::source::Compiler::new_declared_live()
             } else {
                 noble_wasm::source::Compiler::new_live()
             },
@@ -160,6 +161,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         generation: 0,
         retained_generation_limit,
         guest_step_budget,
+        live_module_installed: false,
         live_code_spans: std::vec::Vec::new(),
         #[cfg(target_os = "linux")]
         watch: watcher,
@@ -497,10 +499,8 @@ fn source_identity(metadata: &std::fs::Metadata) -> FileIdentity {
 }
 
 impl Live {
-    fn register_live_code(
-        &mut self,
-        span: noble_wasm::source::CodeSpan,
-    ) -> Result<(), super::output::Failure> {
+    fn register_live_code(&mut self, span: noble_wasm::source::CodeSpan)
+        -> Result<(), super::output::Failure> {
         let registered = self.worker()?.register_live_code(span)?;
         let receipt: serde_json::Value = serde_json::from_str(&registered.json)
             .map_err(|_| fatal_failure("invalid installed live code owner receipt"))?;
@@ -513,6 +513,7 @@ impl Live {
         {
             return Err(fatal_failure("worker did not register the exact checked installed code span"));
         }
+        self.live_module_installed = true;
         if span.length != 0 {
             self.live_code_spans.push(span);
         }
@@ -522,7 +523,9 @@ impl Live {
     fn retire_unowned_live_code(
         &mut self,
     ) -> Result<std::vec::Vec<serde_json::Value>, super::output::Failure> {
-        if self.declared.is_some() {
+        // A module/alias declaration may precede the first executable; an
+        // already installed zero-length module still has globals to release.
+        if self.declared.is_some() && !self.live_module_installed {
             return Ok(std::vec::Vec::new());
         }
         let released = self.worker()?.release_superseded_live_module_roots()?;

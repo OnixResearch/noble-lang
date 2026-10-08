@@ -402,6 +402,48 @@ fn alias_rebind_replays_exact_current_dependents_but_preserves_versioned_owners(
 }
 
 #[test]
+fn failed_registration_and_alias_rebind_never_reissue_a_module_owner() -> Result<(), String> {
+    use noble_contracts::source::{ModuleSession, RetainedSourceLimit};
+    let retained = RetainedSourceLimit::new(65_536)
+        .ok_or("invalid retained source limit")?;
+    let mut session = ModuleSession::new_declared_text(&[], false, retained)
+        .map_err(|error| format!("{error:?}"))?;
+    let first = session.prepare(b"module m@1 [ export addone def addone [ 1 + ] ]", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let first_owner = first.resolved_module().ok_or("first module lost checked owner")?.0;
+    let (next, outcome) = session.commit(first);
+    outcome.map_err(|error| format!("{error:?}"))?;
+    session = next;
+    session = commit(session, b"import m@1 as m")?;
+    assert!(session.prepare(b"module m@2 [ export addone def addone [ true + ] ]",
+        &[], LIMITS).is_err());
+
+    let second = session.prepare(b"module m@2 [ export addone def addone [ 2 + ] ]", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let second_owner = second.resolved_module().ok_or("second module lost checked owner")?.0;
+    assert!(second_owner > first_owner);
+    let (next, outcome) = session.commit(second);
+    outcome.map_err(|error| format!("{error:?}"))?;
+    session = next;
+    session = commit(session, b"def once [ m.addone ]")?;
+    session = commit(session, b"def twice [ once once ]")?;
+    session = commit(session, b"import m@2 as m")?;
+
+    let third = session.prepare(b"module m@3 [ export addone def addone [ 3 + ] ]", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let third_owner = third.resolved_module().ok_or("third module lost checked owner")?.0;
+    assert!(third_owner > second_owner && third_owner != first_owner);
+    let (next, outcome) = session.commit(third);
+    outcome.map_err(|error| format!("{error:?}"))?;
+    session = next;
+    session = commit(session, b"import m@3 as m")?;
+    assert_eq!(session.prepare(b"20 twice", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?.output(),
+        &[noble_kernel::types::Ty::I64]);
+    Ok(())
+}
+
+#[test]
 fn alias_rebind_refuses_a_current_body_capturing_a_shadowed_old_alias_owner() -> Result<(), String> {
     let session = noble_contracts::source::ModuleSession::new_declared_text(&[], false, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;

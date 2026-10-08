@@ -28,6 +28,9 @@ pub struct ModuleSession {
     bindings: alloc::vec::Vec<super::BoundOperation>,
     pub(super) modules: alloc::vec::Vec<super::Module>,
     aliases: alloc::vec::Vec<super::Alias>,
+    // A namespace owner is never identified by the length of a retained
+    // collection: retirement must not make an old captured owner reusable.
+    next_module_identity: u64,
     generation: u64,
     retained_source_limit: crate::source::RetainedSourceLimit,
     pub(super) source: crate::source::Session,
@@ -42,6 +45,7 @@ pub struct ModulePrepared {
     previous_source_definitions_len: usize,
     previous_modules: alloc::vec::Vec<super::Module>,
     previous_aliases: alloc::vec::Vec<super::Alias>,
+    previous_next_module_identity: u64,
     previous_history: alloc::vec::Vec<u8>,
     staged: ModuleSession,
     submission: Option<noble_kernel::execution::Submission>,
@@ -1193,6 +1197,7 @@ impl ModuleSession {
             bindings: bindings.to_vec(),
             modules: alloc::vec::Vec::new(),
             aliases: alloc::vec::Vec::new(),
+            next_module_identity: 1,
             generation: 0,
             retained_source_limit,
         })
@@ -1229,6 +1234,7 @@ impl ModuleSession {
             bindings: self.bindings.clone(),
             modules: self.modules.clone(),
             aliases: self.aliases.clone(),
+            next_module_identity: self.next_module_identity,
             generation: self.generation,
             retained_source_limit: self.retained_source_limit,
         }

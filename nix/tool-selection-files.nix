@@ -240,6 +240,7 @@
   "crates/noble-wasm/src/source/plan/operations/nominal.rs"
   "crates/noble-wasm/src/source/preflight.rs"
   "crates/noble-wasm/src/source/preflight/concrete.rs"
+  "crates/noble-wasm/src/source/transaction.rs"
   "crates/noble-wasm/wit/worker-program.wit"
   "crates/noble-wasm/wit/worker-send.wit"
   "verification/worker-send/peer/src/host.rs"

@@ -25,7 +25,7 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-This source-only integrated candidate selection compares 252 file digests across the flake and
+This source-only integrated candidate selection compares 253 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
 source-bound verification/build recipes, the architecture capacity policy,
@@ -35,8 +35,8 @@ LIVE06 production-role sources, and MW1 issuer/MW2 Send/cancel source and
 controls, including direct Worker configuration, process, protocol, typed
 shell consumer, binding
 policy, declared-live publication, live ABI encoding and watched-file gate,
-component assembler/report, Wasm metadata
-emission, the typed package parser, and directly compiled Send WIT and
+component assembler/report, Wasm metadata emission and declared-live
+transaction ownership, the typed package parser, and directly compiled Send WIT and
 dispatch source, plus the separate test-only boundary
 fixture lock. The newly selected declared-module contracts and CLI files,
 their behavioral regressions, migrated Wasm constructor callsites, and active

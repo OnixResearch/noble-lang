@@ -34,6 +34,32 @@ impl State {
         Self { manifest, roots: Vec::new(), aliases: Vec::new(), selected_module_name: None }
     }
 
+    fn checked_source_versions(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+    ) -> Result<Vec<serde_json::Value>, String> {
+        let mut identities = Vec::new();
+        let mut sources = Vec::new();
+        for definition in &submission.definitions {
+            let row = usize::try_from(definition.definition.0)
+                .map_err(|_| "checked definition owner row overflow")?;
+            let owner = submission.environment.definition_owners.get(row)
+                .ok_or("checked definition omitted its namespace owner row")?;
+            let Some(identity) = owner else { continue };
+            if identities.contains(identity) {
+                continue;
+            }
+            let root = self.roots.iter().find(|root| root.identity == *identity)
+                .ok_or("compiled definition has no retained immutable module version root")?;
+            identities.push(*identity);
+            sources.push(serde_json::json!({
+                "identity": root.identity, "module": &root.module, "version": root.version,
+                "sha256": &root.sha256,
+            }));
+        }
+        Ok(sources)
+    }
+
     fn proposed(
         &self,
         prepared: &noble_contracts::source::ModulePrepared,
@@ -260,8 +286,10 @@ impl Live {
             .ok_or_else(|| fatal_failure("declared state vanished after publication"))?;
         state.roots = roots;
         state.aliases = aliases;
+        let retained_module_roots = state.roots.len();
         self.generation += 1;
         self.session.submissions = number;
+        let retired_code_spans = self.retire_unowned_live_code()?;
         let source_freshness = match file {
             Some((path, candidate)) if same_snapshot(path, candidate) =>
                 "matched-at-postpublish-check",
@@ -282,8 +310,8 @@ impl Live {
             },
             "rebuilt_import_definitions": rebuilt_import_definitions,
             "proof_recheck": proof_recheck,
-            "retained_module_roots": state.roots.len(),
-            "code_retirement": "deferred-until-backend-owner-accounting",
+            "retained_module_roots": retained_module_roots,
+            "retired_code_spans": retired_code_spans,
             "stack": self.last_stack,
             "guest_requests": 0, "protected_operations": 0,
         })))
@@ -351,6 +379,11 @@ impl Live {
     ) -> Result<super::super::output::Report, super::super::output::Failure> {
         let submission = prepared.submission()
             .ok_or_else(|| fatal_failure("declared expression omitted checked submission"))?;
+        // The immutable registry retains original source for future exact
+        // recompilation; it is not a root for this physical Wasm code span.
+        let source_versions = self.declared.as_ref()
+            .ok_or_else(|| fatal_failure("declared immutable module roots disappeared"))?
+            .checked_source_versions(submission).map_err(fatal_failure)?;
         let compiled = match self.session.compiler.prepare(submission) {
             Ok(compiled) => compiled,
             Err(error) => return Ok(super::super::output::Report::declared_backend_error(
@@ -376,6 +409,7 @@ impl Live {
                 return Ok(refusal);
             }
         }
+        let code_span = compiled.code_span();
         let output = prepared.output().to_vec();
         self.session.compiler.commit(compiled)
             .map_err(super::super::output::Failure::backend)?;
@@ -388,11 +422,22 @@ impl Live {
         };
         if report.outcome == "normal" {
             self.session.stack = output;
+            self.register_live_code(code_span)?;
         }
         let mut value: serde_json::Value = serde_json::from_str(&report.json)
             .map_err(|_| fatal_failure("invalid declared live execution report"))?;
         if let Some(fields) = value.as_object_mut() {
             fields.insert("source_generation".into(), serde_json::json!(self.generation));
+            if report.outcome == "normal" {
+                fields.insert("installed_code_span".into(), serde_json::json!({
+                    "start": code_span.start, "length": code_span.length,
+                    "generation": code_span.generation,
+                }));
+                fields.insert("source_module_versions".into(),
+                    serde_json::json!(source_versions));
+                fields.insert("retired_code_spans".into(),
+                    serde_json::json!(self.retire_unowned_live_code()?));
+            }
         }
         report.json = value.to_string();
         Ok(report)
