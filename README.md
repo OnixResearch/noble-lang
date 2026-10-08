@@ -587,9 +587,15 @@ The [exact calculator](.cairn/specs/calculator/spec.md) is a planned reference
 application. Its [numeric error schema prerequisite](verification/calculator-errors/README.md)
 has a finite 18-case compiled-guest observation on a rebuilt binary, explicitly
 **not source-bound**; the opt-in byte cursor does not establish MA1 or CALC
-acceptance. The [typed-worker design](specs/WORKER-CONFORMANCE.md) describes
-future worker admission and lifecycle contracts. Neither is a completed
-application or agent runtime.
+acceptance. The [typed-worker design](specs/WORKER-CONFORMANCE.md) remains a
+portable-runtime contract, not completed acceptance. The opt-in `noble worker
+typed` executes a source-checked, closed pure transition; `noble worker shell`
+and [the independent WIT peer](verification/worker-send/test.mjs) exercise
+exact host-selected Send grants, native Unix datagram delivery and future
+cancellation with retained task/resource pins. These are local-only controls:
+there is no external destination, rollback claim, owner-selected portable
+G-03/G-05 package/export, or canonical WORKER-01–12 acceptance. Neither the
+calculator nor Worker is a completed application or agent runtime.
 
 ## Verification
 

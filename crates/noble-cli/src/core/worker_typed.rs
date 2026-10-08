@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 const USAGE: &str = "usage: noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON";
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
-    bytes: 65_536, nodes: 4_096, depth: 32, work: 1_000_000,
+    bytes: 65_536, nodes: 4_096, depth: 32, work: 3_000_000,
 };
 
 fn failure(outcome: &'static str, message: &'static str) -> Failure {
@@ -798,7 +798,7 @@ mod tests {
             .err().ok_or("forged Program owner passed before shell operation")?;
         assert_eq!(refusal.context.outcome, "invalid-input");
 
-        let noop = fixture()?;
+        let noop = self::fixture()?;
         let noop_package = serde_json::to_vec(&noop.manifest).map_err(|error| error.to_string())?;
         let refusal = super::super::worker_shell::execute(&noop_package, SCHEMA.as_bytes(),
             &noop.state,&noop.event,&cancel,&grant("ping",true)?)

@@ -21,10 +21,10 @@ const component = path.join(componentDir, 'component.wasm');
 const selected = name => path.join(fixtures, name);
 const worker = JSON.parse(fs.readFileSync(selected('package.json'), 'utf8'));
 const selectedSourceSha256 = createHash('sha256').update(worker.root.source_utf8).digest('hex');
-const grant = (name, { allow = true, expires_at = 20,
+const grant = (name, { allow = true, attempt = '1', expires_at = 20,
   source_sha256 = selectedSourceSha256 } = {}) => {
   const bytes = {
-    allow, attempt: '1', expires_at,
+    allow, attempt, expires_at,
     format: 'noble-worker-send-grant/v1',
     operation: 'noble-test:worker-send/host@1.0.0#begin-send',
     source_sha256, text: 'ping',
@@ -35,6 +35,7 @@ const grant = (name, { allow = true, expires_at = 20,
 };
 const approvedGrant = grant('approved');
 const deniedGrant = grant('denied', { allow: false });
+const wrongAttemptGrant = grant('wrong-attempt', { attempt: '2' });
 const expiredGrant = grant('expired', { expires_at: 8 });
 const mismatchedSource = grant('mismatched-source', {
   source_sha256: `${selectedSourceSha256[0] === '0' ? '1' : '0'}${selectedSourceSha256.slice(1)}`,
@@ -50,6 +51,8 @@ function run(name, mode, submit, selectedGrant) {
     selectedGrant, mode], { encoding: 'utf8', timeout: 120_000 });
   assert.equal(invoked.status, 0, `${name}: ${invoked.stderr}\n${invoked.stdout}`);
   const report = JSON.parse(invoked.stdout);
+  fs.writeFileSync(path.join(output, `${name.replaceAll(' ', '-')}.report.json`),
+    invoked.stdout, { flag: 'wx', mode: 0o600 });
   assert.equal(report.schema, 'noble-worker-send-wit-integration/v1', name);
   assert.equal(report.first_guest.outcome, 'normal', name);
   assert.equal(report.cancel_guest.outcome, 'normal', name);
@@ -62,6 +65,7 @@ const allowed = run('authorized socket send', 'send-then-cancel', selected('subm
 assert.equal(allowed.outcome, 'cancelled-retired');
 assert.equal(allowed.host.receiver_datagrams, 1);
 assert.equal(allowed.host.native_send_bytes, 12);
+assert.equal(allowed.host.protected_operation_attempts, 1);
 assert.equal(allowed.host.pins_at_cancel, 1);
 assert.equal(allowed.host.late_completion_retired, true);
 assert.equal(allowed.host.task_retired, 1);
@@ -74,12 +78,16 @@ const cancelled = run('cancel before native send', 'cancel-before-send', selecte
 assert.equal(cancelled.outcome, 'cancelled-retired');
 assert.equal(cancelled.host.receiver_datagrams, 0);
 assert.equal(cancelled.host.native_send_bytes, 0);
+assert.equal(cancelled.host.protected_operation_attempts, 1);
+assert.equal(cancelled.host.pins_at_cancel, 1);
+assert.equal(cancelled.native_pins_at_guest_exit, 1);
 assert.equal(cancelled.host.task_retired, 1);
 assert.equal(cancelled.host.resource_retired, 1);
 assert.equal(cancelled.host.late_completion_retired, true);
 assert.equal(cancelled.host.successful_result_deliveries, 0);
 for (const [name, submit, selection] of [
   ['no-grant', selected('submit.json'), deniedGrant],
+  ['mismatched-attempt-grant', selected('submit.json'), wrongAttemptGrant],
   ['expired-grant', selected('submit.json'), expiredGrant],
   ['candidate-generated-grant', generatedEvent, approvedGrant],
 ]) {
@@ -98,6 +106,8 @@ const wrongSource = spawnSync(peer, [component, cli, selected('package.json'),
 { encoding: 'utf8', timeout: 120_000 });
 assert.equal(wrongSource.status, 2, wrongSource.stderr || wrongSource.stdout);
 const wrongReport = JSON.parse(wrongSource.stdout);
+fs.writeFileSync(path.join(output, 'mismatched-source-grant.report.json'),
+  wrongSource.stdout, { flag: 'wx', mode: 0o600 });
 assert.equal(wrongReport.schema, 'noble-worker-send-wit-integration/v1');
 assert.equal(wrongReport.outcome, 'internal-failure');
 assert.equal(Object.hasOwn(wrongReport, 'host'), false,
@@ -106,5 +116,5 @@ console.log(JSON.stringify({ schema: 'noble-worker-send-wit-smoke/v1',
   world: 'noble-test:worker-send/worker-shell@1.0.0',
   scope: 'local-socket-only-not-canonical-WORKER-01',
   cases: ['authorized socket send', 'cancel before native send',
-    'no-grant', 'expired-grant', 'candidate-generated-grant',
+    'no-grant', 'mismatched-attempt-grant', 'expired-grant', 'candidate-generated-grant',
     'mismatched-source-grant'] }));
