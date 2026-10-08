@@ -3,7 +3,7 @@
 Document: SPEC-BE002  
 Revision: 0.1.0-draft.5  
 Depends on: SPEC-0001, SPEC-B001, SPEC-BE001, SPEC-S001, SPEC-V001 and IMPL-V001 at 0.1.0-draft.5  
-Status: Proposed C-Backend-Draft contract; restricted inert I64/Bool source emission exists, while native compilation/execution, sandbox, conformance evidence and backend proof remain absent
+Status: Proposed C-Backend-Draft contract; restricted inert I64/Bool/Unit/Text source-only emission exists, while native compilation/execution, sandbox, conformance evidence and backend proof remain absent
 
 ## Scope and selection
 
@@ -21,16 +21,20 @@ The proposed explicit interface is `noble build SOURCE --target c --out DIR --co
 
 The current nonselected **source-only** route is narrower: it accepts checked,
 effect-free Core-Bootstrap expressions with no runtime inputs, definitions
-or host contracts and one I64/Bool result, with the exact three-key
+or host contracts and one I64/Bool/Unit/Text result, with the exact three-key
 `stack_slots`/`steps`/`output_bytes` limits policy. It emits source and
 manifest without compiler/ELF pin or compile argv, and `--native` and
 `execute --target c` refuse. This MUST NOT be represented as satisfying
-the complete proposed C/native build contract. Its ordinary unsupported
-contract, policy, type, effect and target inputs refuse, but current JSON
-decoding accepts duplicate member names with last-wins semantics. That
-permits an earlier bound to disappear from the decoded limits and manifest;
-the source-only path is nonconforming to the complete duplicate-key and
-limit-integrity contract, not evidence that CB-BUILD-01 is fulfilled.
+the complete proposed C/native build contract. Pair/Sum/List/Syntax,
+`reflect`, typed runtime inputs, named definitions and host effects remain
+unsupported by this source-only slice. Its ordinary unsupported
+contract, policy, type, effect and target inputs refuse. The source-only
+control decoder now rejects duplicate JSON object member names recursively,
+including escaped spellings of the same key, before interpreting limits;
+an earlier bound cannot silently disappear through last-wins decoding.
+This fixes only that source-only input-integrity defect. The complete
+CB-LIMIT-01 limits and CB-BUILD-01 native build contract remain open; this
+is not native compilation, execution, sandbox or artifact admission evidence.
 
 **CB-IDENTITY-01.**
 

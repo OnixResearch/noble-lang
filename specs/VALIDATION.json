@@ -1732,7 +1732,7 @@
     },
     {
       "file": ".cairn/specs/c-backend/spec.md",
-      "sha256": "78d5ce4936d273064ca076d610f70eb9b4007446f30b51f8957b773a38a1cebd"
+      "sha256": "0fa889db713c48076959d7b0acb3e8cc9f2601542b95dea9580dc80e7bed8da5"
     },
     {
       "file": ".cairn/specs/calculator/spec.md",
@@ -1816,7 +1816,7 @@
     },
     {
       "file": "specs/C-BACKEND.md",
-      "sha256": "31a08b3975694297d1127e5eee96b3aea6c6e2a80950464ea5b5578b457368d0"
+      "sha256": "198ed19e6c21c67e203a92c5e8cf0db2d07d68707525d7d8bbf8ae2290c40cc5"
     },
     {
       "file": "specs/CALCULATOR.md",
