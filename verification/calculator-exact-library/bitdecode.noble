@@ -1,0 +1,9 @@
+module bitdecode@1 [
+    signature last_bit forall<S:stack> [ S List<Bool> -- S Bool ! pure ]
+    export last_bit
+    def last_bit [
+        [ false ] [
+            [ ] [ cons swap drop last_bit ] list.case
+        ] list.case
+    ]
+]

@@ -1,0 +1,374 @@
+module calc_session@1 [
+    variant Reply Number rat@1.Rat public Defined Unit public
+    export Reply
+    export Reply.Number
+    export Reply.Defined
+    export Reply.match
+
+    # A proposal retains the old environment even when a submission fails.
+    # Only commit can publish a new environment, after the shell has formatted
+    # the answer and supplied its exact UTF-8 output-byte count to the guest.
+    opaque Proposal Pair<calc_env@1.Environment,result@1.Result<Pair<Pair<calc_env@1.Environment,Reply>,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic>> private
+    export Proposal
+
+    signature empty forall<S:stack> [ S -- S calc_env@1.Environment ! pure ]
+    export empty
+    def empty [ calc_env@1.empty ]
+
+    signature compile forall<S:stack>
+        [ S Text calc_env@1.Environment List<calc_name@1.Name>
+          Bool calc_name@1.Name numeric_budget@1.Budget --
+          S result@1.Result<Pair<List<calc_code@1.Instruction>,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def compile [
+        let budget let self_name let defining let params let environment let source
+        source budget calc_lex@1.tokenize
+        [ unpair let after_scan unpair let length let tokens
+          tokens length after_scan calc_parse@1.parse
+          [ unpair let after_parse let code
+            code source environment params defining self_name after_parse calc_bind@1.bind ]
+          [ result@1.Result.Err ] result@1.Result.match ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+    # Structured fixture ingress, not calculator expression syntax. All
+    # imported names are provisioned with stable identities and arities before
+    # any body is bound. Provisional bodies are never executable or published.
+    signature import_error forall<S:stack> [ S -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def import_error [ 0 0 calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.DefinitionError ]
+
+    signature import_limit forall<S:stack> [ S -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def import_limit [
+        0 0 unit calc_errors@1.LimitRemaining.EvaluationWork
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit calc_diagnostic@1.numeric
+    ]
+
+    signature provision_imports forall<S:stack>
+        [ S calc_env@1.Environment List<Pair<Text,Pair<List<Text>,Text>>>
+          numeric_budget@1.Budget I64 --
+          S result@1.Result<Pair<calc_env@1.Environment,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def provision_imports [
+        let remaining let budget let environment
+        [ environment budget pair result@1.Result.Ok ]
+        [ let pending let definition
+          remaining 0 =
+          [ import_limit result@1.Result.Err ]
+          [ budget 1 numeric_budget@1.charge_work
+            [ let charged
+              definition unpair let details let name_text
+              details unpair let body let parameters
+              name_text charged calc_name@1.whole
+              [ unpair let named let name
+                environment name calc_env@1.resolve 0 <
+                [ parameters nil named 0 collect_parameters
+                  [ unpair let metered let names
+                    environment name body names nil pair pair
+                    calc_env@1.Binding.Function calc_env@1.install
+                    pending metered remaining 1 - provision_imports ]
+                  [ result@1.Result.Err ] result@1.Result.match ]
+                [ import_error result@1.Result.Err ] if ]
+              [ result@1.Result.Err ] result@1.Result.match ]
+            [ let cause 0 0 cause calc_diagnostic@1.numeric result@1.Result.Err ]
+            result@1.Result.match ] if ] list.case
+    ]
+
+    signature finish_imports forall<S:stack>
+        [ S calc_env@1.Environment calc_env@1.Environment
+          List<Pair<Text,Pair<List<Text>,Text>>> numeric_budget@1.Budget --
+          S result@1.Result<Pair<calc_env@1.Environment,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def finish_imports [
+        let budget let provisional let finished
+        [ finished budget pair result@1.Result.Ok ]
+        [ let pending let definition
+          definition unpair let details let name_text
+          details unpair let body let parameters
+          name_text budget calc_name@1.whole
+          [ unpair let named let name
+            provisional name calc_env@1.resolve let id
+            provisional id calc_env@1.get
+            [ let entry
+              entry calc_env@1.binding
+              [ drop import_error result@1.Result.Err ]
+              [ unpair let source let payload
+                payload unpair let old_code let names
+                body provisional names true name named compile
+                [ unpair let metered let code
+                  finished id body names code pair pair
+                  calc_env@1.Binding.Function calc_env@1.replace
+                  provisional pending metered finish_imports ]
+                [ result@1.Result.Err ] result@1.Result.match ]
+              calc_env@1.Binding.match ]
+            [ drop import_error result@1.Result.Err ] result@1.Result.match ]
+          [ result@1.Result.Err ] result@1.Result.match ] list.case
+    ]
+
+    signature imported_member forall<S:stack>
+        [ S List<I64> I64 -- S Bool ! pure ]
+    def imported_member [
+        let wanted
+        [ false ]
+        [ let rest let first
+          first wanted = [ true ] [ rest wanted imported_member ] if ] list.case
+    ]
+
+    signature dependencies_ready forall<S:stack>
+        [ S List<calc_code@1.Instruction> I64 I64 List<I64> -- S Bool ! pure ]
+    def dependencies_ready [
+        let admitted let upper let lower
+        [ true ]
+        [ let rest let instruction
+          instruction calc_code@1.kind 261 =
+          [ instruction calc_code@1.count let target
+            target lower < [ false ] [ target upper < ] if
+            [ admitted target imported_member ]
+            [ true ] if ]
+          [ true ] if
+          [ rest lower upper admitted dependencies_ready ]
+          [ false ] if ] list.case
+    ]
+
+    signature import_ready forall<S:stack>
+        [ S calc_env@1.Environment I64 I64 I64 List<I64> -- S Bool ! pure ]
+    def import_ready [
+        let admitted let upper let lower let id let environment
+        environment id calc_env@1.get
+        [ calc_env@1.binding
+          [ drop false ]
+          [ unpair let source let payload
+            payload unpair let code let names
+            code lower upper admitted dependencies_ready ]
+          calc_env@1.Binding.match ]
+        [ drop false ] result@1.Result.match
+    ]
+
+    signature imported_ids forall<S:stack>
+        [ S I64 I64 -- S List<I64> ! pure ]
+    def imported_ids [
+        let upper let next
+        next upper =
+        [ nil ]
+        [ next next 1 + upper imported_ids cons ] if
+    ]
+
+    signature import_pass forall<S:stack>
+        [ S calc_env@1.Environment List<I64> List<I64> List<I64>
+          Bool I64 I64 -- S Pair<List<I64>,Pair<List<I64>,Bool>> ! pure ]
+    def import_pass [
+        let upper let lower let progress let deferred let admitted let environment
+        [ deferred admitted progress pair pair ]
+        [ let rest let id
+          environment id lower upper admitted import_ready
+          [ environment rest id admitted cons deferred true lower upper import_pass ]
+          [ environment rest admitted id deferred cons progress lower upper import_pass ] if ]
+        list.case
+    ]
+
+    signature import_acyclic forall<S:stack>
+        [ S calc_env@1.Environment List<I64> List<I64> I64 I64 -- S Bool ! pure ]
+    def import_acyclic [
+        let upper let lower let admitted let pending let environment
+        pending
+        [ true ]
+        [ let rest let first
+          first rest cons environment swap admitted nil false lower upper import_pass
+          unpair let status let next
+          status unpair let progress let known
+          progress
+          [ environment next known lower upper import_acyclic ]
+          [ false ] if ] list.case
+    ]
+
+    signature stage_imported forall<S:stack>
+        [ S calc_env@1.Environment List<Pair<Text,Pair<List<Text>,Text>>>
+          numeric_budget@1.Budget -- S Proposal ! pure ]
+    export stage_imported
+    def stage_imported [
+        let budget let definitions let environment
+        environment definitions budget 16 provision_imports
+        [ unpair let after_provision let provisional
+          environment provisional definitions after_provision finish_imports
+          [ unpair let after_finish let finished
+            environment calc_env@1.next_identity let lower
+            finished calc_env@1.next_identity let upper
+            finished lower upper imported_ids nil lower upper import_acyclic
+            [ finished unit Reply.Defined pair after_finish pair result@1.Result.Ok ]
+            [ import_error result@1.Result.Err ] if ]
+          [ result@1.Result.Err ] result@1.Result.match ]
+        [ result@1.Result.Err ] result@1.Result.match
+        environment swap pair Proposal.new
+    ]
+
+    signature stage_imported_budgeted forall<S:stack>
+        [ S calc_env@1.Environment List<Pair<Text,Pair<List<Text>,Text>>>
+          result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> --
+          S Proposal ! pure ]
+    export stage_imported_budgeted
+    def stage_imported_budgeted [
+        let allowed let definitions let environment
+        allowed
+        [ let budget environment definitions budget stage_imported ]
+        [ let cause environment
+          0 0 cause calc_diagnostic@1.numeric result@1.Result.Err
+          pair Proposal.new ]
+        result@1.Result.match
+    ]
+
+    signature stage_evaluate forall<S:stack>
+        [ S calc_env@1.Environment Text numeric_budget@1.Budget -- S Proposal ! pure ]
+    export stage_evaluate
+    def stage_evaluate [
+        let budget let source let environment
+        source environment nil false source 0 0 calc_name@1.make budget compile
+        [ unpair let after let program
+          program nil source environment nil after 0 calc_eval@1.execute
+          [ unpair let evaluated let answer
+            environment answer Reply.Number pair evaluated pair result@1.Result.Ok ]
+          [ result@1.Result.Err ] result@1.Result.match ]
+        [ result@1.Result.Err ] result@1.Result.match
+        environment swap pair Proposal.new
+    ]
+
+    signature stage_evaluate_budgeted forall<S:stack>
+        [ S calc_env@1.Environment Text
+          result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> -- S Proposal ! pure ]
+    export stage_evaluate_budgeted
+    def stage_evaluate_budgeted [
+        let allowed let source let environment
+        allowed
+        [ let budget environment source budget stage_evaluate ]
+        [ let cause environment
+          0 0 cause calc_diagnostic@1.numeric result@1.Result.Err
+          pair Proposal.new ]
+        result@1.Result.match
+    ]
+
+    signature contains forall<S:stack>
+        [ S List<calc_name@1.Name> calc_name@1.Name -- S Bool ! pure ]
+    def contains [
+        let wanted
+        [ false ]
+        [ let rest let prior
+          prior wanted calc_name@1.equal
+          [ true ] [ rest wanted contains ] if ] list.case
+    ]
+
+    signature collect_parameters forall<S:stack>
+        [ S List<Text> List<calc_name@1.Name> numeric_budget@1.Budget I64 --
+          S result@1.Result<Pair<List<calc_name@1.Name>,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def collect_parameters [
+        let seen let budget let reverse_names
+        [ reverse_names nil reverse_names_list budget pair result@1.Result.Ok ]
+        [ let pending let candidate
+          seen 32 <
+          [ candidate budget calc_name@1.whole
+            [ unpair let charged let name
+              reverse_names name contains
+              [ name calc_name@1.fields let finish let begin let text
+                begin finish calc_diagnostic@1.span
+                calc_diagnostic@1.Diagnostic.DefinitionError result@1.Result.Err ]
+              [ pending name reverse_names cons charged seen 1 + collect_parameters ] if ]
+            [ result@1.Result.Err ] result@1.Result.match ]
+          [ 0 0
+            unit calc_errors@1.LimitRemaining.EvaluationWork
+            calc_errors@1.LimitCategory.Remaining
+            calc_errors@1.NumericError.ResourceLimit
+            calc_diagnostic@1.numeric result@1.Result.Err ] if ] list.case
+    ]
+
+    signature reverse_names_list forall<S:stack>
+        [ S List<calc_name@1.Name> List<calc_name@1.Name> -- S List<calc_name@1.Name> ! pure ]
+    def reverse_names_list [
+        swap [ ] [ [ swap ] dip [ cons ] dip swap reverse_names_list ] list.case
+    ]
+
+    signature stage_variable forall<S:stack>
+        [ S calc_env@1.Environment Text Text numeric_budget@1.Budget -- S Proposal ! pure ]
+    export stage_variable
+    def stage_variable [
+        let budget let expression let name_text let environment
+        name_text budget calc_name@1.whole
+        [ unpair let after_name let name
+          expression environment nil false name after_name compile
+          [ unpair let after_parse let program
+            program nil expression environment nil after_parse 0 calc_eval@1.execute
+            [ unpair let evaluated let value
+              environment name value calc_env@1.Binding.Value calc_env@1.install
+              value Reply.Number pair evaluated pair result@1.Result.Ok ]
+            [ result@1.Result.Err ] result@1.Result.match ]
+          [ result@1.Result.Err ] result@1.Result.match ]
+        [ result@1.Result.Err ] result@1.Result.match
+        environment swap pair Proposal.new
+    ]
+
+    signature stage_variable_budgeted forall<S:stack>
+        [ S calc_env@1.Environment Text Text
+          result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> -- S Proposal ! pure ]
+    export stage_variable_budgeted
+    def stage_variable_budgeted [
+        let allowed let expression let name_text let environment
+        allowed
+        [ let budget environment name_text expression budget stage_variable ]
+        [ let cause environment
+          0 0 cause calc_diagnostic@1.numeric result@1.Result.Err
+          pair Proposal.new ]
+        result@1.Result.match
+    ]
+
+    signature stage_function forall<S:stack>
+        [ S calc_env@1.Environment Text List<Text> Text numeric_budget@1.Budget -- S Proposal ! pure ]
+    export stage_function
+    def stage_function [
+        let budget let body let parameters let name_text let environment
+        name_text budget calc_name@1.whole
+        [ unpair let named let name
+          parameters nil named 0 collect_parameters
+          [ unpair let metered let names
+            body environment names true name metered compile
+            [ unpair let after let program
+              body names program pair pair calc_env@1.Binding.Function
+              let binding
+              environment name binding calc_env@1.install
+              unit Reply.Defined pair after pair result@1.Result.Ok ]
+            [ result@1.Result.Err ] result@1.Result.match ]
+          [ result@1.Result.Err ] result@1.Result.match ]
+        [ result@1.Result.Err ] result@1.Result.match
+        environment swap pair Proposal.new
+    ]
+
+    signature stage_function_budgeted forall<S:stack>
+        [ S calc_env@1.Environment Text List<Text> Text
+          result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> -- S Proposal ! pure ]
+    export stage_function_budgeted
+    def stage_function_budgeted [
+        let allowed let body let parameters let name_text let environment
+        allowed
+        [ let budget environment name_text parameters body budget stage_function ]
+        [ let cause environment
+          0 0 cause calc_diagnostic@1.numeric result@1.Result.Err
+          pair Proposal.new ]
+        result@1.Result.match
+    ]
+
+    signature commit forall<S:stack>
+        [ S Proposal I64 -- S calc_env@1.Environment result@1.Result<Reply,calc_diagnostic@1.Diagnostic> ! pure ]
+    export commit
+    def commit [
+        let output_bytes
+        Proposal.into unpair let staged let old
+        staged
+        [ unpair let budget unpair let reply let next
+          budget output_bytes numeric_budget@1.charge_output_size
+          [ drop next reply result@1.Result.Ok ]
+          [ let cause
+            old 0 0 cause calc_diagnostic@1.numeric result@1.Result.Err ]
+          result@1.Result.match ]
+        [ old swap result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # A host formatting failure never publishes a proposal. This operation
+    # restores the exact prior guest environment rather than terminating a
+    # live session with an uncommitted proposal on its stack.
+    signature rollback forall<S:stack>
+        [ S Proposal -- S calc_env@1.Environment Unit ! pure ]
+    export rollback
+    def rollback [ Proposal.into unpair drop unit ]
+]

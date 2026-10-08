@@ -1,0 +1,437 @@
+module decimal@1 [
+    variant DecimalError Malformed Unit public Numeric calc_errors@1.NumericError public
+    export DecimalError
+    export DecimalError.Malformed
+    export DecimalError.Numeric
+    export DecimalError.match
+
+    # Only this module can construct or project the list/count pair. The
+    # exported recursive scanners therefore cannot receive forged lengths.
+    opaque Digits Pair<List<I64>,I64> private
+    export Digits
+
+    # Signed self recursion requires exported words in this selected profile;
+    # these token types hide the otherwise-unbounded private recursive inputs.
+    opaque DigitList List<I64> private
+    export DigitList
+    opaque ScaleCount I64 private
+    export ScaleCount
+
+    # The recursive lexer alone owns the cursor, digit count and fractional
+    # scale. A scale of -1 denotes integer mode; only it may consume a dot.
+    opaque ScanState Pair<Pair<Pair<Text,I64>,I64>,Pair<Digits,I64>> private
+    export ScanState
+
+    # Cursor is (Text, offset); range cursor is (cursor, exclusive end).
+    # An end of -1 means the complete Text. Text is retained by text.byte.
+    signature advance forall<S:stack>
+        [ S Pair<Text,I64> -- S Pair<Text,I64> ! pure ]
+    def advance [ unpair 1 + pair ]
+
+    signature range_advance forall<S:stack>
+        [ S Pair<Pair<Text,I64>,I64> -- S Pair<Pair<Text,I64>,I64> ! pure ]
+    def range_advance [ unpair [ advance ] dip pair ]
+
+    signature range_peek forall<S:stack>
+        [ S Pair<Pair<Text,I64>,I64> -- S Pair<Pair<Text,I64>,I64> I64 ! pure ]
+    def range_peek [
+        dup unpair [ dup unpair swap drop ] dip swap =
+        [ drop -1 ]
+        [ unpair text.byte swap drop
+          dup -1 =
+          [ [ dup unpair swap drop ] dip swap -1 =
+            [ ] [ drop -3 ] if ] [ ] if ] if
+    ]
+
+    signature charge_byte forall<S:stack>
+        [ S numeric_budget@1.Budget -- S result@1.Result<numeric_budget@1.Budget,DecimalError> ! pure ]
+    def charge_byte [
+        1 numeric_budget@1.charge_input_bytes
+        [ result@1.Result.Ok ]
+        [ DecimalError.Numeric result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature charge_ascii_digit forall<S:stack>
+        [ S numeric_budget@1.Budget -- S result@1.Result<numeric_budget@1.Budget,DecimalError> ! pure ]
+    def charge_ascii_digit [
+        numeric_budget@1.charge_ascii_digit
+        [ result@1.Result.Ok ]
+        [ DecimalError.Numeric result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # UNVERIFIED scanner-frame hypothesis over BigInt's source queue model.
+    # For every admitted n <= 23 digits, 10^n < 2^(3*n+8).
+    # n = 24 already fails the unchanged 480-frame reserve. This is a
+    # bit-width bound for preflight, not a fixed-width value conversion.
+    # A compiled peak must validate 4*(bounded bits+1)+136+scan depth.
+    signature depth_error forall<S:stack>
+        [ S numeric_budget@1.Budget I64 -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def depth_error [
+        drop drop unit calc_errors@1.LimitDepth.CallDepth
+        calc_errors@1.LimitRemaining.NestedDepth
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit result@1.Result.Err
+    ]
+
+    signature reserve_scan_depth forall<S:stack>
+        [ S I64 I64 numeric_budget@1.Budget -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def reserve_scan_depth [
+        [ dup 0 < ] dip swap
+        [ drop drop drop
+          unit calc_errors@1.LimitDepth.CallDepth
+          calc_errors@1.LimitRemaining.NestedDepth
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        [ [ dup 480 < ] dip swap
+          [ [[ dup 1000000000 < ] dip ] dip [ swap ] dip swap
+            [ [ swap ] dip [ 1 + 4 * ] dip [ + 136 + ] dip swap
+              dup 480 <
+              [ numeric_budget@1.admit_call ]
+              [ depth_error ] if ]
+            [ drop drop drop
+              unit calc_errors@1.LimitDepth.CallDepth
+              calc_errors@1.LimitRemaining.NestedDepth
+              calc_errors@1.LimitCategory.Remaining
+              calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ] if ]
+          [ drop drop drop
+            unit calc_errors@1.LimitDepth.CallDepth
+            calc_errors@1.LimitRemaining.NestedDepth
+            calc_errors@1.LimitCategory.Remaining
+            calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ] if ] if
+    ]
+
+    signature digits_count forall<S:stack> [ S Digits -- S I64 ! pure ]
+    def digits_count [ Digits.into unpair swap drop ]
+
+    signature digits_value forall<S:stack> [ S Digits -- S List<I64> ! pure ]
+    def digits_value [ Digits.into unpair drop ]
+
+    signature digits_push forall<S:stack>
+        [ S Digits I64 -- S Digits ! pure ]
+    def digits_push [
+        [ Digits.into unpair ] dip [ swap ] dip swap cons
+        swap 1 + pair Digits.new
+    ]
+
+    signature digit_count_error forall<S:stack>
+        [ S -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def digit_count_error [
+        unit calc_errors@1.LimitDepth.CallDepth
+        calc_errors@1.LimitRemaining.NestedDepth
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit result@1.Result.Err
+    ]
+
+    # The upper bound 3*n+8 is proved only within this checked range.
+    # In particular the fractional scanner may start with existing integer
+    # digits, so its own recursion depth alone is insufficient as a guard.
+    signature checked_width forall<S:stack>
+        [ S I64 numeric_budget@1.Budget -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def checked_width [
+        [ dup 0 < ] dip swap
+        [ drop drop digit_count_error ]
+        [ [ dup 24 < ] dip swap
+          [ [ 3 * 8 + ] dip pair result@1.Result.Ok ]
+          [ drop drop digit_count_error ] if ] if
+    ]
+
+    signature valid_scale_count forall<S:stack>
+        [ S Pair<Digits,I64> -- S Bool ! pure ]
+    def valid_scale_count [
+        dup unpair swap drop dup -1 =
+        [ drop drop true ]
+        [ dup 0 <
+          [ drop drop false ]
+          [ [ dup unpair drop digits_count ] dip < swap drop
+            [ false ] [ true ] if ] if ] if
+    ]
+
+    signature reverse_digits forall<S:stack>
+        [ S DigitList List<I64> -- S List<I64> ! pure ]
+    export reverse_digits
+    def reverse_digits [
+        swap DigitList.into
+        [ ] [ [ swap ] dip [ cons ] dip swap
+              [ DigitList.new ] dip reverse_digits ] list.case
+    ]
+
+    signature zeros forall<S:stack> [ S ScaleCount List<I64> -- S List<I64> ! pure ]
+    export zeros
+    def zeros [
+        swap ScaleCount.into dup 0 =
+        [ drop ]
+        [ 1 - [ 0 swap cons ] dip swap [ ScaleCount.new ] dip zeros ] if
+    ]
+
+    signature scale_digits forall<S:stack> [ S I64 -- S List<I64> ! pure ]
+    def scale_digits [ ScaleCount.new nil zeros 1 swap cons ]
+
+    signature digit forall<S:stack> [ S I64 -- S I64 Bool ! pure ]
+    def digit [
+        48 -
+        dup 0 < [ false ] [ dup 10 < ] if
+    ]
+
+    signature peek_metered_cursor forall<S:stack>
+        [ S Pair<Pair<Pair<Text,I64>,I64>,numeric_budget@1.Budget> -- S Pair<Pair<Pair<Text,I64>,I64>,numeric_budget@1.Budget> I64 ! pure ]
+    def peek_metered_cursor [ dup unpair drop range_peek swap drop ]
+
+    signature consume_prefix forall<S:stack>
+        [ S Pair<Pair<Pair<Text,I64>,I64>,numeric_budget@1.Budget> -- S result@1.Result<Pair<Pair<Pair<Text,I64>,I64>,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def consume_prefix [
+        unpair charge_byte
+        [ [ range_advance ] dip pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature scan_width forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget -- S result@1.Result<Pair<ScanState,Pair<I64,numeric_budget@1.Budget>>,calc_errors@1.NumericError> ! pure ]
+    def scan_width [
+        [ dup ScanState.into unpair swap drop ] dip
+        [ dup valid_scale_count ] dip swap
+        [ [ dup unpair drop digits_count ] dip [ swap drop ] dip
+          checked_width
+          [ pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ drop drop drop
+          unit calc_errors@1.LimitDepth.CallDepth
+          calc_errors@1.LimitRemaining.NestedDepth
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ] if
+    ]
+
+    signature scan_depth forall<S:stack> [ S ScanState -- S ScanState I64 ! pure ]
+    def scan_depth [
+        dup ScanState.into unpair swap drop unpair
+        [ digits_count ] dip
+        dup -1 = [ drop ] [ drop 1 + ] if
+    ]
+
+    signature scan_integer_mode forall<S:stack>
+        [ S Pair<ScanState,numeric_budget@1.Budget> -- S Pair<ScanState,numeric_budget@1.Budget> Bool ! pure ]
+    def scan_integer_mode [
+        dup unpair drop ScanState.into unpair swap drop unpair swap drop -1 =
+    ]
+
+    signature scan_valid_terminal forall<S:stack>
+        [ S Pair<ScanState,numeric_budget@1.Budget> -- S Pair<ScanState,numeric_budget@1.Budget> Bool ! pure ]
+    def scan_valid_terminal [
+        dup unpair drop ScanState.into unpair swap drop unpair
+        dup -1 =
+        [ drop digits_count 0 > ]
+        [ swap drop 0 > ] if
+    ]
+
+    signature peek_metered_scan forall<S:stack>
+        [ S Pair<ScanState,numeric_budget@1.Budget> -- S Pair<ScanState,numeric_budget@1.Budget> I64 ! pure ]
+    def peek_metered_scan [
+        dup unpair drop ScanState.into unpair drop range_peek swap drop
+    ]
+
+    signature append_scan_digit forall<S:stack>
+        [ S ScanState I64 -- S ScanState ! pure ]
+    def append_scan_digit [
+        [ ScanState.into unpair ] dip swap unpair [ swap ] dip
+        [ digits_push ] dip
+        dup 0 < [ ] [ 1 + ] if
+        pair [ range_advance ] dip pair ScanState.new
+    ]
+
+    signature consume_scan_digit forall<S:stack>
+        [ S Pair<ScanState,numeric_budget@1.Budget> I64 -- S result@1.Result<Pair<ScanState,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def consume_scan_digit [
+        swap unpair charge_ascii_digit
+        [ [ swap ] dip [ append_scan_digit ] dip pair result@1.Result.Ok ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature start_fraction_scan forall<S:stack>
+        [ S Pair<ScanState,numeric_budget@1.Budget> -- S result@1.Result<Pair<ScanState,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def start_fraction_scan [
+        unpair charge_byte
+        [ swap ScanState.into unpair unpair drop
+          [ range_advance ] dip 0 pair pair ScanState.new
+          swap pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature scan_dot forall<S:stack>
+        [ S Pair<ScanState,numeric_budget@1.Budget> -- S result@1.Result<Pair<ScanState,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def scan_dot [
+        scan_integer_mode
+        [ scan_valid_terminal
+          [ start_fraction_scan
+            [ unpair scan_digits ]
+            [ result@1.Result.Err ] result@1.Result.match ]
+          [ drop unit DecimalError.Malformed result@1.Result.Err ] if ]
+        [ drop unit DecimalError.Malformed result@1.Result.Err ] if
+    ]
+
+    signature scan_terminal forall<S:stack>
+        [ S Pair<ScanState,numeric_budget@1.Budget> I64 -- S result@1.Result<Pair<ScanState,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def scan_terminal [
+        dup -1 =
+        [ drop scan_valid_terminal
+          [ result@1.Result.Ok ]
+          [ drop unit DecimalError.Malformed result@1.Result.Err ] if ]
+        [ dup 46 =
+          [ drop scan_dot ]
+          [ drop drop unit DecimalError.Malformed result@1.Result.Err ] if ] if
+    ]
+
+    signature scan_digits forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget -- S result@1.Result<Pair<ScanState,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    export scan_digits
+    def scan_digits [
+        640 numeric_budget@1.charge_native_steps
+        [ scan_width
+          [ unpair unpair
+            [[ scan_depth ] dip ] dip [ swap ] dip reserve_scan_depth
+            [ pair peek_metered_scan dup digit
+              [ [ drop ] dip consume_scan_digit
+                [ unpair scan_digits ]
+                [ result@1.Result.Err ] result@1.Result.match ]
+              [ drop scan_terminal ] if ]
+            [ swap drop DecimalError.Numeric result@1.Result.Err ]
+            result@1.Result.match ]
+          [ DecimalError.Numeric result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop DecimalError.Numeric result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse_integer_terminal forall<S:stack>
+        [ S Pair<Pair<Pair<Pair<Text,I64>,I64>,Digits>,numeric_budget@1.Budget> Bool -- S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def parse_integer_terminal [
+        swap unpair 256 numeric_budget@1.charge_native_steps
+        [ [ unpair swap drop digits_value ] dip
+          [ DigitList.new nil reverse_digits ] dip
+          [ swap ] dip rat@1.from_decimal_digits
+          [ result@1.Result.Ok ]
+          [ DecimalError.Numeric result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop swap drop DecimalError.Numeric result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse_fraction_values forall<S:stack>
+        [ S Pair<Digits,I64> numeric_budget@1.Budget -- S result@1.Result<Pair<Pair<bigint@1.BigInt,bigint@1.BigInt>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def parse_fraction_values [
+        [ dup unpair drop ] dip [ digits_value ] dip
+        [ DigitList.new nil reverse_digits ] dip bigint@1.from_decimal_digits
+        [ unpair [[ unpair swap drop ] dip ] dip
+          [[ scale_digits ] dip ] dip
+          [ swap ] dip bigint@1.from_decimal_digits
+          [ unpair [ pair ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature parse_fraction_terminal forall<S:stack>
+        [ S Pair<Pair<Pair<Pair<Text,I64>,I64>,Pair<Digits,I64>>,numeric_budget@1.Budget> Bool -- S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def parse_fraction_terminal [
+        swap unpair 512 numeric_budget@1.charge_native_steps
+        [ [ unpair swap drop ] dip parse_fraction_values
+          [ finish ]
+          [ swap drop DecimalError.Numeric result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop swap drop DecimalError.Numeric result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse_scanned forall<S:stack>
+        [ S Pair<ScanState,numeric_budget@1.Budget> Bool -- S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def parse_scanned [
+        swap unpair [ dup ScanState.into unpair swap drop unpair swap drop -1 = ] dip
+        swap
+        [ [ ScanState.into unpair ] dip
+          [ unpair drop ] dip [ pair ] dip
+          pair swap parse_integer_terminal ]
+        [ [ ScanState.into unpair ] dip
+          [ pair ] dip pair swap parse_fraction_terminal ] if
+    ]
+
+    signature finish forall<S:stack>
+        [ S Bool Pair<Pair<bigint@1.BigInt,bigint@1.BigInt>,numeric_budget@1.Budget> -- S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def finish [
+        unpair [ unpair ] dip [ swap ] dip [[ swap ] dip ] dip
+        [ swap ] dip swap
+        [ bigint@1.negate
+          [ unpair [ swap ] dip rat@1.make
+            [ result@1.Result.Ok ]
+            [ DecimalError.Numeric result@1.Result.Err ] result@1.Result.match ]
+          [ swap drop DecimalError.Numeric result@1.Result.Err ]
+          result@1.Result.match ]
+        [ [ swap ] dip rat@1.make
+          [ result@1.Result.Ok ]
+          [ DecimalError.Numeric result@1.Result.Err ] result@1.Result.match ] if
+    ]
+
+    signature parse_signed forall<S:stack>
+        [ S Pair<Pair<Pair<Text,I64>,I64>,numeric_budget@1.Budget> Bool -- S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def parse_signed [
+        swap unpair [ nil 0 pair Digits.new -1 pair pair ScanState.new ] dip
+        scan_digits
+        [ swap parse_scanned ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature parse_range_impl forall<S:stack>
+        [ S Text I64 I64 numeric_budget@1.Budget -- S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    def parse_range_impl [
+        [[ pair ] dip pair ] dip pair peek_metered_cursor
+        dup 43 =
+        [ drop consume_prefix
+          [ false pair result@1.Result.Ok ]
+          [ result@1.Result.Err ] result@1.Result.match ]
+        [ dup 45 =
+          [ drop consume_prefix
+            [ true pair result@1.Result.Ok ]
+            [ result@1.Result.Err ] result@1.Result.match ]
+          [ drop false pair result@1.Result.Ok ] if ] if
+        [ unpair parse_signed ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature valid_range forall<S:stack>
+        [ S Pair<I64,I64> -- S Bool ! pure ]
+    def valid_range [
+        unpair [ dup 0 < ] dip swap
+        [ drop drop false ] [ < ] if
+    ]
+
+    # Both byte and digit charges occur in the single Text-preserving scan.
+    signature parse_bounded forall<S:stack>
+        [ S Text numeric_budget@1.Budget -- S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    export parse_bounded
+    def parse_bounded [
+        512 numeric_budget@1.charge_native_steps
+        [ [ 0 -1 ] dip parse_range_impl ]
+        [ swap drop DecimalError.Numeric result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse forall<S:stack>
+        [ S Text -- S result@1.Result<rat@1.Rat,DecimalError> ! pure ]
+    export parse
+    def parse [
+        numeric_budget@1.default
+        [ parse_bounded
+          [ unpair drop result@1.Result.Ok ]
+          [ result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop DecimalError.Numeric result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse_range_bounded forall<S:stack>
+        [ S Text I64 I64 numeric_budget@1.Budget -- S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,DecimalError> ! pure ]
+    export parse_range_bounded
+    def parse_range_bounded [
+        [ pair ] dip [ dup valid_range ] dip swap
+        [ 512 numeric_budget@1.charge_native_steps
+          [ [ unpair ] dip parse_range_impl ]
+          [ swap drop swap drop DecimalError.Numeric result@1.Result.Err ]
+          result@1.Result.match ]
+        [ drop drop drop unit DecimalError.Malformed result@1.Result.Err ] if
+    ]
+]

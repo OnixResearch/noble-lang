@@ -1,0 +1,44 @@
+module calc_parse_state@1 [
+    opaque State Pair<Pair<List<calc_token@1.Token>,List<calc_code@1.Instruction>>,I64> private
+    export State
+
+    signature make forall<S:stack>
+        [ S List<calc_token@1.Token> List<calc_code@1.Instruction> I64 -- S State ! pure ]
+    export make
+    def make [ [ pair ] dip pair State.new ]
+
+    signature front forall<S:stack> [ S State -- S calc_token@1.Token ! pure ]
+    export front
+    def front [
+        State.into unpair let length unpair let code
+        [ -1 length length calc_token@1.make ]
+        [ let rest ] list.case
+    ]
+
+    signature advance forall<S:stack> [ S State -- S State ! pure ]
+    export advance
+    def advance [
+        State.into unpair let length unpair let code
+        [ nil ] [ let rest let first rest ] list.case
+        code length make
+    ]
+
+    signature emit forall<S:stack>
+        [ S State I64 I64 calc_token@1.Token -- S State ! pure ]
+    export emit
+    def emit [
+        let token let arity let kind
+        State.into unpair let length unpair let code let tokens
+        kind arity token calc_token@1.span calc_code@1.make
+        code cons let next_code
+        tokens next_code length make
+    ]
+
+    signature program forall<S:stack>
+        [ S State -- S List<calc_code@1.Instruction> ! pure ]
+    export program
+    def program [
+        State.into unpair drop unpair swap drop
+        nil calc_code@1.reverse
+    ]
+]

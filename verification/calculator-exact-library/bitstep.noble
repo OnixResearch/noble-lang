@@ -1,0 +1,34 @@
+module bitstep@1 [
+    signature is_zero forall<S:stack> [ S List<Bool> -- S Bool ! pure ]
+    export is_zero
+    def is_zero [ [ true ] [ drop drop false ] list.case ]
+
+    signature fold_unsigned forall<S:stack>
+        [ S List<Bool> -- S I64 ! pure ]
+    export fold_unsigned
+    def fold_unsigned [
+        [ 0 ] [
+            swap [ fold_unsigned ] dip
+            [ 2 * ] dip
+            [ 1 + ] [ ] if
+        ] list.case
+    ]
+
+    signature adjust_bits forall<S:stack> [ S List<Bool> Bool -- S List<Bool> ! pure ]
+    export adjust_bits
+    def adjust_bits [
+        swap
+        [ [ nil ] [ true nil cons ] if ] [
+            [ swap ] dip swap
+            [
+                swap
+                [ dup is_zero [ drop nil ] [ false swap cons ] if ]
+                [ true adjust_bits true swap cons ] if
+            ] [
+                swap
+                [ false adjust_bits false swap cons ]
+                [ true swap cons ] if
+            ] if
+        ] list.case
+    ]
+]

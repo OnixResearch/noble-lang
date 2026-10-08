@@ -1,0 +1,21 @@
+module bitadd@1 [
+    signature add_bits forall<S:stack>
+        [ S List<Bool> List<Bool> Bool -- S List<Bool> ! pure ]
+    export add_bits
+    def add_bits [
+        pair swap
+        [ unpair [ true nil cons false add_bits ] [ ] if ] [
+            [ swap ] dip swap unpair swap
+            [ [ cons ] dip [ true nil cons false add_bits ] [ ] if ] [
+                [[[ swap ] dip ] dip ] dip
+                [ swap ] dip
+                swap
+                [ swap ] dip
+                [[ swap ] dip ] dip
+                bitfull@1.add
+                swap [ add_bits ] dip
+                swap cons
+            ] list.case
+        ] list.case
+    ]
+]

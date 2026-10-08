@@ -1,0 +1,140 @@
+module numeric_budget@1 [
+    # Seven external caps in declaration order, followed by an internal
+    # remaining native-dispatch ceiling for this pinned managed-Wasm profile.
+    opaque Budget Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>> private
+    export Budget
+    signature charge_input_bytes forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_input_bytes
+    def charge_input_bytes [
+        [ Budget.into unpair ] dip
+        swap [ numeric_budget_limits@1.input_bytes ] dip swap
+        [ swap pair Budget.new result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature charge_numeric_digits forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_numeric_digits
+    def charge_numeric_digits [
+        [ Budget.into unpair unpair ] dip
+        swap [ numeric_budget_limits@1.numeric_digits ] dip swap
+        [ swap pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # A consumed ASCII digit charges its input byte before its numeric digit,
+    # reconstructing the shared Budget once instead of twice per text byte.
+    signature charge_ascii_digit forall<S:stack>
+        [ S Budget -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_ascii_digit
+    def charge_ascii_digit [
+        Budget.into unpair unpair
+        [[ 1 numeric_budget_limits@1.input_bytes ] dip ] dip
+        [ swap ] dip swap
+        [ swap [ swap ] dip
+          [ 1 numeric_budget_limits@1.numeric_digits ] dip swap
+          [ swap pair pair Budget.new result@1.Result.Ok ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature admit_bits forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export admit_bits
+    def admit_bits [
+        [ Budget.into unpair unpair unpair ] dip
+        swap [ numeric_budget_limits@1.limit_bits ] dip swap
+        [ swap pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature admit_syntax forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export admit_syntax
+    def admit_syntax [
+        [ Budget.into unpair unpair unpair unpair ] dip
+        swap [ numeric_budget_limits@1.limit_syntax ] dip swap
+        [ swap pair pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature admit_call forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export admit_call
+    def admit_call [
+        [ Budget.into unpair unpair unpair unpair unpair ] dip
+        swap [ numeric_budget_limits@1.limit_call ] dip swap
+        [ swap pair pair pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature charge_work forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_work
+    def charge_work [
+        [ Budget.into unpair unpair unpair unpair unpair unpair ] dip
+        swap [ numeric_budget_limits@1.evaluation_work ] dip swap
+        [ swap pair pair pair pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature charge_output_size forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_output_size
+    def charge_output_size [
+        [ Budget.into unpair unpair unpair unpair unpair unpair unpair ] dip
+        swap [ numeric_budget_limits@1.output_size ] dip swap
+        [ swap pair pair pair pair pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop swap drop swap drop
+          result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature charge_native_steps forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_native_steps
+    def charge_native_steps [
+        [ Budget.into unpair unpair unpair unpair unpair unpair unpair ] dip
+        numeric_budget_limits@1.evaluation_work
+        [ pair pair pair pair pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop swap drop swap drop
+          result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+
+    signature initialize forall<S:stack>
+        [ S I64 I64 I64 I64 I64 I64 I64 -- S Budget ! pure ]
+    def initialize [
+        100000 pair pair pair pair pair pair pair Budget.new
+    ]
+
+    signature make forall<S:stack>
+        [ S I64 I64 I64 I64 I64 I64 I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export make
+    def make [
+        numeric_budget_preflight@1.validate
+        [ unpair unpair unpair unpair unpair unpair
+          100000 pair pair pair pair pair pair pair
+          Budget.new result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # These fixed caps satisfy preflight; keep the direct private constructor.
+    signature default forall<S:stack>
+        [ S -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export default
+    def default [
+        512 512 256 256 512 100000000 512 initialize result@1.Result.Ok
+    ]
+]

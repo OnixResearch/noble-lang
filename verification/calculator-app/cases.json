@@ -1,0 +1,108 @@
+{
+  "schema": "noble-calculator-application-vectors/v1",
+  "source_revision": "0ea10d3f59dd7e5d878862869a64282283052f15",
+  "execution": "not-run",
+  "budget_units": {
+    "input": "UTF-8 bytes visited by guest lexical scanning plus numeric-token bytes revisited by guest exact decimal conversion",
+    "digits": "decimal literal digits consumed by guest exact conversion",
+    "bits": "numeric-library maximum admitted intermediate integer bit length",
+    "syntax": "guest Pratt parser nesting depth",
+    "calls": "guest function-call depth and numeric-library admitted recursive-call depth",
+    "work": "guest parser steps, reference resolutions, evaluator instructions and numeric-library charged work",
+    "output": "UTF-8 bytes of the exact formatted answer charged in the guest before state publication"
+  },
+  "expressions": [
+    {"input": "1 / 3 + 1 / 6", "fraction": ["1", "2"]},
+    {"input": "0.1 + 0.2", "fraction": ["3", "10"]},
+    {"input": "0.00000000000000000001", "fraction": ["1", "100000000000000000000"]},
+    {"input": "9223372036854775807 + 1", "fraction": ["9223372036854775808", "1"]},
+    {"input": "9007199254740993 - 9007199254740992", "fraction": ["1", "1"]},
+    {"input": "2 + 3 * 4", "fraction": ["14", "1"]},
+    {"input": "(2 + 3) * 4", "fraction": ["20", "1"]},
+    {"input": "10 - 3", "fraction": ["7", "1"]},
+    {"input": "8 / 4 / 2", "fraction": ["1", "1"]},
+    {"input": "-2^2", "fraction": ["-4", "1"]},
+    {"input": "(-2)^2", "fraction": ["4", "1"]},
+    {"input": "2^3^2", "fraction": ["512", "1"]},
+    {"input": "2^-3", "fraction": ["1", "8"]},
+    {"input": "4^(2/2)", "fraction": ["4", "1"]},
+    {"input": "0^0", "fraction": ["1", "1"]}
+  ],
+  "errors": [
+    {"input": "1 + )", "category": "SyntaxError", "span": [4, 5]},
+    {"input": "1 2", "category": "TrailingInput", "span": [2, 3]},
+    {"input": "2(3)", "category": "TrailingInput", "span": [1, 2]},
+    {"input": "0.1.2", "category": "SyntaxError", "span": [3, 4]},
+    {"input": "1.", "category": "SyntaxError", "span": [1, 2]},
+    {"input": "f(1,)", "category": "SyntaxError", "span": [4, 5]},
+    {"input": "f(,1)", "category": "SyntaxError", "span": [2, 3]},
+    {"input": "é + 1", "category": "SyntaxError", "span": [0, 2]},
+    {"input": "1 + é", "category": "SyntaxError", "span": [4, 6]},
+    {"input": "1e3", "category": "TrailingInput", "span": [1, 3]},
+    {"input": "1 / 0", "category": "DivisionByZero", "span": [2, 3]},
+    {"input": "0 / 0", "category": "DivisionByZero", "span": [2, 3]},
+    {"input": "1/0 + 4^(1/2)", "category": "DivisionByZero", "span": [1, 2]},
+    {"input": "0^-1", "category": "DivisionByZero", "span": [1, 2]},
+    {"input": "4^(1/2)", "category": "NonIntegerExponent", "span": [1, 2]},
+    {"input": "missing + 1", "category": "UnknownName", "span": [0, 7]}
+  ],
+  "session": [
+    {"op": "var", "name": "x", "expression": "10", "fraction": ["10", "1"]},
+    {"op": "function", "name": "f", "parameters": ["y"], "body": "x + y", "display": "defined"},
+    {"op": "var", "name": "x", "expression": "20", "fraction": ["20", "1"]},
+    {"op": "eval", "expression": "f(1)", "fraction": ["11", "1"]},
+    {"op": "function", "name": "g", "parameters": ["x"], "body": "x + 1", "display": "defined"},
+    {"op": "eval", "expression": "g(2)", "fraction": ["3", "1"]},
+    {"op": "var", "name": "x", "expression": "1 / 0", "category": "DivisionByZero", "state_unchanged": true},
+    {"op": "eval", "expression": "x", "fraction": ["20", "1"]},
+    {"op": "eval", "expression": "f(1, 2)", "category": "WrongArity", "span": [0, 1]},
+    {"op": "function", "name": "f", "parameters": ["z"], "body": "f(z)", "category": "DefinitionError", "state_unchanged": true},
+    {"op": "function", "name": "bad", "parameters": ["z", "z"], "body": "1", "category": "DefinitionError", "state_unchanged": true},
+    {"op": "function", "name": "bad", "parameters": [], "body": "unknown", "category": "UnknownName", "state_unchanged": true},
+    {"op": "function", "name": "sum2", "parameters": ["a", "b"], "body": "a+b", "display": "defined"},
+    {"op": "eval", "expression": "sum2(1/0,4^(1/2))", "category": "DivisionByZero", "span": [6, 7], "state_unchanged": true},
+    {"op": "function", "name": "lazy", "parameters": [], "body": "1/0", "display": "defined"},
+    {"op": "eval", "expression": "lazy()", "category": "DivisionByZero", "state_unchanged": true},
+    {"op": "eval", "expression": "lazy()", "budget": {"calls": 0}, "category": "ResourceLimit", "limit": "CallDepth", "state_unchanged": true},
+    {"op": "function", "name": "captured", "parameters": ["n"], "body": "f(n)", "display": "defined"},
+    {"op": "function", "name": "f", "parameters": ["y"], "body": "100 + y", "display": "defined"},
+    {"op": "eval", "expression": "captured(1)", "fraction": ["11", "1"]},
+    {"op": "eval", "expression": "f(1)", "fraction": ["101", "1"]},
+    {"op": "var", "name": "held", "expression": "99", "budget": {"output": 1}, "category": "ResourceLimit", "limit": "OutputSize", "state_unchanged": true},
+    {"op": "eval", "expression": "held", "category": "UnknownName"},
+    {"op": "function", "name": "h", "parameters": [], "body": "1", "budget": {"output": 1}, "category": "ResourceLimit", "limit": "OutputSize", "state_unchanged": true},
+    {"op": "eval", "expression": "h()", "category": "UnknownName"},
+    {"op": "eval", "expression": "x", "fraction": ["20", "1"]}
+  ],
+  "limits": [
+    {"expression": "123", "budget": {"input": 1}, "category": "ResourceLimit", "limit": "InputBytes", "state_unchanged": true},
+    {"expression": "123", "budget": {"digits": 2}, "category": "ResourceLimit", "limit": "NumericDigits", "state_unchanged": true},
+    {"expression": "2^100", "budget": {"bits": 8}, "category": "ResourceLimit", "limit": "IntermediateIntegerBits", "state_unchanged": true},
+    {"expression": "((((1))))", "budget": {"syntax": 1}, "category": "ResourceLimit", "limit": "SyntaxDepth", "state_unchanged": true},
+    {"expression": "2^100", "budget": {"work": 1}, "category": "ResourceLimit", "limit": "EvaluationWork", "state_unchanged": true},
+    {"expression": "999", "budget": {"output": 1}, "category": "ResourceLimit", "limit": "OutputSize", "state_unchanged": true}
+  ],
+  "import_fixtures": [
+    {"op": "import-fixture", "definitions": [
+      {"name": "cycle_left", "parameters": [], "body": "cycle_right()"},
+      {"name": "cycle_right", "parameters": [], "body": "cycle_left()"}
+    ], "category": "DefinitionError", "state_unchanged": true},
+    {"op": "eval", "expression": "cycle_left()", "category": "UnknownName", "state_unchanged": true},
+    {"op": "eval", "expression": "cycle_right()", "category": "UnknownName", "state_unchanged": true},
+    {"op": "eval", "expression": "f(1)", "fraction": ["101", "1"]},
+    {"op": "import-fixture", "definitions": [
+      {"name": "bridge", "parameters": ["n"], "body": "f(n)"},
+      {"name": "imported", "parameters": ["n"], "body": "bridge(n)"}
+    ], "display": "defined"},
+    {"op": "eval", "expression": "imported(1)", "fraction": ["101", "1"]},
+    {"op": "function", "name": "f", "parameters": ["y"], "body": "200+y", "display": "defined"},
+    {"op": "eval", "expression": "imported(1)", "fraction": ["101", "1"]}
+  ],
+  "open_controls": [
+    {"id": "CALC-07/resource-capability-capture", "status": "PENDING-SELECTED-CHECKER", "fixture": "crates/noble-contracts/tests/calculator_capability.rs", "reason": "The actual checked calculator import expression has a Resource<test.counter> input; the selected declared-text source checker must reject its quote at the exact Source/Word identity before an Env or Proposal can be installed. The I64 control prepares the same import entry. Resource is non-Data, so no Resource arm is added to calculator Environment; the typed checker fixture awaits the selected compiled MA1/application source gate."}
+  ],
+  "external_library_controls": [
+    {"id": "CALC-04", "owner": "MA1 numeric gate", "status": "OPEN"},
+    {"id": "CALC-05", "owner": "MA1 numeric gate", "status": "OPEN"}
+  ]
+}

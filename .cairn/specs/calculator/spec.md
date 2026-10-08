@@ -592,6 +592,24 @@ r[CALC-GATE-01]
 
 The [calculator scenarios](../../../specs/conformance/calculator-cases.json) are unexecuted harness designs. `Calculator-Design` and `AI-Authoring-Design` label application/test lanes, not Noble language conformance profiles. JSON exact-number fields use decimal strings. They do not define portable Noble serialization.
 
+The PRE-ACCEPTANCE source-only 40-module calculator candidate in
+`verification/calculator-app/` links 12 application modules to 28 numeric
+and fixture modules. Its
+`--vectors-only` gate checks source contracts and an independent exact
+arithmetic oracle, but runs no Noble guest. The executable gate requires
+the source-bound, committed full-library MA1 receipt from this same HEAD,
+its selected compiled CLI and exact nine-lock vendor recipe, then runs
+`noble session --framed --declared-modules --text-byte-cursor
+--signed-self-recursion --retained-source-bytes 262144` through the
+application shell. A missing or mismatched receipt is a refusal. The
+selected nine-lock vendor closure and Octet origin evidence remain on HOLD.
+This branch has no MA1 driver or receipt producer: its numeric modules are an
+unverified snapshot, and numeric host integration must wait for a full
+source-bound 28-module guest run on the same committed source tree.
+CALC-04, CALC-05 and CALC-07 retain separate open controls; CALC-10
+through CALC-13 are not covered by the application gate. No calculator
+case is promoted by source vectors or these pending gates.
+
 [Source provenance](../../../specs/SOURCES.md) records the mathematical-computing references and their limits. No calculator, benchmark, or proof execution is claimed by this amendment.
 
 

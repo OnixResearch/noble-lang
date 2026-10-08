@@ -1,0 +1,33 @@
+module numeric_budget_preflight_late@1 [
+    signature check_work forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_work [
+        unpair unpair unpair unpair unpair unpair
+        [ 0 numeric_budget_limits@1.evaluation_work ] dip swap
+        [ swap pair pair pair pair pair pair result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop swap drop
+          result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature check_output_size forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_output_size [
+        unpair unpair unpair unpair unpair unpair
+        0 numeric_budget_limits@1.output_size
+        [ pair pair pair pair pair pair result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop swap drop
+          result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature validate_late forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    export validate_late
+    def validate_late [
+        numeric_budget_preflight_depth@1.validate_depth
+        [ check_work ] result@1.and_then
+        [ check_output_size ] result@1.and_then
+    ]
+]

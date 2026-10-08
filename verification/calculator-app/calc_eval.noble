@@ -1,0 +1,240 @@
+module calc_eval@1 [
+    # One checked machine frame replaces six locals repeatedly captured by
+    # every branch quotation of the instruction interpreter.
+    opaque Frame Pair<List<rat@1.Rat>,Pair<Text,Pair<calc_env@1.Environment,Pair<List<rat@1.Rat>,Pair<numeric_budget@1.Budget,I64>>>>> private
+    signature frame forall<S:stack>
+        [ S List<rat@1.Rat> Text calc_env@1.Environment List<rat@1.Rat>
+          numeric_budget@1.Budget I64 -- S Frame ! pure ]
+    def frame [
+        let depth let budget let arguments let environment let source let values
+        values source environment arguments budget depth pair pair pair pair pair Frame.new
+    ]
+    signature frame_values forall<S:stack> [ S Frame -- S List<rat@1.Rat> ! pure ]
+    def frame_values [ Frame.into unpair drop ]
+    signature frame_source forall<S:stack> [ S Frame -- S Text ! pure ]
+    def frame_source [ Frame.into unpair swap drop unpair drop ]
+    signature frame_environment forall<S:stack> [ S Frame -- S calc_env@1.Environment ! pure ]
+    def frame_environment [ Frame.into unpair swap drop unpair swap drop unpair drop ]
+    signature frame_arguments forall<S:stack> [ S Frame -- S List<rat@1.Rat> ! pure ]
+    def frame_arguments [ Frame.into unpair swap drop unpair swap drop unpair swap drop unpair drop ]
+    signature frame_budget forall<S:stack> [ S Frame -- S numeric_budget@1.Budget ! pure ]
+    def frame_budget [ Frame.into unpair swap drop unpair swap drop unpair swap drop unpair swap drop unpair drop ]
+    signature frame_depth forall<S:stack> [ S Frame -- S I64 ! pure ]
+    def frame_depth [ Frame.into unpair swap drop unpair swap drop unpair swap drop unpair swap drop unpair swap drop ]
+
+    variant Action Literal Unit public Stored Unit public Parameter Unit public
+        Function Unit public Positive Unit public Negative Unit public Operator Unit public
+    signature action forall<S:stack> [ S I64 -- S Action ! pure ]
+    def action [
+        dup 256 = [ drop unit Action.Literal ]
+        [ dup 259 = [ drop unit Action.Stored ]
+          [ dup 260 = [ drop unit Action.Parameter ]
+            [ dup 261 = [ drop unit Action.Function ]
+              [ dup 128 = [ drop unit Action.Positive ]
+                [ dup 129 = [ drop unit Action.Negative ]
+                  [ drop unit Action.Operator ] if ] if ] if ] if ] if ] if
+    ]
+
+    signature syntax forall<S:stack>
+        [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def syntax [
+        dup calc_code@1.start swap calc_code@1.finish
+        calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.Syntax
+    ]
+    signature unknown forall<S:stack>
+        [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def unknown [
+        dup calc_code@1.start swap calc_code@1.finish
+        calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.UnknownName
+    ]
+    signature numeric forall<S:stack>
+        [ S calc_code@1.Instruction calc_errors@1.NumericError -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def numeric [
+        let cause let instruction
+        instruction calc_code@1.start instruction calc_code@1.finish
+        cause calc_diagnostic@1.numeric
+    ]
+    signature decimal_error forall<S:stack>
+        [ S calc_code@1.Instruction decimal@1.DecimalError -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def decimal_error [
+        let cause let instruction
+        cause
+        [ drop instruction syntax ]
+        [ instruction swap numeric ] decimal@1.DecimalError.match
+    ]
+
+    signature pop forall<S:stack>
+        [ S List<rat@1.Rat> calc_code@1.Instruction --
+          S result@1.Result<Pair<rat@1.Rat,List<rat@1.Rat>>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def pop [
+        let instruction
+        [ instruction syntax result@1.Result.Err ]
+        [ pair result@1.Result.Ok ] list.case
+    ]
+
+    signature pop_args forall<S:stack>
+        [ S List<rat@1.Rat> I64 List<rat@1.Rat> calc_code@1.Instruction --
+          S result@1.Result<Pair<List<rat@1.Rat>,List<rat@1.Rat>>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def pop_args [
+        let instruction let collected let remaining let values
+        remaining 0 =
+        [ collected values pair result@1.Result.Ok ]
+        [ values instruction pop
+          [ unpair let rest let last
+            rest remaining 1 - last collected cons instruction pop_args ]
+          [ result@1.Result.Err ] result@1.Result.match ] if
+    ]
+
+    signature parameter forall<S:stack>
+        [ S List<rat@1.Rat> I64 calc_code@1.Instruction --
+          S result@1.Result<rat@1.Rat,calc_diagnostic@1.Diagnostic> ! pure ]
+    def parameter [
+        let instruction let position
+        [ instruction unknown result@1.Result.Err ]
+        [ let rest let first
+          position 0 =
+          [ first result@1.Result.Ok ]
+          [ rest position 1 - instruction parameter ] if ] list.case
+    ]
+
+    signature binary forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def binary [
+        let kind
+        kind 43 = [ true ] [
+        kind 45 = [ true ] [
+        kind 42 = [ true ] [
+        kind 47 = [ true ] [ kind 94 = ] if
+        ] if ] if ] if
+    ]
+
+    signature arithmetic forall<S:stack>
+        [ S rat@1.Rat rat@1.Rat numeric_budget@1.Budget calc_code@1.Instruction --
+          S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def arithmetic [
+        let instruction let budget let right let left
+        instruction calc_code@1.kind let kind
+        kind 43 = [ left right budget rat@1.plus ] [
+        kind 45 = [ left right budget rat@1.minus ] [
+        kind 42 = [ left right budget rat@1.times ] [
+        kind 47 = [ left right budget rat@1.divide ] [
+        left right budget rat@1.power ] if
+        ] if ] if ] if
+        [ result@1.Result.Ok ]
+        [ instruction swap numeric result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature negate forall<S:stack>
+        [ S rat@1.Rat numeric_budget@1.Budget calc_code@1.Instruction --
+          S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    def negate [
+        let instruction let budget
+        rat@1.parts let denominator let numerator
+        numerator budget bigint@1.negate
+        [ unpair let after_negation let negative
+          negative denominator after_negation rat@1.make
+          [ result@1.Result.Ok ]
+          [ instruction swap numeric result@1.Result.Err ] result@1.Result.match ]
+        [ instruction swap numeric result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature call_limit forall<S:stack>
+        [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
+    def call_limit [
+        unit calc_errors@1.LimitDepth.CallDepth
+        calc_errors@1.LimitRemaining.NestedDepth
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit numeric
+    ]
+
+    # Function programs carry their original Text and bound immutable indexes.
+    # Child calls share the caller's one immutable numeric budget; no state is
+    # installed here. A failed operand prevents any remaining RPN instruction.
+    signature execute forall<S:stack>
+        [ S List<calc_code@1.Instruction> List<rat@1.Rat> Text
+          calc_env@1.Environment List<rat@1.Rat> numeric_budget@1.Budget I64 --
+          S result@1.Result<Pair<rat@1.Rat,numeric_budget@1.Budget>,calc_diagnostic@1.Diagnostic> ! pure ]
+    export execute
+    def execute [
+        frame let machine
+        [ machine frame_values
+          [ 0 0 calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.Syntax result@1.Result.Err ]
+          [ let leftover let answer
+            leftover
+            [ answer machine frame_budget pair result@1.Result.Ok ]
+            [ drop drop
+              0 0 calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.Syntax result@1.Result.Err ]
+            list.case ] list.case ]
+        [ let remaining let instruction
+          machine frame_budget 1 numeric_budget@1.charge_work
+          [ let charged
+            instruction calc_code@1.kind let kind
+            kind action
+            [ drop machine frame_source instruction calc_code@1.start instruction calc_code@1.finish
+              charged decimal@1.parse_range_bounded
+              [ unpair let after let literal
+                remaining literal machine frame_values cons machine frame_source
+                machine frame_environment machine frame_arguments after machine frame_depth execute ]
+              [ instruction swap decimal_error result@1.Result.Err ] result@1.Result.match ]
+            [ drop machine frame_environment instruction calc_code@1.count calc_env@1.get
+                [ calc_env@1.binding
+                  [ remaining swap machine frame_values cons machine frame_source
+                    machine frame_environment machine frame_arguments charged machine frame_depth execute ]
+                  [ drop instruction unknown result@1.Result.Err ] calc_env@1.Binding.match ]
+                [ drop instruction unknown result@1.Result.Err ] result@1.Result.match ]
+            [ drop machine frame_arguments instruction calc_code@1.count instruction parameter
+                  [ remaining swap machine frame_values cons machine frame_source
+                    machine frame_environment machine frame_arguments charged machine frame_depth execute ]
+                  [ result@1.Result.Err ] result@1.Result.match ]
+            [ drop machine frame_depth 64 <
+                    [ charged machine frame_depth 1 + numeric_budget@1.admit_call
+                      [ let admitted
+                        machine frame_environment instruction calc_code@1.count calc_env@1.get
+                        [ calc_env@1.binding
+                          [ drop instruction unknown result@1.Result.Err ]
+                          [ unpair let body let body_source
+                            body unpair let program let names
+                            machine frame_values instruction calc_code@1.count nil instruction pop_args
+                            [ unpair let rest let supplied
+                              program nil body_source machine frame_environment supplied
+                              admitted machine frame_depth 1 + execute
+                              [ unpair let after let answer
+                                remaining answer rest cons machine frame_source
+                                machine frame_environment machine frame_arguments after machine frame_depth execute ]
+                              [ result@1.Result.Err ] result@1.Result.match ]
+                            [ result@1.Result.Err ] result@1.Result.match ]
+                          calc_env@1.Binding.match ]
+                        [ drop instruction unknown result@1.Result.Err ] result@1.Result.match ]
+                      [ instruction swap numeric result@1.Result.Err ] result@1.Result.match ]
+                    [ instruction call_limit result@1.Result.Err ] if ]
+            [ drop machine frame_values instruction pop
+                      [ unpair let rest let operand
+                        remaining operand rest cons machine frame_source
+                        machine frame_environment machine frame_arguments charged machine frame_depth execute ]
+                      [ result@1.Result.Err ] result@1.Result.match ]
+            [ drop machine frame_values instruction pop
+                        [ unpair let rest let operand
+                          operand charged instruction negate
+                          [ unpair let after let negative
+                            remaining negative rest cons machine frame_source
+                            machine frame_environment machine frame_arguments after machine frame_depth execute ]
+                          [ result@1.Result.Err ] result@1.Result.match ]
+                        [ result@1.Result.Err ] result@1.Result.match ]
+            [ drop kind binary
+                        [ machine frame_values instruction pop
+                          [ unpair let rest let right
+                            rest instruction pop
+                            [ unpair let tail let left
+                              left right charged instruction arithmetic
+                              [ unpair let after let result
+                                remaining result tail cons machine frame_source
+                                machine frame_environment machine frame_arguments after machine frame_depth execute ]
+                              [ result@1.Result.Err ] result@1.Result.match ]
+                            [ result@1.Result.Err ] result@1.Result.match ]
+                          [ result@1.Result.Err ] result@1.Result.match ]
+                        [ instruction syntax result@1.Result.Err ] if
+            ]
+            Action.match ]
+          [ instruction swap numeric result@1.Result.Err ] result@1.Result.match ]
+        list.case
+    ]
+]

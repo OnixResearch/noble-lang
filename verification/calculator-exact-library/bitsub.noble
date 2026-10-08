@@ -1,0 +1,13 @@
+module bitsub@1 [
+    signature difference forall<S:stack>
+        [ S List<Bool> List<Bool> Bool -- S Bool List<Bool> ! pure ]
+    export difference
+    def difference [
+        swap [ swap ] dip
+        pair dup unpair bitcompare@1.compare -1 =
+        [ unpair swap true ] [ unpair false ] if
+        [ false bitborrow@1.subtract_with_borrow swap drop ] dip
+        swap
+        [ swap [ [ false ] [ true ] if ] [ ] if ] dip
+    ]
+]

@@ -1812,7 +1812,7 @@
     },
     {
       "file": ".cairn/specs/calculator/spec.md",
-      "sha256": "47038640134e1187603f561240777a0c1b166a8986a52544aefb578f81368d93"
+      "sha256": "6c92544db457221a9f735866296f31ec1b831ea913607069d6f90ac1f516c781"
     },
     {
       "file": ".cairn/specs/core-bootstrap/spec.md",
@@ -1896,7 +1896,7 @@
     },
     {
       "file": "specs/CALCULATOR.md",
-      "sha256": "88019854306afdecbbf6786af10ecc9d061bee1090494d668e973a06230db790"
+      "sha256": "45840c43bdd7e14162df5ed589e4e36551cb7183e0eddc9dfe81c1c60cf99d23"
     },
     {
       "file": "specs/conformance/adaptation-cases.json",

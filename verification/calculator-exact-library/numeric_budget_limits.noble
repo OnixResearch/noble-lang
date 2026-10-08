@@ -1,0 +1,125 @@
+module numeric_budget_limits@1 [
+    signature charge forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,Unit> ! pure ]
+    def charge [
+        dup 0 <
+        [ drop drop unit result@1.Result.Err ]
+        [ [ dup ] dip swap [ dup ] dip swap <
+          [ drop drop unit result@1.Result.Err ]
+          [ - result@1.Result.Ok ] if
+        ] if
+    ]
+
+    export input_bytes
+    signature input_bytes forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def input_bytes [
+        charge
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitIO.InputBytes
+          calc_errors@1.LimitPrimary.IO
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    export numeric_digits
+    signature numeric_digits forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def numeric_digits [
+        charge
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitNumeric.NumericDigits
+          calc_errors@1.LimitPrimary.Numeric
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+
+    export evaluation_work
+    signature evaluation_work forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def evaluation_work [
+        charge
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitRemaining.EvaluationWork
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    export output_size
+    signature output_size forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def output_size [
+        charge
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitIO.OutputSize
+          calc_errors@1.LimitPrimary.IO
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature check forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,Unit> ! pure ]
+    def check [
+        dup 0 <
+        [ drop drop unit result@1.Result.Err ]
+        [ [ dup ] dip swap [ dup ] dip swap <
+          [ drop drop unit result@1.Result.Err ]
+          [ drop result@1.Result.Ok ] if
+        ] if
+    ]
+
+    export limit_bits
+    signature limit_bits forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def limit_bits [
+        check
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+          calc_errors@1.LimitPrimary.Numeric
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    export limit_syntax
+    signature limit_syntax forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def limit_syntax [
+        check
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitDepth.SyntaxDepth
+          calc_errors@1.LimitRemaining.NestedDepth
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    export limit_call
+    signature limit_call forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    # The pinned managed-Wasm ABI admits 4096 continuation bytes at eight
+    # bytes per frame. Callers include their own nesting/entry margin when
+    # requesting frames; an externally supplied larger budget cannot waive
+    # the runtime ceiling.
+    def limit_call [
+        dup 513 <
+        [ check
+          [ result@1.Result.Ok ]
+          [ drop unit calc_errors@1.LimitDepth.CallDepth
+            calc_errors@1.LimitRemaining.NestedDepth
+            calc_errors@1.LimitCategory.Remaining
+            calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+          result@1.Result.match ]
+        [ drop drop unit calc_errors@1.LimitDepth.CallDepth
+          calc_errors@1.LimitRemaining.NestedDepth
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        if
+    ]
+
+]

@@ -1,0 +1,20 @@
+module bitrelation@1 [
+    signature compare forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> -- S I64 ! pure ]
+    export compare
+    def compare [
+        bitpair@1.unpack
+        [ [ bitcompare@1.compare ] [ drop drop -1 ] if ]
+        [ [ drop drop 1 ] [ swap bitcompare@1.compare ] if ] if
+    ]
+
+    signature multiply forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> -- S Pair<Bool,List<Bool>> ! pure ]
+    export multiply
+    def multiply [
+        bitpair@1.unpack
+        bitpair@1.different
+        [ bitmul@1.multiply ] dip
+        swap bitsigned@1.normalize
+    ]
+]

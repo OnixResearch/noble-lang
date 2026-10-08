@@ -1,0 +1,27 @@
+module calc_diagnostic@1 [
+    # All spans are zero-based half-open UTF-8 byte offsets. Provenance is
+    # unavailable for expressions submitted through the calculator shell.
+    opaque Span Pair<I64,I64> private
+    export Span
+    signature span forall<S:stack> [ S I64 I64 -- S Span ! pure ]
+    export span
+    def span [ pair Span.new ]
+    signature bounds forall<S:stack> [ S Span -- S I64 I64 ! pure ]
+    export bounds
+    def bounds [ Span.into unpair ]
+
+    variant Diagnostic Syntax Span public TrailingInput Span public UnknownName Span public WrongArity Span public DefinitionError Span public Numeric Pair<Span,calc_errors@1.NumericError> public
+    export Diagnostic
+    export Diagnostic.Syntax
+    export Diagnostic.TrailingInput
+    export Diagnostic.UnknownName
+    export Diagnostic.WrongArity
+    export Diagnostic.DefinitionError
+    export Diagnostic.Numeric
+    export Diagnostic.match
+
+    signature numeric forall<S:stack>
+        [ S I64 I64 calc_errors@1.NumericError -- S Diagnostic ! pure ]
+    export numeric
+    def numeric [ [ span ] dip pair Diagnostic.Numeric ]
+]

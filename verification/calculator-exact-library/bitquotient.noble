@@ -1,0 +1,18 @@
+module bitquotient@1 [
+    signature divide_rem forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> -- S Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>> ! pure ]
+    export divide_rem
+    def divide_rem [
+        bitpair@1.unpack
+        pair [ swap ] dip
+        [ bitdiv@1.divide_rem ] dip
+        [ unpair ] dip
+        [ swap ] dip
+        dup unpair bitpair@1.different
+        swap [ swap bitsigned@1.normalize ] dip
+        [ swap ] dip unpair
+        [ swap ] dip
+        [[ drop ] dip ] dip
+        swap bitsigned@1.normalize pair
+    ]
+]

@@ -1,0 +1,33 @@
+module calc_token@1 [
+    # ASCII punctuation uses its byte value as kind. 256 and 257 distinguish
+    # maximal identifiers and numeric literals. An EOF token is never stored.
+    opaque Token Pair<I64,Pair<I64,I64>> private
+    export Token
+
+    signature make forall<S:stack> [ S I64 I64 I64 -- S Token ! pure ]
+    export make
+    def make [ pair pair Token.new ]
+
+    signature kind forall<S:stack> [ S Token -- S I64 ! pure ]
+    export kind
+    def kind [ Token.into unpair drop ]
+
+    signature span forall<S:stack> [ S Token -- S I64 I64 ! pure ]
+    export span
+    def span [ Token.into unpair swap drop unpair ]
+
+    signature start forall<S:stack> [ S Token -- S I64 ! pure ]
+    export start
+    def start [ span drop ]
+
+    signature finish forall<S:stack> [ S Token -- S I64 ! pure ]
+    export finish
+    def finish [ span swap drop ]
+
+    signature reverse forall<S:stack>
+        [ S List<Token> List<Token> -- S List<Token> ! pure ]
+    export reverse
+    def reverse [
+        swap [ ] [ [ swap ] dip [ cons ] dip swap reverse ] list.case
+    ]
+]

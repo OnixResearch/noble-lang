@@ -1,0 +1,34 @@
+module calc_chars@1 [
+    signature digit forall<S:stack> [ S I64 -- S Bool ! pure ]
+    export digit
+    def digit [ dup 48 < [ drop false ] [ 58 < ] if ]
+
+    signature letter forall<S:stack> [ S I64 -- S Bool ! pure ]
+    export letter
+    def letter [
+        dup 65 < [ drop false ] [
+            dup 91 < [ drop true ] [
+                dup 97 < [ drop false ] [ 123 < ] if
+            ] if
+        ] if
+    ]
+
+    signature ident_start forall<S:stack> [ S I64 -- S Bool ! pure ]
+    export ident_start
+    def ident_start [ dup 95 = [ drop true ] [ letter ] if ]
+
+    signature ident_continue forall<S:stack> [ S I64 -- S Bool ! pure ]
+    export ident_continue
+    def ident_continue [ dup ident_start [ drop true ] [ digit ] if ]
+
+    signature whitespace forall<S:stack> [ S I64 -- S Bool ! pure ]
+    export whitespace
+    def whitespace [
+        dup 32 = [ drop true ] [
+            dup 9 = [ drop true ] [
+                dup 10 = [ drop true ] [ 13 = ] if
+            ] if
+        ] if
+    ]
+
+]

@@ -1,0 +1,14 @@
+module bitpair@1 [
+    signature unpack forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S List<Bool> List<Bool> Bool Bool ! pure ]
+    export unpack
+    def unpack [
+        unpair [ swap ] dip swap unpair
+        [[ swap ] dip ] dip swap [ swap ] dip
+    ]
+
+    signature different forall<S:stack> [ S Bool Bool -- S Bool ! pure ]
+    export different
+    def different [ [ [ false ] [ true ] if ] [ ] if ]
+]

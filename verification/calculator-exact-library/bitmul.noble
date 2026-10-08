@@ -1,0 +1,19 @@
+module bitmul@1 [
+    signature multiply forall<S:stack>
+        [ S List<Bool> List<Bool> -- S List<Bool> ! pure ]
+    export multiply
+    def multiply [
+        [ drop nil ] [
+            [[ dup ] dip ] dip
+            # Keep the head and multiplicand above the recursive call; the
+            # signed call must see its original rigid stack witness S.
+            swap [ swap ] dip swap
+            [[ multiply ] dip ] dip
+            swap [ swap ] dip swap
+            dup [ true ] [ drop drop false ] list.case
+            [ drop nil ] [ false swap cons ] if
+            swap
+            [ false bitadd@1.add_bits ] [ swap drop ] if
+        ] list.case
+    ]
+]

@@ -1,0 +1,34 @@
+module bitborrow@1 [
+    signature subtract_with_borrow forall<S:stack>
+        [ S List<Bool> List<Bool> Bool -- S Bool List<Bool> ! pure ]
+    export subtract_with_borrow
+    def subtract_with_borrow [
+        pair swap
+        [ unpair swap
+            [ nil ]
+            [ drop drop drop true nil ] list.case
+        ] [
+            [ swap ] dip swap unpair swap
+            [
+                [ cons ] dip
+                [ true nil cons false subtract_with_borrow ] [ false swap ] if
+            ] [
+                [[[ swap ] dip ] dip ] dip
+                [ swap ] dip
+                swap
+                [ swap ] dip
+                [[ swap ] dip ] dip
+                [ 1 ] [ 0 ] if swap [ 1 ] [ 0 ] if +
+                swap [ 1 ] [ 0 ] if swap -
+                dup 0 < [ -1 = true ] [ 1 = false ] if
+                swap [ subtract_with_borrow ] dip
+                [ swap ] dip swap
+                [
+                    swap dup [ true ] [ drop drop false ] list.case
+                    [ drop [ true nil cons ] [ nil ] if ] [ cons ] if
+                ] dip
+                swap
+            ] list.case
+        ] list.case
+    ]
+]
