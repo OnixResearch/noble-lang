@@ -458,6 +458,18 @@ file without a selected-directory event. This cooperative watch is *not*
 proof of immutable file bytes after ACK or full H-LIVE-01/LIVE-05
 acceptance. Explicit `live repl --source` and `:reload` remain available.
 
+Scoped real-child tests also stop inside an actual old Wasm guest frame before
+queuing a reload, and after candidate A's checked V8 Wasm compilation but
+before its staging reply while a second fsynced rename selects B. They observe
+the old result before the reload ACK, only B acknowledged as current, and
+zero guest requests for an unsupported partial in-place write. A separate
+external `MAP_SHARED` smoke similarly refuses observed source drift before
+guest execution. The default selected `live_repl` suite passed 55 cases and
+the opt-in test-barrier suite passed 57; test-only FIFO synchronization is
+omitted from the default CLI. These scoped executions do not discharge every
+canonical LIVE-02/LIVE-05 variant, source-bound proof, or LIVE-06 host-policy
+revocation; those canonical cases remain absent/not-run with proof open.
+
 For a separate **opt-in source-change execution gate**, start the same REPL
 with `--verify-source-before-execute`. Before each source submission, after
 frontend preparation, and after Wasm candidate preparation but before guest

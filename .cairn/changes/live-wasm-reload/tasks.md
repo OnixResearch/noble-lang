@@ -21,28 +21,42 @@ their original identities and dependencies. Exact `:generation` inspection
 reports the host publication generation, actual V8 engine and ordered
 checked typed stack without file access, worker submission or grant
 consumption; it is not full DX-LIVE-01 or accepted LIVE case evidence.
-Automatic `noble live watch SOURCE` is unavailable. `IN_MOVED_TO` gives
-pathname provenance but cannot authenticate bytes at rename time: writable
-mappings or external hardlinks can mutate a renamed inode without a selected
-basename content notification. The unsound automatic path was removed, not
-left as a no-op alias. Explicit `:reload` remains the host-controlled path;
-its ACK names pinned committed source bytes, not an assertion that a
-concurrently rewritten path still contains those bytes. A bounded
-postpublication path check reports its observation separately. Source reads
-pin a directory descriptor and reject symlink final components. Unselected
-or non-granted effectful definitions/submissions, incompatible
-replacements, unstable files and exhausted rebuild budgets fail closed before
-candidate worker staging. An effectful old Program requires current host
-authority, and typed values remain retained. Failed post-invocation guest
-admission retains the completed invocation's stack and unused grant.
+On Linux, `noble live watch --source /absolute/math.noble --engine v8` now
+handles a cooperative completed save: `fsync` the same-directory
+`math.noble.tmp`, then atomically rename it onto the selected file. The host
+pairs the rename events, reads a bounded directory-pinned regular single-link
+snapshot, checks its bytes and identity again after Wasm staging, and refuses
+a candidate superseded by a later complete save. Only a committed current
+generation receives a success ACK with `watch_sequence`, pinned
+`source_sha256`, `watch_save_protocol`, and bounded `source_freshness`.
+The old rename-only path was removed; this checked watch is not a no-op alias.
+Rename provenance alone cannot authenticate later inode bytes: unpaired
+renames, in-place partial writes, symlink escapes, hardlinks and changed
+candidates do not earn an ACK, while writable mappings or aliases can change
+bytes without a selected-directory event. The selected-byte execution gate
+refuses observed partial writes and external `MAP_SHARED` drift with zero
+guest requests; finite checks do not prove bytes immutable after ACK or
+through every in-flight guest step. Explicit `:reload` remains available;
+its ACK also identifies pinned committed bytes rather than promising that
+a concurrently rewritten pathname still contains them. Unselected or
+non-granted effectful definitions/submissions, incompatible replacements,
+unstable files and exhausted rebuild budgets fail closed before candidate
+worker staging. An effectful old Program requires current host authority,
+and typed values remain retained. Failed post-invocation guest admission
+retains the completed invocation's stack and unused grant.
 
-Indirect self-rebind/cycle refusal was exercised in scoped live-child checks;
-general proof and canonical LIVE case acceptance remain open. This is not the
-complete automatic H-LIVE-01/LIVE-05 watch profile: declared modules,
-effectful watch, full in-flight source-change controls, code retirement,
-complete source-bound LIVE-02 acceptance, interpreter execution, complete
-scenario receipts and
-source-bound proof/assurance remain absent.
+Scoped real-child tests exercise selected declared-module watch snapshots,
+Core code-span retirement, an old active Wasm frame completing before the
+queued reload ACK, and a checked compiled candidate A discarded after a
+second fsynced atomic rename B; partial in-place and separate external
+`MAP_SHARED` controls refuse before guest execution. Indirect
+self-rebind/cycle refusal was also exercised in scoped live-child checks.
+These are not complete automatic H-LIVE-01/LIVE-05 acceptance: general
+effectful watch, full adversarial in-flight source-change controls,
+complete source-bound LIVE-02, every LIVE-05 variant, interpreter execution,
+scenario receipts and source-bound proof/assurance remain open. LIVE-06
+current-host-policy revocation also remains open; no general revoke API is
+established by the selected runtime tests.
 The canonical LIVE case states remain `absent`/`not-run`/proof `open`; none of the
 implementation or acceptance tasks below is complete.
 
