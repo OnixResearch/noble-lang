@@ -16,7 +16,7 @@
   "crates/noble-cli/src/core/runtime/host.mjs" = "271d8add2c5ab940fec867d822cbb68fed9b0c57e98f9243ffed879065d59494",
   "crates/noble-cli/src/core/runtime/preamble.mjs" = "8e39c9f52d335b88f89f4193b3b0ab27dcf47b0c37ad826380a33721d75c3a9c",
   "crates/noble-cli/src/core/runtime/protocol.mjs" = "142cec483f84923991c211bebfd583a8e89bf415c50e8d670771dfe47978c812",
-  "crates/noble-cli/src/core/runtime/values.mjs" = "99a98fccca16a5039143d2ee64e1c760c06f53b927ff688c3dc3e6faa87c0194",
+  "crates/noble-cli/src/core/runtime/values.mjs" = "a50b0725394c11ea830ac56252d9e34632d085d43e34359d14a90b321ba449a0",
   "crates/noble-contracts/Cargo.toml" = "757e1546739b76fb93fadffee7ceb32bc537c030e945adcd2ca6905f79d43bd8",
   "crates/noble-contracts/src/source/proof.rs" = "d2fb14cfde16dbfa9033d85e4b364f4bea8f4cf054b5cde74918cef8e251edce",
   "crates/noble-kernel/Cargo.toml" = "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",

@@ -14,6 +14,7 @@ pub(super) struct Input<'a> {
     pub(super) arena: &'a super::Arena,
     pub(super) arenas: &'a [super::Arena],
     pub(super) owner: Option<u64>,
+    pub(super) owner_definition: Option<noble_kernel::contracts::Definition>,
 }
 
 #[expect(
@@ -144,6 +145,12 @@ fn lower_node(
                 },
             ))
         }
+        noble_kernel::untrusted::Node::SignedSelf { def, .. } => {
+            if input.owner_definition != Some(*def) {
+                return Err(crate::Diagnostic::Invalid);
+            }
+            attempt!(input.named_call(*def, interface))
+        }
         noble_kernel::untrusted::Node::SlotInvoke { site_id, .. } => {
             if !layout.live_slots || *site_id != id.0 {
                 return Err(crate::Diagnostic::Invalid);
@@ -217,6 +224,16 @@ impl Input<'_> {
                     Err(crate::Diagnostic::Invalid)
                 };
             }
+            if def.0 == 27 {
+                return if self.submission.environment.declared_modules
+                    && self.submission.environment.kind(def)
+                        == Some(noble_kernel::contracts::Behavior::I64Less)
+                {
+                    Ok(super::Action::I64Less)
+                } else {
+                    Err(crate::Diagnostic::Invalid)
+                };
+            }
         }
         if def.0 == 24 && super::super::builtin_count(&self.submission.environment) == 26 {
             return match self.owner {
@@ -231,7 +248,8 @@ impl Input<'_> {
             return Ok(super::Action::Word(def.0));
         }
         match self.submission.environment.kind(def) {
-            Some(noble_kernel::contracts::Behavior::Named) => self.named_call(def),
+            Some(noble_kernel::contracts::Behavior::Named) =>
+                self.named_call(def, output.interface),
             Some(kind) => match kind {
                 noble_kernel::contracts::Behavior::BoundEmit(slot) => output.bound_action(slot),
                 noble_kernel::contracts::Behavior::BoundClock(slot) =>
@@ -293,6 +311,7 @@ impl Input<'_> {
                 | noble_kernel::contracts::Behavior::TestEmit
                 | noble_kernel::contracts::Behavior::Reserved
                 | noble_kernel::contracts::Behavior::TextByte
+                | noble_kernel::contracts::Behavior::I64Less
                 | noble_kernel::contracts::Behavior::Named => Err(crate::Diagnostic::Invalid),
             },
             None => Err(crate::Diagnostic::Invalid),
@@ -302,11 +321,22 @@ impl Input<'_> {
     fn named_call(
         self,
         def: noble_kernel::contracts::Definition,
+        site: &noble_kernel::untrusted::Interface,
     ) -> Result<super::Action, crate::Diagnostic> {
         let target = attempt!(super::super::admission::definition_index(
             self.submission,
             def
         ));
+        // A generic signed owner may have multiple independently checked
+        // specializations. This call can dispatch only to the precise
+        // concrete ABI compiled for this target, even when another
+        // instantiation of its rank-1 Scheme is well typed by the kernel.
+        let expected = &self.submission.definitions[target].expected;
+        if site.stack_in != expected.stack_in
+            || site.stack_out != expected.stack_out
+            || site.effects != expected.allowed_effects {
+            return Err(crate::Diagnostic::Invalid);
+        }
         Ok(super::Action::Call(
             self.arenas[target].root,
             self.submission.definitions[target].identity,

@@ -56,13 +56,15 @@ impl super::Session {
                 return Ok(super::output::Report::declared_source_error(
                     &error,
                     self.submissions,
+                    options.signed_self_recursion,
+                    options.declared_text(),
                 ))
             }
         };
         match prepared.kind() {
             noble_contracts::source::ModuleKind::Module
             | noble_contracts::source::ModuleKind::Import => self.link_declared(prepared,source,options),
-            noble_contracts::source::ModuleKind::Definition => self.define_declared(prepared),
+            noble_contracts::source::ModuleKind::Definition => self.define_declared(prepared, options),
             noble_contracts::source::ModuleKind::Expression => {
                 self.execute_declared(prepared, source, options)
             }
@@ -173,6 +175,8 @@ impl super::Session {
         match committed {
             Ok(()) => Ok(super::output::Report::declared_link(
                 self.submissions,
+                options.signed_self_recursion,
+                options.declared_text(),
                 message,
                 module,
                 binding,
@@ -182,6 +186,8 @@ impl super::Session {
             Err(error) => Ok(super::output::Report::declared_source_error(
                 &error,
                 self.submissions,
+                options.signed_self_recursion,
+                options.declared_text(),
             )),
         }
     }
@@ -193,12 +199,17 @@ impl super::Session {
     fn define_declared(
         &mut self,
         prepared: noble_contracts::source::ModulePrepared,
+        options: &super::arguments::Options,
     ) -> Result<super::output::Report, super::output::Failure> {
         match attempt!(self.commit_declared(prepared)) {
-            Ok(()) => Ok(super::output::Report::declared_definition(self.submissions)),
+            Ok(()) => Ok(super::output::Report::declared_definition(
+                self.submissions, options.signed_self_recursion, options.declared_text(),
+            )),
             Err(error) => Ok(super::output::Report::declared_source_error(
                 &error,
                 self.submissions,
+                options.signed_self_recursion,
+                options.declared_text(),
             )),
         }
     }
@@ -223,12 +234,26 @@ impl super::Session {
                     },
                     "declared expression produced no candidate",
                 )));
-        let compiled = match self.compiler.prepare(submission) {
+        let compiled = if options.declared_text() {
+            match prepared.declared_text_source_owner() {
+                Some(ref owner) => self.compiler.prepare_declared_text(owner),
+                None => Err(noble_wasm::Diagnostic::Invalid),
+            }
+        } else {
+            let signed = prepared.signed_source_owner();
+            match signed {
+                Some(ref owner) => self.compiler.prepare_signed(owner),
+                None => self.compiler.prepare(submission),
+            }
+        };
+        let compiled = match compiled {
             Ok(compiled) => compiled,
             Err(error) => {
                 return Ok(super::output::Report::declared_backend_error(
                     error,
                     self.submissions,
+                    options.signed_self_recursion,
+                    options.declared_text(),
                 ))
             }
         };

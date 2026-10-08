@@ -3,6 +3,8 @@
     reason = "Owner: noble-maintainers; preparation's mutable parameters are only its request-local meter; draft trees and output buffers are newly owned, while source bytes, supplied types, and the committed session are borrowed unchanged until an explicit later commit."
 )]
 
+pub(in crate::source) mod symbolic;
+
 impl super::Session {
     pub fn prepare(
         &self,
@@ -30,7 +32,15 @@ impl super::Session {
             Ok(parsed) => parsed,
             Err(error) => return Err(super::Error::at(super::Stage::Parse, error)),
         };
-        if let Err(error) = super::resolution::resolve(&mut tree, name.as_deref(), self, &mut meter)
+        if self.declared.as_ref().is_some_and(|context| context.declared_text) {
+            attempt!(super::locals::lower(&mut tree, &mut meter)
+                .map_err(|error| super::Error::at(super::Stage::Resolve, error)));
+        }
+        let signed_owner = signature.is_some()
+            && self.declared.as_ref().is_some_and(|context| context.signed_self);
+        if let Err(error) = super::resolution::resolve(
+            &mut tree, name.as_deref(), self, signed_owner, &mut meter,
+        )
         {
             return Err(super::Error::at(super::Stage::Resolve, error));
         }
@@ -63,25 +73,63 @@ impl super::Session {
         if let Err(error) = self.retained(extra, tree.span, &mut meter) {
             return Err(super::Error::at(super::Stage::Check, error));
         }
-        let environment = match self.environment() {
+        let mut environment = match self.environment() {
             Ok(environment) => environment,
             Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
+        };
+        // An actual unpublished owner interface occupies this transaction's
+        // prospective Env row while its body is checked. It is never installed
+        // into the committed namespace or exposed as a raw graph self edge.
+        let prospective_owner = if signed_owner && tree.nodes.iter().any(|node| {
+            matches!(node.kind, super::Kind::Call(super::Target::SelfOwner))
+        }) {
+            let Some(scheme) = signature else {
+                return Err(super::Error::at(super::Stage::Check,
+                    crate::invalid(tree.span, "signed owner has no signature")));
+            };
+            let Some(owner) = self.declared.as_ref().and_then(|context| context.owner) else {
+                return Err(super::Error::at(super::Stage::Check,
+                    crate::invalid(tree.span, "signed owner has no module")));
+            };
+            let def = noble_kernel::contracts::Definition(attempt!(crate::index(
+                environment.defs.len(), tree.span,
+            ).map_err(|problem| super::Error::at(super::Stage::Check, problem))));
+            attempt!(meter.node(tree.span)
+                .map_err(|problem| super::Error::at(super::Stage::Check, problem)));
+            environment.defs.push(scheme.clone());
+            environment.kinds.push(noble_kernel::contracts::Behavior::Named);
+            environment.deps.push(alloc::vec::Vec::new());
+            environment.definition_owners.push(Some(owner));
+            Some(def)
+        } else {
+            None
         };
         let scope = super::inference::Scope {
             root: &tree,
             session: self,
             environment: &environment,
             root_signature: signature,
+            prospective_owner,
         };
         let state = match super::inference::infer(scope, mode, inputs, &mut meter) {
             Ok(state) => state,
             Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
         };
+        let signed_relation = match prospective_owner {
+            Some(owner) => {
+                let scheme = signature.ok_or_else(|| super::Error::at(super::Stage::Check,
+                    crate::invalid(tree.span, "signed owner has no signature")))?;
+                Some(attempt!(symbolic::check(&tree, &state, scheme, source_bytes,
+                    owner, self, &environment, &mut meter)
+                    .map_err(|problem| super::Error::at(super::Stage::Check, problem))))
+            }
+            None => None,
+        };
         let mut addition = alloc::vec::Vec::new();
         let (definition, submission, checked, output) = match name {
             Some(name) => {
                 let definition =
-                    match declaration(tree, name, source_bytes, signature, self, &mut meter) {
+                    match declaration(tree, name, source_bytes, signature, signed_relation, self, &mut meter) {
                         Ok((definition, bytes)) => {
                             addition = bytes;
                             definition
@@ -94,6 +142,7 @@ impl super::Session {
                 let (submission, checked, output) = attempt!(super::emission::emit(
                     state,
                     environment,
+                    &self.definitions,
                     source_bytes.len(),
                     &mut meter
                 ));
@@ -165,6 +214,7 @@ fn declaration(
     name: alloc::string::String,
     source_bytes: &[u8],
     signature: Option<&noble_kernel::words::Scheme>,
+    signed: Option<super::SignedRelation>,
     session: &super::Session,
     meter: &mut crate::Meter,
 ) -> Result<(super::Named, alloc::vec::Vec<u8>), crate::Diagnostic> {
@@ -185,6 +235,7 @@ fn declaration(
             owner: session.declared.as_ref().and_then(|context| context.owner),
             tree,
             signature: signature.cloned(),
+            signed,
         },
         addition,
     ))

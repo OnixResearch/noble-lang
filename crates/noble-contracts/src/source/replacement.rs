@@ -13,6 +13,7 @@ fn infer(
         session,
         environment,
         root_signature: definition.signature.as_ref(),
+        prospective_owner: None,
     };
     super::inference::infer(scope, super::inference::Mode::Declaration, &[], &mut meter)
 }

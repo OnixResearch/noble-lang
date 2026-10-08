@@ -5,6 +5,12 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let is_declared = parsed
         .as_ref()
         .is_ok_and(|options| options.declared_modules);
+    let is_signed = parsed
+        .as_ref()
+        .is_ok_and(|options| options.signed_self_recursion);
+    let is_declared_text = parsed
+        .as_ref()
+        .is_ok_and(|options| options.declared_text());
     let is_cursor = parsed
         .as_ref()
         .is_ok_and(|options| options.text_byte_cursor);
@@ -12,11 +18,9 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     match result {
         Ok(exit) => std::process::ExitCode::from(exit),
         Err(error) => {
-            let report = if is_cursor {
-                super::output::Report::failure_with_profile(&error, "Text-Byte-Cursor-v1")
-            } else {
-                super::output::Report::failure(&error, is_declared)
-            };
+            let report = super::output::Report::failure(
+                &error, is_declared, is_signed, is_declared_text, is_cursor,
+            );
             if let Err(write_error) = super::output::print(&report) {
                 eprintln!("noble: {}", write_error.message);
             }

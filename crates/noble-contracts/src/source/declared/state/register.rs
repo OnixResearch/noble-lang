@@ -66,19 +66,23 @@ impl super::ModuleSession {
                 crate::source::Stage::Check,
                 "module identity limit exceeded"
             )));
+        let selected_locals = self.source.declared.as_ref().is_some_and(|context| context.declared_text);
         let mut collected = attempt!(collection::Collected::collect(
             core::mem::take(&mut request.members),
-            request.limits
+            request.limits,
+            selected_locals,
         ));
         self = attempt!(self.outside_words());
         let (next, resolved, meter) =
             attempt!(schema::resolve(self, &collected, identity, request.limits));
         let families =
             crate::source::declared::signatures::families(&next, &collected.schemas, identity);
+        let fixed = crate::source::declared::signatures::fixed_nominals(
+            &next, &collected.schemas, identity);
         let mut signatures = alloc::vec::Vec::with_capacity(collected.signatures.len());
         for (name, binders, words) in &collected.signatures {
             let scheme = attempt!(crate::source::declared::signatures::parse(
-                binders, words, &families,
+                binders, words, &families, &fixed,
             ));
             if collected.exports.contains(name)
                 && !next.source.declared.as_ref().is_some_and(|context| {
@@ -146,6 +150,7 @@ impl super::ModuleSession {
             adapter_slot,
             source: request.source.to_vec(),
             definition_spans: core::mem::take(&mut collected.definition_spans),
+            verified_signed_slots: alloc::vec::Vec::new(),
             import_aliases,
             contracts: staged.contracts,
             proof_exports: staged.proof_exports,
@@ -163,4 +168,37 @@ fn retained_bytes(session: &super::ModuleSession, start: usize) -> usize {
         at += 1;
     }
     bytes
+}
+
+/// Re-parse the retained whole module, including the signature declaration
+/// paired by exact definition name, rather than trusting a staged Scheme.
+pub(super) fn original_signature(
+    session: &super::ModuleSession,
+    module: &super::super::Module,
+    definition: &str,
+    limits: crate::Limits,
+) -> Result<noble_kernel::words::Scheme, crate::source::Error> {
+    let parsed = attempt!(crate::source::declared::parsing::parse(&module.source, limits)
+        .map_err(|problem| super::super::diagnostic(crate::source::Stage::Check, problem)));
+    let crate::source::declared::parsing::ParsedUnit::Module { name, version, members } = parsed
+        else { return Err(super::super::error(crate::source::Stage::Check,
+            "signed owner original source is not a module")); };
+    if name != module.name || version != module.version {
+        return Err(super::super::error(crate::source::Stage::Check,
+            "signed owner original module identity differs"));
+    }
+    let selected_locals = session.source.declared.as_ref()
+        .is_some_and(|context| context.declared_text);
+    let collected = attempt!(collection::Collected::collect(members, limits, selected_locals));
+    let families = crate::source::declared::signatures::families(
+        session, &collected.schemas, module.identity,
+    );
+    let fixed = crate::source::declared::signatures::fixed_nominals(
+        session, &collected.schemas, module.identity,
+    );
+    let (_, binders, words) = collected.signatures.iter()
+        .find(|(name, _, _)| name == definition).ok_or_else(|| super::super::error(
+            crate::source::Stage::Check, "signed definition lacks its original signature",
+        ))?;
+    crate::source::declared::signatures::parse(binders, words, &families, &fixed)
 }

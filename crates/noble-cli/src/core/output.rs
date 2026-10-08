@@ -56,9 +56,17 @@ pub(super) struct Report {
 }
 
 impl Report {
-    pub fn failure(failure: &Failure, declared: bool) -> Self {
+    pub fn failure(
+        failure: &Failure,
+        declared: bool,
+        signed: bool,
+        declared_text: bool,
+        text_byte_cursor: bool,
+    ) -> Self {
         if declared {
-            Self::declared_static(failure.context, &failure.message, 0, None)
+            Self::declared_static(
+                failure.context, &failure.message, 0, None, signed, declared_text,
+            )
         } else {
             Self::static_report(
                 failure.context,
@@ -66,13 +74,9 @@ impl Report {
                 0,
                 None,
                 None,
-                "Core-Bootstrap",
+                if text_byte_cursor { "Text-Byte-Cursor-v1" } else { "Core-Bootstrap" },
             )
         }
-    }
-
-    pub fn failure_with_profile(failure: &Failure, profile: &str) -> Self {
-        Self::static_report(failure.context, &failure.message, 0, None, None, profile)
     }
 
     pub fn source_error(error: &noble_contracts::source::Error, submission: u64) -> Self {

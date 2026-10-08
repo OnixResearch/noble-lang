@@ -195,11 +195,12 @@ function checkLiveBytes(bytes, abi) {
 export class CoreEngine {
   constructor(selection, abi, { optimized = false, artifacts = null, bindings = [],
     declared_modules = false, declared_extension = null, in_process_live = false,
-    text_byte_cursor = false } = {}) {
+    text_byte_cursor = false, signed_self_recursion = false } = {}) {
     this.selection = selection;
     this.abi = abi;
     this.inProcessLive = in_process_live === true;
-    configureDeclaredAbi(this, abi, declared_modules, declared_extension, bindings, text_byte_cursor);
+    configureDeclaredAbi(this, abi, declared_modules, declared_extension, bindings,
+      text_byte_cursor, signed_self_recursion);
     this.optimized = optimized;
     initializeHostState(this, bindings);
     this.pending = null;
@@ -882,7 +883,7 @@ export class CoreEngine {
     this.pending = { instance, module, record: { ...record, imports }, traceStart: requests };
     return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       stage: 'wasm', outcome: 'ready', module: this.pending.record, guest_requests: 0, protected_operations: 0,
-      ...(this.profile === 'Declared-Modules-v1' ? { host_requests: 0, acquired_authority: false,
+      ...(this.declaredModules ? { host_requests: 0, acquired_authority: false,
         ambient_fallback_calls: 0, real_host_evidence: false, real_host_fallback_calls: 0 } : {}),
       candidate_prepare_requests: 0 };
   }
@@ -894,7 +895,7 @@ export class CoreEngine {
     const boundTotalStart = this.boundRequestsTotal;
     const hostStart = this.hostRequestsTotal;
     const traceExhaustedStart = this.boundTraceExhausted;
-    const adapterStarts = this.profile === 'Declared-Modules-v1'
+    const adapterStarts = this.declaredModules
       ? new Map(Array.from(this.boundAdapters, ([slot, binding]) => [slot, binding.invocations]))
       : null;
     const protectedStart = this.protectedOperations;
@@ -976,7 +977,7 @@ export class CoreEngine {
       }
     }
     const outcome = status === 0 ? 'normal' : status === 1 || status === 2 ? 'runtime-exhausted' : 'trap';
-    const isDeclared = this.profile === 'Declared-Modules-v1';
+    const isDeclared = this.declaredModules;
     const boundRequests = isDeclared ? this.boundRequests.slice(boundStart) : null;
     const adapterInvocations = isDeclared
       ? Array.from(this.boundAdapters.entries(), ([slot, binding]) => ({

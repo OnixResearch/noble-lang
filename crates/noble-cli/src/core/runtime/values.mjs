@@ -91,7 +91,7 @@ function readValue(engine, runtime, kind, value, depth) {
       const marker = runtime.cell_w(handle);
       if (marker === 0) return { type: 'Sum', variant: kind === 12 ? 'left' : 'right',
         value: readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1) };
-      if (engine.profile !== 'Declared-Modules-v1') fail('nominal value is outside Core-Bootstrap');
+      if (!engine.declaredModules) fail('nominal value is outside Core-Bootstrap');
       if (marker !== 1 && marker !== 2) fail('invalid nominal representation marker');
       if (marker === 1 && kind !== 12) fail('opaque wrapper uses an invalid sum tag');
       const module = (BigInt(runtime.cell_y(handle) >>> 0) << 32n) | BigInt(runtime.cell_x(handle) >>> 0);
@@ -146,8 +146,15 @@ function readRecipe(engine, runtime, root, depth) {
       else if (atom === 4) result.push({ literal: { type: 'Bool', value: value !== 0n } });
       else if (atom === 5) result.push({ literal: { type: 'Unit', value: null } });
       else if (atom === 2) {
-        const id = integer(Number(value), 25, 'builtin identity');
-        result.push({ invoke: `${id < 22 ? 'builtin' : id < 24 ? 'host' : 'live'}:${names[id]}` });
+        const id = integer(Number(value), 27, 'builtin identity');
+        const declaredText = engine.profile === 'Declared-Text-v1'
+          || engine.profile === 'Signed-Declared-Text-v1';
+        const cursor = declaredText || engine.profile === 'Text-Byte-Cursor-v1';
+        if (id === 26 && cursor) result.push({ invoke: 'builtin:text.byte' });
+        else if (id === 27 && declaredText) result.push({ invoke: 'builtin:<' });
+        else if (id < names.length) {
+          result.push({ invoke: `${id < 22 ? 'builtin' : id < 24 ? 'host' : 'live'}:${names[id]}` });
+        } else fail('builtin identity is outside selected profile');
       } else if (atom === 15) result.push({ invoke: `definition:${BigInt.asUintN(64, value)}` });
       else if (atom === 3) {
         const program = readBoxed(engine, runtime, child, depth + 1);
@@ -158,7 +165,7 @@ function readRecipe(engine, runtime, root, depth) {
         ...readBoxed(engine, runtime, child, depth + 1),
         schema: readSignature(engine, runtime, runtime.cell_y(handle)),
       } });
-      else if (atom >= 26 && atom <= 32 && engine.profile !== 'Declared-Modules-v1') {
+      else if (atom >= 26 && atom <= 32 && !engine.declaredModules) {
         fail('nominal or bound operation recipe is outside Core-Bootstrap');
       }
       else if (atom >= 26 && atom <= 30) result.push({ invoke: {

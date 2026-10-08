@@ -10,6 +10,7 @@ pub mod editor;
 mod emission;
 mod inference;
 mod lexer;
+mod locals;
 mod parsing;
 mod preflight;
 mod preparation;
@@ -17,7 +18,7 @@ pub mod proof;
 mod replacement;
 mod resolution;
 
-pub use declared::{BoundOperation, ModuleKind, ModulePrepared, ModuleSession};
+pub use declared::{BoundOperation, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, SignedSourceOwner};
 pub(crate) use declared::{DefinitionOrigin, verify_definition_origin, verify_named_call_origin, verify_named_export};
 
 /// Immutable source authority for the versioned Result interface. The same
@@ -55,6 +56,9 @@ impl Error {
 enum Target {
     Builtin(u32),
     Named(u32),
+    /// Finite lexical self occurrence; never a namespace lookup or an
+    /// installed-definition index until the entire owner is checked.
+    SelfOwner,
     SlotInvoke(Option<u32>),
 }
 
@@ -152,6 +156,7 @@ fn replay_preserves_targets(
             (Kind::Quotation(a), Kind::Quotation(b)) => a == b,
             (Kind::Call(Target::Builtin(a)), Kind::Call(Target::Builtin(b))) => a == b,
             (Kind::Call(Target::SlotInvoke(a)), Kind::Call(Target::SlotInvoke(b))) => a == b,
+            (Kind::Call(Target::SelfOwner), Kind::Call(Target::SelfOwner)) => true,
             (Kind::Call(Target::Named(a)), Kind::Call(Target::Named(b))) => {
                 replacements.get(*a as usize).is_some_and(|replacement| {
                     replacement.unwrap_or(*a as usize) == *b as usize
@@ -163,12 +168,34 @@ fn replay_preserves_targets(
 }
 
 #[derive(Clone, Debug)]
+struct SymbolicNode {
+    draft: u32,
+    span: crate::Span,
+    target: Option<Target>,
+}
+
+#[derive(Clone, Debug)]
+struct SignedRelation {
+    /// Source namespace slot reserved for the owner before it was installed.
+    source_slot: u32,
+    /// Every executable lexical node has exactly one rigid inferred draft;
+    /// the parser's final `def` envelope quotation is source syntax only.
+    /// Concrete environments may use different specialization slots, so this
+    /// source-order relation, not a concrete Candidate, carries the rank-1
+    /// owner check across publication and signed-only compiler ingress.
+    symbolic_nodes: alloc::vec::Vec<SymbolicNode>,
+    /// Original self occurrences, including those inside quotations.
+    lexical_nodes: alloc::vec::Vec<u32>,
+}
+
+#[derive(Clone, Debug)]
 struct Named {
     name: alloc::string::String,
     identity: u64,
     owner: Option<u64>,
     tree: Tree,
     signature: Option<noble_kernel::words::Scheme>,
+    signed: Option<SignedRelation>,
 }
 
 /// An immutable preparation. A declaration deliberately has no executable root.

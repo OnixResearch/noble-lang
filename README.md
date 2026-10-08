@@ -144,8 +144,40 @@ UTF-8 byte 0..255 for an in-range offset, -1 at exactly the byte length
 (including empty Text), -2 for a negative offset, or -3 for an offset beyond
 the length. Increment the offset only after a nonnegative byte. The operation
 does not copy a suffix, allocate an aggregate, or request a host effect.
-Ordinary `run`, declared modules, and live REPL cannot select this profile.
+Ordinary `run`, ordinary declared modules, and live REPL cannot select this
+standalone profile.
 Managed-Wasm reports from the opted-in session identify `Text-Byte-Cursor-v1`.
+
+For **pure declared Text modules**, select the separate combined profile with
+`noble session --framed --declared-modules --text-byte-cursor` or
+`noble compile SOURCE --declared-modules --text-byte-cursor`. It retains the
+same `text.byte` behavior as the standalone cursor and additionally resolves
+`<` as a pure *signed* `I64 I64 -- Bool` comparison (`-1 0 <` yields `true`).
+The combined prefix is selected by the host's flags, never by source or a
+forged kernel candidate. No `--bindings` file or host operation is permitted.
+Add `--signed-self-recursion` to allow an exported declared word with an
+explicit `signature` to call its own unqualified name at the *same* owner
+signature; different-owner/mutual or polymorphic recursion remains refused.
+Missing signatures, wrong module versions and invalid candidates do not
+publish a partially checked module. Reports identify `Declared-Text-v1` or
+`Signed-Declared-Text-v1`; no pure guest imports a host function.
+
+This combined profile also accepts immutable lexical `let name` bindings.
+Each `let` consumes the current top value until its enclosing definition,
+quotation, or root expression ends. Initial binders spell ordered parameters:
+`def add [ let right let left left right + ]` preserves the expected
+`I64 I64 -- I64` order. A nested quotation captures the *current checked
+value*, so later name shadowing cannot rebind it. Duplicate names in one
+scope and resource copying, implicit discard, or capture without the
+kernel's `Data`/Capture eligibility are refused before execution. Reflection shows
+the checked capture and stack operations, not a dynamic local name lookup;
+ordinary declared modules and standalone cursor do not acquire `let`.
+
+The selected profile makes bounded byte-wise guest parsing possible; it does
+not introduce exact BigInt/Rat values, the calculator's seven numeric budgets,
+or any CALC acceptance status. The compiled signed decimal-fold and lexical
+parameter precursors under `verification/calculator-precursor/` still use
+**wrapping** I64 arithmetic and are not exact-number implementations.
 
 ### Persistent sessions
 

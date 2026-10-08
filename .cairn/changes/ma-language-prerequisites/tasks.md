@@ -1,0 +1,11 @@
+## Phase 1: Normative contract
+
+- [x] [serial] Inspect public 0ea10d3 active cursor design and accepted module/recursion/calculator contracts; select an additive pure combined CLI profile and a signed self-owner, without reusing unchecked WIP as authority. r[B-CHECK-02] r[K-CHECK-02] r[K-DEF-03] r[DX-MODULE-04] r[CALC-GATE-01]
+
+## Phase 2: Real implementation and executable evidence
+
+- [x] [serial] Implement source parsing/resolution/immutable owner, independently checked candidate, compiler admission and actual managed-Wasm recursion/text operation. Preserve all existing profile denials and failed-preparation state. r[B-CHECK-02] r[K-CHECK-02] r[K-DEF-03] r[DX-MODULE-04]
+- [x] [serial] Run relevant behavior tests and actual framed `noble session` positive text-digit/nominal error guest in opt off/on; reject malformed/misbound/profile/bounds cases and prove later valid session input unchanged. Retain only honestly scoped precursor evidence. r[CALC-GATE-01]
+- [x] [serial] Validate exact source-bound `let name` parameter lowering, nearest-scope shadowing and quote capture on real compiled opt-off/on guests; compare stack-only forms, inspect captured recipe and refuse malformed binders, resource copy/discard/capture and invalid-then-valid sessions. Existing signed-owner version pin test protects the retained imported global. r[DX-LOCAL-01] r[DX-LOCAL-02] r[CALC-STATE-01]
+- [ ] [serial] Admit source-checked tail-position reuse within signed self, including final conditional/nominal-match branches, without relaxing unproven Core calls or non-tail paths; run real exact numeric width beyond the historical 512-frame bound with observed budgets and negative scope controls. r[K-DEF-03] r[CALC-GATE-01]
+- [ ] [serial] Update visible CLI/docs, run pinned native Cairn gates, validate and preview sync without promoting canonical/status/archive or claiming MA1, MA2 or calculator numeric budgets. r[DX-MODULE-04] r[CALC-GATE-01]

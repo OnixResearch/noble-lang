@@ -29,6 +29,9 @@ pub(super) fn node(
         noble_kernel::untrusted::Node::Invocation { def, .. } => {
             attempt!(invoke(*def, world, state))
         }
+        noble_kernel::untrusted::Node::SignedSelf { .. } => {
+            return Err(crate::Diagnostic::Unsupported)
+        }
         noble_kernel::untrusted::Node::Quotation { .. } => {
             return Err(crate::Diagnostic::Unsupported)
         }

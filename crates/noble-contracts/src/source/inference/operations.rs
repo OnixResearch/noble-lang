@@ -119,6 +119,55 @@ pub(super) fn builtin(
     Ok(())
 }
 
+/// A signed occurrence uses the already instantiated owner body's variables.
+/// In particular, a quotation cannot choose a fresh stack row or effect for
+/// its recursive call; that would silently admit polymorphic recursion.
+pub(super) fn signed_self(
+    span: crate::Span,
+    frame: &mut super::Frame,
+    state: &mut super::State,
+    scope: &super::Scope<'_>,
+    meter: &mut crate::Meter,
+) -> Result<(), crate::Diagnostic> {
+    let scheme = match frame.tree {
+        super::TreeKey::Root => scope.root_signature,
+        super::TreeKey::Named(index) => scope.session.definitions
+            .get(attempt!(crate::offset(index, span)))
+            .and_then(|definition| definition.signature.as_ref()),
+    };
+    let Some(scheme) = scheme else {
+        return Err(crate::invalid(span, "signed self requires its owner signature"));
+    };
+    let Some(body) = state.bodies.get(frame.body) else {
+        return Err(crate::internal(span));
+    };
+    if body.owner.is_none() {
+        return Err(crate::invalid(span, "signed self requires its declared module owner"));
+    }
+    let Some(variables) = body.owner_variables.as_ref() else {
+        return Err(crate::invalid(span, "signed self has no owner-body substitution"));
+    };
+    let input = attempt!(state.arena.pattern_stack(&scheme.stack_in, variables, span, meter));
+    let output = attempt!(state.arena.pattern_stack(&scheme.stack_out, variables, span, meter));
+    let effects = attempt!(state.arena.effect_pattern(&scheme.effects, variables, span, meter));
+    attempt!(state.arena.unify(frame.stack, input, span, meter));
+    frame.effect = attempt!(state.arena.effect_union(frame.effect, effects, span, meter));
+    let body_index = frame.body.checked_sub(1).unwrap_or(0);
+    let target = state.definition_base.checked_add(body_index)
+        .ok_or_else(|| crate::internal(span))?;
+    let definition = noble_kernel::contracts::Definition(attempt!(crate::index(target, span)));
+    let variables = variables.clone();
+    let id = attempt!(super::add(frame.body, super::Draft {
+        kind: super::DraftKind::SignedSelf(definition),
+        variables,
+        text: None,
+        span,
+    }, state, meter));
+    frame.sequence.push(id);
+    frame.stack = output;
+    Ok(())
+}
+
 /// A ref is selected from the root's typed borrowed-input sidecar, never
 /// constructed from a value or literal. The unqualified spelling chooses the
 /// uniquely most-specific compatible interface; ambiguous peers require the
