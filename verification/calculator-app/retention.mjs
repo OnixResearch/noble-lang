@@ -14,9 +14,12 @@ export function modulePaths(languageRoot, numericDir, here) {
   return [
     path.join(languageRoot, 'crates/noble-contracts/src/fixtures/result.noble'),
     path.join(languageRoot, 'crates/noble-contracts/src/fixtures/calc-errors.noble'),
-    ...['numeric_budget', 'bitstep', 'bitfull', 'bittrim', 'bitcompare',
-      'bitadd', 'bitsub', 'bitmul', 'bitdiv', 'bitsigned', 'bitdecode',
-      'bigint', 'rat', 'decimal'].map(name => path.join(numericDir, `${name}.noble`)),
+    // This ordering matches MA1's declared full-library registration graph.
+    ...['bitstep', 'bitdecode', 'bitfull', 'bittrim', 'bitadd', 'bitcompare',
+      'bitborrow', 'bitsub', 'bitmul', 'bitdiv', 'bitpair', 'bitsum',
+      'bitorder', 'bitsigned', 'numeric_budget_limits',
+      'numeric_budget_preflight', 'numeric_budget', 'bigint', 'rat',
+      'decimal'].map(name => path.join(numericDir, `${name}.noble`)),
     ...['calc_chars', 'calc_token', 'calc_diagnostic', 'calc_code',
       'calc_lex', 'calc_name', 'calc_parse_state', 'calc_parse', 'calc_env',
       'calc_bind', 'calc_eval', 'calc_session'].map(name => path.join(here, `${name}.noble`)),
@@ -29,8 +32,8 @@ export function modulePaths(languageRoot, numericDir, here) {
 // the CLI flag; an arbitrary argv claim is not a compiler receipt.
 export function selectedCompilerReceipt(binary, receiptPath, numericDir, languageRoot, sourceAudit) {
   if (!receiptPath) throw Error('committed MA1 compiled CLI/recipe receipt is required');
-  assert.equal(sourceAudit?.modules?.length, 28,
-    'selected compiler requires the exact 28-module calculator source audit');
+  assert.equal(sourceAudit?.modules?.length, 34,
+    'selected compiler requires the exact 34-module calculator source audit');
   const numericRoot = fs.realpathSync(path.resolve(numericDir, '../..'));
   assert.equal(fs.realpathSync(languageRoot), numericRoot,
     'selected language root differs from committed numeric source root');
@@ -77,10 +80,10 @@ export function selectedCompilerReceipt(binary, receiptPath, numericDir, languag
     assert.equal(build.tools[tool].sha256, sha256(fs.readFileSync(expected)));
   }
   const selectedPaths = modulePaths(numericRoot, numericDir, path.join(numericRoot, 'verification/calculator-app'))
-    .slice(0, 16);
+    .slice(0, 22);
   const moduleName = file => path.basename(file, '.noble').replace('-', '_');
   const expected = new Map(selectedPaths.map(file => [moduleName(file), file]));
-  assert.equal(expected.size, 16, 'selected numeric closure is not 16 modules');
+  assert.equal(expected.size, 22, 'selected numeric closure is not 22 modules');
   assert.equal(verification.module_sources?.length, expected.size);
   assert.equal(verification.retained_source_accounting?.limit_bytes, OPTED_RETAINED);
   assert.equal(verification.retained_source_accounting?.per_submission_limit_bytes, MAX_SOURCE);

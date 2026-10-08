@@ -29,8 +29,10 @@ fn calculator_session() -> Result<(ModuleSession, usize), String> {
         root.join("crates/noble-contracts/src/fixtures/result.noble"),
         root.join("crates/noble-contracts/src/fixtures/calc-errors.noble"),
     ];
-    for name in ["numeric_budget", "bitstep", "bitfull", "bittrim", "bitcompare",
-        "bitadd", "bitsub", "bitmul", "bitdiv", "bitsigned", "bitdecode",
+    for name in ["bitstep", "bitdecode", "bitfull", "bittrim", "bitadd",
+        "bitcompare", "bitborrow", "bitsub", "bitmul", "bitdiv",
+        "bitpair", "bitsum", "bitorder", "bitsigned",
+        "numeric_budget_limits", "numeric_budget_preflight", "numeric_budget",
         "bigint", "rat", "decimal"] {
         sources.push(numeric.join(format!("{name}.noble")));
     }

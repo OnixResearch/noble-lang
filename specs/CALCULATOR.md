@@ -147,7 +147,7 @@ The [calculator scenarios](conformance/calculator-cases.json) are unexecuted har
 The source-only MA2 candidate in `verification/calculator-app/` has a
 `--vectors-only` source-contract gate; that mode does not execute a guest or
 establish conformance. The executable gate requires the actual Noble CLI, the
-matching numeric module directory and language root, and (for this 28-module
+matching numeric module directory and language root, and (for this 34-module
 graph) `--retained-source-bytes 262144 --compiled-retention-receipt
 MA1_VERIFICATION_JSON`. Before probing that CLI option, it checks the committed
 MA1 full-library verification, source-bound CLI build, raw numeric guest
