@@ -28,6 +28,10 @@ fs.mkdirSync(output, { mode: 0o700 });
 const save = (name, content) => fs.writeFileSync(path.join(output, name), content, { flag: 'wx', mode: 0o600 });
 const relative = file => path.relative(root, file).split(path.sep).join('/');
 const fixtureFile = 'specs/conformance/live-reference-cases.json';
+const modelSourcePaths = [
+  'proofs/lslot/NativeStorage.lean',
+  'verification/live-slot-current-source/storage-read.c',
+];
 const fixtureBytes = fs.readFileSync(path.join(root, fixtureFile));
 const fixture = JSON.parse(fixtureBytes);
 assert.deepEqual(fixture.cases.map(row => row.id),
@@ -38,6 +42,7 @@ for (const row of fixture.cases) {
   assert.deepEqual(row.evidence, []);
 }
 const inputs = [fixtureFile, 'README.md', 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
+  ...modelSourcePaths,
   'policy/tool-selection.json', 'crates/noble-cli/Cargo.toml',
   'crates/noble-contracts/Cargo.toml', 'crates/noble-kernel/Cargo.toml',
   'crates/noble-wasm/Cargo.toml', 'crates/noble-cli/src/core/runtime/config.json',
@@ -72,6 +77,15 @@ const selectedTrees = [
 const source = sourceInventory(inputs, selectedTrees);
 const sourceRevision = revision(source);
 save('source.json', JSON.stringify({ revision: sourceRevision, sha256: source }, null, 2) + '\n');
+const modelSources = {
+  source_revision: sourceRevision,
+  sha256: Object.fromEntries(modelSourcePaths.map(file => [file, source[file]])),
+  lean_checked: false,
+  c_compiled: false,
+  wasm_lean_c_refinement: 'not-established',
+};
+const modelSourcesReceipt = JSON.stringify(modelSources, null, 2) + '\n';
+save('model-sources.json', modelSourcesReceipt);
 save('canonical-fixture.json', fixtureBytes);
 const config = JSON.parse(fs.readFileSync(path.join(root,
   'crates/noble-cli/src/core/runtime/config.json')));
@@ -1303,6 +1317,8 @@ const acceptance = {
   schema: 'noble-live-slot-current-source-diagnostic/v1', result,
   canonical_promotion: false, proof: 'open',
   source_revision: sourceRevision, source_sha256: source,
+  model_sources: { ...modelSources,
+    receipt: { path: 'model-sources.json', sha256: sha(modelSourcesReceipt) } },
   fixture: { path: fixtureFile, sha256: sha(fixtureBytes), canonical_state_unchanged: true },
   tool_selection: { configuration_sha256: source['policy/tool-selection.json'],
     runtime_configuration_sha256: source['crates/noble-cli/src/core/runtime/config.json'],
@@ -1322,12 +1338,18 @@ const acceptance = {
   external_evidence_sha256: evidenceFiles, integrity_issues: issues,
   limitations: [
     'All nine canonical cases remain absent/not-run/open/unassessed; this external diagnostic does not promote any case.',
+    'NativeStorage.lean and storage-read.c are source-bound only: this gate neither checks Lean nor compiles C nor establishes Wasm/Lean/C refinement. A separate source-bound check with pinned Lean and C tools and selected Wasm comparisons is required before any proof claim.',
     'The startup-variable check and recorded child environment cannot attest to a preload that already ran and removed its own indicator; invoke the pinned Node with a clean env -i environment.',
     'LSLOT-05 has a bounded experimental anonymous D/P control after trusted-worker retained-owner graph reinspection, but the symbolic fixture P2/D2, selected captured-target Wasm and exact P/D/C/Q/A/artifact Lean proof with applicability negatives remain unestablished.',
     'LSLOT-08 now has a D-neutral selected dynamic owner transitive last-pin retention control, but replay still lacks canonical captured I64:5 Dtrace and scripted ok-A/ok-B responses; exact replay never grants real effects.',
     'LSLOT-02 has selected CLI matches for both complete epoch-1 multi-slot variants, including effect-set reflection and per-dispatch host authority; this external diagnostic does not promote unchanged canonical case states. Several admission/static negatives and the exact typed LSLOT-09 legacy caller remain profile-limited.',
   ],
 };
+if (acceptance.proof !== 'open' || acceptance.canonical_promotion)
+  throw new Error('diagnostic gate cannot assert proof or promote canonical cases');
+if (modelSources.lean_checked || modelSources.c_compiled ||
+    modelSources.wasm_lean_c_refinement !== 'not-established')
+  throw new Error('model sources cannot claim unperformed Lean/C or refinement checks');
 save('receipt.json', JSON.stringify(acceptance, null, 2) + '\n');
 console.log(JSON.stringify({ result, receipt: path.join(output, 'receipt.json'),
   source_revision: sourceRevision, ...summary, integrity_issues: issues.length }));

@@ -131,6 +131,8 @@ fn lower(checked: &Value) -> Result<(String, String), output::Failure> {
     }
     if quote["schema"] != "noble-live-slot-installed-direct-scalar-quote/v1"
         || quote["scope"] != "one captured I64 quote-entry step only; no dispatch or full composite proof"
+        || quote["execution_backend"] != "bounded decoded installed operators; not an actual V8 guest transition"
+        || quote["sidecar_scope"] != "unchanged under speculative slot overlay only; actual guest sidecar not observed"
         || quote["module_sha256"] != native
         || quote["memory_sha256"] != initial_memory
         || quote["literal"] != first

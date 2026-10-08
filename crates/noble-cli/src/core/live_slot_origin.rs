@@ -113,6 +113,7 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
         .ok_or_else(|| denied("code span overflow"))?;
     let mut functions = BTreeMap::<u32, String>::new();
     let mut globals = BTreeMap::<u32, String>::new();
+    let mut global_imports = Vec::new();
     let mut function_bodies = Vec::new();
     let mut imported_functions = 0u32;
     let mut function_types = Vec::new();
@@ -134,6 +135,10 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
                     wasmparser::TypeRef::Func(index) | wasmparser::TypeRef::FuncExact(index) => {
                         function_types.push(index);
                         imported_functions += 1;
+                    }
+                    wasmparser::TypeRef::Global(ty) => {
+                        global_imports.push((import.module.to_owned(), import.name.to_owned(),
+                            ty.content_type, ty.mutable, ty.shared));
                     }
                     wasmparser::TypeRef::Table(_) => {
                         if import.module != "noble" || import.name != "table" || table_imports != 0 {
@@ -201,6 +206,7 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
         }
     }
     let unique_functions = functions.values().collect::<BTreeSet<_>>();
+    super::native::verify_global_imports(&global_imports, &globals)?;
     if table_imports != 1 { return Err(denied("selected module lacks the host dispatch table")); }
     if unique_functions.len() != functions.len() || globals.values().collect::<BTreeSet<_>>().len() != globals.len() {
         return Err(denied("ambiguous function or global name"));
@@ -1457,17 +1463,21 @@ mod tests {
             &imported, 3, &[4097, 4098], None).is_ok() {
             return Err("installed child helper accepted a stale epoch edge after mutation".into());
         }
-        let quote_globals = json!([
-            {"name":"failure","type":"i32","value":"0"},
-            {"name":"sp","type":"i32","value":"0"},
-            {"name":"cp","type":"i32","value":"0"},
-            {"name":"rp","type":"i32","value":"0"},
-            {"name":"live_frame","type":"i32","value":"0"},
-            {"name":"heap_cursor","type":"i32","value":"3"},
-            {"name":"operand_limit","type":"i32","value":"2048"},
-            {"name":"operand_peak","type":"i32","value":"0"},
-            {"name":"quote_invocations","type":"i32","value":"0"}
+        let abi: Value = serde_json::from_str(include_str!("runtime/abi.json"))
+            .map_err(|error| format!("selected host ABI unavailable: {error}"))?;
+        let mut quote_globals = abi["globals"].as_array()
+            .ok_or("selected host ABI has no shared global list")?.iter().map(|row|
+                json!({"name":row["name"],"type":row["type"],
+                    "value":row["value"].as_str().map(str::to_owned)
+                        .unwrap_or_else(|| row["value"].to_string())})).collect::<Vec<_>>();
+        quote_globals.extend([
+            json!({"name":"live_target","type":"i32","value":"0"}),
+            json!({"name":"live_frame","type":"i32","value":"0"}),
         ]);
+        for row in &mut quote_globals {
+            if row["name"] == "heap_cursor" { row["value"] = json!("3"); }
+        }
+        let quote_globals = json!(quote_globals);
         let memory_sha = crate::workflow::intrinsic::sha256(&imported);
         let quote_request = || Some(super::super::native::QuoteRequest {
             imported_globals:&quote_globals, environment:4097, captured:-9,
@@ -1484,6 +1494,45 @@ mod tests {
             || slot["final_quote_invocations"] != "1"
             || slot["heap_and_refcount_writes"] != 0 {
             return Err("installed scalar quote changed padding, I64 bits or refcount transition".into());
+        }
+        let mut wrong_rows = quote_globals.clone();
+        wrong_rows[0]["name"] = json!("sp");
+        if super::super::native::probe_storage(
+            &binary, &binary_sha, &binary, &binary_sha,
+            &imported, 3, &[4097, 4098],
+            Some(super::super::native::QuoteRequest {
+                imported_globals:&wrong_rows, environment:4097, captured:-9,
+                memory_sha256:&memory_sha })).is_ok() {
+            return Err("renamed host global snapshot bypassed selected ABI ordering".into());
+        }
+        let mut wrapped_rows = quote_globals.clone();
+        let counter = wrapped_rows.as_array_mut().ok_or("host globals are not an array")?
+            .iter_mut().find(|row| row["name"] == "quote_invocations")
+            .ok_or("host ABI has no quote counter")?;
+        counter["value"] = json!("-1");
+        let wrapped = super::super::native::probe_storage(
+            &binary, &binary_sha, &binary, &binary_sha,
+            &imported, 3, &[4097, 4098],
+            Some(super::super::native::QuoteRequest {
+                imported_globals:&wrapped_rows, environment:4097, captured:-9,
+                memory_sha256:&memory_sha }))?;
+        if wrapped["scalar_quote_step"]["final_quote_invocations"] != "0" {
+            return Err("selected scalar quote did not wrap the imported i32 counter".into());
+        }
+        for (name, value) in [("operand_limit", "15"), ("failure", "1")] {
+            let mut refused_rows = quote_globals.clone();
+            let selected = refused_rows.as_array_mut().ok_or("host globals are not an array")?
+                .iter_mut().find(|row| row["name"] == name)
+                .ok_or("host ABI lacks a selected mutable global")?;
+            selected["value"] = json!(value);
+            if super::super::native::probe_storage(
+                &binary, &binary_sha, &binary, &binary_sha,
+                &imported, 3, &[4097, 4098],
+                Some(super::super::native::QuoteRequest {
+                    imported_globals:&refused_rows, environment:4097, captured:-9,
+                    memory_sha256:&memory_sha })).is_ok() {
+                return Err(format!("selected scalar quote accepted invalid {name}"));
+            }
         }
         imported[child + 8..child + 16].copy_from_slice(&(-8i64).to_le_bytes());
         if super::super::native::probe_storage(
@@ -1540,6 +1589,30 @@ mod tests {
                 &changed_binary, &changed_sha, &changed_binary, &changed_sha,
                 &imported, 3, &[4097, 4098], quote_request()).is_ok() {
                 return Err(format!("installed scalar quote executed unsupported {label}"));
+            }
+        }
+        let sp_import = "(import \"noble\" \"sp\" (global $sp (mut i32)))";
+        let cp_import = "(import \"noble\" \"cp\" (global $cp (mut i32)))";
+        let frame_import = "(import \"noble\" \"live_frame\" (global $live_frame (mut i32)))";
+        for (changed, label) in [
+            (wat.replacen(sp_import,
+                "(import \"noble\" \"cp\" (global $sp (mut i32)))", 1)
+                .replacen(cp_import, sp_import, 1), "swapped imported globals"),
+            (wat.replacen(sp_import,
+                "(import \"noble\" \"renamed_sp\" (global $sp (mut i32)))", 1),
+                "renamed imported global"),
+            (wat.replacen(frame_import,
+                "(global $live_frame (mut i32) (i32.const 0))", 1),
+                "defined substitute for imported global"),
+        ] {
+            if changed == wat { return Err(format!("{label} mutation did not match original imports")); }
+            let changed_binary = super::super::assemble_slot(changed.as_bytes())?;
+            let changed_sha = crate::workflow::intrinsic::sha256(&changed_binary);
+            if super::super::native::probe_storage(
+                &changed_binary, &changed_sha, &changed_binary, &changed_sha,
+                &imported, 3, &[4097, 4098], quote_request()).is_ok()
+                || verify(&changed_binary, &origin, &install).is_ok() {
+                return Err(format!("{label} borrowed the original host-global object"));
             }
         }
         for (old, replacement, label) in [

@@ -12,6 +12,51 @@ mod quote;
 
 fn denied(reason: &str) -> String { format!("selected native body witness refused: {reason}") }
 
+// The emitter imports all shared globals in this order; the host ABI's JSON
+// lists the same objects in a different order. Bind the actual Wasm *indices*
+// and types, not only the optional Name section's labels or a value's name.
+pub(super) fn verify_global_imports(
+    imports: &[(String, String, ValType, bool, bool)],
+    names: &BTreeMap<u32, String>,
+) -> Result<(), String> {
+    const ORDER: &[&str] = &[
+        "failure", "quota_reason", "phase", "heap_cursor", "heap_baseline",
+        "allocation_limit", "recipe_limit", "depth_limit", "operand_limit",
+        "continuation_limit", "step_limit", "allocation_peak", "operand_peak",
+        "continuation_peak", "steps", "quote_invocations", "sp", "cp",
+        "observed_program", "recipe_count", "reflection_steps", "rp",
+        "generation", "allocated_total", "released_total", "live_target",
+        "live_frame",
+    ];
+    let abi: Value = serde_json::from_str(include_str!("runtime/abi.json"))
+        .map_err(|_| denied("selected shared-global ABI is unavailable"))?;
+    let rows = abi["globals"].as_array()
+        .ok_or_else(|| denied("selected shared-global ABI is incomplete"))?;
+    if imports.len() != ORDER.len() || rows.len() + 2 != ORDER.len()
+        || names.values().collect::<BTreeSet<_>>().len() != names.len() {
+        return Err(denied("installed global imports or names differ from the shared ABI"));
+    }
+    for (index, (&name, (module, imported_name, actual, mutable, shared))) in
+        ORDER.iter().zip(imports).enumerate() {
+        let expected = if ["live_target", "live_frame"].contains(&name) {
+            ValType::I32
+        } else {
+            let row = rows.iter().find(|row| row["name"] == name)
+                .ok_or_else(|| denied("shared ABI lacks an imported global"))?;
+            match row["type"].as_str() {
+                Some("i32") => ValType::I32,
+                Some("i64") => ValType::I64,
+                _ => return Err(denied("unsupported shared-global ABI type")),
+            }
+        };
+        if module.as_str() != "noble" || imported_name.as_str() != name || *actual != expected
+            || !*mutable || *shared || names.get(&(index as u32)).map(String::as_str) != Some(name) {
+            return Err(denied("installed shared-global index, import identity or type changed"));
+        }
+    }
+    Ok(())
+}
+
 struct Module<'a> {
     bytes: &'a [u8],
     sha256: &'a str,
@@ -20,6 +65,7 @@ struct Module<'a> {
     names: BTreeMap<u32, String>,
     by_name: BTreeMap<String, u32>,
     globals: BTreeMap<u32, String>,
+    global_imports: Vec<(String, String, ValType, bool, bool)>,
     segments: BTreeMap<String, u32>,
     elements: Vec<Vec<u32>>,
     bodies: Vec<wasmparser::FunctionBody<'a>>,
@@ -28,6 +74,13 @@ struct Module<'a> {
 }
 
 impl<'a> Module<'a> {
+    fn global_bindings(&self) -> Value {
+        json!(self.global_imports.iter().enumerate().map(|(index, (_, name, ty, _, _))|
+            json!({"index":index,"name":name,"type":match ty {
+                ValType::I32 => "i32", ValType::I64 => "i64", _ => unreachable!(),
+            }})).collect::<Vec<_>>())
+    }
+
     fn parse(bytes: &'a [u8], expected_sha256: &'a str) -> Result<Self, String> {
         if crate::workflow::intrinsic::sha256(bytes) != expected_sha256 {
             return Err(denied("original installed Wasm bytes differ from selected donor SHA"));
@@ -36,6 +89,7 @@ impl<'a> Module<'a> {
         let mut module = Self {
             bytes, sha256:expected_sha256, imported:0, imports:BTreeMap::new(),
             names:BTreeMap::new(), by_name:BTreeMap::new(), globals:BTreeMap::new(),
+            global_imports:Vec::new(),
             segments:BTreeMap::new(),
             elements:Vec::new(), bodies:Vec::new(), function_types:Vec::new(), types:Vec::new(),
         };
@@ -46,13 +100,20 @@ impl<'a> Module<'a> {
                 },
                 Payload::ImportSection(section) => for import in section {
                     let import = import.map_err(|_| denied("invalid installed import"))?;
-                    if let wasmparser::TypeRef::Func(ty) | wasmparser::TypeRef::FuncExact(ty) = import.ty {
-                        module.function_types.push(ty);
-                        if module.imports.insert(module.imported,
-                            (import.module.to_owned(), import.name.to_owned())).is_some() {
-                            return Err(denied("duplicate imported function index"));
+                    match import.ty {
+                        wasmparser::TypeRef::Global(ty) => {
+                            module.global_imports.push((import.module.to_owned(), import.name.to_owned(),
+                                ty.content_type, ty.mutable, ty.shared));
                         }
-                        module.imported += 1;
+                        wasmparser::TypeRef::Func(ty) | wasmparser::TypeRef::FuncExact(ty) => {
+                            module.function_types.push(ty);
+                            if module.imports.insert(module.imported,
+                                (import.module.to_owned(), import.name.to_owned())).is_some() {
+                                return Err(denied("duplicate imported function index"));
+                            }
+                            module.imported += 1;
+                        }
+                        _ => {},
                     }
                 },
                 Payload::FunctionSection(section) => for ty in section {
@@ -100,6 +161,7 @@ impl<'a> Module<'a> {
             || module.function_types.len() > 4096 {
             return Err(denied("incomplete or unbounded installed function map"));
         }
+        verify_global_imports(&module.global_imports, &module.globals)?;
         // This bounded returned target is pure. A changed/duplicated host
         // import is not part of its semantic closure, even if signatures
         // happen to match and the altered binary remains valid WebAssembly.
@@ -295,6 +357,8 @@ pub(super) fn probe_storage(
     Ok(json!({"schema":"noble-live-slot-installed-storage-one-state/v1",
         "scope":"exact selected storage/child/metadata reads and stale-epoch negatives only; writes/refcounts/future calls unproved",
         "native_module_sha256":core_sha,"static_module_sha256":static_sha,
+        "installed_global_bindings":{"native":core.global_bindings(),
+            "static":static_donor.global_bindings()},
         "selected_handles":handles,"heap_cursor":cursor,
         "scalar_quote_step":scalar_quote_step}))
 }

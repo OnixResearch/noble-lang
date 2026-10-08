@@ -406,10 +406,25 @@ class SlotEngine {
       || !Array.isArray(origin.outputs))) {
       return slotReply('install-refused', { diagnostic: 'host-selected origin differs from installed selected target' });
     }
+    const hostImports = this.imports(request.id);
+    const globalBindings = WebAssembly.Module.imports(compiled.module)
+      .filter(({ kind }) => kind === 'global')
+      .map(({ module, name }, index) => {
+        const expected = this.abi.globals.find(global => global.name === name);
+        const object = hostImports[name];
+        if (module !== this.abi.module || !expected
+          || !(object instanceof WebAssembly.Global) || object !== this.shared[name]) {
+          throw Error('selected installed global does not alias the shared host object');
+        }
+        return { index, name, type: expected.type, object };
+      });
+    if (globalBindings.length !== this.abi.globals.length) {
+      throw Error('selected installed module has an incomplete shared global set');
+    }
     const sourceCatalog = this.registry.admitResourceCatalog(request.host_owner,
       request.source_artifact_sha256, request.resource_catalog, request.source_schemas);
     const instance = new WebAssembly.Instance(compiled.module,
-      { [this.abi.module]: this.imports(request.id) });
+      { [this.abi.module]: hostImports });
     const handle = instance.exports.install_target() >>> 0;
     if (handle === 0) throw Error(`checked inert install failed: failure=${this.shared.failure.value}, `
       + `quota_reason=${this.shared.quota_reason.value}, phase=${this.shared.phase.value}, `
@@ -475,7 +490,7 @@ class SlotEngine {
     const token = this.registry.registerModule(compiled.digest, request.live_sites,
       checked.stack_in, sourceCatalog, request.source_artifact_sha256);
     for (const program of pinned) this.handles.set(program, { instance, moduleId: request.id });
-    this.modules.set(request.id, { ...request, token, handle, instance, pinned,
+    this.modules.set(request.id, { ...request, token, handle, instance, pinned, globalBindings,
       artifactSha256: compiled.digest, installed: true, checkedEntries,
       published: false, versionOwned: new Set(), compositeOwned: new Set(),
       replayOwned: new Set(),
@@ -1375,6 +1390,15 @@ class SlotEngine {
             module.instance.exports.module_program_handle(index) >>> 0);
         };
         const nativeRoots = roots(core), staticRoots = roots(caller);
+        const boundGlobals = module => {
+          if (module.globalBindings?.length !== this.abi.globals.length
+            || module.globalBindings.some(({ name, object }) =>
+              !(object instanceof WebAssembly.Global) || object !== this.shared[name])) {
+            throw Error('selected donor no longer aliases the installed shared global objects');
+          }
+          return module.globalBindings.map(({ index, name, type }) => ({ index, name, type }));
+        };
+        const nativeBindings = boundGlobals(core), staticBindings = boundGlobals(caller);
         const memory = Buffer.from(this.memory.buffer);
         if (memory.length !== 20 * 65536 || this.shared.failure.value !== 0
           || this.shared.sp.value !== 0 || this.shared.cp.value !== 0
@@ -1387,6 +1411,7 @@ class SlotEngine {
           owner_handle: saved.handle,
           imported_globals: this.abi.globals.map(({ name, type }) =>
             ({ name, type, value: String(this.shared[name].value) })),
+          imported_global_bindings: { native: nativeBindings, static: staticBindings },
           native_roots: nativeRoots, static_roots: staticRoots,
           scope: 'one-idle-state-only; not future-invocation semantics',
         };

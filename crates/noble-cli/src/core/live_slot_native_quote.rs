@@ -66,13 +66,26 @@ impl<'a, 'm, 's> Runner<'a, 'm, 's> {
             Self::decode(module, "push_tag", &[ValType::I32, ValType::I64], 2)?,
         ];
         let rows = imported.as_array().ok_or_else(refused)?;
+        let abi: Json = serde_json::from_str(include_str!("runtime/abi.json"))
+            .map_err(|_| refused())?;
+        let expected = abi["globals"].as_array().ok_or_else(refused)?;
+        if rows.len() != expected.len() + 2 || module.global_imports.len() != rows.len() {
+            return Err(refused());
+        }
+        for (at, row) in rows.iter().enumerate() {
+            let (name, ty) = if at < expected.len() {
+                (expected[at]["name"].as_str().ok_or_else(refused)?,
+                    expected[at]["type"].as_str().ok_or_else(refused)?)
+            } else {
+                (if at == expected.len() { "live_target" } else { "live_frame" }, "i32")
+            };
+            if row["name"] != name || row["type"] != ty {
+                return Err(refused());
+            }
+        }
         let mut globals = [0u32; 9];
         for (at, name) in ["failure", "sp", "cp", "rp", "live_frame", "heap_cursor",
             "operand_limit", "operand_peak", "quote_invocations"].iter().enumerate() {
-            let mut installed = module.globals.values().filter(|found| found.as_str() == *name);
-            if installed.next().is_none() || installed.next().is_some() {
-                return Err(refused());
-            }
             let mut matching = rows.iter().filter(|row| row["name"].as_str() == Some(*name));
             let row = matching.next().ok_or_else(refused)?;
             if matching.next().is_some() || row["type"] != "i32" {
@@ -116,6 +129,15 @@ impl<'a, 'm, 's> Runner<'a, 'm, 's> {
         Self::get_global(&self.globals, name)
     }
 
+    fn imported_global(&self, index: u32) -> Result<&str, String> {
+        let name = self.module.global_imports.get(index as usize)
+            .map(|(_, name, _, _, _)| name.as_str()).ok_or_else(refused)?;
+        if self.module.globals.get(&index).map(String::as_str) != Some(name) {
+            return Err(refused());
+        }
+        Ok(name)
+    }
+
     fn skip(ops: &[Operator<'_>], at: usize, stop_at_else: bool) -> Result<usize, String> {
         let mut nesting = 0usize;
         for (next, op) in ops.iter().enumerate().skip(at + 1) {
@@ -156,18 +178,19 @@ impl<'a, 'm, 's> Runner<'a, 'm, 's> {
                     None
                 }
                 Operator::GlobalGet { global_index } => {
-                    let name = self.module.globals.get(global_index).ok_or_else(refused)?;
+                    let name = self.imported_global(*global_index)?;
                     if !["failure", "sp", "operand_limit", "operand_peak", "quote_invocations"]
-                        .contains(&name.as_str()) { return Err(refused()); }
+                        .contains(&name) { return Err(refused()); }
                     Some(Value::I32(self.globals[Self::global_slot(name)?]))
                 }
                 Operator::GlobalSet { global_index } => {
-                    let name = self.module.globals.get(global_index).ok_or_else(refused)?;
-                    if !["sp", "operand_peak", "quote_invocations"].contains(&name.as_str()) {
+                    let name = self.imported_global(*global_index)?;
+                    if !["sp", "operand_peak", "quote_invocations"].contains(&name) {
                         return Err(refused());
                     }
+                    let slot = Self::global_slot(name)?;
                     let next = pop32(&stack, &mut top)?;
-                    self.globals[Self::global_slot(name)?] = next;
+                    self.globals[slot] = next;
                     None
                 }
                 Operator::I32Const { value } => Some(Value::I32(*value as u32)),
@@ -297,6 +320,8 @@ pub(super) fn probe<'a, 'm>(module: &'m Module<'a>, storage: &storage::Machine<'
     // abstracted as a no-op; any such instruction or helper is refused.
     Ok(json!({"schema":"noble-live-slot-installed-direct-scalar-quote/v1",
         "scope":"one captured I64 quote-entry step only; no dispatch or full composite proof",
+        "execution_backend":"bounded decoded installed operators; not an actual V8 guest transition",
+        "sidecar_scope":"unchanged under speculative slot overlay only; actual guest sidecar not observed",
         "module_sha256":module.sha256,"memory_sha256":memory_sha256,
         "environment":environment,"capture":child,"literal":captured.to_string(),
         "initial_sp":0,"final_sp":1,"before_slot":before,"after_slot":runner.slot,

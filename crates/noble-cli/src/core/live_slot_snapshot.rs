@@ -197,6 +197,7 @@ fn observed_literals(graph: &Value, handles: &[u32]) -> Result<(Value, u32), Str
         .ok_or_else(|| denied("snapshot has no nested composition"))?;
     let first_quote = inner["a"].as_u64().and_then(|index| usize::try_from(index).ok())
         .and_then(|index| handles.get(index)).copied()
+        .filter(|handle| *handle >= 4096)
         .ok_or_else(|| denied("first captured quote has no physical environment handle"))?;
     Ok((json!([literal(&inner["a"])?, literal(&inner["b"])?]), first_quote))
 }
@@ -237,6 +238,15 @@ pub(super) fn check(snapshot: &Value, manifest: &Value, subject: &Value,
         core_bytes, core_sha, static_bytes, static_sha, &memory, cursor, &handles,
         Some(super::native::QuoteRequest { imported_globals:&globals,
             environment:first_quote, captured, memory_sha256:imported_sha }))?;
+    let snapshot_bindings = &snapshot["imported_global_bindings"];
+    let installed_bindings = &installed_storage["installed_global_bindings"];
+    if !snapshot_bindings["native"].is_array()
+        || !snapshot_bindings["static"].is_array()
+        || !installed_bindings["native"].is_array()
+        || !installed_bindings["static"].is_array()
+        || snapshot_bindings != installed_bindings {
+        return Err(denied("imported global bindings differ from installed module imports"));
+    }
     Ok(json!({"schema":"noble-live-slot-one-idle-state-replay/v1",
         "scope":"one-state-layout-only; native helper/dispatch semantics not established",
         "memory_sha256":snapshot["memory_sha256"],"memory_length":memory.len(),
@@ -279,23 +289,38 @@ mod tests {
             {"kind":4,"x":1,"a":4}, {"kind":4,"x":1,"a":5},
             {"kind":1,"payload":"2"}, {"kind":1,"payload":"-7"}
         ]);
-        if observed_literals(&graph)? != json!(["2","-7"]) {
+        // This vector is hand-authored for the shape test, not authenticated by memory.
+        let handles = [4096, 4097, 4098, 4099, 4100, 4101];
+        let (literals, first_quote) = observed_literals(&graph, &handles)?;
+        if literals != json!(["2","-7"]) {
             return Err("selected quote shape lost physical captured values".into());
+        }
+        if first_quote != 4098 {
+            return Err("first quote environment did not select its indexed handle".into());
         }
         let mut wrong_shape = graph.clone();
         wrong_shape[2]["x"] = json!(2);
-        if observed_literals(&wrong_shape).is_ok() {
+        if observed_literals(&wrong_shape, &handles).is_ok() {
             return Err("changed native quote entry shape acquired captured literals".into());
         }
         let mut wrong_capture = graph.clone();
         wrong_capture[4]["kind"] = json!(4);
-        if observed_literals(&wrong_capture).is_ok() {
+        if observed_literals(&wrong_capture, &handles).is_ok() {
             return Err("non-I64 captured cell acquired selected I64 literal".into());
         }
         let mut substituted_value = graph.clone();
         substituted_value[4]["payload"] = json!("3");
-        if observed_literals(&substituted_value)? == json!(["2","-7"]) {
+        let (changed_literals, unchanged_quote) = observed_literals(&substituted_value, &handles)?;
+        if changed_literals != json!(["3","-7"]) || unchanged_quote != 4098 {
             return Err("changed captured I64 retained the old physical literal witness".into());
+        }
+        if observed_literals(&graph, &handles[..2]).is_ok() {
+            return Err("missing first quote environment handle passed".into());
+        }
+        let mut invalid_handles = handles;
+        invalid_handles[2] = 0;
+        if observed_literals(&graph, &invalid_handles).is_ok() {
+            return Err("invalid first quote environment handle passed".into());
         }
         let manifest = json!({"descriptor":{"owner":{"handle":4097}}});
         let snapshot = json!({"owner_handle":4097});
@@ -312,6 +337,46 @@ mod tests {
         retained_owner(&imported, 4097, 2)?;
         if retained_owner(&imported, 8193, 1).is_ok() {
             return Err("owner outside heap cursor passed retained-root guard".into());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn quote_environment_requires_complete_physical_epoch() -> Result<(), String> {
+        let mut imported = vec![0; MEMORY_BYTES];
+        let kinds = [4u32, 4, 4, 4, 1, 1];
+        let edges = [[4097u32, 0, 0], [4098, 4099, 0],
+            [4100, 0, 0], [4101, 0, 0], [0, 0, 0], [0, 0, 0]];
+        for index in 0..kinds.len() {
+            let at = CELL_BASE + index * CELL_BYTES;
+            imported[at..at + 4].copy_from_slice(&kinds[index].to_le_bytes());
+            imported[at + 4..at + 8].copy_from_slice(&(4096 + index as u32).to_le_bytes());
+            for (edge, handle) in edges[index].iter().enumerate() {
+                let offset = at + 16 + edge * 4;
+                imported[offset..offset + 4].copy_from_slice(&handle.to_le_bytes());
+            }
+        }
+        for index in [2usize, 3] {
+            let at = CELL_BASE + index * CELL_BYTES + 28;
+            imported[at..at + 4].copy_from_slice(&1u32.to_le_bytes());
+        }
+        for (index, literal) in [(4usize, 2i64), (5, -7)] {
+            let at = CELL_BASE + index * CELL_BYTES + 8;
+            imported[at..at + 8].copy_from_slice(&literal.to_le_bytes());
+        }
+        let (graph, authenticated_handles) = complete_graph(&imported, 4096, 6)?;
+        let (literals, first_quote) = observed_literals(&graph, &authenticated_handles)?;
+        if literals != json!(["2", "-7"]) {
+            return Err("physical graph did not reconstruct selected quote captures".into());
+        }
+        if first_quote != 4098 {
+            return Err("physical graph did not bind the first quote environment".into());
+        }
+        let quote_header = CELL_BASE + 2 * CELL_BYTES + 4;
+        imported[quote_header..quote_header + 4].copy_from_slice(&8194u32.to_le_bytes());
+        match complete_graph(&imported, 4096, 6) {
+            Err(reason) if reason.contains("epoch header differs") => {}
+            _ => return Err("stale quote epoch reached a quote receipt".into()),
         }
         Ok(())
     }
