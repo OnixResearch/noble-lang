@@ -8,7 +8,7 @@ use wasmtime::{Caller, Config, Engine, ExternType, Global, Linker as CoreLinker,
     Ref, Store, StoreLimits, StoreLimitsBuilder, Table, Val};
 use wasmtime::component::{Component, Linker, Resource, ResourceTable, ResourceType};
 
-use super::worker_program::{Handle, Store as ProgramStore};
+use super::worker_program::{Handle, Refusal, Store as ProgramStore};
 
 const INTERFACE: &str = "noble-test:worker-program/programs@2.0.0";
 pub(super) const FUEL: u64 = 10_000_000;
@@ -929,6 +929,15 @@ impl std::fmt::Display for ForeignOrStaleProgramNode {
 }
 impl std::error::Error for ForeignOrStaleProgramNode {}
 
+#[derive(Debug)]
+struct UnselectedProgramNode;
+impl std::fmt::Display for UnselectedProgramNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Program node is not rooted in the selected source export")
+    }
+}
+impl std::error::Error for UnselectedProgramNode {}
+
 #[derive(Clone, Copy)]
 struct BatchIterations(u16);
 impl BatchIterations {
@@ -948,6 +957,11 @@ enum GuestAction<'a> { Invoke, CodeExport(&'a str), CoreCodeExport }
 
 fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: TaskOwner)
     -> Result<Store<Host>> {
+    source.require_selected_root(root).map_err(|refusal| match refusal {
+        Refusal::Invalid => anyhow::Error::new(ForeignOrStaleProgramNode),
+        Refusal::Unsupported => anyhow::Error::new(UnselectedProgramNode),
+        Refusal::Exhausted => anyhow::Error::new(UnselectedProgramNode),
+    })?;
     let installation = NEXT_INSTALLATION.fetch_update(Ordering::Relaxed, Ordering::Relaxed,
         |next| next.checked_add(1))
         .map_err(|_| anyhow::anyhow!("Worker installation IDs exhausted"))?;
@@ -1945,7 +1959,10 @@ mod tests {
         let double = source.checked_root(0).unwrap();
         let adapted = source.adapt(root, &noble_kernel::types::EffSet::empty()).unwrap();
         let chosen = source.select(&[adapted, double], 1).unwrap();
-        assert_eq!(execute(&mut source, chosen, 3, 1).unwrap().value, 6);
+        assert!(matches!(execute(&mut source, chosen, 3, 1),
+            Err(GuestFailure::Invalid(problem))
+                if problem.downcast_ref::<UnselectedProgramNode>().is_some()),
+            "a checked dependency cannot independently become the installed selected root");
         let composed = source.compose(root, double).unwrap();
         assert!(source.recipe_edges(composed).is_some());
         let observed = execute(&mut source, composed, 3, 1).unwrap();
@@ -1978,13 +1995,21 @@ mod tests {
     fn dependent_equal_text_atoms_keep_their_distinct_checked_owners_in_guest() {
         let bytes = b"module Worker@1 [ def helper [ \"same\" drop 2 * ] export plus def plus [ \"same\" drop helper 1 + ] ]";
         let (mut source, root) = ProgramStore::prepare(
-            bytes, "plus", &[Ty::I64], 80_000_000).unwrap();
+            bytes, "plus", &[Ty::I64], 120_000_000).unwrap();
         let helper = source.checked_root(0).unwrap();
         assert_ne!(source.source_owner_identity(helper), source.source_owner_identity(root));
         assert_eq!(source.text_aliases().len(), 2);
         assert_eq!(source.text_aliases()[0].bytes, source.text_aliases()[1].bytes);
         assert_eq!(execute(&mut source, root, 3, 1).unwrap().value, 7);
-        assert_eq!(execute(&mut source, helper, 3, 1).unwrap().value, 6);
+        assert!(matches!(execute(&mut source, helper, 3, 1),
+            Err(GuestFailure::Invalid(problem))
+                if problem.downcast_ref::<UnselectedProgramNode>().is_some()),
+            "the nested checked Text owner cannot independently obtain a WIT Program");
+        let dependency_only = source.compose(helper, helper).unwrap();
+        assert!(matches!(execute(&mut source, dependency_only, 3, 1),
+            Err(GuestFailure::Invalid(problem))
+                if problem.downcast_ref::<UnselectedProgramNode>().is_some()),
+            "composing only dependency nodes does not recover selected-root authority");
         let composed = source.compose(helper, root).unwrap();
         assert!(source.source_owner_identity(composed).is_none(),
             "a composition is not a source-named owner");

@@ -318,6 +318,20 @@ for binary SHA-256
 They predate fixture-only test-budget corrections and do not establish an
 exact-number current28 gate, complete Worker package suite, selected vendor,
 canonical acceptance, or a full Cairn closeout.
+The later combined successor closes a Worker package authority escape:
+only the checked selected named root or a bounded composition containing it
+may be packaged or installed as a WIT Program. A checked dependency alone,
+including a composition of dependencies, cannot inherit the selected root's
+export grant; a foreign or retired source instance remains invalid. The
+source-bound scoped rerun passed all eight Worker Program package tests,
+22 installed-guest tests, and four host-child tests. A fresh direct Worker
+guest denied request 257 after 256 committed effects without issuing an I64
+value and refused the fifth ledger byte-quota request. Its raw report is
+`/home/brittonr/.cache/noble-live-epoch-combined-guest-tmp-20261008/root-authority-f324/combined-worker-direct-raw.json`
+for binary SHA-256
+`604a37322cce7ab8a880134cb0f73f2e1fc85ca89942172e49b91d1a4af77aef`.
+These patched-source checks do not rerun the prior LIVE or signed-epoch
+scenarios, certify Worker Send, or promote canonical acceptance.
 
 **Declared source retention is a separate opt-in bound**, not a larger input
 limit. Without `--retained-source-bytes`, the combined original module-source

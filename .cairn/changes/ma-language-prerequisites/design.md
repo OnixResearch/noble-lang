@@ -109,6 +109,16 @@ path, and host-only decimal parsing would not satisfy the calculator gate.
   These receipts precede fixture-only Worker unit-test budget corrections;
   neither donor nor combined observations promote CALC cases, the exact
   numeric current28 gate, selected-vendor acceptance or runtime refinement.
+- On the corrected combined successor, the Worker selected-root authority
+  is checked before package serialization, captured-Text attestation and
+  installed WIT admission. A checked transitive dependency or dependency-only
+  composition cannot inherit the selected root's export grant; a root-bearing
+  composition with nested captured Text still packages, imports and executes.
+  The scoped source-bound rerun passed Worker Program 8/8, installed guest
+  22/22 and host child 4/4. Its direct Worker receipt separately preserves
+  256 committed effects, 257th refusal without issued I64, and the fifth
+  ledger byte-quota denial under the unchanged original caps. This is not
+  canonical WORKER, selected-vendor or full-suite acceptance.
 - Combining two existing flags is a *new* host-selected contract and needs
   negative cross-profile tests; the active cursor change remains unchanged.
 - Existing source-work and signature table meters must charge actual visited

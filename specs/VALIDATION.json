@@ -1560,7 +1560,7 @@
     },
     {
       "file": ".cairn/changes/ma-language-prerequisites/design.md",
-      "sha256": "589e13c9860323d3d0313ea950425e5b79390a545777f9d44593f4e4556b0c19"
+      "sha256": "0b806ecea7ff5e44a7367e0b4c1d50fcef00dc58659114ac871ee1331b52593c"
     },
     {
       "file": ".cairn/changes/ma-language-prerequisites/proposal.md",
@@ -1584,7 +1584,7 @@
     },
     {
       "file": ".cairn/changes/ma-language-prerequisites/tasks.md",
-      "sha256": "05eae1360fb4f8d8f4b61cea742b9d327b486e10999f665c5ca96da116795e56"
+      "sha256": "421e9ca3794c02a1aded4159bc59f653b2d7df413a5d0c1d5fe7e7c00cd4711e"
     },
     {
       "file": ".cairn/changes/runtime-program-template-identity/design.md",
@@ -1884,7 +1884,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "4257be0d6c6ba635f237f672c3b65813cd193ec79666bef77110896d3f615d0d"
+      "sha256": "314fd64de922cabfac81d2b355371f2c54dd3ec783d5a0e1b0b263422bc6384e"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -2148,7 +2148,7 @@
     },
     {
       "file": "verification/tool-selection.md",
-      "sha256": "9fab26b0b49e47705902e7502ff2ee556fc6dac221add8e27915c1afd631a9b8"
+      "sha256": "0880a816d362cffc12032d2fd86851b58ba97c08727b17019b520daf1b0386bf"
     },
     {
       "file": "verification/wi03/README.md",

@@ -33,6 +33,7 @@ struct Node {
     original: usize,
     depth: u32,
     leaves: u32,
+    root_reachable: bool,
 }
 
 enum Recipe {
@@ -229,9 +230,10 @@ impl Store {
                 || metadata.recipe_leaves > RECIPE_LEAF_LIMIT {
                 return Err(Refusal::Exhausted);
             }
+            let root_reachable = dependency.definition_slot() == owner.definition_slot();
             nodes.push(Node { recipe: Recipe::Named { program_index: target.program_index },
                 original: index, depth: metadata.recipe_depth,
-                leaves: metadata.recipe_leaves });
+                leaves: metadata.recipe_leaves, root_reachable });
             owners.push(Owner { module_id: dependency.module_identity(),
                 version: dependency.module_version(), ordinal: dependency.definition_ordinal(),
                 identity: dependency.definition_identity() });
@@ -250,7 +252,7 @@ impl Store {
             }
             witnesses.push(Witness { node: index, input: target.stack_in.clone(),
                 output: target.stack_out.clone(), effects: target.effects.clone() });
-            if dependency.definition_slot() == owner.definition_slot() {
+            if root_reachable {
                 if target.stack_in.as_slice() != input
                     || target.stack_out.as_slice() != prepared.output() {
                     return Err(Refusal::Invalid);
@@ -340,8 +342,21 @@ impl Store {
             .map_err(|_| Refusal::Invalid)
     }
 
-    fn package(&self, handle: Handle) -> Result<Value, Refusal> {
+    pub(crate) fn require_selected_root(&self, handle: Handle) -> Result<(), Refusal> {
         if handle.instance != self.instance { return Err(Refusal::Invalid) }
+        let node = self.nodes.get(handle.node).ok_or(Refusal::Invalid)?;
+        if self.witnesses.get(handle.witness).is_none_or(|witness|
+            witness.node != handle.node) {
+            return Err(Refusal::Invalid);
+        }
+        if !node.root_reachable {
+            return Err(Refusal::Unsupported);
+        }
+        Ok(())
+    }
+
+    fn package(&self, handle: Handle) -> Result<Value, Refusal> {
+        self.require_selected_root(handle)?;
         let root = self.node_handle(self.root_index).ok_or(Refusal::Invalid)?;
         let target = self.named(root).ok_or(Refusal::Invalid)?;
         if self.nodes.get(handle.node).is_none_or(|node| node.original != handle.witness) {
@@ -412,6 +427,7 @@ impl Store {
             || grant.capture_sha256 != crate::workflow::intrinsic::sha256(&captures) {
             return Err(Refusal::Invalid);
         }
+        self.require_selected_root(handle)?;
         let package_work = self.nodes.len().checked_mul(16)
             .and_then(|count| count.checked_add(self.source.len()))
             .and_then(|count| count.checked_add(captures.len()))
@@ -506,6 +522,9 @@ impl Store {
         let selected = document["selected_node"].as_u64()
             .and_then(|index| usize::try_from(index).ok())
             .and_then(|index| store.node_handle(index)).ok_or(Refusal::Invalid)?;
+        // Refuse another closure member before any captured-Text guest
+        // attestation, not merely during the final package comparison.
+        store.require_selected_root(selected)?;
         let comparison_work = store.recipe_nodes().checked_mul(16)
             .and_then(|count| count.checked_add(source.len()))
             .and_then(|count| count.checked_add(bytes.len()))
@@ -641,13 +660,15 @@ impl Store {
         self.charge(1)?;
         let left = &self.witnesses[first.witness];
         let right = &self.witnesses[second.witness];
+        let root_reachable = self.nodes[first.node].root_reachable
+            || self.nodes[second.node].root_reachable;
         let node = self.nodes.len();
         let witness = Witness { node, input: left.input.clone(), output: right.output.clone(),
             effects: left.effects.union(&right.effects) };
         let position = self.witnesses.len();
         self.witnesses.push(witness);
         self.nodes.push(Node { recipe: Recipe::Compose { first: first.node,
-            second: second.node }, original: position, depth, leaves });
+            second: second.node }, original: position, depth, leaves, root_reachable });
         Ok(Handle { instance: self.instance, node, witness: position })
     }
 
@@ -931,25 +952,27 @@ mod tests {
 
     #[test]
     fn composed_program_package_reconstructs_checked_graph_not_claimed_edges() {
-        let source = b"module Worker@1 [ def double [ 2 * ] export plus def plus [ double 1 + ] ]";
+        let source = b"module Worker@1 [ def double [ \"nested\" drop 2 * ] export plus def plus [ double 1 + ] ]";
         let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
             .unwrap();
         let double = store.checked_root(0).unwrap();
         let composed = store.compose(root, double).unwrap();
         let source_sha256 = crate::workflow::intrinsic::sha256(source);
-        let capture_sha256 = crate::workflow::intrinsic::sha256(b"[]");
+        let captures = serde_json::to_vec(&store.capture_wire().unwrap()).unwrap();
+        let capture_sha256 = crate::workflow::intrinsic::sha256(&captures);
         let grant = ExportGrant { destination: "private", source_sha256: &source_sha256,
             capture_sha256: &capture_sha256, allowed: true };
         let package = store.export(composed, "private", &grant).unwrap();
         let (mut imported, selected) = Store::import(&package, RUNTIME_REQUEST_WORK).unwrap();
+        assert_eq!(imported.capture_wire().unwrap()[0]["text_utf8"], "nested");
         assert_eq!(imported.recipe_edges(selected), Some((root.node,double.node)));
         assert_eq!(crate::core::worker_program_guest::execute(&mut imported, selected, 3, 1)
             .unwrap().value, 14, "freshly imported graph must execute its selected composition");
         let mut claim: Value = serde_json::from_slice(&package).unwrap();
-        claim["graph"][2]["first"] = json!(0);
+        claim["graph"][2]["second"] = json!(root.node);
         let forged = serde_json::to_vec(&claim).unwrap();
         assert!(matches!(Store::import(&forged, RUNTIME_REQUEST_WORK),
-            Err(Refusal::Invalid)));
+            Err(Refusal::Invalid)), "a still-rooted but forged edge cannot pass graph attestation");
     }
 
     #[test]
@@ -1048,6 +1071,14 @@ mod tests {
         assert!(matches!(current.adapt(stale, &EffSet::empty()), Err(Refusal::Invalid)));
         assert!(matches!(current.compose(stale, active), Err(Refusal::Invalid)));
         assert!(matches!(current.select(&[active, stale], 0), Err(Refusal::Invalid)));
+        let source_sha256 = crate::workflow::intrinsic::sha256(source);
+        let capture_sha256 = crate::workflow::intrinsic::sha256(b"[]");
+        let grant = ExportGrant { destination: "local-test", source_sha256: &source_sha256,
+            capture_sha256: &capture_sha256, allowed: true };
+        assert!(matches!(current.export(stale, "local-test", &grant),
+            Err(Refusal::Invalid)), "a same-source retired handle cannot borrow a new grant");
+        assert!(matches!(current.export(active, "local-test", &grant), Ok(_)),
+            "the fresh exact-instance root retains its own export authority");
     }
 
     #[test]
@@ -1066,6 +1097,10 @@ mod tests {
             .find(|candidate| candidate.node != root.node).expect("checked dependency");
         assert!(matches!(store.export(alternate, "local-test", &grant),
             Err(Refusal::Unsupported)), "a different named root cannot inherit export authority");
+        let dependency_only = store.compose(alternate, alternate)
+            .expect("two checked dependencies compose without the selected root");
+        assert!(matches!(store.export(dependency_only, "local-test", &grant),
+            Err(Refusal::Unsupported)), "composition without the selected root cannot inherit export authority");
         let encoded = store.export(root, "local-test", &grant).expect("explicit export grant");
         let (imported, restored) = Store::import(&encoded, RUNTIME_REQUEST_WORK)
             .expect("fresh locally checked package import");
@@ -1073,6 +1108,13 @@ mod tests {
             store.named(root).unwrap().checked_recipe);
         assert!(imported.interface(restored).unwrap().2.is_empty());
         let parsed: Value = serde_json::from_slice(&encoded).expect("test package");
+        let mut forged_selection = parsed.clone();
+        forged_selection["selected_node"] = json!(alternate.node);
+        forged_selection["selected_graph_blake3"] = json!(
+            store.selected_graph_blake3(alternate.node).expect("checked dependency digest"));
+        assert!(matches!(Store::import(&serde_json::to_vec(&forged_selection).unwrap(),
+            RUNTIME_REQUEST_WORK), Err(Refusal::Unsupported)),
+            "a recomputed digest cannot authorize importing another selected root");
         for (label, altered, expected) in [
             ("missing transitive dependency", {
                 let mut value = parsed.clone();

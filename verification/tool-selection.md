@@ -137,6 +137,15 @@ a kernel-stuck child or group-escaping descendant. A separate scoped combined
 guest on `2621b07` captured raw LIVE first-guest/source-retirement and local
 Worker 256/257 effect-prefix receipts; it did not exercise the Worker Send
 peer or establish a selected-vendor or canonical acceptance receipt.
+After the Worker selected-root authority repair, a fresh combined successor
+passed the scoped Worker Program 8/8, installed guest 22/22, host child 4/4,
+and direct Worker 257th-denial/fifth-ledger-byte refusal. That patched binary
+is SHA-256
+`604a37322cce7ab8a880134cb0f73f2e1fc85ca89942172e49b91d1a4af77aef`;
+the raw direct report is under
+`/home/brittonr/.cache/noble-live-epoch-combined-guest-tmp-20261008/root-authority-f324/combined-worker-direct-raw.json`.
+The previous LIVE and signed-epoch receipts remain bound to their earlier
+binary, not this patched source; this is not selected-vendor acceptance.
 [`selectedVendor`](selected-vendor.mjs) verifies that NAR at each migrated
 gate; the Result build additionally compares all nine lock hashes and the
 615-row/241-package provenance closure before invoking Cargo. Merely
