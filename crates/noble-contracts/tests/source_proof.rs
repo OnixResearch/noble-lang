@@ -78,8 +78,6 @@ fn selected_quote_site_binds_original_token_and_checked_i64_operand() -> Result<
     let site = selected.checked_quote_site(node).map_err(|error| format!("{error:?}"))?;
     assert_eq!(site.interface().stack_in.last(), Some(&Ty::I64));
     assert!(matches!(site.interface().stack_out.last(), Some(Ty::Program(..))));
-    assert!(matches!(selected.checked_quote_site(NodeId(1)),
-        Err(SourceProofRefusal::MismatchedSource)));
     Ok(())
 }
 
@@ -112,17 +110,19 @@ fn quote_site_rejects_non_quote_words_and_non_i64_capture() -> Result<(), String
 }
 
 #[test]
-fn quote_site_refuses_nested_occurrence_and_rebound_source() -> Result<(), String> {
+fn quote_site_accepts_checked_nested_occurrence_and_refuses_rebound_source() -> Result<(), String> {
     let mut nested = live()?;
-    let definition = nested.prepare(b"def nested [ [ quote ] ]", &[], LIMITS)
+    let definition = nested.prepare(b"def nested [ [ 2 quote ] ]", &[], LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     nested.commit(definition).map_err(|error| format!("{error:?}"))?;
     let prepared = nested.prepare(b"nested", &[], LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     let selected = nested.checked_selected_target(&prepared, "nested")
         .map_err(|error| format!("{error:?}"))?;
-    assert!(matches!(selected.checked_quote_site(NodeId(0)),
-        Err(SourceProofRefusal::MismatchedSource)), "inner quote is not a root-body site");
+    let nested_site = selected.checked_quote_site(NodeId(1))
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(nested_site.node(), NodeId(1));
+    assert_eq!(nested_site.interface().stack_in.last(), Some(&Ty::I64));
 
     let mut source = live()?;
     let original = source.prepare(b"def builder [ quote [ + ] compose ]", &[], LIMITS)
@@ -134,7 +134,8 @@ fn quote_site_refuses_nested_occurrence_and_rebound_source() -> Result<(), Strin
         let selected = source.checked_selected_target(&old, "builder")
             .map_err(|error| format!("{error:?}"))?;
         selected.checked_quote_site(NodeId(0))
-            .map_err(|error| format!("{error:?}"))?.span()
+            .map_err(|error| format!("{error:?}"))?
+            .authored_span().ok_or("authored quote lost its source token")?
     };
     let replacement = source.prepare(b"def builder [ 0 drop quote [ + ] compose ]", &[], LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -149,7 +150,128 @@ fn quote_site_refuses_nested_occurrence_and_rebound_source() -> Result<(), Strin
         Err(SourceProofRefusal::UnsupportedProfile)), "old node selects a literal now");
     let site = selected.checked_quote_site(NodeId(2))
         .map_err(|error| format!("{error:?}"))?;
-    assert_ne!(site.span(), old_span, "old source occurrence cannot stand in for replacement");
+    assert_ne!(site.authored_span(), Some(old_span),
+        "old source occurrence cannot stand in for replacement");
+    Ok(())
+}
+
+#[test]
+fn lexical_binding_replay_authenticates_generated_checked_dip_and_quote() -> Result<(), String> {
+    use noble_contracts::source::proof::CheckedLexicalKind;
+    use noble_kernel::untrusted::Node;
+    let mut source = live()?;
+    let bytes = b"def builder [ let x x quote [ + ] compose ]";
+    let definition = source.prepare(bytes, &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    source.commit(definition).map_err(|error| format!("{error:?}"))?;
+    let prepared = source.prepare(b"builder", &[Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let selected = source.checked_selected_target(&prepared, "builder")
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(selected.body().interface.stack_in, [Ty::I64]);
+    assert!(matches!(selected.body().interface.stack_out.as_slice(),
+        [Ty::Program(..)]));
+    assert!(selected.candidate_to_lexical().iter().enumerate()
+        .any(|(checked, lexical)| checked as u32 != *lexical),
+        "source projection must retain its distinct checked and lexical NodeIds");
+    let relocated_quotation = selected.definition().body.candidate.nodes.iter().enumerate()
+        .find_map(|(index, node)| match node {
+            Node::Quotation { body, .. } if body.iter().any(|child|
+                selected.lexical_source_node(*child) != Some(child.0))
+                && selected.lexical_source_node(NodeId(index as u32))
+                    .is_some_and(|lexical| lexical >= selected.original_lexical_nodes()) =>
+                Some(NodeId(index as u32)),
+            _ => None,
+        }).ok_or("lowering did not relocate a quotation's checked children")?;
+    let relocated_site = selected.checked_operation_site(relocated_quotation)
+        .map_err(|error| format!("relocated quotation lost lexical correspondence: {error:?}"))?;
+    assert!(relocated_site.lexical_node >= selected.original_lexical_nodes());
+    assert!(relocated_site.generated_witness.is_some());
+    let mut cleanup = 0;
+    let mut projection = 0;
+    for lexical in selected.original_lexical_nodes()..selected.generated_lexical_end() {
+        let node = selected.checked_lexical_node(lexical)
+            .map_err(|error| format!("{error:?}"))?;
+        assert!(node.authored_span.is_none(), "generated node borrowed an authored span");
+        let witness = node.generated_witness.ok_or("generated node lost lexical replay witness")?;
+        if witness.generation() == "cleanup-drop" {
+            assert!(matches!(node.kind, CheckedLexicalKind::Builtin(1)));
+            assert_eq!(witness.occurrence_node(), None);
+            assert!(witness.binder_node().is_some());
+            cleanup += 1;
+        } else if witness.generation() == "projection-dup" {
+            assert!(witness.occurrence_node().is_some());
+            assert!(witness.binder_node().is_some());
+            projection += 1;
+        }
+    }
+    assert!(cleanup > 0 && projection > 0,
+        "the checked expansion must bind actual cleanup and projection to original local");
+    let mut generated_dips = 0;
+    for (index, node) in selected.definition().body.candidate.nodes.iter().enumerate() {
+        if matches!(node, Node::Invocation { def, .. } if def.0 == 3) {
+            let site = selected.checked_operation_site(NodeId(index as u32))
+                .map_err(|error| format!("{error:?}"))?;
+            assert_eq!(site.authored_span, None,
+                "generated lexical dip cannot acquire an authored token span");
+            assert_eq!(site.generated_witness
+                .ok_or("generated dip has no replay witness")?.generation(), "wrap-dip");
+            assert!(site.lexical_node >= selected.original_lexical_nodes());
+            generated_dips += 1;
+        }
+    }
+    assert!(generated_dips > 0, "physical hidden-value projection must be source-bound");
+    let authored_quote = selected.definition().body.candidate.nodes.iter().enumerate()
+        .find_map(|(index, node)| matches!(node,
+            Node::Invocation { def, .. } if def.0 == 8)
+            .then_some(NodeId(index as u32))
+            .filter(|id| selected.checked_operation_site(*id)
+                .is_ok_and(|site| site.authored_span.is_some())))
+        .ok_or("authored quote has no checked kernel site")?;
+    let quote = selected.checked_quote_site(authored_quote)
+        .map_err(|error| format!("{error:?}"))?;
+    let span = quote.authored_span().ok_or("authored quote lost source span")?;
+    assert_eq!(&bytes[span.start as usize..span.end as usize], b"quote");
+    Ok(())
+}
+
+#[test]
+fn lexical_replay_uses_historical_named_first_shadow_and_not_later_namespace() -> Result<(), String> {
+    use noble_kernel::untrusted::Node;
+    let mut source = live()?;
+    // An authored `dup` is a call to the prior named body, not the bootstrap
+    // builtin. Independently replaying a spelling as a builtin would silently
+    // claim the wrong source operation.
+    for text in [b"def dup [ 1 + ]".as_slice(),
+        b"def shadowed [ dup quote [ + ] compose ]"] {
+        let declaration = source.prepare(text, &[], LIMITS)
+            .map_err(|error| format!("{error:?}"))?;
+        source.commit(declaration).map_err(|error| format!("{error:?}"))?;
+    }
+    let shadowed = source.prepare(b"shadowed", &[Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let checked = source.checked_selected_target(&shadowed, "shadowed")
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(matches!(checked.definition().body.candidate.nodes.first(),
+        Some(Node::Invocation { def, .. }) if def.0 != 0));
+    let quote = checked.checked_quote_site(NodeId(1))
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(quote.interface().stack_in.last(), Some(&Ty::I64));
+
+    // A later shadow is excluded from the original declaration's immutable
+    // namespace, even though it is visible to new source submissions.
+    let fresh = source.prepare(b"def earlier [ quote [ + ] compose ]", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    source.commit(fresh).map_err(|error| format!("{error:?}"))?;
+    let later = source.prepare(b"def + [ 1 ]", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    source.commit(later).map_err(|error| format!("{error:?}"))?;
+    let prepared = source.prepare(b"earlier", &[Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let selected = source.checked_selected_target(&prepared, "earlier")
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(selected.body().interface.stack_in, [Ty::I64]);
+    assert!(selected.checked_quote_site(NodeId(0)).is_ok());
     Ok(())
 }
 

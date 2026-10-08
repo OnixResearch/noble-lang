@@ -12,11 +12,29 @@ pub(super) fn resolve(
     signed_owner: bool,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
+    resolve_prefix(tree, declaration, session, signed_owner, session.definitions.len(), meter)
+}
+
+/// Resolve retained source at its original declaration boundary. Later
+/// definitions (including later shadows of bootstrap words) were not visible
+/// when this body was checked and must not change its immutable targets.
+pub(super) fn resolve_prefix(
+    tree: &mut super::Tree,
+    declaration: Option<&str>,
+    session: &super::Session,
+    signed_owner: bool,
+    definition_prefix: usize,
+    meter: &mut crate::Meter,
+) -> Result<(), crate::Diagnostic> {
+    if definition_prefix > session.definitions.len() {
+        return Err(crate::internal(tree.span));
+    }
     let mut at = 0usize;
     let mut failure = None;
     while at < tree.nodes.len() {
         let result = match tree.nodes.get_mut(at) {
-            Some(node) => resolve_node(node, declaration, session, signed_owner, meter),
+            Some(node) => resolve_node(node, declaration, session, signed_owner,
+                definition_prefix, meter),
             None => Err(crate::internal(tree.span)),
         };
         if let Err(problem) = result {
@@ -36,11 +54,13 @@ fn resolve_node(
     declaration: Option<&str>,
     session: &super::Session,
     signed_owner: bool,
+    definition_prefix: usize,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(meter.charge(1, node.span));
     if let super::Kind::Word(word) = &node.kind {
-        let target = attempt!(lookup(word, declaration, session, signed_owner, node.span, meter));
+        let target = attempt!(lookup(word, declaration, session, signed_owner,
+            definition_prefix, node.span, meter));
         node.kind = super::Kind::Call(target);
     }
     Ok(())
@@ -55,6 +75,7 @@ fn lookup(
     declaration: Option<&str>,
     session: &super::Session,
     signed_owner: bool,
+    definition_prefix: usize,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<super::Target, crate::Diagnostic> {
@@ -87,7 +108,7 @@ fn lookup(
     if let Some(context) = &session.declared {
         return declared_lookup(word, declaration, context, signed_owner, span, meter);
     }
-    let mut at = session.definitions.len();
+    let mut at = definition_prefix;
     let mut found = None;
     let mut failure = None;
     while at > 0 {

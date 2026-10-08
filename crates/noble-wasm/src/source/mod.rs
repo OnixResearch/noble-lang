@@ -184,6 +184,9 @@ pub enum OriginSource {
 pub struct OriginProgram {
     pub source_artifact: OriginSource,
     pub program_index: usize,
+    /// Source replay quotation NodeId; the named body and selection wrapper
+    /// are identified separately and have no quotation occurrence here.
+    pub body_node: Option<u32>,
     pub entry: u32,
     pub input_signature: u32,
     pub output_signature: u32,
@@ -200,8 +203,10 @@ pub enum OriginAction {
     Dup,
     Swap,
     Drop,
+    Dip,
+    Run,
     StaticProgram(usize),
-    QuoteI64 { input: u32, output: u32, witness: u32 },
+    Quote { input: u32, output: u32, witness: u32, program_operand: bool },
     Compose,
     CallSelected(usize),
 }
@@ -209,8 +214,14 @@ pub enum OriginAction {
 #[derive(Clone, Debug)]
 pub struct OriginOperation {
     pub node: noble_kernel::untrusted::NodeId,
-    /// None exclusively for the independently checked selection wrapper.
-    pub source_span: Option<noble_contracts::Span>,
+    /// Kernel/instruction indices are compacted; this is the separate exact
+    /// parsed-and-lowered lexical occurrence, absent for selection wrapper.
+    pub lexical_node: Option<u32>,
+    /// Only authored source tokens have a byte span. Synthetic cleanup,
+    /// projection, quote, and dip operations carry a replay witness instead.
+    pub authored_span: Option<noble_contracts::Span>,
+    pub generated: bool,
+    pub generated_witness: Option<noble_contracts::source::proof::CheckedGeneratedWitness>,
     pub ordinal: u32,
     pub table_entry: u32,
     pub input_signature: u32,
@@ -219,38 +230,60 @@ pub struct OriginOperation {
     pub action: OriginAction,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OriginI64 {
     RootInput(u32),
-    Fixed(i64),
+    Fixed { value: i64, recipe: alloc::rc::Rc<OriginFixedExpression> },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OriginFixedArithmetic {
+    Add,
+    Sub,
+    Mul,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OriginFixedExpression {
+    Literal(i64),
+    Arithmetic {
+        kind: OriginFixedArithmetic,
+        left: alloc::rc::Rc<Self>,
+        right: alloc::rc::Rc<Self>,
+        nodes: usize,
+        depth: usize,
+    },
 }
 
 #[derive(Clone, Debug)]
 pub enum OriginProgramValue {
-    QuoteI64 {
+    Static {
+        node: noble_kernel::untrusted::NodeId,
+        program_index: usize,
+    },
+    Quote {
         node: noble_kernel::untrusted::NodeId,
         table_entry: u32,
-        operand: OriginI64,
+        operand: OriginOperand,
     },
     Compose {
         node: noble_kernel::untrusted::NodeId,
         table_entry: u32,
-        left: alloc::boxed::Box<Self>,
-        right_node: noble_kernel::untrusted::NodeId,
-        right_program_index: usize,
+        left: alloc::rc::Rc<Self>,
+        right: alloc::rc::Rc<Self>,
     },
-    ComposeDynamic {
-        node: noble_kernel::untrusted::NodeId,
-        table_entry: u32,
-        left: alloc::boxed::Box<Self>,
-        right: alloc::boxed::Box<Self>,
-    },
+}
+
+#[derive(Clone, Debug)]
+pub enum OriginOperand {
+    I64(OriginI64),
+    Program(alloc::rc::Rc<OriginProgramValue>),
 }
 
 #[derive(Clone, Debug)]
 pub struct OriginOutput {
     pub stack_position: usize,
-    pub result: OriginProgramValue,
+    pub result: alloc::rc::Rc<OriginProgramValue>,
 }
 
 /// An independently rechecked, emitted named definition, not the submission's

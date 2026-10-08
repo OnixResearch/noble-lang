@@ -10,27 +10,128 @@ use std::sync::{Arc, Condvar, Mutex, atomic::{AtomicBool, Ordering}};
 #[path = "live_slot_origin.rs"]
 mod origin;
 
+fn generated_witness_json(
+    witness: Option<noble_contracts::source::proof::CheckedGeneratedWitness>,
+) -> Value {
+    witness.map_or(Value::Null, |witness| json!({
+        "generation":witness.generation(),
+        "occurrence_node":witness.occurrence_node(),
+        "binder_node":witness.binder_node(),
+    }))
+}
+
+fn lexical_replay_json(
+    selected: &noble_contracts::source::proof::CheckedSelectedTarget<'_>,
+) -> Result<Value, String> {
+    use noble_contracts::source::proof::CheckedLexicalKind;
+    if selected.lexical_nodes_len() > 512 {
+        return Err(reject("selected source exceeds complete lexical replay bound"));
+    }
+    let nodes = (0..selected.lexical_nodes_len()).map(|index| {
+        let node = selected.checked_lexical_node(index as u32)
+            .map_err(|error| format!("selected source has an unsupported lexical node: {error:?}"))?;
+        let mut row = json!({"node":index,"authored_span":node.authored_span
+            .map(|span|json!({"start":span.start,"end":span.end})),
+            "generated_witness":generated_witness_json(node.generated_witness)});
+        match node.kind {
+            CheckedLexicalKind::I64(value) => {
+                row["kind"] = json!("i64");
+                row["value"] = json!(value.to_string());
+            }
+            CheckedLexicalKind::Builtin(definition) => {
+                row["kind"] = json!("builtin");
+                row["definition"] = json!(definition);
+            }
+            CheckedLexicalKind::Quotation(body) => {
+                row["kind"] = json!("quotation");
+                row["body"] = json!(body);
+            }
+        }
+        Ok(row)
+    }).collect::<Result<Vec<Value>, String>>()?;
+    let source = std::str::from_utf8(selected.source())
+        .map_err(|_| reject("selected source is not exact UTF-8 text"))?;
+    Ok(json!({"source":source,
+        "source_sha256":crate::workflow::intrinsic::sha256(selected.source()),
+        "definition_name":selected.definition_name(),
+        "original_nodes":selected.original_lexical_nodes(),
+        "generated_start":selected.original_lexical_nodes(),
+        "generated_end":selected.generated_lexical_end(),
+        "body":selected.lexical_body(),
+        "nodes":nodes,
+        "candidate_to_lexical":selected.candidate_to_lexical()}))
+}
+
 fn selected_origin_json(
     origin: &noble_wasm::source::SelectedOriginMetadata,
     target: &Value,
+    lexical_replay: &Value,
 ) -> Result<Value, String> {
-    use noble_wasm::source::{OriginAction, OriginI64, OriginProgramValue, OriginSource};
-    fn result(value: &OriginProgramValue) -> Value {
-        match value {
-            OriginProgramValue::QuoteI64 { node, table_entry, operand } => {
-                let operand = match operand {
-                    OriginI64::RootInput(position) => json!({"kind":"root-i64","position":position}),
-                    OriginI64::Fixed(value) => json!({"kind":"fixed-i64","value":value.to_string()}),
-                };
-                json!({"kind":"quote-i64","node":node.0,"table_entry":table_entry,"operand":operand})
-            }
-            OriginProgramValue::Compose { node, table_entry, left, right_node, right_program_index } =>
-                json!({"kind":"compose","node":node.0,"table_entry":table_entry,
-                    "left":result(left),"right":{"kind":"static-program","node":right_node.0,
-                        "program_index":right_program_index}}),
-            OriginProgramValue::ComposeDynamic { node, table_entry, left, right } =>
-                json!({"kind":"compose-dynamic","node":node.0,"table_entry":table_entry,
-                    "left":result(left),"right":result(right)}),
+    use noble_wasm::source::{OriginAction, OriginFixedArithmetic, OriginFixedExpression,
+        OriginI64, OriginOperand, OriginProgramValue, OriginSource};
+    use std::rc::Rc;
+    fn fixed_recipe(
+        recipe: &OriginFixedExpression, depth: usize, nodes: &mut usize,
+    ) -> Result<Value, String> {
+        *nodes += 1;
+        if *nodes > 128 || depth > 32 {
+            return Err(reject("selected fixed I64 source expression exceeds bound"));
+        }
+        match recipe {
+            OriginFixedExpression::Literal(value) =>
+                Ok(json!({"kind":"literal","value":value.to_string()})),
+            OriginFixedExpression::Arithmetic { kind, left, right, .. } =>
+                Ok(json!({"kind":match kind {
+                    OriginFixedArithmetic::Add => "add",
+                    OriginFixedArithmetic::Sub => "sub",
+                    OriginFixedArithmetic::Mul => "mul",
+                },"left":fixed_recipe(left,depth+1,nodes)?,
+                    "right":fixed_recipe(right,depth+1,nodes)?})),
+        }
+    }
+    fn result(
+        value: &Rc<OriginProgramValue>,
+        seen: &mut [usize; 32],
+        count: &mut usize,
+        fixed_nodes: &mut usize,
+    ) -> Result<Value, String> {
+        // Pointer identity is only a temporary traversal key, never part of
+        // the serialized identity. `dup` preserves this Rc while a second
+        // execution of the very same quote site allocates a different one.
+        let pointer = Rc::as_ptr(value) as usize;
+        if let Some(alias) = seen[..*count].iter().position(|known| *known == pointer) {
+            return Ok(json!({"kind":"reference","alias":alias}));
+        }
+        let alias = *count;
+        if alias >= 32 {
+            return Err(reject("selected returned Program DAG exceeds graph bound"));
+        }
+        seen[alias] = pointer;
+        *count += 1;
+        match value.as_ref() {
+            OriginProgramValue::Static { node, program_index } =>
+                Ok(json!({"kind":"static-program","alias":alias,
+                    "node":node.0,"program_index":program_index})),
+            OriginProgramValue::Quote { node, table_entry, operand } => match operand {
+                OriginOperand::I64(operand) => {
+                    let operand = match operand {
+                        OriginI64::RootInput(position) => json!({"kind":"root-i64","position":position}),
+                        OriginI64::Fixed { value, recipe } => json!({"kind":"fixed-i64",
+                            "value":value.to_string(),
+                            "recipe":fixed_recipe(recipe,1,fixed_nodes)?}),
+                    };
+                    Ok(json!({"kind":"quote-i64","alias":alias,"node":node.0,
+                        "table_entry":table_entry,"operand":operand}))
+                }
+                OriginOperand::Program(program) =>
+                    Ok(json!({"kind":"quote-program","alias":alias,"node":node.0,
+                        "table_entry":table_entry,"operand":result(program, seen, count,
+                            fixed_nodes)?})),
+            },
+            OriginProgramValue::Compose { node, table_entry, left, right } =>
+                Ok(json!({"kind":"compose","alias":alias,"node":node.0,
+                    "table_entry":table_entry,"left":result(left, seen, count,fixed_nodes)?,
+                    "right":result(right, seen, count,fixed_nodes)?})),
         }
     }
     if target["definition_index"] != origin.definition_id.index()
@@ -49,14 +150,20 @@ fn selected_origin_json(
                 OriginAction::Dup => "dup",
                 OriginAction::Swap => "swap",
                 OriginAction::Drop => "drop",
+                OriginAction::Dip => "dip",
+                OriginAction::Run => "run",
                 OriginAction::StaticProgram(_) => "static-program",
-                OriginAction::QuoteI64 { .. } => "quote-i64",
+                OriginAction::Quote { program_operand: false, .. } => "quote-i64",
+                OriginAction::Quote { program_operand: true, .. } => "quote-program",
                 OriginAction::Compose => "compose",
                 OriginAction::CallSelected(_) => "call-selected",
             };
             let mut row = json!({"node":operation.node.0,
-                "source_span":operation.source_span.map(|span|
+                "lexical_node":operation.lexical_node,
+                "authored_span":operation.authored_span.map(|span|
                     json!({"start":span.start,"end":span.end})),
+                "generated":operation.generated,
+                "generated_witness":generated_witness_json(operation.generated_witness),
                 "ordinal":operation.ordinal,"table_entry":operation.table_entry,
                 "input_signature":operation.input_signature,
                 "output_signature":operation.output_signature,
@@ -65,7 +172,7 @@ fn selected_origin_json(
                 OriginAction::I64(value) => row["value"] = json!(value.to_string()),
                 OriginAction::StaticProgram(index) | OriginAction::CallSelected(index) =>
                     row["static_program_index"] = json!(index),
-                OriginAction::QuoteI64 { input, output, witness } => {
+                OriginAction::Quote { input, output, witness, .. } => {
                     row["quote_input_signature"] = json!(input);
                     row["quote_output_signature"] = json!(output);
                     row["quote_witness"] = json!(witness);
@@ -76,7 +183,8 @@ fn selected_origin_json(
         }).collect::<Vec<_>>();
         json!({"source_artifact":match program.source_artifact {
             OriginSource::Definition => "definition", OriginSource::Selection => "selection",
-        },"program_index":program.program_index,"entry":program.entry,
+        },"program_index":program.program_index,"body_node":program.body_node,
+            "entry":program.entry,
             "input_signature":program.input_signature,"output_signature":program.output_signature,
             "effect_mask":program.effect_mask,"operations":operations})
     }).collect::<Vec<_>>();
@@ -86,10 +194,15 @@ fn selected_origin_json(
         "selected_source_sha256":target["selected_source_sha256"],
         "named_program_index":origin.named_program_index,
         "root_program_index":origin.root_program_index,
+        "lexical_replay":lexical_replay,
         "programs":programs,
-        "outputs":origin.outputs.iter().map(|output|
-            json!({"stack_position":output.stack_position,"result":result(&output.result)}))
-            .collect::<Vec<_>>() }))
+        "outputs":origin.outputs.iter().map(|output| {
+            let mut seen = [0; 32];
+            let mut count = 0;
+            let mut fixed_nodes = 0;
+            Ok(json!({"stack_position":output.stack_position,
+                "result":result(&output.result, &mut seen, &mut count, &mut fixed_nodes)?}))
+        }).collect::<Result<Vec<_>, String>>()? }))
 }
 
 fn assemble_slot(wat: &[u8]) -> Result<Vec<u8>, String> {
@@ -202,7 +315,7 @@ struct ProgramOwner {
     program_index: Option<usize>,
     descriptor: String,
     composite: Option<CompositeOwner>,
-    composite_missing_core: bool,
+    composite_unavailable: bool,
 }
 
 #[derive(Clone)]
@@ -1517,7 +1630,7 @@ impl Host {
             return Err(reject("a slot install must contain a checked executable expression"));
         }
         let submission = checked.submission().ok_or_else(|| reject("missing checked source submission"))?;
-        let (compiled, selected_target) = if request.get("selected_name").is_some() {
+        let (compiled, selected_target, lexical_replay) = if request.get("selected_name").is_some() {
             let name = self::id(request, "selected_name")?;
             let retained_hash = self.definitions.get(&name)
                 .ok_or_else(|| reject("selected named target has no independently selected declaration"))?;
@@ -1549,10 +1662,12 @@ impl Host {
                 "source_sha256":source_hash,
                 "wat_sha256":crate::workflow::intrinsic::sha256(prepared.wat()),
             });
-            (prepared, Some(identity))
+            let lexical_replay = prepared.selected_origin()
+                .map(|_| lexical_replay_json(&selected)).transpose()?;
+            (prepared, Some(identity), lexical_replay)
         } else {
             (self.compiler.prepare(submission)
-                .map_err(|error| super::output::Failure::backend(error).message)?, None)
+                .map_err(|error| super::output::Failure::backend(error).message)?, None, None)
         };
         if !self.compiler.can_commit(&compiled) {
             return Err(reject("compiler source state changed during preparation"));
@@ -1644,11 +1759,14 @@ impl Host {
         if let Some(checked_origin) = compiled.selected_origin() {
             let selected = message.get("selected_target")
                 .ok_or_else(|| reject("unselected source cannot claim selected origin"))?;
-            message["selected_origin"] = selected_origin_json(checked_origin, selected)?;
+            let replay = lexical_replay.as_ref()
+                .ok_or_else(|| reject("selected source lacks independent lexical replay"))?;
+            message["selected_origin"] = selected_origin_json(checked_origin, selected, replay)?;
         }
         let binary = assemble_slot(compiled.wat())?;
         if let Some(selected_origin) = message.get("selected_origin") {
-            origin::verify(&binary, selected_origin, &message)?;
+            origin::verify(&binary, selected_origin, &message,
+                lexical_replay.as_ref().ok_or_else(|| reject("missing checked lexical replay"))?)?;
         }
         let selected_origin = message.get("selected_origin").map(|row| -> Result<SelectedOrigin, String> {
             Ok(SelectedOrigin {
@@ -1781,10 +1899,10 @@ impl Host {
             &caller.programs, saved.position, descriptor, &saved.saved_cell,
             graph, &saved.inputs)?
             .ok_or_else(|| reject("selected target source/graph shape changed before publication"))?;
-        let manifest = origin::alias_code_donor_manifest(owner, saved.handle,
+        let manifest = origin::checked_code_donor_manifest(owner, saved.handle,
             &saved.caller_id, caller, core_id, core, saved.position, descriptor,
             &identity, graph, &saved.inputs)?
-            .ok_or_else(|| reject("saved dynamic target lacks a checked alias code donor manifest"))?;
+            .ok_or_else(|| reject("saved dynamic target lacks a checked composite code donor manifest"))?;
         identity["artifact_sha256"] = manifest["manifest_sha256"].clone();
         identity["artifact_format"] = json!("noble-live-slot-composite-code-donors/v1");
         identity["artifact_manifest"] = manifest["descriptor"].clone();
@@ -1813,8 +1931,8 @@ impl Host {
                 if request.get("program_index").is_some() {
                     return Err(reject("saved owner publication cannot select a different Program index"));
                 }
-                if saved.composite_missing_core {
-                    return Err(reject("selected native core code donor lacks first-generation binary attestation"));
+                if saved.composite_unavailable {
+                    return Err(reject("selected returned target lacks independently checked composite code donor attestation"));
                 }
                 if let Some(selected) = saved.composite.as_ref() {
                     let identity = &selected.identity["interface"];
@@ -2053,7 +2171,7 @@ impl Host {
                     || !owner.is_ascii()
                     || self.programs.insert(owner.to_owned(), ProgramOwner {
                         source_id, program_index, descriptor:descriptor.clone(),
-                        composite:None, composite_missing_core:false,
+                        composite:None, composite_unavailable:false,
                     }).is_some() {
                     self.poisoned = true;
                     return Err(reject("worker returned duplicate or invalid saved Program owner"));
@@ -2087,13 +2205,10 @@ impl Host {
             let core = self.native_core_owner.as_ref()
                 .and_then(|id| self.candidates.get(id).map(|candidate| (id, candidate)));
             let manifest = if let Some((core_id, core)) = core {
-                origin::alias_code_donor_manifest(&owner, saved_handle, module_id,
+                origin::checked_code_donor_manifest(&owner, saved_handle, module_id,
                     candidate, core_id, core, position, &candidate.output[position],
                     &identity, graph, inputs)?
             } else { None };
-            let is_alias = identity["interface"]["input"] == json!(["I64","I64"])
-                && identity["interface"]["output"] == json!(["I64"])
-                && inputs.len() == 2;
             let mut identity = identity;
             let saved = self.programs.get_mut(&owner)
                 .ok_or_else(|| reject("selected saved Program owner vanished during inspection"))?;
@@ -2106,8 +2221,8 @@ impl Host {
                     inputs:inputs.to_vec(), saved_cell:cell.clone(),
                     identity:identity.clone(), manifest,
                 });
-            } else if is_alias {
-                saved.composite_missing_core = true;
+            } else {
+                saved.composite_unavailable = true;
             }
             report["stack"][position]["target_identity"] = identity;
         }
