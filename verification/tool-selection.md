@@ -98,12 +98,11 @@ Noble owns the exact selection policy and the Nix composition code.
 [`nix/reviewed-vendor.nix`](../nix/reviewed-vendor.nix) reads the root Cargo
 lock and the independent M5, M6, M7, intrinsic-proofs, intrinsic-named-v2,
 Result-library, declared-modules-v1, and Worker Send peer locks: nine locks
-in all. That frozen pre-C recipe still expects root lock SHA-256
-`414f95bc62d57849a6411aed8d848bd93fe00111dba2c19be4a77e1b6e0161aa`,
-but the integrated C backend's direct `serde` dependency changes the root
-lock to `2b38a16099566ea5eaca9cbf5c70ab584a92b650a8f82ed16a31ca1f1e0b8f6d`.
-The old recipe therefore **must fail closed** on this checkout. The Worker
-Send peer lock remains
+in all. The source-only recipe now expects the integrated C backend's root
+lock SHA-256 `2b38a16099566ea5eaca9cbf5c70ab584a92b650a8f82ed16a31ca1f1e0b8f6d`;
+all nine pinned lock bytes are statically coherent with this source tree.
+This is not a vendor output, measured NAR or release. The Worker Send peer
+lock remains
 `91e75cfc90112d55765e7598527f151677076902c2b3434cc5af77069931f7c2`.
 It requires exactly 615 registry rows and 241 unique checked packages,
 rejects missing/conflicting checksums, verifies archive SHA-256, and restricts
@@ -111,15 +110,15 @@ archive extraction to safe regular files/directories under the exact package
 root. The derivation writes `source-registry-0` and a nine-lock
 lock/archive provenance manifest. A new exact nine-lock source manifest and
 separately reviewed derivation/NAR are required before any vendor selection
-or locked Cargo execution; no replacement output is claimed here. The
-previous eight-lock output
+or locked Cargo execution; no replacement output or M5/M6 pin issuance is
+claimed here. The previous eight-lock output
 `/nix/store/3sl4kjvccw33wbrhb7qf57myyrzj371c-noble-reviewed-offline-vendor`
 has measured NAR `sha256-23BKxkztQ6megprdki32gwDS8LXsqQPIsCnI1CYGHTQ=`,
 still bound in [`M5`](m5/pins.json) and [`M6`](m6/pins.json), but it cannot
 certify the nine-lock recipe. Keep those pins held until a separately reviewed
 new derivation and measured NAR are available; do not relabel the old output.
-This candidate-only source selection is not a selected Nix, source-inventory,
-numeric guest, or native-assurance gate pass.
+This candidate-only source selection is not a selected vendor closure, Nix,
+source-inventory, numeric guest, or native-assurance gate pass.
 The MW1 host-owned `own<program>` issuer and MW2 Worker Send peer have
 separate interfaces and lifetimes: a Program cell is not a Send task or its
 native socket pin. The selected local `worker shell` is a distinct typed
