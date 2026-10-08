@@ -195,7 +195,7 @@ fn alias_rebind_replays_exact_current_dependents_but_preserves_versioned_owners(
     session = next;
     session = commit(session, b"import m@1 as other")?;
     session = commit(session, b"def pinned [ m@1.addone ]")?;
-    session = commit(session, b"def once [ m.addone ]")?;
+    session = commit(session, b"def once [ let x x m.addone ]")?;
     session = commit(session, b"def twice [ once once ]")?;
     let captured = session.prepare(b"[ once ]", &[], LIMITS)
         .map_err(|error| format!("{error:?}"))?;

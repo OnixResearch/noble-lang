@@ -282,7 +282,7 @@ for (const opt of ['off', 'on']) {
   const second = Buffer.from('module m@2 [ export addone def addone [ 2 + ] ]');
   const source = [first, second, Buffer.from('import m@1 as m'),
     Buffer.from('import m@1 as other'),
-    Buffer.from('def once [ m.addone ]'), Buffer.from('def twice [ once once ]'),
+    Buffer.from('def once [ let x x m.addone ]'), Buffer.from('def twice [ once once ]'),
     Buffer.from('[ once ]'), Buffer.from('import m@2 as m'),
     Buffer.from('20 swap run'), Buffer.from('drop'),
     Buffer.from('20 other.addone'), Buffer.from('drop'), Buffer.from('20 twice')];
