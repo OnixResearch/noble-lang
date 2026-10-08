@@ -910,7 +910,8 @@ enum GuestAction<'a> { Invoke, CodeExport(&'a str), CoreCodeExport }
 fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: TaskOwner)
     -> Result<Store<Host>> {
     let installation = NEXT_INSTALLATION.fetch_update(Ordering::Relaxed, Ordering::Relaxed,
-        |next| next.checked_add(1)).context("Worker installation IDs exhausted")?;
+        |next| next.checked_add(1))
+        .map_err(|_| anyhow::anyhow!("Worker installation IDs exhausted"))?;
     let core = core_module(&engine, source.wat())?;
     let mut store = Store::new(&engine, Host {
         table: ResourceTable::new(), installed: None, export_capture: None,

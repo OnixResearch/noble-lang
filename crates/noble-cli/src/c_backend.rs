@@ -897,7 +897,7 @@ fn lower_body<'a>(
                 };
                 (op, 0, json!(["word", word]))
             }
-            Node::SlotInvoke { .. } | Node::Literal { .. } => {
+            Node::SlotInvoke { .. } | Node::SignedSelf { .. } => {
                 return Err("unsupported checked C value, effect or live operation".into())
             }
         };

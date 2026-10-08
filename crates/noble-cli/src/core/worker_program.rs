@@ -552,7 +552,7 @@ impl Store {
 
     pub(crate) fn source_owner_identity(&self, handle: Handle) -> Option<u64> {
         self.named(handle)?;
-        Some(self.owners.get(handle.node)?.identity)
+        Some(self.closure.get(handle.node)?.identity)
     }
 
     pub(crate) fn interface(&self, handle: Handle) -> Option<(&[Ty], &[Ty], &EffSet)> {
