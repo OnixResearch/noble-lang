@@ -46,8 +46,14 @@ after trap/quota. The source manifest SHA-256 is
 `33317914fd0f057b9eb45047ac21f052833334ad25910c30fce2154e7c40fd5a`;
 the combined scoped guest receipt SHA-256 is
 `9376b0d13aa1c0cd2f852925fc9af528821428ee36cb6cdc6044dc6bc7eab5d5`.
-Complete H-LIVE-01/LIVE-05 watch, LIVE-02 active in-flight reload,
-LIVE-05 forced overlap, LIVE-06 explicit host revoke, effectful/general
+The later feature-only FIFO tests stop inside an actual old compiled Wasm
+guest frame before a queued reload ACK, and after checked candidate A
+compilation before its staging reply, allowing a second complete fsynced
+rename B to supersede A. The worker reports 55 default and 57
+feature-enabled live tests passing, with separate external `MAP_SHARED`
+source-drift refusal. These scoped controls are not complete H-LIVE-01/
+LIVE-05 watch acceptance, complete source-bound LIVE-02, every LIVE-05
+variant or LIVE-06 explicit host-policy revocation; effectful/general
 transitions, general LIVE-10 cancellation/retirement, interpreter
 execution, canonical scenario receipts and source-bound proof remain open.
 The canonical LIVE case states remain `absent`/`not-run`/proof `open`; none of the

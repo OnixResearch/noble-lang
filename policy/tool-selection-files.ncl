@@ -3,7 +3,7 @@
   ".pre-commit-config.yaml" = "968b8b2fa4e321c91a6ddad1eac2a4043dc6cf04d03582a19be60a1555591ad5",
   "Cargo.lock" = "414f95bc62d57849a6411aed8d848bd93fe00111dba2c19be4a77e1b6e0161aa",
   "Cargo.toml" = "f80e3a51b375873afb46e9b933890e560ab5334c4f98c7e7000b528c50f0a73e",
-  "crates/noble-cli/Cargo.toml" = "8ef62b03ee3e21b424871335abe5a671929701ee66d843b02d3a70646094c9e9",
+  "crates/noble-cli/Cargo.toml" = "eab853345228f777002b3ef476e9ee369f03763abfbe45a7fede24843798ced3",
   "crates/noble-cli/src/core/live_slot.rs" = "54c1a8fda1283c1181b5749ad5816cf23e678ee806cd15919d7ba4e7f6263073",
   "crates/noble-cli/src/core/live_slot_origin.rs" = "e8fac3045f9a85df13eb23495f8dc007663380aa3a56c10bd00fe7275d50080d",
   "crates/noble-cli/src/workflow/intrinsic.rs" = "59304c02632dd8d0ad628e8a0325ecfe90599c3a3f8e061f06b257d1287bcdf4",
