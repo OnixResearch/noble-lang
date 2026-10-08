@@ -21,9 +21,20 @@ pub(super) fn lower(tree: &mut super::Tree, meter: &mut crate::Meter) -> Result<
     if !tree.nodes.iter().any(|node| matches!(&node.kind, super::Kind::Word(word) if word == b"let")) {
         return Ok(());
     }
+    // A declaration's final, unreferenced quotation is its syntactic `def`
+    // envelope, not an executable node. Keep it last when the lowering adds
+    // checked operations, so signed owner certificates can distinguish it
+    // from every generated executable node without trusting source spans.
+    let envelope = tree.nodes.len().checked_sub(1)
+        .filter(|index| matches!(&tree.nodes[*index].kind,
+            super::Kind::Quotation(children) if children.is_empty())
+            && !tree.body.iter().any(|id| usize::try_from(*id).ok() == Some(*index)))
+        .and_then(|_| tree.nodes.pop());
     let body = core::mem::take(&mut tree.body);
     let mut lower = Lower { nodes: &mut tree.nodes, meter };
-    tree.body = attempt!(lower.body(&body, Vec::new(), 0));
+    let lowered = lower.body(&body, Vec::new(), 0);
+    if let Some(envelope) = envelope { tree.nodes.push(envelope); }
+    tree.body = attempt!(lowered);
     Ok(())
 }
 
