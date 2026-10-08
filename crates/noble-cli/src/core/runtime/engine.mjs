@@ -554,11 +554,12 @@ export class CoreEngine {
     return { outcome: 'discarded', generation: this.shared.generation.value };
   }
 
-  liveCodeIdle(allowQueuedProposal = false) {
+  liveCodeIdle(allowQueuedProposal = false, allowMissingInstance = false) {
     return this.liveCodeOwners && !this.poisoned && !this.pending && !this.parked
       && !this.staged && (!this.liveProposal || allowQueuedProposal)
       && !this.liveExecuting && !this.liveInstalling
-      && this.last !== null && this.shared.cp.value === 0 && this.shared.failure.value === 0
+      && (allowMissingInstance || this.last !== null)
+      && this.shared.cp.value === 0 && this.shared.failure.value === 0
       && new DataView(this.memory.buffer).getInt32(61440, true) === 0;
   }
 
@@ -635,7 +636,14 @@ export class CoreEngine {
   }
 
   releaseObservedRoots() {
-    if (!this.liveCodeIdle()) fail('observed root release requires an idle checked live worker');
+    if (!this.liveCodeIdle(false, true)) fail('observed root release requires an idle checked live worker');
+    if (this.last === null) {
+      if (this.externalCodeRoots.size !== 0) {
+        this.poisoned = true;
+        fail('unexecuted live worker retained observed code roots');
+      }
+      return { outcome: 'observed-roots-released', released: 0 };
+    }
     const runtime = this.runtime();
     let released = 0;
     // A report grants the host a real root even for nested quotation handles

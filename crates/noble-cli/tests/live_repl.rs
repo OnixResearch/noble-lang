@@ -968,6 +968,15 @@ fn declared_old_code_retires_after_last_nested_program_then_reimports_exact_old_
     let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
     let original = live.report()?;
     live_ack(&original, &[]);
+    let generation = number_field(&original, "generation");
+    let empty_release = live.submit(":release-observed-roots")?;
+    assert_eq!(text_field(&empty_release, "outcome"), "observed-roots-released", "{empty_release}");
+    assert_eq!(number_field(&empty_release, "generation"), generation);
+    assert_eq!(number_field(&empty_release, "released_observed_roots"), 0);
+    assert_eq!(empty_release["retired_code_spans"], serde_json::json!([]), "{empty_release}");
+    assert_eq!(number_field(&empty_release, "guest_requests"), 0);
+    assert_eq!(number_field(&empty_release, "protected_operations"), 0);
+    assert_generation_inspection(&live.submit(":generation")?, generation, &original["stack"]);
     assert_eq!(text_field(&live.submit("import m@1 as m")?, "outcome"), "namespace-committed");
     let saved = live.submit("[ [ 20 m.addone ] ]")?;
     assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
