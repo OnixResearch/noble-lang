@@ -7,7 +7,8 @@ use noble_kernel::async_tasks as task;
 use parking_lot::Mutex;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{io::Read, os::unix::fs::OpenOptionsExt, path::Path, sync::Arc, time::Duration};
+use std::{future::Future, io::Read, os::unix::fs::OpenOptionsExt, path::Path,
+    sync::Arc, task::Poll, time::Duration};
 use wasmtime::component::{Component, FutureReader, Linker, Val, types::ComponentItem};
 use wasmtime::{Config, Engine, Store, StoreContextMut, StoreLimits, StoreLimitsBuilder};
 
@@ -130,7 +131,7 @@ fn read_component(path:&Path)->Result<(Vec<u8>,String)> {
 
 async fn execute(arguments:&[String])->Result<Value> {
     let [_,component_path,cli_path,package_path,schema_path,state_path,submit_path,cancel_path,grant_path,mode]=arguments else {
-        bail!("usage: noble-worker-send-peer COMPONENT NOBLE PACKAGE SCHEMA STATE SUBMIT CANCEL HOST_GRANT send-then-cancel|cancel-before-send|inject-receive-error|inject-receive-corruption|inject-producer-panic|inject-cancel-error|inject-cancel-panic|buffer-quota-preflight")
+        bail!("usage: noble-worker-send-peer COMPONENT NOBLE PACKAGE SCHEMA STATE SUBMIT CANCEL HOST_GRANT send-then-cancel|cancel-before-send|inject-receive-error|inject-receive-corruption|inject-producer-panic|inject-cancel-error|inject-cancel-panic|inject-fallback-authority-error|buffer-quota-preflight")
     };
     let selected=verified::run(Path::new(cli_path),Path::new(package_path),Path::new(schema_path),
         Path::new(state_path),Path::new(submit_path),Path::new(cancel_path))?;
@@ -144,28 +145,46 @@ async fn execute(arguments:&[String])->Result<Value> {
         limits:StoreLimitsBuilder::new().memory_size(4_194_304).instances(16).tables(16).build(),
         host:host.clone(),selected,live:None,
     });
-    store.limiter(|runtime|&mut runtime.limits);
-    store.set_fuel(100_000)?;
-    store.fuel_async_yield_interval(Some(1_000))?;
-    store.set_epoch_deadline(1);
-    let mut linker=Linker::new(&engine);
-    link(&engine,&component,&mut linker)?;
-    let instance=linker.instantiate_async(&mut store,&component).await?;
-    let typed=bindings::WorkerShell::new(&mut store,&instance)?;
-    let attempt=store.data().selected.attempt;
-    let text=store.data().selected.text.clone();
-    let call=tokio::time::timeout(Duration::from_secs(10),store.run_concurrent(async |accessor| {
-        let ((),task)=typed.call_dispatch(accessor,attempt,text).await?;
-        task.block(accessor).await;
-        Ok::<(),anyhow::Error>(())
-    })).await.map_err(anyhow::Error::from).and_then(|value|value).and_then(|value|value);
+    // Instantiation runs core start functions, which may already have begun
+    // a native Send before trapping or failing typed export lookup. Keep all
+    // work after Store construction in one bounded, unwind-safe guest phase;
+    // even an error here must proceed through the shared retirement path.
+    let call=tokio::time::timeout(Duration::from_secs(10),async {
+        let phase=async {
+            store.limiter(|runtime|&mut runtime.limits);
+            store.set_fuel(100_000)?;
+            store.fuel_async_yield_interval(Some(1_000))?;
+            store.set_epoch_deadline(1);
+            let mut linker=Linker::new(&engine);
+            link(&engine,&component,&mut linker)?;
+            let instance=linker.instantiate_async(&mut store,&component).await?;
+            let typed=bindings::WorkerShell::new(&mut store,&instance)?;
+            let attempt=store.data().selected.attempt;
+            let text=store.data().selected.text.clone();
+            store.run_concurrent(async |accessor| {
+                let ((),task)=typed.call_dispatch(accessor,attempt,text).await?;
+                task.block(accessor).await;
+                Ok::<(),anyhow::Error>(())
+            }).await??;
+            Ok::<(),anyhow::Error>(())
+        };
+        let mut phase=std::pin::pin!(phase);
+        std::future::poll_fn(|cx|
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(||
+                phase.as_mut().poll(cx)))
+                .unwrap_or_else(|_|Poll::Ready(Err(anyhow::anyhow!(
+                    "component guest phase panicked"))))
+        ).await
+    }).await.map_err(anyhow::Error::from).and_then(|result|result);
     let selected=&mut store.data_mut().selected;
     let source_sha256=std::mem::take(&mut selected.source_sha256);
     let checked_first=std::mem::take(&mut selected.first);
     let checked_second=std::mem::take(&mut selected.second);
     let future_consumed=store.data().live.is_none();
     let pins_at_guest_exit=host.lock().outstanding_pins();
-    drop(store);
+    let store_drop_diagnostic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||
+        drop(store)))
+        .err().map(|_|"component Store disposal panicked".to_owned());
     // Store disposal is not native-stop. Host table/callback and producer job
     // remain alive until explicit join, completion, resource cleanup and pin settlement.
     let abort_diagnostic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||
@@ -173,19 +192,21 @@ async fn execute(arguments:&[String])->Result<Value> {
         .map_err(|_|anyhow::anyhow!("host Send abort panicked"))
         .and_then(|result|result).err().map(|error|format!("{error:#}"));
     let joined={host.lock().take_native()};
-    let native_completion_diagnostic=if let Some(joined)=joined {
+    let (native_completion_diagnostic,release_diagnostic)=if let Some(joined)=joined {
         // A producer panic ends native access but not the host's retained
         // task/resource obligations. Finish retirement even when no native
         // result can be trusted or delivered to the closed guest future.
         let native=joined.join().unwrap_or_else(|_|
             Err("native Send producer panicked".to_owned()));
-        host.lock().finish_native(native).err().map(|error|format!("{error:#}"))
+        (host.lock().finish_native(native).err().map(|error|format!("{error:#}")),None)
     } else {
-        host.lock().release_unused()?;
-        None
+        (None,host.lock().release_unused().err().map(|error|format!("{error:#}")))
     };
     let observed=host.lock().observation();
-    let outcome=if abort_diagnostic.is_some() {"internal-failure"}
+    let cleanup_failed=observed["cleanup_failures"].as_array()
+        .is_some_and(|failures|!failures.is_empty());
+    let outcome=if store_drop_diagnostic.is_some() || abort_diagnostic.is_some()
+        || release_diagnostic.is_some() || cleanup_failed {"internal-failure"}
         else if observed["denied"]==true {"denied"}
         else if observed["quota_refusal"]=="byte-capacity" {"quota-denied"}
         else if native_completion_diagnostic.is_some() {
@@ -214,6 +235,12 @@ async fn execute(arguments:&[String])->Result<Value> {
     }
     if let Some(diagnostic)=abort_diagnostic {
         report["abort_diagnostic"]=Value::String(diagnostic);
+    }
+    if let Some(diagnostic)=store_drop_diagnostic {
+        report["store_drop_diagnostic"]=Value::String(diagnostic);
+    }
+    if let Some(diagnostic)=release_diagnostic {
+        report["release_diagnostic"]=Value::String(diagnostic);
     }
     Ok(report)
 }

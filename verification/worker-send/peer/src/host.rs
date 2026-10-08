@@ -61,6 +61,7 @@ impl Grant {
 pub enum Mode {
     SendThenCancel,
     CancelBeforeSend,
+    InjectFallbackAuthorityError,
     InjectReceiveError,
     InjectReceiveCorruption,
     InjectProducerPanic,
@@ -72,6 +73,7 @@ impl Mode {
     pub fn parse(text:&str) -> Result<Self> {
         match text { "send-then-cancel"=>Ok(Self::SendThenCancel),
             "cancel-before-send"=>Ok(Self::CancelBeforeSend),
+            "inject-fallback-authority-error"=>Ok(Self::InjectFallbackAuthorityError),
             "inject-receive-error"=>Ok(Self::InjectReceiveError),
             "inject-receive-corruption"=>Ok(Self::InjectReceiveCorruption),
             "inject-producer-panic"=>Ok(Self::InjectProducerPanic),
@@ -112,31 +114,75 @@ struct Pending {
     receive_buffer:Vec<u8>,
 }
 
-// The producer's gate is last: even an error or unwind must retire guest
-// access, invocation authority and native resource access before it can run.
+// The producer's gate is last. Attempt every independent revocation even
+// after a refusal; the producer cannot issue a post-gate Send in any mode.
+// Native pins cannot settle until the released producer has exited and joined.
 struct Cancellation<'a> {
     pending:&'a mut Pending,
     tasks:&'a mut task::Table,
     authority:&'a mut auth::Authority,
     resources:&'a mut owner::Table,
+    cleanup_failures:&'a mut Vec<String>,
+    pins_at_cancel:&'a mut usize,
     task_retired:bool,
     authority_cancelled:bool,
     resource_revoked:bool,
 }
 
+impl Cancellation<'_> {
+    fn record_failure(&mut self, mut diagnostic:String) {
+        // Three independent fallbacks plus the physical-pin check. Kernel
+        // errors here are fixed-size enums; still bound the exposed report.
+        if self.cleanup_failures.len() >= 4 { return; }
+        if diagnostic.len() > 192 {
+            let boundary=diagnostic.char_indices().map(|(offset,_)|offset)
+                .take_while(|offset|*offset<=189).last().unwrap_or(0);
+            diagnostic.truncate(boundary);
+            diagnostic.push_str("...");
+        }
+        self.cleanup_failures.push(diagnostic);
+    }
+}
+
 impl Drop for Cancellation<'_> {
     fn drop(&mut self) {
-        if !self.task_retired
-            && self.tasks.retire(self.pending.callback.task,task::Failure::Internal).is_ok() {
-            // A rejected move-only Task stays owned by Pending until the
-            // authenticated callback is retired by the trusted host.
-            self.pending.token.take();
+        if !self.task_retired {
+            match self.tasks.retire(self.pending.callback.task,task::Failure::Internal) {
+                Ok(decision) if decision.record.state==task::State::Retiring => {
+                    // A rejected move-only Task stays owned by Pending unless
+                    // trusted host retirement actually consumes guest access.
+                    self.pending.token.take();
+                }
+                Ok(decision)=>self.record_failure(
+                    format!("task.retire: unexpected state: {:?}",decision.record.state)),
+                Err(error)=>self.record_failure(
+                    format!("task.retire: retained host decision: {error:?}")),
+            }
         }
         if !self.authority_cancelled {
-            let _=self.authority.cancel_invocation();
+            if let Err(error)=self.authority.cancel_invocation() {
+                self.record_failure(format!(
+                    "authority.cancel_invocation: retained host decision: {error:?}"));
+            }
         }
         if !self.resource_revoked {
-            let _=self.resources.retire(self.pending.scope.handle,owner::Retirement::HostCleanup);
+            match self.resources.retire(self.pending.scope.handle,owner::Retirement::HostCleanup) {
+                Ok(decision) if decision.record.state
+                    ==owner::State::Retiring(self.pending.scope.serial)=>{}
+                Ok(decision)=>self.record_failure(
+                    format!("resources.retire: unexpected state: {:?}",decision.record.state)),
+                Err(error)=>self.record_failure(
+                    format!("resources.retire: retained host decision: {error:?}")),
+            }
+        }
+        // Neither cancellation nor host retirement releases the physical pin.
+        // Even on refusal, record the actual state before opening the gate.
+        let task_pins=self.tasks.observation().outstanding_pins;
+        let resource_pins=self.resources.observation().native_pins;
+        *self.pins_at_cancel=resource_pins;
+        if task_pins!=1 || resource_pins!=1 {
+            self.record_failure(format!(
+                "pre-gate native pin mismatch: task={task_pins}, resource={resource_pins}"));
         }
         if let Some(release)=self.pending.release.take() {let _=release.send(());}
     }
@@ -162,6 +208,7 @@ pub struct Host {
     late_retired:bool,
     late_task_outcome:Option<task::Outcome>,
     pins_at_cancel:usize,
+    cleanup_failures:Vec<String>,
 }
 
 impl Host {
@@ -194,7 +241,8 @@ impl Host {
         let mut host=Self {authority,tasks,resources,required,owner:None,
             sender:Some(sender),receiver:Some(receiver),pending:None,grant,mode,context,
             denied:false,quota_refusal:None,native_sent:0,native_error:None,receiver_reads:0,
-            late_retired:false,late_task_outcome:None,pins_at_cancel:0};
+            late_retired:false,late_task_outcome:None,pins_at_cancel:0,
+            cleanup_failures:Vec::new()};
         host.owner=Some(checked(host.resources.register(required))?);
         Ok(host)
     }
@@ -287,10 +335,11 @@ impl Host {
         let joined=std::thread::Builder::new().name("noble-worker-wit-send".into())
             .spawn(move || {
                 let _permit=started;
-                let sent=if mode==Mode::CancelBeforeSend {
+                let sent=if matches!(mode,Mode::CancelBeforeSend
+                    | Mode::InjectFallbackAuthorityError) {
                     // Acknowledging readiness does not complete the operation.
-                    // The native producer must not decide to skip Send until
-                    // cancellation has revoked access and released this gate.
+                    // No post-gate Send is possible even if cancellation
+                    // reports a revocation failure; the pin retires on join.
                     let _=started_tx.send(Ok(0));
                     let _=release_rx.recv();
                     Ok(0)
@@ -306,7 +355,7 @@ impl Host {
                 // Skipping a Send after cancellation is not a successful
                 // result, even though the closed future cannot deliver it.
                 let result=match (mode,&sent) {
-                    (Mode::CancelBeforeSend,Ok(0))=>
+                    (Mode::CancelBeforeSend | Mode::InjectFallbackAuthorityError,Ok(0))=>
                         Err("cancelled before native Send".to_owned()),
                     _=>sent.clone().map(|_|attempt),
                 };
@@ -333,10 +382,13 @@ impl Host {
     }
 
     pub fn cancel(&mut self,callback:task::Callback)->Result<()> {
+        let previous_cleanup_failures=self.cleanup_failures.len();
         let pending=self.pending.as_mut().context("no admitted task to cancel")?;
         ensure!(pending.callback==callback,"foreign or stale future cancellation");
         let mut cancellation=Cancellation {pending,tasks:&mut self.tasks,
             authority:&mut self.authority,resources:&mut self.resources,
+            cleanup_failures:&mut self.cleanup_failures,
+            pins_at_cancel:&mut self.pins_at_cancel,
             task_retired:false,authority_cancelled:false,resource_revoked:false};
         let token=cancellation.pending.token.take().context("duplicate future cancellation")?;
         // Deliberately exercise the real move-only rejection contract in the
@@ -360,6 +412,14 @@ impl Host {
             && decision.record.retiring_inputs==1
             && cancellation.tasks.observation().reserved.bytes
                 ==3*cancellation.pending.receive_buffer.len()+256;
+        if self.mode==Mode::InjectFallbackAuthorityError {
+            // Deliberately enter the real terminal Failed state. The primary
+            // cancellation below and the guard's fallback both receive the
+            // kernel's InvocationFinished refusal, not a fabricated error.
+            let failed=checked(cancellation.authority.fail_invocation())?;
+            ensure!(failed==auth::InvocationOutcome::Failed,
+                "injected invocation failure did not become terminal");
+        }
         let cancelled=checked(cancellation.authority.cancel_invocation());
         cancellation.authority_cancelled=cancelled.is_ok();
         let revoked=checked(cancellation.resources.revoke(
@@ -374,7 +434,8 @@ impl Host {
             && cancellation.resources.native_access(&cancellation.pending.borrow).is_err(),
             "resource access or native pin violated cancellation");
         drop(cancellation);
-        self.pins_at_cancel=1;
+        ensure!(self.cleanup_failures.len()==previous_cleanup_failures,
+            "host cancellation cleanup failed; see cleanup_failures");
         Ok(())
     }
 
@@ -416,12 +477,10 @@ impl Host {
     }
 
     pub fn finish_native(&mut self,outcome:std::result::Result<usize,String>)->Result<()> {
-        ensure!(self.pending.as_ref().context("late native completion without task")?
-            .token.is_none(),"native completion preceded cancellation");
         let mut pending=self.pending.take().context("late native completion without task")?;
         let receiver=self.receiver.take();
-        // No host observation is allowed to return before physical buffers
-        // are dropped and both ownership tables have retired the late result.
+        // Drop physical buffers and attempt both ownership-table settlements
+        // before returning; a refused retirement remains an explicit failure.
         let validation=(|| -> Result<bool> {
             let receiver=receiver.as_ref().context("missing native receiver after join")?;
             match (self.mode,&outcome) {
@@ -458,14 +517,14 @@ impl Host {
                         error.kind()==std::io::ErrorKind::WouldBlock),"duplicate datagram observed");
                     Ok(true)
                 }
-                (Mode::CancelBeforeSend,Ok(0))=>{
+                (Mode::CancelBeforeSend | Mode::InjectFallbackAuthorityError,Ok(0))=>{
                     let mut extra=[0];
                     let unexpected=receiver.recv(&mut extra);
                     if unexpected.is_ok(){self.receiver_reads+=1;}
                     ensure!(unexpected.is_err_and(|error|
                         error.kind()==std::io::ErrorKind::WouldBlock),
                         "cancelled operation sent a datagram");
-                    // No native operation succeeded; only retirement did.
+                    // No native Send occurred, and no result can be delivered.
                     Ok(false)
                 }
                 (_,Err(error))=>{
@@ -485,6 +544,20 @@ impl Host {
         drop(pending.receive_buffer);
         let success=matches!(&validation,Ok(true));
         let task_outcome=if success {task::Outcome::Success} else {task::Outcome::DomainError};
+        // A rejected fallback retirement keeps the move-only task in Pending.
+        // The joined producer is now stopped; retry host retirement before
+        // accepting its late callback, without skipping independent resource
+        // completion or pin settlement if the retry also refuses.
+        let retirement=if pending.token.is_some() {
+            let decision=checked(self.tasks.retire(pending.callback.task,task::Failure::Internal))
+                .and_then(|decision| {
+                    ensure!(decision.record.state==task::State::Retiring,
+                        "joined task host retirement did not revoke guest access");
+                    Ok(())
+                });
+            if decision.is_ok() {pending.token.take();}
+            decision
+        } else {Ok(())};
         let late=checked(self.tasks.complete(pending.callback,task_outcome,
             task::Completion {inputs:task::Disposition {returned:0,consumed:0,retired:1},
                 produced:0,bytes:0}));
@@ -503,6 +576,7 @@ impl Host {
         // callback rejection must not skip resource completion, nor may a
         // resource error skip the task's native-stop/pin/cleanup transitions.
         let settled=self.settle_retired(pending.callback);
+        retirement?;
         late?;
         stopped?;
         released?;
@@ -543,6 +617,7 @@ impl Host {
             "successful_result_deliveries":counters.successful_deliveries,
             "pins_at_cancel":self.pins_at_cancel,"late_completion_retired":self.late_retired,
             "late_task_outcome":late_task_outcome,
+            "cleanup_failures":self.cleanup_failures,
             "native_send_bytes":self.native_sent,"native_error":self.native_error,
             "receiver_datagrams":self.receiver_reads,
             "external_send_outcome":"not-attempted", "external_rollback_claimed":false})

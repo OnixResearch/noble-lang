@@ -98,20 +98,36 @@ provenance manifest, and NAR hash require separate realization and review
 before those pins or the source-bound selection can be renewed.
 These candidate-only pins are not a selected Nix, source-inventory, or
 native-assurance gate pass or independently verified signed-substitute proof.
+The isolated 144-file Nickel-exported candidate table had its exact source
+hashes checked statically and rejected a deliberately incorrect hash, without
+running the Nix checker. It must be regenerated and checked against the
+integrated checkout after merge; copying these hashes is not an integration
+or selected-source gate.
 The worker-send WIT peer and the host-owned `own<program>` Worker Program use
 separate interfaces and lifetimes: a Program cell is not the Send task or its
 native socket pin. The peer checks the typed worker's package, schema, source,
 and checked source-Program owner record (not an MW1 `own<program>` handle)
 before its own exact-action host grant. Cancellation revokes that grant and
-native access before releasing a blocked producer; the socket pin remains
-until native join and retirement. A changed root or peer
-Cargo lock requires renewed vendor-manifest and selected NAR binding before
+native access before releasing a blocked producer on the accepted path.
+Abnormal cleanup must expose any failed retirement and release the producer
+only after it can no longer initiate a Send; its socket pin stays charged
+until native join and retirement. A changed root or peer Cargo lock requires
+renewed vendor-manifest and selected NAR binding before
 any direct worker-send run can count as selected evidence.
+Component instantiation may execute a core start and call the host before
+typed export lookup. A trap, error, or panic from that phase must take the
+same Store-disposal, guest-abort, native-join, and pin-settlement path as
+an error during dispatch.
 The isolated peer pins SHA-256 0.10.2 already present in the older reviewed
 vendor archive set. It hashes its private package/schema snapshots and the
 same bounded component byte slice it hands to Wasmtime, rather than hashing
 one path and compiling a later reopening of that path. This source-only
 binding is not a selected offline build or an executed WIT result.
+The peer bounds each selected CLI check to a shared 60-second deadline with
+131072-byte stdout and 8192-byte stderr limits, killing its owned process
+group on failure. This bounds its ordinary caller-side wait and buffering,
+not arbitrary process containment, permission, or guaranteed synchronous
+reaping of a kernel-stuck child or deliberately group-escaping descendant.
 [`selectedVendor`](selected-vendor.mjs) verifies that NAR at each migrated
 gate before selecting Cargo's exact offline source replacement. Merely
 having a registry directory is not evidence of the reviewed vendor.

@@ -19,6 +19,17 @@ assert.equal(compilation.outcome, 'compiled');
 assert.equal(compilation.component_emitted, true);
 const component = path.join(componentDir, 'component.wasm');
 const componentSha256 = createHash('sha256').update(fs.readFileSync(component)).digest('hex');
+const compiledComponent = { path: component, sha256: componentSha256 };
+const startTrap = path.resolve('verification/worker-send/start-trap.wat');
+const startTrapComponent = {
+  path: startTrap,
+  sha256: createHash('sha256').update(fs.readFileSync(startTrap)).digest('hex'),
+};
+const missingDispatch = path.resolve('verification/worker-send/start-missing-dispatch.wat');
+const missingDispatchComponent = {
+  path: missingDispatch,
+  sha256: createHash('sha256').update(fs.readFileSync(missingDispatch)).digest('hex'),
+};
 const selected = name => path.join(fixtures, name);
 const worker = JSON.parse(fs.readFileSync(selected('package.json'), 'utf8'));
 const selectedSourceSha256 = createHash('sha256').update(worker.root.source_utf8).digest('hex');
@@ -46,8 +57,9 @@ generated.value.value.right.value = '{"grant":"candidate-generated","allow":true
 const generatedEvent = path.join(output, 'candidate-grant-event.json');
 fs.writeFileSync(generatedEvent, JSON.stringify(generated), { flag: 'wx', mode: 0o600 });
 
-function run(name, mode, submit, selectedGrant, expectedStatus = 0) {
-  const invoked = spawnSync(peer, [component, cli, selected('package.json'),
+function run(name, mode, submit, selectedGrant, expectedStatus = 0,
+  selectedComponent = compiledComponent) {
+  const invoked = spawnSync(peer, [selectedComponent.path, cli, selected('package.json'),
     selected('schema.noble'), selected('state.json'), submit, selected('cancel.json'),
     selectedGrant, mode], { encoding: 'utf8', timeout: 120_000 });
   assert.equal(invoked.status, expectedStatus, `${name}: ${invoked.stderr}\n${invoked.stdout}`);
@@ -55,7 +67,7 @@ function run(name, mode, submit, selectedGrant, expectedStatus = 0) {
   fs.writeFileSync(path.join(output, `${name.replaceAll(' ', '-')}.report.json`),
     invoked.stdout, { flag: 'wx', mode: 0o600 });
   assert.equal(report.schema, 'noble-worker-send-wit-integration/v1', name);
-  assert.equal(report.component_sha256, componentSha256,
+  assert.equal(report.component_sha256, selectedComponent.sha256,
     `${name}: peer did not report the exact selected component bytes`);
   assert.equal(report.first_guest.outcome, 'normal', name);
   assert.equal(report.cancel_guest.outcome, 'normal', name);
@@ -100,6 +112,48 @@ assert.equal(cancelled.host.task_reserved_bytes, 0);
 assert.equal(cancelled.host.successful_result_deliveries, 0);
 assert.equal(cancelled.host.native_error, null);
 assert.equal(Object.hasOwn(cancelled, 'native_completion_diagnostic'), false);
+const startTrapReport = run('core start traps after send admission', 'cancel-before-send',
+  selected('submit.json'), approvedGrant, 2, startTrapComponent);
+assert.equal(startTrapReport.outcome, 'internal-failure');
+assert.match(startTrapReport.guest_component_error, /unreachable|trap/i);
+assert.equal(startTrapReport.future_consumed, false);
+assert.equal(startTrapReport.native_pins_at_guest_exit, 1);
+assert.equal(startTrapReport.host.protected_operation_attempts, 1);
+assert.equal(startTrapReport.host.pins_at_cancel, 1);
+assert.equal(startTrapReport.host.task_retired, 1);
+assert.equal(startTrapReport.host.resource_retired, 1);
+assert.equal(startTrapReport.host.late_completion_retired, true);
+assert.equal(startTrapReport.host.late_task_outcome, 'domain-error');
+assert.equal(startTrapReport.host.task_outstanding_pins, 0);
+assert.equal(startTrapReport.host.resource_native_pins, 0);
+assert.equal(startTrapReport.host.task_reserved_bytes, 0);
+assert.equal(startTrapReport.host.native_send_bytes, 0);
+assert.equal(startTrapReport.host.receiver_datagrams, 0);
+assert.equal(startTrapReport.host.successful_result_deliveries, 0);
+assert.deepEqual(startTrapReport.host.cleanup_failures, []);
+assert.equal(Object.hasOwn(startTrapReport, 'abort_diagnostic'), false);
+assert.equal(Object.hasOwn(startTrapReport, 'native_completion_diagnostic'), false);
+const lookupFailure = run('core start sends before typed lookup failure', 'cancel-before-send',
+  selected('submit.json'), approvedGrant, 2, missingDispatchComponent);
+assert.equal(lookupFailure.outcome, 'internal-failure');
+assert.match(lookupFailure.guest_component_error, /dispatch/);
+assert.equal(lookupFailure.future_consumed, false);
+assert.equal(lookupFailure.native_pins_at_guest_exit, 1);
+assert.equal(lookupFailure.host.protected_operation_attempts, 1);
+assert.equal(lookupFailure.host.pins_at_cancel, 1);
+assert.equal(lookupFailure.host.task_retired, 1);
+assert.equal(lookupFailure.host.resource_retired, 1);
+assert.equal(lookupFailure.host.late_completion_retired, true);
+assert.equal(lookupFailure.host.late_task_outcome, 'domain-error');
+assert.equal(lookupFailure.host.task_outstanding_pins, 0);
+assert.equal(lookupFailure.host.resource_native_pins, 0);
+assert.equal(lookupFailure.host.task_reserved_bytes, 0);
+assert.equal(lookupFailure.host.native_send_bytes, 0);
+assert.equal(lookupFailure.host.receiver_datagrams, 0);
+assert.equal(lookupFailure.host.successful_result_deliveries, 0);
+assert.deepEqual(lookupFailure.host.cleanup_failures, []);
+assert.equal(Object.hasOwn(lookupFailure, 'abort_diagnostic'), false);
+assert.equal(Object.hasOwn(lookupFailure, 'native_completion_diagnostic'), false);
 for (const [name, mode, diagnostic] of [
   ['injected receiver error', 'inject-receive-error', /native receiver read failed/],
   ['injected receiver corruption', 'inject-receive-corruption',
@@ -169,6 +223,28 @@ for (const [name, mode, failure] of [
   assert.equal(fault.host.task_reserved_bytes, 0, name);
   assert.equal(Object.hasOwn(fault, 'native_completion_diagnostic'), false, name);
 }
+const fallbackAuthority = run('failed fallback authority retirement',
+  'inject-fallback-authority-error', selected('submit.json'), approvedGrant, 2);
+assert.equal(fallbackAuthority.outcome, 'internal-failure');
+assert.match(fallbackAuthority.guest_component_error, /InvocationFinished/);
+assert.equal(fallbackAuthority.host.cleanup_failures.length, 1);
+assert.match(fallbackAuthority.host.cleanup_failures[0],
+  /authority\.cancel_invocation.*InvocationFinished/);
+assert.equal(fallbackAuthority.future_consumed, true);
+assert.equal(fallbackAuthority.native_pins_at_guest_exit, 1);
+assert.equal(fallbackAuthority.host.protected_operation_attempts, 1);
+assert.equal(fallbackAuthority.host.pins_at_cancel, 1);
+assert.equal(fallbackAuthority.host.task_retired, 1);
+assert.equal(fallbackAuthority.host.resource_retired, 1);
+assert.equal(fallbackAuthority.host.late_completion_retired, true);
+assert.equal(fallbackAuthority.host.late_task_outcome, 'domain-error');
+assert.equal(fallbackAuthority.host.task_outstanding_pins, 0);
+assert.equal(fallbackAuthority.host.resource_native_pins, 0);
+assert.equal(fallbackAuthority.host.task_reserved_bytes, 0);
+assert.equal(fallbackAuthority.host.native_send_bytes, 0);
+assert.equal(fallbackAuthority.host.receiver_datagrams, 0);
+assert.equal(fallbackAuthority.host.successful_result_deliveries, 0);
+assert.equal(Object.hasOwn(fallbackAuthority, 'native_completion_diagnostic'), false);
 const bufferQuota = run('buffer quota preflight', 'buffer-quota-preflight',
   selected('submit.json'), approvedGrant, 2);
 assert.equal(bufferQuota.outcome, 'quota-denied');
@@ -220,8 +296,10 @@ console.log(JSON.stringify({ schema: 'noble-worker-send-wit-smoke/v1',
   world: 'noble-test:worker-send/worker-shell@1.0.0',
   scope: 'local-socket-only-not-canonical-WORKER-01',
   cases: ['authorized socket send', 'cancel before native send',
+    'core start traps after send admission', 'core start sends before typed lookup failure',
     'injected receiver error', 'injected receiver corruption',
     'native producer panic after send', 'rejected native cancellation',
-    'unwound native cancellation', 'buffer quota preflight',
+    'unwound native cancellation', 'failed fallback authority retirement',
+    'buffer quota preflight',
     'no-grant', 'mismatched-attempt-grant', 'expired-grant', 'candidate-generated-grant',
     'mismatched-source-grant'] }));
