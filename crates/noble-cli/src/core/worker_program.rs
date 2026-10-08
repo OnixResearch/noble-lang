@@ -527,14 +527,18 @@ impl Store {
         self.charge(work)
     }
 
-    /// Explicit effect inclusion changes only a witness, never a recipe node.
+    /// Explicit type-level effect inclusion changes only a witness, never a
+    /// recipe node or host authority. Executable guest admission still
+    /// requires a separate effect issuer; only pure cells are admitted here.
     pub(crate) fn adapt(&mut self, handle: Handle, destination: &EffSet)
         -> Result<Handle, Refusal> {
         let current = self.witnesses.get(handle.witness).ok_or(Refusal::Invalid)?;
         if handle.instance != self.instance { return Err(Refusal::Invalid) }
         self.nodes.get(handle.node).ok_or(Refusal::Invalid)?;
         if current.node != handle.node { return Err(Refusal::Invalid) }
-        if !current.effects.is_subset_of(destination) || !destination.is_empty() {
+        if !current.effects.is_subset_of(destination)
+            || destination.as_slice().iter()
+                .any(|effect| *effect != noble_kernel::contracts::TEST_EMIT) {
             return Err(Refusal::Invalid)
         }
         if self.witnesses.len() >= WITNESS_LIMIT { return Err(Refusal::Exhausted) }
@@ -904,14 +908,16 @@ mod tests {
         assert!(selected.prepare_export("compute",
             b"programs.admit swap programs.invoke", SOURCE_LIMITS).is_ok(),
             "selected source can type the host-admitted Program");
-        let destination = EffSet::empty();
-        let wider = store.adapt(original, &destination).expect("checked pure effect inclusion");
-        assert_eq!(store.recipe_nodes(), 2, "adapting must not add a recipe node");
+        let destination = EffSet::from_ids(&[TEST_EMIT]);
+        let wider = store.adapt(original, &destination).expect("checked effect inclusion");
+        assert_eq!(store.recipe_nodes(), 2, "widening must not add a recipe node");
         assert_eq!(store.original(wider).unwrap().2, &EffSet::empty());
         assert_eq!(store.interface(wider).unwrap().2, &destination);
         let mismatched = Handle { node: other.node, ..wider };
         assert!(store.interface(mismatched).is_none());
         assert!(matches!(store.adapt(mismatched, &destination), Err(Refusal::Invalid)));
+        assert!(matches!(store.select(&[other, wider], 1), Err(Refusal::Invalid)),
+            "heterogeneous effect witnesses cannot enter a typed list");
         let second = store.adapt(other, &destination).expect("second source-checked Program");
         assert_eq!(store.select(&[wider, second], 1), Ok(second));
         let composed = store.compose(wider, second).expect("compatible checked stacks");
@@ -919,8 +925,10 @@ mod tests {
         assert_eq!(store.interface(composed).unwrap().2, &destination);
         assert_eq!(store.original(original).unwrap().2, &EffSet::empty());
         assert_eq!(store.recipe_nodes(), 3);
-        assert!(matches!(store.adapt(wider, &EffSet::from_ids(&[TEST_EMIT])),
-            Err(Refusal::Invalid)), "unissued effect must not widen");
+        assert!(matches!(store.adapt(wider, &EffSet::empty()), Err(Refusal::Invalid)),
+            "effect ceiling must not narrow");
+        assert!(matches!(store.package(wider), Err(Refusal::Unsupported)),
+            "widening alone cannot authorize executable export");
         assert!(matches!(store.compose(original, composed), Err(Refusal::Exhausted)),
             "a consumed request budget must not silently reset");
     }
@@ -936,16 +944,18 @@ mod tests {
     }
 
     #[test]
-    fn unissued_effect_ceiling_and_request_work_cannot_be_selected_by_source() {
+    fn unissued_effect_witness_cannot_grant_package_export() {
         let source = b"module Worker@1 [ export plus def plus [ 1 + ] ]";
         assert!(matches!(Store::prepare(source, "plus", &[Ty::I64], 3),
             Err(Refusal::Exhausted)), "source checks cannot refresh an empty request meter");
         let (mut pure, root) = Store::prepare(source, "plus", &[Ty::I64], 1_000_000)
             .expect("pure source");
-        pure.work_left = 1;
-        assert!(matches!(pure.adapt(root, &EffSet::from_ids(&[TEST_EMIT])),
-            Err(Refusal::Invalid)), "source must not select an absent host contract");
+        pure.work_left = 2;
+        let widened = pure.adapt(root, &EffSet::from_ids(&[TEST_EMIT]))
+            .expect("type-level effect inclusion does not perform a host request");
         assert_eq!(pure.recipe_nodes(), 1);
+        assert_eq!(pure.original(widened).unwrap().2, &EffSet::empty());
+        assert!(matches!(pure.package(widened), Err(Refusal::Unsupported)));
         assert!(pure.adapt(root, &EffSet::empty()).is_ok());
         assert!(matches!(pure.adapt(root, &EffSet::empty()), Err(Refusal::Exhausted)));
         assert_eq!(pure.recipe_nodes(), 1);

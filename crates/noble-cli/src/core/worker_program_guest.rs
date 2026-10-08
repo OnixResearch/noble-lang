@@ -626,6 +626,17 @@ mod tests {
     }
 
     #[test]
+    fn type_level_widening_does_not_issue_a_host_effect_grant() {
+        let (mut source, root) = ProgramStore::prepare(
+            b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
+            "increment", &[Ty::I64], 50_000_000).unwrap();
+        let widened = source.adapt(root, &noble_kernel::types::EffSet::from_ids(
+            &[noble_kernel::contracts::TEST_EMIT])).unwrap();
+        assert!(matches!(execute(&mut source, widened, 41), Err(GuestFailure::Invalid(_))),
+            "an adapted effect witness alone cannot enter the pure Worker guest");
+    }
+
+    #[test]
     fn equal_text_bytes_rebind_as_distinct_checked_lexical_atoms() {
         let (mut source, root) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def increment [ \"same\" drop \"same\" drop 1 + ] export increment ]",
