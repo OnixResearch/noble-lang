@@ -2027,11 +2027,11 @@ mod tests {
         let checked = frontend
             .prepare(source, &[], super::super::SOURCE_LIMITS)
             .unwrap_or_else(|_| panic!("accepted source"));
-        let compiler = noble_wasm::source::Compiler::new();
+        let compiler = noble_wasm::source::Compiler::new_live();
         let compiled = compiler
             .prepare(checked.submission().expect("checked expression"))
             .unwrap_or_else(|_| panic!("compiled source"));
-        let binary = super::encoding::encode_checked(compiled.wat())
+        let binary = super::encoding::encode_live_checked(compiled.wat())
             .unwrap_or_else(|_| panic!("checked live binary"));
         let mut worker = super::super::worker::Engine::start_live()
             .unwrap_or_else(|_| panic!("resident live worker"));
