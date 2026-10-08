@@ -77,7 +77,7 @@ export function hashNarPath(root, validate = () => {}) {
     raw(zeroes.subarray(0, (-data.length) & 7));
   };
   const walk = (name, depth) => {
-    assert.ok(depth <= maxDepth, 'selected vendor NAR depth limit exceeded');
+    assert.ok(depth < maxDepth, 'selected vendor NAR depth limit exceeded');
     const before = fs.lstatSync(name, { bigint: true });
     validate(before, name);
     assert.ok(++nodes <= maxNodes, 'selected vendor NAR node limit exceeded');
