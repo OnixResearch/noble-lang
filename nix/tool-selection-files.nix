@@ -234,6 +234,7 @@
   "crates/noble-wasm/src/component/lower.rs"
   "crates/noble-wasm/src/component/lower/inputs.rs"
   "crates/noble-wasm/src/component/lower/operations.rs"
+  "crates/noble-wasm/src/component/mod.rs"
   "crates/noble-wasm/src/source/admission/environment/replay.rs"
   "crates/noble-wasm/src/source/admission/identity.rs"
   "crates/noble-wasm/src/source/emit.rs"

@@ -44,6 +44,7 @@ impl Value {
 }
 struct State {
     worker_program: Option<noble_kernel::types::ResourceKind>,
+    worker_program_type: Option<noble_kernel::types::Ty>,
     locals: alloc::vec::Vec<super::abi::Lane>,
     parameters: usize,
     stack: alloc::vec::Vec<Value>,
@@ -70,7 +71,8 @@ impl State {
         Ok(index)
     }
     fn value(&mut self, ty: noble_kernel::types::Ty) -> Result<Value, crate::Diagnostic> {
-        let canonical = attempt!(super::abi::value_type(&ty, self.worker_program));
+        let selected = self.worker_program.zip(self.worker_program_type.as_ref());
+        let canonical = attempt!(super::abi::value_type(&ty, selected));
         let mut locals = [None; VALUE_LANES];
         let mut at = 0usize;
         let mut failure = None;

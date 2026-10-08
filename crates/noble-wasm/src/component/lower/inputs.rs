@@ -6,8 +6,16 @@ pub(super) fn initial(
     world: &noble_contracts::component::World,
     parameters: &[noble_contracts::component::Type],
 ) -> Result<super::State, crate::Diagnostic> {
+    let worker_program = world.worker_program_kind();
+    let worker_program_type = worker_program.and_then(|kind| {
+        match world.noble_type(noble_contracts::component::Type::Own(kind)) {
+            Some(program @ noble_kernel::types::Ty::Program(_, _, _)) => Some(program),
+            Some(_) | None => None,
+        }
+    });
     let mut state = super::State {
-        worker_program: world.worker_program_kind(),
+        worker_program,
+        worker_program_type,
         locals: alloc::vec::Vec::new(),
         parameters: 0,
         stack: alloc::vec::Vec::with_capacity(parameters.len()),

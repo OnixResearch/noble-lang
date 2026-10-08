@@ -177,3 +177,131 @@ fn export_capacity(
         .checked_add(export.source().len())
         .ok_or(crate::Diagnostic::Exhausted)
 }
+
+#[cfg(test)]
+mod tests {
+    use alloc::vec;
+    use alloc::vec::Vec;
+    use noble_contracts::component::World;
+    use noble_contracts::source::{BoundOperation, ModuleSession, RetainedSourceLimit};
+    use noble_kernel::contracts::{TEST_CODE_EXPORT, TEST_EMIT};
+    use noble_kernel::types::{EffSet, Ty};
+
+    const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
+        bytes: 65_536,
+        nodes: 4_096,
+        depth: 32,
+        work: 3_000_000,
+    };
+
+    #[test]
+    fn selected_emit_compiles_only_exact_effectful_program_owner() {
+        let binding = BoundOperation {
+            module_name: "Ledger".into(),
+            module_version: 1,
+            operation: "test.emit".into(),
+            adapter_identity: "worker-test-emit".into(),
+            adapter_slot: 4,
+            input: vec![Ty::Text],
+            output: vec![],
+            effects: vec![TEST_EMIT],
+        };
+        let retained = RetainedSourceLimit::new(LIMITS.bytes).unwrap();
+        let session = ModuleSession::new(&[binding.clone()], retained).unwrap();
+        let module = session.prepare(
+            b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"private-ledger-marker\" emit 1 + ] ]",
+            &[], LIMITS,
+        ).unwrap();
+        let owner = module.checked_program_owner_for_binding("plus", &binding).unwrap();
+        let (session, committed) = session.commit(module);
+        committed.unwrap();
+        let invocation = session.prepare(b"Ledger@1.plus", &[Ty::I64], LIMITS).unwrap();
+        let interface = invocation.checked_program_interface_for_binding(&owner, &binding).unwrap();
+        let world = World::parse(
+            include_bytes!("../../wit/worker-program.wit"), "guest", LIMITS,
+        ).unwrap().select_worker_program_for_test_emit(&interface).unwrap();
+        let checked = world.prepare_export(
+            "compute", b"programs.admit swap programs.invoke", LIMITS,
+        ).unwrap();
+        let kind = world.worker_program_kind().unwrap();
+        let selected = world.noble_type(noble_contracts::component::Type::Own(kind)).unwrap();
+        let wrong_effect = Ty::program(
+            vec![Ty::I64], vec![Ty::I64], EffSet::from_ids(&[TEST_CODE_EXPORT]),
+        );
+        assert!(matches!(
+            super::abi::value_type(&wrong_effect, Some((kind, &selected))),
+            Err(crate::Diagnostic::Unsupported)
+        ), "a different latent effect cannot alias selected own<program>");
+        assert!(world.prepare_export("compute", b"programs.admit run", LIMITS).is_err(),
+            "selected latent effect is not directly callable");
+        assert!(super::compile(&world, core::slice::from_ref(&checked)).is_ok(),
+            "selected import-only guest must publish a complete component artifact");
+    }
+
+    fn checked_interface(
+        source: &[u8],
+        invocation: &[u8],
+        name: &str,
+        binding: Option<&BoundOperation>,
+    ) -> noble_contracts::source::CheckedProgramInterface {
+        let bindings: Vec<_> = binding.into_iter().cloned().collect();
+        let session = ModuleSession::new(&bindings,
+            RetainedSourceLimit::new(LIMITS.bytes).unwrap()).unwrap();
+        let module = session.prepare(source, &[], LIMITS).unwrap();
+        let owner = match binding {
+            Some(binding) => module.checked_program_owner_for_binding(name, binding).unwrap(),
+            None => module.checked_program_owner(name).unwrap(),
+        };
+        let (session, committed) = session.commit(module);
+        committed.unwrap();
+        let invocation = session.prepare(invocation, &[Ty::I64], LIMITS).unwrap();
+        match binding {
+            Some(binding) => invocation.checked_program_interface_for_binding(&owner, binding)
+                .unwrap(),
+            None => invocation.checked_program_interface(&owner).unwrap(),
+        }
+    }
+
+    #[test]
+    fn selected_pure_and_code_export_compile_only_exact_program_owners() {
+        let wit = include_bytes!("../../wit/worker-program.wit");
+        let pure = checked_interface(
+            b"module plain@1 [ export plus def plus [ 1 + ] ]",
+            b"plain@1.plus", "plus", None,
+        );
+        let pure_world = World::parse(wit, "guest", LIMITS).unwrap()
+            .select_worker_program(&pure).unwrap();
+        let pure_guest = pure_world.prepare_export(
+            "compute", b"programs.admit swap programs.invoke", LIMITS,
+        ).unwrap();
+        assert!(super::compile(&pure_world, core::slice::from_ref(&pure_guest)).is_ok(),
+            "pure selected Program must compile through the same exact own<program> ABI");
+
+        let binding = BoundOperation {
+            module_name: "ledger".into(),
+            module_version: 1,
+            operation: "test.code-export".into(),
+            adapter_identity: "worker-test-code-export@1.0.0".into(),
+            adapter_slot: 4,
+            input: vec![Ty::Text, Ty::Text],
+            output: vec![],
+            effects: vec![TEST_CODE_EXPORT],
+        };
+        let effectful = checked_interface(
+            b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-export-marker\" \"hidden-capture-destination\" code_export ] ]",
+            b"ledger@1.capture", "capture", Some(&binding),
+        );
+        assert!(World::parse(wit, "guest", LIMITS).unwrap()
+            .select_worker_program_for_test_emit(&effectful).is_err(),
+            "the wrong effect must not select a different Program owner");
+        let selected = World::parse(wit, "guest", LIMITS).unwrap()
+            .select_worker_program_for_test_code_export(&effectful).unwrap();
+        assert!(selected.prepare_export("compute", b"programs.admit run", LIMITS).is_err(),
+            "a selected latent code-export effect remains noncallable");
+        let checked = selected.prepare_export("compute",
+            b"programs.admit \"denied-destination\" programs.request-code-export drop",
+            LIMITS).unwrap();
+        assert!(super::compile(&selected, core::slice::from_ref(&checked)).is_ok(),
+            "selected code-export imports must compile without granting a direct effect");
+    }
+}
