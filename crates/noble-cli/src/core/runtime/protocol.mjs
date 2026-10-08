@@ -73,6 +73,14 @@ async function protocol(config) {
           if (engine.staged && header !== 'publish-bin' && header !== 'discard-bin') {
             fail('staged live reload requires publish or discard');
           }
+          if (header === 'test-host-revoke-ledger1-emit'
+            && typeof engine.revokeLive06TestEmit === 'function') {
+            try {
+              const report = engine.revokeLive06TestEmit();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
           if (header === 'publish-live-declared' || header === 'discard-live-declared') {
             try {
               const report = header === 'publish-live-declared'

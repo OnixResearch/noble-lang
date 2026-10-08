@@ -1026,6 +1026,100 @@ fn declared_rebound_alias_revokes_old_adapter_even_for_saved_program(
     Ok(())
 }
 
+#[cfg(feature = "live-test-barrier")]
+#[test]
+fn live06_host_revokes_old_effect_before_actual_retained_wasm_request(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n",
+    )?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let (initial, _) = live_ack(&live.report()?, &[]);
+    let imported = live.submit("import ledger@1 as l")?;
+    assert_eq!(text_field(&imported, "outcome"), "namespace-committed", "{imported}");
+    let saved = live.submit("[ l.send ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    assert_eq!(saved["stack"][0]["interface"]["effects"], serde_json::json!(["test.emit"]));
+    assert_eq!(number_field(&saved, "guest_requests"), 0);
+
+    // An explicit, test-feature-only host event revokes A while its old alias
+    // is still active. The later alias switch must not masquerade as revocation.
+    let revoked = live.submit(":test-host-revoke-ledger1-emit")?;
+    assert_eq!(text_field(&revoked, "stage"), "host-policy");
+    assert_eq!(text_field(&revoked, "outcome"), "host-policy-revoked", "{revoked}");
+    assert_eq!(text_field(&revoked, "module"), "ledger");
+    assert_eq!(number_field(&revoked, "version"), 1);
+    assert_eq!(text_field(&revoked, "effect"), "test.emit");
+    assert_eq!(text_field(&revoked, "adapter_identity"), "emit-a");
+    assert_eq!(revoked["previously_authorized"], true);
+    assert_eq!(revoked["currently_authorized"], false);
+    assert_eq!(revoked["stack"], saved["stack"]);
+    assert_eq!(number_field(&revoked, "generation"), initial + 1);
+    assert_eq!(number_field(&revoked, "guest_requests"), 0);
+    assert_eq!(number_field(&revoked, "protected_operations"), 0);
+    assert_generation_inspection(&live.submit(":generation")?, initial + 1, &saved["stack"]);
+
+    fixture.replace(
+        "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
+    )?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&updated, "outcome"), "reload-committed", "{updated}");
+    assert_eq!(updated["stack"], saved["stack"]);
+    assert_eq!(number_field(&updated, "guest_requests"), 0);
+    assert_eq!(number_field(&updated, "protected_operations"), 0);
+    let imported = live.submit("import ledger@2 as l")?;
+    assert_eq!(text_field(&imported, "outcome"), "namespace-committed", "{imported}");
+    assert_eq!(imported["stack"], saved["stack"]);
+    assert_eq!(number_field(&imported, "guest_requests"), 0);
+    assert_eq!(number_field(&imported, "protected_operations"), 0);
+
+    let refused = live.submit("run")?;
+    assert_eq!(text_field(&refused, "outcome"), "trap", "{refused}");
+    assert_eq!(refused["stack"], serde_json::json!([]), "{refused}");
+    assert_eq!(text_field(&refused, "session_state"), "terminated-after-runtime-failure");
+    assert_eq!(number_field(&refused, "guest_requests"), 1);
+    assert_eq!(number_field(&refused, "host_requests"), 1);
+    assert_eq!(number_field(&refused, "protected_operations"), 0);
+    assert_eq!(number_field(&refused, "candidate_prepare_requests"), 0);
+    assert_eq!(number_field(&refused, "ambient_fallback_calls"), 0);
+    assert_eq!(refused["effect_requests"], serde_json::json!(["test.emit"]));
+    assert_eq!(refused["request_trace_complete"], true);
+    assert_eq!(refused["declared_effect_preserved"], true);
+    assert_eq!(refused["request_trace"].as_array().map(Vec::len), Some(1));
+    let request = &refused["request_trace"][0];
+    assert_eq!(text_field(request, "module"), "ledger");
+    assert_eq!(number_field(request, "version"), 1);
+    assert_eq!(text_field(request, "effect"), "test.emit");
+    assert_eq!(text_field(request, "adapter_identity"), "emit-a");
+    assert_eq!(text_field(request, "decision"), "deny");
+    assert_eq!(text_field(request, "reason"), "policy-denied");
+    assert_ne!(text_field(request, "adapter_identity"), "emit-b");
+    assert_eq!(refused["request_trace"][0]["text"], serde_json::Value::Null);
+    let request_identity = format!(
+        "{}@{}:{}",
+        text_field(request, "module"),
+        number_field(request, "version"),
+        text_field(request, "effect"),
+    );
+    assert_eq!(request_identity, "ledger@1:test.emit");
+    println!("LIVE06 scoped old-code/current-host observation: {}", serde_json::json!({
+        "request_identity": request_identity,
+        "outcome": refused["outcome"],
+        "session_state": refused["session_state"],
+        "guest_requests": refused["guest_requests"],
+        "protected_operations": refused["protected_operations"],
+        "staging_guest_requests": updated["guest_requests"],
+        "policy_authorized_before_reload": revoked["currently_authorized"],
+    }));
+    Ok(())
+}
+
 #[test]
 fn generation_inspection_without_selected_source_is_exact_and_inert(
 ) -> Result<(), Box<dyn std::error::Error>> {
