@@ -408,7 +408,7 @@ fn imported_module<'a>(
         let version = version.parse::<u32>().ok();
         session.modules.iter().find(|module| module.name == name && Some(module.version) == version)
     } else {
-        session.aliases.iter().rev().find(|alias| alias.spelling == scope)
+        session.aliases.iter().rev().find(|alias| !alias.pending && alias.spelling == scope)
             .and_then(|alias| session.modules.get(alias.module))
     };
     module.ok_or_else(|| at(crate::source::Stage::Resolve, span,

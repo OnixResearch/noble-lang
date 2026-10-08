@@ -6,6 +6,7 @@ use noble_kernel::shapes::{EffectSlot, Pattern};
 use noble_kernel::words::{Scheme, Variable, VariableKind};
 
 type Families = Vec<(String, noble_kernel::types::NominalTypeId, [u8; 2])>;
+type FixedNames = Vec<(String, noble_kernel::types::NominalTypeId, noble_kernel::types::NominalShape)>;
 
 fn invalid(reason: &str) -> crate::source::Error {
     super::error(crate::source::Stage::Check, reason)
@@ -60,10 +61,52 @@ pub(super) fn families(
     result
 }
 
+/// Only the calculator source ingress extends signatures with concrete,
+/// source-registered non-generic nominal types. The attached ID and checked
+/// shape come from the staged namespace, never a source spelling alone.
+pub(super) fn fixed_nominals(
+    session: &super::ModuleSession,
+    names: &[super::Schema],
+    identity: u64,
+) -> FixedNames {
+    if !session.declared_text() {
+        return Vec::new();
+    }
+    let mut result = Vec::new();
+    if let Some(context) = &session.source.declared {
+        for (ordinal, schema) in names.iter().enumerate() {
+            let id = noble_kernel::types::NominalTypeId {
+                module: identity,
+                ordinal: ordinal as u32,
+            };
+            if let Some(decl) = context.environment.nominal(id) {
+                result.push((schema.name.clone(), id, decl.shape.clone()));
+            }
+        }
+        for module in &session.modules {
+            for export in &module.exports {
+                if let Some(noble_kernel::types::Ty::Nominal(id, shape)) = &export.ty {
+                    if context.environment.nominal(*id)
+                        .is_some_and(|decl| decl.exported && decl.shape == **shape)
+                    {
+                        result.push((
+                            alloc::format!("{}@{}.{}", module.name, module.version, export.name),
+                            *id,
+                            (**shape).clone(),
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    result
+}
+
 pub(super) fn parse(
     binders: &str,
     words: &[String],
     families: &Families,
+    fixed: &FixedNames,
 ) -> Result<Scheme, crate::source::Error> {
     let Some(binders) = binders
         .strip_prefix("forall<")
@@ -108,8 +151,8 @@ pub(super) fn parse(
     if arrow == 0 || bang <= output_start || effect_index.checked_add(1) != Some(words.len()) {
         return Err(invalid("malformed signature stack or effect bound"));
     }
-    let input = attempt!(parse_stack(&words[..arrow], &named, families));
-    let output = attempt!(parse_stack(&words[output_start..bang], &named, families));
+    let input = attempt!(parse_stack(&words[..arrow], &named, families, fixed));
+    let output = attempt!(parse_stack(&words[output_start..bang], &named, families, fixed));
     let effects = attempt!(parse_effect(&words[effect_index], &named));
     let scheme = Scheme {
         var_kinds: named.into_iter().map(|(_, kind)| kind).collect(),
@@ -181,10 +224,11 @@ fn parse_stack(
     words: &[String],
     binders: &[(String, VariableKind)],
     families: &Families,
+    fixed: &FixedNames,
 ) -> Result<Vec<Pattern>, crate::source::Error> {
     words
         .iter()
-        .map(|word| pattern(word, binders, families))
+        .map(|word| pattern(word, binders, families, fixed))
         .collect()
 }
 
@@ -219,6 +263,7 @@ fn pattern(
     word: &str,
     binders: &[(String, VariableKind)],
     families: &Families,
+    fixed: &FixedNames,
 ) -> Result<Pattern, crate::source::Error> {
     enum Step<'a> {
         Parse(&'a str, u32),
@@ -253,6 +298,12 @@ fn pattern(
                         "Text" => Some(Pattern::Text),
                         "Syntax" => Some(Pattern::Syntax),
                         _ => {
+                            if let Some((_, id, shape)) = fixed.iter()
+                                .find(|(name, _, _)| name == word) {
+                                values.push(Pattern::Nominal(*id,
+                                    alloc::boxed::Box::new(shape.clone())));
+                                continue;
+                            }
                             let Some((constructor, inner)) = word.split_once('<') else {
                                 return Err(invalid("unknown signature value type"));
                             };
@@ -410,7 +461,8 @@ mod tests {
     fn program_children_parse_in_order_and_nesting_is_bounded() {
         let binders = Vec::new();
         let families = Vec::new();
-        let value = pattern("Program<Pair<I64,Bool>+List<Text>,Sum<Bool,I64>,pure>", &binders, &families)
+        let fixed = Vec::new();
+        let value = pattern("Program<Pair<I64,Bool>+List<Text>,Sum<Bool,I64>,pure>", &binders, &families, &fixed)
             .expect("nested program signature");
         let Pattern::Program(input, output, _) = value else {
             panic!("expected program");
@@ -418,12 +470,12 @@ mod tests {
         assert!(matches!(input.as_slice(), [Pattern::Pair(_, _), Pattern::List(_)]));
         assert!(matches!(output.as_slice(), [Pattern::Sum(_, _)]));
 
-        let error = pattern("Program<Unknown,Resource<unknown>,pure>", &binders, &families)
+        let error = pattern("Program<Unknown,Resource<unknown>,pure>", &binders, &families, &fixed)
             .expect_err("input error takes precedence");
         assert_eq!(error.diagnostic().message, "unknown signature value type");
 
         let deep = alloc::format!("{}I64{}", "List<".repeat(32), ">".repeat(32));
-        let error = pattern(&deep, &binders, &families).expect_err("type depth bound");
+        let error = pattern(&deep, &binders, &families, &fixed).expect_err("type depth bound");
         assert_eq!(error.diagnostic().message, "signature type nesting limit exceeded");
     }
 }

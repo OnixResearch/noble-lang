@@ -23,8 +23,15 @@ fn accept(
     env: &noble_kernel::contracts::Env,
     request: &noble_kernel::untrusted::Request,
     body: &noble_kernel::execution::Body,
+    signed_owner: Option<(noble_kernel::contracts::Definition, &noble_kernel::words::Inst)>,
 ) -> Result<noble_kernel::untrusted::Checked, crate::Diagnostic> {
-    let checked = match noble_kernel::acceptance::check(env, request, &body.candidate) {
+    let outcome = match signed_owner {
+        Some((owner, owner_inst)) => noble_kernel::acceptance::check_signed_structure(
+            env, request, &body.candidate, owner, owner_inst,
+        ),
+        None => noble_kernel::acceptance::check(env, request, &body.candidate),
+    };
+    let checked = match outcome {
         noble_kernel::untrusted::Outcome::Accepted(checked) => checked,
         noble_kernel::untrusted::Outcome::Invalid(_) => return Err(crate::Diagnostic::Invalid),
         noble_kernel::untrusted::Outcome::Unsupported(_) => {
@@ -158,6 +165,7 @@ pub(super) fn definition_index(
 fn bounds(
     submission: &noble_kernel::execution::Submission,
     environment_work: u64,
+    signed: bool,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let mut totals = metadata::Totals { nodes: 0, bytes: 0 };
@@ -165,10 +173,11 @@ fn bounds(
     attempt!(definitions::bounds(
         submission,
         environment_work,
+        signed,
         &mut totals,
         work
     ));
-    dependencies::check(submission, work)
+    dependencies::check(submission, signed, work)
 }
 
 #[expect(
@@ -204,15 +213,17 @@ pub(super) fn check(
     live: bool,
     live_slots: bool,
     text_cursor: bool,
+    declared_text: bool,
+    signed: bool,
     work: &mut super::Work,
 ) -> Result<Accepted, crate::Diagnostic> {
     attempt!(work.charge(1));
     let environment_work = attempt!(environment::work(&submission.environment));
     attempt!(work.charge(environment_work));
-    attempt!(environment::check(submission, live, live_slots, text_cursor));
-    attempt!(bounds(submission, environment_work, work));
+    attempt!(environment::check(submission, live, live_slots, text_cursor, declared_text));
+    attempt!(bounds(submission, environment_work, signed, work));
     let limits = attempt!(kernel_limits(submission, environment_work, work));
-    let definitions = attempt!(definitions::accept(submission, limits, work));
+    let definitions = attempt!(definitions::accept(submission, limits, signed, work));
     let root = attempt!(accept_root(submission, limits, work));
     Ok(Accepted { definitions, root })
 }
@@ -228,7 +239,7 @@ fn accept_root(
         expected: submission.request.expected.clone(),
         limits,
     };
-    accept(&submission.environment, &root_request, &submission.body)
+    accept(&submission.environment, &root_request, &submission.body, None)
 }
 
 pub(super) fn text(

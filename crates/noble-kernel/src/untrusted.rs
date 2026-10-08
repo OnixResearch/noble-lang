@@ -65,6 +65,15 @@ pub enum Node {
         /// Instantiation of the definition's scheme.
         inst: crate::words::Inst,
     },
+    /// An explicitly signed, owner-local self occurrence. Public callers
+    /// cannot authorize it through `check`; its structural check is not a
+    /// source-provenance credential.
+    SignedSelf {
+        /// The exact unpublished or installed owner definition.
+        def: crate::contracts::Definition,
+        /// The owning body's shared signature substitution at this call.
+        inst: crate::words::Inst,
+    },
     /// Select and invoke a previously admitted live program through a
     /// borrowed root reference, never by a candidate-supplied handle.
     SlotInvoke {

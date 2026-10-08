@@ -1,13 +1,14 @@
 pub(super) fn collect(
     state: &super::super::inference::State,
     environment: &mut noble_kernel::contracts::Env,
+    definitions: &[super::super::Named],
     meter: &mut crate::Meter,
 ) -> Result<alloc::vec::Vec<noble_kernel::untrusted::Expected>, crate::Diagnostic> {
     let mut expected = alloc::vec::Vec::with_capacity(state.bodies.len());
     let mut at = 0usize;
     let mut failure = None;
     while at < state.bodies.len() {
-        match install_interface(&state.bodies[at], &state.arena, environment, meter) {
+        match install_interface(&state.bodies[at], &state.arena, environment, definitions, meter) {
             Ok(mut interface) => {
                 if at == 0 {
                     if let Some(logical) = &state.logical_inputs {
@@ -33,16 +34,38 @@ fn install_interface(
     body: &super::super::inference::Body,
     arena: &crate::inference::Arena,
     environment: &mut noble_kernel::contracts::Env,
+    definitions: &[super::super::Named],
     meter: &mut crate::Meter,
 ) -> Result<noble_kernel::untrusted::Expected, crate::Diagnostic> {
     let interface = attempt!(super::materialization::interface(arena, body, meter));
     if body.identity.is_some() {
-        let scheme = attempt!(super::contracts::scheme(
-            &interface,
-            environment,
-            body.span,
-            meter
-        ));
+        // Each signed source owner retains the original rank-1 Scheme in
+        // the concrete Env. Its fresh, exact owner Inst is materialized
+        // separately from this body's source-derived variables and checked
+        // against the body's concrete expected interface by the kernel.
+        let signed = body.nodes.iter().any(|node| {
+            matches!(node.kind, super::super::inference::DraftKind::SignedSelf(_))
+        });
+        let scheme = if signed {
+            let source = body.owner_slot
+                .and_then(|slot| usize::try_from(slot).ok())
+                .and_then(|slot| definitions.get(slot))
+                .ok_or_else(|| crate::invalid(body.span, "signed body has no original source owner"))?;
+            if Some(source.identity) != body.identity
+                || source.owner != body.owner || source.signed.is_none() {
+                return Err(crate::invalid(body.span, "signed body differs from original source owner"));
+            }
+            source.signature.as_ref().ok_or_else(|| {
+                crate::invalid(body.span, "signed body has no original rank-1 signature")
+            })?.clone()
+        } else {
+            attempt!(super::contracts::scheme(
+                &interface,
+                environment,
+                body.span,
+                meter
+            ))
+        };
         let deps = attempt!(super::materialization::dependencies(body, meter));
         environment.defs.reserve(1);
         environment.kinds.reserve(1);

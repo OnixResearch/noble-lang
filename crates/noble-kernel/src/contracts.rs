@@ -76,6 +76,8 @@ pub enum Behavior {
     ListCase,
     /// Pure byte-offset inspection of an immutable Text in the opt-in cursor profile.
     TextByte,
+    /// Pure signed comparison, visible only to the combined declared-text profile.
+    I64Less,
     /// Non-callable slots preserving globally disjoint builtin identities.
     Reserved,
     /// The supplied `test.emit` operation.
@@ -549,5 +551,28 @@ pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
     env.deps.push(alloc::vec::Vec::new());
     env.definition_owners.push(None);
     env.text_cursor = true;
+    Ok(env)
+}
+
+/// Pure declared text retains the immutable cursor at 26 and adds signed
+/// comparison at 27. Core, standalone cursor and ordinary modules gain neither.
+pub fn declared_text_environment() -> Result<Env, crate::shapes::Defect> {
+    use crate::shapes::Pattern;
+    use crate::words::{Scheme, Variable, VariableKind};
+
+    let mut env = text_cursor_environment()?;
+    let tail = Pattern::StackVar(Variable(0));
+    let less = Scheme {
+        var_kinds: alloc::vec![VariableKind::Stack],
+        stack_in: alloc::vec![tail.clone(), Pattern::I64, Pattern::I64],
+        stack_out: alloc::vec![tail, Pattern::Bool],
+        effects: alloc::vec![],
+    };
+    less.validate()?;
+    env.defs.push(less);
+    env.kinds.push(Behavior::I64Less);
+    env.deps.push(alloc::vec::Vec::new());
+    env.definition_owners.push(None);
+    env.declared_modules = true;
     Ok(env)
 }

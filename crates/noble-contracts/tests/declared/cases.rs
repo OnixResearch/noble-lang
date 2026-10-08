@@ -199,6 +199,37 @@ fn universal_source_signatures_reject_narrowed_value_and_effect() -> Result<(), 
 }
 
 #[test]
+fn signed_pure_list_branch_with_dip_preserves_effect_ceiling() -> Result<(), String> {
+    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = super::commit(
+        session,
+        b"module calc_once@1 [ signature first forall<S:stack> [ S List<I64> -- S I64 ! pure ] export first def first [ 0 swap [ ] [ [ + ] dip drop ] list.case ] ]",
+    )?;
+    let call = session
+        .prepare(b"3 nil cons calc_once@1.first", &[], super::LIMITS)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(call.output(), &[noble_kernel::types::Ty::I64]);
+
+    let bound = super::binding(super::Binding {
+        version: 1,
+        slot: 3,
+        adapter: "version-A",
+    });
+    let effectful = noble_contracts::source::ModuleSession::new(&[bound])
+        .map_err(|e| format!("{e:?}"))?;
+    let accounted = b"module ledger@1 [ require emit Text -- ! test.emit signature first forall<S:stack> [ S List<I64> -- S I64 ! test.emit ] export first def first [ 0 swap [ ] [ [ \"event\" emit + ] dip drop ] list.case ] ]";
+    effectful
+        .prepare(accounted, &[], super::LIMITS)
+        .map_err(|e| format!("{e:?}"))?;
+    let leaking = b"module ledger@1 [ require emit Text -- ! test.emit signature first forall<S:stack> [ S List<I64> -- S I64 ! pure ] export first def first [ 0 swap [ ] [ [ \"event\" emit + ] dip drop ] list.case ] ]";
+    assert!(matches!(
+        effectful.prepare(leaking, &[], super::LIMITS),
+        Err(error) if error.stage() == noble_contracts::source::Stage::Check
+    ));
+    Ok(())
+}
+
+#[test]
 fn public_constructor_cannot_expose_unexported_nominal_payload() -> Result<(), String> {
     let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
     let hidden=b"module ledger@1 [ opaque Secret I64 private opaque Wrapper Secret public export Wrapper export Wrapper.new ]";

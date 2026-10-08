@@ -37,7 +37,10 @@ fn visible_behavior(
         return bound_emit_visible(env, def);
     }
     if kind == crate::contracts::Behavior::TextByte {
-        return env.text_cursor && !env.declared_modules && def.0 == 26;
+        return env.text_cursor && def.0 == 26;
+    }
+    if kind == crate::contracts::Behavior::I64Less {
+        return env.text_cursor && env.declared_modules && def.0 == 27;
     }
     if let crate::contracts::Behavior::TestEmit = kind {
         return env.ambient_test_emit_visible();

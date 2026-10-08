@@ -245,6 +245,7 @@ const fn inst_of(node: &noble_kernel::untrusted::Node) -> &noble_kernel::words::
     match node {
         noble_kernel::untrusted::Node::Literal { inst, .. }
         | noble_kernel::untrusted::Node::Invocation { inst, .. }
+        | noble_kernel::untrusted::Node::SignedSelf { inst, .. }
         | noble_kernel::untrusted::Node::Quotation { inst, .. } => inst,
         noble_kernel::untrusted::Node::SlotInvoke { .. } => {
             panic!("legacy property generator cannot carry a live-slot node")
@@ -256,6 +257,7 @@ const fn inst_of_mut(node: &mut noble_kernel::untrusted::Node) -> &mut noble_ker
     match node {
         noble_kernel::untrusted::Node::Literal { inst, .. }
         | noble_kernel::untrusted::Node::Invocation { inst, .. }
+        | noble_kernel::untrusted::Node::SignedSelf { inst, .. }
         | noble_kernel::untrusted::Node::Quotation { inst, .. } => inst,
         noble_kernel::untrusted::Node::SlotInvoke { .. } => {
             panic!("legacy property generator cannot carry a live-slot node")

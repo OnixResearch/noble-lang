@@ -31,6 +31,9 @@ struct CheckedBody {
     request: noble_kernel::untrusted::Request,
     checked: noble_kernel::untrusted::Checked,
     identity: Option<u64>,
+    source_identity: Option<u64>,
+    owner_slot: Option<u32>,
+    owner_inst: Option<noble_kernel::words::Inst>,
     span: crate::Span,
 }
 
@@ -61,6 +64,11 @@ impl Assembly {
                     identity,
                     body: checked.body,
                     expected: checked.request.expected,
+                    source_identity: checked.source_identity.ok_or_else(|| super::Error::at(
+                        crate::source::Stage::Check, crate::internal(checked.span),
+                    ))?,
+                    owner_slot: checked.owner_slot,
+                    owner_inst: checked.owner_inst,
                 });
             }
             None => {
@@ -81,6 +89,7 @@ impl Assembly {
 pub(super) fn emit(
     mut state: super::inference::State,
     mut environment: noble_kernel::contracts::Env,
+    definitions: &[super::Named],
     input_bytes: usize,
     meter: &mut crate::Meter,
 ) -> Result<
@@ -98,7 +107,7 @@ pub(super) fn emit(
         Ok(bytes) => bytes,
         Err(error) => return Err(super::Error::at(crate::source::Stage::Check, error)),
     };
-    let expected = match interfaces::collect(&state, &mut environment, meter) {
+    let expected = match interfaces::collect(&state, &mut environment, definitions, meter) {
         Ok(expected) => expected,
         Err(error) => return Err(super::Error::at(crate::source::Stage::Check, error)),
     };
@@ -162,7 +171,9 @@ fn assemble(
     let mut position = 0usize;
     let mut failure = None;
     while let Some(draft) = drafts.next() {
-        let result = match checked(draft, expected.next(), &arena, admission, meter) {
+        let result = match checked(
+            draft, expected.next(), &arena, admission, position, state.definition_base, meter,
+        ) {
             Ok(body) => assembly.install(body, position, meter.limits.work),
             Err(problem) => Err(problem),
         };
@@ -213,6 +224,8 @@ fn checked(
     expected: Option<noble_kernel::untrusted::Expected>,
     arena: &crate::inference::Arena,
     admission: Admission<'_>,
+    position: usize,
+    definition_base: usize,
     meter: &mut crate::Meter,
 ) -> Result<CheckedBody, super::Error> {
     let expected = match expected {
@@ -230,10 +243,22 @@ fn checked(
         limits: admission.limits,
     };
     let span = draft.span;
-    let identity = draft
-        .identity
+    let source_identity = draft.identity;
+    let identity = source_identity
         .map(|id| identity::specialization(id, admission.environment, admission.linked_slots));
     let draft_owner = draft.owner;
+    let owner_slot = draft.owner_slot;
+    let owner_inst = if draft.nodes.iter().any(|node| {
+        matches!(node.kind, super::inference::DraftKind::SignedSelf(_))
+    }) {
+        let variables = draft.owner_variables.as_ref().ok_or_else(|| super::Error::at(
+            crate::source::Stage::Check, crate::invalid(span, "signed body has no owner binder"),
+        ))?;
+        Some(attempt!(arena.instantiation(variables, span, meter)
+            .map_err(|problem| super::Error::at(crate::source::Stage::Check, problem))))
+    } else {
+        None
+    };
     let (body, spans) = match materialization::body(draft, arena, meter) {
         Ok(body) => body,
         Err(error) => return Err(super::Error::at(crate::source::Stage::Check, error)),
@@ -245,9 +270,34 @@ fn checked(
     }
     let mut caller_environment = admission.environment.clone();
     caller_environment.caller_module = draft_owner;
-    let checked = match crate::program::check(
-        &caller_environment, &body.candidate, &request, &spans, span,
-    ) {
+    let self_owner = if body.candidate.nodes.iter().any(|node| {
+        matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })
+    }) {
+        let Some(owner_offset) = position.checked_sub(1) else {
+            return Err(super::Error::at(crate::source::Stage::Acceptance,
+                crate::invalid(span, "signed self cannot appear in the executable root")));
+        };
+        let owner_index = definition_base.checked_add(owner_offset)
+            .ok_or_else(|| super::Error::at(crate::source::Stage::Check, crate::internal(span)))?;
+        Some(noble_kernel::contracts::Definition(
+            attempt!(crate::index(owner_index, span)
+                .map_err(|error| super::Error::at(crate::source::Stage::Check, error)))
+        ))
+    } else {
+        None
+    };
+    let result = match self_owner {
+        Some(owner) => crate::program::check_signed_structure(
+            &caller_environment, &body.candidate, &request, &spans, span, owner,
+            owner_inst.as_ref().ok_or_else(|| super::Error::at(
+                crate::source::Stage::Check, crate::internal(span),
+            ))?,
+        ),
+        None => crate::program::check(
+            &caller_environment, &body.candidate, &request, &spans, span,
+        ),
+    };
+    let checked = match result {
         Ok(checked) => checked,
         Err(error) => return Err(super::Error::at(crate::source::Stage::Acceptance, error)),
     };
@@ -256,6 +306,9 @@ fn checked(
         request,
         checked,
         identity,
+        source_identity,
+        owner_slot,
+        owner_inst,
         span,
     })
 }

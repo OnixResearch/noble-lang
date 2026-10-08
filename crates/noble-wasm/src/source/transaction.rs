@@ -4,6 +4,7 @@
 pub(super) struct Base {
     live: bool,
     text_cursor: bool,
+    declared_text: bool,
     generation: u32,
     functions: u32,
     text_end_bytes: u32,
@@ -17,6 +18,7 @@ impl Base {
         Self {
             live: compiler.live,
             text_cursor: compiler.text_cursor,
+            declared_text: compiler.declared_text,
             generation: compiler.generation,
             functions: compiler.functions,
             text_end_bytes: compiler.text_end,
@@ -31,6 +33,8 @@ impl Base {
             && self.live == next.live
             && self.text_cursor == current.text_cursor
             && self.text_cursor == next.text_cursor
+            && self.declared_text == current.declared_text
+            && self.declared_text == next.declared_text
             && self.generation == current.generation
             && self.functions == current.functions
             && self.text_end_bytes == current.text_end

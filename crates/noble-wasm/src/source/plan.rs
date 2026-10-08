@@ -16,6 +16,7 @@ pub(super) enum Action {
     Program(usize),
     Word(u32),
     TextByte,
+    I64Less,
     Quote(u32, u32, u32),
     Call(usize, u64),
     NominalNew(u64, u32, u32),
@@ -81,6 +82,7 @@ pub(super) struct Layout {
     pub(super) has_core_emit: bool,
     pub(super) has_core_abort: bool,
     pub(super) has_text_byte: bool,
+    pub(super) has_i64_less: bool,
     pub(super) has_bound_emit: bool,
     pub(super) has_bound_clock: bool,
     pub(super) has_live_propose: bool,
@@ -193,6 +195,7 @@ fn start(
         has_core_emit: false,
         has_core_abort: false,
         has_text_byte: false,
+        has_i64_less: false,
         has_bound_emit: false,
         has_bound_clock: false,
         has_live_propose: false,
@@ -222,6 +225,7 @@ fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
                 Action::Word(22) => layout.has_core_emit = true,
                 Action::Word(23) => layout.has_core_abort = true,
                 Action::TextByte => layout.has_text_byte = true,
+                Action::I64Less => layout.has_i64_less = true,
                 Action::EmitBound(_) => layout.has_bound_emit = true,
                 Action::ClockBound(_) => layout.has_bound_clock = true,
                 Action::LivePropose(_) => layout.has_live_propose = true,
@@ -254,6 +258,7 @@ pub(super) fn lower(
             arena: &arenas[index],
             arenas: &arenas,
             owner: Some(submission.definitions[index].identity),
+            owner_definition: Some(submission.definitions[index].definition),
         };
         match operations::fill(input, compiler, &mut layout, work) {
             Ok(()) => index += 1,
@@ -273,6 +278,7 @@ pub(super) fn lower(
         arena: &arenas[index],
         arenas: &arenas,
         owner: None,
+        owner_definition: None,
     };
     attempt!(operations::fill(input, compiler, &mut layout, work));
     attempt!(host_footprint(&mut layout));
