@@ -54,9 +54,10 @@ self-rebind/cycle refusal was also exercised in scoped live-child checks.
 These are not complete automatic H-LIVE-01/LIVE-05 acceptance: general
 effectful watch, full adversarial in-flight source-change controls,
 complete source-bound LIVE-02, every LIVE-05 variant, interpreter execution,
-scenario receipts and source-bound proof/assurance remain open. LIVE-06
-current-host-policy revocation also remains open; no general revoke API is
-established by the selected runtime tests.
+scenario receipts and source-bound proof/assurance remain open. An exact,
+feature-only LIVE-06 host-policy revoke fixture has been added in source but
+has not yet run an actual Wasm guest; current-host-policy revocation remains
+open and no general revoke API is established by the selected runtime tests.
 The canonical LIVE case states remain `absent`/`not-run`/proof `open`; none of the
 implementation or acceptance tasks below is complete.
 
