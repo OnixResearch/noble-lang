@@ -921,7 +921,7 @@ mod tests {
         assert!(document["capture_binding_blake3"].as_str().is_some());
         let (mut imported, selected) = Store::import(&encoded, RUNTIME_REQUEST_WORK)
             .expect("freshly attested Text package");
-        assert_eq!(super::worker_program_guest::execute(&mut imported, selected, 41)
+        assert_eq!(crate::core::worker_program_guest::execute(&mut imported, selected, 41)
             .unwrap().value, 42, "imported Text must rebind before guest invocation");
         document["captures"][0]["text_utf8"] = json!("forged");
         let forged = serde_json::to_vec(&document).unwrap();
@@ -943,7 +943,7 @@ mod tests {
         let package = store.export(composed, "private", &grant).unwrap();
         let (mut imported, selected) = Store::import(&package, RUNTIME_REQUEST_WORK).unwrap();
         assert_eq!(imported.recipe_edges(selected), Some((root.node,double.node)));
-        assert_eq!(super::worker_program_guest::execute(&mut imported, selected, 3)
+        assert_eq!(crate::core::worker_program_guest::execute(&mut imported, selected, 3)
             .unwrap().value, 14, "freshly imported graph must execute its selected composition");
         let mut claim: Value = serde_json::from_slice(&package).unwrap();
         claim["graph"][2]["first"] = json!(0);

@@ -1474,14 +1474,18 @@ mod tests {
             entered.wait();
             let (started, started_rx) = mpsc::channel();
             let (ack, ack_rx) = mpsc::channel();
-            let revoker = threads.spawn(|| {
-                started.send(()).unwrap();
-                policy.revoke().unwrap();
-                ack.send("revoked").unwrap();
+            let revocation_policy = &policy;
+            let started_revoke = started.clone();
+            let ack_revoke = ack.clone();
+            let revoker = threads.spawn(move || {
+                started_revoke.send(()).unwrap();
+                revocation_policy.revoke().unwrap();
+                ack_revoke.send("revoked").unwrap();
             });
-            let canceler = threads.spawn(|| {
+            let cancellation_task = &task;
+            let canceler = threads.spawn(move || {
                 started.send(()).unwrap();
-                task.cancel(scope).unwrap();
+                cancellation_task.cancel(scope).unwrap();
                 ack.send("cancelled").unwrap();
             });
             let both_started = started_rx.recv_timeout(Duration::from_secs(2)).is_ok()
@@ -1571,7 +1575,10 @@ mod tests {
         assert!(!report.to_string().contains("module ledger"));
         assert_eq!(policy.counts().unwrap(), (0, 0));
         assert!(policy.ledger().unwrap().is_empty());
-        let denied_source_invoke = execute(&mut selected, root, 41).unwrap_err();
+        let denied_source_invoke = match execute(&mut selected, root, 41) {
+            Ok(_) => panic!("unissued code-export source effect unexpectedly succeeded"),
+            Err(error) => error,
+        };
         assert!(!format!("{denied_source_invoke:?}").contains("synthetic-private-text"),
             "a direct checked code-export effect must deny without spilling capture bytes");
         assert!(policy.ledger().unwrap().is_empty());
