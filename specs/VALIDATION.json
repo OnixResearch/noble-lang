@@ -11,8 +11,8 @@
   "lane": "document-validation-only",
   "result": "passed",
   "runner": {
-    "bun": "1.3.10",
-    "node_api": "24.3.0"
+    "bun": null,
+    "node_api": "24.13.0"
   },
   "documents": 13,
   "requirements": 531,
@@ -1408,7 +1408,7 @@
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "6bb5850a37150a195c457209a71a5764a36d5949c689a4c655b5ae8438413a30"
+      "sha256": "7329d733cab6d71d800e2c499da865f4f5f8fc59b6a2daf3f028b5ebf9dc71e3"
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
@@ -1416,11 +1416,11 @@
     },
     {
       "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
-      "sha256": "5b325053353f5f076f5657c5345d8dbddc2c2aa67117be69042120445cfe391b"
+      "sha256": "ba1b47fc0c7b147baa6b093f155bdc21cd999c2e6ede91a4b57dc902b2607c61"
     },
     {
       "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "eb9dd821960f374b20a53f2cdd03ad05b26aeb1e5660b2e4d4815bab9ba9b44c"
+      "sha256": "16529a9c01019e1ed39e9ac953458a01e0d88179ac38c6ef18953afbc8410dfc"
     },
     {
       "file": ".cairn/changes/editor-hole-transport/design.md",
@@ -1543,8 +1543,36 @@
       "sha256": "fdde2d45feb8a466b51b47879d58b961e142909a43a4a1629f1ea74d93c1c0b5"
     },
     {
+      "file": ".cairn/changes/ma-language-prerequisites/design.md",
+      "sha256": "c54fc4f60f2a1161ce6e01a4902a150239d0f04b9d6c50e42e720a641cd813fd"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/proposal.md",
+      "sha256": "e0846c7355036293686ea36d37253fc0738d037397c31a78129b59f3f85d4094"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/specs/calculator/spec.md",
+      "sha256": "713e6818130007f3d60755b77747deabd25e4639462566a5a7e245e828ca9caa"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/specs/core-bootstrap/spec.md",
+      "sha256": "e2944b5744703df1b8f4ce04459f8c8d26834d52b666c80884c1c2c3defd8f93"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/specs/developer-experience/spec.md",
+      "sha256": "f82d829d1ab9a71578199dce11afd0fe1fa96434d2d8a9d478cb9326401f93a7"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/specs/language/spec.md",
+      "sha256": "20183e79f156e1897391b7d8eaa4cfb8b348d5aa9472a5f1727d4fb5e0faa12d"
+    },
+    {
+      "file": ".cairn/changes/ma-language-prerequisites/tasks.md",
+      "sha256": "5b8f8578410640f0b7c0abcc0ad99d25e148d35fc9b1a64b341d3935bbd6d735"
+    },
+    {
       "file": ".cairn/changes/runtime-program-template-identity/design.md",
-      "sha256": "014f3cb1920902547f1d0f49fa989b3763e24c1909c7aa9662ab18379d90af9e"
+      "sha256": "0baff2d1500f59b3cfdd57edf1226e90ee01cee1789a4ba7ff6d9b30887e2b6e"
     },
     {
       "file": ".cairn/changes/runtime-program-template-identity/proposal.md",
@@ -1556,7 +1584,7 @@
     },
     {
       "file": ".cairn/changes/runtime-program-template-identity/tasks.md",
-      "sha256": "c0a331d6a9231e59007779a195fcd892caa35eaeebced7261dc5822c3ab344a0"
+      "sha256": "78ec68af3ec310e25f924e791ccc1cbeba0fc4aac918f296b260b7731416b566"
     },
     {
       "file": ".cairn/changes/safety-artifact-correspondence/design.md",
@@ -1808,7 +1836,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "0750b4353ebe77c42f93309e0bd084d1bb79bf5d04fdcab0653229e20911d300"
+      "sha256": "65d1649a734bf3ce1d881500aac7ff094c00d9a5d51403c0169a73da530a918c"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1956,7 +1984,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "5c8c4c0f647bb48ff9ebe4be7bfeabf1dbad671dc67d9ddcd94280b2517c65ee"
+      "sha256": "62034e762d296613058c6481c10896bf3e74f40c6988e3a7e868882dd9556e28"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
