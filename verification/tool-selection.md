@@ -25,7 +25,7 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-This source-only integrated candidate selection compares 256 file digests across the flake and
+This source-only integrated candidate selection compares 263 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
 source-bound verification/build recipes, the architecture capacity policy,
