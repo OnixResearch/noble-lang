@@ -25,12 +25,13 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-This isolated candidate selection compares 175 file digests across the flake and
+This isolated candidate selection compares 182 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
 source-bound verification/build recipes, the architecture capacity policy,
-its typed export dependencies and manifest, and all eight Cargo locks
-consumed by the reviewed offline vendor, plus the separate test-only boundary
+its typed export dependencies and manifest, all nine Cargo locks
+consumed by the reviewed offline vendor, the Worker peer manifest, and the
+guarded LIVE06 production-role sources, plus the separate test-only boundary
 fixture lock. The newly selected declared-module contracts and CLI files,
 their behavioral regressions, migrated Wasm constructor callsites, and active
 diagnostic replay source bind this candidate's retained-source change rather
