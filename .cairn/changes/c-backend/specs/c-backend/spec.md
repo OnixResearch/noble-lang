@@ -89,6 +89,25 @@ r[CB-SANDBOX-01]
 
 Native ELF can call syscalls directly. Runnable C therefore MUST require a separately pinned x86_64 Linux native sandbox runner isolating admitted worker address space from host mediator, closing unrelated inherited FDs and secrets, confining filesystem, network, clock, process/exec and direct syscalls while bounding memory/CPU/wall time. Runtime/shim, runner, private IPC, mediator, loader/static-link assumptions, target and syscall profile MUST be separately pinned/tested. Absent confinement blocks execution even if C syntax is valid. Direct-syscall hostile controls run only through a sealed test-only runner entry without production source-to-ELF admission; production hostile ELF substitution MUST fail admission. No crash counts as success.
 
+The runner MUST select a reviewed immutable derivation and policy independent
+of the proof-only Lean runner or any package merely present in the host Nix
+closure. Its launch boundary MUST enumerate the exact immutable executable and
+loader/library closure, mount it read-only without a writable executable path,
+seal guest bytes before use, clear environment and credentials, and close all
+FDs other than fixed, private, explicitly reviewed protocol/output endpoints.
+An initial ELF `execve` cannot be denied by a filter installed before that
+exec: the reviewed design MUST distinguish initial load from a fail-closed
+post-load syscall policy installed before untrusted candidate instructions.
+It MUST reject unrestricted later `execve`/`execveat`, writable executable
+mappings, unreviewed imports/loaders, namespace escape and direct file,
+network, process or host-clock access. Seccomp syscall denial alone does NOT
+deny vDSO clock reads or x86 timestamp instructions; unless a separately
+reviewed and verified boundary closes those paths too, runnable C remains
+unavailable. A parent-owned cgroup/process-tree memory, CPU, task, output and
+monotonic wall deadline MUST kill and reap the entire worker tree, classify
+signal/crash/timeout as refusal rather than success, and forbid any protected
+operation from partial or post-failure output.
+
 #### Scenario: CB-CASE-08 direct-syscall sandbox control
 
 - GIVEN sealed test-only openat/connect/clock/exec/FD/fork probes and a separately production-admitted benign emit source under the same pinned runner profile
@@ -99,6 +118,24 @@ Native ELF can call syscalls directly. Runnable C therefore MUST require a separ
 r[CB-ADMIT-01]
 
 Prior to launch independently accept host-selected source/candidate/policy; separately validate C11 source and its exact pinned emitter/runtime inventory, and ELF target/ABI/loader/imports and exact trusted reproducible native bytes (or separately reviewed authenticated trusted-build equivalent). Trusted source emission must byte-match candidate C; native build must byte-match candidate ELF. Candidate digest, manifest flag, self-claimed source or successful compiler exit cannot establish correspondence. Wrong/stale source, modified inert/executable sections, malformed C/ELF, target, tool, ABI or missing sandbox MUST refuse before effects. This finite byte correspondence is not a semantic lowering proof.
+
+For every build and execution request, the verifier MUST obtain its own
+host-selected source, contract, policy, current authority and candidate files
+through bounded, lexically absolute and normalized paths under trusted
+descriptor-relative anchors. It MUST refuse `.`/`..`, symlink and magic-link
+traversal, unreviewed hard-linked mutable artifacts, directory retargeting
+and file replacement; ownership or a digest observed through a pathname is
+not sufficient. It MUST snapshot the exact checked bytes into sealed,
+read-only descriptors and use those same bytes for independent kernel
+acceptance, pinned C re-emission, reproducible native compilation, ELF
+validation, byte comparison and eventual runner launch, without reopening
+mutable candidate paths. The independently rebuilt ELF MUST be compared in
+full, including nominally inert sections, against the sealed candidate, under
+recorded deterministic flags, sysroot, linker, runtime, ABI and build
+environment; any nondeterminism or mismatch blocks launch. Independent
+admission MUST reject unsupported architecture, interpreter, dynamic import,
+load segment, relocation or executable/writable mapping rather than relying
+on a manifest digest, successful C syntax check or compiler exit.
 
 #### Scenario: CB-CASE-05 forged C and ELF
 
