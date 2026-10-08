@@ -430,7 +430,7 @@ refer to the refused candidate file's bytes, not the installed old definition.
 Existing saved pure Programs retain their old definition even when a new
 top-level call uses the replacement.
 
-The exact `:generation` line inspects the current Core-only live namespace
+The exact `:generation` line inspects the current selected live namespace
 without reloading, reading the source file, invoking the worker or consuming
 a self-edit grant. Its one `noble-live-report/v1` JSON line has
 `stage: "inspection"`, `outcome: "generation-observed"`, the host publication
