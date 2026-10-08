@@ -14,6 +14,7 @@ mod report;
 pub(crate) mod worker;
 pub(crate) mod worker_scalar;
 pub(crate) mod worker_package;
+pub(crate) mod worker_program;
 pub(crate) mod worker_typed;
 pub(crate) mod worker_value;
 pub(crate) mod worker_shell;
@@ -51,6 +52,10 @@ pub const USAGE: &str = "usage:
   noble worker scalar SOURCE --state I64 --delta I64
   Scalar worker precursor: independently check I64 I64 -- I64 ! {}, run one
   bounded source-backed guest invocation, report its exact local outcome.
+  noble worker program build SOURCE --name NAME --effect-ceiling pure|test.emit
+  Opted source-bound named Program builder: check and compile source once, then
+  adapt, select, duplicate and compose typed handles under an explicit bound.
+  This local builder does not execute a guest, import/export packages or grant effects.
   noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON
   Typed worker: host-select a source-checked WorkerData@1 module and two canonical
   nominal values; check one exact local no-capture package and exported transition
