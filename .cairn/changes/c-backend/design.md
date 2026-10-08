@@ -4,6 +4,31 @@
 
 `Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles only checked, effect-free Core-Bootstrap I64/Bool/Unit expressions; it does not compile or execute native ELF. The held canonical status paragraph still describes the earlier I64/Bool slice and needs independent owner review before any integration. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
 
+The isolated source-only emitter now lowers checked pure `dip` and `if`
+as well as literal/stack/arithmetic/Unit/quotation/`quote`/`compose`/`run`.
+The checker binds `dip` to Definition 3: save the value below a Program,
+run the Program on the remaining stack, then restore that immutable value.
+Definition 18 `if` consumes the otherwise Program, then Program and Bool
+in top-to-deeper order, then runs exactly one selected branch. The
+emitted C uses bounded frames and charges a step for each dispatch,
+branch frame and `dip` restore, not the selected Wasm fuel schedule.
+The independent kernel checks both branches and rejects unsupported
+quotation bodies before emission; no C branch is a source evaluator.
+These source-only semantics remain unexecuted as C native code.
+
+The complete CB-SCOPE/CB-VALUE/CB-LIMIT contracts are still open: Text's
+checked candidate literal is only a `Lit::Text` marker and needs exact
+host-selected payload binding before C byte emission; Pair/Sum/List,
+inert Syntax/`reflect`, typed runtime input, definitions, `test.emit`
+and current host authority require distinct checked representations
+or a real mediator. The source-only policy has only
+`stack_slots`/`steps`/`output_bytes`, not the native list/aggregate/
+CPU/memory/wall limits or equal Wasm gas. It refuses the extra
+`limits.list_length` in CB-CASE-01 rather than ignoring it. None of
+these missing obligations can be filled by a C token parser or by
+claiming source syntax as differential execution. r[CB-SCOPE-01]
+r[CB-VALUE-01] r[CB-LIMIT-01] r[CB-GATE-01]
+
 ## Decisions
 
 ### Selection and first subset

@@ -65,6 +65,13 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
         ("unit", "unit", "-- Unit"),
         ("captured-unit", "unit quote run", "-- Unit"),
         ("retained-unit", "unit quote 7 drop run", "-- Unit"),
+        ("if-true", "true [ 42 ] [ 0 ] if", "-- I64"),
+        ("if-false", "false [ 0 ] [ 42 ] if", "-- I64"),
+        ("if-retained", "41 true [ 1 + ] [ drop 0 ] if", "-- I64"),
+        ("if-unit", "true [ unit ] [ unit ] if", "-- Unit"),
+        ("dip-i64", "10 32 [ 1 + ] dip +", "-- I64"),
+        ("dip-unit", "41 unit [ 1 + ] dip drop", "-- I64"),
+        ("dip-program", "41 [ 1 + ] [ drop 0 ] dip run", "-- I64"),
     ] {
         let source = scratch.file(&format!("{name}.noble"), source.as_bytes())?;
         let contract = scratch.file(
@@ -206,6 +213,40 @@ fn checked_unit_results_require_the_exact_stack_interface(
         );
         assert!(refused.stdout.is_empty());
         assert!(!refused_dir.exists());
+    }
+    Ok(())
+}
+
+#[test]
+fn checked_control_requires_matching_branches_and_dip_stack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let scratch = Scratch::new()?;
+    let policy = scratch.file("policy.json", br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#)?;
+    let contract = scratch.file(
+        "contract.json",
+        br#"{"expected_interface":"-- I64","resolved_host_contracts":{}}"#,
+    )?;
+    let mismatched_branches = scratch.file(
+        "mismatched-branches.noble",
+        b"true [ 42 ] [ unit ] if",
+    )?;
+    let wrong_output = scratch.file(
+        "wrong-output.noble",
+        b"true [ unit ] [ unit ] if",
+    )?;
+    let invalid_dip = scratch.file(
+        "invalid-dip.noble",
+        b"40 [ 1 + ] dip",
+    )?;
+    for (index, source) in [&mismatched_branches, &wrong_output, &invalid_dip]
+        .into_iter()
+        .enumerate()
+    {
+        let out = scratch.0.join(format!("refused-control-{index}"));
+        let refusal = build(source, &contract, &policy, &out)?;
+        assert_eq!(refusal.status.code(), Some(2));
+        assert!(refusal.stdout.is_empty());
+        assert!(!out.exists());
     }
     Ok(())
 }

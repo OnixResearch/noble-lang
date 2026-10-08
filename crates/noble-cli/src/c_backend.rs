@@ -32,10 +32,10 @@ enum { TAG_I64 = 1, TAG_BOOL = 2, TAG_PROGRAM = 3, TAG_UNIT = 4 };
 typedef struct { unsigned tag; uint64_t bits; } Value;
 typedef struct { unsigned op; uint64_t bits; } Instruction;
 typedef struct { const Instruction *code; size_t count; unsigned valid; size_t leaves, depth; } StaticProgram;
-enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_UNIT };
+enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_UNIT, OP_IF, OP_DIP };
 typedef struct { unsigned kind; uint64_t left, right; Value capture; size_t leaves, depth; } Program;
 typedef struct { size_t leaves, depth; } Metrics;
-typedef struct { uint64_t program; size_t pc; unsigned phase; } Frame;
+typedef struct { uint64_t program; size_t pc; unsigned phase; Value restore; } Frame;
 "#;
 const RUNTIME: &str = r#"
 static Value stack[STACK_SLOTS];
@@ -82,6 +82,11 @@ static uint64_t pop_i64(void) {
     if (value.tag != TAG_I64) fail("invalid I64 tag");
     return value.bits;
 }
+static unsigned pop_bool(void) {
+    Value value = pop();
+    if (value.tag != TAG_BOOL || value.bits > 1) fail("invalid Bool tag");
+    return (unsigned)value.bits;
+}
 static Metrics metrics(uint64_t id) {
     if (id < STATIC_PROGRAMS) {
         const StaticProgram *program = &static_programs[id];
@@ -104,7 +109,7 @@ static uint64_t new_program(unsigned kind, uint64_t left, uint64_t right, Value 
 static void enter(uint64_t program) {
     if (program >= STATIC_PROGRAMS + program_count) fail("invalid Program reference");
     if (frame_count == FRAME_SLOTS) fail("program frames exhausted");
-    frames[frame_count++] = (Frame){program, 0, 0};
+    frames[frame_count++] = (Frame){program, 0, 0, {0, 0}};
 }
 static void arith(unsigned operation) {
     uint64_t right = pop_i64();
@@ -167,6 +172,24 @@ static void execute(Instruction instruction) {
         enter(value.bits);
         break;
     }
+    case OP_IF: {
+        Value otherwise = pop_program();
+        Value then_branch = pop_program();
+        unsigned condition = pop_bool();
+        enter(condition ? then_branch.bits : otherwise.bits);
+        break;
+    }
+    case OP_DIP: {
+        Value program = pop_program();
+        Value saved = pop();
+        if (saved.tag != TAG_I64 && saved.tag != TAG_BOOL &&
+            saved.tag != TAG_UNIT && saved.tag != TAG_PROGRAM) fail("invalid dip value");
+        if (saved.tag == TAG_PROGRAM) (void)metrics(saved.bits);
+        if (frame_count > FRAME_SLOTS - 2) fail("program frames exhausted");
+        frames[frame_count++] = (Frame){UINT64_MAX, 0, 0, saved};
+        enter(program.bits);
+        break;
+    }
     default: fail("invalid instruction");
     }
 }
@@ -176,6 +199,12 @@ static void run_program(void) {
         /* Charge every transition, including empty bodies and compose phases. */
         tick();
         Frame *frame = &frames[frame_count - 1];
+        if (frame->program == UINT64_MAX) {
+            Value saved = frame->restore;
+            --frame_count;
+            push_value(saved);
+            continue;
+        }
         if (frame->program < STATIC_PROGRAMS) {
             const StaticProgram *body = &static_programs[frame->program];
             if (!body->valid) fail("invalid static Program");
@@ -417,6 +446,7 @@ fn lower_body(
                     (0, Behavior::Dup) => "OP_DUP",
                     (1, Behavior::Drop) => "OP_DROP",
                     (2, Behavior::Swap) => "OP_SWAP",
+                    (3, Behavior::Dip) => "OP_DIP",
                     (4, Behavior::Arith) => "OP_ADD",
                     (5, Behavior::Arith) => "OP_SUB",
                     (6, Behavior::Arith) => "OP_MUL",
@@ -425,6 +455,7 @@ fn lower_body(
                     (9, Behavior::Compose) => "OP_COMPOSE",
                     (10, Behavior::Run) => "OP_RUN",
                     (12, Behavior::Unit) => "OP_UNIT",
+                    (18, Behavior::If) => "OP_IF",
                     _ => return Err(format!("unsupported checked C operation {word}")),
                 };
                 (op, 0, json!(["word", word]))

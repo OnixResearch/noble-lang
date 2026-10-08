@@ -80,8 +80,8 @@ The explicit `build SOURCE --target c` route emits **source only**, not an
 executable or an alternative to the selected Wasm runtime. This isolated
 WIP independently checks an effect-free Core-Bootstrap expression with one
 I64, Bool or Unit result, then lowers ordered stack operations and the `unit`
-constructor, immutable quotation bodies, runtime
-`quote` capture, `compose`, and `run` into bounded C11 instructions and
+constructor, immutable quotation bodies, runtime `quote` capture,
+`compose`, `run`, pure `dip` and checked `if` branches into bounded C11 instructions and
 Program values. It refuses unsupported types, host effects, named definitions,
 runtime input and other profiles; there is no Wasm fallback.
 
@@ -108,7 +108,8 @@ subsequent mutation. Output child paths are also re-resolved after creating the
 directory, so a concurrently replaced output directory is not authenticated.
 The manifest declares fixed ceilings: 256 dynamic Program slots, 512 frames,
 256 recipe leaves, and depth 256. Every C dispatch iteration consumes the
-policy step budget, including empty quotations and composition traversal.
+policy step budget, including empty quotations, composition traversal,
+selected branches and `dip` restore continuations.
 Finishing a frame also costs a step; these counts do not claim Wasm parity.
 These are source-level bounds, not native runtime acceptance. Both `--native`
 and `execute --target c` refuse: no compiler/ELF execution is authorized until

@@ -22,7 +22,7 @@ pub const USAGE: &str = "usage:
 The nonselected C11 source-only route requires an independently checked,
 effect-free Core-Bootstrap I64/Bool/Unit result, no runtime input or named definitions,
 and supports I64/Bool literals, unit, stack words, arithmetic, quote, quotation,
-compose and run. CONTRACT_JSON contains exactly expected_interface (\"-- I64\",
+compose, run, pure dip and checked if branches. CONTRACT_JSON contains exactly expected_interface (\"-- I64\",
 \"-- Bool\" or \"-- Unit\") and empty resolved_host_contracts. POLICY_JSON contains exactly
 profile Core-Bootstrap, target x86_64-unknown-linux-gnu, empty allowed_effects,
 and finite stack_slots/steps/output_bytes limits. It creates source.noble,
