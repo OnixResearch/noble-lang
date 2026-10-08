@@ -479,6 +479,9 @@ fn worker_code_export_requires_exact_checked_effect_and_consumed_program_owner()
     assert_eq!(selected.imports()[2].results, [Type::Boolean]);
     assert_eq!(selected.noble_type(Type::Own(kind)), Some(Ty::program(
         vec![Ty::I64], vec![Ty::I64], EffSet::from_ids(&[TEST_CODE_EXPORT]))));
+    assert!(selected.environment().map_err(|error| format!("{error:?}"))?
+        .knows_effect(TEST_CODE_EXPORT),
+        "the selected latent effect must be known without granting a host import");
     assert!(selected.check_import_effect(&selected.imports()[2].word, &[]).is_err(),
         "a checked effect witness never grants export destination/capture authority");
     let changed = std::str::from_utf8(WORKER_WIT)

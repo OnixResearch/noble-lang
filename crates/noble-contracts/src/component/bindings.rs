@@ -13,9 +13,11 @@ pub(super) fn make(world: &super::World) -> Result<super::Bindings, super::Error
         }
     };
     let count = world.imports.len();
+    let extra_effect = usize::from(world.worker_program_effect.is_some_and(|effect|
+        !environment.effects.contains(&effect)));
     environment.defs.reserve(count);
     environment.kinds.reserve(count);
-    environment.effects.reserve(count);
+    environment.effects.reserve(count.saturating_add(extra_effect));
     environment.deps.reserve(count);
     let mut words = alloc::vec::Vec::with_capacity(count);
     let mut effects = 0u64;
@@ -33,6 +35,15 @@ pub(super) fn make(world: &super::World) -> Result<super::Bindings, super::Error
     }
     if let Some(problem) = failure {
         return Err(problem);
+    }
+    // The selected source Program's latent effect must be a known type
+    // identity to the guest checker, but it is never an imported WIT effect
+    // grant: only the three independently named imports contribute to the
+    // callable-effect bitset above.
+    if let Some(effect) = world.worker_program_effect {
+        if !environment.effects.contains(&effect) {
+            environment.effects.push(effect);
+        }
     }
     environment.resource_kinds = resource_kinds(world);
     Ok(super::Bindings {
