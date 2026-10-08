@@ -95,6 +95,114 @@ function composedQuoteCaptures(program) {
     return scalar.payload;
   });
 }
+function checkFreshCompositeTrace(row, program, rootInputs, ownerInputs, aliasPositions) {
+  const receipt = row.source_trace;
+  const descriptor = program.target_identity.artifact_manifest;
+  const ownerCaptures = aliasPositions.map(index => String(ownerInputs[index]));
+  const uniquePositions = [...new Set(aliasPositions)];
+  const captures = uniquePositions.map(index => ({
+    type: 'I64', value: String(ownerInputs[index]),
+  }));
+  assert.deepEqual(descriptor.source.capture_positions, aliasPositions);
+  assert.deepEqual(program.target_identity.captures, captures);
+  assert.deepEqual(composedQuoteCaptures(program), ownerCaptures);
+  assert.deepEqual(Object.keys(receipt).sort(), [
+    'after', 'before', 'callback', 'manifest_sha256', 'owner', 'result', 'schema', 'scope',
+  ]);
+  assert.equal(receipt.schema, 'noble-live-slot-fresh-composite-trace/v1');
+  assert.equal(receipt.scope,
+    'one observed V8 guest invocation only; no guest-Lean theorem or future invariant');
+  assert.equal(receipt.owner, program.owner);
+  assert.equal(receipt.manifest_sha256, program.target_identity.artifact_sha256);
+  const callback = receipt.callback;
+  assert.deepEqual(Object.keys(callback).sort(),
+    ['alias_positions', 'dispatch', 'handle', 'identity', 'named_source']);
+  assert.equal(callback.handle, descriptor.owner.handle);
+  assert.deepEqual(callback.alias_positions, aliasPositions);
+  assert.deepEqual(callback.identity, descriptor.identity);
+  assert.deepEqual(callback.named_source, descriptor.source);
+  assert.equal(callback.identity.definition_id, program.target_identity.definition_id);
+  assert.equal(callback.identity.program_value_id, program.target_identity.program_value_id);
+  assert.deepEqual(callback.identity.captures, captures);
+  assert.equal(row.guest_requests, 1);
+  assert.equal(row.protected_operations, 0);
+  assert.equal(row.request_trace.length, 1);
+  assert.deepEqual(callback.dispatch, row.request_trace[0]);
+  const dispatch = callback.dispatch;
+  assert.equal(dispatch.operation, 'dispatch');
+  assert.equal(dispatch.outcome, 'allowed');
+  assert.equal(dispatch.policyAllowed, true);
+  assert.equal(dispatch.slotId, 'alias-target');
+  assert.equal(dispatch.rootEpoch, row.epoch);
+  assert.match(dispatch.incarnation, /^[1-9][0-9]*$/);
+  assert.match(dispatch.generation, /^[1-9][0-9]*$/);
+  assert.equal(dispatch.definitionId, program.target_identity.definition_id);
+  assert.equal(dispatch.programValueId, program.target_identity.program_value_id);
+  assert.equal(dispatch.artifactSha256, receipt.manifest_sha256);
+  assert.deepEqual(dispatch.captures,
+    captures.map(({ type, value }) => `${type}:${value}`));
+  assert.equal(dispatch.recipeSha256, descriptor.recipe_sha256);
+  assert.equal(dispatch.semanticContext,
+    `returned-target:${receipt.manifest_sha256}:graph:${descriptor.graph_sha256}`);
+  assert.equal(dispatch.policyInput.rootEpoch, row.epoch);
+  assert.equal(dispatch.policyInput.version.handle, callback.handle);
+  assert.equal(dispatch.policyInput.version.definitionId, dispatch.definitionId);
+  assert.equal(dispatch.policyInput.version.programValueId, dispatch.programValueId);
+  assert.deepEqual(dispatch.policyInput.version.captures, dispatch.captures);
+  const expected = BigInt.asIntN(64, rootInputs.concat(ownerCaptures)
+    .reduce((sum, value) => sum + BigInt(value), 0n)).toString();
+  assert.deepEqual(receipt.result, { kind: 1, value: expected });
+  assert.deepEqual(row.stack, [receipt.result]);
+  for (const [name, snapshot, sp] of [
+    ['before', receipt.before, 2], ['after', receipt.after, 1],
+  ]) {
+    assert.deepEqual(Object.keys(snapshot).sort(), [
+      'cp', 'failure', 'heap_cursor', 'live_frame', 'memory_sha256',
+      'operand_limit', 'operand_peak',
+      'quote_invocations', 'rp', 'selected_cell_hex', 'selected_refcounts',
+      'sidecar_sha256', 'sp', 'stack_hex',
+    ]);
+    for (const key of ['memory_sha256', 'sidecar_sha256'])
+      assert.match(snapshot[key], /^[a-f0-9]{64}$/);
+    assert.equal(snapshot.sp, String(sp), name);
+    for (const key of ['cp', 'rp', 'failure', 'operand_limit', 'operand_peak',
+      'quote_invocations', 'heap_cursor', 'live_frame'])
+      assert.match(snapshot[key], /^(?:0|-[1-9][0-9]*|[1-9][0-9]*)$/, `${name}.${key}`);
+    assert.match(snapshot.stack_hex, /^[0-9a-f]*$/);
+    assert.equal(snapshot.stack_hex.length, sp * 32);
+    assert.match(snapshot.selected_cell_hex, /^[0-9a-f]{96}$/);
+    const cell = Buffer.from(snapshot.selected_cell_hex, 'hex');
+    assert.equal(cell.readUInt32LE(0) & 255, 4);
+    assert.equal(cell.readUInt32LE(4), callback.handle);
+    assert.deepEqual(Object.keys(snapshot.selected_refcounts).sort(),
+      ['incoming', 'module', 'saved']);
+    for (const count of Object.values(snapshot.selected_refcounts))
+      assert.ok(Number.isInteger(count) && count >= 0 && count <= 65535);
+    assert.ok(snapshot.selected_refcounts.saved > 0);
+    assert.ok(snapshot.selected_refcounts.incoming
+      >= snapshot.selected_refcounts.saved + snapshot.selected_refcounts.module);
+  }
+  const beforeStack = Buffer.from(receipt.before.stack_hex, 'hex');
+  for (let index = 0; index < rootInputs.length; index++) {
+    assert.equal(beforeStack.readUInt32LE(index * 16), 1);
+    assert.equal(beforeStack.readBigInt64LE(index * 16 + 8), BigInt(rootInputs[index]));
+  }
+  const afterStack = Buffer.from(receipt.after.stack_hex, 'hex');
+  assert.equal(afterStack.readUInt32LE(0), 1);
+  assert.equal(afterStack.readBigInt64LE(8).toString(), expected);
+  assert.equal(receipt.before.selected_cell_hex, receipt.after.selected_cell_hex);
+  assert.equal(receipt.before.failure, '0');
+  assert.equal(receipt.after.failure, '0');
+  assert.equal(receipt.after.cp, '0');
+  assert.equal(receipt.after.rp, '0');
+  assert.ok(Number(receipt.before.live_frame) > 0);
+  assert.equal(receipt.after.live_frame, '0');
+  assert.equal(receipt.before.operand_limit, '2048');
+  assert.equal(receipt.after.operand_limit, receipt.before.operand_limit);
+  assert.equal(Number(receipt.after.quote_invocations)
+    - Number(receipt.before.quote_invocations), 2);
+  assert.ok(Number(receipt.after.operand_peak) >= 64);
+}
 let complete = false;
 try {
   expectOutcome(await session.configured, 'configured');
@@ -291,6 +399,26 @@ try {
     owner: same.owner, expected_epoch: '0' }, 'published');
   assert.equal(firstPublish.epoch, '1');
   const refs = [{ position: 2, ordinal: 0, slot: 'alias-target' }];
+  const missingTraceOwner = await issue({ operation: 'invoke', id: 'generic',
+    inputs: [input(1), input(4)], refs,
+    trace_composite_owner: 'program-999999' }, 'refused');
+  assert.match(missingTraceOwner.diagnostic,
+    /saved dynamic target lacks a checked composite code donor manifest/);
+  const traceIsNotReplay = await issue({ operation: 'invoke', id: 'generic',
+    inputs: [input(1), input(4)], refs, record: true,
+    trace_composite_owner: same.owner }, 'refused');
+  assert.match(traceIsNotReplay.diagnostic,
+    /one fresh composite invocation cannot also freeze a replay/);
+  const tracedSame = await issue({ operation: 'invoke', id: 'generic',
+    inputs: [input(1), input(4)], refs,
+    trace_composite_owner: same.owner }, 'executed', 1);
+  checkFreshCompositeTrace(tracedSame, same, [1, 4], [2, 2], [0, 0]);
+  const signedMax = '9223372036854775807';
+  const tracedWrap = await issue({ operation: 'invoke', id: 'generic',
+    inputs: [input(signedMax), input(1)], refs,
+    trace_composite_owner: same.owner }, 'executed', 1);
+  checkFreshCompositeTrace(tracedWrap, same, [signedMax, 1], [2, 2], [0, 0]);
+  assert.deepEqual(tracedWrap.stack, [{ kind: 1, value: '-9223372036854775804' }]);
   const recorded = await issue({ operation: 'invoke', id: 'generic',
     inputs: [input(1), input(4)], refs, record: true }, 'executed', 1);
   assert.deepEqual(recorded.stack, [{ kind: 1, value: '9' }]);
@@ -317,8 +445,10 @@ try {
   assert.equal(secondPublish.epoch, '2');
   await issue({ operation: 'release-program', owner: same.owner }, 'program-released');
   const fresh = await issue({ operation: 'invoke', id: 'generic',
-    inputs: [input(1), input(4)], refs }, 'executed', 1);
+    inputs: [input(1), input(4)], refs,
+    trace_composite_owner: secondCapture.owner }, 'executed', 1);
   assert.deepEqual(fresh.stack, [{ kind: 1, value: '11' }]);
+  checkFreshCompositeTrace(fresh, secondCapture, [1, 4], [3, 2], [0, 0]);
   const replaced = structuredClone(replayRequest);
   replaced.expected_identity.slots[0].programValueId =
     secondCapture.target_identity.program_value_id;
@@ -330,8 +460,16 @@ try {
   const pinnedReplay = await issue(replayRequest, 'replay-matched', 1);
   assert.deepEqual(pinnedReplay.actual_stack, recorded.stack);
   await issue({ operation: 'release-replay', token: recorded.replay_token }, 'replay-released');
+  const distinctPublish = await issue({ operation: 'publish', slot: 'alias-target',
+    owner: distinct.owner, expected_epoch: '2', expected_incarnation: '1',
+    expected_generation: '2' }, 'published');
+  assert.equal(distinctPublish.epoch, '3');
+  const tracedDistinct = await issue({ operation: 'invoke', id: 'generic',
+    inputs: [input(1), input(4)], refs,
+    trace_composite_owner: distinct.owner }, 'executed', 1);
+  checkFreshCompositeTrace(tracedDistinct, distinct, [1, 4], [2, 2], [1, 0]);
   const aliasedNoProof = await issue({ operation: 'publish', slot: 'alias-proof-required',
-    owner: secondCapture.owner, expected_epoch: '2' }, 'refused');
+    owner: secondCapture.owner, expected_epoch: '3' }, 'refused');
   assert.match(aliasedNoProof.diagnostic, /proof-required slot lacks independently checked target evidence/);
   const opaque = saved(await invoke('ambiguous', [input(2)]), 0, 'ambiguous',
     installations.ambiguous, 'backend-observed-source-occurrence-unavailable');
@@ -359,7 +497,7 @@ try {
       owner_count: owners.size, installed_artifacts: Object.fromEntries(
         Object.entries(installations).map(([id, row]) => [id, row.artifact_sha256])),
       returned_target_manifest_sha256: sameIdentity.artifact_sha256,
-      published_epoch: secondPublish.epoch,
+      published_epoch: distinctPublish.epoch,
       guest_requests: replies.reduce((n, row) => n + (row.guest_requests ?? 0), 0),
       protected_operations: replies.reduce((n, row) => n + (row.protected_operations ?? 0), 0) }, null, 2) + '\n',
     { flag: 'wx', mode: 0o600 });
@@ -399,4 +537,4 @@ try {
 } finally {
   if (!missingCoreComplete) await missingCore.abort();
 }
-console.log('selected origin and experimental D/P: two-donor returned target publication, exact captured generic dispatch and frozen replay, asserted/retired/missing donor refusal, proof-required refusal and opaque controls');
+console.log('selected origin and experimental D/P: fresh guest same/distinct alias composite traces, exact captured generic dispatch and frozen replay, asserted/retired/missing donor refusal, proof-required refusal and opaque controls');

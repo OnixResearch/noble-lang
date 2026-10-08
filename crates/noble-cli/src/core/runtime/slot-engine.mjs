@@ -62,6 +62,20 @@ class SlotEngine {
         { name: 'live_frame', type: 'i32', value: 0 }],
       exports: { ...baseAbi.exports,
         ...Object.fromEntries(Object.keys(slotExports).map(name => [name, 'checked live-slot export'])) } };
+    this.globalTypes = new Map(this.abi.globals.map(({ name, type }) => [name, type]));
+    if (this.globalTypes.size !== this.abi.globals.length) {
+      throw Error('selected shared-global ABI has an ambiguous name');
+    }
+    // emit/imports.rs places the two accounting I64 imports after all fixed
+    // I32 globals, then appends the two selected live-slot globals.
+    const appended = ['allocated_total', 'released_total', 'live_target', 'live_frame'];
+    this.globalImportOrder = this.abi.globals
+      .filter(({ name }) => !appended.includes(name)).map(({ name }) => name)
+      .concat(appended);
+    if (this.globalImportOrder.length !== this.abi.globals.length
+      || appended.some(name => !this.globalTypes.has(name))) {
+      throw Error('selected global import order is incomplete');
+    }
     this.shared = { memory: this.memory, table: this.table };
     for (const { name, type, value } of this.abi.globals) {
       this.shared[name] = new WebAssembly.Global({ value: type, mutable: true },
@@ -309,10 +323,40 @@ class SlotEngine {
     };
     const selected = guarded((ordinal, site) => {
       this.checkpoint('live_select', site >>> 0, ordinal >>> 0);
-      const decision = this.registry.dispatch(active(), ordinal >>> 0, checkedModule(), site >>> 0);
+      const root = active();
+      const decision = this.registry.dispatch(root, ordinal >>> 0, checkedModule(), site >>> 0);
       if (this.compositeVersions.has(decision.handle >>> 0)
         && !this.compositeCodeIsInstalled(this.compositeVersions.get(decision.handle >>> 0))) {
         throw Error('selected returned target code donor changed before dispatch');
+      }
+      const diagnostic = this.active?.sourceTrace;
+      if (diagnostic) {
+        this.checkedGlobalBindings(diagnostic.checked.core);
+        this.checkedGlobalBindings(diagnostic.checked.caller);
+        const observed = this.registry.trace(root).at(-1);
+        const handle = decision.handle >>> 0;
+        const identity = diagnostic.manifest.descriptor.identity;
+        const version = this.versions.get(handle);
+        const captures = identity.captures.map(row => `${row.type}:${row.value}`);
+        if (diagnostic.callback || handle !== diagnostic.handle
+          || !version || version.handle !== handle
+          || observed?.operation !== 'dispatch' || observed?.outcome !== 'allowed'
+          || observed.policyAllowed !== true || observed.slotId !== diagnostic.slot
+          || observed.programValueId !== identity.program_value_id
+          || observed.definitionId !== identity.definition_id
+          || observed.artifactSha256 !== diagnostic.checked.manifestSha256
+          || !sameSlotJSON(observed.captures, captures)
+          || version.programValueId !== identity.program_value_id
+          || version.definitionId !== identity.definition_id
+          || version.artifactSha256 !== diagnostic.checked.manifestSha256
+          || !sameSlotJSON(version.captures, captures)) {
+          throw Error('fresh selected host callback differs from retained D/P, alias or code donor');
+        }
+        diagnostic.callback = { handle, identity,
+          named_source: diagnostic.manifest.descriptor.source,
+          alias_positions: diagnostic.checked.aliasPositions,
+          dispatch: observed };
+        diagnostic.before = this.observeCompositeTraceState(handle);
       }
       return decision.handle >>> 0;
     });
@@ -410,13 +454,13 @@ class SlotEngine {
     const globalBindings = WebAssembly.Module.imports(compiled.module)
       .filter(({ kind }) => kind === 'global')
       .map(({ module, name }, index) => {
-        const expected = this.abi.globals.find(global => global.name === name);
+        const expected = this.globalTypes.get(name);
         const object = hostImports[name];
-        if (module !== this.abi.module || !expected
+        if (module !== this.abi.module || this.globalImportOrder[index] !== name || !expected
           || !(object instanceof WebAssembly.Global) || object !== this.shared[name]) {
           throw Error('selected installed global does not alias the shared host object');
         }
-        return { index, name, type: expected.type, object };
+        return { index, name, type: expected, object };
       });
     if (globalBindings.length !== this.abi.globals.length) {
       throw Error('selected installed module has an incomplete shared global set');
@@ -680,6 +724,7 @@ class SlotEngine {
         selected_source_sha256: caller.selected_origin.selected_source_sha256,
         definition_identity: caller.selected_origin.definition_identity,
         source_generation: caller.selected_origin.source_generation,
+        capture_positions: capturePositions,
         quote_sites: quoteSites, compose_sites: composeSites,
         static_program_index: staticIndex, static_site: staticSite },
       donors: {
@@ -700,8 +745,73 @@ class SlotEngine {
       throw Error('host and worker independently checked composite code donors disagree');
     }
     return { core, caller, donor, manifestSha256, captures,
+      aliasPositions: capturePositions,
       graphSha256: descriptor.graph_sha256,
       recipeSha256: descriptor.recipe_sha256 };
+  }
+
+  // Preserve the exact Global objects supplied at instantiation, including
+  // their imported index and ABI type, across the later diagnostic invocation.
+  checkedGlobalBindings(module, includeReceipt = false) {
+    if (module.globalBindings?.length !== this.abi.globals.length
+      || module.globalBindings.some(({ index, name, type, object }, at) =>
+        index !== at || this.globalImportOrder[at] !== name
+        || this.globalTypes.get(name) !== type
+        || !(object instanceof WebAssembly.Global)
+        || object !== this.shared[name])) {
+      throw Error('selected donor no longer aliases the installed shared global objects');
+    }
+    return includeReceipt
+      ? module.globalBindings.map(({ index, name, type }) => ({ index, name, type }))
+      : undefined;
+  }
+
+  // Observe real guest bytes and mutable Global objects. Unlike the
+  // speculative idle quote overlay, both readings occur within one selected
+  // V8 invocation: the first in live_select, the second after invoke_live.
+  observeCompositeTraceState(handle) {
+    const memory = new Uint8Array(this.memory.buffer);
+    if (memory.length !== 20 * 65536) throw Error('selected guest memory is not twenty pages');
+    const names = ['sp', 'cp', 'rp', 'failure', 'operand_limit', 'operand_peak',
+      'quote_invocations', 'heap_cursor', 'live_frame'];
+    const globals = Object.fromEntries(names.map(name => {
+      const object = this.shared[name];
+      if (!(object instanceof WebAssembly.Global)) {
+        throw Error('selected trace lost its shared mutable global object');
+      }
+      return [name, String(object.value)];
+    }));
+    const sp = Number(this.shared.sp.value);
+    if (!Number.isInteger(sp) || sp < 0 || sp > 128) {
+      throw Error('selected guest operand stack exceeds the exact trace bound');
+    }
+    const cursor = Number(this.shared.heap_cursor.value);
+    const slot = handle & 4095;
+    const cellAddress = 65536 + slot * 48;
+    const bytes = new DataView(this.memory.buffer);
+    if (!Number.isInteger(handle) || handle < 4096
+      || !Number.isInteger(cursor) || slot >= cursor
+      || bytes.getUint32(cellAddress + 4, true) !== handle
+      || (bytes.getUint32(cellAddress, true) & 255) !== 4) {
+      throw Error('selected fresh trace lost its full-epoch Program cell');
+    }
+    const refcounts = {
+      incoming: bytes.getUint16(1052672 + slot * 2, true),
+      saved: bytes.getUint16(1060864 + slot * 2, true),
+      module: bytes.getUint16(1069056 + slot * 2, true),
+    };
+    if (refcounts.saved === 0
+      || refcounts.incoming < refcounts.saved + refcounts.module) {
+      throw Error('selected Program lost its physical saved-owner reference');
+    }
+    return {
+      memory_sha256: sha256(memory),
+      sidecar_sha256: sha256(memory.subarray(1052672, 1077248)),
+      stack_hex: Buffer.from(this.memory.buffer, 0, sp * 16).toString('hex'),
+      selected_cell_hex: Buffer.from(this.memory.buffer, cellAddress, 48).toString('hex'),
+      selected_refcounts: refcounts,
+      ...globals,
+    };
   }
 
   returnedCandidate(saved, checked, manifest) {
@@ -1390,15 +1500,8 @@ class SlotEngine {
             module.instance.exports.module_program_handle(index) >>> 0);
         };
         const nativeRoots = roots(core), staticRoots = roots(caller);
-        const boundGlobals = module => {
-          if (module.globalBindings?.length !== this.abi.globals.length
-            || module.globalBindings.some(({ name, object }) =>
-              !(object instanceof WebAssembly.Global) || object !== this.shared[name])) {
-            throw Error('selected donor no longer aliases the installed shared global objects');
-          }
-          return module.globalBindings.map(({ index, name, type }) => ({ index, name, type }));
-        };
-        const nativeBindings = boundGlobals(core), staticBindings = boundGlobals(caller);
+        const nativeBindings = this.checkedGlobalBindings(core, true);
+        const staticBindings = this.checkedGlobalBindings(caller, true);
         const memory = Buffer.from(this.memory.buffer);
         if (memory.length !== 20 * 65536 || this.shared.failure.value !== 0
           || this.shared.sp.value !== 0 || this.shared.cp.value !== 0
@@ -1483,11 +1586,44 @@ class SlotEngine {
       return slotReply('trace-capacity-refused', {
         diagnostic: 'exact host trace retention is full; release this session before invoking' });
     }
+    let sourceTrace = null;
+    if (request.source_trace !== undefined) {
+      const selected = request.source_trace;
+      if (this.replaying || request.record === true
+        || !selected || typeof selected.owner !== 'string'
+        || !selected.manifest || !Array.isArray(request.refs)
+        || request.refs.length !== 1 || request.refs[0]?.ordinal !== 0
+        || typeof request.refs[0]?.slot !== 'string') {
+        return slotReply('invocation-refused', {
+          diagnostic: 'fresh composite trace requires one exact selected borrowed slot' });
+      }
+      try {
+        const saved = this.savedOwners.get(selected.owner);
+        const checked = this.returnedManifest(selected.owner, saved, selected.manifest);
+        this.checkedGlobalBindings(checked.core);
+        this.checkedGlobalBindings(checked.caller);
+        const handle = saved.handle;
+        const version = this.versions.get(handle);
+        const identity = selected.manifest.descriptor.identity;
+        if (!version || version.handle !== handle
+          || version.programValueId !== identity.program_value_id
+          || version.definitionId !== identity.definition_id
+          || version.artifactSha256 !== checked.manifestSha256
+          || !sameSlotJSON(checked.aliasPositions,
+            selected.manifest.descriptor.source.capture_positions)) {
+          throw Error('selected retained owner has no identical admitted composite target');
+        }
+        sourceTrace = { owner: selected.owner, manifest: selected.manifest,
+          checked, handle, slot: request.refs[0].slot, callback: null, before: null };
+      } catch (error) {
+        return slotReply('invocation-refused', { diagnostic: String(error) });
+      }
+    }
     const root = this.registry.pinRoot(module.handle, module.token, request._frozen_snapshot ?? null);
     if (this.rootSequence === Number.MAX_SAFE_INTEGER) throw Error('host root sequence exhausted');
     this.rootSequence++;
     this.checkpointIndex = 0;
-    this.active = { root, module };
+    this.active = { root, module, sourceTrace };
     const runtime = module.instance.exports;
     const createdOwners = [];
     let replayToken = null;
@@ -1517,6 +1653,29 @@ class SlotEngine {
         throw Error(this.traceFailure
           ?? `checked guest execution returned status ${status}; control lane poisoned=${this.poisoned}`);
       }
+      let selectedTrace = null;
+      if (sourceTrace) {
+        if (!sourceTrace.callback || !sourceTrace.before
+          || trace.length !== 1
+          || !sameSlotJSON(trace[0], sourceTrace.callback.dispatch)) {
+          throw Error('fresh invocation omitted or repeated its exact selected host callback');
+        }
+        const again = this.returnedManifest(sourceTrace.owner,
+          this.savedOwners.get(sourceTrace.owner), sourceTrace.manifest);
+        this.checkedGlobalBindings(again.core);
+        this.checkedGlobalBindings(again.caller);
+        if (again.manifestSha256 !== sourceTrace.checked.manifestSha256
+          || !sameSlotJSON(again.aliasPositions, sourceTrace.checked.aliasPositions)) {
+          throw Error('selected Program or installed composite donor changed during invocation');
+        }
+        selectedTrace = {
+          schema: 'noble-live-slot-fresh-composite-trace/v1',
+          scope: 'one observed V8 guest invocation only; no guest-Lean theorem or future invariant',
+          owner: sourceTrace.owner, manifest_sha256: again.manifestSha256,
+          callback: sourceTrace.callback, before: sourceTrace.before,
+          after: this.observeCompositeTraceState(sourceTrace.handle),
+        };
+      }
       const count = runtime.stack_length();
       if (!Number.isInteger(count) || count < 0 || count > 128) throw Error('invalid result stack length');
       const selectedOutputs = originInputs === null ? null : this.evaluateSelectedOrigin(module, originInputs);
@@ -1532,6 +1691,13 @@ class SlotEngine {
           createdOwners.push(saved.owner);
           stack.push(saved);
         } else stack.push({ kind, value: runtime.stack_value(index).toString() });
+      }
+      if (selectedTrace) {
+        if (stack.length !== 1 || stack[0].kind !== 1
+          || typeof stack[0].value !== 'string') {
+          throw Error('selected fresh composite did not yield one observable I64');
+        }
+        selectedTrace.result = { kind: stack[0].kind, value: stack[0].value };
       }
       if (runtime.clear_stack() !== 0) throw Error('backend could not release actual operand roots');
       const rootEpoch = this.registry.rootEpoch(root).toString();
@@ -1569,6 +1735,7 @@ class SlotEngine {
       for (const candidate of this.modules.values()) this.sweepRetirement(candidate);
       this.appendRootTrace(trace, traceSize);
       return slotReply('executed', { epoch: rootEpoch, stack,
+        ...(selectedTrace === null ? {} : { source_trace: selectedTrace }),
         ...(replayToken === null ? {} : { replay_token: replayToken }),
         ...(replayToken === null ? {} : { frozen_identity: this.replays.get(replayToken).identity }),
         request_trace: trace, control_events: this.controlEvents.splice(0),

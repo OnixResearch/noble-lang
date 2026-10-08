@@ -1063,6 +1063,8 @@ pub(super) fn alias_code_donor_manifest(
             "selected_source_sha256":origin.checked_metadata["selected_source_sha256"],
             "definition_identity":origin.definition_identity,
             "source_generation":origin.source_generation,
+            "capture_positions":[number(&left["operand"], "position")?,
+                number(&right["operand"], "position")?],
             "quote_sites":quote_sites,"compose_sites":compose_sites,
             "static_program_index":static_index,"static_site":static_site},
         "donors":{

@@ -271,4 +271,143 @@ theorem direct_scalar_quote_refuses_bad_child (s : ScalarQuoteInput)
   · simp [directScalarQuote, valid, quoteRequire, bad]
   · simp [directScalarQuote, valid, quoteRequire]
 
+/-!
+Pure arithmetic and source-binding projection for the selected two-quote,
+three-add recipe. This is a composition of *two independent* successful
+`directScalarQuote` results, not a model of their sequential execution in a
+shared guest stack. The first add consumes the two quoted payloads, the second
+adds `y`, and the third adds `x`, each modulo 2^64. No theorem below relates
+this projection to guest callbacks, dispatch, heap/refcount changes, a
+snapshot, a C implementation, or a fresh guest invocation. In particular,
+equality of root values is not equality of source root bindings.
+-/
+
+def i64Modulus : Nat := 2 ^ 64
+
+def wrappingAdd64 (left right : Nat) : Nat :=
+  (left + right) % i64Modulus
+
+def selectedFourInput (x y first second : Nat) : Nat :=
+  wrappingAdd64 x (wrappingAdd64 y (wrappingAdd64 first second))
+
+/-- The three ordered, wrapping additions compute the four-input sum modulo
+    2^64, including when one or more additions overflow. -/
+theorem selected_four_input_modulo (x y first second : Nat) :
+    selectedFourInput x y first second =
+      (x + (y + (first + second))) % i64Modulus := by
+  simp [selectedFourInput, wrappingAdd64, Nat.add_mod]
+
+/-- Only the *payloads* from the existing narrow directScalarQuote relation
+    feed this pure composition. This Option has no guest-state transition. -/
+def selectedQuotedFourInput (x y : Nat)
+    (left right : ScalarQuoteInput) : Option Nat := do
+  let first ← directScalarQuote left
+  let second ← directScalarQuote right
+  return selectedFourInput x y first.payloadBits second.payloadBits
+
+theorem selected_quoted_composition (x y : Nat)
+    (left right : ScalarQuoteInput) (first second : ScalarQuoteResult)
+    (leftOk : directScalarQuote left = some first)
+    (rightOk : directScalarQuote right = some second) :
+    selectedQuotedFourInput x y left right =
+      some ((x + (y + (first.payloadBits + second.payloadBits))) % i64Modulus) := by
+  simp [selectedQuotedFourInput, leftOk, rightOk, selected_four_input_modulo]
+
+/-- Two positions in the source root-input list. This is source selection,
+    not a claim about physical handle equality or Wasm aliasing. -/
+def selectedRootFourInput (x y : Nat) (roots : Fin 2 → Nat)
+    (left right : Fin 2) : Nat :=
+  selectedFourInput x y (roots left) (roots right)
+
+theorem selected_quotes_match_roots (x y : Nat)
+    (left right : ScalarQuoteInput) (first second : ScalarQuoteResult)
+    (roots : Fin 2 → Nat) (leftRoot rightRoot : Fin 2)
+    (leftOk : directScalarQuote left = some first)
+    (rightOk : directScalarQuote right = some second)
+    (firstCapture : first.payloadBits = roots leftRoot)
+    (secondCapture : second.payloadBits = roots rightRoot) :
+    selectedQuotedFourInput x y left right =
+      some (selectedRootFourInput x y roots leftRoot rightRoot) := by
+  simp [selectedQuotedFourInput, leftOk, rightOk, selectedRootFourInput,
+    firstCapture, secondCapture]
+
+/-- These are *mathematical projections* of this one fixed recipe, not Noble
+    digest values or a claim that a host's DefinitionId uses this encoding.
+    Renaming a root preserves `shared`/`distinct`; duplicating one binding
+    is not the same source graph as capturing two independent bindings. -/
+inductive PureCaptureTopology where
+  | shared
+  | distinct
+  deriving DecidableEq, Repr
+
+structure PureDefinitionId where
+  topology : PureCaptureTopology
+  deriving DecidableEq, Repr
+
+/-- Program-value data retains the definition shape *and* the captured I64
+    bits modulo 2^64. Shared roots have one logical capture, distinct roots
+    have two, even when their numerical values agree. -/
+structure PureProgramValueId where
+  definitionId : PureDefinitionId
+  captures : List Nat
+  deriving DecidableEq, Repr
+
+def selectedDefinitionId (left right : Fin 2) : PureDefinitionId :=
+  ⟨if left = right then .shared else .distinct⟩
+
+def selectedCaptureValues (roots : Fin 2 → Nat)
+    (left right : Fin 2) : List Nat :=
+  if left = right then [roots left % i64Modulus]
+  else [roots left % i64Modulus, roots right % i64Modulus]
+
+def selectedProgramValueId (roots : Fin 2 → Nat)
+    (left right : Fin 2) : PureProgramValueId :=
+  ⟨selectedDefinitionId left right, selectedCaptureValues roots left right⟩
+
+/-- Either physical root position may represent the same *logical* alias
+    class; this equality does not depend on the captured bits. -/
+theorem alias_definition_ignores_root_position (left right : Fin 2) :
+    selectedDefinitionId left left = selectedDefinitionId right right := by
+  simp [selectedDefinitionId]
+
+/-- Under equal captures, moving a shared binding to another source position
+    also preserves this pure program-value projection. -/
+theorem alias_value_ignores_equal_root_renaming
+    (roots : Fin 2 → Nat) (left right : Fin 2)
+    (sameCapture : roots left = roots right) :
+    selectedProgramValueId roots left left =
+      selectedProgramValueId roots right right := by
+  simp [selectedProgramValueId, selectedDefinitionId,
+    selectedCaptureValues, sameCapture]
+
+/-- Equal numeric outputs need not mean equal source alias graphs or IDs:
+    `[v,v]` from one source binding has one logical capture; `[v,v]` from
+    independent bindings has two. -/
+theorem equal_values_do_not_erase_alias_class (x y value : Nat) :
+    selectedRootFourInput x y (fun _ => value) 0 0 =
+      selectedRootFourInput x y (fun _ => value) 1 0 ∧
+    selectedDefinitionId 0 0 ≠ selectedDefinitionId 1 0 ∧
+    selectedProgramValueId (fun _ => value) 0 0 ≠
+      selectedProgramValueId (fun _ => value) 1 0 := by
+  refine ⟨rfl, by decide, ?_⟩
+  intro sameValueId
+  exact (by decide : selectedDefinitionId 0 0 ≠ selectedDefinitionId 1 0)
+    (congrArg PureProgramValueId.definitionId sameValueId)
+
+/-- Conversely, changing the captured value preserves the definition shape
+    but changes the program-value data, even when the shared source root has
+    been renamed. No cryptographic hash collision property is asserted. -/
+theorem changed_capture_preserves_definition_not_value (first second : Nat)
+    (different : first % i64Modulus ≠ second % i64Modulus) :
+    selectedDefinitionId 0 0 = selectedDefinitionId 1 1 ∧
+    selectedProgramValueId (fun _ => first) 0 0 ≠
+      selectedProgramValueId (fun _ => second) 1 1 := by
+  refine ⟨rfl, ?_⟩
+  intro sameValueId
+  have sameCaptures :
+      [first % i64Modulus] = [second % i64Modulus] := by
+    simpa [selectedProgramValueId, selectedCaptureValues] using
+      (congrArg PureProgramValueId.captures sameValueId)
+  exact different (by simpa using sameCaptures)
+
 end NobleLiveStorage

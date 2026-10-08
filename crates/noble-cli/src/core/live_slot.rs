@@ -644,6 +644,91 @@ fn strings(value: &Value, key: &str, limit: usize) -> Result<Vec<String>, String
         .map(str::to_owned).ok_or_else(|| format!("invalid {key}"))).collect()
 }
 
+fn trace_digest(value: &Value, key: &str) -> bool {
+    value.get(key).and_then(Value::as_str).is_some_and(|digest|
+        digest.len() == 64 && digest.bytes().all(|byte|
+            byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()))
+}
+
+// Values are imported Wasm globals, not host estimates. Keep the decimal and
+// stack-byte checks separate from the selected source/dispatch comparison.
+fn trace_snapshot(value: &Value, handle: u32) -> Result<[i64; 9], String> {
+    let fields = ["sp", "cp", "rp", "failure", "operand_peak",
+        "quote_invocations", "heap_cursor", "live_frame", "operand_limit"];
+    if object(value, &["memory_sha256", "sidecar_sha256", "stack_hex",
+        "selected_cell_hex", "selected_refcounts",
+        "sp", "cp", "rp", "failure", "operand_peak",
+        "quote_invocations", "heap_cursor", "live_frame", "operand_limit"])?.len() != 14
+        || !trace_digest(value, "memory_sha256")
+        || !trace_digest(value, "sidecar_sha256") {
+        return Err(reject("composite invocation snapshot omitted exact memory identity"));
+    }
+    let mut globals = [0; 9];
+    for (index, field) in fields.iter().enumerate() {
+        let raw = text(value, field, 11)?;
+        let digits = raw.strip_prefix('-').unwrap_or(raw);
+        if digits.is_empty() || (digits.len() > 1 && digits.starts_with('0'))
+            || (raw.starts_with('-') && digits == "0")
+            || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
+            return Err(reject("composite invocation snapshot has a noncanonical global"));
+        }
+        let parsed = raw.parse::<i32>()
+            .map_err(|_| reject("composite invocation snapshot global exceeds Wasm I32"))?;
+        globals[index] = i64::from(parsed);
+    }
+    let hex = value["stack_hex"].as_str()
+        .ok_or_else(|| reject("composite invocation snapshot omitted stack bytes"))?;
+    let sp = usize::try_from(globals[0]).ok();
+    if sp.is_none_or(|sp| sp > MAX_TYPES || hex.len() != sp * 32)
+        || !hex.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+        return Err(reject("composite invocation stack bytes differ from observed sp"));
+    }
+    let cell = value["selected_cell_hex"].as_str()
+        .filter(|cell| cell.len() == 96 && cell.bytes().all(|byte|
+            byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()))
+        .ok_or_else(|| reject("composite invocation omitted selected 48-byte Program cell"))?;
+    let mut epoch = [0; 4];
+    for (index, byte) in epoch.iter_mut().enumerate() {
+        let offset = 8 + index * 2;
+        *byte = u8::from_str_radix(&cell[offset..offset + 2], 16)
+            .map_err(|_| reject("composite invocation Program header is invalid"))?;
+    }
+    if cell.get(0..2) != Some("04") || u32::from_le_bytes(epoch) != handle {
+        return Err(reject("composite invocation Program cell differs from selected epoch handle"));
+    }
+    let refcounts = value.get("selected_refcounts").and_then(Value::as_object)
+        .filter(|refcounts| refcounts.len() == 3)
+        .ok_or_else(|| reject("composite invocation has no selected sidecar refcounts"))?;
+    let mut counts = [0; 3];
+    for (count, key) in counts.iter_mut().zip(["incoming", "saved", "module"]) {
+        *count = refcounts.get(key).and_then(Value::as_u64)
+            .filter(|value| *value <= u64::from(u16::MAX))
+            .ok_or_else(|| reject("composite invocation has an invalid sidecar refcount"))?;
+    }
+    if counts[1] == 0 || counts[0] < counts[1] + counts[2] {
+        return Err(reject("selected retained Program has impossible sidecar ownership"));
+    }
+    Ok(globals)
+}
+
+fn trace_stack_i64(snapshot: &Value, position: usize) -> Result<i64, String> {
+    // live-stack.wat stores 16-byte slots: LE kind at +0, LE I64 at +8.
+    let hex = snapshot["stack_hex"].as_str()
+        .ok_or_else(|| reject("composite invocation has no stack bytes"))?;
+    let start = position * 32;
+    if hex.get(start..start + 8) != Some("01000000") {
+        return Err(reject("composite invocation stack cell is not I64"));
+    }
+    let mut bytes = [0; 8];
+    for (index, byte) in bytes.iter_mut().enumerate() {
+        let offset = start + 16 + 2 * index;
+        *byte = u8::from_str_radix(hex.get(offset..offset + 2)
+            .ok_or_else(|| reject("composite invocation stack cell is truncated"))?, 16)
+            .map_err(|_| reject("composite invocation stack cell is not hex"))?;
+    }
+    Ok(i64::from_le_bytes(bytes))
+}
+
 fn effect(id: noble_kernel::types::EffId) -> Result<&'static str, String> {
     match id.0 {
         0 => Ok("test.emit"), 1 => Ok("test.abort"), 2 => Ok("test.clock"),
@@ -1990,7 +2075,8 @@ impl Host {
     }
 
     fn invoke(&mut self, request: &Value) -> Result<Value, String> {
-        object(request, &["operation", "id", "inputs", "refs", "record"])?;
+        object(request, &["operation", "id", "inputs", "refs", "record",
+            "trace_composite_owner"])?;
         let module_id = id(request, "id")?;
         let record = match request.get("record") {
             None => false,
@@ -1999,11 +2085,29 @@ impl Host {
         if record && self.replays.len() >= MAX_INSTALLS {
             return Err(reject("recorded root retention limit exhausted"));
         }
+        if record && request.get("trace_composite_owner").is_some() {
+            return Err(reject("one fresh composite invocation cannot also freeze a replay"));
+        }
         let mut invocation = self.invocation(request, &module_id)?;
+        let source_trace = request.get("trace_composite_owner").map(|_| {
+            let owner = text(request, "trace_composite_owner", 256)?.to_owned();
+            let manifest = self.checked_composite_for_publication(&owner)?;
+            Ok::<_, String>((owner, manifest))
+        }).transpose()?;
+        if let Some((owner, manifest)) = &source_trace {
+            invocation["source_trace"] = json!({"owner":owner,"manifest":manifest});
+        }
         invocation["record"] = json!(record);
         self.worker_invocation_started = true;
         let mut report = self.send(&invocation, &[])?;
         if report["outcome"] == "executed" {
+            if let Some((owner, manifest)) = &source_trace {
+                if let Err(problem) = self.verify_composite_trace(owner, manifest,
+                    &invocation, &report) {
+                    self.poisoned = true;
+                    return Err(problem);
+                }
+            }
             if let Err(problem) = self.retain_program_outputs(&module_id, &mut report, &invocation["inputs"]) {
                 self.poisoned = true;
                 return Err(problem);
@@ -2044,6 +2148,152 @@ impl Host {
             }
         }
         Ok(report)
+    }
+
+    fn verify_composite_trace(&self, owner: &str, manifest: &Value,
+        invocation: &Value, report: &Value) -> Result<(), String> {
+        let descriptor = &manifest["descriptor"];
+        let identity = &descriptor["identity"];
+        let saved = self.programs.get(owner).and_then(|row| row.composite.as_ref())
+            .ok_or_else(|| reject("composite trace owner is no longer retained"))?;
+        let positions = descriptor["source"]["capture_positions"].as_array()
+            .filter(|positions| positions.len() == 2)
+            .ok_or_else(|| reject("checked composite source has no ordered root positions"))?;
+        let left_position = positions[0].as_u64().and_then(|n| usize::try_from(n).ok())
+            .filter(|n| *n < 2).ok_or_else(||
+                reject("checked composite source has invalid left root position"))?;
+        let right_position = positions[1].as_u64().and_then(|n| usize::try_from(n).ok())
+            .filter(|n| *n < 2).ok_or_else(||
+                reject("checked composite source has invalid right root position"))?;
+        if saved.inputs.len() != 2
+            || descriptor["owner"]["token"] != owner
+            || descriptor["owner"]["handle"] != saved.handle
+            || !trace_digest(manifest, "manifest_sha256")
+            || saved.identity["artifact_sha256"] != manifest["manifest_sha256"] {
+            return Err(reject("composite trace owner differs from checked saved root"));
+        }
+        let left = text(&saved.inputs[left_position], "value", 20)?
+            .parse::<i64>().map_err(|_| reject("checked left captured root is not I64"))?;
+        let right = text(&saved.inputs[right_position], "value", 20)?
+            .parse::<i64>().map_err(|_| reject("checked right captured root is not I64"))?;
+        let captures = identity["captures"].as_array()
+            .ok_or_else(|| reject("checked composite captures are missing"))?;
+        if captures.len() != if left_position == right_position { 1 } else { 2 }
+            || captures[0]["type"] != "I64"
+            || captures[0]["value"] != saved.inputs[left_position]["value"]
+            || (captures.len() == 2 && (captures[1]["type"] != "I64"
+                || captures[1]["value"] != saved.inputs[right_position]["value"])) {
+            return Err(reject("composite trace captures differ from checked root bindings"));
+        }
+        let roots = invocation["inputs"].as_array()
+            .filter(|roots| roots.len() == 2)
+            .ok_or_else(|| reject("composite trace requires two checked root I64 inputs"))?;
+        let refs = invocation["refs"].as_array()
+            .filter(|refs| refs.len() == 1 && refs[0]["ordinal"] == 0)
+            .ok_or_else(|| reject("composite trace requires one selected root reference"))?;
+        let mut root_values = [0; 2];
+        for (value, root) in root_values.iter_mut().zip(roots) {
+            if root["kind"] != "i64" {
+                return Err(reject("composite trace root input is not checked I64"));
+            }
+            *value = text(root, "value", 20)?.parse::<i64>()
+                .map_err(|_| reject("composite trace root input exceeds I64"))?;
+        }
+        let receipt = report.get("source_trace")
+            .ok_or_else(|| reject("successful composite invocation omitted source trace"))?;
+        if object(receipt, &["schema", "scope", "manifest_sha256", "owner",
+            "callback", "before", "after", "result"])?.len() != 8
+            || receipt["schema"] != "noble-live-slot-fresh-composite-trace/v1"
+            || receipt["scope"] != "one observed V8 guest invocation only; no guest-Lean theorem or future invariant"
+            || receipt["owner"] != owner
+            || receipt["manifest_sha256"] != manifest["manifest_sha256"] {
+            return Err(reject("composite invocation receipt differs from checked manifest"));
+        }
+        let callback = &receipt["callback"];
+        if object(callback, &["handle", "identity", "named_source",
+            "dispatch", "alias_positions"])?.len() != 5
+            || callback["handle"] != saved.handle
+            || callback.get("identity") != Some(identity)
+            || callback.get("named_source") != Some(&descriptor["source"])
+            || callback["alias_positions"].as_array() != Some(positions) {
+            return Err(reject("composite callback differs from checked owner and alias source"));
+        }
+        let trace = report["request_trace"].as_array()
+            .filter(|trace| trace.len() == 1)
+            .ok_or_else(|| reject("composite invocation has no unique selected dispatch"))?;
+        let epoch = numbers(report, "epoch")?;
+        let incarnation = numbers(&trace[0], "incarnation")?;
+        let generation = numbers(&trace[0], "generation")?;
+        if epoch == 0 || incarnation == 0 || generation == 0
+            || report["guest_requests"] != 1 || report["protected_operations"] != 0
+            || callback["dispatch"] != trace[0] {
+            return Err(reject("composite callback has no unique allowed registry dispatch"));
+        }
+        let semantic_context = format!("returned-target:{}:graph:{}",
+            manifest["manifest_sha256"].as_str().unwrap_or_default(),
+            descriptor["graph_sha256"].as_str().unwrap_or_default());
+        let dispatch_captures = captures.iter().map(|capture|
+            format!("I64:{}", capture["value"].as_str().unwrap_or_default()))
+            .collect::<Vec<_>>();
+        let expected_dispatch = json!({
+            "operation":"dispatch", "rootEpoch":report["epoch"],
+            "slotId":refs[0]["slot"], "incarnation":trace[0]["incarnation"],
+            "generation":trace[0]["generation"],
+            "programValueId":identity["program_value_id"],
+            "definitionId":identity["definition_id"],
+            "artifactSha256":manifest["manifest_sha256"],
+            "captures":dispatch_captures,
+            "semanticContext":semantic_context,
+            "recipeSha256":descriptor["recipe_sha256"],
+            "policyInput":{"operation":"dispatch","slotId":refs[0]["slot"],
+                "rootEpoch":report["epoch"],"version":{
+                    "programValueId":identity["program_value_id"],
+                    "definitionId":identity["definition_id"],
+                    "captures":dispatch_captures,
+                    "semanticContext":semantic_context,
+                    "recipeSha256":descriptor["recipe_sha256"],
+                    "artifactSha256":manifest["manifest_sha256"],
+                    "input":identity["interface"]["input"],
+                    "output":identity["interface"]["output"],
+                    "effects":identity["interface"]["effects"],
+                    "claim":"unverified","assumptions":"unverified",
+                    "handle":saved.handle}},
+            "policyAllowed":true,"outcome":"allowed"
+        });
+        if trace[0] != expected_dispatch {
+            return Err(reject("composite dispatch differs from independently checked selected source"));
+        }
+        let result = &receipt["result"];
+        if object(result, &["kind", "value"])?.len() != 2 || result["kind"] != 1
+            || report["stack"] != json!([result]) {
+            return Err(reject("composite invocation has no matching typed guest result"));
+        }
+        let expected = root_values[0].wrapping_add(root_values[1])
+            .wrapping_add(left).wrapping_add(right);
+        if result["value"] != expected.to_string() {
+            return Err(reject("composite invocation result differs from four-input wrapping add"));
+        }
+        let before = &receipt["before"];
+        let after = &receipt["after"];
+        let [before_sp, _, _, before_failure, before_peak, before_quotes, before_heap,
+            before_frame, before_limit] =
+            trace_snapshot(before, saved.handle)?;
+        let [after_sp, after_cp, after_rp, after_failure, after_peak, after_quotes,
+            after_heap, after_frame, after_limit] = trace_snapshot(after, saved.handle)?;
+        if before_sp != 2 || after_sp != 1 || before_failure != 0 || before_frame <= 0
+            || after_cp != 0 || after_rp != 0 || after_failure != 0 || after_frame != 0
+            || before_peak < 32 || after_peak < 64 || after_peak < before_peak
+            || before_quotes < 0 || after_quotes - before_quotes != 2
+            || before_limit != 2048 || before_limit != after_limit
+            || after_peak > after_limit
+            || before_heap <= 0 || after_heap <= 0
+            || before["selected_cell_hex"] != after["selected_cell_hex"]
+            || trace_stack_i64(before, 0)? != root_values[0]
+            || trace_stack_i64(before, 1)? != root_values[1]
+            || trace_stack_i64(after, 0)? != expected {
+            return Err(reject("composite guest snapshots do not show the selected non-idle call"));
+        }
+        Ok(())
     }
 
     fn retain_program_outputs(&mut self, module_id: &str, report: &mut Value, root_inputs: &Value) -> Result<(), String> {
