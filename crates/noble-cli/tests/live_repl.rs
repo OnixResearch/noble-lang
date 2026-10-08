@@ -760,6 +760,44 @@ fn declared_module_snapshots_preserve_old_program_and_fresh_new_alias() -> Resul
 }
 
 #[test]
+fn declared_checked_rebind_replays_transitive_dependents_without_rewriting_saved_program(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let (initial, _) = live_ack(&live.report()?, &[]);
+    for source in ["import m@1 as m", "import m@1 as other",
+        "def once [ m.addone ]", "def twice [ once once ]"] {
+        let receipt = live.submit(source)?;
+        assert_eq!(text_field(&receipt, "outcome"), "namespace-committed", "{receipt}");
+    }
+    let saved = live.submit("20 [ m.addone ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    fixture.replace("module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&updated, "outcome"), "reload-committed", "{updated}");
+    assert_eq!(updated["stack"], saved["stack"]);
+    let rebound = live.submit("import m@2 as m")?;
+    assert_eq!(text_field(&rebound, "outcome"), "namespace-committed", "{rebound}");
+    assert_eq!(number_field(&rebound, "generation"), initial + 6);
+    let rebuilt = rebound["rebuilt_import_definitions"].as_array()
+        .ok_or("checked transitive rebind omitted replay receipts")?;
+    let rebuilt_names: std::collections::BTreeSet<_> =
+        rebuilt.iter().map(|entry| text_field(entry, "name")).collect();
+    assert_eq!(rebuilt_names, ["once", "twice"].into_iter().collect());
+    for entry in rebuilt {
+        assert_ne!(entry["previous_identity"], entry["new_identity"]);
+    }
+    assert_eq!(rebound["stack"], saved["stack"]);
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 twice")?, &["21", "24"]);
+    normal(&live.submit("20 other.addone")?, &["21", "24", "21"]);
+    normal(&live.submit("20 m.addone")?, &["21", "24", "21", "22"]);
+    live.finish()
+}
+
+#[test]
 fn declared_same_version_changed_bytes_refuse_without_losing_old_owner() -> Result<(), Box<dyn std::error::Error>> {
     let original = "module Definitions@5 [ export step def step [ 1 + ] ]";
     let fixture = Fixture::new(original)?;
