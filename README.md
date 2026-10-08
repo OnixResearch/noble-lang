@@ -510,6 +510,17 @@ This is a **guarded partial** live profile, not automatic H-LIVE-01/LIVE-05
 watch acceptance, selected declared-module snapshots, complete source-bound LIVE-02
 acceptance, interpreter execution, code retirement, general guest mutation,
 or PushGP evolution.
+Separately, the `Compiler::new_live()` backend now emits a **Core 16-page**
+code-owner API exercised in a direct Node/V8 guest: saved Program and nested
+aggregate roots keep old code callable until their final release. The backend
+refuses table-span reuse until zero owners, exact installed table verification,
+stale-handle invalidation and table clearance complete in one idle generation;
+installed adapter leases prevent premature module-root release. This is a
+backend control, **not a selected CLI code-retirement path**. The host must
+register every external raw handle before it leaves the worker and fail closed
+on an unknown owner inventory. Reusing table indices does not reclaim Core's
+append-only 4096-cell heap or text allocation.
+
 `--engine interpreter` refuses rather than falling back to V8.
 Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
 remain `absent`/`not-run`, proof open, with no accepted source-bound assurance;

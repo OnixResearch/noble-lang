@@ -361,7 +361,7 @@ impl Compiler {
             });
         }
         let mut start = self.functions;
-        if self.live_slots {
+        if self.live || self.live_slots {
             if let Some(index) = self.free_code.iter().position(|free| free.length >= length) {
                 let free = &mut self.free_code[index];
                 start = free.start;
@@ -387,7 +387,7 @@ impl Compiler {
             length,
             generation: self.generation,
         };
-        if self.live_slots {
+        if self.live || self.live_slots {
             self.installed_code.push(span);
         }
         Ok(span)
@@ -426,8 +426,9 @@ impl Compiler {
         }
     }
 
-    /// A separate admission profile: the ordinary compiler never emits the
-    /// proposal or generation imports.
+    /// The Core 16-page live profile has its own proposal/generation ingress
+    /// and root-checked code span ledger. Neither ordinary Core nor the
+    /// separate 20-page live-slot backend acquires these root exports.
     pub fn new_live() -> Self {
         Self { live: true, ..Self::new() }
     }
@@ -735,11 +736,15 @@ impl Compiler {
         Ok(())
     }
 
-    /// Retire an installed code allocation only after the trusted runtime
-    /// verifies zero backend Program owners and clears every entry of its
-    /// physical shared table span. The callback must query the backend's
-    /// `code_owners(start, length)` (a negative result is a refusal), verify
-    /// the installed entries and clear them before returning success.
+    /// Retire an installed live-slot or Core-live allocation only after the
+    /// trusted runtime verifies zero backend Program owners and clears every
+    /// entry of its physical shared table span. The callback must query the
+    /// backend's `code_owners(start, length)` (negative means refusal), verify
+    /// exact installed entries, invalidate Core-live stale Program handles,
+    /// and clear the physical table span before returning success.
+    /// Core-live saved stack/host roots, observed values, and adapter leases
+    /// remain owners until their explicit release; an unknown host inventory
+    /// must refuse retirement rather than report a zero count.
     /// Validation precedes the callback, so stale or partial spans cannot
     /// cause table side effects.
     #[expect(
@@ -751,7 +756,7 @@ impl Compiler {
         span: CodeSpan,
         verify_and_clear: impl FnOnce(CodeSpan) -> Result<(), crate::Diagnostic>,
     ) -> Result<(), crate::Diagnostic> {
-        if !self.live_slots || span.length == 0 || span.start < 4 {
+        if !(self.live || self.live_slots) || span.length == 0 || span.start < 4 {
             return Err(crate::Diagnostic::Invalid);
         }
         let Some(index) = self.installed_code.iter().position(|owned| *owned == span) else {

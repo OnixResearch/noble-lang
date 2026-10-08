@@ -75,6 +75,8 @@ pub(super) struct Layout {
     pub(super) text_witness: u32,
     pub(super) declared_modules: bool,
     pub(super) live: bool,
+    /// Only `Compiler::new_live()`: the 16-page Core heap, never live_slots.
+    pub(super) core_live: bool,
     pub(super) live_slots: bool,
     pub(super) live_test_hosts: bool,
     pub(super) live_sites: alloc::vec::Vec<super::LiveSiteMetadata>,
@@ -187,6 +189,7 @@ fn start(
         text_witness: 0,
         declared_modules: submission.environment.declared_modules,
         live: submission.environment.effects.contains(&noble_kernel::types::EffId(3)),
+        core_live: compiler.live,
         live_slots: submission.environment.live_slots,
         live_test_hosts: submission.environment.live_test_hosts,
         live_sites: alloc::vec::Vec::new(),
