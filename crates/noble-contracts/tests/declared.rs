@@ -254,6 +254,24 @@ fn alias_rebind_refuses_a_current_body_capturing_a_shadowed_old_alias_owner() ->
 }
 
 #[test]
+fn alias_rebind_refuses_a_new_host_effect_above_the_previous_ceiling() -> Result<(), String> {
+    let session = noble_contracts::source::ModuleSession::new(&[binding(Binding {
+        version: 2, slot: 7, adapter: "ledger-v2-emit",
+    })]).map_err(|error| format!("{error:?}"))?;
+    let session = commit(session, b"module ledger@1 [ export touch def touch [ 1 drop ] ]")?;
+    let session = commit(session, b"module ledger@2 [ require emit Text -- ! test.emit export touch def touch [ \"event\" emit ] ]")?;
+    let session = commit(session, b"import ledger@1 as account")?;
+    let session = commit(session, b"def once [ account.touch ]")?;
+    let before = session.generation();
+    let error = session.prepare(b"import ledger@2 as account", &[], LIMITS)
+        .err().ok_or("accepted an effectful replacement of a pure dependent")?;
+    assert!(matches!(error.stage(),
+        noble_contracts::source::Stage::Check | noble_contracts::source::Stage::Acceptance));
+    assert_eq!(session.generation(), before);
+    Ok(())
+}
+
+#[test]
 fn nominal_resource_fixture_rejects_dup_drop_and_capture() -> Result<(), String> {
     let mut session =
         noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
