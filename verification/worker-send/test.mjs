@@ -21,12 +21,13 @@ const component = path.join(componentDir, 'component.wasm');
 const selected = name => path.join(fixtures, name);
 const worker = JSON.parse(fs.readFileSync(selected('package.json'), 'utf8'));
 const selectedSourceSha256 = createHash('sha256').update(worker.root.source_utf8).digest('hex');
-const grant = (name, { allow = true, expires_at = 20 } = {}) => {
+const grant = (name, { allow = true, expires_at = 20,
+  source_sha256 = selectedSourceSha256 } = {}) => {
   const bytes = {
     allow, attempt: '1', expires_at,
     format: 'noble-worker-send-grant/v1',
     operation: 'noble-test:worker-send/host@1.0.0#begin-send',
-    source_sha256: selectedSourceSha256, text: 'ping',
+    source_sha256, text: 'ping',
   };
   const file = path.join(output, `${name}.json`);
   fs.writeFileSync(file, JSON.stringify(bytes), { flag: 'wx', mode: 0o600 });
@@ -35,6 +36,9 @@ const grant = (name, { allow = true, expires_at = 20 } = {}) => {
 const approvedGrant = grant('approved');
 const deniedGrant = grant('denied', { allow: false });
 const expiredGrant = grant('expired', { expires_at: 8 });
+const mismatchedSource = grant('mismatched-source', {
+  source_sha256: `${selectedSourceSha256[0] === '0' ? '1' : '0'}${selectedSourceSha256.slice(1)}`,
+});
 const generated = JSON.parse(fs.readFileSync(selected('submit.json'), 'utf8'));
 generated.value.value.right.value = '{"grant":"candidate-generated","allow":true}';
 const generatedEvent = path.join(output, 'candidate-grant-event.json');
@@ -88,8 +92,19 @@ for (const [name, submit, selection] of [
   assert.equal(refused.host.task_outstanding_pins, 0, name);
   assert.equal(refused.host.resource_native_pins, 0, name);
 }
+const wrongSource = spawnSync(peer, [component, cli, selected('package.json'),
+  selected('schema.noble'), selected('state.json'), selected('submit.json'),
+  selected('cancel.json'), mismatchedSource, 'send-then-cancel'],
+{ encoding: 'utf8', timeout: 120_000 });
+assert.equal(wrongSource.status, 2, wrongSource.stderr || wrongSource.stdout);
+const wrongReport = JSON.parse(wrongSource.stdout);
+assert.equal(wrongReport.schema, 'noble-worker-send-wit-integration/v1');
+assert.equal(wrongReport.outcome, 'internal-failure');
+assert.equal(Object.hasOwn(wrongReport, 'host'), false,
+  'a mismatched worker source grant must be refused before a native host exists');
 console.log(JSON.stringify({ schema: 'noble-worker-send-wit-smoke/v1',
   world: 'noble-test:worker-send/worker-shell@1.0.0',
   scope: 'local-socket-only-not-canonical-WORKER-01',
   cases: ['authorized socket send', 'cancel before native send',
-    'no-grant', 'expired-grant', 'candidate-generated-grant'] }));
+    'no-grant', 'expired-grant', 'candidate-generated-grant',
+    'mismatched-source-grant'] }));

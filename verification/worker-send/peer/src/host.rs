@@ -258,19 +258,23 @@ impl Host {
         ensure!(pending.callback==callback,"foreign or stale future cancellation");
         let token=pending.token.take().context("duplicate future cancellation")?;
         let decision=checked(self.tasks.cancel(token,self.context).map_err(|error|error.error))?;
-        ensure!(decision.action==task::Action::CancellationAcknowledged
+        let task_retained=decision.action==task::Action::CancellationAcknowledged
             && decision.record.state==task::State::Retiring && decision.record.pins==1
             && decision.record.retiring_inputs==1
-            && self.tasks.observation().reserved.bytes==3*pending.receive_buffer.len()+256,
-            "task owner or reserved storage was not retained at cancellation");
-        checked(self.authority.cancel_invocation())?;
-        let revoked=checked(self.resources.revoke(pending.scope,owner::Retirement::Cancelled))?;
+            && self.tasks.observation().reserved.bytes==3*pending.receive_buffer.len()+256;
+        let cancelled=checked(self.authority.cancel_invocation());
+        let revoked=checked(self.resources.revoke(pending.scope,owner::Retirement::Cancelled));
+        // Release the producer even if a post-cancel invariant is violated:
+        // failure must not strand the native thread and its socket pin forever.
+        if let Some(release)=pending.release.take(){let _=release.send(());}
+        ensure!(task_retained,"task owner or reserved storage was not retained at cancellation");
+        cancelled?;
+        let revoked=revoked?;
         ensure!(revoked.record.state==owner::State::Retiring(pending.scope.serial)
             && self.resources.observation().native_pins==1
             && self.resources.native_access(&pending.borrow).is_err(),
             "resource access or native pin violated cancellation");
         self.pins_at_cancel=1;
-        if let Some(release)=pending.release.take(){let _=release.send(());}
         Ok(())
     }
 
