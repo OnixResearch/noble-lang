@@ -392,9 +392,23 @@ vendor closure contains 237 archives, five beyond the formerly reviewed 232:
 vendor was realized locally, with its measured path and NAR bound by M5/M6
 in this WIP selection, without source-bound assurance. That is not a selected
 Nix, source-inventory or native-assurance gate pass. Source locations, builder
-D, VM addresses and code-owner handles are not part of D. General logical
-source-binding aliases, independently named equal bindings, recursive lexical
-owners, other returned interfaces and effectful graph shapes have no
+D, VM addresses and code-owner handles are not part of D. The selected offline
+vendor helper now computes the entire pinned SHA-256 NAR with the selected
+Node process instead of starting a Nix client: it includes sorted directory
+entries (raw byte order), owner-executable regular-file markers (not group
+or other execute bits) and file bytes. It enumerates directories with a
+bounded iterator before sorting, limits traversal to 50,000 nodes, rejects
+depth 64 (root at zero), and caps individual files, cumulative contents and
+encoded NAR work.
+It rejects symlinks, requires root-owned nonwritable entries and refuses if
+the caller can write the store ancestry. This assumes the root-owned store
+is not rewritten by privileged actors; a shared-daemon GC may still remove
+an unrooted output, which fails closed rather than providing an alternate
+registry. This helper check does not establish that a GC root protects the
+output or complete any gate. Other M5/M6 closure checks still invoke Nix;
+this helper does not make the full selected collection daemon-free.
+General logical source-binding aliases, independently named equal bindings,
+recursive lexical owners, other returned interfaces and effectful graph shapes have no
 identity-bearing witness here; they remain without target D/P rather than
 using bit equality or heap topology.
 The same-interface pure `quote [ - ] compose` result remains an executable
