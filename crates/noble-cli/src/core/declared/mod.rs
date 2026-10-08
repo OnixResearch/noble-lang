@@ -31,6 +31,18 @@ impl super::Session {
                 "declared namespace is unavailable",
             )
         }));
+        let (next, outcome, report) = Self::prepared_declared_proofs(previous, prepared, source, limits);
+        self.declared = Some(next);
+        Ok((outcome,report))
+    }
+
+    pub(super) fn prepared_declared_proofs(
+        previous: noble_contracts::source::ModuleSession,
+        prepared: noble_contracts::source::ModulePrepared,
+        source: &[u8],
+        limits: noble_contracts::Limits,
+    ) -> (noble_contracts::source::ModuleSession,
+        Result<(), noble_contracts::source::Error>, crate::workflow::encoding::Json) {
         let mut report = crate::workflow::encoding::Json::Null;
         let (next, outcome) = previous.commit_verified(prepared, |batch| {
             let (checked,evidence,_) = crate::workflow::intrinsic::verify_with_evidence(
@@ -40,8 +52,7 @@ impl super::Session {
             report = crate::workflow::intrinsic::session_proof_report(batch,&checked,&evidence);
             Ok(checked)
         });
-        self.declared = Some(next);
-        Ok((outcome,report))
+        (next,outcome,report)
     }
 
     pub(super) fn submit_declared(
