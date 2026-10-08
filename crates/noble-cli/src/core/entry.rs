@@ -57,9 +57,16 @@ fn execute(options: super::arguments::Options) -> Result<u8, super::output::Fail
         options.framed,
         options.limits.bytes,
         options.declared_modules,
+        options.declared_text() && options.signed_self_recursion,
     )) {
         let source = match submission {
             super::framing::Submission::Source(source) => source,
+            super::framing::Submission::ReleaseObserved { store, id } => {
+                let report = attempt!(session.release_declared_observation(&store, id, &options));
+                attempt!(super::output::print(&report));
+                exit = exit.max(report.exit());
+                continue;
+            }
             super::framing::Submission::Exhausted => {
                 let number = attempt!(session.advance_submission());
                 let report = super::output::Report::declared_frame_refusal(

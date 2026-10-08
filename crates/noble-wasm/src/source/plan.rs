@@ -125,6 +125,7 @@ pub(super) struct Layout {
     pub(super) borrowed_input_positions: alloc::vec::Vec<u32>,
     pub(super) text_witness: u32,
     pub(super) declared_modules: bool,
+    pub(super) declared_text: bool,
     pub(super) worker_inputs: bool,
     pub(super) live: bool,
     /// Opt-in Core or declared live: the 16-page heap, never live_slots.
@@ -242,6 +243,7 @@ fn start(
         borrowed_input_positions: alloc::vec::Vec::new(),
         text_witness: 0,
         declared_modules: submission.environment.declared_modules,
+        declared_text: compiler.declared_text,
         worker_inputs: compiler.worker_inputs,
         live: submission.environment.effects.contains(&noble_kernel::types::EffId(3)),
         core_live: compiler.live || compiler.declared_live,

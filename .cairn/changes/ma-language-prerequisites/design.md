@@ -76,6 +76,40 @@ path, and host-only decimal parsing would not satisfy the calculator gate.
 
 ## Risks / Trade-offs
 
+- The combined declared-Text session has a separate, host-owned source epoch.
+  After a successful frame reports its original metrics, a later idle retirement
+  may clear the checked non-core Program globals and code-table entries, roll
+  the guest heap back to cell zero, and release the corresponding compiler code
+  slots. The first four source-independent callbacks remain at their exact
+  identities; source-store UUID and epoch generation do not rewind. This is
+  **not** a larger heap, an increase to the original 4,096-cell allocation
+  cap, a change to frame fuel/steps/peak, or a LIVE code-retirement rule.
+- An observed Program or aggregate containing one pins its complete reachable
+  Program group, including quoted children not separately visible in the
+  output. A checked guest `drop` empties the stack but does not relinquish a
+  host-observed group. Only the framed host-control header
+  `:release-observed-roots STORE_UUID OBSERVATION_ID` may relinquish the exact
+  reported `source_observation_id` from that `source_store_id`, and only after
+  checked empty-stack, idle and no parked/pending or guest
+  failure-stack/continuation/observation state. Other external groups keep
+  the epoch pinned until separately relinquished. The header is not Noble
+  source, cannot be supplied by a guest module and does not count as a source
+  submission. Unknown, foreign, stale, early and repeated releases refuse;
+  visible raw Program ingress is bound to the same store and epoch, not a
+  recyclable integer handle. A pinned old version or Program keeps its
+  original code and recipe until the owner is actually discharged, even if
+  that makes the original runtime quota exhaust honestly.
+- Source-only scoped evidence: a real combined-profile session completed 65
+  repeated decimal-fold activations with empty checked stacks; each reported
+  306 allocated cells (14,688 bytes) under the original runtime cap, then a
+  separate retirement receipt reported 306 released cells, 144 cleared
+  non-core entries, four retained core entries and monotone generations.
+  Keeping one observed Program externally pinned let 13 activations finish
+  but the 14th exhausted the original allocation quota. A further real
+  session refused early, foreign, stale and repeated group release, then
+  retired only after the exact host release. This is precursor behavior, not
+  the integrated exact-number current28 gate, an accepted CALC scenario,
+  proof refinement or a selected vendor receipt.
 - Combining two existing flags is a *new* host-selected contract and needs
   negative cross-profile tests; the active cursor change remains unchanged.
 - Existing source-work and signature table meters must charge actual visited

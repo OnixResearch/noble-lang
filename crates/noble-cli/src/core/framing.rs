@@ -20,6 +20,7 @@ pub(super) fn read_file(
 pub(super) enum Submission {
     Source(std::vec::Vec<u8>),
     Exhausted,
+    ReleaseObserved { store: std::string::String, id: u64 },
 }
 
 #[expect(
@@ -31,14 +32,33 @@ pub(super) fn read_submission(
     framed: bool,
     limit_bytes: u32,
     recover_bounded_oversize: bool,
+    allow_observed_release: bool,
 ) -> Result<Option<Submission>, super::output::Failure> {
     if !framed {
         return read_line(reader, limit_bytes).map(|source| source.map(Submission::Source));
     }
-    let header = match attempt!(read_line(reader, 20)) {
+    let header = match attempt!(read_line(reader, if allow_observed_release { 96 } else { 20 })) {
         Some(header) => header,
         None => return Ok(None),
     };
+    if allow_observed_release && header.starts_with(b":release-observed-roots ") {
+        let text = attempt!(std::str::from_utf8(&header)
+            .map_err(|_| invalid_header()));
+        let mut fields = text.trim_end_matches('\n')
+            .strip_prefix(":release-observed-roots ")
+            .ok_or_else(invalid_header)?
+            .split(' ');
+        let store = attempt!(fields.next().filter(|store| store.len() == 36
+            && store.bytes().all(|byte| byte.is_ascii_hexdigit() || byte == b'-'))
+            .ok_or_else(invalid_header));
+        let id = attempt!(fields.next().and_then(|id| id.parse::<u64>().ok())
+            .filter(|id| (1..=9_007_199_254_740_991).contains(id))
+            .ok_or_else(invalid_header));
+        if fields.next().is_some() {
+            return Err(invalid_header());
+        }
+        return Ok(Some(Submission::ReleaseObserved { store: store.to_owned(), id }));
+    }
     let count_bytes = attempt!(std::str::from_utf8(&header)
         .ok()
         .and_then(|header| header.trim_end().parse::<u32>().ok())
@@ -62,6 +82,13 @@ pub(super) fn read_submission(
     let mut source = std::vec![0_u8; count_bytes];
     attempt!(std::io::Read::read_exact(reader, &mut source).map_err(io_error));
     Ok(Some(Submission::Source(source)))
+}
+
+fn invalid_header() -> super::output::Failure {
+    super::output::Failure::new(
+        super::output::ErrorContext { stage: "parse", outcome: "invalid-input" },
+        "invalid signed source control header",
+    )
 }
 
 fn drain_frame(

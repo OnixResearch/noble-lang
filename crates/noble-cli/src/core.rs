@@ -105,6 +105,13 @@ pub const USAGE: &str = "usage:
   noble session --framed --declared-modules --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --signed-self-recursion --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --text-byte-cursor [--signed-self-recursion] [--opt off|on] [--emit NEW_DIR]
+  Signed-Declared-Text-v1 framed control: :release-observed-roots STORE_UUID OBSERVATION_ID
+  sends no source submission; after the caller has compared an observed aggregate,
+  submit a checked `drop` expression first, then release that report's exact
+  source_store_id/source_observation_id. The worker releases every nested
+  observed handle in that receipt. A wrong, stale or foreign owner is refused.
+  An idle ownerless epoch retires checked Program/Recipe cells and source code
+  without restarting the session or changing the 4096-cell runtime maximum.
   HOST_FILE: bind MODULE@VERSION test.emit ADAPTER Text -- ! test.emit allow|deny
              bind MODULE@VERSION test.clock ADAPTER -- I64 ! test.clock allow|deny script I64[,I64...]
   Declared-Modules-v1 module/import/definition units link without running guest code.

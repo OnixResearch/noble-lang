@@ -160,6 +160,19 @@ async function protocol(config) {
             const report = header === 'park' ? engine.park() : engine.restore();
             emit(report.outcome, report);
             continue;
+          } else if (/^retire-source-epoch [0-9]+ [0-9]+$/.test(header)) {
+            const [, generation, codeEnd] = /^retire-source-epoch ([0-9]+) ([0-9]+)$/.exec(header);
+            const report = engine.retireSourceEpoch(
+              integer(Number(generation), 4294967295, 'source generation'),
+              integer(Number(codeEnd), 16384, 'source code end'));
+            emit(report.outcome, report);
+            continue;
+          } else if (/^release-source-observation [0-9]+ [a-f0-9-]{36}$/.test(header)) {
+            const [, id, store] = /^release-source-observation ([0-9]+) ([a-f0-9-]{36})$/.exec(header);
+            const report = engine.releaseSourceObservation(store,
+              integer(Number(id), Number.MAX_SAFE_INTEGER, 'source observation'));
+            emit(report.outcome, report);
+            continue;
           } else if (header === 'execute') {
             command = { kind: 'execute', inputs: 0 };
           } else if (/^execute-steps [0-9]+$/.test(header)) {
@@ -184,8 +197,12 @@ async function protocol(config) {
           } else if (/^push [0-9]+$/.test(header)) {
             const count = Number(header.slice('push '.length));
             command = { kind: 'push', inputs: integer(count, MAX_FRAME, 'injection frame') };
-          } else if (/^project [0-9]+$/.test(header)) {
-            try { emit('projected', engine.project(Number(header.slice('project '.length)))); }
+          } else if (/^project [0-9]+(?: [0-9]+ [a-f0-9-]{36})?$/.test(header)) {
+            const [, handle, epoch, store] =
+              /^project ([0-9]+)(?: ([0-9]+) ([a-f0-9-]{36}))?$/.exec(header);
+            try { emit('projected', engine.project(Number(handle),
+              epoch === undefined ? undefined : integer(Number(epoch), Number.MAX_SAFE_INTEGER, 'source epoch'),
+              store)); }
             catch (error) { emit('internal-failure', reportError(error)); return; }
             continue;
           } else {

@@ -21,6 +21,43 @@ fn linked(session: ModuleSession, source: &[u8]) -> Result<ModuleSession, String
 }
 
 #[test]
+fn source_epoch_reuses_cleared_code_without_rewinding_generation() -> Result<(), String> {
+    let session = ModuleSession::new_declared_text(&[], true,
+        noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .ok_or("invalid retained source cap")?)
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let session = linked(session, include_bytes!("../../noble-contracts/src/fixtures/result.noble"))?;
+    let expression = session.prepare(b"1 drop", &[], LIMITS)
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let owner = expression.declared_text_source_owner().ok_or("missing signed source owner")?;
+    let mut compiler = Compiler::new_declared_text();
+    let prepared = compiler.prepare_declared_text(&owner)
+        .map_err(|_| "initial signed source compilation refused")?;
+    let span = prepared.code_span();
+    let end = span.start + span.length;
+    compiler.commit(prepared).map_err(|_| "initial commit refused")?;
+    if compiler.retire_declared_text_epoch(span.generation + 1, end).is_ok()
+        || compiler.retire_declared_text_epoch(span.generation, end + 1).is_ok()
+        || compiler.declared_text_epoch_state() != Some((span.generation, end)) {
+        return Err("stale or partial worker receipt changed checked compiler state".into());
+    }
+    compiler.retire_declared_text_epoch(span.generation, end)
+        .map_err(|_| "checked epoch reset refused")?;
+    if compiler.declared_text_epoch_state() != Some((span.generation, 4))
+        || compiler.retire_declared_text_epoch(span.generation, end).is_ok() {
+        return Err("source epoch repeated retirement or rewound the compiler".into());
+    }
+    let next = compiler.prepare_declared_text(&owner)
+        .map_err(|_| "rechecked source after epoch refused")?;
+    if next.code_span().start != 4 || next.code_span().generation != span.generation + 1
+        || next.wat().windows(b"table.init $core".len())
+            .any(|window| window == b"table.init $core") {
+        return Err("cleared code did not reuse table4 with monotone source generation".into());
+    }
+    Ok(())
+}
+
+#[test]
 fn source_bound_signed_fold_and_nominal_result_require_selected_compiler() -> Result<(), String> {
     let session = ModuleSession::new_declared_text(&[], true, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;

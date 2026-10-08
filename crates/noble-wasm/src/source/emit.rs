@@ -146,6 +146,32 @@ pub(super) fn module(
     if plan.core_live {
         attempt!(core_live::release_module_roots(&mut out, plan.programs.len()));
     }
+    if plan.declared_text {
+        attempt!(out.append(b"(func (export \"module_program_count\") (result i32) "));
+        attempt!(out.i32(plan.programs.len() as u32));
+        attempt!(out.append(b")\n(func (export \"module_program_handle\") (param $index i32) (result i32)\n"));
+        for index in 0..plan.programs.len() {
+            attempt!(out.append(b"(if (i32.eq (local.get $index) "));
+            attempt!(out.i32(index as u32));
+            attempt!(out.append(b") (then (return "));
+            attempt!(get_global(&mut out, index));
+            attempt!(out.append(b")))\n"));
+        }
+        attempt!(out.append(b"(i32.const 0))\n(func (export \"release_module_programs\") (result i32)\n"));
+        for index in 0..plan.programs.len() {
+            attempt!(out.append(b"(global.set "));
+            attempt!(global(&mut out, index));
+            attempt!(out.append(b" (i32.const 0))\n"));
+        }
+        attempt!(out.append(b"(i32.const 0))\n\
+(func (export \"retire_source_epoch\") (result i32)\n\
+ (if (i32.or (global.get $failure) (global.get $sp)) (then (return (i32.const 4))))\n\
+ (if (i32.or (global.get $cp) (global.get $rp)) (then (return (i32.const 4))))\n\
+ (if (global.get $observed_program) (then (return (i32.const 4))))\n\
+ (call $rollback (i32.const 0))\n\
+ (global.set $heap_baseline (i32.const 0))\n\
+ (i32.const 0))\n"));
+    }
     attempt!(out.append(b"(func (export \"submit\") (result i32)\n(if (global.get $failure) (then (return (global.get $failure))))\n"));
     if plan.core_live {
         attempt!(out.append(b"(if (i32.or (global.get $core_live_module_installed) (i32.load (i32.const 61440)))\n (then (call $fail (i32.const 4)) (return (global.get $failure))))\n"));
