@@ -826,7 +826,7 @@ mod symbolic_owner_tests {
         let relation = forged.staged.source.definitions.iter_mut()
             .find_map(|definition| definition.signed.as_mut())
             .expect("nested recursive owner relation");
-        let self_node = relation.symbolic_nodes.iter_mut()
+        let self_node = relation.symbolic_nodes.iter_mut().filter_map(Option::as_mut)
             .find(|node| node.target == Some(Target::SelfOwner))
             .expect("nested owner edge");
         self_node.target = Some(Target::Builtin(0));

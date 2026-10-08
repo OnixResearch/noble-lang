@@ -189,11 +189,12 @@ struct SignedRelation {
     /// Source namespace slot reserved for the owner before it was installed.
     source_slot: u32,
     /// Every executable lexical node has exactly one rigid inferred draft;
-    /// the parser's final `def` envelope quotation is source syntax only.
+    /// `None` slots are independently re-lowered, non-executable lexical
+    /// binder/name syntax. The parser's final `def` envelope is omitted.
     /// Concrete environments may use different specialization slots, so this
     /// source-order relation, not a concrete Candidate, carries the rank-1
     /// owner check across publication and signed-only compiler ingress.
-    symbolic_nodes: alloc::vec::Vec<SymbolicNode>,
+    symbolic_nodes: alloc::vec::Vec<Option<SymbolicNode>>,
     /// Original self occurrences, including those inside quotations.
     lexical_nodes: alloc::vec::Vec<u32>,
 }

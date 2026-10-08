@@ -345,6 +345,22 @@ fn alias_rebind_refuses_a_new_host_effect_above_the_previous_ceiling() -> Result
 }
 
 #[test]
+fn signed_lexical_owner_rederives_its_checked_tail_from_original_source() -> Result<(), String> {
+    let session = noble_contracts::source::ModuleSession::new_declared_text(&[], true)
+        .map_err(|error| format!("{error:?}"))?;
+    let session = commit(session,
+        b"module countdown@1 [ signature go forall<S:stack> [ S I64 -- S I64 ! pure ] export go def go [ dup [ let n n 0 = ] dip swap [ ] [ 1 - go ] if ] ]")?;
+    let prepared = session.prepare(b"3 countdown@1.go", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(prepared.output(), &[noble_kernel::types::Ty::I64]);
+    let rederived = prepared.signed_source_owner()
+        .ok_or("signed lexical source owner missing")?.rederive()
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(rederived.environment.declared_modules);
+    Ok(())
+}
+
+#[test]
 fn nominal_resource_fixture_rejects_dup_drop_and_capture() -> Result<(), String> {
     let mut session =
         noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
