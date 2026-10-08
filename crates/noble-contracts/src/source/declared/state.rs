@@ -765,7 +765,11 @@ impl ModuleSession {
             .is_some_and(|context| context.declared_text)
     }
 
-    fn snapshot(&self) -> Self {
+    /// Copy this checked namespace for an unpublished external transaction.
+    /// A proof recheck or worker proposal can commit to the copy without
+    /// changing the retained session; its owner must revalidate its external
+    /// safepoint before replacing the retained session with this successor.
+    pub fn snapshot(&self) -> Self {
         Self {
             source: crate::source::Session {
                 definitions: self.source.definitions.clone(),
