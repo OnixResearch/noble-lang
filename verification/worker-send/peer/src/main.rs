@@ -41,7 +41,7 @@ fn begin(mut store:StoreContextMut<'_,Runtime>,params:&[Val],results:&mut [Val])
     let [Val::S64(attempt),Val::String(text)]=params else {bail!("invalid typed WIT Send arguments")};
     ensure!(results.len()==1,"WIT begin-send result arity changed");
     ensure!(*attempt==store.data().selected.attempt
-        && text.as_ref()==store.data().selected.text.as_str(),
+        && text==&store.data().selected.text,
         "component Send differs from checked nominal guest Action");
     ensure!(store.data().live.is_none(),"second live future cannot copy Send authority");
     let (callback,receive)=store.data().host.lock().begin(*attempt,text)?;
@@ -130,7 +130,7 @@ async fn execute(arguments:&[String])->Result<Value> {
     let attempt=store.data().selected.attempt;
     let text=store.data().selected.text.clone();
     let call=tokio::time::timeout(Duration::from_secs(10),store.run_concurrent(async |accessor| {
-        let ((),task)=typed.call_dispatch(accessor,attempt,&text).await?;
+        let ((),task)=typed.call_dispatch(accessor,attempt,text).await?;
         task.block(accessor).await;
         Ok::<(),anyhow::Error>(())
     })).await.map_err(anyhow::Error::from).and_then(|value|value).and_then(|value|value);
