@@ -5,8 +5,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export const DEFAULT_RETAINED = 65_536;
-export const OPTED_RETAINED = 262_144;
+export const OPTED_RETAINED = 262144;
 export const MAX_SOURCE = 65_536;
+export const MAX_COMMAND_BYTES = 262_144;
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 
 export function modulePaths(languageRoot, numericDir, here) {
@@ -45,6 +46,8 @@ export function selectedCompilerReceipt(binary, receiptPath, numericDir, languag
   assert.equal(verification.schema, 'noble-ma1-exact-numeric-gate/v1');
   assert.equal(verification.result, 'passed', 'MA1 full compiled numeric gate is required');
   assert.equal(verification.scope, 'full-library');
+  assert.equal(verification.vendor_recipe?.exact_eight_lock_recipe, true,
+    'MA1 guest success without the exact committed eight-lock vendor recipe is not acceptance');
   assert.equal(fs.realpathSync(verification.source_root), numericRoot);
   assert.equal(verification.binary_sha256, binarySha256);
   assert.equal(verification.source_bound_cli_build_sha256, sha256(buildBytes));
@@ -57,6 +60,8 @@ export function selectedCompilerReceipt(binary, receiptPath, numericDir, languag
   assert.match(build.sourceRevision, /^[0-9a-f]{40}$/);
   assert.equal(fs.realpathSync(build.binary.path), executable);
   assert.equal(build.binary.sha256, binarySha256);
+  assert.deepEqual(build.tools.vendor.recipe, verification.vendor_recipe,
+    'selected CLI build and MA1 guest disagree about the vendor recipe');
   const git = '/run/current-system/sw/bin/git';
   const head = spawnSync(git, ['rev-parse', 'HEAD'], {
     cwd: numericRoot, encoding: 'utf8', timeout: 30_000,

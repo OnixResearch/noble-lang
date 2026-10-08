@@ -44,6 +44,9 @@ export function rational(value) {
   const n = integer(numerator);
   const d = integer(denominator);
   if (d <= 0n) throw Error('guest returned invalid rational denominator');
+  let a = n < 0n ? -n : n, b = d;
+  while (b !== 0n) [a, b] = [b, a % b];
+  if (a !== 1n) throw Error('guest returned noncanonical rational');
   return [n, d];
 }
 export function displayExact(n, d, mode) {
