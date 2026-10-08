@@ -116,6 +116,19 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
     assert!(unchecked_self.checked_program_owner("forever").is_none());
     assert!(unchecked_self.checked_program_closure("forever").is_none(),
         "an unverified signed self cycle cannot enter a closed worker package");
+    let bound = ModuleSession::new(&[binding(Binding {
+        version: 1, slot: 4, adapter: "version-A",
+    })]).map_err(|error| format!("{error:?}"))?;
+    let host_module = bound.prepare(
+        b"module ledger@1 [ opaque UserId I64 private require emit Text -- ! test.emit export UserId export handle def handle [ \"audit\" emit ] ]",
+        &[], LIMITS,
+    ).map_err(|error| format!("{error:?}"))?;
+    assert!(host_module.linked_binding().is_some());
+    assert!(host_module.resolve_type("ledger@1.UserId").is_err());
+    assert!(host_module.checked_nominals().is_none());
+    assert!(host_module.checked_program_owner("handle").is_none());
+    assert!(host_module.checked_program_closure("handle").is_none(),
+        "an independently linked host adapter must not enter a pure worker package");
     Ok(())
 }
 
