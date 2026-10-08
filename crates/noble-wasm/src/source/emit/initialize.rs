@@ -206,6 +206,13 @@ fn program(
             b") (then (call $fail (i32.const 4)) (return)))\n"
         ));
     }
+    if plan.core_live {
+        // Core's append-only heap has distinct host and per-module root bytes.
+        // A quotation child stays owned after its wrapper has left the stack.
+        attempt!(out.append(b"(if (call $core_live_module_root "));
+        attempt!(super::get_global(out, id));
+        attempt!(out.append(b") (then (call $fail (i32.const 4)) (return)))\n"));
+    }
     Ok(())
 }
 
