@@ -248,6 +248,9 @@ current body reaching a shadowed old alias owner rejects the import without
 changing the previous namespace. The opt-off/on guest scenarios under
 `verification/calculator-precursor/` exercise old captured `21`, another
 alias's `21`, new transitive `24`, and incompatible-import recovery.
+The finite language guest observations above belong to isolated compiled
+donor `209c478`; this combined Worker/C integration has not replayed them
+and does not inherit a source-bound acceptance receipt.
 
 A static rejection preserves the previous stack and namespace. A runtime trap
 or exhausted execution quota ends the session, retaining any host requests
