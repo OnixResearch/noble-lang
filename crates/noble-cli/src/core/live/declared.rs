@@ -416,10 +416,17 @@ impl Live {
             Err(encoding::EncodeError::Other(problem)) =>
                 return Ok(self.admission_refusal(&problem, "bytecode-refused")),
         };
-        let ready = self.worker()?.prepare_binary(&binary, source, number)?;
+        let (bridge, signatures, bridge_wat_sha256) = super::Live::runtime_bridge(&compiled)?;
+        let binding = super::LiveBinaryBinding::new(
+            &compiled, &binary, &bridge, bridge_wat_sha256, &signatures, source);
+        let ready = self.worker()?.prepare_binary(
+            &binary, &bridge, &signatures,
+            &binding.wat_sha256, &binding.bridge_wat_sha256,
+            compiled.code_span(), source, number)?;
         if ready.outcome != "ready" {
             return Ok(ready);
         }
+        super::Live::check_live_binary_binding(&ready, &binding)?;
         if self.verify_source_before_execute {
             if let Some(refusal) = self.source_change_refusal() {
                 let discarded = self.worker()?.discard_prepared_live()?;
@@ -441,8 +448,9 @@ impl Live {
             None => self.worker()?.execute()?,
         };
         if report.outcome == "normal" {
+            super::Live::check_live_binary_binding(&report, &binding)?;
             self.session.stack = output;
-            self.register_live_code(code_span)?;
+            self.register_live_code(code_span, &report)?;
         }
         let mut value: serde_json::Value = serde_json::from_str(&report.json)
             .map_err(|_| fatal_failure("invalid declared live execution report"))?;

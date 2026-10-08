@@ -21,9 +21,18 @@ static ABI: LazyLock<Result<Value, String>> = LazyLock::new(|| {
 enum ImportProfile {
     CoreLive,
     DeclaredLive,
+    RuntimeBridge,
 }
 
+const BRIDGE_CORE_EXPORTS: &[(&str, &str)] = &[
+    ("core_empty", "(environment:i32)->"),
+    ("core_quote", "(environment:i32)->"),
+    ("core_compose", "(environment:i32)->"),
+    ("core_restore", "(environment:i32)->"),
+];
+
 const CORE_LIVE_EXPORTS: &[(&str, &str)] = &[
+    ("signature_count", "()->count:i32"),
     ("code_owners", "(start:i32,length:i32)->owners:i32"),
     ("retain_code_root", "(handle:i32)->status:i32"),
     ("release_code_root", "(handle:i32)->status:i32"),
@@ -135,7 +144,9 @@ fn check_export_signature(actual: &FuncType, descriptor: &str, name: &str) -> Re
     )?;
     let result = result.split(';').next().unwrap_or("");
     let result = result.rsplit_once(':').map_or(result, |(_, kind)| kind);
-    if !matches_inputs || !matches_params(actual.results(), std::iter::once(result))? {
+    if !matches_inputs || !matches_params(actual.results(),
+        result.split(',').filter(|part| !part.is_empty())
+            .map(|part| part.rsplit_once(':').map_or(part, |(_, kind)| kind)))? {
         return Err(format!("invalid ABI export signature: {name}"));
     }
     Ok(())
@@ -242,6 +253,7 @@ fn check_export(
     manifest: &Value,
     functions: &[u32],
     types: &[FuncType],
+    profile: ImportProfile,
 ) -> Result<(), String> {
     if name == string(&manifest["memory"], "name")? {
         if kind != ExternalKind::Memory || index != 0 {
@@ -249,12 +261,21 @@ fn check_export(
         }
         return Ok(());
     }
+    if matches!(profile, ImportProfile::RuntimeBridge)
+        && (name == "submit" || name == "release_module_roots")
+    {
+        return Err(format!("guest-only export in runtime bridge: {name}"));
+    }
     let descriptor = manifest["exports"]
         .get(name)
         .and_then(Value::as_str)
         .or_else(|| CORE_LIVE_EXPORTS.iter()
             .find(|(entry, _)| *entry == name)
             .map(|(_, signature)| *signature))
+        .or_else(|| matches!(profile, ImportProfile::RuntimeBridge).then(|| {
+            BRIDGE_CORE_EXPORTS.iter().find(|(entry, _)| *entry == name)
+                .map(|(_, signature)| *signature)
+        }).flatten())
         .ok_or_else(|| format!("undeclared Wasm export: {name}"))?;
     if kind != ExternalKind::Func {
         return Err(format!("invalid ABI export kind: {name}"));
@@ -327,11 +348,15 @@ fn check_binary(bytes: &[u8], manifest: &Value, profile: ImportProfile) -> Resul
                         manifest,
                         &functions,
                         &types,
+                        profile,
                     )?;
                 }
             }
             Payload::StartSection { .. } => return Err("Wasm start function is forbidden".into()),
             Payload::DataSection(section) => {
+                if matches!(profile, ImportProfile::RuntimeBridge) && section.count() != 0 {
+                    return Err("runtime bridge must not contain data segments".into());
+                }
                 for data in section {
                     if matches!(
                         data.map_err(|error| format!("invalid Wasm data segment: {error}"))?
@@ -343,6 +368,9 @@ fn check_binary(bytes: &[u8], manifest: &Value, profile: ImportProfile) -> Resul
                 }
             }
             Payload::ElementSection(section) => {
+                if matches!(profile, ImportProfile::RuntimeBridge) && section.count() != 0 {
+                    return Err("runtime bridge must not contain element segments".into());
+                }
                 for element in section {
                     if matches!(
                         element
@@ -381,14 +409,23 @@ fn check_binary(bytes: &[u8], manifest: &Value, profile: ImportProfile) -> Resul
     let functions = manifest["exports"]
         .as_object()
         .ok_or("missing core ABI exports")?;
-    for name in functions.keys() {
+    for name in functions.keys().filter(|name|
+        !matches!(profile, ImportProfile::RuntimeBridge) || name.as_str() != "submit") {
         if !exports.contains(name.as_str()) {
             return Err(format!("missing core function export: {name}").into());
         }
     }
-    for (name, _) in CORE_LIVE_EXPORTS {
+    for (name, _) in CORE_LIVE_EXPORTS.iter().filter(|(name, _)|
+        !matches!(profile, ImportProfile::RuntimeBridge) || *name != "release_module_roots") {
         if !exports.contains(name) {
             return Err(format!("missing live code owner export: {name}").into());
+        }
+    }
+    if matches!(profile, ImportProfile::RuntimeBridge) {
+        for (name, _) in BRIDGE_CORE_EXPORTS {
+            if !exports.contains(name) {
+                return Err(format!("missing core bridge entry: {name}").into());
+            }
         }
     }
     Ok(())
@@ -422,6 +459,12 @@ pub(super) fn encode_live_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
 /// typed abort. Core-live self-edit imports and ambient effects stay unavailable.
 pub(super) fn encode_declared_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
     encode(wat, ImportProfile::DeclaredLive)
+}
+
+/// The compiler's source-free helper has only the shared Core16 arena
+/// imports; its four exported functions replace the first guest's core slots.
+pub(super) fn encode_runtime_bridge_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
+    encode(wat, ImportProfile::RuntimeBridge)
 }
 
 #[cfg(test)]

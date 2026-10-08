@@ -12,6 +12,24 @@ mod metadata;
 mod reflection;
 mod worker;
 
+pub(super) fn runtime_bridge(
+    descriptors: &[(u32, u32)],
+    declared_modules: bool,
+) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
+    let mut out = crate::output::Buffer::new(32_768);
+    attempt!(imports::bridge(&mut out));
+    attempt!(imports::bridge_runtime(&mut out, declared_modules));
+    attempt!(metadata::descriptors(&mut out, descriptors));
+    attempt!(metadata::signature_count(&mut out, descriptors.len()));
+    attempt!(out.append(
+        b"(export \"core_empty\" (func $empty_entry))\n\
+(export \"core_quote\" (func $quote_entry))\n\
+(export \"core_compose\" (func $compose_entry))\n\
+(export \"core_restore\" (func $restore_entry))\n)\n",
+    ));
+    Ok(out.finish())
+}
+
 fn global(out: &mut crate::output::Buffer, id: usize) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"$s"));
     out.index(id)
@@ -121,6 +139,9 @@ pub(super) fn module(
         return Err(problem);
     }
     attempt!(metadata::descriptors(&mut out, &plan.descriptors));
+    if plan.core_live {
+        attempt!(metadata::signature_count(&mut out, plan.descriptors.len()));
+    }
     attempt!(initialize::write(&mut out, plan, generation));
     attempt!(metadata::stack_check(
         &mut out,

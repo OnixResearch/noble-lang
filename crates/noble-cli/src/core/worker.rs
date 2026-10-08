@@ -284,31 +284,62 @@ impl Engine {
     pub fn prepare_binary(
         &mut self,
         binary: &[u8],
+        bridge: &[u8],
+        signatures: &[u8],
+        wat_sha256: &str,
+        bridge_wat_sha256: &str,
+        span: noble_wasm::source::CodeSpan,
         source: &[u8],
         submission: u64,
     ) -> Result<super::output::Report, super::output::Failure> {
-        self.send_binary("compile-bin", binary, source, submission)
+        self.send_binary("compile-bin", binary, bridge, signatures,
+            wat_sha256, bridge_wat_sha256, span, source, submission)
     }
 
     pub fn stage_binary(
         &mut self,
         binary: &[u8],
+        bridge: &[u8],
+        signatures: &[u8],
+        wat_sha256: &str,
+        bridge_wat_sha256: &str,
+        span: noble_wasm::source::CodeSpan,
         source: &[u8],
         submission: u64,
     ) -> Result<super::output::Report, super::output::Failure> {
-        self.send_binary("stage-bin", binary, source, submission)
+        self.send_binary("stage-bin", binary, bridge, signatures,
+            wat_sha256, bridge_wat_sha256, span, source, submission)
     }
 
     fn send_binary(
         &mut self,
         kind: &str,
         binary: &[u8],
+        bridge: &[u8],
+        signatures: &[u8],
+        wat_sha256: &str,
+        bridge_wat_sha256: &str,
+        span: noble_wasm::source::CodeSpan,
         source: &[u8],
         submission: u64,
     ) -> Result<super::output::Report, super::output::Failure> {
-        let header = std::format!("{kind} {} {} {submission}\n", binary.len(), source.len());
+        if binary.len() > 4_194_304 || bridge.len() > 4_194_304
+            || signatures.len() > 4_194_304 || source.len() > 65_536
+            || binary.len() + bridge.len() + signatures.len() + source.len() > 8_454_144
+            || [wat_sha256, bridge_wat_sha256].iter().any(|digest|
+                digest.len() != 64
+                    || !digest.bytes().all(|byte| byte.is_ascii_digit()
+                        || (b'a'..=b'f').contains(&byte)))
+        {
+            return Err(protocol::error());
+        }
+        let header = std::format!("{kind} {} {} {} {} {submission} {} {} {} {wat_sha256} {bridge_wat_sha256}\n",
+            binary.len(), bridge.len(), signatures.len(), source.len(),
+            span.start, span.length, span.generation);
         attempt!(self.write(header.as_bytes()));
         attempt!(self.write(binary));
+        attempt!(self.write(bridge));
+        attempt!(self.write(signatures));
         attempt!(self.write(source));
         self.reply()
     }

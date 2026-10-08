@@ -290,6 +290,46 @@ fn number_field(report: &Value, key: &str) -> u64 {
         .unwrap_or_else(|| panic!("missing unsigned {key}: {report}"))
 }
 
+fn exact_guest_instance_identity(receipt: &Value, span: &Value, guest: &Value) -> bool {
+    receipt["code_span"] == *span
+        && receipt["guest_instance_owner"].as_u64().is_some_and(|id| id > 0)
+        && receipt["guest_source_sha256"] == guest["source_sha256"]
+        && receipt["guest_wat_sha256"] == guest["wat_sha256"]
+        && receipt["guest_wasm_sha256"] == guest["wasm_sha256"]
+        && receipt["bridge_wat_sha256"] == guest["bridge_wat_sha256"]
+        && receipt["bridge_wasm_sha256"] == guest["bridge_wasm_sha256"]
+        && receipt["signature_catalogue_sha256"] == guest["signature_catalogue_sha256"]
+        && receipt["source_generation"].as_str()
+            .is_some_and(|generation| generation.parse::<u64>().is_ok())
+        && receipt["guest_table_entries_remaining"] == 0
+        && receipt["guest_js_owner_edges_remaining"] == 0
+        && receipt["core_dispatch_bridge_owned"] == true
+        && receipt["guest_instance_releasable"] == true
+}
+
+fn released_guest_instance(receipt: &Value, span: &Value, guest: &Value) -> bool {
+    exact_guest_instance_identity(receipt, span, guest)
+        && receipt["outcome"] == "code-retired"
+        && receipt["code_owners"] == 0
+        && receipt["table_cleared"] == true
+}
+
+fn retired_empty_guest_instance(
+    receipt: &Value,
+    span: &Value,
+    guest: &Value,
+    source_generation: u64,
+) -> bool {
+    exact_guest_instance_identity(receipt, span, guest)
+        && receipt["outcome"] == "instance-retired"
+        && receipt["no_code_interval"] == true
+        && receipt["module_roots_released"] == true
+        && receipt.get("code_owners").is_none()
+        && receipt.get("table_cleared").is_none()
+        && receipt["source_generation"].as_str()
+            .and_then(|generation| generation.parse::<u64>().ok()) == Some(source_generation)
+}
+
 #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
 struct LiveBarrier {
     directory: PathBuf,
@@ -1073,8 +1113,7 @@ fn declared_old_code_retires_after_last_nested_program_then_reimports_exact_old_
     normal(&released, &["21"]);
     assert!(released["retired_code_spans"].as_array()
         .ok_or("declared execution omitted checked retirement receipts")?
-        .iter().any(|entry| entry["code_span"] == saved_span
-            && entry["code_owners"] == 0 && entry["table_cleared"] == true), "{released}");
+        .iter().any(|entry| released_guest_instance(entry, &saved_span, &saved["module"])), "{released}");
 
     let old_import = live.submit("import m@1 as old")?;
     assert_eq!(text_field(&old_import, "outcome"), "namespace-committed", "{old_import}");
@@ -1117,8 +1156,7 @@ fn declared_namespace_reload_retires_unreferenced_current_code_without_source_ev
     assert_eq!(number_field(&updated, "retained_module_roots"), 2, "{updated}");
     assert!(updated["retired_code_spans"].as_array()
         .ok_or("declared reload omitted exact code retirement receipts")?
-        .iter().any(|entry| entry["code_span"] == old_span
-            && entry["code_owners"] == 0 && entry["table_cleared"] == true), "{updated}");
+        .iter().any(|entry| released_guest_instance(entry, &old_span, &old["module"])), "{updated}");
 
     let rebound = live.submit("import m@2 as m")?;
     assert_eq!(text_field(&rebound, "outcome"), "namespace-committed", "{rebound}");
@@ -1217,8 +1255,7 @@ fn declared_ownerless_code_retires_after_last_nested_program_is_consumed(
     assert!(number_field(&released, "released_observed_roots") > 0, "{released}");
     assert!(released["retired_code_spans"].as_array()
         .ok_or("observed root release omitted checked retirement receipts")?
-        .iter().any(|entry| entry["code_span"] == saved_span
-            && entry["code_owners"] == 0 && entry["table_cleared"] == true), "{released}");
+        .iter().any(|entry| released_guest_instance(entry, &saved_span, &saved["module"])), "{released}");
     assert_eq!(number_field(&released, "guest_requests"), 0);
     assert_eq!(number_field(&released, "protected_operations"), 0);
     assert_eq!(text_field(&live.submit("import m@1 as m")?, "outcome"),
@@ -1663,13 +1700,13 @@ fn generation_inspection_preserves_typed_program_and_tracks_only_publication(
     assert_generation_inspection(&live.submit(":generation")?, 3, &next["stack"]);
 
     let old = live.submit("drop dip")?;
-    assert_eq!(text_field(&old, "outcome"), "normal");
+    assert_eq!(text_field(&old, "outcome"), "normal", "{old}");
     assert_eq!(old["stack"][0]["value"], "21");
     assert_eq!(old["stack"][1]["value"], "keep");
     assert_generation_inspection(&live.submit(":generation")?, 3, &old["stack"]);
 
     let fresh = live.submit("20 twice")?;
-    assert_eq!(text_field(&fresh, "outcome"), "normal");
+    assert_eq!(text_field(&fresh, "outcome"), "normal", "{fresh}");
     assert_eq!(fresh["stack"][2]["value"], "24");
     assert_generation_inspection(&live.submit(":generation")?, 3, &fresh["stack"]);
     live.finish()
@@ -1898,8 +1935,8 @@ fn ten_real_reloads_preserve_checked_budget_and_reuse_cleared_code(
         if increment == 2 {
             let retired = ack["retired_code_spans"].as_array()
                 .ok_or("checked live code retirement omitted worker receipts")?;
-            assert!(retired.iter().any(|row| row["code_span"] == *first_span
-                && row["code_owners"] == 0 && row["table_cleared"] == true), "{ack}");
+            assert!(retired.iter().any(|row|
+                released_guest_instance(row, first_span, &first_call["module"])), "{ack}");
         }
         let value = live.submit("20 addone")?;
         assert_eq!(text_field(&value, "outcome"), "normal", "{value}");
@@ -1912,6 +1949,43 @@ fn ten_real_reloads_preserve_checked_budget_and_reuse_cleared_code(
             assert_eq!(value["installed_code_span"]["start"], first_span["start"], "{value}");
         }
     }
+    live.finish()
+}
+
+#[test]
+fn first_guest_core_dispatch_moves_to_bridge_before_instance_retirement(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    let first = live.report()?;
+    live_ack(&first, &[]);
+    assert_eq!(first["retired_code_spans"].as_array().map(Vec::len), Some(0),
+        "current zero-code guest still owns its module root: {first}");
+    let old_span = &first["installed_code_span"];
+    assert_eq!(number_field(old_span, "length"), 0,
+        "initial source publication owns no code yet must release its guest: {first}");
+
+    fixture.replace("def addone [ 2 + ]")?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&updated, "outcome"), "reload-committed", "{updated}");
+    assert!(updated["retired_code_spans"].as_array()
+        .ok_or("first source retirement omitted checked instance receipt")?
+        .iter().any(|row| retired_empty_guest_instance(row, old_span, &first["module"],
+            number_field(&first, "generation"))),
+        "first guest must not remain pinned by core dispatch: {updated}");
+
+    let second_span = &updated["installed_code_span"];
+    assert_eq!(number_field(second_span, "length"), 0, "{updated}");
+    fixture.replace("def addone [ 3 + ]")?;
+    let third = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&third, "outcome"), "reload-committed", "{third}");
+    assert!(third["retired_code_spans"].as_array()
+        .ok_or("subsequent zero-code guest omitted instance release")?
+        .iter().any(|row| retired_empty_guest_instance(row, second_span, &updated["module"],
+            number_field(&updated, "generation"))),
+        "subsequent empty guest must not be pinned by bridge or module root: {third}");
+    normal(&live.submit("20 addone")?, &["23"]);
+    normal(&live.submit("5 [ 3 + ] run")?, &["23", "8"]);
     live.finish()
 }
 
@@ -2054,10 +2128,7 @@ fn dependent_rebuild_exceeding_retained_source_budget_refuses_atomically()
     fixture.replace("def addone [ 2 + ]")?;
     let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
     assert_eq!(refused_reload(&refused, &["22"]), generation);
-    assert!(
-        text_field(&refused, "diagnostic").contains("retained namespace byte limit"),
-        "{refused}"
-    );
+    assert_no_candidate_span(&refused);
     normal(&live.submit("20 twice")?, &["22", "22"]);
     live.finish()
 }

@@ -30,6 +30,7 @@ const liveExportTypes = {
   signature_length: 'i32->i32',
 };
 const liveCodeOwnerExports = {
+  signature_count: '->i32',
   code_owners: 'i32,i32->i32',
   retain_code_root: 'i32->i32',
   release_code_root: 'i32->i32',
@@ -43,6 +44,11 @@ const liveCodeOwnerExports = {
   invalidate_code_span: 'i32,i32->i32',
 };
 const liveOwnerExportTypes = { ...liveExportTypes, ...liveCodeOwnerExports };
+const bridgeExportTypes = { ...liveOwnerExportTypes,
+  core_empty: 'i32->', core_quote: 'i32->',
+  core_compose: 'i32->', core_restore: 'i32->' };
+delete bridgeExportTypes.submit;
+delete bridgeExportTypes.release_module_roots;
 const liveImportTypes = {
   live_propose: 'i64,i64,i32->i32',
   live_generation: '->i64',
@@ -53,7 +59,7 @@ const declaredLiveImportTypes = {
   test_abort: '->i32',
 };
 
-function checkLiveBytes(bytes, abi, declaredLive, ownerAware) {
+function checkLiveBytes(bytes, abi, declaredLive, ownerAware, bridge = false) {
   if (!Buffer.isBuffer(bytes) || bytes.length < 8 || bytes.length > MAX_FRAME
     || bytes.readUInt32LE(0) !== 0x6d736100 || bytes.readUInt32LE(4) !== 1) {
     fail('invalid bounded Wasm module');
@@ -106,8 +112,9 @@ function checkLiveBytes(bytes, abi, declaredLive, ownerAware) {
     if (byte() !== 1 || uint() !== initial || uint() !== maximum) fail('incompatible Wasm arena limits');
   };
   const expectedGlobals = new Map(abi.globals.map(global => [global.name, global.type]));
-  const hostImports = declaredLive ? declaredLiveImportTypes : liveImportTypes;
-  const expectedExports = ownerAware ? liveOwnerExportTypes : liveExportTypes;
+  const hostImports = bridge ? {} : declaredLive ? declaredLiveImportTypes : liveImportTypes;
+  const expectedExports = bridge ? bridgeExportTypes
+    : ownerAware ? liveOwnerExportTypes : liveExportTypes;
   const types = [], functionTypes = [], imports = [], exports = [];
   const seenImports = new Set(), seenExports = new Set();
   let memoryImports = 0, tableImports = 0, globalImports = 0, definedFunctions = 0;
@@ -180,8 +187,7 @@ function checkLiveBytes(bytes, abi, declaredLive, ownerAware) {
         seenExports.add(name);
         if (name === 'memory') {
           if (kind !== 2 || index !== 0) fail('incompatible Wasm memory export');
-        } else if ((!Object.hasOwn(abi.exports, name)
-          && !(ownerAware && Object.hasOwn(liveCodeOwnerExports, name))) || kind !== 0
+        } else if (!Object.hasOwn(expectedExports, name) || kind !== 0
           || functionTypes[index] !== expectedExports[name]) fail('incompatible Wasm function export');
         exports.push({ name, kind: kind === 0 ? 'function' : 'memory' });
       }
@@ -189,7 +195,7 @@ function checkLiveBytes(bytes, abi, declaredLive, ownerAware) {
       fail('module must import its only table and memory');
     } else if (id === 9) {
       const n = count();
-      if (n > 16384) fail('too many Wasm element segments');
+      if (n > 16384 || bridge && n !== 0) fail('unexpected Wasm element segments');
       for (let i = 0; i < n; i += 1) {
         const flags = uint();
         if (flags !== 1 && flags !== 3 || byte() !== 0) fail('active or unsupported Wasm element segment');
@@ -199,6 +205,7 @@ function checkLiveBytes(bytes, abi, declaredLive, ownerAware) {
       }
     } else if (id === 11) {
       const n = count();
+      if (bridge && n !== 0) fail('runtime bridge must not install data');
       for (let i = 0; i < n; i += 1) {
         if (uint() !== 1) fail('active or unsupported Wasm data segment');
         const length = uint();
@@ -214,6 +221,28 @@ function checkLiveBytes(bytes, abi, declaredLive, ownerAware) {
   if (memoryImports !== 1 || tableImports !== 1 || globalImports !== expectedGlobals.size
     || seenExports.size !== Object.keys(expectedExports).length + 1) fail('incomplete Wasm arena ABI');
   return { imports, exports };
+}
+
+function checkedSignatureCatalogue(bytes) {
+  if (!Buffer.isBuffer(bytes) || bytes.length < 4 || bytes.length > MAX_FRAME) {
+    fail('invalid checked signature catalogue');
+  }
+  const count = bytes.readUInt32LE(0);
+  if (count > 4096) fail('checked signature catalogue exceeds Core identities');
+  const rows = [];
+  let at = 4, end = 262144;
+  for (let id = 0; id < count; id += 1) {
+    if (bytes.length - at < 8) fail('truncated checked signature catalogue');
+    const address = bytes.readUInt32LE(at), length = bytes.readUInt32LE(at + 4);
+    at += 8;
+    if (address < end || length > bytes.length - at
+      || address + length > 1048576) fail('invalid checked signature descriptor');
+    rows.push({ address, length, offset: at });
+    at += length;
+    end = address + length;
+  }
+  if (at !== bytes.length) fail('trailing checked signature catalogue bytes');
+  return { bytes: Buffer.from(bytes), rows, sha256: sha256(bytes) };
 }
 
 // Node's selected JSON.parse reviver exposes the original numeric token.
@@ -265,6 +294,15 @@ export class CoreEngine {
     this.stagedDeclared = null;
     this.pending = null;
     this.last = null;
+    this.guestInstalled = false;
+    this.activeGuest = null;
+    this.unregisteredGuest = null;
+    this.runtimeBridge = null;
+    this.coreBridge = null;
+    this.nextGuestOwner = 1;
+    this.guestOwners = new WeakMap();
+    this.releasedModuleOwners = new Set();
+    this.liveModuleOwnerId = null;
     this.parked = null;
     this.poisoned = false;
     this.compilations = 0;
@@ -381,13 +419,23 @@ export class CoreEngine {
     installationCapability);
   }
 
-  liveModule(bytes, source, submission) {
+  liveModule(bytes, source, submission, bridgeBytes, signatureBytes, span,
+    watSha256, bridgeWatSha256) {
     if (!this.inProcessLive || this.pending || this.parked || this.staged || this.stagedDeclared || this.poisoned
-      || this.liveProposal) {
+      || this.liveProposal || this.unregisteredGuest) {
       fail('live session is pending, parked, staged, or poisoned');
     }
     if (!Buffer.isBuffer(source) || source.length > 65536) fail('invalid live source frame');
+    if (typeof watSha256 !== 'string' || !/^[0-9a-f]{64}$/.test(watSha256)
+      || typeof bridgeWatSha256 !== 'string' || !/^[0-9a-f]{64}$/.test(bridgeWatSha256)) {
+      fail('invalid checked source WAT digests');
+    }
     integer(submission, Number.MAX_SAFE_INTEGER, 'submission');
+    if (!span || !Number.isInteger(span.start) || span.start < 4
+      || span.start > this.table.length || !Number.isInteger(span.length)
+      || span.length < 0 || span.length > this.table.length - span.start
+      || !Number.isInteger(span.generation) || span.generation !==
+        ((this.shared.generation.value + 1) >>> 0)) fail('unbound live code span');
     const policy = checkLiveBytes(bytes, this.abi, this.declaredLive, this.liveCodeOwners);
     const module = new WebAssembly.Module(bytes);
     for (const [actual, expected] of [
@@ -399,24 +447,59 @@ export class CoreEngine {
         fail('V8 disagrees with bounded Wasm ABI');
       }
     }
+    const bridgePolicy = checkLiveBytes(bridgeBytes, this.abi, this.declaredLive, true, true);
+    const bridgeModule = new WebAssembly.Module(bridgeBytes);
+    for (const [actual, expected] of [
+      [WebAssembly.Module.imports(bridgeModule), bridgePolicy.imports],
+      [WebAssembly.Module.exports(bridgeModule), bridgePolicy.exports],
+    ]) {
+      if (actual.length !== expected.length || actual.some((entry, index) =>
+        Object.keys(expected[index]).some(key => entry[key] !== expected[index][key]))) {
+        fail('V8 disagrees with source-free Core bridge ABI');
+      }
+    }
+    const signatures = checkedSignatureCatalogue(signatureBytes);
+    const before = { memory: sha256(Buffer.from(this.memory.buffer)),
+      table: Array.from({ length: this.table.length }, (_, index) => this.table.get(index)),
+      globals: this.abi.globals.map(global => this.shared[global.name].value),
+      trace: this.trace.length, hostRequests: this.hostRequestsTotal };
+    const bridge = new WebAssembly.Instance(bridgeModule, { [this.abi.module]: this.shared });
+    if (bridge.exports.memory !== this.memory
+      || sha256(Buffer.from(this.memory.buffer)) !== before.memory
+      || before.table.some((entry, index) => this.table.get(index) !== entry)
+      || this.abi.globals.some((global, index) => this.shared[global.name].value !== before.globals[index])
+      || this.trace.length !== before.trace || this.hostRequestsTotal !== before.hostRequests) {
+      this.poisoned = true;
+      fail('source-free Core bridge changed the checked live arena');
+    }
     return { module, record: { submission, wasm_sha256: sha256(bytes),
       source_sha256: sha256(source), optimized: false,
-      compilations: this.compilations + 1, imports: policy.imports } };
+      wat_sha256: watSha256, bridge_wat_sha256: bridgeWatSha256,
+      bridge_wasm_sha256: sha256(bridgeBytes), signature_catalogue_sha256: signatures.sha256,
+      compilations: this.compilations + 1, imports: policy.imports },
+      bridge, signatures, span: { ...span } };
   }
 
-  compileBinary(bytes, source, submission) {
+  compileBinary(bytes, source, submission, bridgeBytes, signatureBytes, span,
+    watSha256, bridgeWatSha256) {
     // Interactive expressions remain ordinary pending preparations against
     // the same arena, including after a staged source-file publication.
     if (!this.inProcessLive || this.pending || this.staged || this.parked || this.poisoned) {
       fail('live compilation requires an idle arena');
     }
     let candidate;
-    try { candidate = this.liveModule(bytes, source, submission); }
-    catch (error) { return this.liveRefusal(`${error.name}: ${error.message}`, 'compile-refused'); }
-    const { module, record } = candidate;
+    try {
+      candidate = this.liveModule(bytes, source, submission, bridgeBytes, signatureBytes,
+        span, watSha256, bridgeWatSha256);
+    } catch (error) {
+      if (this.poisoned) throw error;
+      return this.liveRefusal(`${error.name}: ${error.message}`, 'compile-refused');
+    }
+    const { module, record, bridge, signatures } = candidate;
     this.liveInstalling = true;
     try {
       const ready = this.install(module, record, installationCapability);
+      this.pending.checkedLive = { bridge, signatures, span: candidate.span };
       this.compilations += 1;
       return ready;
     } finally {
@@ -446,7 +529,7 @@ export class CoreEngine {
       return { schema: 'noble-core-report/v1', profile: this.profile,
         backend: 'managed-linear-memory', stage: 'wasm', outcome,
         diagnostic: String(diagnostic), generation: this.shared.generation.value,
-        stack: this.last ? readStack(this, this.last.exports) : [],
+        stack: this.guestInstalled ? readStack(this, this.runtime()) : [],
         guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0,
         session_state: 'retained' };
     } finally {
@@ -515,9 +598,73 @@ export class CoreEngine {
     this.checkLivePreserved(original, memory, shared);
   }
 
-  stageBinary(bytes, source, submission) {
+  verifyLiveInstallation(before, span, bridge, signatures, guestExports) {
+    if (this.shared.failure.value !== 0 || this.shared.cp.value !== 0
+      || this.shared.rp.value !== 0
+      || new DataView(this.memory.buffer).getInt32(61440, true) !== 0
+      || before.length !== this.table.length) {
+      fail('Core bridge handoff requires a completed idle guest');
+    }
+    const first = this.coreBridge === null;
+    const core = ['core_empty', 'core_quote', 'core_compose', 'core_restore'];
+    for (let at = 0; at < this.table.length; at += 1) {
+      const entry = this.table.get(at);
+      if (at < 4) {
+        if (first ? before[at] !== null || typeof entry !== 'function'
+          : before[at] !== this.coreBridge.exports[core[at]]
+            || entry !== before[at]) fail('Core table provenance changed before handoff');
+      } else if (at >= span.start && at < span.start + span.length) {
+        if (before[at] !== null || typeof entry !== 'function') {
+          fail('guest code did not install its exact free span');
+        }
+      } else if (entry !== before[at]) {
+        fail('guest changed a table entry outside its checked code span');
+      }
+    }
+    if (bridge.exports.signature_count() !== signatures.rows.length
+      || guestExports.signature_count() !== signatures.rows.length) {
+      fail('guest and bridge signature catalogue cardinality differs from checked source');
+    }
+    for (let id = 0; id < signatures.rows.length; id += 1) {
+      const row = signatures.rows[id];
+      if (bridge.exports.signature_address(id) !== row.address
+        || bridge.exports.signature_length(id) !== row.length
+        || guestExports.signature_address(id) !== row.address
+        || guestExports.signature_length(id) !== row.length
+        || !Buffer.from(this.memory.buffer, row.address, row.length)
+          .equals(signatures.bytes.subarray(row.offset, row.offset + row.length))) {
+        fail('runtime signature catalogue differs from checked shared bytes');
+      }
+    }
+    if (!first) return;
+    const old = core.map((_, index) => this.table.get(index));
     try {
-      const { module, record } = this.liveModule(bytes, source, submission);
+      for (let index = 0; index < 4; index += 1) {
+        if (this.table.get(index) !== old[index]) fail('Core entry changed during handoff');
+        this.table.set(index, bridge.exports[core[index]]);
+      }
+      if (core.some((name, index) => this.table.get(index) !== bridge.exports[name])) {
+        fail('Core bridge handoff did not install exact typed entries');
+      }
+    } catch (error) {
+      try {
+        for (let index = 0; index < 4; index += 1) this.table.set(index, old[index]);
+      } catch (rollbackError) {
+        this.poisoned = true;
+        fail(`Core table handoff rollback failed: ${rollbackError}`);
+      }
+      this.poisoned = true;
+      fail(`Core table handoff failed: ${error}`);
+    }
+    this.coreBridge = bridge;
+  }
+
+  stageBinary(bytes, source, submission, bridgeBytes, signatureBytes, span,
+    watSha256, bridgeWatSha256) {
+    try {
+      const { module, record, bridge, signatures } =
+        this.liveModule(bytes, source, submission, bridgeBytes, signatureBytes,
+          span, watSha256, bridgeWatSha256);
       if (this.pending || this.shared.cp.value !== 0) {
         fail('live staging requires an idle arena');
       }
@@ -532,18 +679,19 @@ export class CoreEngine {
         // shadow to live memory and violate isolation, so later shadow stages
         // validate and instantiate only. The no-effect empty root executes
         // after publication starts, with full live-state rollback on failure.
-        if (!this.last) this.liveRoot(instance, arena.memory, arena.shared, original);
+        if (!this.guestInstalled) this.liveRoot(instance, arena.memory, arena.shared, original);
       } finally {
         this.liveInstalling = false;
       }
       // No Wasm bytes or staging arena need survive the preflight.
-      this.staged = { module, record,
+      this.staged = { module, record, bridge, signatures, span: { ...span },
         generation: this.shared.generation.value };
       return { schema: 'noble-core-report/v1', profile: this.profile,
         backend: 'managed-linear-memory', stage: 'wasm', outcome: 'ready',
         staged: true, module: record, generation: this.shared.generation.value,
         guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
     } catch (error) {
+      if (this.poisoned) throw error;
       return this.liveRefusal(`${error.name}: ${error.message}`);
     }
   }
@@ -554,17 +702,21 @@ export class CoreEngine {
     return { outcome: 'discarded', generation: this.shared.generation.value };
   }
 
-  liveCodeIdle(allowQueuedProposal = false, allowMissingInstance = false) {
+  liveCodeIdle(allowQueuedProposal = false, allowMissingInstance = false,
+    allowUnregistered = false) {
     return this.liveCodeOwners && !this.poisoned && !this.pending && !this.parked
       && !this.staged && (!this.liveProposal || allowQueuedProposal)
       && !this.liveExecuting && !this.liveInstalling
-      && (allowMissingInstance || this.last !== null)
+      && (allowMissingInstance || this.guestInstalled)
+      && (allowUnregistered || this.unregisteredGuest === null)
       && this.shared.cp.value === 0 && this.shared.failure.value === 0
+      && this.shared.rp.value === 0
       && new DataView(this.memory.buffer).getInt32(61440, true) === 0;
   }
 
-  checkedLiveCodeSpan(span, allowQueuedProposal = false, allowEmpty = false) {
-    if (!this.liveCodeIdle(allowQueuedProposal)
+  checkedLiveCodeSpan(span, allowQueuedProposal = false, allowEmpty = false,
+    allowUnregistered = false) {
+    if (!this.liveCodeIdle(allowQueuedProposal, false, allowUnregistered)
       || !Number.isInteger(span.start) || span.start < 4
       || !Number.isInteger(span.length) || span.length < (allowEmpty ? 0 : 1)
       || span.length > this.table.length - span.start
@@ -574,11 +726,15 @@ export class CoreEngine {
   }
 
   registerLiveCode(span) {
-    const key = this.checkedLiveCodeSpan(span, true, true);
-    if (this.liveModuleOwner === this.last
-      || span.length !== 0 && this.liveCodeSpans.has(key)
+    const key = this.checkedLiveCodeSpan(span, true, true, true);
+    const owner = this.unregisteredGuest;
+    if (!owner || owner.span.start !== span.start || owner.span.length !== span.length
+      || owner.span.generation !== span.generation
+      || this.liveModuleOwner === owner.instance
+      || this.liveCodeSpans.has(key)
       || [...this.liveCodeSpans.values()].some(record =>
-        span.start < record.span.start + record.span.length
+        span.length !== 0 && record.span.length !== 0
+        && span.start < record.span.start + record.span.length
         && record.span.start < span.start + span.length)) {
       this.poisoned = true;
       fail('duplicate or overlapping installed live code span');
@@ -592,16 +748,27 @@ export class CoreEngine {
       }
       entries.push(callable);
     }
-    const record = { span: { ...span }, entries, instance: this.last };
-    if (span.length !== 0) this.liveCodeSpans.set(key, record);
+    const sourceGeneration = (this.declaredLive
+      ? this.declaredLiveState.generation : this.liveSourceGeneration).toString();
+    const record = { span: { ...span }, entries, instance: owner.instance,
+      ownerId: owner.ownerId, module: owner.record, sourceGeneration };
+    this.liveCodeSpans.set(key, record);
     if (this.liveModuleOwner) this.supersededLiveModules.push(this.liveModuleOwner);
-    this.liveModuleOwner = this.last;
+    this.liveModuleOwner = owner.instance;
+    this.liveModuleOwnerId = owner.ownerId;
+    this.unregisteredGuest = null;
     this.liveModuleNamespaceGeneration = this.declaredLive
       ? this.declaredLiveState.generation : null;
     return { outcome: 'code-registered', code_span: record.span,
       table_installed: true,
-      source_generation: (this.declaredLive
-        ? this.declaredLiveState.generation : this.liveSourceGeneration).toString() };
+      guest_instance_owner: owner.ownerId,
+      guest_wat_sha256: owner.record.wat_sha256,
+      guest_wasm_sha256: owner.record.wasm_sha256,
+      guest_source_sha256: owner.record.source_sha256,
+      bridge_wat_sha256: owner.record.bridge_wat_sha256,
+      bridge_wasm_sha256: owner.record.bridge_wasm_sha256,
+      signature_catalogue_sha256: owner.record.signature_catalogue_sha256,
+      source_generation: sourceGeneration };
   }
 
   sweepSupersededLiveModules() {
@@ -616,6 +783,7 @@ export class CoreEngine {
         this.poisoned = true;
         fail('backend refused superseded Core module root release');
       }
+      this.releasedModuleOwners.add(this.guestOwners.get(instance));
       released += 1;
     }
     this.supersededLiveModules = [];
@@ -628,7 +796,9 @@ export class CoreEngine {
         this.poisoned = true;
         fail('backend refused obsolete declared module root release');
       }
+      this.releasedModuleOwners.add(this.liveModuleOwnerId);
       this.liveModuleOwner = null;
+      this.liveModuleOwnerId = null;
       this.liveModuleNamespaceGeneration = null;
       released += 1;
     }
@@ -637,7 +807,7 @@ export class CoreEngine {
 
   releaseObservedRoots() {
     if (!this.liveCodeIdle(false, true)) fail('observed root release requires an idle checked live worker');
-    if (this.last === null) {
+    if (!this.guestInstalled) {
       if (this.externalCodeRoots.size !== 0) {
         this.poisoned = true;
         fail('unexecuted live worker retained observed code roots');
@@ -664,7 +834,7 @@ export class CoreEngine {
   }
 
   recordedLiveCode(span) {
-    const record = this.liveCodeSpans.get(this.checkedLiveCodeSpan(span));
+    const record = this.liveCodeSpans.get(this.checkedLiveCodeSpan(span, false, true));
     if (!record || record.span.start !== span.start || record.span.length !== span.length
       || record.span.generation !== span.generation) {
       this.poisoned = true;
@@ -690,6 +860,13 @@ export class CoreEngine {
       this.poisoned = true;
       fail('cannot clear idle live code observation');
     }
+    // A zero-code guest has no backend CodeSpan owner query at all.
+    if (span.length === 0) {
+      const released = this.releasedModuleOwners.has(record.ownerId);
+      return { outcome: released ? 'instance-unowned' : 'instance-owned',
+        code_span: record.span, no_code_interval: true,
+        module_roots_released: released, guest_instance_owner: record.ownerId };
+    }
     const owners = runtime.code_owners(span.start, span.length);
     if (!Number.isInteger(owners) || owners < 0) {
       this.poisoned = true;
@@ -702,12 +879,17 @@ export class CoreEngine {
   retireLiveCode(span) {
     const record = this.recordedLiveCode(span);
     const runtime = this.runtime();
-    if (runtime.clear_code_observation() !== 0 || runtime.code_owners(span.start, span.length) !== 0) {
+    if (runtime.clear_code_observation() !== 0
+      || (span.length === 0
+        ? !this.releasedModuleOwners.has(record.ownerId)
+        : runtime.code_owners(span.start, span.length) !== 0)) {
       this.poisoned = true;
       fail('live code ownership changed before exact retirement');
     }
     this.verifyLiveCodeTable(record);
-    if (runtime.invalidate_code_span(span.start, span.length) !== 0) {
+    // An empty span allocates no backend Program entries to invalidate; it
+    // still requires module-root release and the full host/table edge scan.
+    if (span.length !== 0 && runtime.invalidate_code_span(span.start, span.length) !== 0) {
       this.poisoned = true;
       fail('backend refused unowned live code tombstones');
     }
@@ -723,9 +905,67 @@ export class CoreEngine {
         fail('live code table clear verification failed after backend invalidation');
       }
     }
+    const ownerId = record.ownerId;
+    const instance = record.instance;
+    if (!this.releasedModuleOwners.has(ownerId)
+      || this.guestOwners.get(instance) !== ownerId
+      || this.liveModuleOwner === instance
+      || this.supersededLiveModules.includes(instance)
+      || this.pending?.instance === instance
+      || this.activeGuest === instance
+      || this.unregisteredGuest?.instance === instance
+      || this.last === instance
+      || this.liveProposal?.rootOwner === instance.exports
+      || !this.coreBridge || this.coreBridge === instance
+      || this.runtimeBridge === instance) {
+      this.poisoned = true;
+      fail('retired guest retains a live JavaScript module owner');
+    }
+    const core = ['core_empty', 'core_quote', 'core_compose', 'core_restore'];
+    if (core.some((name, index) => this.table.get(index) !== this.coreBridge.exports[name])) {
+      this.poisoned = true;
+      fail('retired guest still owns a core dispatch table entry');
+    }
     this.liveCodeSpans.delete(`${span.start}:${span.length}:${span.generation}`);
-    return { outcome: 'code-retired', code_span: record.span,
-      code_owners: 0, table_cleared: true };
+    record.instance = null;
+    record.entries.length = 0;
+    const expected = new Map();
+    let remaining = false;
+    for (const other of this.liveCodeSpans.values()) {
+      if (other.ownerId === ownerId) remaining = true;
+      for (let offset = 0; offset < other.entries.length; offset += 1) {
+        const position = other.span.start + offset;
+        if (expected.has(position)) remaining = true;
+        expected.set(position, other.entries[offset]);
+      }
+    }
+    // Every remaining table reference must belong to one exact registered
+    // code span. The first guest's former core refs were never in that map:
+    // the separate four-slot bridge equality check above covers them.
+    for (let index = 4; index < this.table.length; index += 1) {
+      if (this.table.get(index) !== (expected.get(index) ?? null)) remaining = true;
+    }
+    if (remaining) {
+      this.poisoned = true;
+      fail('retired guest or unregistered function remains in the shared table');
+    }
+    this.releasedModuleOwners.delete(ownerId);
+    const identity = { code_span: record.span,
+      guest_wat_sha256: record.module.wat_sha256,
+      guest_wasm_sha256: record.module.wasm_sha256,
+      guest_source_sha256: record.module.source_sha256,
+      bridge_wat_sha256: record.module.bridge_wat_sha256,
+      bridge_wasm_sha256: record.module.bridge_wasm_sha256,
+      signature_catalogue_sha256: record.module.signature_catalogue_sha256,
+      source_generation: record.sourceGeneration,
+      guest_instance_owner: ownerId,
+      guest_table_entries_remaining: 0, guest_js_owner_edges_remaining: 0,
+      core_dispatch_bridge_owned: true, guest_instance_releasable: true };
+    return span.length === 0
+      ? { outcome: 'instance-retired', ...identity,
+        no_code_interval: true, module_roots_released: true }
+      : { outcome: 'code-retired', ...identity,
+        code_owners: 0, table_cleared: true };
   }
 
   declaredIdle() {
@@ -885,7 +1125,11 @@ export class CoreEngine {
     let snapshot;
     try { snapshot = captureLiveProgram(this, program); }
     catch (error) { return deny(`invalid-program:${error.message}`); }
-    const rootOwner = this.runtime();
+    const rootOwner = this.activeGuest?.exports;
+    if (!rootOwner) {
+      this.poisoned = true;
+      fail('live proposal lost its executing guest owner');
+    }
     const rootStateBefore = rootOwner.code_root_state(program);
     if (rootStateBefore < 0 || rootOwner.queued_proposal_roots() !== 0) {
       return deny('invalid-proposal-owner-state');
@@ -1096,6 +1340,10 @@ export class CoreEngine {
       boundTraceExhausted: this.boundTraceExhausted, boundTraceTerminal: this.boundTraceTerminal,
       adapters: Array.from(this.boundAdapters.values(), adapter => [adapter.scriptIndex, adapter.invocations]),
       pending: this.pending, last: this.last, lastTraceStart: this.lastTraceStart,
+      guestInstalled: this.guestInstalled, activeGuest: this.activeGuest,
+      unregisteredGuest: this.unregisteredGuest, runtimeBridge: this.runtimeBridge,
+      coreBridge: this.coreBridge,
+      nextGuestOwner: this.nextGuestOwner,
       liveSourceGeneration: this.liveSourceGeneration, liveGrant: this.liveGrant,
       compilations: this.compilations, parked: this.parked, poisoned: this.poisoned,
       externalCodeRoots: new Set(this.externalCodeRoots),
@@ -1122,6 +1370,12 @@ export class CoreEngine {
     });
     this.pending = saved.pending;
     this.last = saved.last;
+    this.guestInstalled = saved.guestInstalled;
+    this.activeGuest = saved.activeGuest;
+    this.unregisteredGuest = saved.unregisteredGuest;
+    this.runtimeBridge = saved.runtimeBridge;
+    this.coreBridge = saved.coreBridge;
+    this.nextGuestOwner = saved.nextGuestOwner;
     this.lastTraceStart = saved.lastTraceStart;
     this.liveSourceGeneration = saved.liveSourceGeneration;
     this.liveGrant = saved.liveGrant;
@@ -1143,7 +1397,7 @@ export class CoreEngine {
       || this.liveSourceGeneration >= 0x7fffffffffffffffn) {
       fail('staged module no longer matches live arena');
     }
-    const { module, record } = this.staged;
+    const { module, record, bridge, signatures, span } = this.staged;
     const original = this.liveStackSnapshot(this.memory, this.shared);
     const saved = this.snapshotLive();
     this.staged = null;
@@ -1151,6 +1405,7 @@ export class CoreEngine {
     try {
       const instance = new WebAssembly.Instance(module, { [this.abi.module]: this.shared });
       this.liveRoot(instance, this.memory, this.shared, original);
+      this.verifyLiveInstallation(saved.table, span, bridge, signatures, instance.exports);
       if (saved.table.some((entry, index) => entry !== null && this.table.get(index) !== entry)) {
         fail('empty live root replaced existing Program code');
       }
@@ -1164,7 +1419,11 @@ export class CoreEngine {
       const stack = readStack(this, instance.exports);
       const metrics = Object.fromEntries(Object.entries(this.abi.metrics)
         .map(([id, name]) => [name, Number(instance.exports.metric(Number(id)))]));
-      this.last = instance;
+      const ownerId = this.nextGuestOwner++;
+      this.guestOwners.set(instance, ownerId);
+      this.unregisteredGuest = { instance, ownerId, span, record };
+      this.guestInstalled = true;
+      this.runtimeBridge = bridge;
       this.compilations += 1;
       this.lastTraceStart = this.trace.length;
       this.liveSourceGeneration += 1n;
@@ -1328,7 +1587,7 @@ export class CoreEngine {
 
   execute({ inputs = [], typedValues = null, limits = {} } = {}) {
     if (!this.pending || this.stagedDeclared || this.poisoned) fail('no prepared module or poisoned session');
-    const { instance, record, traceStart } = this.pending;
+    const { instance, record, traceStart, checkedLive } = this.pending;
     const boundStart = this.boundRequests.length;
     const boundTotalStart = this.boundRequestsTotal;
     const hostStart = this.hostRequestsTotal;
@@ -1341,9 +1600,9 @@ export class CoreEngine {
     this.lastTraceStart = traceStart;
     this.pending = null;
     const runtime = instance.exports;
-    // Retain exactly one executed instance so post-execution inspection reads
-    // the same session state. The shared table already owns its callables.
-    this.last = instance;
+    const tableBefore = this.inProcessLive
+      ? Array.from({ length: this.table.length }, (_, index) => this.table.get(index)) : null;
+    if (!this.inProcessLive) this.last = instance;
     const defaults = this.abi.limits_maximum;
     const keys = ['allocation_bytes', 'recipe_leaves', 'program_depth', 'operand_bytes', 'continuation_bytes', 'steps'];
     if (Object.keys(limits).some(key => !keys.includes(key))) fail('unknown runtime limit');
@@ -1383,9 +1642,20 @@ export class CoreEngine {
       if (status === 0) {
         this.liveProposalDenied = false;
         this.liveExecuting = this.inProcessLive;
+        this.activeGuest = this.inProcessLive ? instance : null;
         try { status = runtime.submit(); }
-        finally { this.liveExecuting = false; }
+        finally { this.liveExecuting = false; this.activeGuest = null; }
         if (status === 0 && this.liveProposalDenied) status = 5;
+        if (status === 0 && this.inProcessLive) {
+          if (!checkedLive) fail('executed guest has no checked Core bridge');
+          this.verifyLiveInstallation(tableBefore, checkedLive.span,
+            checkedLive.bridge, checkedLive.signatures, instance.exports);
+          const ownerId = this.nextGuestOwner++;
+          this.guestOwners.set(instance, ownerId);
+          this.unregisteredGuest = { instance, ownerId, span: checkedLive.span, record };
+          this.guestInstalled = true;
+          this.runtimeBridge = checkedLive.bridge;
+        }
       }
     } catch (error) {
       nativeTrap = `${error.name}: ${error.message}`;
@@ -1608,8 +1878,9 @@ export class CoreEngine {
   // Standalone typed injection outside one submission. Values stay first-class
   // session state; each push fails closed on a missing or mistyped cell.
   push(inputs) {
-    if (!this.last && (inputs.length !== 0 || this.shared.sp.value !== 0)) fail('no initialized runtime for injection');
-    const runtime = this.last ? this.runtime() : null;
+    const initialized = this.inProcessLive ? this.guestInstalled : this.last !== null;
+    if (!initialized && (inputs.length !== 0 || this.shared.sp.value !== 0)) fail('no initialized runtime for injection');
+    const runtime = initialized ? this.runtime() : null;
     let status = 0;
     for (const input of inputs) {
       if (status) break;
@@ -1748,6 +2019,10 @@ export class CoreEngine {
   }
 
   runtime() {
+    if (this.inProcessLive) {
+      if (!this.guestInstalled || !this.runtimeBridge) fail('no installed Core bridge to inspect');
+      return this.runtimeBridge.exports;
+    }
     if (!this.last) fail('no executed instance to inspect');
     return this.last.exports;
   }

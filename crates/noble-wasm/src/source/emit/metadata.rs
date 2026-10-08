@@ -100,6 +100,15 @@ pub(super) fn descriptors(
     descriptor_function(out, b"signature_length", descriptors, true)
 }
 
+pub(super) fn signature_count(
+    out: &mut crate::output::Buffer,
+    count: usize,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(func (export \"signature_count\") (result i32) (i32.const "));
+    attempt!(out.index(count));
+    out.append(b"))\n")
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; validated descriptor rows are emitted in order through the bounded sink, including an explicit runtime rejection for unknown identities; no untrusted metadata requires a Rust assertion."

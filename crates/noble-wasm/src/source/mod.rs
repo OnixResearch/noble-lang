@@ -327,6 +327,44 @@ impl Prepared {
         &self.wat
     }
 
+    /// Source-free Core16 helper code over this checked prospective signature
+    /// catalogue. It has no submission, active segment or host-effect import.
+    pub fn runtime_bridge_wat(&self) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
+        if !(self.next.live || self.next.declared_live) || self.next.live_slots {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        emit::runtime_bridge(&self.next.descriptors, self.next.declared_live)
+    }
+
+    /// Ordered id -> address, length, exact UTF-8 signature bytes for the
+    /// shared arena. These bytes come only from this prospective compiler.
+    pub fn runtime_signature_catalog(&self) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
+        if !(self.next.live || self.next.declared_live)
+            || self.next.descriptors.len() != self.next.signatures.keys.len()
+            || self.next.descriptors.len() > crate::signatures::SOURCE_KEY_LIMIT
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        let mut bytes = alloc::vec::Vec::new();
+        let count = u32::try_from(self.next.descriptors.len())
+            .map_err(|_| crate::Diagnostic::Exhausted)?;
+        bytes.extend_from_slice(&count.to_le_bytes());
+        for ((address, length), signature) in self.next.descriptors.iter()
+            .zip(&self.next.signatures.keys)
+        {
+            if usize::try_from(*length).ok() != Some(signature.len())
+                || *address < TEXT_START
+                || address.checked_add(*length).is_none_or(|end| end > MEMORY_BYTES)
+            {
+                return Err(crate::Diagnostic::Defective);
+            }
+            bytes.extend_from_slice(&address.to_le_bytes());
+            bytes.extend_from_slice(&length.to_le_bytes());
+            bytes.extend_from_slice(signature);
+        }
+        Ok(bytes)
+    }
+
     /// End of checked source literals before the disjoint host-only Text arena.
     pub const fn literal_end(&self) -> u32 {
         self.next.text_end
@@ -341,7 +379,8 @@ impl Prepared {
     }
 
     /// The exact table span installed by this module's successful submission.
-    /// An empty span installs no code and must not be retired.
+    /// An empty span installs no code and must not enter `retire_code`; its
+    /// originating guest instance still needs separate module-root release.
     pub const fn code_span(&self) -> CodeSpan {
         self.code_span
     }

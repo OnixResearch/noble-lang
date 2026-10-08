@@ -29,6 +29,8 @@ r[H-LIVE-03]
 
 The session MUST keep only ABI-compatible typed stack and immutable old Programs; it MUST prohibit implicit state/resource migration, bound retained generations and enforce independent current host authorization. Runtime traps report actual effects and poison the first live session.
 
+To retire the first installed guest, core dispatch MUST be rebound to a separately checked source-free runtime instance with the same selected runtime semantics and shared arena, not kept as function references from that guest. The handoff MUST validate all live table entries and the exact signature catalogue against both modules and shared bytes before replacing the four core entries; later publications MUST preserve those entries. A nonempty old code span MAY be cleared only after its backend owners reach zero and its exact table interval is tombstoned and cleared. A zero-length span has no backend code interval: its guest instance MAY be released only after actual module-root release and checks for remaining host/table edges, and its receipt MUST distinguish instance release from code-span retirement without claiming a zero-owner query or table clearance. Neither finite receipt establishes the time of V8 garbage collection.
+
 ### Requirement: H-LIVE-04
 r[H-LIVE-04]
 

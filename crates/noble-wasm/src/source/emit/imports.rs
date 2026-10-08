@@ -113,6 +113,57 @@ fn fragment(out: &mut crate::output::Buffer, text: &str) -> Result<(), crate::Di
     out.append(b"\n")
 }
 
+pub(super) fn bridge(out: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(
+        b"(module\n(type $entry (func (param i32)))\n\
+(import \"noble\" \"memory\" (memory 16 16))\n\
+(import \"noble\" \"table\" (table 16384 16384 funcref))\n",
+    ));
+    attempt!(globals(out));
+    attempt!(global_import(out, b"allocated_total", b"i64"));
+    attempt!(global_import(out, b"released_total", b"i64"));
+    out.append(
+        b"(global $core_live_module_installed (mut i32) (i32.const 0))\n\
+(global $core_live_adapter_leases (mut i32) (i32.const 0))\n\
+(global $core_live_proposal_callback_active (mut i32) (i32.const 0))\n\
+(global $core_live_queued_proposal_root (mut i32) (i32.const 0))\n\
+(global $source_reflection i32 (i32.const 1))\n\
+(export \"memory\" (memory 0))\n",
+    )
+}
+
+fn core_runtime(out: &mut crate::output::Buffer, core_live: bool) -> Result<(), crate::Diagnostic> {
+    for text in [
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/accounting.wat")),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/linear-storage.wat")),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat")),
+    ] {
+        attempt!(fragment(out, text));
+    }
+    if core_live {
+        attempt!(fragment(out, include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"), "/runtime/core-live-owners.wat"
+        ))));
+    }
+    for text in [
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/programs.wat")),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/operations.wat")),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat")),
+    ] {
+        attempt!(fragment(out, text));
+    }
+    Ok(())
+}
+
+pub(super) fn bridge_runtime(
+    out: &mut crate::output::Buffer,
+    declared_modules: bool,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(core_runtime(out, true));
+    attempt!(super::reflection::write(out, declared_modules));
+    fragment(out, include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat")))
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; immutable manifest-root runtime fragments are appended in their required order to the private bounded sink; output exhaustion propagates a diagnostic and no producer invariant needs an assertion."
@@ -135,45 +186,19 @@ pub(super) fn runtime(
             env!("CARGO_MANIFEST_DIR"), "/runtime/live-stack.wat"
         ))));
     } else {
-        attempt!(fragment(
-            out,
-            include_str!(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/runtime/accounting.wat"
-            ))
-        ));
-        attempt!(fragment(
-            out,
-            include_str!(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/runtime/linear-storage.wat"
-            ))
-        ));
-        attempt!(fragment(
-            out,
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat"))
-        ));
+        attempt!(core_runtime(out, plan.core_live));
     }
-    if plan.core_live {
+    if plan.live_slots {
         attempt!(fragment(out, include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"), "/runtime/core-live-owners.wat"
+            env!("CARGO_MANIFEST_DIR"), "/runtime/programs.wat"
+        ))));
+        attempt!(fragment(out, include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"), "/runtime/operations.wat"
+        ))));
+        attempt!(fragment(out, include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat"
         ))));
     }
-    attempt!(fragment(
-        out,
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/programs.wat"))
-    ));
-    attempt!(fragment(
-        out,
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/runtime/operations.wat"
-        ))
-    ));
-    attempt!(fragment(
-        out,
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat"))
-    ));
     if plan.has_text_byte {
         attempt!(fragment(
             out,

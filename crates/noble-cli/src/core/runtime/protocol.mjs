@@ -48,9 +48,10 @@ async function protocol(config) {
         if (command === null) {
           const newline = pending.indexOf(10);
           if (newline < 0) {
-            if (pending.length > 128) fail('engine header limit exceeded');
+            if (pending.length > 256) fail('engine header limit exceeded');
             break;
           }
+          if (newline > 256) fail('engine header limit exceeded');
           const header = utf8.decode(pending.subarray(0, newline));
           pending = pending.subarray(newline + 1);
           if (engine.stagedDeclared && header !== 'publish-live-declared'
@@ -198,18 +199,34 @@ async function protocol(config) {
                 claims: integer(Number(admission[4]), 1024, 'claim frame'),
                 allowed: integer(Number(admission[5]), 1024, 'host-policy frame') };
             } else {
-              const match = /^(compile|compile-bin|stage-bin|compile-typed) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+) ([0-9]+))?$/.exec(header);
-              if (!match) fail('invalid engine command');
-              command = { kind: match[1],
-                bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
-                source: integer(Number(match[3]), 65536, 'source frame'),
-                submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission') };
-              if (command.kind === 'compile-typed') {
-                if (match[5] === undefined || match[6] === undefined) fail('worker manifest absent');
-                command.literalEnd = integer(Number(match[5]), 983040, 'worker literal end');
-                command.catalog = integer(Number(match[6]), 65536, 'worker schema frame');
-              } else if (match[5] !== undefined || match[6] !== undefined) fail('unexpected worker manifest');
-              if (command.kind !== 'compile' && command.bytes < 8) fail('invalid Wasm frame size');
+              const live = /^(compile-bin|stage-bin) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9a-f]{64}) ([0-9a-f]{64})$/.exec(header);
+              if (live) {
+                command = { kind: live[1],
+                  bytes: integer(Number(live[2]), MAX_FRAME, 'module frame'),
+                  bridge: integer(Number(live[3]), MAX_FRAME, 'Core bridge frame'),
+                  signatures: integer(Number(live[4]), MAX_FRAME, 'signature frame'),
+                  source: integer(Number(live[5]), 65536, 'source frame'),
+                  submission: integer(Number(live[6]), Number.MAX_SAFE_INTEGER, 'submission'),
+                  span: { start: integer(Number(live[7]), 16384, 'code span start'),
+                    length: integer(Number(live[8]), 16384, 'code span length'),
+                    generation: integer(Number(live[9]), 0xffffffff, 'code span generation') },
+                  watSha256: live[10], bridgeWatSha256: live[11] };
+                if (command.bytes < 8 || command.bridge < 8 || command.signatures < 4
+                  || command.bytes + command.bridge + command.signatures + command.source
+                    > 2 * MAX_FRAME + 65536) fail('invalid bounded live module frame');
+              } else {
+                const match = /^(compile|compile-typed) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+) ([0-9]+))?$/.exec(header);
+                if (!match) fail('invalid engine command');
+                command = { kind: match[1],
+                  bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
+                  source: integer(Number(match[3]), 65536, 'source frame'),
+                  submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission') };
+                if (command.kind === 'compile-typed') {
+                  if (match[5] === undefined || match[6] === undefined) fail('worker manifest absent');
+                  command.literalEnd = integer(Number(match[5]), 983040, 'worker literal end');
+                  command.catalog = integer(Number(match[6]), 65536, 'worker schema frame');
+                } else if (match[5] !== undefined || match[6] !== undefined) fail('unexpected worker manifest');
+              }
             }
           }
         }
@@ -310,20 +327,28 @@ async function protocol(config) {
           } catch (error) { emit('internal-failure', reportError(error)); return; }
           continue;
         }
-        if (pending.length < command.bytes + command.source + (command.catalog ?? 0)) break;
+        if (pending.length < command.bytes + (command.bridge ?? 0)
+          + (command.signatures ?? 0) + command.source + (command.catalog ?? 0)) break;
         const bytes = pending.subarray(0, command.bytes);
-        const source = pending.subarray(command.bytes, command.bytes + command.source);
+        const bridgeEnd = command.bytes + (command.bridge ?? 0);
+        const signaturesEnd = bridgeEnd + (command.signatures ?? 0);
+        const source = pending.subarray(signaturesEnd, signaturesEnd + command.source);
         const policy = command.kind === 'compile-typed'
-          ? pending.subarray(command.bytes + command.source,
-            command.bytes + command.source + command.catalog) : null;
-        pending = pending.subarray(command.bytes + command.source + (command.catalog ?? 0));
+          ? pending.subarray(signaturesEnd + command.source,
+            signaturesEnd + command.source + command.catalog) : null;
+        const bridge = command.bridge ? pending.subarray(command.bytes, bridgeEnd) : null;
+        const signatures = command.signatures ? pending.subarray(bridgeEnd, signaturesEnd) : null;
+        pending = pending.subarray(signaturesEnd + command.source + (command.catalog ?? 0));
         try {
           const report = command.kind === 'compile' || command.kind === 'compile-typed'
             ? engine.prepare(bytes, source, command.submission,
               command.kind === 'compile-typed' ? command.literalEnd : null,
               policy === null ? null : JSON.parse(utf8.decode(policy)))
-            : command.kind === 'compile-bin' ? engine.compileBinary(bytes, source, command.submission)
-              : engine.stageBinary(bytes, source, command.submission);
+            : command.kind === 'compile-bin'
+              ? engine.compileBinary(bytes, source, command.submission,
+                bridge, signatures, command.span, command.watSha256, command.bridgeWatSha256)
+              : engine.stageBinary(bytes, source, command.submission,
+                bridge, signatures, command.span, command.watSha256, command.bridgeWatSha256);
           emit(report.outcome, report);
         }
         catch (error) { emit('internal-failure', reportError(error)); return; }

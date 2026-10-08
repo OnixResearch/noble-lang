@@ -1520,11 +1520,11 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/design.md",
-      "sha256": "d7666edecfe22554e932b590491747dda9905df0ea3b122957495a9e76bc1db9"
+      "sha256": "3a25623f96ba102d70a92f60f7aea98dd9b19542d39cd6b4285cfcd810fcf65b"
     },
     {
       "file": ".cairn/changes/live-wasm-reload/proposal.md",
-      "sha256": "347cfecf41a080ac303c31c56052eb1cefe3c98697148e7dbe8715022e25fd49"
+      "sha256": "f6b8bb29abf105f5b32f7a96ff77d100171da672389c3a51c2184bfd86c9394f"
     },
     {
       "file": ".cairn/changes/live-wasm-reload/specs/backend-experiments/spec.md",
@@ -1544,7 +1544,7 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/specs/language/spec.md",
-      "sha256": "b4e3e0eb566f706551ee775eeb25850338231d43ff62424ff124d9a27feb8f53"
+      "sha256": "ec1b8fbe8a5b4a0f3ccf7c3000b27f926262c38bfaf4c6211519699cfd4e7f9e"
     },
     {
       "file": ".cairn/changes/live-wasm-reload/specs/safety/spec.md",
@@ -1556,7 +1556,7 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/tasks.md",
-      "sha256": "dd18b3e02cd60f088893c6b5814ba65a061cfe38b8a2ad3d4b00f7f77c78075c"
+      "sha256": "4cc38f897cb2ea1984d3a097fe66afe2e3fd21953e37f955b5b22e4faba130a2"
     },
     {
       "file": ".cairn/changes/ma-language-prerequisites/design.md",

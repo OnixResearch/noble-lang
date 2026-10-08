@@ -61,7 +61,43 @@ request, zero protected operations and a terminal trap. A separate B load
 did not replace the stale A adapter. The scoped receipt is
 `$HOME/.cache/noble-mlive-private-20261007/tmp/live06-a35194d-scoped-receipt.json`;
 child stdout/stderr were not saved separately from Rust harness summaries.
-The combined graft has not run a guest. These scoped controls are not
+That earlier combined graft had not run a guest. In the separate 2026-10-08
+isolated Core-bridge cutover, the first focused real-guest test initially
+exposed an empty first CodeSpan rather than a backend-owned interval; the
+corrected instance-only receipt path then passed. The first complete scoped
+`cargo test --locked --offline -j2 -p noble-cli --test live_repl -- --test-threads=2`
+run passed 60/62: one test still pinned incidental retained-budget diagnostic
+wording, and one real old-Program invocation failed because a zero-length
+guest interval falsely intersected a reused nonempty interval. After deleting
+that wording assertion, preserving the refusal/unchanged-namespace checks,
+and enforcing nonempty intervals on both sides of the overlap test, the same
+actual V8 child suite passed 62/62. Four focused `core::live::tests::` unit
+cases passed under
+`cargo test --locked --offline -j2 -p noble-cli --bin noble core::live::tests:: -- --nocapture`
+on test-harness SHA-256
+`4435689893eadd3189116126564a31bc86232eeab0835083bd84bed830964a93`,
+including first-byte-malformed Wasm stage refusal with generation zero,
+unchanged stack, zero host requests and protected operations, followed by
+real checked `21` guest execution and instance registration in that same worker.
+The first unit fixture wrongly mixed an ordinary frontend with a live
+compiler and was corrected to the actual live frontend before that passing
+run. A separate direct `noble live repl --engine v8 --source PATH` run used
+the selected file at one path: saved `20 [ addone ]` kept its old body (21)
+after the file changed from `[ 1 + ]` to `[ 2 + ]`, a new invocation returned
+22, reimport of the original bytes restored 21 for new calls, and a real
+`code-retired` receipt appeared; each observed step had zero guest requests
+and protected operations, with a clean CLI exit. That executed CLI SHA-256
+is `fe6f6a83e0b1952d671b31aa4cde2925c04d181bfcb7fac82541549a6d45a2b2`;
+Node 24.13.0 binary SHA-256 is
+`ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b`.
+The current 263-file selected source SHA map is
+`policy/tool-selection-files.ncl` SHA-256
+`fb03c25e448887073beaf673002c4648587f64067292f4c86d5cf27705cad8ae`;
+every entry matched the checkout's actual bytes and its pinned Nickel export
+matched `policy/tool-selection.json`. This source selection is not by itself
+a whole-workspace source-bound assurance gate or a substitute for an immutable
+CLI/guest execution receipt.
+These scoped controls are not
 complete H-LIVE-01/LIVE-05 watch acceptance, complete source-bound LIVE-02,
 every LIVE-05 variant or general LIVE-06 revocation; effectful/general
 transitions, general LIVE-10 cancellation/retirement, interpreter execution,
