@@ -153,16 +153,17 @@ impl ModulePrepared {
     /// Resolve against the staged checked namespace, not a display spelling
     /// guessed from a package. Unchecked proof-bearing modules cannot lend it.
     pub fn resolve_type(&self, spelling: &str) -> Result<noble_kernel::types::Ty, crate::source::Error> {
-        if self.pending.is_some() {
+        if self.pending.is_some() || !self.staged.bindings.is_empty() {
             return Err(super::error(crate::source::Stage::Acceptance,
-                "unchecked proof module cannot supply a worker type"));
+                "unchecked proof or host-bound module cannot supply a worker type"));
         }
         self.staged.resolve_type(spelling)
     }
 
     /// Only the newly prepared module's nominal declarations are exposed.
     pub fn checked_nominals(&self) -> Option<impl Iterator<Item = CheckedNominal<'_>> + '_> {
-        if self.kind != ModuleKind::Module || self.pending.is_some() {
+        if self.kind != ModuleKind::Module || self.pending.is_some()
+            || !self.staged.bindings.is_empty() {
             return None;
         }
         let module = self.staged.modules.last()?;
@@ -179,7 +180,8 @@ impl ModulePrepared {
     /// This owner comes from an exported, matching module-owned checked
     /// definition; an unverified signed self owner is not a worker capability.
     pub fn checked_program_owner(&self, name: &str) -> Option<CheckedProgramOwner> {
-        if self.kind != ModuleKind::Module || self.pending.is_some() {
+        if self.kind != ModuleKind::Module || self.pending.is_some()
+            || !self.staged.bindings.is_empty() {
             return None;
         }
         let module = self.staged.modules.last()?;
