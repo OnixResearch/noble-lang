@@ -21,15 +21,15 @@ their original identities and dependencies. Exact `:generation` inspection
 reports the host publication generation, actual V8 engine and ordered
 checked typed stack without file access, worker submission or grant
 consumption; it is not full DX-LIVE-01 or accepted LIVE case evidence.
-Automatic `noble live watch SOURCE` is unavailable. `IN_MOVED_TO` gives
-pathname provenance but cannot authenticate bytes at rename time: writable
-mappings or external hardlinks can mutate a renamed inode without a selected
-basename content notification. The unsound automatic path was removed, not
-left as a no-op alias. Explicit `:reload` remains the host-controlled path;
-its ACK names pinned committed source bytes, not an assertion that a
-concurrently rewritten path still contains those bytes. A bounded
-postpublication path check reports its observation separately. Source reads
-pin a directory descriptor and reject symlink final components. Unselected
+Cooperative `noble live watch --source PATH` admits paired `.tmp` rename
+notifications and rechecks bounded selected bytes before publication.
+`IN_MOVED_TO` alone cannot authenticate later inode bytes: writable mappings
+or external hardlinks can mutate the renamed inode without a selected
+basename event. Explicit `:reload` remains available; a watch or reload ACK
+names checked committed source bytes, not an assertion that a subsequently
+rewritten path still contains those bytes. A bounded postpublication path
+check reports its observation separately. Source reads pin a directory
+descriptor and reject symlink final components. Unselected
 or non-granted effectful definitions/submissions, incompatible
 replacements, unstable files and exhausted rebuild budgets fail closed before
 candidate worker staging. An effectful old Program requires current host
@@ -37,12 +37,15 @@ authority, and typed values remain retained. Failed post-invocation guest
 admission retains the completed invocation's stack and unused grant.
 
 Indirect self-rebind/cycle refusal was exercised in scoped live-child checks;
-general proof and canonical LIVE case acceptance remain open. This is not the
-complete automatic H-LIVE-01/LIVE-05 watch profile: declared modules,
-effectful watch, full in-flight source-change controls, code retirement,
-complete source-bound LIVE-02 acceptance, interpreter execution, complete
-scenario receipts and
-source-bound proof/assurance remain absent.
+general proof remains open. Selected declared snapshots and Core zero-owner
+table-span reuse have finite
+guest controls, as does the isolated donor's exact queued-proposal root
+release after terminal guest trap/quota. The preceding combined source
+`418209f` passed its 53 live tests; the newly merged fix still requires
+combined-tree guest replay. Complete automatic H-LIVE-01/LIVE-05 watch,
+effectful/general transitions, full in-flight source-change controls,
+general LIVE-10 cancellation/retirement, complete source-bound LIVE-02,
+interpreter execution, scenario receipts and source-bound proof remain open.
 The canonical LIVE case states remain `absent`/`not-run`/proof `open`; none of the
 implementation or acceptance tasks below is complete.
 

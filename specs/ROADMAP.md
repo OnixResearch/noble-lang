@@ -1404,8 +1404,9 @@ live-child checks; general proof and canonical LIVE case acceptance remain
 open. The guest may enqueue
 a checked pure Program candidate during Wasm execution, but only host-side
 post-return independent admission and a generation/definition-identity CAS
-may publish it. Guest publication leaves the selected file unchanged; LIVE-09
-and LIVE-10 remain unexecuted designs. The first target reuses selected
+may publish it. Guest publication leaves the selected file unchanged; scoped
+isolated donor guest execution does not promote canonical LIVE-09 or LIVE-10.
+The first target reuses selected
 Node/V8, which may JIT and
 does **not** establish strictly interpreted execution. A genuine interpreter
 engine remains separately unselected. The [MCB milestone](roadmap.json) follows
@@ -1417,9 +1418,10 @@ Only restricted inert checked I64/Bool C11 source emission is implemented;
 `limits.list_length` is not accepted by that source-only policy, so the
 case remains open rather than treating the bound as an ignored field.
 Full watch-case acceptance and complete source-bound LIVE-02 remain open
-despite the guarded partial runtime. In the current source a guest can queue
-a self-proposal and then trap before the host takes it, clearing the proposal
-without releasing its code root; LIVE-10 failure-path retirement remains open.
+despite the guarded partial runtime. The grafted guest fault fix releases
+only the exact queued proposal root after a terminal trap or quota; isolated
+donor real-guest controls observe one root fall to zero. Combined-tree
+execution and general LIVE-10 cancellation/retirement assurance remain open.
 Neither complete opt-in backend profile is accepted: all
 [LIVE](conformance/live-wasm-cases.json) and
 [CB](conformance/c-backend-cases.json) cases are absent/not-run and proofs

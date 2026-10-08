@@ -83,6 +83,9 @@ then lowers ordered stack operations, immutable quotation bodies, runtime
 `quote` capture, `compose`, and `run` into bounded C11 instructions and
 Program values. It refuses unsupported types, host effects, named definitions,
 runtime input and other profiles; there is no Wasm fallback.
+The active C specification delta still awaits requirement-level
+reconciliation; structurally valid Cairn documents do not authorize
+native execution, case promotion or change archiving.
 
 ```sh
 printf '20 2 quote [ + ] compose run\n' > capture.noble
@@ -624,13 +627,12 @@ Core's append-only 4096-cell heap or text allocation. The checked compiler's
 one 2-million-work submission cap is unchanged: exact contract checking
 charges the selected scheme, while the full environment remains charged for
 its own scan and each independently admitted kernel body.
-The 53 scoped tests and ten reloads are observations on isolated MLIVE donor
-`fc0fb8c`, not a combined-tree guest replay or canonical LIVE acceptance.
-A LIVE-10 failure path remains **open**: after a guest queues a self-proposal,
-a later execution trap can clear that queued proposal without releasing its
-code root. The selected guest trap-after-enqueue and owner-release control
-must pass on a corrected source before claiming cancellation/retirement
-completeness.
+The preceding combined tree `418209f` passed 53 scoped live tests and ten
+reloads. The grafted terminal queued-root fix has separate isolated MLIVE
+donor evidence at `594218e`: 55 live CLI tests and real selected guest
+trap/quota controls report its queued root moving from one to zero. This
+new combined source has not been rebuilt or guest-replayed; cancellation
+beyond that finite control and canonical LIVE-10 acceptance remain **open**.
 
 `--engine interpreter` refuses rather than falling back to V8.
 Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
@@ -688,12 +690,12 @@ cancellation with retained task/resource pins. These are local-only controls:
 there is no external destination, rollback claim, owner-selected portable
 G-03/G-05 package/export, or canonical WORKER-01–12 acceptance. Neither the
 calculator nor Worker is a completed application or agent runtime.
-The seven-case local WIT receipt predates a known `finish_native` fault:
-receive, payload, or duplicate-datagram validation can return before native
-stop, resource completion and pin settlement. Those host-fault paths are
-**open**, not covered by the passing cancellation/denial controls. The
-separate fix `58b9d6c` and its reported nine-case r3 guest run are not
-integrated here; this tree retains the pre-fix fault.
+This source includes `58b9d6c` host-fault cleanup and the `9c687ed` source
+binding/fault assertions. Its isolated Worker r3 donor exercised nine real
+local WIT/UnixDatagram cases, including two receive faults with settled task,
+resource and native pins; these cases have **not** been replayed on this new
+combined source. Portable Worker acceptance, broader host-fault proof and
+canonical WORKER-01–12 remain open.
 
 ## Verification
 
