@@ -122,6 +122,8 @@ export function selectedCompilerReceipt(binary, receiptPath, numericDir, languag
     'verification/calculator-exact-library/guest_session.py',
     'verification/calculator-exact-library/oracle.py',
     'verification/result-library/collect-build.mjs', 'specs/CALCULATOR.md',
+    'verification/m6/pins.json', 'verification/selected-vendor.mjs',
+    'nix/reviewed-vendor.nix',
     'policy/tool-selection.json', 'policy/tool-selection.ncl',
     'policy/tool-selection-files.ncl', 'policy/tool-selection-tools.ncl']) {
     const source = committed(path.join(numericRoot, relative));

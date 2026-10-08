@@ -227,6 +227,11 @@ async function runCapabilityChecker() {
   const build = JSON.parse(buildBytes);
   const cargo = build.tools.cargo.path;
   const vendor = build.tools.vendor.path;
+  const pins = JSON.parse(fs.readFileSync(path.join(languageRoot, 'verification/m6/pins.json')));
+  assert.equal(vendor, path.join(pins.vendor, 'source-registry-0'),
+    'checker vendor differs from committed selected offline vendor');
+  assert.equal(build.tools.vendor.nar_hash, pins.vendor_nar_hash,
+    'checker vendor receipt differs from committed selected vendor identity');
   const packageName = 'noble-calculator-checked-boundary';
   const temporary = fs.mkdtempSync(path.join(process.env.TMPDIR ?? os.tmpdir(),
     'noble-calculator-checker-'));
