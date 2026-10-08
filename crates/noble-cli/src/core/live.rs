@@ -95,10 +95,14 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             "protected_operations": 0,
         }));
         return std::process::ExitCode::from(2);
-    }
+    };
     let selected_grant_name = initial_grant.as_ref().map(|grant| grant.name.as_str());
     let declared = match manifest.as_ref() {
-        Some(manifest) => match noble_contracts::source::ModuleSession::new(&manifest.operations()) {
+        Some(manifest) => match noble_contracts::source::ModuleSession::new(
+            &manifest.operations(),
+            noble_contracts::source::RetainedSourceLimit::new(super::SOURCE_LIMITS.bytes)
+                .expect("the fixed live source byte bound is valid"),
+        ) {
             Ok(frontend) => Some(frontend),
             Err(error) => {
                 emit(&refusal(0, &serde_json::json!([]), &error.diagnostic().message));

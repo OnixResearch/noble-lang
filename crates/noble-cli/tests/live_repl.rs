@@ -1066,6 +1066,57 @@ fn declared_namespace_reload_retires_unreferenced_current_code_without_source_ev
 }
 
 #[test]
+fn declared_retained_source_quota_refuses_two_individually_valid_modules_atomically(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let padded = |version: u32, addition: u32| {
+        format!(
+            "module m@{version} [ export addone def addone [ {addition} + ] ] #{}\n",
+            "x".repeat(40_000),
+        )
+    };
+    let first = padded(1, 1);
+    let too_large_together = padded(2, 2);
+    assert!(first.len() <= 65_536 && too_large_together.len() <= 65_536);
+    assert!(first.len() + too_large_together.len() > 65_536);
+    let fixture = Fixture::new(&first)?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    let imported = live.submit("import m@1 as m")?;
+    assert_eq!(text_field(&imported, "outcome"), "namespace-committed", "{imported}");
+    let generation = number_field(&imported, "generation");
+    let old = live.submit("20 m.addone")?;
+    normal(&old, &["21"]);
+    let old_source = old["source_module_versions"][0].clone();
+
+    fixture.replace(&too_large_together)?;
+    let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(refused_reload(&refused, &["21"]), generation, "{refused}");
+    assert!(text_field(&refused, "diagnostic")
+        .contains("retained module and definition byte limit exceeded"), "{refused}");
+    assert_generation_inspection(&live.submit(":generation")?, generation, &old["stack"]);
+
+    fixture.replace(&first)?;
+    let still_old = live.submit("20 m.addone")?;
+    normal(&still_old, &["21", "21"]);
+    assert_eq!(still_old["source_module_versions"][0], old_source, "{still_old}");
+    assert_eq!(number_field(&still_old, "guest_requests"), 0, "{still_old}");
+    assert_eq!(number_field(&still_old, "protected_operations"), 0, "{still_old}");
+
+    fixture.replace("module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let admitted = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&admitted, "outcome"), "reload-committed", "{admitted}");
+    assert_eq!(number_field(&admitted, "retained_module_roots"), 2, "{admitted}");
+    assert_eq!(number_field(&admitted, "guest_requests"), 0, "{admitted}");
+    assert_eq!(number_field(&admitted, "protected_operations"), 0, "{admitted}");
+    let rebound = live.submit("import m@2 as m")?;
+    assert_eq!(text_field(&rebound, "outcome"), "namespace-committed", "{rebound}");
+    normal(&live.submit("20 m.addone")?, &["21", "21", "22"]);
+    live.finish()
+}
+
+#[test]
 fn declared_ownerless_code_retires_after_last_nested_program_is_consumed(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
