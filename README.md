@@ -563,11 +563,24 @@ before its staging reply while a second fsynced rename selects B. They observe
 the old result before the reload ACK, only B acknowledged as current, and
 zero guest requests for an unsupported partial in-place write. A separate
 external `MAP_SHARED` smoke similarly refuses observed source drift before
-guest execution. The worker reports 55 passing default live tests and 57
-passing feature-enabled live tests; test-only FIFO synchronization is omitted
-from the default CLI. These scoped executions do not discharge every
-canonical LIVE-02/LIVE-05 variant, source-bound proof, or LIVE-06 host-policy
-revocation; those canonical cases remain absent/not-run with proof open.
+guest execution. The prior combined worker reported 55 passing default live
+tests and 57 feature-enabled tests. Separately, isolated LIVE06 source
+`a35194da1776747e8478414d04a106162aca7733` passed 55 default and 59
+feature-enabled live tests on feature CLI SHA-256
+`f98b6b5eee1fa9fcea01c83d159a26c89dcd18a62948fe69f2bdeb2105ec8406`,
+including two actual A-active host-policy guest controls. With the same
+checked A source and alias, an allowed request had
+one guest request and one protected operation; a feature-only host revoke
+changed the resident A binding and slot from allowed/active to denied/inactive
+before the old Wasm request, which trapped with one guest request and zero
+protected operations. A separately loaded B did not substitute its adapter
+for the stale A request. The isolated scoped receipt is
+`$HOME/.cache/noble-mlive-private-20261007/tmp/live06-a35194d-scoped-receipt.json`;
+individual child stdout/stderr were not preserved separately from the Rust
+harness summaries. The default CLI omits those test-only host controls. This
+combined source has not run a guest or a canonical LIVE gate: LIVE-02/LIVE-05
+variants, general LIVE-06 revocation, scenario receipts and source-bound
+proof remain open, with canonical cases absent/not-run.
 
 For a separate **opt-in source-change execution gate**, start the same REPL
 with `--verify-source-before-execute`. Before each source submission, after

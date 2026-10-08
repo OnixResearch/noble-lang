@@ -257,6 +257,21 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             }));
             continue;
         }
+        #[cfg(feature = "live-test-barrier")]
+        if let Some(inspect) = match line {
+            ":test-host-inspect-ledger1-emit" => Some(true),
+            ":test-host-revoke-ledger1-emit" => Some(false),
+            _ => None,
+        } {
+            match live.live06_policy_event(inspect) {
+                Ok(report) => emit(&report),
+                Err(error) => {
+                    emit(&fatal(&error.message));
+                    return std::process::ExitCode::from(2);
+                }
+            }
+            continue;
+        }
         if let Some(terms) = line.strip_prefix(":grant-self-edit ") {
             let mut words = terms.split_ascii_whitespace();
             let report = match (words.next(), words.next(), words.next()) {
@@ -886,6 +901,31 @@ impl Live {
             "candidate_prepare_requests": 0,
             "diagnostic": diagnostic,
         })
+    }
+
+    #[cfg(feature = "live-test-barrier")]
+    fn live06_policy_event(&mut self, inspect: bool)
+        -> Result<serde_json::Value, super::output::Failure> {
+        if self.declared.is_none() {
+            return Ok(refusal(
+                self.generation, &self.last_stack,
+                "LIVE06 host policy inspection or revocation requires selected declared modules",
+            ));
+        }
+        let worker = if inspect {
+            self.worker()?.inspect_live06_test_emit()?
+        } else {
+            self.worker()?.revoke_live06_test_emit()?
+        };
+        let mut report: serde_json::Value = serde_json::from_str(&worker.json)
+            .map_err(|_| fatal_failure("invalid LIVE06 host policy event receipt"))?;
+        let fields = report.as_object_mut()
+            .ok_or_else(|| fatal_failure("invalid LIVE06 host policy event shape"))?;
+        fields.insert("schema".into(), serde_json::json!("noble-live-report/v1"));
+        fields.insert("stage".into(), serde_json::json!("host-policy"));
+        fields.insert("generation".into(), serde_json::json!(self.generation));
+        fields.insert("stack".into(), self.last_stack.clone());
+        Ok(report)
     }
 
     fn selected_file_digest(&self) -> Option<std::string::String> {

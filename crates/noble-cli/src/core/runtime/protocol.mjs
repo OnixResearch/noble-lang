@@ -73,6 +73,16 @@ async function protocol(config) {
           if (engine.staged && header !== 'publish-bin' && header !== 'discard-bin') {
             fail('staged live reload requires publish or discard');
           }
+          if ((header === 'test-host-inspect-ledger1-emit'
+            || header === 'test-host-revoke-ledger1-emit')
+            && typeof engine.inspectLive06TestEmit === 'function') {
+            try {
+              const report = header === 'test-host-inspect-ledger1-emit'
+                ? engine.inspectLive06TestEmit() : engine.revokeLive06TestEmit();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
           if (header === 'publish-live-declared' || header === 'discard-live-declared') {
             try {
               const report = header === 'publish-live-declared'

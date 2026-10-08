@@ -1556,7 +1556,7 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/tasks.md",
-      "sha256": "a944876a3b978889279ffa7da1d425d91ee9e8eaf26b4644a8446da7241961c5"
+      "sha256": "dd18b3e02cd60f088893c6b5814ba65a061cfe38b8a2ad3d4b00f7f77c78075c"
     },
     {
       "file": ".cairn/changes/ma-language-prerequisites/design.md",
@@ -1768,7 +1768,7 @@
     },
     {
       "file": ".cairn/README.md",
-      "sha256": "d4c28777d70eb0f3049f903d8ee75bae68c8e3e5f0c3624ff980e2d7309fe3a2"
+      "sha256": "8ad4f365f28ab8752b0ab5edd5e073c10ba210fc2ebd66845eeef81bbdb9a2af"
     },
     {
       "file": ".cairn/specs/backend-experiments/spec.md",
@@ -1852,7 +1852,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "aa756db49ad76ac1ccaf89f450b05c47356c703505d2b067187352bcfd23bcf0"
+      "sha256": "290d16475075f5f554bd4ffd27bcb4e572c8fbb7bafce2293cb3b2fdbf7c0fc0"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",

@@ -51,11 +51,21 @@ guest frame before a queued reload ACK, and after checked candidate A
 compilation before its staging reply, allowing a second complete fsynced
 rename B to supersede A. The worker reports 55 default and 57
 feature-enabled live tests passing, with separate external `MAP_SHARED`
-source-drift refusal. These scoped controls are not complete H-LIVE-01/
-LIVE-05 watch acceptance, complete source-bound LIVE-02, every LIVE-05
-variant or LIVE-06 explicit host-policy revocation; effectful/general
-transitions, general LIVE-10 cancellation/retirement, interpreter
-execution, canonical scenario receipts and source-bound proof remain open.
+source-drift refusal. Isolated LIVE06 commit
+`a35194da1776747e8478414d04a106162aca7733` later passed 55 default
+and 59 feature-enabled live tests. Its two A-active actual guest controls
+compare the same A source and selected alias: allow yielded one request and
+one protected operation; feature-only host revocation before the old Wasm
+request changed binding allowed and active slot true-to-false, yielding one
+request, zero protected operations and a terminal trap. A separate B load
+did not replace the stale A adapter. The scoped receipt is
+`$HOME/.cache/noble-mlive-private-20261007/tmp/live06-a35194d-scoped-receipt.json`;
+child stdout/stderr were not saved separately from Rust harness summaries.
+The combined graft has not run a guest. These scoped controls are not
+complete H-LIVE-01/LIVE-05 watch acceptance, complete source-bound LIVE-02,
+every LIVE-05 variant or general LIVE-06 revocation; effectful/general
+transitions, general LIVE-10 cancellation/retirement, interpreter execution,
+canonical scenario receipts and source-bound proof remain open.
 The canonical LIVE case states remain `absent`/`not-run`/proof `open`; none of the
 implementation or acceptance tasks below is complete.
 
