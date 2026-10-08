@@ -15,8 +15,12 @@ use std::{env, fs};
 fn sha(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
+fn retained() -> noble_contracts::source::RetainedSourceLimit {
+    noble_contracts::source::RetainedSourceLimit::new(Limits::default().bytes)
+        .expect("default source limit")
+}
 fn prepare(units: &[Vec<u8>]) -> Result<(ContractGoal, intrinsic::ProofBatch), String> {
-    let mut session = ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = ModuleSession::new(&[], retained()).map_err(|e| format!("{e:?}"))?;
     for source in &units[..2] {
         let pending = session
             .prepare(source, &[], Limits::default())
@@ -239,7 +243,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // A previously prepared @5 proof cannot be published after the retained
     // alias is rebound to an identical-looking @6 lexical token. The callback
     // must not run: source namespace identity is checked before proof checking.
-    let mut session = ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let mut session = ModuleSession::new(&[], retained()).map_err(|e| format!("{e:?}"))?;
     for bytes in &units[..2] {
         let pending = session
             .prepare(bytes, &[], Limits::default())

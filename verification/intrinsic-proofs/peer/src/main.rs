@@ -32,6 +32,11 @@ fn source_error(error: noble_contracts::source::Error) -> anyhow::Error {
     anyhow::anyhow!("production source {:?}: {}", error.stage(), error.diagnostic().message)
 }
 
+fn retained() -> noble_contracts::source::RetainedSourceLimit {
+    noble_contracts::source::RetainedSourceLimit::new(Limits::default().bytes)
+        .expect("default source limit")
+}
+
 fn checked(batch: &ProofBatch, receipt: &Value) -> Result<Vec<CheckedProof>> {
     ensure!(receipt.get("schema").and_then(Value::as_str)
         == Some("noble-intrinsic-module-report/v1"), "not an intrinsic CLI report");
@@ -127,7 +132,7 @@ fn stale(document: &Value) -> Result<Value> {
     let first_verdict = verdict(document, "exported_v1")?;
     let second_verdict = verdict(document, "exported_v2")?;
     let consumer_verdict = verdict(document, "consumer_v2")?;
-    let mut session = ModuleSession::new(&[]).map_err(source_error)?;
+    let mut session = ModuleSession::new(&[], retained()).map_err(source_error)?;
     session = register(session, &first, Some(&first_verdict))?;
     session = import(session, &import_first)?;
     let prepared = session.prepare(&consumer, &[], Limits::default()).map_err(source_error)?;
@@ -165,7 +170,7 @@ fn private(document: &Value) -> Result<Value> {
     let imported = source(document, "import_v1")?;
     let consumer = source(document, "consumer")?;
     let strict = verdict(document, "private_v1")?;
-    let mut session = ModuleSession::new(&[]).map_err(source_error)?;
+    let mut session = ModuleSession::new(&[], retained()).map_err(source_error)?;
     session = register(session, &source_private, Some(&strict))?;
     session = import(session, &imported)?;
     let before = session.generation();
@@ -188,7 +193,7 @@ fn transitive(document: &Value) -> Result<Value> {
     let consumer = source(document, "consumer")?;
     let forged = source(document, "untrusted_axiom")?;
     let strict = verdict(document, "exported_v1")?;
-    let mut session = ModuleSession::new(&[]).map_err(source_error)?;
+    let mut session = ModuleSession::new(&[], retained()).map_err(source_error)?;
     session = register(session, &exporter, Some(&strict))?;
     session = import(session, &imported)?;
     let genuine = session.prepare(&consumer, &[], Limits::default()).map_err(source_error)?;

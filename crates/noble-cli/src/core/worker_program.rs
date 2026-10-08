@@ -138,7 +138,9 @@ impl Store {
         let mut work_left = work.checked_sub(reserved).ok_or(Refusal::Exhausted)?;
         let bindings = policy.as_ref().map_or(&[][..], |selection|
             std::slice::from_ref(selection.binding()));
-        let session = noble_contracts::source::ModuleSession::new(bindings)
+        let retained = noble_contracts::source::RetainedSourceLimit::new(limits.bytes)
+            .ok_or(Refusal::Exhausted)?;
+        let session = noble_contracts::source::ModuleSession::new(bindings, retained)
             .map_err(source_refusal)?;
         let module = session.prepare(source, &[], limits).map_err(source_refusal)?;
         if module.kind() != noble_contracts::source::ModuleKind::Module
@@ -884,7 +886,9 @@ mod tests {
 
     #[test]
     fn checked_wit_token_requires_exact_named_program_root() {
-        let session = noble_contracts::source::ModuleSession::new(&[]).unwrap();
+        let retained = noble_contracts::source::RetainedSourceLimit::new(SOURCE_LIMITS.bytes)
+            .expect("selected Worker source limit");
+        let session = noble_contracts::source::ModuleSession::new(&[], retained).unwrap();
         let module = session.prepare(
             b"module Worker@1 [ def plus [ 1 + ] export plus ]",
             &[], SOURCE_LIMITS).unwrap();

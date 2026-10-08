@@ -25,18 +25,20 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-This isolated candidate selection compares 182 file digests across the flake and
+This source-only integrated candidate selection compares 237 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
 source-bound verification/build recipes, the architecture capacity policy,
 its typed export dependencies and manifest, all nine Cargo locks
-consumed by the reviewed offline vendor, the Worker peer manifest, and the
-guarded LIVE06 production-role sources, plus the separate test-only boundary
+consumed by the reviewed offline vendor, the Worker peer manifest, guarded
+LIVE06 production-role sources, and MW1 issuer/MW2 Send/cancel source and
+controls, plus the separate test-only boundary
 fixture lock. The newly selected declared-module contracts and CLI files,
 their behavioral regressions, migrated Wasm constructor callsites, and active
 diagnostic replay source bind this candidate's retained-source change rather
 than treating a source-revision label or stale test receipt as equivalent proof.
-These are source identities, not an executed proof.
+These are source identities, not an executed Octet check, runtime proof,
+or current release selection.
 In particular, the `noble-cli` package manifest binds the `noble` executable name, and the `noble-contracts` manifest binds the frontend's kernel dependency.
 `nix/tool-selection-files.nix` owns the observed file set; `policy/tool-selection-files.ncl` owns the corresponding reviewed hashes imported by the selection policy.
 The JSON export and observed file set must agree exactly. A check does not refresh its own expected values.
@@ -107,6 +109,20 @@ certify the nine-lock recipe. Keep those pins held until a separately reviewed
 new derivation and measured NAR are available; do not relabel the old output.
 This candidate-only source selection is not a selected Nix, source-inventory,
 numeric guest, or native-assurance gate pass.
+The MW1 host-owned `own<program>` issuer and MW2 Worker Send peer have
+separate interfaces and lifetimes: a Program cell is not a Send task or its
+native socket pin. The peer checks package, schema, source, and the checked
+source-Program owner before an exact-action host grant; cancellation revokes
+that grant and native access before releasing a blocked producer. Abnormal
+cleanup must report failed retirement and keep the socket pin charged until
+native join and retirement. Component instantiation may call the host from
+a core start before typed export lookup; trap, error, or panic there requires
+the same Store disposal, guest abort, native join, and pin settlement as a
+dispatch failure. The peer bounds each selected CLI check to a shared
+60-second deadline with 131072-byte stdout and 8192-byte stderr limits,
+killing its owned process group on failure. This does not guarantee reaping
+a kernel-stuck child or group-escaping descendant. None of these source
+changes provides a combined runtime guest receipt.
 [`selectedVendor`](selected-vendor.mjs) verifies that NAR at each migrated
 gate; the Result build additionally compares all nine lock hashes and the
 615-row/241-package provenance closure before invoking Cargo. Merely

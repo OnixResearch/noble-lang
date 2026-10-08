@@ -51,7 +51,9 @@ impl WorkerHostPolicy {
     /// definition. Source bytes are an untrusted candidate, never a policy row.
     fn select_checked(source: &[u8], name: &str, destination: &str, epoch: u64,
                       binding: noble_contracts::source::BoundOperation) -> Result<Self> {
-        let session = noble_contracts::source::ModuleSession::new(&[binding.clone()])
+        let retained = noble_contracts::source::RetainedSourceLimit::new(super::SOURCE_LIMITS.bytes)
+            .context("invalid selected Worker retained source limit")?;
+        let session = noble_contracts::source::ModuleSession::new(&[binding.clone()], retained)
             .map_err(|_| anyhow::anyhow!("selected Worker binding refused"))?;
         let module = session.prepare(source, &[], super::SOURCE_LIMITS)
             .map_err(|_| anyhow::anyhow!("selected Worker candidate refused"))?;
@@ -1363,7 +1365,11 @@ mod tests {
                 effects: vec![noble_kernel::contracts::TEST_EMIT],
             }
         };
-        let session = noble_contracts::source::ModuleSession::new(&[binding.clone()]).unwrap();
+        let retained = noble_contracts::source::RetainedSourceLimit::new(
+            super::super::worker_program::SOURCE_LIMITS.bytes)
+            .expect("selected Worker source limit");
+        let session = noble_contracts::source::ModuleSession::new(&[binding.clone()], retained)
+            .unwrap();
         let module = session.prepare(source, &[], super::super::worker_program::SOURCE_LIMITS)
             .expect("host independently checks selected source bytes");
         let owner = module.checked_program_owner_for_binding(

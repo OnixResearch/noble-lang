@@ -14,6 +14,11 @@ const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     work: 2_000_000,
 };
 
+fn retained() -> noble_contracts::source::RetainedSourceLimit {
+    noble_contracts::source::RetainedSourceLimit::new(LIMITS.bytes)
+        .expect("declared test source limit")
+}
+
 struct Binding<'a> {
     version: u32,
     slot: u32,
@@ -67,7 +72,7 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
     for forbidden in [22, 23, 26, 27] {
         assert_eq!(pure_builtin_spelling(forbidden), None);
     }
-    let session = ModuleSession::new_declared_text(&[], false)
+    let session = ModuleSession::new_declared_text(&[], false, retained())
         .map_err(|error| format!("{error:?}"))?;
     let package = b"module package@1 [ variant Choice Good I64 public Bad Text public export Choice export Choice.Good export helper def helper [ 1 + ] export root def root [ let value [ value helper ] run ] ]";
     let prepared = session.prepare(package, &[], LIMITS)
@@ -107,7 +112,7 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
     assert!(foreign.checked_program_owner("root").is_some());
     assert!(foreign.checked_program_closure("root").is_none(),
         "a foreign checked source owner is not inside this worker package");
-    let signed = ModuleSession::new_declared_text(&[], true)
+    let signed = ModuleSession::new_declared_text(&[], true, retained())
         .map_err(|error| format!("{error:?}"))?;
     let unchecked_self = signed.prepare(
         b"module spin@1 [ signature forever forall<S:stack> [ S -- S ! pure ] export forever def forever [ forever ] ]",
@@ -118,7 +123,7 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
         "an unverified signed self cycle cannot enter a closed worker package");
     let bound = ModuleSession::new(&[binding(Binding {
         version: 1, slot: 4, adapter: "version-A",
-    })]).map_err(|error| format!("{error:?}"))?;
+    })], retained()).map_err(|error| format!("{error:?}"))?;
     let host_module = bound.prepare(
         b"module ledger@1 [ opaque UserId I64 private require emit Text -- ! test.emit export UserId export handle def handle [ \"audit\" emit ] ]",
         &[], LIMITS,
@@ -138,7 +143,7 @@ fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Re
     use noble_kernel::types::{EffSet, Ty};
 
     let selected = binding(Binding { version: 1, slot: 4, adapter: "version-A" });
-    let session = ModuleSession::new(core::slice::from_ref(&selected))
+    let session = ModuleSession::new(core::slice::from_ref(&selected), retained())
         .map_err(|error| format!("{error:?}"))?;
     let source = b"module ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
     let module = session.prepare(source, &[], LIMITS)
@@ -167,7 +172,7 @@ fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Re
         assert!(module.checked_program_closure_for_binding("plus", wrong).is_none());
     }
     let extra = binding(Binding { version: 2, slot: 5, adapter: "version-B" });
-    let multiple = ModuleSession::new(&[selected.clone(), extra])
+    let multiple = ModuleSession::new(&[selected.clone(), extra], retained())
         .map_err(|error| format!("{error:?}"))?;
     let multiple_module = multiple.prepare(source, &[], LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -181,7 +186,7 @@ fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Re
         effects: vec![noble_kernel::contracts::TEST_CLOCK],
         ..selected.clone()
     };
-    let clock_session = ModuleSession::new(&[clock])
+    let clock_session = ModuleSession::new(&[clock], retained())
         .map_err(|error| format!("{error:?}"))?;
     let clock_staged = clock_session.prepare(
         b"module ledger@1 [ export plus def plus [ 1 + ] ]", &[], LIMITS,

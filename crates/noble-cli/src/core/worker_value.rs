@@ -347,7 +347,9 @@ mod tests {
     use super::*;
 
     fn selected(source: &[u8], type_name: &str) -> Result<(Schema, Ty), String> {
-        let session = noble_contracts::source::ModuleSession::new(&[])
+        let session = noble_contracts::source::ModuleSession::new(&[],
+            noble_contracts::source::RetainedSourceLimit::new(crate::core::SOURCE_LIMITS.bytes)
+                .expect("Worker source limit"))
             .map_err(|error| format!("{error:?}"))?;
         let checked = session.prepare(source, &[], crate::core::SOURCE_LIMITS)
             .map_err(|error| format!("{error:?}"))?;

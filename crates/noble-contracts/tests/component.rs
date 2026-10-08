@@ -11,6 +11,11 @@ const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     work: 2_000_000,
 };
 
+fn retained() -> noble_contracts::source::RetainedSourceLimit {
+    noble_contracts::source::RetainedSourceLimit::new(LIMITS.bytes)
+        .expect("component test source limit")
+}
+
 const ASYNC_WIT: &[u8] = br#"
 package test:tasks@1.2.3;
 interface service {
@@ -362,7 +367,7 @@ fn worker_test_emit_selection_requires_exact_checked_effect_and_world_shape() ->
         output: vec![],
         effects: vec![TEST_EMIT],
     };
-    let session = ModuleSession::new(&[binding.clone()])
+    let session = ModuleSession::new(&[binding.clone()], retained())
         .map_err(|error| format!("{error:?}"))?;
     let module = session.prepare(
         b"module ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]",
@@ -405,7 +410,8 @@ fn worker_test_emit_selection_requires_exact_checked_effect_and_world_shape() ->
         vec![EffectSlot::Effect(TEST_EMIT)])),
         "the generated import must carry the selected latent effect");
 
-    let pure_session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let pure_session = ModuleSession::new(&[], retained())
+        .map_err(|error| format!("{error:?}"))?;
     let pure_module = pure_session.prepare(
         b"module plain@1 [ export plus def plus [ 1 + ] ]", &[], LIMITS,
     ).map_err(|error| format!("{error:?}"))?;
@@ -454,7 +460,7 @@ fn worker_code_export_requires_exact_checked_effect_and_consumed_program_owner()
         adapter_slot: 4, input: vec![Ty::Text, Ty::Text], output: vec![],
         effects: vec![TEST_CODE_EXPORT],
     };
-    let session = ModuleSession::new(&[binding.clone()])
+    let session = ModuleSession::new(&[binding.clone()], retained())
         .map_err(|error| format!("{error:?}"))?;
     let source = b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-capture\" \"local-destination\" code_export ] ]";
     let module = session.prepare(source, &[], LIMITS)

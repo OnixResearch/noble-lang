@@ -16,6 +16,10 @@ use std::{env, fs, path::Path};
 fn source_error(problem: noble_contracts::source::Error) -> anyhow::Error {
     anyhow::anyhow!("production source {:?}: {}", problem.stage(), problem.diagnostic().message)
 }
+fn retained() -> noble_contracts::source::RetainedSourceLimit {
+    noble_contracts::source::RetainedSourceLimit::new(Limits::default().bytes)
+        .expect("default source limit")
+}
 fn input(document: &Value, field: &str) -> Result<Vec<u8>> {
     let path = document.get(field).and_then(Value::as_str)
         .with_context(|| format!("missing frozen input path {field}"))?;
@@ -278,7 +282,7 @@ fn bound_session(emitter_source: &[u8]) -> Result<ModuleSession> {
     let operation = BoundOperation { module_name: "ledger".into(), module_version: 1,
         operation: "test.emit".into(), adapter_identity: "version-A".into(), adapter_slot: 0,
         input: vec![Ty::Text], output: vec![], effects: vec![contracts::TEST_EMIT] };
-    let session = ModuleSession::new(&[operation]).map_err(source_error)?;
+    let session = ModuleSession::new(&[operation], retained()).map_err(source_error)?;
     register(session, emitter_source)
 }
 fn bound_submission(emitter_source: &[u8]) -> Result<Submission> {
@@ -355,7 +359,7 @@ fn stale_module_identity(session: ModuleSession, second_source: &[u8]) -> Result
     Ok((session, record("stale-module-identity", reason, Constraint::StackJoin, 2)?))
 }
 fn stale_preparation(module: &[u8], second: &[u8], import: &[u8]) -> Result<Value> {
-    let session = ModuleSession::new(&[]).map_err(source_error)?;
+    let session = ModuleSession::new(&[], retained()).map_err(source_error)?;
     let session = register(session, module)?;
     let prepared = session.prepare(import, &[], Limits::default()).map_err(source_error)?;
     ensure!(matches!(prepared.kind(), ModuleKind::Import),
@@ -381,7 +385,7 @@ fn stale_preparation(module: &[u8], second: &[u8], import: &[u8]) -> Result<Valu
         "kernel_or_source_stage": format!("{:?}", rejection.stage()), "guest_requests": 0 }))
 }
 fn dependency_control(module: &[u8]) -> Result<Value> {
-    let session = ModuleSession::new(&[]).map_err(source_error)?;
+    let session = ModuleSession::new(&[], retained()).map_err(source_error)?;
     let session = register(session, module)?;
     let source = submission(&session, b"ledger@1.handle", &[])?;
     let first = Definition(23);
@@ -438,7 +442,7 @@ fn run(workload_path: &Path) -> Result<Value> {
         "kernel peer input differs from actual selected host binding bytes");
     let stale = stale_preparation(&module, &second, &import)?;
     let dependencies = dependency_control(&dependency)?;
-    let session = ModuleSession::new(&[]).map_err(source_error)?;
+    let session = ModuleSession::new(&[], retained()).map_err(source_error)?;
     let session = register(session, &module)?;
     let bound = bound_submission(&emitter)?;
     let [owner, arm, layout, shape, sum, effect, binding] = [

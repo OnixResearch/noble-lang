@@ -325,7 +325,7 @@ fn code_export_binding_checks_capture_destination_and_owner_effect() -> Result<(
         output: vec![], effects: vec![TEST_CODE_EXPORT],
     };
     let source = b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-capture\" \"local-destination\" code_export ] ]";
-    let session = ModuleSession::new(core::slice::from_ref(&binding))
+    let session = ModuleSession::new(core::slice::from_ref(&binding), super::retained())
         .map_err(|e| format!("{e:?}"))?;
     let prepared = session.prepare(source, &[], super::LIMITS)
         .map_err(|e| format!("{e:?}"))?;
