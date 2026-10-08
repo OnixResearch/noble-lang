@@ -446,15 +446,27 @@ impl Engine {
         self.reply()
     }
 
-    #[cfg(feature = "live-test-barrier")]
-    pub fn revoke_live06_test_emit(&mut self) -> Result<super::output::Report, super::output::Failure> {
-        attempt!(self.write(b"test-host-revoke-ledger1-emit\n"));
-        self.reply()
-    }
-
-    #[cfg(feature = "live-test-barrier")]
-    pub fn inspect_live06_test_emit(&mut self) -> Result<super::output::Report, super::output::Failure> {
-        attempt!(self.write(b"test-host-inspect-ledger1-emit\n"));
+    /// The CLI selects a checked immutable source root and host manifest slot;
+    /// this worker command can only remove that slot's current authorization.
+    pub fn revoke_live_effect(
+        &mut self,
+        selection: &serde_json::Value,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let bytes = attempt!(serde_json::to_vec(selection).map_err(|error| {
+            super::output::Failure::new(
+                super::output::ErrorContext { stage: "shell", outcome: "invalid-input" },
+                std::format!("cannot encode host revocation: {error}"),
+            )
+        }));
+        if bytes.len() > 1024 {
+            return Err(super::output::Failure::new(
+                super::output::ErrorContext { stage: "shell", outcome: "invalid-input" },
+                "host revocation selection exceeds bounded worker protocol",
+            ));
+        }
+        let header = std::format!("revoke-live-effect {}\n", bytes.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(&bytes));
         self.reply()
     }
 

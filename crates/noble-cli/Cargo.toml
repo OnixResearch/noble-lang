@@ -11,8 +11,8 @@ path = "src/main.rs"
 
 [features]
 # Test-only synchronization of real CLI/worker safepoints; never shipped by
-# the default binary. The feature also enables one exact LIVE06 host-only
-# test-policy revocation; neither test control changes guest bytes.
+# the default binary. Production host-only revocation is available without
+# this feature and does not change guest bytes.
 live-test-barrier = []
 
 [dependencies]

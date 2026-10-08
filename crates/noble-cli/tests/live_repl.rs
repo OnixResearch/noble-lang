@@ -1377,6 +1377,7 @@ fn declared_saved_adapter_keeps_old_identity_while_host_policy_allows_it() -> Re
     assert_eq!(text_field(&imported, "outcome"), "namespace-committed", "{imported}");
     let old = live.submit("run")?;
     normal(&old, &[]);
+    assert_eq!(number_field(&old, "guest_requests"), 1);
     assert_eq!(number_field(&old, "protected_operations"), 1);
     assert_eq!(old["request_trace"][0]["adapter_identity"], "emit-a");
     assert_eq!(old["request_trace"][0]["version"], 1);
@@ -1384,6 +1385,7 @@ fn declared_saved_adapter_keeps_old_identity_while_host_policy_allows_it() -> Re
     assert_eq!(old["request_trace"][0]["decision"], "allow");
     let fresh = live.submit("n.send")?;
     normal(&fresh, &[]);
+    assert_eq!(number_field(&fresh, "guest_requests"), 1);
     assert_eq!(number_field(&fresh, "protected_operations"), 1);
     assert_eq!(fresh["request_trace"][0]["adapter_identity"], "emit-b");
     assert_eq!(fresh["request_trace"][0]["version"], 2);
@@ -1428,29 +1430,6 @@ fn declared_rebound_alias_revokes_old_adapter_even_for_saved_program(
     Ok(())
 }
 
-#[cfg(feature = "live-test-barrier")]
-fn assert_live06_policy(
-    report: &Value,
-    binding_allowed: bool,
-    active_slot: bool,
-    selected_alias: bool,
-    stack: &Value,
-) {
-    assert_eq!(text_field(report, "stage"), "host-policy", "{report}");
-    assert_eq!(text_field(report, "outcome"), "host-policy-observed", "{report}");
-    assert_eq!(text_field(report, "module"), "ledger");
-    assert_eq!(number_field(report, "version"), 1);
-    assert_eq!(text_field(report, "effect"), "test.emit");
-    assert_eq!(text_field(report, "adapter_identity"), "emit-a");
-    assert_eq!(report["binding_allowed"], binding_allowed, "{report}");
-    assert_eq!(report["active_slot"], active_slot, "{report}");
-    assert_eq!(report["selected_alias"], selected_alias, "{report}");
-    assert_eq!(&report["stack"], stack);
-    assert_eq!(number_field(report, "guest_requests"), 0);
-    assert_eq!(number_field(report, "protected_operations"), 0);
-}
-
-#[cfg(feature = "live-test-barrier")]
 #[test]
 fn live06_a_active_controls_isolate_host_revocation_from_alias_rebind(
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1470,8 +1449,6 @@ fn live06_a_active_controls_isolate_host_revocation_from_alias_rebind(
     let saved = allowed.submit("[ l.send ]")?;
     assert_eq!(saved["stack"][0]["type"], "Program");
     assert_eq!(saved["stack"][0]["interface"]["effects"], serde_json::json!(["test.emit"]));
-    let policy = allowed.submit(":test-host-inspect-ledger1-emit")?;
-    assert_live06_policy(&policy, true, true, true, &saved["stack"]);
     let performed = allowed.submit("run")?;
     normal(&performed, &[]);
     assert_eq!(number_field(&performed, "guest_requests"), 1);
@@ -1496,14 +1473,16 @@ fn live06_a_active_controls_isolate_host_revocation_from_alias_rebind(
         "namespace-committed");
     let saved_again = revoked.submit("[ l.send ]")?;
     assert_eq!(saved_again["stack"][0]["interface"], saved["stack"][0]["interface"]);
-    let before = revoked.submit(":test-host-inspect-ledger1-emit")?;
-    assert_live06_policy(&before, true, true, true, &saved_again["stack"]);
-    let host_event = revoked.submit(":test-host-revoke-ledger1-emit")?;
+    let host_event = revoked.submit(":revoke-effect ledger@1 emit-a test.emit")?;
     assert_eq!(text_field(&host_event, "outcome"), "host-policy-revoked");
+    assert_eq!(text_field(&host_event, "source_sha256"), a_sha256);
+    assert_eq!(host_event["binding_allowed_before"], true);
+    assert_eq!(host_event["binding_allowed_after"], false);
+    assert_eq!(host_event["active_slot_before"], true);
+    assert_eq!(host_event["active_slot_after"], false);
+    assert_eq!(host_event["selected_alias"], true);
+    assert_eq!(host_event["stack"], saved_again["stack"]);
     assert_eq!(number_field(&host_event, "guest_requests"), 0);
-    let after = revoked.submit(":test-host-inspect-ledger1-emit")?;
-    assert_live06_policy(&after, false, false, true, &saved_again["stack"]);
-    assert_eq!(number_field(&after, "generation"), number_field(&before, "generation"));
     assert_generation_inspection(&revoked.submit(":generation")?,
         generation + 1, &saved_again["stack"]);
     let denied = revoked.submit("run")?;
@@ -1520,22 +1499,9 @@ fn live06_a_active_controls_isolate_host_revocation_from_alias_rebind(
     assert_eq!(text_field(request, "adapter_identity"), "emit-a");
     assert_eq!(text_field(request, "decision"), "deny");
     assert_eq!(text_field(request, "reason"), "policy-denied");
-    println!("LIVE06 A-active causal controls: {}", serde_json::json!({
-        "source_sha256": a_sha256,
-        "allow_guest_requests": performed["guest_requests"],
-        "allow_protected_operations": performed["protected_operations"],
-        "deny_guest_requests": denied["guest_requests"],
-        "deny_protected_operations": denied["protected_operations"],
-        "binding_allowed_before": before["binding_allowed"],
-        "binding_allowed_after": after["binding_allowed"],
-        "active_slot_before": before["active_slot"],
-        "active_slot_after": after["active_slot"],
-        "alias_selected_after": after["selected_alias"],
-    }));
     Ok(())
 }
 
-#[cfg(feature = "live-test-barrier")]
 #[test]
 fn live06_host_revokes_old_effect_before_actual_retained_wasm_request(
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1556,27 +1522,21 @@ fn live06_host_revokes_old_effect_before_actual_retained_wasm_request(
     assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
     assert_eq!(saved["stack"][0]["interface"]["effects"], serde_json::json!(["test.emit"]));
     assert_eq!(number_field(&saved, "guest_requests"), 0);
-    let before = live.submit(":test-host-inspect-ledger1-emit")?;
-    assert_live06_policy(&before, true, true, true, &saved["stack"]);
-
-    // An explicit, test-feature-only host event revokes A while its old alias
-    // is still active. The later alias switch must not masquerade as revocation.
-    let revoked = live.submit(":test-host-revoke-ledger1-emit")?;
-    assert_eq!(text_field(&revoked, "stage"), "host-policy");
-    assert_eq!(text_field(&revoked, "outcome"), "host-policy-revoked", "{revoked}");
-    assert_eq!(text_field(&revoked, "module"), "ledger");
-    assert_eq!(number_field(&revoked, "version"), 1);
-    assert_eq!(text_field(&revoked, "effect"), "test.emit");
-    assert_eq!(text_field(&revoked, "adapter_identity"), "emit-a");
-    assert_eq!(revoked["previously_authorized"], true);
-    assert_eq!(revoked["currently_authorized"], false);
-    assert_eq!(revoked["stack"], saved["stack"]);
-    assert_eq!(number_field(&revoked, "generation"), initial + 1);
-    assert_eq!(number_field(&revoked, "guest_requests"), 0);
-    assert_eq!(number_field(&revoked, "protected_operations"), 0);
-    let after = live.submit(":test-host-inspect-ledger1-emit")?;
-    assert_live06_policy(&after, false, false, true, &saved["stack"]);
-    assert_generation_inspection(&live.submit(":generation")?, initial + 1, &saved["stack"]);
+    for foreign in [
+        ":revoke-effect ledger@01 emit-a test.emit",
+        ":revoke-effect ledger@+1 emit-a test.emit",
+        ":revoke-effect ledger@1 emit-b test.emit",
+        ":revoke-effect ledger@1 emit-a test.clock",
+        ":revoke-effect ledger@2 emit-b test.emit",
+        ":revoke-effect ledger@1 emit-a test.emit extra",
+    ] {
+        let refusal = live.submit(foreign)?;
+        assert_eq!(text_field(&refusal, "outcome"), "reload-refused", "{foreign}: {refusal}");
+        assert_eq!(number_field(&refusal, "generation"), initial + 1);
+        assert_eq!(refusal["stack"], saved["stack"]);
+        assert_eq!(number_field(&refusal, "guest_requests"), 0);
+        assert_eq!(number_field(&refusal, "protected_operations"), 0);
+    }
 
     fixture.replace(
         "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
@@ -1589,13 +1549,47 @@ fn live06_host_revokes_old_effect_before_actual_retained_wasm_request(
     let b_sha256 = text_field(&updated, "source_sha256");
     assert_eq!(b_sha256.len(), 64);
     assert_ne!(b_sha256, a_sha256);
-    let imported = live.submit("import ledger@2 as l")?;
+    let imported = live.submit("import ledger@2 as n")?;
     assert_eq!(text_field(&imported, "outcome"), "namespace-committed", "{imported}");
     assert_eq!(imported["stack"], saved["stack"]);
     assert_eq!(number_field(&imported, "guest_requests"), 0);
     assert_eq!(number_field(&imported, "protected_operations"), 0);
-    let before_run = live.submit(":test-host-inspect-ledger1-emit")?;
-    assert_live06_policy(&before_run, false, false, false, &saved["stack"]);
+    // B is loaded under another alias; A remains selected and authorized
+    // until the host-only command changes the exact old source-bound slot.
+    let revoked = live.submit(":revoke-effect ledger@1 emit-a test.emit")?;
+    assert_eq!(text_field(&revoked, "stage"), "host-policy");
+    assert_eq!(text_field(&revoked, "outcome"), "host-policy-revoked", "{revoked}");
+    assert_eq!(text_field(&revoked, "module"), "ledger");
+    assert_eq!(number_field(&revoked, "version"), 1);
+    assert_eq!(text_field(&revoked, "effect"), "test.emit");
+    assert_eq!(text_field(&revoked, "adapter_identity"), "emit-a");
+    assert_eq!(text_field(&revoked, "source_sha256"), a_sha256);
+    assert_eq!(revoked["binding_allowed_before"], true);
+    assert_eq!(revoked["binding_allowed_after"], false);
+    assert_eq!(revoked["active_slot_before"], true);
+    assert_eq!(revoked["active_slot_after"], false);
+    assert_eq!(revoked["selected_alias"], true);
+    assert_eq!(revoked["previously_authorized"], true);
+    assert_eq!(revoked["currently_authorized"], false);
+    assert_eq!(revoked["stack"], saved["stack"]);
+    assert_eq!(number_field(&revoked, "generation"), number_field(&imported, "generation"));
+    assert_eq!(number_field(&revoked, "guest_requests"), 0);
+    assert_eq!(number_field(&revoked, "protected_operations"), 0);
+    let again = live.submit(":revoke-effect ledger@1 emit-a test.emit")?;
+    assert_eq!(text_field(&again, "outcome"), "host-policy-refused", "{again}");
+    assert_eq!(again["stack"], saved["stack"]);
+    assert_eq!(number_field(&again, "generation"), number_field(&revoked, "generation"));
+    assert_eq!(number_field(&again, "guest_requests"), 0);
+    let b_call = live.submit("n.send")?;
+    assert_eq!(text_field(&b_call, "outcome"), "normal", "{b_call}");
+    assert_eq!(b_call["stack"], saved["stack"]);
+    assert_eq!(number_field(&b_call, "guest_requests"), 1);
+    assert_eq!(number_field(&b_call, "protected_operations"), 1);
+    assert_eq!(text_field(&b_call["request_trace"][0], "adapter_identity"), "emit-b");
+    assert_eq!(text_field(&b_call["request_trace"][0], "text"), "B");
+    let rebound = live.submit("import ledger@2 as l")?;
+    assert_eq!(text_field(&rebound, "outcome"), "namespace-committed", "{rebound}");
+    assert_eq!(rebound["stack"], saved["stack"]);
 
     let refused = live.submit("run")?;
     assert_eq!(text_field(&refused, "outcome"), "trap", "{refused}");
@@ -1626,19 +1620,91 @@ fn live06_host_revokes_old_effect_before_actual_retained_wasm_request(
         text_field(request, "effect"),
     );
     assert_eq!(request_identity, "ledger@1:test.emit");
-    println!("LIVE06 scoped old-code/current-host observation: {}", serde_json::json!({
-        "request_identity": request_identity,
-        "source_a_sha256": a_sha256,
-        "source_b_sha256": b_sha256,
-        "outcome": refused["outcome"],
-        "session_state": refused["session_state"],
-        "guest_requests": refused["guest_requests"],
-        "protected_operations": refused["protected_operations"],
-        "staging_guest_requests": updated["guest_requests"],
-        "binding_allowed_before_revoke": before["binding_allowed"],
-        "binding_allowed_before_guest": before_run["binding_allowed"],
-        "active_slot_before_guest": before_run["active_slot"],
-    }));
+    Ok(())
+}
+
+#[test]
+fn revoked_declared_adapter_cannot_reauthorize_on_later_import(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n",
+    )?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(text_field(&live.submit("import ledger@1 as l")?, "outcome"),
+        "namespace-committed");
+    let revoked = live.submit(":revoke-effect ledger@1 emit-a test.emit")?;
+    assert_eq!(text_field(&revoked, "outcome"), "host-policy-revoked", "{revoked}");
+    assert_eq!(revoked["active_slot_before"], true);
+    fixture.replace(
+        "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
+    )?;
+    assert_eq!(text_field(&live.submit(&format!(":reload {}", fixture.source.display()))?,
+        "outcome"), "reload-committed");
+    assert_eq!(text_field(&live.submit("import ledger@2 as l")?, "outcome"),
+        "namespace-committed");
+    let allowed_b = live.submit("l.send")?;
+    assert_eq!(text_field(&allowed_b, "outcome"), "normal", "{allowed_b}");
+    assert_eq!(number_field(&allowed_b, "protected_operations"), 1);
+    assert_eq!(text_field(&allowed_b["request_trace"][0], "adapter_identity"), "emit-b");
+    assert_eq!(text_field(&live.submit("import ledger@1 as old")?, "outcome"),
+        "namespace-committed");
+    let denied_a = live.submit("old.send")?;
+    assert_eq!(text_field(&denied_a, "outcome"), "trap", "{denied_a}");
+    assert_eq!(text_field(&denied_a, "session_state"), "terminated-after-runtime-failure");
+    assert_eq!(number_field(&denied_a, "guest_requests"), 1);
+    assert_eq!(number_field(&denied_a, "protected_operations"), 0);
+    assert_eq!(text_field(&denied_a["request_trace"][0], "adapter_identity"), "emit-a");
+    assert_eq!(text_field(&denied_a["request_trace"][0], "decision"), "deny");
+    Ok(())
+}
+
+#[test]
+fn revoked_declared_clock_denies_remaining_scripted_effect(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module clock@1 [ require now -- I64 ! test.clock export read def read [ now ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind clock@1 test.clock clock-a -- I64 ! test.clock allow script 42,43\n",
+    )?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(text_field(&live.submit("import clock@1 as c")?, "outcome"),
+        "namespace-committed");
+    let allowed = live.submit("c.read")?;
+    assert_eq!(text_field(&allowed, "outcome"), "normal", "{allowed}");
+    assert_eq!(number_field(&allowed, "guest_requests"), 1);
+    assert_eq!(number_field(&allowed, "protected_operations"), 1);
+    assert_eq!(text_field(&allowed["request_trace"][0], "effect"), "test.clock");
+    assert_eq!(text_field(&allowed["request_trace"][0], "decision"), "allow");
+    assert_eq!(text_field(&allowed["request_trace"][0], "value"), "42");
+    let revoked = live.submit(":revoke-effect clock@1 clock-a test.clock")?;
+    assert_eq!(text_field(&revoked, "outcome"), "host-policy-revoked", "{revoked}");
+    assert_eq!(revoked["active_slot_before"], true);
+    assert_eq!(revoked["active_slot_after"], false);
+    assert_eq!(revoked["binding_allowed_before"], true);
+    assert_eq!(revoked["binding_allowed_after"], false);
+    assert_eq!(number_field(&revoked, "guest_requests"), 0);
+    assert_eq!(number_field(&revoked, "protected_operations"), 0);
+    let denied = live.submit("c.read")?;
+    assert_eq!(text_field(&denied, "outcome"), "trap", "{denied}");
+    assert_eq!(text_field(&denied, "session_state"), "terminated-after-runtime-failure");
+    assert_eq!(number_field(&denied, "guest_requests"), 1);
+    assert_eq!(number_field(&denied, "protected_operations"), 0);
+    assert_eq!(denied["effect_requests"], serde_json::json!(["test.clock"]));
+    assert_eq!(text_field(&denied["request_trace"][0], "adapter_identity"), "clock-a");
+    assert_eq!(text_field(&denied["request_trace"][0], "decision"), "deny");
+    assert_eq!(text_field(&denied["request_trace"][0], "reason"), "policy-denied");
+    assert_eq!(denied["request_trace"][0]["value"], serde_json::Value::Null);
     Ok(())
 }
 

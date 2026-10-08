@@ -174,7 +174,8 @@ function installTestHosts(engine, declared_modules) {
       let reason = null;
       if (!binding) reason = 'missing-mapping';
       else if (binding.operation !== 'test.clock') reason = 'unexpected-operation';
-      else if (engine.declaredLive && !engine.declaredLiveState.activeSlots.has(slot)) {
+      else if (engine.declaredLive
+        && (!binding.allowed || !engine.declaredLiveState.activeSlots.has(slot))) {
         reason = 'policy-denied';
       }
       else {

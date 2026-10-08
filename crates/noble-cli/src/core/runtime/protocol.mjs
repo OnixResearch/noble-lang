@@ -74,16 +74,6 @@ async function protocol(config) {
           if (engine.staged && header !== 'publish-bin' && header !== 'discard-bin') {
             fail('staged live reload requires publish or discard');
           }
-          if ((header === 'test-host-inspect-ledger1-emit'
-            || header === 'test-host-revoke-ledger1-emit')
-            && typeof engine.inspectLive06TestEmit === 'function') {
-            try {
-              const report = header === 'test-host-inspect-ledger1-emit'
-                ? engine.inspectLive06TestEmit() : engine.revokeLive06TestEmit();
-              emit(report.outcome, report);
-            } catch (error) { emit('internal-failure', reportError(error)); return; }
-            continue;
-          }
           if (header === 'publish-live-declared' || header === 'discard-live-declared') {
             try {
               const report = header === 'publish-live-declared'
@@ -105,6 +95,14 @@ async function protocol(config) {
             command = { kind: 'stage-live-declared',
               bytes: integer(Number(declaredState[1]), 65536, 'declared live state frame') };
             if (command.bytes === 0) fail('empty declared live state');
+            continue;
+          }
+          const revocation = /^revoke-live-effect ([0-9]+)$/.exec(header);
+          if (revocation) {
+            if (!engine.declaredLive) fail('host revocation requires a declared live worker');
+            command = { kind: 'revoke-live-effect',
+              bytes: integer(Number(revocation[1]), 1024, 'host revocation frame') };
+            if (command.bytes === 0) fail('empty host revocation selection');
             continue;
           }
           if (header === 'discard-prepared-live') {
@@ -267,6 +265,17 @@ async function protocol(config) {
           command = null;
           try {
             const report = engine.stageLiveDeclared(parseDeclaredLiveState(bytes));
+            emit(report.outcome, report);
+          } catch (error) { emit('internal-failure', reportError(error)); return; }
+          continue;
+        }
+        if (command.kind === 'revoke-live-effect') {
+          if (pending.length < command.bytes) break;
+          const bytes = pending.subarray(0, command.bytes);
+          pending = pending.subarray(command.bytes);
+          command = null;
+          try {
+            const report = engine.revokeLiveEffect(parseDeclaredLiveState(bytes));
             emit(report.outcome, report);
           } catch (error) { emit('internal-failure', reportError(error)); return; }
           continue;

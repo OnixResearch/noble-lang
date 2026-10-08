@@ -1,7 +1,6 @@
 // Only concatenated into the explicitly feature-built live test worker.
 // Private FIFO handshakes delay a real V8 guest callback or checked candidate
-// compilation. The exact LIVE06 control below revokes host authority, not
-// guest bytes, and is absent from the default worker.
+// compilation; host policy changes use the ordinary live control protocol.
 {
   const directory = process.env.NOBLE_LIVE_TEST_BARRIER_DIR;
   const point = process.env.NOBLE_LIVE_TEST_BARRIER_POINT;
@@ -99,54 +98,3 @@
     }
   }
 }
-
-// The test harness is the host here. This exact event is not a guest action,
-// a self-edit grant, or a public CLI command. It selects the independently
-// configured ledger@1 binding while its old alias is still live, then revokes
-// test.emit before the next actual guest request. The immutable adapter/slot
-// identity stays resident; subsequent declared snapshots cannot rearm it.
-function live06TestEmitBinding(engine) {
-  let selected = null;
-  for (const [slot, binding] of engine.boundAdapters) {
-    if (binding.module === 'ledger' && binding.version === 1
-      && binding.operation === 'test.emit' && binding.adapter === 'emit-a') {
-      if (selected) return null;
-      selected = { slot, binding };
-    }
-  }
-  return selected;
-}
-
-CoreEngine.prototype.inspectLive06TestEmit = function () {
-  const state = this.declaredLiveState;
-  const selected = live06TestEmitBinding(this);
-  if (!this.declaredIdle() || this.stagedDeclared || !selected) {
-    return this.declaredStateReport('host-policy-refused', state,
-      'LIVE06 test host cannot inspect an idle ledger@1:test.emit binding');
-  }
-  // Separate, read-only observation of the actual worker authorization
-  // operands; the revoke receipt's constant labels are not causal evidence.
-  return { ...this.declaredStateReport('host-policy-observed', state),
-    module: selected.binding.module, version: selected.binding.version,
-    effect: selected.binding.operation, adapter_identity: selected.binding.adapter,
-    slot: selected.slot, binding_allowed: selected.binding.allowed,
-    active_slot: state.activeSlots.has(selected.slot),
-    selected_alias: state.aliases.some(alias => alias.slot === selected.slot) };
-};
-
-CoreEngine.prototype.revokeLive06TestEmit = function () {
-  const state = this.declaredLiveState;
-  const selected = live06TestEmitBinding(this);
-  if (!this.declaredIdle() || this.stagedDeclared || !selected
-    || !selected.binding.allowed || !state.activeSlots.has(selected.slot)
-    || !state.aliases.some(alias => alias.slot === selected.slot)) {
-    return this.declaredStateReport('host-policy-refused', state,
-      'LIVE06 test host can only revoke a currently authorized ledger@1:test.emit binding');
-  }
-  selected.binding.allowed = false;
-  state.activeSlots.delete(selected.slot);
-  return { ...this.declaredStateReport('host-policy-revoked', state),
-    module: 'ledger', version: 1, effect: 'test.emit',
-    adapter_identity: 'emit-a', slot: selected.slot,
-    previously_authorized: true, currently_authorized: false };
-};

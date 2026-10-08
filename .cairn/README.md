@@ -48,7 +48,32 @@ The worker and Octet maps remain supporting documents, not additional normative 
 Conversion began with empty `changes/` and `archive/` directories; it did not fabricate implementation tasks, completed changes, or archive evidence.
 Subsequent implementation changes have their own lifecycle records. Active changes belong in `changes/<slug>/`, with explicit requirement deltas.
 `changes/explicit-live-references/` remains active for future implementation after the separate issue #1 `Live-Slot-Design` contract was accepted into the canonical Cairn specifications. Its nine registered LSLOT scenario designs remain absent/not-run/open/unassessed with empty evidence; canonical design acceptance does not supply an opt-in slot runtime, accepted proof or LIVE case promotion.
-`changes/live-wasm-reload/` is an active design with guarded partial runtime: a resident Node/V8 REPL, in-process Wasm byte emission, checked explicit reload and bounded cooperative Linux `noble live watch` on same-directory `fsync`-then-atomic-rename saves. Its selected-byte and watch-sequence checks refuse stale compiled candidates and unsupported partial/in-place changes; an external writable mapping can still change bytes without a watch event, so ACK-time observation is not continuing file immutability or complete H-LIVE-01/LIVE-05 acceptance. Scoped real-child checks exercise transitive Core rebuild, old Program and declared-module snapshots, counted Core code retirement, an active old Wasm frame before a reload ACK, and candidate A compiled before fsynced save B supersedes it without an A ACK. Bounded host-granted guest self-edit refuses any current effective dependent rather than rebuilding it. Indirect self-rebind/cycle refusal is scoped, not established by general proof or accepted LIVE case evidence. General effectful watch, full in-flight source-change controls, interpreter execution, complete source-bound LIVE-02 and LIVE-06 host-policy revocation remain open. `changes/c-backend/` remains a specification-only active design. Their canonical scenarios remain absent/not-run with proof open, their roadmap acceptance milestones not-started, and neither complete profile changes historical M4 or Declared-Modules-v1 claims.
+`changes/live-wasm-reload/` is an active design with guarded partial runtime:
+a resident Node/V8 REPL, in-process Wasm byte emission, checked explicit reload
+and bounded cooperative Linux `noble live watch` on same-directory
+`fsync`-then-atomic-rename saves. Its selected-byte and watch-sequence checks
+refuse stale compiled candidates and unsupported partial/in-place changes; an
+external writable mapping can still change bytes without a watch event, so
+ACK-time observation is not continuing file immutability or complete
+H-LIVE-01/LIVE-05 acceptance. Scoped real-child checks exercise transitive
+Core rebuild, old Program and declared-module snapshots, counted Core code
+retirement, an active old Wasm frame before a reload ACK, and candidate A
+compiled before fsynced save B supersedes it without an A ACK. The production
+declared REPL now has an exact host-stdin binding revocation; default and
+feature actual V8 child suites and one direct CLI run observed a retained A
+Program denied after B import and A host revocation, while B stayed allowed.
+Those V8 child and direct CLI observations belong to the separate LIVE06 donor
+source; the successor combining it with returned-target identity is source-only
+and has no joint runtime or document-validation result.
+Bounded host-granted guest self-edit refuses any current effective dependent
+rather than rebuilding it. Indirect self-rebind/cycle refusal is scoped, not
+established by general proof or accepted LIVE case evidence. General
+effectful watch, full in-flight source-change controls, interpreter execution,
+complete source-bound LIVE-02 and canonical LIVE-06 acceptance remain open.
+`changes/c-backend/` remains a specification-only active design. Their
+canonical scenarios remain absent/not-run with proof open, their roadmap
+acceptance milestones not-started, and neither complete profile changes
+historical M4 or Declared-Modules-v1 claims.
 
 ## Inspect and validate
 

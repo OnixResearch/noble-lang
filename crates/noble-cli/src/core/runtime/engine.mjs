@@ -998,6 +998,58 @@ export class CoreEngine {
       session_state: 'retained' };
   }
 
+  revokeLiveEffect(selection) {
+    const state = this.declaredLiveState;
+    try {
+      if (!this.declaredIdle() || this.stagedDeclared) {
+        fail('host policy revocation requires an idle declared live worker');
+      }
+      declaredLiveObject(selection,
+        ['generation', 'identity', 'module', 'version', 'source_sha256', 'adapter', 'effect', 'slot'],
+        'host revocation');
+      const maximum = BigInt(Number.MAX_SAFE_INTEGER);
+      const generation = declaredLiveInteger(selection.generation, maximum, 'source generation');
+      const identity = declaredLiveInteger(selection.identity, 64n, 'declared root identity');
+      if (generation !== state.generation || identity === 0n
+        || typeof selection.module !== 'string'
+        || typeof selection.adapter !== 'string'
+        || typeof selection.effect !== 'string'
+        || typeof selection.source_sha256 !== 'string'
+        || !/^[0-9a-f]{64}$/.test(selection.source_sha256)
+        || !Number.isInteger(selection.version) || selection.version < 1
+        || selection.version > 4294967295
+        || !Number.isInteger(selection.slot) || selection.slot < 0 || selection.slot >= 64) {
+        fail('stale or malformed host revocation selection');
+      }
+      const root = state.roots.find(entry => entry.identity === identity
+        && entry.module === selection.module && entry.version === selection.version
+        && entry.sha256 === selection.source_sha256);
+      const binding = this.boundAdapters.get(selection.slot);
+      if (!root || !binding || binding.module !== root.module
+        || binding.version !== root.version || binding.adapter !== selection.adapter
+        || binding.operation !== selection.effect || !binding.allowed) {
+        fail('host revocation does not name an authorized immutable source binding');
+      }
+      const active = state.activeSlots.has(selection.slot);
+      const selectedAlias = state.aliases.some(alias => alias.slot === selection.slot);
+      // The slot identity, old compiled code and immutable source root stay
+      // unchanged. Subsequent namespace staging reads binding.allowed=false.
+      binding.allowed = false;
+      state.activeSlots.delete(selection.slot);
+      return { ...this.declaredStateReport('host-policy-revoked', state),
+        module: root.module, version: root.version, module_identity: root.identity.toString(),
+        source_sha256: root.sha256, adapter_identity: binding.adapter,
+        effect: binding.operation, slot: selection.slot,
+        previously_authorized: true, currently_authorized: false,
+        binding_allowed_before: true, binding_allowed_after: binding.allowed,
+        active_slot_before: active, active_slot_after: state.activeSlots.has(selection.slot),
+        selected_alias: selectedAlias };
+    } catch (error) {
+      return this.declaredStateReport('host-policy-refused', state,
+        `${error.name}: ${error.message}`);
+    }
+  }
+
   stageLiveDeclared(snapshot) {
     if (!this.declaredLive || this.stagedDeclared) fail('declared live state is unavailable or already staged');
     try {

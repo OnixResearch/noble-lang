@@ -341,13 +341,8 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             }));
             continue;
         }
-        #[cfg(feature = "live-test-barrier")]
-        if let Some(inspect) = match line {
-            ":test-host-inspect-ledger1-emit" => Some(true),
-            ":test-host-revoke-ledger1-emit" => Some(false),
-            _ => None,
-        } {
-            match live.live06_policy_event(inspect) {
+        if let Some(selection) = line.strip_prefix(":revoke-effect ") {
+            match live.revoke_effect(selection) {
                 Ok(report) => emit(&report),
                 Err(error) => {
                     emit(&fatal(&error.message));
@@ -1133,24 +1128,75 @@ impl Live {
         })
     }
 
-    #[cfg(feature = "live-test-barrier")]
-    fn live06_policy_event(&mut self, inspect: bool)
+    /// Only this host command can remove a selected immutable binding's
+    /// current permission. It never changes the source root, slot or grant.
+    fn revoke_effect(&mut self, selection: &str)
         -> Result<serde_json::Value, super::output::Failure> {
-        if self.declared.is_none() {
+        let Some(declared) = self.declared.as_ref() else {
             return Ok(refusal(
                 self.generation, &self.last_stack,
-                "LIVE06 host policy inspection or revocation requires selected declared modules",
+                "host revocation requires selected declared modules",
             ));
-        }
-        let worker = if inspect {
-            self.worker()?.inspect_live06_test_emit()?
-        } else {
-            self.worker()?.revoke_live06_test_emit()?
         };
+        if let Some(changed) = self.source_change_refusal() {
+            return serde_json::from_str(&changed.json)
+                .map_err(|_| fatal_failure("invalid selected-source refusal"));
+        }
+        let mut terms = selection.split_ascii_whitespace();
+        let (Some(module_version), Some(adapter), Some(effect), None) =
+            (terms.next(), terms.next(), terms.next(), terms.next()) else {
+            return Ok(refusal(self.generation, &self.last_stack,
+                "host revocation requires MODULE@VERSION ADAPTER EFFECT"));
+        };
+        let Some((module, version_text)) = module_version.rsplit_once('@') else {
+            return Ok(refusal(self.generation, &self.last_stack,
+                "host revocation requires a canonical module version"));
+        };
+        let Ok(version) = version_text.parse::<u32>() else {
+            return Ok(refusal(self.generation, &self.last_stack,
+                "host revocation requires a canonical module version"));
+        };
+        if version == 0 || version_text.starts_with('0')
+            || !version_text.bytes().all(|byte| byte.is_ascii_digit())
+        {
+            return Ok(refusal(self.generation, &self.last_stack,
+                "host revocation requires a canonical module version"));
+        }
+        let (Some(slot), Some((identity, source_sha256))) = (
+            declared.manifest.revocable_slot(module, version, adapter, effect),
+            declared.revocation_root(module, version),
+        ) else {
+            return Ok(refusal(self.generation, &self.last_stack,
+                "host revocation does not name a checked source binding"));
+        };
+        let checked = serde_json::json!({
+            "generation": self.generation, "identity": identity,
+            "module": module, "version": version, "source_sha256": source_sha256,
+            "adapter": adapter, "effect": effect, "slot": slot,
+        });
+        let worker = self.worker()?.revoke_live_effect(&checked)?;
+        if worker.outcome != "host-policy-revoked" && worker.outcome != "host-policy-refused" {
+            return Err(fatal_failure("worker did not decide host revocation"));
+        }
         let mut report: serde_json::Value = serde_json::from_str(&worker.json)
-            .map_err(|_| fatal_failure("invalid LIVE06 host policy event receipt"))?;
+            .map_err(|_| fatal_failure("invalid host revocation receipt"))?;
+        if report["outcome"] != worker.outcome
+            || report["source_generation"].as_str() != Some(self.generation.to_string().as_str())
+            || report["guest_requests"] != 0 || report["protected_operations"] != 0
+        {
+            return Err(fatal_failure("worker revocation receipt changed outcome, generation or host ledger"));
+        }
+        if worker.outcome == "host-policy-revoked"
+            && (report["module"] != module || report["version"] != version
+                || report["module_identity"].as_str() != Some(identity.to_string().as_str())
+                || report["source_sha256"] != checked["source_sha256"]
+                || report["adapter_identity"] != adapter || report["effect"] != effect
+                || report["slot"] != slot || report["currently_authorized"] != false)
+        {
+            return Err(fatal_failure("worker revoked a different immutable binding"));
+        }
         let fields = report.as_object_mut()
-            .ok_or_else(|| fatal_failure("invalid LIVE06 host policy event shape"))?;
+            .ok_or_else(|| fatal_failure("invalid host revocation receipt shape"))?;
         fields.insert("schema".into(), serde_json::json!("noble-live-report/v1"));
         fields.insert("stage".into(), serde_json::json!("host-policy"));
         fields.insert("generation".into(), serde_json::json!(self.generation));

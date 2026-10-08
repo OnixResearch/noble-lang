@@ -47,6 +47,13 @@ impl State {
         Self { manifest, roots: Vec::new(), aliases: Vec::new(), selected_module_name: None }
     }
 
+    /// Only a checked, published immutable module version can be a host
+    /// revocation target. The old root survives alias changes for saved code.
+    pub(super) fn revocation_root(&self, module: &str, version: u32) -> Option<(u64, &str)> {
+        self.roots.iter().find(|root| root.module == module && root.version == version)
+            .map(|root| (root.identity, root.sha256.as_str()))
+    }
+
     fn checked_source_versions(
         &self,
         submission: &noble_kernel::execution::Submission,

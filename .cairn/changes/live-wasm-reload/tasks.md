@@ -90,20 +90,51 @@ and protected operations, with a clean CLI exit. That executed CLI SHA-256
 is `fe6f6a83e0b1952d671b31aa4cde2925c04d181bfcb7fac82541549a6d45a2b2`;
 Node 24.13.0 binary SHA-256 is
 `ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b`.
-The current 263-file selected source SHA map is
+The LIVE06 donor's 263-file selected source SHA map was
 `policy/tool-selection-files.ncl` SHA-256
-`fb03c25e448887073beaf673002c4648587f64067292f4c86d5cf27705cad8ae`;
-every entry matched the checkout's actual bytes and its pinned Nickel export
-matched `policy/tool-selection.json`. This source selection is not by itself
+`4a8bc45c448002dd3f2f3bf285848b832d1583500a08be685aa025f35c5cdb17`;
+every entry matched that donor checkout's actual bytes and its then-pinned
+Nickel export matched `policy/tool-selection.json`. The separate successor's
+270-file Nix/NCL/JSON selection is source-rehashed only, with no new Nickel
+export. Neither source selection is by itself
 a whole-workspace source-bound assurance gate or a substitute for an immutable
 CLI/guest execution receipt.
+The later isolated LIVE06 production cutover removed the hardcoded
+feature-only policy command and added host-stdin
+`:revoke-effect MODULE@VERSION ADAPTER EFFECT` against an allowed manifest
+slot and checked immutable root. A read-only independent source review found
+no surviving authority bypass and rechecked the actual `test.clock`
+before/after bound-guest case and corrected receipt names before runtime.
+Pinned nightly-2026-03-21/GCC15/Node 24.13.0 offline V8 live REPL suites
+passed 66/66 default and 69/69 feature-enabled tests. In a separate direct
+default-CLI child, a typed old A `Program` survived B import, the exact A
+binding and active slot revoked true-to-false without a guest request, B ran
+through `emit-b` with one request/one protected operation, and the saved old
+A trapped through `emit-a` with one request/zero protected operations and a
+poisoned session. Foreign and repeated host selections refused; the
+real-child tests also exercise a prior unrevoked A allow, monotone denial
+after later reimport, and scripted `test.clock` allowed-before/denied-after.
+The direct default CLI SHA-256 was
+`bb738f38f887c9f08cf40c727af9b0bdb47198e37a85c1f940031ae614cf6676`;
+raw direct-child reports and stderr are under
+`$HOME/.cache/noble-live06-policy-cutover-20261008-yD7w-tmp/direct-live06-lIcbkl/`.
 These scoped controls are not
 complete H-LIVE-01/LIVE-05 watch acceptance, complete source-bound LIVE-02,
-every LIVE-05 variant or general LIVE-06 revocation; effectful/general
+every LIVE-05 variant or complete canonical LIVE-06 acceptance; effectful/general
 transitions, general LIVE-10 cancellation/retirement, interpreter execution,
 canonical scenario receipts and source-bound proof remain open.
 The canonical LIVE case states remain `absent`/`not-run`/proof `open`; none of the
 implementation or acceptance tasks below is complete.
+
+The separate graft onto tested returned-identity source
+`1d5ac07674389c7a344d187762f991ed18ca1db9` preserves this LIVE06
+donor's code and historical 66/66, 69/69 and direct-CLI receipts, but the
+**combined successor is source-only and untested**. Its reviewed source hashes
+cannot substitute for a compiled CLI, checked guest trace, independent source
+security GO or renewed document-validation receipt. The universal Wasm lane
+owns the exclusive Cargo/Node24 V8 slot until release; request a distinct
+combined tested CLI slot afterward. Do not relabel the donor CLI or any
+canonical LIVE/LSLOT evidence as a combined result.
 
 - [ ] [serial] Implement and test in-process Wasm encoder/verifier with independently accepted source, exact selected ABI and isolated staging. r[BE-LIVE-01] r[S-LIVE-01]
 - [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]

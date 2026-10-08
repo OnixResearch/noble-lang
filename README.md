@@ -655,10 +655,30 @@ protected operations. A separately loaded B did not substitute its adapter
 for the stale A request. The isolated scoped receipt is
 `$HOME/.cache/noble-mlive-private-20261007/tmp/live06-a35194d-scoped-receipt.json`;
 individual child stdout/stderr were not preserved separately from the Rust
-harness summaries. The default CLI omits those test-only host controls. This
-combined source has not run a guest or a canonical LIVE gate: LIVE-02/LIVE-05
-variants, general LIVE-06 revocation, scenario receipts and source-bound
+harness summaries. Those feature-only hardcoded controls are removed by the
+subsequent production host-only `:revoke-effect` cutover. On its isolated
+source, the default `live_repl` suite passed 66/66 and the feature suite
+passed 69/69 against actual Node 24/V8 child guests. In a separate direct
+default-CLI session, an old A `Program` remained typed on the stack after B
+loaded; revoking the exact checked A source/adapter/effect changed its
+binding and active slot from allowed to denied with zero guest requests. B
+still executed through `emit-b` (one request, one protected operation);
+invoking the saved A trapped through `emit-a` (one request, zero protected
+operations), poisoned the session and exited 2. The executed default CLI
+SHA-256 was
+`bb738f38f887c9f08cf40c727af9b0bdb47198e37a85c1f940031ae614cf6676`;
+the raw direct-child JSON reports and empty stderr are retained under
+`$HOME/.cache/noble-live06-policy-cutover-20261008-yD7w-tmp/direct-live06-lIcbkl/`.
+This is scoped evidence, not a canonical LIVE gate: LIVE-02/LIVE-05
+variants, complete LIVE-06 acceptance, scenario receipts and source-bound
 proof remain open, with canonical cases absent/not-run.
+
+The separate successor that combines the tested returned-identity source
+`1d5ac07674389c7a344d187762f991ed18ca1db9` with LIVE06 donor
+`8483c17b6ac2d3c6e0d3e876216fbe92c09e09f4` has only a source-only graft.
+The LIVE06 and returned-target binaries and guest receipts above are for
+their respective original trees; this combined checkout has not been built,
+run, document-validated, security-cleared or sealed.
 
 For a separate **opt-in source-change execution gate**, start the same REPL
 with `--verify-source-before-execute`. Before each source submission, after
@@ -704,12 +724,28 @@ It keeps checked module/version/import snapshots and a saved old Program through
 module replacement; a fresh import sees the new version. Rebinding an alias
 rebuilds compatible transitive dependents without rewriting old Programs;
 incompatible replacements refuse that import. The old bound adapter identity
-stays fixed while invocation checks the **current** host authorization.
+stays fixed while invocation checks the **current** host authorization. At
+the declared live REPL's **host stdin**, an operator can revoke one
+initially allowed manifest binding after its immutable module root is checked:
+
+```text
+:revoke-effect ledger@1 emit-a test.emit
+```
+
+The three arguments are the exact `MODULE@VERSION`, adapter identity and
+effect selected in the host bindings manifest. The report binds the checked
+module identity and source SHA-256, retains generation and typed stack, and
+records the formerly allowed binding and active slot becoming denied/inactive.
+Malformed, foreign, not-yet-checked and repeat selections refuse without a
+guest request. Revocation is monotone for the session: subsequent imports
+cannot reauthorize that binding; only a new host-selected session can have
+its initially allowed policy. Guest code cannot invoke or regrant this host
+command. The test-only safepoint feature is not required.
 Candidate source, import version, source-history and proof requirements are
 checked on a private frontend snapshot before a candidate is published; a
 refusal preserves the old session. This is scoped runtime evidence, not
-canonical LIVE-05 proof or a claim that all declared/effectful transitions
-are accepted.
+canonical LIVE-05/LIVE-06 proof or a claim that all declared/effectful
+transitions are accepted.
 
 An exact host grant can allow the selected named definition to propose its
 own *pure* replacement from an actual runtime input. Put this in
@@ -781,8 +817,9 @@ The private source manifest SHA-256 is
 `33317914fd0f057b9eb45047ac21f052833334ad25910c30fce2154e7c40fd5a`;
 the scoped guest receipt SHA-256 is
 `9376b0d13aa1c0cd2f852925fc9af528821428ee36cb6cdc6044dc6bc7eab5d5`.
-LIVE-02 active in-flight reload, LIVE-05 forced overlap, LIVE-06 explicit
-host revoke, general cancellation and canonical LIVE-01–10 remain **open**.
+LIVE-02 active in-flight reload, complete LIVE-05 forced-overlap coverage,
+canonical LIVE-06 host revocation, general cancellation and canonical
+LIVE-01–10 remain **open**.
 
 `--engine interpreter` refuses rather than falling back to V8.
 Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
@@ -811,7 +848,7 @@ does not make every other feature available in that runtime.
 | Area | Implemented scope |
 |---|---|
 | [Core language and Wasm sessions](specs/ROADMAP.md#m4-implementation-and-retained-acceptance) | Wrapping `I64` arithmetic; Bool, Text, Unit, Pair, Sum, and List values; stack operations; checked branches; quotation, capture, composition, execution, and reflection; nonrecursive definitions. |
-| [Guarded live REPL](#guarded-live-repl-opt-in-partial) | One resident Node/V8 arena supports explicit checked reload, cooperative Linux paired-rename watch, optional before-execution selected-byte verification, old Program preservation, Core zero-owner table-span retirement/reuse, and separately selected declared-module snapshots with current bound-adapter policy. Scoped source/guest regressions do not establish complete LIVE-01–10 acceptance or source-bound proof. |
+| [Guarded live REPL](#guarded-live-repl-opt-in-partial) | One resident Node/V8 arena supports explicit checked reload, cooperative Linux paired-rename watch, optional before-execution selected-byte verification, old Program preservation, Core zero-owner table-span retirement/reuse, and separately selected declared-module snapshots with host-only exact binding revocation. Scoped source/guest regressions do not establish complete LIVE-01–10 acceptance or source-bound proof. |
 | [Declared modules](specs/ROADMAP.md#dxm1-selected-declared-modules-bounded-acceptance-complete) | Opt-in opaque types, two-constructor variants, versioned session-local modules, imports and exports, and an explicit typed `test.emit` adapter. Available through `compile` and framed `session`. |
 | [Local typed Worker Send](verification/worker-send/test.mjs) | Separate opt-in source-checked pure worker transition and host-selected WIT Send grant with local Unix datagram/cancellation controls; no canonical WORKER or MW1/MW2 acceptance. |
 | Worker Program test host | A separate source-bound `own<program>` I64 WIT guest can request a finite synthetic `test.emit` ledger only after the built-in host explicitly issues its checked installed cell. `noble worker program test-host emit|emit-wrong|emit-ledger-denied|emit-request-denied|emit-panic|emit-revoked|wit-export|core-export` accepts only exact built-in fixture source bytes on bounded stdin: the trusted fixture owner, binding, destination and epoch are selected before reading candidate input; arbitrary checked source is denied without issuing. It accepts no grant or destination document, and denies WIT and Core export independently. The donor's unchanged ledger-byte control observed four real appends then denied the fifth. Its separate host-selected batch used one checked source cell, Store, task and issuer, admitting and consuming a fresh linear owner per iteration; scoped real guest runs observed 512 pure steps from 41 to 553 with zero live owners, and 256 committed 21-byte appends (5,376 bytes) followed by a denied 257th request with no delivered final I64. Between-step cancellation and revocation acknowledged after the first committed append prevented a second request or result. These are donor observations pending execution against this combined successor; issued-cell revocation and caught after-append panic preserve redacted effect counts, and canonical WORKER-01–12 acceptance remains open. |
