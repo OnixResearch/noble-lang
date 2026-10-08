@@ -56,7 +56,12 @@ function run(name, mode, submit, selectedGrant, expectedStatus = 0) {
   assert.equal(report.schema, 'noble-worker-send-wit-integration/v1', name);
   assert.equal(report.first_guest.outcome, 'normal', name);
   assert.equal(report.cancel_guest.outcome, 'normal', name);
-  assert.equal(report.first_guest.source_sha256, report.cancel_guest.source_sha256, name);
+  assert.equal(report.source_sha256, selectedSourceSha256,
+    `${name}: host selected a different checked guest source`);
+  assert.equal(report.first_guest.source_sha256, selectedSourceSha256,
+    `${name}: Submit did not execute the selected checked source`);
+  assert.equal(report.cancel_guest.source_sha256, selectedSourceSha256,
+    `${name}: Cancelled did not execute the same checked source`);
   assert.equal(report.host.external_send_outcome, 'not-attempted', name);
   assert.equal(report.host.external_rollback_claimed, false, name);
   return report;
@@ -86,9 +91,10 @@ assert.equal(cancelled.host.task_retired, 1);
 assert.equal(cancelled.host.resource_retired, 1);
 assert.equal(cancelled.host.late_completion_retired, true);
 assert.equal(cancelled.host.successful_result_deliveries, 0);
-for (const [name, mode] of [
-  ['injected receiver error', 'inject-receive-error'],
-  ['injected receiver corruption', 'inject-receive-corruption'],
+for (const [name, mode, diagnostic] of [
+  ['injected receiver error', 'inject-receive-error', /native receiver read failed/],
+  ['injected receiver corruption', 'inject-receive-corruption',
+    /native receiver did not observe exact authorized Send/],
 ]) {
   // Both modes perform the actual selected native Send. The test host alone
   // consumes or corrupts its receipt after join, not the guest or the wire.
@@ -108,8 +114,7 @@ for (const [name, mode] of [
   assert.equal(fault.host.task_reserved_bytes, 0, name);
   assert.equal(fault.host.successful_result_deliveries, 0, name);
   assert.equal(fault.host.native_error, null, name);
-  assert.ok(typeof fault.native_completion_diagnostic === 'string'
-    && fault.native_completion_diagnostic.length > 0, name);
+  assert.match(fault.native_completion_diagnostic, diagnostic, name);
 }
 for (const [name, submit, selection] of [
   ['no-grant', selected('submit.json'), deniedGrant],
