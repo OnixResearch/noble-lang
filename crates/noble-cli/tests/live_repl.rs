@@ -1011,7 +1011,8 @@ fn declared_old_code_retires_after_last_nested_program_then_reimports_exact_old_
         Some("declared-publish") => "declared-publish",
         _ => "unknown",
     };
-    assert!(startup_outcome == "reload-committed",
+    assert!(original.get("schema").and_then(Value::as_str) == Some("noble-live-report/v1")
+        && startup_stage == "wasm-live" && startup_outcome == "reload-committed",
         "synthetic m@1 startup stage={startup_stage}, outcome={startup_outcome}, phase={startup_phase}");
     live_ack(&original, &[]);
     let generation = number_field(&original, "generation");
