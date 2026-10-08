@@ -290,6 +290,85 @@ fn number_field(report: &Value, key: &str) -> u64 {
         .unwrap_or_else(|| panic!("missing unsigned {key}: {report}"))
 }
 
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+struct LiveBarrier {
+    directory: PathBuf,
+    point: &'static str,
+    expected: String,
+    reached: Receiver<Result<String, String>>,
+    reached_channel: File,
+    release_channel: File,
+    reader: Option<std::thread::JoinHandle<()>>,
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+impl LiveBarrier {
+    fn new(
+        directory: &Path,
+        point: &'static str,
+        expected: &str,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        use std::os::unix::ffi::OsStrExt;
+        for name in ["reached", "release"] {
+            let path = directory.join(name);
+            let path = std::ffi::CString::new(path.as_os_str().as_bytes())?;
+            if unsafe { libc::mkfifo(path.as_ptr(), 0o600) } != 0 {
+                return Err(std::io::Error::last_os_error().into());
+            }
+        }
+        // Linux FIFO O_RDWR opens without a rendezvous race. Both ends stay
+        // owned by this test until a real guest sends its exact event.
+        let reached_channel = std::fs::OpenOptions::new().read(true).write(true)
+            .open(directory.join("reached"))?;
+        let release_channel = std::fs::OpenOptions::new().read(true).write(true)
+            .open(directory.join("release"))?;
+        let reader_file = reached_channel.try_clone()?;
+        let (sender, reached) = mpsc::channel();
+        let reader = std::thread::spawn(move || {
+            let mut event = String::new();
+            let result = BufReader::new(reader_file).read_line(&mut event)
+                .map(|_| event).map_err(|error| error.to_string());
+            let _ = sender.send(result);
+        });
+        Ok(Self {
+            directory: directory.to_path_buf(), point, expected: expected.to_owned(),
+            reached, reached_channel, release_channel, reader: Some(reader),
+        })
+    }
+
+    fn configure(&self, command: &mut Command) {
+        command.env("NOBLE_LIVE_TEST_BARRIER_DIR", &self.directory)
+            .env("NOBLE_LIVE_TEST_BARRIER_POINT", self.point)
+            .env("NOBLE_LIVE_TEST_BARRIER_EXPECTED", &self.expected);
+    }
+
+    fn wait(&self) -> Result<Value, Box<dyn std::error::Error>> {
+        let line = self.reached.recv_timeout(DEADLINE)??;
+        let event: Value = serde_json::from_str(&line)?;
+        assert_eq!(text_field(&event, "point"), self.point);
+        assert_eq!(text_field(&event, "matched"), self.expected);
+        Ok(event)
+    }
+
+    fn release(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.release_channel.write_all(b"R")?;
+        self.release_channel.flush()?;
+        Ok(())
+    }
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+impl Drop for LiveBarrier {
+    fn drop(&mut self) {
+        // A failing assertion may precede guest entry. Wake the bounded
+        // reader so the suite never leaves a private test thread blocked.
+        let _ = (&self.reached_channel).write_all(b"{}\n");
+        if let Some(reader) = self.reader.take() {
+            let _ = reader.join();
+        }
+    }
+}
+
 fn text_field<'a>(report: &'a Value, key: &str) -> &'a str {
     report
         .get(key)
@@ -1969,4 +2048,184 @@ fn interpreter_choice_refuses_at_startup_without_v8_fallback()
         }
         std::thread::sleep(Duration::from_millis(20));
     }
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn old_active_wasm_frame_finishes_before_queued_reload_ack()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ self.generation drop 1 + ]")?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "in-flight-generation", "1")?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "repl", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8", "--self-edit", "addone", "--expect-generation", "1"]);
+    barrier.configure(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let (old_generation, old_sha256) = live_ack(&live.report()?, &[]);
+    assert_eq!(old_generation, 1);
+    let grant = live.report()?;
+    assert_eq!(text_field(&grant, "outcome"), "grant-selected", "{grant}");
+    assert_eq!(text_field(&grant, "name"), "addone");
+
+    // No source mutation or queued reload before the actual Wasm frame
+    // reaches its host import. The child cannot finish this invocation until
+    // the test explicitly releases the private FIFO.
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(b"20 addone\n")?;
+    stdin.flush()?;
+    let frame = barrier.wait()?;
+    assert_eq!(text_field(&frame, "source_generation"), "1");
+    assert_eq!(frame["guest_frame_active"], true, "{frame}");
+    fixture.replace("def addone [ self.generation drop 2 + ]")?;
+    stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
+    stdin.flush()?;
+    barrier.release()?;
+
+    let old = live.report()?;
+    normal(&old, &["21"]);
+    assert_eq!(number_field(&old, "source_generation"), old_generation);
+    assert!(number_field(&old, "guest_requests") >= 1, "{old}");
+    assert!(old["request_trace"].as_array()
+        .ok_or("old frame omitted guest request trace")?
+        .iter().any(|entry| entry == "live.observe-generation:1"), "{old}");
+    let ack = live.report()?;
+    let (new_generation, new_sha256) = live_ack(&ack, &["21"]);
+    assert_eq!(new_generation, old_generation + 1);
+    assert_ne!(new_sha256, old_sha256);
+    assert_eq!(number_field(&ack, "guest_requests"), 0);
+    let regrant = live.submit(":grant-self-edit addone 2")?;
+    assert_eq!(text_field(&regrant, "outcome"), "grant-selected", "{regrant}");
+    assert_eq!(number_field(&regrant, "source_generation"), new_generation);
+    let new = live.submit("20 addone")?;
+    normal(&new, &["21", "22"]);
+    assert_eq!(number_field(&new, "source_generation"), new_generation);
+    println!("{}", serde_json::json!({
+        "case": "old-active-frame-queued-reload",
+        "barrier_guest_frame_active": frame["guest_frame_active"],
+        "old_source_sha256": old_sha256,
+        "old_source_generation": old_generation,
+        "new_source_sha256": new_sha256,
+        "ack_generation": new_generation,
+        "old_guest_value": old["stack"][0]["value"],
+        "new_guest_value": new["stack"][1]["value"],
+    }));
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack()
+-> Result<(), Box<dyn std::error::Error>> {
+    use std::os::fd::AsRawFd;
+
+    // These are SHA-256 digests of precisely the two byte strings below
+    // (without trailing newlines), not values produced by the worker hook.
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    const B: &str = "def addone [ 3 + ]";
+    const B_SHA256: &str = "eb81fb3297b696317d1de013abdf5423a31c3708443b1d1a3d8977e0bf5e92e2";
+    const MMAP_DRIFT: &str = "def addone [ 9 + ]";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "candidate-compiled", A_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "watch", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    barrier.configure(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let (initial_generation, _) = live_ack(&live.report()?, &[]);
+    fixture.replace(A)?;
+    let staged_a = barrier.wait()?;
+    assert_eq!(text_field(&staged_a, "source_generation"),
+        initial_generation.to_string());
+    assert_eq!(staged_a["guest_frame_active"], false, "{staged_a}");
+    assert_eq!(staged_a["checked_wasm_module"], true, "{staged_a}");
+    // A's checked WebAssembly.Module now exists, while stage_binary has not
+    // replied. This second complete, fsynced atomic save must defeat A's
+    // selected-file/sequence CAS and be the only accepted watch ACK.
+    fixture.replace(B)?;
+    File::open(&fixture.directory)?.sync_all()?;
+    barrier.release()?;
+    let mut b_ack = None;
+    for _ in 0..4 {
+        let report = live.report()?;
+        match text_field(&report, "outcome") {
+            "reload-refused" => {
+                assert_eq!(refused_reload(&report, &[]), initial_generation);
+                assert!(text_field(&report, "diagnostic").contains("superseded"),
+                    "staged A must be discarded: {report}");
+            }
+            "watch-superseded" => {
+                assert_ne!(text_field(&report, "source_sha256"), A_SHA256,
+                    "A was published despite B's completed rename: {report}");
+            }
+            "reload-committed" => {
+                assert_eq!(text_field(&report, "source_sha256"), B_SHA256,
+                    "only candidate B can be acknowledged: {report}");
+                b_ack = Some(report);
+                break;
+            }
+            other => panic!("unexpected report while A was superseded: {other}: {report}"),
+        }
+    }
+    let ack = b_ack.ok_or("candidate B received no ACK after A was staged")?;
+    let generation = number_field(&ack, "generation");
+    assert_eq!(generation, initial_generation + 1);
+    assert!(number_field(&ack, "watch_sequence") >= 2, "{ack}");
+    assert_eq!(text_field(&ack, "source_freshness"), "matched-at-watch-ack-check");
+    assert_eq!(number_field(&ack, "guest_requests"), 0);
+
+    // An in-place partial write and a noncooperative MAP_SHARED modification
+    // do not form watched complete saves. Both must fail the selected-byte
+    // gate, retain B's ACKed generation, and execute zero guest requests.
+    fs::write(&fixture.source, "def addone [ 4 +")?;
+    let partial = live.submit("20 addone")?;
+    assert_source_change_refused(&partial, generation, &[], B_SHA256);
+    let partial_sha256 = text_field(&partial, "observed_source_sha256").to_owned();
+    assert_eq!(partial_sha256.len(), 64);
+    assert_ne!(partial_sha256, B_SHA256);
+    fs::write(&fixture.source, B)?;
+    assert_eq!(B.len(), MMAP_DRIFT.len());
+    let mapped = File::options().read(true).write(true).open(&fixture.source)?;
+    let address = unsafe { libc::mmap(
+        std::ptr::null_mut(), MMAP_DRIFT.len(), libc::PROT_READ | libc::PROT_WRITE,
+        libc::MAP_SHARED, mapped.as_raw_fd(), 0,
+    ) };
+    if address == libc::MAP_FAILED {
+        return Err(std::io::Error::last_os_error().into());
+    }
+    unsafe {
+        std::ptr::copy_nonoverlapping(
+            MMAP_DRIFT.as_ptr(), address.cast::<u8>(), MMAP_DRIFT.len(),
+        );
+    }
+    let sync = unsafe { libc::msync(address, MMAP_DRIFT.len(), libc::MS_SYNC) };
+    let sync_error = std::io::Error::last_os_error();
+    let unmap = unsafe { libc::munmap(address, MMAP_DRIFT.len()) };
+    if sync != 0 { return Err(sync_error.into()); }
+    if unmap != 0 { return Err(std::io::Error::last_os_error().into()); }
+    mapped.sync_all()?;
+    let mmap = live.submit("20 addone")?;
+    assert_source_change_refused(&mmap, generation, &[], B_SHA256);
+    let mmap_sha256 = text_field(&mmap, "observed_source_sha256").to_owned();
+    assert_eq!(mmap_sha256.len(), 64);
+    assert_ne!(mmap_sha256, B_SHA256);
+    assert_ne!(mmap_sha256, partial_sha256);
+    fs::write(&fixture.source, B)?;
+    let after_restore = live.submit("20 addone")?;
+    normal(&after_restore, &["23"]);
+    assert_eq!(number_field(&after_restore, "source_generation"), generation);
+    let inspected = live.submit(":generation")?;
+    assert_generation_inspection(&inspected, generation, &after_restore["stack"]);
+    println!("{}", serde_json::json!({
+        "case": "staged-candidate-superseded-by-complete-rename",
+        "compiled_candidate_a_sha256": A_SHA256,
+        "accepted_candidate_b_sha256": B_SHA256,
+        "watch_sequence": number_field(&ack, "watch_sequence"),
+        "ack_generation": generation,
+        "partial_in_place_sha256": partial_sha256,
+        "noncooperative_mmap_sha256": mmap_sha256,
+        "restored_source_generation": number_field(&after_restore, "source_generation"),
+        "guest_value": after_restore["stack"][0]["value"],
+    }));
+    live.finish()
 }

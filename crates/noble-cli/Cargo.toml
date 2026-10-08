@@ -9,6 +9,11 @@ default-run = "noble"
 name = "noble"
 path = "src/main.rs"
 
+[features]
+# Test-only synchronization of real CLI/worker safepoints; never shipped by
+# the default binary and never changes admission, policy, or guest bytes.
+live-test-barrier = []
+
 [dependencies]
 noble-kernel = { path = "../noble-kernel" }
 noble-contracts = { path = "../noble-contracts" }

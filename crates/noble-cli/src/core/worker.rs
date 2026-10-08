@@ -4,11 +4,21 @@ mod process;
 mod protocol;
 
 const NODE: &str = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node";
+#[cfg(not(feature = "live-test-barrier"))]
 const HOST: &str = concat!(
     include_str!("runtime/preamble.mjs"),
     include_str!("runtime/values.mjs"),
     include_str!("runtime/engine-host.mjs"),
     include_str!("runtime/engine.mjs"),
+    include_str!("runtime/protocol.mjs"),
+);
+#[cfg(feature = "live-test-barrier")]
+const HOST: &str = concat!(
+    include_str!("runtime/preamble.mjs"),
+    include_str!("runtime/values.mjs"),
+    include_str!("runtime/engine-host.mjs"),
+    include_str!("runtime/engine.mjs"),
+    include_str!("runtime/live-test-barrier.mjs"),
     include_str!("runtime/protocol.mjs"),
 );
 const SLOT_HOST: &str = concat!(
@@ -606,6 +616,22 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
             count += 1;
         }
         command.env("NOBLE_SLOT_SOURCE_PARTS", count.to_string());
+    }
+    #[cfg(feature = "live-test-barrier")]
+    if !slot {
+        // Only a deliberately feature-built test binary can propagate this
+        // private one-shot FIFO barrier into its otherwise env-cleared worker.
+        // The hook delays a real guest or candidate, never grants authority
+        // or changes source/byte admission.
+        for key in [
+            "NOBLE_LIVE_TEST_BARRIER_DIR",
+            "NOBLE_LIVE_TEST_BARRIER_POINT",
+            "NOBLE_LIVE_TEST_BARRIER_EXPECTED",
+        ] {
+            if let Some(value) = std::env::var_os(key) {
+                command.env(key, value);
+            }
+        }
     }
     if let Some(control) = child_control {
         command.env("NOBLE_SLOT_CONTROL_FD", "2");
