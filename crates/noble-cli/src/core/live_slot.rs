@@ -28,6 +28,9 @@ fn selected_origin_json(
                 json!({"kind":"compose","node":node.0,"table_entry":table_entry,
                     "left":result(left),"right":{"kind":"static-program","node":right_node.0,
                         "program_index":right_program_index}}),
+            OriginProgramValue::ComposeDynamic { node, table_entry, left, right } =>
+                json!({"kind":"compose-dynamic","node":node.0,"table_entry":table_entry,
+                    "left":result(left),"right":result(right)}),
         }
     }
     if target["definition_index"] != origin.definition_id.index()
@@ -164,6 +167,7 @@ struct Authority {
 struct Candidate {
     input: Vec<Ty>,
     output: Vec<String>,
+    source_sha256: String,
     artifact_sha256: String,
     handle: u32,
     span: noble_wasm::source::CodeSpan,
@@ -197,6 +201,19 @@ struct ProgramOwner {
     source_id: Option<String>,
     program_index: Option<usize>,
     descriptor: String,
+    composite: Option<CompositeOwner>,
+    composite_missing_core: bool,
+}
+
+#[derive(Clone)]
+struct CompositeOwner {
+    caller_id: String,
+    position: usize,
+    handle: u32,
+    inputs: Vec<Value>,
+    saved_cell: Value,
+    identity: Value,
+    manifest: Value,
 }
 
 struct ReplayOwner {
@@ -244,6 +261,7 @@ struct Host {
     definitions: BTreeMap<String, String>,
     replays: BTreeMap<String, ReplayOwner>,
     programs: BTreeMap<String, ProgramOwner>,
+    native_core_owner: Option<String>,
     control: Arc<ControlPolicy>,
     active: Arc<AtomicBool>,
     started: Arc<(Mutex<u64>, Condvar)>,
@@ -350,6 +368,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         definitions: BTreeMap::new(),
         replays: BTreeMap::new(),
         programs: BTreeMap::new(),
+        native_core_owner: None,
         control,
         active,
         started,
@@ -1647,11 +1666,12 @@ impl Host {
         if result["outcome"] != "installed" { return Ok(result); }
         let artifact_sha256 = match text(&result, "artifact_sha256", 64) {
             Ok(digest) if digest.len() == 64
+                && digest == message["binary_sha256"].as_str().unwrap_or_default()
                 && digest.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) =>
                 digest.to_owned(),
             _ => {
                 self.poisoned = true;
-                return Err(reject("worker omitted checked installed artifact identity"));
+                return Err(reject("worker omitted or mismatched independently checked installed artifact identity"));
             }
         };
         let handle = match uint(&result, "handle") {
@@ -1680,10 +1700,13 @@ impl Host {
         let installed_id = id.clone();
         self.candidates.insert(id, Candidate {
             input:typed, output,
-            artifact_sha256, handle,
+            source_sha256:source_hash, artifact_sha256, handle,
             span, root_index, programs,
             selected_origin,
         });
+        if span.generation == 1 && self.candidates[&installed_id].selected_origin.is_some() {
+            self.native_core_owner = Some(installed_id.clone());
+        }
         let mut state = self.control.state.lock().map_err(|_| {
             self.poisoned = true;
             reject("operator candidate catalog failed after install")
@@ -1737,12 +1760,77 @@ impl Host {
         Ok(message)
     }
 
-    fn publication(&self, request: &Value, op: &str) -> Result<Value, String> {
+    fn checked_composite_for_publication(&mut self, owner: &str) -> Result<Value, String> {
+        let saved = self.programs.get(owner).and_then(|row| row.composite.clone())
+            .ok_or_else(|| reject("saved dynamic target lacks a checked composite code donor manifest"))?;
+        // Re-read the retained owner and recompute the descriptor from trusted
+        // source/compiler/install records, not a claim in the operator request.
+        let inspected = self.send(&json!({"operation":"inspect-saved-program","owner":owner}), &[])?;
+        let graph = origin::checked_saved_owner_inspection(owner, saved.handle, &inspected)?;
+        let caller = self.candidates.get(&saved.caller_id)
+            .ok_or_else(|| reject("selected static code donor was retired"))?;
+        let core_id = self.native_core_owner.as_ref()
+            .ok_or_else(|| reject("selected native core code donor is unavailable"))?;
+        let core = self.candidates.get(core_id)
+            .ok_or_else(|| reject("selected native core code donor was retired"))?;
+        let selected = caller.selected_origin.as_ref()
+            .ok_or_else(|| reject("selected caller lost independently checked source lineage"))?;
+        let descriptor = caller.output.get(saved.position)
+            .ok_or_else(|| reject("selected target output index is no longer checked"))?;
+        let mut identity = origin::anonymous_target_identity(&selected.checked_metadata,
+            &caller.programs, saved.position, descriptor, &saved.saved_cell,
+            graph, &saved.inputs)?
+            .ok_or_else(|| reject("selected target source/graph shape changed before publication"))?;
+        let manifest = origin::alias_code_donor_manifest(owner, saved.handle,
+            &saved.caller_id, caller, core_id, core, saved.position, descriptor,
+            &identity, graph, &saved.inputs)?
+            .ok_or_else(|| reject("saved dynamic target lacks a checked alias code donor manifest"))?;
+        identity["artifact_sha256"] = manifest["manifest_sha256"].clone();
+        identity["artifact_format"] = json!("noble-live-slot-composite-code-donors/v1");
+        identity["artifact_manifest"] = manifest["descriptor"].clone();
+        if identity != saved.identity || manifest != saved.manifest {
+            return Err(reject("selected returned target or immutable code donor changed before publication"));
+        }
+        Ok(manifest)
+    }
+
+    fn publication(&mut self, request: &Value, op: &str) -> Result<Value, String> {
         let slot = id(request, "slot")?;
         self.require_grant(op, Some(&slot), None)?;
-        let contract = self.authority.slots.get(&slot).ok_or_else(|| reject("unregistered selected slot contract"))?;
+        let contract = self.authority.slots.get(&slot)
+            .ok_or_else(|| reject("unregistered selected slot contract"))?.clone();
         if contract.proof_required {
             return Err(reject("proof-required slot lacks independently checked target evidence"));
+        }
+        if request.get("owner").is_some() && request.get("id").is_some() {
+            return Err(reject("publish requires exactly one checked candidate or saved Program owner"));
+        }
+        if let Some(owner) = request.get("owner") {
+            let owner = owner.as_str().ok_or_else(|| reject("invalid saved Program owner"))?;
+            let saved = self.programs.get(owner)
+                .ok_or_else(|| reject("unknown saved checked Program owner"))?;
+            if saved.source_id.is_none() && saved.program_index.is_none() {
+                if request.get("program_index").is_some() {
+                    return Err(reject("saved owner publication cannot select a different Program index"));
+                }
+                if saved.composite_missing_core {
+                    return Err(reject("selected native core code donor lacks first-generation binary attestation"));
+                }
+                if let Some(selected) = saved.composite.as_ref() {
+                    let identity = &selected.identity["interface"];
+                    if identity["input"] != json!(contract.input)
+                        || identity["output"] != json!(contract.output)
+                        || identity["effects"] != json!(Vec::<String>::new()) {
+                        return Err(reject("checked returned target differs from selected slot interface or effect ceiling"));
+                    }
+                    let manifest = self.checked_composite_for_publication(owner)?;
+                    let message = json!({"operation":op,"slot":slot,"owner":owner,
+                        "target_manifest":manifest,"proof_required":false,
+                        "interface":{"input":contract.input,"output":contract.output,
+                            "effectCeiling":contract.ceiling,"proofRequired":false}});
+                    return self.cas(request, message);
+                }
+            }
         }
         let (input, output, effects, selected_field, selected_index) =
             match (request.get("id"), request.get("owner")) {
@@ -1965,6 +2053,7 @@ impl Host {
                     || !owner.is_ascii()
                     || self.programs.insert(owner.to_owned(), ProgramOwner {
                         source_id, program_index, descriptor:descriptor.clone(),
+                        composite:None, composite_missing_core:false,
                     }).is_some() {
                     self.poisoned = true;
                     return Err(reject("worker returned duplicate or invalid saved Program owner"));
@@ -1995,6 +2084,31 @@ impl Host {
                 &origin.checked_metadata, &candidate.programs, position,
                 &candidate.output[position], cell, graph, inputs)?
                 .ok_or_else(|| reject("checked anonymous target shape changed during inspection"))?;
+            let core = self.native_core_owner.as_ref()
+                .and_then(|id| self.candidates.get(id).map(|candidate| (id, candidate)));
+            let manifest = if let Some((core_id, core)) = core {
+                origin::alias_code_donor_manifest(&owner, saved_handle, module_id,
+                    candidate, core_id, core, position, &candidate.output[position],
+                    &identity, graph, inputs)?
+            } else { None };
+            let is_alias = identity["interface"]["input"] == json!(["I64","I64"])
+                && identity["interface"]["output"] == json!(["I64"])
+                && inputs.len() == 2;
+            let mut identity = identity;
+            let saved = self.programs.get_mut(&owner)
+                .ok_or_else(|| reject("selected saved Program owner vanished during inspection"))?;
+            if let Some(manifest) = manifest {
+                identity["artifact_sha256"] = manifest["manifest_sha256"].clone();
+                identity["artifact_format"] = json!("noble-live-slot-composite-code-donors/v1");
+                identity["artifact_manifest"] = manifest["descriptor"].clone();
+                saved.composite = Some(CompositeOwner {
+                    caller_id: module_id.to_owned(), position, handle:saved_handle,
+                    inputs:inputs.to_vec(), saved_cell:cell.clone(),
+                    identity:identity.clone(), manifest,
+                });
+            } else if is_alias {
+                saved.composite_missing_core = true;
+            }
             report["stack"][position]["target_identity"] = identity;
         }
         Ok(())

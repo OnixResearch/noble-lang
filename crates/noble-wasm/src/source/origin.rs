@@ -162,13 +162,27 @@ fn returned_outputs(
                 }), depth: 1 });
             }
             Action::Word(9) => {
-                let Value::Static { node: right_node, program: right_program_index } = stack.pop()?
-                else { return None; };
+                let right = stack.pop()?;
                 let (left, depth) = dynamic(stack.pop()?)?;
                 if depth >= MAX_ORIGIN_DEPTH { return None; }
-                stack.push(Value::Dynamic { result: Box::new(OriginProgramValue::Compose {
-                    node: operation.node, table_entry, left, right_node, right_program_index,
-                }), depth: depth + 1 });
+                let result = match right {
+                    Value::Static { node: right_node, program: right_program_index } =>
+                        OriginProgramValue::Compose {
+                            node: operation.node, table_entry, left, right_node, right_program_index,
+                        },
+                    Value::Dynamic { result: right, depth: 1 } if depth == 1
+                        && matches!(left.as_ref(), OriginProgramValue::QuoteI64 {
+                            operand: OriginI64::RootInput(_), ..
+                        })
+                        && matches!(right.as_ref(), OriginProgramValue::QuoteI64 {
+                            operand: OriginI64::RootInput(_), ..
+                        }) =>
+                        OriginProgramValue::ComposeDynamic {
+                            node: operation.node, table_entry, left, right,
+                        },
+                    _ => return None,
+                };
+                stack.push(Value::Dynamic { result: Box::new(result), depth: depth + 1 });
             }
             _ => return None,
         }
