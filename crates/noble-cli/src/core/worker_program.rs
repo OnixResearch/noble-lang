@@ -16,23 +16,10 @@ const RECIPE_DEPTH_LIMIT: u32 = 32;
 const RECIPE_LEAF_LIMIT: u32 = 256;
 const PACKAGE_BYTES: usize = 262_144;
 const PACKAGE_DEPTH: usize = 32;
+const RUNTIME_REQUEST_WORK: usize = 50_000_000;
 const PACKAGE_REVISION: &str = "0.1.0-draft.9";
 const WIT_WORLD: &str = "noble-test:worker-program/guest@2.0.0";
 static NEXT_INSTANCE: AtomicU64 = AtomicU64::new(1);
-
-/// The host, never package source, selects this exact operation contract.
-#[derive(Clone, Copy)]
-pub(crate) enum HostContract {
-    TestEmitV1,
-}
-
-impl HostContract {
-    fn effects(self) -> EffSet {
-        match self {
-            Self::TestEmitV1 => EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT]),
-        }
-    }
-}
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum Refusal {
@@ -82,12 +69,13 @@ impl Owner {
 
 /// A host-selected, exact destination grant. Source/program/package bytes
 /// cannot construct this value; code using it must authenticate the grant.
+#[cfg(test)]
 #[derive(Clone, Copy)]
-pub(crate) struct ExportGrant<'a> {
-    pub(crate) destination: &'a str,
-    pub(crate) source_sha256: &'a str,
-    pub(crate) capture_sha256: &'a str,
-    pub(crate) allowed: bool,
+struct ExportGrant<'a> {
+    destination: &'a str,
+    source_sha256: &'a str,
+    capture_sha256: &'a str,
+    allowed: bool,
 }
 
 /// A Program's graph index and its *adapted* interface witness are distinct.
@@ -110,8 +98,6 @@ pub(crate) struct Store {
     closure: Vec<Owner>,
     text_aliases: Vec<CheckedTextAlias>,
     attested_capture_hash: Option<[u8; 32]>,
-    host_contract: Option<HostContract>,
-    selected_effects: EffSet,
     nodes: Vec<Node>,
     witnesses: Vec<Witness>,
     work_left: usize,
@@ -120,16 +106,24 @@ pub(crate) struct Store {
 impl Store {
     /// Check the named root and independently emit the actual selected Wasm.
     /// No runtime builder below calls a source compiler or executes guest code.
-    pub(crate) fn prepare(source: &[u8], name: &str, input: &[Ty],
-                          contract: Option<HostContract>, work: usize)
+    pub(crate) fn prepare(source: &[u8], name: &str, input: &[Ty], work: usize)
         -> Result<(Self, Handle), Refusal> {
         if source.len() > SOURCE_LIMITS.bytes as usize || input.len() > 64 || name.len() > 128
             || !name.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'_') {
             return Err(Refusal::Exhausted);
         }
+        // Reserve from one request meter: module check, selected invocation
+        // check and Wasm compilation cannot each refresh a full 3M allowance.
+        let stage_work = u32::try_from((work / 4).min(SOURCE_LIMITS.work as usize))
+            .map_err(|_| Refusal::Exhausted)?;
+        if stage_work == 0 { return Err(Refusal::Exhausted) }
+        let limits = noble_contracts::Limits { work: stage_work, ..SOURCE_LIMITS };
+        let reserved = usize::try_from(stage_work).map_err(|_| Refusal::Exhausted)?
+            .checked_mul(3).ok_or(Refusal::Exhausted)?;
+        let mut work_left = work.checked_sub(reserved).ok_or(Refusal::Exhausted)?;
         let session = noble_contracts::source::ModuleSession::new(&[])
-            .map_err(|_| Refusal::Invalid)?;
-        let module = session.prepare(source, &[], SOURCE_LIMITS).map_err(|_| Refusal::Invalid)?;
+            .map_err(source_refusal)?;
+        let module = session.prepare(source, &[], limits).map_err(source_refusal)?;
         if module.kind() != noble_contracts::source::ModuleKind::Module
             || module.proof_obligations().is_some() || !module.bindings().is_empty() {
             return Err(Refusal::Unsupported);
@@ -137,12 +131,15 @@ impl Store {
         let owner = module.checked_program_owner(name).ok_or(Refusal::Invalid)?;
         let closure = module.checked_program_closure(name).ok_or(Refusal::Invalid)?;
         if closure.is_empty() { return Err(Refusal::Invalid) }
+        work_left = work_left.checked_sub(source.len())
+            .and_then(|left| left.checked_sub(closure.len().checked_mul(8)?))
+            .ok_or(Refusal::Exhausted)?;
         let (_, module_name, version) = module.resolved_module().ok_or(Refusal::Invalid)?;
         let (session, committed) = session.commit(module);
-        committed.map_err(|_| Refusal::Invalid)?;
+        committed.map_err(source_refusal)?;
         let invocation = format!("{module_name}@{version}.{name}");
-        let prepared = session.prepare(invocation.as_bytes(), input, SOURCE_LIMITS)
-            .map_err(|_| Refusal::Invalid)?;
+        let prepared = session.prepare(invocation.as_bytes(), input, limits)
+            .map_err(source_refusal)?;
         let checked_interface = prepared.checked_program_interface(&owner)
             .ok_or(Refusal::Invalid)?;
         let submission = prepared.submission().ok_or(Refusal::Invalid)?;
@@ -155,7 +152,10 @@ impl Store {
             return Err(Refusal::Invalid);
         }
         let compiled = noble_wasm::source::Compiler::new_worker().prepare(submission)
-            .map_err(|_| Refusal::Invalid)?;
+            .map_err(|problem| match problem {
+                noble_wasm::Diagnostic::Exhausted => Refusal::Exhausted,
+                _ => Refusal::Invalid,
+            })?;
         let mut nodes = Vec::with_capacity(closure.len());
         let mut witnesses = Vec::with_capacity(closure.len());
         let mut owners = Vec::with_capacity(closure.len());
@@ -216,8 +216,7 @@ impl Store {
         let root = root.ok_or(Refusal::Invalid)?;
         let instance = NEXT_INSTANCE.fetch_update(Ordering::Relaxed, Ordering::Relaxed,
             |next| next.checked_add(1)).map_err(|_| Refusal::Exhausted)?;
-        let store = Self { selected_effects: contract.map_or_else(EffSet::empty, HostContract::effects),
-            instance,
+        let store = Self { instance,
             checked_interface,
             source: source.to_vec(), root_name: name.to_owned(),
             root_owner: Owner { module_id: owner.module_identity(),
@@ -225,8 +224,7 @@ impl Store {
                 identity: owner.definition_identity() },
             root_index: root,
             closure: owners, text_aliases, attested_capture_hash: None,
-            host_contract: contract,
-            nodes, witnesses, compiled, work_left: work };
+            nodes, witnesses, compiled, work_left };
         Ok((store, Handle { instance, node: root, witness: root }))
     }
 
@@ -339,8 +337,7 @@ impl Store {
             "selected_graph_blake3":self.selected_graph_blake3(handle.node)?,
             "definitions":definitions,
             "interface":{"input":["I64"],"output":["I64"],"effects":[]},
-            "host_contracts":self.host_contract.map_or_else(Vec::new,
-                |_| vec!["test.emit@1.0.0"]),
+            "host_contracts":[],
             "captures":captures,
             "capture_binding_blake3":capture_binding_blake3,
             "artifact":null
@@ -349,7 +346,8 @@ impl Store {
 
     /// Authorization precedes even package construction/serialization.
     /// A grant to another destination or capture digest never transfers.
-    pub(crate) fn export(&mut self, handle: Handle, destination: &str,
+    #[cfg(test)]
+    fn export(&mut self, handle: Handle, destination: &str,
                          grant: &ExportGrant<'_>) -> Result<Vec<u8>, Refusal> {
         let captures = serde_json::to_vec(&self.capture_wire()?)
             .map_err(|_| Refusal::Invalid)?;
@@ -358,10 +356,15 @@ impl Store {
             || grant.capture_sha256 != crate::workflow::intrinsic::sha256(&captures) {
             return Err(Refusal::Invalid);
         }
-        self.charge(1)?;
+        let package_work = self.nodes.len().checked_mul(16)
+            .and_then(|count| count.checked_add(self.source.len()))
+            .and_then(|count| count.checked_add(captures.len()))
+            .ok_or(Refusal::Exhausted)?;
+        self.charge(package_work)?;
         if !self.text_aliases.is_empty() {
+            self.reserve_attestation()?;
             self.attested_capture_hash = Some(super::worker_program_guest::attest(self, handle)
-                .map_err(|_| Refusal::Invalid)?);
+                .map_err(runtime_refusal)?);
         }
         let package = self.package(handle)?;
         let encoded = serde_json::to_vec(&package).map_err(|_| Refusal::Invalid)?;
@@ -370,9 +373,9 @@ impl Store {
     }
 
     /// Import never accepts a package's digest, flags or artifact as proof:
-    /// compare every bounded field with a newly checked, emitted source
-    /// package under the independently selected host contract.
-    pub(crate) fn import(bytes: &[u8], contract: Option<HostContract>, work: usize)
+    /// compare every bounded field with a newly checked, emitted pure source
+    /// package. Nonempty host contracts have no issuer and do not import.
+    pub(crate) fn import(bytes: &[u8], work: usize)
         -> Result<(Self, Handle), Refusal> {
         if bytes.len() > PACKAGE_BYTES { return Err(Refusal::Exhausted) }
         let mut depth = 0usize;
@@ -430,7 +433,7 @@ impl Store {
         }
         let source = document["source_utf8"].as_str().ok_or(Refusal::Invalid)?;
         let name = document["root"]["name"].as_str().ok_or(Refusal::Invalid)?;
-        let (mut store, _root) = Self::prepare(source.as_bytes(), name, &[Ty::I64], contract, remaining)?;
+        let (mut store, _root) = Self::prepare(source.as_bytes(), name, &[Ty::I64], remaining)?;
         let graph = document["graph"].as_array().ok_or(Refusal::Invalid)?;
         if graph.len() < store.recipe_nodes() { return Err(Refusal::Invalid) }
         if graph.len() > GRAPH_LIMIT { return Err(Refusal::Exhausted) }
@@ -447,9 +450,16 @@ impl Store {
         let selected = document["selected_node"].as_u64()
             .and_then(|index| usize::try_from(index).ok())
             .and_then(|index| store.node_handle(index)).ok_or(Refusal::Invalid)?;
+        let comparison_work = store.recipe_nodes().checked_mul(16)
+            .and_then(|count| count.checked_add(source.len()))
+            .and_then(|count| count.checked_add(bytes.len()))
+            .ok_or(Refusal::Exhausted)?;
+        store.charge(comparison_work)?;
         if !store.text_aliases.is_empty() {
-            store.attested_capture_hash = Some(super::worker_program_guest::attest(&store, selected)
-                .map_err(|_| Refusal::Invalid)?);
+            store.reserve_attestation()?;
+            let attested = super::worker_program_guest::attest(&store, selected)
+                .map_err(runtime_refusal)?;
+            store.attested_capture_hash = Some(attested);
         }
         if store.package(selected)? != document { return Err(Refusal::Invalid) }
         Ok((store, selected))
@@ -458,7 +468,7 @@ impl Store {
     /// A second candidate must be an independently checked reachable named
     /// Program in the same compiled source closure, not a claimed package row.
     pub(crate) fn checked_root(&self, index: usize) -> Option<Handle> {
-        matches!(self.nodes.get(index)?.recipe, Recipe::Named { .. })
+        matches!(&self.nodes.get(index)?.recipe, Recipe::Named { .. })
             .then_some(Handle { instance: self.instance, node: index,
                 witness: self.nodes[index].original })
     }
@@ -503,6 +513,20 @@ impl Store {
         Ok(())
     }
 
+    pub(crate) fn reserve_attestation(&mut self) -> Result<(), Refusal> {
+        self.charge(usize::try_from(super::worker_program_guest::FUEL)
+            .map_err(|_| Refusal::Exhausted)?)
+    }
+
+    pub(crate) fn reserve_guest(&mut self) -> Result<(), Refusal> {
+        let work = usize::try_from(super::worker_program_guest::FUEL)
+            .map_err(|_| Refusal::Exhausted)?
+            .checked_mul(2)
+            .and_then(|fuel| fuel.checked_add(SOURCE_LIMITS.work as usize))
+            .ok_or(Refusal::Exhausted)?;
+        self.charge(work)
+    }
+
     /// Explicit effect inclusion changes only a witness, never a recipe node.
     pub(crate) fn adapt(&mut self, handle: Handle, destination: &EffSet)
         -> Result<Handle, Refusal> {
@@ -510,8 +534,7 @@ impl Store {
         if handle.instance != self.instance { return Err(Refusal::Invalid) }
         self.nodes.get(handle.node).ok_or(Refusal::Invalid)?;
         if current.node != handle.node { return Err(Refusal::Invalid) }
-        if !current.effects.is_subset_of(destination)
-            || !destination.is_subset_of(&self.selected_effects) {
+        if !current.effects.is_subset_of(destination) || !destination.is_empty() {
             return Err(Refusal::Invalid)
         }
         if self.witnesses.len() >= WITNESS_LIMIT { return Err(Refusal::Exhausted) }
@@ -604,64 +627,33 @@ fn refusal(problem: Refusal) -> (&'static str, &'static str) {
     }
 }
 
-fn export(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'static str)> {
-    if arguments.len() != 10 || arguments[4] != "--name"
-        || arguments[6] != "--destination" || arguments[8] != "--authority" {
-        return Err(("invalid-input", "usage: noble worker program export SOURCE --name NAME --destination DEST --authority HOST_GRANT"));
+fn source_refusal(problem: noble_contracts::source::Error) -> Refusal {
+    if problem.diagnostic().kind == noble_contracts::DiagnosticKind::Exhausted {
+        Refusal::Exhausted
+    } else {
+        Refusal::Invalid
     }
-    let name = arguments[5].to_str().ok_or(("invalid-input", "invalid named Program"))?;
-    let destination = arguments[7].to_str().ok_or(("invalid-input", "invalid export destination"))?;
-    if destination.is_empty() || destination.len() > 256 {
-        return Err(("invalid-input", "export destination outside bounded profile"))
+}
+
+fn runtime_refusal(problem: anyhow::Error) -> Refusal {
+    if problem.downcast_ref::<wasmtime::Trap>() == Some(&wasmtime::Trap::OutOfFuel) {
+        Refusal::Exhausted
+    } else {
+        Refusal::Invalid
     }
-    let grant_bytes = super::worker_typed::read_bounded_regular_file(
-        std::path::Path::new(&arguments[9]), 4_096)
-        .map_err(|_| ("invalid-input", "host export grant unavailable"))?;
-    let grant: Value = serde_json::from_slice(&grant_bytes)
-        .map_err(|_| ("invalid-input", "invalid host export grant"))?;
-    if serde_json::to_vec(&grant).map_err(|_| ("invalid-input", "invalid host grant encoding"))?
-        != grant_bytes
-        || grant.as_object().is_none_or(|fields| fields.len() != 5)
-        || grant["format"] != "noble-worker-program-export-grant/v2"
-        || grant["allow"].as_bool().is_none()
-        || grant["destination"].as_str().is_none()
-        || grant["source_sha256"].as_str().is_none()
-        || grant["capture_sha256"].as_str().is_none() {
-        return Err(("invalid-input", "invalid host export grant"))
-    }
-    let source = super::worker_typed::read_bounded_regular_file(
-        std::path::Path::new(&arguments[3]), SOURCE_LIMITS.bytes as usize)
-        .map_err(|_| ("invalid-input", "source file admission failed"))?;
-    let (mut store, root) = Store::prepare(&source, name, &[Ty::I64], None, 1_000_000)
-        .map_err(refusal)?;
-    let authority = ExportGrant {
-        destination: grant["destination"].as_str().ok_or(("invalid-input", "invalid destination"))?,
-        source_sha256: grant["source_sha256"].as_str().ok_or(("invalid-input", "invalid source digest"))?,
-        capture_sha256: grant["capture_sha256"].as_str().ok_or(("invalid-input", "invalid capture digest"))?,
-        allowed: grant["allow"].as_bool().ok_or(("invalid-input", "invalid grant decision"))?,
-    };
-    let encoded = store.export(root, destination, &authority)
-        .map_err(|_| ("denied", "destination, source or capture export authority denied"))?;
-    let package: Value = serde_json::from_slice(&encoded)
-        .map_err(|_| ("internal-failure", "authorized package encoding failed"))?;
-    Ok(json!({"schema":"noble-worker-program-export/v2","stage":"export-authorization",
-        "outcome":"normal","destination":destination,"package":package,
-        "export_requests":1,"protected_operations":1,"executable_guest_installed":false}))
 }
 
 fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'static str)> {
     if arguments.len() != 6 || arguments[4] != "--effect-ceiling" {
-        return Err(("invalid-input", "usage: noble worker program import PACKAGE --effect-ceiling pure|test.emit@1.0.0"));
+        return Err(("invalid-input", "usage: noble worker program import PACKAGE --effect-ceiling pure"));
     }
-    let contract = match arguments[5].to_str() {
-        Some("pure") => None,
-        Some("test.emit@1.0.0") => Some(HostContract::TestEmitV1),
-        _ => return Err(("unsupported", "unsupported host contract version")),
-    };
+    if arguments[5] != "pure" {
+        return Err(("unsupported", "unissued Worker host effect contract"));
+    }
     let package = super::worker_typed::read_bounded_regular_file(
         std::path::Path::new(&arguments[3]), PACKAGE_BYTES)
         .map_err(|_| ("invalid-input", "package file admission failed"))?;
-    let (store, root) = Store::import(&package, contract, 1_000_000)
+    let (store, root) = Store::import(&package, RUNTIME_REQUEST_WORK)
         .map_err(refusal)?;
     Ok(json!({"schema":"noble-worker-program-import/v2","stage":"import-admission",
         "outcome":"ready","source_sha256":crate::workflow::intrinsic::sha256(&store.source),
@@ -683,15 +675,48 @@ fn guest(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'sta
     let source = super::worker_typed::read_bounded_regular_file(
         std::path::Path::new(&arguments[3]), SOURCE_LIMITS.bytes as usize)
         .map_err(|_| ("invalid-input", "source file admission failed"))?;
-    let (store, root) = Store::prepare(&source, name, &[Ty::I64], None, 1_000_000)
+    let (mut store, root) = Store::prepare(&source, name, &[Ty::I64], RUNTIME_REQUEST_WORK)
         .map_err(refusal)?;
-    let observed = super::worker_program_guest::execute(&store, root, operand)
-        .map_err(|_| ("invalid-input", "source-bound Worker guest installation or execution refused"))?;
+    guest_report(&mut store, root, operand, "source")
+}
+
+fn guest_package(arguments: &[std::ffi::OsString])
+    -> Result<Value, (&'static str, &'static str)> {
+    if arguments.len() != 8 || arguments[4] != "--operand"
+        || arguments[6] != "--effect-ceiling" || arguments[7] != "pure" {
+        return Err(("invalid-input",
+            "usage: noble worker program guest-package PACKAGE --operand I64 --effect-ceiling pure"));
+    }
+    let operand = arguments[5].to_str().ok_or(("invalid-input", "invalid signed operand"))?
+        .parse::<i64>().map_err(|_| ("invalid-input", "invalid signed operand"))?;
+    let package = super::worker_typed::read_bounded_regular_file(
+        std::path::Path::new(&arguments[3]), PACKAGE_BYTES)
+        .map_err(|_| ("invalid-input", "package file admission failed"))?;
+    let (mut store, root) = Store::import(&package, RUNTIME_REQUEST_WORK)
+        .map_err(refusal)?;
+    guest_report(&mut store, root, operand, "fresh-package")
+}
+
+fn guest_report(store: &mut Store, root: Handle, operand: i64, origin: &'static str)
+    -> Result<Value, (&'static str, &'static str)> {
+    let observed = super::worker_program_guest::execute(store, root, operand)
+        .map_err(|failure| match failure {
+            super::worker_program_guest::GuestFailure::Exhausted => refusal(Refusal::Exhausted),
+            super::worker_program_guest::GuestFailure::Invalid(problem) =>
+                match runtime_refusal(problem) {
+                    Refusal::Exhausted => refusal(Refusal::Exhausted),
+                    _ => ("invalid-input",
+                        "source-bound Worker guest installation or execution refused"),
+                },
+        })?;
+    let guest_requests = observed.admits.checked_add(observed.invokes)
+        .ok_or(("internal-failure", "guest request counter overflow"))?;
     Ok(json!({"schema":"noble-worker-program-guest/v2",
         "stage":"guest-execution", "outcome":"normal",
-        "source_sha256":crate::workflow::intrinsic::sha256(store.source()),
-        "operand":operand,"value":observed.value,"guest_requests":observed.admits,
-        "protected_operations":observed.invokes,"live_owners":observed.live_owners,
+        "origin":origin,"source_sha256":crate::workflow::intrinsic::sha256(store.source()),
+        "operand":operand,"value":observed.value,"guest_requests":guest_requests,
+        "program_admissions":observed.admits,"program_invocations":observed.invokes,
+        "protected_operations":0,"live_owners":observed.live_owners,
         "executable_guest_installed":true}))
 }
 
@@ -700,27 +725,25 @@ fn guest(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'sta
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let result = (|| {
         match arguments.get(2).and_then(|value| value.to_str()) {
-            Some("export") => return export(arguments),
             Some("import") => return import(arguments),
             Some("guest") => return guest(arguments),
+            Some("guest-package") => return guest_package(arguments),
             _ => {}
         }
         if arguments.len() != 8 || arguments[1] != "program"
             || arguments[2] != "build" || arguments[4] != "--name"
             || arguments[6] != "--effect-ceiling" {
-            return Err(("invalid-input", "usage: noble worker program build SOURCE --name NAME --effect-ceiling pure|test.emit@1.0.0"));
+            return Err(("invalid-input", "usage: noble worker program build SOURCE --name NAME --effect-ceiling pure"));
         }
         let name = arguments[5].to_str().ok_or(("invalid-input", "invalid named Program"))?;
-        let contract = match arguments[7].to_str() {
-            Some("pure") => None,
-            Some("test.emit@1.0.0") => Some(HostContract::TestEmitV1),
-            _ => return Err(("unsupported", "unsupported effect ceiling")),
-        };
-        let effects = contract.map_or_else(EffSet::empty, HostContract::effects);
+        if arguments[7] != "pure" {
+            return Err(("unsupported", "unissued Worker host effect contract"));
+        }
+        let effects = EffSet::empty();
         let source = super::worker_typed::read_bounded_regular_file(
             std::path::Path::new(&arguments[3]), SOURCE_LIMITS.bytes as usize)
             .map_err(|problem| (problem.context.outcome, "source file admission failed"))?;
-        let (mut store, root) = Store::prepare(&source, name, &[Ty::I64], contract, 64)
+        let (mut store, root) = Store::prepare(&source, name, &[Ty::I64], 1_000_000)
             .map_err(|problem| (match problem {
                 Refusal::Invalid => "invalid-input",
                 Refusal::Unsupported => "unsupported",
@@ -755,7 +778,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             "source_sha256":source_sha256,
             "wat_sha256":wat_sha256, "source_compiler_calls_after_admission":0,
             "guest_requests":0, "protected_operations":0, "recipe_nodes":store.recipe_nodes(),
-            "host_contract":contract.map(|_| "test.emit@1.0.0"),
+            "host_contract":null,
             "checked_programs":[store.named(root).map(|target| target.program_index),
                 store.named(other).map(|target| target.program_index)],
             "original_effects":original.2.as_slice().iter().map(|effect| effect.0).collect::<Vec<_>>(),
@@ -767,9 +790,8 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         Ok(value) => (value["outcome"].as_str().unwrap_or("internal-failure").to_owned(), value),
         Err((outcome, diagnostic)) => (outcome.to_owned(), json!({
             "schema":"noble-worker-program-builder/v2",
-            "stage":if outcome == "denied" {"export-authorization"} else {"admission"},
+            "stage":"admission",
             "outcome":outcome, "diagnostic":diagnostic, "guest_requests":0,
-            "export_requests":if outcome == "denied" {1} else {0},
             "protected_operations":0, "executable_guest_installed":false,
         })),
     };
@@ -806,7 +828,7 @@ mod tests {
     #[test]
     fn text_capture_is_runtime_bound_before_portable_export_or_import() {
         let source = b"module Worker@1 [ def plus [ \"tag\" drop 1 + ] export plus ]";
-        let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], None, 1_000_000)
+        let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
             .expect("checked Text source");
         let captures = serde_json::to_vec(&store.capture_wire().unwrap()).unwrap();
         let source_sha256 = crate::workflow::intrinsic::sha256(source);
@@ -821,17 +843,20 @@ mod tests {
         let mut document: Value = serde_json::from_slice(&encoded).unwrap();
         assert_eq!(document["captures"][0]["text_utf8"], "tag");
         assert!(document["capture_binding_blake3"].as_str().is_some());
-        assert!(Store::import(&encoded, None, 1_000_000).is_ok());
+        let (mut imported, selected) = Store::import(&encoded, RUNTIME_REQUEST_WORK)
+            .expect("freshly attested Text package");
+        assert_eq!(super::worker_program_guest::execute(&mut imported, selected, 41)
+            .unwrap().value, 42, "imported Text must rebind before guest invocation");
         document["captures"][0]["text_utf8"] = json!("forged");
         let forged = serde_json::to_vec(&document).unwrap();
-        assert!(matches!(Store::import(&forged, None, 1_000_000),
+        assert!(matches!(Store::import(&forged, RUNTIME_REQUEST_WORK),
             Err(Refusal::Invalid)));
     }
 
     #[test]
     fn composed_program_package_reconstructs_checked_graph_not_claimed_edges() {
         let source = b"module Worker@1 [ def double [ 2 * ] export plus def plus [ double 1 + ] ]";
-        let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], None, 1_000_000)
+        let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], 1_000_000)
             .unwrap();
         let double = store.checked_root(0).unwrap();
         let composed = store.compose(root, double).unwrap();
@@ -840,12 +865,14 @@ mod tests {
         let grant = ExportGrant { destination: "private", source_sha256: &source_sha256,
             capture_sha256: &capture_sha256, allowed: true };
         let package = store.export(composed, "private", &grant).unwrap();
-        let (imported, selected) = Store::import(&package, None, 1_000_000).unwrap();
+        let (mut imported, selected) = Store::import(&package, RUNTIME_REQUEST_WORK).unwrap();
         assert_eq!(imported.recipe_edges(selected), Some((root.node,double.node)));
+        assert_eq!(super::worker_program_guest::execute(&mut imported, selected, 3)
+            .unwrap().value, 14, "freshly imported graph must execute its selected composition");
         let mut claim: Value = serde_json::from_slice(&package).unwrap();
         claim["graph"][2]["first"] = json!(0);
         let forged = serde_json::to_vec(&claim).unwrap();
-        assert!(matches!(Store::import(&forged, None, 1_000_000),
+        assert!(matches!(Store::import(&forged, 1_000_000),
             Err(Refusal::Invalid)));
     }
 
@@ -853,8 +880,9 @@ mod tests {
     fn checked_named_program_adapts_selects_and_composes_without_changing_its_recipe() {
         let (mut store, original) = Store::prepare(
             b"module Worker@1 [ def minus [ 1 - ] export plus def plus [ minus 1 + ] ]",
-            "plus", &[Ty::I64], Some(HostContract::TestEmitV1), 5,
+            "plus", &[Ty::I64], 1_000_000,
         ).expect("source-checked named Program");
+        store.work_left = 5;
         let other = store.checked_root(0).expect("checked reachable second Program");
         assert_ne!(other.node, original.node);
         assert_ne!(store.named(other).unwrap().checked_recipe,
@@ -876,16 +904,14 @@ mod tests {
         assert!(selected.prepare_export("compute",
             b"programs.admit swap programs.invoke", SOURCE_LIMITS).is_ok(),
             "selected source can type the host-admitted Program");
-        let destination = EffSet::from_ids(&[TEST_EMIT]);
-        let wider = store.adapt(original, &destination).expect("checked effect inclusion");
-        assert_eq!(store.recipe_nodes(), 2, "widening must not add a recipe node");
+        let destination = EffSet::empty();
+        let wider = store.adapt(original, &destination).expect("checked pure effect inclusion");
+        assert_eq!(store.recipe_nodes(), 2, "adapting must not add a recipe node");
         assert_eq!(store.original(wider).unwrap().2, &EffSet::empty());
         assert_eq!(store.interface(wider).unwrap().2, &destination);
         let mismatched = Handle { node: other.node, ..wider };
         assert!(store.interface(mismatched).is_none());
         assert!(matches!(store.adapt(mismatched, &destination), Err(Refusal::Invalid)));
-        assert!(matches!(store.select(&[other, wider], 1), Err(Refusal::Invalid)),
-            "heterogeneous interface must not enter a typed list");
         let second = store.adapt(other, &destination).expect("second source-checked Program");
         assert_eq!(store.select(&[wider, second], 1), Ok(second));
         let composed = store.compose(wider, second).expect("compatible checked stacks");
@@ -893,8 +919,8 @@ mod tests {
         assert_eq!(store.interface(composed).unwrap().2, &destination);
         assert_eq!(store.original(original).unwrap().2, &EffSet::empty());
         assert_eq!(store.recipe_nodes(), 3);
-        assert!(matches!(store.adapt(wider, &EffSet::empty()), Err(Refusal::Invalid)),
-            "effect ceiling must not narrow");
+        assert!(matches!(store.adapt(wider, &EffSet::from_ids(&[TEST_EMIT])),
+            Err(Refusal::Invalid)), "unissued effect must not widen");
         assert!(matches!(store.compose(original, composed), Err(Refusal::Exhausted)),
             "a consumed request budget must not silently reset");
     }
@@ -902,18 +928,21 @@ mod tests {
     #[test]
     fn forged_or_unchecked_named_program_cannot_become_a_builder_root() {
         assert!(matches!(Store::prepare(
-            b"module Worker@1 [ def plus [ 1 + ] ]", "plus", &[Ty::I64], None, 10),
+            b"module Worker@1 [ def plus [ 1 + ] ]", "plus", &[Ty::I64], 1_000_000),
             Err(Refusal::Invalid)));
         assert!(matches!(Store::prepare(
             b"module Worker@1 [ export plus def plus [ 1 + ] ]",
-            "plus", &[Ty::Text], None, 10), Err(Refusal::Invalid)));
+            "plus", &[Ty::Text], 1_000_000), Err(Refusal::Invalid)));
     }
 
     #[test]
-    fn selected_host_ceiling_and_request_work_are_independent_of_source_claims() {
+    fn unissued_effect_ceiling_and_request_work_cannot_be_selected_by_source() {
         let source = b"module Worker@1 [ export plus def plus [ 1 + ] ]";
-        let (mut pure, root) = Store::prepare(source, "plus", &[Ty::I64], None, 1)
+        assert!(matches!(Store::prepare(source, "plus", &[Ty::I64], 3),
+            Err(Refusal::Exhausted)), "source checks cannot refresh an empty request meter");
+        let (mut pure, root) = Store::prepare(source, "plus", &[Ty::I64], 1_000_000)
             .expect("pure source");
+        pure.work_left = 1;
         assert!(matches!(pure.adapt(root, &EffSet::from_ids(&[TEST_EMIT])),
             Err(Refusal::Invalid)), "source must not select an absent host contract");
         assert_eq!(pure.recipe_nodes(), 1);
@@ -925,11 +954,11 @@ mod tests {
     #[test]
     fn handle_from_retired_or_other_source_session_cannot_alias_a_new_instance() {
         let source = b"module Worker@1 [ export plus def plus [ 1 + ] ]";
-        let (old, stale) = Store::prepare(source, "plus", &[Ty::I64], None, 10)
+        let (old, stale) = Store::prepare(source, "plus", &[Ty::I64], 1_000_000)
             .expect("old source instance");
         assert!(old.interface(stale).is_some());
         drop(old);
-        let (mut current, active) = Store::prepare(source, "plus", &[Ty::I64], None, 10)
+        let (mut current, active) = Store::prepare(source, "plus", &[Ty::I64], 1_000_000)
             .expect("new source instance with same source identity and index");
         assert_ne!(stale, active);
         assert!(current.interface(stale).is_none());
@@ -943,7 +972,7 @@ mod tests {
     fn source_bound_package_rechecks_closure_contracts_and_export_authority() {
         let source = b"module Worker@1 [ def minus [ 1 - ] export plus def plus [ minus 1 + ] ]";
         let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64],
-            Some(HostContract::TestEmitV1), 64).expect("checked package source");
+            1_000_000).expect("checked package source");
         let source_sha256 = crate::workflow::intrinsic::sha256(source);
         let capture_sha256 = crate::workflow::intrinsic::sha256(b"[]");
         let grant = ExportGrant { destination: "local-test", source_sha256: &source_sha256,
@@ -956,14 +985,11 @@ mod tests {
         assert!(matches!(store.export(alternate, "local-test", &grant),
             Err(Refusal::Unsupported)), "a different named root cannot inherit export authority");
         let encoded = store.export(root, "local-test", &grant).expect("explicit export grant");
-        let (imported, restored) = Store::import(&encoded, Some(HostContract::TestEmitV1),
-            100_000)
+        let (imported, restored) = Store::import(&encoded, 1_000_000)
             .expect("fresh locally checked package import");
         assert_eq!(imported.named(restored).unwrap().checked_recipe,
             store.named(root).unwrap().checked_recipe);
-        assert!(matches!(Store::import(&encoded, None, 100_000),
-            Err(Refusal::Invalid)),
-            "a package cannot select a missing host contract");
+        assert!(imported.interface(restored).unwrap().2.is_empty());
         let parsed: Value = serde_json::from_slice(&encoded).expect("test package");
         for (label, altered, expected) in [
             ("missing transitive dependency", {
@@ -971,9 +997,9 @@ mod tests {
                 value["definitions"].as_array_mut().unwrap().remove(0);
                 value
             }, Refusal::Invalid),
-            ("wrong host version", {
+            ("unissued host contract", {
                 let mut value = parsed.clone();
-                value["host_contracts"][0] = json!("test.emit@2.0.0");
+                value["host_contracts"] = json!(["test.emit@1.0.0"]);
                 value
             }, Refusal::Invalid),
             ("forged root identity", {
@@ -990,7 +1016,7 @@ mod tests {
                 let mut value = parsed.clone();
                 value["captures"] = json!([{"type":"Text","value":"synthetic-private-text"}]);
                 value
-            }, Refusal::Unsupported),
+            }, Refusal::Invalid),
             ("unsupported revision", {
                 let mut value = parsed.clone();
                 value["semantic_revision"] = json!("future");
@@ -998,7 +1024,7 @@ mod tests {
             }, Refusal::Unsupported),
         ] {
             let bytes = serde_json::to_vec(&altered).expect(label);
-            assert!(matches!(Store::import(&bytes, Some(HostContract::TestEmitV1), 100_000),
+            assert!(matches!(Store::import(&bytes, 1_000_000),
                 Err(refusal) if refusal == expected), "{label}");
         }
     }

@@ -143,6 +143,22 @@ pub struct ProgramMetadata {
     pub capture_right: u32,
     pub recipe_depth: u32,
     pub recipe_leaves: u32,
+    /// Closed, source-checked atom sequence for exact installed c-recipe
+    /// correspondence. Only the Worker ingress retains these atoms.
+    pub runtime_atoms: alloc::vec::Vec<ProgramAtomMetadata>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ProgramAtomMetadata {
+    pub source_node: u32,
+    pub tag: u32,
+    pub payload: i64,
+    pub child_program: Option<usize>,
+    pub text: Option<(u32, u32)>,
+    pub input: u32,
+    pub output: u32,
+    pub effects: u32,
+    pub ordinal: u32,
 }
 
 /// D-neutral, source-checked lineage for a selected named caller's returned
@@ -656,7 +672,14 @@ impl Compiler {
         let mut program_metadata = alloc::vec::Vec::new();
         if self.live_slots || self.worker_inputs {
             program_metadata.reserve(plan.programs.len());
+            let text_witness = plan.text_witness;
             for (program_index, program) in plan.programs.iter_mut().enumerate() {
+                let runtime_atoms = if self.worker_inputs {
+                    program.operations.iter().map(|operation|
+                        plan::atom_metadata(operation, text_witness)).collect()
+                } else {
+                    alloc::vec::Vec::new()
+                };
                 let logical = attempt!(program.logical.take()
                     .ok_or(crate::Diagnostic::Defective));
                 program_metadata.push(ProgramMetadata {
@@ -672,6 +695,7 @@ impl Compiler {
                     capture_right: 0,
                     recipe_depth: program.depth,
                     recipe_leaves: program.leaves,
+                    runtime_atoms,
                 });
             }
         }

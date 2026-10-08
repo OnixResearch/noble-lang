@@ -35,6 +35,17 @@ pub(super) fn exports(
         attempt!(out.append(b")))\n"));
     }
     attempt!(out.append(b"(i32.const 0))\n\
+(func (export \"worker_program_handle\") (param $index i32) (result i32)\n\
+(if (i32.eqz (global.get $worker_installed)) (then (return (i32.const 0))))\n"));
+    for index in 0..plan.programs.len() {
+        attempt!(out.append(b"(if (i32.eq (local.get $index) "));
+        attempt!(out.i32(attempt!(u32::try_from(index)
+            .map_err(|_| crate::Diagnostic::Exhausted))));
+        attempt!(out.append(b") (then (return "));
+        attempt!(super::get_global(out, index));
+        attempt!(out.append(b")))\n"));
+    }
+    attempt!(out.append(b"(i32.const 0))\n\
 (func (export \"worker_invoke\") (param $handle i32) (param $operand i64) (result i64)\n\
 (if (i32.or (i32.eqz (global.get $worker_installed))\n (i32.or (global.get $sp) (global.get $cp)))\n (then (call $fail (i32.const 4)) (return (i64.const 0))))\n\
 (if (global.get $failure) (then (return (i64.const 0))))\n\

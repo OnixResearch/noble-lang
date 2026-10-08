@@ -10,7 +10,7 @@ use wasmtime::component::{Component, Linker, Resource, ResourceTable, ResourceTy
 use super::worker_program::{Handle, Store as ProgramStore};
 
 const INTERFACE: &str = "noble-test:worker-program/programs@2.0.0";
-const FUEL: u64 = 10_000_000;
+pub(super) const FUEL: u64 = 10_000_000;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Phase { Ready, Running, Completed, Cancelled, Delivered }
@@ -153,13 +153,15 @@ fn install_core(store: &mut Store<Host>, module: &Module) -> Result<wasmtime::In
 fn cell_field(store: &mut Store<Host>, instance: wasmtime::Instance,
               field: &str, address: u32) -> Result<u32> {
     let accessor = instance.get_typed_func::<i32, i32>(&mut *store, field)?;
-    accessor.call(&mut *store, i32::try_from(address)?)
-        .with_context(|| format!("source cell {field} read"))
+    let value = accessor.call(&mut *store, i32::try_from(address)?)
+        .with_context(|| format!("source cell {field} read"))?;
+    Ok(u32::try_from(value)?)
 }
 
-/// Walk real installed recipe cells and compare each runtime Text cell with
-/// its checked source occurrence. The source alias includes the definition
-/// identity and lexical node, never just a coincidentally equal string.
+/// Compare every installed c-recipe atom against the *same checked layout*
+/// that emitted it. Text bytes alone cannot distinguish lexical aliases:
+/// the matching atom carries the checked source node before its runtime
+/// address, length and bytes are accepted.
 fn text_alias_hash(store: &mut Store<Host>, instance: wasmtime::Instance,
                    source: &ProgramStore) -> Result<[u8;32]> {
     let mut hash = blake3::Hasher::new();
@@ -175,8 +177,8 @@ fn text_alias_hash(store: &mut Store<Host>, instance: wasmtime::Instance,
             .call(&mut *store, i32::try_from(index)?)?;
         ensure!(handle > 0, "missing installed named Program for Text alias");
         let root = u32::try_from(handle)?;
-        let mut pending = vec![cell_field(store,instance,"cell_c",root)?];
-        let mut visited = std::collections::HashSet::new();
+        let mut programs = vec![(named.program_index, root)];
+        let mut seen_programs = std::collections::HashSet::new();
         let aliases = source.text_aliases();
         let start = aliases.iter().position(|alias|
             alias.owner_identity == named.definition_identity).unwrap_or(aliases.len());
@@ -187,43 +189,109 @@ fn text_alias_hash(store: &mut Store<Host>, instance: wasmtime::Instance,
             alias.owner_identity != named.definition_identity),
             "checked Text aliases are not grouped by source owner");
         let mut matched = vec![false; expected.len()];
-        while let Some(address) = pending.pop() {
-            if address == 0 || !visited.insert(address) { continue }
-            ensure!(visited.len() <= 4096 && pending.len() <= 4096,
-                "installed Text/recipe graph exceeds bound");
-            match cell_field(store,instance,"cell_kind",address)? {
-                9 => {
-                    pending.push(cell_field(store,instance,"cell_b",address)?);
-                    pending.push(cell_field(store,instance,"cell_a",address)?);
-                }
-                8 => {
-                    let tag = cell_field(store,instance,"cell_x",address)?;
-                    if tag == 8 || tag == 3 {
-                        pending.push(cell_field(store,instance,"cell_a",address)?);
+        while let Some((program_index, program_address)) = programs.pop() {
+            ensure!(seen_programs.insert(program_index) && seen_programs.len() <= 4096,
+                "installed quotation Program graph repeats or exceeds bound");
+            let metadata = source.compiled().program_metadata().get(program_index)
+                .context("checked source recipe metadata absent")?;
+            let installed = instance.get_typed_func::<i32,i32>(
+                &mut *store,"worker_program_handle")?
+                .call(&mut *store,i32::try_from(program_index)?)?;
+            ensure!(installed > 0 && program_address == u32::try_from(installed)?,
+                "installed quotation Program does not match checked global");
+            let payload = instance.get_typed_func::<i32,i64>(&mut *store,"cell_payload")?
+                .call(&mut *store,i32::try_from(program_address)?)?;
+            ensure!(cell_field(store,instance,"cell_kind",program_address)? == 4
+                && payload == i64::from(metadata.effect_mask)
+                && cell_field(store,instance,"cell_x",program_address)? == metadata.entry
+                && cell_field(store,instance,"cell_y",program_address)? == metadata.input_signature
+                && cell_field(store,instance,"cell_z",program_address)? == metadata.output_signature
+                && cell_field(store,instance,"cell_a",program_address)? == metadata.capture_left
+                && cell_field(store,instance,"cell_b",program_address)? == metadata.capture_right
+                && cell_field(store,instance,"cell_w",program_address)? == metadata.recipe_depth
+                && cell_field(store,instance,"cell_n",program_address)? == metadata.recipe_leaves,
+                "installed quotation Program cell differs from checked source");
+            let recipe = cell_field(store,instance,"cell_c",program_address)?;
+            ensure!(recipe != 0 || metadata.runtime_atoms.is_empty(),
+                "installed Program recipe absent");
+            let mut pending = if recipe == 0 { Vec::new() } else { vec![recipe] };
+            let mut visited = std::collections::HashSet::new();
+            let mut at = 0usize;
+            while let Some(address) = pending.pop() {
+                ensure!(address != 0 && visited.insert(address),
+                    "installed Program recipe has a null or repeated edge");
+                ensure!(visited.len() <= 4096 && pending.len() <= 4096,
+                    "installed Text/recipe graph exceeds bound");
+                match cell_field(store,instance,"cell_kind",address)? {
+                    9 => {
+                        let left = cell_field(store,instance,"cell_a",address)?;
+                        let right = cell_field(store,instance,"cell_b",address)?;
+                        ensure!(left != 0 && right != 0
+                            && cell_field(store,instance,"cell_c",address)? == 0,
+                            "installed concat recipe edges differ from source layout");
+                        pending.push(right);
+                        pending.push(left);
                     }
+                    8 => {
+                        let atom = metadata.runtime_atoms.get(at)
+                            .context("installed Program has extra recipe atom")?;
+                        at += 1;
+                        let payload = instance.get_typed_func::<i32,i64>(&mut *store,"cell_payload")?
+                            .call(&mut *store,i32::try_from(address)?)?;
+                        ensure!(payload == atom.payload
+                            && cell_field(store,instance,"cell_x",address)? == atom.tag
+                            && cell_field(store,instance,"cell_y",address)? == atom.input
+                            && cell_field(store,instance,"cell_z",address)? == atom.output
+                            && cell_field(store,instance,"cell_w",address)? == atom.effects
+                            && cell_field(store,instance,"cell_n",address)? == atom.ordinal
+                            && cell_field(store,instance,"cell_b",address)? == 0
+                            && cell_field(store,instance,"cell_c",address)? == 0,
+                            "installed recipe atom differs from checked source node");
+                        let child = cell_field(store,instance,"cell_a",address)?;
+                        match (atom.text, atom.child_program) {
+                            (Some((start, length)), None) => {
+                                ensure!(child != 0
+                                    && cell_field(store,instance,"cell_kind",child)? == 11
+                                    && cell_field(store,instance,"cell_x",child)? == start
+                                    && cell_field(store,instance,"cell_y",child)? == length,
+                                    "installed Text atom differs from checked literal span");
+                                total = total.checked_add(usize::try_from(length)?)
+                                    .context("Text capture size overflow")?;
+                                ensure!(total <= 65_536, "Text capture bytes exceed source limit");
+                                let end = start.checked_add(length)
+                                    .context("Text capture address overflow")?;
+                                ensure!(end <= source.compiled().worker_literal_end()
+                                    .context("not a Worker source literal")?,
+                                    "Text capture points outside checked literal arena");
+                                let memory = instance.get_memory(&mut *store,"memory")
+                                    .context("source memory export absent")?;
+                                let bytes = memory.data(&*store)
+                                    .get(usize::try_from(start)?..usize::try_from(end)?)
+                                    .context("Text capture memory out of bounds")?;
+                                let index = expected.iter().enumerate().position(|(index, alias)|
+                                    !matched[index] && alias.node == atom.source_node
+                                        && alias.bytes == bytes)
+                                    .context("lexically bound Text differs from installed literal")?;
+                                matched[index] = true;
+                            }
+                            (None, Some(program)) => {
+                                let expected_child = instance.get_typed_func::<i32,i32>(
+                                    &mut *store,"worker_program_handle")?
+                                    .call(&mut *store,i32::try_from(program)?)?;
+                                ensure!(expected_child > 0 && child == u32::try_from(expected_child)?,
+                                    "installed quotation Program child differs from checked source");
+                                programs.push((program, child));
+                            }
+                            (None, None) => ensure!(child == 0,
+                                "installed Program atom contains an unapproved child"),
+                            (Some(_), Some(_)) => bail!("ambiguous checked recipe atom"),
+                        }
+                    }
+                    _ => bail!("installed Program recipe contains an unapproved cell"),
                 }
-                4 => pending.push(cell_field(store,instance,"cell_c",address)?),
-                11 => {
-                    let start = usize::try_from(cell_field(store,instance,"cell_x",address)?)?;
-                    let length = usize::try_from(cell_field(store,instance,"cell_y",address)?)?;
-                    total = total.checked_add(length).context("Text capture size overflow")?;
-                    ensure!(total <= 65_536, "Text capture bytes exceed source limit");
-                    let end = start.checked_add(length).context("Text capture address overflow")?;
-                    ensure!(end <= usize::try_from(source.compiled().worker_literal_end()
-                        .context("not a Worker source literal")?)?,
-                        "Text capture points outside checked literal arena");
-                    let memory = instance.get_memory(&mut *store,"memory")
-                        .context("source memory export absent")?;
-                    let bytes = memory.data(&*store).get(start..end)
-                        .context("Text capture memory out of bounds")?;
-                    let index = expected.iter().enumerate().position(|(index, alias)|
-                        !matched[index] && alias.bytes == bytes)
-                        .context("source-bound Text alias differs from installed capture")?;
-                    matched[index] = true;
-                }
-                0 => bail!("missing installed recipe cell"),
-                _ => {}
             }
+            ensure!(at == metadata.runtime_atoms.len(),
+                "installed Program omits checked recipe atoms");
         }
         ensure!(matched.iter().all(|matched| *matched),
             "checked Text alias is absent from installed recipe");
@@ -407,6 +475,12 @@ pub(super) struct Observation {
     pub(super) live_owners: u32,
 }
 
+#[derive(Debug)]
+pub(super) enum GuestFailure {
+    Exhausted,
+    Invalid(anyhow::Error),
+}
+
 fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: TaskOwner)
     -> Result<Store<Host>> {
     let core = core_module(&engine, source.wat())?;
@@ -445,14 +519,21 @@ pub(super) fn attest(source: &ProgramStore, root: Handle) -> Result<[u8;32]> {
 
 /// The selected guest is always rebuilt from the WIT and Noble body retained
 /// here; no package or caller-supplied component binary is installed.
-pub(super) fn execute(source: &ProgramStore, root: Handle, operand: i64)
-    -> Result<Observation> {
+pub(super) fn execute(source: &mut ProgramStore, root: Handle, operand: i64)
+    -> std::result::Result<Observation, GuestFailure> {
     let task = TaskOwner::new(source.instance_id());
     execute_with_task(source, root, operand, &task)
 }
 
-pub(super) fn execute_with_task(source: &ProgramStore, root: Handle,
-                                operand: i64, task: &TaskOwner) -> Result<Observation> {
+pub(super) fn execute_with_task(source: &mut ProgramStore, root: Handle,
+                                operand: i64, task: &TaskOwner)
+    -> std::result::Result<Observation, GuestFailure> {
+    source.reserve_guest().map_err(|_| GuestFailure::Exhausted)?;
+    execute_reserved_with_task(source, root, operand, task).map_err(GuestFailure::Invalid)
+}
+
+fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
+                              operand: i64, task: &TaskOwner) -> Result<Observation> {
     ensure!(task.scope == source.instance_id(), "foreign Program task context");
     ensure!(!task.cancelled()?, "Program task cancelled before guest admission");
     let world = source.selected_world()
@@ -518,13 +599,13 @@ mod tests {
 
     #[test]
     fn selected_guest_executes_checked_program_and_consumes_own_resource() {
-        let (source, root) = ProgramStore::prepare(
+        let (mut source, root) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
-            "increment", &[Ty::I64], None, 1_000_000).unwrap();
-        let observed = execute(&source, root, 41).unwrap();
+            "increment", &[Ty::I64], 70_000_000).unwrap();
+        let observed = execute(&mut source, root, 41).unwrap();
         assert_eq!(observed.value, 42);
         assert_eq!((observed.admits, observed.invokes, observed.live_owners), (1,1,0));
-        let observed = execute(&source, root, -2).unwrap();
+        let observed = execute(&mut source, root, -2).unwrap();
         assert_eq!(observed.value, -1);
     }
 
@@ -532,42 +613,52 @@ mod tests {
     fn selected_guest_invokes_actual_bounded_composed_program_cell() {
         let (mut source, root) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def double [ 2 * ] export plus def plus [ double 1 + ] ]",
-            "plus", &[Ty::I64], None, 1_000_000).unwrap();
+            "plus", &[Ty::I64], 70_000_000).unwrap();
         let double = source.checked_root(0).unwrap();
         let adapted = source.adapt(root, &noble_kernel::types::EffSet::empty()).unwrap();
         let chosen = source.select(&[adapted, double], 1).unwrap();
-        assert_eq!(execute(&source, chosen, 3).unwrap().value, 6);
+        assert_eq!(execute(&mut source, chosen, 3).unwrap().value, 6);
         let composed = source.compose(root, double).unwrap();
         assert!(source.recipe_edges(composed).is_some());
-        let observed = execute(&source, composed, 3).unwrap();
+        let observed = execute(&mut source, composed, 3).unwrap();
         assert_eq!(observed.value, 14);
         assert_eq!(observed.live_owners, 0);
+    }
+
+    #[test]
+    fn equal_text_bytes_rebind_as_distinct_checked_lexical_atoms() {
+        let (mut source, root) = ProgramStore::prepare(
+            b"module Arithmetic@1 [ def increment [ \"same\" drop \"same\" drop 1 + ] export increment ]",
+            "increment", &[Ty::I64], 50_000_000).unwrap();
+        assert_eq!(source.text_aliases().len(), 2);
+        assert_ne!(source.text_aliases()[0].node, source.text_aliases()[1].node);
+        assert_eq!(execute(&mut source, root, 41).unwrap().value, 42);
     }
 
     #[test]
     fn checked_foreign_instance_handle_cannot_be_installed_in_guest() {
         let (first, root) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
-            "increment", &[Ty::I64], None, 1_000_000).unwrap();
-        let (other, _) = ProgramStore::prepare(
+            "increment", &[Ty::I64], 1_000_000).unwrap();
+        let (mut other, _) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def decrement [ 1 - ] export decrement ]",
-            "decrement", &[Ty::I64], None, 1_000_000).unwrap();
+            "decrement", &[Ty::I64], 50_000_000).unwrap();
         assert!(first.named(root).is_some());
-        assert!(execute(&other, root, 3).is_err(),
+        assert!(execute(&mut other, root, 3).is_err(),
             "another checked module cannot receive a foreign Program owner");
     }
 
     #[test]
     fn cancelled_and_delivered_tasks_cannot_reenter_guest_admission() {
-        let (source, root) = ProgramStore::prepare(
+        let (mut source, root) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
-            "increment", &[Ty::I64], None, 1_000_000).unwrap();
+            "increment", &[Ty::I64], 80_000_000).unwrap();
         let cancelled = TaskOwner::new(source.instance_id());
         assert!(cancelled.cancel(source.instance_id()).unwrap());
-        assert!(execute_with_task(&source, root, 41, &cancelled).is_err());
+        assert!(execute_with_task(&mut source, root, 41, &cancelled).is_err());
         let delivered = TaskOwner::new(source.instance_id());
-        assert_eq!(execute_with_task(&source, root, 41, &delivered).unwrap().value, 42);
-        assert!(execute_with_task(&source, root, 7, &delivered).is_err(),
+        assert_eq!(execute_with_task(&mut source, root, 41, &delivered).unwrap().value, 42);
+        assert!(execute_with_task(&mut source, root, 7, &delivered).is_err(),
             "one delivered task must not mint a second Program owner");
     }
 }

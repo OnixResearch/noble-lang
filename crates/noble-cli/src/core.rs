@@ -53,7 +53,7 @@ pub const USAGE: &str = "usage:
   noble worker scalar SOURCE --state I64 --delta I64
   Scalar worker precursor: independently check I64 I64 -- I64 ! {}, run one
   bounded source-backed guest invocation, report its exact local outcome.
-  noble worker program build SOURCE --name NAME --effect-ceiling pure|test.emit@1.0.0
+  noble worker program build SOURCE --name NAME --effect-ceiling pure
   Opted source-bound named Program builder: check and compile a module with two
   reachable, compatible named Programs once, then
   adapt, select, duplicate and compose typed handles under an explicit bound.
@@ -62,13 +62,16 @@ pub const USAGE: &str = "usage:
   Selected pure WIT owner invokes the actual checked named Program cell in a
   fresh, bounded source Wasm instance. Guest source and component are rebuilt;
   this source-only path is not yet execution evidence without scoped Wasm tests.
-  noble worker program export SOURCE --name NAME --destination DEST --authority HOST_GRANT
-  Export only an original source-checked pure named Program with a matching
-  host-selected grant for destination, exact source and checked Text capture digest.
-  noble worker program import PACKAGE --effect-ceiling pure|test.emit@1.0.0
+  noble worker program guest-package PACKAGE --operand I64 --effect-ceiling pure
+  Freshly import a checked pure package graph and invoke its selected installed
+  Program cell through the same WIT owner; package bytes are not executable.
+  noble worker program import PACKAGE --effect-ceiling pure
   Freshly recheck a finite local v2 package's source, complete named closure
   and checked recipe; Text aliases require fresh installed-cell rechecking.
-  Inert package test.emit ceiling does not authorize guest effects.
+  Import is inert and is not an executable guest. Export is unavailable through
+  CLI until an authenticated host-owned grant exists; file JSON cannot grant it.
+  A test.emit package/ceiling is refused: no authenticated Worker effect issuer
+  or bound adapter is connected to this guest.
   noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON
   Typed worker: host-select a source-checked WorkerData@1 module and two canonical
   nominal values; check one exact local no-capture package and exported transition
