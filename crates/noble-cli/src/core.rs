@@ -52,8 +52,9 @@ pub const USAGE: &str = "usage:
   noble worker scalar SOURCE --state I64 --delta I64
   Scalar worker precursor: independently check I64 I64 -- I64 ! {}, run one
   bounded source-backed guest invocation, report its exact local outcome.
-  noble worker program build SOURCE --name NAME --effect-ceiling pure|test.emit
-  Opted source-bound named Program builder: check and compile source once, then
+  noble worker program build SOURCE --name NAME --effect-ceiling pure|test.emit@1.0.0
+  Opted source-bound named Program builder: check and compile a module with two
+  reachable, compatible named Programs once, then
   adapt, select, duplicate and compose typed handles under an explicit bound.
   This local builder does not execute a guest, import/export packages or grant effects.
   noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON
