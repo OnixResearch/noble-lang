@@ -144,6 +144,11 @@ async function protocol(config) {
             continue;
           } else if (header === 'execute') {
             command = { kind: 'execute', inputs: 0 };
+          } else if (/^execute-steps [0-9]+$/.test(header)) {
+            const steps = Number(header.slice('execute-steps '.length));
+            command = { kind: 'execute', inputs: 0,
+              steps: integer(steps, 100000, 'guest execution steps') };
+            if (command.steps === 0) fail('guest execution steps must be positive');
           } else if (/^execute [0-9]+$/.test(header)) {
             const count = Number(header.slice('execute '.length));
             command = { kind: 'execute', inputs: integer(count, MAX_FRAME, 'injection frame') };
@@ -213,6 +218,7 @@ async function protocol(config) {
         }
         if (command.kind === 'execute') {
           if (pending.length < command.inputs) break;
+          const steps = command.steps;
           const bytes = pending.subarray(0, command.inputs);
           pending = pending.subarray(command.inputs);
           command = null;
@@ -222,7 +228,8 @@ async function protocol(config) {
             catch (error) { emit('internal-failure', reportError(error)); return; }
           }
           try {
-            const report = engine.execute({ inputs });
+            const report = engine.execute({ inputs, ...(steps
+              ? { limits: { steps } } : {}) });
             emit(report.outcome, report);
           } catch (error) { emit('internal-failure', reportError(error)); return; }
           if (engine.poisoned) return;

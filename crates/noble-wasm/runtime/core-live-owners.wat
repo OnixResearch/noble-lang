@@ -73,15 +73,22 @@
  (local.set $roots (i32.load8_u (local.get $address)))
  (if (i32.eq (i32.and (local.get $roots) (i32.const 127)) (i32.const 127))
   (then (return (i32.const 4))))
+ (if (i32.and (global.get $core_live_proposal_callback_active)
+              (global.get $core_live_queued_proposal_root))
+  (then (return (i32.const 4))))
  (i32.store8 (local.get $address) (i32.add (local.get $roots) (i32.const 1)))
+ (if (global.get $core_live_proposal_callback_active)
+  (then (global.set $core_live_queued_proposal_root (local.get $h))))
  (i32.const 0))
 (func (export "release_code_root") (param $h i32) (result i32)
  (local $address i32) (local $roots i32)
- ;; Permit the active proposal callback to undo its provisional root; a
- ;; previously denied proposal cannot release unrelated saved Programs.
+ ;; Only the exact queued callback root can be released after terminal guest
+ ;; failure. No unrelated saved Program may lose a host root on denial.
  (if (i32.and (global.get $failure)
-   (i32.eqz (i32.and (i32.eq (global.get $failure) (i32.const 5))
-                    (global.get $core_live_proposal_callback_active))))
+   (i32.eqz (i32.or
+    (i32.and (i32.eq (global.get $failure) (i32.const 5))
+             (global.get $core_live_proposal_callback_active))
+    (i32.eq (global.get $core_live_queued_proposal_root) (local.get $h)))))
   (then (return (i32.const 4))))
  (if (i32.eqz (call $storage_is_live (local.get $h))) (then (return (i32.const 4))))
  (if (i32.lt_u (call $kind (local.get $h)) (i32.const 4)) (then (return (i32.const 4))))
@@ -90,7 +97,31 @@
  (if (i32.eqz (i32.and (local.get $roots) (i32.const 127)))
   (then (return (i32.const 4))))
  (i32.store8 (local.get $address) (i32.sub (local.get $roots) (i32.const 1)))
+ (if (i32.eq (global.get $core_live_queued_proposal_root) (local.get $h))
+  (then (global.set $core_live_queued_proposal_root (i32.const 0))))
  (i32.const 0))
+;; This exact backend registry witness is available even after a terminal
+;; guest failure; the worker must not claim cancellation from a JS flag alone.
+(func (export "queued_proposal_roots") (result i32)
+ (local $h i32)
+ (local.set $h (global.get $core_live_queued_proposal_root))
+ (if (i32.eqz (local.get $h)) (then (return (i32.const 0))))
+ (if (i32.eqz (call $storage_is_live (local.get $h)))
+  (then (return (i32.const -1))))
+ (if (i32.eqz (i32.and
+               (i32.load8_u (call $core_live_root_address (local.get $h)))
+               (i32.const 127)))
+  (then (return (i32.const -1))))
+ (i32.const 1))
+;; Host-only exact owner byte: low seven bits count retained host pins and the
+;; high bit records the independent module root. This remains observable after
+;; terminal guest failure without permitting any root mutation.
+(func (export "code_root_state") (param $h i32) (result i32)
+ (if (i32.eqz (call $storage_is_live (local.get $h)))
+  (then (return (i32.const -1))))
+ (if (i32.lt_u (call $kind (local.get $h)) (i32.const 4))
+  (then (return (i32.const -1))))
+ (i32.load8_u (call $core_live_root_address (local.get $h))))
 ;; Observe a real typed stack reference and retain it in one host call.
 ;; Zero refuses; a positive result is the exact backend handle retained.
 (func (export "save_stack_code_root") (param $index i32) (result i32)

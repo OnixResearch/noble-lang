@@ -27,6 +27,8 @@ const CORE_LIVE_EXPORTS: &[(&str, &str)] = &[
     ("code_owners", "(start:i32,length:i32)->owners:i32"),
     ("retain_code_root", "(handle:i32)->status:i32"),
     ("release_code_root", "(handle:i32)->status:i32"),
+    ("queued_proposal_roots", "()->count:i32"),
+    ("code_root_state", "(handle:i32)->roots:i32"),
     ("save_stack_code_root", "(index:i32)->handle:i32"),
     ("clear_code_observation", "()->status:i32"),
     ("retain_adapter_lease", "()->status:i32"),

@@ -154,6 +154,18 @@ impl LiveChild {
         Self::spawn(command)
     }
 
+    fn start_with_guest_step_budget(
+        source: &Path,
+        name: &str,
+        steps: u32,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command.args(["live", "repl", "--source"]).arg(source)
+            .args(["--engine", "v8", "--self-edit", name, "--expect-generation", "1",
+                "--max-guest-steps", &steps.to_string()]);
+        Self::spawn(command)
+    }
+
     fn spawn(mut command: Command) -> Result<Self, Box<dyn std::error::Error>> {
         let mut child = command
             .stdin(Stdio::piped())
@@ -1678,11 +1690,102 @@ fn stale_expected_source_generation_denies_without_staging_candidate()
         denied["proposal_queued"], true,
         "stale callback cannot enqueue a proposal"
     );
+    assert_eq!(denied["queued_proposal_roots"], 0,
+        "rejected callback before retain must not add a backend owner: {denied}");
     assert_eq!(denied["session_state"], "terminated-after-runtime-failure");
     assert_eq!(
         fs::read_to_string(&fixture.source)?,
         EVOLVE.replace("self.generation", "0")
     );
+    Ok(())
+}
+
+#[test]
+fn guest_denial_after_enqueuing_cancels_exact_backend_proposal_pin(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let source = "def evolve [ dup 18 - quote [ + ] compose self.generation swap self.propose \
+        drop dup 18 - quote [ + ] compose self.generation swap self.propose drop 1 + ]";
+    let fixture = Fixture::new(source)?;
+    let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
+    live_ack(&live.report()?, &[]);
+    assert_grant(&live, 1)?;
+    let saved = live.submit("[ evolve ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    let denied = live.submit("20 evolve")?;
+    assert_eq!(text_field(&denied, "outcome"), "trap", "{denied}");
+    assert_eq!(denied["session_state"], "terminated-after-runtime-failure");
+    assert_eq!(denied["proposal_queued"], false);
+    assert_eq!(denied["cancelled_proposal_roots_before_cancel"], 1,
+        "actual backend queued owner must be present before cancellation: {denied}");
+    assert_eq!(denied["cancelled_proposal_roots_remaining"], 0,
+        "backend must prove the exact queued proposal's pin is gone: {denied}");
+    assert_eq!(denied["queued_proposal_roots"], 0);
+    assert_eq!(denied["cancelled_proposal_release_status"], 0);
+    assert_eq!(denied["cancelled_proposal_repeat_release_status"], 4,
+        "terminal cancellation must not release twice: {denied}");
+    assert_eq!(denied["cancelled_proposal_root_state_after_repeat"],
+        denied["cancelled_proposal_root_state_after"], "{denied}");
+    assert_eq!(denied["cancelled_proposal_unrelated_root_release_status"], 4,
+        "old saved Program must remain pinned while poisoned: {denied}");
+    assert_eq!(denied["cancelled_proposal_unrelated_root_state_before"],
+        denied["cancelled_proposal_unrelated_root_state_after"], "{denied}");
+    let before = number_field(&denied, "cancelled_proposal_root_state_before");
+    let after = number_field(&denied, "cancelled_proposal_root_state_after");
+    assert_eq!(before, after + 1,
+        "exact backend root count, not a JS flag, must decrease by one: {denied}");
+    assert_eq!(after & 127, 0, "failed guest retained a host pin: {denied}");
+    assert_eq!(before & 128, after & 128,
+        "terminal cleanup must not resurrect or clear an independent module owner: {denied}");
+    assert_eq!(number_field(&denied, "protected_operations"), 0);
+    assert_eq!(number_field(&denied, "candidate_prepare_requests"), 0);
+    let trace = denied["request_trace"].as_array().ok_or("missing guest request trace")?;
+    assert!(trace.iter().any(|entry| entry == "live.propose:evolve:queued"), "{denied}");
+    assert!(trace.iter().any(|entry| entry == "live.propose:denied:already-queued"), "{denied}");
+    assert_eq!(fs::read_to_string(&fixture.source)?, source);
+    assert_eq!(live.child.wait()?.code(), Some(2));
+    Ok(())
+}
+
+#[test]
+fn guest_work_quota_after_enqueuing_cancels_exact_backend_proposal_pin(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let source = format!(
+        "def evolve [ dup 18 - quote [ + ] compose self.generation swap self.propose drop{} ]",
+        " 1 +".repeat(80),
+    );
+    let fixture = Fixture::new(&source)?;
+    let mut positive = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
+    live_ack(&positive.report()?, &[]);
+    assert_grant(&positive, 1)?;
+    normal(&positive.submit("20 evolve")?, &["100"]);
+    assert_eq!(text_field(&positive.report()?, "outcome"), "proposal-pending");
+    assert_eq!(text_field(&positive.report()?, "outcome"), "proposal-committed");
+    positive.finish()?;
+
+    let mut quota = LiveChild::start_with_guest_step_budget(&fixture.source, "evolve", 32)?;
+    live_ack(&quota.report()?, &[]);
+    assert_grant(&quota, 1)?;
+    let exhausted = quota.submit("20 evolve")?;
+    assert_eq!(text_field(&exhausted, "outcome"), "runtime-exhausted", "{exhausted}");
+    assert_eq!(text_field(&exhausted, "session_state"), "terminated-after-runtime-failure");
+    assert_eq!(exhausted["proposal_queued"], false);
+    assert_eq!(exhausted["queued_proposal_roots"], 0);
+    assert_eq!(exhausted["cancelled_proposal_roots_before_cancel"], 1,
+        "work quota must follow actual guest proposal enqueue: {exhausted}");
+    assert_eq!(exhausted["cancelled_proposal_roots_remaining"], 0);
+    assert_eq!(exhausted["cancelled_proposal_release_status"], 0);
+    assert_eq!(exhausted["cancelled_proposal_repeat_release_status"], 4);
+    let before = number_field(&exhausted, "cancelled_proposal_root_state_before");
+    let after = number_field(&exhausted, "cancelled_proposal_root_state_after");
+    assert_eq!(before, after + 1, "{exhausted}");
+    assert_eq!(after & 127, 0, "{exhausted}");
+    assert_eq!(before & 128, after & 128, "{exhausted}");
+    let trace = exhausted["request_trace"].as_array().ok_or("missing quota request prefix")?;
+    assert!(trace.iter().any(|entry| entry == "live.propose:evolve:queued"), "{exhausted}");
+    assert_eq!(number_field(&exhausted, "protected_operations"), 0);
+    assert_eq!(number_field(&exhausted, "candidate_prepare_requests"), 0);
+    assert_eq!(fs::read_to_string(&fixture.source)?, source);
+    assert_eq!(quota.child.wait()?.code(), Some(5));
     Ok(())
 }
 

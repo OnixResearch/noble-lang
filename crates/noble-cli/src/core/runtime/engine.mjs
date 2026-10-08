@@ -33,6 +33,8 @@ const liveCodeOwnerExports = {
   code_owners: 'i32,i32->i32',
   retain_code_root: 'i32->i32',
   release_code_root: 'i32->i32',
+  queued_proposal_roots: '->i32',
+  code_root_state: 'i32->i32',
   save_stack_code_root: 'i32->i32',
   clear_code_observation: '->i32',
   retain_adapter_lease: '->i32',
@@ -820,8 +822,20 @@ export class CoreEngine {
     try { snapshot = captureLiveProgram(this, program); }
     catch (error) { return deny(`invalid-program:${error.message}`); }
     const rootOwner = this.runtime();
+    const rootStateBefore = rootOwner.code_root_state(program);
+    if (rootStateBefore < 0 || rootOwner.queued_proposal_roots() !== 0) {
+      return deny('invalid-proposal-owner-state');
+    }
     if (rootOwner.retain_code_root(program) !== 0) return deny('unretained-program');
-    this.liveProposal = { grant, expected, program, snapshot, rootOwner };
+    if (rootOwner.code_root_state(program) !== rootStateBefore + 1
+      || rootOwner.queued_proposal_roots() !== 1) {
+      if (rootOwner.release_code_root(program) !== 0) {
+        this.poisoned = true;
+        fail('cannot undo an inconsistently retained live proposal root');
+      }
+      return deny('invalid-proposal-pin');
+    }
+    this.liveProposal = { grant, expected, program, snapshot, rootOwner, rootStateBefore };
     this.trace.push(`live.propose:${grant.name}:queued`);
     return 0;
   }
@@ -838,12 +852,57 @@ export class CoreEngine {
     try {
       return this.inspectQueuedLiveProposal(queued);
     } finally {
-      if (queued.rootOwner.release_code_root(queued.program) !== 0) {
-        this.poisoned = true;
-        this.proposalInspectionFailed = true;
+      if (!this.releaseQueuedLiveProposal(queued).released) {
         fail('cannot release inspected live proposal code root');
       }
     }
+  }
+
+  releaseQueuedLiveProposal(queued) {
+    const witness = { queued_roots_before: -1, queued_roots_after: -1,
+      root_state_before: -1, root_state_after: -1, release_status: -1,
+      repeat_release_status: -1, unrelated_root_release_status: null,
+      root_state_after_repeat: -1, unrelated_root_state_before: null,
+      unrelated_root_state_after: null,
+      released: false };
+    try {
+      witness.queued_roots_before = queued.rootOwner.queued_proposal_roots();
+      witness.root_state_before = queued.rootOwner.code_root_state(queued.program);
+      // Do not skip the actual backend release even if the pre-release
+      // inventory is defective: an unreleased root is also a terminal fault.
+      witness.release_status = queued.rootOwner.release_code_root(queued.program);
+      witness.queued_roots_after = queued.rootOwner.queued_proposal_roots();
+      witness.root_state_after = queued.rootOwner.code_root_state(queued.program);
+      if (this.poisoned || this.shared.failure.value !== 0) {
+        witness.repeat_release_status = queued.rootOwner.release_code_root(queued.program);
+        witness.root_state_after_repeat = queued.rootOwner.code_root_state(queued.program);
+        const unrelated = this.externalCodeRoots.values().next().value;
+        if (unrelated !== undefined && unrelated !== queued.program) {
+          witness.unrelated_root_state_before = queued.rootOwner.code_root_state(unrelated);
+          witness.unrelated_root_release_status = queued.rootOwner.release_code_root(unrelated);
+          witness.unrelated_root_state_after = queued.rootOwner.code_root_state(unrelated);
+        }
+      }
+    } catch {
+      // An owner failure is terminal, but must not erase the preceding guest
+      // request trace when cancellation follows a failed invocation.
+    }
+    witness.released = witness.queued_roots_before === 1
+      && witness.root_state_before === queued.rootStateBefore + 1
+      && witness.release_status === 0
+      && witness.queued_roots_after === 0
+      && witness.root_state_after === queued.rootStateBefore
+      && (witness.repeat_release_status === -1
+        || witness.repeat_release_status === 4
+          && witness.root_state_after_repeat === witness.root_state_after)
+      && (witness.unrelated_root_release_status === null
+        || witness.unrelated_root_release_status === 4
+          && witness.unrelated_root_state_before === witness.unrelated_root_state_after);
+    if (!witness.released) {
+      this.poisoned = true;
+      this.proposalInspectionFailed = true;
+    }
+    return witness;
   }
 
   inspectQueuedLiveProposal(queued) {
@@ -1243,12 +1302,35 @@ export class CoreEngine {
       nativeTrap = `${error.name}: ${error.message}`;
       status = 6;
     }
-    if (status !== 0) this.liveProposal = null;
+    let cancelledProposal = null;
+    if (status !== 0 && this.liveProposal) {
+      const queued = this.liveProposal;
+      this.liveProposal = null;
+      cancelledProposal = this.releaseQueuedLiveProposal(queued);
+      if (!cancelledProposal.released) {
+        nativeTrap = `${nativeTrap ? `${nativeTrap}; ` : ''}cannot release failed live proposal code root`;
+        status = 6;
+      }
+    }
     this.poisoned = status !== 0;
-    const metrics = Object.fromEntries(Object.entries(this.abi.metrics).map(([id, name]) => [name, Number(runtime.metric(Number(id)))]));
-    const outcome = status === 0 ? 'normal' : status === 1 || status === 2 ? 'runtime-exhausted' : 'trap';
+    let metrics;
     let stack = [];
-    if (status === 0) stack = readStack(this, runtime);
+    try {
+      metrics = Object.fromEntries(Object.entries(this.abi.metrics).map(([id, name]) => [name, Number(runtime.metric(Number(id)))]));
+      if (status === 0) stack = readStack(this, runtime);
+    } catch (error) {
+      if (this.liveProposal) {
+        const queued = this.liveProposal;
+        this.liveProposal = null;
+        if (!this.releaseQueuedLiveProposal(queued).released) {
+          this.poisoned = true;
+          fail(`cannot release failed live proposal after observation error: ${error}`);
+        }
+      }
+      this.poisoned = true;
+      throw error;
+    }
+    const outcome = status === 0 ? 'normal' : status === 1 || status === 2 ? 'runtime-exhausted' : 'trap';
     const isDeclared = this.declaredModules;
     const boundRequests = isDeclared ? this.boundRequests.slice(boundStart) : null;
     const adapterInvocations = isDeclared
@@ -1262,7 +1344,21 @@ export class CoreEngine {
       submission: record.submission ?? null, stage: 'wasm', outcome, status,
       ...(this.inProcessLive ? { generation: this.shared.generation.value,
         source_generation: this.liveSourceGeneration.toString(),
-        proposal_queued: status === 0 && this.liveProposal !== null } : {}),
+        proposal_queued: status === 0 && this.liveProposal !== null,
+        ...(this.liveCodeOwners ? {
+          queued_proposal_roots: runtime.queued_proposal_roots() } : {}),
+        ...(cancelledProposal ? {
+          cancelled_proposal_roots_before_cancel: cancelledProposal.queued_roots_before,
+          cancelled_proposal_roots_remaining: cancelledProposal.queued_roots_after,
+          cancelled_proposal_root_state_before: cancelledProposal.root_state_before,
+          cancelled_proposal_root_state_after: cancelledProposal.root_state_after,
+          cancelled_proposal_release_status: cancelledProposal.release_status,
+          cancelled_proposal_repeat_release_status: cancelledProposal.repeat_release_status,
+          cancelled_proposal_unrelated_root_release_status: cancelledProposal.unrelated_root_release_status,
+          cancelled_proposal_root_state_after_repeat: cancelledProposal.root_state_after_repeat,
+          cancelled_proposal_unrelated_root_state_before: cancelledProposal.unrelated_root_state_before,
+          cancelled_proposal_unrelated_root_state_after: cancelledProposal.unrelated_root_state_after,
+        } : {}) } : {}),
       quota_reason: this.abi.quota_reason[String(metrics.quota_reason)] ?? null, stack,
       request_trace: isDeclared
         ? boundRequests : this.trace.slice(traceStart),

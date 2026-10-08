@@ -375,6 +375,22 @@ impl Engine {
         self.reply()
     }
 
+    /// Apply an explicitly host-selected execution-work cap to one prepared
+    /// live submission without changing the global runtime maximum.
+    pub fn execute_with_steps(
+        &mut self,
+        steps: u32,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        if !(1..=100_000).contains(&steps) {
+            return Err(super::output::Failure::new(
+                super::output::ErrorContext { stage: "wasm", outcome: "internal-failure" },
+                "invalid live guest step budget".into(),
+            ));
+        }
+        attempt!(self.write(std::format!("execute-steps {steps}\n").as_bytes()));
+        self.reply()
+    }
+
     /// Execute one prepared module with explicitly typed host injections.
     pub fn execute_inputs(
         &mut self,
