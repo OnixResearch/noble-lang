@@ -918,9 +918,8 @@ impl ModulePrepared {
             return None;
         }
         let mut matched = submission.definitions.iter().filter(|definition|
-            definition.definition.0 == owner.definition_slot
+            definition.owner_slot == Some(owner.definition_slot)
                 && definition.source_identity == owner.definition_identity
-                && definition.owner_slot == Some(owner.definition_slot)
                 && submission.environment.definition_owners
                     .get(definition.definition.0 as usize) == Some(&Some(owner.module_identity)));
         let definition = matched.next()?;
@@ -933,7 +932,7 @@ impl ModulePrepared {
         if !matches!(
             submission.body.candidate.nodes.get(root),
             Some(noble_kernel::untrusted::Node::Invocation { def, .. })
-                if def.0 == owner.definition_slot
+                if *def == definition.definition
         ) { return None }
         Some((submission, definition, module))
     }

@@ -1767,6 +1767,27 @@ mod tests {
     }
 
     #[test]
+    fn dependent_equal_text_atoms_keep_their_distinct_checked_owners_in_guest() {
+        let bytes = b"module Worker@1 [ def helper [ \"same\" drop 2 * ] export plus def plus [ \"same\" drop helper 1 + ] ]";
+        let (mut source, root) = ProgramStore::prepare(
+            bytes, "plus", &[Ty::I64], 80_000_000).unwrap();
+        let helper = source.checked_root(0).unwrap();
+        assert_ne!(source.source_owner_identity(helper), source.source_owner_identity(root));
+        assert_eq!(source.text_aliases().len(), 2);
+        assert_eq!(source.text_aliases()[0].bytes, source.text_aliases()[1].bytes);
+        assert_eq!(execute(&mut source, root, 3).unwrap().value, 7);
+        assert_eq!(execute(&mut source, helper, 3).unwrap().value, 6);
+        let composed = source.compose(helper, root).unwrap();
+        assert!(source.source_owner_identity(composed).is_none(),
+            "a composition is not a source-named owner");
+        assert_eq!(execute(&mut source, composed, 3).unwrap().value, 13);
+        let (mut fresh, _) = ProgramStore::prepare(
+            bytes, "plus", &[Ty::I64], 50_000_000).unwrap();
+        assert!(matches!(execute(&mut fresh, helper, 3), Err(GuestFailure::Invalid(_))),
+            "a dependency handle cannot cross a fresh source installation");
+    }
+
+    #[test]
     fn checked_foreign_instance_handle_cannot_be_installed_in_guest() {
         let (first, root) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",

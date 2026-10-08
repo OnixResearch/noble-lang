@@ -185,9 +185,8 @@ impl Store {
                 None => !submission.request.expected.allowed_effects.is_empty(),
             }
             || submission.definitions.iter().filter(|definition|
-                definition.definition.0 == owner.definition_slot()
+                definition.owner_slot == Some(owner.definition_slot())
                 && definition.source_identity == owner.definition_identity()
-                && definition.owner_slot == Some(owner.definition_slot())
                 && submission.environment.definition_owners.get(definition.definition.0 as usize)
                     == Some(&Some(owner.module_identity()))).count() != 1 {
             return Err(Refusal::Invalid);
@@ -204,9 +203,8 @@ impl Store {
         let mut root = None;
         for dependency in &closure {
             let mut source_definitions = submission.definitions.iter().filter(|definition|
-                definition.definition.0 == dependency.definition_slot()
+                definition.owner_slot == Some(dependency.definition_slot())
                 && definition.source_identity == dependency.definition_identity()
-                && definition.owner_slot == Some(dependency.definition_slot())
                 && submission.environment.definition_owners.get(definition.definition.0 as usize)
                     == Some(&Some(owner.module_identity())));
             let (Some(source_definition), None) =
