@@ -16,6 +16,7 @@ macro_rules! attempt {
 
 mod backend;
 mod build;
+mod c_backend;
 mod component;
 mod core;
 mod sandbox;
@@ -80,7 +81,18 @@ fn main() -> std::process::ExitCode {
         .first()
         .is_some_and(|argument| argument == "build")
     {
+        if arguments.iter().any(|argument| argument == "--target")
+            || arguments.iter().any(|argument| argument == "--native")
+        {
+            return c_backend::run(&arguments);
+        }
         return build::run(&arguments);
+    }
+    if arguments.first().is_some_and(|argument| argument == "execute")
+        && arguments.iter().any(|argument| argument == "--target")
+    {
+        eprintln!("native C execution is unavailable: no selected sandbox or source-to-ELF admission");
+        return std::process::ExitCode::from(2);
     }
     if arguments
         .first()

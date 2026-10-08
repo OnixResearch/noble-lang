@@ -16,7 +16,20 @@ mod report;
 pub const USAGE: &str = "usage:
   noble build --require-proof SOURCE --contract FILE [--proof FILE | --refutation FILE]
               [--out NEW_DIR] [--timeout-ms N]
+  noble build SOURCE --target c --out NEW_DIR --contract CONTRACT_JSON --policy POLICY_JSON
   noble companions
+
+The nonselected C11 source-only route requires an independently checked,
+effect-free Core-Bootstrap I64/Bool result, no runtime input or named definitions,
+and supports I64/Bool literals, stack words, arithmetic, quote, quotation,
+compose and run. CONTRACT_JSON contains exactly expected_interface (\"-- I64\"
+or \"-- Bool\") and empty resolved_host_contracts. POLICY_JSON contains exactly
+profile Core-Bootstrap, target x86_64-unknown-linux-gnu, empty allowed_effects,
+and finite stack_slots/steps/output_bytes limits. It creates source.noble,
+contract.json, policy.json, artifact.c and manifest.json in a new directory.
+The source is inert evidence, not an admitted native artifact; --native and
+execute --target c refuse without independently selected sandbox/clock/loader
+barrier and source-to-ELF admission.
 
 build --require-proof compiles SOURCE, prepares the contract, and releases the
 artifact only for an applicable accepted `proved` claim whose evidence binds the

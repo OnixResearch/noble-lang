@@ -74,6 +74,35 @@ The runtime uses pinned Node/V8, wasm-tools, and Binaryen paths from
 incompatible tools produce an explicit refusal. The development shell alone
 does not install these runtime tools.
 
+### Inert C11 source candidate (nonselected)
+
+The explicit `build SOURCE --target c` route emits **source only**, not an
+executable or an alternative to the selected Wasm runtime. It independently
+checks an effect-free Core-Bootstrap expression with one I64 or Bool result,
+then lowers ordered stack operations, immutable quotation bodies, runtime
+`quote` capture, `compose`, and `run` into bounded C11 instructions and
+Program values. It refuses unsupported types, host effects, named definitions,
+runtime input and other profiles; there is no Wasm fallback.
+
+```sh
+printf '20 2 quote [ + ] compose run\n' > capture.noble
+printf '%s\n' '{"expected_interface":"-- I64","resolved_host_contracts":{}}' > c-contract.json
+printf '%s\n' '{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}' > c-policy.json
+noble build capture.noble --target c --contract c-contract.json \
+  --policy c-policy.json --out NEW_OUTPUT_DIRECTORY
+```
+
+The new directory contains the exact source, contract, policy, `artifact.c`,
+and `manifest.json` with exact-byte digests and a build key. This is candidate
+evidence, **not** independent admission or C/Wasm equivalence. Input files are
+read through one bounded file descriptor each, then the observed bytes are
+copied; this does not authenticate the host-selected pathname against ancestor
+symlinks, hard links or concurrent replacement, nor seal output files against
+subsequent mutation. `--native` and
+`execute --target c` refuse: no compiler/ELF execution is authorized until
+a separately reviewed pinned native toolchain, complete source-to-ELF
+correspondence, sandbox, loader, and clock barrier are selected.
+
 ### Independent Mathlib comparison for implemented I64 arithmetic
 
 `verification/mathlib-i64/compare.mjs` compiles
