@@ -291,19 +291,36 @@ struct ProgramCell {
     // An address/source can recur in a fresh Wasmtime Store. This token cannot.
     installation: u64,
 }
-/// One exact installed cell's grant ends on every execution exit, including
-/// guest traps and component instantiation errors. A poisoned policy denies.
-struct IssuedInstallation {
-    policy: WorkerHostPolicy,
-    cell: ProgramCell,
+/// Created before starting a task or installing a cell. The exact issue is
+/// recorded here before publication, so even an unwind during issuance
+/// retires it. Policy and task locks are never held across guest execution.
+struct ExecutionScope<'a> {
+    task: &'a TaskOwner,
+    policy: Option<&'a WorkerHostPolicy>,
+    issued: Option<ProgramCell>,
 }
-impl Drop for IssuedInstallation {
+impl<'a> ExecutionScope<'a> {
+    fn new(task: &'a TaskOwner, policy: Option<&'a WorkerHostPolicy>) -> Self {
+        Self { task, policy, issued: None }
+    }
+    fn issue(&mut self, source: &ProgramStore, root: Handle, cell: ProgramCell)
+        -> Result<()> {
+        ensure!(self.issued.is_none(), "Worker invocation already attempted an issue");
+        let policy = self.policy.context("no selected Worker host grant")?;
+        self.issued = Some(cell);
+        policy.issue_installed(source, root, cell, self.task)
+    }
+}
+impl Drop for ExecutionScope<'_> {
     fn drop(&mut self) {
-        if let Ok(mut state) = self.policy.inner.state.lock() {
-            if state.issued == Some(self.cell) {
-                state.issued = None;
+        if let (Some(policy), Some(cell)) = (self.policy, self.issued) {
+            if let Ok(mut state) = policy.inner.state.lock() {
+                if state.issued == Some(cell) {
+                    state.issued = None;
+                }
             }
         }
+        self.task.retire();
     }
 }
 #[derive(Clone, Copy)]
@@ -832,8 +849,7 @@ pub(super) enum GuestFailure {
 #[derive(Clone, Copy)]
 enum GuestAction<'a> { Invoke, CodeExport(&'a str) }
 
-fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: TaskOwner,
-                    grant: bool)
+fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: TaskOwner)
     -> Result<Store<Host>> {
     let installation = NEXT_INSTALLATION.fetch_update(Ordering::Relaxed, Ordering::Relaxed,
         |next| next.checked_add(1)).context("Worker installation IDs exhausted")?;
@@ -861,10 +877,6 @@ fn install_selected(engine: &Engine, source: &ProgramStore, root: Handle, task: 
     ensure!(install.call(&mut store,())? == 0,"source Program install failed");
     let mut cell = bind_installed(&mut store, instance, source, root)?;
     cell.installation = installation;
-    if grant {
-        source.host_policy().context("no selected Worker host grant")?
-            .issue_installed(source, root, cell, &store.data().task)?;
-    }
     let host = store.data_mut();
     if source.host_policy().is_some_and(|policy|
         policy.binding().operation == "test.code-export") && !source.text_aliases().is_empty() {
@@ -880,7 +892,7 @@ pub(super) fn attest(source: &ProgramStore, root: Handle) -> Result<[u8;32]> {
     let mut config = Config::new();
     config.wasm_component_model(true).consume_fuel(true).epoch_interruption(true);
     let engine = Engine::new(&config)?;
-    let store = install_selected(&engine, source, root, TaskOwner::for_source(source), false)?;
+    let store = install_selected(&engine, source, root, TaskOwner::for_source(source))?;
     Ok(store.data().installed.context("missing installed Program cell")?
         .cell.capture_hash)
 }
@@ -955,6 +967,7 @@ fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
                               operand: i64, task: &TaskOwner,
                               action: GuestAction<'_>, grant: bool) -> Result<Observation> {
     ensure!(task.scope == source.instance_id(), "foreign Program task context");
+    let mut scope = ExecutionScope::new(task, source.host_policy());
     ensure!(!task.cancelled()?, "Program task cancelled before guest admission");
     let world = source.selected_world()
         .map_err(|_| anyhow::anyhow!("source Program WIT binding refused"))?;
@@ -974,17 +987,14 @@ fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
     config.wasm_component_model(true).consume_fuel(true).epoch_interruption(true);
     let engine = Engine::new(&config)?;
     task.start(&engine)?;
-    let result = (|| {
     let guest = Component::new(&engine, component)?;
     let mut linker = Linker::new(&engine);
     link(&engine, &guest, &mut linker)?;
-    let mut store = install_selected(&engine, source, root, task.clone(), grant)?;
-    let _issued = if grant {
-        Some(IssuedInstallation {
-            policy: source.host_policy().context("missing issued Worker policy")?.clone(),
-            cell: store.data().installed.context("missing issued Worker cell")?.cell,
-        })
-    } else { None };
+    let mut store = install_selected(&engine, source, root, task.clone())?;
+    if grant {
+        scope.issue(source, root,
+            store.data().installed.context("missing installed Worker cell")?.cell)?;
+    }
     store.set_fuel(FUEL)?;
     let guest = linker.instantiate(&mut store, &guest)?;
     let compute = guest.get_typed_func::<(i64,),(i64,)>(&mut store,"compute")?;
@@ -1009,9 +1019,6 @@ fn execute_reserved_with_task(source: &ProgramStore, root: Handle,
         code_export_requests: host.code_export_requests,
         code_export_denials: host.code_export_denials,
         capture_published: host.capture_published })
-    })();
-    if result.is_err() { task.retire(); }
-    result
 }
 
 #[cfg(test)]
@@ -1126,9 +1133,11 @@ mod tests {
         let mut config = Config::new();
         config.consume_fuel(true).epoch_interruption(true);
         let engine = Engine::new(&config).unwrap();
+        let mut execution = ExecutionScope::new(&task, selected.host_policy());
         task.start(&engine).unwrap();
-        let installed = install_selected(&engine, &selected, root, task.clone(), true).unwrap();
+        let installed = install_selected(&engine, &selected, root, task.clone()).unwrap();
         let cell = installed.data().installed.unwrap().cell;
+        execution.issue(&selected, root, cell).unwrap();
         let scope = selected.instance_id();
         let entered = std::sync::Arc::new(Barrier::new(2));
         let release = std::sync::Arc::new(Barrier::new(2));
@@ -1200,9 +1209,11 @@ mod tests {
         let mut config = Config::new();
         config.consume_fuel(true).epoch_interruption(true);
         let engine = Engine::new(&config).unwrap();
+        let mut execution = ExecutionScope::new(&task, selected.host_policy());
         task.start(&engine).unwrap();
-        let installed = install_selected(&engine, &selected, root, task.clone(), true).unwrap();
+        let installed = install_selected(&engine, &selected, root, task.clone()).unwrap();
         let cell = installed.data().installed.unwrap().cell;
+        execution.issue(&selected, root, cell).unwrap();
         let full = "a".repeat(EFFECT_TEXT_LIMIT);
         for _ in 0..(LEDGER_BYTES_LIMIT / EFFECT_TEXT_LIMIT) {
             assert!(matches!(policy.emit(cell, 4, &full, &task).unwrap(),
@@ -1270,14 +1281,15 @@ mod tests {
         config.wasm_component_model(true).consume_fuel(true).epoch_interruption(true);
         let engine = Engine::new(&config).unwrap();
         let task = TaskOwner::for_source(&selected);
+        let mut execution = ExecutionScope::new(&task, selected.host_policy());
         task.start(&engine).unwrap();
         let mut first = None;
         let failed = (|| -> Result<()> {
-            let installed = install_selected(&engine, &selected, root, task.clone(), true)?;
+            let installed = install_selected(&engine, &selected, root, task.clone())?;
             let cell = installed.data().installed.context("missing first cell")?.cell;
             first = Some(cell);
-            let _issued = IssuedInstallation { policy: policy.clone(), cell };
-            let other = install_selected(&engine, &selected, root, task.clone(), false)?;
+            execution.issue(&selected, root, cell)?;
+            let other = install_selected(&engine, &selected, root, task.clone())?;
             let other = other.data().installed.context("missing second cell")?.cell;
             ensure!(cell.scope == other.scope && cell.address == other.address
                 && cell.definition_identity == other.definition_identity
@@ -1289,16 +1301,56 @@ mod tests {
             bail!("guest failed after installation, before invoking the source");
         })();
         assert!(failed.is_err());
+        drop(execution);
         let first = first.unwrap();
         assert!(policy.inner.state.lock().unwrap().issued.is_none());
-        let retry = install_selected(&engine, &selected, root, task.clone(), false).unwrap();
+        assert!(!task.running().unwrap(), "failed task was not retired");
+        let retry_task = TaskOwner::for_source(&selected);
+        let _retry_scope = ExecutionScope::new(&retry_task, selected.host_policy());
+        retry_task.start(&engine).unwrap();
+        let retry = install_selected(&engine, &selected, root, retry_task.clone()).unwrap();
         let second = retry.data().installed.unwrap().cell;
         assert_eq!((first.scope, first.address, first.definition_identity, first.capture_hash),
             (second.scope, second.address, second.definition_identity, second.capture_hash));
         assert_ne!(first.installation, second.installation);
-        assert!(matches!(policy.emit(second, 4, "audit", &task).unwrap(),
+        assert!(matches!(policy.emit(second, 4, "audit", &retry_task).unwrap(),
             EffectOutcome::Denied), "retry without a new issue must not append");
         assert_eq!(policy.counts().unwrap(), (2, 0));
+        assert!(policy.ledger().unwrap().is_empty());
+    }
+
+    #[test]
+    fn unwinding_before_and_after_issue_retires_the_task_and_exact_grant() {
+        use std::panic::{AssertUnwindSafe, catch_unwind};
+        let source = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
+        let policy = host_selected_policy(source, false);
+        let (selected, root) = ProgramStore::prepare_with_policy(
+            source, "plus", &[Ty::I64], policy.clone(), 70_000_000).unwrap();
+        let mut config = Config::new();
+        config.consume_fuel(true).epoch_interruption(true);
+        let engine = Engine::new(&config).unwrap();
+        let before = TaskOwner::for_source(&selected);
+        assert!(catch_unwind(AssertUnwindSafe(|| {
+            let _scope = ExecutionScope::new(&before, selected.host_policy());
+            before.start(&engine).unwrap();
+            panic!("synthetic abort after task start");
+        })).is_err());
+        assert!(before.cancelled().unwrap());
+        assert!(policy.inner.state.lock().unwrap().issued.is_none());
+
+        let after = TaskOwner::for_source(&selected);
+        assert!(catch_unwind(AssertUnwindSafe(|| {
+            let mut scope = ExecutionScope::new(&after, selected.host_policy());
+            after.start(&engine).unwrap();
+            let installed = install_selected(&engine, &selected, root, after.clone()).unwrap();
+            let cell = installed.data().installed.unwrap().cell;
+            scope.issue(&selected, root, cell).unwrap();
+            assert!(policy.inner.state.lock().unwrap().issued == Some(cell));
+            panic!("synthetic abort after host issue");
+        })).is_err());
+        assert!(after.cancelled().unwrap());
+        assert!(policy.inner.state.lock().unwrap().issued.is_none());
+        assert_eq!(policy.counts().unwrap(), (0, 0));
         assert!(policy.ledger().unwrap().is_empty());
     }
 
