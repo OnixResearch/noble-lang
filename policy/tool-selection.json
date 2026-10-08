@@ -195,7 +195,7 @@
     "crates/noble-wasm/src/source/emit/initialize.rs": "26dcaf3e2c16e4f2c86a8b86f719d04b5a375019115f7e8b5c8fae59d787cf64",
     "crates/noble-wasm/src/source/emit/metadata.rs": "6294d2eb85387768e7679d8e6d55812adfe044aa99501c414aca6c0ada62f333",
     "crates/noble-wasm/src/source/emit/reflection.rs": "e28ceb43538e5015330278300f27536af2ad3a785322bdf5494aec8b21062179",
-    "crates/noble-wasm/src/source/emit/worker.rs": "4ffdd16acae198c92627a2002996a059c0b6ff9458dd278c96ff02018fd3f6de",
+    "crates/noble-wasm/src/source/emit/worker.rs": "04db81243441a4074fd698c3703cac0eb01daf4990131d9c5d8c20f05b0b671d",
     "crates/noble-wasm/src/source/mod.rs": "c817ea94c80ff500e1a00538e07a2b73b19560f567b9c3965a82c7c4e3435ac4",
     "crates/noble-wasm/src/source/origin.rs": "89857e7f29931cf97991c4b50555351a16fe734d5152c14bb5c340b94786667b",
     "crates/noble-wasm/src/source/plan.rs": "f564c896f4c4ffa06d0e482cece5f46b9072e2cf0f71e40adf9516b77171f206",

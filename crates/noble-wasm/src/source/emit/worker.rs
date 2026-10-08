@@ -45,7 +45,7 @@ pub(super) fn exports(
         attempt!(super::get_global(out, index));
         attempt!(out.append(b")))\n"));
     }
-    attempt!(out.append(b"(i32.const 0))\n\
+    out.append(b"(i32.const 0))\n\
 (func (export \"worker_invoke\") (param $handle i32) (param $operand i64) (result i64)\n\
 (if (i32.or (i32.eqz (global.get $worker_installed))\n (i32.or (global.get $sp) (global.get $cp)))\n (then (call $fail (i32.const 4)) (return (i64.const 0))))\n\
 (if (global.get $failure) (then (return (i64.const 0))))\n\
@@ -63,5 +63,5 @@ pub(super) fn exports(
  (i32.or (global.get $sp) (global.get $cp)))\n\
  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n\
 (if (global.get $failure) (then (return (i32.const 0))))\n\
-(call $compose (local.get $left) (local.get $right)))\n"))
+(call $compose (local.get $left) (local.get $right)))\n")
 }
