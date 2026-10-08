@@ -221,8 +221,13 @@ use retained roots rather than replacing live effect policy. Every reply is
 JSON; inspect each `outcome`, not only the process exit status. Source-bound
 named selection requires `install` with `selected_name` after the corresponding
 `define`. A narrow checked anonymous returned target can receive experimental
-local D/P in its saved-owner receipt, but has no independently installed
-captured-target Wasm candidate, proof, or source-bound frozen replay. Recorded
+local D/P in its saved-owner receipt. The separately checked, narrow pure
+two-capture composite can also publish into a non-proof slot after its exact
+source, installed code donors, retained Program graph and artifact manifest
+are checked; it can then be frozen and replayed without performing another
+host effect. Other returned shapes, including captured effectful Programs,
+do not acquire this publication path. There is no captured-target Wasm
+refinement proof. Recorded
 protected responses are replayed as an
 exact ordered script without executing another real host effect; they do not
 grant permission for a new live effect. An optional `expected_identity` on
@@ -289,11 +294,13 @@ source/Wasm/graph correspondence from compiler-emitted Wasm; the custom Wasm
 name section alone does not authenticate arbitrary replacement runtime helper
 bodies or the installer's complete control flow. The bounded local D/P receipt
 is **not** symbolic P2/D2, captured P/D/C/Q/A/Wasm Lean proof, effect
-permission, publication permission, or frozen replay authorization. Saved
-dynamic targets still refuse publication even into a non-proof slot until the
-exact target's installed Wasm correspondence exists; proof-required slots
-also refuse without independently checked exact-target evidence. Canonical
-LSLOT-05 and LSLOT-08 remain blocked.
+permission, or a general publication or replay authorization. A supported
+pure two-capture dynamic target can publish into a non-proof slot only after
+the host checks its exact source, installed code donors, retained Program
+graph, identity and manifest; unsupported shapes, including captured
+effectful targets, still refuse publication. Proof-required slots refuse
+without independently checked exact-target evidence even for the supported
+pure shape. Canonical LSLOT-05 and LSLOT-08 remain blocked.
 
 The selected dynamic owner also has a narrower retention consequence: with
 `def builder [ quote [ 1 + ] compose ]`, the same builder module's independently
