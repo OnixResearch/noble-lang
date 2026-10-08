@@ -540,6 +540,15 @@ has any current effective dependent; it does not rebuild those dependents.
 Only host-selected file reload and direct host definition admission exercise
 the acyclic Core transitive rebuild. A rejected guest candidate publishes
 neither a successor nor a stale ACK.
+An optional host-selected `--max-guest-steps N` (1–100000) tightens the
+per-invocation V8 guest work bound; it does not raise the existing maximum
+or apply to inert source staging. A queued self-edit candidate held by the
+backend remains inert until normal guest return. If later guest work traps or
+exhausts, the worker cancels it, releases only its exact retained code root,
+and reports the backend's before/after queued-root and owner-byte counts.
+Terminal denial still preserves the completed host-request prefix and does
+not release an unrelated saved Program. This is a scoped terminal-cancellation
+control, not canonical LIVE-10 acceptance.
 
 This is a **guarded partial** live profile, not complete source-bound
 LIVE-01–10 acceptance, interpreter execution, general guest mutation, or
@@ -565,6 +574,19 @@ Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
 remain `absent`/`not-run`, proof open, with no accepted source-bound assurance;
 see the [active change](.cairn/changes/live-wasm-reload/tasks.md) and
 [status ledger](specs/STATUS.json).
+
+For a repeatable scoped selected-CLI trace, run the pinned Node 24 binary
+against an already-built absolute `noble` binary:
+
+```sh
+/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node \
+  tools/live-selected-receipts.mjs --noble /absolute/path/to/noble
+```
+
+The JSON lines contain the selected binary SHA-256, initial source SHA-256,
+raw guest reports, exact process exits, and explicit `unproven` controls.
+They are finite real-child observations, **not** canonical LIVE statuses or
+proof receipts.
 
 ## What works today
 

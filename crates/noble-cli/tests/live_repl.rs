@@ -1762,7 +1762,7 @@ fn guest_work_quota_after_enqueuing_cancels_exact_backend_proposal_pin(
     assert_eq!(text_field(&positive.report()?, "outcome"), "proposal-committed");
     positive.finish()?;
 
-    let mut quota = LiveChild::start_with_guest_step_budget(&fixture.source, "evolve", 32)?;
+    let mut quota = LiveChild::start_with_guest_step_budget(&fixture.source, "evolve", 300)?;
     live_ack(&quota.report()?, &[]);
     assert_grant(&quota, 1)?;
     let exhausted = quota.submit("20 evolve")?;

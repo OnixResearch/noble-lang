@@ -384,7 +384,7 @@ impl Engine {
         if !(1..=100_000).contains(&steps) {
             return Err(super::output::Failure::new(
                 super::output::ErrorContext { stage: "wasm", outcome: "internal-failure" },
-                "invalid live guest step budget".into(),
+                "invalid live guest step budget",
             ));
         }
         attempt!(self.write(std::format!("execute-steps {steps}\n").as_bytes()));
