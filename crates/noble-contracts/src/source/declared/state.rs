@@ -377,11 +377,11 @@ impl ModulePrepared {
                     == Some(&Some(module.identity))
                 && (matches!(environment.kind(adapter.definition),
                     Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
-                        if *slot == binding.adapter_slot
+                        if slot == binding.adapter_slot
                             && binding.operation == "test.emit")
                     || matches!(environment.kind(adapter.definition),
                         Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
-                            if *slot == binding.adapter_slot
+                            if slot == binding.adapter_slot
                                 && binding.operation == "test.code-export"))
         });
         let adapter = matching.next()?;
@@ -875,11 +875,11 @@ impl ModulePrepared {
                     && actual.effects == adapter.effects
                     && (matches!(submission.environment.kind(actual.definition),
                         Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
-                            if *slot == binding.adapter_slot
+                            if slot == binding.adapter_slot
                                 && binding.operation == "test.emit")
                     || matches!(submission.environment.kind(actual.definition),
                         Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
-                            if *slot == binding.adapter_slot
+                            if slot == binding.adapter_slot
                                 && binding.operation == "test.code-export")))
                 .count() != 1 {
             return None;
