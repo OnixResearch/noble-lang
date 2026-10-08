@@ -36,6 +36,12 @@ impl super::Session {
             attempt!(super::locals::lower(&mut tree, &mut meter)
                 .map_err(|error| super::Error::at(super::Stage::Resolve, error)));
         }
+        let alias_candidates = if name.is_some() {
+            attempt!(alias_candidates(&tree, self, &mut meter)
+                .map_err(|error| super::Error::at(super::Stage::Resolve, error)))
+        } else {
+            alloc::vec::Vec::new()
+        };
         let signed_owner = signature.is_some()
             && self.declared.as_ref().is_some_and(|context| context.signed_self);
         if let Err(error) = super::resolution::resolve(
@@ -44,6 +50,12 @@ impl super::Session {
         {
             return Err(super::Error::at(super::Stage::Resolve, error));
         }
+        let alias_uses = if alias_candidates.is_empty() {
+            alloc::vec::Vec::new()
+        } else {
+            attempt!(checked_alias_uses(&tree, self, &alias_candidates, &mut meter)
+                .map_err(|error| super::Error::at(super::Stage::Check, error)))
+        };
         if name.is_some() && self.live_slots.is_some() && tree.nodes.iter().any(|node| {
             matches!(node.kind, super::Kind::Call(super::Target::SlotInvoke(_)))
         }) {
@@ -129,7 +141,8 @@ impl super::Session {
         let (definition, submission, checked, output) = match name {
             Some(name) => {
                 let definition =
-                    match declaration(tree, name, source_bytes, signature, signed_relation, self, &mut meter) {
+                    match declaration(tree, name, source_bytes, signature, signed_relation,
+                        alias_uses, self, &mut meter) {
                         Ok((definition, bytes)) => {
                             addition = bytes;
                             definition
@@ -209,12 +222,90 @@ impl super::Session {
     }
 }
 
+/// Preserve exact source node ordinals before resolution erases spellings.
+/// Only current outside aliases on a top-level named body are mutable;
+/// module-local imports belong to that module's immutable source snapshot.
+fn alias_candidates(
+    tree: &super::Tree,
+    session: &super::Session,
+    meter: &mut crate::Meter,
+) -> Result<alloc::vec::Vec<(u32, usize)>, crate::Diagnostic> {
+    let Some(context) = session.declared.as_ref() else { return Ok(alloc::vec::Vec::new()); };
+    if context.owner.is_some() || context.aliases.is_empty() {
+        return Ok(alloc::vec::Vec::new());
+    }
+    let mut candidates = alloc::vec::Vec::new();
+    for (node_index, node) in tree.nodes.iter().enumerate() {
+        attempt!(meter.charge(1, node.span));
+        let super::Kind::Word(word) = &node.kind else { continue; };
+        for (alias_index, (alias, _)) in context.aliases.iter().enumerate() {
+            attempt!(meter.charge(1, node.span));
+            if word.len() > alias.len() + 1 && word.starts_with(alias.as_bytes())
+                && word[alias.len()] == b'.'
+            {
+                candidates.push((attempt!(crate::index(node_index, node.span)), alias_index));
+                break;
+            }
+        }
+    }
+    Ok(candidates)
+}
+
+fn checked_alias_uses(
+    tree: &super::Tree,
+    session: &super::Session,
+    candidates: &[(u32, usize)],
+    meter: &mut crate::Meter,
+) -> Result<alloc::vec::Vec<super::AliasUse>, crate::Diagnostic> {
+    let context = session.declared.as_ref().ok_or_else(|| crate::internal(tree.span))?;
+    let mut uses: alloc::vec::Vec<super::AliasUse> = alloc::vec::Vec::new();
+    for &(node_index, alias_index) in candidates {
+        let node = tree.nodes.get(attempt!(crate::offset(node_index, tree.span)))
+            .ok_or_else(|| crate::internal(tree.span))?;
+        let (alias, owner) = context.aliases.get(alias_index)
+            .ok_or_else(|| crate::internal(node.span))?;
+        let super::Kind::Call(target) = &node.kind else {
+            return Err(crate::invalid(node.span, "checked import alias lost its source word"));
+        };
+        match *target {
+            super::Target::Named(index) => {
+                let definition = session.definitions.get(attempt!(crate::offset(index, node.span)))
+                    .ok_or_else(|| crate::internal(node.span))?;
+                if definition.owner != Some(*owner) {
+                    return Err(crate::invalid(node.span,
+                        "checked alias call has a foreign module owner"));
+                }
+            }
+            super::Target::Builtin(_) => {}
+            super::Target::SelfOwner | super::Target::SlotInvoke(_) => {
+                return Err(crate::invalid(node.span,
+                    "checked alias call has an unsupported target"));
+            }
+        }
+        attempt!(meter.charge(1, node.span));
+        if let Some(existing) = uses.iter_mut().find(|entry| {
+            entry.spelling == alias.as_str() && entry.owner == *owner
+        }) {
+            existing.nodes.push((node_index, *target));
+        } else {
+            attempt!(meter.node(node.span));
+            uses.push(super::AliasUse {
+                spelling: alias.clone(),
+                owner: *owner,
+                nodes: alloc::vec![(node_index, *target)],
+            });
+        }
+    }
+    Ok(uses)
+}
+
 fn declaration(
     tree: super::Tree,
     name: alloc::string::String,
     source_bytes: &[u8],
     signature: Option<&noble_kernel::words::Scheme>,
     signed: Option<super::SignedRelation>,
+    alias_uses: alloc::vec::Vec<super::AliasUse>,
     session: &super::Session,
     meter: &mut crate::Meter,
 ) -> Result<(super::Named, alloc::vec::Vec<u8>), crate::Diagnostic> {
@@ -236,6 +327,8 @@ fn declaration(
             tree,
             signature: signature.cloned(),
             signed,
+            alias_uses,
+            history_start: None,
         },
         addition,
     ))

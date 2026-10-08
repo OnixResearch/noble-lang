@@ -30,10 +30,15 @@ impl super::ModuleSession {
                 crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
             })
         );
-        let StagedUnit { session: staged, kind, submission, output, pending } =
+        let StagedUnit { session: mut staged, kind, submission, output, pending } =
             attempt!(self
                 .snapshot()
                 .stage_unit(unit, input_bytes, inputs, limits));
+        let rebuilt_import_definitions = if kind == super::ModuleKind::Import {
+            attempt!(self.rebuild_import_alias(&mut staged, limits))
+        } else {
+            None
+        };
         attempt!(staged.retained(limits));
         let signed_expression = if kind == super::ModuleKind::Expression
             && (self.source.declared.as_ref()
@@ -58,6 +63,7 @@ impl super::ModuleSession {
             output,
             pending,
             signed_expression,
+            rebuilt_import_definitions,
         };
         if !prepared.signed_expression.is_empty() {
             attempt!(prepared.verify_signed_origins());
@@ -165,6 +171,16 @@ impl super::ModuleSession {
                 Err(crate::source::declared::error(
                     crate::source::Stage::Acceptance,
                     "stale or foreign module namespace snapshot",
+                )),
+            );
+        }
+        if self.import_rebind_required(&prepared)
+            && prepared.rebuilt_import_definitions.is_none() {
+            return (
+                self,
+                Err(crate::source::declared::error(
+                    crate::source::Stage::Acceptance,
+                    "import rebind lacks its checked transitive dependent rebuild",
                 )),
             );
         }
