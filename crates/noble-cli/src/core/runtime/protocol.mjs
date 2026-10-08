@@ -26,7 +26,8 @@ async function protocol(config) {
     ? { ...slotReply('internal-failure'), diagnostic: `${error.name}: ${error.message}`,
       request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
       session_state: 'terminated-after-internal-failure' }
-    : ({ schema: 'noble-core-report/v1', profile: 'Core-Bootstrap',
+    : ({ schema: 'noble-core-report/v1',
+    profile: engine?.declaredLive ? engine.profile : 'Core-Bootstrap',
     backend: 'managed-linear-memory', stage: 'wasm', outcome: 'internal-failure',
     diagnostic: `${error.name}: ${error.message}`,
     request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
@@ -52,6 +53,10 @@ async function protocol(config) {
           }
           const header = utf8.decode(pending.subarray(0, newline));
           pending = pending.subarray(newline + 1);
+          if (engine.stagedDeclared && header !== 'publish-live-declared'
+            && header !== 'discard-live-declared') {
+            fail('staged declared live state requires publish or discard');
+          }
           if (header === 'shutdown') {
             emit('closed', { outcome: 'closed' });
             return;
@@ -68,11 +73,27 @@ async function protocol(config) {
           if (engine.staged && header !== 'publish-bin' && header !== 'discard-bin') {
             fail('staged live reload requires publish or discard');
           }
+          if (header === 'publish-live-declared' || header === 'discard-live-declared') {
+            try {
+              const report = header === 'publish-live-declared'
+                ? engine.publishLiveDeclared() : engine.discardLiveDeclared();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
           if (header === 'publish-bin' || header === 'discard-bin') {
             try {
               const report = header === 'publish-bin' ? engine.publishBinary() : engine.discardBinary();
               emit(report.outcome, report);
             } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
+          const declaredState = /^stage-live-declared ([0-9]+)$/.exec(header);
+          if (declaredState) {
+            if (!engine.declaredLive) fail('declared live state requires a declared live worker');
+            command = { kind: 'stage-live-declared',
+              bytes: integer(Number(declaredState[1]), 65536, 'declared live state frame') };
+            if (command.bytes === 0) fail('empty declared live state');
             continue;
           }
           if (header === 'discard-prepared-live') {
@@ -85,6 +106,18 @@ async function protocol(config) {
           if (header === 'take-live-proposal') {
             try {
               const report = engine.takeLiveProposal();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
+          const liveCode = /^(register-live-code|inspect-live-code|retire-live-code) ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+          if (liveCode) {
+            try {
+              const span = { start: Number(liveCode[2]), length: Number(liveCode[3]),
+                generation: Number(liveCode[4]) };
+              const report = liveCode[1] === 'register-live-code'
+                ? engine.registerLiveCode(span) : liveCode[1] === 'inspect-live-code'
+                  ? engine.inspectLiveCode(span) : engine.retireLiveCode(span);
               emit(report.outcome, report);
             } catch (error) { emit('internal-failure', reportError(error)); return; }
             continue;
@@ -160,6 +193,17 @@ async function protocol(config) {
             const report = engine.request(JSON.parse(utf8.decode(json)), binary);
             emit(report.outcome, { ...report, retire_code_spans: engine.retireCodeSpans() });
             if (engine.poisoned) return;
+          } catch (error) { emit('internal-failure', reportError(error)); return; }
+          continue;
+        }
+        if (command.kind === 'stage-live-declared') {
+          if (pending.length < command.bytes) break;
+          const bytes = pending.subarray(0, command.bytes);
+          pending = pending.subarray(command.bytes);
+          command = null;
+          try {
+            const report = engine.stageLiveDeclared(parseDeclaredLiveState(bytes));
+            emit(report.outcome, report);
           } catch (error) { emit('internal-failure', reportError(error)); return; }
           continue;
         }

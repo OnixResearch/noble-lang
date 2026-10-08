@@ -1,10 +1,13 @@
-//! Opt-in, resource-free Core live session. Existing run/session paths do not enter here.
-//! A reload previews one checked replacement and its transitive dependents,
-//! compiles an inert empty expression from that private successor, and publishes
-//! only after isolated binary staging and an exact second file snapshot.
-//! The resident engine retains old Program slots.
+//! Opt-in Core/declared live session. Existing run/session paths do not enter here.
+//! Core reload previews one checked replacement and its transitive dependents,
+//! stages an inert binary, and publishes after a second selected-file snapshot.
+//! Declared reload instead publishes immutable module roots and current aliases.
+//! The resident engine retains old Program slots in both profiles.
 
 mod encoding;
+mod declared;
+#[cfg(target_os = "linux")]
+mod watch;
 
 use std::os::unix::fs::MetadataExt;
 
@@ -24,6 +27,16 @@ struct GrantSelection {
     expected_generation: u64,
 }
 
+struct LiveOptions {
+    source: Option<std::path::PathBuf>,
+    engine: &'static str,
+    initial_grant: Option<GrantSelection>,
+    verify_source_before_execute: bool,
+    manifest: Option<super::arguments::bindings::Manifest>,
+    watch: bool,
+    retained_generation_limit: Option<u64>,
+}
+
 enum ReloadDecision {
     Committed(serde_json::Value),
     Refused(std::string::String),
@@ -34,20 +47,34 @@ enum ReloadDecision {
 
 struct Live {
     session: super::Session,
+    declared: Option<declared::State>,
     verify_source_before_execute: bool,
     selected: Option<std::path::PathBuf>,
     selected_definition: Option<std::string::String>,
     selected_file_hash: Option<std::string::String>,
+    selected_file_identity: Option<(FileIdentity, (u64, u64))>,
     grant_scope: Option<std::string::String>,
     grant: Option<GrantSelection>,
     last_stack: serde_json::Value,
     invocation_prior_stack: Option<serde_json::Value>,
     // Source/namespace publication generation, not the Wasm submission count.
     generation: u64,
+    retained_generation_limit: Option<u64>,
+    live_code_spans: std::vec::Vec<noble_wasm::source::CodeSpan>,
+    #[cfg(target_os = "linux")]
+    watch: Option<watch::Watcher>,
 }
 
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
-    let (source, engine, initial_grant, verify_source_before_execute) = match parse(arguments) {
+    let LiveOptions {
+        source,
+        engine,
+        initial_grant,
+        verify_source_before_execute,
+        manifest,
+        watch,
+        retained_generation_limit,
+    } = match parse(arguments) {
         Ok(options) => options,
         Err(message) => {
             emit(&refusal(0, &serde_json::json!([]), &message));
@@ -66,25 +93,55 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         return std::process::ExitCode::from(2);
     }
     let selected_grant_name = initial_grant.as_ref().map(|grant| grant.name.as_str());
+    let declared = match manifest.as_ref() {
+        Some(manifest) => match noble_contracts::source::ModuleSession::new(&manifest.operations()) {
+            Ok(frontend) => Some(frontend),
+            Err(error) => {
+                emit(&refusal(0, &serde_json::json!([]), &error.diagnostic().message));
+                return std::process::ExitCode::from(2);
+            }
+        },
+        None => None,
+    };
+    #[cfg(target_os = "linux")]
+    let watcher = if watch {
+        match watch::Watcher::new(source.as_ref().expect("parsed watch requires a source")) {
+            Ok(watcher) => Some(watcher),
+            Err(problem) => {
+                emit(&refusal(0, &serde_json::json!([]), &problem));
+                return std::process::ExitCode::from(2);
+            }
+        }
+    } else {
+        None
+    };
+    #[cfg(not(target_os = "linux"))]
+    if watch {
+        emit(&refusal(0, &serde_json::json!([]), "live watch requires Linux inotify"));
+        return std::process::ExitCode::from(2);
+    }
     let mut live = Live {
         session: super::Session {
             frontend: match selected_grant_name {
                 Some(name) => noble_contracts::source::Session::new_live(name),
                 None => noble_contracts::source::Session::new(),
             },
-            declared: None,
-            compiler: match selected_grant_name {
-                Some(_) => noble_wasm::source::Compiler::new_live(),
-                None => noble_wasm::source::Compiler::new(),
+            declared,
+            compiler: if manifest.is_some() {
+                noble_wasm::source::Compiler::new()
+            } else {
+                noble_wasm::source::Compiler::new_live()
             },
             stack: std::vec::Vec::new(),
             worker: None,
             submissions: 0,
         },
+        declared: manifest.map(declared::State::new),
         verify_source_before_execute,
         selected: None,
         selected_definition: None,
         selected_file_hash: None,
+        selected_file_identity: None,
         grant_scope: selected_grant_name.map(str::to_owned),
         grant: initial_grant.as_ref().map(|grant| GrantSelection {
             name: grant.name.clone(),
@@ -93,6 +150,10 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         last_stack: serde_json::json!([]),
         invocation_prior_stack: None,
         generation: 0,
+        retained_generation_limit,
+        live_code_spans: std::vec::Vec::new(),
+        #[cfg(target_os = "linux")]
+        watch: watcher,
     };
     if let Some(source) = source {
         if !live.respond_reload(&source) {
@@ -117,6 +178,38 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     }
     let mut input = std::io::BufReader::new(std::io::stdin());
     loop {
+        #[cfg(target_os = "linux")]
+        if live.watch.is_some() {
+            // A BufReader may already hold more complete input lines than
+            // poll can see. Drain pending save events before consuming its
+            // next line, including a save that superseded the last commit.
+            let watcher = live.watch.as_mut().expect("checked watch selection");
+            if let Err(problem) = watcher.drain() {
+                emit(&fatal(&problem));
+                return std::process::ExitCode::from(2);
+            }
+            if watcher.has_pending() {
+                if !live.respond_watch() {
+                    return std::process::ExitCode::from(2);
+                }
+                continue;
+            }
+            if input.buffer().is_empty() {
+                match live.watch.as_ref().expect("checked watch selection").wait(input.get_ref()) {
+                    Ok(watch::Ready::Input) => {}
+                    Ok(watch::Ready::Save) => {
+                        if !live.respond_watch() {
+                            return std::process::ExitCode::from(2);
+                        }
+                        continue;
+                    }
+                    Err(problem) => {
+                        emit(&fatal(&problem));
+                        return std::process::ExitCode::from(2);
+                    }
+                }
+            }
+        }
         let next = super::framing::read_line(&mut input, LIMIT)
             .map_err(|error| error.message);
         let bytes = match next {
@@ -221,6 +314,10 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
                     }
                     return std::process::ExitCode::from(2);
                 }
+                if let Err(error) = live.retire_unowned_live_code() {
+                    emit(&fatal(&error.message));
+                    return std::process::ExitCode::from(2);
+                }
             }
             Err(error) => {
                 emit(&fatal(&error.message));
@@ -232,15 +329,20 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
 
 fn parse(
     arguments: &[std::ffi::OsString],
-) -> Result<(Option<std::path::PathBuf>, &'static str, Option<GrantSelection>, bool), std::string::String> {
-    if arguments.get(1).and_then(|argument| argument.to_str()) != Some("repl") {
-        return Err("usage: noble live repl [--source ABS_PATH]".into());
-    }
+) -> Result<LiveOptions, std::string::String> {
+    let mut watch = match arguments.get(1).and_then(|argument| argument.to_str()) {
+        Some("repl") => false,
+        Some("watch") => true,
+        _ => return Err("usage: noble live repl|watch --source ABS_PATH".into()),
+    };
     let mut source = None;
     let mut engine = None;
     let mut grant_name = None;
     let mut grant_generation = None;
     let mut verify_source_before_execute = false;
+    let mut declared_modules = false;
+    let mut bindings = None;
+    let mut retained_generation_limit = None;
     let mut at = 2;
     while at < arguments.len() {
         let flag = arguments[at].to_str().ok_or("invalid live option")?;
@@ -252,6 +354,22 @@ fn parse(
             at += 1;
             continue;
         }
+        if flag == "--declared-modules" {
+            if declared_modules {
+                return Err("duplicate live declared modules option".into());
+            }
+            declared_modules = true;
+            at += 1;
+            continue;
+        }
+        if flag == "--watch" {
+            if watch {
+                return Err("duplicate live watch selection".into());
+            }
+            watch = true;
+            at += 1;
+            continue;
+        }
         let value = arguments
             .get(at + 1)
             .and_then(|value| value.to_str())
@@ -259,6 +377,15 @@ fn parse(
         match flag {
             "--source" if source.is_none() => {
                 source = Some(std::path::PathBuf::from(value))
+            }
+            "--bindings" if bindings.is_none() => bindings = Some(std::path::PathBuf::from(value)),
+            "--max-retained-generations" if retained_generation_limit.is_none() => {
+                let limit = value.parse::<u64>()
+                    .map_err(|_| "invalid retained generation budget")?;
+                if !(1..=64).contains(&limit) {
+                    return Err("retained generation budget must be between 1 and 64".into());
+                }
+                retained_generation_limit = Some(limit);
             }
             "--engine" if engine.is_none() => {
                 engine = Some(match value {
@@ -279,8 +406,17 @@ fn parse(
         }
         at += 2;
     }
-    if verify_source_before_execute && source.is_none() {
+    if (verify_source_before_execute || watch) && source.is_none() {
         return Err("source verification requires --source ABS_PATH".into());
+    }
+    // A watched complete-save ACK cannot permit execution after an observed
+    // but unacknowledged file change, even before the rename is processed.
+    verify_source_before_execute |= watch;
+    if declared_modules != bindings.is_some() || declared_modules && source.is_none() {
+        return Err("declared live modules require --source ABS_PATH --declared-modules --bindings MANIFEST".into());
+    }
+    if declared_modules && (grant_name.is_some() || grant_generation.is_some()) {
+        return Err("declared live modules do not support guest self-edit grants".into());
     }
     let grant = match (grant_name, grant_generation) {
         (Some(name), Some(expected_generation)) if source.is_some() && !name.is_empty() => {
@@ -296,7 +432,21 @@ fn parse(
             );
         }
     };
-    Ok((source, engine.unwrap_or("v8"), grant, verify_source_before_execute))
+    let manifest = match bindings {
+        Some(path) => Some(
+            super::arguments::load_live_manifest(&path).map_err(|error| error.message)?
+        ),
+        None => None,
+    };
+    Ok(LiveOptions {
+        source,
+        engine: engine.unwrap_or("v8"),
+        initial_grant: grant,
+        verify_source_before_execute,
+        manifest,
+        watch,
+        retained_generation_limit,
+    })
 }
 
 fn source_identity(metadata: &std::fs::Metadata) -> FileIdentity {
@@ -313,6 +463,99 @@ fn source_identity(metadata: &std::fs::Metadata) -> FileIdentity {
 }
 
 impl Live {
+    fn register_live_code(
+        &mut self,
+        span: noble_wasm::source::CodeSpan,
+    ) -> Result<(), super::output::Failure> {
+        if span.length == 0 {
+            return Ok(());
+        }
+        let registered = self.worker()?.register_live_code(span)?;
+        let receipt: serde_json::Value = serde_json::from_str(&registered.json)
+            .map_err(|_| fatal_failure("invalid installed live code owner receipt"))?;
+        let exact = serde_json::json!({
+            "start": span.start, "length": span.length, "generation": span.generation,
+        });
+        if registered.outcome != "code-registered" || receipt["code_span"] != exact
+            || receipt["table_installed"] != true
+            || receipt["source_generation"].as_str() != Some(self.generation.to_string().as_str())
+        {
+            return Err(fatal_failure("worker did not register the exact checked installed code span"));
+        }
+        self.live_code_spans.push(span);
+        Ok(())
+    }
+
+    fn retire_unowned_live_code(&mut self) -> Result<(), super::output::Failure> {
+        if self.declared.is_some() {
+            return Ok(());
+        }
+        let mut at = 0;
+        while let Some(&span) = self.live_code_spans.get(at) {
+            let inspected = self.worker()?.inspect_live_code(span)?;
+            let receipt: serde_json::Value = serde_json::from_str(&inspected.json)
+                .map_err(|_| fatal_failure("invalid live code owner inventory"))?;
+            let exact = serde_json::json!({
+                "start": span.start, "length": span.length, "generation": span.generation,
+            });
+            let owners = receipt["code_owners"]
+                .as_u64().ok_or_else(|| fatal_failure("live code inventory omitted nonnegative owners"))?;
+            if receipt["code_span"] != exact
+                || (owners == 0 && inspected.outcome != "code-unowned")
+                || (owners != 0 && inspected.outcome != "code-owned")
+            {
+                return Err(fatal_failure("worker returned inconsistent checked live code owners"));
+            }
+            if owners != 0 {
+                at += 1;
+                continue;
+            }
+            let mut problem = None;
+            let worker = self.session.worker.as_mut()
+                .ok_or_else(|| fatal_failure("live worker disappeared before code retirement"))?;
+            let retired = self.session.compiler.retire_code(span, |checked| {
+                let report = match worker.retire_live_code(checked) {
+                    Ok(report) => report,
+                    Err(error) => {
+                        problem = Some(std::format!("worker live code retirement failed: {}", error.message));
+                        return Err(noble_wasm::Diagnostic::Invalid);
+                    }
+                };
+                let acknowledged = serde_json::from_str::<serde_json::Value>(&report.json).ok();
+                let exact = serde_json::json!({
+                    "start": checked.start,
+                    "length": checked.length,
+                    "generation": checked.generation,
+                });
+                if report.outcome != "code-retired"
+                    || !acknowledged.as_ref().is_some_and(|value|
+                        value["outcome"] == "code-retired"
+                            && value["code_span"] == exact
+                            && value["code_owners"] == 0
+                            && value["table_cleared"] == true)
+                {
+                    problem = Some("worker did not prove exact zero-owned code tombstones and table clearance".into());
+                    return Err(noble_wasm::Diagnostic::Invalid);
+                }
+                Ok(())
+            });
+            if retired.is_err() {
+                return Err(fatal_failure(problem.unwrap_or_else(||
+                    "compiler refused exact installed live code retirement".into())));
+            }
+            self.live_code_spans.remove(at);
+        }
+        Ok(())
+    }
+
+    fn retained_generation_budget_refusal(&self) -> Option<String> {
+        self.retained_generation_limit
+            .filter(|limit| self.generation >= *limit)
+            .map(|limit| format!(
+                "retained generation budget of {limit} exhausted; prior generation remains active"
+            ))
+    }
+
     fn finish_proposal(
         &mut self,
         executed: &super::output::Report,
@@ -553,7 +796,7 @@ impl Live {
             .submissions
             .checked_add(1)
             .ok_or_else(|| fatal_failure("live submission count exhausted"))?;
-        self.install_definition(prepared, &source, number, None)
+        self.install_definition(prepared, &source, number, None, None)
     }
 
     fn proposal_receipt(
@@ -693,7 +936,10 @@ impl Live {
 
     fn worker(&mut self) -> Result<&mut super::worker::Engine, super::output::Failure> {
         if self.session.worker.is_none() {
-            self.session.worker = Some(super::worker::Engine::start_live()?);
+            self.session.worker = Some(match &self.declared {
+                Some(state) => super::worker::Engine::start_live_declared(&state.manifest)?,
+                None => super::worker::Engine::start_live()?,
+            });
         }
         self.session.worker.as_mut().ok_or_else(|| {
             super::output::Failure::new(
@@ -711,6 +957,9 @@ impl Live {
             if let Some(refusal) = self.source_change_refusal() {
                 return Ok(refusal);
             }
+        }
+        if self.declared.is_some() {
+            return self.submit_declared(source);
         }
         self.session.submissions = self
             .session
@@ -747,6 +996,7 @@ impl Live {
                 prepared,
                 source,
                 self.session.submissions,
+                None,
                 None,
             )? {
                 ReloadDecision::Committed(_) => {
@@ -799,11 +1049,7 @@ impl Live {
                 ));
             }
         };
-        let encoded = if self.grant_scope.is_some() {
-            encoding::encode_live_checked(compiled.wat())
-        } else {
-            encoding::encode_checked(compiled.wat())
-        };
+        let encoded = encoding::encode_live_checked(compiled.wat());
         let binary = match encoded {
             Ok(binary) => binary,
             Err(encoding::EncodeError::HostEffect(error)) => {
@@ -828,6 +1074,7 @@ impl Live {
                 return Ok(refusal);
             }
         }
+        let code_span = compiled.code_span();
         let output = prepared.output().to_vec();
         self.session
             .compiler
@@ -840,6 +1087,7 @@ impl Live {
         let mut report = self.worker()?.execute()?;
         if report.outcome == "normal" {
             self.session.stack = output;
+            self.register_live_code(code_span)?;
         }
         let mut invocation: serde_json::Value = serde_json::from_str(&report.json)
             .map_err(|_| fatal_failure("invalid live Wasm execution report"))?;
@@ -898,34 +1146,132 @@ impl Live {
     }
 
     fn respond_reload(&mut self, path: &std::path::Path) -> bool {
-        let outcome = match self.reload(path) {
+        let decision = self.reload(path);
+        match self.reload_report(decision) {
+            Ok(mut outcome) => {
+                #[cfg(target_os = "linux")]
+                if outcome["outcome"] == "reload-committed" && self.watch.is_some() {
+                    let Some(selected) = self.selected.as_ref().cloned() else {
+                        emit(&fatal("committed watch reload lost its selected file"));
+                        return false;
+                    };
+                    if let Err(error) = self.finalize_watch_report(&mut outcome, &selected, None) {
+                        emit(&fatal(&error.message));
+                        return false;
+                    }
+                }
+                emit(&outcome);
+                true
+            }
+            Err(error) => {
+                emit(&fatal(&error.message));
+                false
+            }
+        }
+    }
+
+    fn reload_report(
+        &self,
+        decision: Result<ReloadDecision, super::output::Failure>,
+    ) -> Result<serde_json::Value, super::output::Failure> {
+        Ok(match decision {
             Ok(ReloadDecision::Committed(report)) => report,
             Ok(ReloadDecision::Refused(problem)) => {
                 refusal(self.generation, &self.last_stack, &problem)
             }
             Ok(ReloadDecision::SelectedSourceRefused(error)) => {
-                match self.selected_source_refusal(&error) {
-                    Ok(report) => report,
-                    Err(error) => {
-                        emit(&fatal(&error.message));
-                        return false;
-                    }
-                }
+                self.selected_source_refusal(&error)?
             }
             Ok(ReloadDecision::HostEffect(problem)) => {
                 refusal(self.generation, &self.last_stack, &problem)
             }
             Ok(ReloadDecision::SourceChanged(_)) => {
-                emit(&fatal("file-backed reload reported an unrelated source-change refusal"));
+                return Err(fatal_failure("file-backed reload reported an unrelated source-change refusal"));
+            }
+            Err(error) => return Err(error),
+        })
+    }
+
+    #[cfg(target_os = "linux")]
+    fn respond_watch(&mut self) -> bool {
+        let (selected, sequence, trusted_save) = {
+            let watcher = self.watch.as_mut().expect("watch loop requires a watcher");
+            if let Err(problem) = watcher.drain() {
+                emit(&fatal(&problem));
                 return false;
             }
+            let Some((sequence, trusted_save)) = watcher.take_pending() else {
+                return true;
+            };
+            (watcher.selected().to_path_buf(), sequence, trusted_save)
+        };
+        if !trusted_save {
+            emit(&refusal(self.generation, &self.last_stack,
+                "watched save requires a paired atomic rename of the selected .tmp file"));
+            return true;
+        }
+        let candidate = match snapshot(&selected) {
+            Ok(candidate) => candidate,
+            Err(problem) => {
+                emit(&refusal(self.generation, &self.last_stack, &problem));
+                return true;
+            }
+        };
+        let decision = self.reload_candidate(selected.clone(), candidate);
+        let mut report = match self.reload_report(decision) {
+            Ok(report) => report,
             Err(error) => {
                 emit(&fatal(&error.message));
                 return false;
             }
         };
-        emit(&outcome);
+        if report["outcome"] == "reload-committed" {
+            if let Err(error) = self.finalize_watch_report(&mut report, &selected, Some(sequence)) {
+                emit(&fatal(&error.message));
+                return false;
+            }
+        }
+        emit(&report);
         true
+    }
+
+    #[cfg(target_os = "linux")]
+    fn finalize_watch_report(
+        &mut self,
+        report: &mut serde_json::Value,
+        selected: &std::path::Path,
+        expected_sequence: Option<u64>,
+    ) -> Result<(), super::output::Failure> {
+        let selected_identity = self.selected_file_identity;
+        let watcher = self.watch.as_mut()
+            .ok_or_else(|| fatal_failure("watched source lost its watch"))?;
+        watcher.drain().map_err(fatal_failure)?;
+        let sequence = report["watch_sequence"].as_u64();
+        let observed = snapshot(selected).ok();
+        let current = sequence == Some(watcher.sequence())
+            && expected_sequence.is_none_or(|event_sequence| sequence == Some(event_sequence))
+            && report["source_freshness"] == "matched-at-postpublish-check"
+            && observed.as_ref().is_some_and(|after|
+                report["source_sha256"].as_str() == Some(after.digest.as_str())
+                    && selected_identity == Some((after.identity, after.directory)));
+        let fields = report.as_object_mut()
+            .ok_or_else(|| fatal_failure("committed reload report is not an object"))?;
+        fields.insert("watch_save_protocol".into(),
+            serde_json::json!("fsync-temp-then-atomic-rename"));
+        if current {
+            fields.insert("source_freshness".into(),
+                serde_json::json!("matched-at-watch-ack-check"));
+        } else {
+            // The committed generation is real and cannot be rolled back.
+            // No success ACK is issued for bytes no longer selected; the
+            // next queued complete save must be handled before next input.
+            fields.insert("outcome".into(), serde_json::json!("watch-superseded"));
+            fields.insert("source_freshness".into(),
+                serde_json::json!("changed-or-unverifiable-at-watch-ack-check"));
+            fields.insert("observed_source_sha256".into(),
+                serde_json::json!(observed.as_ref().map(|after| after.digest.as_str())));
+        }
+        Ok(())
     }
 
     fn selected_source_refusal(
@@ -997,6 +1343,24 @@ impl Live {
                 "reload path differs from selected source".into(),
             ));
         }
+        #[cfg(target_os = "linux")]
+        if self.watch.is_some() && candidate.identity.2 != 1 {
+            return Ok(ReloadDecision::Refused(
+                "watched source has a hardlink alias, not an immutable complete-save file".into(),
+            ));
+        }
+        #[cfg(target_os = "linux")]
+        let watch_sequence = if let Some(watcher) = self.watch.as_mut() {
+            watcher.drain().map_err(fatal_failure)?;
+            Some(watcher.sequence())
+        } else {
+            None
+        };
+        #[cfg(not(target_os = "linux"))]
+        let watch_sequence = None;
+        if self.declared.is_some() {
+            return self.reload_declared_candidate(selected, candidate, watch_sequence);
+        }
         let definition = match self.session.frontend.prepare(
             &candidate.bytes,
             &self.session.stack,
@@ -1033,13 +1397,38 @@ impl Live {
             &candidate.bytes,
             number,
             Some((&selected, &candidate)),
+            watch_sequence,
         )?;
         if matches!(result, ReloadDecision::Committed(_)) {
             self.selected = Some(selected);
             self.selected_definition = Some(definition_name);
             self.selected_file_hash = Some(candidate.digest);
+            self.selected_file_identity = Some((candidate.identity, candidate.directory));
         }
         Ok(result)
+    }
+
+    fn candidate_is_current(
+        &mut self,
+        selected: &std::path::Path,
+        candidate: &Snapshot,
+        watch_sequence: Option<u64>,
+    ) -> Result<bool, super::output::Failure> {
+        if !same_snapshot(selected, candidate) {
+            return Ok(false);
+        }
+        #[cfg(target_os = "linux")]
+        if let Some(sequence) = watch_sequence {
+            let watcher = self.watch.as_mut()
+                .ok_or_else(|| fatal_failure("watched source lost its watch"))?;
+            watcher.drain().map_err(fatal_failure)?;
+            if watcher.sequence() != sequence {
+                return Ok(false);
+            }
+        }
+        #[cfg(not(target_os = "linux"))]
+        let _ = watch_sequence;
+        Ok(same_snapshot(selected, candidate))
     }
 
     /// File reload, guest proposal and direct definition admission share one
@@ -1052,7 +1441,11 @@ impl Live {
         source: &[u8],
         number: u64,
         file: Option<(&std::path::Path, &Snapshot)>,
+        watch_sequence: Option<u64>,
     ) -> Result<ReloadDecision, super::output::Failure> {
+        if let Some(problem) = self.retained_generation_budget_refusal() {
+            return Ok(ReloadDecision::Refused(problem));
+        }
         if self
             .session
             .frontend
@@ -1089,11 +1482,7 @@ impl Live {
                 "prospective compiler base changed before staging",
             ));
         }
-        let encoded = if self.grant_scope.is_some() {
-            encoding::encode_live_checked(compiled.wat())
-        } else {
-            encoding::encode_checked(compiled.wat())
-        };
+        let encoded = encoding::encode_live_checked(compiled.wat());
         let binary = match encoded {
             Ok(binary) => binary,
             Err(encoding::EncodeError::HostEffect(problem)) => {
@@ -1118,25 +1507,16 @@ impl Live {
             )));
         }
         if let Some((selected, candidate)) = file {
-            match snapshot(selected) {
-                Ok(after)
-                    if after.digest == candidate.digest
-                        && after.identity == candidate.identity
-                        && after.directory == candidate.directory => {
+            if !self.candidate_is_current(selected, candidate, watch_sequence)? {
+                let discarded = self.worker()?.discard_binary()?;
+                if discarded.outcome != "discarded" {
+                    return Err(fatal_failure(
+                        "live worker did not discard superseded binary",
+                    ));
                 }
-                other => {
-                    let discarded = self.worker()?.discard_binary()?;
-                    if discarded.outcome != "discarded" {
-                        return Err(fatal_failure(
-                            "live worker did not discard superseded binary",
-                        ));
-                    }
-                    let reason = match other {
-                        Ok(_) => "source changed during reload staging".into(),
-                        Err(error) => error,
-                    };
-                    return Ok(ReloadDecision::Refused(reason));
-                }
+                return Ok(ReloadDecision::Refused(
+                    "source changed or another complete save superseded reload staging".into(),
+                ));
             }
         } else if self.verify_source_before_execute {
             if let Some(report) = self.source_change_refusal() {
@@ -1175,6 +1555,7 @@ impl Live {
         if stack != self.last_stack {
             return Err(fatal_failure("published reload changed the retained stack"));
         }
+        let code_span = compiled.code_span();
         self.session
             .compiler
             .commit(compiled)
@@ -1182,6 +1563,8 @@ impl Live {
         self.session.frontend = preview;
         self.session.submissions = number;
         self.generation = next_generation;
+        self.register_live_code(code_span)?;
+        self.retire_unowned_live_code()?;
         // Publication is irreversible: a later rename cannot be reported as a
         // recoverable refusal. ACK the pinned bytes actually installed, and
         // disclose a bounded observation of the path after publication. Even
@@ -1203,6 +1586,7 @@ impl Live {
         Ok(ReloadDecision::Committed(serde_json::json!({
             "schema": "noble-live-report/v1", "stage": "wasm-live", "outcome": "reload-committed",
             "generation": self.generation, "stack": stack,
+            "watch_sequence": watch_sequence,
             "source_sha256": crate::workflow::intrinsic::sha256(source),
             "source_version": "pinned-at-prepublish-check",
             "source_freshness": source_freshness,
@@ -1219,6 +1603,11 @@ fn selected_path(path: &std::path::Path) -> Result<std::path::PathBuf, std::stri
     let name = path.file_name().ok_or("reload path lacks a filename")?;
     let parent = std::fs::canonicalize(parent).map_err(|error| error.to_string())?;
     Ok(parent.join(name))
+}
+
+fn same_snapshot(path: &std::path::Path, candidate: &Snapshot) -> bool {
+    snapshot(path).is_ok_and(|after| after.digest == candidate.digest
+        && after.identity == candidate.identity && after.directory == candidate.directory)
 }
 
 /// Reify only the closed, pure numeric recipe fragment. These bytes are a

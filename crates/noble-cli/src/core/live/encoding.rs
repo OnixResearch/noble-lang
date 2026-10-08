@@ -17,6 +17,13 @@ static ABI: LazyLock<Result<Value, String>> = LazyLock::new(|| {
     serde_json::from_str(ABI_JSON).map_err(|error| format!("invalid core ABI: {error}"))
 });
 
+#[derive(Clone, Copy)]
+enum ImportProfile {
+    Ordinary,
+    CoreLive,
+    DeclaredLive,
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum EncodeError {
     HostEffect(String),
@@ -151,17 +158,31 @@ fn check_import(
     import: Import<'_>,
     manifest: &Value,
     types: &[FuncType],
-    live: bool,
+    profile: ImportProfile,
 ) -> Result<Option<u32>, EncodeError> {
     if let TypeRef::Func(index) | TypeRef::FuncExact(index) = import.ty {
-        let required = match (live, import.module, import.name) {
-            (true, "noble", "live_propose") => Some((&[ValType::I64, ValType::I64, ValType::I32][..], ValType::I32)),
-            (true, "noble", "live_generation") => Some((&[][..], ValType::I64)),
+        let required: Option<(&[ValType], &[ValType])> = match (profile, import.module, import.name) {
+            (ImportProfile::CoreLive, "noble", "live_propose") => {
+                Some((&[ValType::I64, ValType::I64, ValType::I32], &[ValType::I32]))
+            }
+            (ImportProfile::CoreLive, "noble", "live_generation") => {
+                Some((&[], &[ValType::I64]))
+            }
+            (ImportProfile::DeclaredLive, "noble", "test_emit_bound") => {
+                Some((&[ValType::I32, ValType::I32, ValType::I32], &[ValType::I32]))
+            }
+            (ImportProfile::DeclaredLive, "noble", "test_clock_bound") => {
+                Some((&[ValType::I32], &[ValType::I32, ValType::I64]))
+            }
+            (ImportProfile::DeclaredLive, "noble", "test_abort") => {
+                Some((&[], &[ValType::I32]))
+            }
             _ => None,
         };
-        let actual = types.get(index as usize);
-        if !required.is_some_and(|(params, result)| {
-            actual.is_some_and(|ty| ty.params() == params && ty.results() == [result])
+        if !required.is_some_and(|(params, results)| {
+            types
+                .get(index as usize)
+                .is_some_and(|ty| ty.params() == params && ty.results() == results)
         }) {
             return Err(EncodeError::HostEffect(format!(
                 "unsupported effect import: {}.{}",
@@ -225,7 +246,7 @@ fn check_export(
     check_export_signature(func_type(functions, types, index)?, descriptor, name)
 }
 
-fn check_binary(bytes: &[u8], manifest: &Value, live: bool) -> Result<(), EncodeError> {
+fn check_binary(bytes: &[u8], manifest: &Value, profile: ImportProfile) -> Result<(), EncodeError> {
     let features = WasmFeatures::WASM1
         .difference(WasmFeatures::FLOATS)
         .difference(WasmFeatures::GC_TYPES)
@@ -260,7 +281,7 @@ fn check_binary(bytes: &[u8], manifest: &Value, live: bool) -> Result<(), Encode
                     if !imports.insert(import.name) {
                         return Err(format!("duplicate Wasm import: {}", import.name).into());
                     }
-                    if let Some(index) = check_import(import, manifest, &types, live)? {
+                    if let Some(index) = check_import(import, manifest, &types, profile)? {
                         functions.push(index);
                     }
                 }
@@ -354,7 +375,7 @@ fn check_binary(bytes: &[u8], manifest: &Value, live: bool) -> Result<(), Encode
 
 /// Only UTF-8 WAT, never a binary passed through `wat::parse_bytes`, may be
 /// encoded. Every byte and ABI check completes before any engine installation.
-fn encode(wat: &[u8], live: bool) -> Result<Vec<u8>, EncodeError> {
+fn encode(wat: &[u8], profile: ImportProfile) -> Result<Vec<u8>, EncodeError> {
     if wat.len() > MAX_BYTES {
         return Err("WAT exceeds 4 MiB".into());
     }
@@ -366,24 +387,134 @@ fn encode(wat: &[u8], live: bool) -> Result<Vec<u8>, EncodeError> {
     if !bytes.starts_with(b"\0asm\x01\0\0\0") {
         return Err("expected standard core Wasm v1 header".into());
     }
-    check_binary(&bytes, abi()?, live)?;
+    check_binary(&bytes, abi()?, profile)?;
     Ok(bytes)
 }
 
 /// Ordinary sessions have no live host imports, even when the WAT names them.
 pub(super) fn encode_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
-    encode(wat, false)
+    encode(wat, ImportProfile::Ordinary)
 }
 
 /// Live source is independently checked by the frontend before this encoding;
 /// only its two explicitly typed observation/proposal imports are admitted.
 pub(super) fn encode_live_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
-    encode(wat, true)
+    encode(wat, ImportProfile::CoreLive)
+}
+
+/// The declared live source boundary permits only bound adapter effects and
+/// typed abort. Core-live self-edit imports and ambient effects stay unavailable.
+pub(super) fn encode_declared_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
+    encode(wat, ImportProfile::DeclaredLive)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::encode_checked;
+    use super::{encode_checked, EncodeError, ImportProfile};
+    use wasmparser::{FuncType, Import, TypeRef, ValType};
+
+    fn effect(
+        module: &str,
+        name: &str,
+        params: &[ValType],
+        results: &[ValType],
+        profile: ImportProfile,
+    ) -> Result<Option<u32>, EncodeError> {
+        let types = [FuncType::new(
+            params.iter().copied(),
+            results.iter().copied(),
+        )];
+        super::check_import(
+            Import {
+                module,
+                name,
+                ty: TypeRef::Func(0),
+            },
+            super::abi().unwrap(),
+            &types,
+            profile,
+        )
+    }
+
+    #[test]
+    fn declared_imports_require_exact_bound_signatures_and_profile() {
+        for (name, params, results) in [
+            (
+                "test_emit_bound",
+                &[ValType::I32, ValType::I32, ValType::I32][..],
+                &[ValType::I32][..],
+            ),
+            (
+                "test_clock_bound",
+                &[ValType::I32][..],
+                &[ValType::I32, ValType::I64][..],
+            ),
+            ("test_abort", &[][..], &[ValType::I32][..]),
+        ] {
+            assert_eq!(
+                effect("noble", name, params, results, ImportProfile::DeclaredLive),
+                Ok(Some(0))
+            );
+            for profile in [ImportProfile::Ordinary, ImportProfile::CoreLive] {
+                assert!(matches!(
+                    effect("noble", name, params, results, profile),
+                    Err(EncodeError::HostEffect(_))
+                ));
+            }
+        }
+        for (module, name, params, results) in [
+            (
+                "noble",
+                "test_emit_bound",
+                &[ValType::I32, ValType::I32][..],
+                &[ValType::I32][..],
+            ),
+            (
+                "noble",
+                "test_clock_bound",
+                &[ValType::I32][..],
+                &[ValType::I64, ValType::I32][..],
+            ),
+            ("noble", "test_abort", &[][..], &[][..]),
+            (
+                "foreign",
+                "test_emit_bound",
+                &[ValType::I32, ValType::I32, ValType::I32][..],
+                &[ValType::I32][..],
+            ),
+            (
+                "noble",
+                "test_emit",
+                &[ValType::I32, ValType::I32][..],
+                &[ValType::I32][..],
+            ),
+            ("noble", "live_generation", &[][..], &[ValType::I64][..]),
+            (
+                "noble",
+                "live_propose",
+                &[ValType::I64, ValType::I64, ValType::I32][..],
+                &[ValType::I32][..],
+            ),
+        ] {
+            assert!(
+                matches!(
+                    effect(module, name, params, results, ImportProfile::DeclaredLive),
+                    Err(EncodeError::HostEffect(_))
+                ),
+                "{module}.{name}"
+            );
+        }
+        assert_eq!(
+            effect(
+                "noble",
+                "live_generation",
+                &[],
+                &[ValType::I64],
+                ImportProfile::CoreLive,
+            ),
+            Ok(Some(0))
+        );
+    }
 
     #[test]
     fn rejects_non_text_and_unsupported_features() {

@@ -1,7 +1,7 @@
 //! Declared-Modules-v1 namespace transactions and selected-worker expression execution.
 
 impl super::Session {
-    fn commit_declared(
+    pub(super) fn commit_declared(
         &mut self,
         prepared: noble_contracts::source::ModulePrepared,
     ) -> Result<Result<(), noble_contracts::source::Error>, super::output::Failure> {
@@ -19,7 +19,7 @@ impl super::Session {
         Ok(outcome)
     }
 
-    fn commit_declared_proofs(
+    pub(super) fn commit_declared_proofs(
         &mut self,
         prepared: noble_contracts::source::ModulePrepared,
         source: &[u8],

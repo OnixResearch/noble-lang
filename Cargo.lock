@@ -443,6 +443,7 @@ dependencies = [
  "noble-contracts",
  "noble-kernel",
  "noble-wasm",
+ "rustix",
  "serde_json",
  "wasmparser",
  "wasmtime",

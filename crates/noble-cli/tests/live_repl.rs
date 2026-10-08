@@ -82,6 +82,38 @@ impl LiveChild {
         Self::spawn(command)
     }
 
+    #[cfg(target_os = "linux")]
+    fn start_watch(source: &Path) -> Result<Self, Box<dyn std::error::Error>> {
+        Self::start_watch_with_limit(source, None)
+    }
+
+    #[cfg(target_os = "linux")]
+    fn start_watch_with_limit(
+        source: &Path,
+        retained_limit: Option<u64>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command.args(["live", "watch", "--source"]).arg(source).args(["--engine", "v8"]);
+        if let Some(limit) = retained_limit {
+            command.args(["--max-retained-generations", &limit.to_string()]);
+        }
+        Self::spawn(command)
+    }
+
+    fn start_declared(
+        source: &Path,
+        bindings: &Path,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command
+            .args(["live", "repl", "--source"])
+            .arg(source)
+            .args(["--engine", "v8", "--declared-modules", "--bindings"])
+            .arg(bindings)
+            .arg("--verify-source-before-execute");
+        Self::spawn(command)
+    }
+
     fn start_with_grant(
         source: &Path,
         name: &str,
@@ -358,6 +390,222 @@ fn source_verification_requires_explicit_selected_file() -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_complete_rename_acks_only_checked_bytes_and_never_runs_partial_write(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (old_generation, old_hash) = live_ack(&live.report()?, &[]);
+    fs::write(&fixture.source, "def addone [ 2 +")?;
+    assert!(matches!(
+        live.reports.recv_timeout(Duration::from_millis(250)),
+        Err(mpsc::RecvTimeoutError::Timeout)
+    ), "an in-place partial write must not produce a save ACK");
+    assert_source_change_refused(&live.submit("20 addone")?, old_generation, &[], &old_hash);
+
+    fixture.replace("def addone [ 2 + ]")?;
+    let ack = live.report()?;
+    let (fresh_generation, fresh_hash) = live_ack(&ack, &[]);
+    assert_eq!(fresh_generation, old_generation + 1);
+    assert_ne!(fresh_hash, old_hash);
+    assert_eq!(text_field(&ack, "watch_save_protocol"), "fsync-temp-then-atomic-rename");
+    assert_eq!(text_field(&ack, "source_freshness"), "matched-at-watch-ack-check");
+    assert!(number_field(&ack, "watch_sequence") >= 1);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_rename_preserves_saved_old_program_and_uses_new_word_after_ack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (initial, _) = live_ack(&live.report()?, &[]);
+    let saved = live.submit("20 [ addone ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program");
+    fixture.replace("def addone [ 2 + ]")?;
+    let ack = live.report()?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    assert_eq!(number_field(&ack, "generation"), initial + 1);
+    assert_eq!(ack["stack"], saved["stack"]);
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 addone")?, &["21", "22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watch_flag_requires_explicit_selected_source() -> Result<(), Box<dyn std::error::Error>> {
+    let output = Command::new(env!("CARGO_BIN_EXE_noble"))
+        .args(["live", "repl", "--watch"])
+        .stdin(Stdio::null()).output()?;
+    assert_eq!(output.status.code(), Some(2));
+    let report: Value = serde_json::from_slice(&output.stdout)?;
+    assert_eq!(text_field(&report, "outcome"), "reload-refused");
+    assert_eq!(number_field(&report, "guest_requests"), 0);
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_symlink_escape_refuses_and_next_complete_save_recovers(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (old_generation, old_hash) = live_ack(&live.report()?, &[]);
+    let unselected = fixture.directory.parent().ok_or("no fixture parent")?
+        .join("unselected-watch-escape.noble");
+    let temporary = fixture.directory.join("math.noble.tmp");
+    symlink(&unselected, &temporary)?;
+    fs::rename(&temporary, &fixture.source)?;
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), old_generation);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    assert_source_change_refused(&live.submit("20 addone")?, old_generation, &[], &old_hash);
+    fixture.replace("def addone [ 3 + ]")?;
+    let ack = live.report()?;
+    assert_eq!(live_ack(&ack, &[]).0, old_generation + 1);
+    normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_unpaired_rename_cannot_ack_unselected_writer(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (initial, hash) = live_ack(&live.report()?, &[]);
+    let unselected = fixture.directory.join("different-temp.noble");
+    let mut file = File::create_new(&unselected)?;
+    file.write_all(b"def addone [ 7 + ]")?;
+    file.sync_all()?;
+    drop(file);
+    fs::rename(&unselected, &fixture.source)?;
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), initial);
+    assert!(text_field(&refused, "diagnostic").contains("paired atomic rename"));
+    assert_source_change_refused(&live.submit("20 addone")?, initial, &[], &hash);
+    fixture.replace("def addone [ 2 + ]")?;
+    assert_eq!(live_ack(&live.report()?, &[]).0, initial + 1);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_hardlinked_temp_cannot_claim_immutable_complete_save(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let external = Fixture::new("unused")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (generation, hash) = live_ack(&live.report()?, &[]);
+    let temporary = fixture.directory.join("math.noble.tmp");
+    let mut file = File::create_new(&temporary)?;
+    file.write_all(b"def addone [ 9 + ]")?;
+    file.sync_all()?;
+    drop(file);
+    fs::remove_file(&external.source)?;
+    fs::hard_link(&temporary, &external.source)?;
+    fs::rename(&temporary, &fixture.source)?;
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), generation);
+    assert!(text_field(&refused, "diagnostic").contains("hardlink alias"));
+    assert_source_change_refused(&live.submit("20 addone")?, generation, &[], &hash);
+    fixture.replace("def addone [ 2 + ]")?;
+    assert_eq!(live_ack(&live.report()?, &[]).0, generation + 1);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_superseded_renames_and_buffered_input_report_accepted_generation(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let initial = live_ack(&live.report()?, &[]).0;
+    fixture.replace("def addone [ 2 + ]")?;
+    fixture.replace("def addone [ 3 + ]")?;
+    // The writer completes both renames before these lines enter stdin. The
+    // watcher must drain the complete-save queue before consuming its buffered
+    // second top-level line, even if a first rename was staged already.
+    let input = live.stdin.as_mut().ok_or("missing child stdin")?;
+    input.write_all(b":generation\n20 addone\n")?;
+    input.flush()?;
+    let mut saw_final_ack = false;
+    let mut buffered_call = None;
+    let mut saw_inspection = false;
+    for _ in 0..8 {
+        let report = live.report()?;
+        match text_field(&report, "outcome") {
+            "reload-committed" if report["watch_save_protocol"].is_string() => {
+                assert_eq!(text_field(&report, "source_freshness"),
+                    "matched-at-watch-ack-check", "{report}");
+                if number_field(&report, "watch_sequence") >= 2 {
+                    saw_final_ack = true;
+                }
+            }
+            "watch-superseded" | "reload-refused" => {}
+            "generation-observed" => saw_inspection = true,
+            "normal" => {
+                assert!(saw_final_ack, "top-level ran before the final save ACK");
+                assert_stack(&report, &["23"]);
+                assert!(number_field(&report, "source_generation") > initial);
+                buffered_call = Some(true);
+            }
+            "source-change-refused" => {
+                assert_eq!(number_field(&report, "guest_requests"), 0);
+                buffered_call = Some(false);
+            }
+            other => panic!("unexpected watched report {other}: {report}"),
+        }
+        if saw_final_ack && saw_inspection && buffered_call.is_some() {
+            break;
+        }
+    }
+    assert!(saw_final_ack && saw_inspection, "last complete save was not acknowledged");
+    match buffered_call {
+        Some(true) => normal(&live.submit("20 addone")?, &["23", "23"]),
+        Some(false) => normal(&live.submit("20 addone")?, &["23"]),
+        None => panic!("buffered top-level command did not finish"),
+    }
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_retained_generation_budget_refuses_third_save_without_losing_old_program(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch_with_limit(&fixture.source, Some(2))?;
+    let (initial, _) = live_ack(&live.report()?, &[]);
+    let saved = live.submit("20 [ addone ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program");
+    fixture.replace("def addone [ 2 + ]")?;
+    let accepted = live.report()?;
+    assert_eq!(text_field(&accepted, "outcome"), "reload-committed");
+    assert_eq!(accepted["stack"], saved["stack"]);
+    let second = number_field(&accepted, "generation");
+    assert_eq!(second, initial + 1);
+    fixture.replace("def addone [ 3 + ]")?;
+    let refused = live.report()?;
+    assert_eq!(text_field(&refused, "outcome"), "reload-refused");
+    assert_eq!(number_field(&refused, "generation"), second);
+    assert_eq!(refused["stack"], saved["stack"]);
+    assert!(text_field(&refused, "diagnostic").contains("retained generation budget"));
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    // No third generation was accepted. Restore exactly the last ACKed file
+    // bytes without a new rename so the source gate permits using the saved
+    // old Program and current second-generation definition again.
+    fs::write(&fixture.source, "def addone [ 2 + ]")?;
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 addone")?, &["21", "22"]);
+    live.finish()
+}
+
 #[test]
 fn verified_submission_refuses_atomic_rename_until_explicit_reload() -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
@@ -473,6 +721,109 @@ fn verified_submission_refuses_partial_in_place_bytes_before_guest() -> Result<(
     );
     assert_eq!(next, generation + 1);
     normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[test]
+fn declared_module_snapshots_preserve_old_program_and_fresh_new_alias() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module Definitions@5 [ export step def step [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let initial = live.report()?;
+    let (initial_generation, old_hash) = live_ack(&initial, &[]);
+    assert_eq!(text_field(&initial, "declared_kind"), "module");
+    let linked = live.submit("import Definitions@5 as d")?;
+    assert_eq!(text_field(&linked, "outcome"), "namespace-committed");
+    assert_eq!(text_field(&linked, "declared_kind"), "import");
+    assert_eq!(number_field(&linked, "generation"), initial_generation + 1);
+    let saved = live.submit("20 [ d.step ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    fixture.replace("module Definitions@6 [ export step def step [ 2 + ] ]")?;
+    let refused = live.submit("run")?;
+    assert_eq!(text_field(&refused, "outcome"), "source-change-refused");
+    assert_eq!(refused["stack"], saved["stack"]);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    assert_eq!(text_field(&refused, "selected_file_sha256"), old_hash);
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&updated, "outcome"), "reload-committed", "{updated}");
+    assert_eq!(text_field(&updated, "declared_kind"), "module");
+    assert_eq!(number_field(&updated, "generation"), initial_generation + 2);
+    assert_ne!(text_field(&updated, "source_sha256"), old_hash);
+    assert_eq!(updated["stack"], saved["stack"]);
+    let next = live.submit("import Definitions@6 as e")?;
+    assert_eq!(text_field(&next, "outcome"), "namespace-committed", "{next}");
+    assert_eq!(number_field(&next, "generation"), initial_generation + 3);
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 e.step")?, &["21", "22"]);
+    live.finish()
+}
+
+#[test]
+fn declared_same_version_changed_bytes_refuse_without_losing_old_owner() -> Result<(), Box<dyn std::error::Error>> {
+    let original = "module Definitions@5 [ export step def step [ 1 + ] ]";
+    let fixture = Fixture::new(original)?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let (generation, old_hash) = live_ack(&live.report()?, &[]);
+    assert_eq!(text_field(&live.submit("import Definitions@5 as d")?, "outcome"), "namespace-committed");
+    fixture.replace("module Definitions@5 [ export step def step [ 2 + ] ]")?;
+    let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&refused, "outcome"), "reload-refused", "{refused}");
+    assert_eq!(number_field(&refused, "generation"), generation + 1);
+    assert_eq!(number_field(&refused, "guest_requests"), 0);
+    let blocked = live.submit("20 d.step")?;
+    assert_eq!(text_field(&blocked, "outcome"), "source-change-refused");
+    assert_eq!(text_field(&blocked, "selected_file_sha256"), old_hash);
+    fixture.replace(original)?;
+    normal(&live.submit("20 d.step")?, &["21"]);
+    assert_eq!(number_field(&live.submit(":generation")?, "generation"), generation + 1);
+    live.finish()
+}
+
+#[test]
+fn declared_saved_adapter_keeps_old_identity_while_host_policy_allows_it() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n",
+    )?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let initial = live.report()?;
+    let (before, _) = live_ack(&initial, &[]);
+    assert_eq!(number_field(&initial, "guest_requests"), 0);
+    let imported = live.submit("import ledger@1 as l")?;
+    assert_eq!(text_field(&imported, "outcome"), "namespace-committed", "{imported}");
+    let saved = live.submit("[ l.send ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    assert_eq!(number_field(&saved, "guest_requests"), 0);
+    fixture.replace(
+        "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
+    )?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&updated, "outcome"), "reload-committed", "{updated}");
+    assert_eq!(number_field(&updated, "generation"), before + 2);
+    assert_eq!(updated["stack"], saved["stack"]);
+    let imported = live.submit("import ledger@2 as n")?;
+    assert_eq!(text_field(&imported, "outcome"), "namespace-committed", "{imported}");
+    let old = live.submit("run")?;
+    normal(&old, &[]);
+    assert_eq!(number_field(&old, "protected_operations"), 1);
+    assert_eq!(old["request_trace"][0]["adapter_identity"], "emit-a");
+    assert_eq!(old["request_trace"][0]["version"], 1);
+    assert_eq!(old["request_trace"][0]["text"], "A");
+    assert_eq!(old["request_trace"][0]["decision"], "allow");
+    let fresh = live.submit("n.send")?;
+    normal(&fresh, &[]);
+    assert_eq!(number_field(&fresh, "protected_operations"), 1);
+    assert_eq!(fresh["request_trace"][0]["adapter_identity"], "emit-b");
+    assert_eq!(fresh["request_trace"][0]["version"], 2);
+    assert_eq!(fresh["request_trace"][0]["text"], "B");
     live.finish()
 }
 

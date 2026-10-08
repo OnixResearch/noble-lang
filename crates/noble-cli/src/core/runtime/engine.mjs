@@ -29,12 +29,29 @@ const liveExportTypes = {
   metric: 'i32->i64', signature_address: 'i32->i32',
   signature_length: 'i32->i32',
 };
+const liveCodeOwnerExports = {
+  code_owners: 'i32,i32->i32',
+  retain_code_root: 'i32->i32',
+  release_code_root: 'i32->i32',
+  save_stack_code_root: 'i32->i32',
+  clear_code_observation: '->i32',
+  retain_adapter_lease: '->i32',
+  release_adapter_lease: '->i32',
+  release_module_roots: '->i32',
+  invalidate_code_span: 'i32,i32->i32',
+};
+const liveOwnerExportTypes = { ...liveExportTypes, ...liveCodeOwnerExports };
 const liveImportTypes = {
   live_propose: 'i64,i64,i32->i32',
   live_generation: '->i64',
 };
+const declaredLiveImportTypes = {
+  test_emit_bound: 'i32,i32,i32->i32',
+  test_clock_bound: 'i32->i32,i64',
+  test_abort: '->i32',
+};
 
-function checkLiveBytes(bytes, abi) {
+function checkLiveBytes(bytes, abi, declaredLive, ownerAware) {
   if (!Buffer.isBuffer(bytes) || bytes.length < 8 || bytes.length > MAX_FRAME
     || bytes.readUInt32LE(0) !== 0x6d736100 || bytes.readUInt32LE(4) !== 1) {
     fail('invalid bounded Wasm module');
@@ -87,6 +104,8 @@ function checkLiveBytes(bytes, abi) {
     if (byte() !== 1 || uint() !== initial || uint() !== maximum) fail('incompatible Wasm arena limits');
   };
   const expectedGlobals = new Map(abi.globals.map(global => [global.name, global.type]));
+  const hostImports = declaredLive ? declaredLiveImportTypes : liveImportTypes;
+  const expectedExports = ownerAware ? liveOwnerExportTypes : liveExportTypes;
   const types = [], functionTypes = [], imports = [], exports = [];
   const seenImports = new Set(), seenExports = new Set();
   let memoryImports = 0, tableImports = 0, globalImports = 0, definedFunctions = 0;
@@ -114,7 +133,7 @@ function checkLiveBytes(bytes, abi) {
         seenImports.add(name);
         if (kind === 0) {
           const type = types[uint()];
-          if (!Object.hasOwn(liveImportTypes, name) || type !== liveImportTypes[name]) {
+          if (!Object.hasOwn(hostImports, name) || type !== hostImports[name]) {
             fail('undeclared or mistyped live host effect');
           }
           functionTypes.push(type);
@@ -149,16 +168,19 @@ function checkLiveBytes(bytes, abi) {
       }
     } else if (id === 7) {
       const n = count();
-      if (n !== Object.keys(liveExportTypes).length + 1
-        || Object.keys(abi.exports).length !== n - 1) fail('incompatible Wasm export count');
+      if (n !== Object.keys(expectedExports).length + 1
+        || Object.keys(abi.exports).length !== Object.keys(liveExportTypes).length) {
+        fail('incompatible Wasm export count');
+      }
       for (let i = 0; i < n; i += 1) {
         const name = text(), kind = byte(), index = uint();
         if (seenExports.has(name)) fail('duplicate Wasm export');
         seenExports.add(name);
         if (name === 'memory') {
           if (kind !== 2 || index !== 0) fail('incompatible Wasm memory export');
-        } else if (!Object.hasOwn(abi.exports, name) || kind !== 0
-          || functionTypes[index] !== liveExportTypes[name]) fail('incompatible Wasm function export');
+        } else if ((!Object.hasOwn(abi.exports, name)
+          && !(ownerAware && Object.hasOwn(liveCodeOwnerExports, name))) || kind !== 0
+          || functionTypes[index] !== expectedExports[name]) fail('incompatible Wasm function export');
         exports.push({ name, kind: kind === 0 ? 'function' : 'memory' });
       }
     } else if (id === 4 || id === 5) {
@@ -188,8 +210,35 @@ function checkLiveBytes(bytes, abi) {
     if (at !== end) fail('invalid Wasm section length');
   }
   if (memoryImports !== 1 || tableImports !== 1 || globalImports !== expectedGlobals.size
-    || seenExports.size !== Object.keys(liveExportTypes).length + 1) fail('incomplete Wasm arena ABI');
+    || seenExports.size !== Object.keys(expectedExports).length + 1) fail('incomplete Wasm arena ABI');
   return { imports, exports };
+}
+
+// Node's selected JSON.parse reviver exposes the original numeric token.
+// Preserve it before Number rounding can turn one u64 module owner into another.
+function parseDeclaredLiveState(bytes) {
+  return JSON.parse(utf8.decode(bytes), (key, value, context) => {
+    if (key !== 'identity' && key !== 'generation' && key !== 'expected_generation') return value;
+    if (typeof value !== 'number' || !/^(0|[1-9][0-9]*)$/.test(context.source)) {
+      fail('invalid declared live integer');
+    }
+    return BigInt(context.source);
+  });
+}
+
+function declaredLiveInteger(value, maximum, label) {
+  if (typeof value === 'number') {
+    if (!Number.isSafeInteger(value)) fail(`invalid ${label}`);
+    value = BigInt(value);
+  }
+  if (typeof value !== 'bigint' || value < 0n || value > maximum) fail(`invalid ${label}`);
+  return value;
+}
+
+function declaredLiveObject(value, fields, label) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)
+    || Object.keys(value).length !== fields.length
+    || fields.some(field => !Object.hasOwn(value, field))) fail(`invalid ${label}`);
 }
 
 export class CoreEngine {
@@ -201,8 +250,17 @@ export class CoreEngine {
     this.inProcessLive = in_process_live === true;
     configureDeclaredAbi(this, abi, declared_modules, declared_extension, bindings,
       text_byte_cursor, signed_self_recursion);
+    this.declaredLive = this.inProcessLive && declared_modules === true;
+    this.liveCodeOwners = this.inProcessLive && !this.declaredLive;
+    this.externalCodeRoots = new Set();
+    this.liveCodeSpans = new Map();
     this.optimized = optimized;
     initializeHostState(this, bindings);
+    this.declaredLiveState = { generation: 0n, roots: [], aliases: [], activeSlots: new Set() };
+    this.stagedDeclared = null;
+    // Declared modules still use ownerless Core. Do not release their instances
+    // or table entries on an alias switch without a checked owner inventory.
+    this.retainedDeclaredCode = [];
     this.pending = null;
     this.parked = null;
     this.poisoned = false;
@@ -226,8 +284,10 @@ export class CoreEngine {
     installSharedGlobals(this, abi);
     installTestHosts(this, declared_modules);
     if (this.inProcessLive) {
-      this.shared.live_propose = (owner, expected, program) => this.livePropose(owner, expected, program);
-      this.shared.live_generation = () => this.liveGeneration();
+      if (!this.declaredLive) {
+        this.shared.live_propose = (owner, expected, program) => this.livePropose(owner, expected, program);
+        this.shared.live_generation = () => this.liveGeneration();
+      }
       // Includes callbacks retained by *older* instances in the live table.
       for (const host of this.hostFunctions) {
         const callback = this.shared[host.name];
@@ -319,13 +379,13 @@ export class CoreEngine {
   }
 
   liveModule(bytes, source, submission) {
-    if (!this.inProcessLive || this.pending || this.parked || this.staged || this.poisoned
+    if (!this.inProcessLive || this.pending || this.parked || this.staged || this.stagedDeclared || this.poisoned
       || this.liveProposal) {
       fail('live session is pending, parked, staged, or poisoned');
     }
     if (!Buffer.isBuffer(source) || source.length > 65536) fail('invalid live source frame');
     integer(submission, Number.MAX_SAFE_INTEGER, 'submission');
-    const policy = checkLiveBytes(bytes, this.abi);
+    const policy = checkLiveBytes(bytes, this.abi, this.declaredLive, this.liveCodeOwners);
     const module = new WebAssembly.Module(bytes);
     for (const [actual, expected] of [
       [WebAssembly.Module.imports(module), policy.imports],
@@ -491,8 +551,229 @@ export class CoreEngine {
     return { outcome: 'discarded', generation: this.shared.generation.value };
   }
 
+  liveCodeIdle(allowQueuedProposal = false) {
+    return this.liveCodeOwners && !this.poisoned && !this.pending && !this.parked
+      && !this.staged && (!this.liveProposal || allowQueuedProposal)
+      && !this.liveExecuting && !this.liveInstalling
+      && this.last !== null && this.shared.cp.value === 0 && this.shared.failure.value === 0
+      && new DataView(this.memory.buffer).getInt32(61440, true) === 0;
+  }
+
+  checkedLiveCodeSpan(span, allowQueuedProposal = false) {
+    if (!this.liveCodeIdle(allowQueuedProposal)
+      || !Number.isInteger(span.start) || span.start < 4
+      || !Number.isInteger(span.length) || span.length < 1
+      || span.length > this.table.length - span.start
+      || !Number.isInteger(span.generation) || span.generation < 1
+      || span.generation > 0xffffffff) fail('invalid or non-idle checked live code span');
+    return `${span.start}:${span.length}:${span.generation}`;
+  }
+
+  registerLiveCode(span) {
+    const key = this.checkedLiveCodeSpan(span, true);
+    if (this.liveCodeSpans.has(key)
+      || [...this.liveCodeSpans.values()].some(record =>
+        span.start < record.span.start + record.span.length
+        && record.span.start < span.start + span.length)) {
+      this.poisoned = true;
+      fail('duplicate or overlapping installed live code span');
+    }
+    const entries = [];
+    for (let at = span.start; at < span.start + span.length; at += 1) {
+      const callable = this.table.get(at);
+      if (typeof callable !== 'function') {
+        this.poisoned = true;
+        fail('installed live code span has a missing table entry');
+      }
+      entries.push(callable);
+    }
+    const record = { span: { ...span }, entries, instance: this.last };
+    this.liveCodeSpans.set(key, record);
+    return { outcome: 'code-registered', code_span: record.span,
+      table_installed: true, source_generation: this.liveSourceGeneration.toString() };
+  }
+
+  recordedLiveCode(span) {
+    const record = this.liveCodeSpans.get(this.checkedLiveCodeSpan(span));
+    if (!record || record.span.start !== span.start || record.span.length !== span.length
+      || record.span.generation !== span.generation) {
+      this.poisoned = true;
+      fail('unknown or stale installed live code span');
+    }
+    return record;
+  }
+
+  verifyLiveCodeTable(record) {
+    const { start, length } = record.span;
+    if (record.entries.length !== length
+      || record.entries.some((entry, offset) => this.table.get(start + offset) !== entry)) {
+      this.poisoned = true;
+      fail('installed live code table ownership snapshot changed');
+    }
+  }
+
+  inspectLiveCode(span) {
+    const record = this.recordedLiveCode(span);
+    this.verifyLiveCodeTable(record);
+    const runtime = this.runtime();
+    if (runtime.clear_code_observation() !== 0) {
+      this.poisoned = true;
+      fail('cannot clear idle live code observation');
+    }
+    const owners = runtime.code_owners(span.start, span.length);
+    if (!Number.isInteger(owners) || owners < 0) {
+      this.poisoned = true;
+      fail('live code ownership inventory is unavailable');
+    }
+    return { outcome: owners === 0 ? 'code-unowned' : 'code-owned',
+      code_span: record.span, code_owners: owners };
+  }
+
+  retireLiveCode(span) {
+    const record = this.recordedLiveCode(span);
+    const runtime = this.runtime();
+    if (runtime.clear_code_observation() !== 0 || runtime.code_owners(span.start, span.length) !== 0) {
+      this.poisoned = true;
+      fail('live code ownership changed before exact retirement');
+    }
+    this.verifyLiveCodeTable(record);
+    if (runtime.invalidate_code_span(span.start, span.length) !== 0) {
+      this.poisoned = true;
+      fail('backend refused unowned live code tombstones');
+    }
+    try {
+      for (let at = span.start; at < span.start + span.length; at += 1) this.table.set(at, null);
+    } catch (error) {
+      this.poisoned = true;
+      fail(`live code table clear failed after backend invalidation: ${error.message}`);
+    }
+    for (let at = span.start; at < span.start + span.length; at += 1) {
+      if (this.table.get(at) !== null) {
+        this.poisoned = true;
+        fail('live code table clear verification failed after backend invalidation');
+      }
+    }
+    this.liveCodeSpans.delete(`${span.start}:${span.length}:${span.generation}`);
+    return { outcome: 'code-retired', code_span: record.span,
+      code_owners: 0, table_cleared: true };
+  }
+
+  declaredIdle() {
+    return this.declaredLive && !this.poisoned && !this.pending && !this.parked
+      && !this.staged && !this.liveProposal && !this.liveExecuting && !this.liveInstalling
+      && this.shared.cp.value === 0 && this.shared.failure.value === 0;
+  }
+
+  declaredStateReport(outcome, state, diagnostic) {
+    return { schema: 'noble-core-report/v1', profile: this.profile,
+      backend: 'managed-linear-memory', stage: 'wasm', outcome,
+      ...(diagnostic ? { diagnostic } : {}),
+      generation: Number(state.generation), source_generation: state.generation.toString(),
+      retained_roots: state.roots.length,
+      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0,
+      session_state: 'retained' };
+  }
+
+  stageLiveDeclared(snapshot) {
+    if (!this.declaredLive || this.stagedDeclared) fail('declared live state is unavailable or already staged');
+    try {
+      if (!this.declaredIdle()) fail('declared live state requires an idle worker');
+      declaredLiveObject(snapshot, ['expected_generation', 'generation', 'roots', 'aliases'],
+        'declared live state');
+      const current = this.declaredLiveState;
+      const maximum = BigInt(Number.MAX_SAFE_INTEGER);
+      const expected = declaredLiveInteger(snapshot.expected_generation, maximum, 'expected generation');
+      const generation = declaredLiveInteger(snapshot.generation, maximum, 'declared generation');
+      if (expected !== current.generation || generation !== expected + 1n) {
+        fail('stale or skipped declared live generation');
+      }
+      if (!Array.isArray(snapshot.roots) || snapshot.roots.length > 64
+        || !Array.isArray(snapshot.aliases) || snapshot.aliases.length > 64) {
+        fail('declared live root or alias limit exceeded');
+      }
+      const roots = [], byIdentity = new Map(), byNameVersion = new Set();
+      for (const entry of snapshot.roots) {
+        declaredLiveObject(entry, ['identity', 'module', 'version', 'sha256'], 'declared root');
+        const identity = declaredLiveInteger(entry.identity, 64n, 'declared root identity');
+        if (identity === 0n || typeof entry.module !== 'string'
+          || entry.module.length > 128 || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(entry.module)
+          || !Number.isInteger(entry.version) || entry.version < 1 || entry.version > 4294967295
+          || typeof entry.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(entry.sha256)
+          || byIdentity.has(identity)) fail('invalid or rebound declared root');
+        const key = `${entry.module}\0${entry.version}`;
+        if (byNameVersion.has(key)) fail('duplicate declared module version');
+        byNameVersion.add(key);
+        const root = { identity, module: entry.module, version: entry.version, sha256: entry.sha256 };
+        roots.push(root);
+        byIdentity.set(identity, root);
+      }
+      // The namespace may change, but no earlier source owner, version, or
+      // source digest may disappear or silently become a different root.
+      if (roots.length < current.roots.length || current.roots.some((prior, index) => {
+        const root = roots[index];
+        return root.identity !== prior.identity || root.module !== prior.module
+          || root.version !== prior.version || root.sha256 !== prior.sha256;
+      })) fail('declared live state removed or rebound an old root');
+      const byBinding = new Map();
+      for (const [slot, binding] of this.boundAdapters) {
+        const key = `${binding.module}\0${binding.version}`;
+        if (byBinding.has(key)) fail('ambiguous immutable declared adapter binding');
+        byBinding.set(key, { slot, binding });
+      }
+      const aliases = [], spellings = new Set(), activeSlots = new Set();
+      for (const entry of snapshot.aliases) {
+        declaredLiveObject(entry, ['alias', 'identity', 'slot'], 'declared alias');
+        const identity = declaredLiveInteger(entry.identity, 64n, 'declared alias identity');
+        const root = byIdentity.get(identity);
+        if (typeof entry.alias !== 'string' || entry.alias.length > 128
+          || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(entry.alias)
+          || spellings.has(entry.alias) || !root) fail('invalid declared alias owner');
+        spellings.add(entry.alias);
+        const selected = byBinding.get(`${root.module}\0${root.version}`);
+        if (entry.slot !== (selected?.slot ?? null)) fail('declared alias redirected an immutable adapter slot');
+        aliases.push({ alias: entry.alias, identity, slot: entry.slot });
+        if (selected?.binding.allowed) activeSlots.add(selected.slot);
+      }
+      if (aliases.length < current.aliases.length || current.aliases.some((prior, index) =>
+        aliases[index].alias !== prior.alias)) {
+        fail('declared live state removed or redirected an alias spelling');
+      }
+      const staged = { generation, roots, aliases, activeSlots,
+        arenaGeneration: this.shared.generation.value,
+        sourceGeneration: this.liveSourceGeneration,
+        hostRequestsTotal: this.hostRequestsTotal, boundRequestsTotal: this.boundRequestsTotal };
+      this.stagedDeclared = staged;
+      return { ...this.declaredStateReport('declared-state-staged', staged), staged: true };
+    } catch (error) {
+      return this.declaredStateReport('declared-state-refused', this.declaredLiveState,
+        `${error.name}: ${error.message}`);
+    }
+  }
+
+  publishLiveDeclared() {
+    if (!this.declaredLive || !this.stagedDeclared) fail('no staged declared live state to publish');
+    const staged = this.stagedDeclared;
+    if (!this.declaredIdle() || this.declaredLiveState.generation + 1n !== staged.generation
+      || this.shared.generation.value !== staged.arenaGeneration
+      || this.liveSourceGeneration !== staged.sourceGeneration
+      || this.hostRequestsTotal !== staged.hostRequestsTotal
+      || this.boundRequestsTotal !== staged.boundRequestsTotal) {
+      return this.declaredStateReport('declared-state-refused', this.declaredLiveState,
+        'staged declared state no longer matches the idle worker');
+    }
+    this.declaredLiveState = staged;
+    this.stagedDeclared = null;
+    return this.declaredStateReport('declared-state-published', staged);
+  }
+
+  discardLiveDeclared() {
+    if (!this.declaredLive || !this.stagedDeclared) fail('no staged declared live state to discard');
+    this.stagedDeclared = null;
+    return this.declaredStateReport('declared-state-discarded', this.declaredLiveState);
+  }
+
   setLiveGrant(name, owner, sourceGeneration) {
-    const selected = this.inProcessLive && !this.poisoned && !this.pending && !this.parked
+    const selected = this.inProcessLive && !this.declaredLive && !this.poisoned && !this.pending && !this.parked
       && !this.staged && !this.liveProposal && !this.liveExecuting
       && typeof name === 'string' && Buffer.byteLength(name) > 0
       && Buffer.byteLength(name) <= 256 && typeof owner === 'bigint'
@@ -508,7 +789,7 @@ export class CoreEngine {
   }
 
   liveGeneration() {
-    if (!this.inProcessLive || !this.liveExecuting || this.liveInstalling) {
+    if (!this.inProcessLive || this.declaredLive || !this.liveExecuting || this.liveInstalling) {
       fail('live generation observation outside execution');
     }
     if (this.trace.length >= 4096) fail('live observation trace exhausted');
@@ -517,7 +798,7 @@ export class CoreEngine {
   }
 
   livePropose(owner, expected, program) {
-    if (!this.inProcessLive || !this.liveExecuting || this.liveInstalling) {
+    if (!this.inProcessLive || this.declaredLive || !this.liveExecuting || this.liveInstalling) {
       fail('live proposal outside execution');
     }
     const deny = reason => {
@@ -534,13 +815,15 @@ export class CoreEngine {
     let snapshot;
     try { snapshot = captureLiveProgram(this, program); }
     catch (error) { return deny(`invalid-program:${error.message}`); }
-    this.liveProposal = { grant, expected, program, snapshot };
+    const rootOwner = this.runtime();
+    if (rootOwner.retain_code_root(program) !== 0) return deny('unretained-program');
+    this.liveProposal = { grant, expected, program, snapshot, rootOwner };
     this.trace.push(`live.propose:${grant.name}:queued`);
     return 0;
   }
 
   takeLiveProposal() {
-    if (!this.inProcessLive || this.poisoned || this.pending || this.staged || this.liveExecuting) {
+    if (!this.inProcessLive || this.declaredLive || this.poisoned || this.pending || this.staged || this.liveExecuting) {
       fail('live proposal is unavailable');
     }
     const queued = this.liveProposal;
@@ -548,6 +831,18 @@ export class CoreEngine {
     if (!queued) return { schema: 'noble-core-report/v1', profile: this.profile,
       stage: 'wasm', outcome: 'proposal-none',
       guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
+    try {
+      return this.inspectQueuedLiveProposal(queued);
+    } finally {
+      if (queued.rootOwner.release_code_root(queued.program) !== 0) {
+        this.poisoned = true;
+        this.proposalInspectionFailed = true;
+        fail('cannot release inspected live proposal code root');
+      }
+    }
+  }
+
+  inspectQueuedLiveProposal(queued) {
     let snapshotVerified = false;
     const refused = diagnostic => ({ schema: 'noble-core-report/v1', profile: this.profile,
       stage: 'wasm', outcome: 'proposal-refused', diagnostic,
@@ -676,6 +971,7 @@ export class CoreEngine {
       pending: this.pending, last: this.last, lastTraceStart: this.lastTraceStart,
       liveSourceGeneration: this.liveSourceGeneration, liveGrant: this.liveGrant,
       compilations: this.compilations, parked: this.parked, poisoned: this.poisoned,
+      externalCodeRoots: new Set(this.externalCodeRoots),
       observationWork: this.observationWork };
   }
 
@@ -703,6 +999,7 @@ export class CoreEngine {
     this.liveSourceGeneration = saved.liveSourceGeneration;
     this.liveGrant = saved.liveGrant;
     this.compilations = saved.compilations;
+    this.externalCodeRoots = saved.externalCodeRoots;
     this.parked = saved.parked;
     this.poisoned = saved.poisoned;
     this.observationWork = saved.observationWork;
@@ -714,7 +1011,7 @@ export class CoreEngine {
   }
 
   publishBinary() {
-    if (!this.inProcessLive || !this.staged || this.poisoned || this.pending || this.parked
+    if (!this.inProcessLive || !this.staged || this.stagedDeclared || this.poisoned || this.pending || this.parked
       || this.shared.generation.value !== this.staged.generation
       || this.liveSourceGeneration >= 0x7fffffffffffffffn) {
       fail('staged module no longer matches live arena');
@@ -745,6 +1042,7 @@ export class CoreEngine {
       this.lastTraceStart = this.trace.length;
       this.liveSourceGeneration += 1n;
       this.liveGrant = null;
+      if (this.declaredLive) this.retainedDeclaredCode.push(instance);
       return { schema: 'noble-core-report/v1', profile: this.profile,
         backend: 'managed-linear-memory', stage: 'wasm', outcome: 'normal',
         status: 0, submission: record.submission, generation: this.shared.generation.value,
@@ -903,7 +1201,7 @@ export class CoreEngine {
   }
 
   execute({ inputs = [], typedValues = null, limits = {} } = {}) {
-    if (!this.pending || this.poisoned) fail('no prepared module or poisoned session');
+    if (!this.pending || this.stagedDeclared || this.poisoned) fail('no prepared module or poisoned session');
     const { instance, record, traceStart } = this.pending;
     const boundStart = this.boundRequests.length;
     const boundTotalStart = this.boundRequestsTotal;
@@ -1048,6 +1346,7 @@ export class CoreEngine {
       session_state: this.poisoned ? 'terminated-after-runtime-failure' : 'retained',
       metrics, module: record };
     if (record.stem) this.save(`${record.stem}-execution.json`, report);
+    if (this.declaredLive && !this.poisoned) this.retainedDeclaredCode.push(instance);
     return report;
   }
 
@@ -1168,7 +1467,21 @@ export class CoreEngine {
     const layout = this.abi.operand_slots;
     const count = integer(this.shared.sp.value, layout.maximum, 'operand count');
     const bytes = new Uint8Array(this.memory.buffer, layout.offset, count * layout.stride);
-    this.parked = { count, bytes: bytes.slice() };
+    const saved = bytes.slice();
+    const roots = [];
+    if (this.liveCodeOwners && count) {
+      const runtime = this.runtime();
+      for (let index = 0; index < count; index += 1) {
+        if (runtime.stack_kind(index) < 4) continue;
+        const handle = runtime.save_stack_code_root(index);
+        if (!Number.isInteger(handle) || handle <= 0) {
+          this.poisoned = true;
+          fail('cannot retain parked stack code root');
+        }
+        roots.push(handle);
+      }
+    }
+    this.parked = { count, bytes: saved, roots };
     bytes.fill(0);
     this.shared.sp.value = 0;
     return { outcome: 'parked', stack_length: count };
@@ -1181,6 +1494,15 @@ export class CoreEngine {
     bytes.fill(0);
     bytes.set(this.parked.bytes);
     this.shared.sp.value = this.parked.count;
+    if (this.liveCodeOwners) {
+      const runtime = this.runtime();
+      for (const handle of this.parked.roots) {
+        if (runtime.release_code_root(handle) !== 0) {
+          this.poisoned = true;
+          fail('cannot release restored stack code root');
+        }
+      }
+    }
     this.parked = null;
     return { outcome: 'restored', stack: readStack(this, this.runtime()) };
   }
@@ -1196,18 +1518,46 @@ export class CoreEngine {
       return runtime.push_bool(input.value ? 1 : 0);
     }
     if (input.type === 'Unit') return runtime.push_unit();
-    if (input.type === 'Program') return runtime.push_program(integer(input.handle, 4096, 'program handle'));
+    if (input.type === 'Program') {
+      const handle = integer(input.handle, 4096, 'program handle');
+      this.requireExternalCodeRoot(handle);
+      return runtime.push_program(handle);
+    }
     if (input.type === 'Contract') return runtime.push_contract(
       integer(input.index, 4294967295, 'contract index'), BigInt(input.statement),
       integer(input.claim_kind ?? 1, 1, 'claim kind'), integer(input.revision ?? 0, 4294967295, 'claim revision'));
-    if (input.type === 'Evidence') return runtime.push_evidence(
-      integer(input.index, 4294967295, 'evidence index'), integer(input.class ?? 1, 255, 'evidence class'),
-      integer(input.ruleset ?? 1, 4294967295, 'ruleset version'),
-      integer(input.contract, 4096, 'contract handle'));
-    if (input.type === 'Certified') return runtime.push_certified(
-      integer(input.subject, 4096, 'subject handle'), integer(input.contract, 4096, 'contract handle'),
-      integer(input.evidence, 4096, 'evidence handle'), BigInt(input.identity));
+    if (input.type === 'Evidence') {
+      const contract = integer(input.contract, 4096, 'contract handle');
+      this.requireExternalCodeRoot(contract);
+      return runtime.push_evidence(
+        integer(input.index, 4294967295, 'evidence index'),
+        integer(input.class ?? 1, 255, 'evidence class'),
+        integer(input.ruleset ?? 1, 4294967295, 'ruleset version'), contract);
+    }
+    if (input.type === 'Certified') {
+      const subject = integer(input.subject, 4096, 'subject handle');
+      const contract = integer(input.contract, 4096, 'contract handle');
+      const evidence = integer(input.evidence, 4096, 'evidence handle');
+      for (const handle of [subject, contract, evidence]) this.requireExternalCodeRoot(handle);
+      return runtime.push_certified(subject, contract, evidence, BigInt(input.identity));
+    }
     fail('unsupported runtime input type');
+  }
+
+  retainExternalCodeRoot(runtime, handle) {
+    if (!this.liveCodeOwners || this.externalCodeRoots.has(handle)) return;
+    if (!Number.isInteger(handle) || handle < 1 || handle > this.abi.limits_maximum.session_cells
+      || runtime.retain_code_root(handle) !== 0) {
+      this.poisoned = true;
+      fail('cannot retain externally visible code root');
+    }
+    this.externalCodeRoots.add(handle);
+  }
+
+  requireExternalCodeRoot(handle) {
+    if (this.liveCodeOwners && !this.externalCodeRoots.has(handle)) {
+      fail('live raw cell handle lacks a retained owner');
+    }
   }
 
   // Inspect one stack slot without executing candidate code. Only the bounded
@@ -1224,7 +1574,10 @@ export class CoreEngine {
   // Explicit projection of a Certified cell to its live subject Program handle.
   project(handle) {
     const runtime = this.runtime();
-    const subject = runtime.certified_subject(integer(handle, this.abi.limits_maximum.session_cells, 'cell handle'));
+    handle = integer(handle, this.abi.limits_maximum.session_cells, 'cell handle');
+    this.requireExternalCodeRoot(handle);
+    const subject = runtime.certified_subject(handle);
+    if (subject) this.retainExternalCodeRoot(runtime, subject);
     return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       stage: 'wasm', outcome: subject ? 'projected' : 'projection-failed', handle, subject,
       identity_unchanged: subject !== 0,
