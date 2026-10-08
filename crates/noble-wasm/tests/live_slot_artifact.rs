@@ -73,25 +73,42 @@ fn selected_builder(
 
 #[test]
 fn selected_returned_program_distinguishes_input_from_fixed_literal_and_computation() -> Result<(), String> {
-    use noble_wasm::source::{OriginAction, OriginI64, OriginProgramValue, OriginSource};
+    use noble_wasm::source::{OriginAction, OriginFixedArithmetic, OriginFixedExpression,
+        OriginI64, OriginOperand, OriginProgramValue, OriginSource};
     let varying = selected_builder(b"def builder [ quote [ + ] compose ]", &[Ty::I64])?;
     let fixed = selected_builder(b"def builder [ 2 quote [ + ] compose ]", &[Ty::I64])?;
     let computed = selected_builder(b"def builder [ 1 1 + quote [ + ] compose ]", &[Ty::I64])?;
     for (prepared, expected, position) in [
-        (&varying, OriginI64::RootInput(0), 0),
-        (&fixed, OriginI64::Fixed(2), 1),
-        (&computed, OriginI64::Fixed(2), 1),
+        (&varying, "root", 0),
+        (&fixed, "literal", 1),
+        (&computed, "add", 1),
     ] {
         let origin = prepared.selected_origin().ok_or("source-bound output lineage absent")?;
         let [output] = origin.outputs.as_slice() else {
             return Err("selected builder does not return exactly one dynamic Program".into());
         };
-        let OriginProgramValue::Compose { left, right_node, right_program_index, .. } = &output.result
+        let OriginProgramValue::Compose { left, right, .. } = output.result.as_ref()
         else { return Err("selected compose output lost its checked children".into()); };
-        let OriginProgramValue::QuoteI64 { operand, .. } = left.as_ref() else {
+        let OriginProgramValue::Static { node: right_node, program_index: right_program_index } =
+            right.as_ref() else {
+                return Err("selected compose output has no checked static child".into());
+            };
+        let OriginProgramValue::Quote { operand: OriginOperand::I64(operand), .. } =
+            left.as_ref() else {
             return Err("selected quote operand was replaced by a static child".into());
         };
-        if *operand != expected || output.stack_position != position
+        let source_operand_matches = match (operand, expected) {
+            (OriginI64::RootInput(0), "root") => true,
+            (OriginI64::Fixed { value: 2, recipe }, "literal") =>
+                matches!(recipe.as_ref(), OriginFixedExpression::Literal(2)),
+            (OriginI64::Fixed { value: 2, recipe }, "add") =>
+                matches!(recipe.as_ref(), OriginFixedExpression::Arithmetic {
+                    kind: OriginFixedArithmetic::Add, left, right, ..
+                } if matches!(left.as_ref(), OriginFixedExpression::Literal(1))
+                    && matches!(right.as_ref(), OriginFixedExpression::Literal(1))),
+            _ => false,
+        };
+        if !source_operand_matches || output.stack_position != position
             || origin.root_program_index == origin.named_program_index
             || origin.programs.len() != prepared.program_metadata().len()
             || !origin.programs.iter().any(|program| program.program_index == *right_program_index
@@ -113,7 +130,9 @@ fn selected_returned_program_distinguishes_input_from_fixed_literal_and_computat
             .ok_or("selection wrapper missing")?;
         if root.source_artifact != OriginSource::Selection
             || root.operations.len() != 1
-            || root.operations[0].source_span.is_some()
+            || root.operations[0].authored_span.is_some()
+            || root.operations[0].lexical_node.is_some()
+            || root.operations[0].generated_witness.is_some()
             || !matches!(root.operations[0].action,
                 OriginAction::CallSelected(index) if index == origin.named_program_index)
         {
@@ -131,26 +150,78 @@ fn selected_returned_program_distinguishes_input_from_fixed_literal_and_computat
 }
 
 #[test]
-fn selected_origin_keeps_equal_input_values_distinct_and_refuses_root_dependent_arithmetic() -> Result<(), String> {
-    use noble_wasm::source::{OriginI64, OriginProgramValue};
+fn selected_origin_refuses_unproven_multi_output_root_arithmetic_and_over_cap_graphs() -> Result<(), String> {
     let both = selected_builder(b"def builder [ quote swap quote ]", &[Ty::I64, Ty::I64])?;
-    let origin = both.selected_origin().ok_or("independent quote origins absent")?;
-    let [first, second] = origin.outputs.as_slice() else {
-        return Err("distinct root inputs did not produce two returned Programs".into());
-    };
-    if first.stack_position != 0 || second.stack_position != 1
-        || !matches!(&first.result, OriginProgramValue::QuoteI64 {
-            operand: OriginI64::RootInput(1), ..
-        })
-        || !matches!(&second.result, OriginProgramValue::QuoteI64 {
-            operand: OriginI64::RootInput(0), ..
-        })
-    {
-        return Err("identical input bits would be conflated instead of binding their positions".into());
+    if both.selected_origin().is_some() {
+        return Err("two separately saved Program outputs acquired one unverified alias graph".into());
     }
     let unsupported = selected_builder(b"def builder [ 1 + quote [ + ] compose ]", &[Ty::I64])?;
     if unsupported.selected_origin().is_some() {
         return Err("root-varying arithmetic was mislabeled as a fixed captured literal".into());
+    }
+    let large_source = format!("def builder [ quote [ {}+ ] compose ]",
+        "dup drop ".repeat(16));
+    let large = selected_builder(large_source.as_bytes(), &[Ty::I64])?;
+    if large.selected_target().is_none() || large.selected_origin().is_some() {
+        return Err("a valid pure Program exceeding the exact graph observation bound acquired selected identity or lost ordinary compilation".into());
+    }
+    Ok(())
+}
+
+#[test]
+fn checked_lexical_program_sharing_and_nested_program_capture_remain_distinct_from_source_sites()
+-> Result<(), String> {
+    use noble_wasm::source::{OriginI64, OriginOperand, OriginProgramValue};
+    let shared = selected_builder(
+        b"def builder [ quote [ + ] compose let q q q compose [ 0 + ] compose ]", &[Ty::I64],
+    ).map_err(|error| format!("shared Program source: {error}"))?;
+    let fresh = selected_builder(
+        b"def builder [ dup quote [ + ] compose swap quote [ + ] compose compose [ 0 + ] compose ]", &[Ty::I64],
+    ).map_err(|error| format!("fresh quotations source: {error}"))?;
+    fn inner(prepared: &noble_wasm::source::Prepared)
+        -> Result<(&std::rc::Rc<OriginProgramValue>, &std::rc::Rc<OriginProgramValue>), String> {
+        let origin = prepared.selected_origin().ok_or("checked returned DAG missing")?;
+        let [output] = origin.outputs.as_slice() else {
+            return Err("returned graph is not one independently saved owner".into());
+        };
+        let OriginProgramValue::Compose { left, .. } = output.result.as_ref() else {
+            return Err("returned graph lacks checked pure-I64 static continuation".into());
+        };
+        let OriginProgramValue::Compose { left, right, .. } = left.as_ref() else {
+            return Err("returned graph lacks two composed pure-I64 endomorphisms".into());
+        };
+        Ok((left, right))
+    }
+    let (shared_left, shared_right) = inner(&shared)?;
+    let (fresh_left, fresh_right) = inner(&fresh)?;
+    if !std::rc::Rc::ptr_eq(shared_left, shared_right)
+        || std::rc::Rc::ptr_eq(fresh_left, fresh_right) {
+        return Err("lexical Program reuse was conflated with two quote executions".into());
+    }
+    for quote in [shared_left, shared_right, fresh_left, fresh_right] {
+        let OriginProgramValue::Compose { left, .. } = quote.as_ref() else {
+            return Err("reused Program is not a checked pure-I64 endomorphism".into());
+        };
+        if !matches!(left.as_ref(), OriginProgramValue::Quote {
+            operand: OriginOperand::I64(OriginI64::RootInput(0)), ..
+        }) { return Err("the same root I64 binding lost its checked quote operand".into()); }
+    }
+    let nested = selected_builder(
+        b"def builder [ quote let q q quote [ run + ] compose ]", &[Ty::I64],
+    ).map_err(|error| format!("nested Program source: {error}"))?;
+    let [output] = nested.selected_origin().ok_or("nested Program source origin missing")?
+        .outputs.as_slice() else {
+            return Err("nested Program quote returned an ambiguous owner".into());
+        };
+    let OriginProgramValue::Compose { left, .. } = output.result.as_ref() else {
+        return Err("nested Program quote lacks checked continuation".into());
+    };
+    if !matches!(left.as_ref(), OriginProgramValue::Quote {
+        operand: OriginOperand::Program(program), ..
+    } if matches!(program.as_ref(), OriginProgramValue::Quote {
+        operand: OriginOperand::I64(OriginI64::RootInput(0)), ..
+    })) {
+        return Err("quote(Program) lost its nested checked root capture".into());
     }
     Ok(())
 }

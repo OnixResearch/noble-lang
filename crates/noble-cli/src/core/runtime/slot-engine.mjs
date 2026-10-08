@@ -453,9 +453,27 @@ class SlotEngine {
       throw Error('installed Program is inconsistent with checked root metadata/code span');
     }
     if (origin) {
+      if (origin.programs.length > 32
+        || origin.programs.reduce((total, program) =>
+          total + (Array.isArray(program?.operations) ? program.operations.length : 129), 0) > 128) {
+        throw Error('selected source exceeds bounded Program or operation count');
+      }
+      this.verifySelectedLexical(origin);
       for (const [index, program] of origin.programs.entries()) {
+        const metadata = request.program_metadata[index];
         if (program?.program_index !== index
-          || !Array.isArray(program.operations) || !program.operations.length) {
+          || !Array.isArray(program.operations) || !program.operations.length
+          || program.entry !== metadata.entry
+          || program.input_signature !== metadata.input_signature
+          || program.output_signature !== metadata.output_signature
+          || program.effect_mask !== 0 || metadata.effect_mask !== 0
+          || !Array.isArray(metadata.effects) || metadata.effects.length
+          || program.source_artifact !== (index === origin.root_program_index
+            ? 'selection' : 'definition')
+          || program.operations.some((op, ordinal) =>
+            op.ordinal !== ordinal || op.table_entry !== program.entry + ordinal
+            || op.effect_mask !== 0
+            || !Number.isInteger(op.node) || op.node < 0)) {
           throw Error('selected installed Program lacks complete ordered recipe operations');
         }
         this.verifySelectedRecipe(instance.exports,
@@ -474,6 +492,16 @@ class SlotEngine {
     }
     const token = this.registry.registerModule(compiled.digest, request.live_sites,
       checked.stack_in, sourceCatalog, request.source_artifact_sha256);
+    if (origin) {
+      const freeze = value => {
+        if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
+          for (const child of Object.values(value)) freeze(child);
+          Object.freeze(value);
+        }
+      };
+      for (const metadata of [origin, request.program_metadata, request.target_metadata,
+        request.selected_target, request.code_span]) freeze(metadata);
+    }
     for (const program of pinned) this.handles.set(program, { instance, moduleId: request.id });
     this.modules.set(request.id, { ...request, token, handle, instance, pinned,
       artifactSha256: compiled.digest, installed: true, checkedEntries,
@@ -486,7 +514,8 @@ class SlotEngine {
         || typeof this.table.get(2) !== 'function') {
         throw Error('selected first-generation native code donor is missing');
       }
-      this.nativeCoreOwner = { id: request.id, entries: [this.table.get(1), this.table.get(2)] };
+      this.nativeCoreOwner = { id: request.id,
+        entries: [1, 2, 3].map(entry => this.table.get(entry)) };
     }
     return slotReply('installed', { id: request.id, handle,
       artifact_sha256: compiled.digest, generation: String(this.shared.generation.value) });
@@ -532,19 +561,603 @@ class SlotEngine {
     }, handle, artifactSha256, catalog);
   }
 
-  compositeCodeIsInstalled({ coreId, callerId, addEntries }) {
+  compositeCodeIsInstalled(donor, allowDiscard = false) {
+    if (!donor) return false;
+    const { coreId, callerId, codeEntries, nativeEntries, coreSpan, callerSpan,
+      programIndices, handle, selectedInputs, position } = donor;
     const core = this.modules.get(coreId), caller = this.modules.get(callerId);
-    if (!core || !caller || core.discardRequested || caller.discardRequested
+    if (!core || !caller || !allowDiscard && (core.discardRequested || caller.discardRequested)
       || core.rootsReleased || caller.rootsReleased
       || this.nativeCoreOwner?.id !== coreId
       || core.code_span.generation !== 1 || !core.selected_origin
+      || !sameSlotJSON(core.code_span, coreSpan)
+      || !sameSlotJSON(caller.code_span, callerSpan)
       || core.binary_sha256 !== core.artifactSha256
       || caller.binary_sha256 !== caller.artifactSha256
-      || this.table.get(1) !== this.nativeCoreOwner.entries[0]
-      || this.table.get(2) !== this.nativeCoreOwner.entries[1]
-      || !addEntries.every(entry => caller.checkedEntries.get(entry) !== undefined
+      || !nativeEntries.every(entry => typeof this.nativeCoreOwner.entries[entry - 1] === 'function'
+        && this.table.get(entry) === this.nativeCoreOwner.entries[entry - 1])
+      || codeEntries.length !== caller.checkedEntries.size
+      || !codeEntries.every(entry => entry >= caller.code_span.start
+        && entry < caller.code_span.start + caller.code_span.length
         && caller.checkedEntries.get(entry) === this.table.get(entry))) return false;
+    try {
+      for (const index of [caller.selected_origin.named_program_index, ...programIndices]) {
+        const id = caller.pinned[index], metadata = caller.program_metadata[index];
+        if (this.handles.get(id)?.moduleId !== caller.id
+          || this.handles.get(id)?.instance !== caller.instance
+          || caller.instance.exports.cell_kind(id) !== 4
+          || caller.instance.exports.cell_x(id) !== metadata.entry
+          || caller.instance.exports.cell_y(id) !== metadata.input_signature
+          || caller.instance.exports.cell_z(id) !== metadata.output_signature
+          || caller.instance.exports.cell_payload(id) !== BigInt(metadata.effect_mask)
+          || caller.instance.exports.cell_c(id) < 4096) return false;
+        this.verifySelectedRecipe(caller.instance.exports, caller.instance.exports.cell_c(id),
+          caller.selected_origin.programs[index].operations, caller.pinned,
+          caller.selected_origin.definition_identity);
+      }
+      const result = this.evaluateSelectedOrigin(caller, selectedInputs).get(position);
+      this.verifySelectedGraph(caller.instance.exports, handle, result, caller, selectedInputs);
+    } catch { return false; }
     return true;
+  }
+
+  replaySelectedLexicalSource(source, definitionName) {
+    const bytes = Buffer.from(source, 'utf8');
+    if (bytes.toString('utf8') !== source || bytes.length > 131072) {
+      throw Error('selected lexical replay lacks bounded exact UTF-8 source bytes');
+    }
+    const tokens = [];
+    const space = byte => byte === 32 || byte === 9 || byte === 10 || byte === 13;
+    for (let at = 0; at < bytes.length;) {
+      const byte = bytes[at];
+      if (space(byte)) { at++; continue; }
+      if (byte === 35) {
+        while (at < bytes.length && bytes[at] !== 10 && bytes[at] !== 13) at++;
+        continue;
+      }
+      const start = at++;
+      if (byte === 91 || byte === 93) {
+        tokens.push({ kind: byte === 91 ? 'open' : 'close',
+          span: { start, end: at } });
+      } else {
+        if (byte === 34) throw Error('selected pure lexical source contains unsupported text');
+        while (at < bytes.length && !space(bytes[at])
+          && bytes[at] !== 35 && bytes[at] !== 91
+          && bytes[at] !== 93 && bytes[at] !== 34) at++;
+        for (let letter = start; letter < at; letter++) {
+          if (bytes[letter] > 127) {
+            throw Error('selected lexical word contains non-ASCII source bytes');
+          }
+        }
+        const word = bytes.toString('ascii', start, at);
+        if (!/^[A-Za-z_+\-*\/=<>\?!][A-Za-z0-9_.+\-*\/=<>\?!]*$/.test(word)
+          && !/^-?(?:0|[1-9][0-9]*)$/.test(word)) {
+          throw Error('selected lexical token is not a complete pure-I64 word');
+        }
+        tokens.push({ kind: 'word', word, span: { start, end: at } });
+      }
+      if (tokens.length > 1028) throw Error('selected source exceeds bounded token count');
+    }
+    if (tokens[0]?.word !== 'def' || tokens[1]?.kind !== 'word'
+      || tokens[1].word !== definitionName || tokens[2]?.kind !== 'open'
+      || tokens[1].word === 'def') {
+      throw Error('selected lexical definition differs from retained source bytes');
+    }
+    const nodes = [], frames = [{ body: [], start: 0 }];
+    const append = node => {
+      if (nodes.length >= 512) throw Error('selected lexical arena exceeds 512 nodes');
+      const id = nodes.length;
+      nodes.push(node);
+      frames.at(-1).body.push(id);
+      return id;
+    };
+    for (let tokenIndex = 2; tokenIndex < tokens.length; tokenIndex++) {
+      const token = tokens[tokenIndex];
+      if (token.kind === 'open') {
+        if (frames.length >= 32) throw Error('selected quotation exceeds lexical depth');
+        frames.push({ body: [], start: token.span.start });
+      } else if (token.kind === 'close') {
+        if (frames.length < 2) throw Error('selected lexical quotation has unmatched close');
+        const frame = frames.pop();
+        append({ kind: 'quotation', body: frame.body,
+          span: { start: frame.start, end: token.span.end }, witness: null });
+      } else {
+        const value = token.word;
+        if (value === 'def' || value === 'true' || value === 'false') {
+          throw Error('selected lexical body has an unsupported expression');
+        }
+        if (/^-?(?:0|[1-9][0-9]*)$/.test(value)) {
+          const integer = BigInt(value);
+          if (BigInt.asIntN(64, integer) !== integer) {
+            throw Error('selected lexical literal exceeds signed I64');
+          }
+          append({ kind: 'i64', value: integer.toString(),
+            span: token.span, witness: null });
+        } else {
+          append({ kind: 'word', word: value, span: token.span, witness: null });
+        }
+      }
+    }
+    if (frames.length !== 1 || frames[0].body.length !== 1
+      || nodes[frames[0].body[0]]?.kind !== 'quotation'
+      || frames[0].body[0] !== nodes.length - 1) {
+      throw Error('selected lexical definition has no unique terminal quotation envelope');
+    }
+    const envelope = nodes.at(-1);
+    const original = nodes.length - 1;
+    let body = envelope.body;
+    envelope.body = [];
+    const name = word => /^[A-Za-z_][A-Za-z0-9_]*$/.test(word) && word !== 'let';
+    const builtin = { dup: 0, drop: 1, swap: 2, dip: 3,
+      '+': 4, '-': 5, '*': 6, quote: 8, compose: 9, run: 10 };
+    if (nodes.some(node => node.kind === 'word' && node.word === 'let')) {
+      nodes.pop();
+      const generated = (kind, span, generation, occurrence, binder, fields = {}) => {
+        if (nodes.length >= 512) throw Error('selected lexical arena exceeds 512 nodes');
+        const id = nodes.length;
+        nodes.push({ kind, span, witness: { generation, occurrence_node: occurrence,
+          binder_node: binder }, ...fields });
+        return id;
+      };
+      const operation = (code, definition, hidden, locals, depth, span,
+        occurrence, generation, binder) => {
+        const id = generated('builtin', span, generation, occurrence, binder, { definition });
+        code.push(...wrapped(id, hidden, locals, depth, span, occurrence));
+      };
+      const wrapped = (id, hidden, locals, depth, span, occurrence) => {
+        let code = [id];
+        for (let layer = 0; layer < hidden; layer++) {
+          if (depth + layer + 1 > 32) {
+            throw Error('selected lexical hidden-value quotation exceeds depth');
+          }
+          const binder = locals[layer]?.binder;
+          if (!Number.isInteger(binder)) throw Error('selected lexical wrapper lacks binder');
+          const quotation = generated('quotation', span, 'wrap-quotation',
+            occurrence, binder, { body: code });
+          const dip = generated('builtin', span, 'wrap-dip',
+            occurrence, binder, { definition: 3 });
+          code = [quotation, dip];
+        }
+        return code;
+      };
+      const read = (code, which, locals, depth, span, occurrence) => {
+        if (which < 0 || which >= locals.length) {
+          throw Error('selected lexical projection references absent binder');
+        }
+        const binder = locals[which].binder;
+        operation(code, 0, which, locals, depth, span,
+          occurrence, 'projection-dup', binder);
+        for (let older = 0; older < locals.length - which - 1; older++) {
+          operation(code, 2, which + 1 + older, locals, depth, span,
+            occurrence, 'projection-swap', binder);
+        }
+      };
+      const free = (sourceBody, outer, shadow, used, depth) => {
+        if (depth > 32) throw Error('selected lexical free occurrence exceeds depth');
+        const scope = shadow.length;
+        for (let at = 0; at < sourceBody.length; at++) {
+          const node = nodes[sourceBody[at]];
+          if (node?.kind === 'word' && node.word === 'let') {
+            const binding = nodes[sourceBody[++at]];
+            if (binding?.kind !== 'word' || !name(binding.word)
+              || shadow.slice(scope).includes(binding.word)) {
+              throw Error('selected lexical quotation contains invalid binder');
+            }
+            shadow.push(binding.word);
+          } else if (node?.kind === 'word') {
+            if (!shadow.includes(node.word)) {
+              const index = outer.findIndex(local => local.name === node.word);
+              if (index !== -1) used[index] = true;
+            }
+          } else if (node?.kind === 'quotation') {
+            free(node.body, outer, shadow, used, depth + 1);
+          }
+        }
+        shadow.length = scope;
+      };
+      const lowerQuote = (id, outer, depth, span) => {
+        const nested = nodes[id].body;
+        nodes[id].body = [];
+        const used = outer.map(() => false);
+        free(nested, outer, [], used, depth + 1);
+        const captured = outer.filter((_, index) => used[index])
+          .map(local => ({ ...local }));
+        const code = [];
+        let first = true;
+        for (let index = used.length - 1; index >= 0; index--) {
+          if (!used[index]) continue;
+          read(code, index, outer, depth, span, id);
+          operation(code, 8, outer.length, outer, depth, span,
+            id, 'capture-quote', outer[index].binder);
+          if (!first) operation(code, 9, outer.length, outer, depth, span,
+            id, 'capture-compose', outer[index].binder);
+          first = false;
+        }
+        nodes[id].body = lowerBody(nested, captured, depth + 1);
+        code.push(...wrapped(id, outer.length, outer, depth, span, id));
+        if (!first) operation(code, 9, outer.length, outer, depth, span,
+          id, 'capture-compose', null);
+        return code;
+      };
+      const lowerBody = (sourceBody, inherited, depth) => {
+        if (depth > 32) throw Error('selected lexical body exceeds depth');
+        const code = [], locals = inherited.slice();
+        let introduced = 0;
+        for (let at = 0; at < sourceBody.length; at++) {
+          const id = sourceBody[at], node = nodes[id];
+          if (node?.kind === 'word' && node.word === 'let') {
+            const bindId = sourceBody[++at], binding = nodes[bindId];
+            if (binding?.kind !== 'word' || !name(binding.word)
+              || locals.slice(0, introduced).some(local => local.name === binding.word)
+              || locals.length + 1 > 32) {
+              throw Error('selected lexical binding lacks an independent named operand');
+            }
+            for (let hidden = locals.length - 1; hidden >= 0; hidden--) {
+              operation(code, 2, hidden, locals, depth, node.span,
+                id, 'binding-swap', bindId);
+            }
+            const binderName = binding.word;
+            nodes[id].kind = nodes[bindId].kind = 'quotation';
+            nodes[id].body = nodes[bindId].body = [];
+            delete nodes[id].word; delete nodes[bindId].word;
+            locals.unshift({ name: binderName, binder: bindId });
+            introduced++;
+          } else if (node?.kind === 'word'
+            && locals.some(local => local.name === node.word)) {
+            const which = locals.findIndex(local => local.name === node.word);
+            nodes[id].kind = 'quotation';
+            nodes[id].body = [];
+            delete nodes[id].word;
+            read(code, which, locals, depth, node.span, id);
+          } else if (node?.kind === 'quotation') {
+            code.push(...lowerQuote(id, locals, depth, node.span));
+          } else if (node) {
+            code.push(...wrapped(id, locals.length, locals, depth, node.span, id));
+          } else {
+            throw Error('selected lexical body references absent source node');
+          }
+        }
+        for (const local of locals) {
+          code.push(generated('builtin', { start: 0, end: 0 }, 'cleanup-drop',
+            null, local.binder, { definition: 1 }));
+        }
+        return code;
+      };
+      body = lowerBody(body, [], 0);
+      if (nodes.length >= 512) throw Error('selected lexical arena exceeds 512 nodes');
+      nodes.push(envelope);
+    }
+    const definitions = new Map(Object.entries(builtin)
+      .map(([word, number]) => [word, number]));
+    for (const node of nodes) {
+      if (node.kind === 'word') {
+        if (!definitions.has(node.word)) {
+          throw Error('selected lexical source has unresolved or unsupported authored word');
+        }
+        node.kind = 'builtin';
+        node.definition = definitions.get(node.word);
+        delete node.word;
+      }
+    }
+    const end = nodes.length - 1;
+    const normalized = nodes.map((node, index) => {
+      const row = { node: index, kind: node.kind,
+        authored_span: node.witness === null ? node.span : null,
+        generated_witness: node.witness };
+      if (node.kind === 'i64') row.value = node.value;
+      else if (node.kind === 'builtin') row.definition = node.definition;
+      else if (node.kind === 'quotation') row.body = node.body;
+      else throw Error('selected lexical replay has unrecognized AST node');
+      return row;
+    });
+    return { source, definition_name: definitionName, original_nodes: original,
+      generated_start: original, generated_end: end, body, nodes: normalized };
+  }
+
+  verifySelectedLexical(origin) {
+    const claimed = origin.lexical_replay;
+    if (!claimed || typeof claimed.source !== 'string'
+      || typeof claimed.source_sha256 !== 'string'
+      || claimed.source_sha256 !== origin.selected_source_sha256
+      || sha256(Buffer.from(claimed.source, 'utf8')) !== claimed.source_sha256
+      || !Array.isArray(claimed.nodes) || claimed.nodes.length > 512) {
+      throw Error('selected lexical source bytes or bounded node replay are unverified');
+    }
+    const expected = this.replaySelectedLexicalSource(
+      claimed.source, claimed.definition_name);
+    const kernelByLexical = new Map();
+    const indexCandidate = (ids, depth) => {
+      if (depth >= 32) throw Error('selected lexical candidate quotation exceeds depth bound');
+      for (const lexical of ids) {
+        const node = expected.nodes[lexical];
+        if (!node || lexical >= expected.generated_end
+          || kernelByLexical.has(lexical)) {
+          throw Error('selected lexical candidate repeats or loses an executable occurrence');
+        }
+        if (node.kind === 'quotation') indexCandidate(node.body, depth + 1);
+        kernelByLexical.set(lexical, kernelByLexical.size);
+        if (kernelByLexical.size > 512) {
+          throw Error('selected lexical candidate exceeds bounded checked node count');
+        }
+      }
+    };
+    indexCandidate(expected.body, 0);
+    if (!sameSlotJSON(claimed, { ...expected,
+      source_sha256: claimed.source_sha256,
+      candidate_to_lexical: [...kernelByLexical.keys()] })) {
+      throw Error('selected lexical lowering/candidate map differs from independent source-byte replay');
+    }
+    const sourceBodies = new Map();
+    const covered = new Set();
+    const named = origin.programs[origin.named_program_index];
+    if (named?.body_node !== null) throw Error('selected named builder lacks root lexical body');
+    for (const program of origin.programs) {
+      if (program.source_artifact !== 'definition'
+        || program.program_index === origin.named_program_index) continue;
+      const bodyNode = program.body_node;
+      if (!Number.isInteger(bodyNode) || bodyNode < 0 || bodyNode >= expected.generated_end
+        || expected.nodes[bodyNode].kind !== 'quotation'
+        || sourceBodies.has(bodyNode)) {
+        throw Error('selected quotation Program has duplicate or missing lexical body owner');
+      }
+      sourceBodies.set(bodyNode, program.program_index);
+    }
+    for (const program of origin.programs) {
+      if (program.source_artifact === 'selection') {
+        if (program.body_node !== null || program.program_index !== origin.root_program_index
+          || program.operations.length !== 1 || program.operations[0].kind !== 'call-selected'
+          || program.operations[0].lexical_node !== null
+          || program.operations[0].generated !== false
+          || program.operations[0].authored_span !== null
+          || program.operations[0].generated_witness !== null) {
+          throw Error('selected lexical wrapper differs from checked root call');
+        }
+        continue;
+      }
+      const bodyNode = program.body_node;
+      let body;
+      if (program.program_index === origin.named_program_index) {
+        if (bodyNode !== null) throw Error('named lexical body was rebound to a quotation');
+        body = expected.body;
+      } else {
+        if (sourceBodies.get(bodyNode) !== program.program_index) {
+          throw Error('selected quotation Program was rebound to another lexical body');
+        }
+        body = expected.nodes[bodyNode].body;
+      }
+      if (!sameSlotJSON(program.operations.map(op => op.lexical_node), body)) {
+        throw Error('selected Program operation order differs from lexical quotation body');
+      }
+      for (const op of program.operations) {
+        const node = expected.nodes[op.lexical_node];
+        const definition = { dup: 0, drop: 1, swap: 2, dip: 3,
+          add: 4, sub: 5, mul: 6, 'quote-i64': 8, 'quote-program': 8,
+          compose: 9, run: 10 }[op.kind];
+        if (!node || op.lexical_node >= expected.generated_end
+          || op.node !== kernelByLexical.get(op.lexical_node)
+          || covered.has(op.node)
+          || op.generated !== (node.generated_witness !== null)
+          || op.kind === 'dip' && !op.generated
+          || !sameSlotJSON(op.authored_span, node.authored_span)
+          || !sameSlotJSON(op.generated_witness, node.generated_witness)
+          || op.kind === 'i64' && (node.kind !== 'i64' || op.value !== node.value)
+          || op.kind === 'static-program' && (node.kind !== 'quotation'
+            || sourceBodies.get(op.lexical_node) !== op.static_program_index)
+          || definition !== undefined
+            && (node.kind !== 'builtin' || node.definition !== definition)
+          || !['i64', 'static-program', 'dup', 'drop', 'swap', 'dip',
+            'add', 'sub', 'mul', 'quote-i64', 'quote-program',
+            'compose', 'run'].includes(op.kind)) {
+          throw Error('selected source operation provenance differs from exact lexical replay');
+        }
+        covered.add(op.node);
+      }
+    }
+    const reachable = new Set(), visit = ids => {
+      for (const id of ids) {
+        if (expected.nodes[id]?.kind !== 'quotation' || !expected.nodes[id].body.length) continue;
+        reachable.add(id);
+        visit(expected.nodes[id].body);
+      }
+    };
+    visit(expected.body);
+    if (reachable.size !== sourceBodies.size
+      || [...reachable].some(id => !sourceBodies.has(id))
+      || covered.size !== kernelByLexical.size) {
+      throw Error('selected lexical quotation has missing or orphan installed Program');
+    }
+  }
+
+  selectedPureType(source, depth = 0) {
+    if (source === 'I64') return true;
+    if (typeof source !== 'string' || depth >= 32
+      || !source.startsWith('Program([') || !source.endsWith(']!{})')) return false;
+    const body = source.slice(9, -5);
+    let nesting = 0, split = -1;
+    for (let at = 0; at < body.length; at++) {
+      if (body[at] === '[') nesting++;
+      else if (body[at] === ']') {
+        if (!nesting && body.slice(at, at + 4) === ']->[') {
+          split = at;
+          break;
+        }
+        if (--nesting < 0) return false;
+      }
+    }
+    if (split < 0) return false;
+    const splitTypes = part => {
+      if (!part) return [];
+      const result = [];
+      let start = 0, nested = 0;
+      for (let at = 0; at < part.length; at++) {
+        if (part[at] === '[') nested++;
+        else if (part[at] === ']' && --nested < 0) return null;
+        else if (part[at] === ',' && nested === 0) {
+          result.push(part.slice(start, at));
+          start = at + 1;
+        }
+      }
+      if (nested !== 0) return null;
+      result.push(part.slice(start));
+      return result;
+    };
+    const input = splitTypes(body.slice(0, split));
+    const output = splitTypes(body.slice(split + 4));
+    return input !== null && output !== null
+      && [...input, ...output].every(type => this.selectedPureType(type, depth + 1));
+  }
+
+  selectedStaticBody(module, index, active, dependencies, bodies = new Map()) {
+    if (bodies.has(index)) return bodies.get(index);
+    const source = module.selected_origin.programs[index];
+    const metadata = module.program_metadata[index];
+    if (active.length >= 32 || active.includes(index)
+      || !source || !metadata || source.program_index !== index
+      || source.source_artifact !== 'definition' || source.effect_mask !== 0
+      || metadata.effect_mask !== 0 || !Array.isArray(metadata.effects)
+      || metadata.effects.length || !Array.isArray(source.operations)
+      || !Array.isArray(metadata.stack_in) || !Array.isArray(metadata.stack_out)
+      || ![...metadata.stack_in, ...metadata.stack_out]
+        .every(type => this.selectedPureType(type))) {
+      throw Error('selected static Program has an unverified typed or recursive dependency');
+    }
+    dependencies.add(index);
+    active.push(index);
+    try {
+      const operations = source.operations.map(op => {
+        if (op.effect_mask !== 0 || !['i64', 'add', 'sub', 'mul', 'dup', 'swap',
+          'drop', 'dip', 'run', 'quote-i64', 'quote-program',
+          'compose', 'static-program'].includes(op.kind)) {
+          throw Error('selected static dependency has an effect or unsupported operation');
+        }
+        if (op.kind === 'i64') {
+          const value = BigInt(op.value);
+          if (BigInt.asIntN(64, value) !== value || value.toString() !== op.value) {
+            throw Error('selected static I64 literal is not canonical');
+          }
+          return { kind: op.kind, value: op.value };
+        }
+        if (op.kind === 'static-program') {
+          return { kind: op.kind, program: this.selectedStaticBody(module,
+            op.static_program_index, active, dependencies, bodies) };
+        }
+        return { kind: op.kind };
+      });
+      const body = { input: metadata.stack_in, output: metadata.stack_out,
+        effects: [], operations };
+      bodies.set(index, body);
+      return body;
+    } finally { active.pop(); }
+  }
+
+  selectedProgramInterface(module, position) {
+    const descriptor = module.target_metadata.stack_out[position];
+    const match = typeof descriptor === 'string'
+      && /^Program\(\[(I64(?:,I64)*|)\]->\[(I64(?:,I64)*|)\]!\{\}\)$/.exec(descriptor);
+    if (!match || !match[2]) {
+      throw Error('selected returned target has no pure-I64 Program interface');
+    }
+    const types = text => text ? text.split(',') : [];
+    return { input: types(match[1]), output: types(match[2]), effects: [] };
+  }
+
+  countSelectedFixedRecipe(recipe, budget, depth = 1) {
+    if (!recipe || ++budget.nodes > 128 || depth > 32) {
+      throw Error('selected computed I64 expression exceeds bounded source shape');
+    }
+    if (recipe.kind === 'literal') {
+      if (typeof recipe.value !== 'string'
+        || BigInt.asIntN(64, BigInt(recipe.value)).toString() !== recipe.value) {
+        throw Error('selected source I64 expression has a noncanonical literal');
+      }
+    } else if (['add', 'sub', 'mul'].includes(recipe.kind)) {
+      this.countSelectedFixedRecipe(recipe.left, budget, depth + 1);
+      this.countSelectedFixedRecipe(recipe.right, budget, depth + 1);
+    } else {
+      throw Error('selected fixed I64 expression has an unsupported source operation');
+    }
+  }
+
+  selectedResultTemplate(module, result, inputs, dependencies, bodies) {
+    const aliases = new Map(), normalized = new Map();
+    const captures = [], captured = new Set();
+    const constructedSites = [], staticSites = [];
+    const fixedBudget = { nodes: 0 };
+    const sites = module.selected_origin.programs.flatMap(program => program.operations);
+    const site = (description, kind) => {
+      const matches = sites.filter(op => op.kind === kind
+        && op.node === description.node && op.effect_mask === 0
+        && (kind === 'static-program'
+          ? op.static_program_index === description.program_index
+          : op.table_entry === description.table_entry));
+      if (matches.length !== 1) throw Error('selected returned Program source site is ambiguous');
+      return matches[0];
+    };
+    const walk = value => {
+      if (value.kind === 'reference') {
+        if (!Number.isInteger(value.alias) || !normalized.has(value.alias)) {
+          throw Error('selected returned Program has a forward or missing sharing reference');
+        }
+        return normalized.get(value.alias);
+      }
+      if (!Number.isInteger(value.alias) || value.alias !== aliases.size || aliases.size >= 32) {
+        throw Error('selected returned Program aliases are not bounded DFS ordinals');
+      }
+      aliases.set(value.alias, value);
+      if (value.kind === 'static-program') {
+        const op = site(value, 'static-program');
+        staticSites.push({ program_index: value.program_index,
+          node: value.node, table_entry: op.table_entry });
+        const body = { kind: value.kind,
+          program: this.selectedStaticBody(module, value.program_index, [], dependencies, bodies) };
+        normalized.set(value.alias, body);
+        return body;
+      }
+      if (value.kind === 'quote-i64' || value.kind === 'quote-program') {
+        const op = site(value, value.kind);
+        constructedSites.push({ kind: value.kind, node: op.node, table_entry: op.table_entry });
+        if (value.kind === 'quote-program') {
+          const body = { kind: value.kind, operand: walk(value.operand) };
+          normalized.set(value.alias, body);
+          return body;
+        }
+        const operand = value.operand;
+        if (operand?.kind === 'root-i64') {
+          const position = operand.position;
+          if (!Number.isInteger(position) || position < 0 || position >= inputs.length) {
+            throw Error('selected I64 root binder is outside checked input interface');
+          }
+          if (!captured.has(position)) {
+            captured.add(position);
+            captures.push({ type: 'I64', value: inputs[position].value });
+          }
+          const body = { kind: value.kind, operand: { kind: 'root-i64', position } };
+          normalized.set(value.alias, body);
+          return body;
+        }
+        if (operand?.kind !== 'fixed-i64'
+          || typeof operand.value !== 'string'
+          || BigInt.asIntN(64, BigInt(operand.value)).toString() !== operand.value
+          || !operand.recipe) {
+          throw Error('selected fixed I64 quote lacks a canonical signed capture');
+        }
+        this.countSelectedFixedRecipe(operand.recipe, fixedBudget);
+        const body = { kind: value.kind,
+          operand: { kind: 'fixed-i64', value: operand.value, recipe: operand.recipe } };
+        normalized.set(value.alias, body);
+        return body;
+      }
+      if (value.kind === 'compose') {
+        const op = site(value, 'compose');
+        constructedSites.push({ kind: value.kind, node: op.node, table_entry: op.table_entry });
+        const body = { kind: value.kind,
+          left: walk(value.left), right: walk(value.right) };
+        normalized.set(value.alias, body);
+        return body;
+      }
+      throw Error('selected returned Program contains an unsupported source node');
+    };
+    return { template: walk(result), captures, constructedSites, staticSites };
   }
 
   returnedManifest(owner, saved, claimed) {
@@ -552,78 +1165,51 @@ class SlotEngine {
     const caller = this.modules.get(selected?.callerId);
     const core = this.modules.get(this.nativeCoreOwner?.id);
     if (!caller?.selected_origin || !core || !selected
-      || selected.inputs.length !== 2
+      || selected.inputs.length !== caller.target_metadata.stack_in.length
+      || caller.target_metadata.stack_in.some(type => type !== 'I64')
       || selected.inputs.some(input => input.kind !== 'i64'
-        || !/^-?(0|[1-9][0-9]*)$/.test(input.value))
-      || caller.target_metadata.stack_out[selected.position] !== 'Program([I64,I64]->[I64]!{})'
+        || typeof input.value !== 'string'
+        || BigInt.asIntN(64, BigInt(input.value)).toString() !== input.value)
       || saved.sourceId !== null || saved.programIndex !== null) {
-      throw Error('selected returned target lacks a checked two-root code donor');
+      throw Error('selected returned target lacks a checked pure-I64 source owner');
     }
     const outputs = caller.selected_origin.outputs;
     if (outputs.length !== 1 || outputs[0].stack_position !== selected.position) {
       throw Error('selected returned target source occurrence is ambiguous');
     }
+    const targetInterface = this.selectedProgramInterface(caller, selected.position);
     const result = this.evaluateSelectedOrigin(caller, selected.inputs).get(selected.position);
-    const inner = result?.left, left = inner?.left, right = inner?.right;
-    const staticResult = result?.right;
-    if (result?.kind !== 'compose' || inner?.kind !== 'compose-dynamic'
-      || left?.kind !== 'quote-i64' || right?.kind !== 'quote-i64'
-      || staticResult?.kind !== 'static-program'
-      || left.operand?.kind !== 'root-i64' || right.operand?.kind !== 'root-i64'
-      || ![left.operand.position, right.operand.position]
-        .every(position => Number.isInteger(position) && position >= 0 && position < 2)) {
-      throw Error('selected returned target has unsupported or unverified source bindings');
+    const dependencies = new Set();
+    const bodies = new Map();
+    const { template, captures, constructedSites, staticSites } =
+      this.selectedResultTemplate(caller, result, selected.inputs, dependencies, bodies);
+    if (result.kind === 'static-program') {
+      throw Error('pinned static Program cannot acquire a constructed returned-target identity');
     }
     const named = caller.selected_origin.programs[caller.selected_origin.named_program_index];
-    const staticIndex = staticResult.program_index;
-    const staticProgram = caller.selected_origin.programs[staticIndex];
-    const additions = staticProgram?.operations;
-    if (named?.source_artifact !== 'definition' || named.effect_mask !== 0
-      || !named.operations.every(operation =>
-        ['dup', 'drop', 'swap', 'quote-i64', 'compose', 'static-program'].includes(operation.kind)
-        && operation.effect_mask === 0)
-      || staticProgram?.source_artifact !== 'definition'
-      || !Number.isInteger(staticIndex) || staticIndex < 0
-      || !Array.isArray(additions) || additions.length !== 3
-      || additions.some((operation, ordinal) =>
-        operation.kind !== 'add' || operation.effect_mask !== 0
-        || operation.table_entry !== staticProgram.entry + ordinal)
-      || caller.program_metadata[staticIndex]?.entry !== staticProgram.entry
-      || !sameSlotJSON(caller.program_metadata[staticIndex]?.stack_in,
-        ['I64', 'I64', 'I64', 'I64'])
-      || !sameSlotJSON(caller.program_metadata[staticIndex]?.stack_out, ['I64'])
-      || caller.program_metadata[staticIndex]?.effect_mask !== 0) {
-      throw Error('selected returned target static add dependency lacks checked code');
+    if (named?.source_artifact !== 'definition' || named.effect_mask !== 0) {
+      throw Error('selected returned Program has no pure checked named builder');
     }
-    const site = (node, kind) => {
-      const matching = named.operations.filter(operation =>
-        operation.kind === kind && operation.node === node.node
-          && operation.table_entry === node.table_entry
-          && operation.effect_mask === 0);
-      if (matching.length !== 1) throw Error('selected returned target source site is ambiguous');
-      return { node: matching[0].node, table_entry: matching[0].table_entry };
-    };
-    const quoteSites = [site(left, 'quote-i64'), site(right, 'quote-i64')];
-    const composeSites = [site(inner, 'compose'), site(result, 'compose')];
-    const staticSiteMatches = named.operations.filter(operation =>
-      operation.kind === 'static-program' && operation.node === staticResult.node
-        && operation.static_program_index === staticIndex
-        && operation.effect_mask === 0);
-    if (staticSiteMatches.length !== 1) {
-      throw Error('selected returned target static dependency site is ambiguous');
+    for (const op of named.operations) if (op.kind === 'static-program') {
+      const index = op.static_program_index;
+      this.selectedStaticBody(caller, index, [], dependencies, bodies);
     }
-    const staticSite = { node: staticSiteMatches[0].node,
-      table_entry: staticSiteMatches[0].table_entry };
-    if (quoteSites[0].table_entry === quoteSites[1].table_entry
-      || composeSites[0].node === composeSites[1].node
-      || composeSites[0].table_entry === composeSites[1].table_entry) {
-      throw Error('selected returned target reuses an unverified source occurrence');
-    }
-    const addEntries = additions.map(operation => operation.table_entry);
-    const donor = { coreId: core.id, callerId: caller.id, addEntries };
+    const programIndices = [...dependencies].sort((left, right) => left - right);
+    const staticEntries = [...new Set([
+      ...named.operations.map(op => op.table_entry),
+      ...programIndices.flatMap(index =>
+        caller.selected_origin.programs[index].operations.map(op => op.table_entry))])]
+      .sort((left, right) => left - right);
+    const dip = named.operations.some(op => op.kind === 'dip')
+      || programIndices.some(index => caller.selected_origin.programs[index]
+        .operations.some(op => op.kind === 'dip'));
+    const nativeEntries = dip ? [1, 2, 3] : [1, 2];
+    const donor = { coreId: core.id, callerId: caller.id, nativeEntries,
+      codeEntries: [...caller.checkedEntries.keys()],
+      coreSpan: { ...core.code_span }, callerSpan: { ...caller.code_span },
+      programIndices, handle: saved.handle, position: selected.position,
+      selectedInputs: selected.inputs.map(input => ({ ...input })) };
     if (!this.compositeCodeIsInstalled(donor)
-      || !addEntries.every(entry => entry >= caller.code_span.start
-        && entry < caller.code_span.start + caller.code_span.length)
       || saved.moduleIds.size !== new Set([core.id, caller.id]).size
       || ![core.id, caller.id].every(id => saved.moduleIds.has(id))) {
       throw Error('selected returned target code donor changed, retired or has extra owner');
@@ -637,42 +1223,47 @@ class SlotEngine {
     const recipe = JSON.parse(this.captureValue(retained.runtime,
       retained.runtime.cell_c(saved.handle), 32, 4096));
     const observed = this.observeProgramGraph(retained.runtime, saved.handle);
-    if (observed.moduleIds.size !== 1 || !observed.moduleIds.has(caller.id)) {
+    if (observed.moduleIds.size > 1
+      || observed.moduleIds.size === 1 && !observed.moduleIds.has(caller.id)
+      || staticSites.length && !observed.moduleIds.has(caller.id)) {
       throw Error('selected returned target graph contains unchecked dynamic code owner');
     }
-    const capturePositions = [left.operand.position, right.operand.position];
-    const captures = [capturePositions[0], ...capturePositions.slice(1)
-      .filter(position => position !== capturePositions[0])]
-      .map(position => ({ type: 'I64', value: selected.inputs[position].value }));
-    const supplied = claimed?.descriptor?.identity;
-    if (!supplied || typeof supplied.definition_id !== 'string'
-      || !/^anonymous-template-experimental-v2-blake3:[0-9a-f]{64}$/.test(supplied.definition_id)
-      || typeof supplied.program_value_id !== 'string'
-      || !/^anonymous-program-experimental-v2-blake3:[0-9a-f]{64}$/.test(supplied.program_value_id)
-      || !sameSlotJSON(supplied.captures, captures)
-      || !sameSlotJSON(supplied.interface, { input: ['I64', 'I64'],
-        output: ['I64'], effects: [] })) {
-      throw Error('selected returned target identity/captures differ from checked source and graph');
-    }
+    let expanded = 0;
+    const boundTemplate = (value, depth) => {
+      if (++expanded > 4096 || depth > 32) {
+        throw Error('selected semantic Program template exceeds bounded replay size/depth');
+      }
+      if (value && typeof value === 'object') {
+        for (const child of Object.values(value)) boundTemplate(child, depth + 1);
+      }
+    };
+    boundTemplate(template, 1);
+    const definitionDescriptor = { schema: 'noble-returned-pure-i64-dag/experimental-v3',
+      interface: targetInterface, template, lexical_recursive_owner: null };
+    const definitionId = `anonymous-template-experimental-v3-sha256:${sha256(Buffer.concat([
+      Buffer.from('noble returned pure-i64 DAG definition experimental v3\0'),
+      Buffer.from(canonicalSlotJSON(definitionDescriptor))]))}`;
+    const valueDescriptor = { definition_id: definitionId, captures };
+    const programValueId = `anonymous-program-experimental-v3-sha256:${sha256(Buffer.concat([
+      Buffer.from('noble returned pure-i64 DAG value experimental v3\0'),
+      Buffer.from(canonicalSlotJSON(valueDescriptor))]))}`;
     const descriptor = {
       schema: 'noble-live-slot-composite-code-donors/v1',
       owner: { token: owner, handle: saved.handle },
-      identity: { definition_id: supplied.definition_id,
-        program_value_id: supplied.program_value_id,
-        captures, interface: { input: ['I64', 'I64'], output: ['I64'], effects: [] },
-        lexical_recursive_owner: null },
+      identity: { definition_id: definitionId, program_value_id: programValueId,
+        captures, interface: targetInterface, lexical_recursive_owner: null },
       source: { caller_id: caller.id, source_sha256: caller.source_sha256,
         selected_source_sha256: caller.selected_origin.selected_source_sha256,
         definition_identity: caller.selected_origin.definition_identity,
         source_generation: caller.selected_origin.source_generation,
-        quote_sites: quoteSites, compose_sites: composeSites,
-        static_program_index: staticIndex, static_site: staticSite },
+        constructed_sites: constructedSites, static_sites: staticSites,
+        program_indices: programIndices },
       donors: {
         native: { module_id: core.id, artifact_sha256: core.artifactSha256,
-          source_sha256: core.source_sha256, span: { ...core.code_span }, entries: [1, 2] },
+          source_sha256: core.source_sha256, span: { ...core.code_span }, entries: nativeEntries },
         static: { module_id: caller.id, artifact_sha256: caller.artifactSha256,
           source_sha256: caller.source_sha256, span: { ...caller.code_span },
-          entries: addEntries },
+          entries: staticEntries },
       },
       graph_sha256: sha256(Buffer.from(canonicalSlotJSON(graph))),
       recipe_sha256: sha256(Buffer.from(canonicalSlotJSON(recipe))),
@@ -684,12 +1275,12 @@ class SlotEngine {
     if (!sameSlotJSON(claimed, { descriptor, manifest_sha256: manifestSha256 })) {
       throw Error('host and worker independently checked composite code donors disagree');
     }
-    return { core, caller, donor, manifestSha256, captures,
+    return { core, caller, donor, manifestSha256, captures, identity: descriptor.identity,
       graphSha256: descriptor.graph_sha256,
       recipeSha256: descriptor.recipe_sha256 };
   }
 
-  returnedCandidate(saved, checked, manifest) {
+  returnedCandidate(saved, checked) {
     const { core, caller, donor, manifestSha256, captures, graphSha256,
       recipeSha256 } = checked;
     const handle = saved.handle;
@@ -700,7 +1291,7 @@ class SlotEngine {
       || runtime.retain_target(handle) !== 0) {
       throw Error('cannot retain exact returned target Program owner');
     }
-    const identity = manifest.descriptor.identity;
+    const identity = checked.identity;
     let version;
     try { version = this.registry.admitCandidate({
       programValueId: identity.program_value_id,
@@ -779,12 +1370,14 @@ class SlotEngine {
     const handle = saved.handle;
     let version = this.versions.get(handle);
     if (version && (version.artifactSha256 !== manifestSha256
-      || version.programValueId !== request.target_manifest.descriptor.identity.program_value_id)) {
+      || version.programValueId !== checked.identity.program_value_id
+      || !this.compositeVersions.has(handle)
+      || !this.compositeCodeIsInstalled(this.compositeVersions.get(handle)))) {
       return slotReply('unadmitted-target',
         { diagnostic: 'retained returned Program differs from previously staged code donors' });
     }
     if (!version) {
-      version = this.returnedCandidate(saved, checked, request.target_manifest);
+      version = this.returnedCandidate(saved, checked);
       this.versions.set(handle, version);
     }
     const record = this.registry.publish({ slotId: request.slot,
@@ -888,10 +1481,14 @@ class SlotEngine {
   retireTarget(handle) {
     const owner = this.handles.get(handle >>> 0);
     const module = this.modules.get(owner?.moduleId);
+    const composite = this.compositeVersions.get(handle >>> 0);
+    if (composite && !this.compositeCodeIsInstalled(composite, true)) {
+      this.poisoned = true;
+      throw Error('selected returned target code donor changed before release');
+    }
     if (!module || !module.versionOwned.has(handle >>> 0)
       || owner.instance.exports.release_target(handle >>> 0) !== 0) return false;
     module.versionOwned.delete(handle >>> 0);
-    const composite = this.compositeVersions.get(handle >>> 0);
     if (composite) {
       this.modules.get(composite.coreId)?.compositeOwned.delete(handle >>> 0);
       this.compositeVersions.delete(handle >>> 0);
@@ -1067,83 +1664,160 @@ class SlotEngine {
     const origin = module.selected_origin;
     if (!origin) return null;
     if (inputs.length !== module.target_metadata.stack_in.length
-      || inputs.some(input => input.kind !== 'i64' || !/^-?(0|[1-9][0-9]*)$/.test(input.value))) {
+      || module.target_metadata.stack_in.some(type => type !== 'I64')
+      || inputs.some(input => input.kind !== 'i64'
+        || BigInt.asIntN(64, BigInt(input.value)).toString() !== input.value)) {
       throw Error('selected origin requires exact I64 root operands');
     }
-    const program = origin.programs[origin.named_program_index];
-    if (program?.program_index !== origin.named_program_index) {
+    if (origin.programs[origin.named_program_index]?.source_artifact !== 'definition') {
       throw Error('selected origin has no exact named program');
     }
     const stack = inputs.map((input, position) =>
       ({ kind: 'scalar', value: BigInt(input.value), operand: { kind: 'root-i64', position } }));
+    const staticResults = new Map();
+    const active = [];
+    let steps = 0;
     const pop = kind => {
       const item = stack.pop();
       if (item?.kind !== kind) throw Error('selected origin operand kind/order differs');
       return item;
     };
-    for (const op of program.operations) {
-      const fixed = value => ({ kind: 'scalar', value: BigInt.asIntN(64, value),
-        operand: { kind: 'fixed-i64', value: BigInt.asIntN(64, value).toString() } });
-      switch (op.kind) {
-        case 'i64': stack.push(fixed(BigInt(op.value))); break;
-        case 'dup': {
-          const top = stack.at(-1);
-          if (!top || top.kind !== 'scalar' && top.result?.kind !== 'static-program') {
-            throw Error('selected dup lacks copyable scalar/static operand');
-          }
-          stack.push(top); break;
-        }
-        case 'drop': {
-          if (!stack.length) throw Error('selected drop lacks operand');
-          stack.pop(); break;
-        }
-        case 'swap': {
-          if (stack.length < 2) throw Error('selected swap lacks operands');
-          const right = stack.pop(), left = stack.pop();
-          stack.push(right, left); break;
-        }
-        case 'add': case 'sub': case 'mul': {
-          const right = pop('scalar'), left = pop('scalar');
-          if (left.operand.kind !== 'fixed-i64' || right.operand.kind !== 'fixed-i64') {
-            throw Error('unclassified selected root arithmetic cannot acquire origin');
-          }
-          stack.push(fixed(op.kind === 'add' ? left.value + right.value
-            : op.kind === 'sub' ? left.value - right.value : left.value * right.value));
-          break;
-        }
-        case 'quote-i64': {
-          const input = pop('scalar');
-          stack.push({ kind: 'program', result: { kind: 'quote-i64', node: op.node,
-            table_entry: op.table_entry, operand: input.operand }, op });
-          break;
-        }
-        case 'static-program':
-          stack.push({ kind: 'program', result: { kind: 'static-program',
-            node: op.node, program_index: op.static_program_index }, op });
-          break;
-        case 'compose': {
-          const right = pop('program'), left = pop('program');
-          const dynamic = left.result.kind === 'quote-i64'
-            && right.result.kind === 'quote-i64'
-            && left.result.operand.kind === 'root-i64'
-            && right.result.operand.kind === 'root-i64';
-          if (!dynamic && (right.result.kind !== 'static-program'
-            || !['quote-i64', 'compose', 'compose-dynamic'].includes(left.result.kind))) {
-            throw Error('selected compose has unsupported operand lineage');
-          }
-          stack.push({ kind: 'program', result: { kind: dynamic ? 'compose-dynamic' : 'compose',
-            node: op.node, table_entry: op.table_entry, left: left.result,
-            right: dynamic ? right.result : { kind: 'static-program', node: right.result.node,
-              program_index: right.result.program_index } }, op });
-          break;
-        }
-        default: throw Error('unclassified selected operation cannot acquire origin');
+    const fixed = (value, recipe, expressionNodes, expressionDepth) => {
+      if (expressionNodes > 128 || expressionDepth > 32) {
+        throw Error('selected intermediate fixed I64 expression exceeds source replay bound');
       }
-    }
+      const signed = BigInt.asIntN(64, value);
+      return { kind: 'scalar', value: signed, expressionNodes, expressionDepth,
+        operand: { kind: 'fixed-i64', value: signed.toString(), recipe } };
+    };
+    const execute = index => {
+      const program = origin.programs[index];
+      if (active.length >= 32 || active.includes(index)
+        || !program || program.program_index !== index
+        || program.source_artifact !== 'definition'
+        || program.effect_mask !== 0) {
+        throw Error('selected source helper is unverified, cyclic or exceeds depth bound');
+      }
+      active.push(index);
+      try {
+        for (const op of program.operations) {
+          if (++steps > 4096 || op.effect_mask !== 0) {
+            throw Error('selected source replay exceeds bounded pure-operation limit');
+          }
+          switch (op.kind) {
+            case 'i64': {
+              const value = BigInt(op.value);
+              if (value.toString() !== op.value || BigInt.asIntN(64, value) !== value) {
+                throw Error('selected source I64 literal is not canonical');
+              }
+              stack.push(fixed(value, { kind: 'literal', value: op.value }, 1, 1)); break;
+            }
+            case 'dup': {
+              const top = stack.at(-1);
+              if (!top) throw Error('selected dup lacks operand');
+              stack.push(top); break;
+            }
+            case 'drop': {
+              if (!stack.length) throw Error('selected drop lacks operand');
+              stack.pop(); break;
+            }
+            case 'swap': {
+              if (stack.length < 2) throw Error('selected swap lacks operands');
+              const right = stack.pop(), left = stack.pop();
+              stack.push(right, left); break;
+            }
+            case 'dip': {
+              const helper = pop('program');
+              if (helper.result.kind !== 'static-program') {
+                throw Error('selected generated dip has no pinned static helper');
+              }
+              const hidden = stack.pop();
+              if (!hidden) throw Error('selected generated dip lacks hidden operand');
+              execute(helper.result.program_index);
+              stack.push(hidden);
+              break;
+            }
+            case 'add': case 'sub': case 'mul': {
+              const right = pop('scalar'), left = pop('scalar');
+              if (left.operand.kind !== 'fixed-i64' || right.operand.kind !== 'fixed-i64') {
+                throw Error('unclassified selected root arithmetic cannot acquire origin');
+              }
+              const nodes = left.expressionNodes + right.expressionNodes + 1;
+              const depth = Math.max(left.expressionDepth, right.expressionDepth) + 1;
+              stack.push(fixed(op.kind === 'add' ? left.value + right.value
+                : op.kind === 'sub' ? left.value - right.value : left.value * right.value,
+              { kind: op.kind, left: left.operand.recipe, right: right.operand.recipe },
+              nodes, depth));
+              break;
+            }
+            case 'quote-i64': {
+              const input = pop('scalar');
+              stack.push({ kind: 'program', result: { kind: 'quote-i64', node: op.node,
+                table_entry: op.table_entry, operand: input.operand } });
+              break;
+            }
+            case 'quote-program': {
+              const input = pop('program');
+              stack.push({ kind: 'program', result: { kind: 'quote-program', node: op.node,
+                table_entry: op.table_entry, operand: input.result } });
+              break;
+            }
+            case 'static-program': {
+              const programIndex = op.static_program_index;
+              if (origin.programs[programIndex]?.source_artifact !== 'definition') {
+                throw Error('selected static source dependency is not a checked definition');
+              }
+              if (!staticResults.has(programIndex)) {
+                staticResults.set(programIndex, { kind: 'static-program',
+                  node: op.node, program_index: programIndex });
+              }
+              stack.push({ kind: 'program', result: staticResults.get(programIndex) });
+              break;
+            }
+            case 'compose': {
+              const right = pop('program'), left = pop('program');
+              stack.push({ kind: 'program', result: { kind: 'compose',
+                node: op.node, table_entry: op.table_entry, left: left.result,
+                right: right.result } });
+              break;
+            }
+            default: throw Error('unclassified selected operation cannot acquire origin');
+          }
+          if (stack.length > 128) throw Error('selected source stack exceeds operation bound');
+        }
+      } finally { active.pop(); }
+    };
+    execute(origin.named_program_index);
+    const serialize = (value, seen, fixedBudget) => {
+      if (seen.has(value)) return { kind: 'reference', alias: seen.get(value) };
+      const alias = seen.size;
+      if (alias >= 32) throw Error('selected source Program DAG exceeds graph bound');
+      seen.set(value, alias);
+      switch (value.kind) {
+        case 'static-program':
+          return { kind: value.kind, alias, node: value.node,
+            program_index: value.program_index };
+        case 'quote-i64':
+          if (value.operand.kind === 'fixed-i64') {
+            this.countSelectedFixedRecipe(value.operand.recipe, fixedBudget);
+          }
+          return { kind: value.kind, alias, node: value.node,
+            table_entry: value.table_entry, operand: value.operand };
+        case 'quote-program':
+          return { kind: value.kind, alias, node: value.node,
+            table_entry: value.table_entry, operand: serialize(value.operand, seen, fixedBudget) };
+        case 'compose':
+          return { kind: value.kind, alias, node: value.node,
+            table_entry: value.table_entry, left: serialize(value.left, seen, fixedBudget),
+            right: serialize(value.right, seen, fixedBudget) };
+        default: throw Error('unsupported selected source Program result');
+      }
+    };
     const expected = new Map(origin.outputs.map(row => [row.stack_position, row.result]));
     if (expected.size !== origin.outputs.length || stack.length !== module.target_metadata.stack_out.length
       || stack.some((cell, position) => (cell.kind === 'program') !== expected.has(position)
-        || cell.kind === 'program' && !sameSlotJSON(cell.result, expected.get(position)))) {
+        || cell.kind === 'program' && !sameSlotJSON(
+          serialize(cell.result, new Map(), { nodes: 0 }), expected.get(position)))) {
       throw Error('selected output lineage differs from independently checked source actions');
     }
     return expected;
@@ -1155,7 +1829,8 @@ class SlotEngine {
         throw Error('selected recipe contains stale or differently typed epoch handle');
       }
     };
-    const word = { add: 4, sub: 5, mul: 6, dup: 0, drop: 1, swap: 2, compose: 9 };
+    const word = { add: 4, sub: 5, mul: 6, dup: 0, drop: 1, swap: 2,
+      dip: 3, run: 10, compose: 9 };
     const checkRange = (id, end, lastIndex = 0) => {
       if (end === 1) {
         const op = operations[lastIndex];
@@ -1164,7 +1839,8 @@ class SlotEngine {
           : op.kind === 'call-selected' ? 15 : 2;
         const value = op.kind === 'i64' ? BigInt(op.value)
           : op.kind === 'call-selected' ? BigInt.asIntN(64, BigInt(definitionIdentity))
-          : tag === 3 ? 0n : BigInt(op.kind === 'quote-i64' ? 8 : word[op.kind]);
+          : tag === 3 ? 0n : BigInt(
+            op.kind === 'quote-i64' || op.kind === 'quote-program' ? 8 : word[op.kind]);
         if (runtime.cell_x(id) !== tag || runtime.cell_payload(id) !== value
           || runtime.cell_y(id) !== (tag === 2 || tag === 15 ? op.input_signature : 0)
           || runtime.cell_z(id) !== (tag === 2 || tag === 15 ? op.output_signature : 0)
@@ -1196,75 +1872,122 @@ class SlotEngine {
         throw Error('selected origin graph contains stale or differently typed epoch handle');
       }
     };
-    const walk = (id, description) => {
-      if (description.kind === 'quote-i64') {
-        cell(id, 4);
-        const op = module.selected_origin.programs[module.selected_origin.named_program_index]
-          .operations.find(row => row.table_entry === description.table_entry && row.node === description.node);
-        if (op?.kind !== 'quote-i64' || runtime.cell_x(id) !== 1
-          || runtime.cell_y(id) !== op.quote_input_signature
-          || runtime.cell_z(id) !== op.quote_output_signature
-          || runtime.cell_payload(id) !== 0n || runtime.cell_b(id)
-          || runtime.cell_w(id) !== 1 || runtime.cell_n(id) !== 1) {
-          throw Error('selected quote differs from exact source site/signatures');
-        }
-        const captured = runtime.cell_a(id), atom = runtime.cell_c(id);
-        cell(captured, 1); cell(atom, 8);
-        const operand = description.operand;
-        const value = operand.kind === 'root-i64'
-          ? inputs[operand.position]?.value : operand.value;
-        if (value === undefined || runtime.cell_payload(captured) !== BigInt(value)
-          || runtime.cell_a(captured) || runtime.cell_b(captured) || runtime.cell_c(captured)
-          || runtime.cell_x(captured) || runtime.cell_y(captured) || runtime.cell_z(captured)
-          || runtime.cell_w(captured) || runtime.cell_n(captured)
-          || runtime.cell_x(atom) !== 1 || runtime.cell_payload(atom) !== BigInt(value)
-          || runtime.cell_a(atom) || runtime.cell_b(atom) || runtime.cell_c(atom)
-          || runtime.cell_y(atom) || runtime.cell_z(atom) || runtime.cell_w(atom) || runtime.cell_n(atom)) {
-          throw Error('selected quote captures wrong ordered root/fixed I64 operand');
+    const aliases = new Map(), constructed = new Set();
+    const sites = module.selected_origin.programs.flatMap(program => program.operations);
+    const sourceSite = (description, kind) => {
+      const matches = sites.filter(op => op.kind === kind && op.node === description.node
+        && op.effect_mask === 0 && (kind === 'static-program'
+          ? op.static_program_index === description.program_index
+          : op.table_entry === description.table_entry));
+      if (matches.length !== 1) throw Error('selected graph site lacks unique checked source operation');
+      return matches[0];
+    };
+    const empty = id => !runtime.cell_a(id) && !runtime.cell_b(id) && !runtime.cell_c(id)
+      && !runtime.cell_x(id) && !runtime.cell_y(id) && !runtime.cell_z(id)
+      && !runtime.cell_w(id) && !runtime.cell_n(id);
+    const walk = (id, description, depth) => {
+      if (depth > 32) throw Error('selected Program graph exceeds bounded depth');
+      cell(id, 4);
+      if (description.kind === 'reference') {
+        if (!aliases.has(description.alias) || aliases.get(description.alias) !== id) {
+          throw Error('selected Program sharing reference differs from exact backend handle');
         }
         return;
       }
+      if (description.alias !== aliases.size || aliases.size >= 32) {
+        throw Error('selected Program graph has duplicate or out-of-order alias');
+      }
+      aliases.set(description.alias, id);
       if (description.kind === 'static-program') {
+        sourceSite(description, 'static-program');
         const selected = module.pinned[description.program_index];
-        cell(id, 4);
-        if (id !== selected || this.handles.get(id)?.moduleId !== module.id) {
-          throw Error('selected static child is not the exact pinned installed Program');
-        }
         const source = module.selected_origin.programs[description.program_index];
-        if (source?.program_index !== description.program_index || source.source_artifact !== 'definition') {
-          throw Error('selected static child lacks exact checked source body');
+        const metadata = module.program_metadata[description.program_index];
+        if (id !== selected || this.handles.get(id)?.moduleId !== module.id
+          || source?.source_artifact !== 'definition' || source.program_index !== description.program_index
+          || !metadata || metadata.effect_mask !== 0 || metadata.effects.length
+          || runtime.cell_x(id) !== metadata.entry
+          || runtime.cell_y(id) !== metadata.input_signature
+          || runtime.cell_z(id) !== metadata.output_signature
+          || runtime.cell_payload(id) !== 0n
+          || runtime.cell_a(id) !== metadata.capture_left
+          || runtime.cell_b(id) !== metadata.capture_right
+          || runtime.cell_w(id) !== metadata.recipe_depth
+          || runtime.cell_n(id) !== metadata.recipe_leaves) {
+          throw Error('selected static child is not the exact pure pinned installed Program');
         }
         this.verifySelectedRecipe(runtime, runtime.cell_c(id), source.operations, module.pinned,
           module.selected_origin.definition_identity);
         return;
       }
-      if (!['compose', 'compose-dynamic'].includes(description.kind)) {
-        throw Error('unsupported selected output graph');
+      if (constructed.has(id)) {
+        throw Error('two distinct selected constructed nodes share a backend handle');
       }
-      cell(id, 4);
-      const composeOp = module.selected_origin.programs[module.selected_origin.named_program_index]
-        .operations.find(row => row.table_entry === description.table_entry && row.node === description.node);
-      if (composeOp?.kind !== 'compose') {
-        throw Error('selected compose differs from checked source site');
+      constructed.add(id);
+      if (description.kind === 'quote-i64' || description.kind === 'quote-program') {
+        const op = sourceSite(description, description.kind);
+        const captured = runtime.cell_a(id), atom = runtime.cell_c(id);
+        cell(atom, 8);
+        if (runtime.cell_x(id) !== 1
+          || runtime.cell_y(id) !== op.quote_input_signature
+          || runtime.cell_z(id) !== op.quote_output_signature
+          || runtime.cell_payload(id) !== 0n || runtime.cell_b(id)
+          || runtime.cell_x(atom) !== (description.kind === 'quote-i64' ? 1 : 3)
+          || runtime.cell_b(atom) || runtime.cell_c(atom)
+          || runtime.cell_y(atom) || runtime.cell_z(atom)
+          || runtime.cell_w(atom) || runtime.cell_n(atom)) {
+          throw Error('selected quote differs from exact checked source site and capture recipe');
+        }
+        if (description.kind === 'quote-i64') {
+          const operand = description.operand;
+          const value = operand?.kind === 'root-i64'
+            ? inputs[operand.position]?.value : operand?.kind === 'fixed-i64'
+              ? operand.value : undefined;
+          cell(captured, 1);
+          if (value === undefined || runtime.cell_payload(captured) !== BigInt(value)
+            || runtime.cell_payload(atom) !== BigInt(value)
+            || runtime.cell_a(atom) || !empty(captured)
+            || runtime.cell_w(id) !== 1 || runtime.cell_n(id) !== 1) {
+            throw Error('selected quote captures wrong ordered root/fixed I64 operand');
+          }
+        } else {
+          walk(captured, description.operand, depth + 1);
+          if (runtime.cell_payload(atom) !== 0n || runtime.cell_a(atom) !== captured
+            || runtime.cell_payload(captured) !== 0n
+            || runtime.cell_w(id) !== runtime.cell_w(captured) + 1
+            || runtime.cell_n(id) !== runtime.cell_n(captured) + 1) {
+            throw Error('selected Program quote has a different captured Program graph');
+          }
+        }
+        return;
       }
+      if (description.kind !== 'compose') throw Error('unsupported selected output graph');
+      sourceSite(description, 'compose');
       const left = runtime.cell_a(id), right = runtime.cell_b(id);
-      walk(left, description.left); walk(right, description.right);
-      const lRecipe = runtime.cell_c(left), rRecipe = runtime.cell_c(right);
+      walk(left, description.left, depth + 1);
+      walk(right, description.right, depth + 1);
       const combined = runtime.cell_c(id);
       cell(combined, 9);
       if (runtime.cell_x(id) !== 2 || runtime.cell_payload(id) !== 0n
+        || runtime.cell_payload(left) !== 0n || runtime.cell_payload(right) !== 0n
+        || runtime.cell_z(left) !== runtime.cell_y(right)
         || runtime.cell_y(id) !== runtime.cell_y(left)
         || runtime.cell_z(id) !== runtime.cell_z(right)
         || runtime.cell_w(id) !== Math.max(runtime.cell_w(left), runtime.cell_w(right)) + 1
         || runtime.cell_n(id) !== runtime.cell_n(left) + runtime.cell_n(right)
-        || runtime.cell_a(combined) !== lRecipe || runtime.cell_b(combined) !== rRecipe
+        || runtime.cell_a(combined) !== runtime.cell_c(left)
+        || runtime.cell_b(combined) !== runtime.cell_c(right)
         || runtime.cell_c(combined) || runtime.cell_payload(combined) !== 0n
         || runtime.cell_x(combined) || runtime.cell_y(combined) || runtime.cell_z(combined)
         || runtime.cell_w(combined) || runtime.cell_n(combined)) {
         throw Error('selected compose child or recipe graph differs from checked operand lineage');
       }
     };
-    walk(handle, result);
+    walk(handle, result, 1);
+    // The exact bounded BFS includes every value, recipe and shared edge;
+    // refusing it also rejects a graph whose apparent Program tree hides
+    // unchecked cells behind a capture or recipe edge.
+    this.captureValue(runtime, handle, 32, 4096);
   }
 
   saveOutput(runtime, index, selectedResult = null, rootInputs = null) {
@@ -1277,9 +2000,10 @@ class SlotEngine {
     }
     if (this.nextSavedOwner === Number.MAX_SAFE_INTEGER) throw Error('saved Program owner exhausted');
     const graph = this.observeProgramGraph(runtime, handle);
-    const aliasResult = selectedResult?.kind === 'compose'
-      && selectedResult.left?.kind === 'compose-dynamic';
-    if (aliasResult && this.nativeCoreOwner) graph.moduleIds.add(this.nativeCoreOwner.id);
+    if (selectedResult !== null) {
+      graph.moduleIds.add(this.active.module.id);
+      if (this.nativeCoreOwner) graph.moduleIds.add(this.nativeCoreOwner.id);
+    }
     const prior = this.savedCells.get(handle);
     if (prior && prior.runtime !== runtime) {
       this.poisoned = true;
@@ -1291,7 +2015,7 @@ class SlotEngine {
     let observedCaptures = null;
     if (programIndex < 0) {
       const entry = runtime.cell_x(handle);
-      if (entry === 1) {
+      if (entry === 1 && runtime.cell_kind(runtime.cell_a(handle)) === 1) {
         const recipe = runtime.cell_c(handle) >>> 0;
         const captured = runtime.cell_a(handle) >>> 0;
         if (!captured || runtime.cell_kind(captured) !== 1
@@ -1309,7 +2033,7 @@ class SlotEngine {
         observedCaptures = ['cell_a', 'cell_b'].flatMap(field => {
           const child = runtime[field](handle) >>> 0;
           return child ? [{ field, value: JSON.parse(this.captureValue(runtime, child,
-            64, aliasResult ? 4096 : 1000)) }] : [];
+            selectedResult === null ? 64 : 32, selectedResult === null ? 1000 : 4096)) }] : [];
         });
       }
     }
@@ -1324,7 +2048,7 @@ class SlotEngine {
     this.savedOwners.set(token, { handle, moduleIds: graph.moduleIds, registryOwner,
       sourceId: programIndex < 0 ? null : module.id,
       programIndex: programIndex < 0 ? null : programIndex,
-      selected: aliasResult ? { callerId: this.active.module.id,
+      selected: selectedResult !== null && programIndex < 0 ? { callerId: this.active.module.id,
         position:index, inputs:rootInputs.map(input => ({ ...input })) } : null });
     return { kind: 4, owner: token, source_id: programIndex < 0 ? null : module.id,
       program_index: programIndex < 0 ? null : programIndex,
@@ -1349,6 +2073,14 @@ class SlotEngine {
       || retained.runtime.cell_kind(saved.handle) !== 4) {
       return slotReply('saved-program-inspection-refused');
     }
+    if (saved.selected) {
+      const caller = this.modules.get(saved.selected.callerId);
+      if (!caller || caller.rootsReleased) return slotReply('saved-program-inspection-refused');
+      const result = this.evaluateSelectedOrigin(caller, saved.selected.inputs)
+        .get(saved.selected.position);
+      this.verifySelectedGraph(retained.runtime, saved.handle, result,
+        caller, saved.selected.inputs);
+    }
     return slotReply('saved-program-inspected', { owner, saved_handle: saved.handle,
       selected_graph: JSON.parse(this.captureValue(retained.runtime, saved.handle, 32, 4096)) });
   }
@@ -1356,6 +2088,33 @@ class SlotEngine {
   releaseProgram(token) {
     const saved = this.savedOwners.get(token);
     if (!saved) return slotReply('program-owner-refused');
+    const composite = this.compositeVersions.get(saved.handle);
+    if (composite && !this.compositeCodeIsInstalled(composite)) {
+      this.poisoned = true;
+      throw Error('selected returned target code donor changed before saved-owner release');
+    }
+    if (saved.selected) {
+      const caller = this.modules.get(saved.selected.callerId);
+      const retained = this.savedCells.get(saved.handle);
+      if (!caller?.selected_origin || caller.rootsReleased || !retained
+        || retained.count < 1 || retained.runtime.cell_kind(saved.handle) !== 4) {
+        this.poisoned = true;
+        throw Error('selected saved Program lost its checked caller or retained backend root');
+      }
+      if (!composite && (caller.discardRequested
+        || [...caller.checkedEntries].some(([entry, fn]) => this.table.get(entry) !== fn)
+        || this.nativeCoreOwner && [1, 2,
+          ...(caller.selected_origin.programs.some(program =>
+            program.operations.some(op => op.kind === 'dip')) ? [3] : [])]
+          .some(entry => this.table.get(entry) !== this.nativeCoreOwner.entries[entry - 1]))) {
+        this.poisoned = true;
+        throw Error('selected returned target code donor changed before saved-owner release');
+      }
+      const result = this.evaluateSelectedOrigin(caller, saved.selected.inputs)
+        .get(saved.selected.position);
+      this.verifySelectedGraph(retained.runtime, saved.handle, result,
+        caller, saved.selected.inputs);
+    }
     this.registry.releaseProgram(saved.registryOwner);
     const cell = this.savedCells.get(saved.handle);
     if (cell.count === 1) this.savedCells.delete(saved.handle);

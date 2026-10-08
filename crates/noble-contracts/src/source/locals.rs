@@ -1,4 +1,4 @@
-//! Selected declared-text lexical sugar. No local instruction reaches the kernel.
+//! Selected declared-text and live-slot lexical sugar. No local instruction reaches the kernel.
 //!
 //! Physical stacks place immutable bound values above the visible stack.
 //! Checked `dip` executes ordinary words beneath them, while `dup` and
@@ -10,14 +10,61 @@ use alloc::vec::Vec;
 
 struct Bound {
     name: Vec<u8>,
+    binder_node: u32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Generation {
+    BindingSwap,
+    ProjectionDup,
+    ProjectionSwap,
+    CaptureQuote,
+    CaptureCompose,
+    WrapQuotation,
+    WrapDip,
+    CleanupDrop,
+}
+
+impl Generation {
+    pub(super) const fn as_str(self) -> &'static str {
+        match self {
+            Self::BindingSwap => "binding-swap",
+            Self::ProjectionDup => "projection-dup",
+            Self::ProjectionSwap => "projection-swap",
+            Self::CaptureQuote => "capture-quote",
+            Self::CaptureCompose => "capture-compose",
+            Self::WrapQuotation => "wrap-quotation",
+            Self::WrapDip => "wrap-dip",
+            Self::CleanupDrop => "cleanup-drop",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) struct GeneratedWitness {
+    pub node: u32,
+    pub generation: Generation,
+    pub occurrence_node: Option<u32>,
+    pub binder_node: Option<u32>,
 }
 
 struct Lower<'a> {
     nodes: &'a mut Vec<super::Node>,
     meter: &'a mut crate::Meter,
+    witnesses: Option<&'a mut Vec<GeneratedWitness>>,
 }
 
 pub(super) fn lower(tree: &mut super::Tree, meter: &mut crate::Meter) -> Result<(), crate::Diagnostic> {
+    lower_inner(tree, meter, None)
+}
+
+pub(super) fn lower_with_witness(tree: &mut super::Tree, meter: &mut crate::Meter,
+    witnesses: &mut Vec<GeneratedWitness>) -> Result<(), crate::Diagnostic> {
+    lower_inner(tree, meter, Some(witnesses))
+}
+
+fn lower_inner(tree: &mut super::Tree, meter: &mut crate::Meter,
+    witnesses: Option<&mut Vec<GeneratedWitness>>) -> Result<(), crate::Diagnostic> {
     if !tree.nodes.iter().any(|node| matches!(&node.kind, super::Kind::Word(word) if word == b"let")) {
         return Ok(());
     }
@@ -31,7 +78,7 @@ pub(super) fn lower(tree: &mut super::Tree, meter: &mut crate::Meter) -> Result<
             && !tree.body.iter().any(|id| usize::try_from(*id).ok() == Some(*index)))
         .and_then(|_| tree.nodes.pop());
     let body = core::mem::take(&mut tree.body);
-    let mut lower = Lower { nodes: &mut tree.nodes, meter };
+    let mut lower = Lower { nodes: &mut tree.nodes, meter, witnesses };
     let lowered = lower.body(&body, Vec::new(), 0);
     if let Some(envelope) = envelope { tree.nodes.push(envelope); }
     tree.body = attempt!(lowered);
@@ -105,18 +152,26 @@ fn free(
 }
 
 impl Lower<'_> {
-    fn node(&mut self, kind: super::Kind, span: crate::Span) -> Result<u32, crate::Diagnostic> {
+    fn node(&mut self, kind: super::Kind, span: crate::Span, generation: Generation,
+        occurrence_node: Option<u32>, binder_node: Option<u32>) -> Result<u32, crate::Diagnostic> {
         attempt!(self.meter.node(span));
         let id = attempt!(crate::index(self.nodes.len(), span));
         self.nodes.push(super::Node { kind, span });
+        if let Some(witnesses) = &mut self.witnesses {
+            witnesses.push(GeneratedWitness { node: id, generation,
+                occurrence_node, binder_node });
+        }
         Ok(id)
     }
 
-    fn builtin(&mut self, definition: u32, span: crate::Span) -> Result<u32, crate::Diagnostic> {
-        self.node(super::Kind::Call(super::Target::Builtin(definition)), span)
+    fn builtin(&mut self, definition: u32, span: crate::Span, generation: Generation,
+        occurrence_node: Option<u32>, binder_node: Option<u32>) -> Result<u32, crate::Diagnostic> {
+        self.node(super::Kind::Call(super::Target::Builtin(definition)), span,
+            generation, occurrence_node, binder_node)
     }
 
-    fn wrapped(&mut self, id: u32, hidden: usize, depth: u32, span: crate::Span)
+    fn wrapped(&mut self, id: u32, locals: &[Bound], hidden: usize, depth: u32,
+        span: crate::Span, occurrence_node: u32)
         -> Result<Vec<u32>, crate::Diagnostic>
     {
         let mut code = alloc::vec![id];
@@ -126,18 +181,24 @@ impl Lower<'_> {
                 .and_then(|value| u32::try_from(value).ok())
                 .ok_or_else(|| crate::invalid(span, "lexical quotation depth overflow"))?;
             attempt!(self.meter.depth(count, span));
-            let quotation = attempt!(self.node(super::Kind::Quotation(code), span));
-            let dip = attempt!(self.builtin(3, span));
+            let binder_node = locals.get(layer).map(|bound| bound.binder_node)
+                .ok_or_else(|| crate::internal(span))?;
+            let quotation = attempt!(self.node(super::Kind::Quotation(code), span,
+                Generation::WrapQuotation, Some(occurrence_node), Some(binder_node)));
+            let dip = attempt!(self.builtin(3, span, Generation::WrapDip,
+                Some(occurrence_node), Some(binder_node)));
             code = alloc::vec![quotation, dip];
         }
         Ok(code)
     }
 
-    fn operation(&mut self, code: &mut Vec<u32>, definition: u32, hidden: usize,
-        depth: u32, span: crate::Span) -> Result<(), crate::Diagnostic>
+    fn operation(&mut self, code: &mut Vec<u32>, definition: u32, locals: &[Bound],
+        hidden: usize, depth: u32, span: crate::Span, generation: Generation,
+        occurrence_node: u32, binder_node: Option<u32>) -> Result<(), crate::Diagnostic>
     {
-        let id = attempt!(self.builtin(definition, span));
-        code.extend(attempt!(self.wrapped(id, hidden, depth, span)));
+        let id = attempt!(self.builtin(definition, span, generation,
+            Some(occurrence_node), binder_node));
+        code.extend(attempt!(self.wrapped(id, locals, hidden, depth, span, occurrence_node)));
         Ok(())
     }
 
@@ -153,15 +214,18 @@ impl Lower<'_> {
 
     /// Project a local at physical index `which` below *all* hidden values.
     /// Each `dup` or `swap` is itself an ordinary kernel-checked builtin.
-    fn read(&mut self, code: &mut Vec<u32>, which: usize, locals: usize,
-        depth: u32, span: crate::Span) -> Result<(), crate::Diagnostic>
+    fn read(&mut self, code: &mut Vec<u32>, which: usize, locals: &[Bound],
+        depth: u32, span: crate::Span, occurrence_node: u32) -> Result<(), crate::Diagnostic>
     {
-        if which >= locals { return Err(crate::internal(span)); }
-        attempt!(self.operation(code, 0, which, depth, span));
-        for older in 0..(locals - which - 1) {
+        if which >= locals.len() { return Err(crate::internal(span)); }
+        let binder_node = Some(locals[which].binder_node);
+        attempt!(self.operation(code, 0, locals, which, depth, span,
+            Generation::ProjectionDup, occurrence_node, binder_node));
+        for older in 0..(locals.len() - which - 1) {
             let hidden = which.checked_add(1).and_then(|count| count.checked_add(older))
                 .ok_or_else(|| crate::internal(span))?;
-            attempt!(self.operation(code, 2, hidden, depth, span));
+            attempt!(self.operation(code, 2, locals, hidden, depth, span,
+                Generation::ProjectionSwap, occurrence_node, binder_node));
         }
         Ok(())
     }
@@ -183,7 +247,8 @@ impl Lower<'_> {
         for (index, local) in outer.iter().enumerate() {
             if used[index] {
                 attempt!(self.meter.node(span));
-                captured.push(Bound { name: local.name.clone() });
+                captured.push(Bound { name: local.name.clone(),
+                    binder_node: local.binder_node });
             }
         }
         let mut lowered = Vec::new();
@@ -192,9 +257,12 @@ impl Lower<'_> {
         // replaying the composed programs reconstructs that same stack order.
         for index in (0..used.len()).rev() {
             if used[index] {
-                attempt!(self.read(&mut lowered, index, outer.len(), depth, span));
-                attempt!(self.operation(&mut lowered, 8, outer.len(), depth, span));
-                if !first { attempt!(self.operation(&mut lowered, 9, outer.len(), depth, span)); }
+                let binder_node = Some(outer[index].binder_node);
+                attempt!(self.read(&mut lowered, index, outer, depth, span, id));
+                attempt!(self.operation(&mut lowered, 8, outer, outer.len(), depth, span,
+                    Generation::CaptureQuote, id, binder_node));
+                if !first { attempt!(self.operation(&mut lowered, 9, outer, outer.len(), depth,
+                    span, Generation::CaptureCompose, id, binder_node)); }
                 first = false;
             }
         }
@@ -202,8 +270,9 @@ impl Lower<'_> {
         let node = self.nodes.get_mut(attempt!(crate::offset(id, span)))
             .ok_or_else(|| crate::internal(span))?;
         node.kind = super::Kind::Quotation(body);
-        lowered.extend(attempt!(self.wrapped(id, outer.len(), depth, span)));
-        if !first { attempt!(self.operation(&mut lowered, 9, outer.len(), depth, span)); }
+        lowered.extend(attempt!(self.wrapped(id, outer, outer.len(), depth, span, id)));
+        if !first { attempt!(self.operation(&mut lowered, 9, outer, outer.len(), depth,
+            span, Generation::CaptureCompose, id, None)); }
         Ok(lowered)
     }
 
@@ -233,13 +302,14 @@ impl Lower<'_> {
                 // Move it above them before installing it as the newest
                 // binder; `swap` moves ownership without copying or dropping.
                 for hidden in (0..locals.len()).rev() {
-                    attempt!(self.operation(&mut code, 2, hidden, depth, span));
+                    attempt!(self.operation(&mut code, 2, &locals, hidden, depth, span,
+                        Generation::BindingSwap, id, Some(next)));
                 }
                 let bound = core::mem::replace(&mut self.nodes[attempt!(crate::offset(next, span))].kind,
                     super::Kind::Quotation(Vec::new()));
                 let super::Kind::Word(name_bytes) = bound else { return Err(crate::internal(span)); };
                 self.nodes[attempt!(crate::offset(id, span))].kind = super::Kind::Quotation(Vec::new());
-                locals.insert(0, Bound { name: name_bytes });
+                locals.insert(0, Bound { name: name_bytes, binder_node: next });
                 introduced += 1;
                 at += 2;
                 continue;
@@ -250,16 +320,17 @@ impl Lower<'_> {
             };
             if let Some(which) = local {
                 self.nodes[attempt!(crate::offset(id, span))].kind = super::Kind::Quotation(Vec::new());
-                attempt!(self.read(&mut code, which, locals.len(), depth, span));
+                attempt!(self.read(&mut code, which, &locals, depth, span, id));
             } else if matches!(&node.kind, super::Kind::Quotation(_)) {
                 code.extend(attempt!(self.quote(id, &locals, depth, span)));
             } else {
-                code.extend(attempt!(self.wrapped(id, locals.len(), depth, span)));
+                code.extend(attempt!(self.wrapped(id, &locals, locals.len(), depth, span, id)));
             }
             at += 1;
         }
-        for _ in 0..locals.len() {
-            code.push(attempt!(self.builtin(1, crate::Span { start: 0, end: 0 })));
+        for local in &locals {
+            code.push(attempt!(self.builtin(1, crate::Span { start: 0, end: 0 },
+                Generation::CleanupDrop, None, Some(local.binder_node))));
         }
         Ok(code)
     }

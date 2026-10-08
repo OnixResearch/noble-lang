@@ -350,6 +350,7 @@ pub struct Prepared {
     text_cursor: bool,
     live_selected: Option<alloc::string::String>,
     live_slots: bool,
+    live_slot_owner: Option<alloc::sync::Arc<()>>,
     limits: crate::Limits,
     boundary: Option<alloc::vec::Vec<u8>>,
     definition: Option<Named>,
@@ -407,6 +408,7 @@ pub struct Session {
 struct LiveSlots {
     environment: noble_kernel::contracts::Env,
     resources: alloc::vec::Vec<(alloc::string::String, noble_kernel::types::Ty)>,
+    owner: alloc::sync::Arc<()>,
 }
 
 impl Default for Session {
@@ -474,6 +476,7 @@ impl Session {
             live_slots: Some(LiveSlots {
                 environment,
                 resources: alloc::vec::Vec::new(),
+                owner: alloc::sync::Arc::new(()),
             }),
             ..Self::without_test_hosts()
         })
@@ -982,12 +985,18 @@ impl Session {
         reason = "Owner: noble-maintainers; namespace comparison uses non-const exact Vec content equality over retained history and optional boundary identities."
     )]
     fn is_current_namespace(&self, prepared: &Prepared) -> bool {
+        let live_slot_owner_matches = match (&self.live_slots, &prepared.live_slot_owner) {
+            (Some(slots), Some(owner)) => alloc::sync::Arc::ptr_eq(&slots.owner, owner),
+            (None, None) => true,
+            _ => false,
+        };
         if prepared.generation != self.generation
             || prepared.hosts != self.hosts
             || prepared.text_cursor != self.text_cursor
             || prepared.live_selected != self.live_selected
             || prepared.live_slots != self.live_slots.is_some()
             || prepared.history != self.history
+            || !live_slot_owner_matches
         {
             return false;
         }

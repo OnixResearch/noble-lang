@@ -43,10 +43,11 @@ impl super::Session {
             Ok(parsed) => parsed,
             Err(error) => return Err(super::Error::at(super::Stage::Parse, error)),
         };
-        if self
-            .declared
-            .as_ref()
-            .is_some_and(|context| context.declared_text)
+        if self.live_slots.is_some()
+            || self
+                .declared
+                .as_ref()
+                .is_some_and(|context| context.declared_text)
         {
             attempt!(super::locals::lower(&mut tree, &mut meter)
                 .map_err(|error| super::Error::at(super::Stage::Resolve, error)));
@@ -237,6 +238,7 @@ impl super::Session {
             text_cursor: self.text_cursor,
             live_selected: self.live_selected.clone(),
             live_slots: self.live_slots.is_some(),
+            live_slot_owner: self.live_slots.as_ref().map(|slots| slots.owner.clone()),
             limits,
             boundary: self.bindings.as_ref().map(|bindings| bindings.key.clone()),
             definition,
