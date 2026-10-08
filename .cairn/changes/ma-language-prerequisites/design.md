@@ -82,6 +82,39 @@ path, and host-only decimal parsing would not satisfy the calculator gate.
   nodes/keys, not all historic keys on an early match. A compiler exhaustion
   is an explicit failure and cannot publish partial state.
 - This does not implement BigInt/Rat, seven independently typed calculator
-  budgets, full calculator grammar/session commands, local-name authoring
-  syntax, general termination/proof, or MA1/MA2 acceptance. Source-bound
-  structural admission and observed execution are separate from refinement.
+  budgets, full calculator grammar/session commands, general termination,
+  or MA1/MA2 acceptance. Source-bound structural admission and observed
+  execution are separate from refinement.
+
+### Decision: Checked lexical values without new kernel instructions
+
+**Choice:** Select `let name` only in the combined declared-Text source
+profile. It consumes the current top value as a binding until the end of the
+enclosing definition, root expression or quotation. Initial binders therefore
+spell finite ordered function parameters: e.g. `let right let left left right
++` retains the order of `[S I64 I64 -- S I64]`. Names are ASCII identifiers;
+duplicate names within the same scope reject; nested quotations create a
+scope with nearest binder shadowing, while qualified immutable module
+references remain globals. A local read projects the *checked value*, never
+re-resolves a global spelling when executed.
+
+The source elaborator runs before ordinary module resolution/inference and
+derives only existing checked `dup`, `drop`, `swap`, `dip`, `quote`, `compose`
+and quotation nodes; it introduces no binder/read op in the kernel or new
+Wasm instruction. It parks immutable locals at the physical stack top and
+applies ordinary words below them with checked nested `dip`. A read projects
+a checked duplicate of the selected local to the visible stack; end-of-scope
+discards use checked `drop`. References to outer locals within a quotation
+are captured at quotation construction, oldest to newest, into the retained
+`quote`/`compose` recipe. Original resolution and source-derived checked
+owner independently rederive this expansion from immutable source; a
+provider-supplied synthetic local is not privileged. Ordinary non-`Data`
+resource duplication/discard/capture must fail under the existing checker,
+not through a new ad-hoc eligibility table.
+
+**Gate before acceptance:** Compare stack-only and lexical forms, observe
+opt-off/on compiled guest behavior, retained capture recipes, duplicate
+diagnostics, source-invalid-then-valid atomicity, global rebinding stability
+and resource reuse, implicit discard and capture refusals. Selecting syntax
+and source lowering alone does not claim DX-LOCAL-01/02 or CALC-STATE-01.
+r[DX-LOCAL-01] r[DX-LOCAL-02] r[CALC-STATE-01]

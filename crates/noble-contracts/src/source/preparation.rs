@@ -32,6 +32,10 @@ impl super::Session {
             Ok(parsed) => parsed,
             Err(error) => return Err(super::Error::at(super::Stage::Parse, error)),
         };
+        if self.declared.as_ref().is_some_and(|context| context.declared_text) {
+            attempt!(super::locals::lower(&mut tree, &mut meter)
+                .map_err(|error| super::Error::at(super::Stage::Resolve, error)));
+        }
         let signed_owner = signature.is_some()
             && self.declared.as_ref().is_some_and(|context| context.signed_self);
         if let Err(error) = super::resolution::resolve(

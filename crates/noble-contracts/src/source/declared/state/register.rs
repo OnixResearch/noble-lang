@@ -66,9 +66,11 @@ impl super::ModuleSession {
                 crate::source::Stage::Check,
                 "module identity limit exceeded"
             )));
+        let selected_locals = self.source.declared.as_ref().is_some_and(|context| context.declared_text);
         let mut collected = attempt!(collection::Collected::collect(
             core::mem::take(&mut request.members),
-            request.limits
+            request.limits,
+            selected_locals,
         ));
         self = attempt!(self.outside_words());
         let (next, resolved, meter) =
@@ -185,7 +187,9 @@ pub(super) fn original_signature(
         return Err(super::super::error(crate::source::Stage::Check,
             "signed owner original module identity differs"));
     }
-    let collected = attempt!(collection::Collected::collect(members, limits));
+    let selected_locals = session.source.declared.as_ref()
+        .is_some_and(|context| context.declared_text);
+    let collected = attempt!(collection::Collected::collect(members, limits, selected_locals));
     let families = crate::source::declared::signatures::families(
         session, &collected.schemas, module.identity,
     );

@@ -1,0 +1,33 @@
+module local_math@1 [
+    signature add forall<S:stack> [ S I64 I64 -- S I64 ! pure ]
+    export add
+    def add [ let right let left left right + ]
+
+    signature stack_add forall<S:stack> [ S I64 I64 -- S I64 ! pure ]
+    export stack_add
+    def stack_add [ + ]
+
+    signature value forall<S:stack> [ S -- S I64 ! pure ]
+    export value
+    def value [ 9 ]
+
+    signature shadow_global forall<S:stack> [ S I64 -- S I64 ! pure ]
+    export shadow_global
+    def shadow_global [ let value [ value ] run ]
+
+    signature capture forall<S:stack> [ S I64 -- S I64 ! pure ]
+    export capture
+    def capture [ let x [ x ] run ]
+
+    signature capture_pair forall<S:stack> [ S I64 I64 -- S I64 ! pure ]
+    export capture_pair
+    def capture_pair [ let second let first [ first second + ] run ]
+
+    signature ordered_three forall<S:stack> [ S I64 I64 I64 -- S I64 ! pure ]
+    export ordered_three
+    def ordered_three [ let third let second let first first second + third + ]
+
+    signature shadow forall<S:stack> [ S I64 -- S I64 ! pure ]
+    export shadow
+    def shadow [ let value [ 2 let value value ] run ]
+]

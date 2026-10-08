@@ -32,6 +32,7 @@ impl Collected {
     pub(super) fn collect(
         members: alloc::vec::Vec<crate::source::declared::parsing::Member>,
         limits: crate::Limits,
+        selected_locals: bool,
     ) -> Result<Self, crate::source::Error> {
         let count = members.len();
         let mut collected = Ok(Self {
@@ -87,7 +88,7 @@ impl Collected {
                         span,
                         body_span,
                     } => {
-                        collected.add_definition(name, bytes, span, body_span, limits)
+                        collected.add_definition(name, bytes, span, body_span, limits, selected_locals)
                     }
                     crate::source::declared::parsing::Member::Contract(contract) => {
                         collected.add_contract(contract)
@@ -255,12 +256,18 @@ impl Collected {
         span: crate::Span,
         body_span: crate::Span,
         limits: crate::Limits,
+        selected_locals: bool,
     ) -> Result<Self, crate::source::Error> {
         let mut meter = crate::Meter::new(limits);
         let parsed = crate::source::parsing::parse_declared(&bytes, &mut meter);
-        let (tree, parsed_name) = attempt!(parsed.map_err(|problem| {
+        let (mut tree, parsed_name) = attempt!(parsed.map_err(|problem| {
             crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
         }));
+        if selected_locals {
+            attempt!(crate::source::locals::lower(&mut tree, &mut meter).map_err(|problem| {
+                crate::source::declared::diagnostic(crate::source::Stage::Resolve, problem)
+            }));
+        }
         let parsed_name = attempt!(parsed_name.ok_or_else(|| crate::source::declared::error(
             crate::source::Stage::Parse,
             "module definition missing name"
