@@ -712,6 +712,7 @@ const parts=Array.from({length:count},(_,i)=>{
 delete process.env.NOBLE_WORKER_SOURCE_PARTS;
 await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString('base64'));"#;
     let mut command = std::process::Command::new(NODE);
+    #[cfg(feature = "live-test-barrier")]
     let slot = child_control.is_some();
     command.env_clear()
         .args([

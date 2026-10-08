@@ -1520,7 +1520,7 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/design.md",
-      "sha256": "416734c3590ce176be550c9ab9af5a43be9f44cd417329804ad9ed1941a589dc"
+      "sha256": "d7666edecfe22554e932b590491747dda9905df0ea3b122957495a9e76bc1db9"
     },
     {
       "file": ".cairn/changes/live-wasm-reload/proposal.md",
@@ -1884,7 +1884,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "d6819c8f2de2ae140408bd8cf390229c26fffffe1e47abe28b90a0703cc94f1e"
+      "sha256": "c585f89f2f7c7041714bf9f7df88284f381ede3566e9b20fca20d0248fe5aea5"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",

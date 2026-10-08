@@ -1050,6 +1050,16 @@ const HOST_EMIT_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.
 const HOST_WRONG_RESULT_SOURCE: &[u8] = b"module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"private-ledger-marker\" emit 2 + ] ]";
 const HOST_EXPORT_SOURCE: &[u8] = b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-export-marker\" \"hidden-capture-destination\" code_export ] ]";
 
+fn host_ledger_denial_source() -> Vec<u8> {
+    // One checked Text atom, not 257 recipe leaves: four committed copies
+    // precede the fifth callback's actual ledger-byte quota refusal.
+    let mut source = String::with_capacity(52_554);
+    source.push_str("module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"private-ledger-marker");
+    source.extend(std::iter::repeat_n('x', 52_408));
+    source.push_str("\" dup emit dup emit dup emit dup emit emit 1 + ] ]");
+    source.into_bytes()
+}
+
 pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let mut selected_policy = None;
     let mut guest_attempted = false;
@@ -1058,7 +1068,7 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
     let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(
         || -> Result<serde_json::Value> {
         use std::io::Read;
-        ensure!(arguments.len() == 4 && ["emit", "emit-wrong", "emit-trap",
+        ensure!(arguments.len() == 4 && ["emit", "emit-wrong", "emit-ledger-denied",
             "emit-panic", "emit-revoked",
             "wit-export", "core-export"].iter().any(|mode| arguments[3] == *mode),
             "unsupported Worker test host mode");
@@ -1069,9 +1079,7 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
         let trusted_source = match mode {
             "emit" => HOST_EMIT_SOURCE.to_vec(),
             "emit-wrong" => HOST_WRONG_RESULT_SOURCE.to_vec(),
-            "emit-trap" => format!(
-                "module Ledger@1 [ require emit Text -- ! test.emit export plus def plus [ {} 1 + ] ]",
-                "\"private-ledger-marker\" emit ".repeat(257)).into_bytes(),
+            "emit-ledger-denied" => host_ledger_denial_source(),
             "emit-panic" | "emit-revoked" => HOST_EMIT_SOURCE.to_vec(),
             _ => HOST_EXPORT_SOURCE.to_vec(),
         };
@@ -1124,15 +1132,17 @@ pub(crate) fn run_test_host(arguments: &[std::ffi::OsString]) -> std::process::E
         });
         if emit {
             let issuer = HostWorkerIssuer { policy };
-            if mode == "emit-trap" {
-                // Keep this fixture's quota independent of the unissued
-                // control: its 257th callback follows 256 committed appends.
+            if mode == "emit-ledger-denied" {
+                // The fifth actual callback exceeds the unchanged ledger-byte
+                // quota after four committed appends; no result is delivered.
                 guest_attempted = true;
                 let invocation = issuer.invoke(&mut selected, root, 41);
                 let receipt = issuer.receipt()?;
-                let exact_denial = receipt["effect_requests"] == 257
-                    && receipt["protected_operations"] == 256
-                    && receipt["denied_requests"] == 1;
+                let exact_denial = receipt["effect_requests"] == 5
+                    && receipt["protected_operations"] == 4
+                    && receipt["denied_requests"] == 1
+                    && receipt["ledger_entries"] == 4
+                    && receipt["ledger_bytes"] == 209_716;
                 return Ok(match invocation {
                     Err(GuestFailure::Invalid(_)) if exact_denial => serde_json::json!({
                         "schema":"noble-worker-program-test-host/v1","outcome":"guest-trapped",
