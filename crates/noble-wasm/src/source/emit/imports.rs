@@ -38,6 +38,9 @@ pub(super) fn write(
     if plan.has_bound_clock {
         attempt!(out.append(b"(import \"noble\" \"test_clock_bound\" (func $host_clock_bound (param i32) (result i32 i64)))\n"));
     }
+    if plan.has_bound_code_export {
+        attempt!(out.append(b"(import \"noble\" \"test_code_export_bound\" (func $host_code_export_bound (param i32) (result i32)))\n"));
+    }
     if plan.has_live_propose {
         attempt!(out.append(b"(import \"noble\" \"live_propose\" (func $host_live_propose (param i64 i64 i32) (result i32)))\n"));
     }
@@ -228,6 +231,9 @@ pub(super) fn runtime(
     }
     if plan.has_bound_clock {
         attempt!(out.append(b"(func $op_clock_bound (param $slot i32) (local $status i32) (local $value i64)\n (global.set $failure (i32.const 5))\n (call $host_clock_bound (local.get $slot))\n (local.set $value)\n (local.set $status)\n (if (i32.eqz (local.get $status)) (then\n   (global.set $failure (i32.const 0))\n   (call $push_i64 (local.get $value)))))\n"));
+    }
+    if plan.has_bound_code_export {
+        attempt!(out.append(b"(func $op_code_export_bound (param $slot i32)\n (if (global.get $failure) (then (return)))\n ;; Poison before entering the host; neither Text operand is read or serialized.\n ;; Even a host returning zero cannot authorize export in this profile.\n (global.set $failure (i32.const 5))\n (drop (call $host_code_export_bound (local.get $slot))))\n"));
     }
     if plan.has_live_propose {
         if plan.core_live {

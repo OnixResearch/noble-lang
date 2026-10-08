@@ -14,6 +14,8 @@ mod report;
 pub(crate) mod worker;
 pub(crate) mod worker_scalar;
 pub(crate) mod worker_package;
+pub(crate) mod worker_program;
+mod worker_program_guest;
 pub(crate) mod worker_typed;
 pub(crate) mod worker_value;
 pub(crate) mod worker_shell;
@@ -51,6 +53,33 @@ pub const USAGE: &str = "usage:
   noble worker scalar SOURCE --state I64 --delta I64
   Scalar worker precursor: independently check I64 I64 -- I64 ! {}, run one
   bounded source-backed guest invocation, report its exact local outcome.
+  noble worker program build SOURCE --name NAME --effect-ceiling pure
+  Opted source-bound named Program builder: check and compile a module with two
+  reachable, compatible named Programs once, then
+  adapt, select, duplicate and compose typed handles under an explicit bound.
+  This local builder does not execute a guest, import/export packages or grant effects.
+  noble worker program guest SOURCE --name NAME --operand I64 --effect-ceiling pure
+  Selected pure WIT owner invokes the actual checked named Program cell in a
+  fresh, bounded source Wasm instance. Guest source and component are rebuilt;
+  this source-only path is not yet execution evidence without scoped Wasm tests.
+  noble worker program guest-package PACKAGE --operand I64 --effect-ceiling pure
+  Freshly import a checked pure package graph and invoke its selected installed
+  Program cell through the same WIT owner; package bytes are not executable.
+  noble worker program import PACKAGE --effect-ceiling pure
+  Freshly recheck a finite local v2 package's source, complete named closure
+  and checked recipe; Text aliases require fresh installed-cell rechecking.
+  Import is inert and is not an executable guest. Export is unavailable through
+  CLI until an authenticated host-owned grant exists; file JSON cannot grant it.
+  A test.emit package/ceiling is refused: the host-only bound adapter and
+  revocable effect policy require an explicit embedder, never a CLI argument.
+  noble worker program test-host emit|emit-wrong|emit-trap|emit-panic|emit-revoked|wit-export|core-export < FIXTURE_SOURCE
+  Dedicated finite synthetic test embedder: built-in exact fixture source,
+  checked owner, adapter, destination and epoch are chosen before bounded
+  untrusted stdin; source mismatch denies before any issue. Only an installed
+  allowlisted test.emit cell may be issued. Both export paths always deny.
+  Fault controls report protected ledger state after real guest trap or caught
+  host panic; emit-revoked revokes an issued installed cell before invocation.
+  It accepts no authority document or caller-selected export destination.
   noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON
   Typed worker: host-select a source-checked WorkerData@1 module and two canonical
   nominal values; check one exact local no-capture package and exported transition

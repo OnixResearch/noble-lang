@@ -26,6 +26,7 @@ pub(super) enum Action {
     NominalMatch(u64, u32, u32, u32, u32),
     EmitBound(u32),
     ClockBound(u32),
+    CodeExportBound(u32),
     LivePropose(u64),
     LiveGeneration,
     SlotInvoke(u32, u32),
@@ -37,6 +38,56 @@ pub(super) struct Operation {
     pub(super) input: u32,
     pub(super) output: u32,
     pub(super) effects: u32,
+}
+
+/// One closed mapping shared by source emission and the independently
+/// inspected installed-cell receipt. `source_node` preserves lexical Text
+/// occurrence identity across equal byte strings.
+pub(super) fn atom_metadata(
+    operation: &Operation,
+    text_witness: u32,
+) -> super::ProgramAtomMetadata {
+    let (tag, payload, child_program, text, ordinal) = match operation.action {
+        Action::I64(value) => (1, value, None, None, 0),
+        Action::Bool(value) => (4, i64::from(value), None, None, 0),
+        Action::Unit => (5, 0, None, None, 0),
+        Action::Text(start, length) => (8, 0, None, Some((start, length)), 0),
+        Action::Program(child) => (3, 0, Some(child), None, 0),
+        Action::Word(definition) => (2, i64::from(definition), None, None, 0),
+        Action::TextByte => (2, 26, None, None, 0),
+        Action::I64Less => (2, 27, None, None, 0),
+        Action::Quote(_, _, _) => (2, 8, None, None, 0),
+        Action::Call(_, identity) => (15, i64::from_le_bytes(identity.to_le_bytes()),
+            None, None, 0),
+        Action::NominalNew(module, ordinal, _) => (26,
+            i64::from_le_bytes(module.to_le_bytes()), None, None, ordinal),
+        Action::NominalInto(module, ordinal, _) => (27,
+            i64::from_le_bytes(module.to_le_bytes()), None, None, ordinal),
+        Action::NominalLeft(module, ordinal, _) => (28,
+            i64::from_le_bytes(module.to_le_bytes()), None, None, ordinal),
+        Action::NominalRight(module, ordinal, _) => (29,
+            i64::from_le_bytes(module.to_le_bytes()), None, None, ordinal),
+        Action::NominalMatch(module, ordinal, _, _, _) => (30,
+            i64::from_le_bytes(module.to_le_bytes()), None, None, ordinal),
+        Action::EmitBound(slot) => (31, i64::from(slot), None, None, 0),
+        Action::ClockBound(slot) => (32, i64::from(slot), None, None, 0),
+        Action::CodeExportBound(slot) => (34, i64::from(slot), None, None, 0),
+        Action::LivePropose(_) => (2, 24, None, None, 0),
+        Action::LiveGeneration => (2, 25, None, None, 0),
+        Action::SlotInvoke(_, borrowed_ordinal) =>
+            (33, i64::from(borrowed_ordinal), None, None, 0),
+    };
+    let (input, output, effects) = if text.is_some() {
+        (8, text_witness, 0)
+    } else if tag == 2 || tag == 15 || tag == 33 || tag == 34 || (26..=32).contains(&tag) {
+        (operation.input, operation.output, operation.effects)
+    } else {
+        (0, 0, 0)
+    };
+    super::ProgramAtomMetadata {
+        source_node: operation.node.0, tag, payload, child_program, text,
+        input, output, effects, ordinal,
+    }
 }
 
 pub(super) struct Program {
@@ -88,6 +139,7 @@ pub(super) struct Layout {
     pub(super) has_i64_less: bool,
     pub(super) has_bound_emit: bool,
     pub(super) has_bound_clock: bool,
+    pub(super) has_bound_code_export: bool,
     pub(super) has_live_propose: bool,
     pub(super) has_live_generation: bool,
 }
@@ -113,6 +165,7 @@ pub(super) fn effect_mask(effects: &noble_kernel::types::EffSet) -> Result<u32, 
             3 => mask |= 8,
             5 => mask |= 32,
             4 => mask |= 16,
+            6 => mask |= 64,
             _ => {
                 failure = Some(crate::Diagnostic::Unsupported);
                 break;
@@ -169,7 +222,7 @@ fn start(
         compiler,
         work
     )));
-    let definition_roots = if submission.environment.live_slots {
+    let definition_roots = if submission.environment.live_slots || compiler.worker_inputs {
         arenas[..index].iter().map(|arena| arena.root).collect()
     } else {
         alloc::vec::Vec::new()
@@ -203,6 +256,7 @@ fn start(
         has_i64_less: false,
         has_bound_emit: false,
         has_bound_clock: false,
+        has_bound_code_export: false,
         has_live_propose: false,
         has_live_generation: false,
     };
@@ -233,6 +287,7 @@ fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
                 Action::I64Less => layout.has_i64_less = true,
                 Action::EmitBound(_) => layout.has_bound_emit = true,
                 Action::ClockBound(_) => layout.has_bound_clock = true,
+                Action::CodeExportBound(_) => layout.has_bound_code_export = true,
                 Action::LivePropose(_) => layout.has_live_propose = true,
                 Action::LiveGeneration => layout.has_live_generation = true,
                 _ => {}

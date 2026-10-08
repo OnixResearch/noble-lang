@@ -119,8 +119,10 @@ fn invoke(
         0 => {
             let value = attempt!(state.pop());
             // Independent kernel acceptance enforces Data; lowering also
-            // rejects handle duplication rather than trusting machine width.
-            if !value.ty.is_data() {
+            // rejects WIT own<program> aliasing even though a native Noble
+            // immutable Program is Data and would normally be copyable.
+            if !value.ty.is_data()
+                || (state.worker_program.is_some() && contains_program(&value.ty)) {
                 return Err(crate::Diagnostic::Invalid);
             }
             state.stack.push(value.clone());
@@ -129,7 +131,8 @@ fn invoke(
         }
         1 => {
             let value = attempt!(state.pop());
-            if !value.ty.is_data() {
+            if !value.ty.is_data()
+                || (state.worker_program.is_some() && contains_program(&value.ty)) {
                 return Err(crate::Diagnostic::Invalid);
             }
             Ok(())
@@ -165,6 +168,24 @@ fn invoke(
             super::calls::invoke(world, operation, state)
         }
         _ => Err(crate::Diagnostic::Unsupported),
+    }
+}
+
+fn contains_program(ty: &noble_kernel::types::Ty) -> bool {
+    match ty {
+        noble_kernel::types::Ty::Program(_, _, _) => true,
+        noble_kernel::types::Ty::Pair(left, right)
+        | noble_kernel::types::Ty::Sum(left, right) =>
+            contains_program(left) || contains_program(right),
+        noble_kernel::types::Ty::List(item) => contains_program(item),
+        noble_kernel::types::Ty::Nominal(_, shape)
+        | noble_kernel::types::Ty::GenericNominal(_, _, shape) =>
+            match shape.as_ref() {
+                noble_kernel::types::NominalShape::Opaque(item) => contains_program(item),
+                noble_kernel::types::NominalShape::Variant(left, right) =>
+                    contains_program(left) || contains_program(right),
+            },
+        _ => false,
     }
 }
 

@@ -22,8 +22,9 @@ pub(crate) use declared::{
     verify_definition_origin, verify_named_call_origin, verify_named_export, DefinitionOrigin,
 };
 pub use declared::{
-    BoundOperation, CheckedNominal, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind,
-    ModulePrepared, ModuleSession, RebuiltImportDefinition, SignedSourceOwner,
+    BoundOperation, CheckedNominal, CheckedProgramInterface, CheckedProgramOwner,
+    DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession,
+    RebuiltImportDefinition, SignedSourceOwner,
 };
 
 /// Core vocabulary resolved by the same checker as a worker's pure source.

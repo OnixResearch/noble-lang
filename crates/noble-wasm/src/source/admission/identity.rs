@@ -107,7 +107,8 @@ impl Encoding {
                             attempt!(self.out.number(submission.definitions[index].identity));
                         }
                         Some(noble_kernel::contracts::Behavior::BoundEmit(slot)
-                            | noble_kernel::contracts::Behavior::BoundClock(slot)) => {
+                            | noble_kernel::contracts::Behavior::BoundClock(slot)
+                            | noble_kernel::contracts::Behavior::BoundCodeExport(slot)) => {
                             let mut found = None;
                             let mut at = 0usize;
                             while at < submission.environment.bound_adapters.len() {
@@ -123,10 +124,11 @@ impl Encoding {
                                 None => return Err(crate::Diagnostic::Invalid),
                             };
                             attempt!(work.entries(binding.adapter_identity.len()));
-                            let marker = if matches!(
-                                behavior,
-                                Some(noble_kernel::contracts::Behavior::BoundClock(_))
-                            ) { b"c" } else { b"a" };
+                            let marker = match behavior {
+                                Some(noble_kernel::contracts::Behavior::BoundClock(_)) => b"c",
+                                Some(noble_kernel::contracts::Behavior::BoundCodeExport(_)) => b"e",
+                                _ => b"a",
+                            };
                             attempt!(self.out.append(marker));
                             attempt!(self.out.number(u64::from(slot)));
                             attempt!(self.out.append(b":"));
@@ -170,7 +172,8 @@ impl Encoding {
                                 | noble_kernel::contracts::Behavior::I64Less
                                 | noble_kernel::contracts::Behavior::Named
                                 | noble_kernel::contracts::Behavior::BoundEmit(_)
-                                | noble_kernel::contracts::Behavior::BoundClock(_) => {
+                                | noble_kernel::contracts::Behavior::BoundClock(_)
+                                | noble_kernel::contracts::Behavior::BoundCodeExport(_) => {
                                     return Err(crate::Diagnostic::Invalid);
                                 }
                             };

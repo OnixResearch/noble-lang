@@ -51,6 +51,8 @@ pub(super) fn world(
         resources,
         asynchronous: false,
         checked_u64,
+        worker_program_kind: None,
+        worker_program_effect: None,
         limits,
     };
     let context = Context {

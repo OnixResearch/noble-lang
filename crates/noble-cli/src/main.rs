@@ -51,6 +51,10 @@ fn main() -> std::process::ExitCode {
         return core::live::run(&arguments);
     }
     if arguments.first().is_some_and(|argument| argument == "worker")
+        && arguments.get(1).is_some_and(|argument| argument == "program") {
+        return core::worker_program::run(&arguments);
+    }
+    if arguments.first().is_some_and(|argument| argument == "worker")
         && arguments.get(1).is_some_and(|argument| argument == "typed") {
         return core::worker_typed::run(&arguments);
     }

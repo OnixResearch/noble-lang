@@ -10,6 +10,7 @@ mod initialize;
 mod live;
 mod metadata;
 mod reflection;
+mod worker;
 
 fn global(out: &mut crate::output::Buffer, id: usize) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"$s"));
@@ -138,6 +139,9 @@ pub(super) fn module(
         attempt!(live::exports(&mut out, plan, generation));
         attempt!(out.append(b")\n"));
         return Ok(out.finish());
+    }
+    if plan.worker_inputs {
+        attempt!(worker::exports(&mut out, plan, generation));
     }
     if plan.core_live {
         attempt!(core_live::release_module_roots(&mut out, plan.programs.len()));

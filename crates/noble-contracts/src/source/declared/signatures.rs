@@ -249,6 +249,11 @@ fn parse_effect(
             noble_kernel::contracts::TEST_CLOCK
         )]);
     }
+    if word == "test.code-export" {
+        return Ok(alloc::vec![EffectSlot::Effect(
+            noble_kernel::contracts::TEST_CODE_EXPORT
+        )]);
+    }
     let Some((index, _)) = binders
         .iter()
         .enumerate()

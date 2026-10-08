@@ -342,3 +342,155 @@ fn checked_unsigned_selector_requires_import_free_exact_scalar_export() {
     assert_eq!(world.imports().len(), 1);
     assert_eq!(world.exports().len(), 1);
 }
+
+#[test]
+fn worker_test_emit_selection_requires_exact_checked_effect_and_world_shape() -> Result<(), String> {
+    use noble_contracts::component::{Type, World};
+    use noble_contracts::source::{BoundOperation, ModuleSession};
+    use noble_kernel::contracts::TEST_EMIT;
+    use noble_kernel::shapes::{EffectSlot, Pattern};
+    use noble_kernel::types::{EffSet, Ty};
+
+    const WORKER_WIT: &[u8] = include_bytes!("../../noble-wasm/wit/worker-program.wit");
+    let binding = BoundOperation {
+        module_name: "ledger".into(),
+        module_version: 1,
+        operation: "test.emit".into(),
+        adapter_identity: "worker-test-emit".into(),
+        adapter_slot: 4,
+        input: vec![Ty::Text],
+        output: vec![],
+        effects: vec![TEST_EMIT],
+    };
+    let session = ModuleSession::new(&[binding.clone()])
+        .map_err(|error| format!("{error:?}"))?;
+    let module = session.prepare(
+        b"module ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]",
+        &[], LIMITS,
+    ).map_err(|error| format!("{error:?}"))?;
+    let owner = module.checked_program_owner_for_binding("plus", &binding)
+        .ok_or("bound source lost its exact checked owner")?;
+    let (session, committed) = session.commit(module);
+    committed.map_err(|error| format!("{error:?}"))?;
+    let invocation = session.prepare(b"ledger@1.plus", &[Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let checked = invocation.checked_program_interface_for_binding(&owner, &binding)
+        .ok_or("bound source lost its exact checked invocation")?;
+
+    let ordinary = world(WORKER_WIT, "guest")?;
+    let kind = ordinary.resources().first().ok_or("missing WIT Program resource")?.kind;
+    assert_eq!(ordinary.noble_type(Type::Own(kind)), Some(Ty::Resource(kind)));
+    assert_eq!(ordinary.noble_type(Type::Borrow(kind)), Some(Ty::Resource(kind)));
+    assert!(world(WORKER_WIT, "guest")?
+        .select_worker_program(&checked).is_err(),
+        "the PURE ingress must not select an effectful Program");
+
+    let selected = world(WORKER_WIT, "guest")?
+        .select_worker_program_for_test_emit(&checked)
+        .map_err(|error| format!("{error:?}"))?;
+    let program = Ty::program(vec![Ty::I64], vec![Ty::I64], EffSet::from_ids(&[TEST_EMIT]));
+    assert_eq!(selected.noble_type(Type::Own(kind)), Some(program));
+    assert_eq!(selected.noble_type(Type::Borrow(kind)), None);
+    assert_ne!(selected.build_context(), ordinary.build_context(),
+        "the effect-bound type selection must have a distinct context");
+    let request = &selected.imports()[2];
+    assert!(selected.check_import_effect(&request.word, &[]).is_err(),
+        "selecting a Program type does not grant the host export operation");
+    let environment = selected.environment().map_err(|error| format!("{error:?}"))?;
+    let admit_id = selected.imports()[0].definition.ok_or("missing WIT admit definition")?;
+    let admit = environment.defs.get(admit_id.0 as usize)
+        .ok_or("missing generated WIT admit contract")?;
+    assert_eq!(admit.stack_out.last(), Some(&Pattern::program(
+        vec![Pattern::I64], vec![Pattern::I64],
+        vec![EffectSlot::Effect(TEST_EMIT)])),
+        "the generated import must carry the selected latent effect");
+
+    let pure_session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let pure_module = pure_session.prepare(
+        b"module plain@1 [ export plus def plus [ 1 + ] ]", &[], LIMITS,
+    ).map_err(|error| format!("{error:?}"))?;
+    let pure_owner = pure_module.checked_program_owner("plus")
+        .ok_or("missing checked pure owner")?;
+    let (pure_session, committed) = pure_session.commit(pure_module);
+    committed.map_err(|error| format!("{error:?}"))?;
+    let pure_invocation = pure_session.prepare(b"plain@1.plus", &[Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let pure = pure_invocation.checked_program_interface(&pure_owner)
+        .ok_or("missing checked pure invocation")?;
+    assert!(world(WORKER_WIT, "guest")?
+        .select_worker_program_for_test_emit(&pure).is_err(),
+        "a checked pure Program cannot select test.emit");
+    let pure_selected = world(WORKER_WIT, "guest")?
+        .select_worker_program(&pure).map_err(|error| format!("{error:?}"))?;
+    assert_eq!(pure_selected.noble_type(Type::Own(kind)),
+        Some(Ty::program(vec![Ty::I64], vec![Ty::I64], EffSet::empty())));
+    assert_ne!(selected.build_context(), pure_selected.build_context(),
+        "pure and test.emit Program mappings must not share an identity");
+
+    let changed = std::str::from_utf8(WORKER_WIT)
+        .map_err(|error| error.to_string())?
+        .replace("request-code-export: func(owner: own<program>, destination: string) -> bool",
+            "request-code-export: func(owner: own<program>, destination: string) -> s64");
+    assert!(World::parse(changed.as_bytes(), "guest", LIMITS)
+        .map_err(|error| format!("{error:?}"))?
+        .select_worker_program_for_test_emit(&checked).is_err(),
+        "the effectful selector must not accept a different host interface");
+    Ok(())
+}
+
+#[test]
+fn worker_code_export_requires_exact_checked_effect_and_consumed_program_owner()
+    -> Result<(), String> {
+    use noble_contracts::component::{Type, World};
+    use noble_contracts::source::{BoundOperation, ModuleSession};
+    use noble_kernel::contracts::TEST_CODE_EXPORT;
+    use noble_kernel::types::{EffSet, Ty};
+
+    const WORKER_WIT: &[u8] = include_bytes!("../../noble-wasm/wit/worker-program.wit");
+    let binding = BoundOperation {
+        module_name: "ledger".into(), module_version: 1,
+        operation: "test.code-export".into(),
+        adapter_identity: "worker-test-code-export@1.0.0".into(),
+        adapter_slot: 4, input: vec![Ty::Text, Ty::Text], output: vec![],
+        effects: vec![TEST_CODE_EXPORT],
+    };
+    let session = ModuleSession::new(&[binding.clone()])
+        .map_err(|error| format!("{error:?}"))?;
+    let source = b"module ledger@1 [ require code_export Text Text -- ! test.code-export export capture def capture [ \"private-capture\" \"local-destination\" code_export ] ]";
+    let module = session.prepare(source, &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let owner = module.checked_program_owner_for_binding("capture", &binding)
+        .ok_or("missing checked private-capture Program")?;
+    let (session, committed) = session.commit(module);
+    committed.map_err(|error| format!("{error:?}"))?;
+    let invocation = session.prepare(b"ledger@1.capture", &[Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let checked = invocation.checked_program_interface_for_binding(&owner, &binding)
+        .ok_or("missing exact checked code-export interface")?;
+    assert!(world(WORKER_WIT, "guest")?.select_worker_program(&checked).is_err());
+    assert!(world(WORKER_WIT, "guest")?
+        .select_worker_program_for_test_emit(&checked).is_err());
+    let selected = world(WORKER_WIT, "guest")?
+        .select_worker_program_for_test_code_export(&checked)
+        .map_err(|error| format!("{error:?}"))?;
+    let kind = selected.resources().first().ok_or("missing WIT Program owner")?.kind;
+    assert_eq!(selected.imports()[2].parameters,
+        [Type::Own(kind), Type::String]);
+    assert_eq!(selected.imports()[2].results, [Type::Boolean]);
+    assert_eq!(selected.noble_type(Type::Own(kind)), Some(Ty::program(
+        vec![Ty::I64], vec![Ty::I64], EffSet::from_ids(&[TEST_CODE_EXPORT]))));
+    assert!(selected.environment().map_err(|error| format!("{error:?}"))?
+        .knows_effect(TEST_CODE_EXPORT),
+        "the selected latent effect must be known without granting a host import");
+    assert!(selected.check_import_effect(&selected.imports()[2].word, &[]).is_err(),
+        "a checked effect witness never grants export destination/capture authority");
+    let changed = std::str::from_utf8(WORKER_WIT)
+        .map_err(|error| error.to_string())?
+        .replace("request-code-export: func(owner: own<program>, destination: string) -> bool",
+            "request-code-export: func(destination: string) -> bool");
+    assert!(World::parse(changed.as_bytes(), "guest", LIMITS)
+        .map_err(|error| format!("{error:?}"))?
+        .select_worker_program_for_test_code_export(&checked).is_err(),
+        "a string-only request cannot identify checked captured Program data");
+    Ok(())
+}

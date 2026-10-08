@@ -136,7 +136,7 @@ fn expected(
     limits: noble_kernel::untrusted::Limits,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
-    if expected.allowed_effects.as_slice().len() > 6 {
+    if expected.allowed_effects.as_slice().len() > 7 {
         return Err(crate::Diagnostic::Exhausted);
     }
     attempt!(concrete::stack(&expected.stack_in, limits, work));

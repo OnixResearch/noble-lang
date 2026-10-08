@@ -61,8 +61,15 @@ pub(super) const fn lane(
 
 pub(super) fn value_type(
     ty: &noble_kernel::types::Ty,
+    worker_program: Option<noble_kernel::types::ResourceKind>,
 ) -> Result<Option<noble_contracts::component::Type>, crate::Diagnostic> {
     match ty {
+        noble_kernel::types::Ty::Program(input, output, effects)
+            if worker_program.is_some()
+                && input.as_slice() == [noble_kernel::types::Ty::I64]
+                && output.as_slice() == [noble_kernel::types::Ty::I64]
+                && effects.is_empty() =>
+            Ok(worker_program.map(noble_contracts::component::Type::Own)),
         noble_kernel::types::Ty::Unit => Ok(None),
         noble_kernel::types::Ty::Bool => Ok(Some(noble_contracts::component::Type::Boolean)),
         noble_kernel::types::Ty::I64 => Ok(Some(noble_contracts::component::Type::S64)),

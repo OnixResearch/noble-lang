@@ -77,6 +77,7 @@ pub(crate) const fn data_slot(
         | Some(crate::contracts::Behavior::TestEmit)
         | Some(crate::contracts::Behavior::BoundEmit(_))
         | Some(crate::contracts::Behavior::BoundClock(_))
+        | Some(crate::contracts::Behavior::BoundCodeExport(_))
         | Some(crate::contracts::Behavior::NominalNew(_))
         | Some(crate::contracts::Behavior::NominalInto(_))
         | Some(crate::contracts::Behavior::NominalLeft(_))

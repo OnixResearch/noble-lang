@@ -133,6 +133,97 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
 }
 
 #[test]
+fn bound_program_provenance_requires_exact_host_selection_and_invocation() -> Result<(), String> {
+    use noble_contracts::source::{BoundOperation, ModuleSession};
+    use noble_kernel::types::{EffSet, Ty};
+
+    let selected = binding(Binding { version: 1, slot: 4, adapter: "version-A" });
+    let session = ModuleSession::new(core::slice::from_ref(&selected))
+        .map_err(|error| format!("{error:?}"))?;
+    let source = b"module ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] ]";
+    let module = session.prepare(source, &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(module.checked_program_owner("plus").is_none());
+    assert!(module.checked_program_closure("plus").is_none());
+    let owner = module.checked_program_owner_for_binding("plus", &selected)
+        .ok_or("bound export lost checked source owner")?;
+    let closure = module.checked_program_closure_for_binding("plus", &selected)
+        .ok_or("bound export lost closed source graph")?;
+    assert_eq!(closure.iter().map(|entry| entry.definition_slot()).collect::<Vec<_>>(),
+        vec![owner.definition_slot()]);
+
+    let altered = [
+        BoundOperation { module_name: "other".into(), ..selected.clone() },
+        BoundOperation { module_version: 2, ..selected.clone() },
+        BoundOperation { operation: "test.clock".into(), ..selected.clone() },
+        BoundOperation { adapter_identity: "version-B".into(), ..selected.clone() },
+        BoundOperation { adapter_slot: 5, ..selected.clone() },
+        BoundOperation { input: vec![Ty::I64], ..selected.clone() },
+        BoundOperation { output: vec![Ty::I64], ..selected.clone() },
+        BoundOperation { effects: vec![], ..selected.clone() },
+    ];
+    for wrong in &altered {
+        assert!(module.checked_program_owner_for_binding("plus", wrong).is_none());
+        assert!(module.checked_program_closure_for_binding("plus", wrong).is_none());
+    }
+    let extra = binding(Binding { version: 2, slot: 5, adapter: "version-B" });
+    let multiple = ModuleSession::new(&[selected.clone(), extra])
+        .map_err(|error| format!("{error:?}"))?;
+    let multiple_module = multiple.prepare(source, &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(multiple_module.checked_program_owner_for_binding("plus", &selected).is_none());
+    assert!(multiple_module.checked_program_closure_for_binding("plus", &selected).is_none(),
+        "one matching row among several staged bindings is not an exact host selection");
+    let clock = BoundOperation {
+        operation: "test.clock".into(),
+        input: vec![],
+        output: vec![Ty::I64],
+        effects: vec![noble_kernel::contracts::TEST_CLOCK],
+        ..selected.clone()
+    };
+    let clock_session = ModuleSession::new(&[clock])
+        .map_err(|error| format!("{error:?}"))?;
+    let clock_staged = clock_session.prepare(
+        b"module ledger@1 [ export plus def plus [ 1 + ] ]", &[], LIMITS,
+    ).map_err(|error| format!("{error:?}"))?;
+    assert!(clock_staged.checked_program_owner("plus").is_none());
+    assert!(clock_staged.checked_program_closure("plus").is_none(),
+        "pure getters must reject even an unused non-emit host binding");
+    let inert = session.prepare(
+        b"module ledger@1 [ require emit Text -- ! test.emit export plus def plus [ 1 + ] ]",
+        &[], LIMITS,
+    ).map_err(|error| format!("{error:?}"))?;
+    assert!(inert.checked_program_owner_for_binding("plus", &selected).is_none(),
+        "declaring a bound operation without invoking it is not an effectful Program");
+    let partial = session.prepare(
+        b"module ledger@1 [ require emit Text -- ! test.emit export plus def plus [ \"audit\" emit 1 + ] def unused [ 0 ] ]",
+        &[], LIMITS,
+    ).map_err(|error| format!("{error:?}"))?;
+    assert!(partial.checked_program_closure_for_binding("plus", &selected).is_none(),
+        "an unused source definition cannot enter a bound Worker package");
+
+    let (session, committed) = session.commit(module);
+    committed.map_err(|error| format!("{error:?}"))?;
+    let invocation = session.prepare(b"ledger@1.plus", &[Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(invocation.checked_program_interface(&owner).is_none());
+    let interface = invocation.checked_program_interface_for_binding(&owner, &selected)
+        .ok_or("exact bound invocation lost checked interface")?;
+    assert!(interface.is_test_emit_i64_endomorphism());
+    assert!(!interface.is_pure_i64_endomorphism());
+    assert_eq!(interface.ty(), Ty::program(vec![Ty::I64], vec![Ty::I64],
+        EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT])));
+    for wrong in &altered {
+        assert!(invocation.checked_program_interface_for_binding(&owner, wrong).is_none());
+    }
+    let extended = session.prepare(b"ledger@1.plus 1 drop", &[Ty::I64], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(extended.checked_program_interface_for_binding(&owner, &selected).is_none(),
+        "an expression extending the invocation is not the named bound Program");
+    Ok(())
+}
+
+#[test]
 fn link_rejects_bad_contract_and_ambient_emit() -> Result<(), String> {
     let source=b"module ledger@1 [ require emit Text -- ! test.emit export handle def handle [ \"audit\" emit ] ]";
     let missing = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;

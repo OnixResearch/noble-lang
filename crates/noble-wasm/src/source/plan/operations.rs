@@ -254,6 +254,8 @@ impl Input<'_> {
                 noble_kernel::contracts::Behavior::BoundEmit(slot) => output.bound_action(slot),
                 noble_kernel::contracts::Behavior::BoundClock(slot) =>
                     output.clock_action(slot),
+                noble_kernel::contracts::Behavior::BoundCodeExport(slot) =>
+                    output.code_export_action(slot),
                 noble_kernel::contracts::Behavior::NominalNew(id) => output.new_action(id),
                 noble_kernel::contracts::Behavior::NominalInto(id) => {
                     let ty = attempt!(nominal::Output::checked_input(

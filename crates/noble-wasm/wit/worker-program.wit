@@ -1,0 +1,13 @@
+package noble-test:worker-program@2.0.0;
+
+interface programs {
+  resource program;
+  admit: func() -> own<program>;
+  invoke: func(value: own<program>, operand: s64) -> s64;
+  request-code-export: func(owner: own<program>, destination: string) -> bool;
+}
+
+world guest {
+  import programs;
+  export compute: func(operand: s64) -> s64;
+}
