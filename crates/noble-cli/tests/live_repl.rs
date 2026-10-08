@@ -922,6 +922,46 @@ fn declared_checked_rebind_replays_transitive_dependents_without_rewriting_saved
 }
 
 #[test]
+fn declared_nested_captured_transitive_alias_keeps_first_owner_across_two_rebinds(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    live_ack(&live.report()?, &[]);
+    for declaration in [
+        "import m@1 as m", "def once [ m.addone ]", "def twice [ once once ]",
+    ] {
+        let receipt = live.submit(declaration)?;
+        assert_eq!(text_field(&receipt, "outcome"), "namespace-committed", "{receipt}");
+    }
+    let saved = live.submit("20 [ [ twice ] ]")?;
+    assert_eq!(saved["stack"][0]["value"], "20", "{saved}");
+    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+
+    for (version, increment) in [(2, 2), (3, 3)] {
+        fixture.replace(&format!(
+            "module m@{version} [ export addone def addone [ {increment} + ] ]"
+        ))?;
+        let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+        assert_eq!(text_field(&updated, "outcome"), "reload-committed", "{updated}");
+        assert_eq!(updated["stack"], saved["stack"]);
+        assert_eq!(number_field(&updated, "guest_requests"), 0);
+        assert_eq!(number_field(&updated, "protected_operations"), 0);
+        let rebound = live.submit(&format!("import m@{version} as m"))?;
+        assert_eq!(text_field(&rebound, "outcome"), "namespace-committed", "{rebound}");
+        assert_eq!(rebound["stack"], saved["stack"]);
+    }
+    let unwrapped = live.submit("run")?;
+    assert_eq!(text_field(&unwrapped, "outcome"), "normal", "{unwrapped}");
+    assert_eq!(unwrapped["stack"][0]["value"], "20", "{unwrapped}");
+    assert_eq!(unwrapped["stack"][1]["type"], "Program", "{unwrapped}");
+    normal(&live.submit("run")?, &["22"]);
+    normal(&live.submit("20 twice")?, &["22", "26"]);
+    live.finish()
+}
+
+#[test]
 fn declared_same_version_changed_bytes_refuse_without_losing_old_owner() -> Result<(), Box<dyn std::error::Error>> {
     let original = "module Definitions@5 [ export step def step [ 1 + ] ]";
     let fixture = Fixture::new(original)?;

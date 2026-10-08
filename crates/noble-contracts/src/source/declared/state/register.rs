@@ -47,9 +47,8 @@ impl super::ModuleSession {
             ));
         }
         attempt!(self.check_retained(request.source.len()));
-        let identity = attempt!(u64::try_from(self.modules.len())
-            .ok()
-            .and_then(|n| n.checked_add(1))
+        let identity = self.next_module_identity;
+        let next_module_identity = attempt!(identity.checked_add(1)
             .ok_or_else(|| super::super::error(
                 crate::source::Stage::Check,
                 "module identity limit exceeded"
@@ -153,6 +152,7 @@ impl super::ModuleSession {
             proof_exports: staged.proof_exports,
             proofs: alloc::vec::Vec::new(),
         });
+        next.next_module_identity = next_module_identity;
         Ok((attempt!(next.outside_words()), staged.pending))
     }
 }

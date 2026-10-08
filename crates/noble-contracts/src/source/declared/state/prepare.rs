@@ -90,6 +90,7 @@ impl super::ModuleSession {
             previous_source_definitions_len: self.source.definitions.len(),
             previous_modules: self.modules.clone(),
             previous_aliases: self.aliases.clone(),
+            previous_next_module_identity: self.next_module_identity,
             previous_history: self.source.history.clone(),
             staged,
             submission,
@@ -274,6 +275,7 @@ impl super::ModuleSession {
             && self.bindings == prepared.staged.bindings
             && self.modules == prepared.previous_modules
             && self.aliases == prepared.previous_aliases
+            && self.next_module_identity == prepared.previous_next_module_identity
             && self.source.history == prepared.previous_history
     }
 

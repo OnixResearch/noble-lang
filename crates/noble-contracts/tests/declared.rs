@@ -67,7 +67,9 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
     for forbidden in [22, 23, 26, 27] {
         assert_eq!(pure_builtin_spelling(forbidden), None);
     }
-    let session = ModuleSession::new_declared_text(&[], false)
+    let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+        .ok_or("invalid retained source limit")?;
+    let session = ModuleSession::new_declared_text(&[], false, retained)
         .map_err(|error| format!("{error:?}"))?;
     let package = b"module package@1 [ variant Choice Good I64 public Bad Text public export Choice export Choice.Good export helper def helper [ 1 + ] export root def root [ let value [ value helper ] run ] ]";
     let prepared = session.prepare(package, &[], LIMITS)
@@ -302,6 +304,48 @@ fn alias_rebind_replays_exact_current_dependents_but_preserves_versioned_owners(
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(rebind.rebuilt_import_definitions().map(|items| items.len()), Some(0),
         "a version-pinned callee is not an outside alias dependent");
+    Ok(())
+}
+
+#[test]
+fn failed_registration_and_alias_rebind_never_reissue_a_module_owner() -> Result<(), String> {
+    use noble_contracts::source::{ModuleSession, RetainedSourceLimit};
+    let retained = RetainedSourceLimit::new(65_536)
+        .ok_or("invalid retained source limit")?;
+    let mut session = ModuleSession::new_declared_text(&[], false, retained)
+        .map_err(|error| format!("{error:?}"))?;
+    let first = session.prepare(b"module m@1 [ export addone def addone [ 1 + ] ]", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let first_owner = first.resolved_module().ok_or("first module lost checked owner")?.0;
+    let (next, outcome) = session.commit(first);
+    outcome.map_err(|error| format!("{error:?}"))?;
+    session = next;
+    session = commit(session, b"import m@1 as m")?;
+    assert!(session.prepare(b"module m@2 [ export addone def addone [ true + ] ]",
+        &[], LIMITS).is_err());
+
+    let second = session.prepare(b"module m@2 [ export addone def addone [ 2 + ] ]", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let second_owner = second.resolved_module().ok_or("second module lost checked owner")?.0;
+    assert!(second_owner > first_owner);
+    let (next, outcome) = session.commit(second);
+    outcome.map_err(|error| format!("{error:?}"))?;
+    session = next;
+    session = commit(session, b"def once [ m.addone ]")?;
+    session = commit(session, b"def twice [ once once ]")?;
+    session = commit(session, b"import m@2 as m")?;
+
+    let third = session.prepare(b"module m@3 [ export addone def addone [ 3 + ] ]", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let third_owner = third.resolved_module().ok_or("third module lost checked owner")?.0;
+    assert!(third_owner > second_owner && third_owner != first_owner);
+    let (next, outcome) = session.commit(third);
+    outcome.map_err(|error| format!("{error:?}"))?;
+    session = next;
+    session = commit(session, b"import m@3 as m")?;
+    assert_eq!(session.prepare(b"20 twice", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?.output(),
+        &[noble_kernel::types::Ty::I64]);
     Ok(())
 }
 
