@@ -308,13 +308,11 @@ impl LiveBarrier {
         point: &'static str,
         expected: &str,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        use std::os::unix::ffi::OsStrExt;
+        let parent = File::open(directory)?;
         for name in ["reached", "release"] {
-            let path = directory.join(name);
-            let path = std::ffi::CString::new(path.as_os_str().as_bytes())?;
-            if unsafe { libc::mkfifo(path.as_ptr(), 0o600) } != 0 {
-                return Err(std::io::Error::last_os_error().into());
-            }
+            rustix::fs::mkfifoat(
+                &parent, name, rustix::fs::Mode::RUSR | rustix::fs::Mode::WUSR,
+            )?;
         }
         // Linux FIFO O_RDWR opens without a rendezvous race. Both ends stay
         // owned by this test until a real guest sends its exact event.
@@ -2093,12 +2091,16 @@ fn old_active_wasm_frame_finishes_before_queued_reload_ack()
     assert_eq!(new_generation, old_generation + 1);
     assert_ne!(new_sha256, old_sha256);
     assert_eq!(number_field(&ack, "guest_requests"), 0);
+    let old_guest_wasm = text_field(&old["module"], "wasm_sha256");
+    assert_eq!(old_guest_wasm.len(), 64);
     let regrant = live.submit(":grant-self-edit addone 2")?;
     assert_eq!(text_field(&regrant, "outcome"), "grant-selected", "{regrant}");
     assert_eq!(number_field(&regrant, "source_generation"), new_generation);
     let new = live.submit("20 addone")?;
     normal(&new, &["21", "22"]);
     assert_eq!(number_field(&new, "source_generation"), new_generation);
+    let new_guest_wasm = text_field(&new["module"], "wasm_sha256");
+    assert_eq!(new_guest_wasm.len(), 64);
     println!("{}", serde_json::json!({
         "case": "old-active-frame-queued-reload",
         "barrier_guest_frame_active": frame["guest_frame_active"],
@@ -2106,6 +2108,8 @@ fn old_active_wasm_frame_finishes_before_queued_reload_ack()
         "old_source_generation": old_generation,
         "new_source_sha256": new_sha256,
         "ack_generation": new_generation,
+        "old_guest_wasm_sha256": old_guest_wasm,
+        "new_guest_wasm_sha256": new_guest_wasm,
         "old_guest_value": old["stack"][0]["value"],
         "new_guest_value": new["stack"][1]["value"],
     }));
@@ -2116,15 +2120,12 @@ fn old_active_wasm_frame_finishes_before_queued_reload_ack()
 #[test]
 fn compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack()
 -> Result<(), Box<dyn std::error::Error>> {
-    use std::os::fd::AsRawFd;
-
     // These are SHA-256 digests of precisely the two byte strings below
     // (without trailing newlines), not values produced by the worker hook.
     const A: &str = "def addone [ 2 + ]";
     const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
     const B: &str = "def addone [ 3 + ]";
     const B_SHA256: &str = "eb81fb3297b696317d1de013abdf5423a31c3708443b1d1a3d8977e0bf5e92e2";
-    const MMAP_DRIFT: &str = "def addone [ 9 + ]";
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut barrier = LiveBarrier::new(&fixture.directory, "candidate-compiled", A_SHA256)?;
     let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
@@ -2139,6 +2140,8 @@ fn compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack()
         initial_generation.to_string());
     assert_eq!(staged_a["guest_frame_active"], false, "{staged_a}");
     assert_eq!(staged_a["checked_wasm_module"], true, "{staged_a}");
+    let a_wasm_sha256 = text_field(&staged_a, "checked_wasm_sha256");
+    assert_eq!(a_wasm_sha256.len(), 64);
     // A's checked WebAssembly.Module now exists, while stage_binary has not
     // replied. This second complete, fsynced atomic save must defeat A's
     // selected-file/sequence CAS and be the only accepted watch ACK.
@@ -2174,9 +2177,10 @@ fn compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack()
     assert_eq!(text_field(&ack, "source_freshness"), "matched-at-watch-ack-check");
     assert_eq!(number_field(&ack, "guest_requests"), 0);
 
-    // An in-place partial write and a noncooperative MAP_SHARED modification
-    // do not form watched complete saves. Both must fail the selected-byte
-    // gate, retain B's ACKed generation, and execute zero guest requests.
+    // An in-place partial write cannot form a watched complete save; the
+    // selected-byte gate refuses it before any guest request. Noncooperative
+    // MAP_SHARED drift is independently exercised by the existing external
+    // C helper + real-child tools/live-mmap-smoke.mjs, not by unsafe Rust.
     fs::write(&fixture.source, "def addone [ 4 +")?;
     let partial = live.submit("20 addone")?;
     assert_source_change_refused(&partial, generation, &[], B_SHA256);
@@ -2184,46 +2188,22 @@ fn compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack()
     assert_eq!(partial_sha256.len(), 64);
     assert_ne!(partial_sha256, B_SHA256);
     fs::write(&fixture.source, B)?;
-    assert_eq!(B.len(), MMAP_DRIFT.len());
-    let mapped = File::options().read(true).write(true).open(&fixture.source)?;
-    let address = unsafe { libc::mmap(
-        std::ptr::null_mut(), MMAP_DRIFT.len(), libc::PROT_READ | libc::PROT_WRITE,
-        libc::MAP_SHARED, mapped.as_raw_fd(), 0,
-    ) };
-    if address == libc::MAP_FAILED {
-        return Err(std::io::Error::last_os_error().into());
-    }
-    unsafe {
-        std::ptr::copy_nonoverlapping(
-            MMAP_DRIFT.as_ptr(), address.cast::<u8>(), MMAP_DRIFT.len(),
-        );
-    }
-    let sync = unsafe { libc::msync(address, MMAP_DRIFT.len(), libc::MS_SYNC) };
-    let sync_error = std::io::Error::last_os_error();
-    let unmap = unsafe { libc::munmap(address, MMAP_DRIFT.len()) };
-    if sync != 0 { return Err(sync_error.into()); }
-    if unmap != 0 { return Err(std::io::Error::last_os_error().into()); }
-    mapped.sync_all()?;
-    let mmap = live.submit("20 addone")?;
-    assert_source_change_refused(&mmap, generation, &[], B_SHA256);
-    let mmap_sha256 = text_field(&mmap, "observed_source_sha256").to_owned();
-    assert_eq!(mmap_sha256.len(), 64);
-    assert_ne!(mmap_sha256, B_SHA256);
-    assert_ne!(mmap_sha256, partial_sha256);
-    fs::write(&fixture.source, B)?;
     let after_restore = live.submit("20 addone")?;
     normal(&after_restore, &["23"]);
     assert_eq!(number_field(&after_restore, "source_generation"), generation);
+    let b_guest_wasm = text_field(&after_restore["module"], "wasm_sha256");
+    assert_eq!(b_guest_wasm.len(), 64);
     let inspected = live.submit(":generation")?;
     assert_generation_inspection(&inspected, generation, &after_restore["stack"]);
     println!("{}", serde_json::json!({
         "case": "staged-candidate-superseded-by-complete-rename",
         "compiled_candidate_a_sha256": A_SHA256,
+        "compiled_candidate_a_wasm_sha256": a_wasm_sha256,
         "accepted_candidate_b_sha256": B_SHA256,
+        "accepted_b_guest_wasm_sha256": b_guest_wasm,
         "watch_sequence": number_field(&ack, "watch_sequence"),
         "ack_generation": generation,
         "partial_in_place_sha256": partial_sha256,
-        "noncooperative_mmap_sha256": mmap_sha256,
         "restored_source_generation": number_field(&after_restore, "source_generation"),
         "guest_value": after_restore["stack"][0]["value"],
     }));
