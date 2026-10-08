@@ -932,7 +932,7 @@ mod tests {
     #[test]
     fn composed_program_package_reconstructs_checked_graph_not_claimed_edges() {
         let source = b"module Worker@1 [ def double [ 2 * ] export plus def plus [ double 1 + ] ]";
-        let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], 1_000_000)
+        let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
             .unwrap();
         let double = store.checked_root(0).unwrap();
         let composed = store.compose(root, double).unwrap();
@@ -948,7 +948,7 @@ mod tests {
         let mut claim: Value = serde_json::from_slice(&package).unwrap();
         claim["graph"][2]["first"] = json!(0);
         let forged = serde_json::to_vec(&claim).unwrap();
-        assert!(matches!(Store::import(&forged, 1_000_000),
+        assert!(matches!(Store::import(&forged, RUNTIME_REQUEST_WORK),
             Err(Refusal::Invalid)));
     }
 
@@ -956,7 +956,7 @@ mod tests {
     fn checked_named_program_adapts_selects_and_composes_without_changing_its_recipe() {
         let (mut store, original) = Store::prepare(
             b"module Worker@1 [ def minus [ 1 - ] export plus def plus [ minus 1 + ] ]",
-            "plus", &[Ty::I64], 1_000_000,
+            "plus", &[Ty::I64], RUNTIME_REQUEST_WORK,
         ).expect("source-checked named Program");
         store.work_left = 5;
         let other = store.checked_root(0).expect("checked reachable second Program");
@@ -1020,7 +1020,7 @@ mod tests {
         let source = b"module Worker@1 [ export plus def plus [ 1 + ] ]";
         assert!(matches!(Store::prepare(source, "plus", &[Ty::I64], 3),
             Err(Refusal::Exhausted)), "source checks cannot refresh an empty request meter");
-        let (mut pure, root) = Store::prepare(source, "plus", &[Ty::I64], 1_000_000)
+        let (mut pure, root) = Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
             .expect("pure source");
         pure.work_left = 2;
         let widened = pure.adapt(root, &EffSet::from_ids(&[TEST_EMIT]))
@@ -1036,11 +1036,11 @@ mod tests {
     #[test]
     fn handle_from_retired_or_other_source_session_cannot_alias_a_new_instance() {
         let source = b"module Worker@1 [ export plus def plus [ 1 + ] ]";
-        let (old, stale) = Store::prepare(source, "plus", &[Ty::I64], 1_000_000)
+        let (old, stale) = Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
             .expect("old source instance");
         assert!(old.interface(stale).is_some());
         drop(old);
-        let (mut current, active) = Store::prepare(source, "plus", &[Ty::I64], 1_000_000)
+        let (mut current, active) = Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
             .expect("new source instance with same source identity and index");
         assert_ne!(stale, active);
         assert!(current.interface(stale).is_none());
@@ -1054,7 +1054,7 @@ mod tests {
     fn source_bound_package_rechecks_closure_contracts_and_export_authority() {
         let source = b"module Worker@1 [ def minus [ 1 - ] export plus def plus [ minus 1 + ] ]";
         let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64],
-            1_000_000).expect("checked package source");
+            RUNTIME_REQUEST_WORK).expect("checked package source");
         let source_sha256 = crate::workflow::intrinsic::sha256(source);
         let capture_sha256 = crate::workflow::intrinsic::sha256(b"[]");
         let grant = ExportGrant { destination: "local-test", source_sha256: &source_sha256,
@@ -1067,7 +1067,7 @@ mod tests {
         assert!(matches!(store.export(alternate, "local-test", &grant),
             Err(Refusal::Unsupported)), "a different named root cannot inherit export authority");
         let encoded = store.export(root, "local-test", &grant).expect("explicit export grant");
-        let (imported, restored) = Store::import(&encoded, 1_000_000)
+        let (imported, restored) = Store::import(&encoded, RUNTIME_REQUEST_WORK)
             .expect("fresh locally checked package import");
         assert_eq!(imported.named(restored).unwrap().checked_recipe,
             store.named(root).unwrap().checked_recipe);
@@ -1106,7 +1106,7 @@ mod tests {
             }, Refusal::Unsupported),
         ] {
             let bytes = serde_json::to_vec(&altered).expect(label);
-            assert!(matches!(Store::import(&bytes, 1_000_000),
+            assert!(matches!(Store::import(&bytes, RUNTIME_REQUEST_WORK),
                 Err(refusal) if refusal == expected), "{label}");
         }
     }

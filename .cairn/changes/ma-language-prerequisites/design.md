@@ -100,9 +100,15 @@ path, and host-only decimal parsing would not satisfy the calculator gate.
 - The isolated signed-source donor `911c671` demonstrated 65 repeated
   decimal-fold precursor activations and checked post-report retirement
   under the original cap, while an externally pinned Program caused honest
-  quota exhaustion. The combined successor has not run a guest or the exact
-  numeric current28 gate. Donor observations do not promote CALC cases,
-  selected-vendor acceptance, runtime refinement or an integrated receipt.
+  quota exhaustion. The combined successor's separately captured
+  `2621b07`-bound raw guest receipts now demonstrate 65 same-session folds
+  of 306 cells/14,688 bytes with Core 0..3 retained, a pinned Program
+  denying the 14th fold at the unchanged 4,096-cell cap, and forged/early
+  observation-release refusals. Its independent LIVE first-guest bridge
+  and Worker 257th effect request were also scoped runtime tested.
+  These receipts precede fixture-only Worker unit-test budget corrections;
+  neither donor nor combined observations promote CALC cases, the exact
+  numeric current28 gate, selected-vendor acceptance or runtime refinement.
 - Combining two existing flags is a *new* host-selected contract and needs
   negative cross-profile tests; the active cursor change remains unchanged.
 - Existing source-work and signature table meters must charge actual visited

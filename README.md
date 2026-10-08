@@ -302,6 +302,22 @@ alias's `21`, new transitive `24`, and incompatible-import recovery.
 The finite language guest observations above belong to isolated compiled
 donor `209c478`; this combined Worker/C integration has not replayed them
 and does not inherit a source-bound acceptance receipt.
+Separately, the source-equivalent combined successor at `2621b07` ran the
+existing LIVE REPL 62/62 suite and a direct first-guest zero-code bridge
+retirement, saved old Program `21`, new `22`, and retired old-code reimport
+`21`. The signed framed guest completed 65 same-session decimal folds at
+306 cells/14,688 bytes each under the original caps, then a separate
+externally pinned Program refused the 14th fold at the 4,096-cell limit;
+foreign and premature observation releases refused. The selected Worker
+guest tests passed 22/22, its child tests 4/4, and a direct child committed
+256 effects before denying request 257 without an I64 result; the separate
+fifth ledger request also refused. These scoped raw reports are under
+`/home/brittonr/.cache/noble-live-epoch-combined-guest-tmp-20261008/combined-{live,epoch,worker}-direct-raw.json`
+for binary SHA-256
+`ac2eaeecfddf673f56e636ccb4e032e4ee2cb41050ba4ee942cd4ee02482ca38`.
+They predate fixture-only test-budget corrections and do not establish an
+exact-number current28 gate, complete Worker package suite, selected vendor,
+canonical acceptance, or a full Cairn closeout.
 
 **Declared source retention is a separate opt-in bound**, not a larger input
 limit. Without `--retained-source-bytes`, the combined original module-source

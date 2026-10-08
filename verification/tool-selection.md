@@ -133,8 +133,10 @@ the same Store disposal, guest abort, native join, and pin settlement as a
 dispatch failure. The peer bounds each selected CLI check to a shared
 60-second deadline with 131072-byte stdout and 8192-byte stderr limits,
 killing its owned process group on failure. This does not guarantee reaping
-a kernel-stuck child or group-escaping descendant. None of these source
-changes provides a combined runtime guest receipt.
+a kernel-stuck child or group-escaping descendant. A separate scoped combined
+guest on `2621b07` captured raw LIVE first-guest/source-retirement and local
+Worker 256/257 effect-prefix receipts; it did not exercise the Worker Send
+peer or establish a selected-vendor or canonical acceptance receipt.
 [`selectedVendor`](selected-vendor.mjs) verifies that NAR at each migrated
 gate; the Result build additionally compares all nine lock hashes and the
 615-row/241-package provenance closure before invoking Cargo. Merely
