@@ -58,12 +58,19 @@ impl Grant {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Mode { SendThenCancel, CancelBeforeSend }
+pub enum Mode {
+    SendThenCancel,
+    CancelBeforeSend,
+    InjectReceiveError,
+    InjectReceiveCorruption,
+}
 impl Mode {
     pub fn parse(text:&str) -> Result<Self> {
         match text { "send-then-cancel"=>Ok(Self::SendThenCancel),
             "cancel-before-send"=>Ok(Self::CancelBeforeSend),
-            _=>bail!("mode must be send-then-cancel or cancel-before-send") }
+            "inject-receive-error"=>Ok(Self::InjectReceiveError),
+            "inject-receive-corruption"=>Ok(Self::InjectReceiveCorruption),
+            _=>bail!("unknown host-selected native Send mode") }
     }
 }
 
@@ -226,7 +233,7 @@ impl Host {
         let joined=std::thread::Builder::new().name("noble-worker-wit-send".into())
             .spawn(move || {
                 let _permit=started;
-                let sent=if mode==Mode::SendThenCancel {
+                let sent=if mode!=Mode::CancelBeforeSend {
                     sender.send(&wire).map_err(|error|error.to_string())
                 } else { Ok(0) };
                 let _=started_tx.send(sent.clone());
@@ -316,56 +323,88 @@ impl Host {
     }
 
     pub fn finish_native(&mut self,outcome:std::result::Result<usize,String>)->Result<()> {
+        ensure!(self.pending.as_ref().context("late native completion without task")?
+            .token.is_none(),"native completion preceded cancellation");
         let mut pending=self.pending.take().context("late native completion without task")?;
-        ensure!(pending.token.is_none(),"native completion preceded cancellation");
-        let receiver=self.receiver.take().context("missing native receiver")?;
-        let success=match (&self.mode,&outcome) {
-            (Mode::SendThenCancel,Ok(count))=>{
-                let size=receiver.recv(&mut pending.receive_buffer)?;
-                ensure!(size==8+self.grant.text.len()
-                    && &pending.receive_buffer[..8]==self.grant.attempt.to_le_bytes().as_slice()
-                    && &pending.receive_buffer[8..]==self.grant.text.as_bytes(),
-                    "native receiver did not observe exact authorized Send");
-                self.receiver_reads=1;
-                ensure!(*count==size,"native producer emitted incomplete Send");
-                let mut extra=[0];
-                ensure!(receiver.recv(&mut extra).is_err_and(|error|
-                    error.kind()==std::io::ErrorKind::WouldBlock),"duplicate datagram observed");
-                true
+        let receiver=self.receiver.take();
+        // No host observation is allowed to return before physical buffers
+        // are dropped and both ownership tables have retired the late result.
+        let validation=(|| -> Result<bool> {
+            let receiver=receiver.as_ref().context("missing native receiver after join")?;
+            match (self.mode,&outcome) {
+                (Mode::SendThenCancel | Mode::InjectReceiveError
+                    | Mode::InjectReceiveCorruption,Ok(count))=>{
+                    if self.mode==Mode::InjectReceiveError {
+                        // Consume the real datagram first. The ordinary read
+                        // then deterministically gets WouldBlock, exercising
+                        // the same cleanup path as a failed host recv syscall.
+                        let drained=receiver.recv(&mut pending.receive_buffer)
+                            .context("injected host receive failed before validation")?;
+                        self.receiver_reads+=1;
+                        ensure!(drained==8+self.grant.text.len()
+                            && &pending.receive_buffer[..8]==self.grant.attempt.to_le_bytes().as_slice()
+                            && &pending.receive_buffer[8..]==self.grant.text.as_bytes(),
+                            "injected drain did not receive the actual authorized datagram");
+                    }
+                    let size=receiver.recv(&mut pending.receive_buffer)
+                        .context("native receiver read failed")?;
+                    self.receiver_reads+=1;
+                    if self.mode==Mode::InjectReceiveCorruption {
+                        pending.receive_buffer[0]^=1;
+                    }
+                    ensure!(size==8+self.grant.text.len()
+                        && &pending.receive_buffer[..8]==self.grant.attempt.to_le_bytes().as_slice()
+                        && &pending.receive_buffer[8..]==self.grant.text.as_bytes(),
+                        "native receiver did not observe exact authorized Send");
+                    ensure!(*count==size,"native producer emitted incomplete Send");
+                    let mut extra=[0];
+                    let additional=receiver.recv(&mut extra);
+                    if additional.is_ok(){self.receiver_reads+=1;}
+                    ensure!(additional.is_err_and(|error|
+                        error.kind()==std::io::ErrorKind::WouldBlock),"duplicate datagram observed");
+                    Ok(true)
+                }
+                (Mode::CancelBeforeSend,Ok(0))=>{
+                    let mut extra=[0];
+                    let unexpected=receiver.recv(&mut extra);
+                    if unexpected.is_ok(){self.receiver_reads+=1;}
+                    ensure!(unexpected.is_err_and(|error|
+                        error.kind()==std::io::ErrorKind::WouldBlock),
+                        "cancelled operation sent a datagram");
+                    Ok(true)
+                }
+                (_,Err(error))=>{
+                    let mut extra=[0];
+                    let unexpected=receiver.recv(&mut extra);
+                    if unexpected.is_ok(){self.receiver_reads+=1;}
+                    ensure!(unexpected.is_err_and(|problem|
+                        problem.kind()==std::io::ErrorKind::WouldBlock),
+                        "failed native Send unexpectedly reached receiver");
+                    self.native_error=Some(error.clone());
+                    Ok(false)
+                }
+                _=>bail!("cancelled native operation sent an unauthorized datagram"),
             }
-            (Mode::CancelBeforeSend,Ok(0))=>{
-                let mut extra=[0];
-                ensure!(receiver.recv(&mut extra).is_err_and(|error|
-                    error.kind()==std::io::ErrorKind::WouldBlock),"cancelled operation sent a datagram");
-                true
-            }
-            (_,Err(error))=>{
-                let mut extra=[0];
-                ensure!(receiver.recv(&mut extra).is_err_and(|problem|
-                    problem.kind()==std::io::ErrorKind::WouldBlock),
-                    "failed native Send unexpectedly reached receiver");
-                self.native_error=Some(error.clone());
-                false
-            }
-            _=>bail!("cancelled native operation sent an unauthorized datagram"),
-        };
+        })();
         drop(receiver);
         drop(pending.receive_buffer);
+        let success=matches!(&validation,Ok(true));
         let task_outcome=if success {task::Outcome::Success} else {task::Outcome::DomainError};
         let late=checked(self.tasks.complete(pending.callback,task_outcome,
             task::Completion {inputs:task::Disposition {returned:0,consumed:0,retired:1},
                 produced:0,bytes:0}))?;
-        ensure!(late.action==task::Action::CompletionRetired(task_outcome),
-            "late native result crossed canceled future boundary");
+        let late_retired=late.action==task::Action::CompletionRetired(task_outcome);
         checked(self.tasks.native_stopped(pending.callback))?;
         let completion=if success {owner::Completion::Success} else {owner::Completion::DomainError};
         let released=checked(self.resources.complete(pending.scope,completion))?;
-        ensure!(released.owner.is_none() && released.decision.accounting().pins_released==1
-            && released.decision.accounting().local_releases==1,
-            "late native result resurrected resource owner");
+        let resource_retired=released.owner.is_none()
+            && released.decision.accounting().pins_released==1
+            && released.decision.accounting().local_releases==1;
         self.settle_retired(pending.callback)?;
+        ensure!(late_retired,"late native result crossed canceled future boundary");
+        ensure!(resource_retired,"late native result resurrected resource owner");
         self.late_retired=true;
-        Ok(())
+        validation.map(|_|())
     }
 
     pub fn release_unused(&mut self)->Result<()> {

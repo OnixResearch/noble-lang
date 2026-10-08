@@ -45,11 +45,11 @@ generated.value.value.right.value = '{"grant":"candidate-generated","allow":true
 const generatedEvent = path.join(output, 'candidate-grant-event.json');
 fs.writeFileSync(generatedEvent, JSON.stringify(generated), { flag: 'wx', mode: 0o600 });
 
-function run(name, mode, submit, selectedGrant) {
+function run(name, mode, submit, selectedGrant, expectedStatus = 0) {
   const invoked = spawnSync(peer, [component, cli, selected('package.json'),
     selected('schema.noble'), selected('state.json'), submit, selected('cancel.json'),
     selectedGrant, mode], { encoding: 'utf8', timeout: 120_000 });
-  assert.equal(invoked.status, 0, `${name}: ${invoked.stderr}\n${invoked.stdout}`);
+  assert.equal(invoked.status, expectedStatus, `${name}: ${invoked.stderr}\n${invoked.stdout}`);
   const report = JSON.parse(invoked.stdout);
   fs.writeFileSync(path.join(output, `${name.replaceAll(' ', '-')}.report.json`),
     invoked.stdout, { flag: 'wx', mode: 0o600 });
@@ -74,6 +74,7 @@ assert.equal(allowed.host.task_outstanding_pins, 0);
 assert.equal(allowed.host.resource_native_pins, 0);
 assert.equal(allowed.host.successful_result_deliveries, 0);
 assert.equal(allowed.native_pins_at_guest_exit, 1);
+assert.equal(Object.hasOwn(allowed, 'native_completion_diagnostic'), false);
 const cancelled = run('cancel before native send', 'cancel-before-send', selected('submit.json'), approvedGrant);
 assert.equal(cancelled.outcome, 'cancelled-retired');
 assert.equal(cancelled.host.receiver_datagrams, 0);
@@ -85,6 +86,31 @@ assert.equal(cancelled.host.task_retired, 1);
 assert.equal(cancelled.host.resource_retired, 1);
 assert.equal(cancelled.host.late_completion_retired, true);
 assert.equal(cancelled.host.successful_result_deliveries, 0);
+for (const [name, mode] of [
+  ['injected receiver error', 'inject-receive-error'],
+  ['injected receiver corruption', 'inject-receive-corruption'],
+]) {
+  // Both modes perform the actual selected native Send. The test host alone
+  // consumes or corrupts its receipt after join, not the guest or the wire.
+  const fault = run(name, mode, selected('submit.json'), approvedGrant, 2);
+  assert.equal(fault.outcome, 'native-validation-failure-retired', name);
+  assert.equal(fault.future_consumed, true, name);
+  assert.equal(fault.native_pins_at_guest_exit, 1, name);
+  assert.equal(fault.host.receiver_datagrams, 1, name);
+  assert.equal(fault.host.native_send_bytes, 12, name);
+  assert.equal(fault.host.protected_operation_attempts, 1, name);
+  assert.equal(fault.host.pins_at_cancel, 1, name);
+  assert.equal(fault.host.late_completion_retired, true, name);
+  assert.equal(fault.host.task_retired, 1, name);
+  assert.equal(fault.host.resource_retired, 1, name);
+  assert.equal(fault.host.task_outstanding_pins, 0, name);
+  assert.equal(fault.host.resource_native_pins, 0, name);
+  assert.equal(fault.host.task_reserved_bytes, 0, name);
+  assert.equal(fault.host.successful_result_deliveries, 0, name);
+  assert.equal(fault.host.native_error, null, name);
+  assert.ok(typeof fault.native_completion_diagnostic === 'string'
+    && fault.native_completion_diagnostic.length > 0, name);
+}
 for (const [name, submit, selection] of [
   ['no-grant', selected('submit.json'), deniedGrant],
   ['mismatched-attempt-grant', selected('submit.json'), wrongAttemptGrant],
@@ -116,5 +142,6 @@ console.log(JSON.stringify({ schema: 'noble-worker-send-wit-smoke/v1',
   world: 'noble-test:worker-send/worker-shell@1.0.0',
   scope: 'local-socket-only-not-canonical-WORKER-01',
   cases: ['authorized socket send', 'cancel before native send',
+    'injected receiver error', 'injected receiver corruption',
     'no-grant', 'mismatched-attempt-grant', 'expired-grant', 'candidate-generated-grant',
     'mismatched-source-grant'] }));
