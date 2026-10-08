@@ -2,7 +2,7 @@
 
 ## Context
 
-`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. The new native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
+`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter now handles only checked, effect-free Core-Bootstrap I64/Bool expressions; it does not compile or execute native ELF. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
 
 ## Decisions
 
@@ -47,20 +47,20 @@ candidate ELF, including inert sections. Launch the same admitted sealed
 bytes without reopening the mutable path. Neither manifest hashes nor
 successful compiler exit grant correspondence. r[CB-ADMIT-01]
 
-**Choice:** A reviewed native launcher must use an explicit FD table,
-read-only exact executable/loader closure, no ambient secrets, private
-namespace and cgroup limits, and a pinned syscall filter. Candidate
-bubblewrap flags include `--unshare-all --die-with-parent --new-session
---clearenv --cap-drop ALL`, read-only descriptor-bound mounts and a
-reviewed first-stage `--seccomp FD`; do not use `--share-net`,
-`--unshare-user-try` or `--not-a-security-boundary`. Initial executable
-load and later no-exec filtering need independently reviewed ordering
-before candidate instructions. Seccomp cannot intercept vDSO clock reads
-or x86 `rdtsc`; a static ELF alone does not remove either path. Until the
-owner selects and reviews a VM/virtualized-clock boundary, or an equally
-demonstrated native clock/loader barrier, native execution MUST refuse.
-Do not run a hostile test ELF outside a separately authorized sealed
-test-only lane. r[CB-SANDBOX-01]
+**Choice:** A future owner-reviewed native launcher must use an explicit
+FD table, read-only exact executable/loader closure, no ambient secrets,
+reviewed namespace and cgroup limits, and a pinned syscall filter. No
+bubblewrap command line or user-namespace behavior is selected:
+`--unshare-all` includes user-namespace behavior and must not be paired
+with a contradictory user-namespace exclusion; flag names alone establish
+no confinement.
+Initial executable load and later no-exec filtering need independently
+reviewed ordering before candidate instructions. Seccomp cannot intercept
+vDSO clock reads or x86 `rdtsc`; a static ELF alone does not remove either
+path. Until the owner selects and reviews a VM/virtualized-clock boundary,
+or an equally demonstrated native clock/loader barrier, native execution
+MUST refuse. Do not run a hostile test ELF outside a separately authorized
+sealed test-only lane. r[CB-SANDBOX-01]
 
 | Negative control (not executed) | Insufficient shortcut | Required gate |
 |---|---|---|

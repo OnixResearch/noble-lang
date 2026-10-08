@@ -1,6 +1,6 @@
 # Opt-in C backend candidate
 
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: CB-SCOPE-01
 r[CB-SCOPE-01]
