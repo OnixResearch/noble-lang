@@ -208,14 +208,18 @@ impl Live {
                 return Ok(ReloadDecision::SourceChanged(report));
             }
         }
-        let (checked, proof_recheck) = if prepared.proof_obligations().is_some() {
-            let (checked, proof) = self.session.commit_declared_proofs(
-                prepared, source, super::super::SOURCE_LIMITS)?;
+        let preview = self.session.declared.as_ref()
+            .ok_or_else(|| fatal_failure("declared live frontend vanished before checked preview"))?
+            .snapshot();
+        let (next, checked, proof_recheck) = if prepared.proof_obligations().is_some() {
+            let (next, checked, proof) = super::super::Session::prepared_declared_proofs(
+                preview, prepared, source, super::super::SOURCE_LIMITS);
             let report = serde_json::from_str::<serde_json::Value>(&proof.encode())
                 .map_err(|_| fatal_failure("checked module proof report is not JSON"))?;
-            (checked, Some(report))
+            (next, checked, Some(report))
         } else {
-            (self.session.commit_declared(prepared)?, None)
+            let (next, checked) = preview.commit(prepared);
+            (next, checked, None)
         };
         if let Err(error) = checked {
             let discarded = self.worker()?.discard_live_declared()?;
@@ -224,12 +228,34 @@ impl Live {
             }
             return Ok(ReloadDecision::SelectedSourceRefused(error));
         }
-        // A publication failure after frontend commitment is terminal; it is
-        // never misreported as a recoverable ACK for the old policy.
+        // Proof rechecking may take longer than a complete editor save. The
+        // old namespace remains active until this final selected-byte/watch
+        // CAS and worker publication both succeed.
+        if let Some((path, candidate)) = file {
+            if !self.candidate_is_current(path, candidate, watch_sequence)? {
+                let discarded = self.worker()?.discard_live_declared()?;
+                if discarded.outcome != "declared-state-discarded" {
+                    return Err(fatal_failure("worker failed to discard superseded checked namespace"));
+                }
+                return Ok(ReloadDecision::Refused(
+                    "selected module source changed during checked namespace replay".into()));
+            }
+        } else if self.verify_source_before_execute {
+            if let Some(report) = self.source_change_refusal() {
+                let discarded = self.worker()?.discard_live_declared()?;
+                if discarded.outcome != "declared-state-discarded" {
+                    return Err(fatal_failure("worker failed to discard stale checked namespace"));
+                }
+                return Ok(ReloadDecision::SourceChanged(report));
+            }
+        }
+        // A worker publication failure is terminal, never an ACK or a
+        // recoverable changed-namespace claim.
         let published = self.worker()?.publish_live_declared()?;
         if published.outcome != "declared-state-published" {
             return Err(fatal_failure("worker failed to publish checked declared policy"));
         }
+        self.session.declared = Some(next);
         let state = self.declared.as_mut()
             .ok_or_else(|| fatal_failure("declared state vanished after publication"))?;
         state.roots = roots;
