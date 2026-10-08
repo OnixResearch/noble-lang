@@ -699,17 +699,17 @@ fn launch(
     child_control: Option<std::os::unix::net::UnixDatagram>,
     scratch: Option<&std::path::Path>,
 ) -> Result<std::process::Child, super::output::Failure> {
-    // Linux caps each individual exec argument below its total ARG_MAX. Keep
-    // the selected, embedded slot worker off the -e argument as it grows;
-    // bounded chunks remain private to the freshly spawned, env-cleared Node
-    // process and the loader removes them before starting the worker module.
-    const SLOT_SOURCE_LOADER: &str = r#"const count=Number(process.env.NOBLE_SLOT_SOURCE_PARTS);
+    // Linux caps each individual exec argument below its total ARG_MAX.
+    // Every embedded worker uses private, bounded source chunks instead of
+    // passing its entire growing module as one -e argument. The env-cleared
+    // Node loader removes the chunks before starting the worker module.
+    const WORKER_SOURCE_LOADER: &str = r#"const count=Number(process.env.NOBLE_WORKER_SOURCE_PARTS);
 const parts=Array.from({length:count},(_,i)=>{
-  const key=`NOBLE_SLOT_SOURCE_${i}`, part=process.env[key];
+  const key=`NOBLE_WORKER_SOURCE_${i}`, part=process.env[key];
   delete process.env[key];
   return part;
 });
-delete process.env.NOBLE_SLOT_SOURCE_PARTS;
+delete process.env.NOBLE_WORKER_SOURCE_PARTS;
 await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString('base64'));"#;
     let mut command = std::process::Command::new(NODE);
     let slot = child_control.is_some();
@@ -722,7 +722,7 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
             "--max-old-space-size=256",
             "--input-type=module",
             "-e",
-            if slot { SLOT_SOURCE_LOADER } else { host },
+            WORKER_SOURCE_LOADER,
             "--",
             "--protocol",
             config,
@@ -734,20 +734,18 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
         // fresh 0700 directory, including after a forced kill before JS close.
         command.env("TMPDIR", directory);
     }
-    if slot {
-        let mut start = 0;
-        let mut count = 0;
-        while start < host.len() {
-            let mut end = (start + 60_000).min(host.len());
-            while !host.is_char_boundary(end) {
-                end -= 1;
-            }
-            command.env(std::format!("NOBLE_SLOT_SOURCE_{count}"), &host[start..end]);
-            start = end;
-            count += 1;
+    let mut start = 0;
+    let mut count = 0;
+    while start < host.len() {
+        let mut end = (start + 60_000).min(host.len());
+        while !host.is_char_boundary(end) {
+            end -= 1;
         }
-        command.env("NOBLE_SLOT_SOURCE_PARTS", count.to_string());
+        command.env(std::format!("NOBLE_WORKER_SOURCE_{count}"), &host[start..end]);
+        start = end;
+        count += 1;
     }
+    command.env("NOBLE_WORKER_SOURCE_PARTS", count.to_string());
     #[cfg(feature = "live-test-barrier")]
     if !slot {
         // Only a deliberately feature-built test binary can propagate this

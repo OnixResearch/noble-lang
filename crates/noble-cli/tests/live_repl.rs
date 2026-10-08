@@ -994,8 +994,35 @@ fn declared_old_code_retires_after_last_nested_program_then_reimports_exact_old_
     fs::write(&bindings, "")?;
     let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
     let original = live.report()?;
-    live_ack(&original, &[]);
-    let generation = number_field(&original, "generation");
+    let startup_stage = match original.get("stage").and_then(Value::as_str) {
+        Some("wasm-live") => "wasm-live",
+        Some("admission") => "admission",
+        _ => "unknown",
+    };
+    let startup_outcome = match original.get("outcome").and_then(Value::as_str) {
+        Some("reload-committed") => "reload-committed",
+        Some("internal-failure") => "internal-failure",
+        Some("reload-refused") => "reload-refused",
+        _ => "unknown",
+    };
+    let startup_phase = match original.get("startup_phase_code").and_then(Value::as_str) {
+        Some("worker-start") => "worker-start",
+        Some("declared-stage") => "declared-stage",
+        Some("declared-publish") => "declared-publish",
+        _ => "unknown",
+    };
+    assert!(original.get("schema").and_then(Value::as_str) == Some("noble-live-report/v1")
+        && startup_stage == "wasm-live" && startup_outcome == "reload-committed",
+        "synthetic m@1 startup stage={startup_stage}, outcome={startup_outcome}, phase={startup_phase}");
+    let generation = original.get("generation").and_then(Value::as_u64).unwrap_or(0);
+    let digest = original.get("source_sha256").and_then(Value::as_str);
+    assert!(original.get("guest_requests").and_then(Value::as_u64) == Some(0)
+        && original.get("protected_operations").and_then(Value::as_u64) == Some(0)
+        && original.get("stack").and_then(Value::as_array).is_some_and(|stack| stack.is_empty())
+        && generation > 0
+        && digest.is_some_and(|value| value.len() == 64
+            && value.bytes().all(|byte| byte.is_ascii_hexdigit())),
+        "synthetic m@1 startup stage={startup_stage}, outcome={startup_outcome}, phase={startup_phase}");
     let empty_release = live.submit(":release-observed-roots")?;
     assert_eq!(text_field(&empty_release, "outcome"), "observed-roots-released", "{empty_release}");
     assert_eq!(number_field(&empty_release, "generation"), generation);

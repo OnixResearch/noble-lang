@@ -7,6 +7,19 @@ use super::{encoding, fatal_failure, report_diagnostic, same_snapshot, Live, Rel
 const MAX_ROOTS: usize = 64;
 const MAX_SAFE_GENERATION: u64 = 9_007_199_254_740_991;
 
+fn worker_phase_failure(
+    phase: &'static str,
+    failure: super::super::output::Failure,
+) -> super::super::output::Failure {
+    super::super::output::Failure::new(
+        super::super::output::ErrorContext {
+            stage: phase,
+            outcome: failure.context.outcome,
+        },
+        failure.message,
+    )
+}
+
 #[derive(Clone)]
 struct Root {
     identity: u64,
@@ -212,7 +225,10 @@ impl Live {
                 "selected module source changed before declaration staging".into()));
         }
         let proposal = state_payload(self.generation, &roots, &aliases);
-        let staged = self.worker()?.stage_live_declared(&proposal)?;
+        let staged = self.worker()
+            .map_err(|failure| worker_phase_failure("declared-worker-start", failure))?
+            .stage_live_declared(&proposal)
+            .map_err(|failure| worker_phase_failure("declared-worker-stage", failure))?;
         if staged.outcome != "declared-state-staged" {
             return Ok(ReloadDecision::Refused(report_diagnostic(&staged)));
         }
@@ -277,9 +293,13 @@ impl Live {
         }
         // A worker publication failure is terminal, never an ACK or a
         // recoverable changed-namespace claim.
-        let published = self.worker()?.publish_live_declared()?;
+        let published = self.worker()
+            .map_err(|failure| worker_phase_failure("declared-worker-start", failure))?
+            .publish_live_declared()
+            .map_err(|failure| worker_phase_failure("declared-worker-publish", failure))?;
         if published.outcome != "declared-state-published" {
-            return Err(fatal_failure("worker failed to publish checked declared policy"));
+            return Err(worker_phase_failure("declared-worker-publish",
+                fatal_failure("worker failed to publish checked declared policy")));
         }
         self.session.declared = Some(next);
         let state = self.declared.as_mut()
