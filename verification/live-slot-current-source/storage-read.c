@@ -23,3 +23,32 @@ int noble_lslot_storage_is_live(const uint8_t *memory, size_t length,
     uint32_t kind = load32(memory, at) & 255u;
     return id == handle && (uint32_t)(kind - 1u) <= 16u;
 }
+
+/* 0 means a returned child (including null); -1 denotes the Wasm trap.
+ * The installed helper accepts but does not dereference its parent argument. */
+int noble_lslot_linear_child(const uint8_t *memory, size_t length,
+                             uint32_t heap_cursor, uint32_t child,
+                             uint32_t parent, uint32_t *result) {
+    (void)parent;
+    if (!result || (child && noble_lslot_storage_is_live(
+            memory, length, heap_cursor, child) != 1)) return -1;
+    *result = child;
+    return 0;
+}
+
+/* Exact i32 loads for a/b/c and x/y/z; only a/b/c validate the loaded
+ * non-null child handle through linear_child. This has not been compiled or
+ * compared against an executing installed Wasm binary. */
+int noble_lslot_read_field32(const uint8_t *memory, size_t length,
+                             uint32_t heap_cursor, uint32_t handle,
+                             uint32_t offset, uint32_t *result) {
+    if (!result || (offset != 16u && offset != 20u && offset != 24u
+                    && offset != 28u && offset != 32u && offset != 36u)
+        || noble_lslot_storage_is_live(memory, length, heap_cursor, handle) != 1) return -1;
+    size_t at = 65536u + (size_t)(handle & 4095u) * 48u;
+    uint32_t value = load32(memory, at + offset);
+    if (offset <= 24u && noble_lslot_linear_child(
+            memory, length, heap_cursor, value, handle, &value) != 0) return -1;
+    *result = value;
+    return 0;
+}

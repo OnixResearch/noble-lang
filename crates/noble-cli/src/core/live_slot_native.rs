@@ -280,7 +280,7 @@ pub(super) fn probe_storage(
     storage::probe(&core, memory, cursor, handles)?;
     storage::probe(&static_donor, memory, cursor, handles)?;
     Ok(json!({"schema":"noble-live-slot-installed-storage-one-state/v1",
-        "scope":"exact selected storage reads and stale-epoch negatives only; writes/refcounts/future calls unproved",
+        "scope":"exact selected storage/child/metadata reads and stale-epoch negatives only; writes/refcounts/future calls unproved",
         "native_module_sha256":core_sha,"static_module_sha256":static_sha,
         "selected_handles":handles,"heap_cursor":cursor}))
 }

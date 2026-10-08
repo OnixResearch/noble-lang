@@ -7,6 +7,7 @@ use wasmparser::{Operator, ValType};
 
 struct Function<'a> {
     ops: Vec<Operator<'a>>,
+    params: usize,
     locals: usize,
 }
 
@@ -27,9 +28,11 @@ fn pop(stack: &[u64; 16], top: &mut usize) -> Result<u64, String> {
 impl<'a, 'm> Machine<'a, 'm> {
     fn new(module: &'m Module<'a>, memory: &'m [u8], cursor: u32) -> Result<Self, String> {
         let mut functions = BTreeMap::new();
-        for name in ["linear_address", "storage_is_live", "linear_live_address", "kind", "payload"] {
+        for name in ["linear_address", "storage_is_live", "linear_live_address",
+            "linear_child", "kind", "payload", "a", "b", "c", "x", "y", "z"] {
             let index = module.index(name)?;
-            module.signature(index, &[ValType::I32], &[if name == "payload" {
+            let params = if name == "linear_child" { 2 } else { 1 };
+            module.signature(index, &[ValType::I32; 2][..params], &[if name == "payload" {
                 ValType::I64
             } else { ValType::I32 }])?;
             let body = module.body(index)?;
@@ -44,7 +47,7 @@ impl<'a, 'm> Machine<'a, 'm> {
             let ops = body.get_operators_reader().map_err(|_| refused())?
                 .collect::<Result<Vec<_>, _>>().map_err(|_| refused())?;
             if ops.is_empty() || ops.len() > 96 { return Err(refused()); }
-            functions.insert(index, Function { ops, locals });
+            functions.insert(index, Function { ops, params, locals });
         }
         Ok(Self { module, memory, cursor, functions })
     }
@@ -66,21 +69,23 @@ impl<'a, 'm> Machine<'a, 'm> {
         Err(refused())
     }
 
-    fn run(&self, index: u32, handle: u32, depth: u8) -> Result<u64, String> {
+    fn run(&self, index: u32, args: [u32; 2], depth: u8) -> Result<u64, String> {
         if depth > 5 { return Err(refused()); }
         let function = self.functions.get(&index).ok_or_else(refused)?;
-        let mut locals = [u64::from(handle), 0];
+        let mut locals = [u64::from(args[0]), u64::from(args[1])];
         let mut stack = [0u64; 16];
         let mut top = 0usize;
         let mut at = 0usize;
         while let Some(op) = function.ops.get(at) {
             let value = match op {
                 Operator::LocalGet { local_index } => Some(*locals.get(*local_index as usize)
-                    .filter(|_| *local_index as usize <= function.locals).ok_or_else(refused)?),
+                    .filter(|_| *local_index as usize < function.params + function.locals)
+                    .ok_or_else(refused)?),
                 Operator::LocalSet { local_index } => {
                     let value = pop(&stack, &mut top)?;
                     *locals.get_mut(*local_index as usize)
-                        .filter(|_| *local_index as usize <= function.locals).ok_or_else(refused)? = value;
+                        .filter(|_| *local_index as usize < function.params + function.locals)
+                        .ok_or_else(refused)? = value;
                     None
                 }
                 Operator::GlobalGet { global_index }
@@ -89,8 +94,12 @@ impl<'a, 'm> Machine<'a, 'm> {
                 }
                 Operator::I32Const { value } => Some(u64::from(*value as u32)),
                 Operator::Call { function_index } => {
-                    let arg = pop(&stack, &mut top)? as u32;
-                    Some(self.run(*function_index, arg, depth + 1)?)
+                    let callee = self.functions.get(function_index).ok_or_else(refused)?;
+                    let mut args = [0; 2];
+                    for arg in args[..callee.params].iter_mut().rev() {
+                        *arg = pop(&stack, &mut top)? as u32;
+                    }
+                    Some(self.run(*function_index, args, depth + 1)?)
                 }
                 Operator::I32Load { memarg } if memarg.memory == 0 && memarg.align == 2 => {
                     let base = pop(&stack, &mut top)? as u32 as usize;
@@ -131,6 +140,7 @@ impl<'a, 'm> Machine<'a, 'm> {
                 }
                 Operator::I32Eqz =>
                     Some(u64::from(u32::from(pop(&stack, &mut top)? as u32 == 0))),
+                Operator::Drop => { pop(&stack, &mut top)?; None }
                 Operator::If { blockty: wasmparser::BlockType::Empty } => {
                     if pop(&stack, &mut top)? as u32 == 0 {
                         at = Self::skip(&function.ops, at, true)?;
@@ -162,7 +172,11 @@ impl<'a, 'm> Machine<'a, 'm> {
     }
 
     fn named(&self, name: &str, handle: u32) -> Result<u64, String> {
-        self.run(self.module.index(name)?, handle, 0)
+        self.run(self.module.index(name)?, [handle, 0], 0)
+    }
+
+    fn child(&self, child: u32, parent: u32) -> Result<u64, String> {
+        self.run(self.module.index("linear_child")?, [child, parent], 0)
     }
 }
 
@@ -183,6 +197,20 @@ pub(super) fn probe(module: &Module<'_>, memory: &[u8], cursor: u32,
             || machine.named("payload", *handle)? != u64::from_le_bytes(payload) {
             return Err(denied("installed storage helper differs from selected live cell observation"));
         }
+        if machine.child(0, *handle)? != 0 {
+            return Err(denied("installed child helper changes a null edge"));
+        }
+        for (name, offset) in [("a", 16), ("b", 20), ("c", 24),
+            ("x", 28), ("y", 32), ("z", 36)] {
+            let field = u32::from_le_bytes(read_field(memory, address + offset)?);
+            if ["a", "b", "c"].contains(&name)
+                && field != 0 && !handles.contains(&field) {
+                return Err(denied("selected helper child is outside complete observed graph"));
+            }
+            if machine.named(name, *handle)? != u64::from(field) {
+                return Err(denied("installed field helper differs from selected cell observation"));
+            }
+        }
         // A nonwrapping future epoch using this same physical slot must not
         // alias the currently retained cell. This is a one-state negative,
         // not an allocator/retirement theorem.
@@ -190,7 +218,15 @@ pub(super) fn probe(module: &Module<'_>, memory: &[u8], cursor: u32,
             if machine.named("storage_is_live", stale)? != 0 {
                 return Err(denied("installed storage helper accepts a stale epoch handle"));
             }
+            if machine.child(stale, *handle).is_ok() {
+                return Err(denied("installed child helper accepts a stale epoch edge"));
+            }
         }
     }
     Ok(())
+}
+
+fn read_field(memory: &[u8], at: usize) -> Result<[u8; 4], String> {
+    memory.get(at..at + 4).ok_or_else(refused)?
+        .try_into().map_err(|_| refused())
 }

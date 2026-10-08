@@ -1399,8 +1399,14 @@ mod tests {
         imported[cell..cell + 4].copy_from_slice(&4u32.to_le_bytes());
         imported[cell + 4..cell + 8].copy_from_slice(&4097u32.to_le_bytes());
         imported[cell + 8..cell + 16].copy_from_slice(&(-7i64).to_le_bytes());
+        imported[cell + 16..cell + 20].copy_from_slice(&4098u32.to_le_bytes());
+        imported[cell + 28..cell + 32].copy_from_slice(&1u32.to_le_bytes());
+        let child = cell + 48;
+        imported[child..child + 4].copy_from_slice(&1u32.to_le_bytes());
+        imported[child + 4..child + 8].copy_from_slice(&4098u32.to_le_bytes());
+        imported[child + 8..child + 16].copy_from_slice(&(-9i64).to_le_bytes());
         super::super::native::probe_storage(
-            &binary, &binary_sha, &binary, &binary_sha, &imported, 2, &[4097])?;
+            &binary, &binary_sha, &binary, &binary_sha, &imported, 3, &[4097, 4098])?;
         let old_address_mask = "(i32.and (local.get $h) (i32.const 4095))";
         let rewritten_address = wat.replacen(old_address_mask,
             "(i32.and (local.get $h) (i32.const 4094))", 1);
@@ -1410,8 +1416,43 @@ mod tests {
         let altered = super::super::assemble_slot(rewritten_address.as_bytes())?;
         let altered_sha = crate::workflow::intrinsic::sha256(&altered);
         if super::super::native::probe_storage(
-            &altered, &altered_sha, &altered, &altered_sha, &imported, 2, &[4097]).is_ok() {
+            &altered, &altered_sha, &altered, &altered_sha, &imported, 3, &[4097, 4098]).is_ok() {
             return Err("rewritten installed linear-address helper passed physical odd-slot probe".into());
+        }
+        let old_a = "(func $a (param $h i32) (result i32)\n (call $linear_child (i32.load offset=16 (call $linear_live_address (local.get $h))) (local.get $h)))";
+        let rewritten_a = wat.replacen(old_a,
+            "(func $a (param $h i32) (result i32)\n (call $linear_child (i32.load offset=20 (call $linear_live_address (local.get $h))) (local.get $h)))", 1);
+        if rewritten_a == wat { return Err("installed first child accessor mutation did not match source".into()); }
+        let altered_a = super::super::assemble_slot(rewritten_a.as_bytes())?;
+        let altered_a_sha = crate::workflow::intrinsic::sha256(&altered_a);
+        if super::super::native::probe_storage(
+            &altered_a, &altered_a_sha, &altered_a, &altered_a_sha,
+            &imported, 3, &[4097, 4098]).is_ok() {
+            return Err("installed first child helper accepted the wrong physical edge".into());
+        }
+        let old_x = "(func $x (param $h i32) (result i32)\n (i32.load offset=28 (call $linear_live_address (local.get $h))))";
+        let rewritten_x = wat.replacen(old_x,
+            "(func $x (param $h i32) (result i32)\n (i32.load offset=32 (call $linear_live_address (local.get $h))))", 1);
+        if rewritten_x == wat { return Err("installed code metadata accessor mutation did not match source".into()); }
+        let altered_x = super::super::assemble_slot(rewritten_x.as_bytes())?;
+        let altered_x_sha = crate::workflow::intrinsic::sha256(&altered_x);
+        if super::super::native::probe_storage(
+            &altered_x, &altered_x_sha, &altered_x, &altered_x_sha,
+            &imported, 3, &[4097, 4098]).is_ok() {
+            return Err("installed code metadata helper accepted the wrong physical word".into());
+        }
+        let old_child = "(if (local.get $child) (then (drop (call $linear_live_address (local.get $child)))))";
+        let rewritten_child = wat.replacen(old_child,
+            "(if (local.get $child) (then (drop (call $linear_address (local.get $child)))))", 1);
+        if rewritten_child == wat {
+            return Err("installed child edge validator mutation did not match source".into());
+        }
+        let altered_child = super::super::assemble_slot(rewritten_child.as_bytes())?;
+        let altered_child_sha = crate::workflow::intrinsic::sha256(&altered_child);
+        if super::super::native::probe_storage(
+            &altered_child, &altered_child_sha, &altered_child, &altered_child_sha,
+            &imported, 3, &[4097, 4098]).is_ok() {
+            return Err("installed child helper accepted a stale epoch edge after mutation".into());
         }
         for (old, replacement, label) in [
             ("(i64.add (local.get $left) (local.get $right))",
