@@ -277,10 +277,22 @@ export class CoreEngine {
     if (result.error || result.status !== 0) fail(`${label} failed: ${result.error ?? result.stderr}`);
   }
 
-  prepare(wat, source = Buffer.alloc(0), submission = this.compilations + 1) {
+  prepare(wat, source = Buffer.alloc(0), submission = this.compilations + 1,
+    workerLiteralEnd = null, workerCatalog = null) {
     if (this.inProcessLive) fail('live mode requires binary preparation');
     if (this.pending || this.poisoned) fail('session is pending or poisoned');
     if (wat.length > MAX_FRAME || source.length > 65536) fail('preparation byte limit exceeded');
+    if ((workerLiteralEnd === null) !== (workerCatalog === null)) fail('incomplete worker profile');
+    if (workerLiteralEnd !== null && (this.profile !== 'Declared-Modules-v1'
+      || !Number.isSafeInteger(workerLiteralEnd) || workerLiteralEnd < 262144
+      || workerLiteralEnd > 983040)) fail('invalid worker literal arena');
+    if (workerCatalog !== null && (!workerCatalog || !Array.isArray(workerCatalog.catalog)
+      || workerCatalog.catalog.length !== 4 || !Array.isArray(workerCatalog.inputs)
+      || workerCatalog.inputs.length !== 2
+      || typeof workerCatalog.schema_source_sha256 !== 'string'
+      || !/^[a-f0-9]{64}$/.test(workerCatalog.schema_source_sha256))) {
+      fail('invalid checked worker catalog');
+    }
     const stem = `module-${submission}`;
     this.save(`${stem}.wat`, wat);
     this.save(`${stem}.noble`, source);
@@ -300,7 +312,9 @@ export class CoreEngine {
     const module = new WebAssembly.Module(bytes);
     this.compilations += 1;
     return this.install(module, { submission, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
-      wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations, stem },
+      wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations, stem,
+      ...(workerLiteralEnd !== null ? { worker_literal_end: workerLiteralEnd,
+        worker_catalog: workerCatalog } : {}) },
     installationCapability);
   }
 
@@ -888,7 +902,7 @@ export class CoreEngine {
       candidate_prepare_requests: 0 };
   }
 
-  execute({ inputs = [], limits = {} } = {}) {
+  execute({ inputs = [], typedValues = null, limits = {} } = {}) {
     if (!this.pending || this.poisoned) fail('no prepared module or poisoned session');
     const { instance, record, traceStart } = this.pending;
     const boundStart = this.boundRequests.length;
@@ -911,10 +925,36 @@ export class CoreEngine {
     if (Object.keys(limits).some(key => !keys.includes(key))) fail('unknown runtime limit');
     let status = runtime.begin(...keys.map(key => integer(limits[key] ?? defaults[key], defaults[key], key)));
     let nativeTrap = null;
+    let inputExhausted = null;
     try {
-      for (const input of inputs) {
-        if (status) break;
-        status = this.inject(runtime, input);
+      if (typedValues !== null) {
+        const manifest = record.worker_catalog;
+        if (this.profile !== 'Declared-Modules-v1' || inputs.length !== 0
+          || !Array.isArray(typedValues) || typedValues.length !== 2
+          || !Number.isSafeInteger(record.worker_literal_end)
+          || record.worker_literal_end > 983040 || record.worker_literal_end < 262144
+          || !manifest || !Array.isArray(manifest.inputs) || manifest.inputs.length !== 2) {
+          fail('worker input requires admitted declared module and disjoint literal memory');
+        }
+        this.workerScratch(typedValues);
+        const context = { cursor: 983040, nodes: 0 };
+        for (let index = 0; index < 2; index += 1) {
+          if (status) break;
+          const expected = manifest.inputs[index];
+          const row = manifest.catalog.find(entry => entry.schema.module_id === expected.module_id
+            && entry.schema.ordinal === expected.ordinal
+            && entry.schema.version === expected.version
+            && entry.schema.shape_sha256 === expected.shape_sha256);
+          if (!row) fail('worker input schema absent from checked catalog');
+          const handle = this.workerValue(runtime, typedValues[index], context, 0,
+            ['Nominal', expected.module_id, expected.ordinal, row.shape], manifest.catalog);
+          status = runtime.host_push(handle);
+        }
+      } else {
+        for (const input of inputs) {
+          if (status) break;
+          status = this.inject(runtime, input);
+        }
       }
       if (status === 0) {
         this.liveProposalDenied = false;
@@ -925,14 +965,32 @@ export class CoreEngine {
       }
     } catch (error) {
       nativeTrap = `${error.name}: ${error.message}`;
-      status = 6;
+      if (typedValues !== null && (error.message === 'worker text budget exhausted'
+        || error.message === 'worker value budget exhausted'
+        || error.message === 'worker list budget exhausted')) {
+        inputExhausted = error.message === 'worker text budget exhausted'
+          ? 'typed-input-scratch' : 'typed-input-nodes';
+      }
+      status = inputExhausted === null ? 6 : 2;
     }
     if (status !== 0) this.liveProposal = null;
     this.poisoned = status !== 0;
     const metrics = Object.fromEntries(Object.entries(this.abi.metrics).map(([id, name]) => [name, Number(runtime.metric(Number(id)))]));
-    const outcome = status === 0 ? 'normal' : status === 1 || status === 2 ? 'runtime-exhausted' : 'trap';
+    this.workerObservation = record.worker_catalog !== undefined;
     let stack = [];
-    if (status === 0) stack = readStack(this, runtime);
+    let observationExhausted = null;
+    if (status === 0) {
+      try { stack = readStack(this, runtime); }
+      catch (error) {
+        if (!this.workerObservation || !['typed observation byte limit exhausted',
+          'typed observation work limit exhausted'].includes(error.message)) throw error;
+        status = 2;
+        this.poisoned = true;
+        observationExhausted = error.message === 'typed observation work limit exhausted'
+          ? 'typed-observation-work' : 'typed-observation-bytes';
+      }
+    }
+    const outcome = status === 0 ? 'normal' : status === 1 || status === 2 ? 'runtime-exhausted' : 'trap';
     const isDeclared = this.declaredModules;
     const boundRequests = isDeclared ? this.boundRequests.slice(boundStart) : null;
     const adapterInvocations = isDeclared
@@ -947,7 +1005,8 @@ export class CoreEngine {
       ...(this.inProcessLive ? { generation: this.shared.generation.value,
         source_generation: this.liveSourceGeneration.toString(),
         proposal_queued: status === 0 && this.liveProposal !== null } : {}),
-      quota_reason: this.abi.quota_reason[String(metrics.quota_reason)] ?? null, stack,
+      quota_reason: inputExhausted ?? observationExhausted
+        ?? this.abi.quota_reason[String(metrics.quota_reason)] ?? null, stack,
       request_trace: isDeclared
         ? boundRequests : this.trace.slice(traceStart),
       guest_requests: isDeclared ? this.hostRequestsTotal - hostStart : this.trace.length - traceStart,
@@ -990,6 +1049,98 @@ export class CoreEngine {
       metrics, module: record };
     if (record.stem) this.save(`${record.stem}-execution.json`, report);
     return report;
+  }
+
+  workerScratch(values) {
+    const pending = [values[1], values[0]];
+    let cursor = 983040, nodes = 0;
+    while (pending.length) {
+      const value = pending.pop();
+      if (!value || typeof value !== 'object' || ++nodes > 4096)
+        fail('worker value budget exhausted');
+      if (value.tag === 'text') {
+        if (typeof value.value !== 'string') fail('invalid worker Text');
+        const count = Buffer.byteLength(value.value, 'utf8');
+        if (count > 65536 || count > this.memory.buffer.byteLength - cursor)
+          fail('worker text budget exhausted');
+        cursor += count;
+      } else if (value.tag === 'pair') {
+        pending.push(value.right, value.left);
+      } else if (value.tag === 'sum' || value.tag === 'opaque' || value.tag === 'variant') {
+        pending.push(value.value);
+      } else if (value.tag === 'list') {
+        if (!Array.isArray(value.items) || value.items.length > 4096 - nodes - pending.length)
+          fail('worker list budget exhausted');
+        for (let at = value.items.length - 1; at >= 0; at -= 1) pending.push(value.items[at]);
+      } else if (value.tag !== 'i64' && value.tag !== 'bool' && value.tag !== 'unit') {
+        fail('unsupported worker value');
+      }
+    }
+  }
+
+  workerValue(runtime, value, context, depth, expected, catalog) {
+    if (depth >= 32 || ++context.nodes > 4096) fail('worker value budget exhausted');
+    if (!value || typeof value !== 'object' || !Array.isArray(expected)) fail('invalid worker value');
+    if (expected[0] === 'I64' && value.tag === 'i64') {
+      if (typeof value.value !== 'string' || value.value.length > 20
+        || !/^(0|-[1-9][0-9]*|[1-9][0-9]*)$/.test(value.value)) fail('invalid I64');
+      const number = BigInt(value.value);
+      if (BigInt.asIntN(64, number) !== number) fail('worker I64 range exceeded');
+      return runtime.host_i64(number);
+    }
+    if (expected[0] === 'Bool' && value.tag === 'bool' && typeof value.value === 'boolean')
+      return runtime.host_bool(value.value ? 1 : 0);
+    if (expected[0] === 'Unit' && value.tag === 'unit' && value.value === null)
+      return runtime.host_unit();
+    if (expected[0] === 'Text' && value.tag === 'text' && typeof value.value === 'string') {
+      const count = Buffer.byteLength(value.value, 'utf8');
+      if (count > 65536 || context.cursor + count > this.memory.buffer.byteLength) fail('worker text budget exhausted');
+      const bytes = Buffer.from(value.value, 'utf8');
+      new Uint8Array(this.memory.buffer, context.cursor, bytes.length).set(bytes);
+      const handle = runtime.host_text(context.cursor, count);
+      context.cursor += count;
+      return handle;
+    }
+    if (expected[0] === 'Pair' && value.tag === 'pair') return runtime.host_pair(
+      this.workerValue(runtime, value.left, context, depth + 1, expected[1], catalog),
+      this.workerValue(runtime, value.right, context, depth + 1, expected[2], catalog));
+    if (expected[0] === 'Sum' && value.tag === 'sum'
+      && (value.arm === 'left' || value.arm === 'right'))
+      return runtime.host_sum(value.arm === 'left' ? 0 : 1,
+        this.workerValue(runtime, value.value, context, depth + 1,
+          expected[value.arm === 'left' ? 1 : 2], catalog));
+    if (expected[0] === 'List' && value.tag === 'list' && Array.isArray(value.items)) {
+      if (value.items.length > 4096) fail('worker list budget exhausted');
+      let tail = runtime.host_list_nil();
+      for (let at = value.items.length - 1; at >= 0; at -= 1) {
+        tail = runtime.host_list_cons(
+          this.workerValue(runtime, value.items[at], context, depth + 1, expected[1], catalog), tail);
+      }
+      return tail;
+    }
+    if (expected[0] === 'Nominal' && (value.tag === 'opaque' || value.tag === 'variant')) {
+      const row = catalog.find(entry => entry.schema.module_id === expected[1]
+        && entry.schema.ordinal === expected[2]
+        && JSON.stringify(entry.shape) === JSON.stringify(expected[3]));
+      if (!row || !value.schema || Object.keys(value.schema).length !== 4
+        || Object.keys(row.schema).some(key => value.schema[key] !== row.schema[key])) {
+        fail('worker nominal has no checked schema');
+      }
+      const shape = row.shape, constructors = row.constructors;
+      if (!Array.isArray(shape) || !constructors) fail('worker nominal shape absent');
+      if (value.tag === 'opaque' && (shape[0] !== 'opaque' || constructors.opaque !== true))
+        fail('private or wrong opaque constructor');
+      if (value.tag === 'variant' && (shape[0] !== 'variant'
+        || !((value.arm === 'left' && constructors.left === true)
+          || (value.arm === 'right' && constructors.right === true)))) {
+        fail('private or wrong variant constructor');
+      }
+      const arm = value.tag === 'opaque' ? 0 : value.arm === 'left' ? 1 : 2;
+      return runtime.host_nominal(BigInt(value.schema.module_id), value.schema.ordinal, arm,
+        this.workerValue(runtime, value.value, context, depth + 1,
+          shape[value.tag === 'opaque' || arm === 1 ? 1 : 2], catalog));
+    }
+    fail('unsupported worker value');
   }
 
   // Standalone typed injection outside one submission. Values stay first-class

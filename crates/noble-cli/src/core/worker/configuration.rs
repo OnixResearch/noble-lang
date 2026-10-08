@@ -7,14 +7,23 @@ pub(super) fn build(
 
 /// Artifact admission never inherits a declared binding or persistent session.
 pub(super) fn admission(optimized: bool) -> std::string::String {
+    worker(optimized, false)
+}
+
+pub(super) fn typed() -> std::string::String {
+    worker(false, true)
+}
+
+fn worker(optimized: bool, declared: bool) -> std::string::String {
     crate::workflow::encoding::object([
         ("selection", crate::workflow::encoding::string(super::SELECTION)),
         ("abi", crate::workflow::encoding::string(super::ABI)),
         ("optimized", crate::workflow::encoding::Json::Bool(optimized)),
         ("artifacts", crate::workflow::encoding::Json::Null),
-        ("declared_modules", crate::workflow::encoding::Json::Bool(false)),
+        ("declared_modules", crate::workflow::encoding::Json::Bool(declared)),
         ("bindings", crate::workflow::encoding::Json::Array(std::vec::Vec::new())),
-        ("declared_extension", crate::workflow::encoding::Json::Null),
+        ("declared_extension", crate::workflow::encoding::optional_string(
+            declared.then_some(super::DECLARED_ABI))),
     ]).encode()
 }
 

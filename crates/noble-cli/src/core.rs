@@ -12,6 +12,11 @@ pub(crate) mod live_slot;
 mod output;
 mod report;
 pub(crate) mod worker;
+pub(crate) mod worker_scalar;
+pub(crate) mod worker_package;
+pub(crate) mod worker_typed;
+pub(crate) mod worker_value;
+pub(crate) mod worker_shell;
 
 pub(crate) const SOURCE_LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
@@ -41,6 +46,17 @@ pub const USAGE: &str = "usage:
     without independent target evidence; source text is never a control command.
   noble editor analyze|admit JSON_FILE [--emit NEW_DIR (admit only)]
   JSON_FILE: editor AST format 1, nodes integer/boolean/word/quotation/hole
+  noble worker scalar SOURCE --state I64 --delta I64
+  Scalar worker precursor: independently check I64 I64 -- I64 ! {}, run one
+  bounded source-backed guest invocation, report its exact local outcome.
+  noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON
+  Typed worker: host-select a source-checked WorkerData@1 module and two canonical
+  nominal values; check one exact local no-capture package and exported transition
+  before compiling and running one bounded State Event -- State List<Action> guest.
+  noble worker shell PACKAGE --schema SCHEMA --state STATE --submit EVENT --cancel EVENT --authority HOST_GRANT
+  Local synthetic-send shell: authorize checked inert Send against a separately
+  selected exact grant, then cancel a pinned native task before late completion.
+  No network send or portable package/export authority is provided.
   noble admit-artifact WASM --effects CLAIMS_JSON [--source HOST_SOURCE] [--allow-effects test.emit,test.abort,test.clock] [--opt off|on]
   CLAIMS_JSON: {\"claimed_effects\":[]}; optional source/digest/allowed/trusted_correspondence are ignored
   --source and --allow-effects are selected by the host invoker, never by candidate claims.

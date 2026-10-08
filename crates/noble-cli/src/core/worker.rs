@@ -24,6 +24,7 @@ const DECLARED_ABI: &str = include_str!("runtime/declared-abi.json");
 
 pub(super) struct Engine {
     child: std::process::Child,
+    scratch: Option<crate::workflow::artifacts::Temporary>,
     replies: std::sync::mpsc::Receiver<Result<super::output::Report, super::output::Failure>>,
     reader: Option<std::thread::JoinHandle<()>>,
     control: Option<std::os::unix::net::UnixDatagram>,
@@ -36,8 +37,10 @@ impl Engine {
     pub fn start_admission(optimized: bool) -> Result<Self, super::output::Failure> {
         let config = configuration::admission(optimized);
         let (send, replies) = std::sync::mpsc::sync_channel(1);
+        let scratch = attempt!(private_scratch());
         let mut engine = Self {
-            child: attempt!(launch(&config, HOST, None)),
+            child: attempt!(launch(&config, HOST, None, Some(&scratch.path))),
+            scratch: Some(scratch),
             replies,
             reader: None,
             control: None,
@@ -57,6 +60,10 @@ impl Engine {
             ));
         }
         Ok(engine)
+    }
+
+    pub fn start_typed_worker() -> Result<Self, super::output::Failure> {
+        Self::start_with_config(&configuration::typed(), true)
     }
 
     pub fn admit(
@@ -82,15 +89,15 @@ impl Engine {
 
     pub fn start(options: &super::arguments::Options) -> Result<Self, super::output::Failure> {
         let config = attempt!(configuration::build(options));
-        Self::start_with_config(&config)
+        Self::start_with_config(&config, options.emit.is_none())
     }
 
     pub fn start_live() -> Result<Self, super::output::Failure> {
-        Self::start_with_config(&configuration::live())
+        Self::start_with_config(&configuration::live(), true)
     }
 
     pub fn start_slot() -> Result<Self, super::output::Failure> {
-        Self::start_with_host(&configuration::slot(), SLOT_HOST, true)
+        Self::start_with_host(&configuration::slot(), SLOT_HOST, true, false)
     }
 
     /// A separately framed, private host-operator datagram channel. Only the
@@ -116,11 +123,19 @@ impl Engine {
         }
     }
 
-    fn start_with_config(config: &str) -> Result<Self, super::output::Failure> {
-        Self::start_with_host(config, HOST, false)
+    fn start_with_config(
+        config: &str,
+        private_artifacts: bool,
+    ) -> Result<Self, super::output::Failure> {
+        Self::start_with_host(config, HOST, false, private_artifacts)
     }
 
-    fn start_with_host(config: &str, host: &str, slot: bool) -> Result<Self, super::output::Failure> {
+    fn start_with_host(
+        config: &str,
+        host: &str,
+        slot: bool,
+        private_artifacts: bool,
+    ) -> Result<Self, super::output::Failure> {
         let (control, child_control) = if slot {
             let (parent, child) = attempt!(std::os::unix::net::UnixDatagram::pair()
                 .map_err(super::framing::io_error));
@@ -132,8 +147,15 @@ impl Engine {
             (None, None)
         };
         let (send, replies) = std::sync::mpsc::sync_channel(1);
+        let scratch = if private_artifacts {
+            Some(attempt!(private_scratch()))
+        } else {
+            None
+        };
         let mut engine = Self {
-            child: attempt!(launch(config, host, child_control)),
+            child: attempt!(launch(config, host, child_control,
+                scratch.as_ref().map(|directory| directory.path.as_path()))),
+            scratch,
             replies,
             reader: None,
             control,
@@ -168,6 +190,43 @@ impl Engine {
         attempt!(self.write(header.as_bytes()));
         attempt!(self.write(wat));
         attempt!(self.write(source));
+        self.reply()
+    }
+
+    /// Bind the actual worker compiler's prospective literal end to the
+    /// prepared artifact, never a candidate-supplied protocol integer.
+    pub fn prepare_typed(
+        &mut self,
+        compiled: &noble_wasm::source::Prepared,
+        source: &[u8],
+        submission: u64,
+        catalog: &[super::worker_value::Schema],
+        expected: [&noble_kernel::types::Ty; 2],
+        schema_source: &[u8],
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let end = attempt!(compiled.worker_literal_end().filter(|end| *end <= 983_040)
+            .ok_or_else(protocol::error));
+        let mut rows = Vec::with_capacity(catalog.len());
+        for schema in catalog {
+            rows.push(attempt!(schema.runtime_row().map_err(|_| protocol::error())));
+        }
+        let mut inputs = Vec::with_capacity(2);
+        for ty in expected {
+            let schema = attempt!(catalog.iter().find(|entry| &entry.ty == ty)
+                .ok_or_else(protocol::error));
+            inputs.push(schema.wire());
+        }
+        let policy = serde_json::json!({ "catalog":rows, "inputs":inputs,
+            "schema_source_sha256":crate::workflow::intrinsic::sha256(schema_source) });
+        let policy = attempt!(serde_json::to_vec(&policy).map_err(|_| protocol::error()));
+        if policy.len() > 65_536 { return Err(protocol::error()); }
+        let wat = compiled.wat();
+        let header = std::format!("compile-typed {} {} {submission} {end} {}\n",
+            wat.len(), source.len(), policy.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(wat));
+        attempt!(self.write(source));
+        attempt!(self.write(&policy));
         self.reply()
     }
 
@@ -294,6 +353,28 @@ impl Engine {
         self.reply()
     }
 
+    /// The scalar worker precursor has a fixed host-owned step ceiling. The
+    /// protocol refuses other input shapes rather than inheriting caller limits.
+    pub fn execute_scalar(
+        &mut self,
+        inputs: &str,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!("execute-scalar {}\n", inputs.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(inputs.as_bytes()));
+        self.reply_with_deadline("host-deadline")
+    }
+
+    pub fn execute_typed(
+        &mut self,
+        inputs: &str,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!("execute-typed {}\n", inputs.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(inputs.as_bytes()));
+        self.reply_with_deadline("host-deadline")
+    }
+
     /// Push typed companion or program values onto the persistent session stack
     /// without executing a candidate. One refused push is reported, never fatal.
     pub fn push(&mut self, inputs: &str) -> Result<super::output::Report, super::output::Failure> {
@@ -353,6 +434,13 @@ impl Engine {
         reason = "Owner: noble-maintainers; reply waits on an mpsc receiver with a runtime deadline and formats channel failures. Channel synchronization and owned diagnostic formatting cannot be const."
     )]
     fn reply(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        self.reply_with_deadline("internal-failure")
+    }
+
+    fn reply_with_deadline(
+        &mut self,
+        timeout_outcome: &'static str,
+    ) -> Result<super::output::Report, super::output::Failure> {
         let result = match self
             .replies
             .recv_timeout(std::time::Duration::from_secs(120))
@@ -361,7 +449,10 @@ impl Engine {
             Err(error) => Err(super::output::Failure::new(
                 super::output::ErrorContext {
                     stage: "wasm",
-                    outcome: "internal-failure",
+                    outcome: match error {
+                        std::sync::mpsc::RecvTimeoutError::Timeout => timeout_outcome,
+                        std::sync::mpsc::RecvTimeoutError::Disconnected => "internal-failure",
+                    },
                 },
                 std::format!("engine worker failed or exceeded wall-clock limit: {error}"),
             )),
@@ -435,7 +526,15 @@ impl Engine {
             }),
             None => Ok(()),
         };
+        // A timed-out or poisoned Node cannot run its JS close handler. Reap
+        // first, then remove only the exact private directory we created.
+        let cleanup = self
+            .scratch
+            .take()
+            .map(|mut directory| directory.remove().map_err(super::framing::io_error))
+            .unwrap_or(Ok(()));
         // Reaping and joining precede error propagation, including startup failures.
+        attempt!(cleanup);
         attempt!(request);
         attempt!(status.map_err(super::framing::io_error));
         joined
@@ -450,10 +549,18 @@ impl Drop for Engine {
     }
 }
 
+fn private_scratch() -> Result<crate::workflow::artifacts::Temporary, super::output::Failure> {
+    crate::workflow::artifacts::Temporary::create_named("noble-core-worker-")
+        .map_err(|error| super::output::Failure::new(
+            super::output::ErrorContext { stage: "wasm", outcome: "unsupported" },
+            std::format!("cannot create private engine artifact directory: {}", error.message)))
+}
+
 fn launch(
     config: &str,
     host: &str,
     child_control: Option<std::os::unix::net::UnixDatagram>,
+    scratch: Option<&std::path::Path>,
 ) -> Result<std::process::Child, super::output::Failure> {
     // Linux caps each individual exec argument below its total ARG_MAX. Keep
     // the selected, embedded slot worker off the -e argument as it grows;
@@ -485,6 +592,11 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
         ])
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped());
+    if let Some(directory) = scratch {
+        // Node's os.tmpdir() honors TMPDIR; only this child sees the parent's
+        // fresh 0700 directory, including after a forced kill before JS close.
+        command.env("TMPDIR", directory);
+    }
     if slot {
         let mut start = 0;
         let mut count = 0;
@@ -515,4 +627,74 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
                 std::format!("cannot start selected Node engine: {error}"),
             )
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn prepared_private_artifacts() -> Result<(Engine, std::path::PathBuf), String> {
+        const SOURCE: &[u8] = b"private candidate source for forced shutdown";
+        let mut engine = Engine::start_typed_worker().map_err(|error| error.message)?;
+        let root = engine.scratch.as_ref().ok_or("private scratch absent")?.path.clone();
+        if !root.file_name().is_some_and(|name|
+            name.to_string_lossy().starts_with("noble-core-worker-")) {
+            return Err("worker did not own a uniquely prefixed temporary parent".into());
+        }
+        let report = engine.prepare(b"(module)", SOURCE, 1).map_err(|error| error.message)?;
+        let observation: serde_json::Value =
+            serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+        if report.outcome != "ready" || observation["guest_requests"] != 0
+            || observation["protected_operations"] != 0 {
+            return Err("unexpected private worker preparation outcome".into());
+        }
+        let mut directory = None;
+        for entry in std::fs::read_dir(&root).map_err(|error| error.to_string())? {
+            let path = entry.map_err(|error| error.to_string())?.path();
+            if path.file_name().is_some_and(|name|
+                name.to_string_lossy().starts_with("noble-core-")) {
+                directory = Some(path);
+                break;
+            }
+        }
+        let directory = directory.ok_or("Node did not write its private artifact directory")?;
+        if std::fs::read(directory.join("module-1.noble")).map_err(|error| error.to_string())? != SOURCE
+            || std::fs::metadata(directory.join("module-1.wasm"))
+                .map_err(|error| error.to_string())?.len() == 0 {
+            return Err("actual source/Wasm artifacts were not retained before termination".into());
+        }
+        Ok((engine,root))
+    }
+
+    #[test]
+    fn forced_worker_kill_removes_only_its_private_artifact_directory() -> Result<(), String> {
+        let (mut engine,root) = prepared_private_artifacts()?;
+        engine.has_failed = true;
+        drop(engine);
+        if root.exists() { return Err(format!("forced shutdown leaked {}",root.display())) }
+        Ok(())
+    }
+
+    #[test]
+    #[ignore = "waits for the production 120-second wall deadline"]
+    fn stopped_node_preparation_deadline_removes_private_source_and_wasm() -> Result<(), String> {
+        let (mut engine,root) = prepared_private_artifacts()?;
+        // Match the real preparation timeout: Node cannot run its JS close()
+        // while stopped, and Rust must own the artifact cleanup after SIGKILL.
+        if !std::process::Command::new("/bin/kill")
+            .args(["-STOP", &engine.child.id().to_string()])
+            .status().map_err(|error| error.to_string())?.success() {
+            return Err("cannot stop selected Node child".into());
+        }
+        let failure = match engine.reply() {
+            Err(failure) => failure,
+            Ok(_) => return Err("unexpected reply before host deadline".into()),
+        };
+        if failure.context.outcome != "internal-failure" || !engine.has_failed {
+            return Err("the production deadline did not poison the child".into());
+        }
+        drop(engine);
+        if root.exists() { return Err(format!("deadline leaked {}",root.display())) }
+        Ok(())
+    }
 }
