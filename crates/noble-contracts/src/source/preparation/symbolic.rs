@@ -2,7 +2,7 @@
 //! inferred graph before its definition can enter a staged module. This is a
 //! contracts-private source certificate, not a concrete kernel Checked value.
 
-use alloc::{collections::BTreeMap, vec, vec::Vec};
+use alloc::{vec, vec::Vec};
 use noble_kernel::{contracts::Definition, words::{Scheme, VariableKind}};
 
 use crate::source::{Kind, SignedRelation, SymbolicNode, Target, Tree};
@@ -75,7 +75,9 @@ fn semantic_count(tree: &Tree) -> Result<usize, crate::Diagnostic> {
     Ok(tree.nodes.len() - 1)
 }
 
-fn reachable(tree: &Tree, meter: &mut crate::Meter) -> Result<Vec<u32>, crate::Diagnostic> {
+fn reachable(tree: &Tree, meter: &mut crate::Meter)
+    -> Result<(Vec<bool>, Vec<u32>), crate::Diagnostic>
+{
     let mut seen = vec![false; attempt!(semantic_count(tree))];
     let mut pending = Vec::with_capacity(tree.body.len());
     for node in &tree.body { pending.push((*node, 0u32)); }
@@ -97,18 +99,21 @@ fn reachable(tree: &Tree, meter: &mut crate::Meter) -> Result<Vec<u32>, crate::D
             _ => {}
         }
     }
-    if seen.iter().any(|visited| !visited) {
-        return Err(refused(tree.span));
+    for (index, visited) in seen.iter().enumerate() {
+        if !visited && !matches!(&tree.nodes[index].kind,
+            Kind::Quotation(children) if children.is_empty()) {
+            return Err(refused(tree.nodes[index].span));
+        }
     }
     let mut self_nodes = Vec::new();
-    for (index, node) in tree.nodes.iter().enumerate() {
+    for (index, node) in tree.nodes.iter().take(seen.len()).enumerate() {
         attempt!(meter.charge(1, node.span));
         if matches!(node.kind, Kind::Call(Target::SelfOwner)) {
             self_nodes.push(attempt!(crate::index(index, node.span)));
         }
     }
     if self_nodes.is_empty() { return Err(refused(tree.span)); }
-    Ok(self_nodes)
+    Ok((seen, self_nodes))
 }
 
 /// Every source occurrence, including quotation children, has exactly one
@@ -127,48 +132,75 @@ pub(super) fn check(
     let body = state.bodies.first().ok_or_else(|| refused(tree.span))?;
     let variables = body.owner_variables.as_ref().ok_or_else(|| refused(tree.span))?;
     let semantic_count = attempt!(semantic_count(tree));
+    let (live, lexical_nodes) = attempt!(reachable(tree, meter));
     if body.owner != session.declared.as_ref().and_then(|context| context.owner)
         || body.owner.is_none()
         || state.definition_base != attempt!(crate::offset(owner.0, tree.span))
         || environment.scheme(owner).is_none()
-        || body.nodes.len() != semantic_count
+        || body.nodes.len() != live.iter().filter(|visited| **visited).count()
         || tree.nodes.len() > usize::try_from(meter.limits.nodes).unwrap_or(usize::MAX)
     {
         return Err(refused(tree.span));
     }
     attempt!(rigid_owner(state, scheme, variables, tree.span, meter));
-    let (original, parsed_name) = attempt!(crate::source::parsing::parse_declared(source_bytes, meter));
+    let (mut original, parsed_name) = attempt!(crate::source::parsing::parse_declared(source_bytes, meter));
+    if session.declared.as_ref().is_some_and(|context| context.declared_text) {
+        attempt!(crate::source::locals::lower(&mut original, meter));
+    }
     if parsed_name.is_none() || original.body != tree.body || original.nodes.len() != tree.nodes.len()
         || original.nodes.last().map(|node| node.span) != tree.nodes.last().map(|node| node.span)
     {
         return Err(refused(tree.span));
     }
-    let lexical_nodes = attempt!(reachable(tree, meter));
-    let mut spans = BTreeMap::new();
     for (index, (source, raw)) in tree.nodes.iter().zip(&original.nodes)
         .take(semantic_count).enumerate() {
         attempt!(meter.charge(16, source.span));
-        if source.span != raw.span || source.span.start >= source.span.end
-            || spans.insert((source.span.start, source.span.end), index).is_some()
+        if source.span != raw.span
+            || (source.span.start >= source.span.end && !matches!(
+                (&source.kind, &raw.kind),
+                (Kind::Call(Target::Builtin(_)), Kind::Call(Target::Builtin(_)))
+            ))
             || !lexical_kind(source, raw, parsed_name.as_deref(), source_bytes)
             || !attempt!(named_token_matches(source, raw, session, meter))
         {
             return Err(refused(source.span));
         }
-    }
-    let mut source_to_draft = vec![None; semantic_count];
-    for (draft_index, draft) in body.nodes.iter().enumerate() {
-        attempt!(meter.charge(16, draft.span));
-        let Some(source_index) = spans.remove(&(draft.span.start, draft.span.end)) else {
-            return Err(refused(draft.span));
-        };
-        let source = &tree.nodes[source_index];
-        if !draft_matches(source, draft, state, scheme, variables, owner, session, environment, meter)? {
+        if !live[index] && !matches!(&source.kind, Kind::Quotation(children) if children.is_empty()) {
             return Err(refused(source.span));
         }
-        source_to_draft[source_index] = Some(attempt!(crate::index(draft_index, draft.span)));
     }
-    if !spans.is_empty() { return Err(refused(tree.span)); }
+    let mut source_to_draft = vec![None; semantic_count];
+    let mut drafts_seen = vec![false; body.nodes.len()];
+    if tree.body.len() != body.root.len() { return Err(refused(tree.span)); }
+    let mut pending = tree.body.iter().zip(&body.root)
+        .map(|(source, draft)| (*source, draft.0)).collect::<Vec<_>>();
+    while let Some((source_id, draft_id)) = pending.pop() {
+        let source_index = attempt!(crate::offset(source_id, tree.span));
+        let draft_index = attempt!(crate::offset(draft_id, tree.span));
+        let Some(source) = tree.nodes.get(source_index) else { return Err(refused(tree.span)); };
+        let Some(draft) = body.nodes.get(draft_index) else { return Err(refused(tree.span)); };
+        attempt!(meter.charge(16, draft.span));
+        if !live.get(source_index).copied().unwrap_or(false)
+            || source_to_draft[source_index].is_some()
+            || drafts_seen[draft_index] || source.span != draft.span
+            || !draft_matches(source, draft, state, scheme, variables, owner, session, environment, meter)?
+        {
+            return Err(refused(source.span));
+        }
+        source_to_draft[source_index] = Some(draft_id);
+        drafts_seen[draft_index] = true;
+        if let Kind::Quotation(children) = &source.kind {
+            let crate::source::inference::DraftKind::Quotation(inferred) = &draft.kind
+                else { return Err(refused(source.span)); };
+            if children.len() != inferred.len() { return Err(refused(source.span)); }
+            pending.extend(children.iter().zip(inferred).map(|(child, node)| (*child, node.0)));
+        }
+    }
+    if drafts_seen.iter().any(|seen| !seen)
+        || live.iter().enumerate().any(|(index, seen)|
+            *seen != source_to_draft[index].is_some()) {
+        return Err(refused(tree.span));
+    }
     let mapped = |id: u32| -> Option<u32> {
         source_to_draft.get(usize::try_from(id).ok()?).copied().flatten()
     };
@@ -178,7 +210,10 @@ pub(super) fn check(
     let mut symbolic_nodes = Vec::with_capacity(semantic_count);
     for (index, source) in tree.nodes.iter().take(semantic_count).enumerate() {
         attempt!(meter.charge(1, source.span));
-        let draft_id = source_to_draft[index].ok_or_else(|| refused(source.span))?;
+        let Some(draft_id) = source_to_draft[index] else {
+            symbolic_nodes.push(None);
+            continue;
+        };
         if let Kind::Quotation(children) = &source.kind {
             let Some(crate::source::inference::DraftKind::Quotation(drafts)) =
                 body.nodes.get(attempt!(crate::offset(draft_id, source.span)))
@@ -187,8 +222,8 @@ pub(super) fn check(
                 return Err(refused(source.span));
             }
         }
-        symbolic_nodes.push(SymbolicNode { draft: draft_id, span: source.span,
-            target: match &source.kind { Kind::Call(target) => Some(*target), _ => None } });
+        symbolic_nodes.push(Some(SymbolicNode { draft: draft_id, span: source.span,
+            target: match &source.kind { Kind::Call(target) => Some(*target), _ => None } }));
     }
     Ok(SignedRelation { source_slot: attempt!(crate::index(session.definitions.len(), tree.span)),
         symbolic_nodes, lexical_nodes })
@@ -225,6 +260,7 @@ fn lexical_kind(source: &crate::source::Node, raw: &crate::source::Node,
         (Kind::Literal(a), Kind::Literal(b)) => a == b,
         (Kind::Text(a), Kind::Text(b)) => a == b,
         (Kind::Quotation(a), Kind::Quotation(b)) => a == b,
+        (Kind::Call(Target::Builtin(a)), Kind::Call(Target::Builtin(b))) => a == b,
         (Kind::Call(target), Kind::Word(word)) => {
             let start = usize::try_from(raw.span.start).ok();
             let end = usize::try_from(raw.span.end).ok();
@@ -320,18 +356,24 @@ pub(in crate::source) fn verify(
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
     let n = attempt!(semantic_count(tree));
+    let (live, lexical_nodes) = attempt!(reachable(tree, meter));
     if relation.symbolic_nodes.len() != n || original.nodes.len() != tree.nodes.len()
         || original.nodes.last().map(|node| node.span) != tree.nodes.last().map(|node| node.span)
         || original.body != tree.body || relation.lexical_nodes.is_empty() {
         return Err(refused(tree.span));
     }
-    let mut drafts = vec![false; n];
+    let mut drafts = vec![false; live.iter().filter(|visited| **visited).count()];
     let mut self_nodes = Vec::new();
-    for (index, ((node, raw), binding)) in tree.nodes.iter().zip(&original.nodes)
+    for (index, ((node, raw), slot)) in tree.nodes.iter().zip(&original.nodes)
         .zip(&relation.symbolic_nodes).enumerate() {
         attempt!(meter.charge(1, node.span));
-        if node.span != raw.span || binding.span != node.span
-            || !lexical_kind(node, raw, Some(name), source_bytes)
+        if node.span != raw.span || !lexical_kind(node, raw, Some(name), source_bytes)
+            || live[index] != slot.is_some()
+        {
+            return Err(refused(node.span));
+        }
+        let Some(binding) = slot else { continue; };
+        if binding.span != node.span
             || binding.target != (match &node.kind { Kind::Call(target) => Some(*target), _ => None }) {
             return Err(refused(node.span));
         }
@@ -344,7 +386,7 @@ pub(in crate::source) fn verify(
         }
     }
     if drafts.iter().any(|seen| !seen) || self_nodes != relation.lexical_nodes
-        || attempt!(reachable(tree, meter)) != relation.lexical_nodes {
+        || lexical_nodes != relation.lexical_nodes {
         return Err(refused(tree.span));
     }
     Ok(())
