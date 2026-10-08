@@ -7,6 +7,8 @@ use wasmparser::{ElementItems, KnownCustom, Name, Operator, Parser, Payload, Val
 
 #[path = "live_slot_native_storage.rs"]
 mod storage;
+#[path = "live_slot_native_quote.rs"]
+mod quote;
 
 fn denied(reason: &str) -> String { format!("selected native body witness refused: {reason}") }
 
@@ -271,18 +273,30 @@ impl<'a> Module<'a> {
     }
 }
 
+pub(super) struct QuoteRequest<'a> {
+    pub(super) imported_globals: &'a Value,
+    pub(super) environment: u32,
+    pub(super) captured: i64,
+    pub(super) memory_sha256: &'a str,
+}
+
 pub(super) fn probe_storage(
     core_bytes: &[u8], core_sha: &str, static_bytes: &[u8], static_sha: &str,
-    memory: &[u8], cursor: u32, handles: &[u32],
+    memory: &[u8], cursor: u32, handles: &[u32], scalar_quote: Option<QuoteRequest<'_>>,
 ) -> Result<Value, String> {
     let core = Module::parse(core_bytes, core_sha)?;
     let static_donor = Module::parse(static_bytes, static_sha)?;
-    storage::probe(&core, memory, cursor, handles)?;
-    storage::probe(&static_donor, memory, cursor, handles)?;
+    let core_storage = storage::Machine::new(&core, memory, cursor)?;
+    core_storage.probe(handles)?;
+    storage::Machine::new(&static_donor, memory, cursor)?.probe(handles)?;
+    let scalar_quote_step = scalar_quote.map(|request| quote::probe(&core, &core_storage,
+        memory, cursor, request.imported_globals, request.environment,
+        request.captured, request.memory_sha256)).transpose()?;
     Ok(json!({"schema":"noble-live-slot-installed-storage-one-state/v1",
         "scope":"exact selected storage/child/metadata reads and stale-epoch negatives only; writes/refcounts/future calls unproved",
         "native_module_sha256":core_sha,"static_module_sha256":static_sha,
-        "selected_handles":handles,"heap_cursor":cursor}))
+        "selected_handles":handles,"heap_cursor":cursor,
+        "scalar_quote_step":scalar_quote_step}))
 }
 
 pub(super) fn attest(

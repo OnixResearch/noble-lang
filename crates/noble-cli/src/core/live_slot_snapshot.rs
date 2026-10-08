@@ -179,7 +179,7 @@ fn retained_owner(memory: &[u8], owner: u32, cursor: u32) -> Result<(), String> 
     Ok(())
 }
 
-fn observed_literals(graph: &Value) -> Result<Value, String> {
+fn observed_literals(graph: &Value, handles: &[u32]) -> Result<(Value, u32), String> {
     let literal = |quote: &Value| -> Result<Value, String> {
         let quote_at = quote.as_u64().and_then(|n| usize::try_from(n).ok())
             .ok_or_else(|| denied("snapshot has no quote edge"))?;
@@ -195,7 +195,10 @@ fn observed_literals(graph: &Value) -> Result<Value, String> {
     let inner = rows.first().and_then(|row| row["a"].as_u64())
         .and_then(|index| rows.get(index as usize))
         .ok_or_else(|| denied("snapshot has no nested composition"))?;
-    Ok(json!([literal(&inner["a"])?, literal(&inner["b"])?]))
+    let first_quote = inner["a"].as_u64().and_then(|index| usize::try_from(index).ok())
+        .and_then(|index| handles.get(index)).copied()
+        .ok_or_else(|| denied("first captured quote has no physical environment handle"))?;
+    Ok((json!([literal(&inner["a"])?, literal(&inner["b"])?]), first_quote))
 }
 
 /// This *executes* the selected 48-byte cell layout over actual imported
@@ -220,14 +223,20 @@ pub(super) fn check(snapshot: &Value, manifest: &Value, subject: &Value,
     if manifest["descriptor"]["graph_sha256"] != graph_sha {
         return Err(denied("imported linear memory graph differs from saved source target"));
     }
-    let literals = observed_literals(&graph)?;
+    let (literals, first_quote) = observed_literals(&graph, &handles)?;
     if subject["literal_values"] != literals {
         return Err(denied("snapshot memory literals differ from checked source captures"));
     }
     let native_roots = roots(snapshot, "native_roots", &memory, cursor)?;
     let static_roots = roots(snapshot, "static_roots", &memory, cursor)?;
+    let captured = literals[0].as_str().ok_or_else(|| denied("first quote is not an I64 literal"))?
+        .parse::<i64>().map_err(|_| denied("first captured I64 is out of range"))?;
+    let imported_sha = snapshot["memory_sha256"].as_str()
+        .ok_or_else(|| denied("imported memory digest is unavailable"))?;
     let installed_storage = super::native::probe_storage(
-        core_bytes, core_sha, static_bytes, static_sha, &memory, cursor, &handles)?;
+        core_bytes, core_sha, static_bytes, static_sha, &memory, cursor, &handles,
+        Some(super::native::QuoteRequest { imported_globals:&globals,
+            environment:first_quote, captured, memory_sha256:imported_sha }))?;
     Ok(json!({"schema":"noble-live-slot-one-idle-state-replay/v1",
         "scope":"one-state-layout-only; native helper/dispatch semantics not established",
         "memory_sha256":snapshot["memory_sha256"],"memory_length":memory.len(),

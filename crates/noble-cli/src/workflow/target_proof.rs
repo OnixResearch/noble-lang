@@ -92,17 +92,60 @@ fn lower(checked: &Value) -> Result<(String, String), output::Failure> {
     let captures = subject["literal_values"].as_array()
         .filter(|rows| rows.len() == 2)
         .ok_or_else(|| invalid("exact returned target requires two physical literals"))?;
-    let decimal = |value: &Value| -> Result<String, output::Failure> {
+    let decimal = |value: &Value| -> Result<(String, i64), output::Failure> {
         let text = value.as_str().ok_or_else(|| invalid("target literal is not a decimal string"))?;
         let parsed = text.parse::<i64>()
             .map_err(|_| invalid("target literal is outside signed I64"))?;
         if text != parsed.to_string() {
             return Err(invalid("target literal has a noncanonical representation"));
         }
-        Ok(text.to_owned())
+        Ok((text.to_owned(), parsed))
     };
-    let first = decimal(&captures[0])?;
-    let second = decimal(&captures[1])?;
+    let (first, first_value) = decimal(&captures[0])?;
+    let (second, _) = decimal(&captures[1])?;
+    let quote = &installed_storage["scalar_quote_step"];
+    let handles = installed_storage["selected_handles"].as_array()
+        .ok_or_else(|| invalid("selected captured graph handles are missing"))?;
+    let quote_handle = quote["environment"].as_u64()
+        .ok_or_else(|| invalid("direct quote environment is missing"))?;
+    let capture_handle = quote["capture"].as_u64()
+        .ok_or_else(|| invalid("direct quote captured cell is missing"))?;
+    let before = quote["before_slot"].as_array().filter(|slot| slot.len() == 16)
+        .ok_or_else(|| invalid("direct quote initial stack slot is incomplete"))?;
+    let mut expected_slot = [0u8; 16];
+    for (destination, byte) in expected_slot.iter_mut().zip(before) {
+        *destination = byte.as_u64().and_then(|n| u8::try_from(n).ok())
+            .ok_or_else(|| invalid("direct quote initial stack byte is invalid"))?;
+    }
+    expected_slot[..4].copy_from_slice(&1u32.to_le_bytes());
+    expected_slot[8..].copy_from_slice(&first_value.to_le_bytes());
+    let peak = quote["initial_operand_peak"].as_u64()
+        .filter(|peak| *peak <= 2048)
+        .ok_or_else(|| invalid("direct quote initial operand peak is invalid"))?;
+    let calls_text = quote["initial_quote_invocations"].as_str()
+        .ok_or_else(|| invalid("direct quote counter is missing"))?;
+    let calls = calls_text.parse::<i32>().ok()
+        .ok_or_else(|| invalid("direct quote counter is invalid"))?;
+    if calls.to_string() != calls_text {
+        return Err(invalid("direct quote counter is noncanonical"));
+    }
+    if quote["schema"] != "noble-live-slot-installed-direct-scalar-quote/v1"
+        || quote["scope"] != "one captured I64 quote-entry step only; no dispatch or full composite proof"
+        || quote["module_sha256"] != native
+        || quote["memory_sha256"] != initial_memory
+        || quote["literal"] != first
+        || quote["initial_sp"] != 0 || quote["final_sp"] != 1
+        || quote["final_operand_peak"] != peak.max(16)
+        || quote["final_quote_invocations"] != ((calls as u32).wrapping_add(1) as i32).to_string()
+        || quote["after_slot"] != serde_json::json!(expected_slot)
+        || quote["heap_and_refcount_writes"] != 0
+        || quote["wasm_lean_c_refinement"] != "not-established"
+        || !handles.contains(&serde_json::json!(quote_handle))
+        || !handles.contains(&serde_json::json!(capture_handle))
+        || capture_handle == 0 {
+        return Err(invalid("direct scalar quote witness differs from selected captured stack step"));
+    }
+    let _sidecar = digest(quote, "refcount_sidecar_sha256")?;
     if subject["target_code"] != serde_json::json!([
         {"op":"lit-i64","value":first.as_str()},
         {"op":"lit-i64","value":second.as_str()},

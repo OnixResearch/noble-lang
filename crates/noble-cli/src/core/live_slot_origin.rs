@@ -1395,6 +1395,9 @@ mod tests {
         let checked_native = super::super::native::attest(
             &binary, &binary_sha, &binary, &binary_sha, span.start, &add_entries)?;
         let mut imported = vec![0; 20 * 65536];
+        imported[0..4].copy_from_slice(&[0x11; 4]);
+        imported[4..8].copy_from_slice(&[0xa5, 0x5a, 0xc3, 0x3c]);
+        imported[8..16].copy_from_slice(&[0x22; 8]);
         let cell = 65536 + 48;
         imported[cell..cell + 4].copy_from_slice(&4u32.to_le_bytes());
         imported[cell + 4..cell + 8].copy_from_slice(&4097u32.to_le_bytes());
@@ -1406,7 +1409,7 @@ mod tests {
         imported[child + 4..child + 8].copy_from_slice(&4098u32.to_le_bytes());
         imported[child + 8..child + 16].copy_from_slice(&(-9i64).to_le_bytes());
         super::super::native::probe_storage(
-            &binary, &binary_sha, &binary, &binary_sha, &imported, 3, &[4097, 4098])?;
+            &binary, &binary_sha, &binary, &binary_sha, &imported, 3, &[4097, 4098], None)?;
         let old_address_mask = "(i32.and (local.get $h) (i32.const 4095))";
         let rewritten_address = wat.replacen(old_address_mask,
             "(i32.and (local.get $h) (i32.const 4094))", 1);
@@ -1416,7 +1419,7 @@ mod tests {
         let altered = super::super::assemble_slot(rewritten_address.as_bytes())?;
         let altered_sha = crate::workflow::intrinsic::sha256(&altered);
         if super::super::native::probe_storage(
-            &altered, &altered_sha, &altered, &altered_sha, &imported, 3, &[4097, 4098]).is_ok() {
+            &altered, &altered_sha, &altered, &altered_sha, &imported, 3, &[4097, 4098], None).is_ok() {
             return Err("rewritten installed linear-address helper passed physical odd-slot probe".into());
         }
         let old_a = "(func $a (param $h i32) (result i32)\n (call $linear_child (i32.load offset=16 (call $linear_live_address (local.get $h))) (local.get $h)))";
@@ -1427,7 +1430,7 @@ mod tests {
         let altered_a_sha = crate::workflow::intrinsic::sha256(&altered_a);
         if super::super::native::probe_storage(
             &altered_a, &altered_a_sha, &altered_a, &altered_a_sha,
-            &imported, 3, &[4097, 4098]).is_ok() {
+            &imported, 3, &[4097, 4098], None).is_ok() {
             return Err("installed first child helper accepted the wrong physical edge".into());
         }
         let old_x = "(func $x (param $h i32) (result i32)\n (i32.load offset=28 (call $linear_live_address (local.get $h))))";
@@ -1438,7 +1441,7 @@ mod tests {
         let altered_x_sha = crate::workflow::intrinsic::sha256(&altered_x);
         if super::super::native::probe_storage(
             &altered_x, &altered_x_sha, &altered_x, &altered_x_sha,
-            &imported, 3, &[4097, 4098]).is_ok() {
+            &imported, 3, &[4097, 4098], None).is_ok() {
             return Err("installed code metadata helper accepted the wrong physical word".into());
         }
         let old_child = "(if (local.get $child) (then (drop (call $linear_live_address (local.get $child)))))";
@@ -1451,8 +1454,93 @@ mod tests {
         let altered_child_sha = crate::workflow::intrinsic::sha256(&altered_child);
         if super::super::native::probe_storage(
             &altered_child, &altered_child_sha, &altered_child, &altered_child_sha,
-            &imported, 3, &[4097, 4098]).is_ok() {
+            &imported, 3, &[4097, 4098], None).is_ok() {
             return Err("installed child helper accepted a stale epoch edge after mutation".into());
+        }
+        let quote_globals = json!([
+            {"name":"failure","type":"i32","value":"0"},
+            {"name":"sp","type":"i32","value":"0"},
+            {"name":"cp","type":"i32","value":"0"},
+            {"name":"rp","type":"i32","value":"0"},
+            {"name":"live_frame","type":"i32","value":"0"},
+            {"name":"heap_cursor","type":"i32","value":"3"},
+            {"name":"operand_limit","type":"i32","value":"2048"},
+            {"name":"operand_peak","type":"i32","value":"0"},
+            {"name":"quote_invocations","type":"i32","value":"0"}
+        ]);
+        let memory_sha = crate::workflow::intrinsic::sha256(&imported);
+        let quote_request = || Some(super::super::native::QuoteRequest {
+            imported_globals:&quote_globals, environment:4097, captured:-9,
+            memory_sha256:&memory_sha });
+        let direct_quote = super::super::native::probe_storage(
+            &binary, &binary_sha, &binary, &binary_sha,
+            &imported, 3, &[4097, 4098], quote_request())?;
+        let slot = &direct_quote["scalar_quote_step"];
+        let mut expected_slot = [0u8; 16];
+        expected_slot[0] = 1;
+        expected_slot[4..8].copy_from_slice(&[0xa5, 0x5a, 0xc3, 0x3c]);
+        expected_slot[8..16].copy_from_slice(&(-9i64).to_le_bytes());
+        if slot["after_slot"] != json!(expected_slot) || slot["final_sp"] != 1
+            || slot["final_quote_invocations"] != "1"
+            || slot["heap_and_refcount_writes"] != 0 {
+            return Err("installed scalar quote changed padding, I64 bits or refcount transition".into());
+        }
+        imported[child + 8..child + 16].copy_from_slice(&(-8i64).to_le_bytes());
+        if super::super::native::probe_storage(
+            &binary, &binary_sha, &binary, &binary_sha,
+            &imported, 3, &[4097, 4098], quote_request()).is_ok() {
+            return Err("same-shape altered captured I64 was accepted as the original quote".into());
+        }
+        imported[child + 8..child + 16].copy_from_slice(&(-9i64).to_le_bytes());
+        imported[child + 4..child + 8].copy_from_slice(&8194u32.to_le_bytes());
+        if super::super::native::probe_storage(
+            &binary, &binary_sha, &binary, &binary_sha,
+            &imported, 3, &[4097, 4098], quote_request()).is_ok() {
+            return Err("same-shaped recycled quote capture was accepted under a stale epoch".into());
+        }
+        imported[child + 4..child + 8].copy_from_slice(&4098u32.to_le_bytes());
+        let altered_unbox = wat.replacen(
+            "(if (i32.lt_u (local.get $tag) (i32.const 4))",
+            "(if (i32.lt_u (local.get $tag) (i32.const 1))", 1);
+        if altered_unbox == wat { return Err("scalar unbox branch mutation did not match".into()); }
+        let changed_unbox = super::super::assemble_slot(altered_unbox.as_bytes())?;
+        let changed_unbox_sha = crate::workflow::intrinsic::sha256(&changed_unbox);
+        if super::super::native::probe_storage(
+            &changed_unbox, &changed_unbox_sha, &changed_unbox, &changed_unbox_sha,
+            &imported, 3, &[4097, 4098], quote_request()).is_ok() {
+            return Err("installed unbox changed scalar branch into an unsupported reference push".into());
+        }
+        let altered_refcount = wat.replacen(
+            "(if (i32.ge_u (local.get $kind) (i32.const 4))",
+            "(if (i32.ge_u (local.get $kind) (i32.const 1))", 1);
+        if altered_refcount == wat { return Err("scalar refcount branch mutation did not match".into()); }
+        let changed_refcount = super::super::assemble_slot(altered_refcount.as_bytes())?;
+        let changed_refcount_sha = crate::workflow::intrinsic::sha256(&changed_refcount);
+        if super::super::native::probe_storage(
+            &changed_refcount, &changed_refcount_sha, &changed_refcount, &changed_refcount_sha,
+            &imported, 3, &[4097, 4098], quote_request()).is_ok() {
+            return Err("installed scalar quote performed unsupported refcount mutation".into());
+        }
+        let original_quote = "(then (call $unbox (call $a (local.get $environment))))";
+        for (replacement, label) in [
+            ("(then (call_indirect (type $entry) (local.get $environment) (i32.const 1)))",
+                "table"),
+            ("(then (drop (call $host_live_select (i32.const 0) (i32.const 0))) \
+              (call $unbox (call $a (local.get $environment))))",
+                "host import"),
+            ("(then (call $enqueue_program (local.get $environment)) \
+              (call $unbox (call $a (local.get $environment))))",
+                "continuation"),
+        ] {
+            let changed = wat.replacen(original_quote, replacement, 1);
+            if changed == wat { return Err(format!("scalar {label} mutation did not match source")); }
+            let changed_binary = super::super::assemble_slot(changed.as_bytes())?;
+            let changed_sha = crate::workflow::intrinsic::sha256(&changed_binary);
+            if super::super::native::probe_storage(
+                &changed_binary, &changed_sha, &changed_binary, &changed_sha,
+                &imported, 3, &[4097, 4098], quote_request()).is_ok() {
+                return Err(format!("installed scalar quote executed unsupported {label}"));
+            }
         }
         for (old, replacement, label) in [
             ("(i64.add (local.get $left) (local.get $right))",

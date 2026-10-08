@@ -11,7 +11,7 @@ struct Function<'a> {
     locals: usize,
 }
 
-struct Machine<'a, 'm> {
+pub(super) struct Machine<'a, 'm> {
     module: &'m Module<'a>,
     memory: &'m [u8],
     cursor: u32,
@@ -26,7 +26,7 @@ fn pop(stack: &[u64; 16], top: &mut usize) -> Result<u64, String> {
 }
 
 impl<'a, 'm> Machine<'a, 'm> {
-    fn new(module: &'m Module<'a>, memory: &'m [u8], cursor: u32) -> Result<Self, String> {
+    pub(super) fn new(module: &'m Module<'a>, memory: &'m [u8], cursor: u32) -> Result<Self, String> {
         let mut functions = BTreeMap::new();
         for name in ["linear_address", "storage_is_live", "linear_live_address",
             "linear_child", "kind", "payload", "a", "b", "c", "x", "y", "z"] {
@@ -171,59 +171,58 @@ impl<'a, 'm> Machine<'a, 'm> {
         Err(refused())
     }
 
-    fn named(&self, name: &str, handle: u32) -> Result<u64, String> {
+    pub(super) fn named(&self, name: &str, handle: u32) -> Result<u64, String> {
         self.run(self.module.index(name)?, [handle, 0], 0)
     }
 
     fn child(&self, child: u32, parent: u32) -> Result<u64, String> {
         self.run(self.module.index("linear_child")?, [child, parent], 0)
     }
-}
 
-pub(super) fn probe(module: &Module<'_>, memory: &[u8], cursor: u32,
-    handles: &[u32]) -> Result<(), String> {
-    if handles.is_empty() || handles.len() > 32 || memory.len() != 20 * 65536 {
-        return Err(refused());
+    pub(super) fn probe(&self, handles: &[u32]) -> Result<(), String> {
+        if handles.is_empty() || handles.len() > 32 || self.memory.len() != 20 * 65536 {
+            return Err(refused());
+        }
+        let memory = self.memory;
+        for handle in handles {
+            let slot = handle & 4095;
+            let address = 65536 + slot as usize * 48;
+            let kind = memory.get(address).copied().ok_or_else(refused)?;
+            let payload: [u8; 8] = memory.get(address + 8..address + 16)
+                .ok_or_else(refused)?.try_into().map_err(|_| refused())?;
+            if self.named("storage_is_live", *handle)? != 1
+                || self.named("kind", *handle)? != u64::from(kind)
+                || self.named("payload", *handle)? != u64::from_le_bytes(payload) {
+                return Err(denied("installed storage helper differs from selected live cell observation"));
+            }
+            if self.child(0, *handle)? != 0 {
+                return Err(denied("installed child helper changes a null edge"));
+            }
+            for (name, offset) in [("a", 16), ("b", 20), ("c", 24),
+                ("x", 28), ("y", 32), ("z", 36)] {
+                let field = u32::from_le_bytes(read_field(memory, address + offset)?);
+                if ["a", "b", "c"].contains(&name)
+                    && field != 0 && !handles.contains(&field) {
+                    return Err(denied("selected helper child is outside complete observed graph"));
+                }
+                if self.named(name, *handle)? != u64::from(field) {
+                    return Err(denied("installed field helper differs from selected cell observation"));
+                }
+            }
+            // A nonwrapping future epoch using this same physical slot must not
+            // alias the currently retained cell. This is a one-state negative,
+            // not an allocator/retirement theorem.
+            if let Some(stale) = handle.checked_add(4096) {
+                if self.named("storage_is_live", stale)? != 0 {
+                    return Err(denied("installed storage helper accepts a stale epoch handle"));
+                }
+                if self.child(stale, *handle).is_ok() {
+                    return Err(denied("installed child helper accepts a stale epoch edge"));
+                }
+            }
+        }
+        Ok(())
     }
-    let machine = Machine::new(module, memory, cursor)?;
-    for handle in handles {
-        let slot = handle & 4095;
-        let address = 65536 + slot as usize * 48;
-        let kind = memory.get(address).copied().ok_or_else(refused)?;
-        let payload: [u8; 8] = memory.get(address + 8..address + 16)
-            .ok_or_else(refused)?.try_into().map_err(|_| refused())?;
-        if machine.named("storage_is_live", *handle)? != 1
-            || machine.named("kind", *handle)? != u64::from(kind)
-            || machine.named("payload", *handle)? != u64::from_le_bytes(payload) {
-            return Err(denied("installed storage helper differs from selected live cell observation"));
-        }
-        if machine.child(0, *handle)? != 0 {
-            return Err(denied("installed child helper changes a null edge"));
-        }
-        for (name, offset) in [("a", 16), ("b", 20), ("c", 24),
-            ("x", 28), ("y", 32), ("z", 36)] {
-            let field = u32::from_le_bytes(read_field(memory, address + offset)?);
-            if ["a", "b", "c"].contains(&name)
-                && field != 0 && !handles.contains(&field) {
-                return Err(denied("selected helper child is outside complete observed graph"));
-            }
-            if machine.named(name, *handle)? != u64::from(field) {
-                return Err(denied("installed field helper differs from selected cell observation"));
-            }
-        }
-        // A nonwrapping future epoch using this same physical slot must not
-        // alias the currently retained cell. This is a one-state negative,
-        // not an allocator/retirement theorem.
-        if let Some(stale) = handle.checked_add(4096) {
-            if machine.named("storage_is_live", stale)? != 0 {
-                return Err(denied("installed storage helper accepts a stale epoch handle"));
-            }
-            if machine.child(stale, *handle).is_ok() {
-                return Err(denied("installed child helper accepts a stale epoch edge"));
-            }
-        }
-    }
-    Ok(())
 }
 
 fn read_field(memory: &[u8], at: usize) -> Result<[u8; 4], String> {
