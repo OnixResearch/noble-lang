@@ -1,7 +1,7 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 
-use noble_contracts::source::ModuleSession;
+use noble_contracts::source::{ModuleSession, Stage};
 use noble_kernel::contracts::Behavior;
 use noble_wasm::source::Compiler;
 
@@ -82,6 +82,70 @@ fn signed_i64_order_is_pure_and_kept_out_of_ordinary_declared_modules() -> Resul
         || Compiler::new().prepare(&submission).is_ok()
         || Compiler::new_text_cursor().prepare(&submission).is_ok() {
         return Err("selected-only signed comparison was not isolated to its checked Wasm ABI".into());
+    }
+    Ok(())
+}
+
+#[test]
+fn lexical_parameters_and_quotation_have_source_bound_checked_wasm() -> Result<(), String> {
+    let module = include_bytes!("../../../verification/calculator-precursor/local-bindings.noble");
+    let selected = ModuleSession::new_declared_text(&[], false)
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let selected = linked(selected, module)?;
+    for source in [
+        b"5 6 local_math@1.add".as_slice(),
+        b"5 6 local_math@1.stack_add".as_slice(),
+        b"5 local_math@1.shadow_global".as_slice(),
+        b"5 local_math@1.capture".as_slice(),
+        b"5 6 local_math@1.capture_pair".as_slice(),
+        b"1 2 3 local_math@1.ordered_three".as_slice(),
+        b"5 local_math@1.shadow".as_slice(),
+    ] {
+        let prepared = selected.prepare(source, &[], LIMITS)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        if prepared.output() != [noble_kernel::types::Ty::I64] {
+            return Err("lexically bound module returned the wrong checked interface".into());
+        }
+        let owner = prepared.declared_text_source_owner().ok_or("local module lost source ownership")?;
+        Compiler::new_declared_text().prepare_declared_text(&owner)
+            .map_err(|_| "source-checked local module failed compiled Wasm admission")?;
+    }
+    let ordinary = ModuleSession::new(&[])
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let refused = ordinary.prepare(module, &[], LIMITS).err()
+        .ok_or("ordinary declared modules acquired selected local syntax")?;
+    if refused.stage() != Stage::Resolve {
+        return Err("ordinary lexical syntax failed after lexical resolution".into());
+    }
+    Ok(())
+}
+
+#[test]
+fn local_reuse_discard_capture_and_duplicate_names_fail_closed() -> Result<(), String> {
+    let selected = ModuleSession::new_declared_text(&[], false)
+        .map_err(|error| error.diagnostic().message.clone())?;
+    for source in [
+        b"let r r r".as_slice(),
+        b"let r".as_slice(),
+        b"let r [ r ]".as_slice(),
+    ] {
+        let resource = noble_kernel::types::Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE);
+        let denied = selected.prepare(source, &[resource], LIMITS).err()
+            .ok_or("linear resource escaped lexical Data/Capture eligibility")?;
+        if denied.stage() != Stage::Check && denied.stage() != Stage::Acceptance {
+            return Err(format!("linear local escaped checked static admission until {:?}: {}",
+                denied.stage(), denied.diagnostic().message));
+        }
+    }
+    for source in [
+        b"1 let x 2 let x x".as_slice(),
+        b"1 let".as_slice(),
+    ] {
+        let denied = selected.prepare(source, &[], LIMITS).err()
+            .ok_or("duplicate or malformed local binding was accepted")?;
+        if denied.stage() != Stage::Resolve {
+            return Err(format!("malformed lexical binder failed at {:?}", denied.stage()));
+        }
     }
     Ok(())
 }

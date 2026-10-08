@@ -32,6 +32,7 @@ const resultModule = fs.readFileSync(path.join(root, 'crates/noble-contracts/src
 const digitModule = fs.readFileSync(new URL('./decimal-digit.noble', import.meta.url));
 const laterDigitModule = Buffer.from('module decimal_digit@2 [ signature digit forall<S:stack> [ S I64 -- S I64 Bool ! pure ] export digit def digit [ drop 0 false ] ]');
 const foldModule = fs.readFileSync(new URL('./decimal-fold.noble', import.meta.url));
+const localModule = fs.readFileSync(new URL('./local-bindings.noble', import.meta.url));
 const cases = [
   ['0', '0'], ['9', '9'], ['12345', '12345'],
   ['0009', '9'], ['999999999999999999', '999999999999999999'],
@@ -40,12 +41,13 @@ const cases = [
 ];
 const frame = bytes => Buffer.concat([Buffer.from(`${bytes.length}\n`), bytes]);
 const record = { schema: 'noble-calculator-fold-precursor-local/v1',
-  scope: 'bounded wrapping-I64 decimal fold, not exact BigInt or CALC acceptance',
+  scope: 'bounded wrapping-I64 fold and finite lexical checked-stack sugar, not exact BigInt or CALC acceptance',
   binary_sha256: expectedDigest, result_sha256: digest(resultModule),
   build_sha256: digest(buildBytes), source_manifest_sha256: digest(manifestBytes),
   digit_sha256: digest(digitModule),
   later_digit_sha256: digest(laterDigitModule),
   module_sha256: digest(foldModule),
+  local_module_sha256: digest(localModule),
   gate_sha256: digest(fs.readFileSync(new URL(import.meta.url))), runs: [] };
 fs.mkdirSync(output);
 fs.copyFileSync(binary, path.join(output, 'noble'), fs.constants.COPYFILE_EXCL);
@@ -54,11 +56,11 @@ for (const file of ['build.json', 'build.stdout', 'build.stderr', 'source-manife
 }
 for (const [name, bytes] of [['result.noble', resultModule],
   ['decimal-digit.noble', digitModule], ['decimal-fold.noble', foldModule],
-  ['decimal-digit-2.noble', laterDigitModule]]) {
+  ['decimal-digit-2.noble', laterDigitModule], ['local-bindings.noble', localModule]]) {
   fs.writeFileSync(path.join(output, name), bytes, { flag: 'wx' });
 }
 const run = (name, args, input) => {
-  const artifactDir = /^(fold-|cursor-|less-|digit-version-|same-session-|recover-source-)/.test(name)
+  const artifactDir = /^(fold-|cursor-|less-|local-|digit-version-|same-session-|recover-source-)/.test(name)
     ? path.join(output, `${name}.artifacts`) : null;
   if (artifactDir) args = [...args, '--emit', artifactDir];
   const execution = spawnSync(binary, args, { cwd: root, input, encoding: null,
@@ -99,6 +101,7 @@ const run = (name, args, input) => {
 };
 const flags = ['--framed', '--declared-modules', '--text-byte-cursor',
   '--signed-self-recursion'];
+const localFlags = flags.filter(flag => flag !== '--signed-self-recursion');
 for (const opt of ['off', 'on']) {
   for (const [index, [text, expected]] of cases.entries()) {
     const input = Buffer.concat([resultModule, digitModule, foldModule,
@@ -195,6 +198,66 @@ for (const opt of ['off', 'on']) {
   }
 }
 for (const opt of ['off', 'on']) {
+  for (const [name, source, expected] of [
+    ['add', '5 6 local_math@1.add', '11'],
+    ['stack-add', '5 6 local_math@1.stack_add', '11'],
+    ['shadow-global', '5 local_math@1.shadow_global', '5'],
+    ['capture', '5 local_math@1.capture', '5'],
+    ['capture-pair', '5 6 local_math@1.capture_pair', '11'],
+    ['ordered-three', '1 2 3 local_math@1.ordered_three', '6'],
+    ['shadow', '5 local_math@1.shadow', '2'],
+    ['root', '1 let x 2 let y x y +', '3'],
+  ]) {
+    const input = Buffer.concat([localModule, Buffer.from(source)].map(frame));
+    const result = run(`local-${opt}-${name}`, ['session', ...localFlags, '--opt', opt], input);
+    assert.equal(result.status, 0, `local ${name}/${opt}`);
+    assert.deepEqual(result.reports.map(item => item.outcome), ['linked', 'normal']);
+    for (const report of result.reports) {
+      assert.equal(report.profile, 'Declared-Text-v1');
+      assert.equal(report.host_requests, 0);
+      assert.equal(report.guest_requests, 0);
+      assert.equal(report.acquired_authority, false);
+    }
+    const execution = result.reports[1];
+    assert.deepEqual(execution.stack.map(({ type, value }) => ({ type, value })),
+      [{ type: 'I64', value: expected }]);
+    assert.deepEqual(execution.request_trace, []);
+    assert.equal(execution.native_trap, null);
+    assert.ok(execution.module.imports.every(entry => entry.kind !== 'function'));
+  }
+  const reflected = run(`local-${opt}-capture-recipe`,
+    ['session', ...localFlags, '--opt', opt],
+    Buffer.concat([localModule, Buffer.from('5 let value [ value ] reflect')].map(frame)));
+  assert.equal(reflected.status, 0, `lexical capture reflection/${opt}`);
+  assert.deepEqual(reflected.reports.map(item => item.outcome), ['linked', 'normal']);
+  assert.equal(reflected.reports[1].stack.length, 1);
+  const syntax = reflected.reports[1].stack[0];
+  assert.equal(syntax.type, 'Syntax');
+  assert.deepEqual(syntax.recipe[0], { literal: { type: 'I64', value: '5' } });
+  assert.ok(syntax.recipe.some(entry => entry.invoke === 'builtin:dup')
+    && syntax.recipe.some(entry => entry.invoke === 'builtin:drop'),
+  'capture recipe must show the checked local projection and scope discard');
+  assert.equal(reflected.reports[1].host_requests, 0);
+  assert.deepEqual(reflected.reports[1].request_trace, []);
+  const selectedRecipe = run(`local-${opt}-selected-builtin-recipe`,
+    ['session', ...localFlags, '--opt', opt],
+    Buffer.concat([localModule,
+      Buffer.from('5 let x [ x -1 < ] reflect [ "x" 0 text.byte ] reflect')].map(frame)));
+  assert.equal(selectedRecipe.status, 0, `combined-profile builtin reflection/${opt}`);
+  const reflectedStack = selectedRecipe.reports.at(-1).stack;
+  assert.deepEqual(reflectedStack.map(entry => entry.type), ['Syntax', 'Syntax']);
+  assert.match(JSON.stringify(reflectedStack[0].recipe), /"invoke":"builtin:<"/);
+  assert.match(JSON.stringify(reflectedStack[1].recipe), /"invoke":"builtin:text.byte"/);
+  assert.equal(selectedRecipe.reports.at(-1).host_requests, 0);
+  const failed = run(`local-recover-${opt}`, ['session', ...localFlags, '--opt', opt],
+    Buffer.concat([Buffer.from('1 let x unknown'), Buffer.from('1 let x x')].map(frame)));
+  assert.notEqual(failed.status, 0);
+  assert.deepEqual(failed.reports.map(item => item.outcome), ['unbound-word', 'normal']);
+  assert.equal(failed.reports[0].prior_stack, 'unchanged');
+  assert.equal(failed.reports[0].prior_namespace, 'unchanged');
+  assert.equal(failed.reports[1].stack.at(-1).value, '1');
+}
+for (const opt of ['off', 'on']) {
   const source = [resultModule, digitModule, foldModule,
     Buffer.from('"0" 0 0 decimal_fold@1.fold'),
     Buffer.from('drop "9" 0 0 decimal_fold@1.fold'),
@@ -257,6 +320,12 @@ const negative = [
     frame(Buffer.from('-1 0 <'))],
   ['standalone-cursor-less', ['--text-byte-cursor'],
     frame(Buffer.from('-1 0 <'))],
+  ['ordinary-locals', ['--declared-modules', '--bindings', '/dev/null'],
+    frame(localModule)],
+  ['duplicate-local', localFlags.filter(flag => flag !== '--framed'),
+    frame(Buffer.from('module invalid@1 [ signature f forall<S:stack> [ S I64 I64 -- S I64 ! pure ] export f def f [ let x let x x ] ]'))],
+  ['missing-local-name', localFlags.filter(flag => flag !== '--framed'),
+    frame(Buffer.from('1 let'))],
 ];
 const plainCursorModule = Buffer.from('module cursor@1 [ signature read forall<S:stack> [ S Text I64 -- S Text I64 ! pure ] export read def read [ text.byte ] ]');
 const withoutFramed = flags.filter(flag => flag !== '--framed');
@@ -295,6 +364,10 @@ for (const [name, args, source] of negative) {
   if (name === 'ordinary-declared') {
     assert.equal(refusal.stage, 'resolve');
     assert.equal(refusal.outcome, 'unbound-word');
+    assert.equal(refusal.prior_namespace, 'unchanged');
+  }
+  if (['ordinary-locals', 'duplicate-local', 'missing-local-name'].includes(name)) {
+    assert.equal(refusal.stage, 'resolve');
     assert.equal(refusal.prior_namespace, 'unchanged');
   }
   if (name === 'unsigned-fold' || name === 'wrong-digit-version' ||

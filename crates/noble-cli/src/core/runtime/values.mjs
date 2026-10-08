@@ -130,8 +130,15 @@ function readRecipe(engine, runtime, root, depth) {
       else if (atom === 4) result.push({ literal: { type: 'Bool', value: value !== 0n } });
       else if (atom === 5) result.push({ literal: { type: 'Unit', value: null } });
       else if (atom === 2) {
-        const id = integer(Number(value), 25, 'builtin identity');
-        result.push({ invoke: `${id < 22 ? 'builtin' : id < 24 ? 'host' : 'live'}:${names[id]}` });
+        const id = integer(Number(value), 27, 'builtin identity');
+        const declaredText = engine.profile === 'Declared-Text-v1'
+          || engine.profile === 'Signed-Declared-Text-v1';
+        const cursor = declaredText || engine.profile === 'Text-Byte-Cursor-v1';
+        if (id === 26 && cursor) result.push({ invoke: 'builtin:text.byte' });
+        else if (id === 27 && declaredText) result.push({ invoke: 'builtin:<' });
+        else if (id < names.length) {
+          result.push({ invoke: `${id < 22 ? 'builtin' : id < 24 ? 'host' : 'live'}:${names[id]}` });
+        } else fail('builtin identity is outside selected profile');
       } else if (atom === 15) result.push({ invoke: `definition:${BigInt.asUintN(64, value)}` });
       else if (atom === 3) {
         const program = readBoxed(engine, runtime, child, depth + 1);

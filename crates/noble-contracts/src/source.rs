@@ -10,6 +10,7 @@ pub mod editor;
 mod emission;
 mod inference;
 mod lexer;
+mod locals;
 mod parsing;
 mod preflight;
 mod preparation;
