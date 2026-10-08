@@ -199,7 +199,7 @@ for (const opt of ['off', 'on']) {
 }
 for (const opt of ['off', 'on']) {
   const owner = Buffer.from(
-    'module countdown@1 [ signature go forall<S:stack> [ S I64 -- S I64 ! pure ] export go def go [ let n n 0 = [ n ] [ n 1 - go ] if ] ]');
+    'module countdown@1 [ signature go forall<S:stack> [ S I64 -- S I64 ! pure ] export go def go [ dup [ let n n 0 = ] dip swap [ ] [ 1 - go ] if ] ]');
   const observed = run(`signed-tail-${opt}-lexical-over-512`,
     ['session', ...flags, '--opt', opt],
     Buffer.concat([owner, Buffer.from('600 countdown@1.go')].map(frame)));
@@ -207,6 +207,10 @@ for (const opt of ['off', 'on']) {
   assert.deepEqual(observed.reports.map(report => report.outcome), ['linked', 'normal']);
   assert.deepEqual(observed.reports[1].stack.map(({ type, value }) => ({ type, value })),
     [{ type: 'I64', value: '0' }]);
+  assert.ok(observed.reports[1].metrics.execution_steps > 512,
+    'guest must perform more than 512 real checked recursive steps');
+  assert.ok(observed.reports[1].metrics.continuation_peak_bytes <= 512,
+    'signed tail self must not retain one continuation per recursive step');
   for (const report of observed.reports) {
     assert.equal(report.host_requests, 0);
     assert.equal(report.guest_requests, 0);
