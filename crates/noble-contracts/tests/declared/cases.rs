@@ -341,12 +341,12 @@ fn code_export_binding_checks_capture_destination_and_owner_effect() -> Result<(
     assert!(!interface.is_test_emit_i64_endomorphism());
     let mut wrong = binding.clone();
     wrong.input.pop();
-    assert!(matches!(ModuleSession::new(&[wrong]).and_then(|session|
+    assert!(matches!(ModuleSession::new(&[wrong], super::retained()).and_then(|session|
         session.prepare(source, &[], super::LIMITS)), Err(error)
         if error.stage() == Stage::Link));
     let mut wrong = binding;
     wrong.effects.clear();
-    assert!(matches!(ModuleSession::new(&[wrong]).and_then(|session|
+    assert!(matches!(ModuleSession::new(&[wrong], super::retained()).and_then(|session|
         session.prepare(source, &[], super::LIMITS)), Err(error)
         if error.stage() == Stage::Link));
     Ok(())

@@ -12,6 +12,10 @@ const USAGE: &str = "usage: noble worker typed PACKAGE --schema SCHEMA --state S
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536, nodes: 4_096, depth: 32, work: 3_000_000,
 };
+// The selected schema and root are distinct retained modules in one session.
+// Each preparation still has the independent LIMITS.bytes ceiling.
+const RETAINED_SCHEMA_ROOT_BYTES: u32 = LIMITS.bytes.checked_mul(2)
+    .expect("two bounded Worker module sources");
 
 fn failure(outcome: &'static str, message: &'static str) -> Failure {
     Failure::new(ErrorContext { stage: "admission", outcome }, message)
@@ -179,7 +183,10 @@ pub(super) fn execute(package_bytes: &[u8], schema_bytes: &[u8],
                       state_bytes: &[u8], event_bytes: &[u8])
     -> Result<Report, Failure> {
     let package = attempt!(Package::parse(package_bytes).map_err(value_failure));
-    let session = attempt!(noble_contracts::source::ModuleSession::new(&[]).map_err(Failure::source));
+    let retained = noble_contracts::source::RetainedSourceLimit::new(RETAINED_SCHEMA_ROOT_BYTES)
+        .expect("combined Worker schema and root source limit");
+    let session = attempt!(noble_contracts::source::ModuleSession::new(&[], retained)
+        .map_err(Failure::source));
     let schema_checked = attempt!(session.prepare(schema_bytes, &[], LIMITS).map_err(Failure::source));
     if schema_checked.kind() != noble_contracts::source::ModuleKind::Module
         || schema_checked.proof_obligations().is_some() || !schema_checked.bindings().is_empty() {
@@ -301,7 +308,10 @@ pub(super) fn validate_secondary(package_bytes: &[u8], schema_bytes: &[u8],
                                  state_bytes: &[u8], event_bytes: &[u8])
     -> Result<(), Failure> {
     let package = attempt!(Package::parse(package_bytes).map_err(value_failure));
-    let session = attempt!(noble_contracts::source::ModuleSession::new(&[]).map_err(Failure::source));
+    let retained = noble_contracts::source::RetainedSourceLimit::new(LIMITS.bytes)
+        .expect("Worker source limit");
+    let session = attempt!(noble_contracts::source::ModuleSession::new(&[], retained)
+        .map_err(Failure::source));
     let checked = attempt!(session.prepare(schema_bytes, &[], LIMITS).map_err(Failure::source));
     let (catalog, types) = attempt!(selected_schema(&checked, &package, schema_bytes));
     attempt!(worker_value::admit([state_bytes, event_bytes], [&types[0], &types[1]],
@@ -393,8 +403,8 @@ mod tests {
     fn fixture_with_source(schema_source: &str, source: &str, attempt_value: Value)
         -> Result<Fixture, String> {
         let session = noble_contracts::source::ModuleSession::new(&[],
-            noble_contracts::source::RetainedSourceLimit::new(LIMITS.bytes)
-                .expect("Worker source limit"))
+            noble_contracts::source::RetainedSourceLimit::new(RETAINED_SCHEMA_ROOT_BYTES)
+                .expect("combined Worker schema and root source limit"))
             .map_err(|error| format!("{error:?}"))?;
         let checked = session.prepare(schema_source.as_bytes(), &[], LIMITS)
             .map_err(|error| format!("{error:?}"))?;
@@ -475,6 +485,32 @@ mod tests {
         let report = execute(&package, schema, state, event)
             .map_err(|error| format!("{}: {}",error.context.outcome,error.message))?;
         serde_json::from_str(&report.json).map_err(|error| error.to_string())
+    }
+
+    #[test]
+    fn typed_host_retains_distinct_bounded_schema_and_root_above_single_source_limit()
+        -> Result<(), String> {
+        let schema = SCHEMA.replacen(
+            "opaque AttemptId Text public",
+            &format!("opaque AttemptId Text public # {}\n", "s".repeat(38_000)),
+            1);
+        let source = SOURCE.replacen(
+            "export transition",
+            &format!("# {}\n export transition", "r".repeat(30_000)),
+            1);
+        let per_source = usize::try_from(LIMITS.bytes).map_err(|error| error.to_string())?;
+        if schema.len() > per_source || source.len() > per_source
+            || schema.len() + source.len() <= per_source {
+            return Err("Worker schema/root boundary fixture is not independent".into());
+        }
+        let fixture = fixture_with_source(&schema, &source,
+            json!({"tag":"text","value":"attempt-1"}))?;
+        let result = invoke(&fixture, schema.as_bytes(), &fixture.state, &fixture.event)?;
+        if result["outcome"] != "normal"
+            || result["typed_output"]["actions"]["items"][0]["arm"] != "right" {
+            return Err(format!("separately bounded Worker sources were refused: {result}"));
+        }
+        Ok(())
     }
 
     #[test]

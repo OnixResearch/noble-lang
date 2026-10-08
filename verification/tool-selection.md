@@ -25,14 +25,19 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-This source-only integrated candidate selection compares 237 file digests across the flake and
+This source-only integrated candidate selection compares 252 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
 source-bound verification/build recipes, the architecture capacity policy,
 its typed export dependencies and manifest, all nine Cargo locks
 consumed by the reviewed offline vendor, the Worker peer manifest, guarded
 LIVE06 production-role sources, and MW1 issuer/MW2 Send/cancel source and
-controls, plus the separate test-only boundary
+controls, including direct Worker configuration, process, protocol, typed
+shell consumer, binding
+policy, declared-live publication, live ABI encoding and watched-file gate,
+component assembler/report, Wasm metadata
+emission, the typed package parser, and directly compiled Send WIT and
+dispatch source, plus the separate test-only boundary
 fixture lock. The newly selected declared-module contracts and CLI files,
 their behavioral regressions, migrated Wasm constructor callsites, and active
 diagnostic replay source bind this candidate's retained-source change rather
@@ -111,7 +116,9 @@ This candidate-only source selection is not a selected Nix, source-inventory,
 numeric guest, or native-assurance gate pass.
 The MW1 host-owned `own<program>` issuer and MW2 Worker Send peer have
 separate interfaces and lifetimes: a Program cell is not a Send task or its
-native socket pin. The peer checks package, schema, source, and the checked
+native socket pin. The selected local `worker shell` is a distinct typed
+consumer with a synthetic datagram; it is not the Worker Send WIT peer.
+The peer checks package, schema, source, and the checked
 source-Program owner before an exact-action host grant; cancellation revokes
 that grant and native access before releasing a blocked producer. Abnormal
 cleanup must report failed retirement and keep the socket pin charged until
