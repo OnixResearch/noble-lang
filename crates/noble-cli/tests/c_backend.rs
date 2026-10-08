@@ -3,6 +3,11 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+// Existing component-tool pin used only for a source syntax diagnostic;
+// this is not a selected C backend compiler, linker, or native build pin.
+const SYNTAX_GCC: &str =
+    "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/gcc";
+
 struct Scratch(PathBuf);
 impl Scratch {
     fn new() -> Result<Self, std::io::Error> {
@@ -53,7 +58,7 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let scratch = Scratch::new()?;
     let policy = scratch.file("policy.json", br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#)?;
-    // This is a development compiler diagnostic, not a selected toolchain,
+    // This is a pinned development compiler diagnostic, not a selected C toolchain,
     // source-to-ELF admission, C/Wasm comparison, or a runtime test.
     for (name, source, interface) in [
         ("captured-compose", "40 2 quote [ + ] compose run", "-- I64"),
@@ -72,6 +77,11 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
         ("dip-i64", "10 32 [ 1 + ] dip +", "-- I64"),
         ("dip-unit", "41 unit [ 1 + ] dip drop", "-- I64"),
         ("dip-program", "41 [ 1 + ] [ drop 0 ] dip run", "-- I64"),
+        ("text-empty", "\"\"", "-- Text"),
+        ("text-utf8-escape", "\"é\\\"\\\\\\n\\u{2603}\"", "-- Text"),
+        ("text-captured", "\"a\" quote run", "-- Text"),
+        ("text-dip", "41 \"held\" [ 1 + ] dip swap drop", "-- Text"),
+        ("text-unselected-branch", "true [ \"yes\" ] [ \"no\" ] if", "-- Text"),
     ] {
         let source = scratch.file(&format!("{name}.noble"), source.as_bytes())?;
         let contract = scratch.file(
@@ -87,12 +97,12 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
             String::from_utf8_lossy(&built.stderr)
         );
         let artifact = out.join("artifact.c");
-        let diagnostic = Command::new("cc")
+        let diagnostic = Command::new(SYNTAX_GCC)
             .args(["-std=c11", "-pedantic-errors", "-fsyntax-only"])
             .arg(&artifact)
             .output()
             .map_err(|error| format!(
-                "C11 syntax diagnostic requires a development 'cc' supporting -fsyntax-only: {error}"
+                "C11 syntax diagnostic requires the pinned GCC15 supporting -fsyntax-only: {error}"
             ))?;
         assert!(
             diagnostic.status.success(),
@@ -136,6 +146,37 @@ fn source_bytes_change_build_identity_without_rebinding_numeric_recipe(
         a["semantic_recipe_sha256"],
         minimum["semantic_recipe_sha256"]
     );
+    Ok(())
+}
+
+#[test]
+fn checked_text_payload_changes_recipe_without_changing_type_only_candidate(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let scratch = Scratch::new()?;
+    let contract = scratch.file(
+        "contract.json",
+        br#"{"expected_interface":"-- Text","resolved_host_contracts":{}}"#,
+    )?;
+    let policy = scratch.file(
+        "policy.json",
+        br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#,
+    )?;
+    let mut receipts = Vec::new();
+    for (name, source_bytes) in [
+        ("a", br#""a""#.as_slice()),
+        ("b", br#""b""#.as_slice()),
+        ("escaped-a", br#""\u{61}""#.as_slice()),
+    ] {
+        let source = scratch.file(&format!("{name}.noble"), source_bytes)?;
+        let output = build(&source, &contract, &policy, &scratch.0.join(format!("{name}-out")))?;
+        assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+        receipts.push(serde_json::from_slice::<serde_json::Value>(&output.stdout)?);
+    }
+    assert_eq!(receipts[0]["checked_candidate_sha256"], receipts[1]["checked_candidate_sha256"]);
+    assert_ne!(receipts[0]["semantic_recipe_sha256"], receipts[1]["semantic_recipe_sha256"]);
+    assert_ne!(receipts[0]["c_sha256"], receipts[1]["c_sha256"]);
+    assert_eq!(receipts[0]["semantic_recipe_sha256"], receipts[2]["semantic_recipe_sha256"]);
+    assert_ne!(receipts[0]["source_sha256"], receipts[2]["source_sha256"]);
     Ok(())
 }
 
@@ -252,6 +293,46 @@ fn checked_control_requires_matching_branches_and_dip_stack(
 }
 
 #[test]
+fn duplicate_control_members_refuse_before_emission(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let scratch = Scratch::new()?;
+    let source = scratch.file("source.noble", b"1 2 +")?;
+    let contract = scratch.file(
+        "contract.json",
+        br#"{"expected_interface":"-- I64","resolved_host_contracts":{}}"#,
+    )?;
+    let policy = scratch.file(
+        "policy.json",
+        br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#,
+    )?;
+    let clean_contract = std::fs::read(&contract)?;
+    let clean_policy = std::fs::read(&policy)?;
+    for (index, (contract_bytes, policy_bytes)) in [
+        (
+            br#"{"expected_interface":"-- Bool","expected_interface":"-- I64","resolved_host_contracts":{}}"#.to_vec(),
+            clean_policy.clone(),
+        ),
+        (
+            clean_contract,
+            br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"ste\u0070s":1,"steps":100,"output_bytes":1024}}"#.to_vec(),
+        ),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let contract_path = scratch.file(&format!("duplicate-{index}-contract.json"), &contract_bytes)?;
+        let policy_path = scratch.file(&format!("duplicate-{index}-policy.json"), &policy_bytes)?;
+        let out = scratch.0.join(format!("duplicate-{index}-out"));
+        let refusal = build(&source, &contract_path, &policy_path, &out)?;
+        assert_eq!(refusal.status.code(), Some(2));
+        assert!(String::from_utf8_lossy(&refusal.stderr).contains("duplicate JSON member"));
+        assert!(refusal.stdout.is_empty());
+        assert!(!out.exists());
+    }
+    Ok(())
+}
+
+#[test]
 fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let scratch = Scratch::new()?;
@@ -267,7 +348,7 @@ fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
     let out_of_range = scratch.file("out-of-range.noble", b"9223372036854775808")?;
     let invalid_utf8 = scratch.file("invalid-utf8.noble", b"\xff")?;
     let bad_type = scratch.file("bad-type.noble", b"1 true +")?;
-    let unsupported_value = scratch.file("unsupported-value.noble", b"\"text\" drop 1")?;
+    let unsupported_value = scratch.file("unsupported-value.noble", b"1 2 pair drop 1")?;
     let host_effect = scratch.file("host-effect.noble", b"\"A\" test.emit 1")?;
     let named = scratch.file("named.noble", b"def twice [ dup compose ]\n20 [ 1 + ] twice run")?;
     let reflect = scratch.file("reflect.noble", b"[ 1 ] reflect drop 1")?;

@@ -2,7 +2,7 @@
 
 ## Context
 
-`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles only checked, effect-free Core-Bootstrap I64/Bool/Unit expressions; it does not compile or execute native ELF. The held canonical status paragraph still describes the earlier I64/Bool slice and needs independent owner review before any integration. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
+`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles only checked, effect-free Core-Bootstrap I64/Bool/Unit/Text expressions; it does not compile or execute native ELF. The held canonical status paragraph still describes the earlier I64/Bool slice and needs independent owner review before any integration. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
 
 The isolated source-only emitter now lowers checked pure `dip` and `if`
 as well as literal/stack/arithmetic/Unit/quotation/`quote`/`compose`/`run`.
@@ -16,9 +16,12 @@ The independent kernel checks both branches and rejects unsupported
 quotation bodies before emission; no C branch is a source evaluator.
 These source-only semantics remain unexecuted as C native code.
 
-The complete CB-SCOPE/CB-VALUE/CB-LIMIT contracts are still open: Text's
-checked candidate literal is only a `Lit::Text` marker and needs exact
-host-selected payload binding before C byte emission; Pair/Sum/List,
+The source-only path now verifies one UTF-8 `Body.texts` payload per checked
+`Lit::Text` node, rejects duplicate/orphan metadata, and emits immutable
+static bytes with bounded JSON escaping. Contract/policy JSON now rejects
+duplicate member names recursively before interpretation. These corrections
+are not native admission or executed C semantics.
+The complete CB-SCOPE/CB-VALUE/CB-LIMIT contracts are still open: Pair/Sum/List,
 inert Syntax/`reflect`, typed runtime input, definitions, `test.emit`
 and current host authority require distinct checked representations
 or a real mediator. The source-only policy has only
@@ -114,8 +117,8 @@ syntax-only check authorizes MCB acceptance. r[CB-ADMIT-01] r[CB-GATE-01]
 
 This is a review plan, **not** a selected runner, compiler, VM, executable
 recipe or authorization to launch a guest. The checked source-only emitter
-does not spawn `cc`, produce ELF or satisfy CB-ADMIT-01. Its JSON duplicate
-members and ancestor/output path races remain open. `--native` and
+does not spawn `cc`, produce ELF or satisfy CB-ADMIT-01. Its ancestor/output
+path races remain open despite strict duplicate-key decoding. `--native` and
 `execute --target c` continue to refuse. Canonical C text and all case
 evidence remain HOLD until a separate owner decision.
 

@@ -79,10 +79,14 @@ does not install these runtime tools.
 The explicit `build SOURCE --target c` route emits **source only**, not an
 executable or an alternative to the selected Wasm runtime. This isolated
 WIP independently checks an effect-free Core-Bootstrap expression with one
-I64, Bool or Unit result, then lowers ordered stack operations and the `unit`
-constructor, immutable quotation bodies, runtime `quote` capture,
+I64, Bool, Unit or Text result, then lowers ordered stack operations, the
+`unit` constructor and exact checked UTF-8 Text payloads, immutable quotation
+bodies, runtime `quote` capture,
 `compose`, `run`, pure `dip` and checked `if` branches into bounded C11 instructions and
-Program values. It refuses unsupported types, host effects, named definitions,
+Program values. Text literals are bound by node identity to exactly one
+host-selected checked `Body.texts` payload; static C bytes and bounded JSON
+output preserve escapes and UTF-8 without retaining a borrowed buffer.
+It refuses Pair/Sum/List/Syntax, `reflect`, host effects, named definitions,
 runtime input and other profiles; there is no Wasm fallback.
 
 ```sh
@@ -98,9 +102,10 @@ and `manifest.json` with exact-byte file digests and a build key. The checked
 candidate and resolved-environment digest fields hash this toolchain's Rust
 Debug rendering, not a canonical external encoding. This is candidate
 evidence, **not** independent admission or C/Wasm equivalence. Contract and
-policy JSON currently use last-wins duplicate-member decoding, so an earlier
-bound can be overwritten; the source-only route does not satisfy complete
-CB-LIMIT-01 input-integrity admission. Input files are read through one
+policy JSON reject duplicate member names recursively before checking limits,
+including names whose Unicode escapes decode to the same key. The exact
+source-only policy still rejects `limits.list_length` rather than admitting an
+unenforced bound. Input files are read through one
 bounded file descriptor each, then the observed bytes are
 copied; this does not authenticate the host-selected pathname against ancestor
 symlinks, hard links or concurrent replacement, nor seal output files against
@@ -119,13 +124,13 @@ The existing bubblewrap runner is for Lean proofs, not C; installed QEMU/KVM
 or host compiler binaries do not supply a selected VM image, immutable
 runner/filter/loader/mediator pins or a verified vDSO/vvar/TSC barrier.
 For a **developer-only, nonexecuting** C11 syntax diagnostic on emitted source,
-`cc -std=c11 -pedantic-errors -fsyntax-only NEW_OUTPUT_DIRECTORY/artifact.c`
-can check whether the local compiler accepts the C text. This host `cc` is
-not a selected/pinned C compiler or a native artifact admission check. It
+the isolated CLI test uses the existing pinned component GCC15 wrapper with
+`-std=c11 -pedantic-errors -fsyntax-only` against `artifact.c`. That compiler
+pin is not a selected C backend compiler or a native artifact admission. It
 produces no admitted ELF and cannot establish C/Wasm differential results.
 All CB-CASE-01..10 remain absent/not-run/open/unassessed; the canonical C
 edits are HOLD pending independent owner review before integration. The
-source-only Unit extension is WIP and does not promote any case or update
+source-only Unit/Text extension is WIP and does not promote any case or update
 the held canonical C wording. The [review-only native security design](.cairn/changes/c-backend/design.md)
 lists prerequisites, not a selected
 runner. No clock/vvar/TSC nondisclosure barrier or C selection follows

@@ -3,6 +3,7 @@
 //! Core submission. The emitted C executes typed instructions and immutable
 //! captured Program values; it never parses Noble source or recipe text.
 
+use std::fmt::Write as _;
 use std::io::{Read, Write};
 use std::os::unix::fs::OpenOptionsExt;
 use std::path::{Path, PathBuf};
@@ -10,6 +11,8 @@ use std::path::{Path, PathBuf};
 use noble_kernel::contracts::{Behavior, Definition};
 use noble_kernel::types::Ty;
 use noble_kernel::untrusted::{Candidate, Lit, Node, NodeId};
+use serde::de::{Error as _, MapAccess, SeqAccess, Visitor};
+use serde::Deserialize;
 use serde_json::{json, Value};
 
 const SOURCE_MAX: usize = 4096;
@@ -28,11 +31,12 @@ const RUNTIME_HEADER: &str = r#"/* Noble nonselected C11 source; requires separa
 #include <stdlib.h>
 #include <string.h>
 _Static_assert(CHAR_BIT == 8 && sizeof(uint64_t) == 8 && UINT64_MAX == UINT64_C(18446744073709551615), "unsupported I64 target");
-enum { TAG_I64 = 1, TAG_BOOL = 2, TAG_PROGRAM = 3, TAG_UNIT = 4 };
+enum { TAG_I64 = 1, TAG_BOOL = 2, TAG_PROGRAM = 3, TAG_UNIT = 4, TAG_TEXT = 5 };
 typedef struct { unsigned tag; uint64_t bits; } Value;
 typedef struct { unsigned op; uint64_t bits; } Instruction;
 typedef struct { const Instruction *code; size_t count; unsigned valid; size_t leaves, depth; } StaticProgram;
-enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_UNIT, OP_IF, OP_DIP };
+typedef struct { const unsigned char *bytes; size_t length; unsigned valid; } StaticText;
+enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_UNIT, OP_IF, OP_DIP, OP_TEXT };
 typedef struct { unsigned kind; uint64_t left, right; Value capture; size_t leaves, depth; } Program;
 typedef struct { size_t leaves, depth; } Metrics;
 typedef struct { uint64_t program; size_t pc; unsigned phase; Value restore; } Frame;
@@ -58,6 +62,11 @@ static void append(const char *text) {
     if (n >= OUTPUT_BYTES - length) fail("output bytes exhausted");
     memcpy(output + length, text, n);
     length += n;
+    output[length] = '\0';
+}
+static void append_byte(unsigned char byte) {
+    if (length >= OUTPUT_BYTES - 1) fail("output bytes exhausted");
+    output[length++] = (char)byte;
     output[length] = '\0';
 }
 static void push(unsigned tag, uint64_t bits) {
@@ -124,6 +133,10 @@ static void execute(Instruction instruction) {
     case OP_I64: push(TAG_I64, instruction.bits); break;
     case OP_BOOL: if (instruction.bits > 1) fail("invalid Bool"); push(TAG_BOOL, instruction.bits); break;
     case OP_UNIT: push(TAG_UNIT, 0); break;
+    case OP_TEXT:
+        if (instruction.bits >= STATIC_TEXTS || !text_literals[instruction.bits].valid) fail("invalid Text reference");
+        push(TAG_TEXT, instruction.bits);
+        break;
     case OP_DUP:
         if (!height) fail("stack underflow");
         push_value(stack[height - 1]);
@@ -140,7 +153,8 @@ static void execute(Instruction instruction) {
         break;
     case OP_QUOTE: {
         Value capture = pop();
-        if (capture.tag != TAG_I64 && capture.tag != TAG_BOOL && capture.tag != TAG_UNIT && capture.tag != TAG_PROGRAM) fail("invalid capture");
+        if (capture.tag != TAG_I64 && capture.tag != TAG_BOOL && capture.tag != TAG_UNIT &&
+            capture.tag != TAG_TEXT && capture.tag != TAG_PROGRAM) fail("invalid capture");
         size_t leaves = 1, depth = 1;
         if (capture.tag == TAG_PROGRAM) {
             Metrics subject = metrics(capture.bits);
@@ -183,7 +197,7 @@ static void execute(Instruction instruction) {
         Value program = pop_program();
         Value saved = pop();
         if (saved.tag != TAG_I64 && saved.tag != TAG_BOOL &&
-            saved.tag != TAG_UNIT && saved.tag != TAG_PROGRAM) fail("invalid dip value");
+            saved.tag != TAG_UNIT && saved.tag != TAG_TEXT && saved.tag != TAG_PROGRAM) fail("invalid dip value");
         if (saved.tag == TAG_PROGRAM) (void)metrics(saved.bits);
         if (frame_count > FRAME_SLOTS - 2) fail("program frames exhausted");
         frames[frame_count++] = (Frame){UINT64_MAX, 0, 0, saved};
@@ -238,6 +252,24 @@ static void decimal(uint64_t bits) {
     if (n < 0 || (size_t)n >= sizeof digits) fail("decimal encoding");
     append(digits);
 }
+static void emit_text(uint64_t id) {
+    static const char hex[] = "0123456789abcdef";
+    if (id >= STATIC_TEXTS || !text_literals[id].valid) fail("invalid Text reference");
+    const StaticText *text = &text_literals[id];
+    append("{\"type\":\"Text\",\"value\":\"");
+    for (size_t i = 0; i < text->length; ++i) {
+        unsigned char byte = text->bytes[i];
+        if (byte == '"' || byte == '\\') {
+            append_byte('\\');
+            append_byte(byte);
+        } else if (byte < 0x20) {
+            append("\\u00");
+            append_byte((unsigned char)hex[byte >> 4]);
+            append_byte((unsigned char)hex[byte & 15]);
+        } else append_byte(byte);
+    }
+    append("\"}");
+}
 static void emit_stack(void) {
     append("{\"stage\":\"native-runtime\",\"outcome\":\"normal\",\"stack\":[");
     for (size_t i = 0; i < height; ++i) {
@@ -250,6 +282,8 @@ static void emit_stack(void) {
             append(stack[i].bits ? "{\"type\":\"Bool\",\"value\":true}" : "{\"type\":\"Bool\",\"value\":false}");
         } else if (stack[i].tag == TAG_UNIT) {
             append("{\"type\":\"Unit\"}");
+        } else if (stack[i].tag == TAG_TEXT) {
+            emit_text(stack[i].bits);
         } else fail("invalid output tag");
     }
     append("]}");
@@ -337,9 +371,87 @@ struct Limits {
     output: usize,
 }
 
+struct UniqueValue(Value);
+
+impl<'de> Deserialize<'de> for UniqueValue {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct UniqueVisitor;
+        impl<'de> Visitor<'de> for UniqueVisitor {
+            type Value = UniqueValue;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a JSON value without duplicate object members")
+            }
+
+            fn visit_bool<E: serde::de::Error>(self, value: bool) -> Result<Self::Value, E> {
+                Ok(UniqueValue(Value::Bool(value)))
+            }
+
+            fn visit_i64<E: serde::de::Error>(self, value: i64) -> Result<Self::Value, E> {
+                Ok(UniqueValue(Value::Number(value.into())))
+            }
+
+            fn visit_u64<E: serde::de::Error>(self, value: u64) -> Result<Self::Value, E> {
+                Ok(UniqueValue(Value::Number(value.into())))
+            }
+
+            fn visit_f64<E: serde::de::Error>(self, value: f64) -> Result<Self::Value, E> {
+                serde_json::Number::from_f64(value)
+                    .map(Value::Number)
+                    .map(UniqueValue)
+                    .ok_or_else(|| E::custom("invalid JSON number"))
+            }
+
+            fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
+                Ok(UniqueValue(Value::String(value.to_owned())))
+            }
+
+            fn visit_string<E: serde::de::Error>(self, value: String) -> Result<Self::Value, E> {
+                Ok(UniqueValue(Value::String(value)))
+            }
+
+            fn visit_unit<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                Ok(UniqueValue(Value::Null))
+            }
+
+            fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                Ok(UniqueValue(Value::Null))
+            }
+
+            fn visit_seq<A: SeqAccess<'de>>(self, mut sequence: A) -> Result<Self::Value, A::Error> {
+                let mut values = Vec::new();
+                while let Some(UniqueValue(value)) = sequence.next_element()? {
+                    values.push(value);
+                }
+                Ok(UniqueValue(Value::Array(values)))
+            }
+
+            fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
+                let mut values = serde_json::Map::new();
+                while let Some((key, UniqueValue(value))) = map.next_entry::<String, UniqueValue>()? {
+                    if values.contains_key(&key) {
+                        return Err(A::Error::custom("duplicate JSON member"));
+                    }
+                    values.insert(key, value);
+                }
+                Ok(UniqueValue(Value::Object(values)))
+            }
+        }
+        deserializer.deserialize_any(UniqueVisitor)
+    }
+}
+
+fn unique_json(bytes: &[u8]) -> Result<Value, String> {
+    let mut decoder = serde_json::Deserializer::from_slice(bytes);
+    let UniqueValue(value) = UniqueValue::deserialize(&mut decoder)
+        .map_err(|error| format!("invalid or duplicate control JSON: {error}"))?;
+    decoder.end().map_err(|error| format!("invalid control JSON: {error}"))?;
+    Ok(value)
+}
+
 fn controls(contract: &[u8], policy: &[u8]) -> Result<(Ty, Limits), String> {
-    let contract: Value = serde_json::from_slice(contract).map_err(|_| "invalid contract JSON")?;
-    let policy: Value = serde_json::from_slice(policy).map_err(|_| "invalid policy JSON")?;
+    let contract = unique_json(contract)?;
+    let policy = unique_json(policy)?;
     let fields = contract.as_object().ok_or("contract must be an object")?;
     if fields.len() != 2
         || !fields.contains_key("expected_interface")
@@ -354,7 +466,8 @@ fn controls(contract: &[u8], policy: &[u8]) -> Result<(Ty, Limits), String> {
         Some("-- I64") => Ty::I64,
         Some("-- Bool") => Ty::Bool,
         Some("-- Unit") => Ty::Unit,
-        _ => return Err("C slice requires no runtime input and one I64, Bool or Unit output".into()),
+        Some("-- Text") => Ty::Text,
+        _ => return Err("C slice requires no runtime input and one I64, Bool, Unit or Text output".into()),
     };
     let fields = policy.as_object().ok_or("policy must be an object")?;
     if fields.len() != 4
@@ -406,10 +519,32 @@ struct LoweredProgram {
     depth: usize,
 }
 
+fn bind_texts(body: &noble_kernel::execution::Body) -> Result<Vec<Option<&str>>, String> {
+    let mut texts = vec![None; body.candidate.nodes.len()];
+    for text in &body.texts {
+        let slot = texts.get_mut(text.node.0 as usize).ok_or("Text metadata node out of bounds")?;
+        if !matches!(
+            body.candidate.nodes.get(text.node.0 as usize),
+            Some(Node::Literal { lit: Lit::Text, .. })
+        ) || slot.is_some()
+        {
+            return Err("Text metadata must bind exactly one Text literal".into());
+        }
+        *slot = Some(std::str::from_utf8(&text.bytes).map_err(|_| "invalid Text UTF-8")?);
+    }
+    if body.candidate.nodes.iter().enumerate().any(|(index, node)| {
+        matches!(node, Node::Literal { lit: Lit::Text, .. }) != texts[index].is_some()
+    }) {
+        return Err("missing or extraneous checked Text metadata".into());
+    }
+    Ok(texts)
+}
+
 fn lower_body(
     candidate: &Candidate,
     body: &[NodeId],
     kinds: &[Behavior],
+    texts: &[Option<&str>],
     visited: &mut [bool],
     programs: &mut [Option<LoweredProgram>],
     slot: usize,
@@ -432,9 +567,14 @@ fn lower_body(
                 ("OP_BOOL", u64::from(*value), json!(["bool", value])),
             Node::Literal { lit: Lit::Unit, .. } =>
                 ("OP_UNIT", 0, json!(["unit"])),
+            Node::Literal { lit: Lit::Text, .. } => {
+                let text = texts.get(index).and_then(|value| *value)
+                    .ok_or("missing checked Text payload")?;
+                ("OP_TEXT", index as u64, json!(["text", text]))
+            }
             Node::Quotation { body, .. } => {
                 let (child_leaves, child_depth) = lower_body(
-                    candidate, body, kinds, visited, programs, index + 1,
+                    candidate, body, kinds, texts, visited, programs, index + 1,
                 )?;
                 leaves = leaves.checked_add(child_leaves).ok_or("recipe leaves exhausted")?;
                 depth = depth.max(child_depth.checked_add(1).ok_or("program depth exhausted")?);
@@ -531,11 +671,12 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
     {
         return Err("checked C body differs from its expected interface or order".into());
     }
+    let texts = bind_texts(&submission.body)?;
     let mut visited = vec![false; candidate.nodes.len()];
     let mut programs = Vec::with_capacity(candidate.nodes.len() + 1);
     programs.resize_with(candidate.nodes.len() + 1, || None);
     lower_body(
-        candidate, &candidate.body, &submission.environment.kinds,
+        candidate, &candidate.body, &submission.environment.kinds, &texts,
         &mut visited, &mut programs, 0,
     )?;
     if visited.iter().any(|seen| !seen)
@@ -545,11 +686,32 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
         return Err("checked C body omits or duplicates an accepted node".into());
     }
     let mut c = format!(
-        "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS {}\n#define FRAME_SLOTS {}\n#define RECIPE_LIMIT {}\n#define DEPTH_LIMIT {}\n#define STATIC_PROGRAMS {}\n",
+        "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS {}\n#define FRAME_SLOTS {}\n#define RECIPE_LIMIT {}\n#define DEPTH_LIMIT {}\n#define STATIC_PROGRAMS {}\n#define STATIC_TEXTS {}\n",
         limits.slots, limits.steps, limits.output,
-        PROGRAM_MAX, FRAME_MAX, RECIPE_MAX, PROGRAM_DEPTH_MAX, programs.len()
+        PROGRAM_MAX, FRAME_MAX, RECIPE_MAX, PROGRAM_DEPTH_MAX, programs.len(), texts.len().max(1)
     );
     c.push_str(RUNTIME_HEADER);
+    for (index, text) in texts.iter().enumerate() {
+        if let Some(text) = text {
+            write!(c, "static const unsigned char text_{index}[] = {{").map_err(|_| "C output failure")?;
+            for byte in text.as_bytes() {
+                write!(c, "0x{byte:02x},").map_err(|_| "C output failure")?;
+            }
+            c.push_str("0};\n");
+        }
+    }
+    c.push_str("static const StaticText text_literals[STATIC_TEXTS] = {\n");
+    for (index, text) in texts.iter().enumerate() {
+        if let Some(text) = text {
+            writeln!(c, "    {{text_{index}, {}, 1}},", text.len()).map_err(|_| "C output failure")?;
+        } else {
+            c.push_str("    {NULL, 0, 0},\n");
+        }
+    }
+    if texts.is_empty() {
+        c.push_str("    {NULL, 0, 0},\n");
+    }
+    c.push_str("};\n");
     for (index, program) in programs.iter().enumerate() {
         if let Some(program) = program {
             // An empty quotation is an actual zero-instruction program.
@@ -575,6 +737,7 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
         Ty::I64 => "    if (height != 1 || stack[0].tag != TAG_I64) fail(\"output interface\");\n",
         Ty::Bool => "    if (height != 1 || stack[0].tag != TAG_BOOL) fail(\"output interface\");\n",
         Ty::Unit => "    if (height != 1 || stack[0].tag != TAG_UNIT) fail(\"output interface\");\n",
+        Ty::Text => "    if (height != 1 || stack[0].tag != TAG_TEXT) fail(\"output interface\");\n",
         _ => return Err("unsupported C result type".into()),
     });
     c.push_str("    emit_stack();\n    return 0;\n}\n");
@@ -585,6 +748,7 @@ fn emit(source: &[u8], expected: Ty, limits: &Limits) -> Result<(String, Value, 
         Ty::I64 => "-- I64",
         Ty::Bool => "-- Bool",
         Ty::Unit => "-- Unit",
+        Ty::Text => "-- Text",
         _ => return Err("unsupported C result type".into()),
     };
     let recipes = programs.into_iter().map(|program| program.map(|item| item.recipe))
