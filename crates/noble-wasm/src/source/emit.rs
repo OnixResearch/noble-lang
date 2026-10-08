@@ -3,6 +3,7 @@
     reason = "Owner: noble-maintainers; emission mutates only the fresh private output sink; checked plans and caller inputs remain immutable and no partial output escapes preparation."
 )]
 
+mod core_live;
 mod functions;
 mod imports;
 mod initialize;
@@ -138,10 +139,27 @@ pub(super) fn module(
         attempt!(out.append(b")\n"));
         return Ok(out.finish());
     }
-    attempt!(out.append(b"(func (export \"submit\") (result i32)\n(if (global.get $failure) (then (return (global.get $failure))))\n(if (i32.or (global.get $cp) (i32.ne (global.get $generation) "));
+    if plan.core_live {
+        attempt!(core_live::release_module_roots(&mut out, plan.programs.len()));
+    }
+    attempt!(out.append(b"(func (export \"submit\") (result i32)\n(if (global.get $failure) (then (return (global.get $failure))))\n"));
+    if plan.core_live {
+        attempt!(out.append(b"(if (i32.or (global.get $core_live_module_installed) (i32.load (i32.const 61440)))\n (then (call $fail (i32.const 4)) (return (global.get $failure))))\n"));
+    }
+    attempt!(out.append(b"(if (i32.or (global.get $cp) (i32.ne (global.get $generation) "));
     attempt!(out.i32(generation));
-    attempt!(out.append(b")) (then (call $fail (i32.const 4)) (return (global.get $failure))))\n(call $check_input)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 0))\n(call $initialize)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 1))\n(call $enqueue_program "));
+    attempt!(out.append(b")) (then (call $fail (i32.const 4)) (return (global.get $failure))))\n(call $check_input)\n(if (global.get $failure) (then (return (global.get $failure))))\n"));
+    if plan.core_live {
+        // Shared across all instances: a failed submit leaves the guard set
+        // and permanently refuses code retirement in the poisoned session.
+        attempt!(out.append(b"(i32.store (i32.const 61440) (i32.const 1))\n"));
+    }
+    attempt!(out.append(b"(global.set $phase (i32.const 0))\n(call $initialize)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 1))\n(call $enqueue_program "));
     attempt!(get_global(&mut out, plan.root));
-    attempt!(out.append(b")\n(call $dispatch)\n(if (i32.eqz (global.get $failure)) (then (call $check_output)))\n(if (i32.eqz (global.get $failure)) (then (global.set $generation (i32.add (global.get $generation) (i32.const 1)))))\n(global.get $failure))\n)\n"));
+    attempt!(out.append(b")\n(call $dispatch)\n(if (i32.eqz (global.get $failure)) (then (call $check_output)))\n(if (i32.eqz (global.get $failure)) (then\n (global.set $generation (i32.add (global.get $generation) (i32.const 1)))\n"));
+    if plan.core_live {
+        attempt!(out.append(b" (global.set $core_live_module_installed (i32.const 1))\n (i32.store (i32.const 61440) (i32.const 0))\n"));
+    }
+    attempt!(out.append(b"))\n(global.get $failure))\n)\n"));
     Ok(out.finish())
 }

@@ -52,6 +52,11 @@ pub(super) fn write(
         attempt!(global_import(out, b"live_frame", b"i32"));
         attempt!(out.append(b"(global $live_module_installed (mut i32) (i32.const 0))\n"));
     }
+    if plan.core_live {
+        attempt!(out.append(b"(global $core_live_module_installed (mut i32) (i32.const 0))\n\
+(global $core_live_adapter_leases (mut i32) (i32.const 0))\n\
+(global $core_live_proposal_callback_active (mut i32) (i32.const 0))\n"));
+    }
     out.append(b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n")
 }
 
@@ -145,6 +150,11 @@ pub(super) fn runtime(
             include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat"))
         ));
     }
+    if plan.core_live {
+        attempt!(fragment(out, include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"), "/runtime/core-live-owners.wat"
+        ))));
+    }
     attempt!(fragment(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/programs.wat"))
@@ -219,7 +229,23 @@ pub(super) fn runtime(
         attempt!(out.append(b"(func $op_clock_bound (param $slot i32) (local $status i32) (local $value i64)\n (global.set $failure (i32.const 5))\n (call $host_clock_bound (local.get $slot))\n (local.set $value)\n (local.set $status)\n (if (i32.eqz (local.get $status)) (then\n   (global.set $failure (i32.const 0))\n   (call $push_i64 (local.get $value)))))\n"));
     }
     if plan.has_live_propose {
-        attempt!(out.append(b"(func $op_live_propose (param $owner i64)
+        if plan.core_live {
+            attempt!(out.append(b"(func $op_live_propose (param $owner i64)
+ (local $program i32) (local $expected i64) (local $approved i32)
+ (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))
+ (local.set $expected (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ ;; Permit provisional saved-Program roots only in this exact host callback.
+ (global.set $failure (i32.const 5))
+ (global.set $core_live_proposal_callback_active (i32.const 1))
+ (local.set $approved
+  (call $host_live_propose (local.get $owner) (local.get $expected) (local.get $program)))
+ (global.set $core_live_proposal_callback_active (i32.const 0))
+ (if (i32.eqz (local.get $approved))
+  (then (global.set $failure (i32.const 0)) (call $push_unit))))
+"));
+        } else {
+            attempt!(out.append(b"(func $op_live_propose (param $owner i64)
  (local $program i32) (local $expected i64)
  (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))
  (local.set $expected (call $pop_kind (i32.const 1)))
@@ -229,6 +255,7 @@ pub(super) fn runtime(
  (if (i32.eqz (call $host_live_propose (local.get $owner) (local.get $expected) (local.get $program)))
   (then (global.set $failure (i32.const 0)) (call $push_unit))))
 "));
+        }
     }
     if plan.has_live_generation {
         attempt!(out.append(b"(func $op_live_generation (local $current i64)
