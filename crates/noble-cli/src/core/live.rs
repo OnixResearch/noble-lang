@@ -10,7 +10,7 @@ use std::os::unix::fs::MetadataExt;
 
 const LIMIT: u32 = super::SOURCE_LIMITS.bytes;
 
-type FileIdentity = (u64, u64, u64, i64, i64, i64, i64);
+type FileIdentity = (u64, u64, u64, u64, i64, i64, i64, i64);
 
 struct Snapshot {
     bytes: std::vec::Vec<u8>,
@@ -28,11 +28,13 @@ enum ReloadDecision {
     Committed(serde_json::Value),
     Refused(std::string::String),
     SelectedSourceRefused(noble_contracts::source::Error),
+    SourceChanged(super::output::Report),
     HostEffect(std::string::String),
 }
 
 struct Live {
     session: super::Session,
+    verify_source_before_execute: bool,
     selected: Option<std::path::PathBuf>,
     selected_definition: Option<std::string::String>,
     selected_file_hash: Option<std::string::String>,
@@ -45,7 +47,7 @@ struct Live {
 }
 
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
-    let (source, engine, initial_grant) = match parse(arguments) {
+    let (source, engine, initial_grant, verify_source_before_execute) = match parse(arguments) {
         Ok(options) => options,
         Err(message) => {
             emit(&refusal(0, &serde_json::json!([]), &message));
@@ -79,6 +81,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             worker: None,
             submissions: 0,
         },
+        verify_source_before_execute,
         selected: None,
         selected_definition: None,
         selected_file_hash: None,
@@ -229,7 +232,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
 
 fn parse(
     arguments: &[std::ffi::OsString],
-) -> Result<(Option<std::path::PathBuf>, &'static str, Option<GrantSelection>), std::string::String> {
+) -> Result<(Option<std::path::PathBuf>, &'static str, Option<GrantSelection>, bool), std::string::String> {
     if arguments.get(1).and_then(|argument| argument.to_str()) != Some("repl") {
         return Err("usage: noble live repl [--source ABS_PATH]".into());
     }
@@ -237,9 +240,18 @@ fn parse(
     let mut engine = None;
     let mut grant_name = None;
     let mut grant_generation = None;
+    let mut verify_source_before_execute = false;
     let mut at = 2;
     while at < arguments.len() {
         let flag = arguments[at].to_str().ok_or("invalid live option")?;
+        if flag == "--verify-source-before-execute" {
+            if verify_source_before_execute {
+                return Err("duplicate live source verification option".into());
+            }
+            verify_source_before_execute = true;
+            at += 1;
+            continue;
+        }
         let value = arguments
             .get(at + 1)
             .and_then(|value| value.to_str())
@@ -267,6 +279,9 @@ fn parse(
         }
         at += 2;
     }
+    if verify_source_before_execute && source.is_none() {
+        return Err("source verification requires --source ABS_PATH".into());
+    }
     let grant = match (grant_name, grant_generation) {
         (Some(name), Some(expected_generation)) if source.is_some() && !name.is_empty() => {
             Some(GrantSelection {
@@ -281,13 +296,14 @@ fn parse(
             );
         }
     };
-    Ok((source, engine.unwrap_or("v8"), grant))
+    Ok((source, engine.unwrap_or("v8"), grant, verify_source_before_execute))
 }
 
 fn source_identity(metadata: &std::fs::Metadata) -> FileIdentity {
     (
         metadata.dev(),
         metadata.ino(),
+        metadata.nlink(),
         metadata.len(),
         metadata.mtime(),
         metadata.mtime_nsec(),
@@ -438,6 +454,13 @@ impl Live {
                     Some(&proposal),
                     Some(&problem),
                 ),
+            Ok(ReloadDecision::SourceChanged(report)) => self.proposal_receipt(
+                "proposal-refused",
+                &invocation,
+                Some(&recipe_digest),
+                Some(&proposal),
+                Some(&report_diagnostic(&report)),
+            ),
             Ok(ReloadDecision::SelectedSourceRefused(_)) => {
                 return Err(fatal_failure("guest proposal reported a selected-file source error"));
             }
@@ -684,6 +707,11 @@ impl Live {
     }
 
     fn submit(&mut self, source: &[u8]) -> Result<super::output::Report, super::output::Failure> {
+        if self.verify_source_before_execute {
+            if let Some(refusal) = self.source_change_refusal() {
+                return Ok(refusal);
+            }
+        }
         self.session.submissions = self
             .session
             .submissions
@@ -703,6 +731,11 @@ impl Live {
                     ));
                 }
             };
+        if self.verify_source_before_execute {
+            if let Some(refusal) = self.source_change_refusal() {
+                return Ok(refusal);
+            }
+        }
         if prepared.is_definition() {
             if self.selected_definition.as_deref() == prepared.definition_name() {
                 return Ok(self.admission_refusal(
@@ -725,6 +758,7 @@ impl Live {
                 ReloadDecision::Refused(problem) => {
                     Ok(self.admission_refusal(&problem, "definition-refused"))
                 }
+                ReloadDecision::SourceChanged(report) => Ok(report),
                 ReloadDecision::SelectedSourceRefused(_) => {
                     Err(fatal_failure("direct definition reported a selected-file source error"))
                 }
@@ -784,6 +818,16 @@ impl Live {
         if ready.outcome != "ready" {
             return Ok(ready);
         }
+        if self.verify_source_before_execute {
+            if let Some(refusal) = self.source_change_refusal() {
+                let discarded = self.worker()?.discard_prepared_live()?;
+                if discarded.outcome != "discarded" {
+                    return Err(fatal_failure("live worker failed to discard a stale prepared submission"));
+                }
+                self.invocation_prior_stack = None;
+                return Ok(refusal);
+            }
+        }
         let output = prepared.output().to_vec();
         self.session
             .compiler
@@ -813,6 +857,46 @@ impl Live {
         Ok(report)
     }
 
+    /// This is an execution gate, not an automatic watch or a claim that a
+    /// filesystem pathname remains fresh after this observation. An external
+    /// alias or writable mapping need not produce a selected-directory event.
+    fn source_change_refusal(&self) -> Option<super::output::Report> {
+        let selected = self.selected.as_ref()?;
+        let expected = self.selected_file_hash.as_ref()?;
+        let (observed, diagnostic) = match snapshot(selected) {
+            Ok(snapshot) if snapshot.digest == *expected => {
+                return None;
+            }
+            Ok(snapshot) => (
+                Some(snapshot.digest),
+                "selected source changed since its last explicit file ACK".to_owned(),
+            ),
+            Err(problem) => (
+                None,
+                std::format!("selected source cannot be verified before execution: {problem}"),
+            ),
+        };
+        Some(super::output::Report {
+            outcome: "source-change-refused".into(),
+            json: serde_json::json!({
+                "schema": "noble-live-report/v1",
+                "stage": "admission",
+                "outcome": "source-change-refused",
+                "diagnostic": diagnostic,
+                "generation": self.generation,
+                "stack": self.last_stack,
+                "selected_file_sha256": expected,
+                "observed_source_sha256": observed,
+                "source_freshness": "changed-or-unverifiable-before-execution",
+                "guest_requests": 0,
+                "protected_operations": 0,
+                "candidate_prepare_requests": 0,
+                "prior_stack": "unchanged",
+                "prior_namespace": "unchanged",
+            }).to_string(),
+        })
+    }
+
     fn respond_reload(&mut self, path: &std::path::Path) -> bool {
         let outcome = match self.reload(path) {
             Ok(ReloadDecision::Committed(report)) => report,
@@ -830,6 +914,10 @@ impl Live {
             }
             Ok(ReloadDecision::HostEffect(problem)) => {
                 refusal(self.generation, &self.last_stack, &problem)
+            }
+            Ok(ReloadDecision::SourceChanged(_)) => {
+                emit(&fatal("file-backed reload reported an unrelated source-change refusal"));
+                return false;
             }
             Err(error) => {
                 emit(&fatal(&error.message));
@@ -955,8 +1043,9 @@ impl Live {
     }
 
     /// File reload, guest proposal and direct definition admission share one
-    /// checked dependent-rebuild and binary-staged publication path. Only a
-    /// file reload has an additional post-stage exact file snapshot requirement.
+    /// checked dependent-rebuild and binary-staged publication path. File
+    /// reloads recheck their exact staged snapshot; opt-in direct definitions
+    /// and proposals instead check the last explicitly ACKed selected bytes.
     fn install_definition(
         &mut self,
         definition: noble_contracts::source::Prepared,
@@ -1048,6 +1137,16 @@ impl Live {
                     };
                     return Ok(ReloadDecision::Refused(reason));
                 }
+            }
+        } else if self.verify_source_before_execute {
+            if let Some(report) = self.source_change_refusal() {
+                let discarded = self.worker()?.discard_binary()?;
+                if discarded.outcome != "discarded" {
+                    return Err(fatal_failure(
+                        "live worker did not discard a stale staged definition",
+                    ));
+                }
+                return Ok(ReloadDecision::SourceChanged(report));
             }
         }
         if !self.session.compiler.can_commit(&compiled) {
@@ -1484,5 +1583,39 @@ mod tests {
             terminal["session_state"],
             "terminated-after-proposal-inspection-failure"
         );
+    }
+
+    #[test]
+    fn discarded_prepared_live_binary_does_not_block_next_real_execution() {
+        let source = b"21";
+        let frontend = noble_contracts::source::Session::new();
+        let checked = frontend
+            .prepare(source, &[], super::super::SOURCE_LIMITS)
+            .unwrap_or_else(|_| panic!("accepted source"));
+        let compiler = noble_wasm::source::Compiler::new();
+        let compiled = compiler
+            .prepare(checked.submission().expect("checked expression"))
+            .unwrap_or_else(|_| panic!("compiled source"));
+        let binary = super::encoding::encode_checked(compiled.wat())
+            .unwrap_or_else(|_| panic!("checked live binary"));
+        let mut worker = super::super::worker::Engine::start_live()
+            .unwrap_or_else(|_| panic!("resident live worker"));
+        let first = worker.prepare_binary(&binary, source, 1)
+            .unwrap_or_else(|_| panic!("first prepared binary"));
+        assert_eq!(first.outcome, "ready");
+        let discarded = worker.discard_prepared_live()
+            .unwrap_or_else(|_| panic!("discarded prepared binary"));
+        assert_eq!(discarded.outcome, "discarded");
+        let report: serde_json::Value = serde_json::from_str(&discarded.json).expect("worker JSON");
+        assert_eq!(report["guest_requests"], 0);
+        assert_eq!(report["protected_operations"], 0);
+        let second = worker.prepare_binary(&binary, source, 2)
+            .unwrap_or_else(|_| panic!("subsequent prepared binary"));
+        assert_eq!(second.outcome, "ready");
+        let executed = worker.execute().unwrap_or_else(|_| panic!("guest invocation"));
+        assert_eq!(executed.outcome, "normal");
+        let report: serde_json::Value = serde_json::from_str(&executed.json).expect("worker JSON");
+        assert_eq!(report["stack"][0]["type"], "I64");
+        assert_eq!(report["stack"][0]["value"], "21");
     }
 }

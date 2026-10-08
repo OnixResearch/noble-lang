@@ -247,6 +247,13 @@ impl Engine {
         self.reply()
     }
 
+    pub fn discard_prepared_live(
+        &mut self,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"discard-prepared-live\n"));
+        self.reply()
+    }
+
     /// Only the trusted CLI chooses the exact checked owner and selected-source
     /// generation. Guest input is never a grant-setting protocol command.
     pub fn set_live_grant(

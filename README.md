@@ -451,6 +451,30 @@ written in place after the rename. Use `live repl --source` and explicit
 `:reload /absolute/math.noble` for a complete save; no automatic watch ACK
 or full H-LIVE-01/LIVE-05 acceptance is claimed.
 
+For a separate **opt-in source-change execution gate**, start the same REPL
+with `--verify-source-before-execute`. Before each source submission, after
+frontend preparation, and after Wasm candidate preparation but before guest
+execution, the host opens a bounded, directory-pinned snapshot of the
+selected path and compares its bytes' SHA-256 with the last explicitly
+acknowledged file bytes. A changed or unverifiable path produces
+`source-change-refused` with the prior stack and namespace, both hashes when
+observable, and zero guest requests; it does not commit or run that
+submission. To accept changed bytes after a complete save,
+explicitly `:reload` and wait for its ACK. A path changed through atomic
+rename, an external hardlink, or a writable shared mapping is compared by
+bytes at the next source submission. Identical bytes remain executable even
+after an inode replacement; retained old Programs still execute after a checked
+reload. `:generation` remains an inert inspection without file access. This
+gate is **not an idle filesystem watcher**, does not detect a change between
+its finite snapshot and the subsequent guest invocation, and makes no claim
+that an external writer's in-place bytes are a complete save. The default
+REPL continues to allow old-namespace execution after a refused `:reload`.
+The `MAP_SHARED` adversarial control is a separate real-child smoke, not an
+ambient compiler dependency of `cargo test`: `tools/live-mmap-smoke.mjs`
+requires absolute `--noble` and `--cc` paths, an explicitly selected Nix-store
+compiler, and its exact `--cc-version` first line and `--cc-target` triple.
+It reports a scoped observation, not a canonical LIVE case receipt.
+
 For the tested acyclic Core `addone→twice→four` chain, selected-file reload
 rebuilds transitive dependents in dependency order. New top-level calls see the
 rebuilt generation after one source-generation ACK; saved old Programs still
@@ -508,7 +532,7 @@ does not make every other feature available in that runtime.
 | Area | Implemented scope |
 |---|---|
 | [Core language and Wasm sessions](specs/ROADMAP.md#m4-implementation-and-retained-acceptance) | Wrapping `I64` arithmetic; Bool, Text, Unit, Pair, Sum, and List values; stack operations; checked branches; quotation, capture, composition, execution, and reflection; nonrecursive definitions. |
-| [Guarded live REPL](#guarded-live-repl-opt-in-partial) | In-process Wasm emission and explicit reload use one resident Node/V8 arena and checked publication; tested acyclic dependent rebuild and retained old Programs. Automatic watch is unavailable because rename events cannot authenticate bytes. Guest self-edit refuses current dependents; scoped indirect self-rebind/cycle refusal was exercised without general proof or canonical LIVE case acceptance. No declared-module snapshots or full LIVE-05 acceptance. |
+| [Guarded live REPL](#guarded-live-repl-opt-in-partial) | In-process Wasm emission and explicit reload use one resident Node/V8 arena and checked publication; tested acyclic dependent rebuild and retained old Programs. An optional pre-submission selected-file byte gate refuses changed bytes without running the guest. Automatic watch remains unavailable because rename events cannot authenticate completed bytes. Guest self-edit refuses current dependents; scoped indirect self-rebind/cycle refusal was exercised without general proof or canonical LIVE case acceptance. No declared-module snapshots or full LIVE-05 acceptance. |
 | [Declared modules](specs/ROADMAP.md#dxm1-selected-declared-modules-bounded-acceptance-complete) | Opt-in opaque types, two-constructor variants, versioned session-local modules, imports and exports, and an explicit typed `test.emit` adapter. Available through `compile` and framed `session`. |
 | [Contracts and proof checking](specs/PROGRAM-CONTRACTS.md#12-verification-tooling) | A pure contract language, Lean obligations, proof/refutation checking, and `verify` / `explain-proof`. |
 | [Evidence companions](specs/PROGRAM-CONTRACTS.md#83-mc2-companion-implementation-and-evidence-boundaries) | Live certified programs, evidence composition, guarded invocation, and proof-required build admission for the selected core scope. |
