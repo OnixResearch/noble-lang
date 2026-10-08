@@ -1836,7 +1836,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "fd29cc2f06a15ceb331808643bb3be6bf3e5243bea590d841872e8303e2e3cfd"
+      "sha256": "17ca096b57fb133d41a2a02437757fe625f52ef1ba016e8b38e0001d502e4597"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1984,7 +1984,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "7a5802b8db272c5c344de3d6cdbf835468b77251c3758c6a436e70d5ad038df9"
+      "sha256": "9cbbbefee049e62705a8ab7b2f6d671b3b4f5119a5def3190a8c562d97dec423"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",

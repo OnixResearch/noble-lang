@@ -572,7 +572,7 @@ neither a successor nor a stale ACK.
 
 This is a **guarded partial** live profile, not automatic H-LIVE-01/LIVE-05
 watch acceptance, selected declared-module snapshots, complete source-bound LIVE-02
-acceptance, interpreter execution, code retirement, general guest mutation,
+acceptance, interpreter execution, selected CLI code retirement, general guest mutation,
 or PushGP evolution.
 Separately, the `Compiler::new_live()` backend now emits a **Core 16-page**
 code-owner API exercised in a direct Node/V8 guest: saved Program and nested
@@ -584,6 +584,8 @@ backend control, **not a selected CLI code-retirement path**. The host must
 register every external raw handle before it leaves the worker and fail closed
 on an unknown owner inventory. Reusing table indices does not reclaim Core's
 append-only 4096-cell heap or text allocation.
+The direct Node/V8 backend owner/retirement exercise belongs to isolated
+Core donor `001fb723`, not to a combined-tree CLI retirement gate.
 
 `--engine interpreter` refuses rather than falling back to V8.
 Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
@@ -628,6 +630,11 @@ cancellation with retained task/resource pins. These are local-only controls:
 there is no external destination, rollback claim, owner-selected portable
 G-03/G-05 package/export, or canonical WORKER-01–12 acceptance. Neither the
 calculator nor Worker is a completed application or agent runtime.
+The seven-case local WIT receipt predates a known `finish_native` fault:
+receive, payload, or duplicate-datagram validation can return before native
+stop, resource completion and pin settlement. Those host-fault paths are
+**open**, not covered by the passing cancellation/denial controls. The
+separate fix `58b9d6c` is not integrated or nine-case guest-verified.
 
 ## Verification
 
