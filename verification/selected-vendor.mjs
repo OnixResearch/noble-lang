@@ -8,6 +8,26 @@ const zeroes = Buffer.alloc(7);
 const length = Buffer.alloc(8);
 const maxNodes = 50_000;
 const maxBytes = 2 * 1024 * 1024 * 1024;
+const maxFileBytes = 256 * 1024 * 1024;
+const maxNarBytes = 3 * 1024 * 1024 * 1024;
+const maxDepth = 64;
+
+function directoryNames(name, remaining) {
+  const directory = fs.opendirSync(name, { encoding: 'buffer', bufferSize: 32 });
+  const names = [];
+  try {
+    for (let entry; (entry = directory.readSync()) !== null;) {
+      assert.ok(names.length < remaining, 'selected vendor NAR node limit exceeded');
+      const bytes = entry.name;
+      assert.ok(Buffer.isBuffer(bytes) && bytes.length && !bytes.includes(0) &&
+        !bytes.includes(47), 'invalid selected vendor NAR entry');
+      names.push(bytes);
+    }
+  } finally {
+    directory.closeSync();
+  }
+  return names.sort(Buffer.compare);
+}
 
 function identity(info) {
   return [info.dev, info.ino, info.mode, info.size, info.mtimeNs, info.ctimeNs];
@@ -43,7 +63,12 @@ export function hashNarPath(root, validate = () => {}) {
   const buffer = Buffer.allocUnsafe(1024 * 1024);
   let nodes = 0;
   let bytes = 0;
-  const raw = value => hash.update(value);
+  let narBytes = 0;
+  const raw = value => {
+    narBytes += value.length;
+    assert.ok(narBytes <= maxNarBytes, 'selected vendor NAR encoded byte limit exceeded');
+    hash.update(value);
+  };
   const word = value => {
     const data = Buffer.isBuffer(value) ? value : Buffer.from(value);
     length.writeBigUInt64LE(BigInt(data.length));
@@ -51,7 +76,8 @@ export function hashNarPath(root, validate = () => {}) {
     raw(data);
     raw(zeroes.subarray(0, (-data.length) & 7));
   };
-  const walk = name => {
+  const walk = (name, depth) => {
+    assert.ok(depth <= maxDepth, 'selected vendor NAR depth limit exceeded');
     const before = fs.lstatSync(name, { bigint: true });
     validate(before, name);
     assert.ok(++nodes <= maxNodes, 'selected vendor NAR node limit exceeded');
@@ -62,20 +88,18 @@ export function hashNarPath(root, validate = () => {}) {
       try {
         unchanged(before, fs.fstatSync(fd, { bigint: true }), 'vendor directory changed at open');
         word('directory');
-        const names = fs.readdirSync(name, { encoding: 'buffer' }).sort(Buffer.compare);
+        const names = directoryNames(name, maxNodes - nodes);
         for (const entry of names) {
-          assert.ok(entry.length && !entry.includes(0) && !entry.includes(47),
-            'invalid selected vendor NAR entry');
           word('entry');
           word('(');
           word('name');
           word(entry);
           word('node');
           walk(Buffer.concat([Buffer.isBuffer(name) ? name : Buffer.from(name),
-            Buffer.from('/'), entry]));
+            Buffer.from('/'), entry]), depth + 1);
           word(')');
         }
-        assert.deepEqual(fs.readdirSync(name, { encoding: 'buffer' }).sort(Buffer.compare),
+        assert.deepEqual(directoryNames(name, maxNodes - nodes + names.length),
           names, 'vendor directory entries changed during hashing');
         unchanged(before, fs.fstatSync(fd, { bigint: true }),
           'vendor directory changed during hashing');
@@ -87,10 +111,11 @@ export function hashNarPath(root, validate = () => {}) {
       try {
         unchanged(before, fs.fstatSync(fd, { bigint: true }), 'vendor file changed at open');
         assert.ok(before.size <= BigInt(Number.MAX_SAFE_INTEGER), 'vendor file is too large');
+        assert.ok(before.size <= BigInt(maxFileBytes), 'selected vendor NAR file byte limit exceeded');
         bytes += Number(before.size);
         assert.ok(bytes <= maxBytes, 'selected vendor NAR byte limit exceeded');
         word('regular');
-        if (before.mode & 0o111n) {
+        if (before.mode & 0o100n) {
           word('executable');
           word('');
         }
@@ -122,7 +147,7 @@ export function hashNarPath(root, validate = () => {}) {
     word(')');
   };
   word('nix-archive-1');
-  walk(root);
+  walk(root, 0);
   return `sha256-${hash.digest('base64')}`;
 }
 

@@ -212,7 +212,7 @@
     "verification/result-library/gate.mjs": "2ea8175412b1ab098784be44ffd00586eaa27dd4e91db8a0164961a855dda4b3",
     "verification/result-library/peer/Cargo.lock": "576bd4877d45d0ba2e305d31ff05a38d030f82d14bf4a45df06f405658115260",
     "verification/result-library/plan.mjs": "53adb37dec4bebb63c500892d20d503bf89abf7eb3cdaf57b102660eadd17e5e",
-    "verification/selected-vendor.mjs": "6ad9ec2229ee05a521aef7ec45c747fb6c032d78ac003532a23d4e84928c87a4",
+    "verification/selected-vendor.mjs": "fe432e5e06c3c9ccca45ff148b1354881cf3aeb3c38ee4ffd1fba3ca96b2cfc1",
     "verification/wi03-final/gate.mjs": "77f5d05a7362de5282fa2188fb68e2aa4aa32a76d3c3d85f9845ae2ac166e560",
     "verification/wi03/gate.mjs": "603f2c0aef61d932a77f51e5b80026fe19d924fd637594f4e5985990c69b2d42"
   },

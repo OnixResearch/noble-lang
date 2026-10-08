@@ -369,7 +369,11 @@ Nix, source-inventory or native-assurance gate pass. Source locations, builder
 D, VM addresses and code-owner handles are not part of D. The selected offline
 vendor helper now computes the entire pinned SHA-256 NAR with the selected
 Node process instead of starting a Nix client: it includes sorted directory
-entries, executable markers and file bytes, rejects symlinks, requires
+entries (raw byte order), owner-executable regular-file markers (not group
+or other execute bits) and file bytes. It enumerates directories with a
+bounded iterator before sorting, limits traversal to 50,000 nodes and depth
+64, and caps individual files, cumulative contents and encoded NAR work.
+It rejects symlinks, requires
 root-owned nonwritable entries and refuses if the caller can write the store
 ancestry. This assumes the root-owned store is not rewritten by privileged
 actors; a shared-daemon GC may still remove an unrooted output, which fails
