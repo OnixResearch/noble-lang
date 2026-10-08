@@ -158,5 +158,17 @@ MA1_VERIFICATION_JSON` only when those exact artifacts exist. A missing or
 mismatched receipt is a refusal, not a calculator result. `CALC-07`'s
 resource-capability checker control and the actual Wasm guest observations
 remain open; do not promote `CALC-07` or `CALC-08` on source vectors alone.
+The application gate additionally compares real guest expression and lexical
+session replies against `verification/calculator-app/oracle.py`, an independently
+implemented Python standard-library exact-fraction evaluator, then runs an
+isolated source-level multiplication-precedence mutant through the same
+compiled application shell and requires the oracle to reject its actual wrong
+result. The gate uses `python3` from `PATH`, or an explicit `PYTHON3` interpreter
+path when no Python is on `PATH`; it imports no external packages.
+`--vectors-only` checks the oracle's discriminating examples but
+records both guest comparison and implementation-mutant execution as
+**not-run**. MA1 numeric oracle/mutation evidence does not replace these
+application controls, and none of them promotes a canonical scenario without
+the full selected guest run and the remaining resource-capability control.
 
 [Source provenance](SOURCES.md) records the mathematical-computing references and their limits. No calculator, benchmark, or proof execution is claimed by this amendment.
