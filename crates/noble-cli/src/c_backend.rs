@@ -19,6 +19,7 @@ const SOURCE_MAX: usize = 4096;
 const CONTROL_MAX: usize = 4096;
 const C_MAX: usize = 65536;
 const PROGRAM_MAX: usize = 256;
+const AGGREGATE_MAX: usize = 256;
 const FRAME_MAX: usize = 512;
 const RECIPE_MAX: usize = 256;
 const PROGRAM_DEPTH_MAX: usize = 256;
@@ -31,14 +32,18 @@ const RUNTIME_HEADER: &str = r#"/* Noble nonselected C11 source; requires separa
 #include <stdlib.h>
 #include <string.h>
 _Static_assert(CHAR_BIT == 8 && sizeof(uint64_t) == 8 && UINT64_MAX == UINT64_C(18446744073709551615), "unsupported I64 target");
-enum { TAG_I64 = 1, TAG_BOOL = 2, TAG_PROGRAM = 3, TAG_UNIT = 4, TAG_TEXT = 5 };
+enum { TAG_I64 = 1, TAG_BOOL = 2, TAG_PROGRAM = 3, TAG_UNIT = 4, TAG_TEXT = 5,
+       TAG_PAIR = 6, TAG_SUM_LEFT = 7, TAG_SUM_RIGHT = 8 };
 typedef struct { unsigned tag; uint64_t bits; } Value;
 typedef struct { unsigned op; uint64_t bits; } Instruction;
 typedef struct { const Instruction *code; size_t count; unsigned valid; size_t leaves, depth; } StaticProgram;
 typedef struct { const unsigned char *bytes; size_t length; unsigned valid; } StaticText;
-enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_UNIT, OP_IF, OP_DIP, OP_TEXT };
+enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_UNIT, OP_IF, OP_DIP, OP_TEXT,
+       OP_PAIR, OP_UNPAIR, OP_INL, OP_INR, OP_CASE };
 typedef struct { unsigned kind; uint64_t left, right; Value capture; size_t leaves, depth; } Program;
+typedef struct { unsigned kind; Value left, right; } Aggregate;
 typedef struct { size_t leaves, depth; } Metrics;
+typedef struct { Value value; size_t depth; } DataVisit;
 typedef struct { uint64_t program; size_t pc; unsigned phase; Value restore; } Frame;
 "#;
 const RUNTIME: &str = r#"
@@ -46,6 +51,8 @@ static Value stack[STACK_SLOTS];
 static size_t height;
 static Program programs[PROGRAM_SLOTS];
 static size_t program_count;
+static Aggregate aggregates[AGGREGATE_SLOTS];
+static size_t aggregate_count;
 static Frame frames[FRAME_SLOTS];
 static size_t frame_count;
 static uint64_t steps;
@@ -96,6 +103,42 @@ static unsigned pop_bool(void) {
     if (value.tag != TAG_BOOL || value.bits > 1) fail("invalid Bool tag");
     return (unsigned)value.bits;
 }
+static const Aggregate *aggregate(Value value, unsigned kind) {
+    if (value.tag != kind || value.bits >= aggregate_count) fail("invalid aggregate tag");
+    const Aggregate *item = &aggregates[value.bits];
+    if (item->kind != kind) fail("invalid aggregate reference");
+    return item;
+}
+static void check_value(Value value) {
+    switch (value.tag) {
+    case TAG_I64: break;
+    case TAG_UNIT: if (value.bits != 0) fail("invalid Unit"); break;
+    case TAG_BOOL: if (value.bits > 1) fail("invalid Bool"); break;
+    case TAG_TEXT:
+        if (value.bits >= STATIC_TEXTS || !text_literals[value.bits].valid) fail("invalid Text reference");
+        break;
+    case TAG_PROGRAM:
+        if (value.bits >= STATIC_PROGRAMS + program_count ||
+            (value.bits < STATIC_PROGRAMS && !static_programs[value.bits].valid))
+            fail("invalid Program reference");
+        break;
+    case TAG_PAIR: case TAG_SUM_LEFT: case TAG_SUM_RIGHT:
+        (void)aggregate(value, value.tag);
+        break;
+    default: fail("invalid value tag");
+    }
+}
+static void new_aggregate(unsigned kind, Value left, Value right) {
+    if (aggregate_count == AGGREGATE_SLOTS) fail("aggregate slots exhausted");
+    if (kind != TAG_PAIR && kind != TAG_SUM_LEFT && kind != TAG_SUM_RIGHT)
+        fail("invalid aggregate kind");
+    check_value(left);
+    if (kind == TAG_PAIR) check_value(right);
+    size_t index = aggregate_count;
+    aggregates[index] = (Aggregate){kind, left, right};
+    ++aggregate_count;
+    push(kind, index);
+}
 static Metrics metrics(uint64_t id) {
     if (id < STATIC_PROGRAMS) {
         const StaticProgram *program = &static_programs[id];
@@ -105,6 +148,41 @@ static Metrics metrics(uint64_t id) {
     size_t index = (size_t)(id - STATIC_PROGRAMS);
     if (index >= program_count) fail("invalid Program reference");
     return (Metrics){programs[index].leaves, programs[index].depth};
+}
+static Metrics measure_data(Value root) {
+    DataVisit pending[RECIPE_LIMIT];
+    size_t count = 1, leaves = 0, depth = 1;
+    pending[0] = (DataVisit){root, 1};
+    while (count) {
+        tick();
+        DataVisit visit = pending[--count];
+        Value value = visit.value;
+        check_value(value);
+        if (leaves == RECIPE_LIMIT) fail("recipe leaves exhausted");
+        ++leaves;
+        size_t level = visit.depth;
+        if (level > DEPTH_LIMIT) fail("program depth exhausted");
+        if (value.tag == TAG_PROGRAM) {
+            Metrics subject = metrics(value.bits);
+            if (subject.leaves > RECIPE_LIMIT - leaves) fail("recipe leaves exhausted");
+            leaves += subject.leaves;
+            if (subject.depth > DEPTH_LIMIT - level) fail("program depth exhausted");
+            level += subject.depth;
+        }
+        if (level > DEPTH_LIMIT) fail("program depth exhausted");
+        if (level > depth) depth = level;
+        if (value.tag == TAG_PAIR || value.tag == TAG_SUM_LEFT || value.tag == TAG_SUM_RIGHT) {
+            const Aggregate *item = aggregate(value, value.tag);
+            if (level == DEPTH_LIMIT) fail("program depth exhausted");
+            if (value.tag == TAG_PAIR) {
+                if (count == RECIPE_LIMIT) fail("program depth exhausted");
+                pending[count++] = (DataVisit){item->right, level + 1};
+            }
+            if (count == RECIPE_LIMIT) fail("program depth exhausted");
+            pending[count++] = (DataVisit){item->left, level + 1};
+        }
+    }
+    return (Metrics){leaves, depth};
 }
 static uint64_t new_program(unsigned kind, uint64_t left, uint64_t right, Value capture,
                             size_t leaves, size_t depth) {
@@ -137,6 +215,42 @@ static void execute(Instruction instruction) {
         if (instruction.bits >= STATIC_TEXTS || !text_literals[instruction.bits].valid) fail("invalid Text reference");
         push(TAG_TEXT, instruction.bits);
         break;
+    case OP_PAIR: {
+        if (height < 2) fail("stack underflow");
+        if (aggregate_count == AGGREGATE_SLOTS) fail("aggregate slots exhausted");
+        Value right = pop();
+        Value left = pop();
+        new_aggregate(TAG_PAIR, left, right);
+        break;
+    }
+    case OP_UNPAIR: {
+        if (!height) fail("stack underflow");
+        if (height == STACK_SLOTS) fail("stack slots exhausted");
+        Value value = pop();
+        const Aggregate *pair = aggregate(value, TAG_PAIR);
+        push_value(pair->left);
+        push_value(pair->right);
+        break;
+    }
+    case OP_INL: case OP_INR: {
+        if (!height) fail("stack underflow");
+        if (aggregate_count == AGGREGATE_SLOTS) fail("aggregate slots exhausted");
+        Value payload = pop();
+        new_aggregate(instruction.op == OP_INL ? TAG_SUM_LEFT : TAG_SUM_RIGHT,
+                      payload, (Value){0, 0});
+        break;
+    }
+    case OP_CASE: {
+        if (height < 3) fail("stack underflow");
+        Value right = pop_program();
+        Value left = pop_program();
+        Value sum = pop();
+        if (sum.tag != TAG_SUM_LEFT && sum.tag != TAG_SUM_RIGHT) fail("invalid Sum tag");
+        const Aggregate *branch = aggregate(sum, sum.tag);
+        push_value(branch->left);
+        enter(sum.tag == TAG_SUM_LEFT ? left.bits : right.bits);
+        break;
+    }
     case OP_DUP:
         if (!height) fail("stack underflow");
         push_value(stack[height - 1]);
@@ -153,17 +267,8 @@ static void execute(Instruction instruction) {
         break;
     case OP_QUOTE: {
         Value capture = pop();
-        if (capture.tag != TAG_I64 && capture.tag != TAG_BOOL && capture.tag != TAG_UNIT &&
-            capture.tag != TAG_TEXT && capture.tag != TAG_PROGRAM) fail("invalid capture");
-        size_t leaves = 1, depth = 1;
-        if (capture.tag == TAG_PROGRAM) {
-            Metrics subject = metrics(capture.bits);
-            if (subject.leaves >= RECIPE_LIMIT) fail("recipe leaves exhausted");
-            if (subject.depth >= DEPTH_LIMIT) fail("program depth exhausted");
-            leaves += subject.leaves;
-            depth += subject.depth;
-        }
-        uint64_t program = new_program(1, 0, 0, capture, leaves, depth);
+        Metrics data = measure_data(capture);
+        uint64_t program = new_program(1, 0, 0, capture, data.leaves, data.depth);
         push(TAG_PROGRAM, program);
         break;
     }
@@ -196,8 +301,7 @@ static void execute(Instruction instruction) {
     case OP_DIP: {
         Value program = pop_program();
         Value saved = pop();
-        if (saved.tag != TAG_I64 && saved.tag != TAG_BOOL &&
-            saved.tag != TAG_UNIT && saved.tag != TAG_TEXT && saved.tag != TAG_PROGRAM) fail("invalid dip value");
+        check_value(saved);
         if (saved.tag == TAG_PROGRAM) (void)metrics(saved.bits);
         if (frame_count > FRAME_SLOTS - 2) fail("program frames exhausted");
         frames[frame_count++] = (Frame){UINT64_MAX, 0, 0, saved};
@@ -602,6 +706,11 @@ fn lower_body(
                     (9, Behavior::Compose) => "OP_COMPOSE",
                     (10, Behavior::Run) => "OP_RUN",
                     (12, Behavior::Unit) => "OP_UNIT",
+                    (13, Behavior::Pair) => "OP_PAIR",
+                    (14, Behavior::Unpair) => "OP_UNPAIR",
+                    (15, Behavior::Inl) => "OP_INL",
+                    (16, Behavior::Inr) => "OP_INR",
+                    (17, Behavior::Case) => "OP_CASE",
                     (18, Behavior::If) => "OP_IF",
                     _ => return Err(format!("unsupported checked C operation {word}")),
                 };
@@ -696,9 +805,10 @@ fn emit(
         return Err("checked C body omits or duplicates an accepted node".into());
     }
     let mut c = format!(
-        "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS {}\n#define FRAME_SLOTS {}\n#define RECIPE_LIMIT {}\n#define DEPTH_LIMIT {}\n#define STATIC_PROGRAMS {}\n#define STATIC_TEXTS {}\n",
+        "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS {}\n#define AGGREGATE_SLOTS {}\n#define FRAME_SLOTS {}\n#define RECIPE_LIMIT {}\n#define DEPTH_LIMIT {}\n#define STATIC_PROGRAMS {}\n#define STATIC_TEXTS {}\n",
         limits.slots, limits.steps, limits.output,
-        PROGRAM_MAX, FRAME_MAX, RECIPE_MAX, PROGRAM_DEPTH_MAX, programs.len(), texts.len().max(1)
+        PROGRAM_MAX, AGGREGATE_MAX, FRAME_MAX, RECIPE_MAX, PROGRAM_DEPTH_MAX,
+        programs.len(), texts.len().max(1)
     );
     c.push_str(RUNTIME_HEADER);
     for (index, text) in texts.iter().enumerate() {
@@ -807,7 +917,8 @@ fn build(arguments: &[std::ffi::OsString]) -> Result<Value, String> {
         "build_key":digest(&subject), "native_artifact":null,
         "runtime_limits":{"stack_slots":limits.slots, "steps":limits.steps,
             "output_bytes":limits.output, "program_slots":PROGRAM_MAX,
-            "frame_slots":FRAME_MAX, "recipe_leaves":RECIPE_MAX,
+            "aggregate_slots":AGGREGATE_MAX, "frame_slots":FRAME_MAX,
+            "recipe_leaves":RECIPE_MAX,
             "program_depth":PROGRAM_DEPTH_MAX},
         "source_to_elf_admitted":false, "native_execution":"blocked-no-pinned-sandbox"});
     std::fs::create_dir(&options.out).map_err(|error| format!("new output directory: {error}"))?;

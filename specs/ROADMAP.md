@@ -1409,8 +1409,13 @@ engine remains separately unselected. The [MCB milestone](roadmap.json) follows
 M4 only and is specified by [the C11 AOT contract](C-BACKEND.md) and its
 [active change](../.cairn/changes/c-backend/proposal.md); native execution
 requires a pinned sandbox and separately checked source/C/ELF admission.
-Only restricted inert checked I64/Bool/Unit/Text C11 source emission is present in
-this isolated WIP; the held canonical C wording has not been revised;
+Only restricted inert checked I64/Bool/Unit/Text-result C11 source emission
+is present in this isolated WIP, now including internal Pair/Sum
+construction/elimination and bounded immutable aggregate captures.
+Pair/Sum/List/Syntax/Program final results, lists, reflect, runtime inputs
+and host mediation remain unsupported. The held canonical CB-BUILD-01
+still describes a narrower route; the active delta is stale and cannot
+replace it before independent owner review and reconciliation.
 `--native` and `execute --target c` refuse. CB-CASE-01's supplied
 `limits.list_length` is not accepted by that source-only policy, so the
 case remains open rather than treating the bound as an ignored field.

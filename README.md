@@ -83,16 +83,24 @@ I64, Bool, Unit or Text result, then lowers ordered stack operations, the
 `unit` constructor and exact checked UTF-8 Text payloads, immutable quotation
 bodies, runtime `quote` capture,
 `compose`, `run`, pure `dip` and checked `if` branches into bounded C11 instructions and
-Program values. Text literals are bound by node identity to exactly one
+Program values. This WIP also lowers checked `pair`/`unpair` and
+`inl`/`inr`/`case` **internally** to a 256-slot immutable tagged aggregate
+arena. Pair/Sum references are checked before access; quotation captures
+retain owned arena values, and an iterative, bounded walk charges nested
+data and Program capture recipes before a dynamic Program is created.
+This does not admit Pair/Sum as final result interfaces. Text literals are
+bound by node identity to exactly one
 host-selected checked `Body.texts` payload; static C bytes and bounded JSON
 output preserve escapes and UTF-8 without retaining a borrowed buffer.
 The host-supplied `expected_interface` is parsed into ordered Core `Ty`
 values with the existing bounded source type grammar, then compared with
-independent kernel acceptance. That parser recognizes nested Pair/Sum/List,
-Syntax and pure Program contracts, but recognizing a contract does not enable
-their C value lowering or output: all such source-only builds still refuse.
-It refuses Pair/Sum/List/Syntax, `reflect`, host effects, named definitions,
-runtime input and other profiles; there is no Wasm fallback.
+independent kernel acceptance. The parser recognizes nested Pair/Sum/List,
+Syntax and pure Program contracts, but source-only final Pair/Sum/List/Syntax/
+Program outputs still refuse. List construction and `list.case`, `reflect`,
+host effects, named definitions, runtime inputs and other profiles refuse;
+there is no Wasm fallback. The new internal Pair/Sum path is unreviewed
+source-only WIP, not yet synced into the held canonical CB-BUILD-01 paragraph
+or its stale active change delta.
 
 ```sh
 printf '20 2 quote [ + ] compose run\n' > capture.noble
@@ -116,10 +124,13 @@ copied; this does not authenticate the host-selected pathname against ancestor
 symlinks, hard links or concurrent replacement, nor seal output files against
 subsequent mutation. Output child paths are also re-resolved after creating the
 directory, so a concurrently replaced output directory is not authenticated.
-The manifest declares fixed ceilings: 256 dynamic Program slots, 512 frames,
-256 recipe leaves, and depth 256. Every C dispatch iteration consumes the
+The manifest declares fixed ceilings: 256 dynamic Program slots, 256
+aggregate slots, 512 frames, 256 recipe leaves, and depth 256. Every C
+dispatch iteration consumes the
 policy step budget, including empty quotations, composition traversal,
-selected branches and `dip` restore continuations.
+selected branches and `dip` restore continuations. Quotation capture also
+charges a step per visited nested datum; the aggregate arena has no
+deallocation or borrowed references during an invocation.
 Finishing a frame also costs a step; these counts do not claim Wasm parity.
 These are source-level bounds, not native runtime acceptance. Both `--native`
 and `execute --target c` refuse: no compiler/ELF execution is authorized until
@@ -133,10 +144,13 @@ the isolated CLI test uses the existing pinned component GCC15 wrapper with
 `-std=c11 -pedantic-errors -fsyntax-only` against `artifact.c`. That compiler
 pin is not a selected C backend compiler or a native artifact admission. It
 produces no admitted ELF and cannot establish C/Wasm differential results.
-All CB-CASE-01..10 remain absent/not-run/open/unassessed; the canonical C
-edits are HOLD pending independent owner review before integration. The
-source-only Unit/Text extension is WIP and does not promote any case or update
-the held canonical C wording. The [review-only native security design](.cairn/changes/c-backend/design.md)
+All CB-CASE-01..10 remain absent/not-run/open/unassessed; the active C delta
+still contains stale I64/Bool and last-wins prose, so structural Cairn
+proposal/design/tasks gates and a nonblocked *preview* are not permission to
+sync it over stronger canonical text. Independent owner review and
+reconciliation of all eleven modified requirements remain required. The
+canonical CB-BUILD-01 still describes the earlier narrower source-only slice,
+not the unreviewed internal Pair/Sum WIP. The [review-only native security design](.cairn/changes/c-backend/design.md)
 lists prerequisites, not a selected
 runner. No clock/vvar/TSC nondisclosure barrier or C selection follows
 from source syntax diagnostics.

@@ -1808,7 +1808,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "622555e1622fe98eefb1a34abb54dee1673d0a0494057577b8d22652cdff57df"
+      "sha256": "48d28263a22e5abff0ac6a7365d06d72ce050f2a9b544adf681680a710d05002"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1936,7 +1936,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "dcf233ebec47381b04a276fc872c7269e2a17b36a291148689fe6e53c65561d3"
+      "sha256": "d33ae7d74f315062bdf9e5afbf7b0cb7623d48e8dd7d9c101ba6b3e726446b09"
     },
     {
       "file": "specs/SAFETY.md",
@@ -1956,7 +1956,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "71b2a38f00a437131e4e89e85b390ea3ce3caaa102ad085eeefa400feaabe937"
+      "sha256": "b07b6d2b0ca080072828bdd0cd4c42f43db7750342660001143e60b6664350ab"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",

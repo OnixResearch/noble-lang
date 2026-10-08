@@ -82,6 +82,12 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
         ("text-captured", "\"a\" quote run", "-- Text"),
         ("text-dip", "41 \"held\" [ 1 + ] dip swap drop", "-- Text"),
         ("text-unselected-branch", "true [ \"yes\" ] [ \"no\" ] if", "-- Text"),
+        ("pair-roundtrip", "\"x\" 7 pair unpair swap drop", "-- I64"),
+        ("pair-capture", "40 2 pair quote run unpair +", "-- I64"),
+        ("pair-nested", "1 true pair 2 pair unpair drop unpair drop", "-- I64"),
+        ("sum-left", "1 inl [ 2 + ] [ drop 0 ] case", "-- I64"),
+        ("sum-right", "\"x\" inr [ drop 0 ] [ drop 1 ] case", "-- I64"),
+        ("sum-pair-payload", "1 true pair inl [ unpair drop ] [ drop 0 ] case", "-- I64"),
     ] {
         let source = scratch.file(&format!("{name}.noble"), source.as_bytes())?;
         let contract = scratch.file(
@@ -387,7 +393,7 @@ fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
     let out_of_range = scratch.file("out-of-range.noble", b"9223372036854775808")?;
     let invalid_utf8 = scratch.file("invalid-utf8.noble", b"\xff")?;
     let bad_type = scratch.file("bad-type.noble", b"1 true +")?;
-    let unsupported_value = scratch.file("unsupported-value.noble", b"1 2 pair drop 1")?;
+    let unsupported_value = scratch.file("unsupported-value.noble", b"1 nil swap cons drop 1")?;
     let host_effect = scratch.file("host-effect.noble", b"\"A\" test.emit 1")?;
     let named = scratch.file("named.noble", b"def twice [ dup compose ]\n20 [ 1 + ] twice run")?;
     let reflect = scratch.file("reflect.noble", b"[ 1 ] reflect drop 1")?;
