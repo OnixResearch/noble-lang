@@ -2,7 +2,7 @@
 
 ## Context
 
-`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap I64/Bool/Unit/Text-result expressions plus internal Pair/Sum operations; it does not compile or execute native ELF. The held canonical CB-BUILD-01 status paragraph still excludes the new internal Pair/Sum slice, pending independent owner review and legal delta sync. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
+`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap I64/Bool/Unit/Text-result expressions plus internal Pair/Sum/List operations; it does not compile or execute native ELF. The held canonical CB-BUILD-01 status paragraph still excludes the new internal aggregate slice, pending independent owner review and legal delta sync. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
 
 The isolated source-only emitter now lowers checked pure `dip` and `if`
 as well as literal/stack/arithmetic/Unit/quotation/`quote`/`compose`/`run`.
@@ -21,11 +21,14 @@ The source-only path now verifies one UTF-8 `Body.texts` payload per checked
 static bytes with bounded JSON escaping. Contract/policy JSON now rejects
 duplicate member names recursively before interpretation. These corrections
 are not native admission or executed C semantics.
-The source-only WIP also lowers checked internal `pair`/`unpair` and
-`inl`/`inr`/`case` with immutable bounded tagged arena references and
-iterative nested capture accounting, but still refuses final aggregate
-results. The complete CB-SCOPE/CB-VALUE/CB-LIMIT contracts remain open:
-List, inert Syntax/`reflect`, typed runtime input, definitions, `test.emit`
+The source-only WIP also lowers checked internal `pair`/`unpair`,
+`inl`/`inr`/`case` and `nil`/`cons`/`list.case` with immutable bounded
+tagged arena references, exact per-node Core type-shape preflights and
+iterative step-charged nested capture accounting. Its fixed 255-element
+List ceiling is not a supplied policy: `limits.list_length` still refuses.
+Final aggregates remain unsupported. The complete CB-SCOPE/CB-VALUE/
+CB-LIMIT contracts remain open: inert Syntax/`reflect`, supplied List
+limits, typed runtime input, definitions, `test.emit`
 and current host authority require distinct checked representations
 or a real mediator. The source-only policy has only
 `stack_slots`/`steps`/`output_bytes`, not the native list/aggregate/

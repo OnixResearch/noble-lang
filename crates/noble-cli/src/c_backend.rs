@@ -20,6 +20,8 @@ const CONTROL_MAX: usize = 4096;
 const C_MAX: usize = 65536;
 const PROGRAM_MAX: usize = 256;
 const AGGREGATE_MAX: usize = 256;
+const LIST_MAX: usize = 255;
+const SHAPE_MAX: usize = 512;
 const FRAME_MAX: usize = 512;
 const RECIPE_MAX: usize = 256;
 const PROGRAM_DEPTH_MAX: usize = 256;
@@ -33,15 +35,16 @@ const RUNTIME_HEADER: &str = r#"/* Noble nonselected C11 source; requires separa
 #include <string.h>
 _Static_assert(CHAR_BIT == 8 && sizeof(uint64_t) == 8 && UINT64_MAX == UINT64_C(18446744073709551615), "unsupported I64 target");
 enum { TAG_I64 = 1, TAG_BOOL = 2, TAG_PROGRAM = 3, TAG_UNIT = 4, TAG_TEXT = 5,
-       TAG_PAIR = 6, TAG_SUM_LEFT = 7, TAG_SUM_RIGHT = 8 };
-typedef struct { unsigned tag; uint64_t bits; } Value;
-typedef struct { unsigned op; uint64_t bits; } Instruction;
-typedef struct { const Instruction *code; size_t count; unsigned valid; size_t leaves, depth; } StaticProgram;
+       TAG_PAIR = 6, TAG_SUM_LEFT = 7, TAG_SUM_RIGHT = 8, TAG_LIST = 9 };
+enum { AGG_LIST_NIL = 10, AGG_LIST_CONS = 11 };
+typedef struct { unsigned tag; uint64_t bits; unsigned shape; } Value;
+typedef struct { unsigned op; uint64_t bits; unsigned shape, inputs, input_shape[3]; } Instruction;
+typedef struct { const Instruction *code; size_t count; unsigned valid, shape; size_t leaves, depth; } StaticProgram;
 typedef struct { const unsigned char *bytes; size_t length; unsigned valid; } StaticText;
 enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_UNIT, OP_IF, OP_DIP, OP_TEXT,
-       OP_PAIR, OP_UNPAIR, OP_INL, OP_INR, OP_CASE };
-typedef struct { unsigned kind; uint64_t left, right; Value capture; size_t leaves, depth; } Program;
-typedef struct { unsigned kind; size_t length; Value left, right; } Aggregate;
+       OP_PAIR, OP_UNPAIR, OP_INL, OP_INR, OP_CASE, OP_NIL, OP_CONS, OP_LIST_CASE };
+typedef struct { unsigned kind, shape; uint64_t left, right; Value capture; size_t leaves, depth; } Program;
+typedef struct { unsigned kind, shape; size_t length; Value left, right; } Aggregate;
 typedef struct { size_t leaves, depth; } Metrics;
 typedef struct { Value value; size_t depth; } DataVisit;
 typedef struct { uint64_t program; size_t pc; unsigned phase; Value restore; } Frame;
@@ -64,25 +67,29 @@ static void fail(const char *message) {
     exit(2);
 }
 static void tick(void) { if (steps == STEP_LIMIT) fail("steps exhausted"); ++steps; }
-static void append(const char *text) {
-    size_t n = strlen(text);
+static void append_bytes(const char *text, size_t n) {
     if (n >= OUTPUT_BYTES - length) fail("output bytes exhausted");
     memcpy(output + length, text, n);
     length += n;
     output[length] = '\0';
 }
+#define APPEND_LITERAL(text) append_bytes(text, sizeof(text) - 1)
 static void append_byte(unsigned char byte) {
     if (length >= OUTPUT_BYTES - 1) fail("output bytes exhausted");
     output[length++] = (char)byte;
     output[length] = '\0';
 }
-static void push(unsigned tag, uint64_t bits) {
-    if (height == STACK_SLOTS) fail("stack slots exhausted");
-    stack[height].tag = tag;
-    stack[height].bits = bits;
-    ++height;
+static int shape_kind(unsigned tag, unsigned shape) {
+    if (shape == 0 || shape > SHAPES) return 0;
+    unsigned expected = shape_tags[shape];
+    return expected == tag || (expected == TAG_SUM_LEFT && tag == TAG_SUM_RIGHT);
 }
-static void push_value(Value value) { push(value.tag, value.bits); }
+static void push(unsigned tag, uint64_t bits, unsigned shape) {
+    if (height == STACK_SLOTS) fail("stack slots exhausted");
+    if (!shape_kind(tag, shape)) fail("invalid value shape");
+    stack[height++] = (Value){tag, bits, shape};
+}
+static void push_value(Value value) { push(value.tag, value.bits, value.shape); }
 static Value pop(void) {
     if (height == 0) fail("stack underflow");
     --height;
@@ -90,7 +97,13 @@ static Value pop(void) {
 }
 static Value pop_program(void) {
     Value value = pop();
-    if (value.tag != TAG_PROGRAM || value.bits >= STATIC_PROGRAMS + program_count) fail("invalid Program tag");
+    if (value.tag != TAG_PROGRAM || value.shape == 0 || value.shape > SHAPES ||
+        value.bits >= STATIC_PROGRAMS + program_count) fail("invalid Program tag");
+    if (value.bits < STATIC_PROGRAMS) {
+        if (!static_programs[value.bits].valid || static_programs[value.bits].shape != value.shape)
+            fail("invalid static Program shape");
+    } else if (programs[value.bits - STATIC_PROGRAMS].shape != value.shape)
+        fail("invalid dynamic Program shape");
     return value;
 }
 static uint64_t pop_i64(void) {
@@ -104,13 +117,35 @@ static unsigned pop_bool(void) {
     return (unsigned)value.bits;
 }
 static const Aggregate *aggregate(Value value, unsigned kind) {
-    if (value.tag != kind || value.bits >= aggregate_count) fail("invalid aggregate tag");
+    if (value.tag != kind || value.shape == 0 || value.shape > SHAPES ||
+        value.bits >= aggregate_count) fail("invalid aggregate tag");
     const Aggregate *item = &aggregates[value.bits];
-    if (item->kind != kind || item->length != (kind == TAG_PAIR ? 2u : 1u))
+    if (item->kind != kind || item->shape != value.shape ||
+        item->length != (kind == TAG_PAIR ? 2u : 1u))
         fail("invalid aggregate reference");
     return item;
 }
+static const Aggregate *list(Value value) {
+    if (value.tag != TAG_LIST || value.shape == 0 || value.shape > SHAPES ||
+        value.bits >= aggregate_count) fail("invalid List tag");
+    const Aggregate *item = &aggregates[value.bits];
+    if (item->shape != value.shape || item->length > LIST_LIMIT)
+        fail("invalid List shape or length");
+    if (item->kind == AGG_LIST_NIL) {
+        if (item->length != 0) fail("invalid nil length");
+    } else if (item->kind == AGG_LIST_CONS) {
+        Value tail = item->right;
+        if (item->length == 0 || tail.tag != TAG_LIST || tail.shape != value.shape ||
+            tail.bits >= value.bits) fail("invalid List tail");
+        const Aggregate *previous = &aggregates[tail.bits];
+        if ((previous->kind != AGG_LIST_NIL && previous->kind != AGG_LIST_CONS) ||
+            previous->shape != value.shape || previous->length != item->length - 1)
+            fail("invalid List predecessor");
+    } else fail("invalid List cell");
+    return item;
+}
 static void check_value(Value value) {
+    if (!shape_kind(value.tag, value.shape)) fail("invalid value shape or kind");
     switch (value.tag) {
     case TAG_I64: break;
     case TAG_UNIT: if (value.bits != 0) fail("invalid Unit"); break;
@@ -120,25 +155,41 @@ static void check_value(Value value) {
         break;
     case TAG_PROGRAM:
         if (value.bits >= STATIC_PROGRAMS + program_count ||
-            (value.bits < STATIC_PROGRAMS && !static_programs[value.bits].valid))
+            (value.bits < STATIC_PROGRAMS &&
+             (!static_programs[value.bits].valid || static_programs[value.bits].shape != value.shape)) ||
+            (value.bits >= STATIC_PROGRAMS &&
+             programs[value.bits - STATIC_PROGRAMS].shape != value.shape))
             fail("invalid Program reference");
         break;
     case TAG_PAIR: case TAG_SUM_LEFT: case TAG_SUM_RIGHT:
         (void)aggregate(value, value.tag);
         break;
+    case TAG_LIST: (void)list(value); break;
     default: fail("invalid value tag");
     }
 }
-static void new_aggregate(unsigned kind, Value left, Value right) {
+static void new_aggregate(unsigned kind, unsigned shape, Value left, Value right) {
     if (aggregate_count == AGGREGATE_SLOTS) fail("aggregate slots exhausted");
+    if (shape == 0 || shape > SHAPES) fail("invalid aggregate shape");
     if (kind != TAG_PAIR && kind != TAG_SUM_LEFT && kind != TAG_SUM_RIGHT)
         fail("invalid aggregate kind");
-    check_value(left);
-    if (kind == TAG_PAIR) check_value(right);
     size_t index = aggregate_count;
-    aggregates[index] = (Aggregate){kind, kind == TAG_PAIR ? 2u : 1u, left, right};
+    aggregates[index] = (Aggregate){kind, shape, kind == TAG_PAIR ? 2u : 1u, left, right};
     ++aggregate_count;
-    push(kind, index);
+    push(kind, index, shape);
+}
+static void new_list(unsigned kind, unsigned shape, Value head, Value tail, size_t size) {
+    if (aggregate_count == AGGREGATE_SLOTS) fail("aggregate slots exhausted");
+    if (shape == 0 || shape > SHAPES) fail("invalid List shape");
+    if (kind == AGG_LIST_NIL) {
+        if (size != 0) fail("invalid nil constructor");
+    } else if (kind != AGG_LIST_CONS || size == 0 ||
+               size > LIST_LIMIT || tail.shape != shape)
+        fail("invalid cons constructor");
+    size_t index = aggregate_count;
+    aggregates[index] = (Aggregate){kind, shape, size, head, tail};
+    ++aggregate_count;
+    push(TAG_LIST, index, shape);
 }
 static Metrics metrics(uint64_t id) {
     if (id < STATIC_PROGRAMS) {
@@ -148,6 +199,8 @@ static Metrics metrics(uint64_t id) {
     }
     size_t index = (size_t)(id - STATIC_PROGRAMS);
     if (index >= program_count) fail("invalid Program reference");
+    if (programs[index].kind != 1 && programs[index].kind != 2)
+        fail("invalid Program kind");
     return (Metrics){programs[index].leaves, programs[index].depth};
 }
 static Metrics measure_data(Value root) {
@@ -181,47 +234,65 @@ static Metrics measure_data(Value root) {
             }
             if (count == RECIPE_LIMIT) fail("program depth exhausted");
             pending[count++] = (DataVisit){item->left, level + 1};
+        } else if (value.tag == TAG_LIST) {
+            const Aggregate *item = list(value);
+            if (item->kind == AGG_LIST_CONS) {
+                if (level == DEPTH_LIMIT || count > RECIPE_LIMIT - 2)
+                    fail("program depth exhausted");
+                pending[count++] = (DataVisit){item->right, level + 1};
+                pending[count++] = (DataVisit){item->left, level + 1};
+            }
         }
     }
     return (Metrics){leaves, depth};
 }
-static uint64_t new_program(unsigned kind, uint64_t left, uint64_t right, Value capture,
+static uint64_t new_program(unsigned kind, unsigned shape, uint64_t left, uint64_t right, Value capture,
                             size_t leaves, size_t depth) {
+    if (kind != 1 && kind != 2) fail("invalid Program constructor");
+    if (shape == 0 || shape > SHAPES) fail("invalid Program shape");
     if (leaves > RECIPE_LIMIT) fail("recipe leaves exhausted");
     if (depth > DEPTH_LIMIT) fail("program depth exhausted");
     if (program_count == PROGRAM_SLOTS) fail("program slots exhausted");
     size_t index = program_count++;
-    programs[index] = (Program){kind, left, right, capture, leaves, depth};
+    programs[index] = (Program){kind, shape, left, right, capture, leaves, depth};
     return STATIC_PROGRAMS + index;
 }
 static void enter(uint64_t program) {
     if (program >= STATIC_PROGRAMS + program_count) fail("invalid Program reference");
     if (frame_count == FRAME_SLOTS) fail("program frames exhausted");
-    frames[frame_count++] = (Frame){program, 0, 0, {0, 0}};
+    frames[frame_count++] = (Frame){program, 0, 0, {0, 0, 0}};
 }
-static void arith(unsigned operation) {
+static void arith(unsigned operation, unsigned shape) {
     uint64_t right = pop_i64();
     uint64_t left = pop_i64();
-    if (operation == 0) push(TAG_I64, left + right);
-    else if (operation == 1) push(TAG_I64, left - right);
-    else if (operation == 2) push(TAG_I64, left * right);
-    else push(TAG_BOOL, left == right);
+    if (operation == 0) push(TAG_I64, left + right, shape);
+    else if (operation == 1) push(TAG_I64, left - right, shape);
+    else if (operation == 2) push(TAG_I64, left * right, shape);
+    else push(TAG_BOOL, left == right, shape);
 }
 static void execute(Instruction instruction) {
+    if (instruction.inputs > 3 || height < instruction.inputs)
+        fail("input stack interface");
+    for (size_t i = 0; i < instruction.inputs; ++i) {
+        check_value(stack[height - instruction.inputs + i]);
+        if (instruction.input_shape[i] == 0 ||
+            stack[height - instruction.inputs + i].shape != instruction.input_shape[i])
+            fail("input value shape");
+    }
     switch (instruction.op) {
-    case OP_I64: push(TAG_I64, instruction.bits); break;
-    case OP_BOOL: if (instruction.bits > 1) fail("invalid Bool"); push(TAG_BOOL, instruction.bits); break;
-    case OP_UNIT: push(TAG_UNIT, 0); break;
+    case OP_I64: push(TAG_I64, instruction.bits, instruction.shape); break;
+    case OP_BOOL: if (instruction.bits > 1) fail("invalid Bool"); push(TAG_BOOL, instruction.bits, instruction.shape); break;
+    case OP_UNIT: push(TAG_UNIT, 0, instruction.shape); break;
     case OP_TEXT:
         if (instruction.bits >= STATIC_TEXTS || !text_literals[instruction.bits].valid) fail("invalid Text reference");
-        push(TAG_TEXT, instruction.bits);
+        push(TAG_TEXT, instruction.bits, instruction.shape);
         break;
     case OP_PAIR: {
         if (height < 2) fail("stack underflow");
         if (aggregate_count == AGGREGATE_SLOTS) fail("aggregate slots exhausted");
         Value right = pop();
         Value left = pop();
-        new_aggregate(TAG_PAIR, left, right);
+        new_aggregate(TAG_PAIR, instruction.shape, left, right);
         break;
     }
     case OP_UNPAIR: {
@@ -238,7 +309,7 @@ static void execute(Instruction instruction) {
         if (aggregate_count == AGGREGATE_SLOTS) fail("aggregate slots exhausted");
         Value payload = pop();
         new_aggregate(instruction.op == OP_INL ? TAG_SUM_LEFT : TAG_SUM_RIGHT,
-                      payload, (Value){0, 0});
+                      instruction.shape, payload, (Value){0, 0, 0});
         break;
     }
     case OP_CASE: {
@@ -252,6 +323,36 @@ static void execute(Instruction instruction) {
         enter(sum.tag == TAG_SUM_LEFT ? left.bits : right.bits);
         break;
     }
+    case OP_NIL:
+        new_list(AGG_LIST_NIL, instruction.shape,
+                 (Value){0, 0, 0}, (Value){0, 0, 0}, 0);
+        break;
+    case OP_CONS: {
+        if (height < 2) fail("stack underflow");
+        if (aggregate_count == AGGREGATE_SLOTS) fail("aggregate slots exhausted");
+        const Aggregate *previous = list(stack[height - 1]);
+        if (previous->length == LIST_LIMIT) fail("list length exhausted");
+        size_t size = previous->length + 1;
+        Value tail = pop();
+        Value head = pop();
+        new_list(AGG_LIST_CONS, instruction.shape, head, tail, size);
+        break;
+    }
+    case OP_LIST_CASE: {
+        if (height < 3) fail("stack underflow");
+        Value cons_branch = pop_program();
+        Value nil_branch = pop_program();
+        Value subject = pop();
+        const Aggregate *item = list(subject);
+        if (item->kind == AGG_LIST_NIL) {
+            enter(nil_branch.bits);
+        } else {
+            push_value(item->left);
+            push_value(item->right);
+            enter(cons_branch.bits);
+        }
+        break;
+    }
     case OP_DUP:
         if (!height) fail("stack underflow");
         push_value(stack[height - 1]);
@@ -261,16 +362,20 @@ static void execute(Instruction instruction) {
         if (height < 2) fail("stack underflow");
         { Value temporary = stack[height - 1]; stack[height - 1] = stack[height - 2]; stack[height - 2] = temporary; }
         break;
-    case OP_ADD: case OP_SUB: case OP_MUL: case OP_EQ: arith(instruction.op - OP_ADD); break;
+    case OP_ADD: case OP_SUB: case OP_MUL: case OP_EQ:
+        arith(instruction.op - OP_ADD, instruction.shape);
+        break;
     case OP_STATIC:
-        if (instruction.bits >= STATIC_PROGRAMS || !static_programs[instruction.bits].valid) fail("invalid static Program");
-        push(TAG_PROGRAM, instruction.bits);
+        if (instruction.bits >= STATIC_PROGRAMS || !static_programs[instruction.bits].valid ||
+            static_programs[instruction.bits].shape != instruction.shape)
+            fail("invalid static Program");
+        push(TAG_PROGRAM, instruction.bits, instruction.shape);
         break;
     case OP_QUOTE: {
         Value capture = pop();
         Metrics data = measure_data(capture);
-        uint64_t program = new_program(1, 0, 0, capture, data.leaves, data.depth);
-        push(TAG_PROGRAM, program);
+        uint64_t program = new_program(1, instruction.shape, 0, 0, capture, data.leaves, data.depth);
+        push(TAG_PROGRAM, program, instruction.shape);
         break;
     }
     case OP_COMPOSE: {
@@ -282,9 +387,9 @@ static void execute(Instruction instruction) {
             fail("recipe leaves exhausted");
         size_t depth = lhs.depth > rhs.depth ? lhs.depth : rhs.depth;
         if (depth >= DEPTH_LIMIT) fail("program depth exhausted");
-        uint64_t program = new_program(2, left.bits, right.bits, (Value){0, 0},
+        uint64_t program = new_program(2, instruction.shape, left.bits, right.bits, (Value){0, 0, 0},
                                        lhs.leaves + rhs.leaves, depth + 1);
-        push(TAG_PROGRAM, program);
+        push(TAG_PROGRAM, program, instruction.shape);
         break;
     }
     case OP_RUN: {
@@ -350,48 +455,50 @@ static void decimal(uint64_t bits) {
     char digits[32];
     uint64_t magnitude = bits;
     if ((bits & UINT64_C(9223372036854775808)) != 0) {
-        append("-");
+        APPEND_LITERAL("-");
         magnitude = (~bits) + UINT64_C(1);
     }
     int n = snprintf(digits, sizeof digits, "%llu", (unsigned long long)magnitude);
     if (n < 0 || (size_t)n >= sizeof digits) fail("decimal encoding");
-    append(digits);
+    append_bytes(digits, (size_t)n);
 }
 static void emit_text(uint64_t id) {
     static const char hex[] = "0123456789abcdef";
     if (id >= STATIC_TEXTS || !text_literals[id].valid) fail("invalid Text reference");
     const StaticText *text = &text_literals[id];
-    append("{\"type\":\"Text\",\"value\":\"");
+    APPEND_LITERAL("{\"type\":\"Text\",\"value\":\"");
     for (size_t i = 0; i < text->length; ++i) {
         unsigned char byte = text->bytes[i];
         if (byte == '"' || byte == '\\') {
             append_byte('\\');
             append_byte(byte);
         } else if (byte < 0x20) {
-            append("\\u00");
+            APPEND_LITERAL("\\u00");
             append_byte((unsigned char)hex[byte >> 4]);
             append_byte((unsigned char)hex[byte & 15]);
         } else append_byte(byte);
     }
-    append("\"}");
+    APPEND_LITERAL("\"}");
 }
 static void emit_stack(void) {
-    append("{\"stage\":\"native-runtime\",\"outcome\":\"normal\",\"stack\":[");
+    APPEND_LITERAL("{\"stage\":\"native-runtime\",\"outcome\":\"normal\",\"stack\":[");
     for (size_t i = 0; i < height; ++i) {
-        if (i) append(",");
+        if (i) APPEND_LITERAL(",");
         if (stack[i].tag == TAG_I64) {
-            append("{\"type\":\"I64\",\"value\":\"");
+            APPEND_LITERAL("{\"type\":\"I64\",\"value\":\"");
             decimal(stack[i].bits);
-            append("\"}");
+            APPEND_LITERAL("\"}");
         } else if (stack[i].tag == TAG_BOOL) {
-            append(stack[i].bits ? "{\"type\":\"Bool\",\"value\":true}" : "{\"type\":\"Bool\",\"value\":false}");
+            if (stack[i].bits == 0) APPEND_LITERAL("{\"type\":\"Bool\",\"value\":false}");
+            else if (stack[i].bits == 1) APPEND_LITERAL("{\"type\":\"Bool\",\"value\":true}");
+            else fail("invalid Bool output");
         } else if (stack[i].tag == TAG_UNIT) {
-            append("{\"type\":\"Unit\"}");
+            APPEND_LITERAL("{\"type\":\"Unit\"}");
         } else if (stack[i].tag == TAG_TEXT) {
             emit_text(stack[i].bits);
         } else fail("invalid output tag");
     }
-    append("]}");
+    APPEND_LITERAL("]}");
     if (fputs(output, stdout) == EOF || fputc('\n', stdout) == EOF || fflush(stdout) == EOF) fail("output stream");
 }
 int main(void) {
@@ -523,7 +630,10 @@ impl<'de> Deserialize<'de> for UniqueValue {
                 Ok(UniqueValue(Value::Null))
             }
 
-            fn visit_seq<A: SeqAccess<'de>>(self, mut sequence: A) -> Result<Self::Value, A::Error> {
+            fn visit_seq<A: SeqAccess<'de>>(
+                self,
+                mut sequence: A,
+            ) -> Result<Self::Value, A::Error> {
                 let mut values = Vec::new();
                 while let Some(UniqueValue(value)) = sequence.next_element()? {
                     values.push(value);
@@ -533,7 +643,9 @@ impl<'de> Deserialize<'de> for UniqueValue {
 
             fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
                 let mut values = serde_json::Map::new();
-                while let Some((key, UniqueValue(value))) = map.next_entry::<String, UniqueValue>()? {
+                while let Some((key, UniqueValue(value))) =
+                    map.next_entry::<String, UniqueValue>()?
+                {
                     if values.contains_key(&key) {
                         return Err(A::Error::custom("duplicate JSON member"));
                     }
@@ -550,7 +662,9 @@ fn unique_json(bytes: &[u8]) -> Result<Value, String> {
     let mut decoder = serde_json::Deserializer::from_slice(bytes);
     let UniqueValue(value) = UniqueValue::deserialize(&mut decoder)
         .map_err(|error| format!("invalid or duplicate control JSON: {error}"))?;
-    decoder.end().map_err(|error| format!("invalid control JSON: {error}"))?;
+    decoder
+        .end()
+        .map_err(|error| format!("invalid control JSON: {error}"))?;
     Ok(value)
 }
 
@@ -578,7 +692,10 @@ fn controls(
     if !expected.stack_in.is_empty() || expected.stack_out.len() != 1 {
         return Err("C slice requires no runtime input and one output".into());
     }
-    if !matches!(expected.stack_out.as_slice(), [Ty::I64 | Ty::Bool | Ty::Unit | Ty::Text]) {
+    if !matches!(
+        expected.stack_out.as_slice(),
+        [Ty::I64 | Ty::Bool | Ty::Unit | Ty::Text]
+    ) {
         return Err("checked aggregate, Syntax or Program C output is unsupported".into());
     }
     let fields = policy.as_object().ok_or("policy must be an object")?;
@@ -627,14 +744,28 @@ fn controls(
 struct LoweredProgram {
     code: String,
     recipe: Value,
+    shape: usize,
     leaves: usize,
     depth: usize,
+}
+
+fn shape_id<'a>(shapes: &mut Vec<&'a Ty>, ty: &'a Ty) -> Result<usize, String> {
+    if let Some(index) = shapes.iter().position(|known| *known == ty) {
+        return Ok(index + 1);
+    }
+    if shapes.len() == SHAPE_MAX {
+        return Err("checked C type shapes exhausted".into());
+    }
+    shapes.push(ty);
+    Ok(shapes.len())
 }
 
 fn bind_texts(body: &noble_kernel::execution::Body) -> Result<Vec<Option<&str>>, String> {
     let mut texts = vec![None; body.candidate.nodes.len()];
     for text in &body.texts {
-        let slot = texts.get_mut(text.node.0 as usize).ok_or("Text metadata node out of bounds")?;
+        let slot = texts
+            .get_mut(text.node.0 as usize)
+            .ok_or("Text metadata node out of bounds")?;
         if !matches!(
             body.candidate.nodes.get(text.node.0 as usize),
             Some(Node::Literal { lit: Lit::Text, .. })
@@ -644,19 +775,27 @@ fn bind_texts(body: &noble_kernel::execution::Body) -> Result<Vec<Option<&str>>,
         }
         *slot = Some(std::str::from_utf8(&text.bytes).map_err(|_| "invalid Text UTF-8")?);
     }
-    if body.candidate.nodes.iter().enumerate().any(|(index, node)| {
-        matches!(node, Node::Literal { lit: Lit::Text, .. }) != texts[index].is_some()
-    }) {
+    if body
+        .candidate
+        .nodes
+        .iter()
+        .enumerate()
+        .any(|(index, node)| {
+            matches!(node, Node::Literal { lit: Lit::Text, .. }) != texts[index].is_some()
+        })
+    {
         return Err("missing or extraneous checked Text metadata".into());
     }
     Ok(texts)
 }
 
-fn lower_body(
+fn lower_body<'a>(
     candidate: &Candidate,
     body: &[NodeId],
     kinds: &[Behavior],
     texts: &[Option<&str>],
+    interfaces: &[Option<&'a noble_kernel::untrusted::Interface>],
+    shapes: &mut Vec<&'a Ty>,
     visited: &mut [bool],
     programs: &mut [Option<LoweredProgram>],
     slot: usize,
@@ -667,33 +806,71 @@ fn lower_body(
     let mut depth = 1usize;
     for id in body {
         let index = id.0 as usize;
-        let seen = visited.get_mut(index).ok_or("invalid checked node reference")?;
+        let seen = visited
+            .get_mut(index)
+            .ok_or("invalid checked node reference")?;
         if *seen {
             return Err("repeated or cyclic C node reference".into());
         }
         *seen = true;
-        let (op, bits, atom) = match candidate.nodes.get(index).ok_or("missing checked node")? {
-            Node::Literal { lit: Lit::I64(value), .. } =>
-                ("OP_I64", *value as u64, json!(["i64", value.to_string()])),
-            Node::Literal { lit: Lit::Bool(value), .. } =>
-                ("OP_BOOL", u64::from(*value), json!(["bool", value])),
-            Node::Literal { lit: Lit::Unit, .. } =>
-                ("OP_UNIT", 0, json!(["unit"])),
+        let interface = interfaces
+            .get(index)
+            .and_then(|item| *item)
+            .ok_or("missing checked C node derivation")?;
+        if !interface.effects.is_empty() {
+            return Err("effectful C node is unsupported".into());
+        }
+        let node = candidate.nodes.get(index).ok_or("missing checked node")?;
+        let (op, bits, atom) = match node {
+            Node::Literal {
+                lit: Lit::I64(value),
+                ..
+            } => ("OP_I64", *value as u64, json!(["i64", value.to_string()])),
+            Node::Literal {
+                lit: Lit::Bool(value),
+                ..
+            } => ("OP_BOOL", u64::from(*value), json!(["bool", value])),
+            Node::Literal { lit: Lit::Unit, .. } => ("OP_UNIT", 0, json!(["unit"])),
             Node::Literal { lit: Lit::Text, .. } => {
-                let text = texts.get(index).and_then(|value| *value)
+                let text = texts
+                    .get(index)
+                    .and_then(|value| *value)
                     .ok_or("missing checked Text payload")?;
                 ("OP_TEXT", index as u64, json!(["text", text]))
             }
             Node::Quotation { body, .. } => {
                 let (child_leaves, child_depth) = lower_body(
-                    candidate, body, kinds, texts, visited, programs, index + 1,
+                    candidate,
+                    body,
+                    kinds,
+                    texts,
+                    interfaces,
+                    shapes,
+                    visited,
+                    programs,
+                    index + 1,
                 )?;
-                leaves = leaves.checked_add(child_leaves).ok_or("recipe leaves exhausted")?;
-                depth = depth.max(child_depth.checked_add(1).ok_or("program depth exhausted")?);
-                ("OP_STATIC", (index + 1) as u64, json!(["quotation", index + 1]))
+                leaves = leaves
+                    .checked_add(child_leaves)
+                    .ok_or("recipe leaves exhausted")?;
+                depth = depth.max(
+                    child_depth
+                        .checked_add(1)
+                        .ok_or("program depth exhausted")?,
+                );
+                (
+                    "OP_STATIC",
+                    (index + 1) as u64,
+                    json!(["quotation", index + 1]),
+                )
             }
-            Node::Invocation { def: Definition(word), .. } => {
-                let kind = kinds.get(*word as usize).ok_or("missing checked operation contract")?;
+            Node::Invocation {
+                def: Definition(word),
+                ..
+            } => {
+                let kind = kinds
+                    .get(*word as usize)
+                    .ok_or("missing checked operation contract")?;
                 let op = match (*word, kind) {
                     (0, Behavior::Dup) => "OP_DUP",
                     (1, Behavior::Drop) => "OP_DROP",
@@ -713,14 +890,95 @@ fn lower_body(
                     (16, Behavior::Inr) => "OP_INR",
                     (17, Behavior::Case) => "OP_CASE",
                     (18, Behavior::If) => "OP_IF",
+                    (19, Behavior::Nil) => "OP_NIL",
+                    (20, Behavior::Cons) => "OP_CONS",
+                    (21, Behavior::ListCase) => "OP_LIST_CASE",
                     _ => return Err(format!("unsupported checked C operation {word}")),
                 };
                 (op, 0, json!(["word", word]))
             }
-            Node::SlotInvoke { .. } | Node::Literal { .. } =>
-                return Err("unsupported checked C value, effect or live operation".into()),
+            Node::SlotInvoke { .. } | Node::Literal { .. } => {
+                return Err("unsupported checked C value, effect or live operation".into())
+            }
         };
-        code.push_str(&format!("    {{{op}, UINT64_C({bits})}},\n"));
+        let inputs = match op {
+            "OP_DUP" | "OP_DROP" | "OP_QUOTE" | "OP_RUN" | "OP_UNPAIR" | "OP_INL" | "OP_INR" => 1,
+            "OP_SWAP" | "OP_ADD" | "OP_SUB" | "OP_MUL" | "OP_EQ" | "OP_COMPOSE" | "OP_DIP"
+            | "OP_PAIR" | "OP_CONS" => 2,
+            "OP_IF" | "OP_CASE" | "OP_LIST_CASE" => 3,
+            _ => 0,
+        };
+        let first = interface
+            .stack_in
+            .len()
+            .checked_sub(inputs)
+            .ok_or("incomplete checked C input interface")?;
+        let mut input_shapes = [0usize; 3];
+        for (entry, ty) in input_shapes
+            .iter_mut()
+            .zip(interface.stack_in[first..].iter())
+        {
+            *entry = shape_id(shapes, ty)?;
+        }
+        let produced = matches!(
+            op,
+            "OP_I64"
+                | "OP_BOOL"
+                | "OP_UNIT"
+                | "OP_TEXT"
+                | "OP_STATIC"
+                | "OP_ADD"
+                | "OP_SUB"
+                | "OP_MUL"
+                | "OP_EQ"
+                | "OP_QUOTE"
+                | "OP_COMPOSE"
+                | "OP_PAIR"
+                | "OP_INL"
+                | "OP_INR"
+                | "OP_NIL"
+                | "OP_CONS"
+        );
+        let result_shape = if produced {
+            let ty = interface
+                .stack_out
+                .last()
+                .ok_or("missing checked C result")?;
+            let right_kind = match op {
+                "OP_I64" | "OP_ADD" | "OP_SUB" | "OP_MUL" => matches!(ty, Ty::I64),
+                "OP_BOOL" | "OP_EQ" => matches!(ty, Ty::Bool),
+                "OP_UNIT" => matches!(ty, Ty::Unit),
+                "OP_TEXT" => matches!(ty, Ty::Text),
+                "OP_STATIC" | "OP_QUOTE" | "OP_COMPOSE" => matches!(ty, Ty::Program(..)),
+                "OP_PAIR" => matches!(ty, Ty::Pair(..)),
+                "OP_INL" | "OP_INR" => matches!(ty, Ty::Sum(..)),
+                "OP_NIL" | "OP_CONS" => matches!(ty, Ty::List(..)),
+                _ => false,
+            };
+            if !right_kind {
+                return Err("unsupported checked C result shape".into());
+            }
+            shape_id(shapes, ty)?
+        } else {
+            0
+        };
+        if matches!(node, Node::Quotation { .. }) {
+            programs[index + 1]
+                .as_mut()
+                .ok_or("missing C quotation program")?
+                .shape = result_shape;
+        }
+        code.push_str("    {");
+        write!(code, "{op}, UINT64_C({bits}), {result_shape}, {inputs}, ")
+            .map_err(|_| "C instruction output failure")?;
+        code.push('{');
+        write!(
+            code,
+            "{}, {}, {}",
+            input_shapes[0], input_shapes[1], input_shapes[2]
+        )
+        .map_err(|_| "C instruction output failure")?;
+        code.push_str("}},\n");
         recipe.push(atom);
         leaves = leaves.checked_add(1).ok_or("recipe leaves exhausted")?;
         if leaves > RECIPE_MAX || depth > PROGRAM_DEPTH_MAX {
@@ -733,6 +991,7 @@ fn lower_body(
     programs[slot] = Some(LoweredProgram {
         code,
         recipe: json!(recipe),
+        shape: 0,
         leaves,
         depth,
     });
@@ -793,28 +1052,66 @@ fn emit(
     }
     let texts = bind_texts(&submission.body)?;
     let mut visited = vec![false; candidate.nodes.len()];
+    let mut interfaces = vec![None; candidate.nodes.len()];
+    for row in &checked.derivations {
+        let entry = interfaces
+            .get_mut(row.node.0 as usize)
+            .ok_or("checked C derivation node out of bounds")?;
+        if entry.replace(&row.interface).is_some() {
+            return Err("duplicate checked C node derivation".into());
+        }
+    }
+    let mut shapes = Vec::new();
     let mut programs = Vec::with_capacity(candidate.nodes.len() + 1);
     programs.resize_with(candidate.nodes.len() + 1, || None);
     lower_body(
-        candidate, &candidate.body, &submission.environment.kinds, &texts,
-        &mut visited, &mut programs, 0,
+        candidate,
+        &candidate.body,
+        &submission.environment.kinds,
+        &texts,
+        &interfaces,
+        &mut shapes,
+        &mut visited,
+        &mut programs,
+        0,
     )?;
     if visited.iter().any(|seen| !seen)
         || checked.derivations.len() != visited.len()
-        || checked.derivations.iter().any(|row| !visited.get(row.node.0 as usize).copied().unwrap_or(false))
+        || checked
+            .derivations
+            .iter()
+            .any(|row| !visited.get(row.node.0 as usize).copied().unwrap_or(false))
     {
         return Err("checked C body omits or duplicates an accepted node".into());
     }
     let mut c = format!(
-        "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS {}\n#define AGGREGATE_SLOTS {}\n#define FRAME_SLOTS {}\n#define RECIPE_LIMIT {}\n#define DEPTH_LIMIT {}\n#define STATIC_PROGRAMS {}\n#define STATIC_TEXTS {}\n",
+        "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS {}\n#define AGGREGATE_SLOTS {}\n#define LIST_LIMIT {}\n#define SHAPES {}\n#define FRAME_SLOTS {}\n#define RECIPE_LIMIT {}\n#define DEPTH_LIMIT {}\n#define STATIC_PROGRAMS {}\n#define STATIC_TEXTS {}\n",
         limits.slots, limits.steps, limits.output,
-        PROGRAM_MAX, AGGREGATE_MAX, FRAME_MAX, RECIPE_MAX, PROGRAM_DEPTH_MAX,
+        PROGRAM_MAX, AGGREGATE_MAX, LIST_MAX, shapes.len(), FRAME_MAX,
+        RECIPE_MAX, PROGRAM_DEPTH_MAX,
         programs.len(), texts.len().max(1)
     );
     c.push_str(RUNTIME_HEADER);
+    c.push_str("static const unsigned char shape_tags[SHAPES + 1] = {0,\n");
+    for ty in &shapes {
+        let tag = match ty {
+            Ty::I64 => "TAG_I64",
+            Ty::Bool => "TAG_BOOL",
+            Ty::Unit => "TAG_UNIT",
+            Ty::Text => "TAG_TEXT",
+            Ty::Program(_, _, effects) if effects.is_empty() => "TAG_PROGRAM",
+            Ty::Pair(..) => "TAG_PAIR",
+            Ty::Sum(..) => "TAG_SUM_LEFT",
+            Ty::List(..) => "TAG_LIST",
+            _ => return Err("unsupported checked C value shape".into()),
+        };
+        writeln!(c, "    {tag},").map_err(|_| "C shape output failure")?;
+    }
+    c.push_str("};\n");
     for (index, text) in texts.iter().enumerate() {
         if let Some(text) = text {
-            write!(c, "static const unsigned char text_{index}[] = {{").map_err(|_| "C output failure")?;
+            write!(c, "static const unsigned char text_{index}[] = {{")
+                .map_err(|_| "C output failure")?;
             for byte in text.as_bytes() {
                 write!(c, "0x{byte:02x},").map_err(|_| "C output failure")?;
             }
@@ -824,7 +1121,8 @@ fn emit(
     c.push_str("static const StaticText text_literals[STATIC_TEXTS] = {\n");
     for (index, text) in texts.iter().enumerate() {
         if let Some(text) = text {
-            writeln!(c, "    {{text_{index}, {}, 1}},", text.len()).map_err(|_| "C output failure")?;
+            writeln!(c, "    {{text_{index}, {}, 1}},", text.len())
+                .map_err(|_| "C output failure")?;
         } else {
             c.push_str("    {NULL, 0, 0},\n");
         }
@@ -837,30 +1135,47 @@ fn emit(
         if let Some(program) = program {
             // An empty quotation is an actual zero-instruction program.
             if !program.code.is_empty() {
-                c.push_str(&format!("static const Instruction instructions_{index}[] = {{\n{}}};\n", program.code));
+                c.push_str(&format!(
+                    "static const Instruction instructions_{index}[] = {{\n{}}};\n",
+                    program.code
+                ));
             }
         }
     }
     c.push_str("static const StaticProgram static_programs[STATIC_PROGRAMS] = {\n");
     for (index, program) in programs.iter().enumerate() {
         match program {
-            Some(program) if !program.code.is_empty() =>
-                c.push_str(&format!("    {{instructions_{index}, {}, 1, {}, {}}},\n",
-                    program.code.lines().count(), program.leaves, program.depth)),
-            Some(program) => c.push_str(&format!("    {{NULL, 0, 1, {}, {}}},\n",
-                program.leaves, program.depth)),
-            None => c.push_str("    {NULL, 0, 0, 0, 0},\n"),
+            Some(program) if !program.code.is_empty() => c.push_str(&format!(
+                "    {{instructions_{index}, {}, 1, {}, {}, {}}},\n",
+                program.code.lines().count(),
+                program.shape,
+                program.leaves,
+                program.depth
+            )),
+            Some(program) => c.push_str(&format!(
+                "    {{NULL, 0, 1, {}, {}, {}}},\n",
+                program.shape, program.leaves, program.depth
+            )),
+            None => c.push_str("    {NULL, 0, 0, 0, 0, 0},\n"),
         }
     }
     c.push_str("};\n");
     c.push_str(RUNTIME);
-    c.push_str(match expected.stack_out.as_slice() {
-        [Ty::I64] => "    if (height != 1 || stack[0].tag != TAG_I64) fail(\"output interface\");\n",
-        [Ty::Bool] => "    if (height != 1 || stack[0].tag != TAG_BOOL) fail(\"output interface\");\n",
-        [Ty::Unit] => "    if (height != 1 || stack[0].tag != TAG_UNIT) fail(\"output interface\");\n",
-        [Ty::Text] => "    if (height != 1 || stack[0].tag != TAG_TEXT) fail(\"output interface\");\n",
+    let output_shape = shapes
+        .iter()
+        .position(|ty| *ty == &expected.stack_out[0])
+        .ok_or("checked C output shape was not produced")?
+        + 1;
+    let output_tag = match expected.stack_out.as_slice() {
+        [Ty::I64] => "TAG_I64",
+        [Ty::Bool] => "TAG_BOOL",
+        [Ty::Unit] => "TAG_UNIT",
+        [Ty::Text] => "TAG_TEXT",
         _ => return Err("unsupported C result type".into()),
-    });
+    };
+    c.push_str(&format!(
+        "    if (height != 1 || stack[0].tag != {output_tag} || stack[0].shape != {output_shape}) fail(\"output interface\");\n",
+    ));
     c.push_str("    emit_stack();\n    return 0;\n}\n");
     if c.len() > C_MAX {
         return Err("C source output exhausted".into());
@@ -872,7 +1187,9 @@ fn emit(
         [Ty::Text] => "-- Text",
         _ => return Err("unsupported C result type".into()),
     };
-    let recipes = programs.into_iter().map(|program| program.map(|item| item.recipe))
+    let recipes = programs
+        .into_iter()
+        .map(|program| program.map(|item| item.recipe))
         .collect::<Vec<_>>();
     Ok((
         c,
@@ -918,7 +1235,8 @@ fn build(arguments: &[std::ffi::OsString]) -> Result<Value, String> {
         "build_key":digest(&subject), "native_artifact":null,
         "runtime_limits":{"stack_slots":limits.slots, "steps":limits.steps,
             "output_bytes":limits.output, "program_slots":PROGRAM_MAX,
-            "aggregate_slots":AGGREGATE_MAX, "frame_slots":FRAME_MAX,
+            "aggregate_slots":AGGREGATE_MAX, "list_length_cap":LIST_MAX,
+            "type_shapes":SHAPE_MAX, "frame_slots":FRAME_MAX,
             "recipe_leaves":RECIPE_MAX,
             "program_depth":PROGRAM_DEPTH_MAX},
         "source_to_elf_admitted":false, "native_execution":"blocked-no-pinned-sandbox"});

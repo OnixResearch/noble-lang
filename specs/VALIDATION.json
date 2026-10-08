@@ -1408,19 +1408,19 @@
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "2bbe927778a778097751b0c73704acd91f784b462425949f02b14581cd1d8507"
+      "sha256": "4616200e4537caf47d0077b5843c6f80992f4c3f365ec2123520a563b48e9940"
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
-      "sha256": "ce569dfbddfcdc10e7e06e200334413292a1cf1d666f6c5d6c891fd51b008999"
+      "sha256": "525f25489542c76fb5499eb585b6fca1a0f5496154995524e96edf9704c33013"
     },
     {
       "file": ".cairn/changes/c-backend/specs/c-backend/spec.md",
-      "sha256": "20cbb261d44be154acb6eb7c9ce21653b9d9a9b0150edaa8ff164db5f0169ad5"
+      "sha256": "ebee0a8ee784c5525a30b389988b067d91db5941ba15a4aac308e8535a0efce8"
     },
     {
       "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "b54071d3fb1783a26912ed2000f87f7788df346499439fdcf1312cd9674fa82e"
+      "sha256": "86c667a46be11ae0721c33beeff8f32eae1b1fdf6efe363fab0061d9bd5b0362"
     },
     {
       "file": ".cairn/changes/editor-hole-transport/design.md",
@@ -1808,7 +1808,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "07e2021acc0fecfdbbb091540bda5460d99918a8eed608dc4bc0c6daa79e2945"
+      "sha256": "7726fc4a9e35dd9e05eb74b8acf5b698394e80fba088121bb2fa10c015386a1e"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1936,7 +1936,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "7c2327fc0bf392db9716d069d4ba63ba4e2efdc92751891cec67ffd0f1314884"
+      "sha256": "062a830a92fd9c63e233761ea5da523970e68b5cda3a5b8f27336df327bd4730"
     },
     {
       "file": "specs/SAFETY.md",
@@ -1956,7 +1956,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "15d043374f57ba359e2d7231ab6321fad1935dff574cae9f1e1e473a3a6c23c2"
+      "sha256": "f04a75388342512f9130a8b67daa06b8f6f1564b92d7b668267ac2eb4359e3e1"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",

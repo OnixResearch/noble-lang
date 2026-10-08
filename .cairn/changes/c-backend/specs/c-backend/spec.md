@@ -57,11 +57,19 @@ grammar into ordered input/output stacks; those stacks and the empty effect
 bound are compared against source preparation and independent kernel acceptance.
 Recognizing nested Core types in the control parser does not admit them as
 runtime inputs or final results. This isolated source-only WIP additionally
-lowers checked `pair`/`unpair` and `inl`/`inr`/`case` internally through
-an immutable tagged 256-slot aggregate arena with checked references and
-bounded iterative accounting before quotation captures nested data. It still
-refuses final Pair/Sum/List/Syntax/Program results, `nil`/`cons`/`list.case`,
-`reflect`, typed runtime inputs, named definitions and host effects.
+lowers checked `pair`/`unpair`, `inl`/`inr`/`case` and
+`nil`/`cons`/`list.case` internally through an immutable tagged
+256-slot aggregate arena. Interned exact checked Core type shapes
+preflight operand order and kind before each supported operation;
+Pair/Sum/List cells and static/dynamic Program values retain checked
+shape identities. List cells retain their exact length with a fixed
+255-element source-only ceiling, and an iterative step-charged walk
+accounts for nested quotation captures. This fixed ceiling is NOT
+acceptance of a supplied `limits.list_length`: the exact three-key
+source-only policy still refuses that field before emission, so
+CB-CASE-01/06 are not satisfied by the internal List implementation.
+Final Pair/Sum/List/Syntax/Program results, `reflect`, typed runtime
+inputs, named definitions and host effects still refuse.
 It emits source and manifest without compiler/ELF pin or compile argv, and
 `--native` and `execute --target c` refuse. This MUST NOT be represented
 as satisfying the complete proposed C/native build contract. Its ordinary

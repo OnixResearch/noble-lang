@@ -12,15 +12,17 @@
 
 This isolated WIP adds only an inert, nonselected, checked source emitter for a
 restricted effect-free I64/Bool/Unit/Text-result Core subset, including bounded
-internal Pair/Sum construction/elimination, immutable aggregate captures,
-quotation/compose/run and pure `dip`/`if` code. The development C11
+internal Pair/Sum/List construction/elimination, exact checked local
+type-shape preflights, immutable aggregate captures, quotation/compose/run
+and pure `dip`/`if` code. The fixed 255-element List ceiling is not an
+accepted supplied `limits.list_length` policy. The development C11
 syntax-only diagnostic is not native execution, compiler correspondence or
 C/Wasm acceptance. The requirements below remain open; no CB case is promoted.
 Text payloads bind exactly to checked source-body node identities; recursive
 contract/policy duplicate member names refuse before source-only emission.
 All eleven active MODIFIED delta bodies now retain canonical normative
 requirements and linked scenario designs, with only the unreviewed
-CB-BUILD-01 source-only internal Pair/Sum extension; this is not owner
+CB-BUILD-01 source-only internal Pair/Sum/List extension; this is not owner
 approval or legal sync while the eight remaining gates are undone.
 
 CB-CASE-01 still supplies `limits.list_length: 2`; the current exact

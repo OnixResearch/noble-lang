@@ -83,12 +83,15 @@ I64, Bool, Unit or Text result, then lowers ordered stack operations, the
 `unit` constructor and exact checked UTF-8 Text payloads, immutable quotation
 bodies, runtime `quote` capture,
 `compose`, `run`, pure `dip` and checked `if` branches into bounded C11 instructions and
-Program values. This WIP also lowers checked `pair`/`unpair` and
-`inl`/`inr`/`case` **internally** to a 256-slot immutable tagged aggregate
-arena. Pair/Sum references are checked before access; quotation captures
-retain owned arena values, and an iterative, bounded walk charges nested
-data and Program capture recipes before a dynamic Program is created.
-This does not admit Pair/Sum as final result interfaces. Text literals are
+Program values. This WIP also lowers checked `pair`/`unpair`,
+`inl`/`inr`/`case` and `nil`/`cons`/`list.case` **internally** to a
+256-slot immutable tagged aggregate arena. Checked monomorphic Core types
+are interned as local shape IDs; every supported operation checks the
+exact ordered operand shapes before mutation. Pair/Sum/List references
+and static/dynamic Program shapes are checked before use; quotation
+captures retain arena values, and an iterative, step-charged walk bounds
+nested data and Program capture recipes. This does not admit aggregate
+or Program final results. Text literals are
 bound by node identity to exactly one
 host-selected checked `Body.texts` payload; static C bytes and bounded JSON
 output preserve escapes and UTF-8 without retaining a borrowed buffer.
@@ -96,9 +99,9 @@ The host-supplied `expected_interface` is parsed into ordered Core `Ty`
 values with the existing bounded source type grammar, then compared with
 independent kernel acceptance. The parser recognizes nested Pair/Sum/List,
 Syntax and pure Program contracts, but source-only final Pair/Sum/List/Syntax/
-Program outputs still refuse. List construction and `list.case`, `reflect`,
-host effects, named definitions, runtime inputs and other profiles refuse;
-there is no Wasm fallback. The new internal Pair/Sum path is unreviewed
+Program outputs still refuse. `reflect`, host effects, named definitions,
+runtime inputs and other profiles refuse; there is no Wasm fallback.
+The new internal Pair/Sum/List path is unreviewed
 source-only WIP, reconciled in the active change delta but not yet synced
 into the held canonical CB-BUILD-01 paragraph.
 
@@ -117,15 +120,18 @@ Debug rendering, not a canonical external encoding. This is candidate
 evidence, **not** independent admission or C/Wasm equivalence. Contract and
 policy JSON reject duplicate member names recursively before checking limits,
 including names whose Unicode escapes decode to the same key. The exact
-source-only policy still rejects `limits.list_length` rather than admitting an
-unenforced bound. Input files are read through one
+source-only policy still rejects supplied `limits.list_length` rather than
+admitting an unenforced bound: the internal List arena enforces its own
+fixed 255-element ceiling, **not** the CB-CASE-01/06 policy controls.
+Input files are read through one
 bounded file descriptor each, then the observed bytes are
 copied; this does not authenticate the host-selected pathname against ancestor
 symlinks, hard links or concurrent replacement, nor seal output files against
 subsequent mutation. Output child paths are also re-resolved after creating the
 directory, so a concurrently replaced output directory is not authenticated.
 The manifest declares fixed ceilings: 256 dynamic Program slots, 256
-aggregate slots, 512 frames, 256 recipe leaves, and depth 256. Every C
+aggregate slots, List length 255, 512 shape identities, 512 frames,
+256 recipe leaves, and depth 256. Every C
 dispatch iteration consumes the
 policy step budget, including empty quotations, composition traversal,
 selected branches and `dip` restore continuations. Quotation capture also
@@ -151,7 +157,7 @@ gates and a nonblocked *preview* are not independent owner approval or
 permission to sync it. The eight remaining implementation, owner-review
 and assurance tasks stay open. The
 canonical CB-BUILD-01 still describes the earlier narrower source-only slice,
-not the unreviewed internal Pair/Sum WIP. The [review-only native security design](.cairn/changes/c-backend/design.md)
+not the unreviewed internal Pair/Sum/List WIP. The [review-only native security design](.cairn/changes/c-backend/design.md)
 lists prerequisites, not a selected
 runner. No clock/vvar/TSC nondisclosure barrier or C selection follows
 from source syntax diagnostics.

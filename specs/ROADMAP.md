@@ -1410,10 +1410,12 @@ M4 only and is specified by [the C11 AOT contract](C-BACKEND.md) and its
 [active change](../.cairn/changes/c-backend/proposal.md); native execution
 requires a pinned sandbox and separately checked source/C/ELF admission.
 Only restricted inert checked I64/Bool/Unit/Text-result C11 source emission
-is present in this isolated WIP, now including internal Pair/Sum
-construction/elimination and bounded immutable aggregate captures.
-Pair/Sum/List/Syntax/Program final results, lists, reflect, runtime inputs
-and host mediation remain unsupported. The held canonical CB-BUILD-01
+is present in this isolated WIP, now including internal Pair/Sum/List
+construction/elimination, exact checked value-shape preflights and bounded
+immutable aggregate/Program captures. Pair/Sum/List/Syntax/Program final
+results, supplied list-length policies, reflect, runtime inputs and host
+mediation remain unsupported. The fixed internal List ceiling is 255, not
+CB-CASE-01/06 admission. The held canonical CB-BUILD-01
 still describes a narrower route; the reconciled active delta cannot
 replace it before independent owner review and legal sync.
 `--native` and `execute --target c` refuse. CB-CASE-01's supplied
