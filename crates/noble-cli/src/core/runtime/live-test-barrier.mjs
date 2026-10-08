@@ -26,14 +26,15 @@
         || (entry.mode & 0o077) !== 0) fail('untrusted private live test barrier FIFO');
     }
     let used = false;
-    const pause = (owner, location, value, checkedWasmModule = false) => {
+    const pause = (owner, location, value, checkedWasmModule = false, wasmSha256 = null) => {
       if (used || !owner.inProcessLive || owner.declaredLive
         || location !== point || value !== expected) return;
       used = true;
       const event = Buffer.from(JSON.stringify({ point: location, matched: value,
         source_generation: owner.liveSourceGeneration.toString(),
         guest_frame_active: owner.liveExecuting,
-        checked_wasm_module: checkedWasmModule }) + '\n');
+        checked_wasm_module: checkedWasmModule,
+        checked_wasm_sha256: wasmSha256 }) + '\n');
       const notified = fs.openSync(reached, fs.constants.O_WRONLY | fs.constants.O_NOFOLLOW);
       try { if (fs.writeSync(notified, event) !== event.length) fail('short live barrier event'); }
       finally { fs.closeSync(notified); }
@@ -54,7 +55,7 @@
         }
         // The checked V8.Module exists, but the worker has not replied or
         // published A. A second atomic rename can now supersede it exactly.
-        pause(this, point, result.record.source_sha256, true);
+        pause(this, point, result.record.source_sha256, true, result.record.wasm_sha256);
         return result;
       };
     } else {
