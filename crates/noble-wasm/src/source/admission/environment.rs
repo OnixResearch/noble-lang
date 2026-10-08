@@ -354,7 +354,7 @@ mod declared_text_profile_tests {
         let limits = noble_contracts::Limits {
             bytes: 65_536, nodes: 16_384, depth: 64, work: 2_000_000,
         };
-        let session = ModuleSession::new_declared_text(&[], false).expect("selected source profile");
+        let session = ModuleSession::new_declared_text(&[], false, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).expect("selected source profile");
         let expression = session.prepare(b"\"7\" 0 text.byte", &[], limits)
             .expect("source-checked explicit Text cursor");
         let original = expression.declared_text_source_owner().expect("checked source token")

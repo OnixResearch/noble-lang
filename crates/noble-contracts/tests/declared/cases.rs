@@ -1,7 +1,7 @@
 #[test]
 fn all_exported_public_arms_support_exact_two_branch_match() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = super::commit(session,b"module ledger@1 [ variant Status Ready I64 public Failed Text public export Status export Status.Ready export Status.Failed ]")?;
     let accepted = session
         .prepare(
@@ -32,7 +32,7 @@ fn all_exported_public_arms_support_exact_two_branch_match() -> Result<(), Strin
 #[test]
 fn result_source_definitions_instantiate_at_distinct_named_uses() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = super::commit(session, noble_contracts::source::RESULT_LIBRARY_SOURCE)?;
     let integers = session
         .resolve_type("result@1.Result<I64,Text>")
@@ -65,7 +65,7 @@ fn result_source_definitions_instantiate_at_distinct_named_uses() -> Result<(), 
 
 #[test]
 fn result_library_source_is_pinned_and_invalid_callbacks_reject() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     let forged = b"module result@1 [ variant Result<A,E> Ok A public Err E public ]";
     let refused = session.prepare(forged, &[], super::LIMITS);
     assert!(matches!(
@@ -95,7 +95,7 @@ fn result_library_source_is_pinned_and_invalid_callbacks_reject() -> Result<(), 
 #[test]
 fn signed_constructor_produces_concrete_result_for_checked_program() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = super::commit(session, noble_contracts::source::RESULT_LIBRARY_SOURCE)?;
     session = super::commit(
         session,
@@ -127,7 +127,7 @@ fn signed_constructor_produces_concrete_result_for_checked_program() -> Result<(
 #[test]
 fn first_class_program_is_a_checked_result_payload() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = super::commit(session, noble_contracts::source::RESULT_LIBRARY_SOURCE)?;
     session = super::commit(
         session,
@@ -159,7 +159,7 @@ fn first_class_program_is_a_checked_result_payload() -> Result<(), String> {
 #[test]
 fn reflected_syntax_is_a_checked_error_payload() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = super::commit(session, noble_contracts::source::RESULT_LIBRARY_SOURCE)?;
     session = super::commit(
         session,
@@ -178,7 +178,7 @@ fn reflected_syntax_is_a_checked_error_payload() -> Result<(), String> {
 
 #[test]
 fn universal_source_signatures_reject_narrowed_value_and_effect() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     let narrowed_value = b"module bad@1 [ signature identity forall<S:stack,A:value> [ S A -- S A ! pure ] export identity def identity [ drop 0 ] ]";
     assert!(matches!(
         session.prepare(narrowed_value, &[], super::LIMITS),
@@ -188,7 +188,7 @@ fn universal_source_signatures_reject_narrowed_value_and_effect() -> Result<(), 
         version: 1,
         slot: 3,
         adapter: "version-A",
-    })])
+    })], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
     .map_err(|e| format!("{e:?}"))?;
     let narrowed_effect = b"module ledger@1 [ require emit Text -- ! test.emit signature leak forall<S:stack,eps:effect> [ S -- S ! eps ] export leak def leak [ \"event\" emit ] ]";
     assert!(matches!(
@@ -200,7 +200,7 @@ fn universal_source_signatures_reject_narrowed_value_and_effect() -> Result<(), 
 
 #[test]
 fn signed_pure_list_branch_with_dip_preserves_effect_ceiling() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     let session = super::commit(
         session,
         b"module calc_once@1 [ signature first forall<S:stack> [ S List<I64> -- S I64 ! pure ] export first def first [ 0 swap [ ] [ [ + ] dip drop ] list.case ] ]",
@@ -215,7 +215,7 @@ fn signed_pure_list_branch_with_dip_preserves_effect_ceiling() -> Result<(), Str
         slot: 3,
         adapter: "version-A",
     });
-    let effectful = noble_contracts::source::ModuleSession::new(&[bound])
+    let effectful = noble_contracts::source::ModuleSession::new(&[bound], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|e| format!("{e:?}"))?;
     let accounted = b"module ledger@1 [ require emit Text -- ! test.emit signature first forall<S:stack> [ S List<I64> -- S I64 ! test.emit ] export first def first [ 0 swap [ ] [ [ \"event\" emit + ] dip drop ] list.case ] ]";
     effectful
@@ -231,7 +231,7 @@ fn signed_pure_list_branch_with_dip_preserves_effect_ceiling() -> Result<(), Str
 
 #[test]
 fn public_constructor_cannot_expose_unexported_nominal_payload() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     let hidden=b"module ledger@1 [ opaque Secret I64 private opaque Wrapper Secret public export Wrapper export Wrapper.new ]";
     assert!(
         matches!(&session.prepare(hidden,&[],super::LIMITS),Err(e) if e.stage()==noble_contracts::source::Stage::Link)
@@ -256,7 +256,7 @@ fn alias_rebinding_retains_each_checked_adapter_slot() -> Result<(), String> {
             slot: 7,
             adapter: "version-B",
         }),
-    ])
+    ], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
     .map_err(|e| format!("{e:?}"))?;
     session = super::commit(session,b"module ledger@1 [ require emit Text -- ! test.emit export handle def handle [ \"notice\" emit ] ]")?;
     session = super::commit(session,b"module ledger@2 [ require emit Text -- ! test.emit export handle def handle [ \"notice\" emit ] ]")?;
@@ -295,7 +295,7 @@ fn alias_rebinding_retains_each_checked_adapter_slot() -> Result<(), String> {
 #[test]
 fn largest_module_version_survives_direct_and_imported_resolution() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = super::commit(
         session,
         b"module ledger@4294967295 [ export get def get [ 17 ] ]",
@@ -315,7 +315,7 @@ fn largest_module_version_survives_direct_and_imported_resolution() -> Result<()
 #[test]
 fn scoped_generic_types_resolve_forward_ordinals_without_cycles() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = super::commit(session,b"module ledger@1 [ opaque Composite Pair<Base,Sum<Bool,List<I64>>> private opaque Base I64 private export Composite ]")?;
     let composite = session
         .resolve_type("ledger@1.Composite")
@@ -349,14 +349,14 @@ fn adapter_selection_changes_linked_definition_not_module_schema() -> Result<(),
             version: 1,
             slot: 3,
             adapter: "version-A",
-        })])
+        })], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|e| format!("{e:?}"))?;
     let mut second =
         noble_contracts::source::ModuleSession::new(&[super::binding(super::Binding {
             version: 1,
             slot: 3,
             adapter: "version-B",
-        })])
+        })], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|e| format!("{e:?}"))?;
     first = super::commit(first, source)?;
     second = super::commit(second, source)?;
@@ -398,7 +398,7 @@ fn adapter_selection_changes_linked_definition_not_module_schema() -> Result<(),
 #[test]
 fn local_definitions_resolve_forward_without_accepting_cycles() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = super::commit(
         session,
         b"module ledger@1 [ export first def first [ second ] def second [ 2 ] ]",
@@ -417,14 +417,14 @@ fn local_definitions_resolve_forward_without_accepting_cycles() -> Result<(), St
 #[test]
 fn aliases_do_not_silently_shadow_qualified_definitions() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = super::commit(session, b"def account.get [ 1 ]")?;
     session = super::commit(session, b"module ledger@1 [ export get def get [ 2 ] ]")?;
     assert!(
         matches!(&session.prepare(b"import ledger@1 as account",&[],super::LIMITS),Err(e) if e.stage()==noble_contracts::source::Stage::Resolve)
     );
     let mut other =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     other = super::commit(other, b"module ledger@1 [ export get def get [ 2 ] ]")?;
     other = super::commit(other, b"import ledger@1 as account")?;
     assert!(
@@ -435,7 +435,7 @@ fn aliases_do_not_silently_shadow_qualified_definitions() -> Result<(), String> 
 
 #[test]
 fn full_bounded_module_source_is_counted_once() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     let mut source = String::from("module ledger@1 [ export get def get [ 1 # ");
     let closing = "\n ] ]";
     let padding = usize::try_from(super::LIMITS.bytes)
@@ -459,6 +459,175 @@ fn full_bounded_module_source_is_counted_once() -> Result<(), String> {
     Ok(())
 }
 
+fn padded_retained_module(name: &str, value: i64, size: usize) -> Result<String, String> {
+    let mut source = format!(
+        "module {name}@1 [ opaque Item I64 public export Item export value def value [ {value} ] # "
+    );
+    let suffix = "\n ]";
+    let padding = size
+        .checked_sub(source.len())
+        .and_then(|rest| rest.checked_sub(suffix.len()))
+        .ok_or_else(|| "module source padding exceeds the requested length".to_string())?;
+    source.extend(std::iter::repeat_n('x', padding));
+    source.push_str(suffix);
+    Ok(source)
+}
+
+#[test]
+fn explicitly_retained_modules_admit_exact_boundary_and_refuse_one_extra_byte_atomically(
+) -> Result<(), String> {
+    use noble_contracts::source::{ModuleSession, RetainedSourceLimit, Stage};
+
+    let max = usize::try_from(RetainedSourceLimit::MAX_BYTES)
+        .map_err(|_| "retained source bound exceeds address space".to_string())?;
+    let per_input = usize::try_from(super::LIMITS.bytes)
+        .map_err(|_| "per-input bound exceeds address space".to_string())?;
+    let historical =
+        RetainedSourceLimit::new(super::LIMITS.bytes).ok_or("missing historical source quota")?;
+    let opted_in = RetainedSourceLimit::new(RetainedSourceLimit::MAX_BYTES)
+        .ok_or("missing opt-in retained source quota")?;
+    let first = padded_retained_module("first", 1, per_input)?;
+    let second = padded_retained_module("second", 2, per_input)?;
+    let third = padded_retained_module("third", 3, per_input)?;
+    let fourth = padded_retained_module("fourth", 4, per_input)?;
+    let fifth = b"module fifth@1 [ export value def value [ 5 ] ]";
+    let short_fourth = padded_retained_module("fourth", 4, per_input + 1 - fifth.len())?;
+
+    let historical_session =
+        ModuleSession::new(&[], historical).map_err(|error| format!("{error:?}"))?;
+    let historical_session = super::commit(historical_session, first.as_bytes())?;
+    let old_generation = historical_session.generation();
+    let old_refusal = historical_session.prepare(second.as_bytes(), &[], super::LIMITS);
+    assert!(matches!(old_refusal, Err(error) if error.stage() == Stage::Check));
+    assert_eq!(historical_session.generation(), old_generation);
+
+    let mut session = ModuleSession::new(&[], opted_in).map_err(|error| format!("{error:?}"))?;
+    let mut oversized = first.clone();
+    oversized.push(' ');
+    assert_eq!(oversized.len(), per_input + 1);
+    assert!(
+        matches!(session.prepare(oversized.as_bytes(), &[], super::LIMITS),
+        Err(error) if error.stage() == Stage::Parse)
+    );
+    let oversized_host_budget = noble_contracts::Limits {
+        bytes: RetainedSourceLimit::MAX_BYTES,
+        ..super::LIMITS
+    };
+    assert!(
+        matches!(session.prepare(oversized.as_bytes(), &[], oversized_host_budget),
+        Err(error) if error.stage() == Stage::Parse)
+    );
+    assert_eq!(session.generation(), 0);
+    for module in [&first, &second, &third] {
+        session = super::commit(session, module.as_bytes())?;
+    }
+    let original_type = session
+        .resolve_type("first@1.Item")
+        .map_err(|error| format!("{error:?}"))?;
+    let exact = super::commit(session.snapshot(), fourth.as_bytes())?;
+    assert_eq!(3 * per_input + fourth.len(), max);
+    assert_eq!(exact.generation(), 4);
+    assert_eq!(
+        exact
+            .resolve_type("first@1.Item")
+            .map_err(|error| format!("{error:?}"))?,
+        original_type
+    );
+
+    session = super::commit(session, short_fourth.as_bytes())?;
+    assert_eq!(3 * per_input + short_fourth.len() + fifth.len(), max + 1);
+    let generation = session.generation();
+    let refusal = session.prepare(fifth, &[], super::LIMITS);
+    assert!(
+        matches!(refusal, Err(error) if error.stage() == Stage::Check
+        && error.diagnostic().message.contains("retained module and definition byte limit"))
+    );
+    assert_eq!(session.generation(), generation);
+    assert_eq!(
+        session
+            .resolve_type("first@1.Item")
+            .map_err(|error| format!("{error:?}"))?,
+        original_type
+    );
+    let usable = session
+        .prepare(b"first@1.value", &[], super::LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(usable.output(), &[noble_kernel::types::Ty::I64]);
+    assert!(usable.submission().is_some());
+    Ok(())
+}
+
+#[test]
+fn transitive_alias_rebind_charges_each_exact_outside_source_and_header() -> Result<(), String> {
+    use noble_contracts::source::{ModuleSession, RetainedSourceLimit, Stage};
+
+    let module_one = padded_retained_module("m", 1, 65_536)?;
+    let module_two =
+        b"module m@2 [ opaque Item I64 public export Item export value def value [ 2 ] ]";
+    let once = b"def once [ m.value ]";
+    let twice = b"def twice [ once once ]";
+    let history_per_generation = once.len() + 4 + twice.len() + 4;
+    let exact = module_one.len() + module_two.len() + 2 * history_per_generation;
+    let exact = u32::try_from(exact).map_err(|_| "retained quota exceeds u32".to_string())?;
+    assert!(exact > super::LIMITS.bytes && exact < RetainedSourceLimit::MAX_BYTES);
+
+    for allowance in [exact - 1, exact] {
+        let quota = RetainedSourceLimit::new(allowance).ok_or("invalid retained quota")?;
+        let mut session = ModuleSession::new_declared_text(&[], false, quota)
+            .map_err(|error| format!("{error:?}"))?;
+        session = super::commit(session, module_one.as_bytes())?;
+        session = super::commit(session, module_two)?;
+        session = super::commit(session, b"import m@1 as m")?;
+        session = super::commit(session, once)?;
+        session = super::commit(session, twice)?;
+        let old_owner = session
+            .resolve_type("m.Item")
+            .map_err(|error| format!("{error:?}"))?;
+        let generation = session.generation();
+        let rebind = session.prepare(b"import m@2 as m", &[], super::LIMITS);
+        if allowance < exact {
+            assert!(matches!(rebind, Err(error) if error.stage() == Stage::Check
+                && error.diagnostic().message.contains("retained module and definition byte limit")));
+            assert_eq!(session.generation(), generation);
+            assert_eq!(
+                session
+                    .resolve_type("m.Item")
+                    .map_err(|error| format!("{error:?}"))?,
+                old_owner
+            );
+            assert_eq!(
+                session
+                    .prepare(b"once twice", &[], super::LIMITS)
+                    .map_err(|error| format!("{error:?}"))?
+                    .output(),
+                &[
+                    noble_kernel::types::Ty::I64,
+                    noble_kernel::types::Ty::I64,
+                    noble_kernel::types::Ty::I64
+                ]
+            );
+        } else {
+            let rebind = rebind.map_err(|error| format!("{error:?}"))?;
+            let rebuilt = rebind
+                .rebuilt_import_definitions()
+                .ok_or("missing checked transitive replay")?;
+            assert_eq!(
+                rebuilt.iter().map(|entry| entry.name()).collect::<Vec<_>>(),
+                vec!["once", "twice"]
+            );
+            let (next, outcome) = session.commit(rebind);
+            outcome.map_err(|error| format!("{error:?}"))?;
+            assert_eq!(next.generation(), generation + 1);
+            assert_ne!(
+                next.resolve_type("m.Item")
+                    .map_err(|error| format!("{error:?}"))?,
+                old_owner
+            );
+        }
+    }
+    Ok(())
+}
+
 #[test]
 fn exact_intrinsic_source_proofs_stage_without_ordinary_publication() -> Result<(), String> {
     let logic = b"module logic@1 [
@@ -467,7 +636,7 @@ fn exact_intrinsic_source_proofs_stage_without_ordinary_publication() -> Result<
     [ (intro (A Type0) (intro (x A) (refl x))) ]
 ]
 ";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let prepared = session.prepare(logic, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -508,7 +677,7 @@ fn exact_intrinsic_source_proofs_stage_without_ordinary_publication() -> Result<
 
 #[test]
 fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), String> {
-    let mut session = noble_contracts::source::ModuleSession::new(&[])
+    let mut session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     session = super::commit(session, b"module anchor@1 [ export alive def alive [ 1 ] ]")?;
     let prior = session.generation();
@@ -596,7 +765,7 @@ fn retained_proof_dependency_budget_rejects_atomically() -> Result<(), String> {
     let short_bytes = exact_bytes.checked_sub(1)
         .ok_or("proof dependency fixture has no byte below its exact budget")?;
     let limits = noble_contracts::Limits { bytes: short_bytes, ..super::LIMITS };
-    let mut session = noble_contracts::source::ModuleSession::new(&[])
+    let mut session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     session = super::commit(session, b"module anchor@1 [ export alive def alive [ 1 ] ]")?;
     let prior = session.generation();
@@ -652,7 +821,7 @@ fn imported_proof_dependency_budget_counts_each_obligation() -> Result<(), Strin
       proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ]
       export base
     ]";
-    let module = noble_contracts::source::ModuleSession::new(&[])
+    let module = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let staged = module.prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -713,7 +882,7 @@ fn exact_increment_contract_binds_checked_definition_not_text_only() -> Result<(
         (mc1-true-eq-wrap)) ]
 ]
 ";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let prepared = session.prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -752,7 +921,7 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         (bridge (by-exact-append-assoc)) (join (by-exact-result)))))
     (mc1-true-eq-wrap)) ]
 ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let prepared = session.prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -855,7 +1024,7 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
   contract 1 law [ subject increment input [ x I64 ] output [ y I64 ]
     requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ]
 ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let prepared = session.prepare(formatted,&[],super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -876,7 +1045,7 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
             (bridge (by-exact-append-assoc)) (join (by-exact-result)))))
         (mc1-true-eq-wrap)) ]
     ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let prepared = session.prepare(two,&[],super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -885,7 +1054,7 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
     ).map_err(|error| format!("{error:?}"))?;
 
     let named = b"module named@1 [ def one [ 1 ] export increment def increment [ one + ] ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let session = super::commit(session,named)?;
     let ordinary = session.prepare(b"named@1.increment",&[noble_kernel::types::Ty::I64],super::LIMITS)
@@ -896,7 +1065,7 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
       contract 1 law [ subject increment input [ x I64 ] output [ y I64 ]
         requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ]
     ]";
-    let fresh = noble_contracts::source::ModuleSession::new(&[])
+    let fresh = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     assert!(fresh.prepare(named_contract,&[],super::LIMITS).is_err(),
         "named ordinary runtime is not an MC1-v1 contract theorem");
@@ -919,9 +1088,9 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
 fn unproved_contract_metadata_erases_without_shifting_definition_ids() -> Result<(), String> {
     let plain = b"module arithmetic@1 [ export increment def increment [ 1 + ] ]";
     let decorated = b"module arithmetic@1 [ export increment def increment [ 1 + ] contract 1 increment-law [ subject increment input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] ]";
-    let mut bare = noble_contracts::source::ModuleSession::new(&[])
+    let mut bare = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
-    let mut logical = noble_contracts::source::ModuleSession::new(&[])
+    let mut logical = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     bare = super::commit(bare, plain)?;
     logical = super::commit(logical, decorated)?;
@@ -942,7 +1111,7 @@ fn unproved_contract_metadata_erases_without_shifting_definition_ids() -> Result
 
 #[test]
 fn proof_lexer_modes_and_stale_host_gate_leave_prior_namespace_intact() -> Result<(), String> {
-    let mut session = noble_contracts::source::ModuleSession::new(&[])
+    let mut session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     session = super::commit(session, b"module logic@1 [ export value def value [ 1 ] ]")?;
     let staged = session.prepare(
@@ -978,7 +1147,7 @@ fn proof_lexer_modes_and_stale_host_gate_leave_prior_namespace_intact() -> Resul
 #[test]
 fn general_mc1_contract_is_unproved_metadata_and_alias_resolves_exact_subject() -> Result<(), String> {
     let source = b"module generic@1 [ def identity [ ] contract 1 identity-law [ subject identity input [ x I64 ] output [ y I64 ] requires [ (le (in x) 4) ] ensures [ (eq (out y) (in x)) ] ] export identity-law ]";
-    let mut session = noble_contracts::source::ModuleSession::new(&[])
+    let mut session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let prepared = session.prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -1007,7 +1176,7 @@ fn general_mc1_contract_is_unproved_metadata_and_alias_resolves_exact_subject() 
 #[test]
 fn local_named_proof_use_is_ordered_and_not_an_executable_word() -> Result<(), String> {
     let source = b"module logic@1 [ proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] proof 1 derived : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use base) x)) ] export derived ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let prepared = session.prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -1048,7 +1217,7 @@ fn applying_value_binder_preserves_later_dependent_type_codes() -> Result<(), St
           [ (Pi (x I64) (Pi (z (Pair (List I64) I64)) (Eq (Pair (List I64) I64) z z))) ]
           [ (intro (x I64) (intro (z (Pair (List I64) I64)) (apply (apply (apply (apply (use base) x) (refl x)) I64) z))) ]
     ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let prepared = session.prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;

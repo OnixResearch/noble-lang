@@ -893,7 +893,7 @@ mod declared_text_ingress_tests {
         let limits = noble_contracts::Limits {
             bytes: 65_536, nodes: 16_384, depth: 64, work: 2_000_000,
         };
-        let session = ModuleSession::new_declared_text(&[], true).expect("pure declared text");
+        let session = ModuleSession::new_declared_text(&[], true, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).expect("pure declared text");
         let result = session.prepare(
             include_bytes!("../../../noble-contracts/src/fixtures/result.noble"),
             &[], limits).expect("nominal Result declaration");
@@ -951,7 +951,7 @@ mod declared_text_ingress_tests {
         let limits = noble_contracts::Limits {
             bytes: 65_536, nodes: 16_384, depth: 64, work: 2_000_000,
         };
-        let mut session = ModuleSession::new_declared_text(&[], true).expect("pure declared text");
+        let mut session = ModuleSession::new_declared_text(&[], true, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).expect("pure declared text");
         for module in [
             include_bytes!("../../../noble-contracts/src/fixtures/result.noble").as_slice(),
             include_bytes!("../../../../verification/calculator-precursor/decimal-digit.noble").as_slice(),
@@ -999,7 +999,7 @@ mod signed_dispatch_tests {
         expression: &[u8],
         input: &[Ty],
     ) -> noble_kernel::execution::Submission {
-        let session = ModuleSession::new_signed_self(&[]).expect("signed source");
+        let session = ModuleSession::new_signed_self(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).expect("signed source");
         let staged = session.prepare(module, &[], LIMITS).expect("original signed module");
         let (session, linked) = session.commit(staged);
         linked.expect("module link");

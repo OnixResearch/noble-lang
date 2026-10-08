@@ -1283,7 +1283,8 @@
         "review"
       ],
       "scenarios": [
-        "DX-08"
+        "DX-08",
+        "DX-14"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -1298,7 +1299,8 @@
       ],
       "scenarios": [
         "DX-08",
-        "DX-09"
+        "DX-09",
+        "DX-14"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -1328,6 +1330,20 @@
       ],
       "scenarios": [
         "OCTET-07"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "DX-MODULE-05",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "semantic-test",
+        "policy-test",
+        "review"
+      ],
+      "scenarios": [
+        "DX-14"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -2048,8 +2064,10 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "DX-14"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "H-REPL-03",
@@ -2198,6 +2216,7 @@
         "review"
       ],
       "scenarios": [
+        "DX-14",
         "OCTET-07",
         "WORKER-06",
         "WORKER-07"

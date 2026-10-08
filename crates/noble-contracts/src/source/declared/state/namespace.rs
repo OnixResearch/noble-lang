@@ -129,7 +129,7 @@ impl super::ModuleSession {
         &self.bindings
     }
 
-    pub(super) fn retained(&self, limits: crate::Limits) -> Result<(), crate::source::Error> {
+    pub(super) fn check_retained(&self, extra: usize) -> Result<(), crate::source::Error> {
         let mut module_bytes = 0usize;
         let mut index = 0;
         let mut has_overflow = false;
@@ -149,18 +149,26 @@ impl super::ModuleSession {
                 "retained module byte count overflow",
             ));
         }
-        let total = attempt!(module_bytes
+        let retained = attempt!(module_bytes
             .checked_add(self.source.history.len())
             .ok_or_else(|| super::super::error(
                 crate::source::Stage::Check,
                 "retained namespace byte count overflow"
             )));
-        let limit_bytes = attempt!(usize::try_from(limits.bytes).map_err(|_| {
-            super::super::error(
+        let total = attempt!(retained
+            .checked_add(extra)
+            .ok_or_else(|| super::super::error(
                 crate::source::Stage::Check,
-                "retained byte limit exceeds the host address space",
-            )
-        }));
+                "retained namespace byte count overflow",
+            )));
+        let limit_bytes = attempt!(usize::try_from(self.retained_source_limit.bytes()).map_err(
+            |_| {
+                super::super::error(
+                    crate::source::Stage::Check,
+                    "retained byte limit exceeds the host address space",
+                )
+            }
+        ));
         if total > limit_bytes {
             return Err(super::super::error(
                 crate::source::Stage::Check,
@@ -231,13 +239,20 @@ impl super::ModuleSession {
     }
 
     fn module_has_unverified_signed_owner(&self, module_index: usize) -> bool {
-        let Some(module) = self.modules.get(module_index) else { return true; };
-        self.source.definitions.iter().enumerate().any(|(index, definition)| {
-            definition.owner == Some(module.identity)
-                && definition.signed.is_some()
-                && u32::try_from(index).ok().is_none_or(|slot|
-                    !module.verified_signed_slots.contains(&slot))
-        })
+        let Some(module) = self.modules.get(module_index) else {
+            return true;
+        };
+        self.source
+            .definitions
+            .iter()
+            .enumerate()
+            .any(|(index, definition)| {
+                definition.owner == Some(module.identity)
+                    && definition.signed.is_some()
+                    && u32::try_from(index)
+                        .ok()
+                        .is_none_or(|slot| !module.verified_signed_slots.contains(&slot))
+            })
     }
 
     /// Pending aliases remain unresolvable until each signed owner in their
@@ -247,20 +262,41 @@ impl super::ModuleSession {
         submission: &noble_kernel::execution::Submission,
     ) -> Result<Self, crate::source::Error> {
         for definition in &submission.definitions {
-            if !definition.body.candidate.nodes.iter().any(|node|
-                matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })) {
+            if !definition
+                .body
+                .candidate
+                .nodes
+                .iter()
+                .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }))
+            {
                 continue;
             }
-            let slot = definition.owner_slot.ok_or_else(|| super::super::error(
-                crate::source::Stage::Check, "certified signed owner has no source slot",
-            ))?;
-            let source = self.source.definitions.get(usize::try_from(slot).unwrap_or(usize::MAX))
-                .ok_or_else(|| super::super::error(crate::source::Stage::Check,
-                    "certified signed owner source slot is absent"))?;
-            let module = self.modules.iter_mut().find(|module|
-                source.owner == Some(module.identity)).ok_or_else(|| super::super::error(
-                    crate::source::Stage::Check, "certified signed owner module is absent",
-                ))?;
+            let slot = definition.owner_slot.ok_or_else(|| {
+                super::super::error(
+                    crate::source::Stage::Check,
+                    "certified signed owner has no source slot",
+                )
+            })?;
+            let source = self
+                .source
+                .definitions
+                .get(usize::try_from(slot).unwrap_or(usize::MAX))
+                .ok_or_else(|| {
+                    super::super::error(
+                        crate::source::Stage::Check,
+                        "certified signed owner source slot is absent",
+                    )
+                })?;
+            let module = self
+                .modules
+                .iter_mut()
+                .find(|module| source.owner == Some(module.identity))
+                .ok_or_else(|| {
+                    super::super::error(
+                        crate::source::Stage::Check,
+                        "certified signed owner module is absent",
+                    )
+                })?;
             if !module.verified_signed_slots.contains(&slot) {
                 module.verified_signed_slots.push(slot);
             }
@@ -268,7 +304,8 @@ impl super::ModuleSession {
         let mut at = 0usize;
         while at < self.aliases.len() {
             if self.aliases[at].pending
-                && !self.module_has_unverified_signed_owner(self.aliases[at].module) {
+                && !self.module_has_unverified_signed_owner(self.aliases[at].module)
+            {
                 self.aliases[at].pending = false;
             }
             at += 1;

@@ -6,6 +6,7 @@ pub(super) struct Options {
     pub inputs: std::vec::Vec<InputType>,
     pub modules: std::vec::Vec<std::path::PathBuf>,
     pub declared_modules: bool,
+    pub retained_source_bytes: Option<u32>,
     pub signed_self_recursion: bool,
     pub text_byte_cursor: bool,
     pub bindings: Option<std::path::PathBuf>,
@@ -25,6 +26,13 @@ pub(super) enum InputType {
 impl Options {
     pub const fn declared_text(&self) -> bool {
         self.declared_modules && self.text_byte_cursor
+    }
+
+    pub fn retained_source_limit(&self) -> noble_contracts::source::RetainedSourceLimit {
+        noble_contracts::source::RetainedSourceLimit::new(
+            self.retained_source_bytes.unwrap_or(self.limits.bytes),
+        )
+        .expect("validated options")
     }
 }
 
@@ -49,6 +57,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         inputs: std::vec::Vec::new(),
         modules: std::vec::Vec::new(),
         declared_modules: false,
+        retained_source_bytes: None,
         signed_self_recursion: false,
         text_byte_cursor: false,
         bindings: None,
@@ -65,7 +74,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             .ok_or_else(usage))));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
     }
-    let mut seen = [""; 12];
+    let mut seen = [""; 13];
     let mut seen_count = 0_usize;
     while at < arguments.len() {
         let name = attempt!(arguments[at].to_str().ok_or_else(usage));
@@ -109,10 +118,16 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
     if options.signed_self_recursion
         && (!options.declared_modules
             || is_session && !options.framed
-            || !is_session && !options.compile_only) {
+            || !is_session && !options.compile_only)
+    {
         return Err(usage());
     }
     if !options.declared_modules && !options.modules.is_empty() {
+        return Err(usage());
+    }
+    if options.retained_source_bytes.is_some()
+        && (!options.declared_modules || !is_session && !options.compile_only)
+    {
         return Err(usage());
     }
     if !options.declared_modules
@@ -171,6 +186,16 @@ fn set(
         "--emit" => options.emit = Some(std::path::PathBuf::from(value)),
         "--bindings" => options.bindings = Some(std::path::PathBuf::from(value)),
         "--source-bytes" => options.limits.bytes = attempt!(limit(value, maximum.bytes)),
+        "--retained-source-bytes" => {
+            let bytes = attempt!(limit(
+                value,
+                noble_contracts::source::RetainedSourceLimit::MAX_BYTES,
+            ));
+            if bytes == 0 {
+                return Err(usage());
+            }
+            options.retained_source_bytes = Some(bytes);
+        }
         "--source-nodes" => options.limits.nodes = attempt!(limit(value, maximum.nodes)),
         "--source-depth" => options.limits.depth = attempt!(limit(value, maximum.depth)),
         "--source-work" => options.limits.work = attempt!(limit(value, maximum.work)),
@@ -202,4 +227,186 @@ fn usage() -> super::output::Failure {
         },
         super::USAGE,
     )
+}
+
+#[cfg(test)]
+mod tests {
+    fn flags(arguments: &[&str]) -> Result<super::Options, std::string::String> {
+        let arguments: std::vec::Vec<_> = arguments
+            .iter()
+            .map(|argument| std::ffi::OsString::from(*argument))
+            .collect();
+        super::parse(&arguments).map_err(|failure| failure.message)
+    }
+
+    #[test]
+    fn declared_retention_defaults_to_selected_per_input_limit() -> Result<(), std::string::String>
+    {
+        let original = flags(&[
+            "compile",
+            "expression.noble",
+            "--declared-modules",
+            "--text-byte-cursor",
+        ])?;
+        assert_eq!(original.limits.bytes, 65_536);
+        assert_eq!(original.retained_source_limit().bytes(), 65_536);
+
+        let lowered = flags(&[
+            "session",
+            "--framed",
+            "--declared-modules",
+            "--text-byte-cursor",
+            "--source-bytes",
+            "128",
+        ])?;
+        assert_eq!(lowered.limits.bytes, 128);
+        assert_eq!(lowered.retained_source_limit().bytes(), 128);
+        let zero = flags(&[
+            "session",
+            "--declared-modules",
+            "--text-byte-cursor",
+            "--source-bytes",
+            "0",
+        ])?;
+        assert_eq!(zero.retained_source_limit().bytes(), 0);
+        Ok(())
+    }
+
+    #[test]
+    fn declared_retention_opt_in_is_independent_of_per_input_limit(
+    ) -> Result<(), std::string::String> {
+        for arguments in [
+            [
+                "compile",
+                "expression.noble",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--source-bytes",
+                "32",
+                "--retained-source-bytes",
+                "262144",
+            ],
+            [
+                "compile",
+                "expression.noble",
+                "--retained-source-bytes",
+                "262144",
+                "--source-bytes",
+                "32",
+                "--text-byte-cursor",
+                "--declared-modules",
+            ],
+        ] {
+            let selected = flags(&arguments)?;
+            assert_eq!(selected.limits.bytes, 32);
+            assert_eq!(selected.retained_source_limit().bytes(), 262_144);
+        }
+        let smallest = flags(&[
+            "session",
+            "--declared-modules",
+            "--text-byte-cursor",
+            "--retained-source-bytes",
+            "1",
+            "--source-bytes",
+            "0",
+        ])?;
+        assert_eq!(smallest.limits.bytes, 0);
+        assert_eq!(smallest.retained_source_limit().bytes(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn retained_opt_in_refuses_non_declared_and_invalid_budgets() -> Result<(), std::string::String>
+    {
+        for arguments in [
+            &[
+                "compile",
+                "expression.noble",
+                "--retained-source-bytes",
+                "262144",
+            ][..],
+            &["session", "--retained-source-bytes", "1"][..],
+            &[
+                "compile",
+                "expression.noble",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--retained-source-bytes",
+                "0",
+            ][..],
+            &[
+                "compile",
+                "expression.noble",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--retained-source-bytes",
+                "262145",
+            ][..],
+            &[
+                "compile",
+                "expression.noble",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--retained-source-bytes",
+                "262144",
+                "--source-bytes",
+                "65537",
+            ][..],
+            &[
+                "session",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--retained-source-bytes",
+                "1",
+                "--retained-source-bytes",
+                "2",
+            ][..],
+        ] {
+            if flags(arguments).is_ok() {
+                return Err(std::format!(
+                    "accepted invalid source budget flags: {arguments:?}"
+                ));
+            }
+        }
+        let ordinary = flags(&["session", "--source-bytes", "0"])?;
+        assert_eq!(ordinary.limits.bytes, 0);
+        Ok(())
+    }
+
+    #[test]
+    fn retained_opt_in_refuses_otherwise_valid_declared_run() -> Result<(), std::string::String> {
+        let manifest = std::env::temp_dir().join(std::format!(
+            "noble-retained-run-{}-{:?}.txt",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        std::fs::write(&manifest, "").map_err(|error| error.to_string())?;
+        let path = manifest.to_string_lossy();
+        let baseline = flags(&[
+            "run",
+            "expression.noble",
+            "--declared-modules",
+            "--bindings",
+            &path,
+        ]);
+        let flagged = flags(&[
+            "run",
+            "expression.noble",
+            "--declared-modules",
+            "--bindings",
+            &path,
+            "--retained-source-bytes",
+            "262144",
+        ]);
+        std::fs::remove_file(&manifest).map_err(|error| error.to_string())?;
+        assert!(
+            baseline.is_ok(),
+            "run profile and empty manifest are parser-admissible"
+        );
+        assert!(
+            flagged.is_err(),
+            "retained opt-in must not extend declared run"
+        );
+        Ok(())
+    }
 }

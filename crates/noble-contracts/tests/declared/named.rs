@@ -5,7 +5,7 @@ const DONOR: &[u8] = b"module donor@1 [ def other [ 1 + ] export step def step# 
 const TWICE: &[u8] = b"module chain@1 [ export twice def twice [ d.step d.step ] contract 2 twice-law [ subject twice input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 2)) ] ] export twice-law ]";
 
 fn imported_donor() -> Result<ModuleSession, String> {
-    let session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|error| format!("{error:?}"))?;
     let session = super::commit(session, DONOR)?;
     super::commit(session, b"import donor@1 as d")
 }
@@ -172,7 +172,7 @@ fn revision_two_proof_targets_only_revision_two_contract() -> Result<(), String>
 
 #[test]
 fn revision_two_rejects_pure_proofs_noncanonical_revisions_and_new_field_syntax() -> Result<(), String> {
-    let session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|error| format!("{error:?}"))?;
     let bad = [
         b"module syntax@1 [ proof 2 p : [ true ] [ (refl 0) ] ]".as_slice(),
         b"module syntax@1 [ proof 3 p : [ true ] [ (refl 0) ] ]".as_slice(),

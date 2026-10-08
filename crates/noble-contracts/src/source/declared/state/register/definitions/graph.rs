@@ -6,6 +6,7 @@ pub(super) struct Schedule<'a> {
     installed: alloc::vec::Vec<bool>,
     remaining: usize,
     limits: crate::Limits,
+    retained_bytes: u32,
 }
 
 struct PassPosition {
@@ -18,6 +19,7 @@ impl<'a> Schedule<'a> {
         session: crate::source::declared::ModuleSession,
         mut work: super::Work<'a>,
         limits: crate::Limits,
+        retained_bytes: u32,
     ) -> Result<Self, crate::source::Error> {
         let session = attempt!(super::reserve_words(session, work.definitions.len()));
         let count = work.definitions.len();
@@ -44,6 +46,7 @@ impl<'a> Schedule<'a> {
             installed: alloc::vec![false;remaining],
             remaining,
             limits,
+            retained_bytes,
         })
     }
 
@@ -177,10 +180,17 @@ impl<'a> Schedule<'a> {
             .as_ref()
             .and_then(|session| session.source.declared.as_ref())
             .is_some_and(|context| context.signed_self)
-            && self.work.signatures.iter().any(|(declared, _)| declared == name);
+            && self
+                .work
+                .signatures
+                .iter()
+                .any(|(declared, _)| declared == name);
         let (meter, blocked) = super::scheduling::blocked(
-            tree, &self.names, &self.installed,
-            signed_owner.then_some(name.as_str()), self.work.meter,
+            tree,
+            &self.names,
+            &self.installed,
+            signed_owner.then_some(name.as_str()),
+            self.work.meter,
         );
         self.work.meter = meter;
         let result = match blocked {
@@ -222,6 +232,7 @@ impl<'a> Schedule<'a> {
                 name,
                 source: definition_bytes,
                 limits: self.limits,
+                retained_bytes: self.retained_bytes,
                 exports: self.work.exports,
             },
             core::mem::take(&mut self.work.local_exports),

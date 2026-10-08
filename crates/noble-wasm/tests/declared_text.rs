@@ -22,7 +22,7 @@ fn linked(session: ModuleSession, source: &[u8]) -> Result<ModuleSession, String
 
 #[test]
 fn source_bound_signed_fold_and_nominal_result_require_selected_compiler() -> Result<(), String> {
-    let session = ModuleSession::new_declared_text(&[], true)
+    let session = ModuleSession::new_declared_text(&[], true, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let session = linked(session, include_bytes!("../../noble-contracts/src/fixtures/result.noble"))?;
     let session = linked(session, include_bytes!("../../../verification/calculator-precursor/decimal-digit.noble"))?;
@@ -58,7 +58,7 @@ fn source_bound_signed_fold_and_nominal_result_require_selected_compiler() -> Re
 #[test]
 fn signed_i64_order_is_pure_and_kept_out_of_ordinary_declared_modules() -> Result<(), String> {
     let source = b"-1 0 <";
-    for session in [ModuleSession::new(&[]), ModuleSession::new_signed_self(&[])] {
+    for session in [ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")), ModuleSession::new_signed_self(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))] {
         let session = session.map_err(|error| error.diagnostic().message.clone())?;
         let error = session.prepare(source, &[], LIMITS).err()
             .ok_or("ordinary declared module acquired signed comparison")?;
@@ -66,7 +66,7 @@ fn signed_i64_order_is_pure_and_kept_out_of_ordinary_declared_modules() -> Resul
             return Err(format!("ordinary comparison failed at {:?} instead of resolve", error.stage()));
         }
     }
-    let selected = ModuleSession::new_declared_text(&[], false)
+    let selected = ModuleSession::new_declared_text(&[], false, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let prepared = selected.prepare(source, &[], LIMITS)
         .map_err(|error| error.diagnostic().message.clone())?;
@@ -89,7 +89,7 @@ fn signed_i64_order_is_pure_and_kept_out_of_ordinary_declared_modules() -> Resul
 #[test]
 fn lexical_parameters_and_quotation_have_source_bound_checked_wasm() -> Result<(), String> {
     let module = include_bytes!("../../../verification/calculator-precursor/local-bindings.noble");
-    let selected = ModuleSession::new_declared_text(&[], false)
+    let selected = ModuleSession::new_declared_text(&[], false, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let selected = linked(selected, module)?;
     for source in [
@@ -110,7 +110,7 @@ fn lexical_parameters_and_quotation_have_source_bound_checked_wasm() -> Result<(
         Compiler::new_declared_text().prepare_declared_text(&owner)
             .map_err(|_| "source-checked local module failed compiled Wasm admission")?;
     }
-    let ordinary = ModuleSession::new(&[])
+    let ordinary = ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let refused = ordinary.prepare(module, &[], LIMITS).err()
         .ok_or("ordinary declared modules acquired selected local syntax")?;
@@ -122,7 +122,7 @@ fn lexical_parameters_and_quotation_have_source_bound_checked_wasm() -> Result<(
 
 #[test]
 fn local_reuse_discard_capture_and_duplicate_names_fail_closed() -> Result<(), String> {
-    let selected = ModuleSession::new_declared_text(&[], false)
+    let selected = ModuleSession::new_declared_text(&[], false, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     for source in [
         b"let r r r".as_slice(),
@@ -153,13 +153,13 @@ fn local_reuse_discard_capture_and_duplicate_names_fail_closed() -> Result<(), S
 #[test]
 fn ordinary_declared_module_does_not_acquire_byte_cursor() -> Result<(), String> {
     let source = b"module cursor@1 [ signature read forall<S:stack> [ S Text I64 -- S Text I64 ! pure ] export read def read [ text.byte ] ]";
-    for session in [ModuleSession::new(&[]), ModuleSession::new_signed_self(&[])] {
+    for session in [ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")), ModuleSession::new_signed_self(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))] {
         let session = session.map_err(|error| error.diagnostic().message.clone())?;
         if session.prepare(source, &[], LIMITS).is_ok() {
             return Err("ordinary declared profile admitted text.byte".into());
         }
     }
-    let session = ModuleSession::new_declared_text(&[], true)
+    let session = ModuleSession::new_declared_text(&[], true, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     linked(session, source)?;
     Ok(())
@@ -167,7 +167,7 @@ fn ordinary_declared_module_does_not_acquire_byte_cursor() -> Result<(), String>
 
 #[test]
 fn nominal_signature_names_bind_only_checked_local_or_exact_exported_owner() -> Result<(), String> {
-    let session = ModuleSession::new_declared_text(&[], true)
+    let session = ModuleSession::new_declared_text(&[], true, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let session = linked(session, include_bytes!("../../noble-contracts/src/fixtures/result.noble"))?;
     let forward = b"module forward@1 [ signature read forall<S:stack> [ S result@1.Result<I64,MissingError> -- S result@1.Result<I64,MissingError> ! pure ] def read [ ] ]";
@@ -193,7 +193,7 @@ fn nominal_signature_names_bind_only_checked_local_or_exact_exported_owner() -> 
             return Err(format!("{name} nominal refused for the wrong reason"));
         }
     }
-    let ordinary = ModuleSession::new_signed_self(&[])
+    let ordinary = ModuleSession::new_signed_self(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let ordinary = linked(ordinary, include_bytes!("../../noble-contracts/src/fixtures/result.noble"))?;
     let unsupported = b"module unchanged@1 [ variant Error Bad Unit public Good Unit public signature read forall<S:stack> [ S -- S result@1.Result<I64,Error> ! pure ] def read [ 1 result@1.Result.Ok ] ]";
@@ -207,7 +207,7 @@ fn nominal_signature_names_bind_only_checked_local_or_exact_exported_owner() -> 
 fn signed_fold_keeps_exact_named_digit_owner_across_later_version() -> Result<(), String> {
     let digit = include_bytes!("../../../verification/calculator-precursor/decimal-digit.noble");
     let fold = include_bytes!("../../../verification/calculator-precursor/decimal-fold.noble");
-    let session = ModuleSession::new_declared_text(&[], true)
+    let session = ModuleSession::new_declared_text(&[], true, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let session = linked(session, include_bytes!("../../noble-contracts/src/fixtures/result.noble"))?;
     let session = linked(session, digit)?;

@@ -22,7 +22,7 @@ fn module_submission(
     expression: &[u8],
     bindings: &[noble_contracts::source::BoundOperation],
 ) -> Result<noble_kernel::execution::Submission, String> {
-    let mut session = noble_contracts::source::ModuleSession::new(bindings)
+    let mut session = noble_contracts::source::ModuleSession::new(bindings, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     for source in [module, b"import ledger@1 as account".as_slice()] {
         let prepared = session
@@ -58,7 +58,7 @@ fn source_submission() -> Result<noble_kernel::execution::Submission, String> {
 }
 
 fn result_session() -> Result<noble_contracts::source::ModuleSession, String> {
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let module = session
         .prepare(noble_contracts::source::RESULT_LIBRARY_SOURCE, &[], LIMITS)
@@ -201,7 +201,7 @@ fn admitted_nominal_compiles_but_forged_bindings_and_shapes_do_not() -> Result<(
 
 fn session_with_validated_resource_schema() -> Result<noble_contracts::source::ModuleSession, String>
 {
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let module = session.prepare(
         b"module fixture@1 [ opaque Ticket Pair<I64,Resource<test.counter>> private export Ticket ]",

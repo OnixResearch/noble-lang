@@ -25,14 +25,17 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-This isolated candidate selection compares 142 file digests across the flake and
+This isolated candidate selection compares 175 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
 source-bound verification/build recipes, the architecture capacity policy,
 its typed export dependencies and manifest, and all eight Cargo locks
 consumed by the reviewed offline vendor, plus the separate test-only boundary
-fixture lock. These are source identities,
-not an executed proof.
+fixture lock. The newly selected declared-module contracts and CLI files,
+their behavioral regressions, migrated Wasm constructor callsites, and active
+diagnostic replay source bind this candidate's retained-source change rather
+than treating a source-revision label or stale test receipt as equivalent proof.
+These are source identities, not an executed proof.
 In particular, the `noble-cli` package manifest binds the `noble` executable name, and the `noble-contracts` manifest binds the frontend's kernel dependency.
 `nix/tool-selection-files.nix` owns the observed file set; `policy/tool-selection-files.ncl` owns the corresponding reviewed hashes imported by the selection policy.
 The JSON export and observed file set must agree exactly. A check does not refresh its own expected values.

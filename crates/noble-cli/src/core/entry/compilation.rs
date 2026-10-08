@@ -68,7 +68,11 @@ fn compile_expression(
         Checked::Reported(exit) => return Ok(exit),
     };
     let compiled = match attempt!(accepted_wat(
-        frontend, source, &inputs, options.limits, options.signed_self_recursion,
+        frontend,
+        source,
+        &inputs,
+        options.limits,
+        options.signed_self_recursion,
     )) {
         Checked::Ready(compiled) => compiled,
         Checked::Reported(exit) => return Ok(exit),
@@ -87,7 +91,11 @@ fn declared_input_types(
     let mut inputs = std::vec::Vec::with_capacity(options.inputs.len());
     let mut requested = options.inputs.iter();
     while let Some(input) = requested.next() {
-        match attempt!(declared_input_type(frontend, input, options.signed_self_recursion)) {
+        match attempt!(declared_input_type(
+            frontend,
+            input,
+            options.signed_self_recursion
+        )) {
             Checked::Ready(ty) => inputs.push(ty),
             Checked::Reported(exit) => return Ok(Checked::Reported(exit)),
         }
@@ -109,7 +117,12 @@ fn declared_input_type(
         super::super::arguments::InputType::Nominal(name) => match frontend.resolve_type(name) {
             Ok(ty) => Ok(Checked::Ready(ty)),
             Err(error) => {
-                let report = super::super::output::Report::declared_source_error(&error, 0, signed, frontend.declared_text());
+                let report = super::super::output::Report::declared_source_error(
+                    &error,
+                    0,
+                    signed,
+                    frontend.declared_text(),
+                );
                 reported(report)
             }
         },
@@ -131,14 +144,21 @@ fn accepted_wat(
     let prepared = match frontend.prepare(source, inputs, limits) {
         Ok(prepared) => prepared,
         Err(error) => {
-            let report = super::super::output::Report::declared_source_error(&error, 1, signed_profile, frontend.declared_text());
+            let report = super::super::output::Report::declared_source_error(
+                &error,
+                1,
+                signed_profile,
+                frontend.declared_text(),
+            );
             return reported(report);
         }
     };
     let submission = attempt!(expression_candidate(&prepared));
     let compiled = if frontend.declared_text() {
         match prepared.declared_text_source_owner() {
-            Some(ref owner) => noble_wasm::source::Compiler::new_declared_text().prepare_declared_text(owner),
+            Some(ref owner) => {
+                noble_wasm::source::Compiler::new_declared_text().prepare_declared_text(owner)
+            }
             None => Err(noble_wasm::Diagnostic::Invalid),
         }
     } else {
@@ -151,7 +171,12 @@ fn accepted_wat(
     };
     match compiled {
         Ok(compiled) => Ok(Checked::Ready(compiled)),
-        Err(error) => reported(super::super::output::Report::declared_backend_error(error, 1, signed_profile, frontend.declared_text())),
+        Err(error) => reported(super::super::output::Report::declared_backend_error(
+            error,
+            1,
+            signed_profile,
+            frontend.declared_text(),
+        )),
     }
 }
 
@@ -196,18 +221,24 @@ fn emit_declared_wat(
 fn declared_frontend(
     options: &super::super::arguments::Options,
 ) -> Result<noble_contracts::source::ModuleSession, super::super::output::Failure> {
-    let bindings = options.manifest.as_ref().map(|manifest| manifest.operations())
+    let bindings = options
+        .manifest
+        .as_ref()
+        .map(|manifest| manifest.operations())
         .unwrap_or_default();
+    let retained = options.retained_source_limit();
     (if options.declared_text() {
         noble_contracts::source::ModuleSession::new_declared_text(
-            &bindings, options.signed_self_recursion,
+            &bindings,
+            options.signed_self_recursion,
+            retained,
         )
     } else if options.signed_self_recursion {
-        noble_contracts::source::ModuleSession::new_signed_self(&bindings)
+        noble_contracts::source::ModuleSession::new_signed_self(&bindings, retained)
     } else {
-        noble_contracts::source::ModuleSession::new(&bindings)
+        noble_contracts::source::ModuleSession::new(&bindings, retained)
     })
-        .map_err(super::super::output::Failure::source)
+    .map_err(super::super::output::Failure::source)
 }
 
 /// Link every explicit source module before the executable expression. A
@@ -223,7 +254,10 @@ fn preload_modules(
     let mut modules = options.modules.iter();
     while let Some(module_path) = modules.next() {
         frontend = match attempt!(preload_module(
-            frontend, module_path, options.limits, options.signed_self_recursion,
+            frontend,
+            module_path,
+            options.limits,
+            options.signed_self_recursion,
         )) {
             Checked::Ready(next) => next,
             Checked::Reported(exit) => return Ok(Checked::Reported(exit)),
@@ -250,8 +284,12 @@ fn preload_module(
     let (next, outcome) = if prepared.proof_obligations().is_some() {
         frontend.commit_verified(prepared, |batch| {
             crate::workflow::intrinsic::verify_batch(
-                batch, &module, limits, crate::workflow::DEFAULT_TIMEOUT
-            ).map_err(|error| std::format!("{}: {}",error.code,error.message))
+                batch,
+                &module,
+                limits,
+                crate::workflow::DEFAULT_TIMEOUT,
+            )
+            .map_err(|error| std::format!("{}: {}", error.code, error.message))
         })
     } else {
         frontend.commit(prepared)
@@ -259,7 +297,12 @@ fn preload_module(
     match outcome {
         Ok(()) => Ok(Checked::Ready(next)),
         Err(error) => {
-            let report = super::super::output::Report::declared_source_error(&error, 0, signed, next.declared_text());
+            let report = super::super::output::Report::declared_source_error(
+                &error,
+                0,
+                signed,
+                next.declared_text(),
+            );
             reported(report)
         }
     }
@@ -285,7 +328,12 @@ fn checked_module(
             "--module requires a source declaration without an executable root",
         )),
         Err(error) => {
-            let report = super::super::output::Report::declared_source_error(&error, 0, signed, frontend.declared_text());
+            let report = super::super::output::Report::declared_source_error(
+                &error,
+                0,
+                signed,
+                frontend.declared_text(),
+            );
             reported(report)
         }
     }

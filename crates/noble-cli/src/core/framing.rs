@@ -17,17 +17,23 @@ pub(super) fn read_file(
     Ok(source)
 }
 
+pub(super) enum Submission {
+    Source(std::vec::Vec<u8>),
+    Exhausted,
+}
+
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; read_submission validates the frame header and byte budget before allocation and reports short reads through Failure. Invalid framing, oversized input and I/O errors must not panic."
+    reason = "Owner: noble-maintainers; read_submission validates the frame header and byte budget before allocation, boundedly drains recoverable declared-session frames, and reports short reads through Failure. Invalid framing, oversized input and I/O errors must not panic."
 )]
 pub(super) fn read_submission(
     reader: &mut impl std::io::BufRead,
     framed: bool,
     limit_bytes: u32,
-) -> Result<Option<std::vec::Vec<u8>>, super::output::Failure> {
+    recover_bounded_oversize: bool,
+) -> Result<Option<Submission>, super::output::Failure> {
     if !framed {
-        return read_line(reader, limit_bytes);
+        return read_line(reader, limit_bytes).map(|source| source.map(Submission::Source));
     }
     let header = match attempt!(read_line(reader, 20)) {
         Some(header) => header,
@@ -44,12 +50,32 @@ pub(super) fn read_submission(
             "invalid source frame byte count",
         )));
     if count_bytes > limit_bytes {
+        if recover_bounded_oversize
+            && count_bytes <= noble_contracts::source::RetainedSourceLimit::MAX_BYTES
+        {
+            attempt!(drain_frame(reader, count_bytes));
+            return Ok(Some(Submission::Exhausted));
+        }
         return Err(exhausted());
     }
     let count_bytes = attempt!(usize::try_from(count_bytes).map_err(|_| exhausted()));
     let mut source = std::vec![0_u8; count_bytes];
     attempt!(std::io::Read::read_exact(reader, &mut source).map_err(io_error));
-    Ok(Some(source))
+    Ok(Some(Submission::Source(source)))
+}
+
+fn drain_frame(
+    reader: &mut impl std::io::BufRead,
+    count_bytes: u32,
+) -> Result<(), super::output::Failure> {
+    let mut remaining = attempt!(usize::try_from(count_bytes).map_err(|_| exhausted()));
+    let mut buffer = [0_u8; 8192];
+    while remaining > 0 {
+        let length = remaining.min(buffer.len());
+        attempt!(std::io::Read::read_exact(reader, &mut buffer[..length]).map_err(io_error));
+        remaining -= length;
+    }
+    Ok(())
 }
 
 #[expect(
@@ -107,7 +133,7 @@ pub(super) fn write_new(
     std::io::Write::write_all(&mut file, bytes).map_err(io_error)
 }
 
-fn exhausted() -> super::output::Failure {
+pub(super) fn exhausted() -> super::output::Failure {
     super::output::Failure::new(
         super::output::ErrorContext {
             stage: "parse",

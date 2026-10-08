@@ -117,4 +117,4 @@ opt-off/on compiled guest behavior, retained capture recipes, duplicate
 diagnostics, source-invalid-then-valid atomicity, global rebinding stability
 and resource reuse, implicit discard and capture refusals. Selecting syntax
 and source lowering alone does not claim DX-LOCAL-01/02 or CALC-STATE-01.
-r[DX-LOCAL-01] r[DX-LOCAL-02] r[CALC-STATE-01]
+r[DX-LOCAL-01] r[DX-LOCAL-02] CALC-STATE-01

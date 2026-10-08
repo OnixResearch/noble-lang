@@ -65,7 +65,12 @@ impl Report {
     ) -> Self {
         if declared {
             Self::declared_static(
-                failure.context, &failure.message, 0, None, signed, declared_text,
+                failure.context,
+                &failure.message,
+                0,
+                None,
+                signed,
+                declared_text,
             )
         } else {
             Self::static_report(
@@ -74,9 +79,29 @@ impl Report {
                 0,
                 None,
                 None,
-                if text_byte_cursor { "Text-Byte-Cursor-v1" } else { "Core-Bootstrap" },
+                if text_byte_cursor {
+                    "Text-Byte-Cursor-v1"
+                } else {
+                    "Core-Bootstrap"
+                },
             )
         }
+    }
+
+    pub fn declared_frame_refusal(
+        failure: &Failure,
+        submission: u64,
+        signed: bool,
+        declared_text: bool,
+    ) -> Self {
+        Self::declared_static(
+            failure.context,
+            &failure.message,
+            submission,
+            None,
+            signed,
+            declared_text,
+        )
     }
 
     pub fn source_error(error: &noble_contracts::source::Error, submission: u64) -> Self {
@@ -157,10 +182,7 @@ impl Report {
                 "schema",
                 crate::workflow::encoding::string("noble-core-report/v1"),
             ),
-            (
-                "profile",
-                crate::workflow::encoding::string(profile),
-            ),
+            ("profile", crate::workflow::encoding::string(profile)),
             (
                 "backend",
                 crate::workflow::encoding::string("managed-linear-memory"),
@@ -220,7 +242,10 @@ impl Report {
                     crate::workflow::encoding::string(&join.actual_stack),
                 ),
                 ("source_location", source_span(Some(span))),
-                ("word_or_join", crate::workflow::encoding::string(&join.word)),
+                (
+                    "word_or_join",
+                    crate::workflow::encoding::string(&join.word),
+                ),
                 (
                     "required_stack",
                     crate::workflow::encoding::string(&join.expected_stack),

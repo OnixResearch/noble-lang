@@ -6,6 +6,8 @@ struct StagedUnit {
     pending: Option<crate::intrinsic::ProofBatch>,
 }
 
+const DECLARED_INPUT_SOURCE_BYTES: u32 = 65_536;
+
 impl super::ModuleSession {
     pub fn prepare(
         &self,
@@ -13,6 +15,12 @@ impl super::ModuleSession {
         inputs: &[noble_kernel::types::Ty],
         limits: crate::Limits,
     ) -> Result<super::ModulePrepared, crate::source::Error> {
+        if limits.bytes > DECLARED_INPUT_SOURCE_BYTES {
+            return Err(crate::source::declared::error(
+                crate::source::Stage::Parse,
+                "declared per-input source byte limit exceeds 65,536",
+            ));
+        }
         let limit_bytes = attempt!(usize::try_from(limits.bytes).map_err(|_| {
             crate::source::declared::error(
                 crate::source::Stage::Parse,
@@ -30,23 +38,46 @@ impl super::ModuleSession {
                 crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
             })
         );
-        let StagedUnit { session: mut staged, kind, submission, output, pending } =
-            attempt!(self
-                .snapshot()
-                .stage_unit(unit, input_bytes, inputs, limits));
+        if matches!(
+            &unit,
+            crate::source::declared::parsing::ParsedUnit::Definition
+        ) {
+            let extra = attempt!(input_bytes.len().checked_add(4).ok_or_else(|| {
+                crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "retained definition source length overflow",
+                )
+            }));
+            attempt!(self.check_retained(extra));
+        }
+        let StagedUnit {
+            session: mut staged,
+            kind,
+            submission,
+            output,
+            pending,
+        } = attempt!(self
+            .snapshot()
+            .stage_unit(unit, input_bytes, inputs, limits));
         let rebuilt_import_definitions = if kind == super::ModuleKind::Import {
             attempt!(self.rebuild_import_alias(&mut staged, limits))
         } else {
             None
         };
-        attempt!(staged.retained(limits));
+        attempt!(staged.check_retained(0));
         let signed_expression = if kind == super::ModuleKind::Expression
-            && (self.source.declared.as_ref()
+            && (self
+                .source
+                .declared
+                .as_ref()
                 .is_some_and(|context| context.declared_text)
-            || submission.as_ref().is_some_and(|program| {
-                program.definitions.iter().any(|definition| definition.body.candidate.nodes.iter()
-                    .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })))
-            })) {
+                || submission.as_ref().is_some_and(|program| {
+                    program.definitions.iter().any(|definition| {
+                        definition.body.candidate.nodes.iter().any(|node| {
+                            matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })
+                        })
+                    })
+                })) {
             input_bytes.to_vec()
         } else {
             alloc::vec::Vec::new()
@@ -55,6 +86,8 @@ impl super::ModuleSession {
             kind,
             generation: self.generation,
             limits,
+            previous_source_generation: self.source.generation,
+            previous_source_definitions_len: self.source.definitions.len(),
             previous_modules: self.modules.clone(),
             previous_aliases: self.aliases.clone(),
             previous_history: self.source.history.clone(),
@@ -68,11 +101,13 @@ impl super::ModuleSession {
         if !prepared.signed_expression.is_empty() {
             attempt!(prepared.verify_signed_origins());
             let submission = prepared.submission.as_ref().ok_or_else(|| {
-                crate::source::declared::error(crate::source::Stage::Check,
-                    "signed expression lacks its concrete checked submission")
+                crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "signed expression lacks its concrete checked submission",
+                )
             })?;
             prepared.staged = attempt!(prepared.staged.record_signed_certified(submission));
-            attempt!(prepared.staged.retained(limits));
+            attempt!(prepared.staged.check_retained(0));
         }
         Ok(prepared)
     }
@@ -84,8 +119,10 @@ impl super::ModuleSession {
         inputs: &[noble_kernel::types::Ty],
         limits: crate::Limits,
     ) -> Result<StagedUnit, crate::source::Error> {
-        let expression = matches!(&unit,
-            crate::source::declared::parsing::ParsedUnit::Expression);
+        let expression = matches!(
+            &unit,
+            crate::source::declared::parsing::ParsedUnit::Expression
+        );
         let (kind, submission, output, pending) = match unit {
             crate::source::declared::parsing::ParsedUnit::Module {
                 name,
@@ -101,7 +138,12 @@ impl super::ModuleSession {
                     limits,
                 }));
                 self = next;
-                (super::ModuleKind::Module, None, alloc::vec::Vec::new(), pending)
+                (
+                    super::ModuleKind::Module,
+                    None,
+                    alloc::vec::Vec::new(),
+                    pending,
+                )
             }
             crate::source::declared::parsing::ParsedUnit::Import {
                 name,
@@ -116,7 +158,12 @@ impl super::ModuleSession {
                 if expression {
                     self = attempt!(self.pending_signed_expression_words());
                 }
-                let mut prepared = attempt!(self.source.prepare(input_bytes, inputs, limits));
+                let mut prepared = attempt!(self.source.prepare_with_retention(
+                    input_bytes,
+                    inputs,
+                    limits,
+                    self.retained_source_limit.bytes(),
+                ));
                 let kind = if prepared.is_definition() {
                     super::ModuleKind::Definition
                 } else {
@@ -147,7 +194,13 @@ impl super::ModuleSession {
                 (kind, submission, output, None)
             }
         };
-        Ok(StagedUnit { session: self, kind, submission, output, pending })
+        Ok(StagedUnit {
+            session: self,
+            kind,
+            submission,
+            output,
+            pending,
+        })
     }
 
     /// Publish the entire scanned declaration/import as one stale-checked transition.
@@ -174,8 +227,7 @@ impl super::ModuleSession {
                 )),
             );
         }
-        if self.import_rebind_required(&prepared)
-            && prepared.rebuilt_import_definitions.is_none() {
+        if self.import_rebind_required(&prepared) && prepared.rebuilt_import_definitions.is_none() {
             return (
                 self,
                 Err(crate::source::declared::error(
@@ -199,6 +251,26 @@ impl super::ModuleSession {
 
     fn current_snapshot(&self, prepared: &super::ModulePrepared) -> bool {
         self.generation == prepared.generation
+            && self.retained_source_limit == prepared.staged.retained_source_limit
+            && self.source.generation == prepared.previous_source_generation
+            && self.source.definitions.len() == prepared.previous_source_definitions_len
+            && prepared
+                .staged
+                .source
+                .definitions
+                .get(..prepared.previous_source_definitions_len)
+                == Some(self.source.definitions.as_slice())
+            && self
+                .source
+                .declared
+                .as_ref()
+                .map(|context| (context.signed_self, context.declared_text))
+                == prepared
+                    .staged
+                    .source
+                    .declared
+                    .as_ref()
+                    .map(|context| (context.signed_self, context.declared_text))
             && self.bindings == prepared.staged.bindings
             && self.modules == prepared.previous_modules
             && self.aliases == prepared.previous_aliases
@@ -214,7 +286,10 @@ impl super::ModuleSession {
         recheck: F,
     ) -> (Self, Result<(), crate::source::Error>)
     where
-        F: FnOnce(&crate::intrinsic::ProofBatch) -> Result<alloc::vec::Vec<crate::intrinsic::CheckedProof>, alloc::string::String>,
+        F: FnOnce(
+            &crate::intrinsic::ProofBatch,
+        )
+            -> Result<alloc::vec::Vec<crate::intrinsic::CheckedProof>, alloc::string::String>,
     {
         if !self.current_snapshot(&prepared) {
             return (
@@ -272,7 +347,10 @@ impl super::ModuleSession {
             Err(message) => {
                 return (
                     self,
-                    Err(crate::source::declared::error(crate::source::Stage::Acceptance, &message)),
+                    Err(crate::source::declared::error(
+                        crate::source::Stage::Acceptance,
+                        &message,
+                    )),
                 );
             }
         };
@@ -280,19 +358,28 @@ impl super::ModuleSession {
             || checked.iter().zip(&source_checked).any(|(result, source)| {
                 result.claim != source.claim || result.lean_term != source.lean_term
             })
-            || checked.iter().zip(&batch.obligations).any(|(result, obligation)| {
-                result.name != obligation.name
-                    || !revision(&result.model_revision)
-                    || !revision(&result.checker_revision)
-                    || result.kind
-                        != match &obligation.goal {
-                            crate::intrinsic::PendingGoal::Pure { .. } => crate::intrinsic::ProofKind::Pure,
-                            crate::intrinsic::PendingGoal::Contract { contract } if
-                                contract.revision == 2 && obligation.revision == 2 =>
-                                crate::intrinsic::ProofKind::NamedContract,
-                            crate::intrinsic::PendingGoal::Contract { .. } => crate::intrinsic::ProofKind::Contract,
-                        }
-            })
+            || checked
+                .iter()
+                .zip(&batch.obligations)
+                .any(|(result, obligation)| {
+                    result.name != obligation.name
+                        || !revision(&result.model_revision)
+                        || !revision(&result.checker_revision)
+                        || result.kind
+                            != match &obligation.goal {
+                                crate::intrinsic::PendingGoal::Pure { .. } => {
+                                    crate::intrinsic::ProofKind::Pure
+                                }
+                                crate::intrinsic::PendingGoal::Contract { contract }
+                                    if contract.revision == 2 && obligation.revision == 2 =>
+                                {
+                                    crate::intrinsic::ProofKind::NamedContract
+                                }
+                                crate::intrinsic::PendingGoal::Contract { .. } => {
+                                    crate::intrinsic::ProofKind::Contract
+                                }
+                            }
+                })
         {
             return (
                 self,
@@ -320,9 +407,7 @@ impl super::ModuleSession {
             );
         };
         for obligation in &batch.obligations {
-            if remaining_bytes.checked_sub(batch.source.len()).is_none()
-                || remaining_nodes == 0
-            {
+            if remaining_bytes.checked_sub(batch.source.len()).is_none() || remaining_nodes == 0 {
                 return (
                     self,
                     Err(crate::source::declared::error(
@@ -456,7 +541,10 @@ impl super::ModuleSession {
 }
 
 fn revision(value: &str) -> bool {
-    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 /// Charges a retained dependency and its transitive closure in the same
@@ -489,11 +577,15 @@ fn charge_dependency(
                 inline[inline_len] = Some(child);
                 inline_len = inline_len.saturating_add(1);
             } else {
-                if spill.len() >= nodes { return None; }
+                if spill.len() >= nodes {
+                    return None;
+                }
                 spill.push(child);
             }
         }
-        current = next.dependencies.first()
+        current = next
+            .dependencies
+            .first()
             .or_else(|| spill.pop())
             .or_else(|| {
                 let top = inline_len.checked_sub(1)?;

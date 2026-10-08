@@ -22,7 +22,7 @@ fn wasm_error(error: noble_wasm::Diagnostic) -> &'static str {
 }
 
 fn signed_expression(module: &[u8], expression: &[u8]) -> Result<ModulePrepared, String> {
-    let session = ModuleSession::new_signed_self(&[])
+    let session = ModuleSession::new_signed_self(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let staged = session.prepare(module, &[], LIMITS)
         .map_err(|error| error.diagnostic().message.clone())?;
@@ -419,7 +419,7 @@ fn nested_quotation_self_is_source_bound_and_foreign_cycles_preserve_namespace()
     Compiler::new().prepare_signed(&owner)
         .map_err(|error| format!("quoted owner refused: {}", wasm_error(error)))?;
 
-    let session = ModuleSession::new_signed_self(&[])
+    let session = ModuleSession::new_signed_self(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let bad = b"module bad@1 [ signature even forall<S:stack> [ S -- S ! pure ] signature odd forall<S:stack> [ S -- S ! pure ] def even [ odd ] def odd [ even ] ]";
     if !matches!(session.prepare(bad, &[], LIMITS), Err(error) if error.stage() == Stage::Resolve)
@@ -447,14 +447,14 @@ fn nested_quotation_self_is_source_bound_and_foreign_cycles_preserve_namespace()
         output: vec![],
         effects: vec![noble_kernel::contracts::TEST_EMIT],
     };
-    let effect_session = ModuleSession::new_signed_self(&[emit])
+    let effect_session = ModuleSession::new_signed_self(&[emit], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     let narrowed = b"module ledger@1 [ require emit Text -- ! test.emit signature leak forall<S:stack,eps:effect> [ S -- S ! eps ] export leak def leak [ \"event\" emit [ leak ] drop ] ]";
     if !matches!(effect_session.prepare(narrowed, &[], LIMITS),
         Err(error) if error.stage() == Stage::Check) || effect_session.generation() != 0 {
         return Err("signed owner narrowed a rigid effect variable to an emitted effect".into());
     }
-    let unsigned = ModuleSession::new(&[])
+    let unsigned = ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| error.diagnostic().message.clone())?;
     if !matches!(unsigned.prepare(
         b"module no@1 [ signature spin forall<S:stack> [ S -- S ! pure ] def spin [ spin ] ]",
