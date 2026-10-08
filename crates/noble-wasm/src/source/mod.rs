@@ -218,6 +218,12 @@ pub enum OriginProgramValue {
         right_node: noble_kernel::untrusted::NodeId,
         right_program_index: usize,
     },
+    ComposeDynamic {
+        node: noble_kernel::untrusted::NodeId,
+        table_entry: u32,
+        left: alloc::boxed::Box<Self>,
+        right: alloc::boxed::Box<Self>,
+    },
 }
 
 #[derive(Clone, Debug)]

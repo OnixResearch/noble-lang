@@ -362,10 +362,10 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
     Ok(())
 }
 
-// Experimental local IDs for exactly one returned `quote(I64) [ + ] compose`
-// target. This is deliberately narrower than SelectedOriginMetadata: its
-// general quote/compose grammar has no checked logical-alias or lexical-owner
-// witness. A missing witness never becomes an anonymous target ID.
+// Preserve the existing byte-for-byte local ID path for one returned
+// `quote(I64) [ + ] compose` target. SelectedOriginMetadata is more general
+// than this shape or the two-quotation alias extension below. A missing
+// binding or lexical-owner witness never becomes an anonymous target ID.
 fn anonymous_shape<'a>(
     origin: &'a Value,
     contracts: &[super::ProgramContract],
@@ -408,6 +408,63 @@ fn anonymous_shape<'a>(
     Ok(Some((result, static_program, operand)))
 }
 
+// The only additional identity-bearing shape is two separately checked
+// quotations of root I64 bindings composed before a pure three-add body.
+// Duplicating one root binding and using two independent equal-valued root
+// bindings have different source alias classes, regardless of VM sharing.
+fn alias_shape<'a>(
+    origin: &'a Value,
+    contracts: &[super::ProgramContract],
+    position: usize,
+    descriptor: &str,
+    root_inputs: &[Value],
+) -> Result<Option<(&'a Value, &'a Value, &'a Value, &'a Value, &'a Value)>, String> {
+    if root_inputs.len() != 2 || descriptor != "Program([I64,I64]->[I64]!{})" {
+        return Ok(None);
+    }
+    let outputs = rows(origin, "outputs")?;
+    if outputs.len() != 1 || number(&outputs[0], "stack_position")? as usize != position {
+        return Ok(None);
+    }
+    let outer = &outputs[0]["result"];
+    let inner = &outer["left"];
+    let left = &inner["left"];
+    let right = &inner["right"];
+    if outer["kind"] != "compose" || inner["kind"] != "compose-dynamic"
+        || left["kind"] != "quote-i64" || right["kind"] != "quote-i64"
+        || outer["right"]["kind"] != "static-program"
+        || left["operand"]["kind"] != "root-i64"
+        || right["operand"]["kind"] != "root-i64"
+        || number(&left["operand"], "position")? >= 2
+        || number(&right["operand"], "position")? >= 2 {
+        return Ok(None);
+    }
+    let named_index = number(origin, "named_program_index")? as usize;
+    let named = rows(origin, "programs")?.get(named_index)
+        .ok_or_else(|| denied("selected alias source builder is missing"))?;
+    if named["source_artifact"] != "definition" || named["effect_mask"] != 0
+        || rows(named, "operations")?.iter().any(|op|
+            !matches!(op["kind"].as_str(),
+                Some("dup" | "drop" | "swap" | "quote-i64" | "compose" | "static-program"))
+                || op["effect_mask"] != 0) {
+        return Ok(None);
+    }
+    let static_index = number(&outer["right"], "program_index")? as usize;
+    let static_program = rows(origin, "programs")?.get(static_index)
+        .ok_or_else(|| denied("selected alias dependency is missing"))?;
+    let contract = contracts.get(static_index)
+        .ok_or_else(|| denied("selected alias dependency contract is missing"))?;
+    let operations = rows(static_program, "operations")?;
+    if static_program["source_artifact"] != "definition"
+        || contract.input != ["I64", "I64", "I64", "I64"]
+        || contract.output != ["I64"] || !contract.effects.is_empty()
+        || static_program["effect_mask"] != 0 || operations.len() != 3
+        || operations.iter().any(|op| op["kind"] != "add" || op["effect_mask"] != 0) {
+        return Ok(None);
+    }
+    Ok(Some((outer, inner, left, right, static_program)))
+}
+
 pub(super) fn supports_anonymous_target(
     origin: &Value,
     contracts: &[super::ProgramContract],
@@ -415,7 +472,8 @@ pub(super) fn supports_anonymous_target(
     descriptor: &str,
     root_inputs: &[Value],
 ) -> Result<bool, String> {
-    Ok(anonymous_shape(origin, contracts, position, descriptor, root_inputs)?.is_some())
+    Ok(anonymous_shape(origin, contracts, position, descriptor, root_inputs)?.is_some()
+        || alias_shape(origin, contracts, position, descriptor, root_inputs)?.is_some())
 }
 
 pub(super) fn checked_saved_owner_inspection<'a>(
@@ -442,7 +500,8 @@ pub(super) fn anonymous_target_identity(
     use serde_json::json;
     let Some((result, static_program, operand)) =
         anonymous_shape(origin, contracts, position, descriptor, root_inputs)? else {
-        return Ok(None);
+        return alias_target_identity(origin, contracts, position, descriptor,
+            saved, inspected_graph, root_inputs);
     };
     let (varying, actual) = match operand["kind"].as_str() {
         Some("root-i64") if operand["position"] == 0 && root_inputs.len() == 1 => {
@@ -568,6 +627,458 @@ pub(super) fn anonymous_target_identity(
         "program_value_id":program_value_id,"captures":captured,
         "interface":interface,"effects":[],"dependencies":dependencies,
         "artifact_sha256":null})))
+}
+
+// Reify the worker's bounded, retained graph independently of its public
+// capture summaries. Cell indices and allocation sharing authenticate the
+// actual graph but never become source-binding identities.
+struct ObservedGraph<'a> {
+    cells: &'a [Value],
+    seen: [bool; 32],
+    seen_count: usize,
+}
+
+struct ProgramShape {
+    input: u32,
+    output: u32,
+    depth: u32,
+    leaves: u32,
+    recipe: usize,
+}
+
+impl<'a> ObservedGraph<'a> {
+    fn new(cells: &'a [Value]) -> Result<Self, String> {
+        if cells.is_empty() || cells.len() > 32 {
+            return Err(denied("selected alias graph exceeds bounded retained observation"));
+        }
+        Ok(Self { cells, seen: [false; 32], seen_count: 0 })
+    }
+
+    fn pointer(row: &Value, key: &str) -> Result<usize, String> {
+        row.get(key).and_then(Value::as_u64).and_then(|index| usize::try_from(index).ok())
+            .ok_or_else(|| denied("selected alias graph has a missing or invalid edge"))
+    }
+
+    fn absent(row: &Value, key: &str) -> bool {
+        row.get(key).is_some_and(Value::is_null)
+    }
+
+    fn cell(&mut self, index: usize, kind: u64, payload: &str,
+        x: u32, y: u32, z: u32, w: u32, n: u32) -> Result<&'a Value, String> {
+        let row = self.cells.get(index)
+            .ok_or_else(|| denied("selected alias graph has a truncated edge"))?;
+        if !row.as_object().is_some_and(|object| object.len() == 11)
+            || row["kind"].as_u64() != Some(kind)
+            || row["payload"] != payload
+            || row["x"].as_u64() != Some(u64::from(x))
+            || row["y"].as_u64() != Some(u64::from(y))
+            || row["z"].as_u64() != Some(u64::from(z))
+            || row["w"].as_u64() != Some(u64::from(w))
+            || row["n"].as_u64() != Some(u64::from(n))
+            || !row.get("textBytes").is_some_and(Value::is_null)
+            || ["a", "b", "c"].iter().any(|key| row.get(*key).is_none()) {
+            return Err(denied("selected alias graph node differs from checked source shape"));
+        }
+        if !self.seen[index] {
+            self.seen[index] = true;
+            self.seen_count += 1;
+        }
+        Ok(row)
+    }
+
+    fn atom(&mut self, index: usize, x: u32, payload: &str,
+        input: u32, output: u32, effects: u32) -> Result<(), String> {
+        let row = self.cell(index, 8, payload, x, input, output, effects, 0)?;
+        if !["a", "b", "c"].iter().all(|key| Self::absent(row, key)) {
+            return Err(denied("selected alias recipe atom has an unchecked child"));
+        }
+        Ok(())
+    }
+
+    fn concat(&mut self, index: usize, left: usize, right: usize) -> Result<(), String> {
+        let row = self.cell(index, 9, "0", 0, 0, 0, 0, 0)?;
+        if Self::pointer(row, "a")? != left || Self::pointer(row, "b")? != right
+            || !Self::absent(row, "c") {
+            return Err(denied("selected alias recipe has an unchecked edge"));
+        }
+        Ok(())
+    }
+
+    fn quote(&mut self, index: usize, operation: &Value, value: &str) -> Result<ProgramShape, String> {
+        let input = number(operation, "quote_input_signature")?;
+        let output = number(operation, "quote_output_signature")?;
+        let row = self.cell(index, 4, "0", 1, input, output, 1, 1)?;
+        if !Self::absent(row, "b") {
+            return Err(denied("selected alias quotation has an unchecked capture"));
+        }
+        let capture = Self::pointer(row, "a")?;
+        let recipe = Self::pointer(row, "c")?;
+        let scalar = self.cell(capture, 1, value, 0, 0, 0, 0, 0)?;
+        if !["a", "b", "c"].iter().all(|key| Self::absent(scalar, key)) {
+            return Err(denied("selected alias scalar has an unchecked child"));
+        }
+        self.atom(recipe, 1, value, 0, 0, 0)?;
+        Ok(ProgramShape { input, output, depth: 1, leaves: 1, recipe })
+    }
+
+    fn static_recipe(&mut self, index: usize, operations: &[Value]) -> Result<(), String> {
+        let (last, earlier) = operations.split_last()
+            .ok_or_else(|| denied("selected alias dependency has no source operations"))?;
+        if earlier.is_empty() {
+            return self.atom(index, 2, "4", number(last, "input_signature")?,
+                number(last, "output_signature")?, number(last, "effect_mask")?);
+        }
+        let row = self.cell(index, 9, "0", 0, 0, 0, 0, 0)?;
+        if !Self::absent(row, "c") {
+            return Err(denied("selected alias dependency recipe has an unchecked edge"));
+        }
+        let left = Self::pointer(row, "a")?;
+        let right = Self::pointer(row, "b")?;
+        self.static_recipe(left, earlier)?;
+        self.atom(right, 2, "4", number(last, "input_signature")?,
+            number(last, "output_signature")?, number(last, "effect_mask")?)
+    }
+
+    fn static_program(&mut self, index: usize, source: &Value) -> Result<ProgramShape, String> {
+        let operations = rows(source, "operations")?;
+        let input = number(source, "input_signature")?;
+        let output = number(source, "output_signature")?;
+        let length = u32::try_from(operations.len())
+            .map_err(|_| denied("selected alias dependency is unbounded"))?;
+        // The installer counts nested Program children for depth, not the
+        // left-associated concatenation depth of this three-atom recipe.
+        let row = self.cell(index, 4, "0", number(source, "entry")?,
+            input, output, 1, length)?;
+        if !Self::absent(row, "a") || !Self::absent(row, "b") {
+            return Err(denied("selected alias dependency has an unchecked capture"));
+        }
+        let recipe = Self::pointer(row, "c")?;
+        self.static_recipe(recipe, operations)?;
+        Ok(ProgramShape { input, output, depth: 1, leaves: length, recipe })
+    }
+
+    fn compose(&mut self, index: usize, left: ProgramShape,
+        right: ProgramShape) -> Result<ProgramShape, String> {
+        if left.output != right.input {
+            return Err(denied("selected alias children have incompatible interfaces"));
+        }
+        let depth = left.depth.max(right.depth).checked_add(1)
+            .ok_or_else(|| denied("selected alias graph depth overflow"))?;
+        let leaves = left.leaves.checked_add(right.leaves)
+            .ok_or_else(|| denied("selected alias recipe leaf overflow"))?;
+        let row = self.cell(index, 4, "0", 2, left.input, right.output, depth, leaves)?;
+        let recipe = Self::pointer(row, "c")?;
+        self.concat(recipe, left.recipe, right.recipe)?;
+        Ok(ProgramShape { input: left.input, output: right.output,
+            depth, leaves, recipe })
+    }
+
+    fn capture_matches(&self, root: usize, reported: &Value) -> bool {
+        let Some(summary) = reported.as_array() else { return false; };
+        let mut global = [0usize; 32];
+        let mut mapped = [None; 32];
+        if root >= self.cells.len() { return false; }
+        global[0] = root;
+        mapped[root] = Some(0);
+        let mut local = 0;
+        let mut pending = 1;
+        while local < pending {
+            let Some(actual) = self.cells.get(global[local]) else { return false; };
+            let Some(claimed) = summary.get(local) else { return false; };
+            if !claimed.as_object().is_some_and(|object| object.len() == 11)
+                || ["kind", "payload", "x", "y", "z", "w", "n", "textBytes"]
+                    .iter().any(|key| claimed.get(*key) != actual.get(*key)) {
+                return false;
+            }
+            for key in ["a", "b", "c"] {
+                let Some(actual_edge) = actual.get(key) else { return false; };
+                let Some(claimed_edge) = claimed.get(key) else { return false; };
+                if actual_edge.is_null() {
+                    if !claimed_edge.is_null() { return false; }
+                } else {
+                    let Some(child) = actual_edge.as_u64()
+                        .and_then(|value| usize::try_from(value).ok()) else { return false; };
+                    let Some(slot) = mapped.get_mut(child) else { return false; };
+                    let place = match slot {
+                        Some(place) => *place,
+                        None => {
+                            if pending == global.len() { return false; }
+                            let next = pending;
+                            *slot = Some(next);
+                            global[pending] = child;
+                            pending += 1;
+                            next
+                        }
+                    };
+                    if claimed_edge.as_u64() != Some(place as u64) { return false; }
+                }
+            }
+            local += 1;
+        }
+        pending == summary.len()
+    }
+}
+
+fn selected_site<'a>(operations: &'a [Value], result: &Value, kind: &str) -> Result<&'a Value, String> {
+    let mut matches = operations.iter().filter(|operation|
+        operation["kind"] == kind && operation["node"] == result["node"]
+            && operation["table_entry"] == result["table_entry"]);
+    let selected = matches.next()
+        .ok_or_else(|| denied("selected alias source site is missing"))?;
+    if matches.next().is_some() || selected["effect_mask"] != 0 {
+        return Err(denied("selected alias source site is ambiguous or effectful"));
+    }
+    Ok(selected)
+}
+
+fn alias_target_identity(
+    origin: &Value,
+    contracts: &[super::ProgramContract],
+    position: usize,
+    descriptor: &str,
+    saved: &Value,
+    inspected_graph: &Value,
+    root_inputs: &[Value],
+) -> Result<Option<Value>, String> {
+    use serde_json::json;
+    let Some((outer, inner, left, right, static_program)) =
+        alias_shape(origin, contracts, position, descriptor, root_inputs)? else {
+        return Ok(None);
+    };
+    if saved.get("lexical_owner").is_some()
+        || saved["capture_status"] != "checked-selected-origin" {
+        return Err(denied("selected alias has an unverified lexical owner or capture"));
+    }
+    let named_index = number(origin, "named_program_index")? as usize;
+    let programs = rows(origin, "programs")?;
+    let named = programs.get(named_index)
+        .ok_or_else(|| denied("selected alias has no source builder"))?;
+    let operations = rows(named, "operations")?;
+    let outer_site = selected_site(operations, outer, "compose")?;
+    let inner_site = selected_site(operations, inner, "compose")?;
+    let left_site = selected_site(operations, left, "quote-i64")?;
+    let right_site = selected_site(operations, right, "quote-i64")?;
+    if outer_site["node"] == inner_site["node"]
+        || left_site["node"] == right_site["node"]
+        || left_site["table_entry"] == right_site["table_entry"] {
+        return Err(denied("selected alias has ambiguous compiler source sites"));
+    }
+    let binding = |quote: &Value| -> Result<(usize, i64), String> {
+        let source_position = number(&quote["operand"], "position")? as usize;
+        let input = root_inputs.get(source_position)
+            .ok_or_else(|| denied("selected alias root binding is missing"))?;
+        if input["kind"] != "i64" {
+            return Err(denied("selected alias root binding is not checked I64"));
+        }
+        let value = text(input, "value")?.parse::<i64>()
+            .map_err(|_| denied("selected alias root I64 is out of range"))?;
+        Ok((source_position, value))
+    };
+    let first = binding(left)?;
+    let second_position = number(&right["operand"], "position")? as usize;
+    let second = if second_position == first.0 { first } else { binding(right)? };
+    let shared = first.0 == second.0;
+    let first_literal = first.1.to_string();
+    let second_literal = (!shared).then(|| second.1.to_string());
+    let cells = inspected_graph.as_array()
+        .ok_or_else(|| denied("retained alias owner has no complete graph"))?;
+    let mut graph = ObservedGraph::new(cells)?;
+    let root = cells.first().ok_or_else(|| denied("retained alias root is missing"))?;
+    let inner_index = ObservedGraph::pointer(root, "a")?;
+    let static_index = ObservedGraph::pointer(root, "b")?;
+    let inner_cell = cells.get(inner_index)
+        .ok_or_else(|| denied("retained alias compose is truncated"))?;
+    let left_index = ObservedGraph::pointer(inner_cell, "a")?;
+    let right_index = ObservedGraph::pointer(inner_cell, "b")?;
+    let left_shape = graph.quote(left_index, left_site, &first_literal)?;
+    let right_shape = graph.quote(right_index, right_site,
+        second_literal.as_deref().unwrap_or(&first_literal))?;
+    let inner_shape = graph.compose(inner_index, left_shape, right_shape)?;
+    let static_shape = graph.static_program(static_index, static_program)?;
+    graph.compose(0, inner_shape, static_shape)?;
+    if graph.seen_count != cells.len() {
+        return Err(denied("retained alias owner has extra unchecked graph cells"));
+    }
+    let captures = rows(saved, "capture_values")?;
+    if captures.len() != 2 || captures[0]["field"] != "cell_a"
+        || captures[1]["field"] != "cell_b"
+        || !graph.capture_matches(inner_index, &captures[0]["value"])
+        || !graph.capture_matches(static_index, &captures[1]["value"]) {
+        return Err(denied("public alias captures differ from retained owner graph"));
+    }
+
+    // The checked source contains only root I64 binding uses, quote/compose
+    // and a pure add body: no lexical recursive self-reference is admitted.
+    // Physical code/module owners and source NodeIds never enter the identity.
+    let mut template = blake3::Hasher::new_derive_key(
+        "noble experimental anonymous definition template v2");
+    template.update(b"core-bootstrap:two-quote-compose-add3\0");
+    template.update(b"I64,I64--I64!{}\0builtin:i64.add:4\0");
+    template.update(b"lexical-recursive-owner:none\0logical-source-alias:");
+    template.update(&[0, u8::from(!shared)]);
+    let definition_digest = template.finalize();
+    let definition_id = format!("anonymous-template-experimental-v2-blake3:{}",
+        definition_digest.to_hex());
+    let mut program = blake3::Hasher::new_derive_key(
+        "noble experimental anonymous program value v2");
+    program.update(b"template-blake3:32\0capture:I64:");
+    program.update(&[if shared { 1 } else { 2 }]);
+    program.update(definition_digest.as_bytes());
+    program.update(&first.1.to_le_bytes());
+    let mut captured = vec![json!({"type":"I64","value":first_literal})];
+    if let Some(second_literal) = second_literal {
+        program.update(&second.1.to_le_bytes());
+        captured.push(json!({"type":"I64","value":second_literal}));
+    }
+    Ok(Some(json!({"definition_id":definition_id,
+        "program_value_id":format!("anonymous-program-experimental-v2-blake3:{}",
+            program.finalize().to_hex()),
+        "captures":captured,"interface":{"input":["I64","I64"],
+            "output":["I64"],"effects":[]},"effects":[],
+        "dependencies":["builtin:i64.add"],"artifact_sha256":null})))
+}
+
+// This is a digest of the complete *composite descriptor*, never a claim that
+// either donor Wasm SHA alone is the returned Program's executable artifact.
+// Both callers derive the same sorted-key JSON independently; the worker also
+// checks actual live table function identity before admitting the candidate.
+fn retained_recipe_digest(graph: &Value) -> Result<String, String> {
+    let cells = graph.as_array().ok_or_else(|| denied("retained graph is not an array"))?;
+    let root = cells.first().ok_or_else(|| denied("retained root is missing"))?;
+    let recipe = ObservedGraph::pointer(root, "c")?;
+    let mut global = [0usize; 32];
+    let mut mapped = [None; 32];
+    global[0] = recipe;
+    *mapped.get_mut(recipe).ok_or_else(|| denied("retained recipe root is truncated"))? = Some(0);
+    let mut pending = 1;
+    let mut local = 0;
+    let mut normalized = Vec::new();
+    while local < pending {
+        let mut cell = cells.get(global[local])
+            .ok_or_else(|| denied("retained recipe edge is truncated"))?.clone();
+        for field in ["a", "b", "c"] {
+            if cell[field].is_null() { continue; }
+            let child = cell[field].as_u64().and_then(|value| usize::try_from(value).ok())
+                .ok_or_else(|| denied("retained recipe has an invalid edge"))?;
+            let mapped_child = mapped.get_mut(child)
+                .ok_or_else(|| denied("retained recipe has an out-of-bounds child"))?;
+            let index = if let Some(index) = mapped_child { *index } else {
+                if pending == global.len() { return Err(denied("retained recipe exceeds bound")); }
+                let index = pending;
+                *mapped_child = Some(index);
+                global[pending] = child;
+                pending += 1;
+                index
+            };
+            cell[field] = serde_json::json!(index);
+        }
+        normalized.push(cell);
+        local += 1;
+    }
+    let bytes = serde_json::to_vec(&normalized)
+        .map_err(|_| denied("retained recipe is not serializable"))?;
+    Ok(crate::workflow::intrinsic::sha256(&bytes))
+}
+
+pub(super) fn alias_code_donor_manifest(
+    owner: &str, handle: u32, caller_id: &str, caller: &super::Candidate,
+    core_id: &str, core: &super::Candidate, position: usize, descriptor: &str,
+    identity: &Value, graph: &Value, inputs: &[Value],
+) -> Result<Option<Value>, String> {
+    use serde_json::json;
+    let Some(origin) = caller.selected_origin.as_ref() else { return Ok(None); };
+    let Some((outer, inner, left, right, static_program)) =
+        alias_shape(&origin.checked_metadata, &caller.programs, position, descriptor, inputs)?
+    else { return Ok(None); };
+    if core.span.generation != 1 || core.selected_origin.is_none()
+        || handle < 4096 || identity["artifact_sha256"] != Value::Null
+        || identity["interface"] != json!({"input":["I64","I64"],
+            "output":["I64"],"effects":[]}) {
+        return Err(denied("selected alias has no independently checked native core or target"));
+    }
+    let named = &origin.checked_metadata["programs"][number(&origin.checked_metadata,
+        "named_program_index")? as usize];
+    let operations = rows(named, "operations")?;
+    let quote_sites = [left, right].iter().map(|site|
+        selected_site(operations, site, "quote-i64").and_then(|operation| {
+            Ok(json!({"node":operation.get("node").ok_or_else(||
+                    denied("selected quote site has no source node"))?,
+                "table_entry":number(operation, "table_entry")?}))
+        })).collect::<Result<Vec<_>, String>>()?;
+    let compose_sites = [inner, outer].iter().map(|site|
+        selected_site(operations, site, "compose").and_then(|operation| {
+            Ok(json!({"node":operation.get("node").ok_or_else(||
+                    denied("selected compose site has no source node"))?,
+                "table_entry":number(operation, "table_entry")?}))
+        })).collect::<Result<Vec<_>, String>>()?;
+    let static_result = &outer["right"];
+    let static_index = number(static_result, "program_index")? as usize;
+    if number(static_program, "program_index")? as usize != static_index {
+        return Err(denied("selected static dependency differs from source result"));
+    }
+    let mut static_sites = operations.iter().filter(|operation|
+        operation["kind"] == "static-program"
+            && operation["node"] == static_result["node"]
+            && operation["static_program_index"] == static_index
+            && operation["effect_mask"] == 0);
+    let static_site = static_sites.next()
+        .ok_or_else(|| denied("selected static add child lacks a checked source site"))?;
+    if static_sites.next().is_some() {
+        return Err(denied("selected static add child has ambiguous source sites"));
+    }
+    let static_site = json!({"node":static_site["node"],
+        "table_entry":number(static_site, "table_entry")?});
+    let static_source = &origin.checked_metadata["programs"][static_index];
+    let start = number(static_source, "entry")?;
+    let end = caller.span.start.checked_add(caller.span.length)
+        .ok_or_else(|| denied("selected static donor code span overflows"))?;
+    let add_entries = rows(static_source, "operations")?
+        .iter().enumerate().map(|(ordinal, operation)| {
+            let entry = number(operation, "table_entry")?;
+            if operation["kind"] != "add" || operation["effect_mask"] != 0
+                || entry != start + ordinal as u32 || entry < caller.span.start || entry >= end {
+                return Err(denied("selected static add entry differs from checked code donor"));
+            }
+            Ok(entry)
+        }).collect::<Result<Vec<_>, String>>()?;
+    if add_entries.len() != 3 || static_index >= caller.programs.len() {
+        return Err(denied("selected static add lacks exact three-entry dependency"));
+    }
+    let graph_bytes = serde_json::to_vec(graph)
+        .map_err(|_| denied("selected retained graph is not canonically serializable"))?;
+    let manifest = json!({
+        "schema":"noble-live-slot-composite-code-donors/v1",
+        "owner":{"token":owner,"handle":handle},
+        "identity":{"definition_id":identity["definition_id"],
+            "program_value_id":identity["program_value_id"],
+            "captures":identity["captures"],"interface":identity["interface"],
+            "lexical_recursive_owner":null},
+        "source":{"caller_id":caller_id,"source_sha256":caller.source_sha256,
+            "selected_source_sha256":origin.checked_metadata["selected_source_sha256"],
+            "definition_identity":origin.definition_identity,
+            "source_generation":origin.source_generation,
+            "quote_sites":quote_sites,"compose_sites":compose_sites,
+            "static_program_index":static_index,"static_site":static_site},
+        "donors":{
+            "native":{"module_id":core_id,"artifact_sha256":core.artifact_sha256,
+                "source_sha256":core.source_sha256,
+                "span":{"start":core.span.start,"length":core.span.length,
+                    "generation":core.span.generation},
+                "entries":[1,2]},
+            "static":{"module_id":caller_id,"artifact_sha256":caller.artifact_sha256,
+                "source_sha256":caller.source_sha256,
+                "span":{"start":caller.span.start,"length":caller.span.length,
+                    "generation":caller.span.generation},
+                "entries":add_entries}
+        },
+        "graph_sha256":crate::workflow::intrinsic::sha256(&graph_bytes),
+        "recipe_sha256":retained_recipe_digest(graph)?
+    });
+    let mut bytes = b"noble live-slot composite code donors v1\0".to_vec();
+    bytes.extend_from_slice(&serde_json::to_vec(&manifest)
+        .map_err(|_| denied("selected composite descriptor is not serializable"))?);
+    Ok(Some(json!({"descriptor":manifest,
+        "manifest_sha256":crate::workflow::intrinsic::sha256(&bytes)})))
 }
 
 #[cfg(test)]
@@ -713,6 +1224,103 @@ mod tests {
         if verify(&super::super::assemble_slot(forged.as_bytes())?,
             &later_origin, &later_install).is_ok() {
             return Err("later-generation forged native core segment acquired selected origin".into());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn alias_binary_rejects_second_quote_and_nested_compose_site_substitution() -> Result<(), String> {
+        use serde_json::json;
+        let environment = noble_kernel::contracts::environment()
+            .map_err(|error| format!("environment: {error:?}"))?.enable_live_slots();
+        let mut source = noble_contracts::source::Session::new_live_slots(environment)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let definition = source.prepare(
+            b"def aliased [ drop dup quote swap quote compose [ + + + ] compose ]",
+            &[], LIMITS).map_err(|error| error.diagnostic().message.clone())?;
+        source.commit(definition).map_err(|error| error.diagnostic().message.clone())?;
+        let call = source.prepare(b"aliased", &[Ty::I64, Ty::I64], LIMITS)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let selected = source.checked_selected_target(&call, "aliased")
+            .map_err(|error| format!("selected source: {error:?}"))?;
+        let prepared = noble_wasm::source::Compiler::new_live_slots()
+            .prepare_checked_selected(&selected)
+            .map_err(|_| "checked alias compilation refused".to_owned())?;
+        let bound = prepared.selected_target().ok_or("missing selected alias")?;
+        let target = json!({"definition_index":bound.definition_id.index(),
+            "definition_identity":bound.definition_id.identity().to_string(),
+            "source_generation":bound.source_generation.to_string(),
+            "named_program_index":bound.named_program_index,
+            "selected_source_sha256":crate::workflow::intrinsic::sha256(selected.source())});
+        let origin = super::super::selected_origin_json(
+            prepared.selected_origin().ok_or("missing classified alias source")?, &target)?;
+        let span = prepared.code_span();
+        let install = json!({"selected_target":target,
+            "target_metadata":{"root_program_index":prepared.target_metadata()
+                .ok_or("missing alias root metadata")?.root_program_index,
+                "stack_out":["Program([I64,I64]->[I64]!{})"]},
+            "code_span":{"start":span.start,"length":span.length,"generation":span.generation},
+            "program_metadata":prepared.program_metadata().iter().map(|program| json!({
+                "entry":program.entry,"program_index":program.program_index,
+                "input_signature":program.input_signature,
+                "output_signature":program.output_signature,"effect_mask":program.effect_mask
+            })).collect::<Vec<_>>()});
+        let binary = super::super::assemble_slot(prepared.wat())?;
+        verify(&binary, &origin, &install)?;
+        let contracts = prepared.program_metadata().iter().map(|program|
+            Ok(super::super::ProgramContract {
+                input: super::super::canonical_stack(&program.stack_in, 0)?,
+                output: super::super::canonical_stack(&program.stack_out, 0)?,
+                effects: super::super::effects(&program.effects)?,
+            })).collect::<Result<Vec<_>, String>>()?;
+        let root_inputs = [json!({"kind":"i64","value":"2"}), json!({"kind":"i64","value":"2"})];
+        if !supports_anonymous_target(&origin, &contracts, 0,
+            "Program([I64,I64]->[I64]!{})", &root_inputs)? {
+            return Err("two checked root-binding quotations remained opaque".into());
+        }
+        let named = number(&origin, "named_program_index")? as usize;
+        let source_ops = rows(&origin["programs"][named], "operations")?;
+        let quotes = source_ops.iter().enumerate().filter(|(_, op)| op["kind"] == "quote-i64")
+            .map(|(at, _)| at).collect::<Vec<_>>();
+        let composes = source_ops.iter().enumerate().filter(|(_, op)| op["kind"] == "compose")
+            .map(|(at, _)| at).collect::<Vec<_>>();
+        if quotes.len() != 2 || composes.len() != 2 {
+            return Err("alias source lost distinct quote and compose sites".into());
+        }
+        let mut owner_claim = origin.clone();
+        owner_claim["programs"][named]["operations"][0]["kind"] = json!("recursive-self");
+        if supports_anonymous_target(&owner_claim, &contracts, 0,
+            "Program([I64,I64]->[I64]!{})", &root_inputs)? {
+            return Err("unverified lexical self-reference acquired anonymous identity".into());
+        }
+        let mut substituted_quote = origin.clone();
+        substituted_quote["programs"][named]["operations"][quotes[1]]["table_entry"] =
+            origin["programs"][named]["operations"][quotes[0]]["table_entry"].clone();
+        if verify(&binary, &substituted_quote, &install).is_ok() {
+            return Err("second alias quotation borrowed the first checked code site".into());
+        }
+        let mut substituted_compose = origin.clone();
+        substituted_compose["programs"][named]["operations"][composes[0]]["kind"] = json!("drop");
+        if verify(&binary, &substituted_compose, &install).is_ok() {
+            return Err("inner alias composition borrowed a different compiled action".into());
+        }
+        let wat = std::str::from_utf8(prepared.wat())
+            .map_err(|error| error.to_string())?;
+        let native = "(elem $core func $empty_entry $quote_entry $compose_entry $restore_entry)";
+        if !wat.contains(native) { return Err("selected native donor has no core entry list".into()); }
+        let swapped = wat.replacen(native,
+            "(elem $core func $empty_entry $compose_entry $quote_entry $restore_entry)", 1);
+        if verify(&super::super::assemble_slot(swapped.as_bytes())?, &origin, &install).is_ok() {
+            return Err("rewritten native quote/compose table entry acquired code donor identity".into());
+        }
+        let selected_entry = format!("(table.init $code (i32.const {})", span.start);
+        if !wat.contains(&selected_entry) {
+            return Err("selected static donor has no checked table initializer".into());
+        }
+        let moved = wat.replacen(&selected_entry,
+            &format!("(table.init $code (i32.const {})", span.start + 1), 1);
+        if verify(&super::super::assemble_slot(moved.as_bytes())?, &origin, &install).is_ok() {
+            return Err("rewritten static add table entry acquired code donor identity".into());
         }
         Ok(())
     }

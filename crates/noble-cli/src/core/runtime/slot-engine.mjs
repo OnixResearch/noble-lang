@@ -19,16 +19,20 @@ function slotReply(outcome, fields = {}) {
     guest_requests: 0, protected_operations: 0, ...fields };
 }
 
-function sameSlotJSON(left, right) {
-  const normalized = value => {
-    if (Array.isArray(value)) return value.map(normalized);
-    if (value !== null && typeof value === 'object') {
-      return Object.fromEntries(Object.keys(value).sort()
-        .map(key => [key, normalized(value[key])]));
+function canonicalSlotJSON(value) {
+  const normalized = item => {
+    if (Array.isArray(item)) return item.map(normalized);
+    if (item !== null && typeof item === 'object') {
+      return Object.fromEntries(Object.keys(item).sort()
+        .map(key => [key, normalized(item[key])]));
     }
-    return value;
+    return item;
   };
-  return JSON.stringify(normalized(left)) === JSON.stringify(normalized(right));
+  return JSON.stringify(normalized(value));
+}
+
+function sameSlotJSON(left, right) {
+  return canonicalSlotJSON(left) === canonicalSlotJSON(right);
 }
 
 class SlotEngine {
@@ -68,8 +72,10 @@ class SlotEngine {
     this.grants = new Map();
     this.sources = new Map();
     this.modules = new Map();
+    this.nativeCoreOwner = null;
     this.handles = new Map();
     this.versions = new Map();
+    this.compositeVersions = new Map();
     this.savedOwners = new Map();
     this.savedCells = new Map();
     this.nextSavedOwner = 0;
@@ -304,6 +310,10 @@ class SlotEngine {
     const selected = guarded((ordinal, site) => {
       this.checkpoint('live_select', site >>> 0, ordinal >>> 0);
       const decision = this.registry.dispatch(active(), ordinal >>> 0, checkedModule(), site >>> 0);
+      if (this.compositeVersions.has(decision.handle >>> 0)
+        && !this.compositeCodeIsInstalled(this.compositeVersions.get(decision.handle >>> 0))) {
+        throw Error('selected returned target code donor changed before dispatch');
+      }
       return decision.handle >>> 0;
     });
     const frameEnter = guarded((site, ptr, handle) =>
@@ -453,13 +463,31 @@ class SlotEngine {
           origin.definition_identity);
       }
     }
+    const checkedEntries = new Map();
+    if (origin) for (const program of origin.programs) for (const operation of program.operations) {
+      const entry = operation.table_entry;
+      if (!Number.isInteger(entry) || entry < span.start || entry >= span.start + span.length
+        || typeof this.table.get(entry) !== 'function') {
+        throw Error('selected code donor has no live checked table entry');
+      }
+      checkedEntries.set(entry, this.table.get(entry));
+    }
     const token = this.registry.registerModule(compiled.digest, request.live_sites,
       checked.stack_in, sourceCatalog, request.source_artifact_sha256);
     for (const program of pinned) this.handles.set(program, { instance, moduleId: request.id });
     this.modules.set(request.id, { ...request, token, handle, instance, pinned,
-      artifactSha256: compiled.digest, installed: true,
-      published: false, versionOwned: new Set(), replayOwned: new Set(),
+      artifactSha256: compiled.digest, installed: true, checkedEntries,
+      published: false, versionOwned: new Set(), compositeOwned: new Set(),
+      replayOwned: new Set(),
       rootsReleased: false, discardRequested: false });
+    if (span.generation === 1 && origin) {
+      if (this.nativeCoreOwner
+        || typeof this.table.get(1) !== 'function'
+        || typeof this.table.get(2) !== 'function') {
+        throw Error('selected first-generation native code donor is missing');
+      }
+      this.nativeCoreOwner = { id: request.id, entries: [this.table.get(1), this.table.get(2)] };
+    }
     return slotReply('installed', { id: request.id, handle,
       artifact_sha256: compiled.digest, generation: String(this.shared.generation.value) });
   }
@@ -504,6 +532,200 @@ class SlotEngine {
     }, handle, artifactSha256, catalog);
   }
 
+  compositeCodeIsInstalled({ coreId, callerId, addEntries }) {
+    const core = this.modules.get(coreId), caller = this.modules.get(callerId);
+    if (!core || !caller || core.discardRequested || caller.discardRequested
+      || core.rootsReleased || caller.rootsReleased
+      || this.nativeCoreOwner?.id !== coreId
+      || core.code_span.generation !== 1 || !core.selected_origin
+      || core.binary_sha256 !== core.artifactSha256
+      || caller.binary_sha256 !== caller.artifactSha256
+      || this.table.get(1) !== this.nativeCoreOwner.entries[0]
+      || this.table.get(2) !== this.nativeCoreOwner.entries[1]
+      || !addEntries.every(entry => caller.checkedEntries.get(entry) !== undefined
+        && caller.checkedEntries.get(entry) === this.table.get(entry))) return false;
+    return true;
+  }
+
+  returnedManifest(owner, saved, claimed) {
+    const selected = saved?.selected;
+    const caller = this.modules.get(selected?.callerId);
+    const core = this.modules.get(this.nativeCoreOwner?.id);
+    if (!caller?.selected_origin || !core || !selected
+      || selected.inputs.length !== 2
+      || selected.inputs.some(input => input.kind !== 'i64'
+        || !/^-?(0|[1-9][0-9]*)$/.test(input.value))
+      || caller.target_metadata.stack_out[selected.position] !== 'Program([I64,I64]->[I64]!{})'
+      || saved.sourceId !== null || saved.programIndex !== null) {
+      throw Error('selected returned target lacks a checked two-root code donor');
+    }
+    const outputs = caller.selected_origin.outputs;
+    if (outputs.length !== 1 || outputs[0].stack_position !== selected.position) {
+      throw Error('selected returned target source occurrence is ambiguous');
+    }
+    const result = this.evaluateSelectedOrigin(caller, selected.inputs).get(selected.position);
+    const inner = result?.left, left = inner?.left, right = inner?.right;
+    const staticResult = result?.right;
+    if (result?.kind !== 'compose' || inner?.kind !== 'compose-dynamic'
+      || left?.kind !== 'quote-i64' || right?.kind !== 'quote-i64'
+      || staticResult?.kind !== 'static-program'
+      || left.operand?.kind !== 'root-i64' || right.operand?.kind !== 'root-i64'
+      || ![left.operand.position, right.operand.position]
+        .every(position => Number.isInteger(position) && position >= 0 && position < 2)) {
+      throw Error('selected returned target has unsupported or unverified source bindings');
+    }
+    const named = caller.selected_origin.programs[caller.selected_origin.named_program_index];
+    const staticIndex = staticResult.program_index;
+    const staticProgram = caller.selected_origin.programs[staticIndex];
+    const additions = staticProgram?.operations;
+    if (named?.source_artifact !== 'definition' || named.effect_mask !== 0
+      || !named.operations.every(operation =>
+        ['dup', 'drop', 'swap', 'quote-i64', 'compose', 'static-program'].includes(operation.kind)
+        && operation.effect_mask === 0)
+      || staticProgram?.source_artifact !== 'definition'
+      || !Number.isInteger(staticIndex) || staticIndex < 0
+      || !Array.isArray(additions) || additions.length !== 3
+      || additions.some((operation, ordinal) =>
+        operation.kind !== 'add' || operation.effect_mask !== 0
+        || operation.table_entry !== staticProgram.entry + ordinal)
+      || caller.program_metadata[staticIndex]?.entry !== staticProgram.entry
+      || !sameSlotJSON(caller.program_metadata[staticIndex]?.stack_in,
+        ['I64', 'I64', 'I64', 'I64'])
+      || !sameSlotJSON(caller.program_metadata[staticIndex]?.stack_out, ['I64'])
+      || caller.program_metadata[staticIndex]?.effect_mask !== 0) {
+      throw Error('selected returned target static add dependency lacks checked code');
+    }
+    const site = (node, kind) => {
+      const matching = named.operations.filter(operation =>
+        operation.kind === kind && operation.node === node.node
+          && operation.table_entry === node.table_entry
+          && operation.effect_mask === 0);
+      if (matching.length !== 1) throw Error('selected returned target source site is ambiguous');
+      return { node: matching[0].node, table_entry: matching[0].table_entry };
+    };
+    const quoteSites = [site(left, 'quote-i64'), site(right, 'quote-i64')];
+    const composeSites = [site(inner, 'compose'), site(result, 'compose')];
+    const staticSiteMatches = named.operations.filter(operation =>
+      operation.kind === 'static-program' && operation.node === staticResult.node
+        && operation.static_program_index === staticIndex
+        && operation.effect_mask === 0);
+    if (staticSiteMatches.length !== 1) {
+      throw Error('selected returned target static dependency site is ambiguous');
+    }
+    const staticSite = { node: staticSiteMatches[0].node,
+      table_entry: staticSiteMatches[0].table_entry };
+    if (quoteSites[0].table_entry === quoteSites[1].table_entry
+      || composeSites[0].node === composeSites[1].node
+      || composeSites[0].table_entry === composeSites[1].table_entry) {
+      throw Error('selected returned target reuses an unverified source occurrence');
+    }
+    const addEntries = additions.map(operation => operation.table_entry);
+    const donor = { coreId: core.id, callerId: caller.id, addEntries };
+    if (!this.compositeCodeIsInstalled(donor)
+      || !addEntries.every(entry => entry >= caller.code_span.start
+        && entry < caller.code_span.start + caller.code_span.length)
+      || saved.moduleIds.size !== new Set([core.id, caller.id]).size
+      || ![core.id, caller.id].every(id => saved.moduleIds.has(id))) {
+      throw Error('selected returned target code donor changed, retired or has extra owner');
+    }
+    const retained = this.savedCells.get(saved.handle);
+    if (!retained || retained.count < 1 || retained.runtime.cell_kind(saved.handle) !== 4) {
+      throw Error('selected returned target owner was released');
+    }
+    this.verifySelectedGraph(retained.runtime, saved.handle, result, caller, selected.inputs);
+    const graph = JSON.parse(this.captureValue(retained.runtime, saved.handle, 32, 4096));
+    const recipe = JSON.parse(this.captureValue(retained.runtime,
+      retained.runtime.cell_c(saved.handle), 32, 4096));
+    const observed = this.observeProgramGraph(retained.runtime, saved.handle);
+    if (observed.moduleIds.size !== 1 || !observed.moduleIds.has(caller.id)) {
+      throw Error('selected returned target graph contains unchecked dynamic code owner');
+    }
+    const capturePositions = [left.operand.position, right.operand.position];
+    const captures = [capturePositions[0], ...capturePositions.slice(1)
+      .filter(position => position !== capturePositions[0])]
+      .map(position => ({ type: 'I64', value: selected.inputs[position].value }));
+    const supplied = claimed?.descriptor?.identity;
+    if (!supplied || typeof supplied.definition_id !== 'string'
+      || !/^anonymous-template-experimental-v2-blake3:[0-9a-f]{64}$/.test(supplied.definition_id)
+      || typeof supplied.program_value_id !== 'string'
+      || !/^anonymous-program-experimental-v2-blake3:[0-9a-f]{64}$/.test(supplied.program_value_id)
+      || !sameSlotJSON(supplied.captures, captures)
+      || !sameSlotJSON(supplied.interface, { input: ['I64', 'I64'],
+        output: ['I64'], effects: [] })) {
+      throw Error('selected returned target identity/captures differ from checked source and graph');
+    }
+    const descriptor = {
+      schema: 'noble-live-slot-composite-code-donors/v1',
+      owner: { token: owner, handle: saved.handle },
+      identity: { definition_id: supplied.definition_id,
+        program_value_id: supplied.program_value_id,
+        captures, interface: { input: ['I64', 'I64'], output: ['I64'], effects: [] },
+        lexical_recursive_owner: null },
+      source: { caller_id: caller.id, source_sha256: caller.source_sha256,
+        selected_source_sha256: caller.selected_origin.selected_source_sha256,
+        definition_identity: caller.selected_origin.definition_identity,
+        source_generation: caller.selected_origin.source_generation,
+        quote_sites: quoteSites, compose_sites: composeSites,
+        static_program_index: staticIndex, static_site: staticSite },
+      donors: {
+        native: { module_id: core.id, artifact_sha256: core.artifactSha256,
+          source_sha256: core.source_sha256, span: { ...core.code_span }, entries: [1, 2] },
+        static: { module_id: caller.id, artifact_sha256: caller.artifactSha256,
+          source_sha256: caller.source_sha256, span: { ...caller.code_span },
+          entries: addEntries },
+      },
+      graph_sha256: sha256(Buffer.from(canonicalSlotJSON(graph))),
+      recipe_sha256: sha256(Buffer.from(canonicalSlotJSON(recipe))),
+    };
+    const manifestSha256 = sha256(Buffer.concat([
+      Buffer.from('noble live-slot composite code donors v1\0'),
+      Buffer.from(canonicalSlotJSON(descriptor)),
+    ]));
+    if (!sameSlotJSON(claimed, { descriptor, manifest_sha256: manifestSha256 })) {
+      throw Error('host and worker independently checked composite code donors disagree');
+    }
+    return { core, caller, donor, manifestSha256, captures,
+      graphSha256: descriptor.graph_sha256,
+      recipeSha256: descriptor.recipe_sha256 };
+  }
+
+  returnedCandidate(saved, checked, manifest) {
+    const { core, caller, donor, manifestSha256, captures, graphSha256,
+      recipeSha256 } = checked;
+    const handle = saved.handle;
+    const runtime = this.savedCells.get(handle)?.runtime;
+    const catalog = this.registry.admitResourceCatalog(caller.host_owner,
+      caller.source_artifact_sha256, caller.resource_catalog, caller.source_schemas);
+    if (!runtime || caller.versionOwned.has(handle)
+      || runtime.retain_target(handle) !== 0) {
+      throw Error('cannot retain exact returned target Program owner');
+    }
+    const identity = manifest.descriptor.identity;
+    let version;
+    try { version = this.registry.admitCandidate({
+      programValueId: identity.program_value_id,
+      definitionId: identity.definition_id,
+      captures: captures.map(value => `${value.type}:${value.value}`),
+      interface: { input: identity.interface.input, output: identity.interface.output,
+        effectCeiling: identity.interface.effects },
+      effects: [],
+      semanticContext: `returned-target:${manifestSha256}:graph:${graphSha256}`,
+      recipeSha256,
+      claim: 'unverified', assumptions: 'unverified', artifactSha256: manifestSha256,
+      resourceCatalog: caller.resource_catalog,
+      sourceArtifactSha256: caller.source_artifact_sha256,
+    }, handle, manifestSha256, catalog); }
+    catch (error) {
+      if (runtime.release_target(handle) !== 0) this.poisoned = true;
+      throw error;
+    }
+    caller.versionOwned.add(handle);
+    core.compositeOwned.add(handle);
+    this.handles.set(handle, { instance:caller.instance, moduleId:caller.id });
+    this.compositeVersions.set(handle, donor);
+    return version;
+  }
+
   captureValue(runtime, root, maxNodes = 64, maxBytes = 1000) {
     const nodes = [];
     const indices = new Map([[root, 0]]);
@@ -543,17 +765,54 @@ class SlotEngine {
     return encoded;
   }
 
+  publishReturned(request, saved) {
+    if (this.active) return slotReply('candidate-not-staged');
+    if (request.program_index !== undefined || !request.target_manifest) {
+      return slotReply('unadmitted-target');
+    }
+    let checked;
+    try { checked = this.returnedManifest(request.owner, saved, request.target_manifest); }
+    catch (error) {
+      return slotReply('unadmitted-target', { diagnostic: String(error) });
+    }
+    const { caller, manifestSha256 } = checked;
+    const handle = saved.handle;
+    let version = this.versions.get(handle);
+    if (version && (version.artifactSha256 !== manifestSha256
+      || version.programValueId !== request.target_manifest.descriptor.identity.program_value_id)) {
+      return slotReply('unadmitted-target',
+        { diagnostic: 'retained returned Program differs from previously staged code donors' });
+    }
+    if (!version) {
+      version = this.returnedCandidate(saved, checked, request.target_manifest);
+      this.versions.set(handle, version);
+    }
+    const record = this.registry.publish({ slotId: request.slot,
+      operation: request.operation,
+      expectedEpoch: slotDecimal(request.expected_epoch, 'expected epoch'),
+      expectedIncarnation: request.expected_incarnation == null ? null
+        : slotDecimal(request.expected_incarnation, 'expected incarnation'),
+      expectedGeneration: request.expected_generation == null ? null
+        : slotDecimal(request.expected_generation, 'expected generation'),
+      interface: request.interface, version });
+    if (record.outcome === 'published') caller.published = true;
+    return slotReply(record.outcome, { epoch: record.epoch.toString(),
+      incarnation: record.incarnation?.toString() ?? null,
+      generation: record.generation?.toString() ?? null });
+  }
+
   publish(request) {
     if (request.owner !== undefined && request.id !== undefined) return slotReply('publication-refused');
     const saved = request.owner === undefined ? null : this.savedOwners.get(request.owner);
-    const module = this.modules.get(saved ? saved.sourceId : request.id);
-    if (!module || module.discardRequested || saved && saved.programIndex === null) {
-      return slotReply('unadmitted-target');
-    }
     if (request.proof_required === true || request.interface?.proofRequired === true) {
       return slotReply('selected-target-evidence-refused', {
-        diagnostic: 'a pinned independent Lean checker receipt bound to checked named identity and exact installed Wasm bytes is unavailable',
+        diagnostic: 'a pinned independent Lean checker receipt bound to exact selected target and installed code donors is unavailable',
       });
+    }
+    if (saved && saved.programIndex === null) return this.publishReturned(request, saved);
+    const module = this.modules.get(saved ? saved.sourceId : request.id);
+    if (!module || module.discardRequested || request.target_manifest !== undefined) {
+      return slotReply('unadmitted-target');
     }
     const index = request.program_index ?? module.target_metadata.root_program_index;
     if (!saved && (!Number.isInteger(index) || index < 0 || index >= module.pinned.length)) {
@@ -632,8 +891,18 @@ class SlotEngine {
     if (!module || !module.versionOwned.has(handle >>> 0)
       || owner.instance.exports.release_target(handle >>> 0) !== 0) return false;
     module.versionOwned.delete(handle >>> 0);
+    const composite = this.compositeVersions.get(handle >>> 0);
+    if (composite) {
+      this.modules.get(composite.coreId)?.compositeOwned.delete(handle >>> 0);
+      this.compositeVersions.delete(handle >>> 0);
+      this.handles.delete(handle >>> 0);
+    }
     this.versions.delete(handle >>> 0);
     this.sweepRetirement(module);
+    if (composite) {
+      const core = this.modules.get(composite.coreId);
+      if (core && core !== module) this.sweepRetirement(core);
+    }
     return true;
   }
 
@@ -662,7 +931,8 @@ class SlotEngine {
 
   sweepRetirement(module) {
     if (this.active || !(module.published || module.discardRequested)
-      || module.versionOwned.size || module.replayOwned.size) return;
+      || module.versionOwned.size || module.compositeOwned.size
+      || module.replayOwned.size) return;
     if (!module.rootsReleased) {
       if (module.instance.exports.release_module_roots() !== 0) {
         throw Error('backend refused module-root retirement');
@@ -683,7 +953,7 @@ class SlotEngine {
     if (!module || module.host_owner !== request.host_owner
       || this.grants.get(`discard:${request.id}`) !== true
       || module.published
-      || module.replayOwned.size || this.active
+      || module.replayOwned.size || module.compositeOwned.size || this.active
       || [...this.savedOwners.values()].some(owner => owner.moduleIds.has(module.id))) {
       return slotReply('discard-refused');
     }
@@ -708,6 +978,8 @@ class SlotEngine {
     const key = `${span.start}:${span.length}:${span.generation}`;
     const module = this.retiring.get(key);
     if (!module || !module.rootsReleased || module.versionOwned.size
+      || module.compositeOwned.size
+      || [...this.savedOwners.values()].some(owner => owner.moduleIds.has(module.id))
       || module.code_span.start !== span.start || module.code_span.length !== span.length
       || module.code_span.generation !== span.generation) {
       return slotReply('code-retirement-refused');
@@ -851,13 +1123,17 @@ class SlotEngine {
           break;
         case 'compose': {
           const right = pop('program'), left = pop('program');
-          if (right.result.kind !== 'static-program'
-            || !['quote-i64', 'compose'].includes(left.result.kind)) {
+          const dynamic = left.result.kind === 'quote-i64'
+            && right.result.kind === 'quote-i64'
+            && left.result.operand.kind === 'root-i64'
+            && right.result.operand.kind === 'root-i64';
+          if (!dynamic && (right.result.kind !== 'static-program'
+            || !['quote-i64', 'compose', 'compose-dynamic'].includes(left.result.kind))) {
             throw Error('selected compose has unsupported operand lineage');
           }
-          stack.push({ kind: 'program', result: { kind: 'compose', node: op.node,
-            table_entry: op.table_entry, left: left.result, right: {
-              kind: 'static-program', node: right.result.node,
+          stack.push({ kind: 'program', result: { kind: dynamic ? 'compose-dynamic' : 'compose',
+            node: op.node, table_entry: op.table_entry, left: left.result,
+            right: dynamic ? right.result : { kind: 'static-program', node: right.result.node,
               program_index: right.result.program_index } }, op });
           break;
         }
@@ -962,7 +1238,9 @@ class SlotEngine {
           module.selected_origin.definition_identity);
         return;
       }
-      if (description.kind !== 'compose') throw Error('unsupported selected output graph');
+      if (!['compose', 'compose-dynamic'].includes(description.kind)) {
+        throw Error('unsupported selected output graph');
+      }
       cell(id, 4);
       const composeOp = module.selected_origin.programs[module.selected_origin.named_program_index]
         .operations.find(row => row.table_entry === description.table_entry && row.node === description.node);
@@ -999,6 +1277,9 @@ class SlotEngine {
     }
     if (this.nextSavedOwner === Number.MAX_SAFE_INTEGER) throw Error('saved Program owner exhausted');
     const graph = this.observeProgramGraph(runtime, handle);
+    const aliasResult = selectedResult?.kind === 'compose'
+      && selectedResult.left?.kind === 'compose-dynamic';
+    if (aliasResult && this.nativeCoreOwner) graph.moduleIds.add(this.nativeCoreOwner.id);
     const prior = this.savedCells.get(handle);
     if (prior && prior.runtime !== runtime) {
       this.poisoned = true;
@@ -1027,7 +1308,8 @@ class SlotEngine {
       } else {
         observedCaptures = ['cell_a', 'cell_b'].flatMap(field => {
           const child = runtime[field](handle) >>> 0;
-          return child ? [{ field, value: JSON.parse(this.captureValue(runtime, child)) }] : [];
+          return child ? [{ field, value: JSON.parse(this.captureValue(runtime, child,
+            64, aliasResult ? 4096 : 1000)) }] : [];
         });
       }
     }
@@ -1041,7 +1323,9 @@ class SlotEngine {
     const token = `program-${++this.nextSavedOwner}`;
     this.savedOwners.set(token, { handle, moduleIds: graph.moduleIds, registryOwner,
       sourceId: programIndex < 0 ? null : module.id,
-      programIndex: programIndex < 0 ? null : programIndex });
+      programIndex: programIndex < 0 ? null : programIndex,
+      selected: aliasResult ? { callerId: this.active.module.id,
+        position:index, inputs:rootInputs.map(input => ({ ...input })) } : null });
     return { kind: 4, owner: token, source_id: programIndex < 0 ? null : module.id,
       program_index: programIndex < 0 ? null : programIndex,
       ...(selectedResult === null ? {} : { verified_origin: {
