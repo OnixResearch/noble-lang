@@ -12,6 +12,11 @@ impl super::World {
         reason = "Owner: noble-maintainers; the two private call sites pair fixed profile and ABI constants in an exhaustive Profile match, in wire order. Separate borrowed parameters avoid Aeneas's unsupported nested-borrow join for a branch-selected tuple without copying either string."
     )]
     fn context(&self, profile: &str, abi: &str) -> alloc::vec::Vec<u8> {
+        let worker_schema: &[u8] = if self.worker_program_effect.is_some() {
+            b"worker-program-v2:Program([I64]->[I64]!{test.emit})"
+        } else {
+            b"worker-program-v2:Program([I64]->[I64]!{})"
+        };
         let capacity_bytes = profile
             .len()
             .saturating_add(super::BINDING_SCHEMA.len())
@@ -20,7 +25,11 @@ impl super::World {
             } else {
                 0
             })
-            .saturating_add(if self.worker_program_kind.is_some() { 48 } else { 0 })
+            .saturating_add(if self.worker_program_kind.is_some() {
+                worker_schema.len().saturating_add(5)
+            } else {
+                0
+            })
             .saturating_add(abi.len())
             .saturating_add(self.identity.len())
             .saturating_add(self.wit.len())
@@ -35,7 +44,7 @@ impl super::World {
             key.push(0);
         }
         if let Some(kind) = self.worker_program_kind {
-            key.extend_from_slice(b"worker-program-v2:Program([I64]->[I64]!{})");
+            key.extend_from_slice(worker_schema);
             key.extend_from_slice(&kind.0.to_le_bytes());
             key.push(0);
         }

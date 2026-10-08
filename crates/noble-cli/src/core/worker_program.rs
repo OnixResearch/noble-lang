@@ -89,6 +89,7 @@ pub(crate) struct Handle {
 
 pub(crate) struct Store {
     instance: u64,
+    host_policy: Option<super::worker_program_guest::WorkerHostPolicy>,
     compiled: Compiled,
     checked_interface: noble_contracts::source::CheckedProgramInterface,
     source: Vec<u8>,
@@ -108,6 +109,20 @@ impl Store {
     /// No runtime builder below calls a source compiler or executes guest code.
     pub(crate) fn prepare(source: &[u8], name: &str, input: &[Ty], work: usize)
         -> Result<(Self, Handle), Refusal> {
+        Self::prepare_selected(source, name, input, None, work)
+    }
+
+    /// Only a host embedder may opt in to a checked, bound operation. A typed
+    /// source effect and caller-supplied package are never host policy.
+    pub(crate) fn prepare_with_policy(source: &[u8], name: &str, input: &[Ty],
+        policy: super::worker_program_guest::WorkerHostPolicy, work: usize)
+        -> Result<(Self, Handle), Refusal> {
+        Self::prepare_selected(source, name, input, Some(policy), work)
+    }
+
+    fn prepare_selected(source: &[u8], name: &str, input: &[Ty],
+        policy: Option<super::worker_program_guest::WorkerHostPolicy>, work: usize)
+        -> Result<(Self, Handle), Refusal> {
         if source.len() > SOURCE_LIMITS.bytes as usize || input.len() > 64 || name.len() > 128
             || !name.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'_') {
             return Err(Refusal::Exhausted);
@@ -121,15 +136,26 @@ impl Store {
         let reserved = usize::try_from(stage_work).map_err(|_| Refusal::Exhausted)?
             .checked_mul(3).ok_or(Refusal::Exhausted)?;
         let mut work_left = work.checked_sub(reserved).ok_or(Refusal::Exhausted)?;
-        let session = noble_contracts::source::ModuleSession::new(&[])
+        let bindings = policy.as_ref().map_or(&[][..], |selection|
+            std::slice::from_ref(selection.binding()));
+        let session = noble_contracts::source::ModuleSession::new(bindings)
             .map_err(source_refusal)?;
         let module = session.prepare(source, &[], limits).map_err(source_refusal)?;
         if module.kind() != noble_contracts::source::ModuleKind::Module
-            || module.proof_obligations().is_some() || !module.bindings().is_empty() {
+            || module.proof_obligations().is_some()
+            || (policy.is_none() && !module.bindings().is_empty())
+            || policy.as_ref().is_some_and(|selected|
+                module.bindings() != std::slice::from_ref(selected.binding())) {
             return Err(Refusal::Unsupported);
         }
-        let owner = module.checked_program_owner(name).ok_or(Refusal::Invalid)?;
-        let closure = module.checked_program_closure(name).ok_or(Refusal::Invalid)?;
+        let owner = match &policy {
+            Some(selected) => module.checked_program_owner_for_binding(name, selected.binding()),
+            None => module.checked_program_owner(name),
+        }.ok_or(Refusal::Invalid)?;
+        let closure = match &policy {
+            Some(selected) => module.checked_program_closure_for_binding(name, selected.binding()),
+            None => module.checked_program_closure(name),
+        }.ok_or(Refusal::Invalid)?;
         if closure.is_empty() { return Err(Refusal::Invalid) }
         work_left = work_left.checked_sub(source.len())
             .and_then(|left| left.checked_sub(closure.len().checked_mul(8)?))
@@ -137,16 +163,29 @@ impl Store {
         let (_, module_name, version) = module.resolved_module().ok_or(Refusal::Invalid)?;
         let (session, committed) = session.commit(module);
         committed.map_err(source_refusal)?;
+        if policy.as_ref().is_some_and(|selected| !selected.matches_source(
+            source, owner.definition_identity(), session.generation())) {
+            return Err(Refusal::Invalid);
+        }
         let invocation = format!("{module_name}@{version}.{name}");
         let prepared = session.prepare(invocation.as_bytes(), input, limits)
             .map_err(source_refusal)?;
-        let checked_interface = prepared.checked_program_interface(&owner)
-            .ok_or(Refusal::Invalid)?;
+        let checked_interface = match &policy {
+            Some(selected) => prepared.checked_program_interface_for_binding(
+                &owner, selected.binding()),
+            None => prepared.checked_program_interface(&owner),
+        }.ok_or(Refusal::Invalid)?;
         let submission = prepared.submission().ok_or(Refusal::Invalid)?;
         if submission.request.expected.stack_in != input
-            || !submission.request.expected.allowed_effects.is_empty()
+            || match &policy {
+                Some(selected) => submission.request.expected.allowed_effects.as_slice()
+                    != selected.binding().effects.as_slice(),
+                None => !submission.request.expected.allowed_effects.is_empty(),
+            }
             || submission.definitions.iter().filter(|definition|
-                definition.identity == owner.definition_identity()
+                definition.definition.0 == owner.definition_slot()
+                && definition.source_identity == owner.definition_identity()
+                && definition.owner_slot == Some(owner.definition_slot())
                 && submission.environment.definition_owners.get(definition.definition.0 as usize)
                     == Some(&Some(owner.module_identity()))).count() != 1 {
             return Err(Refusal::Invalid);
@@ -162,15 +201,25 @@ impl Store {
         let mut text_aliases = Vec::new();
         let mut root = None;
         for dependency in &closure {
+            let mut source_definitions = submission.definitions.iter().filter(|definition|
+                definition.definition.0 == dependency.definition_slot()
+                && definition.source_identity == dependency.definition_identity()
+                && definition.owner_slot == Some(dependency.definition_slot())
+                && submission.environment.definition_owners.get(definition.definition.0 as usize)
+                    == Some(&Some(owner.module_identity())));
+            let (Some(source_definition), None) =
+                (source_definitions.next(), source_definitions.next())
+                else { return Err(Refusal::Invalid) };
             let mut named = compiled.named_targets().iter().filter(|target|
-                target.definition.0 == dependency.definition_slot()
-                && target.definition_identity == dependency.definition_identity()
+                target.definition == source_definition.definition
+                && target.definition_identity == source_definition.identity
                 && submission.environment.definition_owners.get(target.definition.0 as usize)
                     == Some(&Some(owner.module_identity())));
             let (Some(target), None) = (named.next(), named.next())
                 else { return Err(Refusal::Invalid) };
             if target.stack_in.len() > 64 || target.stack_out.len() > 64
-                || !target.effects.is_empty() || target.checked_recipe.is_empty() {
+                || !target.effects.is_subset_of(&submission.request.expected.allowed_effects)
+                || target.checked_recipe.is_empty() {
                 return Err(Refusal::Invalid);
             }
             let index = nodes.len();
@@ -186,10 +235,6 @@ impl Store {
             owners.push(Owner { module_id: dependency.module_identity(),
                 version: dependency.module_version(), ordinal: dependency.definition_ordinal(),
                 identity: dependency.definition_identity() });
-            let source_definition = submission.definitions.iter()
-                .find(|definition| definition.definition == target.definition
-                    && definition.identity == target.definition_identity)
-                .ok_or(Refusal::Invalid)?;
             for text in &source_definition.body.texts {
                 let node = usize::try_from(text.node.0).map_err(|_| Refusal::Exhausted)?;
                 if text_aliases.len() >= GRAPH_LIMIT || text.bytes.len() > SOURCE_LIMITS.bytes as usize
@@ -216,7 +261,7 @@ impl Store {
         let root = root.ok_or(Refusal::Invalid)?;
         let instance = NEXT_INSTANCE.fetch_update(Ordering::Relaxed, Ordering::Relaxed,
             |next| next.checked_add(1)).map_err(|_| Refusal::Exhausted)?;
-        let store = Self { instance,
+        let store = Self { instance, host_policy: policy,
             checked_interface,
             source: source.to_vec(), root_name: name.to_owned(),
             root_owner: Owner { module_id: owner.module_identity(),
@@ -232,6 +277,9 @@ impl Store {
     pub(crate) fn compiled(&self) -> &Compiled { &self.compiled }
     pub(crate) fn instance_id(&self) -> u64 { self.instance }
     pub(crate) fn source(&self) -> &[u8] { &self.source }
+    pub(crate) fn host_policy(&self) -> Option<&super::worker_program_guest::WorkerHostPolicy> {
+        self.host_policy.as_ref()
+    }
     pub(crate) fn text_aliases(&self) -> &[CheckedTextAlias] { &self.text_aliases }
 
     fn capture_wire(&self) -> Result<Value, Refusal> {
@@ -280,7 +328,10 @@ impl Store {
         let bytes = include_bytes!("../../../noble-wasm/wit/worker-program.wit");
         let world = noble_contracts::component::World::parse(bytes, "guest", SOURCE_LIMITS)
             .map_err(|_| Refusal::Unsupported)?;
-        world.select_worker_program(&self.checked_interface)
+        match &self.host_policy {
+            Some(_) => world.select_worker_program_for_test_emit(&self.checked_interface),
+            None => world.select_worker_program(&self.checked_interface),
+        }
             .map_err(|_| Refusal::Invalid)
     }
 
@@ -291,14 +342,6 @@ impl Store {
         if self.nodes.get(handle.node).is_none_or(|node| node.original != handle.witness) {
             return Err(Refusal::Unsupported);
         }
-        let source = std::str::from_utf8(&self.source).map_err(|_| Refusal::Unsupported)?;
-        let mut definitions = Vec::with_capacity(self.closure.len());
-        for (index, owner) in self.closure.iter().enumerate() {
-            let named = self.named(Handle { instance: self.instance, node: index, witness: index })
-                .ok_or(Refusal::Invalid)?;
-            definitions.push(json!({"owner":owner.wire(),
-                "recipe_sha256":crate::workflow::intrinsic::sha256(&named.checked_recipe)}));
-        }
         let witness = self.witnesses.get(handle.witness).ok_or(Refusal::Invalid)?;
         if witness.input != [Ty::I64] || witness.output != [Ty::I64]
             || !witness.effects.is_empty() {
@@ -307,6 +350,14 @@ impl Store {
         if self.nodes.iter().any(|node| self.witnesses.get(node.original)
             .is_none_or(|original| !original.effects.is_empty())) {
             return Err(Refusal::Unsupported);
+        }
+        let source = std::str::from_utf8(&self.source).map_err(|_| Refusal::Unsupported)?;
+        let mut definitions = Vec::with_capacity(self.closure.len());
+        for (index, owner) in self.closure.iter().enumerate() {
+            let named = self.named(Handle { instance: self.instance, node: index, witness: index })
+                .ok_or(Refusal::Invalid)?;
+            definitions.push(json!({"owner":owner.wire(),
+                "recipe_sha256":crate::workflow::intrinsic::sha256(&named.checked_recipe)}));
         }
         let mut graph = Vec::with_capacity(self.nodes.len());
         for (index, node) in self.nodes.iter().enumerate() {
@@ -492,6 +543,11 @@ impl Store {
         }
     }
 
+    pub(crate) fn source_owner_identity(&self, handle: Handle) -> Option<u64> {
+        self.named(handle)?;
+        Some(self.owners.get(handle.node)?.identity)
+    }
+
     pub(crate) fn interface(&self, handle: Handle) -> Option<(&[Ty], &[Ty], &EffSet)> {
         if handle.instance != self.instance { return None }
         self.nodes.get(handle.node)?;
@@ -652,7 +708,7 @@ fn import(arguments: &[std::ffi::OsString]) -> Result<Value, (&'static str, &'st
         return Err(("invalid-input", "usage: noble worker program import PACKAGE --effect-ceiling pure"));
     }
     if arguments[5] != "pure" {
-        return Err(("unsupported", "unissued Worker host effect contract"));
+        return Err(("unsupported", "Worker host effect policy unavailable to CLI"));
     }
     let package = super::worker_typed::read_bounded_regular_file(
         std::path::Path::new(&arguments[3]), PACKAGE_BYTES)
@@ -714,13 +770,19 @@ fn guest_report(store: &mut Store, root: Handle, operand: i64, origin: &'static 
                 },
         })?;
     let guest_requests = observed.admits.checked_add(observed.invokes)
+        .and_then(|count| count.checked_add(observed.effect_requests))
+        .and_then(|count| count.checked_add(observed.code_export_requests))
         .ok_or(("internal-failure", "guest request counter overflow"))?;
     Ok(json!({"schema":"noble-worker-program-guest/v2",
         "stage":"guest-execution", "outcome":"normal",
         "origin":origin,"source_sha256":crate::workflow::intrinsic::sha256(store.source()),
         "operand":operand,"value":observed.value,"guest_requests":guest_requests,
         "program_admissions":observed.admits,"program_invocations":observed.invokes,
-        "protected_operations":0,"live_owners":observed.live_owners,
+        "effect_requests":observed.effect_requests,
+        "code_export_requests":observed.code_export_requests,
+        "code_export_denials":observed.code_export_denials,
+        "protected_operations":observed.protected_operations,
+        "live_owners":observed.live_owners,
         "executable_guest_installed":true}))
 }
 
@@ -741,7 +803,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         }
         let name = arguments[5].to_str().ok_or(("invalid-input", "invalid named Program"))?;
         if arguments[7] != "pure" {
-            return Err(("unsupported", "unissued Worker host effect contract"));
+            return Err(("unsupported", "Worker host effect policy unavailable to CLI"));
         }
         let effects = EffSet::empty();
         let source = super::worker_typed::read_bounded_regular_file(

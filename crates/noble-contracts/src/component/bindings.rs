@@ -257,7 +257,10 @@ fn pattern(ty: super::Type, world: &super::World) -> noble_kernel::shapes::Patte
             noble_kernel::shapes::Pattern::program(
                 alloc::vec![noble_kernel::shapes::Pattern::I64],
                 alloc::vec![noble_kernel::shapes::Pattern::I64],
-                alloc::vec![])
+                match world.worker_program_effect {
+                    Some(effect) => alloc::vec![noble_kernel::shapes::EffectSlot::Effect(effect)],
+                    None => alloc::vec![],
+                })
         }
         super::Type::Own(kind) | super::Type::Borrow(kind) => {
             noble_kernel::shapes::Pattern::Resource(kind)

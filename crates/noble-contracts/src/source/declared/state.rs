@@ -96,9 +96,9 @@ pub struct CheckedProgramOwner {
     definition_slot: u32,
 }
 
-/// Source-checked, owner-bound pure Program interface for the separately
-/// selected Worker WIT resource mapping. A type token is not an installed
-/// guest cell, export authority or portable package acceptance.
+/// Source-checked, owner-bound Program interface for a separately selected
+/// Worker WIT resource mapping. A type token is not an installed guest cell,
+/// host-operation authority or portable package acceptance.
 pub struct CheckedProgramInterface {
     input: alloc::vec::Vec<noble_kernel::types::Ty>,
     output: alloc::vec::Vec<noble_kernel::types::Ty>,
@@ -110,6 +110,12 @@ impl CheckedProgramInterface {
         self.input.as_slice() == [noble_kernel::types::Ty::I64]
             && self.output.as_slice() == [noble_kernel::types::Ty::I64]
             && self.effects.is_empty()
+    }
+
+    pub fn is_test_emit_i64_endomorphism(&self) -> bool {
+        self.input.as_slice() == [noble_kernel::types::Ty::I64]
+            && self.output.as_slice() == [noble_kernel::types::Ty::I64]
+            && self.effects.as_slice() == [noble_kernel::contracts::TEST_EMIT]
     }
 
     pub fn ty(&self) -> noble_kernel::types::Ty {
@@ -224,6 +230,25 @@ impl ModulePrepared {
             return None;
         }
         let module = self.staged.modules.last()?;
+        self.checked_program_owner_source(module, name)
+    }
+
+    /// Host-selected source provenance, not permission to invoke the bound
+    /// operation. The binding must be the exact independently supplied row.
+    pub fn checked_program_owner_for_binding(
+        &self, name: &str, binding: &super::BoundOperation,
+    ) -> Option<CheckedProgramOwner> {
+        if self.kind != ModuleKind::Module || self.pending.is_some() {
+            return None;
+        }
+        let module = self.staged.modules.last()?;
+        self.checked_program_bound_closure(module, name, binding)
+            .map(|(owner, _)| owner)
+    }
+
+    fn checked_program_owner_source(
+        &self, module: &super::Module, name: &str,
+    ) -> Option<CheckedProgramOwner> {
         let ordinal = module.definition_spans.iter()
             .position(|definition| definition.name == name)?;
         let exported = module.exports.iter().find(|entry| entry.name == name)?;
@@ -252,6 +277,77 @@ impl ModulePrepared {
     pub fn checked_program_closure(&self, root: &str) -> Option<alloc::vec::Vec<CheckedProgramOwner>> {
         let owner = self.checked_program_owner(root)?;
         let module = self.staged.modules.last()?;
+        self.checked_program_closure_source(module, &owner)
+    }
+
+    /// Only a closed source graph that actually invokes the exact selected
+    /// host operation can describe a bound Worker Program.
+    pub fn checked_program_closure_for_binding(
+        &self, root: &str, binding: &super::BoundOperation,
+    ) -> Option<alloc::vec::Vec<CheckedProgramOwner>> {
+        if self.kind != ModuleKind::Module || self.pending.is_some() {
+            return None;
+        }
+        let module = self.staged.modules.last()?;
+        self.checked_program_bound_closure(module, root, binding)
+            .map(|(_, closure)| closure)
+    }
+
+    fn checked_program_bound_closure(
+        &self, module: &super::Module, root: &str, binding: &super::BoundOperation,
+    ) -> Option<(CheckedProgramOwner, alloc::vec::Vec<CheckedProgramOwner>)> {
+        let adapter = self.checked_bound_adapter(module, binding)?;
+        let owner = self.checked_program_owner_source(module, root)?;
+        let closure = self.checked_program_closure_source(module, &owner)?;
+        self.closure_invokes_bound(&closure, adapter.definition)
+            .then_some((owner, closure))
+    }
+
+    fn closure_invokes_bound(
+        &self, closure: &[CheckedProgramOwner], bound: noble_kernel::contracts::Definition,
+    ) -> bool {
+        closure.iter().any(|member| {
+            usize::try_from(member.definition_slot).ok()
+                .and_then(|slot| self.staged.source.definitions.get(slot))
+                .is_some_and(|definition| definition.tree.nodes.iter().any(|node| {
+                    matches!(node.kind,
+                        crate::source::Kind::Call(crate::source::Target::Builtin(target))
+                            if target == bound.0)
+                }))
+        })
+    }
+
+    fn checked_bound_adapter(
+        &self, module: &super::Module, binding: &super::BoundOperation,
+    ) -> Option<&noble_kernel::contracts::BoundAdapter> {
+        if self.pending.is_some()
+            || self.staged.bindings.as_slice() != core::slice::from_ref(binding)
+            || binding.operation != "test.emit"
+            || module.name != binding.module_name
+            || module.version != binding.module_version
+            || module.adapter_slot != Some(binding.adapter_slot) {
+            return None;
+        }
+        let environment = &self.staged.source.declared.as_ref()?.environment;
+        let mut matching = environment.bound_adapters.iter().filter(|adapter| {
+            adapter.adapter_slot == binding.adapter_slot
+                && adapter.adapter_identity == binding.adapter_identity
+                && adapter.input == binding.input
+                && adapter.output == binding.output
+                && adapter.effects.as_slice() == binding.effects.as_slice()
+                && environment.definition_owners.get(adapter.definition.0 as usize)
+                    == Some(&Some(module.identity))
+                && matches!(environment.kind(adapter.definition),
+                    Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
+                        if *slot == binding.adapter_slot)
+        });
+        let adapter = matching.next()?;
+        matching.next().is_none().then_some(adapter)
+    }
+
+    fn checked_program_closure_source(
+        &self, module: &super::Module, owner: &CheckedProgramOwner,
+    ) -> Option<alloc::vec::Vec<CheckedProgramOwner>> {
         if module.definition_spans.is_empty()
             || module.definition_spans.len() > super::MODULE_CAP {
             return None;
@@ -541,36 +637,98 @@ impl ModulePrepared {
         &self,
         owner: &CheckedProgramOwner,
     ) -> Option<CheckedProgramInterface> {
-        if self.kind != ModuleKind::Expression || self.pending.is_some()
-            || !self.staged.bindings.is_empty() {
+        if !self.staged.bindings.is_empty() {
             return None;
         }
-        let submission = self.submission.as_ref()?;
+        let (submission, definition, _) = self.checked_program_invocation(owner)?;
         if !submission.request.expected.allowed_effects.is_empty()
-            || submission.request.expected.stack_out != self.output {
+            || !definition.expected.allowed_effects.is_empty()
+            || definition.identity != owner.definition_identity {
             return None;
         }
-        let matched = submission.definitions.iter().filter(|definition|
-            definition.definition.0 == owner.definition_slot
-                && definition.identity == owner.definition_identity
-                && submission.environment.definition_owners
-                    .get(definition.definition.0 as usize) == Some(&Some(owner.module_identity)))
-            .count();
-        // This token describes the named Program itself, not an arbitrary
-        // expression that happens to call that name once before doing other
-        // work. Only a single exact root invocation has that provenance.
-        let [root] = submission.body.candidate.body.as_slice() else { return None };
-        let root = usize::try_from(root.0).ok()?;
-        if matched != 1 || !matches!(
-            submission.body.candidate.nodes.get(root),
-            Some(noble_kernel::untrusted::Node::Invocation { def, .. })
-                if def.0 == owner.definition_slot
-        ) { return None }
         Some(CheckedProgramInterface {
             input: submission.request.expected.stack_in.clone(),
             output: self.output.clone(),
             effects: noble_kernel::types::EffSet::empty(),
         })
+    }
+
+    /// Source-checked interface for an independently selected `test.emit`
+    /// binding. This type token does not authorize a host operation.
+    pub fn checked_program_interface_for_binding(
+        &self, owner: &CheckedProgramOwner, binding: &super::BoundOperation,
+    ) -> Option<CheckedProgramInterface> {
+        let (submission, definition, module) = self.checked_program_invocation(owner)?;
+        let adapter = self.checked_bound_adapter(module, binding)?;
+        let closure = self.checked_program_closure_source(module, owner)?;
+        if !self.closure_invokes_bound(&closure, adapter.definition)
+            || submission.request.expected.allowed_effects != adapter.effects
+            || definition.expected.allowed_effects != adapter.effects
+            || submission.environment.bound_adapters.iter().filter(|actual|
+                actual.definition == adapter.definition
+                    && actual.adapter_identity == binding.adapter_identity
+                    && actual.adapter_slot == binding.adapter_slot
+                    && actual.input == binding.input
+                    && actual.output == binding.output
+                    && actual.effects == adapter.effects
+                    && matches!(submission.environment.kind(actual.definition),
+                        Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
+                            if *slot == binding.adapter_slot))
+                .count() != 1 {
+            return None;
+        }
+        Some(CheckedProgramInterface {
+            input: submission.request.expected.stack_in.clone(),
+            output: self.output.clone(),
+            effects: adapter.effects.clone(),
+        })
+    }
+
+    fn checked_program_invocation(
+        &self, owner: &CheckedProgramOwner,
+    ) -> Option<(
+        &noble_kernel::execution::Submission,
+        &noble_kernel::execution::Definition,
+        &super::Module,
+    )> {
+        if self.kind != ModuleKind::Expression || self.pending.is_some() {
+            return None;
+        }
+        let module = self.staged.modules.iter().find(|module|
+            module.identity == owner.module_identity && module.version == owner.module_version)?;
+        let ordinal = usize::try_from(owner.definition_ordinal).ok()?;
+        let entry = module.definition_spans.get(ordinal)?;
+        let source = self.checked_program_owner_source(module, &entry.name)?;
+        if source.module_identity != owner.module_identity
+            || source.module_version != owner.module_version
+            || source.definition_ordinal != owner.definition_ordinal
+            || source.definition_identity != owner.definition_identity
+            || source.definition_slot != owner.definition_slot {
+            return None;
+        }
+        let submission = self.submission.as_ref()?;
+        if submission.request.expected.stack_out != self.output {
+            return None;
+        }
+        let mut matched = submission.definitions.iter().filter(|definition|
+            definition.definition.0 == owner.definition_slot
+                && definition.source_identity == owner.definition_identity
+                && definition.owner_slot == Some(owner.definition_slot)
+                && submission.environment.definition_owners
+                    .get(definition.definition.0 as usize) == Some(&Some(owner.module_identity)));
+        let definition = matched.next()?;
+        if matched.next().is_some() { return None }
+        // This token describes the named Program itself, not an arbitrary
+        // expression that happens to call that name once before doing other
+        // work. Only a single exact root invocation has that provenance.
+        let [root] = submission.body.candidate.body.as_slice() else { return None };
+        let root = usize::try_from(root.0).ok()?;
+        if !matches!(
+            submission.body.candidate.nodes.get(root),
+            Some(noble_kernel::untrusted::Node::Invocation { def, .. })
+                if def.0 == owner.definition_slot
+        ) { return None }
+        Some((submission, definition, module))
     }
 
     pub const fn kind(&self) -> ModuleKind {

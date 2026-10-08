@@ -4,6 +4,7 @@ interface programs {
   resource program;
   admit: func() -> own<program>;
   invoke: func(value: own<program>, operand: s64) -> s64;
+  request-code-export: func(destination: string) -> bool;
 }
 
 world guest {

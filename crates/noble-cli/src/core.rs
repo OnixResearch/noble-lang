@@ -70,8 +70,8 @@ pub const USAGE: &str = "usage:
   and checked recipe; Text aliases require fresh installed-cell rechecking.
   Import is inert and is not an executable guest. Export is unavailable through
   CLI until an authenticated host-owned grant exists; file JSON cannot grant it.
-  A test.emit package/ceiling is refused: no authenticated Worker effect issuer
-  or bound adapter is connected to this guest.
+  A test.emit package/ceiling is refused: the host-only bound adapter and
+  revocable effect policy require an explicit embedder, never a CLI argument.
   noble worker typed PACKAGE --schema SCHEMA --state STATE_JSON --event EVENT_JSON
   Typed worker: host-select a source-checked WorkerData@1 module and two canonical
   nominal values; check one exact local no-capture package and exported transition
