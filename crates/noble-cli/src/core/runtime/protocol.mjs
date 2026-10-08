@@ -127,6 +127,13 @@ async function protocol(config) {
             } catch (error) { emit('internal-failure', reportError(error)); return; }
             continue;
           }
+          if (header === 'release-observed-roots') {
+            try {
+              const report = engine.releaseObservedRoots();
+              emit(report.outcome, report);
+            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            continue;
+          }
           const liveCode = /^(register-live-code|inspect-live-code|retire-live-code) ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
           if (liveCode) {
             try {

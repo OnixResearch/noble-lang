@@ -33,7 +33,9 @@ pub(crate) const EVIDENCE_LIMITS: noble_contracts::Limits = noble_contracts::Lim
 
 pub const USAGE: &str = "usage:
   noble live repl [--source ABS_PATH] [--engine v8|interpreter] [--self-edit NAME --expect-generation N] [--verify-source-before-execute] [--watch] [--declared-modules --bindings MANIFEST] [--max-retained-generations N]
-  live repl: newline-delimited source, :reload ABS_PATH, or :grant-self-edit NAME N; interpreter is unavailable
+  live repl: newline-delimited source, :reload ABS_PATH, :grant-self-edit NAME N,
+    or :release-observed-roots (relinquishes all previously reported raw cell handles);
+    interpreter is unavailable
   noble live watch --source ABS_PATH [--engine v8] [--declared-modules --bindings MANIFEST] [--max-retained-generations N]
   live watch: Linux inotify complete-save rename + checked file ACK; in-place writes have no watch ACK
   noble live slot --engine v8 --authority ABS_PATH

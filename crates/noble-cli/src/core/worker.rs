@@ -344,6 +344,13 @@ impl Engine {
         self.reply()
     }
 
+    pub fn release_observed_roots(
+        &mut self,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"release-observed-roots\n"));
+        self.reply()
+    }
+
     pub fn retire_live_code(
         &mut self,
         span: noble_wasm::source::CodeSpan,
