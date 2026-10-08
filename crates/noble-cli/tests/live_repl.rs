@@ -254,7 +254,7 @@ impl Drop for LiveChild {
 fn live_ack(report: &Value, expected_stack: &[&str]) -> (u64, String) {
     assert_eq!(text_field(report, "schema"), "noble-live-report/v1");
     assert_eq!(text_field(report, "stage"), "wasm-live", "{report}");
-    assert_eq!(text_field(report, "outcome"), "reload-committed");
+    assert_eq!(text_field(report, "outcome"), "reload-committed", "{report}");
     assert_eq!(number_field(report, "guest_requests"), 0);
     assert_eq!(number_field(report, "protected_operations"), 0);
     assert_stack(report, expected_stack);
