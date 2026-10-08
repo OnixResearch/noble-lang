@@ -66,7 +66,7 @@ fn lower(checked: &Value) -> Result<(String, String), output::Failure> {
     let initial_memory = digest(state, "memory_sha256")?;
     let installed_storage = &state["installed_storage_probe"];
     if installed_storage["schema"] != "noble-live-slot-installed-storage-one-state/v1"
-        || installed_storage["scope"] != "exact selected storage reads and stale-epoch negatives only; writes/refcounts/future calls unproved"
+        || installed_storage["scope"] != "exact selected storage/child/metadata reads and stale-epoch negatives only; writes/refcounts/future calls unproved"
         || installed_storage["native_module_sha256"] != native
         || installed_storage["static_module_sha256"] != static_sha
         || installed_storage["selected_handles"].as_array()
