@@ -1,6 +1,7 @@
 mod namespace;
 mod prepare;
 mod proof;
+mod rebind;
 mod register;
 
 macro_rules! present {
@@ -46,6 +47,22 @@ pub struct ModulePrepared {
     /// Only a signed executable root retains its original expression bytes;
     /// the module bodies themselves are retained in their module sources.
     signed_expression: alloc::vec::Vec<u8>,
+    /// Some(empty) proves a genuine old-to-new import alias rebind with no
+    /// current outside dependents. None is an initial import or other unit.
+    rebuilt_import_definitions: Option<alloc::vec::Vec<RebuiltImportDefinition>>,
+}
+
+#[derive(Clone, Debug)]
+pub struct RebuiltImportDefinition {
+    name: alloc::string::String,
+    previous_identity: u64,
+    new_identity: u64,
+}
+
+impl RebuiltImportDefinition {
+    pub fn name(&self) -> &str { &self.name }
+    pub const fn previous_identity(&self) -> u64 { self.previous_identity }
+    pub const fn new_identity(&self) -> u64 { self.new_identity }
 }
 
 /// Borrowed, unforgeable-from-DTO ingress for signed source rederivation.
@@ -272,8 +289,14 @@ impl ModulePrepared {
                 return Err(super::error(crate::source::Stage::Check,
                     "signed definition has no exact specialized owner"));
             }
-            let (original, name) = attempt!(crate::source::parsing::parse_declared(bytes, &mut meter)
+            let (mut original, name) = attempt!(crate::source::parsing::parse_declared(bytes, &mut meter)
                 .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
+            if self.staged.source.declared.as_ref()
+                .is_some_and(|context| context.declared_text)
+            {
+                attempt!(crate::source::locals::lower(&mut original, &mut meter)
+                    .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
+            }
             if name.as_deref() != Some(definition.name.as_str())
                 || original.body != definition.tree.body
                 || original.nodes.len() != definition.tree.nodes.len()
@@ -300,6 +323,9 @@ impl ModulePrepared {
                     }
                     (crate::source::Kind::Call(_), crate::source::Kind::Word(word))
                         if word != definition.name.as_bytes() => {}
+                    (crate::source::Kind::Call(crate::source::Target::Builtin(saved)),
+                     crate::source::Kind::Call(crate::source::Target::Builtin(parsed)))
+                        if saved == parsed => {}
                     (crate::source::Kind::Literal(a), crate::source::Kind::Literal(b)) if a == b => {}
                     (crate::source::Kind::Text(a), crate::source::Kind::Text(b)) if a == b => {}
                     (crate::source::Kind::Quotation(a), crate::source::Kind::Quotation(b)) if a == b => {}
@@ -363,6 +389,12 @@ impl ModulePrepared {
         self.staged.aliases.last()
             .filter(|alias| !alias.pending)
             .map(|alias| alias.spelling.as_str())
+    }
+    /// A source-checked transitive rebind preview, not an alias-word refresh.
+    /// Publication still requires `ModuleSession::commit` on its original
+    /// namespace snapshot; saved old Program values retain prior identities.
+    pub fn rebuilt_import_definitions(&self) -> Option<&[RebuiltImportDefinition]> {
+        self.rebuilt_import_definitions.as_deref()
     }
     pub fn resolved_module(&self) -> Option<(u64, alloc::string::String, u32)> {
         let module = match self.kind {
@@ -551,6 +583,7 @@ impl ModuleSession {
         source_session.declared = Some(super::Context {
             environment,
             words: alloc::vec::Vec::new(),
+            aliases: alloc::vec::Vec::new(),
             owner: None,
             signed_self,
             declared_text,

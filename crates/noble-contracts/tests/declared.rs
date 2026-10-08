@@ -137,7 +137,7 @@ fn invalid_initializers_and_imports_leave_generation_unchanged() -> Result<(), S
 }
 
 #[test]
-fn alias_rebinding_and_stale_commit_keep_previous_candidate() -> Result<(), String> {
+fn incompatible_alias_rebind_and_stale_commit_keep_previous_candidate() -> Result<(), String> {
     let mut session =
         noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
     session = commit(session, b"module ledger@1 [ export get def get [ 10 ] ]")?;
@@ -151,15 +151,21 @@ fn alias_rebinding_and_stale_commit_keep_previous_candidate() -> Result<(), Stri
     let stale = session
         .prepare(b"import ledger@1 as account", &[], LIMITS)
         .map_err(|e| format!("{e:?}"))?;
-    session = commit(session, b"import ledger@2 as account")?;
-    let new = session
+    assert!(stale.rebuilt_import_definitions().is_none());
+    let incompatible = session.prepare(b"import ledger@2 as account", &[], LIMITS)
+        .err().ok_or("incompatible dependent alias rebind was accepted")?;
+    assert!(matches!(incompatible.stage(),
+        noble_contracts::source::Stage::Check
+            | noble_contracts::source::Stage::Acceptance));
+    let retained = session
         .prepare(b"saved account.get", &[], LIMITS)
         .map_err(|e| format!("{e:?}"))?;
     assert_eq!(
-        new.output(),
-        &[noble_kernel::types::Ty::I64, noble_kernel::types::Ty::Bool]
+        retained.output(),
+        &[noble_kernel::types::Ty::I64, noble_kernel::types::Ty::I64]
     );
     assert_eq!(old.output(), &[noble_kernel::types::Ty::I64]);
+    session = commit(session, b"1")?;
     let (session, outcome) = session.commit(stale);
     let error = outcome.err().ok_or("accepted stale module import")?;
     assert_eq!(error.stage(), noble_contracts::source::Stage::Acceptance);
@@ -168,8 +174,82 @@ fn alias_rebinding_and_stale_commit_keep_previous_candidate() -> Result<(), Stri
             .prepare(b"account.get", &[], LIMITS)
             .map_err(|e| format!("{e:?}"))?
             .output(),
-        &[noble_kernel::types::Ty::Bool]
+        &[noble_kernel::types::Ty::I64]
     );
+    Ok(())
+}
+
+#[test]
+fn alias_rebind_replays_exact_current_dependents_but_preserves_versioned_owners() -> Result<(), String> {
+    use noble_contracts::source::ModuleSession;
+    let mut session = ModuleSession::new_declared_text(&[], false)
+        .map_err(|error| format!("{error:?}"))?;
+    session = commit(session, b"module m@1 [ export addone def addone [ 1 + ] ]")?;
+    session = commit(session, b"module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let first = session.prepare(b"import m@1 as m", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(first.resolved_import_alias(), Some("m"));
+    assert!(first.rebuilt_import_definitions().is_none());
+    let (next, outcome) = session.commit(first);
+    outcome.map_err(|error| format!("{error:?}"))?;
+    session = next;
+    session = commit(session, b"import m@1 as other")?;
+    session = commit(session, b"def pinned [ m@1.addone ]")?;
+    session = commit(session, b"def once [ m.addone ]")?;
+    session = commit(session, b"def twice [ once once ]")?;
+    let captured = session.prepare(b"[ once ]", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert!(captured.submission().is_some());
+    let before = session.generation();
+    let rebound = session.prepare(b"import m@2 as m", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(rebound.resolved_import_alias(), Some("m"));
+    assert_eq!(rebound.resolved_module().map(|owner| owner.2), Some(2));
+    let rebuilt = rebound.rebuilt_import_definitions().ok_or("missing checked replay")?;
+    assert_eq!(rebuilt.iter().map(|entry| entry.name()).collect::<Vec<_>>(),
+        vec!["once", "twice"]);
+    assert!(rebuilt.iter().all(|entry|
+        entry.previous_identity() != entry.new_identity()));
+    let (next, outcome) = session.commit(rebound);
+    outcome.map_err(|error| format!("{error:?}"))?;
+    session = next;
+    assert_eq!(session.generation(), before + 1);
+    assert_eq!(session.prepare(b"20 twice 20 pinned 20 other.addone", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?.output(),
+        &[noble_kernel::types::Ty::I64, noble_kernel::types::Ty::I64,
+            noble_kernel::types::Ty::I64]);
+
+    let untouched = ModuleSession::new_declared_text(&[], false)
+        .map_err(|error| format!("{error:?}"))?;
+    let untouched = commit(untouched, b"module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let untouched = commit(untouched, b"module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let untouched = commit(untouched, b"import m@1 as m")?;
+    let untouched = commit(untouched, b"def pinned [ m@1.addone ]")?;
+    let rebind = untouched.prepare(b"import m@2 as m", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(rebind.rebuilt_import_definitions().map(|items| items.len()), Some(0),
+        "a version-pinned callee is not an outside alias dependent");
+    Ok(())
+}
+
+#[test]
+fn alias_rebind_refuses_a_current_body_capturing_a_shadowed_old_alias_owner() -> Result<(), String> {
+    let session = noble_contracts::source::ModuleSession::new_declared_text(&[], false)
+        .map_err(|error| format!("{error:?}"))?;
+    let session = commit(session, b"module m@1 [ export addone def addone [ 1 + ] ]")?;
+    let session = commit(session, b"module m@2 [ export addone def addone [ 2 + ] ]")?;
+    let session = commit(session, b"import m@1 as m")?;
+    let session = commit(session, b"def once [ m.addone ]")?;
+    let session = commit(session, b"def twice [ once once ]")?;
+    let session = commit(session, b"def once [ 2 + ]")?;
+    let before = session.generation();
+    let error = session.prepare(b"import m@2 as m", &[], LIMITS)
+        .err().ok_or("accepted stale call to a shadowed alias-dependent owner")?;
+    assert_eq!(error.stage(), noble_contracts::source::Stage::Acceptance);
+    assert_eq!(session.generation(), before);
+    assert_eq!(session.prepare(b"20 twice", &[], LIMITS)
+        .map_err(|error| format!("{error:?}"))?.output(),
+        &[noble_kernel::types::Ty::I64]);
     Ok(())
 }
 

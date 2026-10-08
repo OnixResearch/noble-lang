@@ -269,6 +269,16 @@ impl super::super::ModuleSession {
     }
 
     fn build_outside_words(mut self, permit_signed: bool) -> Result<Self, crate::source::Error> {
+        attempt!(self.refresh_outside_words(permit_signed));
+        Ok(self)
+    }
+
+    /// Refresh an unpublished successor after replaying a checked outside
+    /// definition; no repeated whole-session clone is needed per dependent.
+    pub(in crate::source::declared::state) fn refresh_outside_words(
+        &mut self,
+        permit_signed: bool,
+    ) -> Result<(), crate::source::Error> {
         let word_slots_count = attempt!(word_capacity(&self, permit_signed));
         let mut words = alloc::vec::Vec::with_capacity(word_slots_count);
         let mut definition_slot = 0usize;
@@ -283,11 +293,21 @@ impl super::super::ModuleSession {
         }
         words = attempt!(append_alias_exports(&self, words));
         words = attempt!(append_versioned_exports(&self, words, permit_signed));
+        let mut aliases = alloc::vec::Vec::with_capacity(self.aliases.len());
+        for alias in &self.aliases {
+            if alias.pending { continue; }
+            let module = self.modules.get(alias.module).ok_or_else(|| {
+                super::super::super::error(crate::source::Stage::Check,
+                    "checked alias has no immutable module owner")
+            })?;
+            aliases.push((alias.spelling.clone(), module.identity));
+        }
         if let Some(context) = &mut self.source.declared {
             context.owner = None;
             context.environment.caller_module = None;
             context.words = words;
+            context.aliases = aliases;
         }
-        Ok(self)
+        Ok(())
     }
 }
