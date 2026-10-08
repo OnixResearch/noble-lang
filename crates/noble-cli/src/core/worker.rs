@@ -327,6 +327,13 @@ impl Engine {
         self.live_code("inspect-live-code", span)
     }
 
+    pub fn release_superseded_live_module_roots(
+        &mut self,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"release-superseded-live-module-roots\n"));
+        self.reply()
+    }
+
     pub fn retire_live_code(
         &mut self,
         span: noble_wasm::source::CodeSpan,

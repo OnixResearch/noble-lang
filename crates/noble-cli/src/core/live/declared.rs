@@ -121,7 +121,7 @@ impl Live {
         use noble_contracts::source::ModuleKind;
         let frontend = self.session.declared.as_ref()
             .ok_or_else(|| fatal_failure("declared live frontend is unavailable"))?;
-        let prepared = match frontend.prepare(&candidate.bytes, &self.session.stack,
+        let prepared = match frontend.prepare(&candidate.bytes, &[],
             super::super::SOURCE_LIMITS) {
             Ok(prepared) if prepared.kind() == ModuleKind::Module => prepared,
             Ok(_) => return Ok(ReloadDecision::Refused(
@@ -302,8 +302,17 @@ impl Live {
         let prepared = match frontend.prepare(source, &self.session.stack,
             super::super::SOURCE_LIMITS) {
             Ok(prepared) => prepared,
-            Err(error) => return Ok(super::super::output::Report::declared_source_error(
-                &error, number, false, false)),
+            Err(error) => {
+                // Declarations do not consume the retained runtime stack.
+                // Retrying with [] is safe only when the independently
+                // prepared source is a declaration, never an expression.
+                match (!self.session.stack.is_empty()).then(||
+                    frontend.prepare(source, &[], super::super::SOURCE_LIMITS)) {
+                    Some(Ok(prepared)) if prepared.kind() != ModuleKind::Expression => prepared,
+                    _ => return Ok(super::super::output::Report::declared_source_error(
+                        &error, number, false, false)),
+                }
+            }
         };
         if self.verify_source_before_execute {
             if let Some(refusal) = self.source_change_refusal() {

@@ -164,19 +164,12 @@ pub(super) fn definition_index(
 
 fn bounds(
     submission: &noble_kernel::execution::Submission,
-    environment_work: u64,
     signed: bool,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let mut totals = metadata::Totals { nodes: 0, bytes: 0 };
     attempt!(metadata::check(&submission.body, &mut totals, work));
-    attempt!(definitions::bounds(
-        submission,
-        environment_work,
-        signed,
-        &mut totals,
-        work
-    ));
+    attempt!(definitions::bounds(submission, signed, &mut totals, work));
     dependencies::check(submission, signed, work)
 }
 
@@ -221,7 +214,7 @@ pub(super) fn check(
     let environment_work = attempt!(environment::work(&submission.environment));
     attempt!(work.charge(environment_work));
     attempt!(environment::check(submission, live, live_slots, text_cursor, declared_text));
-    attempt!(bounds(submission, environment_work, signed, work));
+    attempt!(bounds(submission, signed, work));
     let limits = attempt!(kernel_limits(submission, environment_work, work));
     let definitions = attempt!(definitions::accept(submission, limits, signed, work));
     let root = attempt!(accept_root(submission, limits, work));

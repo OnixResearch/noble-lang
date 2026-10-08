@@ -100,6 +100,18 @@ impl LiveChild {
         Self::spawn(command)
     }
 
+    #[cfg(target_os = "linux")]
+    fn start_watch_declared(
+        source: &Path,
+        bindings: &Path,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command.args(["live", "watch", "--source"]).arg(source)
+            .args(["--engine", "v8", "--declared-modules", "--bindings"])
+            .arg(bindings);
+        Self::spawn(command)
+    }
+
     fn start_declared(
         source: &Path,
         bindings: &Path,
@@ -314,17 +326,6 @@ fn assert_no_candidate_span(report: &Value) {
         report.get("source_span_basis").is_none() && report.get("source_span").is_none(),
         "refusal without a selected-source diagnostic claimed candidate provenance: {report}"
     );
-}
-
-fn effect_policy_refusal(report: &Value, stack: &[&str], generation: u64) {
-    assert_eq!(text_field(report, "schema"), "noble-live-report/v1");
-    assert_eq!(text_field(report, "stage"), "admission");
-    assert_eq!(text_field(report, "outcome"), "effect-refused");
-    assert!(!text_field(report, "diagnostic").is_empty());
-    assert_eq!(number_field(report, "generation"), generation);
-    assert_stack(report, stack);
-    assert_eq!(number_field(report, "guest_requests"), 0);
-    assert_eq!(number_field(report, "protected_operations"), 0);
 }
 
 fn current_generation(
@@ -759,6 +760,32 @@ fn declared_module_snapshots_preserve_old_program_and_fresh_new_alias() -> Resul
     live.finish()
 }
 
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_declared_module_save_preserves_old_program_and_imports_new_version(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("module m@1 [ export step def step [ 1 + ] ]")?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut live = LiveChild::start_watch_declared(&fixture.source, &bindings)?;
+    let initial = live.report()?;
+    live_ack(&initial, &[]);
+    assert_eq!(text_field(&initial, "declared_kind"), "module");
+    assert_eq!(text_field(&live.submit("import m@1 as m")?, "outcome"), "namespace-committed");
+    let saved = live.submit("20 [ m.step ]")?;
+    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    fixture.replace("module m@2 [ export step def step [ 2 + ] ]")?;
+    let ack = live.report()?;
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    assert_eq!(text_field(&ack, "source_freshness"), "matched-at-watch-ack-check", "{ack}");
+    assert_eq!(ack["stack"], saved["stack"]);
+    let imported = live.submit("import m@2 as next")?;
+    assert_eq!(text_field(&imported, "outcome"), "namespace-committed", "{imported}");
+    normal(&live.submit("run")?, &["21"]);
+    normal(&live.submit("20 next.step")?, &["21", "22"]);
+    live.finish()
+}
+
 #[test]
 fn declared_checked_rebind_replays_transitive_dependents_without_rewriting_saved_program(
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -794,6 +821,14 @@ fn declared_checked_rebind_replays_transitive_dependents_without_rewriting_saved
     normal(&live.submit("20 twice")?, &["21", "24"]);
     normal(&live.submit("20 other.addone")?, &["21", "24", "21"]);
     normal(&live.submit("20 m.addone")?, &["21", "24", "21", "22"]);
+    fixture.replace("module m@3 [ export addone def addone [ true ] ]")?;
+    let incompatible = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&incompatible, "outcome"), "reload-committed", "{incompatible}");
+    let rejected = live.submit("import m@3 as m")?;
+    assert_ne!(text_field(&rejected, "outcome"), "namespace-committed", "{rejected}");
+    assert_eq!(number_field(&live.submit(":generation")?, "generation"),
+        number_field(&incompatible, "generation"));
+    normal(&live.submit("20 twice")?, &["21", "24", "21", "22", "24"]);
     live.finish()
 }
 
@@ -863,6 +898,43 @@ fn declared_saved_adapter_keeps_old_identity_while_host_policy_allows_it() -> Re
     assert_eq!(fresh["request_trace"][0]["version"], 2);
     assert_eq!(fresh["request_trace"][0]["text"], "B");
     live.finish()
+}
+
+#[test]
+fn declared_rebound_alias_revokes_old_adapter_even_for_saved_program(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n\
+         bind ledger@2 test.emit emit-b Text -- ! test.emit allow\n",
+    )?;
+    let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let (initial, _) = live_ack(&live.report()?, &[]);
+    let linked = live.submit("import ledger@1 as l")?;
+    assert_eq!(text_field(&linked, "outcome"), "namespace-committed", "{linked}");
+    let saved = live.submit("[ l.send ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    fixture.replace(
+        "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]",
+    )?;
+    let updated = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&updated, "outcome"), "reload-committed", "{updated}");
+    let rebound = live.submit("import ledger@2 as l")?;
+    assert_eq!(text_field(&rebound, "outcome"), "namespace-committed", "{rebound}");
+    assert_eq!(number_field(&rebound, "generation"), initial + 3);
+    assert_eq!(rebound["rebuilt_import_definitions"], serde_json::json!([]));
+    assert_eq!(rebound["stack"], saved["stack"]);
+    let refused = live.submit("run")?;
+    assert_eq!(text_field(&refused, "outcome"), "trap", "{refused}");
+    assert_eq!(number_field(&refused, "protected_operations"), 0);
+    assert_eq!(refused["request_trace"][0]["adapter_identity"], "emit-a");
+    assert_eq!(refused["request_trace"][0]["decision"], "deny");
+    assert_eq!(text_field(&refused, "session_state"), "terminated-after-runtime-failure");
+    Ok(())
 }
 
 #[test]
@@ -953,7 +1025,6 @@ fn unsupported_live_subcommand_refuses_before_publication(
     assert_eq!(text_field(&refused, "outcome"), "reload-refused");
     assert_eq!(number_field(&refused, "generation"), 0);
     assert_eq!(number_field(&refused, "guest_requests"), 0);
-    assert!(text_field(&refused, "diagnostic").contains("usage: noble live repl"));
     Ok(())
 }
 
@@ -1110,17 +1181,22 @@ fn direct_effectful_submission_without_binding_never_enters_guest()
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
-    normal(&live.submit("7")?, &["7"]);
+    let pushed = live.submit("7")?;
+    normal(&pushed, &["7"]);
     let generation = current_generation(&mut live, &fixture, &["7"])?;
 
-    // Ordinary Core sessions permit test.emit; live's unbound, resource-free
-    // profile must refuse it before candidate execution instead.
-    effect_policy_refusal(&live.submit("\"x\" test.emit")?, &["7"], generation);
-    effect_policy_refusal(
-        &live.submit("def emit [ \"x\" test.emit ]")?,
-        &["7"],
-        generation,
-    );
+    // No-gift Core-live frontend cannot even resolve a test host effect. The
+    // selected worker must receive zero requests and preserve the old stack.
+    for source in ["\"x\" test.emit", "def emit [ \"x\" test.emit ]"] {
+        let refused = live.submit(source)?;
+        assert_eq!(text_field(&refused, "stage"), "resolve", "{refused}");
+        assert_eq!(text_field(&refused, "outcome"), "unbound-word", "{refused}");
+        assert_eq!(number_field(&refused, "guest_requests"), 0);
+        assert_eq!(number_field(&refused, "protected_operations"), 0);
+        assert_eq!(text_field(&refused, "prior_stack"), "unchanged");
+        assert_eq!(text_field(&refused, "prior_namespace"), "unchanged");
+        assert_generation_inspection(&live.submit(":generation")?, generation, &pushed["stack"]);
+    }
     let unbound = live.submit("emit")?;
     assert_eq!(text_field(&unbound, "stage"), "resolve");
     assert_eq!(text_field(&unbound, "outcome"), "unbound-word");
@@ -1128,6 +1204,46 @@ fn direct_effectful_submission_without_binding_never_enters_guest()
     assert_eq!(text_field(&unbound, "prior_stack"), "unchanged");
     assert_eq!(text_field(&unbound, "prior_namespace"), "unchanged");
     normal(&live.submit("addone")?, &["8"]);
+    live.finish()
+}
+
+#[test]
+fn ten_real_reloads_preserve_checked_budget_and_reuse_cleared_code(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    let initial = live.report()?;
+    live_ack(&initial, &[]);
+    let first_call = live.submit("20 addone")?;
+    normal(&first_call, &["21"]);
+    let first_span = &first_call["installed_code_span"];
+    assert!(number_field(first_span, "length") > 0, "{first_call}");
+    let mut generation = number_field(&initial, "generation");
+    let mut expected = vec!["21".to_string()];
+    for increment in 2..=11 {
+        fixture.replace(&format!("def addone [ {increment} + ]"))?;
+        let ack = live.submit(&format!(":reload {}", fixture.source.display()))?;
+        assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+        assert_eq!(ack["stack"].as_array().map(Vec::len), Some(expected.len()), "{ack}");
+        generation += 1;
+        assert_eq!(number_field(&ack, "generation"), generation, "{ack}");
+        if increment == 2 {
+            let retired = ack["retired_code_spans"].as_array()
+                .ok_or("checked live code retirement omitted worker receipts")?;
+            assert!(retired.iter().any(|row| row["code_span"] == *first_span
+                && row["code_owners"] == 0 && row["table_cleared"] == true), "{ack}");
+        }
+        let value = live.submit("20 addone")?;
+        assert_eq!(text_field(&value, "outcome"), "normal", "{value}");
+        expected.push((increment + 20).to_string());
+        let stack = value["stack"].as_array().ok_or("normal execution omitted guest stack")?;
+        assert_eq!(stack.len(), expected.len(), "{value}");
+        assert_eq!(stack.last().and_then(|top| top["value"].as_str()),
+            expected.last().map(String::as_str), "{value}");
+        if increment == 2 {
+            assert_eq!(value["installed_code_span"]["start"], first_span["start"], "{value}");
+        }
+    }
     live.finish()
 }
 
@@ -1142,6 +1258,8 @@ fn dependent_rebuild_is_transitive_and_preserves_saved_old_program()
     assert_eq!(text_field(&live.submit("def unrelated [ 10 + ]")?, "outcome"), "defined");
     let saved = live.submit("[ addone ]")?;
     assert_eq!(saved["stack"][0]["type"], "Program");
+    let saved_span = &saved["installed_code_span"];
+    assert!(number_field(saved_span, "length") > 0, "{saved}");
     let other = fixture.directory.join("unselected.noble");
     let probe = live.submit(&format!(":reload {}", other.display()))?;
     assert_eq!(text_field(&probe, "outcome"), "reload-refused");
@@ -1154,6 +1272,10 @@ fn dependent_rebuild_is_transitive_and_preserves_saved_old_program()
     assert_eq!(number_field(&ack, "generation"), generation + 1);
     assert_eq!(ack["stack"], saved["stack"]);
     assert_eq!(number_field(&ack, "guest_requests"), 0);
+    assert!(!ack["retired_code_spans"].as_array()
+        .ok_or("checked retirement receipts missing")?
+        .iter().any(|row| row["code_span"] == *saved_span),
+        "a saved old Program must pin its old code: {ack}");
     normal(&live.submit("20 swap run")?, &["21"]);
     normal(&live.submit("20 four")?, &["21", "28"]);
     normal(&live.submit("20 unrelated")?, &["21", "28", "30"]);

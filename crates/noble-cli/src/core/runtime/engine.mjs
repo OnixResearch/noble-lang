@@ -254,6 +254,8 @@ export class CoreEngine {
     this.liveCodeOwners = this.inProcessLive && !this.declaredLive;
     this.externalCodeRoots = new Set();
     this.liveCodeSpans = new Map();
+    this.liveModuleOwner = null;
+    this.supersededLiveModules = [];
     this.optimized = optimized;
     initializeHostState(this, bindings);
     this.declaredLiveState = { generation: 0n, roots: [], aliases: [], activeSlots: new Set() };
@@ -559,10 +561,10 @@ export class CoreEngine {
       && new DataView(this.memory.buffer).getInt32(61440, true) === 0;
   }
 
-  checkedLiveCodeSpan(span, allowQueuedProposal = false) {
+  checkedLiveCodeSpan(span, allowQueuedProposal = false, allowEmpty = false) {
     if (!this.liveCodeIdle(allowQueuedProposal)
       || !Number.isInteger(span.start) || span.start < 4
-      || !Number.isInteger(span.length) || span.length < 1
+      || !Number.isInteger(span.length) || span.length < (allowEmpty ? 0 : 1)
       || span.length > this.table.length - span.start
       || !Number.isInteger(span.generation) || span.generation < 1
       || span.generation > 0xffffffff) fail('invalid or non-idle checked live code span');
@@ -570,8 +572,9 @@ export class CoreEngine {
   }
 
   registerLiveCode(span) {
-    const key = this.checkedLiveCodeSpan(span, true);
-    if (this.liveCodeSpans.has(key)
+    const key = this.checkedLiveCodeSpan(span, true, true);
+    if (this.liveModuleOwner === this.last
+      || span.length !== 0 && this.liveCodeSpans.has(key)
       || [...this.liveCodeSpans.values()].some(record =>
         span.start < record.span.start + record.span.length
         && record.span.start < span.start + span.length)) {
@@ -588,9 +591,24 @@ export class CoreEngine {
       entries.push(callable);
     }
     const record = { span: { ...span }, entries, instance: this.last };
-    this.liveCodeSpans.set(key, record);
+    if (span.length !== 0) this.liveCodeSpans.set(key, record);
+    if (this.liveModuleOwner) this.supersededLiveModules.push(this.liveModuleOwner);
+    this.liveModuleOwner = this.last;
     return { outcome: 'code-registered', code_span: record.span,
       table_installed: true, source_generation: this.liveSourceGeneration.toString() };
+  }
+
+  sweepSupersededLiveModules() {
+    if (!this.liveCodeIdle()) fail('module root release requires an idle checked live worker');
+    const count = this.supersededLiveModules.length;
+    for (const instance of this.supersededLiveModules) {
+      if (instance === this.liveModuleOwner || instance.exports.release_module_roots() !== 0) {
+        this.poisoned = true;
+        fail('backend refused superseded Core module root release');
+      }
+    }
+    this.supersededLiveModules.length = 0;
+    return { outcome: 'module-roots-released', released: count };
   }
 
   recordedLiveCode(span) {
