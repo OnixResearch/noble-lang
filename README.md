@@ -464,11 +464,14 @@ before its staging reply while a second fsynced rename selects B. They observe
 the old result before the reload ACK, only B acknowledged as current, and
 zero guest requests for an unsupported partial in-place write. A separate
 external `MAP_SHARED` smoke similarly refuses observed source drift before
-guest execution. The default selected `live_repl` suite passed 55 cases and
-the opt-in test-barrier suite passed 57; test-only FIFO synchronization is
-omitted from the default CLI. These scoped executions do not discharge every
-canonical LIVE-02/LIVE-05 variant, source-bound proof, or LIVE-06 host-policy
-revocation; those canonical cases remain absent/not-run with proof open.
+guest execution. Before the separately added LIVE-06 host-policy test case,
+the default selected `live_repl` suite passed 55 cases and the opt-in
+test-barrier suite passed 57. The exact test-only LIVE-06 host revocation has
+not yet been exercised by a Wasm guest; its control and FIFO synchronization
+are absent from the default CLI. These scoped executions do not discharge
+every canonical LIVE-02/LIVE-05 variant, source-bound proof, or LIVE-06
+host-policy revocation; those canonical cases remain absent/not-run with
+proof open.
 
 For a separate **opt-in source-change execution gate**, start the same REPL
 with `--verify-source-before-execute`. Before each source submission, after
