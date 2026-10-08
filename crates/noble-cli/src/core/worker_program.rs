@@ -49,6 +49,7 @@ enum Recipe {
 }
 
 struct Witness {
+    node: usize,
     input: Vec<Ty>,
     output: Vec<Ty>,
     effects: EffSet,
@@ -90,6 +91,7 @@ pub(crate) struct Handle {
 pub(crate) struct Store {
     instance: u64,
     compiled: Compiled,
+    checked_interface: noble_contracts::source::CheckedProgramInterface,
     source: Vec<u8>,
     root_name: String,
     root_owner: Owner,
@@ -128,6 +130,8 @@ impl Store {
         let invocation = format!("{module_name}@{version}.{name}");
         let prepared = session.prepare(invocation.as_bytes(), input, SOURCE_LIMITS)
             .map_err(|_| Refusal::Invalid)?;
+        let checked_interface = prepared.checked_program_interface(&owner)
+            .ok_or(Refusal::Invalid)?;
         let submission = prepared.submission().ok_or(Refusal::Invalid)?;
         if submission.request.expected.stack_in != input
             || !submission.request.expected.allowed_effects.is_empty()
@@ -160,7 +164,7 @@ impl Store {
             owners.push(Owner { module_id: dependency.module_identity(),
                 version: dependency.module_version(), ordinal: dependency.definition_ordinal(),
                 identity: dependency.definition_identity() });
-            witnesses.push(Witness { input: target.stack_in.clone(),
+            witnesses.push(Witness { node: index, input: target.stack_in.clone(),
                 output: target.stack_out.clone(), effects: target.effects.clone() });
             if dependency.definition_slot() == owner.definition_slot() {
                 if target.stack_in.as_slice() != input
@@ -175,6 +179,7 @@ impl Store {
             |next| next.checked_add(1)).map_err(|_| Refusal::Exhausted)?;
         let store = Self { selected_effects: contract.map_or_else(EffSet::empty, HostContract::effects),
             instance,
+            checked_interface,
             source: source.to_vec(), root_name: name.to_owned(),
             root_owner: Owner { module_id: owner.module_identity(),
                 version: owner.module_version(), ordinal: owner.definition_ordinal(),
@@ -186,6 +191,17 @@ impl Store {
     }
 
     pub(crate) fn wat(&self) -> &[u8] { self.compiled.wat() }
+
+    /// This source-authenticated WIT type map is inert. Actual WIT resource
+    /// creation still requires source-to-installed-cell correspondence and a
+    /// host owner table in the selected component instance.
+    pub(crate) fn selected_world(&self) -> Result<noble_contracts::component::World, Refusal> {
+        let bytes = include_bytes!("../../../noble-wasm/wit/worker-program.wit");
+        let world = noble_contracts::component::World::parse(bytes, "guest", SOURCE_LIMITS)
+            .map_err(|_| Refusal::Unsupported)?;
+        world.select_worker_program(&self.checked_interface)
+            .map_err(|_| Refusal::Invalid)
+    }
 
     fn package(&self, handle: Handle) -> Result<Value, Refusal> {
         if handle.instance != self.instance { return Err(Refusal::Invalid) }
@@ -313,6 +329,7 @@ impl Store {
 
     pub(crate) fn named(&self, handle: Handle) -> Option<&NamedTargetMetadata> {
         if handle.instance != self.instance { return None }
+        if self.witnesses.get(handle.witness)?.node != handle.node { return None }
         match &self.nodes.get(handle.node)?.recipe {
             Recipe::Named { program_index } => self.compiled.named_targets().iter()
                 .find(|target| target.program_index == *program_index),
@@ -324,6 +341,7 @@ impl Store {
         if handle.instance != self.instance { return None }
         self.nodes.get(handle.node)?;
         let witness = self.witnesses.get(handle.witness)?;
+        if witness.node != handle.node { return None }
         Some((&witness.input, &witness.output, &witness.effects))
     }
 
@@ -331,6 +349,7 @@ impl Store {
         if handle.instance != self.instance { return None }
         let original = self.nodes.get(handle.node)?.original;
         let witness = self.witnesses.get(original)?;
+        if witness.node != handle.node { return None }
         Some((&witness.input, &witness.output, &witness.effects))
     }
 
@@ -345,6 +364,7 @@ impl Store {
         let current = self.witnesses.get(handle.witness).ok_or(Refusal::Invalid)?;
         if handle.instance != self.instance { return Err(Refusal::Invalid) }
         self.nodes.get(handle.node).ok_or(Refusal::Invalid)?;
+        if current.node != handle.node { return Err(Refusal::Invalid) }
         if !current.effects.is_subset_of(destination)
             || !destination.is_subset_of(&self.selected_effects) {
             return Err(Refusal::Invalid)
@@ -352,7 +372,8 @@ impl Store {
         if self.witnesses.len() >= WITNESS_LIMIT { return Err(Refusal::Exhausted) }
         self.charge(1)?;
         let current = &self.witnesses[handle.witness];
-        let witness = Witness { input: current.input.clone(), output: current.output.clone(),
+        let witness = Witness { node: handle.node,
+            input: current.input.clone(), output: current.output.clone(),
             effects: destination.clone() };
         let position = self.witnesses.len();
         self.witnesses.push(witness);
@@ -370,6 +391,9 @@ impl Store {
         let right = self.witnesses.get(second.witness).ok_or(Refusal::Invalid)?;
         self.nodes.get(first.node).ok_or(Refusal::Invalid)?;
         self.nodes.get(second.node).ok_or(Refusal::Invalid)?;
+        if left.node != first.node || right.node != second.node {
+            return Err(Refusal::Invalid)
+        }
         if left.output != right.input { return Err(Refusal::Invalid) }
         if self.nodes.len() >= GRAPH_LIMIT || self.witnesses.len() >= WITNESS_LIMIT {
             return Err(Refusal::Exhausted);
@@ -377,10 +401,10 @@ impl Store {
         self.charge(1)?;
         let left = &self.witnesses[first.witness];
         let right = &self.witnesses[second.witness];
-        let witness = Witness { input: left.input.clone(), output: right.output.clone(),
+        let node = self.nodes.len();
+        let witness = Witness { node, input: left.input.clone(), output: right.output.clone(),
             effects: left.effects.union(&right.effects) };
         let position = self.witnesses.len();
-        let node = self.nodes.len();
         self.witnesses.push(witness);
         self.nodes.push(Node { recipe: Recipe::Compose { first: first.node,
             second: second.node }, original: position });
@@ -394,11 +418,13 @@ impl Store {
             return Err(Refusal::Invalid);
         }
         let baseline = self.witnesses.get(handles[0].witness).ok_or(Refusal::Invalid)?;
+        if baseline.node != handles[0].node { return Err(Refusal::Invalid) }
         let (input, output, effects) = (&baseline.input, &baseline.output, &baseline.effects);
         for handle in handles {
             if handle.instance != self.instance { return Err(Refusal::Invalid) }
             self.nodes.get(handle.node).ok_or(Refusal::Invalid)?;
             let witness = self.witnesses.get(handle.witness).ok_or(Refusal::Invalid)?;
+            if witness.node != handle.node { return Err(Refusal::Invalid) }
             if &witness.input != input || &witness.output != output || &witness.effects != effects {
                 return Err(Refusal::Invalid);
             }
@@ -525,6 +551,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             }, "source-checked named Program rejected"))?;
         let source_sha256 = crate::workflow::intrinsic::sha256(&source);
         let wat_sha256 = crate::workflow::intrinsic::sha256(store.wat());
+        let world = store.selected_world().map_err(refusal)?;
         let other = (0..store.recipe_nodes()).filter_map(|index| store.checked_root(index))
             .find(|candidate| *candidate != root && {
                 match (store.interface(root), store.interface(*candidate)) {
@@ -547,6 +574,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         Ok(json!({
             "schema":"noble-worker-program-builder/v2", "stage":"runtime-builders",
             "outcome":"normal", "builder_result":"checked-common-interface",
+            "wit_world":world.identity(),
             "source_sha256":source_sha256,
             "wat_sha256":wat_sha256, "source_compiler_calls_after_admission":0,
             "guest_requests":0, "protected_operations":0, "recipe_nodes":store.recipe_nodes(),
@@ -582,6 +610,23 @@ mod tests {
     use noble_kernel::contracts::TEST_EMIT;
 
     #[test]
+    fn checked_wit_token_requires_exact_named_program_root() {
+        let session = noble_contracts::source::ModuleSession::new(&[]).unwrap();
+        let module = session.prepare(
+            b"module Worker@1 [ def plus [ 1 + ] export plus ]",
+            &[], SOURCE_LIMITS).unwrap();
+        let owner = module.checked_program_owner("plus").unwrap();
+        let (session, committed) = session.commit(module);
+        committed.unwrap();
+        let exact = session.prepare(b"Worker@1.plus", &[Ty::I64], SOURCE_LIMITS).unwrap();
+        assert!(exact.checked_program_interface(&owner).is_some());
+        let extended = session.prepare(b"Worker@1.plus 1 drop",
+            &[Ty::I64], SOURCE_LIMITS).unwrap();
+        assert!(extended.checked_program_interface(&owner).is_none(),
+            "a source expression calling a named Program is not that Program");
+    }
+
+    #[test]
     fn checked_named_program_adapts_selects_and_composes_without_changing_its_recipe() {
         let (mut store, original) = Store::prepare(
             b"module Worker@1 [ def minus [ 1 - ] export plus def plus [ minus 1 + ] ]",
@@ -595,11 +640,27 @@ mod tests {
         assert_eq!(store.interface(original).unwrap().1, [Ty::I64]);
         assert!(store.named(original).is_some());
         assert!(!store.wat().is_empty());
+        let selected = store.selected_world().expect("source-bound Program WIT resource");
+        let kind = selected.worker_program_kind().expect("selected resource kind");
+        assert_eq!(selected.noble_type(noble_contracts::component::Type::Own(kind)),
+            Some(Ty::program(vec![Ty::I64],vec![Ty::I64],EffSet::empty())));
+        assert!(selected.noble_type(noble_contracts::component::Type::Borrow(kind)).is_none());
+        let ordinary = noble_contracts::component::World::parse(
+            include_bytes!("../../../noble-wasm/wit/worker-program.wit"),
+            "guest", SOURCE_LIMITS).expect("ordinary unselected WIT");
+        assert_eq!(ordinary.noble_type(noble_contracts::component::Type::Own(kind)),
+            Some(Ty::Resource(kind)), "ordinary WIT resource must stay untrusted");
+        assert!(selected.prepare_export("compute",
+            b"programs.admit 1 programs.invoke", SOURCE_LIMITS).is_ok(),
+            "selected source can type the host-admitted Program");
         let destination = EffSet::from_ids(&[TEST_EMIT]);
         let wider = store.adapt(original, &destination).expect("checked effect inclusion");
         assert_eq!(store.recipe_nodes(), 2, "widening must not add a recipe node");
         assert_eq!(store.original(wider).unwrap().2, &EffSet::empty());
         assert_eq!(store.interface(wider).unwrap().2, &destination);
+        let mismatched = Handle { node: other.node, ..wider };
+        assert!(store.interface(mismatched).is_none());
+        assert!(matches!(store.adapt(mismatched, &destination), Err(Refusal::Invalid)));
         assert!(matches!(store.select(&[other, wider], 1), Err(Refusal::Invalid)),
             "heterogeneous interface must not enter a typed list");
         let second = store.adapt(other, &destination).expect("second source-checked Program");

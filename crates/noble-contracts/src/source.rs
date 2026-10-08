@@ -18,7 +18,7 @@ pub mod proof;
 mod replacement;
 mod resolution;
 
-pub use declared::{BoundOperation, CheckedNominal, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition, SignedSourceOwner};
+pub use declared::{BoundOperation, CheckedNominal, CheckedProgramInterface, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition, SignedSourceOwner};
 pub(crate) use declared::{DefinitionOrigin, verify_definition_origin, verify_named_call_origin, verify_named_export};
 
 /// Core vocabulary resolved by the same checker as a worker's pure source.

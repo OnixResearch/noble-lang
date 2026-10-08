@@ -20,6 +20,7 @@ impl super::World {
             } else {
                 0
             })
+            .saturating_add(if self.worker_program_kind.is_some() { 48 } else { 0 })
             .saturating_add(abi.len())
             .saturating_add(self.identity.len())
             .saturating_add(self.wit.len())
@@ -31,6 +32,11 @@ impl super::World {
         key.push(0);
         if self.checked_u64 {
             key.extend_from_slice(super::CHECKED_U64_SCHEMA.as_bytes());
+            key.push(0);
+        }
+        if let Some(kind) = self.worker_program_kind {
+            key.extend_from_slice(b"worker-program-v2:Program([I64]->[I64]!{})");
+            key.extend_from_slice(&kind.0.to_le_bytes());
             key.push(0);
         }
         key.extend_from_slice(&super::STREAM_U8_KIND.0.to_le_bytes());

@@ -181,6 +181,7 @@ pub struct World {
     resources: alloc::vec::Vec<Resource>,
     asynchronous: bool,
     checked_u64: bool,
+    worker_program_kind: Option<noble_kernel::types::ResourceKind>,
     limits: crate::Limits,
 }
 
@@ -196,11 +197,55 @@ impl World {
     pub const fn checked_u64(&self) -> bool {
         self.checked_u64
     }
+    /// Opt in only with a checked, owner-bound Program type from the source
+    /// session. This selects the semantic WIT type, not an executable handle;
+    /// a host still has to authenticate and install the actual Program cell.
+    pub fn select_worker_program(
+        mut self,
+        source: &crate::source::CheckedProgramInterface,
+    ) -> Result<Self, Error> {
+        if self.identity != "noble-test:worker-program/guest@2.0.0"
+            || self.asynchronous || self.checked_u64
+            || !source.is_pure_i64_endomorphism() {
+            return Err(unsupported("Worker WIT requires checked pure I64 Program"));
+        }
+        let mut matches = self.resources.iter().filter(|resource|
+            resource.identity == "noble-test:worker-program/programs@2.0.0#program");
+        let resource = matches.next().ok_or_else(||
+            unsupported("selected WIT Program resource is absent"))?;
+        if matches.next().is_some() { return Err(invalid("duplicate WIT Program resource")) }
+        let kind = resource.kind;
+        if self.resources.len() != 1 || self.imports.len() != 2 || self.exports.len() != 1
+            || self.imports[0].identity != "noble-test:worker-program/programs@2.0.0#admit"
+            || !self.imports[0].parameters.is_empty()
+            || self.imports[0].results != [Type::Own(kind)]
+            || self.imports[1].identity != "noble-test:worker-program/programs@2.0.0#invoke"
+            || self.imports[1].parameters != [Type::Own(kind),Type::S64]
+            || self.imports[1].results != [Type::S64]
+            || self.exports[0].identity != "noble-test:worker-program/guest@2.0.0#compute"
+            || !self.exports[0].parameters.is_empty()
+            || self.exports[0].results != [Type::S64] {
+            return Err(unsupported("Worker Program WIT operation or ownership shape differs"));
+        }
+        self.worker_program_kind = Some(kind);
+        attempt!(bindings::make(&self));
+        Ok(self)
+    }
+
+    pub const fn worker_program_kind(&self) -> Option<noble_kernel::types::ResourceKind> {
+        self.worker_program_kind
+    }
     /// A checked unsigned projection requires the selected world's authority.
     pub fn noble_type(&self, ty: Type) -> Option<noble_kernel::types::Ty> {
         match ty {
             Type::CheckedU64 if self.checked_u64 => Some(noble_kernel::types::Ty::I64),
             Type::CheckedU64 => None,
+            Type::Own(kind) if self.worker_program_kind == Some(kind) =>
+                Some(noble_kernel::types::Ty::program(
+                    alloc::vec![noble_kernel::types::Ty::I64],
+                    alloc::vec![noble_kernel::types::Ty::I64],
+                    noble_kernel::types::EffSet::empty())),
+            Type::Borrow(kind) if self.worker_program_kind == Some(kind) => None,
             _ => ty.noble(),
         }
     }

@@ -96,6 +96,28 @@ pub struct CheckedProgramOwner {
     definition_slot: u32,
 }
 
+/// Source-checked, owner-bound pure Program interface for the separately
+/// selected Worker WIT resource mapping. A type token is not an installed
+/// guest cell, export authority or portable package acceptance.
+pub struct CheckedProgramInterface {
+    input: alloc::vec::Vec<noble_kernel::types::Ty>,
+    output: alloc::vec::Vec<noble_kernel::types::Ty>,
+    effects: noble_kernel::types::EffSet,
+}
+
+impl CheckedProgramInterface {
+    pub fn is_pure_i64_endomorphism(&self) -> bool {
+        self.input.as_slice() == [noble_kernel::types::Ty::I64]
+            && self.output.as_slice() == [noble_kernel::types::Ty::I64]
+            && self.effects.is_empty()
+    }
+
+    pub fn ty(&self) -> noble_kernel::types::Ty {
+        noble_kernel::types::Ty::program(
+            self.input.clone(), self.output.clone(), self.effects.clone())
+    }
+}
+
 impl CheckedProgramOwner {
     pub const fn module_identity(&self) -> u64 { self.module_identity }
     pub const fn module_version(&self) -> u32 { self.module_version }
@@ -511,6 +533,44 @@ impl ModulePrepared {
                 "signed self in executable root is not an owner definition"));
         }
         Ok(())
+    }
+
+    /// Bind a checked named invocation to its original pure interface. A
+    /// candidate-reported owner or effect ceiling cannot create this token.
+    pub fn checked_program_interface(
+        &self,
+        owner: &CheckedProgramOwner,
+    ) -> Option<CheckedProgramInterface> {
+        if self.kind != ModuleKind::Expression || self.pending.is_some()
+            || !self.staged.bindings.is_empty() {
+            return None;
+        }
+        let submission = self.submission.as_ref()?;
+        if !submission.request.expected.allowed_effects.is_empty()
+            || submission.request.expected.stack_out != self.output {
+            return None;
+        }
+        let matched = submission.definitions.iter().filter(|definition|
+            definition.definition.0 == owner.definition_slot
+                && definition.identity == owner.definition_identity
+                && submission.environment.definition_owners
+                    .get(definition.definition.0 as usize) == Some(&Some(owner.module_identity)))
+            .count();
+        // This token describes the named Program itself, not an arbitrary
+        // expression that happens to call that name once before doing other
+        // work. Only a single exact root invocation has that provenance.
+        let [root] = submission.body.candidate.body.as_slice() else { return None };
+        let root = usize::try_from(root.0).ok()?;
+        if matched != 1 || !matches!(
+            submission.body.candidate.nodes.get(root),
+            Some(noble_kernel::untrusted::Node::Invocation { def, .. })
+                if def.0 == owner.definition_slot
+        ) { return None }
+        Some(CheckedProgramInterface {
+            input: submission.request.expected.stack_in.clone(),
+            output: self.output.clone(),
+            effects: noble_kernel::types::EffSet::empty(),
+        })
     }
 
     pub const fn kind(&self) -> ModuleKind {
