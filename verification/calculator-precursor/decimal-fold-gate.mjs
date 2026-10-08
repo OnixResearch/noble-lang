@@ -60,7 +60,7 @@ for (const [name, bytes] of [['result.noble', resultModule],
   fs.writeFileSync(path.join(output, name), bytes, { flag: 'wx' });
 }
 const run = (name, args, input) => {
-  const artifactDir = /^(fold-|cursor-|less-|local-|rebind-|digit-version-|same-session-|recover-source-)/.test(name)
+  const artifactDir = /^(fold-|cursor-|less-|local-|rebind-|signed-tail-|digit-version-|same-session-|recover-source-)/.test(name)
     ? path.join(output, `${name}.artifacts`) : null;
   if (artifactDir) args = [...args, '--emit', artifactDir];
   const execution = spawnSync(binary, args, { cwd: root, input, encoding: null,
@@ -195,6 +195,26 @@ for (const opt of ['off', 'on']) {
     const wat = fs.readFileSync(path.join(output, `less-${opt}-${index}.artifacts`,
       'engine', `${report.module.stem}.wat`), 'utf8');
     assert.match(wat, /\bi64\.lt_s\b/);
+  }
+}
+for (const opt of ['off', 'on']) {
+  const owner = Buffer.from(
+    'module countdown@1 [ signature go forall<S:stack> [ S I64 -- S I64 ! pure ] export go def go [ let n n 0 = [ n ] [ n 1 - go ] if ] ]');
+  const observed = run(`signed-tail-${opt}-lexical-over-512`,
+    ['session', ...flags, '--opt', opt],
+    Buffer.concat([owner, Buffer.from('600 countdown@1.go')].map(frame)));
+  assert.equal(observed.status, 0, `signed lexical tail recursion/${opt}`);
+  assert.deepEqual(observed.reports.map(report => report.outcome), ['linked', 'normal']);
+  assert.deepEqual(observed.reports[1].stack.map(({ type, value }) => ({ type, value })),
+    [{ type: 'I64', value: '0' }]);
+  for (const report of observed.reports) {
+    assert.equal(report.host_requests, 0);
+    assert.equal(report.guest_requests, 0);
+    assert.equal(report.acquired_authority, false);
+    if (report.module) {
+      assert.equal(report.native_trap, null);
+      assert.ok(report.module.imports.every(entry => entry.kind !== 'function'));
+    }
   }
 }
 for (const opt of ['off', 'on']) {
