@@ -578,7 +578,7 @@ impl Compiler {
         &self,
         source: &noble_contracts::source::DeclaredTextSourceOwner<'_>,
     ) -> Result<Prepared, crate::Diagnostic> {
-        if !self.declared_text || !self.text_cursor || self.live || self.live_slots
+        if !self.declared_text || !self.text_cursor || self.live || self.declared_live || self.live_slots
             || self.worker_inputs {
             return Err(crate::Diagnostic::Unsupported);
         }
@@ -843,6 +843,31 @@ impl Compiler {
         }
         *self = prepared.next;
         Ok(())
+    }
+
+    /// The selected worker has verified that its idle signed/Text arena has
+    /// no external or saved roots, cleared every source code entry and
+    /// released every module global before tombstoning the complete heap.
+    /// Source identities and generation remain monotone across this epoch.
+    pub fn retire_declared_text_epoch(&mut self, generation: u32, code_end: u32) -> Result<(), crate::Diagnostic> {
+        if !self.declared_text || !self.text_cursor || self.live || self.declared_live || self.live_slots
+            || self.worker_inputs || self.generation != generation
+            || self.functions != code_end || self.retention_revision == u64::MAX
+            || !self.free_code.is_empty() || !self.installed_code.is_empty()
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        self.functions = 4;
+        self.text_end = TEXT_START;
+        self.signatures = crate::signatures::Pool::source();
+        self.descriptors.clear();
+        self.retention_revision += 1;
+        Ok(())
+    }
+
+    pub fn declared_text_epoch_state(&self) -> Option<(u32, u32)> {
+        (self.declared_text && self.text_cursor && !self.live && !self.declared_live && !self.live_slots
+            && !self.worker_inputs).then_some((self.generation, self.functions))
     }
 
     /// Retire an installed live-slot or Core-live allocation only after the

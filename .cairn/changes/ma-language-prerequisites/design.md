@@ -76,6 +76,33 @@ path, and host-only decimal parsing would not satisfy the calculator gate.
 
 ## Risks / Trade-offs
 
+- The pure signed declared-Text worker, not LIVE or declared-LIVE, may retire
+  an idle source epoch after reporting the original frame metrics. Its first
+  guest instance owns the fixed source Core dispatch entries 0..3; they stay
+  byte-for-byte the same across signed epoch reuse. In the separate live
+  profile, the first guest and its checked Core bridge retain their own
+  table-0..3 handoff and code-span owner protocol. Signed retirement cannot
+  take a live bridge, installed span or retained LIVE root as authority.
+- A reported Program or aggregate pins its entire reachable Program group,
+  including quotation children. A checked guest `drop` empties the stack but
+  does not release a host-observed group. Only the signed framed host-control
+  header `:release-observed-roots STORE_UUID OBSERVATION_ID` can relinquish
+  the exact report's `source_store_id`/`source_observation_id`, after checked
+  idle and empty-stack state; other observed groups continue to pin the
+  epoch. An unknown, foreign, stale, early or repeated release refuses, and
+  visible raw Program ingress requires the same store and epoch rather than
+  a recyclable integer handle. This header is not guest source or a source
+  submission and is distinct from LIVE's no-argument root-release command.
+  Retirement checks all installed source Program globals, non-core table
+  entries and heap rollback before compiler code allocation is reused;
+  source identities and generation remain monotone. No existing 4,096-cell
+  capacity, per-frame quota, fuel, step count or LIVE retirement rule changes.
+- The isolated signed-source donor `911c671` demonstrated 65 repeated
+  decimal-fold precursor activations and checked post-report retirement
+  under the original cap, while an externally pinned Program caused honest
+  quota exhaustion. The combined successor has not run a guest or the exact
+  numeric current28 gate. Donor observations do not promote CALC cases,
+  selected-vendor acceptance, runtime refinement or an integrated receipt.
 - Combining two existing flags is a *new* host-selected contract and needs
   negative cross-profile tests; the active cursor change remains unchanged.
 - Existing source-work and signature table meters must charge actual visited

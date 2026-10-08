@@ -284,6 +284,20 @@ export class CoreEngine {
     this.declaredLive = this.inProcessLive && declared_modules === true;
     this.liveCodeOwners = this.inProcessLive;
     this.externalCodeRoots = new Set();
+    this.sourceEpoch = this.profile === 'Signed-Declared-Text-v1';
+    if (this.sourceEpoch && this.inProcessLive) {
+      fail('signed source epoch cannot own the live Core bridge');
+    }
+    this.sourceStoreId = this.sourceEpoch ? crypto.randomUUID() : null;
+    this.sourceExternalHandles = new Map();
+    this.sourceIngressHandles = new Map();
+    this.sourceObservations = new Map();
+    this.sourceCurrentObservation = null;
+    this.sourceNextObservation = 1;
+    this.sourceEpochGeneration = 0;
+    this.lastSourceObservation = null;
+    this.sourceModules = [];
+    this.sourceCoreEntries = null;
     this.liveCodeSpans = new Map();
     this.liveModuleOwner = null;
     this.liveModuleNamespaceGeneration = null;
@@ -1778,9 +1792,122 @@ export class CoreEngine {
       protected_operations: this.protectedOperations - protectedStart,
       candidate_prepare_requests: 0, runtime_prover_calls: 0, native_trap: nativeTrap,
       session_state: this.poisoned ? 'terminated-after-runtime-failure' : 'retained',
-      metrics, module: record };
+      metrics, module: record,
+      ...(this.sourceEpoch && status === 0 && this.lastSourceObservation !== null
+        ? { source_observation_id: this.lastSourceObservation,
+          source_store_id: this.sourceStoreId } : {}) };
+    if (this.sourceEpoch && status === 0) {
+      if (typeof runtime.module_program_count !== 'function'
+        || typeof runtime.module_program_handle !== 'function'
+        || typeof runtime.release_module_programs !== 'function'
+        || typeof runtime.retire_source_epoch !== 'function') {
+        this.poisoned = true;
+        fail('signed source module lacks owned epoch exports');
+      }
+      if (this.sourceCoreEntries === null) {
+        if (this.sourceModules.length || this.shared.generation.value !== 1) {
+          this.poisoned = true;
+          fail('signed source core was not installed first');
+        }
+        this.sourceCoreEntries = Array.from({ length: 4 }, (_, index) => this.table.get(index));
+        if (this.sourceCoreEntries.some(entry => typeof entry !== 'function')) {
+          this.poisoned = true;
+          fail('signed source core entries are missing');
+        }
+      }
+      this.sourceModules.push(instance);
+    }
     if (record.stem) this.save(`${record.stem}-execution.json`, report);
     return report;
+  }
+
+  // Only the selected signed/Text CLI requests an epoch after receiving the
+  // unmodified guest report. A reported raw handle is never reused: there is
+  // no release protocol for callers holding an arbitrary nested value.
+  retireSourceEpoch(generation, codeEnd) {
+    if (!this.sourceEpoch || this.poisoned || this.pending || this.parked
+      || this.staged || this.stagedDeclared || this.liveProposal || this.liveExecuting
+      || this.sourceExternalHandles.size || !this.sourceModules.length
+      || generation !== this.shared.generation.value
+      || !Number.isInteger(codeEnd) || codeEnd < 4 || codeEnd > this.table.length
+      || this.shared.failure.value || this.shared.sp.value || this.shared.cp.value
+      || this.shared.rp.value || this.shared.observed_program.value
+      || this.shared.heap_baseline.value > this.shared.heap_cursor.value
+      || !this.sourceCoreEntries
+      || this.sourceCoreEntries.some((entry, index) => this.table.get(index) !== entry)) {
+      return { outcome: 'source-epoch-owned' };
+    }
+    let programCount = 0;
+    const seen = new Set();
+    for (const instance of this.sourceModules) {
+      const runtime = instance.exports;
+      const count = runtime.module_program_count();
+      if (!Number.isInteger(count) || count <= 0 || count > 4096) {
+        return { outcome: 'source-epoch-owned' };
+      }
+      for (let index = 0; index < count; index++) {
+        const handle = runtime.module_program_handle(index);
+        if (!Number.isInteger(handle) || handle < 1
+          || handle > this.shared.heap_cursor.value || seen.has(handle)
+          || runtime.cell_kind(handle) !== 4) {
+          return { outcome: 'source-epoch-owned' };
+        }
+        const entry = runtime.cell_x(handle);
+        if (entry !== 0 && (entry < 4 || entry >= codeEnd)) {
+          return { outcome: 'source-epoch-owned' };
+        }
+        seen.add(handle);
+        programCount += 1;
+      }
+    }
+    for (let index = 4; index < this.table.length; index++) {
+      const entry = this.table.get(index);
+      if (index < codeEnd ? typeof entry !== 'function' : entry !== null) {
+        return { outcome: 'source-epoch-owned' };
+      }
+    }
+    const cellsBefore = this.shared.heap_cursor.value;
+    const generationBefore = this.shared.generation.value;
+    const releasedBefore = this.runtime().metric(3);
+    try {
+      // Nonlive Action::Call loads a Program global from its own instance.
+      // Clear every installed module global and every non-core table entry;
+      // the four source-independent core callbacks hold no $sN reference.
+      for (const instance of this.sourceModules) {
+        const runtime = instance.exports;
+        if (runtime.release_module_programs() !== 0
+          || Array.from({ length: runtime.module_program_count() },
+            (_, index) => runtime.module_program_handle(index)).some(Boolean)) {
+          fail('signed source module roots did not clear');
+        }
+      }
+      for (let index = 4; index < codeEnd; index++) this.table.set(index, null);
+      for (let index = 4; index < codeEnd; index++) {
+        if (this.table.get(index) !== null) fail('signed source code table failed to clear');
+      }
+      if (this.runtime().retire_source_epoch() !== 0
+        || this.shared.heap_cursor.value !== 0 || this.shared.heap_baseline.value !== 0
+        || this.shared.generation.value !== generationBefore
+        || this.runtime().metric(3) - releasedBefore !== BigInt(cellsBefore * 48)
+        || this.sourceCoreEntries.some((entry, index) => this.table.get(index) !== entry)) {
+        fail('signed source heap retirement violated the checked epoch');
+      }
+      this.sourceModules = [];
+      this.sourceEpochGeneration += 1;
+      return { schema: 'noble-source-epoch-retirement/v1',
+        outcome: 'source-epoch-retired', generation, code_end: codeEnd,
+        source_store_id: this.sourceStoreId,
+        source_epoch_before: this.sourceEpochGeneration - 1,
+        source_epoch_after: this.sourceEpochGeneration,
+        heap_cells_before: cellsBefore, released_cells: cellsBefore,
+        released_bytes_before: Number(releasedBefore),
+        released_bytes_after: Number(this.runtime().metric(3)),
+        released_programs: programCount, retained_core_entries: 4,
+        heap_cells_after: 0, cleared_code_entries: codeEnd - 4 };
+    } catch (error) {
+      this.poisoned = true;
+      fail(`signed source epoch failed closed: ${error}`);
+    }
   }
 
   workerScratch(values) {
@@ -1890,6 +2017,9 @@ export class CoreEngine {
     if (!status && runtime) stack = readStack(this, runtime);
     return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       stage: 'wasm', outcome: status ? 'injection-refused' : 'pushed', status, stack,
+      ...(this.sourceEpoch && !status && this.lastSourceObservation !== null
+        ? { source_observation_id: this.lastSourceObservation,
+          source_store_id: this.sourceStoreId } : {}),
       guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0,
       session_state: 'retained' };
   }
@@ -1938,7 +2068,11 @@ export class CoreEngine {
       }
     }
     this.parked = null;
-    return { outcome: 'restored', stack: readStack(this, this.runtime()) };
+    const stack = readStack(this, this.runtime());
+    return { outcome: 'restored', stack,
+      ...(this.sourceEpoch && this.lastSourceObservation !== null
+        ? { source_observation_id: this.lastSourceObservation,
+          source_store_id: this.sourceStoreId } : {}) };
   }
 
   inject(runtime, input) {
@@ -1954,7 +2088,7 @@ export class CoreEngine {
     if (input.type === 'Unit') return runtime.push_unit();
     if (input.type === 'Program') {
       const handle = integer(input.handle, 4096, 'program handle');
-      this.requireExternalCodeRoot(handle);
+      this.requireExternalCodeRoot(handle, input.source_epoch, input.source_store_id);
       return runtime.push_program(handle);
     }
     if (input.type === 'Contract') return runtime.push_contract(
@@ -1962,7 +2096,7 @@ export class CoreEngine {
       integer(input.claim_kind ?? 1, 1, 'claim kind'), integer(input.revision ?? 0, 4294967295, 'claim revision'));
     if (input.type === 'Evidence') {
       const contract = integer(input.contract, 4096, 'contract handle');
-      this.requireExternalCodeRoot(contract);
+      this.requireExternalCodeRoot(contract, input.source_epoch, input.source_store_id);
       return runtime.push_evidence(
         integer(input.index, 4294967295, 'evidence index'),
         integer(input.class ?? 1, 255, 'evidence class'),
@@ -1972,13 +2106,34 @@ export class CoreEngine {
       const subject = integer(input.subject, 4096, 'subject handle');
       const contract = integer(input.contract, 4096, 'contract handle');
       const evidence = integer(input.evidence, 4096, 'evidence handle');
-      for (const handle of [subject, contract, evidence]) this.requireExternalCodeRoot(handle);
+      for (const handle of [subject, contract, evidence]) {
+        this.requireExternalCodeRoot(handle, input.source_epoch, input.source_store_id);
+      }
       return runtime.push_certified(subject, contract, evidence, BigInt(input.identity));
     }
     fail('unsupported runtime input type');
   }
 
-  retainExternalCodeRoot(runtime, handle) {
+  retainExternalCodeRoot(runtime, handle, visible = true) {
+    if (this.sourceEpoch) {
+      if (!Number.isInteger(handle) || handle < 1
+        || handle > this.abi.limits_maximum.session_cells
+        || runtime.cell_kind(handle) < 4 || this.sourceCurrentObservation === null) {
+        this.poisoned = true;
+        fail('invalid externally exposed signed source handle');
+      }
+      const group = this.sourceCurrentObservation.counts;
+      const count = (this.sourceExternalHandles.get(handle) ?? 0) + 1;
+      if (!Number.isSafeInteger(count)) fail('signed source observation ledger exhausted');
+      this.sourceExternalHandles.set(handle, count);
+      group.set(handle, (group.get(handle) ?? 0) + 1);
+      if (visible) {
+        this.sourceIngressHandles.set(handle, (this.sourceIngressHandles.get(handle) ?? 0) + 1);
+        const ingress = this.sourceCurrentObservation.ingress;
+        ingress.set(handle, (ingress.get(handle) ?? 0) + 1);
+      }
+      return;
+    }
     if (!this.liveCodeOwners || this.externalCodeRoots.has(handle)) return;
     if (!Number.isInteger(handle) || handle < 1 || handle > this.abi.limits_maximum.session_cells
       || runtime.retain_code_root(handle) !== 0) {
@@ -1988,7 +2143,76 @@ export class CoreEngine {
     this.externalCodeRoots.add(handle);
   }
 
-  requireExternalCodeRoot(handle) {
+  beginSourceObservation() {
+    if (this.sourceCurrentObservation || this.sourceNextObservation > Number.MAX_SAFE_INTEGER
+      || this.sourceObservations.size >= 4096) fail('signed source observation ledger exhausted');
+    this.sourceCurrentObservation = { id: this.sourceNextObservation,
+      counts: new Map(), ingress: new Map() };
+  }
+
+  finishSourceObservation() {
+    const group = this.sourceCurrentObservation;
+    if (!group) fail('signed source observation has no owner');
+    this.lastSourceObservation = group.counts.size ? group.id : null;
+    if (group.counts.size) {
+      this.sourceObservations.set(group.id, group);
+      this.sourceNextObservation += 1;
+    }
+    this.sourceCurrentObservation = null;
+  }
+
+  releaseSourceObservation(store, id) {
+    const refused = () => ({ schema: 'noble-core-report/v1',
+      profile: this.profile, backend: 'managed-linear-memory', stage: 'wasm',
+      outcome: 'source-observation-refused', guest_requests: 0,
+      protected_operations: 0, candidate_prepare_requests: 0,
+      session_state: 'retained' });
+    if (!this.sourceEpoch || this.poisoned || this.pending || this.parked
+      || this.staged || this.stagedDeclared || this.liveExecuting
+      || this.sourceCurrentObservation || this.shared.failure.value
+      || this.shared.sp.value || this.shared.cp.value || this.shared.rp.value
+      || this.shared.observed_program.value) {
+      return refused();
+    }
+    if (store !== this.sourceStoreId) return refused();
+    const group = this.sourceObservations.get(id);
+    if (!group) return refused();
+    for (const [handle, count] of group.counts) {
+      if (!Number.isInteger(count) || count < 1
+        || (this.sourceExternalHandles.get(handle) ?? 0) < count
+        || (this.sourceIngressHandles.get(handle) ?? 0) < (group.ingress.get(handle) ?? 0)) {
+        return refused();
+      }
+    }
+    let released = 0;
+    for (const [handle, count] of group.counts) {
+      const remaining = this.sourceExternalHandles.get(handle) - count;
+      if (remaining) this.sourceExternalHandles.set(handle, remaining);
+      else this.sourceExternalHandles.delete(handle);
+      const visible = group.ingress.get(handle) ?? 0;
+      if (visible) {
+        const ingressRemaining = this.sourceIngressHandles.get(handle) - visible;
+        if (ingressRemaining) this.sourceIngressHandles.set(handle, ingressRemaining);
+        else this.sourceIngressHandles.delete(handle);
+      }
+      released += count;
+    }
+    this.sourceObservations.delete(id);
+    return { schema: 'noble-core-report/v1', profile: this.profile,
+      backend: 'managed-linear-memory', stage: 'wasm',
+      outcome: 'source-observation-released', source_observation_id: id,
+      released_handles: released, remaining_handles: this.sourceExternalHandles.size,
+      source_epoch: this.sourceEpochGeneration, source_store_id: this.sourceStoreId,
+      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0,
+      session_state: 'retained' };
+  }
+
+  requireExternalCodeRoot(handle, epoch, store) {
+    if (this.sourceEpoch && (epoch !== this.sourceEpochGeneration
+      || store !== this.sourceStoreId
+      || !this.sourceIngressHandles.has(handle))) {
+      fail('signed source raw cell handle lacks an exposed owner');
+    }
     if (this.liveCodeOwners && !this.externalCodeRoots.has(handle)) {
       fail('live raw cell handle lacks a retained owner');
     }
@@ -2006,14 +2230,18 @@ export class CoreEngine {
   }
 
   // Explicit projection of a Certified cell to its live subject Program handle.
-  project(handle) {
+  project(handle, epoch, store) {
     const runtime = this.runtime();
     handle = integer(handle, this.abi.limits_maximum.session_cells, 'cell handle');
-    this.requireExternalCodeRoot(handle);
+    this.requireExternalCodeRoot(handle, epoch, store);
     const subject = runtime.certified_subject(handle);
+    if (subject && this.sourceEpoch) this.beginSourceObservation();
     if (subject) this.retainExternalCodeRoot(runtime, subject);
+    if (subject && this.sourceEpoch) this.finishSourceObservation();
     return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       stage: 'wasm', outcome: subject ? 'projected' : 'projection-failed', handle, subject,
+      ...(subject && this.sourceEpoch ? { source_epoch: this.sourceEpochGeneration,
+        source_store_id: this.sourceStoreId, source_observation_id: this.lastSourceObservation } : {}),
       identity_unchanged: subject !== 0,
       guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
   }

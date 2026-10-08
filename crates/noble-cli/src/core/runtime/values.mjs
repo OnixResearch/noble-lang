@@ -21,17 +21,22 @@ function readStack(engine, runtime) {
     const count = integer(runtime.stack_length(), 128, 'stack height');
     engine.observationWork = 0;
     engine.observationBytes = 0;
+    if (engine.sourceEpoch) engine.beginSourceObservation();
     // Every slot also reports its live cell handle (null for immediate
     // values), so a consumer can project a Program or pass a companion cell to
     // a later push without re-deriving the handle from the value's shape.
-    return Array.from({ length: count }, (_, at) => {
+    const stack = Array.from({ length: count }, (_, at) => {
       const kind = runtime.stack_kind(at);
       const raw = runtime.stack_value(at);
       const handle = kind < 4 ? null : Number(BigInt.asUintN(64, raw));
       const value = readValue(engine, runtime, kind, raw, 0);
       if (handle !== null) engine.retainExternalCodeRoot(runtime, handle);
-      return { handle, ...value };
+      return { handle, ...(handle !== null && engine.sourceEpoch
+        ? { source_epoch: engine.sourceEpochGeneration,
+          source_store_id: engine.sourceStoreId } : {}), ...value };
     });
+    if (engine.sourceEpoch) engine.finishSourceObservation();
+    return stack;
   }
 
 function chargeObservation(engine, depth) {
@@ -46,7 +51,7 @@ function chargeObservation(engine, depth) {
     if (depth > 512 || ++engine.observationWork > MAX_OBSERVATION_WORK) fail('observation limit exhausted');
   }
 
-function readBoxed(engine, runtime, handle, depth) {
+function readBoxed(engine, runtime, handle, depth, visible = true) {
     integer(handle, engine.abi.limits_maximum.session_cells, 'cell handle');
     if (handle === 0 || handle > engine.shared.heap_cursor.value) fail('invalid live cell handle');
     const kind = runtime.cell_kind(handle);
@@ -54,8 +59,10 @@ function readBoxed(engine, runtime, handle, depth) {
     // same cell to a later push without re-deriving the handle from its shape.
     const value = readValue(engine, runtime, kind,
       kind < 4 ? runtime.cell_payload(handle) : BigInt(handle), depth);
-    if (kind >= 4) engine.retainExternalCodeRoot(runtime, handle);
-    return { handle, ...value };
+    if (kind >= 4) engine.retainExternalCodeRoot(runtime, handle, visible);
+    return { handle, ...(kind >= 4 && engine.sourceEpoch
+      ? { source_epoch: engine.sourceEpochGeneration,
+        source_store_id: engine.sourceStoreId } : {}), ...value };
   }
 
 function readValue(engine, runtime, kind, value, depth) {
@@ -160,7 +167,7 @@ function readRecipe(engine, runtime, root, depth) {
         } else fail('builtin identity is outside selected profile');
       } else if (atom === 15) result.push({ invoke: `definition:${BigInt.asUintN(64, value)}` });
       else if (atom === 3) {
-        const program = readBoxed(engine, runtime, child, depth + 1);
+        const program = readBoxed(engine, runtime, child, depth + 1, false);
         if (program.type !== 'Program') fail('quotation recipe has no program');
         result.push({ quotation: program.recipe, interface: program.interface, witnesses: program.witnesses });
       }

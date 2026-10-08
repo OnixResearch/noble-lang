@@ -494,6 +494,29 @@ impl Engine {
         self.reply()
     }
 
+    pub fn retire_source_epoch(
+        &mut self,
+        generation: u32,
+        code_end: u32,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(std::format!("retire-source-epoch {generation} {code_end}\n").as_bytes()));
+        self.reply()
+    }
+
+    pub fn release_source_observation(
+        &mut self,
+        id: u64,
+        store: &str,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        if store.len() != 36 || !store.bytes().all(|byte|
+            byte.is_ascii_hexdigit() || byte == b'-'
+        ) {
+            return Err(protocol::error());
+        }
+        attempt!(self.write(std::format!("release-source-observation {id} {store}\n").as_bytes()));
+        self.reply()
+    }
+
     /// Apply an explicitly host-selected execution-work cap to one prepared
     /// live submission without changing the global runtime maximum.
     pub fn execute_with_steps(
@@ -815,6 +838,56 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn signed_source_parked_program_keeps_its_observation_owner() -> Result<(), String> {
+        let options = super::super::arguments::parse(&[
+            "session", "--framed", "--declared-modules", "--text-byte-cursor",
+            "--signed-self-recursion",
+        ].map(std::ffi::OsString::from)).map_err(|error| error.message)?;
+        let source = noble_contracts::source::ModuleSession::new_declared_text(
+            &[], true, noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .ok_or("invalid source cap")?,
+        ).map_err(|error| error.diagnostic().message.clone())?;
+        let checked = source.prepare(b"[ 1 ]", &[], super::super::SOURCE_LIMITS)
+            .map_err(|error| error.diagnostic().message.clone())?;
+        let owner = checked.declared_text_source_owner().ok_or("missing signed source owner")?;
+        let compiled = noble_wasm::source::Compiler::new_declared_text()
+            .prepare_declared_text(&owner)
+            .map_err(|_| "signed source compilation refused")?;
+        let span = compiled.code_span();
+        let mut worker = Engine::start(&options).map_err(|error| error.message)?;
+        if worker.prepare(compiled.wat(), b"[ 1 ]", 1)
+            .map_err(|error| error.message)?.outcome != "ready" {
+            return Err("signed source guest did not prepare".into());
+        }
+        let executed = worker.execute().map_err(|error| error.message)?;
+        let report: serde_json::Value = serde_json::from_str(&executed.json)
+            .map_err(|error| error.to_string())?;
+        let id = report["source_observation_id"].as_u64().ok_or("missing observed owner")?;
+        let store = report["source_store_id"].as_str().ok_or("missing worker store")?;
+        if executed.outcome != "normal" || report["stack"].as_array().is_none_or(|stack| stack.len() != 1)
+            || worker.park().map_err(|error| error.message)?.outcome != "parked"
+            || worker.release_source_observation(id, store)
+                .map_err(|error| error.message)?.outcome != "source-observation-refused"
+            || worker.retire_source_epoch(span.generation, span.start + span.length)
+                .map_err(|error| error.message)?.outcome != "source-epoch-owned"
+            || worker.restore().map_err(|error| error.message)?.outcome != "restored"
+            || worker.release_source_observation(id, store)
+                .map_err(|error| error.message)?.outcome != "source-observation-refused" {
+            return Err("parked or restored Program lost its pinned worker owner".into());
+        }
+        let handle = report["stack"][0]["handle"].as_u64().ok_or("missing Program handle")?;
+        let old_epoch = report["stack"][0]["source_epoch"].as_u64().ok_or("missing source epoch")?;
+        let wrong = serde_json::json!([{
+            "type": "Program", "handle": handle, "source_epoch": old_epoch + 1,
+            "source_store_id": store,
+        }]).to_string();
+        if worker.push(&wrong).is_ok() {
+            return Err("forged raw Program epoch was accepted after restore".into());
+        }
+        Ok(())
+    }
 
     fn prepared_private_artifacts() -> Result<(Engine, std::path::PathBuf), String> {
         const SOURCE: &[u8] = b"private candidate source for forced shutdown";
