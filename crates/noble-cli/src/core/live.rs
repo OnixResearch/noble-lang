@@ -250,6 +250,16 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             }
             continue;
         }
+        if line == ":release-observed-roots" {
+            match live.release_observed_roots() {
+                Ok(report) => emit(&report),
+                Err(error) => {
+                    emit(&fatal(&error.message));
+                    return std::process::ExitCode::from(2);
+                }
+            }
+            continue;
+        }
         if line == ":generation" {
             emit(&serde_json::json!({
                 "schema": "noble-live-report/v1",
@@ -518,6 +528,29 @@ impl Live {
             self.live_code_spans.push(span);
         }
         Ok(())
+    }
+
+    fn release_observed_roots(&mut self)
+        -> Result<serde_json::Value, super::output::Failure> {
+        let released = self.worker()?.release_observed_roots()?;
+        let receipt: serde_json::Value = serde_json::from_str(&released.json)
+            .map_err(|_| fatal_failure("invalid observed live root release receipt"))?;
+        let count = receipt["released"].as_u64()
+            .ok_or_else(|| fatal_failure("worker omitted released observed root count"))?;
+        if released.outcome != "observed-roots-released"
+            || receipt["outcome"] != "observed-roots-released"
+            || count > 4096
+        {
+            return Err(fatal_failure("worker did not prove bounded observed root release"));
+        }
+        let retired_code_spans = self.retire_unowned_live_code()?;
+        Ok(serde_json::json!({
+            "schema": "noble-live-report/v1", "stage": "wasm-live",
+            "outcome": "observed-roots-released", "generation": self.generation,
+            "released_observed_roots": count,
+            "retired_code_spans": retired_code_spans,
+            "guest_requests": 0, "protected_operations": 0,
+        }))
     }
 
     fn retire_unowned_live_code(

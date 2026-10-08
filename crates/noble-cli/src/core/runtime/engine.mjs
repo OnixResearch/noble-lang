@@ -634,6 +634,27 @@ export class CoreEngine {
     return { outcome: 'module-roots-released', released };
   }
 
+  releaseObservedRoots() {
+    if (!this.liveCodeIdle()) fail('observed root release requires an idle checked live worker');
+    const runtime = this.runtime();
+    let released = 0;
+    // A report grants the host a real root even for nested quotation handles
+    // whose raw identities are not printed. Only the host can relinquish all
+    // those prior observations; stack, module and active-frame owners remain.
+    for (const handle of this.externalCodeRoots) {
+      const before = runtime.code_root_state(handle);
+      if (!Number.isInteger(before) || before < 0 || (before & 127) === 0
+        || runtime.release_code_root(handle) !== 0
+        || runtime.code_root_state(handle) !== before - 1) {
+        this.poisoned = true;
+        fail('backend refused exact observed code root release');
+      }
+      this.externalCodeRoots.delete(handle);
+      released += 1;
+    }
+    return { outcome: 'observed-roots-released', released };
+  }
+
   recordedLiveCode(span) {
     const record = this.liveCodeSpans.get(this.checkedLiveCodeSpan(span));
     if (!record || record.span.start !== span.start || record.span.length !== span.length

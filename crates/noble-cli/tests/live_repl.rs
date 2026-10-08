@@ -935,9 +935,8 @@ fn declared_nested_captured_transitive_alias_keeps_first_owner_across_two_rebind
         let receipt = live.submit(declaration)?;
         assert_eq!(text_field(&receipt, "outcome"), "namespace-committed", "{receipt}");
     }
-    let saved = live.submit("20 [ [ twice ] ]")?;
-    assert_eq!(saved["stack"][0]["value"], "20", "{saved}");
-    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    let saved = live.submit("[ [ 20 twice ] ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
 
     for (version, increment) in [(2, 2), (3, 3)] {
         fixture.replace(&format!(
@@ -954,8 +953,7 @@ fn declared_nested_captured_transitive_alias_keeps_first_owner_across_two_rebind
     }
     let unwrapped = live.submit("run")?;
     assert_eq!(text_field(&unwrapped, "outcome"), "normal", "{unwrapped}");
-    assert_eq!(unwrapped["stack"][0]["value"], "20", "{unwrapped}");
-    assert_eq!(unwrapped["stack"][1]["type"], "Program", "{unwrapped}");
+    assert_eq!(unwrapped["stack"][0]["type"], "Program", "{unwrapped}");
     normal(&live.submit("run")?, &["22"]);
     normal(&live.submit("20 twice")?, &["22", "26"]);
     live.finish()
@@ -971,8 +969,8 @@ fn declared_old_code_retires_after_last_nested_program_then_reimports_exact_old_
     let original = live.report()?;
     live_ack(&original, &[]);
     assert_eq!(text_field(&live.submit("import m@1 as m")?, "outcome"), "namespace-committed");
-    let saved = live.submit("20 [ [ m.addone ] ]")?;
-    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    let saved = live.submit("[ [ 20 m.addone ] ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
     let saved_span = saved["installed_code_span"].clone();
     assert!(number_field(&saved_span, "length") > 0, "{saved}");
     let original_source = saved["source_module_versions"][0].clone();
@@ -994,10 +992,19 @@ fn declared_old_code_retires_after_last_nested_program_then_reimports_exact_old_
 
     let unwrapped = live.submit("run")?;
     assert_eq!(text_field(&unwrapped, "outcome"), "normal", "{unwrapped}");
-    assert_eq!(unwrapped["stack"][1]["type"], "Program", "{unwrapped}");
+    assert_eq!(unwrapped["stack"][0]["type"], "Program", "{unwrapped}");
     assert!(!unwrapped["retired_code_spans"].as_array()
         .ok_or("declared execution omitted checked retirement receipts")?
         .iter().any(|entry| entry["code_span"] == saved_span), "{unwrapped}");
+
+    let observations = live.submit(":release-observed-roots")?;
+    assert_eq!(text_field(&observations, "outcome"), "observed-roots-released", "{observations}");
+    assert!(number_field(&observations, "released_observed_roots") > 0, "{observations}");
+    assert_eq!(number_field(&observations, "guest_requests"), 0);
+    assert_eq!(number_field(&observations, "protected_operations"), 0);
+    assert!(!observations["retired_code_spans"].as_array()
+        .ok_or("observed root release omitted checked retirement receipts")?
+        .iter().any(|entry| entry["code_span"] == saved_span), "{observations}");
 
     let released = live.submit("run")?;
     normal(&released, &["21"]);
@@ -1124,25 +1131,32 @@ fn declared_ownerless_code_retires_after_last_nested_program_is_consumed(
     fs::write(&bindings, "")?;
     let mut live = LiveChild::start_declared(&fixture.source, &bindings)?;
     live_ack(&live.report()?, &[]);
-    let saved = live.submit("20 [ [ 1 + ] ]")?;
-    assert_eq!(saved["stack"][1]["type"], "Program", "{saved}");
+    let saved = live.submit("[ [ 20 1 + ] ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
     assert_eq!(saved["source_module_versions"], serde_json::json!([]), "{saved}");
     let saved_span = saved["installed_code_span"].clone();
     assert!(number_field(&saved_span, "length") > 0, "{saved}");
 
     let unwrapped = live.submit("run")?;
     assert_eq!(text_field(&unwrapped, "outcome"), "normal", "{unwrapped}");
-    assert_eq!(unwrapped["stack"][1]["type"], "Program", "{unwrapped}");
+    assert_eq!(unwrapped["stack"][0]["type"], "Program", "{unwrapped}");
     assert!(!unwrapped["retired_code_spans"].as_array()
         .ok_or("declared execution omitted checked retirement receipts")?
         .iter().any(|entry| entry["code_span"] == saved_span), "{unwrapped}");
 
-    let released = live.submit("run")?;
-    normal(&released, &["21"]);
-    assert!(released["retired_code_spans"].as_array()
+    let consumed = live.submit("run")?;
+    normal(&consumed, &["21"]);
+    assert!(!consumed["retired_code_spans"].as_array()
         .ok_or("declared execution omitted checked retirement receipts")?
+        .iter().any(|entry| entry["code_span"] == saved_span), "{consumed}");
+    let released = live.submit(":release-observed-roots")?;
+    assert_eq!(text_field(&released, "outcome"), "observed-roots-released", "{released}");
+    assert!(number_field(&released, "released_observed_roots") > 0, "{released}");
+    assert!(released["retired_code_spans"].as_array()
+        .ok_or("observed root release omitted checked retirement receipts")?
         .iter().any(|entry| entry["code_span"] == saved_span
             && entry["code_owners"] == 0 && entry["table_cleared"] == true), "{released}");
+    assert_eq!(number_field(&released, "guest_requests"), 0);
     assert_eq!(number_field(&released, "protected_operations"), 0);
     assert_eq!(text_field(&live.submit("import m@1 as m")?, "outcome"),
         "namespace-committed");
