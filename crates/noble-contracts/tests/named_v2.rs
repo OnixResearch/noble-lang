@@ -5,7 +5,7 @@ const LIMITS: Limits = Limits {bytes:65_536,nodes:16_384,depth:64,work:2_000_000
 const SOURCE: &[u8] = b"module Subject@3 [ def twice [ d.step d.step ] contract 2 twice-law [ subject twice input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 2)) ] ] proof 2 twice-correct for twice-law [ (export-named-unary-I64 (pc-named-call 0 (exec-literal-1) (exec-add)) (pc-named-call 1 (exec-literal-1) (exec-add)) (by-exact-tail) (named-true-eq-wrap)) ] ]";
 
 fn fixture_for(source: &[u8]) -> Result<(ContractGoal,noble_contracts::intrinsic::ProofBatch),String> {
-    let mut session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let mut session = ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|error| format!("{error:?}"))?;
     for source in [b"module Definitions@5 [ export step def step [ 1 + ] ]".as_slice(),
         b"import Definitions@5 as d".as_slice()] {
         let prepared = session.prepare(source,&[],LIMITS).map_err(|error| format!("{error:?}"))?;

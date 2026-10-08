@@ -135,7 +135,7 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
 #[test]
 fn link_rejects_bad_contract_and_ambient_emit() -> Result<(), String> {
     let source=b"module ledger@1 [ require emit Text -- ! test.emit export handle def handle [ \"audit\" emit ] ]";
-    let missing = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let missing = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     assert!(
         matches!(&missing.prepare(source,&[],LIMITS),Err(e) if e.stage()==noble_contracts::source::Stage::Link)
     );
@@ -143,7 +143,7 @@ fn link_rejects_bad_contract_and_ambient_emit() -> Result<(), String> {
         version: 1,
         slot: 9,
         adapter: "unused",
-    })])
+    })], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
     .map_err(|e| format!("{e:?}"))?;
     let inert = unused
         .prepare(
@@ -160,7 +160,7 @@ fn link_rejects_bad_contract_and_ambient_emit() -> Result<(), String> {
     });
     wrong.input = vec![noble_kernel::types::Ty::I64];
     let session =
-        noble_contracts::source::ModuleSession::new(&[wrong]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[wrong], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     assert!(
         matches!(&session.prepare(source,&[],LIMITS),Err(e) if e.stage()==noble_contracts::source::Stage::Link)
     );
@@ -171,7 +171,7 @@ fn link_rejects_bad_contract_and_ambient_emit() -> Result<(), String> {
     });
     wrong.effects.clear();
     let session =
-        noble_contracts::source::ModuleSession::new(&[wrong]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[wrong], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     assert!(
         matches!(&session.prepare(source,&[],LIMITS),Err(e) if e.stage()==noble_contracts::source::Stage::Link)
     );
@@ -180,7 +180,7 @@ fn link_rejects_bad_contract_and_ambient_emit() -> Result<(), String> {
 
 #[test]
 fn invalid_initializers_and_imports_leave_generation_unchanged() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    let session = noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     let generation = session.generation();
     assert!(
         matches!(&session.prepare(b"import ledger@99 as missing",&[],LIMITS),Err(e) if e.stage()==noble_contracts::source::Stage::Resolve)
@@ -212,7 +212,7 @@ fn invalid_initializers_and_imports_leave_generation_unchanged() -> Result<(), S
 #[test]
 fn incompatible_alias_rebind_and_stale_commit_keep_previous_candidate() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = commit(session, b"module ledger@1 [ export get def get [ 10 ] ]")?;
     session = commit(session, b"module ledger@2 [ export get def get [ true ] ]")?;
     session = commit(session, b"import ledger@1 as account")?;
@@ -255,7 +255,7 @@ fn incompatible_alias_rebind_and_stale_commit_keep_previous_candidate() -> Resul
 #[test]
 fn alias_rebind_replays_exact_current_dependents_but_preserves_versioned_owners() -> Result<(), String> {
     use noble_contracts::source::ModuleSession;
-    let mut session = ModuleSession::new_declared_text(&[], false)
+    let mut session = ModuleSession::new_declared_text(&[], false, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     session = commit(session, b"module m@1 [ export addone def addone [ 1 + ] ]")?;
     session = commit(session, b"module m@2 [ export addone def addone [ 2 + ] ]")?;
@@ -292,7 +292,7 @@ fn alias_rebind_replays_exact_current_dependents_but_preserves_versioned_owners(
         &[noble_kernel::types::Ty::I64, noble_kernel::types::Ty::I64,
             noble_kernel::types::Ty::I64]);
 
-    let untouched = ModuleSession::new_declared_text(&[], false)
+    let untouched = ModuleSession::new_declared_text(&[], false, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let untouched = commit(untouched, b"module m@1 [ export addone def addone [ 1 + ] ]")?;
     let untouched = commit(untouched, b"module m@2 [ export addone def addone [ 2 + ] ]")?;
@@ -307,7 +307,7 @@ fn alias_rebind_replays_exact_current_dependents_but_preserves_versioned_owners(
 
 #[test]
 fn alias_rebind_refuses_a_current_body_capturing_a_shadowed_old_alias_owner() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new_declared_text(&[], false)
+    let session = noble_contracts::source::ModuleSession::new_declared_text(&[], false, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let session = commit(session, b"module m@1 [ export addone def addone [ 1 + ] ]")?;
     let session = commit(session, b"module m@2 [ export addone def addone [ 2 + ] ]")?;
@@ -330,7 +330,7 @@ fn alias_rebind_refuses_a_current_body_capturing_a_shadowed_old_alias_owner() ->
 fn alias_rebind_refuses_a_new_host_effect_above_the_previous_ceiling() -> Result<(), String> {
     let session = noble_contracts::source::ModuleSession::new(&[binding(Binding {
         version: 2, slot: 7, adapter: "ledger-v2-emit",
-    })]).map_err(|error| format!("{error:?}"))?;
+    })], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|error| format!("{error:?}"))?;
     let session = commit(session, b"module ledger@1 [ export touch def touch [ 1 drop ] ]")?;
     let session = commit(session, b"module ledger@2 [ require emit Text -- ! test.emit export touch def touch [ \"event\" emit ] ]")?;
     let session = commit(session, b"import ledger@1 as account")?;
@@ -346,7 +346,7 @@ fn alias_rebind_refuses_a_new_host_effect_above_the_previous_ceiling() -> Result
 
 #[test]
 fn signed_lexical_owner_rederives_its_checked_tail_from_original_source() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new_declared_text(&[], true)
+    let session = noble_contracts::source::ModuleSession::new_declared_text(&[], true, noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|error| format!("{error:?}"))?;
     let session = commit(session,
         b"module countdown@1 [ signature go forall<S:stack> [ S I64 -- S I64 ! pure ] export go def go [ dup [ let n n 0 = ] dip swap [ ] [ 1 - go ] if ] ]")?;
@@ -363,7 +363,7 @@ fn signed_lexical_owner_rederives_its_checked_tail_from_original_source() -> Res
 #[test]
 fn nominal_resource_fixture_rejects_dup_drop_and_capture() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = commit(session,b"module ledger@1 [ opaque CounterOwner Pair<I64,Resource<test.counter>> private variant State Ready I64 public Busy List<Resource<test.counter>> private export CounterOwner export State ]")?;
     for spelling in ["ledger@1.CounterOwner", "ledger@1.State"] {
         let ty = session
@@ -383,7 +383,7 @@ fn nominal_resource_fixture_rejects_dup_drop_and_capture() -> Result<(), String>
 #[test]
 fn private_arm_is_owner_only_but_owner_eliminator_is_callable() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = commit(session,b"module ledger@1 [ variant Status Ready I64 public Failed Text private export Status export Status.Ready export make export inspect def make [ \"err\" Status.Failed ] def inspect [ [ drop 1 ] [ drop 0 ] Status.match ] ]")?;
     let accepted = session
         .prepare(b"ledger@1.make ledger@1.inspect", &[], LIMITS)

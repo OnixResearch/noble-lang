@@ -8,9 +8,7 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let is_signed = parsed
         .as_ref()
         .is_ok_and(|options| options.signed_self_recursion);
-    let is_declared_text = parsed
-        .as_ref()
-        .is_ok_and(|options| options.declared_text());
+    let is_declared_text = parsed.as_ref().is_ok_and(|options| options.declared_text());
     let is_cursor = parsed
         .as_ref()
         .is_ok_and(|options| options.text_byte_cursor);
@@ -19,7 +17,11 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         Ok(exit) => std::process::ExitCode::from(exit),
         Err(error) => {
             let report = super::output::Report::failure(
-                &error, is_declared, is_signed, is_declared_text, is_cursor,
+                &error,
+                is_declared,
+                is_signed,
+                is_declared_text,
+                is_cursor,
             );
             if let Err(write_error) = super::output::print(&report) {
                 eprintln!("noble: {}", write_error.message);
@@ -50,11 +52,27 @@ fn execute(options: super::arguments::Options) -> Result<u8, super::output::Fail
     }
     let mut input = std::io::BufReader::new(std::io::stdin().lock());
     let mut exit = 0;
-    while let Some(source) = attempt!(super::framing::read_submission(
+    while let Some(submission) = attempt!(super::framing::read_submission(
         &mut input,
         options.framed,
         options.limits.bytes,
+        options.declared_modules,
     )) {
+        let source = match submission {
+            super::framing::Submission::Source(source) => source,
+            super::framing::Submission::Exhausted => {
+                let number = attempt!(session.advance_submission());
+                let report = super::output::Report::declared_frame_refusal(
+                    &super::framing::exhausted(),
+                    number,
+                    options.signed_self_recursion,
+                    options.declared_text(),
+                );
+                attempt!(super::output::print(&report));
+                exit = exit.max(report.exit());
+                continue;
+            }
+        };
         let report = attempt!(session.submit(&source, &options));
         attempt!(retain(&options, session.submissions, &source, &report));
         attempt!(super::output::print(&report));

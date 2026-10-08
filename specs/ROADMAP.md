@@ -183,6 +183,15 @@ reviewed DXM1 inventory remain open; no nominal/module, host or engine proof
 is claimed. General Result, local names, invariant-bearing types, portable
 packages/cache, capability modules and MA/MW entry gates are unaffected.
 
+The active [declared retained-source change](../.cairn/changes/declared-retained-source-budget/proposal.md)
+specifies an optional bounded aggregate namespace-source capacity without
+altering DXM1's historical 65,536-byte default or its accepted evidence. Each
+input remains bounded independently, and original module/definition bytes
+remain necessary for replay and source-derived checking. Its new
+[DX-14 design](conformance/language-workflow-cases.json) is absent/not-run
+with proof open; document authoring and a future native Cairn sync do not
+establish guest execution or strengthen the DXM1 completion claim.
+
 ### M7 selected local synchronous service (bounded acceptance complete)
 
 The archived [M7 Cairn change](../.cairn/archive/2026-09-25-m7-syndicate-service/proposal.md)

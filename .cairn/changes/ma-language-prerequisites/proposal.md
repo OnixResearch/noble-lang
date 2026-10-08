@@ -30,7 +30,7 @@ completed calculator. r[B-CHECK-02] r[K-CHECK-02] r[DX-MODULE-04] r[CALC-GATE-01
   checked values at construction. Duplicate names in one scope reject,
   nested shadowing is lexical, and `Data`/Capture eligibility is enforced by
   the original kernel operations. Neither ordinary modules nor standalone
-  cursor acquire local syntax. r[DX-LOCAL-01] r[DX-LOCAL-02]
+  cursor acquire local syntax. r[DX-LOCAL-01] r[DX-LOCAL-02] CALC-STATE-01
 - Demonstrate a real compiled decimal-byte scanner with checked errors,
   opt-off/on, a bounded successful recursive path, and a source-checked
   local-parameter/capture guest beside malformed source and wrong-profile

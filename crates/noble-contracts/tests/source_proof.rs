@@ -14,7 +14,7 @@ fn live() -> Result<Session, String> {
 // synthetic revisions are not Lean receipts, so no test treats this as proof
 // authorization. The actual pinned independent checker belongs to the host.
 fn source_only_session() -> Result<ModuleSession, String> {
-    let session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|error| format!("{error:?}"))?;
     let prepared = session.prepare(MODULE, &[], LIMITS).map_err(|error| format!("{error:?}"))?;
     let (session, outcome) = session.commit_verified(prepared, |batch| {
         let mut source_checked = noble_contracts::intrinsic::check_batch(batch, LIMITS)

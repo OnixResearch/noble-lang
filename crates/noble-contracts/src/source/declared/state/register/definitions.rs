@@ -37,8 +37,31 @@ pub(super) fn install(
             "invalid definition resource budget",
         )
     }));
+    // Per-definition length headers are transient: after graph installation
+    // the whole original module replaces these temporary history entries.
+    let headers = attempt!(count.checked_mul(4).ok_or_else(|| {
+        crate::source::declared::error(
+            crate::source::Stage::Check,
+            "temporary definition header count overflow",
+        )
+    }));
+    let temporary_retained_bytes = attempt!(session
+        .retained_source_limit
+        .bytes()
+        .checked_add(headers)
+        .ok_or_else(|| {
+            crate::source::declared::error(
+                crate::source::Stage::Check,
+                "temporary definition retention bound overflow",
+            )
+        }));
     let history_start = session.source.history.len();
-    let graph = attempt!(graph::Schedule::setup(session, work, definition_limits));
+    let graph = attempt!(graph::Schedule::setup(
+        session,
+        work,
+        definition_limits,
+        temporary_retained_bytes,
+    ));
     let (session, work) = attempt!(graph.run());
     finish(session, work, history_start)
 }
@@ -162,6 +185,7 @@ struct DefinitionInput<'a> {
     signature: Option<noble_kernel::words::Scheme>,
     source: alloc::vec::Vec<u8>,
     limits: crate::Limits,
+    retained_bytes: u32,
     exports: &'a [alloc::string::String],
 }
 
@@ -181,6 +205,7 @@ fn install_one(
         &input.source,
         input.signature.as_ref(),
         input.limits,
+        input.retained_bytes,
     ));
     let Some(context) = session.source.declared.as_mut() else {
         return Err(crate::source::declared::error(
@@ -212,6 +237,7 @@ fn commit_definition(
     definition_bytes: &[u8],
     signature: Option<&noble_kernel::words::Scheme>,
     limits: crate::Limits,
+    retained_bytes: u32,
 ) -> Result<
     (
         crate::source::declared::ModuleSession,
@@ -219,20 +245,26 @@ fn commit_definition(
     ),
     crate::source::Error,
 > {
-    let prepared =
-        attempt!(session
-            .source
-            .prepare_signed(definition_bytes, &[], signature, limits));
+    let prepared = attempt!(session.source.prepare_signed(
+        definition_bytes,
+        &[],
+        signature,
+        limits,
+        retained_bytes,
+    ));
     if !prepared.is_definition() || prepared.submission().is_some() {
         return Err(crate::source::declared::error(
             crate::source::Stage::Check,
             "module definition has executable initializer",
         ));
     }
-    if prepared.definition.as_ref()
+    if prepared
+        .definition
+        .as_ref()
         .and_then(|definition| definition.signed.as_ref())
-        .is_some_and(|relation| usize::try_from(relation.source_slot).ok()
-            != Some(session.source.definitions.len()))
+        .is_some_and(|relation| {
+            usize::try_from(relation.source_slot).ok() != Some(session.source.definitions.len())
+        })
     {
         return Err(crate::source::declared::error(
             crate::source::Stage::Check,

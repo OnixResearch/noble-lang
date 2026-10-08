@@ -1,0 +1,14 @@
+## Why
+
+A declared-module session retains original module source and length-prefixed outside-definition history for source-derived rechecking and alias-rebind replay. The existing single 65,536-byte preparation limit also caps their combined retained bytes, so several individually valid module/definition inputs can exhaust the namespace before a larger bounded declared program fits. Increasing the ordinary source-input limit would conflate one untrusted input with persistent namespace storage and change ordinary sessions. This change preserves existing K-CHECK-07, DX-MODULE-01 and H-REPL-02 contracts.
+
+## What Changes
+
+- A host-selected `--retained-source-bytes N` on declared `compile`/`session` only sets a separate positive aggregate cap of at most 262,144 bytes. Without the flag the aggregate cap remains the selected per-input `--source-bytes` value (65,536 by default); every individual preparation still obeys `Limits.bytes <= 65,536`. An explicit zero flag refuses as usage; implicit `--source-bytes 0` remains a valid closed quota and rejects nonempty declared input without panic. Ordinary sessions and their existing per-input source policy remain unchanged. r[DX-MODULE-05]
+- Count each retained whole-module original byte and every outside-definition history byte, including each four-byte length header, using checked sums before publication and on replay. Retained source, source spans/digests, immutable resolved owners, reparse/proof subjects and replay fidelity remain byte-exact: no eviction, truncation, normalization, hash-only substitute or moving byte cost into runtime memory/fuel policy. A quota failure leaves the session stack, registry, aliases and history unchanged and executes no candidate body. This preserves DX-MODULE-01 and H-REPL-02. r[DX-MODULE-05]
+- Add an unexecuted DX-14 conformance design for both exact boundaries, per-input independence, original-source identity/reparse and atomic refusal. Document the opt-in as a source-retention setting, not as calculator acceptance, guest memory/fuel, a proof of frontend correctness, or authority. r[DX-MODULE-05]
+
+## Impact
+
+- **Files**: Native developer-experience requirement delta, DX-14 unexecuted workflow scenario, retained-source Cairn proposal/design/tasks, and existing CLI-facing README. The parent-owned contracts/CLI implementation changes are separate. No hand-edit to generated root specifications or accepted historical evidence/status.
+- **Verification**: After the exclusive tool slot is available, independently validate the delta, regenerate/sync native views and ledger, then exercise finite behavior on the actual declared-module admission path with exact raw byte counts, positive/negative boundaries and unchanged-session controls. Source-only authoring does not assert executed DX-14 or proof acceptance.

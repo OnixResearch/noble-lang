@@ -844,7 +844,8 @@ fn execute(arguments: &[std::ffi::OsString], submitted_sha256: &mut Option<std::
     }
     if modules_exceeded { return Err(output::Failure::error("module-limit","too many prior module units".into())); }
     let limits = noble_contracts::Limits::default();
-    let mut session = noble_contracts::source::ModuleSession::new(&[]).map_err(|error|source_error(&error))?;
+    let retained = noble_contracts::source::RetainedSourceLimit::new(65_536).expect("legacy verify-module retained source budget");
+    let mut session = noble_contracts::source::ModuleSession::new(&[], retained).map_err(|error|source_error(&error))?;
     let target = std::path::PathBuf::from(path);
     for module in modules.iter().chain(core::iter::once(&target)) {
         let source = super::artifacts::read_bounded(module,super::SOURCE_LIMIT,"module-source")?;

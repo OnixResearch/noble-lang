@@ -255,6 +255,32 @@ The finite language guest observations above belong to isolated compiled
 donor `209c478`; this combined Worker/C integration has not replayed them
 and does not inherit a source-bound acceptance receipt.
 
+**Declared source retention is a separate opt-in bound**, not a larger input
+limit. Without `--retained-source-bytes`, the combined original module-source
+and outside-definition-history ceiling equals `--source-bytes` (65,536 by
+default); each outside definition also uses a four-byte history header.
+With `--declared-modules` on `compile` or `session`, an explicit
+`--retained-source-bytes N` selects `1..=262144` aggregate bytes while every
+individual source input remains limited by `--source-bytes` (at most 65,536).
+For example, the pure combined session can explicitly select 262,144 with
+`noble session --framed --declared-modules --text-byte-cursor --retained-source-bytes 262144`.
+An explicit zero or larger value, or this
+flag without declared modules, is refused. An implicit `--source-bytes 0`
+remains a valid closed quota: nonempty source exhausts without a panic.
+Increasing aggregate capacity does not evict prior module sources or replace
+original bytes with hashes; alias replay must use the exact retained source.
+In framed declared sessions, a source frame above the per-input limit but at
+most 262,144 bytes is drained in bounded chunks and refused without checking
+or executing it; a following valid frame can reuse the unchanged session.
+Frames above that safe drain ceiling, malformed headers and truncated bodies
+terminate the stream instead. Ordinary sessions keep their prior framing rules.
+Proof workflows select their own 65,536-byte retention policy and do not
+silently inherit a larger session setting; a larger proof path requires
+separate user authorization.
+The active [retained-source change](.cairn/changes/declared-retained-source-budget/proposal.md)
+defines DX-14 as **absent/not-run**, not a compiled guest or proof acceptance.
+Guest runtime fuel/memory and ordinary sessions retain their own policies.
+
 A static rejection preserves the previous stack and namespace. A runtime trap
 or exhausted execution quota ends the session, retaining any host requests
 already observed. Sessions use a bounded arena that does not reclaim individual

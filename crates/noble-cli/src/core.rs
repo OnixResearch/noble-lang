@@ -75,7 +75,10 @@ pub const USAGE: &str = "usage:
   HOST_FILE: bind MODULE@VERSION test.emit ADAPTER Text -- ! test.emit allow|deny
              bind MODULE@VERSION test.clock ADAPTER -- I64 ! test.clock allow|deny script I64[,I64...]
   Declared-Modules-v1 module/import/definition units link without running guest code.
-  Preparation limits: --source-bytes N --source-nodes N --source-depth N --source-work N
+  Preparation limits: --source-bytes N (0..=65536) --source-nodes N --source-depth N --source-work N
+  --retained-source-bytes N (1..=262144) requires declared compile or session;
+  sets the cumulative retained original-source budget independently of the per-input
+  --source-bytes limit; without it the cumulative budget equals --source-bytes.
 
 Core-Bootstrap uses the selected managed-linear-memory backend.
 --text-byte-cursor alone selects Text-Byte-Cursor-v1 for ordinary compile/session;
@@ -89,6 +92,9 @@ Existing ordinary declared modules retain their explicit --bindings file.
 run checks one complete file before executing any of it.
 session reads one source submission per line; --framed reads a decimal byte count,
 newline, then exactly that many source bytes (permits multiline and invalid UTF-8).
+Declared framed sessions drain a complete oversized frame up to 262144 bytes in
+bounded chunks, refuse it without checking or executing it, then read the next
+header; larger, malformed or incomplete frames terminate the input stream.
 Reports are JSON lines, ordered bottom-to-top. A static refusal preserves the
 session; a runtime trap or exhausted execution limit ends it with its effect prefix.
 --emit retains source, WAT, Wasm, tool bindings and runtime observations in a new
@@ -108,19 +114,24 @@ struct Session {
 impl Session {
     fn new(options: &arguments::Options) -> Result<Self, output::Failure> {
         let declared = if options.declared_modules {
-            let bindings = options.manifest.as_ref().map(|manifest| manifest.operations())
+            let bindings = options
+                .manifest
+                .as_ref()
+                .map(|manifest| manifest.operations())
                 .unwrap_or_default();
-            Some(attempt!(
-                if options.declared_text() {
-                    noble_contracts::source::ModuleSession::new_declared_text(
-                        &bindings, options.signed_self_recursion,
-                    )
-                } else if options.signed_self_recursion {
-                    noble_contracts::source::ModuleSession::new_signed_self(&bindings)
-                } else {
-                    noble_contracts::source::ModuleSession::new(&bindings)
-                }.map_err(output::Failure::source)
-            ))
+            let retained = options.retained_source_limit();
+            Some(attempt!(if options.declared_text() {
+                noble_contracts::source::ModuleSession::new_declared_text(
+                    &bindings,
+                    options.signed_self_recursion,
+                    retained,
+                )
+            } else if options.signed_self_recursion {
+                noble_contracts::source::ModuleSession::new_signed_self(&bindings, retained)
+            } else {
+                noble_contracts::source::ModuleSession::new(&bindings, retained)
+            }
+            .map_err(output::Failure::source)))
         } else {
             None
         };
@@ -153,32 +164,28 @@ impl Session {
         source: &[u8],
         options: &arguments::Options,
     ) -> Result<output::Report, output::Failure> {
-        self.submissions = attempt!(self.submissions.checked_add(1).ok_or_else(|| {
-            output::Failure::new(
-                output::ErrorContext {
-                    stage: "session",
-                    outcome: "exhausted",
-                },
-                "submission counter exhausted",
-            )
-        }));
+        attempt!(self.advance_submission());
         if self.declared.is_some() {
             return self.submit_declared(source, options);
         }
         let prepared = match self.frontend.prepare(source, &self.stack, options.limits) {
             Ok(prepared) => prepared,
-            Err(error) => return Ok(output::Report::source_error_for_profile(
-                &error, self.submissions, options.text_byte_cursor,
-            )),
+            Err(error) => {
+                return Ok(output::Report::source_error_for_profile(
+                    &error,
+                    self.submissions,
+                    options.text_byte_cursor,
+                ))
+            }
         };
         if prepared.is_definition() {
-            attempt!(
-                self.frontend
-                    .commit(prepared)
-                    .map_err(output::Failure::source)
-            );
+            attempt!(self
+                .frontend
+                .commit(prepared)
+                .map_err(output::Failure::source));
             return Ok(output::Report::defined_for_profile(
-                self.submissions, options.text_byte_cursor,
+                self.submissions,
+                options.text_byte_cursor,
             ));
         }
         let submission = attempt!(prepared.submission().ok_or_else(|| {
@@ -192,9 +199,13 @@ impl Session {
         }));
         let compiled = match self.compiler.prepare(submission) {
             Ok(compiled) => compiled,
-            Err(error) => return Ok(output::Report::backend_error_for_profile(
-                error, self.submissions, options.text_byte_cursor,
-            )),
+            Err(error) => {
+                return Ok(output::Report::backend_error_for_profile(
+                    error,
+                    self.submissions,
+                    options.text_byte_cursor,
+                ))
+            }
         };
         if self.worker.is_none() {
             self.worker = Some(attempt!(worker::Engine::start(options)));
@@ -213,20 +224,31 @@ impl Session {
             return Ok(prepared_report);
         }
         let output_types = prepared.output().to_vec();
-        attempt!(
-            self.compiler
-                .commit(compiled)
-                .map_err(output::Failure::backend)
-        );
-        attempt!(
-            self.frontend
-                .commit(prepared)
-                .map_err(output::Failure::source)
-        );
+        attempt!(self
+            .compiler
+            .commit(compiled)
+            .map_err(output::Failure::backend));
+        attempt!(self
+            .frontend
+            .commit(prepared)
+            .map_err(output::Failure::source));
         let report = attempt!(engine.execute());
         if report.outcome == "normal" {
             self.stack = output_types;
         }
         Ok(report)
+    }
+
+    fn advance_submission(&mut self) -> Result<u64, output::Failure> {
+        self.submissions = attempt!(self.submissions.checked_add(1).ok_or_else(|| {
+            output::Failure::new(
+                output::ErrorContext {
+                    stage: "session",
+                    outcome: "exhausted",
+                },
+                "submission counter exhausted",
+            )
+        }));
+        Ok(self.submissions)
     }
 }

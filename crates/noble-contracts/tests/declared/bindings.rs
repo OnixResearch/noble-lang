@@ -5,7 +5,7 @@ fn declarations_are_inert_and_retained_slots_are_exact() -> Result<(), String> {
             version: 1,
             slot: 4,
             adapter: "version-A",
-        })])
+        })], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap"))
         .map_err(|e| format!("{e:?}"))?;
     let module=b"module ledger@1 [ opaque UserId I64 private variant Status Ready I64 public Failed Text private require emit Text -- ! test.emit export UserId export Status export handle def handle [ \"audit\" emit ] ]";
     let prepared = session
@@ -64,7 +64,7 @@ fn declarations_are_inert_and_retained_slots_are_exact() -> Result<(), String> {
 #[test]
 fn explicit_exported_conversions_preserve_nominal_identity() -> Result<(), String> {
     let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+        noble_contracts::source::ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|e| format!("{e:?}"))?;
     session = super::commit(session,b"module ledger@1 [ opaque UserId I64 public opaque OrderId I64 public opaque Hidden I64 public export UserId export UserId.new export UserId.into export OrderId export OrderId.new export OrderId.into export Hidden ]")?;
     let accepted = session
         .prepare(

@@ -37,7 +37,7 @@ fn publish(
 }
 
 fn imported_chain() -> Result<ModuleSession, String> {
-    let (session, result) = publish(ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?, BASE, LIMITS)?;
+    let (session, result) = publish(ModuleSession::new(&[], noble_contracts::source::RetainedSourceLimit::new(65_536).expect("valid legacy retained source cap")).map_err(|error| format!("{error:?}"))?, BASE, LIMITS)?;
     result.map_err(|error| format!("{error:?}"))?;
     let session = commit(session, b"import a@1 as a")?;
     let (session, result) = publish(session, MIDDLE, LIMITS)?;
