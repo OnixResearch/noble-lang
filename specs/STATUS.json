@@ -1000,8 +1000,10 @@
     "package_encoding": "open",
     "task_abi": "open",
     "execution_accounting": "open",
-    "implementation": "absent",
+    "implementation": "partial",
+    "implementation_scope": "Separate opt-in source-checked closed pure typed worker transition, bounded compiled Wasm input/output, and local-only WIT worker shell with exact host-selected Send grants and cancellation/native pin controls; portable package/export identity, general worker interface and full MW1/MW2 gates remain open.",
     "execution": "not-run",
+    "scoped_observation": "Donor 9202c2e reports seven local UnixDatagram WIT guest/shell controls, including authorized send, early cancel and denied grant/source variants; not replayed on this integration tree, not a canonical WORKER case or source-bound milestone receipt.",
     "proof": "open"
   },
   "octet_adoption": {

@@ -2,7 +2,7 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "2976cfd7dea1bf917a21a682b68215ac14b7c2dbc0f97d64a274bc30acb1514a",
+    "sha256": "acd8300ded01f26228f65884300f4f3329deacdc4f2f9a61a076fb710298ec94",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
       "sha256": "5a75c586f7ab4d3065a71c1259ea1d835d896b663173a8c83300c6c47f7feeea"
@@ -1836,7 +1836,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "65d1649a734bf3ce1d881500aac7ff094c00d9a5d51403c0169a73da530a918c"
+      "sha256": "d4a5af3ce13e262943325db2dfc413e3b8f89321c2124ebe6b7afbfeae6d5c79"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1964,7 +1964,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "9a91a344be906f121f961437fdd59526c594341accd11a03960ee6dbb03d410c"
+      "sha256": "ce7e63fd0871f96689ab175dcb7632106ac1e94baf6022fe994841ba8a455aee"
     },
     {
       "file": "specs/SAFETY.md",
@@ -1984,7 +1984,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "62034e762d296613058c6481c10896bf3e74f40c6988e3a7e868882dd9556e28"
+      "sha256": "7a5802b8db272c5c344de3d6cdbf835468b77251c3758c6a436e70d5ad038df9"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",

@@ -571,6 +571,7 @@ does not make every other feature available in that runtime.
 | [Core language and Wasm sessions](specs/ROADMAP.md#m4-implementation-and-retained-acceptance) | Wrapping `I64` arithmetic; Bool, Text, Unit, Pair, Sum, and List values; stack operations; checked branches; quotation, capture, composition, execution, and reflection; nonrecursive definitions. |
 | [Guarded live REPL](#guarded-live-repl-opt-in-partial) | In-process Wasm emission and explicit reload use one resident Node/V8 arena and checked publication; tested acyclic dependent rebuild and retained old Programs. An optional pre-submission selected-file byte gate refuses changed bytes without running the guest. Automatic watch remains unavailable because rename events cannot authenticate completed bytes. Guest self-edit refuses current dependents; scoped indirect self-rebind/cycle refusal was exercised without general proof or canonical LIVE case acceptance. No declared-module snapshots or full LIVE-05 acceptance. |
 | [Declared modules](specs/ROADMAP.md#dxm1-selected-declared-modules-bounded-acceptance-complete) | Opt-in opaque types, two-constructor variants, versioned session-local modules, imports and exports, and an explicit typed `test.emit` adapter. Available through `compile` and framed `session`. |
+| [Local typed Worker Send](verification/worker-send/test.mjs) | Separate opt-in source-checked pure worker transition and host-selected WIT Send grant with local Unix datagram/cancellation controls; no canonical WORKER or MW1/MW2 acceptance. |
 | [Contracts and proof checking](specs/PROGRAM-CONTRACTS.md#12-verification-tooling) | A pure contract language, Lean obligations, proof/refutation checking, and `verify` / `explain-proof`. |
 | [Evidence companions](specs/PROGRAM-CONTRACTS.md#83-mc2-companion-implementation-and-evidence-boundaries) | Live certified programs, evidence composition, guarded invocation, and proof-required build admission for the selected core scope. |
 | [Synchronous components](specs/WIT-WASI.md) | Selected WIT bindings, component compilation, host resources, ownership transfer, and authorization checks. |
@@ -579,7 +580,8 @@ does not make every other feature available in that runtime.
 
 Ordinary `run` and `session` use the **resource-free Core-Bootstrap** profile.
 Their host words are `test.emit` and `test.abort`. Resources and component
-features use separate entry points. Recursive definitions, local bindings,
+features use separate entry points. Signed self recursion and lexical locals
+exist only in the separate opt-in declared-module profiles; general recursion,
 general libraries and capability modules, portable package identities, and
 general distributed services remain open.
 

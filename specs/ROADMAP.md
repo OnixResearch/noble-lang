@@ -317,8 +317,10 @@ services, Syndicate, distributed retries, or universal backend/host refinement.
 
 [WORKER-CONFORMANCE.md](WORKER-CONFORMANCE.md) connects kernel and host contracts
 without new agent syntax. The M6 receipt retains WORKER-08's local task-owner
-race slice; the broader actual worker/shell harness remains unimplemented and
-unaccepted. That local evidence does not promote MW1 or MW2.
+race slice. A separately opt-in source-checked pure typed worker and local-only
+WIT Send shell have scoped guest/send/cancellation controls; the broader portable
+worker/shell harness and canonical cases remain unaccepted. Neither local lane
+promotes MW1 or MW2.
 
 | Milestone | Depends on | Exit criterion |
 |---|---|---|
