@@ -77,15 +77,33 @@ does not install these runtime tools.
 ### Inert C11 source candidate (nonselected)
 
 The explicit `build SOURCE --target c` route emits **source only**, not an
-executable or an alternative to the selected Wasm runtime. It independently
-checks an effect-free Core-Bootstrap expression with one I64 or Bool result,
-then lowers ordered stack operations, immutable quotation bodies, runtime
-`quote` capture, `compose`, and `run` into bounded C11 instructions and
-Program values. It refuses unsupported types, host effects, named definitions,
-runtime input and other profiles; there is no Wasm fallback.
-The active C specification delta still awaits requirement-level
-reconciliation; structurally valid Cairn documents do not authorize
-native execution, case promotion or change archiving.
+executable or an alternative to the selected Wasm runtime. This isolated
+WIP independently checks an effect-free Core-Bootstrap expression with one
+I64, Bool, Unit or Text result, then lowers ordered stack operations, the
+`unit` constructor and exact checked UTF-8 Text payloads, immutable quotation
+bodies, runtime `quote` capture,
+`compose`, `run`, pure `dip` and checked `if` branches into bounded C11 instructions and
+Program values. This WIP also lowers checked `pair`/`unpair`,
+`inl`/`inr`/`case` and `nil`/`cons`/`list.case` **internally** to a
+256-slot immutable tagged aggregate arena. Checked monomorphic Core types
+are interned as local shape IDs; every supported operation checks the
+exact ordered operand shapes before mutation. Pair/Sum/List references
+and static/dynamic Program shapes are checked before use; quotation
+captures retain arena values, and an iterative, step-charged walk bounds
+nested data and Program capture recipes. This does not admit aggregate
+or Program final results. Text literals are
+bound by node identity to exactly one
+host-selected checked `Body.texts` payload; static C bytes and bounded JSON
+output preserve escapes and UTF-8 without retaining a borrowed buffer.
+The host-supplied `expected_interface` is parsed into ordered Core `Ty`
+values with the existing bounded source type grammar, then compared with
+independent kernel acceptance. The parser recognizes nested Pair/Sum/List,
+Syntax and pure Program contracts, but source-only final Pair/Sum/List/Syntax/
+Program outputs still refuse. `reflect`, host effects, named definitions,
+runtime inputs and other profiles refuse; there is no Wasm fallback.
+The new internal Pair/Sum/List path is unreviewed
+source-only WIP, reconciled in the active change delta but not yet synced
+into the held canonical CB-BUILD-01 paragraph.
 
 ```sh
 printf '20 2 quote [ + ] compose run\n' > capture.noble
@@ -99,20 +117,50 @@ The new directory contains the exact source, contract, policy, `artifact.c`,
 and `manifest.json` with exact-byte file digests and a build key. The checked
 candidate and resolved-environment digest fields hash this toolchain's Rust
 Debug rendering, not a canonical external encoding. This is candidate
-evidence, **not** independent admission or C/Wasm equivalence. Input files are
-read through one bounded file descriptor each, then the observed bytes are
+evidence, **not** independent admission or C/Wasm equivalence. Contract and
+policy JSON reject duplicate member names recursively before checking limits,
+including names whose Unicode escapes decode to the same key. The exact
+source-only policy still rejects supplied `limits.list_length` rather than
+admitting an unenforced bound: the internal List arena enforces its own
+fixed 255-element ceiling, **not** the CB-CASE-01/06 policy controls.
+Input files are read through one
+bounded file descriptor each, then the observed bytes are
 copied; this does not authenticate the host-selected pathname against ancestor
 symlinks, hard links or concurrent replacement, nor seal output files against
 subsequent mutation. Output child paths are also re-resolved after creating the
 directory, so a concurrently replaced output directory is not authenticated.
-The manifest declares fixed ceilings: 256 dynamic Program slots, 512 frames,
-256 recipe leaves, and depth 256. Every C dispatch iteration consumes the
-policy step budget, including empty quotations and composition traversal.
+The manifest declares fixed ceilings: 256 dynamic Program slots, 256
+aggregate slots, List length 255, 512 shape identities, 512 frames,
+256 recipe leaves, and depth 256. Every C
+dispatch iteration consumes the
+policy step budget, including empty quotations, composition traversal,
+selected branches and `dip` restore continuations. Quotation capture also
+charges a step per visited nested datum; the aggregate arena has no
+deallocation or borrowed references during an invocation.
 Finishing a frame also costs a step; these counts do not claim Wasm parity.
 These are source-level bounds, not native runtime acceptance. Both `--native`
 and `execute --target c` refuse: no compiler/ELF execution is authorized until
 a separately reviewed pinned native toolchain, complete source-to-ELF
 correspondence, sandbox, loader, and clock barrier are selected.
+The existing bubblewrap runner is for Lean proofs, not C; installed QEMU/KVM
+or host compiler binaries do not supply a selected VM image, immutable
+runner/filter/loader/mediator pins or a verified vDSO/vvar/TSC barrier.
+For a **developer-only, nonexecuting** C11 syntax diagnostic on emitted source,
+the isolated CLI test uses the existing pinned component GCC15 wrapper with
+`-std=c11 -pedantic-errors -fsyntax-only` against `artifact.c`. That compiler
+pin is not a selected C backend compiler or a native artifact admission. It
+produces no admitted ELF and cannot establish C/Wasm differential results.
+All CB-CASE-01..10 remain absent/not-run/open/unassessed; the active C delta
+has been reconciled against all eleven canonical requirement bodies and
+their linked scenario designs, but structural Cairn proposal/design/tasks
+gates and a nonblocked *preview* are not independent owner approval or
+permission to sync it. The eight remaining implementation, owner-review
+and assurance tasks stay open. The
+canonical CB-BUILD-01 still describes the earlier narrower source-only slice,
+not the unreviewed internal Pair/Sum/List WIP. The [review-only native security design](.cairn/changes/c-backend/design.md)
+lists prerequisites, not a selected
+runner. No clock/vvar/TSC nondisclosure barrier or C selection follows
+from source syntax diagnostics.
 
 ### Independent Mathlib comparison for implemented I64 arithmetic
 

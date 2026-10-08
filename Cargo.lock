@@ -444,6 +444,7 @@ dependencies = [
  "noble-kernel",
  "noble-wasm",
  "rustix",
+ "serde",
  "serde_json",
  "wasmparser",
  "wasmtime",

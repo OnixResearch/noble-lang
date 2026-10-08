@@ -182,6 +182,8 @@
   "verification/wi03-final/gate.mjs"
   "verification/wi03/gate.mjs"
   # Source-only MW1 issuer and MW2 Send/cancellation integration inputs.
+  "crates/noble-cli/src/build.rs"
+  "crates/noble-cli/src/c_backend.rs"
   "crates/noble-cli/src/component.rs"
   "crates/noble-cli/src/component/artifacts.rs"
   "crates/noble-cli/src/component/report.rs"
@@ -200,6 +202,7 @@
   "crates/noble-cli/src/core/worker/process.rs"
   "crates/noble-cli/src/core/worker/protocol.rs"
   "crates/noble-cli/src/main.rs"
+  "crates/noble-cli/tests/c_backend.rs"
   "crates/noble-cli/tests/worker_host_child.rs"
   "crates/noble-cli/tests/fixtures/worker-send-dispatch.noble"
   "crates/noble-contracts/src/component/bindings.rs"

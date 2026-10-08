@@ -91,6 +91,68 @@ impl Error {
     }
 }
 
+/// An independently supplied, ordered Core stack interface, not a checked
+/// candidate or permission to execute the indicated values.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CoreInterface {
+    pub stack_in: alloc::vec::Vec<noble_kernel::types::Ty>,
+    pub stack_out: alloc::vec::Vec<noble_kernel::types::Ty>,
+}
+
+/// Parse host-selected Core interface words with the source type parser.
+/// The C source-only caller separately checks this against kernel acceptance
+/// and still refuses value forms its emitter cannot lower.
+pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
+    let span = crate::Span {
+        start: 0,
+        end: u32::try_from(text.len()).unwrap_or(u32::MAX),
+    };
+    if text.len() > 4096 {
+        return Err(Error::at(Stage::Check, crate::invalid(span, "Core interface bytes exhausted")));
+    }
+    let mut stack_in = alloc::vec::Vec::new();
+    let mut stack_out = alloc::vec::Vec::new();
+    let mut separator = false;
+    for word in text.split_ascii_whitespace() {
+        if word == "--" {
+            if separator {
+                return Err(Error::at(Stage::Check, crate::invalid(span, "duplicate stack separator")));
+            }
+            separator = true;
+            continue;
+        }
+        let stack = if separator { &mut stack_out } else { &mut stack_in };
+        if stack.len() >= 128 {
+            return Err(Error::at(Stage::Check, crate::invalid(span, "Core stack height exhausted")));
+        }
+        let parsed = declared::types::parse_with_families(word, &[], &[], None, span)
+            .map_err(|error| Error::at(Stage::Check, error))?;
+        if !core_type(&parsed.ty) {
+            return Err(Error::at(Stage::Check, crate::invalid(span, "unsupported Core interface type")));
+        }
+        stack.push(parsed.ty);
+    }
+    if !separator {
+        return Err(Error::at(Stage::Check, crate::invalid(span, "missing stack separator")));
+    }
+    Ok(CoreInterface { stack_in, stack_out })
+}
+
+fn core_type(ty: &noble_kernel::types::Ty) -> bool {
+    use noble_kernel::types::Ty;
+    match ty {
+        Ty::I64 | Ty::Bool | Ty::Unit | Ty::Text | Ty::Syntax => true,
+        Ty::List(item) => core_type(item),
+        Ty::Pair(left, right) | Ty::Sum(left, right) => core_type(left) && core_type(right),
+        Ty::Program(input, output, effects) => {
+            effects.as_slice().is_empty()
+                && input.iter().all(core_type)
+                && output.iter().all(core_type)
+        }
+        _ => false,
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Target {
     Builtin(u32),

@@ -1423,23 +1423,28 @@ engine remains separately unselected. The [MCB milestone](roadmap.json) follows
 M4 only and is specified by [the C11 AOT contract](C-BACKEND.md) and its
 [active change](../.cairn/changes/c-backend/proposal.md); native execution
 requires a pinned sandbox and separately checked source/C/ELF admission.
-Only restricted inert checked I64/Bool C11 source emission is implemented;
-`--native` and `execute --target c` refuse. CB-CASE-01's supplied
-`limits.list_length` is not accepted by that source-only policy, so the
-case remains open rather than treating the bound as an ignored field.
-The active C specification delta remains safety-blocked pending
-requirement-level reconciliation; direct structural Cairn validity is not
-native admission, case promotion or authorization to archive the change.
+Only restricted inert checked I64/Bool/Unit/Text-result C11 source emission
+is present in this isolated source-only integration, including internal
+Pair/Sum/List construction/elimination, exact checked value-shape preflights
+and bounded immutable aggregate/Program captures. Pair/Sum/List/Syntax/Program
+final results, supplied list-length policies, reflect, runtime inputs and host
+mediation remain unsupported. The fixed internal List ceiling is 255, not
+CB-CASE-01/06 admission. The held canonical CB-BUILD-01 still describes a
+narrower route; the reconciled active delta cannot replace it before
+independent owner review and legal sync. `--native` and `execute --target c`
+refuse. CB-CASE-01 supplies `limits.list_length` and remains open because the
+exact source-only policy rejects it. Recursive duplicate JSON members refuse
+before policy interpretation, but this is not native admission or case
+evidence. The current source-only path does not satisfy CB-ADMIT-01's sealed,
+ancestor-anchored native build contract.
 Full watch-case acceptance and complete source-bound LIVE-02 remain open
 despite the guarded partial runtime. Integrated real guests observed only
-the exact queued proposal root released after a terminal trap (62 guest
-steps) or quota (300 guest steps), each from one root to zero; the paired
-watch save advanced sequence zero to one. LIVE-02 active in-flight reload,
-LIVE-05 forced overlap, LIVE-06 explicit host revoke and general LIVE-10
-cancellation/retirement assurance remain open. The scoped source manifest
-SHA-256 is `33317914fd0f057b9eb45047ac21f052833334ad25910c30fce2154e7c40fd5a`;
-guest receipt SHA-256 is
-`9376b0d13aa1c0cd2f852925fc9af528821428ee36cb6cdc6044dc6bc7eab5d5`.
+the historical exact queued proposal root released after a terminal trap
+(62 guest steps) or quota (300 guest steps), each from one root to zero; the
+paired watch save advanced sequence zero to one. LIVE-02 active in-flight
+reload, LIVE-05 forced overlap, LIVE-06 explicit host revoke and general
+LIVE-10 cancellation/retirement assurance remain open in those historical
+receipts; source-only LIVE03 integration is not a new JS-instance receipt.
 Neither complete opt-in backend profile is accepted: all
 [LIVE](conformance/live-wasm-cases.json) and
 [CB](conformance/c-backend-cases.json) cases are absent/not-run and proofs

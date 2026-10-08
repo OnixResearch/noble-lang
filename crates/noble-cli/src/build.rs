@@ -20,10 +20,12 @@ pub const USAGE: &str = "usage:
   noble companions
 
 The nonselected C11 source-only route requires an independently checked,
-effect-free Core-Bootstrap I64/Bool result, no runtime input or named definitions,
-and supports I64/Bool literals, stack words, arithmetic, quote, quotation,
-compose and run. CONTRACT_JSON contains exactly expected_interface (\"-- I64\"
-or \"-- Bool\") and empty resolved_host_contracts. POLICY_JSON contains exactly
+effect-free Core-Bootstrap I64/Bool/Unit/Text result, no runtime input or named definitions,
+and supports checked literals, stack words, arithmetic, quote, quotation,
+compose, run, pure dip, checked if and bounded internal Pair/Sum/List values.
+Final aggregate results remain unsupported. CONTRACT_JSON contains exactly
+expected_interface (\"-- I64\", \"-- Bool\", \"-- Unit\" or \"-- Text\") and empty
+resolved_host_contracts. POLICY_JSON contains exactly
 profile Core-Bootstrap, target x86_64-unknown-linux-gnu, empty allowed_effects,
 and finite stack_slots/steps/output_bytes limits. It creates source.noble,
 contract.json, policy.json, artifact.c and manifest.json in a new directory.

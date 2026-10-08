@@ -25,7 +25,7 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-This source-only integrated candidate selection compares 253 file digests across the flake and
+This source-only integrated candidate selection compares 256 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
 source-bound verification/build recipes, the architecture capacity policy,
@@ -36,8 +36,9 @@ controls, including direct Worker configuration, process, protocol, typed
 shell consumer, binding
 policy, declared-live publication, live ABI encoding and watched-file gate,
 component assembler/report, Wasm metadata emission and declared-live
-transaction ownership, the typed package parser, and directly compiled Send WIT and
-dispatch source, plus the separate test-only boundary
+transaction ownership, the typed package parser, directly compiled Send WIT
+and dispatch source, and the inert C CLI build/backend and regressions,
+plus the separate test-only boundary
 fixture lock. The newly selected declared-module contracts and CLI files,
 their behavioral regressions, migrated Wasm constructor callsites, and active
 diagnostic replay source bind this candidate's retained-source change rather
@@ -97,16 +98,21 @@ Noble owns the exact selection policy and the Nix composition code.
 [`nix/reviewed-vendor.nix`](../nix/reviewed-vendor.nix) reads the root Cargo
 lock and the independent M5, M6, M7, intrinsic-proofs, intrinsic-named-v2,
 Result-library, declared-modules-v1, and Worker Send peer locks: nine locks
-in all. The source-only recipe fixes the root lock SHA-256 to
-`414f95bc62d57849a6411aed8d848bd93fe00111dba2c19be4a77e1b6e0161aa`
-and the Worker Send peer lock to
+in all. That frozen pre-C recipe still expects root lock SHA-256
+`414f95bc62d57849a6411aed8d848bd93fe00111dba2c19be4a77e1b6e0161aa`,
+but the integrated C backend's direct `serde` dependency changes the root
+lock to `2b38a16099566ea5eaca9cbf5c70ab584a92b650a8f82ed16a31ca1f1e0b8f6d`.
+The old recipe therefore **must fail closed** on this checkout. The Worker
+Send peer lock remains
 `91e75cfc90112d55765e7598527f151677076902c2b3434cc5af77069931f7c2`.
 It requires exactly 615 registry rows and 241 unique checked packages,
 rejects missing/conflicting checksums, verifies archive SHA-256, and restricts
 archive extraction to safe regular files/directories under the exact package
 root. The derivation writes `source-registry-0` and a nine-lock
-lock/archive provenance manifest. This source recipe has **not** been realized
-or approved as a selected vendor. The previous eight-lock output
+lock/archive provenance manifest. A new exact nine-lock source manifest and
+separately reviewed derivation/NAR are required before any vendor selection
+or locked Cargo execution; no replacement output is claimed here. The
+previous eight-lock output
 `/nix/store/3sl4kjvccw33wbrhb7qf57myyrzj371c-noble-reviewed-offline-vendor`
 has measured NAR `sha256-23BKxkztQ6megprdki32gwDS8LXsqQPIsCnI1CYGHTQ=`,
 still bound in [`M5`](m5/pins.json) and [`M6`](m6/pins.json), but it cannot
