@@ -646,7 +646,22 @@ before its staging reply while a second fsynced rename selects B. They observe
 the old result before the reload ACK, only B acknowledged as current, and
 zero guest requests for an unsupported partial in-place write. A separate
 external `MAP_SHARED` smoke similarly refuses observed source drift before
-guest execution. The prior combined worker reported 55 passing default live
+guest execution. Two further scoped real-child watch controls ran. One rejects
+a complete save containing canonical missing-import bytes
+`import missing@1 as m` at the Core lexer, before any declared-module lookup,
+without changing the old generation, typed stack or definition. The other
+pauses a checked `20 addone` submission before commit while an fsynced paired
+rename selects its replacement.
+The accepted old submission returns `21` before the new watch ACK, whose
+successor then returns `22`. While the refused bytes remain selected, the
+last-ACKed-byte gate refuses new execution; restoring those exact bytes permits
+the old definition to run, but does not ACK an in-place write as a new save.
+These controls do not promote a canonical LIVE-05 case. The private scoped
+receipt at
+`$HOME/.cache/noble-live05-host-seal-20261009-scoped-receipt.json` binds the
+resulting commit and bounded logs. This path is only a pointer; its SHA-256
+is reported separately, not embedded in the commit it binds. The prior
+combined worker reported 55 passing default live
 tests and 57 feature-enabled tests. Separately, isolated LIVE06 source
 `a35194da1776747e8478414d04a106162aca7733` passed 55 default and 59
 feature-enabled live tests on feature CLI SHA-256

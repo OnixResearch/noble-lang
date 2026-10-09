@@ -20,6 +20,9 @@ use rustix::io::Errno;
 const MAX_EVENTS_PER_DRAIN: usize = 4096;
 const MAX_RENAME_PAIRS: usize = 64;
 static NEXT_SEAL_DIRECTORY: AtomicU64 = AtomicU64::new(0);
+#[cfg(feature = "live-test-barrier")]
+static ACCEPTED_SUBMISSION_PAUSED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
 
 fn pinned(directory: &std::fs::File) -> PathBuf {
     PathBuf::from(format!("/proc/self/fd/{}", directory.as_raw_fd()))
@@ -510,6 +513,35 @@ fn pause_seal_for_test(candidate: &super::Snapshot) -> Result<(), String> {
         "NOBLE_LIVE_TEST_SEAL_BARRIER_SHA256",
         "candidate-sealed",
         &candidate.digest,
+        None,
+    )
+}
+
+#[cfg(feature = "live-test-barrier")]
+pub(super) fn pause_accepted_submission_for_test(
+    source: &[u8],
+    generation: u64,
+    sequence: u64,
+    selected_source_sha256: &str,
+) -> Result<(), String> {
+    const DIRECTORY: &str = "NOBLE_LIVE_TEST_ACCEPTED_SUBMISSION_BARRIER_DIR";
+    if std::env::var_os(DIRECTORY).is_none() {
+        return Ok(());
+    }
+    let digest = crate::workflow::intrinsic::sha256(source);
+    let expected = std::env::var_os("NOBLE_LIVE_TEST_ACCEPTED_SUBMISSION_SHA256")
+        .ok_or("private accepted submission barrier lacks its expected SHA-256")?;
+    if expected.to_str() != Some(digest.as_str())
+        || ACCEPTED_SUBMISSION_PAUSED.swap(true, Ordering::Relaxed)
+    {
+        return Ok(());
+    }
+    pause_host_for_test(
+        DIRECTORY,
+        "NOBLE_LIVE_TEST_ACCEPTED_SUBMISSION_SHA256",
+        "accepted-watch-submission",
+        &digest,
+        Some((generation, sequence, selected_source_sha256)),
     )
 }
 
@@ -529,7 +561,7 @@ pub(super) fn pause_explicit_reload_for_test(
         ),
         _ => return Err("unknown private explicit reload test barrier".into()),
     };
-    pause_host_for_test(directory, expected, point, matched)
+    pause_host_for_test(directory, expected, point, matched, None)
 }
 
 #[cfg(feature = "live-test-barrier")]
@@ -538,6 +570,7 @@ fn pause_host_for_test(
     expected_key: &str,
     point: &str,
     matched: &str,
+    accepted: Option<(u64, u64, &str)>,
 ) -> Result<(), String> {
     let Some(directory) = std::env::var_os(directory_key) else {
         return Ok(());
@@ -553,10 +586,16 @@ fn pause_host_for_test(
     }
     let mut reached = std::fs::OpenOptions::new().write(true)
         .open(directory.join("reached")).map_err(|error| error.to_string())?;
-    writeln!(reached, "{}", serde_json::json!({
+    let mut event = serde_json::json!({
         "point": point,
         "matched": matched,
-    })).map_err(|error| error.to_string())?;
+    });
+    if let Some((generation, sequence, selected_source_sha256)) = accepted {
+        event["source_generation"] = serde_json::json!(generation);
+        event["watch_sequence"] = serde_json::json!(sequence);
+        event["selected_source_sha256"] = serde_json::json!(selected_source_sha256);
+    }
+    writeln!(reached, "{event}").map_err(|error| error.to_string())?;
     let mut release = std::fs::OpenOptions::new().read(true)
         .open(directory.join("release")).map_err(|error| error.to_string())?;
     release.read_exact(&mut [0u8; 1]).map_err(|error| error.to_string())

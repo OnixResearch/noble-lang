@@ -1444,6 +1444,16 @@ impl Live {
         }
         let code_span = compiled.code_span();
         let output = prepared.output().to_vec();
+        #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+        if let (Some(watch), Some(selected_source_sha256)) =
+            (self.watch.as_ref(), self.selected_file_hash.as_deref())
+        {
+            // The selected bytes passed the final execution gate. A save
+            // after this safepoint cannot change the already accepted frame.
+            watch::pause_accepted_submission_for_test(
+                source, self.generation, watch.sequence(), selected_source_sha256,
+            ).map_err(fatal_failure)?;
+        }
         self.session
             .compiler
             .commit(compiled)

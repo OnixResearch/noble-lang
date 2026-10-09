@@ -36,6 +36,24 @@ candidate worker staging. An effectful old Program requires current host
 authority, and typed values remain retained. Failed post-invocation guest
 admission retains the completed invocation's stack and unused grant.
 
+An isolated LIVE-05 watch slice derived from private source `2cc259596eef`
+passed two focused offline real-child controls (one default, one with
+`live-test-barrier`). A paired rename to canonical missing-import bytes
+`import missing@1 as m` refused at the Core lexer before any declared-module
+lookup, with zero guest requests and unchanged old generation/stack; the
+last-ACKed-byte gate refused execution until the original selected bytes
+were restored, after which old `addone` returned `21`. In the feature-only
+control, an accepted `20 addone` paused before top-level commit while a
+fsynced paired rename selected the replacement: old `21` completed before
+watch sequence 1 ACKed generation 2, then the new definition returned `22`.
+Neither control is a canonical LIVE-05 case receipt or proof promotion.
+The private scoped receipt at
+`$HOME/.cache/noble-live05-host-seal-20261009-scoped-receipt.json` binds the
+resulting source commit and bounded logs. The path is not an integrity
+binding; its SHA-256 is reported separately because it cannot be embedded
+in the commit it binds. Full module/ABI artifact provenance and canonical
+proof remain open.
+
 Indirect self-rebind/cycle refusal was exercised in scoped live-child checks;
 general proof remains open. Integrated source `8b1504b` passed 55 scoped
 live CLI tests and five selected real guest traces on CLI SHA-256

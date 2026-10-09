@@ -359,7 +359,7 @@ impl LiveBarrier {
             )?;
         }
         // Linux FIFO O_RDWR opens without a rendezvous race. Both ends stay
-        // owned by this test until a real guest sends its exact event.
+        // owned by this test until the real live child sends its exact event.
         let reached_channel = std::fs::OpenOptions::new().read(true).write(true)
             .open(directory.join("reached"))?;
         let release_channel = std::fs::OpenOptions::new().read(true).write(true)
@@ -387,6 +387,11 @@ impl LiveBarrier {
     fn configure_host_seal(&self, command: &mut Command) {
         command.env("NOBLE_LIVE_TEST_SEAL_BARRIER_DIR", &self.directory)
             .env("NOBLE_LIVE_TEST_SEAL_BARRIER_SHA256", &self.expected);
+    }
+
+    fn configure_accepted_submission(&self, command: &mut Command) {
+        command.env("NOBLE_LIVE_TEST_ACCEPTED_SUBMISSION_BARRIER_DIR", &self.directory)
+            .env("NOBLE_LIVE_TEST_ACCEPTED_SUBMISSION_SHA256", &self.expected);
     }
 
     fn configure_explicit_reload(&self, command: &mut Command) {
@@ -422,8 +427,8 @@ impl LiveBarrier {
 #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
 impl Drop for LiveBarrier {
     fn drop(&mut self) {
-        // A failing assertion may precede guest entry. Wake the bounded
-        // reader so the suite never leaves a private test thread blocked.
+        // A failing assertion may precede the child's barrier event. Wake the
+        // bounded reader so the suite never leaves a private test thread blocked.
         let _ = (&self.reached_channel).write_all(b"{}\n");
         if let Some(reader) = self.reader.take() {
             let _ = reader.join();
@@ -653,6 +658,40 @@ fn watch_flag_requires_explicit_selected_source() -> Result<(), Box<dyn std::err
     assert_eq!(text_field(&report, "outcome"), "reload-refused");
     assert_eq!(number_field(&report, "guest_requests"), 0);
     Ok(())
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_missing_import_preserves_last_ack_and_old_definition(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let (old_generation, old_hash) = live_ack(&live.report()?, &[]);
+    let previous = live.submit("7")?;
+    normal(&previous, &["7"]);
+
+    // Keep the canonical missing-import bytes. Core rejects the `@` in this word
+    // before declared-module import resolution; it is not a registry lookup.
+    fixture.replace("import missing@1 as m")?;
+    let rejected = live.report()?;
+    assert_eq!(refused_reload(&rejected, &["7"]), old_generation);
+    assert_eq!(text_field(&rejected, "source_span_basis"),
+        "refused-candidate-file-byte-offsets");
+    assert_eq!(rejected["source_span"], serde_json::json!({"start": 7, "end": 16}));
+    assert_eq!(rejected["stack"], previous["stack"]);
+    assert_generation_inspection(&live.submit(":generation")?,
+        old_generation, &previous["stack"]);
+    // Watch sessions require the last ACKed selected bytes before executing
+    // again, even though the old immutable definition is still installed.
+    assert_source_change_refused(&live.submit("20 addone")?,
+        old_generation, &["7"], &old_hash);
+    fs::write(&fixture.source, "def addone [ 1 + ]")?;
+    let old = live.submit("20 addone")?;
+    normal(&old, &["7", "21"]);
+    assert_eq!(number_field(&old, "source_generation"), old_generation);
+    assert_eq!(number_field(&old, "guest_requests"), 0);
+    assert_eq!(number_field(&old, "protected_operations"), 0);
+    live.finish()
 }
 
 #[cfg(target_os = "linux")]
@@ -3133,6 +3172,58 @@ fn failed_private_directory_sync_keeps_editor_source_and_old_generation(
     assert_eq!(text_field(&ack, "watch_save_protocol"),
         "paired-temp-rename-host-fsynced-snapshot");
     normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn watched_accepted_top_level_finishes_old_frame_before_new_save_ack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const SUBMISSION_SHA256: &str = "9b407313ac8ea5fd7371d687299519af1f6c52d5a10d50f472232f27a1402107";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut barrier = LiveBarrier::new(&fixture.directory,
+        "accepted-watch-submission", SUBMISSION_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "watch", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    barrier.configure_accepted_submission(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let initial = live.report()?;
+    let (old_generation, old_hash) = live_ack(&initial, &[]);
+    assert_eq!(old_generation, 1);
+    assert_eq!(number_field(&initial, "watch_sequence"), 0);
+
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(b"20 addone\n")?;
+    stdin.flush()?;
+    let accepted = barrier.wait()?;
+    assert_eq!(number_field(&accepted, "watch_sequence"), 0);
+    assert_eq!(number_field(&accepted, "source_generation"), old_generation);
+    assert_eq!(text_field(&accepted, "selected_source_sha256"), old_hash);
+    assert!(matches!(live.reports.try_recv(), Err(mpsc::TryRecvError::Empty)),
+        "a paused accepted top-level submission already received an ACK");
+
+    fixture.replace("def addone [ 2 + ]")?;
+    File::open(&fixture.directory)?.sync_all()?;
+    barrier.release()?;
+    let old = live.report()?;
+    normal(&old, &["21"]);
+    assert_eq!(number_field(&old, "source_generation"), old_generation);
+    assert_eq!(number_field(&old, "guest_requests"), 0);
+    assert_eq!(number_field(&old, "protected_operations"), 0);
+    let ack = live.report()?;
+    let (new_generation, new_hash) = live_ack(&ack, &["21"]);
+    assert_eq!(new_generation, old_generation + 1);
+    assert_ne!(new_hash, old_hash);
+    assert_eq!(number_field(&ack, "watch_sequence"), 1);
+    assert_eq!(text_field(&ack, "source_freshness"), "matched-at-watch-ack-check");
+    let fresh = live.submit("20 addone")?;
+    normal(&fresh, &["21", "22"]);
+    assert_eq!(number_field(&fresh, "source_generation"), new_generation);
+    assert_eq!(number_field(&fresh, "guest_requests"), 0);
+    assert_eq!(number_field(&fresh, "protected_operations"), 0);
+    assert_generation_inspection(&live.submit(":generation")?,
+        new_generation, &fresh["stack"]);
     live.finish()
 }
 
