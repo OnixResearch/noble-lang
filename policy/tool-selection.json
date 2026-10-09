@@ -116,7 +116,7 @@
     "crates/noble-cli/src/core/worker_package.rs": "f078246ab02923fff9e6d09b481cc3e04ef253c6c36924144210083a8e258ed0",
     "crates/noble-cli/src/core/worker_program.rs": "b637bbce5813035c4acdc5b93766347ce5ffda999ba2411217125a55d1e1c06c",
     "crates/noble-cli/src/core/worker_program_guest.rs": "e4fa985c356d9a1c6ba9d18a9ccdd979ca8f5b983cdc3a98a91ac70a3bfb4f89",
-    "crates/noble-cli/src/core/worker_shell.rs": "3fd9e55fe9f52e68bd17934e41cd5d27a2476152fe6775e39d6c7feb54604279",
+    "crates/noble-cli/src/core/worker_shell.rs": "8b034d5f5eb8a30584ff0e2db47e308d0d4490a7212be0304afea7b55aa94917",
     "crates/noble-cli/src/core/worker_typed.rs": "76bc1142c993eaa57eb0097f1ee2fb9695281933c855baa23e8c1815eceedf99",
     "crates/noble-cli/src/core/worker_value.rs": "ac838b88fad72bc3bbf844044ae753537fd048f5adc9df42f3bdf9fb2ab81408",
     "crates/noble-cli/src/main.rs": "b9520ab08a8062293a78cbb8c8ed2601f0232f43766a9f441b1c63161512b3bb",

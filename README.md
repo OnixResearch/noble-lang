@@ -865,6 +865,13 @@ cancellation with retained task/resource pins. These are local-only controls:
 there is no external destination, rollback claim, owner-selected portable
 G-03/G-05 package/export, or canonical WORKER-01–12 acceptance. Neither the
 calculator nor Worker is a completed application or agent runtime.
+On shell cancellation errors, the original move-only task is retained through
+trusted host retirement. Native producer storage is joined and dropped before
+task reservations and resource pins are released, and independent cleanup
+continues even when another settlement fails. Shell failure reports use
+retained authority counters and measured local send bytes when available;
+unavailable observations are `null`, not invented zero attempts. This local
+cleanup does not establish external rollback or portable Worker acceptance.
 This source includes `58b9d6c` host-fault cleanup and `9c687ed` source
 binding/fault assertions. Nine fresh local WIT/UnixDatagram cases passed
 against the integrated CLI above and a fresh offline-locked peer (SHA-256
