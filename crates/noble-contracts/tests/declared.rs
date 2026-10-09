@@ -114,13 +114,12 @@ fn worker_getters_expose_closed_checked_owner_not_source_guessed_rows() -> Resul
         "a foreign checked source owner is not inside this worker package");
     let signed = ModuleSession::new_declared_text(&[], true, retained())
         .map_err(|error| format!("{error:?}"))?;
-    let unchecked_self = signed.prepare(
+    let signed_self = signed.prepare(
         b"module spin@1 [ signature forever forall<S:stack> [ S -- S ! pure ] export forever def forever [ forever ] ]",
         &[], LIMITS,
     ).map_err(|error| format!("{error:?}"))?;
-    assert!(unchecked_self.checked_program_owner("forever").is_none());
-    assert!(unchecked_self.checked_program_closure("forever").is_none(),
-        "an unverified signed self cycle cannot enter a closed worker package");
+    assert!(signed_self.checked_program_closure("forever").is_none(),
+        "verified signed self recursion is not a finite closed worker package");
     let bound = ModuleSession::new(&[binding(Binding {
         version: 1, slot: 4, adapter: "version-A",
     })], retained()).map_err(|error| format!("{error:?}"))?;
