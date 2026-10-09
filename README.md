@@ -683,7 +683,9 @@ built `--no-default-features` CLI denied an injected fixture grant as
 `unbound-word` with zero guest requests, then executed ordinary live source.
 The separately combined watch and harness source rebinds the changed
 selection-policy file SHA-256 entries in authored Nickel and exported JSON.
-Extraction `configuration.features` remains `[]`, while the reviewed
+Extraction `configuration.features` remains `[]` (no individually named
+features), but its separate `cargo_args` still selects `--all-features`,
+including in the contracts and Wasm extraction lanes. The reviewed
 workspace feature-name set is exactly `["live-test-barrier",
 "live05-harness-effects"]`; unreviewed extra names are refused. This is a
 source-bound policy update, not a selected Nix execution or LIVE-05
