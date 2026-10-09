@@ -27,9 +27,11 @@ module bigint_digit_support@1 [
     signature checked_depth forall<S:stack>
         [ S I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
     def checked_depth [
-        dup 2305843009213693935 <
-        [ 1 + 4 * 64 + result@1.Result.Ok ]
-        [ drop depth_limit result@1.Result.Err ] if
+        dup 0 <
+        [ drop depth_limit result@1.Result.Err ]
+        [ dup 2305843009213693935 <
+          [ 1 + 4 * 64 + result@1.Result.Ok ]
+          [ drop depth_limit result@1.Result.Err ] if ] if
     ]
 
     signature scaled_work forall<S:stack>

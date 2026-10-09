@@ -1,0 +1,265 @@
+module bigint_scan@1 [
+    # Unselected source-only cutover: this module owns the private scan states.
+    # Old bigint@1 scan exports/nominal IDs are not aliases or compatible handles.
+    # Keep zero-count construction here; BigInt alone checks canonicality/seals values.
+    # These frozen native debits are not compiled-guest acceptance evidence.
+    # External negative depth widths now return typed CallDepth, never success.
+
+    # Signed counters and opaque scan-state tokens remain module-private;
+    # exported scan facades receive only caller bits/Budget and mint zero count.
+    opaque ScanState Pair<List<Bool>,I64> private
+    opaque ScanPageState Pair<ScanState,I64> private
+    signature depth_limit forall<S:stack> [ S -- S calc_errors@1.NumericError ! pure ]
+    def depth_limit [
+        unit calc_errors@1.LimitDepth.CallDepth
+        calc_errors@1.LimitRemaining.NestedDepth
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    # The emitted continuation scheduler keeps at most one caller continuation
+    # for each multiply/divide level and at most three inside a nested bit
+    # add/subtract; scan and budget loops are tail-recursive. Four per bit
+    # plus 64 for fixed facade/branch frames bounds these source paths.
+    # Native continuation peaks still require a compiled guest gate.
+    signature checked_depth forall<S:stack>
+        [ S I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def checked_depth [
+        dup 0 <
+        [ drop depth_limit result@1.Result.Err ]
+        [ dup 2305843009213693935 <
+          [ 1 + 4 * 64 + result@1.Result.Ok ]
+          [ drop depth_limit result@1.Result.Err ] if ] if
+    ]
+
+    # One page holds at most eight bits. The caller reserves native work
+    # before every page, even when only a few steps remain in the Budget.
+    # Count 112 already fails the existing 4*(width+1)+64 call-depth gate.
+    signature scan_page forall<S:stack>
+        [ S ScanPageState
+          -- S result@1.Result<ScanState,calc_errors@1.NumericError> ! pure ]
+    def scan_page [
+        ScanPageState.into unpair [ ScanState.into unpair ] dip
+        [ dup 112 < ] dip swap
+        [ dup 0 =
+          [ drop pair ScanState.new result@1.Result.Ok ]
+          [ [ swap ] dip swap
+            [ drop nil swap pair ScanState.new result@1.Result.Ok ]
+            [ [ drop ] dip [ swap ] dip [ 1 + ] dip
+              swap [ swap ] dip swap 1 -
+              [ pair ScanState.new ] dip
+              pair ScanPageState.new scan_page ]
+            list.case ] if ]
+        [ drop drop drop depth_limit result@1.Result.Err ] if
+    ]
+
+    # A zero or singleton list reserves 512 native words, longer lists 768.
+    # The earlier <=448-word estimate preceded this cross-module facade;
+    # reservation headroom needs independent review before selection.
+    signature first_scan_native_cost forall<S:stack>
+        [ S ScanState -- S ScanState I64 ! pure ]
+    def first_scan_native_cost [
+        dup ScanState.into unpair swap
+        [ drop 512 ]
+        [ swap drop
+          [ drop 512 ]
+          [ drop drop drop 768 ] list.case ] list.case
+    ]
+
+    signature scan_pages forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages [
+        [ first_scan_native_cost ] dip swap
+        numeric_budget@1.charge_native_steps
+        [ [ 4 pair ScanPageState.new scan_page ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_tail ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature scan_pages_tail forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages_tail [
+        512 numeric_budget@1.charge_native_steps
+        [ [ 4 pair ScanPageState.new scan_page ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_full ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature scan_pages_full forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages_full [
+        # Source-only 896 reservation: cross-module gate and guard costs
+        # require a fresh bound before native selection.
+        896 numeric_budget@1.charge_native_steps
+        [ [ 8 pair ScanPageState.new scan_page ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_full ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature charge_scan_work forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def charge_scan_work [
+        [ dup 1 + ] dip swap numeric_budget@1.charge_work
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature scan forall<S:stack>
+        [ S List<Bool> I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan [
+        [ pair ScanState.new ] dip scan_pages
+        [ unpair gate_bits ] result@1.and_then
+        [ unpair gate_depth ] result@1.and_then
+        [ unpair charge_scan_work ] result@1.and_then
+    ]
+
+    # Counts caller-owned bits from zero; no externally minted count or BigInt.
+    signature scan_bits forall<S:stack>
+        [ S List<Bool> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export scan_bits
+    def scan_bits [ 0 swap scan ]
+
+    # The 65th bit proves checked I64 conversion is out of range.
+    signature scan_page_i64 forall<S:stack>
+        [ S ScanPageState
+          -- S result@1.Result<ScanState,calc_errors@1.NumericError> ! pure ]
+    def scan_page_i64 [
+        ScanPageState.into unpair [ ScanState.into unpair ] dip
+        [ dup 65 < ] dip swap
+        [ dup 0 =
+          [ drop pair ScanState.new result@1.Result.Ok ]
+          [ [ swap ] dip swap
+            [ drop nil swap pair ScanState.new result@1.Result.Ok ]
+            [ [ drop ] dip [ swap ] dip [ 1 + ] dip
+              swap [ swap ] dip swap 1 -
+              [ pair ScanState.new ] dip
+              pair ScanPageState.new scan_page_i64 ]
+            list.case ] if ]
+        [ drop drop drop unit calc_errors@1.DomainConversion.OutOfRange
+          calc_errors@1.DomainError.Conversion
+          calc_errors@1.NumericError.Domain result@1.Result.Err ] if
+    ]
+
+    signature scan_pages_i64 forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages_i64 [
+        768 numeric_budget@1.charge_native_steps
+        [ [ 4 pair ScanPageState.new scan_page_i64 ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_tail_i64 ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature scan_pages_tail_i64 forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages_tail_i64 [
+        512 numeric_budget@1.charge_native_steps
+        [ [ 4 pair ScanPageState.new scan_page_i64 ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_full_i64 ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature scan_pages_full_i64 forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages_full_i64 [
+        1024 numeric_budget@1.charge_native_steps
+        [ [ 8 pair ScanPageState.new scan_page_i64 ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_full_i64 ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature gate_i64_call forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def gate_i64_call [
+        [ 256 ] dip swap numeric_budget@1.admit_call
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature scan_i64 forall<S:stack>
+        [ S List<Bool> I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_i64 [
+        [ pair ScanState.new ] dip scan_pages_i64
+        [ unpair gate_bits ] result@1.and_then
+        [ unpair gate_i64_call ] result@1.and_then
+        [ unpair charge_scan_work ] result@1.and_then
+    ]
+
+    # The same checked traversal retains the original signed-I64 range gate.
+    signature scan_bits_i64 forall<S:stack>
+        [ S List<Bool> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export scan_bits_i64
+    def scan_bits_i64 [ 0 swap scan_i64 ]
+
+    signature gate_bits forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export gate_bits
+    def gate_bits [
+        [ dup ] dip swap numeric_budget@1.admit_bits
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature gate_depth forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export gate_depth
+    def gate_depth [
+        [ dup checked_depth ] dip swap
+        [ numeric_budget@1.admit_call
+          [ pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+]

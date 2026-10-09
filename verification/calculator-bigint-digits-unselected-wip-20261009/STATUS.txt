@@ -1,24 +1,65 @@
 MA1 NUMERIC SOURCE-ONLY RECOVERY — UNSELECTED WIP, 2026-10-09
 
-This directory preserves only the linked source frames 26–28 from the private
-recovery session, not a selected calculator library or a complete numeric family.
+This directory preserves only linked source frames 26–29 from the latest
+private source-only diagnostic, not a selected calculator library or a
+complete numeric family.
 Frame 26: bigint_digit_chunk@1 (bigint_digit_chunk.noble)
   sha256 a7c2cb264702741ccb1f9fec538afc89195820382435ff6b47c3882aa7af0519
-Frame 27: bigint_digit_support@1 (bigint_digit_support.noble)
-  sha256 b196193751cdca00f10090c37b42a0795a45a9cd606916d1087c3b24593d616b
+Frame 27: bigint_digit_support@1 (bigint_digit_support.noble), guarded successor
+  sha256 793590e0d548ff34be513325583befe3354d0029c83bd0d7dda8ca39a6d17ff0
 Frame 28: bigint_digits@1 (bigint_digits.noble)
   sha256 d41fb7d9e50fc776ed2febf9deed89aa4c33472908c57276d36b392591af0516
+Frame 29: bigint_scan@1 (bigint_scan.noble), unselected scanner partition
+  sha256 a2e6880e8775dd1a7346ceea16b7889f0790078fb745b329a501efc0c56f3591
 
-Source-only 29-frame diagnostic reported frames 1–28 linked under unchanged
+Historical source-only 29-frame diagnostic reported frames 1–28 linked under unchanged
 source caps (65536 bytes/module, 16384 nodes/module, 4096 nodes/definition,
 2000000 work/module apportioned by definition count, 262144 retained bytes).
+Its frame 27 was the now-replaced support source
+b196193751cdca00f10090c37b42a0795a45a9cd606916d1087c3b24593d616b.
 The separately supplied ORIGINAL scratch bigint@1 frame 29, sha256
 112eafdb7b3562f3e058b31f3f6d91c4b08c1ce634c53e0be38c83d7577ff862,
 was CHECK/EXHAUSTED: frontend work limit exceeded at source span 102..105.
 Diagnostic CLI exited 5; reported stdin sha256
-8b03d891f57215393703bd338b6f0f536c2f2d81d39824ee08044d3978e88754
+ba9c484507a656d99fcf3700201f1ae3e890431009e1c9663d93a2af83ad5053,
+separate input receipt sha256
+6b6e7b8ba40e116674738488929142cc648a03828ae8493b0f0484e233a6a5be,
 and stdout sha256 b90090285455c5e1906327d6782518c5b697a3774800f9c89ff06d52020a86e5.
 Every frame reported guest_requests=0 and acquired_authority=false.
+
+The guarded 30-frame source-only diagnostic used exact previous frames 1–26,
+guarded support 27, unchanged digits 28, scanner 29, then a separately
+supplied UNLINKED rebased BigInt 30
+(sha256 d428b456eb2b19d9a51f2c35ff576810bed8bda80133504844cb522495d2a058).
+Under the same caps and 128-module limit, frames 1–29 LINKED (session-local
+identities 1–29); BigInt 30 CHECK/EXHAUSTED frontend work at reported
+definition-local source span 134..151, with no resolved identity. CLI exited 5.
+Immutable framed stdin sha256
+8aa56e49b151e125b059dfef4b469d6c989fcd404795f7483b842f1cf9cee96e;
+its separate input receipt sha256
+8ce7e72c4c00bc97aecc7fb6935187c623bf4e0a860252b4021a57525c62f6dc;
+stdout sha256 b050d20ccf4698d1b336c9ab62a4aab74e87bd23387f178d823cc71e2d19ee1c.
+All 30 reports had guest_requests=0 and acquired_authority=false.
+The earlier 28-linked receipt remains historical evidence, not the source
+identity of the guarded support or scanner; no prior nominal handles transfer.
+
+The historically linked support b1961937 exported checked_depth without a
+negative-I64 guard: checked_depth(-1) returned Ok(64), and I64_MIN could wrap.
+The linked replacement checks negative input before arithmetic and returns
+the same typed CallDepth error as its upper-bound branch; its nonnegative
+branch is unchanged. This does not prove native metering headroom: the added
+outer dispatch precedes the per-digit 384 native debit.
+
+Other cross-module exports remain public implementation helpers with caller
+preconditions: bigint_digit_support@1.decimal_digit_bits requires one decimal
+digit, 0<=n<=9 (negative inputs currently map to the bits of 9);
+bigint_digit_support@1.chunk_carry_step requires 0<=carry<1000000000
+(and a Bool bit); bigint_digit_chunk@1.chunk_half requires
+0<=c<1000000000. Their pure raw results cannot themselves mint a sealed
+BigInt, Budget or host authority, but external callers can invoke them outside
+those preconditions. Selecting their interface requires explicit API review;
+the checked_depth admission defect is distinct and not excused by these
+implementation-helper preconditions.
 
 BigInt registration, native hard-100000 work and 512-frame continuation
 headroom remain NO-GO. No guest conversion, arithmetic, Rat, Decimal,
@@ -27,4 +68,6 @@ The selected calculator-exact-library source (including its separately pinned
 bigint.noble sha256 58f47f6f362458da62b0dfe96619753a718401e5d96adc36d6e5121cc1340dd7),
 source-sha256.txt, validation policy and issuer are outside this unselected
 checkpoint and unchanged.
-BigInt scanner source-only candidates are intentionally NOT part of this package.
+The unlinked rebased BigInt and Rat sources are intentionally NOT part of
+this package. Scanner/private nominal IDs and exported helper interfaces
+remain unselected pending review.
