@@ -659,10 +659,12 @@ typed Wasm import pair and the active guest/source identity on each callback;
 the host requires a terminal six-field receipt. This is an opt-in diagnostic,
 not a production grant or canonical LIVE-05 acceptance.
 
-On an isolated private target, the offline locked feature-built watched
-real-child tests passed for the issued grant and for default, stale, and
-foreign-grant refusal. A separately driven CLI JSONL smoke observed watched
-source generations 1 then 2; the selected watched source SHA-256 was
+On isolated pre-integration harness source
+`3924a1f24ca411deb8fac9c7b961d11ee2c2419f`, offline locked
+feature-built watched real-child tests passed for the issued grant and for
+default, stale, and foreign-grant refusal. A separately driven CLI JSONL
+smoke observed watched source generations 1 then 2; the selected watched
+source SHA-256 was
 `4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad`,
 the one-shot root submission SHA-256 was
 `b77aa84381c1c1fc9c59111eda2d07890bc2d7ac7db5661f76a148896aaee832`,
@@ -681,6 +683,8 @@ Artifact and non-live modes still enforce their selected external tools.
 Scoped source, Wasm lowering, and byte-policy unit tests passed. A separately
 built `--no-default-features` CLI denied an injected fixture grant as
 `unbound-word` with zero guest requests, then executed ordinary live source.
+These donor-only runs predate the combined watch/harness source; its guest
+behavior has not yet been exercised.
 The separately combined watch and harness source rebinds the changed
 selection-policy file SHA-256 entries in authored Nickel and exported JSON.
 Extraction `configuration.features` remains `[]` (no individually named
