@@ -48,6 +48,8 @@ let Pin = { rev | String, narHash | String } in
     miri_rust | String = "nightly-2026-08-18",
     miri_flags | Array String = ["-Zmiri-strict-provenance"],
     features | Array String = [],
+    # Reviewed workspace feature names, not enabled extraction features.
+    workspace_features | Array String = ["live-test-barrier", "live05-harness-effects"],
     all_features | Bool = true,
     default_features | Bool = true,
     panic | String = "unwind",

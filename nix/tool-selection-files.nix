@@ -58,6 +58,7 @@
   "crates/noble-contracts/tests/source.rs"
   "crates/noble-contracts/tests/source_proof.rs"
   "crates/noble-wasm/Cargo.toml"
+  "crates/noble-wasm/src/source/admission.rs"
   "crates/noble-wasm/src/source/admission/environment.rs"
   "crates/noble-wasm/src/source/mod.rs"
   "crates/noble-wasm/src/source/origin.rs"

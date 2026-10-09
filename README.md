@@ -681,12 +681,14 @@ Artifact and non-live modes still enforce their selected external tools.
 Scoped source, Wasm lowering, and byte-policy unit tests passed. A separately
 built `--no-default-features` CLI denied an injected fixture grant as
 `unbound-word` with zero guest requests, then executed ordinary live source.
-This does not unblock selected Nix policy: its source SHA-256 pins are stale
-even against the base revision, and its observed feature-scope assertion
-requires an empty feature list despite the existing private test feature.
-After the atomic watch and harness sources are integrated, selected pins and
-feature observation require a separate source-bound review before any Nix
-evaluation or canonical LIVE-05 claim.
+The separately combined watch and harness source rebinds the changed
+selection-policy file SHA-256 entries in authored Nickel and exported JSON.
+Extraction `configuration.features` remains `[]`, while the reviewed
+workspace feature-name set is exactly `["live-test-barrier",
+"live05-harness-effects"]`; unreviewed extra names are refused. This is a
+source-bound policy update, not a selected Nix execution or LIVE-05
+acceptance: selected Octet standards, reviewed vendor and NAR inputs remain
+unavailable here.
 
 Scoped real-child tests also stop inside an actual old Wasm guest frame before
 queuing a reload, and after candidate A's checked V8 Wasm compilation but

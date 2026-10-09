@@ -207,7 +207,15 @@ let
       "release"
       "overflow-checks"
     ] false)
-    (badObservation "unreviewed feature" "feature-scope-mismatch" [ "features" ] [ "extra" ])
+    (badObservation "unreviewed workspace feature" "feature-scope-mismatch" [ "features" ]
+      [ "live-test-barrier" "live05-harness-effects" "extra" ])
+    (badObservation "missing workspace feature" "feature-scope-mismatch" [ "features" ]
+      [ "live-test-barrier" ])
+    (badPolicy "unreviewed workspace feature policy" "feature-scope-mismatch"
+      [ "configuration" "workspace_features" ]
+      [ "live-test-barrier" "live05-harness-effects" "extra" ])
+    (badPolicy "enabled extraction feature" "feature-scope-mismatch"
+      [ "configuration" "features" ] [ "live05-harness-effects" ])
     (badPolicy "missing Lean artifact hash" "lean-artifact-pin" [ "lean" "archive_sha256" ] null)
     (badPolicy "selection promoted to acceptance" "selection-claim-limits"
       [ "claims" ]

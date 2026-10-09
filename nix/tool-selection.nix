@@ -369,7 +369,11 @@ let
     ) "rust-profile-mismatch")
     (require (
       get config "features" == [ ]
-      && get observation "features" == [ ]
+      && get config "workspace_features" == [
+        "live-test-barrier"
+        "live05-harness-effects"
+      ]
+      && get observation "features" == get config "workspace_features"
       && get config "all_features" == true
       && get config "default_features" == true
     ) "feature-scope-mismatch")
