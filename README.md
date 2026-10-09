@@ -422,10 +422,18 @@ protected responses are replayed as an
 exact ordered script without executing another real host effect; they do not
 grant permission for a new live effect. An optional `expected_identity` on
 `replay` is compared with the host-retained frozen receipt before starting a
-guest; it cannot replace that retained authority. Proof-required publication
-currently fails closed: there is no independently pinned Lean receipt for the
-exact selected, installed target. Neither this opt-in CLI nor its unit tests
-constitute LSLOT-01..09 canonical acceptance.
+guest; it cannot replace that retained authority. A same-session frozen owner
+also seals the host-normalized typed root inputs and ordered checked borrowed
+bindings: changing either refuses replay before an active root, guest, or real
+effect, while an equal replay retains the captured epoch and selected target.
+This does not make LiveRefs portable or establish behavioral proof.
+The selected-Node registry smoke exercises this frozen binding and retained
+target; the fresh CLI worker smoke for this isolated change stopped before
+`configured` because its exact selected wasm-tools executable was unavailable.
+That is not an exercised worker replay result.
+Proof-required publication currently fails closed: there is no independently
+pinned Lean receipt for the exact selected, installed target. Neither this
+opt-in CLI nor its unit tests constitute LSLOT-01..09 canonical acceptance.
 
 A directly returned I64 `quote` is also a saved Program: its value is read from
 the actual boxed I64 capture, not from the Program's latent-effect payload.
