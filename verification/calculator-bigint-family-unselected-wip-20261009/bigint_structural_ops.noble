@@ -1,0 +1,139 @@
+module bigint_structural_ops@1 [
+    # The private carrier wraps only operands that have completed BOTH paid
+    # scans. It is not exported and cannot serve as a public fee token.
+    opaque CompareOperands Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>> private
+
+    # Public structural inputs may be arbitrary bits. Scans bound physical
+    # length and charge Budget, but do not validate canonicality. Numerical
+    # and canonical-output guarantees hold only for canonical owner inputs;
+    # external helper results cannot mint the private BigInt nominal.
+    signature raw_negate forall<S:stack>
+        [ S Pair<Bool,List<Bool>> -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_negate [
+        unpair
+        dup bitstep@1.is_zero
+        [ drop drop false nil pair ]
+        [ swap [ false ] [ true ] if swap pair ] if
+    ]
+
+    signature negate_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export negate_parts
+    def negate_parts [
+        [ dup ] dip [ unpair swap drop ] dip bigint_scan@1.scan_bits
+        [ unpair
+          bigint_preflight@1.preflight_same_width
+          [ 128 numeric_budget@1.charge_native_steps
+            [ [ raw_negate ] dip pair result@1.Result.Ok ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_compare forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> -- S I64 ! pure ]
+    def raw_compare [ bitrelation@1.compare ]
+
+    # A private success continuation keeps the public compare entry point
+    # mandatory: measured widths and retained operands never form an export.
+    signature finish_compare forall<S:stack>
+        [ S CompareOperands
+            Pair<Pair<I64,I64>,numeric_budget@1.Budget>
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def finish_compare [
+        unpair bigint_preflight@1.preflight_compare
+        [ [ CompareOperands.into unpair ] dip [ raw_compare ] dip pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # The private scan returns retained caller operands only inside this
+    # module; its widths come from the exact sequential paid scans.
+    signature compare_scan forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<CompareOperands,Pair<Pair<I64,I64>,numeric_budget@1.Budget>>,calc_errors@1.NumericError> ! pure ]
+    def compare_scan [
+        [ pair ] dip [ dup unpair ] dip bigint_pair_scan@1.scan_two_parts
+        [ [ CompareOperands.new ] dip pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature compare_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export compare_parts
+    def compare_parts [
+        compare_scan
+        [ unpair finish_compare ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature raw_add forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_add [ bitaddsigned@1.add ]
+
+    signature add_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export add_parts
+    def add_parts [
+        [ pair ] dip [ dup unpair ] dip bigint_pair_scan@1.scan_two_parts
+        [ unpair bigint_preflight@1.preflight_additive
+          [ [ unpair ] dip [ raw_add ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_subtract forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_subtract [ raw_negate raw_add ]
+
+    signature subtract_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export subtract_parts
+    def subtract_parts [
+        [ pair ] dip [ dup unpair ] dip bigint_pair_scan@1.scan_two_parts
+        [ unpair bigint_preflight@1.preflight_additive
+          [ [ unpair ] dip [ raw_subtract ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_multiply forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_multiply [ bitrelation@1.multiply ]
+
+    signature raw_multiply_ordered forall<S:stack>
+        [ S Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>> Pair<I64,I64>
+          -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_multiply_ordered [
+        unpair swap <
+        [ unpair swap raw_multiply ]
+        [ unpair raw_multiply ] if
+    ]
+
+    signature multiply_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export multiply_parts
+    def multiply_parts [
+        [ pair ] dip [ dup unpair ] dip bigint_pair_scan@1.scan_two_parts
+        [ unpair [ dup ] dip bigint_preflight@1.preflight_product
+          [ [ raw_multiply_ordered ] dip pair result@1.Result.Ok ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]

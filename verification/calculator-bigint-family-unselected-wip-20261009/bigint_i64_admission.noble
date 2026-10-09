@@ -1,0 +1,28 @@
+module bigint_i64_admission@1 [
+    # Public arbitrary List inputs are only returned after bounded scan and
+    # the complete signed-conversion reservation. This checks width and
+    # Budget; it does not assert canonicality or signed-I64 representability.
+    signature checked_bits forall<S:stack>
+        [ S List<Bool> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<List<Bool>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export checked_bits
+    def checked_bits [
+        [ dup ] dip bigint_scan@1.scan_bits_i64
+        [ unpair [ drop ] dip
+          16384 numeric_budget@1.charge_native_steps
+          [ 64 numeric_budget@1.admit_bits
+            [ 256 numeric_budget@1.admit_call
+              [ 33024 numeric_budget@1.charge_work
+                [ pair result@1.Result.Ok ]
+                [ swap drop result@1.Result.Err ]
+                result@1.Result.match ]
+              [ swap drop result@1.Result.Err ]
+              result@1.Result.match ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]

@@ -1,0 +1,35 @@
+module bigint_convert@1 [
+    # Only this module folds fully admitted structural parts into a signed
+    # machine value. No unchecked List input or BigInt constructor is exported.
+    signature raw_to_i64_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def raw_to_i64_parts [
+        unpair bitstep@1.fold_unsigned
+        dup 0 <
+        [ dup -9223372036854775808 =
+          [ drop
+            [ -9223372036854775808 result@1.Result.Ok ]
+            [ unit calc_errors@1.DomainConversion.OutOfRange
+              calc_errors@1.DomainError.Conversion
+              calc_errors@1.NumericError.Domain result@1.Result.Err ] if ]
+          [ drop drop unit calc_errors@1.DomainConversion.OutOfRange
+            calc_errors@1.DomainError.Conversion
+            calc_errors@1.NumericError.Domain result@1.Result.Err ] if ]
+        [ swap [ 0 swap - ] [ ] if result@1.Result.Ok ] if
+    ]
+
+
+    signature to_i64 forall<S:stack>
+        [ S bigint@1.BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export to_i64
+    def to_i64 [
+        bigint@1.checked_i64_parts
+        [ unpair [ raw_to_i64_parts ] dip swap
+          [ swap pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]

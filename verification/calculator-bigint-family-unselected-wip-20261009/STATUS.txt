@@ -1,0 +1,89 @@
+MA1 NUMERIC FAMILY — PRIVATE UNSELECTED SOURCE-ONLY WIP, 2026-10-09
+
+VERDICT: FAILED full BigInt source registration. This is NOT a selected source,
+issuer, signed release, native assurance result, or guest execution result.
+Do not install these files in calculator-exact-library or alter its source pins.
+This checkpoint exists only on the private recovery/ma1-universal-20261009
+branch of the recovered checkout; it has not been published.
+
+Original binary: SHA256 aa0f9704d3f83e965b131c04bc0bec738417b111c65811508a873b6db9d2453e
+(the 321319696-byte binary at /tmp/noble-ma1-universal-recovered-20261009-target/debug/noble
+is NOT archived here). Source-only session flags were --framed --declared-modules
+--text-byte-cursor --signed-self-recursion, --source-bytes 65536,
+--source-nodes 16384, --source-depth 64, --source-work 2000000,
+--retained-source-bytes 262144; module count cap 128. No guest/native,
+Cargo/Nix or shared-daemon execution was part of the gate.
+
+Frozen UTF-8 decimal-length framed input stdin.framed:
+SHA256 c70e6bc9042d7257e11bb0a40854167e777db1623d8924333b92d8dd400da1bb, 107898 bytes.
+Its first 31 frames are 78385 bytes, SHA256
+f2a7c6d532566c5476e3c9bf6c89dd0d957795cca95345e851e87b2ea789934d;
+first 33 frames 82267 bytes, SHA256
+dd96094a5010fd3ee0ca3a8a867a3139f4560e2bf4403c4fe06b0fc406b1cb76;
+first 34 frames 83406 bytes, SHA256
+235e88c2e461ed54e40f016b74bff7cd8cda9b73e4a7ca707f269aef21ea674b.
+The input-receipt.json pins each of all 38 payload bytes/hashes. Its historical
+absolute scratch and /tmp paths are preserved verbatim; this directory holds
+same-hash copies, not altered evidence. Frames 1–25 also exist in tracked
+verification/calculator-exact-library and compiler fixtures. Frames 26–29
+exist in the separate, likewise UNSELECTED
+verification/calculator-bigint-digits-unselected-wip-20261009 directory.
+Frames 30–38 have standalone source copies HERE. None of those earlier
+session-local nominal IDs or module handles transfers into a selected session.
+
+Framed sources archived here (number: file, SHA256):
+30: bigint_preflight.noble cd1fd50b3226111e434a7294519e34daaa39fca0a29bd0c9204f55d86b2ca91b
+31: bigint_power.noble ef45ae01d68ae9618485505cf97a55325a8e86bdd8ddd4cd3850284e1754c5db
+32: bigint_i64_admission.noble b743cc02cb8fdbc72fd3453316874ea8bb9d97044e1efbcf6472264578a04960
+33: bigint_i64_encoding.noble fce0081d96e5a5415119977848987cb3e44bb508ba219e1515e882d8c629aa14
+34: bigint_pair_scan.noble c74f4bc75bab15cb64db13604dd4e9fc9c64d03d5e7cf1bc05a24e55488c46f7
+35: bigint_structural_ops.noble abe6344aae74c8552d31e88d113f2ffc9720bf8f688520bfa4fadff13e9c5039
+36: bigint_small_division.noble 1d818303f8f8271b300c255c1da783dffadd5d0bed9822918c63e9f7861ca3b0
+37: bigint.noble 736c19342195e86c0f7e7d88fb4aab4c59bf9328b85abb4ee69804d2552af76c
+38: bigint_convert.noble 45641cbe173b794f29e8a3662c3806e61afdd9bc145cc966ace44aeebdf790f8
+
+Additional sources, NOT framed, NOT linked, NOT validated here:
+rat.noble c4442cf32e7e2cd06996c2780642d437d719def66ec417ba2571adb62e84c6b9
+  is the migrated BigInt-converter caller; it cannot link before BigInt.
+decimal.noble 90437c3449336f4b259ff84e5f358b5dbd2e49592f51057fa5fda1e5c6d365e7
+  is the bounded-only Decimal candidate. Any source comment referring to a
+  selected profile is historical context, NOT selection of this candidate.
+
+Exactly one source-only c70e run (exit 5) reported frames 1–34 LINKED
+(session-local identities only). Structural frame 35 CHECK/EXHAUSTED frontend
+NODE at source span 29..35; division frame 36 independently CHECK/EXHAUSTED
+frontend NODE at span 86..109. Owner frame 37 RESOLVE/unbound-word and converter
+frame 38 CHECK/type-reject are downstream refusals, not admitted definitions.
+All 38 JSONL reports have guest_requests=0 and acquired_authority=false.
+The separate, once-approved parent-GDB Meter trace on the same frozen input
+and original binary also exited 5 and attributed the FIRST failures:
+  structural35 private compare_scan, ordinal 5, per-definition 4096/4096
+  nodes, work cap 142857, remaining 72317, inference variable validation;
+  division36 private divide_dispatch, ordinal 11, per-definition 4096/4096
+  nodes, work cap 153846, remaining 112221, inference quotation completion.
+The earlier division module-remaining cap of 1771 was relieved by the shared
+paid scanner, but these two per-definition node limits remain exhausted;
+postscan private nominal operands did not establish sufficient node headroom.
+No claim is made that other structural operations would fit after these.
+
+Durable evidence copied byte-for-byte into this directory (SHA256):
+input-receipt.json a3f74480581af1f3ac8a814e7024a864b81308099fae9effa11daa4e378f81ea
+source-only-report.jsonl 278b64d2c64fe5131632c481e3f724a9fa2b708816c063875e6d5139b9eb63d1
+source-only-result.json cf1066ba6dbc4f59fdca8e50ac2e934d57364a69acd4cf1a4b09664593d932c4
+meter-parent.gdb ee8847c06b681554a216ee90cdafb274d59c3889ec42721af4c958f51b4a94cf
+meter-trace.txt ee4a8efecc0ce51812965f117f4a924bbee31406d71ea9756a17cd21ec6f7d25
+meter-result.json 6833c3d9d17f2d0f26fd47bf33b1817faec07c94a82844dbddf2e9ae4a9ab77e
+The GDB script is forensic provenance, NOT an invitation to rerun the
+known failed check. Historical /tmp paths embedded in receipts/scripts/results
+are unchanged; their archived same-hash copies make /tmp nonessential to
+inspect this failed gate. The binary was deliberately not copied, so future
+replay requires separately verifying its exact SHA and fresh authorization.
+
+Hard-100000 native work and 512-frame continuation headroom remain NO-GO.
+The pure numeric Budget can be re-minted/replayed by guest code; it is not an
+unforgeable authority or escrow token, and this source-only package cannot
+resolve that native/issuer safety question. No Rat/Decimal guest conversion or
+arithmetic, native acceptance, source-bound issuer, or selected manifest/pins
+were validated or changed. Stop source micro-splits until a coherent
+compiler/type-graph redesign projects the original per-definition cap and
+preserves the full paid public API; any new experiment needs separate review.

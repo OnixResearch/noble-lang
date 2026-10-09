@@ -1,0 +1,306 @@
+{
+  "schema": "noble-recovered-numeric-postscan-private-operands-38-frame-source-only-input/v1",
+  "worktreeHead": "3977284d79102b427612488686955f9f7f3a390a",
+  "sourceParentHead": "5c39f7224588f31631369dcdc4e1792e406d9531",
+  "cliBinarySha256": "aa0f9704d3f83e965b131c04bc0bec738417b111c65811508a873b6db9d2453e",
+  "rootLockSha256": "2b38a16099566ea5eaca9cbf5c70ab584a92b650a8f82ed16a31ca1f1e0b8f6d",
+  "sourceLimits": {
+    "bytes": 65536,
+    "nodes": 16384,
+    "depth": 64,
+    "work": 2000000,
+    "retainedBytes": 262144
+  },
+  "moduleLimit": 128,
+  "sessionIdentityPolicy": "new source-only session; planned frame numbers are not issued module IDs; only successful link reports provide session-local identities; no previous ABI/issuer compatibility claim",
+  "framedInputSha256": "c70e6bc9042d7257e11bb0a40854167e777db1623d8924333b92d8dd400da1bb",
+  "framedInputBytes": 107898,
+  "moduleSourceBytes": 107721,
+  "entries": [
+    {
+      "frame": 1,
+      "module": "bitborrow",
+      "path": "verification/calculator-exact-library/bitborrow.noble",
+      "sha256": "ac6c09886f1058821606ae417c9d4bef3ff5a9f5c76d8a2ea68a9a098e5c3ca3",
+      "bytes": 1150
+    },
+    {
+      "frame": 2,
+      "module": "bitcompare",
+      "path": "verification/calculator-exact-library/bitcompare.noble",
+      "sha256": "d092bd3ce21c35adc320f1a8bff892abf78c03f923403a4a3e6efb003fb96c1a",
+      "bytes": 645
+    },
+    {
+      "frame": 3,
+      "module": "bitdecode",
+      "path": "verification/calculator-exact-library/bitdecode.noble",
+      "sha256": "32ec8eebbbcf3d91105aad8bf5f69371a020e51d703019665179fb88003f1f81",
+      "bytes": 235
+    },
+    {
+      "frame": 4,
+      "module": "bitdiv",
+      "path": "verification/calculator-exact-library/bitdiv.noble",
+      "sha256": "fc8e27cf19c7e5d1a1cedecbccdc5e94b8137a813bbd303cfd38fc251d69ebfc",
+      "bytes": 864
+    },
+    {
+      "frame": 5,
+      "module": "bitfull",
+      "path": "verification/calculator-exact-library/bitfull.noble",
+      "sha256": "af143bfac2a6c8d56890249065c4b80fc229424eb7244a7217e108fff3856468",
+      "bytes": 709
+    },
+    {
+      "frame": 6,
+      "module": "bitpair",
+      "path": "verification/calculator-exact-library/bitpair.noble",
+      "sha256": "0eab2bbd06482e485944b6e083c90119146967528cf36ebc8e9699fd2b22f2ef",
+      "bytes": 447
+    },
+    {
+      "frame": 7,
+      "module": "bitstep",
+      "path": "verification/calculator-exact-library/bitstep.noble",
+      "sha256": "445d9af1592fef91076160d7549c111f451ddf268fc8871aac1ae48960abd83f",
+      "bytes": 987
+    },
+    {
+      "frame": 8,
+      "module": "bitsub",
+      "path": "verification/calculator-exact-library/bitsub.noble",
+      "sha256": "4fb902a596680271ec9f4f1f8285a55ac1ed902c467b325d8d0f401c6f13cef5",
+      "bytes": 436
+    },
+    {
+      "frame": 9,
+      "module": "bittrim",
+      "path": "verification/calculator-exact-library/bittrim.noble",
+      "sha256": "1742440f388260203123ad6ea424f9132ebccc934fdb458f1fab7d6ce9b2148a",
+      "bytes": 413
+    },
+    {
+      "frame": 10,
+      "module": "result",
+      "path": "crates/noble-contracts/src/fixtures/result.noble",
+      "sha256": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80",
+      "bytes": 1123
+    },
+    {
+      "frame": 11,
+      "module": "calc_errors",
+      "path": "crates/noble-contracts/src/fixtures/calc-errors.noble",
+      "sha256": "c04d1b2c2de6eae9b000a450897bbab84f161811dc18577a349e6e8469fa83fa",
+      "bytes": 2332
+    },
+    {
+      "frame": 12,
+      "module": "bitadd",
+      "path": "verification/calculator-exact-library/bitadd.noble",
+      "sha256": "a8586efbfa4890a2ddd021be6303b90f870b24e7543f47d938842d2ef4ad82cd",
+      "bytes": 656
+    },
+    {
+      "frame": 13,
+      "module": "bitmul",
+      "path": "verification/calculator-exact-library/bitmul.noble",
+      "sha256": "7cd8121f1147ef3ef7900c2fd8303731dd152bbeb570e06e3027e6bf149df1dc",
+      "bytes": 666
+    },
+    {
+      "frame": 14,
+      "module": "bitorder",
+      "path": "verification/calculator-exact-library/bitorder.noble",
+      "sha256": "008300c9bc1293c1fb69a976d1079b458a6a2d3f33b940cdf177308a619422a7",
+      "bytes": 575
+    },
+    {
+      "frame": 15,
+      "module": "bitsigned",
+      "path": "verification/calculator-exact-library/bitsigned.noble",
+      "sha256": "59cfd8dcd0469d74a241d1ae763d310a5e3ef8783b57d9cdeb7f0824922761f3",
+      "bytes": 254
+    },
+    {
+      "frame": 16,
+      "module": "bitsum",
+      "path": "verification/calculator-exact-library/bitsum.noble",
+      "sha256": "8b5f0849569eec5d5027bcf1d8a8fdce8d7659e46806b4053d8620c57dc7d14a",
+      "bytes": 1839
+    },
+    {
+      "frame": 17,
+      "module": "numeric_budget_limits",
+      "path": "verification/calculator-exact-library/numeric_budget_limits.noble",
+      "sha256": "93060cbe6dc18679371d2a0ca54c35b562f72fd6f436fa97c53e41e124074918",
+      "bytes": 4528
+    },
+    {
+      "frame": 18,
+      "module": "numeric_budget_preflight_depth",
+      "path": "verification/calculator-exact-library/numeric_budget_preflight_depth.noble",
+      "sha256": "72aa884ac6d7fc628f5d4f2993b7d51e33bab431dc0a93397148a9f1dcee9500",
+      "bytes": 1527
+    },
+    {
+      "frame": 19,
+      "module": "numeric_budget_preflight_late",
+      "path": "verification/calculator-exact-library/numeric_budget_preflight_late.noble",
+      "sha256": "20b4749b522173bb7326814c04e363645d6324fa94f77e95ea61458e5c94b294",
+      "bytes": 1647
+    },
+    {
+      "frame": 20,
+      "module": "bitaddcarry",
+      "path": "verification/calculator-exact-library/bitaddcarry.noble",
+      "sha256": "9a4c7bbfcdd68582d31cca8b22eb2135788a6db4564d2bc1ad3c63107c81897d",
+      "bytes": 251
+    },
+    {
+      "frame": 21,
+      "module": "bitaddsigned",
+      "path": "verification/calculator-exact-library/bitaddsigned.noble",
+      "sha256": "5cc2c1b58c0b4ece3caf65a3430aa3796a63fff8a41e5c8b62302fc967659152",
+      "bytes": 287
+    },
+    {
+      "frame": 22,
+      "module": "bitquotient",
+      "path": "verification/calculator-exact-library/bitquotient.noble",
+      "sha256": "56d4d829a9a2e9b8d21f974d449f7cad2e86cfe8e5d07cb8533328577f3a156e",
+      "bytes": 570
+    },
+    {
+      "frame": 23,
+      "module": "bitrelation",
+      "path": "verification/calculator-exact-library/bitrelation.noble",
+      "sha256": "364c8eaa98ece9e0a69c2c780223f00c1f0aa429e3a85b43e150f33875eb5932",
+      "bytes": 625
+    },
+    {
+      "frame": 24,
+      "module": "numeric_budget_preflight",
+      "path": "verification/calculator-exact-library/numeric_budget_preflight.noble",
+      "sha256": "de45ef61ba14ab1a2b0fb5f184babcb7917ae1a201496b773ed6f9895701c56e",
+      "bytes": 2473
+    },
+    {
+      "frame": 25,
+      "module": "numeric_budget",
+      "path": "verification/calculator-exact-library/numeric_budget.noble",
+      "sha256": "acbb3bf3bf43f8941d07d7229dbd9cf3924c8ef554b110a833d7d059e361caab",
+      "bytes": 5940
+    },
+    {
+      "module": "bigint_digit_chunk",
+      "path": "/home/brittonr/.cache/noble-ma1-universal-recovered-20261009/verification/calculator-bigint-digits-unselected-wip-20261009/bigint_digit_chunk.noble",
+      "sha256": "a7c2cb264702741ccb1f9fec538afc89195820382435ff6b47c3882aa7af0519",
+      "frame": 26,
+      "bytes": 2441
+    },
+    {
+      "frame": 27,
+      "module": "bigint_digit_support",
+      "path": "/home/brittonr/.cache/noble-ma1-universal-recovered-20261009/verification/calculator-bigint-digits-unselected-wip-20261009/bigint_digit_support.noble",
+      "sha256": "793590e0d548ff34be513325583befe3354d0029c83bd0d7dda8ca39a6d17ff0",
+      "bytes": 4936
+    },
+    {
+      "module": "bigint_digits",
+      "path": "/home/brittonr/.cache/noble-ma1-universal-recovered-20261009/verification/calculator-bigint-digits-unselected-wip-20261009/bigint_digits.noble",
+      "sha256": "d41fb7d9e50fc776ed2febf9deed89aa4c33472908c57276d36b392591af0516",
+      "frame": 28,
+      "bytes": 12724
+    },
+    {
+      "frame": 29,
+      "module": "bigint_scan",
+      "path": "/home/brittonr/.cache/noble-ma1-universal-recovered-20261009/verification/calculator-bigint-digits-unselected-wip-20261009/bigint_scan.noble",
+      "sha256": "a2e6880e8775dd1a7346ceea16b7889f0790078fb745b329a501efc0c56f3591",
+      "bytes": 11669
+    },
+    {
+      "frame": 30,
+      "module": "bigint_preflight",
+      "path": "/home/brittonr/.cache/noble-bigint-family-recovered-20261009/bigint_preflight_guarded_pair_literal_lt_candidate_20261009.noble",
+      "sha256": "cd1fd50b3226111e434a7294519e34daaa39fca0a29bd0c9204f55d86b2ca91b",
+      "bytes": 13255
+    },
+    {
+      "frame": 31,
+      "module": "bigint_power",
+      "path": "/home/brittonr/.cache/noble-bigint-family-recovered-20261009/bigint_power_closed_width_candidate_20261009.noble",
+      "sha256": "ef45ae01d68ae9618485505cf97a55325a8e86bdd8ddd4cd3850284e1754c5db",
+      "bytes": 2039
+    },
+    {
+      "frame": 32,
+      "module": "bigint_i64_admission",
+      "path": "/home/brittonr/.cache/noble-bigint-family-recovered-20261009/bigint_i64_admission_fullprice_candidate_20261009.noble",
+      "sha256": "b743cc02cb8fdbc72fd3453316874ea8bb9d97044e1efbcf6472264578a04960",
+      "bytes": 1235
+    },
+    {
+      "frame": 33,
+      "module": "bigint_i64_encoding",
+      "path": "/home/brittonr/.cache/noble-bigint-family-recovered-20261009/bigint_i64_encoding_paid_names_fixed_candidate_20261009.noble",
+      "sha256": "fce0081d96e5a5415119977848987cb3e44bb508ba219e1515e882d8c629aa14",
+      "bytes": 2637
+    },
+    {
+      "frame": 34,
+      "module": "bigint_pair_scan",
+      "path": "/home/brittonr/.cache/noble-bigint-family-recovered-20261009/bigint_pair_scan_prior_measured_two_parts_candidate_20261009.noble",
+      "sha256": "c74f4bc75bab15cb64db13604dd4e9fc9c64d03d5e7cf1bc05a24e55488c46f7",
+      "bytes": 1134
+    },
+    {
+      "frame": 35,
+      "module": "bigint_structural_ops",
+      "path": "/home/brittonr/.cache/noble-bigint-family-recovered-20261009/bigint_structural_ops_paid_private_compare_operands_postscan_candidate_20261009.noble",
+      "sha256": "abe6344aae74c8552d31e88d113f2ffc9720bf8f688520bfa4fadff13e9c5039",
+      "bytes": 6230
+    },
+    {
+      "frame": 36,
+      "module": "bigint_small_division",
+      "path": "/home/brittonr/.cache/noble-bigint-family-recovered-20261009/bigint_small_division_paid_private_divide_operands_postscan_candidate_20261009.noble",
+      "sha256": "1d818303f8f8271b300c255c1da783dffadd5d0bed9822918c63e9f7861ca3b0",
+      "bytes": 8105
+    },
+    {
+      "frame": 37,
+      "module": "bigint",
+      "path": "/home/brittonr/.cache/noble-bigint-family-recovered-20261009/bigint_full_paid_owner_split_candidate_20261009.noble",
+      "sha256": "736c19342195e86c0f7e7d88fb4aab4c59bf9328b85abb4ee69804d2552af76c",
+      "bytes": 8677
+    },
+    {
+      "frame": 38,
+      "module": "bigint_convert",
+      "path": "/home/brittonr/.cache/noble-bigint-family-recovered-20261009/bigint_convert_fullprice_names_fixed_candidate_20261009.noble",
+      "sha256": "45641cbe173b794f29e8a3662c3806e61afdd9bc145cc966ace44aeebdf790f8",
+      "bytes": 1460
+    }
+  ],
+  "first31FramedSha256": "f2a7c6d532566c5476e3c9bf6c89dd0d957795cca95345e851e87b2ea789934d",
+  "first31FramedBytes": 78385,
+  "previousFailedInputSha256": "00af0e0438b374615167a63f9df998e08272fa0b51800bbab33134335697785a",
+  "previousCoreExhaustion": "00af: structural35 private compare_scan ordinal5 perdef4096 NODE inference validation work remaining71535; division36 private divide_dispatch ordinal11 perdef4096 NODE inference validation work remaining93723; first34 linked",
+  "diagnosticScope": "UNRUN selected postscan opaque 38-frame source-only. First34 frozen previously linked; structural35 abe/division36 1d two independent exact-byte static GO; owner37 converter38 unchanged/unlinked. No guest/native/issuer/selection claim; Rat and Decimal excluded. Earlier prescan nominal files unselected.",
+  "excludedRat": {
+    "reason": "Separate source-only Rat trial only after core/converter admission; no Rat frame included",
+    "plannedCallerSource": "/home/brittonr/.cache/noble-bigint-family-recovered-20261009/rat_bigint_convert_fullprice_candidate_20261009.noble",
+    "sha256": "c4442cf32e7e2cd06996c2780642d437d719def66ec417ba2571adb62e84c6b9"
+  },
+  "first33FramedSha256": "dd96094a5010fd3ee0ca3a8a867a3139f4560e2bf4403c4fe06b0fc406b1cb76",
+  "first33FramedBytes": 82267,
+  "previousDiagnosticTrace": {
+    "path": "/tmp/noble-ma1-universal-recovered-20261009-target/numeric-shared-pair-dual-node-forensics-20261009-gdb-trace.txt",
+    "sha256": "e51ed8ef83d2184ba54571e42e489a9e8d5df03251ce23404e52323c70ece01e"
+  },
+  "staticReview": "two independent exact-byte static GO postscan nominal structural35/division36; original scanner34 already linked; not executable admission",
+  "first34FramedSha256": "235e88c2e461ed54e40f016b74bff7cd8cda9b73e4a7ca707f269aef21ea674b",
+  "first34FramedBytes": 83406
+}

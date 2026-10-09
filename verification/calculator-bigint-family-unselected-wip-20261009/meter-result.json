@@ -1,0 +1,616 @@
+{
+  "pre": {
+    "at": "2026-10-09T11:05:49.426Z",
+    "census": "empty",
+    "df": "Filesystem     1024-blocks      Used Available Capacity Mounted on\ntmpfs             63700212  27942820  35757392      44% /tmp\nzroot/home       303194880 287439616  15755264      95% /home",
+    "sourcesRehashed": 38,
+    "scriptSha": "ee8847c06b681554a216ee90cdafb274d59c3889ec42721af4c958f51b4a94cf",
+    "inputSha": "c70e6bc9042d7257e11bb0a40854167e777db1623d8924333b92d8dd400da1bb",
+    "receiptSha": "a3f74480581af1f3ac8a814e7024a864b81308099fae9effa11daa4e378f81ea",
+    "binarySha": "aa0f9704d3f83e965b131c04bc0bec738417b111c65811508a873b6db9d2453e"
+  },
+  "argv": [
+    "gdb",
+    "-q",
+    "-nx",
+    "-nh",
+    "--batch",
+    "--return-child-result",
+    "-x",
+    "/tmp/noble-ma1-universal-recovered-20261009-target/numeric-postscan-private-operands-dual-node-forensics-20261009.gdb",
+    "/tmp/noble-ma1-universal-recovered-20261009-target/debug/noble"
+  ],
+  "exit": 5,
+  "aborted": null,
+  "elapsedMs": 1493,
+  "files": {
+    "trace": {
+      "path": "/tmp/noble-ma1-universal-recovered-20261009-target/numeric-postscan-private-operands-dual-node-forensics-20261009-gdb-trace.txt",
+      "bytes": 31762,
+      "sha": "ee4a8efecc0ce51812965f117f4a924bbee31406d71ea9756a17cd21ec6f7d25"
+    },
+    "cliOut": {
+      "path": "/tmp/noble-ma1-universal-recovered-20261009-target/numeric-postscan-private-operands-dual-node-forensics-20261009-cli-stdout.jsonl",
+      "bytes": 20000,
+      "sha": "278b64d2c64fe5131632c481e3f724a9fa2b708816c063875e6d5139b9eb63d1"
+    },
+    "cliErr": {
+      "path": "/tmp/noble-ma1-universal-recovered-20261009-target/numeric-postscan-private-operands-dual-node-forensics-20261009-cli-stderr.txt",
+      "bytes": 0,
+      "sha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "gdbOut": {
+      "path": "/tmp/noble-ma1-universal-recovered-20261009-target/numeric-postscan-private-operands-dual-node-forensics-20261009-gdb-stdout.txt",
+      "bytes": 0,
+      "sha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "gdbErr": {
+      "path": "/tmp/noble-ma1-universal-recovered-20261009-target/numeric-postscan-private-operands-dual-node-forensics-20261009-gdb-stderr.txt",
+      "bytes": 207,
+      "sha": "8d689bc61bf393b183fbe0ae1e172a58e9c25a104b144eb1cc9506acba0deb4a"
+    }
+  },
+  "breakpointHits": 2,
+  "hits": [
+    {
+      "hit": 1,
+      "meter": "METER_SNAPSHOT $1 = noble_contracts::Meter {limits: noble_contracts::Limits {bytes: 65588, nodes: 4096, depth: 64, work: 142857}, work: 72317, nodes: 4096}",
+      "ordinals": [
+        "position=5",
+        "position=5",
+        "ordinal = 5",
+        "position = 5",
+        "position = 5"
+      ],
+      "firstFrames": "\n#3  0x00005aa85507cd0f in noble_contracts::source::inference::validation::term (arena=0x7fff9d44bcd8, root=1083, span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:122\n122\t        if let Err(problem) = walk.visit(arena, visit, span, meter) {\nNAMED_CALL_ERROR No symbol 'call' in current context\nNAMED_DEFINITION_ERROR No symbol 'definition' in current context\n#4  0x00005aa85507c813 in noble_contracts::source::inference::validation::variable_term (arena=0x7fff9d44bcd8, variable=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:82\n82\t            term(arena, id, span, meter)\nNAMED_NODE_ID_ERROR No symbol 'node_id' in current context\nNAMED_NODE_ERROR No symbol 'node' in current context\n#0  noble_contracts::Meter::node (self=0x7fff9d44cec8, span=...) at crates/noble-contracts/src/metering.rs:32\n32\t       "
+    },
+    {
+      "hit": 2,
+      "meter": "METER_SNAPSHOT $2 = noble_contracts::Meter {limits: noble_contracts::Limits {bytes: 65584, nodes: 4096, depth: 64, work: 153846}, work: 112221, nodes: 4096}",
+      "ordinals": [
+        "position=11",
+        "position=11",
+        "ordinal = 11",
+        "position = 11",
+        "position = 11"
+      ],
+      "firstFrames": "\n#3  0x00005aa854fae695 in noble_contracts::source::inference::completion::complete (frame=..., parents=..., state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/completion.rs:46\n46\t            quotation(frame, surrounding, parents, state, meter)\nNAMED_CALL_ERROR No symbol 'call' in current context\nNAMED_DEFINITION_ERROR No symbol 'definition' in current context\n#4  0x00005aa855089dc8 in noble_contracts::source::inference::traversal::visit (frame=..., parents=0x7fff9d44c3a8, state=0x7fff9d44bcd8, scope=0x7fff9d452d80, editor_analysis=false, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/traversal.rs:19\n19\t        None => return super::completion::complete(frame, parents, state, meter),\nNAMED_NODE_ID_ERROR No symbol 'node_id' in current context\nNAMED_NODE_ERROR No symbol 'node' in current context\n#0  noble_contracts::Meter::node "
+    }
+  ],
+  "traceExcerpt": "Breakpoint 1 at 0x14d8d05: file crates/noble-contracts/src/metering.rs, line 32.\n[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/nix/store/h4wfwic161kxrr74jlzla5lsm28hgary-glibc-2.44-25/lib/libthread_db.so.1\".\nNODE_EXHAUSTION_BREAKPOINT\n#3  0x00005aa85507cd0f in noble_contracts::source::inference::validation::term (arena=0x7fff9d44bcd8, root=1083, span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:122\n122\t        if let Err(problem) = walk.visit(arena, visit, span, meter) {\nNAMED_CALL_ERROR No symbol 'call' in current context\nNAMED_DEFINITION_ERROR No symbol 'definition' in current context\n#4  0x00005aa85507c813 in noble_contracts::source::inference::validation::variable_term (arena=0x7fff9d44bcd8, variable=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:82\n82\t            term(arena, id, span, meter)\nNAMED_NODE_ID_ERROR No symbol 'node_id' in current context\nNAMED_NODE_ERROR No symbol 'node' in current context\n#0  noble_contracts::Meter::node (self=0x7fff9d44cec8, span=...) at crates/noble-contracts/src/metering.rs:32\n32\t            return Err(crate::Diagnostic::new(\nMETER_SNAPSHOT $1 = noble_contracts::Meter {limits: noble_contracts::Limits {bytes: 65588, nodes: 4096, depth: 64, work: 142857}, work: 72317, nodes: 4096}\n#0  noble_contracts::Meter::node (self=0x7fff9d44cec8, span=...) at crates/noble-contracts/src/metering.rs:32\n#1  0x00005aa85507b852 in noble_contracts::source::inference::validation::Traversal::value_group (self=0x7fff9d44b2c0, term=..., group=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:255\n#2  0x00005aa85507bd3e in noble_contracts::source::inference::validation::Traversal::visit (self=0x7fff9d44b2c0, arena=0x7fff9d44bcd8, visit=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:149\n#3  0x00005aa85507cd0f in noble_contracts::source::inference::validation::term (arena=0x7fff9d44bcd8, root=1083, span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:122\n#4  0x00005aa85507c813 in noble_contracts::source::inference::validation::variable_term (arena=0x7fff9d44bcd8, variable=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:82\n#5  0x00005aa85507cfe7 in noble_contracts::source::inference::validation::variables (arena=0x7fff9d44bcd8, draft=0x5aa871733c00, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:53\n#6  0x00005aa85507c4f9 in noble_contracts::source::inference::validation::body_terms (arena=0x7fff9d44bcd8, body=0x5aa8717007a8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:33\n#7  0x00005aa85507c930 in noble_contracts::source::inference::validation::open (state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:11\n#8  0x00005aa85500c88d in noble_contracts::source::inference::infer (scope=..., mode=noble_contracts::source::inference::Mode::Declaration, inputs=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/mod.rs:232\n#9  0x00005aa8551618de in noble_contracts::source::Session::prepare_with_original (self=0x7fff9d455c68, source_bytes=..., inputs=..., signature=..., limits=..., retained_bytes=262196, original=...) at crates/noble-contracts/src/source/preparation.rs:333\n#10 0x00005aa855165021 in noble_contracts::source::Session::prepare_signed_from_module (self=0x7fff9d455c68, source_bytes=..., inputs=..., signature=..., limits=..., retained_bytes=262196, original=...) at crates/noble-contracts/src/source/preparation.rs:136\n#11 0x00005aa8550126ed in noble_contracts::source::declared::state::register::definitions::commit_definition (session=<error reading variable: Cannot access memory at address 0x431>, definition_bytes=..., signature=..., limits=..., retained_bytes=262196, original=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:258\n#12 0x00005aa855011ecb in noble_contracts::source::declared::state::register::definitions::install_one (session=..., input=..., local_exports=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:209\n#13 0x00005aa8550fa5e8 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::commit (self=..., position=5) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:240\n#14 0x00005aa8550fb9a7 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::pass_at (self=..., position=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:140\n#15 0x00005aa8550f872c in noble_contracts::source::declared::state::register::definitions::graph::Schedule::pass (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:106\n#16 0x00005aa85",
+  "reports": 38,
+  "parseError": null,
+  "stages": [
+    {
+      "frame": 1,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "1",
+        "name": "bitborrow",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 2,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "2",
+        "name": "bitcompare",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 3,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "3",
+        "name": "bitdecode",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 4,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "4",
+        "name": "bitdiv",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 5,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "5",
+        "name": "bitfull",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 6,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "6",
+        "name": "bitpair",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 7,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "7",
+        "name": "bitstep",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 8,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "8",
+        "name": "bitsub",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 9,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "9",
+        "name": "bittrim",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 10,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "10",
+        "name": "result",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 11,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "11",
+        "name": "calc_errors",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 12,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "12",
+        "name": "bitadd",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 13,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "13",
+        "name": "bitmul",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 14,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "14",
+        "name": "bitorder",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 15,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "15",
+        "name": "bitsigned",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 16,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "16",
+        "name": "bitsum",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 17,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "17",
+        "name": "numeric_budget_limits",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 18,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "18",
+        "name": "numeric_budget_preflight_depth",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 19,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "19",
+        "name": "numeric_budget_preflight_late",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 20,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "20",
+        "name": "bitaddcarry",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 21,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "21",
+        "name": "bitaddsigned",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 22,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "22",
+        "name": "bitquotient",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 23,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "23",
+        "name": "bitrelation",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 24,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "24",
+        "name": "numeric_budget_preflight",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 25,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "25",
+        "name": "numeric_budget",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 26,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "26",
+        "name": "bigint_digit_chunk",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 27,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "27",
+        "name": "bigint_digit_support",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 28,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "28",
+        "name": "bigint_digits",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 29,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "29",
+        "name": "bigint_scan",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 30,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "30",
+        "name": "bigint_preflight",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 31,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "31",
+        "name": "bigint_power",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 32,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "32",
+        "name": "bigint_i64_admission",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 33,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "33",
+        "name": "bigint_i64_encoding",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 34,
+      "stage": "link",
+      "outcome": "linked",
+      "identity": {
+        "identity": "34",
+        "name": "bigint_pair_scan",
+        "version": 1
+      },
+      "span": null,
+      "diagnostic": "module registered without guest execution",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 35,
+      "stage": "check",
+      "outcome": "exhausted",
+      "identity": null,
+      "span": {
+        "start": 29,
+        "end": 35
+      },
+      "diagnostic": "frontend node limit exceeded",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 36,
+      "stage": "check",
+      "outcome": "exhausted",
+      "identity": null,
+      "span": {
+        "start": 86,
+        "end": 109
+      },
+      "diagnostic": "frontend node limit exceeded",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 37,
+      "stage": "resolve",
+      "outcome": "unbound-word",
+      "identity": null,
+      "span": {
+        "start": 41,
+        "end": 77
+      },
+      "diagnostic": "unbound or recursive module word",
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 38,
+      "stage": "check",
+      "outcome": "type-reject",
+      "identity": null,
+      "span": {
+        "start": 0,
+        "end": 0
+      },
+      "diagnostic": "unknown signature value type",
+      "guest_requests": 0,
+      "acquired_authority": false
+    }
+  ],
+  "allGuestRequestsZero": true,
+  "allAuthorityFalse": true,
+  "gdbStderr": "warning: Missing auto-load script at offset 0 in section .debug_gdb_scripts\nof file /tmp/noble-ma1-universal-recovered-20261009-target/debug/noble.\nUse `info auto-load python-scripts [REGEXP]' to list them.\n"
+}

@@ -1,0 +1,321 @@
+module bigint_preflight@1 [
+    export preflight_from_bits
+    export preflight_same_width
+    export preflight_compare
+    export preflight_additive
+    export preflight_product
+    export preflight_small_division
+    export preflight_division
+
+    # These exports are consumed only after actual BigInt operand scans, but
+    # remain safe if another caller supplies arbitrary signed lengths. The
+    # invalid pair returns the typed Bits error before any cost arithmetic.
+    signature width_valid forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def width_valid [ dup 0 < [ drop false ] [ 112 < ] if ]
+
+    signature pair_widths_valid forall<S:stack>
+        [ S Pair<I64,I64> -- S Bool ! pure ]
+    def pair_widths_valid [
+        unpair [ width_valid ] dip width_valid
+        [ ] [ drop false ] if
+    ]
+
+    signature bits_limit forall<S:stack> [ S -- S calc_errors@1.NumericError ! pure ]
+    def bits_limit [
+        unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+        calc_errors@1.LimitPrimary.Numeric
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature work_limit forall<S:stack> [ S -- S calc_errors@1.NumericError ! pure ]
+    def work_limit [
+        unit calc_errors@1.LimitRemaining.EvaluationWork
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    # Both inputs are nonnegative sizes. Reserve their sum and one carry bit
+    # without ever computing a wrapping cost.
+    signature checked_width forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def checked_width [
+        pair dup unpair swap
+        9223372036854775806 swap - swap <
+        [ drop bits_limit result@1.Result.Err ]
+        [ unpair + 1 + result@1.Result.Ok ] if
+    ]
+
+    signature checked_sum forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def checked_sum [
+        pair dup unpair swap
+        9223372036854775807 swap - swap <
+        [ drop bits_limit result@1.Result.Err ]
+        [ unpair + result@1.Result.Ok ] if
+    ]
+
+    signature larger forall<S:stack> [ S I64 I64 -- S I64 ! pure ]
+    def larger [
+        pair dup unpair <
+        [ unpair swap drop ] [ unpair drop ] if
+    ]
+
+    signature scaled_work forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def scaled_work [
+        swap dup 36028797018963968 <
+        [ 256 * numeric_budget@1.charge_work ]
+        [ drop drop work_limit result@1.Result.Err ] if
+    ]
+
+    # Checked canonical scans bound both widths by 111 bits, and this helper
+    # runs only after the output-width/depth gate. Its product is therefore
+    # below 256*223*112, with one checked debit equivalent to all row debits.
+    signature scaled_rows forall<S:stack>
+        [ S I64 I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def scaled_rows [
+        swap dup 36028797018963968 <
+        [ 256 * [ swap ] dip * numeric_budget@1.charge_work ]
+        [ drop drop drop work_limit result@1.Result.Err ] if
+    ]
+
+    signature gate_work forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def gate_work [
+        [ dup ] dip scaled_work
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature preflight_linear forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_linear [
+        bigint_scan@1.gate_bits
+        [ unpair bigint_scan@1.gate_depth ] result@1.and_then
+        [ unpair gate_work ] result@1.and_then
+        [ unpair swap drop result@1.Result.Ok ] result@1.and_then
+    ]
+
+    # Constructor/sign operations retain their input width; reserve a work
+    # unit for the empty case without falsely requiring an extra carry bit.
+    signature preflight_same_width forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_same_width [
+        bigint_scan@1.gate_bits
+        [ unpair bigint_scan@1.gate_depth ] result@1.and_then
+        [ unpair [ 1 + ] dip scaled_work ] result@1.and_then
+    ]
+
+    signature preflight_binary_linear forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_binary_linear [
+        [ dup unpair larger 0 checked_width ] dip swap
+        [ [ swap ] dip swap drop swap preflight_linear ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # The high-to-low bit comparator takes at most 59 source words per bit;
+    # unsigned addition/subtraction and the opposite-sign compare+subtract
+    # path take at most 166. Both include an explicit facade margin and debit
+    # native work after the shared Bits/Depth/abstract Work gates.
+    signature preflight_compare forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_compare [
+        [ dup pair_widths_valid ] dip swap
+        [
+        [ dup ] dip preflight_binary_linear
+        [ [ unpair larger 1 + 64 * 128 + ] dip
+          swap numeric_budget@1.charge_native_steps ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+            ]
+        [ drop drop bits_limit result@1.Result.Err ] if
+    ]
+
+    signature preflight_additive forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_additive [
+        [ dup pair_widths_valid ] dip swap
+        [
+        [ dup ] dip preflight_binary_linear
+        [ [ unpair larger 1 + 192 * 128 + ] dip
+          swap numeric_budget@1.charge_native_steps ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+            ]
+        [ drop drop bits_limit result@1.Result.Err ] if
+    ]
+
+    signature gate_depth_for_lengths forall<S:stack>
+        [ S Pair<I64,I64> I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<I64,numeric_budget@1.Budget>>,calc_errors@1.NumericError> ! pure ]
+    def gate_depth_for_lengths [
+        [[ dup unpair larger 0 checked_width ] dip ] dip
+        [ swap ] dip swap
+        [ swap bigint_scan@1.gate_depth
+          [ unpair [ drop ] dip pair pair result@1.Result.Ok ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preflight_product_checked forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_product_checked [
+        [ dup unpair checked_sum ] dip swap
+        [
+            swap bigint_scan@1.gate_bits
+            [ unpair gate_depth_for_lengths ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match
+            [ unpair unpair
+              [ 1 + ] dip
+              [[ unpair ] dip ] dip
+              [[[ drop ] dip ] dip ] dip
+              scaled_rows ] result@1.and_then
+        ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # Loop over the shorter operand. At most two partial-product rows touch
+    # at most max(widths)+1 bits when min(widths)<=2. Each bit-adder row has
+    # fewer than 64 words per bit; 128 per output bit covers both rows and
+    # 512 covers multiplication's sign, empty branches, and result facade.
+    # Larger products keep the conservative row bound, so 81x81 remains
+    # typed Work before entering the unmetered raw multiply.
+    signature native_product_cost forall<S:stack>
+        [ S Pair<I64,I64> -- S I64 ! pure ]
+    def native_product_cost [
+        dup unpair swap <
+        [ unpair swap ] [ unpair ] if
+        [ dup 3 < ] dip swap
+        [ swap drop 2 + 128 * 512 + ]
+        [ [ 1 + 128 * ] dip 2 + * 512 + ] if
+    ]
+
+    signature preflight_product forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_product [
+        [ dup pair_widths_valid ] dip swap
+        [
+        [ dup ] dip preflight_product_checked
+        [ [ dup native_product_cost ] dip swap
+          numeric_budget@1.charge_native_steps
+          [ swap drop result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+            ]
+        [ drop drop bits_limit result@1.Result.Err ] if
+    ]
+
+    # The bitwise trial remainder is below twice the divisor. Its width is
+    # at most max(dividend width, divisor width + 1), not their sum.
+    signature reserve_division_work forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def reserve_division_work [
+        [ dup unpair checked_width ] dip swap
+        [ swap
+          [[ unpair ] dip ] dip
+          [[ drop ] dip ] dip
+          scaled_rows ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preflight_division_checked forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_division_checked [
+        [ dup unpair 1 + larger ] dip
+        bigint_scan@1.gate_bits
+        [ unpair gate_depth_for_lengths ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+        [ unpair unpair
+          [ drop ] dip
+          reserve_division_work ] result@1.and_then
+    ]
+
+    # One long-division trial can compare and subtract the divisor; reserve
+    # the quadratic worst case before entering that unmetered bit recurrence.
+    signature native_division_cost forall<S:stack>
+        [ S Pair<I64,I64> -- S I64 ! pure ]
+    def native_division_cost [
+        unpair [ 1 + ] dip 1 + 192 * 160 + * 512 +
+    ]
+
+    signature preflight_division forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_division [
+        [ dup pair_widths_valid ] dip swap
+        [
+        [ dup ] dip preflight_division_checked
+        [ [ dup native_division_cost ] dip swap
+          numeric_budget@1.charge_native_steps
+          [ swap drop result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+            ]
+        [ drop drop bits_limit result@1.Result.Err ] if
+    ]
+
+    # The 12-bit positive-magnitude path uses guest I64 operations, not a
+    # host division. Each doubled divisor/power is at most 8190; quotient and
+    # remainder stay at most 4095. With divisor width <=2 the remainder has
+    # <=2 bits; two <=12-bit folds, <=13 ascent/unwind levels, one <=12-bit
+    # power-ascent encoder, signs and facade fit in 2560 source words.
+    # The local magnitude encoder adds at most 64 words per output bit
+    # over the former decimal chunk encoder, plus 16 per named call:
+    # 14*64+32 <=1024 for the short-divisor path. For other divisors,
+    # two 12-bit outputs add at most 24*64+32 <=2048 over 4096.
+    # Structural width/depth/work gates run before either division algorithm.
+    signature preflight_small_division forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_small_division [
+        [ dup pair_widths_valid ] dip swap
+        [
+        [ dup ] dip preflight_division_checked
+        [ [ unpair swap drop 3 <
+            [ 3584 ] [ 6144 ] if ] dip
+          swap numeric_budget@1.charge_native_steps ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+            ]
+        [ drop drop bits_limit result@1.Result.Err ] if
+    ]
+
+    # Canonicality checks traverse the accepted list once (ten words per
+    # bit). Reserve this raw decoder after the public width/depth/work gates.
+    signature preflight_from_bits forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_from_bits [
+        [ dup ] dip preflight_same_width
+        [ [ 1 + 16 * 128 + ] dip
+          swap numeric_budget@1.charge_native_steps ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+]

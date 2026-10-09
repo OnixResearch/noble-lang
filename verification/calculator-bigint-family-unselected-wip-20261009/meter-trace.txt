@@ -1,0 +1,348 @@
+Breakpoint 1 at 0x14d8d05: file crates/noble-contracts/src/metering.rs, line 32.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/nix/store/h4wfwic161kxrr74jlzla5lsm28hgary-glibc-2.44-25/lib/libthread_db.so.1".
+NODE_EXHAUSTION_BREAKPOINT
+#3  0x00005aa85507cd0f in noble_contracts::source::inference::validation::term (arena=0x7fff9d44bcd8, root=1083, span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:122
+122	        if let Err(problem) = walk.visit(arena, visit, span, meter) {
+NAMED_CALL_ERROR No symbol 'call' in current context
+NAMED_DEFINITION_ERROR No symbol 'definition' in current context
+#4  0x00005aa85507c813 in noble_contracts::source::inference::validation::variable_term (arena=0x7fff9d44bcd8, variable=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:82
+82	            term(arena, id, span, meter)
+NAMED_NODE_ID_ERROR No symbol 'node_id' in current context
+NAMED_NODE_ERROR No symbol 'node' in current context
+#0  noble_contracts::Meter::node (self=0x7fff9d44cec8, span=...) at crates/noble-contracts/src/metering.rs:32
+32	            return Err(crate::Diagnostic::new(
+METER_SNAPSHOT $1 = noble_contracts::Meter {limits: noble_contracts::Limits {bytes: 65588, nodes: 4096, depth: 64, work: 142857}, work: 72317, nodes: 4096}
+#0  noble_contracts::Meter::node (self=0x7fff9d44cec8, span=...) at crates/noble-contracts/src/metering.rs:32
+#1  0x00005aa85507b852 in noble_contracts::source::inference::validation::Traversal::value_group (self=0x7fff9d44b2c0, term=..., group=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:255
+#2  0x00005aa85507bd3e in noble_contracts::source::inference::validation::Traversal::visit (self=0x7fff9d44b2c0, arena=0x7fff9d44bcd8, visit=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:149
+#3  0x00005aa85507cd0f in noble_contracts::source::inference::validation::term (arena=0x7fff9d44bcd8, root=1083, span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:122
+#4  0x00005aa85507c813 in noble_contracts::source::inference::validation::variable_term (arena=0x7fff9d44bcd8, variable=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:82
+#5  0x00005aa85507cfe7 in noble_contracts::source::inference::validation::variables (arena=0x7fff9d44bcd8, draft=0x5aa871733c00, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:53
+#6  0x00005aa85507c4f9 in noble_contracts::source::inference::validation::body_terms (arena=0x7fff9d44bcd8, body=0x5aa8717007a8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:33
+#7  0x00005aa85507c930 in noble_contracts::source::inference::validation::open (state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:11
+#8  0x00005aa85500c88d in noble_contracts::source::inference::infer (scope=..., mode=noble_contracts::source::inference::Mode::Declaration, inputs=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/mod.rs:232
+#9  0x00005aa8551618de in noble_contracts::source::Session::prepare_with_original (self=0x7fff9d455c68, source_bytes=..., inputs=..., signature=..., limits=..., retained_bytes=262196, original=...) at crates/noble-contracts/src/source/preparation.rs:333
+#10 0x00005aa855165021 in noble_contracts::source::Session::prepare_signed_from_module (self=0x7fff9d455c68, source_bytes=..., inputs=..., signature=..., limits=..., retained_bytes=262196, original=...) at crates/noble-contracts/src/source/preparation.rs:136
+#11 0x00005aa8550126ed in noble_contracts::source::declared::state::register::definitions::commit_definition (session=<error reading variable: Cannot access memory at address 0x431>, definition_bytes=..., signature=..., limits=..., retained_bytes=262196, original=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:258
+#12 0x00005aa855011ecb in noble_contracts::source::declared::state::register::definitions::install_one (session=..., input=..., local_exports=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:209
+#13 0x00005aa8550fa5e8 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::commit (self=..., position=5) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:240
+#14 0x00005aa8550fb9a7 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::pass_at (self=..., position=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:140
+#15 0x00005aa8550f872c in noble_contracts::source::declared::state::register::definitions::graph::Schedule::pass (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:106
+#16 0x00005aa8550fbec9 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::run_pass (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:82
+#17 0x00005aa8550f7ef7 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::run (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:62
+#18 0x00005aa855013bc8 in noble_contracts::source::declared::state::register::definitions::install (session=..., work=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:69
+#19 0x00005aa8551088e4 in noble_contracts::source::declared::state::ModuleSession::register (self=..., request=...) at crates/noble-contracts/src/source/declared/state/register.rs:152
+#20 0x00005aa855103b4d in noble_contracts::source::declared::state::ModuleSession::stage_unit (self=..., unit=..., input_bytes=..., inputs=..., limits=...) at crates/noble-contracts/src/source/declared/state/prepare.rs:133
+#21 0x00005aa855105a9c in noble_contracts::source::declared::state::ModuleSession::prepare (self=0x7fff9d48af18, input_bytes=..., inputs=..., limits=...) at crates/noble-contracts/src/source/declared/state/prepare.rs:61
+#22 0x00005aa854929c8e in noble::core::Session::submit_declared (self=0x7fff9d48aac0, source=..., options=0x7fff9d48d890) at crates/noble-cli/src/core/declared/mod.rs:64
+#23 0x00005aa8549269f1 in noble::core::Session::submit (self=0x7fff9d48aac0, source=..., options=0x7fff9d48d890) at crates/noble-cli/src/core.rs:213
+#24 0x00005aa854924249 in noble::core::entry::execute (options=...) at crates/noble-cli/src/core/entry.rs:83
+#25 0x00005aa854ae810d in core::ops::function::FnOnce::call_once<fn(noble::core::arguments::Options) -> core::result::Result<u8, noble::core::output::Failure>, (noble::core::arguments::Options)> () at /nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/lib/rustlib/src/rust/library/core/src/ops/function.rs:250
+#26 0x00005aa854b3ee64 in core::result::Result<noble::core::arguments::Options, noble::core::output::Failure>::and_then<noble::core::arguments::Options, noble::core::output::Failure, u8, fn(noble::core::arguments::Options) -> core::result::Result<u8, noble::core::output::Failure>> (self=..., op=0x5aa854922f8a00) at /nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/lib/rustlib/src/rust/library/core/src/result.rs:1493
+#27 0x00005aa854922f8a in noble::core::entry::run (arguments=...) at crates/noble-cli/src/core/entry.rs:15
+#28 0x00005aa854b24159 in noble::main () at crates/noble-cli/src/main.rs:72
+#0  noble_contracts::Meter::node (self=0x7fff9d44cec8, span=...) at crates/noble-contracts/src/metering.rs:32
+No locals.
+#1  0x00005aa85507b852 in noble_contracts::source::inference::validation::Traversal::value_group (self=0x7fff9d44b2c0, term=..., group=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:255
+No locals.
+#2  0x00005aa85507bd3e in noble_contracts::source::inference::validation::Traversal::visit (self=0x7fff9d44b2c0, arena=0x7fff9d44bcd8, visit=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:149
+        term = {...}
+        id = 1072
+#3  0x00005aa85507cd0f in noble_contracts::source::inference::validation::term (arena=0x7fff9d44bcd8, root=1083, span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:122
+        problem = {...}
+        visit = {...}
+        failure = {...}
+        walk = {...}
+#4  0x00005aa85507c813 in noble_contracts::source::inference::validation::variable_term (arena=0x7fff9d44bcd8, variable=..., span=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:82
+        id = 1083
+#5  0x00005aa85507cfe7 in noble_contracts::source::inference::validation::variables (arena=0x7fff9d44bcd8, draft=0x5aa871733c00, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:53
+        problem = {...}
+        failure = {...}
+        at = 1
+#6  0x00005aa85507c4f9 in noble_contracts::source::inference::validation::body_terms (arena=0x7fff9d44bcd8, body=0x5aa8717007a8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:33
+        problem = {...}
+        failure = {...}
+        at = 0
+#7  0x00005aa85507c930 in noble_contracts::source::inference::validation::open (state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/validation.rs:11
+        problem = {...}
+        failure = {...}
+        at = 15
+#8  0x00005aa85500c88d in noble_contracts::source::inference::infer (scope=..., mode=noble_contracts::source::inference::Mode::Declaration, inputs=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/mod.rs:232
+        failure = {...}
+        body = 0x5aa87151e0e0
+        frames = {...}
+        signature = {...}
+        owner_variables = {...}
+        state = {...}
+        tree = 0x7fff9d44cf30
+#9  0x00005aa8551618de in noble_contracts::source::Session::prepare_with_original (self=0x7fff9d455c68, source_bytes=..., inputs=..., signature=..., limits=..., retained_bytes=262196, original=...) at crates/noble-contracts/src/source/preparation.rs:333
+        scope = {...}
+        prospective_owner = {...}
+        universal_eligible = true
+        has_self = false
+        universal_bindings = {...}
+        environment = {...}
+        extra = 138
+        mode = noble_contracts::source::inference::Mode::Declaration
+        selected_root = {...}
+        alias_uses = {...}
+        signed_owner = true
+        alias_candidates = {...}
+        tree = {...}
+        name = {...}
+        parsed = {...}
+        meter = {...}
+#10 0x00005aa855165021 in noble_contracts::source::Session::prepare_signed_from_module (self=0x7fff9d455c68, source_bytes=..., inputs=..., signature=..., limits=..., retained_bytes=262196, original=...) at crates/noble-contracts/src/source/preparation.rs:136
+No locals.
+#11 0x00005aa8550126ed in noble_contracts::source::declared::state::register::definitions::commit_definition (session=<error reading variable: Cannot access memory at address 0x431>, definition_bytes=..., signature=..., limits=..., retained_bytes=262196, original=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:258
+No locals.
+#12 0x00005aa855011ecb in noble_contracts::source::declared::state::register::definitions::install_one (session=..., input=..., local_exports=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:209
+No locals.
+#13 0x00005aa8550fa5e8 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::commit (self=..., position=5) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:240
+        ordinal = 5
+        source_span = {...}
+        body_span = {...}
+        definition_limits = {...}
+        session = {...}
+        name = {...}
+        definition_bytes = {...}
+#14 0x00005aa8550fb9a7 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::pass_at (self=..., position=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:140
+        next = {...}
+        ready = {...}
+        position = 5
+        completed = 5
+#15 0x00005aa8550f872c in noble_contracts::source::declared::state::register::definitions::graph::Schedule::pass (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:106
+        failure = {...}
+        count = 13
+        position = 5
+        completed = 5
+#16 0x00005aa8550fbec9 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::run_pass (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:82
+No locals.
+#17 0x00005aa8550f7ef7 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::run (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:62
+        failure = {...}
+#18 0x00005aa855013bc8 in noble_contracts::source::declared::state::register::definitions::install (session=..., work=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:69
+        graph = {...}
+        history_start = 0
+        temporary_retained_bytes = 262196
+        headers = 52
+        definition_limits = {...}
+        count = 13
+#19 0x00005aa8551088e4 in noble_contracts::source::declared::state::ModuleSession::register (self=..., request=...) at crates/noble-contracts/src/source/declared/state/register.rs:152
+        name_index = {...}
+        needs_name_lookup = true
+        source_stamp_prefix = {...}
+        meter = {...}
+        next = {...}
+        name = {...}
+        adapter_slot = {...}
+        next = {...}
+        local_exports = {...}
+        words = {...}
+        signatures = {...}
+        fixed = {...}
+        families = {...}
+        next = {...}
+        resolved = {...}
+        meter = {...}
+        collected = {...}
+        selected_locals = true
+        next_module_identity = 36
+        identity = 35
+        original_source = {...}
+#20 0x00005aa855103b4d in noble_contracts::source::declared::state::ModuleSession::stage_unit (self=..., unit=..., input_bytes=..., inputs=..., limits=...) at crates/noble-contracts/src/source/declared/state/prepare.rs:133
+        name = {...}
+        members = {...}
+        version = 1
+        expression = false
+#21 0x00005aa855105a9c in noble_contracts::source::declared::state::ModuleSession::prepare (self=0x7fff9d48af18, input_bytes=..., inputs=..., limits=...) at crates/noble-contracts/src/source/declared/state/prepare.rs:61
+        unit = {...}
+        limit_bytes = 65536
+#22 0x00005aa854929c8e in noble::core::Session::submit_declared (self=0x7fff9d48aac0, source=..., options=0x7fff9d48d890) at crates/noble-cli/src/core/declared/mod.rs:64
+        frontend = 0x7fff9d48af18
+#23 0x00005aa8549269f1 in noble::core::Session::submit (self=0x7fff9d48aac0, source=..., options=0x7fff9d48d890) at crates/noble-cli/src/core.rs:213
+No locals.
+#24 0x00005aa854924249 in noble::core::entry::execute (options=...) at crates/noble-cli/src/core/entry.rs:83
+        source = {...}
+        submission = {...}
+        exit = 0
+        input = {...}
+        session = {...}
+#25 0x00005aa854ae810d in core::ops::function::FnOnce::call_once<fn(noble::core::arguments::Options) -> core::result::Result<u8, noble::core::output::Failure>, (noble::core::arguments::Options)> () at /nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/lib/rustlib/src/rust/library/core/src/ops/function.rs:250
+No locals.
+#26 0x00005aa854b3ee64 in core::result::Result<noble::core::arguments::Options, noble::core::output::Failure>::and_then<noble::core::arguments::Options, noble::core::output::Failure, u8, fn(noble::core::arguments::Options) -> core::result::Result<u8, noble::core::output::Failure>> (self=..., op=0x5aa854922f8a00) at /nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/lib/rustlib/src/rust/library/core/src/result.rs:1493
+        t = {...}
+#27 0x00005aa854922f8a in noble::core::entry::run (arguments=...) at crates/noble-cli/src/core/entry.rs:15
+        is_cursor = true
+        is_declared_text = true
+        is_signed = true
+        is_declared = true
+        parsed = {...}
+#28 0x00005aa854b24159 in noble::main () at crates/noble-cli/src/main.rs:72
+        arguments = {...}
+NODE_EXHAUSTION_BREAKPOINT
+#3  0x00005aa854fae695 in noble_contracts::source::inference::completion::complete (frame=..., parents=..., state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/completion.rs:46
+46	            quotation(frame, surrounding, parents, state, meter)
+NAMED_CALL_ERROR No symbol 'call' in current context
+NAMED_DEFINITION_ERROR No symbol 'definition' in current context
+#4  0x00005aa855089dc8 in noble_contracts::source::inference::traversal::visit (frame=..., parents=0x7fff9d44c3a8, state=0x7fff9d44bcd8, scope=0x7fff9d452d80, editor_analysis=false, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/traversal.rs:19
+19	        None => return super::completion::complete(frame, parents, state, meter),
+NAMED_NODE_ID_ERROR No symbol 'node_id' in current context
+NAMED_NODE_ERROR No symbol 'node' in current context
+#0  noble_contracts::Meter::node (self=0x7fff9d44cec8, span=...) at crates/noble-contracts/src/metering.rs:32
+32	            return Err(crate::Diagnostic::new(
+METER_SNAPSHOT $2 = noble_contracts::Meter {limits: noble_contracts::Limits {bytes: 65584, nodes: 4096, depth: 64, work: 153846}, work: 112221, nodes: 4096}
+#0  noble_contracts::Meter::node (self=0x7fff9d44cec8, span=...) at crates/noble-contracts/src/metering.rs:32
+#1  0x00005aa85500b748 in noble_contracts::source::inference::add (body=0, draft=<error reading variable: Cannot access memory at address 0x1030>, state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/mod.rs:372
+#2  0x00005aa854faecb2 in noble_contracts::source::inference::completion::quotation (frame=..., surrounding=2310, parents=..., state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/completion.rs:84
+#3  0x00005aa854fae695 in noble_contracts::source::inference::completion::complete (frame=..., parents=..., state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/completion.rs:46
+#4  0x00005aa855089dc8 in noble_contracts::source::inference::traversal::visit (frame=..., parents=0x7fff9d44c3a8, state=0x7fff9d44bcd8, scope=0x7fff9d452d80, editor_analysis=false, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/traversal.rs:19
+#5  0x00005aa85500c646 in noble_contracts::source::inference::infer (scope=..., mode=noble_contracts::source::inference::Mode::Declaration, inputs=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/mod.rs:220
+#6  0x00005aa8551618de in noble_contracts::source::Session::prepare_with_original (self=0x7fff9d455c68, source_bytes=..., inputs=..., signature=..., limits=..., retained_bytes=262192, original=...) at crates/noble-contracts/src/source/preparation.rs:333
+#7  0x00005aa855165021 in noble_contracts::source::Session::prepare_signed_from_module (self=0x7fff9d455c68, source_bytes=..., inputs=..., signature=..., limits=..., retained_bytes=262192, original=...) at crates/noble-contracts/src/source/preparation.rs:136
+#8  0x00005aa8550126ed in noble_contracts::source::declared::state::register::definitions::commit_definition (session=<error reading variable: Cannot access memory at address 0x431>, definition_bytes=..., signature=..., limits=..., retained_bytes=262192, original=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:258
+#9  0x00005aa855011ecb in noble_contracts::source::declared::state::register::definitions::install_one (session=..., input=..., local_exports=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:209
+#10 0x00005aa8550fa5e8 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::commit (self=..., position=11) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:240
+#11 0x00005aa8550fb9a7 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::pass_at (self=..., position=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:140
+#12 0x00005aa8550f872c in noble_contracts::source::declared::state::register::definitions::graph::Schedule::pass (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:106
+#13 0x00005aa8550fbec9 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::run_pass (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:82
+#14 0x00005aa8550f7ef7 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::run (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:62
+#15 0x00005aa855013bc8 in noble_contracts::source::declared::state::register::definitions::install (session=..., work=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:69
+#16 0x00005aa8551088e4 in noble_contracts::source::declared::state::ModuleSession::register (self=..., request=...) at crates/noble-contracts/src/source/declared/state/register.rs:152
+#17 0x00005aa855103b4d in noble_contracts::source::declared::state::ModuleSession::stage_unit (self=..., unit=..., input_bytes=..., inputs=..., limits=...) at crates/noble-contracts/src/source/declared/state/prepare.rs:133
+#18 0x00005aa855105a9c in noble_contracts::source::declared::state::ModuleSession::prepare (self=0x7fff9d48af18, input_bytes=..., inputs=..., limits=...) at crates/noble-contracts/src/source/declared/state/prepare.rs:61
+#19 0x00005aa854929c8e in noble::core::Session::submit_declared (self=0x7fff9d48aac0, source=..., options=0x7fff9d48d890) at crates/noble-cli/src/core/declared/mod.rs:64
+#20 0x00005aa8549269f1 in noble::core::Session::submit (self=0x7fff9d48aac0, source=..., options=0x7fff9d48d890) at crates/noble-cli/src/core.rs:213
+#21 0x00005aa854924249 in noble::core::entry::execute (options=...) at crates/noble-cli/src/core/entry.rs:83
+#22 0x00005aa854ae810d in core::ops::function::FnOnce::call_once<fn(noble::core::arguments::Options) -> core::result::Result<u8, noble::core::output::Failure>, (noble::core::arguments::Options)> () at /nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/lib/rustlib/src/rust/library/core/src/ops/function.rs:250
+#23 0x00005aa854b3ee64 in core::result::Result<noble::core::arguments::Options, noble::core::output::Failure>::and_then<noble::core::arguments::Options, noble::core::output::Failure, u8, fn(noble::core::arguments::Options) -> core::result::Result<u8, noble::core::output::Failure>> (self=..., op=0x5aa854922f8a00) at /nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/lib/rustlib/src/rust/library/core/src/result.rs:1493
+#24 0x00005aa854922f8a in noble::core::entry::run (arguments=...) at crates/noble-cli/src/core/entry.rs:15
+#25 0x00005aa854b24159 in noble::main () at crates/noble-cli/src/main.rs:72
+#0  noble_contracts::Meter::node (self=0x7fff9d44cec8, span=...) at crates/noble-contracts/src/metering.rs:32
+No locals.
+#1  0x00005aa85500b748 in noble_contracts::source::inference::add (body=0, draft=<error reading variable: Cannot access memory at address 0x1030>, state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/mod.rs:372
+No locals.
+#2  0x00005aa854faecb2 in noble_contracts::source::inference::completion::quotation (frame=..., surrounding=2310, parents=..., state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/completion.rs:84
+        variables = {...}
+        output = 2319
+        program = 2318
+#3  0x00005aa854fae695 in noble_contracts::source::inference::completion::complete (frame=..., parents=..., state=0x7fff9d44bcd8, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/completion.rs:46
+        surrounding = 2310
+#4  0x00005aa855089dc8 in noble_contracts::source::inference::traversal::visit (frame=..., parents=0x7fff9d44c3a8, state=0x7fff9d44bcd8, scope=0x7fff9d452d80, editor_analysis=false, meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/traversal.rs:19
+        items = {...}
+        tree = 0x7fff9d44cf30
+#5  0x00005aa85500c646 in noble_contracts::source::inference::infer (scope=..., mode=noble_contracts::source::inference::Mode::Declaration, inputs=..., meter=0x7fff9d44cec8) at crates/noble-contracts/src/source/inference/mod.rs:220
+        problem = {...}
+        frame = {...}
+        failure = {...}
+        body = 0x5aa870962d10
+        frames = {...}
+        signature = {...}
+        owner_variables = {...}
+        state = {...}
+        tree = 0x7fff9d44cf30
+#6  0x00005aa8551618de in noble_contracts::source::Session::prepare_with_original (self=0x7fff9d455c68, source_bytes=..., inputs=..., signature=..., limits=..., retained_bytes=262192, original=...) at crates/noble-contracts/src/source/preparation.rs:333
+        scope = {...}
+        prospective_owner = {...}
+        universal_eligible = true
+        has_self = false
+        universal_bindings = {...}
+        environment = {...}
+        extra = 141
+        mode = noble_contracts::source::inference::Mode::Declaration
+        selected_root = {...}
+        alias_uses = {...}
+        signed_owner = true
+        alias_candidates = {...}
+        tree = {...}
+        name = {...}
+        parsed = {...}
+        meter = {...}
+#7  0x00005aa855165021 in noble_contracts::source::Session::prepare_signed_from_module (self=0x7fff9d455c68, source_bytes=..., inputs=..., signature=..., limits=..., retained_bytes=262192, original=...) at crates/noble-contracts/src/source/preparation.rs:136
+No locals.
+#8  0x00005aa8550126ed in noble_contracts::source::declared::state::register::definitions::commit_definition (session=<error reading variable: Cannot access memory at address 0x431>, definition_bytes=..., signature=..., limits=..., retained_bytes=262192, original=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:258
+No locals.
+#9  0x00005aa855011ecb in noble_contracts::source::declared::state::register::definitions::install_one (session=..., input=..., local_exports=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:209
+No locals.
+#10 0x00005aa8550fa5e8 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::commit (self=..., position=11) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:240
+        ordinal = 11
+        source_span = {...}
+        body_span = {...}
+        definition_limits = {...}
+        session = {...}
+        name = {...}
+        definition_bytes = {...}
+#11 0x00005aa8550fb9a7 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::pass_at (self=..., position=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:140
+        next = {...}
+        ready = {...}
+        position = 11
+        completed = 11
+#12 0x00005aa8550f872c in noble_contracts::source::declared::state::register::definitions::graph::Schedule::pass (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:106
+        failure = {...}
+        count = 12
+        position = 11
+        completed = 11
+#13 0x00005aa8550fbec9 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::run_pass (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:82
+No locals.
+#14 0x00005aa8550f7ef7 in noble_contracts::source::declared::state::register::definitions::graph::Schedule::run (self=...) at crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs:62
+        failure = {...}
+#15 0x00005aa855013bc8 in noble_contracts::source::declared::state::register::definitions::install (session=..., work=...) at crates/noble-contracts/src/source/declared/state/register/definitions.rs:69
+        graph = {...}
+        history_start = 0
+        temporary_retained_bytes = 262192
+        headers = 48
+        definition_limits = {...}
+        count = 12
+#16 0x00005aa8551088e4 in noble_contracts::source::declared::state::ModuleSession::register (self=..., request=...) at crates/noble-contracts/src/source/declared/state/register.rs:152
+        name_index = {...}
+        needs_name_lookup = true
+        source_stamp_prefix = {...}
+        meter = {...}
+        next = {...}
+        name = {...}
+        adapter_slot = {...}
+        next = {...}
+        local_exports = {...}
+        words = {...}
+        signatures = {...}
+        fixed = {...}
+        families = {...}
+        next = {...}
+        resolved = {...}
+        meter = {...}
+        collected = {...}
+        selected_locals = true
+        next_module_identity = 36
+        identity = 35
+        original_source = {...}
+#17 0x00005aa855103b4d in noble_contracts::source::declared::state::ModuleSession::stage_unit (self=..., unit=..., input_bytes=..., inputs=..., limits=...) at crates/noble-contracts/src/source/declared/state/prepare.rs:133
+        name = {...}
+        members = {...}
+        version = 1
+        expression = false
+#18 0x00005aa855105a9c in noble_contracts::source::declared::state::ModuleSession::prepare (self=0x7fff9d48af18, input_bytes=..., inputs=..., limits=...) at crates/noble-contracts/src/source/declared/state/prepare.rs:61
+        unit = {...}
+        limit_bytes = 65536
+#19 0x00005aa854929c8e in noble::core::Session::submit_declared (self=0x7fff9d48aac0, source=..., options=0x7fff9d48d890) at crates/noble-cli/src/core/declared/mod.rs:64
+        frontend = 0x7fff9d48af18
+#20 0x00005aa8549269f1 in noble::core::Session::submit (self=0x7fff9d48aac0, source=..., options=0x7fff9d48d890) at crates/noble-cli/src/core.rs:213
+No locals.
+#21 0x00005aa854924249 in noble::core::entry::execute (options=...) at crates/noble-cli/src/core/entry.rs:83
+        source = {...}
+        submission = {...}
+        exit = 5
+        input = {...}
+        session = {...}
+#22 0x00005aa854ae810d in core::ops::function::FnOnce::call_once<fn(noble::core::arguments::Options) -> core::result::Result<u8, noble::core::output::Failure>, (noble::core::arguments::Options)> () at /nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/lib/rustlib/src/rust/library/core/src/ops/function.rs:250
+No locals.
+#23 0x00005aa854b3ee64 in core::result::Result<noble::core::arguments::Options, noble::core::output::Failure>::and_then<noble::core::arguments::Options, noble::core::output::Failure, u8, fn(noble::core::arguments::Options) -> core::result::Result<u8, noble::core::output::Failure>> (self=..., op=0x5aa854922f8a00) at /nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/lib/rustlib/src/rust/library/core/src/result.rs:1493
+        t = {...}
+#24 0x00005aa854922f8a in noble::core::entry::run (arguments=...) at crates/noble-cli/src/core/entry.rs:15
+        is_cursor = true
+        is_declared_text = true
+        is_signed = true
+        is_declared = true
+        parsed = {...}
+#25 0x00005aa854b24159 in noble::main () at crates/noble-cli/src/main.rs:72
+        arguments = {...}
+[Inferior 1 (process 3963287) exited with code 05]

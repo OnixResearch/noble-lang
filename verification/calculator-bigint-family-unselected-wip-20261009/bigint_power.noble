@@ -1,0 +1,56 @@
+module bigint_power@1 [
+    export i64_exact_width
+
+    # With state (magnitude, (power, width)), the first five multipliers
+    # cannot exceed 2^62. The final doubling checks p <= magnitude-p before
+    # multiplying, so even I64_MAX never produces a wrapping 2^63 candidate.
+    signature power_candidate forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>> I64 -- S Pair<I64,Pair<I64,I64>> I64 ! pure ]
+    def power_candidate [ [ dup unpair swap drop unpair drop ] dip * ]
+
+    signature power_choose forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>> I64 I64 -- S Pair<I64,Pair<I64,I64>> ! pure ]
+    def power_choose [
+        [ power_candidate ] dip pair pair
+        dup unpair unpair drop
+        [ unpair drop ] dip <
+        [ unpair drop ]
+        [ unpair [ unpair unpair swap drop ] dip
+          unpair [ swap ] dip + pair pair ] if
+    ]
+
+    signature power_choose_double forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>> -- S Pair<I64,Pair<I64,I64>> ! pure ]
+    def power_choose_double [
+        dup unpair unpair drop dup [ - ] dip <
+        [ ] [ 2 1 power_choose ] if
+    ]
+
+    # Six finite, exact power choices determine the top set bit. For a
+    # negative n, -(n+1) is representable even at I64_MIN; the all-ones flag
+    # says whether adding one extends that magnitude by one bit.
+    signature magnitude_info forall<S:stack>
+        [ S I64 -- S Pair<I64,Bool> ! pure ]
+    def magnitude_info [
+        dup 0 =
+        [ drop 0 true pair ]
+        [ 1 1 pair pair
+          4294967296 32 power_choose
+          65536 16 power_choose
+          256 8 power_choose
+          16 4 power_choose
+          4 2 power_choose
+          power_choose_double
+          dup unpair unpair drop
+          dup [ - ] dip 1 - =
+          [ unpair unpair swap drop swap drop ] dip pair ] if
+    ]
+
+    signature i64_exact_width forall<S:stack> [ S I64 -- S I64 ! pure ]
+    def i64_exact_width [
+        dup 0 <
+        [ 1 + 0 swap - magnitude_info unpair [ 1 + ] [ ] if ]
+        [ magnitude_info unpair drop ] if
+    ]
+
+]

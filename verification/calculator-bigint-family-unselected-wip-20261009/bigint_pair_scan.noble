@@ -1,0 +1,27 @@
+module bigint_pair_scan@1 [
+    # Consumes both physical operand parts in order, returning only genuine
+    # measured widths and the single Budget lineage from paid scans. The
+    # exported pair scanner cannot accept caller-supplied widths.
+    signature inspect_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def inspect_parts [
+        [ unpair swap drop ] dip
+        bigint_scan@1.scan_bits
+    ]
+
+    signature scan_two_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<I64,I64>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export scan_two_parts
+    def scan_two_parts [
+        [ swap ] dip
+        inspect_parts
+        [ unpair [ swap ] dip inspect_parts
+          [ unpair [ pair ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]

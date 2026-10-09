@@ -1,0 +1,2658 @@
+1150
+module bitborrow@1 [
+    signature subtract_with_borrow forall<S:stack>
+        [ S List<Bool> List<Bool> Bool -- S Bool List<Bool> ! pure ]
+    export subtract_with_borrow
+    def subtract_with_borrow [
+        pair swap
+        [ unpair swap
+            [ nil ]
+            [ drop drop drop true nil ] list.case
+        ] [
+            [ swap ] dip swap unpair swap
+            [
+                [ cons ] dip
+                [ true nil cons false subtract_with_borrow ] [ false swap ] if
+            ] [
+                [[[ swap ] dip ] dip ] dip
+                [ swap ] dip
+                swap
+                [ swap ] dip
+                [[ swap ] dip ] dip
+                [ 1 ] [ 0 ] if swap [ 1 ] [ 0 ] if +
+                swap [ 1 ] [ 0 ] if swap -
+                dup 0 < [ -1 = true ] [ 1 = false ] if
+                swap [ subtract_with_borrow ] dip
+                [ swap ] dip swap
+                [
+                    swap dup [ true ] [ drop drop false ] list.case
+                    [ drop [ true nil cons ] [ nil ] if ] [ cons ] if
+                ] dip
+                swap
+            ] list.case
+        ] list.case
+    ]
+]
+645
+module bitcompare@1 [
+    signature compare forall<S:stack>
+        [ S List<Bool> List<Bool> -- S I64 ! pure ]
+    export compare
+    def compare [
+        swap
+        [ [ 0 ] [ drop drop -1 ] list.case ] [
+            pair swap
+            [ drop 1 ] [
+                [ swap ] dip swap unpair
+                [[ swap ] dip ] dip
+                [ swap ] dip
+                swap
+                [ swap ] dip
+                [[ swap ] dip ] dip
+                [ 1 ] [ 0 ] if swap [ 1 ] [ 0 ] if swap -
+                [ compare ] dip
+                swap dup 0 = [ drop ] [ swap drop ] if
+            ] list.case
+        ] list.case
+    ]
+]
+235
+module bitdecode@1 [
+    signature last_bit forall<S:stack> [ S List<Bool> -- S Bool ! pure ]
+    export last_bit
+    def last_bit [
+        [ false ] [
+            [ ] [ cons swap drop last_bit ] list.case
+        ] list.case
+    ]
+]
+864
+module bitdiv@1 [
+    signature divide_rem forall<S:stack>
+        [ S List<Bool> List<Bool> -- S Pair<List<Bool>,List<Bool>> ! pure ]
+    export divide_rem
+    def divide_rem [
+        swap
+        [ drop nil nil pair ] [
+            # Pair the next bit with its divisor across recursive descent.
+            swap [ swap ] dip [ dup ] dip swap
+            pair [ divide_rem ] dip unpair
+            swap [ swap ] dip swap
+            unpair
+            [ swap ] dip
+            [ [ true nil cons ] [ nil ] if ] [ cons cons ] list.case
+            [ swap ] dip
+            swap [ dup ] dip
+            false bitborrow@1.subtract_with_borrow swap
+            [ drop false swap ]
+            [ swap drop true swap ] if
+            [ swap ] dip
+            [ [ [ true nil cons ] [ nil ] if ] [ cons cons ] list.case ] dip
+            pair
+        ] list.case
+    ]
+]
+709
+module bitfull@1 [
+    signature add forall<S:stack> [ S Bool Bool Bool -- S Bool Bool ! pure ]
+    export add
+    def add [
+        [ 1 ] [ 0 ] if
+        swap [ 1 ] [ 0 ] if +
+        swap [ 1 ] [ 0 ] if +
+        dup 2 < [ 1 = false ] [ 3 = true ] if
+    ]
+
+    signature subtract forall<S:stack> [ S Bool Bool Bool -- S Bool Bool ! pure ]
+    export subtract
+    def subtract [
+        [ 1 ] [ 0 ] if
+        swap [ 1 ] [ 0 ] if +
+        swap [ 1 ] [ 0 ] if swap -
+        dup 0 < [ -1 = true ] [ 1 = false ] if
+    ]
+
+    signature compare_bit forall<S:stack> [ S Bool Bool -- S I64 ! pure ]
+    export compare_bit
+    def compare_bit [
+        [ 1 ] [ 0 ] if
+        swap [ 1 ] [ 0 ] if swap -
+    ]
+]
+447
+module bitpair@1 [
+    signature unpack forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S List<Bool> List<Bool> Bool Bool ! pure ]
+    export unpack
+    def unpack [
+        unpair [ swap ] dip swap unpair
+        [[ swap ] dip ] dip swap [ swap ] dip
+    ]
+
+    signature different forall<S:stack> [ S Bool Bool -- S Bool ! pure ]
+    export different
+    def different [ [ [ false ] [ true ] if ] [ ] if ]
+]
+987
+module bitstep@1 [
+    signature is_zero forall<S:stack> [ S List<Bool> -- S Bool ! pure ]
+    export is_zero
+    def is_zero [ [ true ] [ drop drop false ] list.case ]
+
+    signature fold_unsigned forall<S:stack>
+        [ S List<Bool> -- S I64 ! pure ]
+    export fold_unsigned
+    def fold_unsigned [
+        [ 0 ] [
+            swap [ fold_unsigned ] dip
+            [ 2 * ] dip
+            [ 1 + ] [ ] if
+        ] list.case
+    ]
+
+    signature adjust_bits forall<S:stack> [ S List<Bool> Bool -- S List<Bool> ! pure ]
+    export adjust_bits
+    def adjust_bits [
+        swap
+        [ [ nil ] [ true nil cons ] if ] [
+            [ swap ] dip swap
+            [
+                swap
+                [ dup is_zero [ drop nil ] [ false swap cons ] if ]
+                [ true adjust_bits true swap cons ] if
+            ] [
+                swap
+                [ false adjust_bits false swap cons ]
+                [ true swap cons ] if
+            ] if
+        ] list.case
+    ]
+]
+436
+module bitsub@1 [
+    signature difference forall<S:stack>
+        [ S List<Bool> List<Bool> Bool -- S Bool List<Bool> ! pure ]
+    export difference
+    def difference [
+        swap [ swap ] dip
+        pair dup unpair bitcompare@1.compare -1 =
+        [ unpair swap true ] [ unpair false ] if
+        [ false bitborrow@1.subtract_with_borrow swap drop ] dip
+        swap
+        [ swap [ [ false ] [ true ] if ] [ ] if ] dip
+    ]
+]
+413
+module bittrim@1 [
+    signature trim_cons forall<S:stack>
+        [ S Bool List<Bool> -- S List<Bool> ! pure ]
+    export trim_cons
+    def trim_cons [
+        dup bitstep@1.is_zero
+        [ drop [ true nil cons ] [ nil ] if ] [ cons ] if
+    ]
+
+    signature trim forall<S:stack> [ S List<Bool> -- S List<Bool> ! pure ]
+    export trim
+    def trim [ [ nil ] [ swap [ trim ] dip swap trim_cons ] list.case ]
+]
+1123
+module result@1 [
+    variant Result<A,E> Ok A public Err E public
+    export Result
+    export Result.Ok
+    export Result.Err
+    export Result.match
+
+    signature map_ok forall<S:stack,A:value,E:value,B:value,eps:effect> [ S Result<A,E> Program<S+A,S+B,eps> -- S Result<B,E> ! eps ]
+    export map_ok
+    def map_ok [ swap [ swap run Result.Ok ] [ swap drop Result.Err ] Result.match ]
+
+    signature map_error forall<S:stack,A:value,E:value,F:value,eps:effect> [ S Result<A,E> Program<S+E,S+F,eps> -- S Result<A,F> ! eps ]
+    export map_error
+    def map_error [ swap [ swap drop Result.Ok ] [ swap run Result.Err ] Result.match ]
+
+    signature and_then forall<S:stack,A:value,E:value,B:value,eps:effect> [ S Result<A,E> Program<S+A,S+Result<B,E>,eps> -- S Result<B,E> ! eps ]
+    export and_then
+    def and_then [ swap [ swap run ] [ swap drop Result.Err ] Result.match ]
+
+    signature or_else forall<S:stack,A:value,E:value,F:value,eps:effect> [ S Result<A,E> Program<S+E,S+Result<A,F>,eps> -- S Result<A,F> ! eps ]
+    export or_else
+    def or_else [ swap [ swap drop Result.Ok ] [ swap run ] Result.match ]
+]
+2332
+module calc_errors@1 [
+    variant LimitIO InputBytes Unit public OutputSize Unit public
+    export LimitIO
+    export LimitIO.InputBytes
+    export LimitIO.OutputSize
+    export LimitIO.match
+
+    variant LimitNumeric NumericDigits Unit public IntermediateIntegerBits Unit public
+    export LimitNumeric
+    export LimitNumeric.NumericDigits
+    export LimitNumeric.IntermediateIntegerBits
+    export LimitNumeric.match
+
+    variant LimitDepth SyntaxDepth Unit public CallDepth Unit public
+    export LimitDepth
+    export LimitDepth.SyntaxDepth
+    export LimitDepth.CallDepth
+    export LimitDepth.match
+
+    variant LimitRemaining EvaluationWork Unit public NestedDepth LimitDepth public
+    export LimitRemaining
+    export LimitRemaining.EvaluationWork
+    export LimitRemaining.NestedDepth
+    export LimitRemaining.match
+
+    variant LimitPrimary IO LimitIO public Numeric LimitNumeric public
+    export LimitPrimary
+    export LimitPrimary.IO
+    export LimitPrimary.Numeric
+    export LimitPrimary.match
+
+    variant LimitCategory Primary LimitPrimary public Remaining LimitRemaining public
+    export LimitCategory
+    export LimitCategory.Primary
+    export LimitCategory.Remaining
+    export LimitCategory.match
+
+    variant DomainArithmetic ZeroDenominator Unit public DivisionByZero Unit public
+    export DomainArithmetic
+    export DomainArithmetic.ZeroDenominator
+    export DomainArithmetic.DivisionByZero
+    export DomainArithmetic.match
+
+    variant DomainConversion NonIntegral Unit public OutOfRange Unit public
+    export DomainConversion
+    export DomainConversion.NonIntegral
+    export DomainConversion.OutOfRange
+    export DomainConversion.match
+
+    variant DomainExtended NonIntegerExponent Unit public Arithmetic DomainArithmetic public
+    export DomainExtended
+    export DomainExtended.NonIntegerExponent
+    export DomainExtended.Arithmetic
+    export DomainExtended.match
+
+    variant DomainError Conversion DomainConversion public Extended DomainExtended public
+    export DomainError
+    export DomainError.Conversion
+    export DomainError.Extended
+    export DomainError.match
+
+    variant NumericError ResourceLimit LimitCategory public Domain DomainError public
+    export NumericError
+    export NumericError.ResourceLimit
+    export NumericError.Domain
+    export NumericError.match
+]
+656
+module bitadd@1 [
+    signature add_bits forall<S:stack>
+        [ S List<Bool> List<Bool> Bool -- S List<Bool> ! pure ]
+    export add_bits
+    def add_bits [
+        pair swap
+        [ unpair [ true nil cons false add_bits ] [ ] if ] [
+            [ swap ] dip swap unpair swap
+            [ [ cons ] dip [ true nil cons false add_bits ] [ ] if ] [
+                [[[ swap ] dip ] dip ] dip
+                [ swap ] dip
+                swap
+                [ swap ] dip
+                [[ swap ] dip ] dip
+                bitfull@1.add
+                swap [ add_bits ] dip
+                swap cons
+            ] list.case
+        ] list.case
+    ]
+]
+666
+module bitmul@1 [
+    signature multiply forall<S:stack>
+        [ S List<Bool> List<Bool> -- S List<Bool> ! pure ]
+    export multiply
+    def multiply [
+        [ drop nil ] [
+            [[ dup ] dip ] dip
+            # Keep the head and multiplicand above the recursive call; the
+            # signed call must see its original rigid stack witness S.
+            swap [ swap ] dip swap
+            [[ multiply ] dip ] dip
+            swap [ swap ] dip swap
+            dup [ true ] [ drop drop false ] list.case
+            [ drop nil ] [ false swap cons ] if
+            swap
+            [ false bitadd@1.add_bits ] [ swap drop ] if
+        ] list.case
+    ]
+]
+575
+module bitorder@1 [
+    signature order_for_add forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S Pair<List<Bool>,List<Bool>> Pair<Bool,Bool> Bool ! pure ]
+    export order_for_add
+    def order_for_add [
+        bitpair@1.unpack
+        [ dup ] dip bitpair@1.different
+        [ swap [ swap ] dip
+          pair dup unpair bitcompare@1.compare -1 =
+          [ unpair swap true ] [ unpair false ] if
+          [ pair ] dip [ swap ] dip
+          bitpair@1.different true ]
+        [ [ pair ] dip false ] if
+        dup pair swap
+    ]
+]
+254
+module bitsigned@1 [
+    signature normalize forall<S:stack>
+        [ S Bool List<Bool> -- S Pair<Bool,List<Bool>> ! pure ]
+    export normalize
+    def normalize [
+        dup bitstep@1.is_zero
+        [ drop drop false nil pair ] [ pair ] if
+    ]
+
+]
+1839
+module bitsum@1 [
+    signature bool_or forall<S:stack>
+        [ S Bool Bool -- S Bool ! pure ]
+    def bool_or [ [ drop true ] [ ] if ]
+
+    signature uncons_zero forall<S:stack>
+        [ S List<Bool> -- S Bool Pair<Bool,List<Bool>> ! pure ]
+    def uncons_zero [ [ false false nil pair ] [ pair true swap ] list.case ]
+
+    signature pop2 forall<S:stack>
+        [ S List<Bool> List<Bool> -- S Bool Bool Pair<List<Bool>,List<Bool>> Bool ! pure ]
+    def pop2 [
+        [ uncons_zero ] dip uncons_zero
+        [ swap ] dip [[ bool_or ] dip ] dip
+        pair swap
+        [ unpair [ unpair ] dip unpair [ swap ] dip pair ] dip
+    ]
+
+    signature score forall<S:stack>
+        [ S Pair<Bool,Bool> Bool Bool -- S Bool Pair<Bool,Bool> ! pure ]
+    def score [
+        [[ dup ] dip ] dip [[ unpair ] dip ] dip [[ swap ] dip ] dip
+        swap [ bitpair@1.different ] dip swap [ swap ] dip swap bitfull@1.add
+        [[ unpair ] dip ] dip swap [ swap ] dip [ drop ] dip [ pair ] dip swap
+    ]
+
+    signature prepare forall<S:stack>
+        [ S Pair<Bool,Bool> Bool Bool Pair<List<Bool>,List<Bool>>
+          -- S Pair<List<Bool>,List<Bool>> Pair<Bool,Bool> Bool ! pure ]
+    def prepare [ [ score ] dip swap [ swap ] dip swap ]
+
+    # The control pair is (subtract_rhs,carry); callers must order magnitudes
+    # before subtraction. The base appends a new high bit only for addition;
+    # its carry is not part of the canonical magnitude returned by recursion.
+    signature scan forall<S:stack>
+        [ S Pair<List<Bool>,List<Bool>> Pair<Bool,Bool>
+          -- S List<Bool> ! pure ]
+    export scan
+    def scan [
+        swap unpair pop2
+        [ prepare [ scan ] dip swap bittrim@1.trim_cons ]
+        [ drop drop drop unpair dup [ swap ] dip swap
+          [ drop nil ] [ [ true nil cons ] [ nil ] if ] if swap drop ] if
+    ]
+]
+4528
+module numeric_budget_limits@1 [
+    signature charge forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,Unit> ! pure ]
+    def charge [
+        dup 0 <
+        [ drop drop unit result@1.Result.Err ]
+        [ [ dup ] dip swap [ dup ] dip swap <
+          [ drop drop unit result@1.Result.Err ]
+          [ - result@1.Result.Ok ] if
+        ] if
+    ]
+
+    export input_bytes
+    signature input_bytes forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def input_bytes [
+        charge
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitIO.InputBytes
+          calc_errors@1.LimitPrimary.IO
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    export numeric_digits
+    signature numeric_digits forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def numeric_digits [
+        charge
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitNumeric.NumericDigits
+          calc_errors@1.LimitPrimary.Numeric
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+
+    export evaluation_work
+    signature evaluation_work forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def evaluation_work [
+        charge
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitRemaining.EvaluationWork
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    export output_size
+    signature output_size forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def output_size [
+        charge
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitIO.OutputSize
+          calc_errors@1.LimitPrimary.IO
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature check forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,Unit> ! pure ]
+    def check [
+        dup 0 <
+        [ drop drop unit result@1.Result.Err ]
+        [ [ dup ] dip swap [ dup ] dip swap <
+          [ drop drop unit result@1.Result.Err ]
+          [ drop result@1.Result.Ok ] if
+        ] if
+    ]
+
+    export limit_bits
+    signature limit_bits forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def limit_bits [
+        check
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+          calc_errors@1.LimitPrimary.Numeric
+          calc_errors@1.LimitCategory.Primary
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    export limit_syntax
+    signature limit_syntax forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def limit_syntax [
+        check
+        [ result@1.Result.Ok ]
+        [ drop unit calc_errors@1.LimitDepth.SyntaxDepth
+          calc_errors@1.LimitRemaining.NestedDepth
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    export limit_call
+    signature limit_call forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    # The pinned managed-Wasm ABI admits 4096 continuation bytes at eight
+    # bytes per frame. Callers include their own nesting/entry margin when
+    # requesting frames; an externally supplied larger budget cannot waive
+    # the runtime ceiling.
+    def limit_call [
+        dup 513 <
+        [ check
+          [ result@1.Result.Ok ]
+          [ drop unit calc_errors@1.LimitDepth.CallDepth
+            calc_errors@1.LimitRemaining.NestedDepth
+            calc_errors@1.LimitCategory.Remaining
+            calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+          result@1.Result.match ]
+        [ drop drop unit calc_errors@1.LimitDepth.CallDepth
+          calc_errors@1.LimitRemaining.NestedDepth
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit result@1.Result.Err ]
+        if
+    ]
+
+]1527
+module numeric_budget_preflight_depth@1 [
+    signature check_syntax forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_syntax [
+        unpair unpair unpair unpair [ 0 numeric_budget_limits@1.limit_syntax ] dip swap
+        [ swap pair pair pair pair result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature check_call forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_call [
+        unpair unpair unpair unpair unpair [ 0 numeric_budget_limits@1.limit_call ] dip swap
+        [ swap pair pair pair pair pair result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature validate_depth forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    export validate_depth
+    def validate_depth [
+        result@1.Result.Ok
+        [ check_syntax ] result@1.and_then
+        [ check_call ] result@1.and_then
+    ]
+]
+1647
+module numeric_budget_preflight_late@1 [
+    signature check_work forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_work [
+        unpair unpair unpair unpair unpair unpair
+        [ 0 numeric_budget_limits@1.evaluation_work ] dip swap
+        [ swap pair pair pair pair pair pair result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop swap drop
+          result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature check_output_size forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_output_size [
+        unpair unpair unpair unpair unpair unpair
+        0 numeric_budget_limits@1.output_size
+        [ pair pair pair pair pair pair result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop swap drop
+          result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature validate_late forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    export validate_late
+    def validate_late [
+        numeric_budget_preflight_depth@1.validate_depth
+        [ check_work ] result@1.and_then
+        [ check_output_size ] result@1.and_then
+    ]
+]
+251
+module bitaddcarry@1 [
+    signature scan_keep_sign forall<S:stack>
+        [ S Pair<List<Bool>,List<Bool>> Pair<Bool,Bool> Bool
+          -- S Bool List<Bool> ! pure ]
+    export scan_keep_sign
+    def scan_keep_sign [ [ bitsum@1.scan ] dip swap ]
+]
+287
+module bitaddsigned@1 [
+    signature add forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> -- S Pair<Bool,List<Bool>> ! pure ]
+    export add
+    def add [
+        bitorder@1.order_for_add
+        bitaddcarry@1.scan_keep_sign
+        bitsigned@1.normalize
+    ]
+]
+570
+module bitquotient@1 [
+    signature divide_rem forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> -- S Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>> ! pure ]
+    export divide_rem
+    def divide_rem [
+        bitpair@1.unpack
+        pair [ swap ] dip
+        [ bitdiv@1.divide_rem ] dip
+        [ unpair ] dip
+        [ swap ] dip
+        dup unpair bitpair@1.different
+        swap [ swap bitsigned@1.normalize ] dip
+        [ swap ] dip unpair
+        [ swap ] dip
+        [[ drop ] dip ] dip
+        swap bitsigned@1.normalize pair
+    ]
+]
+625
+module bitrelation@1 [
+    signature compare forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> -- S I64 ! pure ]
+    export compare
+    def compare [
+        bitpair@1.unpack
+        [ [ bitcompare@1.compare ] [ drop drop -1 ] if ]
+        [ [ drop drop 1 ] [ swap bitcompare@1.compare ] if ] if
+    ]
+
+    signature multiply forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> -- S Pair<Bool,List<Bool>> ! pure ]
+    export multiply
+    def multiply [
+        bitpair@1.unpack
+        bitpair@1.different
+        [ bitmul@1.multiply ] dip
+        swap bitsigned@1.normalize
+    ]
+]
+2473
+module numeric_budget_preflight@1 [
+    # Preserve all seven caps until every check has succeeded. No Budget is
+    # constructed here; the opaque owner alone creates the validated value.
+    signature check_input_bytes forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_input_bytes [
+        unpair [ 0 numeric_budget_limits@1.input_bytes ] dip swap
+        [ swap pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature check_numeric_digits forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_numeric_digits [
+        unpair unpair [ 0 numeric_budget_limits@1.numeric_digits ] dip swap
+        [ swap pair pair result@1.Result.Ok ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature check_bits forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_bits [
+        unpair unpair unpair [ 0 numeric_budget_limits@1.limit_bits ] dip swap
+        [ swap pair pair pair result@1.Result.Ok ]
+        [ swap drop swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature validate_early forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def validate_early [
+        result@1.Result.Ok
+        [ check_input_bytes ] result@1.and_then
+        [ check_numeric_digits ] result@1.and_then
+        [ check_bits ] result@1.and_then
+    ]
+
+    signature validate forall<S:stack>
+        [ S I64 I64 I64 I64 I64 I64 I64
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    export validate
+    def validate [
+        pair pair pair pair pair pair validate_early
+        [ numeric_budget_preflight_late@1.validate_late ] result@1.and_then
+    ]
+]
+5940
+module numeric_budget@1 [
+    # Seven external caps in declaration order, followed by an internal
+    # remaining native-dispatch ceiling for this pinned managed-Wasm profile.
+    opaque Budget Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>> private
+    export Budget
+    signature charge_input_bytes forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_input_bytes
+    def charge_input_bytes [
+        [ Budget.into unpair ] dip
+        swap [ numeric_budget_limits@1.input_bytes ] dip swap
+        [ swap pair Budget.new result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature charge_numeric_digits forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_numeric_digits
+    def charge_numeric_digits [
+        [ Budget.into unpair unpair ] dip
+        swap [ numeric_budget_limits@1.numeric_digits ] dip swap
+        [ swap pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # A consumed ASCII digit charges its input byte before its numeric digit,
+    # reconstructing the shared Budget once instead of twice per text byte.
+    signature charge_ascii_digit forall<S:stack>
+        [ S Budget -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_ascii_digit
+    def charge_ascii_digit [
+        Budget.into unpair unpair
+        [[ 1 numeric_budget_limits@1.input_bytes ] dip ] dip
+        [ swap ] dip swap
+        [ swap [ swap ] dip
+          [ 1 numeric_budget_limits@1.numeric_digits ] dip swap
+          [ swap pair pair Budget.new result@1.Result.Ok ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature admit_bits forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export admit_bits
+    def admit_bits [
+        [ Budget.into unpair unpair unpair ] dip
+        swap [ numeric_budget_limits@1.limit_bits ] dip swap
+        [ swap pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature admit_syntax forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export admit_syntax
+    def admit_syntax [
+        [ Budget.into unpair unpair unpair unpair ] dip
+        swap [ numeric_budget_limits@1.limit_syntax ] dip swap
+        [ swap pair pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature admit_call forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export admit_call
+    def admit_call [
+        [ Budget.into unpair unpair unpair unpair unpair ] dip
+        swap [ numeric_budget_limits@1.limit_call ] dip swap
+        [ swap pair pair pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature charge_work forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_work
+    def charge_work [
+        [ Budget.into unpair unpair unpair unpair unpair unpair ] dip
+        swap [ numeric_budget_limits@1.evaluation_work ] dip swap
+        [ swap pair pair pair pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature charge_output_size forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_output_size
+    def charge_output_size [
+        [ Budget.into unpair unpair unpair unpair unpair unpair unpair ] dip
+        swap [ numeric_budget_limits@1.output_size ] dip swap
+        [ swap pair pair pair pair pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop swap drop swap drop
+          result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature charge_native_steps forall<S:stack>
+        [ S Budget I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export charge_native_steps
+    def charge_native_steps [
+        [ Budget.into unpair unpair unpair unpair unpair unpair unpair ] dip
+        numeric_budget_limits@1.evaluation_work
+        [ pair pair pair pair pair pair pair Budget.new result@1.Result.Ok ]
+        [ swap drop swap drop swap drop swap drop swap drop swap drop swap drop
+          result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+
+    signature initialize forall<S:stack>
+        [ S I64 I64 I64 I64 I64 I64 I64 -- S Budget ! pure ]
+    def initialize [
+        100000 pair pair pair pair pair pair pair Budget.new
+    ]
+
+    signature make forall<S:stack>
+        [ S I64 I64 I64 I64 I64 I64 I64 -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export make
+    def make [
+        numeric_budget_preflight@1.validate
+        [ unpair unpair unpair unpair unpair unpair
+          100000 pair pair pair pair pair pair pair
+          Budget.new result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # These fixed caps satisfy preflight; keep the direct private constructor.
+    signature default forall<S:stack>
+        [ S -- S result@1.Result<Budget,calc_errors@1.NumericError> ! pure ]
+    export default
+    def default [
+        512 512 256 256 512 100000000 512 initialize result@1.Result.Ok
+    ]
+]
+2441
+module bigint_digit_chunk@1 [
+    export chunk_half
+
+    signature chunk_half_high forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ]
+    def chunk_half_high [
+        dup 536870912 < [ ] [ 536870912 - swap 268435456 + swap ] if
+        dup 268435456 < [ ] [ 268435456 - swap 134217728 + swap ] if
+        dup 134217728 < [ ] [ 134217728 - swap 67108864 + swap ] if
+        dup 67108864 < [ ] [ 67108864 - swap 33554432 + swap ] if
+        dup 33554432 < [ ] [ 33554432 - swap 16777216 + swap ] if
+        dup 16777216 < [ ] [ 16777216 - swap 8388608 + swap ] if
+        dup 8388608 < [ ] [ 8388608 - swap 4194304 + swap ] if
+        dup 4194304 < [ ] [ 4194304 - swap 2097152 + swap ] if
+        dup 2097152 < [ ] [ 2097152 - swap 1048576 + swap ] if
+        dup 1048576 < [ ] [ 1048576 - swap 524288 + swap ] if
+    ]
+
+    signature chunk_half_middle forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ]
+    def chunk_half_middle [
+        dup 524288 < [ ] [ 524288 - swap 262144 + swap ] if
+        dup 262144 < [ ] [ 262144 - swap 131072 + swap ] if
+        dup 131072 < [ ] [ 131072 - swap 65536 + swap ] if
+        dup 65536 < [ ] [ 65536 - swap 32768 + swap ] if
+        dup 32768 < [ ] [ 32768 - swap 16384 + swap ] if
+        dup 16384 < [ ] [ 16384 - swap 8192 + swap ] if
+        dup 8192 < [ ] [ 8192 - swap 4096 + swap ] if
+        dup 4096 < [ ] [ 4096 - swap 2048 + swap ] if
+        dup 2048 < [ ] [ 2048 - swap 1024 + swap ] if
+        dup 1024 < [ ] [ 1024 - swap 512 + swap ] if
+    ]
+
+    signature chunk_half_low forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ]
+    def chunk_half_low [
+        dup 512 < [ ] [ 512 - swap 256 + swap ] if
+        dup 256 < [ ] [ 256 - swap 128 + swap ] if
+        dup 128 < [ ] [ 128 - swap 64 + swap ] if
+        dup 64 < [ ] [ 64 - swap 32 + swap ] if
+        dup 32 < [ ] [ 32 - swap 16 + swap ] if
+        dup 16 < [ ] [ 16 - swap 8 + swap ] if
+        dup 8 < [ ] [ 8 - swap 4 + swap ] if
+        dup 4 < [ ] [ 4 - swap 2 + swap ] if
+        dup 2 < [ ] [ 2 - swap 1 + swap ] if
+    ]
+
+    # For 0<=c<10^9, greedily remove the powers 2^29..2^1. The emitted
+    # quotient is exactly floor(c/2), and every intermediate I64 stays
+    # nonnegative and below 10^9. There is no I64 division in this profile.
+    signature chunk_half forall<S:stack> [ S I64 -- S I64 ! pure ]
+    def chunk_half [
+        0 swap
+        chunk_half_high chunk_half_middle chunk_half_low
+        drop
+    ]
+]
+4936
+module bigint_digit_support@1 [
+    export work_limit
+    export checked_depth
+    export gate_bits
+    export decimal_digit_valid
+    export decimal_digit_bits
+    export chunk_carry_step
+    export preflight_decimal_scratch
+
+    signature depth_limit forall<S:stack> [ S -- S calc_errors@1.NumericError ! pure ]
+    def depth_limit [
+        unit calc_errors@1.LimitDepth.CallDepth
+        calc_errors@1.LimitRemaining.NestedDepth
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature work_limit forall<S:stack> [ S -- S calc_errors@1.NumericError ! pure ]
+    def work_limit [
+        unit calc_errors@1.LimitRemaining.EvaluationWork
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    # Match the original BigInt digit-scan depth gate without importing the
+    # later BigInt module or changing its other numeric admission paths.
+    signature checked_depth forall<S:stack>
+        [ S I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def checked_depth [
+        dup 0 <
+        [ drop depth_limit result@1.Result.Err ]
+        [ dup 2305843009213693935 <
+          [ 1 + 4 * 64 + result@1.Result.Ok ]
+          [ drop depth_limit result@1.Result.Err ] if ] if
+    ]
+
+    signature scaled_work forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def scaled_work [
+        swap dup 36028797018963968 <
+        [ 256 * numeric_budget@1.charge_work ]
+        [ drop drop work_limit result@1.Result.Err ] if
+    ]
+
+    signature gate_bits forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def gate_bits [
+        [ dup ] dip swap numeric_budget@1.admit_bits
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature gate_depth forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def gate_depth [
+        [ dup checked_depth ] dip swap
+        [ numeric_budget@1.admit_call
+          [ pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature decimal_digit_valid forall<S:stack>
+        [ S I64 -- S Bool ! pure ]
+    def decimal_digit_valid [
+        dup 0 < [ drop false ] [ 10 < ] if
+    ]
+
+    # This I64 is already checked as one decimal digit, so every branch
+    # constructs only its canonical four-or-fewer little-endian magnitude bits.
+    signature decimal_digit_bits forall<S:stack>
+        [ S I64 -- S List<Bool> ! pure ]
+    def decimal_digit_bits [
+        dup 0 <
+        [ drop true false false true nil cons cons cons cons ]
+        [ dup 5 <
+          [ dup 2 <
+            [ dup 0 = [ drop nil ] [ drop true nil cons ] if ]
+            [ dup 3 <
+              [ drop false true nil cons cons ]
+              [ dup 4 <
+                [ drop true true nil cons cons ]
+                [ drop false false true nil cons cons cons ] if ] if ] if ]
+          [ dup 7 <
+            [ dup 6 <
+              [ drop true false true nil cons cons cons ]
+              [ drop false true true nil cons cons cons ] if ]
+            [ dup 9 <
+              [ dup 8 <
+                [ drop true true true nil cons cons cons ]
+                [ drop false false false true nil cons cons cons cons ] if ]
+              [ drop true false false true nil cons cons cons cons ] if ] if ] if ]
+        if
+    ]
+
+    # Multiplication by this signed mask wraps to zero for an even carry or
+    # I64_MIN for an odd carry, without converting its magnitude to I64.
+    signature decimal_odd forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def decimal_odd [ -9223372036854775808 * 0 < ]
+
+    # 10^9*(2*tail+bit)+c emits odd(c) and leaves
+    # floor(c/2)+500000000*bit. Since c<10^9, so is the next carry.
+    signature chunk_carry_step forall<S:stack>
+        [ S I64 Bool -- S Bool I64 ! pure ]
+    def chunk_carry_step [
+        [ dup decimal_odd ] dip
+        [[ bigint_digit_chunk@1.chunk_half ] dip ] dip
+        swap [ [ 500000000 + ] [ ] if ] dip swap
+    ]
+
+    # The digit scan and conservative width/depth bound run before private
+    # scratch allocation. Bit admission uses its actual width before the
+    # later BigInt module may seal the canonical list.
+    signature preflight_decimal_scratch forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_decimal_scratch [
+        gate_depth
+        [ unpair [ 1 + ] dip scaled_work ] result@1.and_then
+    ]
+]
+12724
+module bigint_digits@1 [
+    opaque DecimalScanState Pair<List<I64>,I64> private
+    export DecimalScanState
+    opaque SignificantState Pair<List<I64>,I64> private
+    export SignificantState
+    opaque ThirdCount I64 private
+    export ThirdCount
+    opaque DecimalCarryState Pair<List<Bool>,I64> private
+    export DecimalCarryState
+    opaque DecimalAccState Pair<List<Bool>,List<I64>> private
+    export DecimalAccState
+    opaque ChunkAssemblyState Pair<Pair<I64,List<I64>>,I64> private
+    export ChunkAssemblyState
+    # A positive decimal chunk power and residual, minted only here.
+    opaque ChunkPowerState Pair<I64,I64> private
+    export ChunkPowerState
+    opaque OutputWidthState Pair<List<Bool>,I64> private
+    export OutputWidthState
+    # A private one-visit outcome: only the scanner may recurse on Continue.
+    variant DecimalVisit Done I64 private Continue DecimalScanState private
+
+    # Called only after this visit has passed depth, call, native, and work
+    # admission. This cannot perform another scan or mint a public BigInt.
+    signature decimal_visit forall<S:stack>
+        [ S Pair<List<I64>,I64> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<DecimalVisit,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def decimal_visit [
+        [ unpair ] dip [ swap ] dip swap
+        [ [ DecimalVisit.Done ] dip pair result@1.Result.Ok ]
+        [ [ bigint_digit_support@1.decimal_digit_valid ] dip swap
+          [ swap [ swap ] dip [ 1 + ] dip
+            [ pair DecimalScanState.new DecimalVisit.Continue ] dip
+            pair result@1.Result.Ok ]
+          [ drop drop drop
+            unit calc_errors@1.DomainConversion.OutOfRange
+            calc_errors@1.DomainError.Conversion
+            calc_errors@1.NumericError.Domain result@1.Result.Err ] if ]
+        list.case
+    ]
+
+    # One metered traversal validates digits and count; intermediate Horner
+    # values are private canonical bit lists, not rescanned public BigInts.
+    # Only this function follows the privately constructed recursion state.
+    signature scan_decimal_digits forall<S:stack>
+        [ S DecimalScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export scan_decimal_digits
+    def scan_decimal_digits [
+        [ DecimalScanState.into ] dip
+        [ dup unpair swap drop bigint_digit_support@1.checked_depth ] dip swap
+        [ numeric_budget@1.admit_call
+          [ 384 numeric_budget@1.charge_native_steps
+            [ 1 numeric_budget@1.charge_work
+              [ decimal_visit
+                [ unpair swap
+                  [ swap pair result@1.Result.Ok ]
+                  [ swap scan_decimal_digits ]
+                  DecimalVisit.match ]
+                [ result@1.Result.Err ]
+                result@1.Result.match ]
+              [ swap drop result@1.Result.Err ]
+              result@1.Result.match ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # Validation has already covered every digit. Removing leading zeroes
+    # retains their exact value but reserves raw work for significant digits.
+    signature significant_digits forall<S:stack>
+        [ S SignificantState -- S Pair<List<I64>,I64> ! pure ]
+    export significant_digits
+    def significant_digits [
+        SignificantState.into unpair swap
+        [ nil swap pair ]
+        [ [ dup 0 = ] dip swap
+          [ [ drop ] dip swap 1 -
+            pair SignificantState.new significant_digits ]
+          [ cons swap pair ] if ] list.case
+    ]
+
+    # 10^3 < 2^10, hence at most 3*n+ceil(n/3) bits for n decimal digits.
+    signature decimal_third_ceil forall<S:stack>
+        [ S ThirdCount -- S I64 ! pure ]
+    export decimal_third_ceil
+    def decimal_third_ceil [
+        ThirdCount.into
+        dup 0 =
+        [ ]
+        [ dup 3 < [ drop 1 ]
+          [ 3 - ThirdCount.new decimal_third_ceil 1 + ] if ] if
+    ]
+
+    signature decimal_width forall<S:stack>
+        [ S I64 -- S I64 ! pure ]
+    def decimal_width [ dup 3 * swap ThirdCount.new decimal_third_ceil + ]
+
+    # A leading group of 1..9 digits is followed only by complete groups of
+    # nine, so every subsequent Horner multiplier is exactly 1000000000.
+    signature decimal_ninth_ceil forall<S:stack>
+        [ S ThirdCount -- S I64 ! pure ]
+    export decimal_ninth_ceil
+    def decimal_ninth_ceil [
+        ThirdCount.into
+        dup 0 =
+        [ ]
+        [ dup 9 < [ drop 1 ]
+          [ 9 - ThirdCount.new decimal_ninth_ceil 1 + ] if ] if
+    ]
+
+    # A positive decimal chunk is <10^9. Ascend powers of two until p>chunk,
+    # then unwind from high to low, subtracting each set bit from the residual.
+    # p never exceeds 2^30 and residual stays nonnegative. Cons on unwind
+    # yields little-endian canonical bits, including without leading zeros;
+    # unlike a signed 64-bit probe this does no zero-padding shifts.
+    signature chunk_power_bits forall<S:stack>
+        [ S ChunkPowerState -- S Pair<I64,List<Bool>> ! pure ]
+    export chunk_power_bits
+    def chunk_power_bits [
+        ChunkPowerState.into dup unpair <
+        [ unpair drop nil pair ]
+        [ unpair dup [ 2 * pair ChunkPowerState.new chunk_power_bits ] dip swap
+          unpair [ pair ] dip
+          [ dup unpair swap < ] dip swap
+          [ [ unpair swap drop ] dip swap
+            [ false swap cons ] dip swap pair ]
+          [ [ unpair swap - ] dip swap
+            [ true swap cons ] dip swap pair ] if ] if
+    ]
+
+    signature chunk_bits forall<S:stack>
+        [ S I64 -- S List<Bool> ! pure ]
+    def chunk_bits [
+        dup 10 <
+        [ bigint_digit_support@1.decimal_digit_bits ]
+        [ 1 pair ChunkPowerState.new chunk_power_bits
+          unpair swap drop ] if
+    ]
+
+    signature chunk_step forall<S:stack>
+        [ S DecimalCarryState -- S List<Bool> ! pure ]
+    export chunk_step
+    def chunk_step [
+        DecimalCarryState.into unpair swap
+        [ chunk_bits ]
+        [ [ bigint_digit_support@1.chunk_carry_step ] dip
+          [ swap ] dip swap [ swap ] dip
+          [ pair DecimalCarryState.new chunk_step ] dip
+          swap cons ] list.case
+    ]
+
+    # The digit scan has already established every digit is in 0..9. Each
+    # private counter is minted at 1..9 and the accumulator remains <10^9.
+    signature chunk_assemble forall<S:stack>
+        [ S ChunkAssemblyState -- S Pair<I64,List<I64>> ! pure ]
+    export chunk_assemble
+    def chunk_assemble [
+        ChunkAssemblyState.into unpair [ unpair ] dip
+        dup 0 =
+        [ drop pair ]
+        [ swap
+          [ drop nil pair ]
+          [ [ swap ] dip
+            [[[ 10 * ] dip ] dip ] dip
+            [[ + ] dip ] dip
+            [ 1 - ] dip swap
+            [ pair ] dip pair ChunkAssemblyState.new chunk_assemble ]
+          list.case ] if
+    ]
+
+    signature raw_decimal_digits_acc forall<S:stack>
+        [ S DecimalAccState -- S List<Bool> ! pure ]
+    export raw_decimal_digits_acc
+    def raw_decimal_digits_acc [
+        DecimalAccState.into unpair
+        [ ] [ cons swap
+              [ 0 swap pair 9 pair
+                ChunkAssemblyState.new chunk_assemble ] dip
+              swap unpair
+              [ pair DecimalCarryState.new chunk_step ] dip
+              pair DecimalAccState.new raw_decimal_digits_acc ] list.case
+    ]
+
+    signature raw_decimal_digits forall<S:stack>
+        [ S List<I64> I64 -- S List<Bool> ! pure ]
+    def raw_decimal_digits [
+        dup 0 =
+        [ drop drop nil ]
+        [ dup ThirdCount.new decimal_ninth_ceil 9 * swap -
+          dup 0 = [ drop 9 ] [ 9 swap - ] if
+          [ 0 swap pair ] dip pair
+          ChunkAssemblyState.new chunk_assemble
+          unpair [ chunk_bits ] dip
+          pair DecimalAccState.new raw_decimal_digits_acc ] if
+    ]
+
+    # The checked width/call gates allow at most 33 significant digits.
+    # For n>9, first=n-9*(ceil(n/9)-1) digits form the first chunk.
+    # Before each later chunk, the bit width is bounded by
+    # decimal_width(first)+30*j. Per emitted bit, the 29 checked halving
+    # thresholds cost at most 349 words (346 inline + 3 named helper
+    # dispatches); the carry/recursion facade adds at most 62, or 411.
+    # Every chunk is <10^9: the terminal bit walk has at most
+    # 30 levels, each bounded by 50 words, plus its entry facade (1536
+    # total); nine digit-assembly rounds take at most 473 words and the
+    # chunk facade fits in the remaining 295, for 2304 per chunk.
+    # A final 512 covers the outer conversion/result construction.
+    # The n<=3 finite domains had raw maxima 200, 547, 745 over all
+    # 10, 100, 1000 values; fixed 512/768/1024 retain the original
+    # constructor/result margin. For n=4..9, a single first chunk uses
+    # the fixed 2304 reservation, including 295 words of facade slack.
+    # chunk_half runs only for chunks after the first, so no n<=9 path
+    # incurs any of the three added helper-call steps.
+    # Reserve before raw conversion; validation separately charges 384
+    # native words for each visited input digit.
+    signature chunk_native_cost forall<S:stack>
+        [ S I64 -- S I64 ! pure ]
+    def chunk_native_cost [
+        dup 2 <
+        [ drop 512 ]
+        [ dup 3 <
+          [ drop 768 ]
+          [ dup 4 <
+            [ drop 1024 ]
+            [ dup 10 <
+              [ drop 2304 ]
+              [ dup 19 <
+                [ 9 - decimal_width 411 * 5120 + ]
+                [ dup 28 <
+                  [ 18 - decimal_width 2 * 30 + 411 * 7424 + ]
+                  [ 27 - decimal_width 3 * 90 + 411 * 9728 + ]
+                  if ] if ] if ] if ] if ] if
+    ]
+
+    # The raw chunk algorithm creates only a private List<Bool> scratch,
+    # precharged at its conservative decimal bit bound. A subsequent bounded
+    # walk counts its *actual* canonical bits: at most 24 words per bit plus
+    # the original 256 for the result/BigInt facade before exact bit admission.
+    signature decimal_full_native_cost forall<S:stack>
+        [ S I64 -- S I64 ! pure ]
+    def decimal_full_native_cost [
+        dup chunk_native_cost
+        [ decimal_width 1 + 24 * 256 + ] dip +
+    ]
+
+    signature reserve_decimal_native forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def reserve_decimal_native [
+        [ dup 256 < ] dip swap
+        [ swap decimal_full_native_cost
+          numeric_budget@1.charge_native_steps ]
+        [ drop drop bigint_digit_support@1.work_limit result@1.Result.Err ] if
+    ]
+
+    # Only convert_decimal_digits mints this private bit-width counter after
+    # digit-count/depth/work and raw native bounds are admitted.
+    signature decimal_output_width forall<S:stack>
+        [ S OutputWidthState -- S I64 ! pure ]
+    export decimal_output_width
+    def decimal_output_width [
+        OutputWidthState.into unpair swap
+        [ ]
+        [ swap drop [ 1 + ] dip swap
+          pair OutputWidthState.new decimal_output_width ] list.case
+    ]
+
+    # Keep the original digit/preflight/raw admission and error order. Only
+    # after exact bit admission succeeds is the extra named/result work debited.
+    signature convert_decimal_digits forall<S:stack>
+        [ S List<I64> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<List<Bool>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export convert_decimal_digits
+    def convert_decimal_digits [
+        [ dup ] dip 0 swap
+        [ pair DecimalScanState.new ] dip scan_decimal_digits
+        [ unpair
+          [ pair SignificantState.new significant_digits unpair ] dip
+          [ dup decimal_width ] dip bigint_digit_support@1.preflight_decimal_scratch
+          [ [ dup ] dip reserve_decimal_native
+            [ [ raw_decimal_digits ] dip
+              [ dup 0 pair OutputWidthState.new decimal_output_width ] dip
+              bigint_digit_support@1.gate_bits
+              [ unpair [ drop ] dip
+                144 numeric_budget@1.charge_native_steps
+                [ pair result@1.Result.Ok ]
+                [ swap drop result@1.Result.Err ]
+                result@1.Result.match ]
+              [ swap drop result@1.Result.Err ]
+              result@1.Result.match ]
+            [ swap drop swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]
+11669
+module bigint_scan@1 [
+    # Unselected source-only cutover: this module owns the private scan states.
+    # Old bigint@1 scan exports/nominal IDs are not aliases or compatible handles.
+    # Keep zero-count construction here; BigInt alone checks canonicality/seals values.
+    # These frozen native debits are not compiled-guest acceptance evidence.
+    # External negative depth widths now return typed CallDepth, never success.
+
+    # Signed counters and opaque scan-state tokens remain module-private;
+    # exported scan facades receive only caller bits/Budget and mint zero count.
+    opaque ScanState Pair<List<Bool>,I64> private
+    opaque ScanPageState Pair<ScanState,I64> private
+    signature depth_limit forall<S:stack> [ S -- S calc_errors@1.NumericError ! pure ]
+    def depth_limit [
+        unit calc_errors@1.LimitDepth.CallDepth
+        calc_errors@1.LimitRemaining.NestedDepth
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    # The emitted continuation scheduler keeps at most one caller continuation
+    # for each multiply/divide level and at most three inside a nested bit
+    # add/subtract; scan and budget loops are tail-recursive. Four per bit
+    # plus 64 for fixed facade/branch frames bounds these source paths.
+    # Native continuation peaks still require a compiled guest gate.
+    signature checked_depth forall<S:stack>
+        [ S I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def checked_depth [
+        dup 0 <
+        [ drop depth_limit result@1.Result.Err ]
+        [ dup 2305843009213693935 <
+          [ 1 + 4 * 64 + result@1.Result.Ok ]
+          [ drop depth_limit result@1.Result.Err ] if ] if
+    ]
+
+    # One page holds at most eight bits. The caller reserves native work
+    # before every page, even when only a few steps remain in the Budget.
+    # Count 112 already fails the existing 4*(width+1)+64 call-depth gate.
+    signature scan_page forall<S:stack>
+        [ S ScanPageState
+          -- S result@1.Result<ScanState,calc_errors@1.NumericError> ! pure ]
+    def scan_page [
+        ScanPageState.into unpair [ ScanState.into unpair ] dip
+        [ dup 112 < ] dip swap
+        [ dup 0 =
+          [ drop pair ScanState.new result@1.Result.Ok ]
+          [ [ swap ] dip swap
+            [ drop nil swap pair ScanState.new result@1.Result.Ok ]
+            [ [ drop ] dip [ swap ] dip [ 1 + ] dip
+              swap [ swap ] dip swap 1 -
+              [ pair ScanState.new ] dip
+              pair ScanPageState.new scan_page ]
+            list.case ] if ]
+        [ drop drop drop depth_limit result@1.Result.Err ] if
+    ]
+
+    # A zero or singleton list reserves 512 native words, longer lists 768.
+    # The earlier <=448-word estimate preceded this cross-module facade;
+    # reservation headroom needs independent review before selection.
+    signature first_scan_native_cost forall<S:stack>
+        [ S ScanState -- S ScanState I64 ! pure ]
+    def first_scan_native_cost [
+        dup ScanState.into unpair swap
+        [ drop 512 ]
+        [ swap drop
+          [ drop 512 ]
+          [ drop drop drop 768 ] list.case ] list.case
+    ]
+
+    signature scan_pages forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages [
+        [ first_scan_native_cost ] dip swap
+        numeric_budget@1.charge_native_steps
+        [ [ 4 pair ScanPageState.new scan_page ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_tail ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature scan_pages_tail forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages_tail [
+        512 numeric_budget@1.charge_native_steps
+        [ [ 4 pair ScanPageState.new scan_page ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_full ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature scan_pages_full forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages_full [
+        # Source-only 896 reservation: cross-module gate and guard costs
+        # require a fresh bound before native selection.
+        896 numeric_budget@1.charge_native_steps
+        [ [ 8 pair ScanPageState.new scan_page ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_full ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature charge_scan_work forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def charge_scan_work [
+        [ dup 1 + ] dip swap numeric_budget@1.charge_work
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature scan forall<S:stack>
+        [ S List<Bool> I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan [
+        [ pair ScanState.new ] dip scan_pages
+        [ unpair gate_bits ] result@1.and_then
+        [ unpair gate_depth ] result@1.and_then
+        [ unpair charge_scan_work ] result@1.and_then
+    ]
+
+    # Counts caller-owned bits from zero; no externally minted count or BigInt.
+    signature scan_bits forall<S:stack>
+        [ S List<Bool> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export scan_bits
+    def scan_bits [ 0 swap scan ]
+
+    # The 65th bit proves checked I64 conversion is out of range.
+    signature scan_page_i64 forall<S:stack>
+        [ S ScanPageState
+          -- S result@1.Result<ScanState,calc_errors@1.NumericError> ! pure ]
+    def scan_page_i64 [
+        ScanPageState.into unpair [ ScanState.into unpair ] dip
+        [ dup 65 < ] dip swap
+        [ dup 0 =
+          [ drop pair ScanState.new result@1.Result.Ok ]
+          [ [ swap ] dip swap
+            [ drop nil swap pair ScanState.new result@1.Result.Ok ]
+            [ [ drop ] dip [ swap ] dip [ 1 + ] dip
+              swap [ swap ] dip swap 1 -
+              [ pair ScanState.new ] dip
+              pair ScanPageState.new scan_page_i64 ]
+            list.case ] if ]
+        [ drop drop drop unit calc_errors@1.DomainConversion.OutOfRange
+          calc_errors@1.DomainError.Conversion
+          calc_errors@1.NumericError.Domain result@1.Result.Err ] if
+    ]
+
+    signature scan_pages_i64 forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages_i64 [
+        768 numeric_budget@1.charge_native_steps
+        [ [ 4 pair ScanPageState.new scan_page_i64 ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_tail_i64 ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature scan_pages_tail_i64 forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages_tail_i64 [
+        512 numeric_budget@1.charge_native_steps
+        [ [ 4 pair ScanPageState.new scan_page_i64 ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_full_i64 ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature scan_pages_full_i64 forall<S:stack>
+        [ S ScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_pages_full_i64 [
+        1024 numeric_budget@1.charge_native_steps
+        [ [ 8 pair ScanPageState.new scan_page_i64 ] dip swap
+          [ ScanState.into unpair [ dup bitstep@1.is_zero ] dip swap
+            [ [ drop ] dip swap pair result@1.Result.Ok ]
+            [ [ swap ] dip swap
+              [ pair ScanState.new ] dip scan_pages_full_i64 ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature gate_i64_call forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def gate_i64_call [
+        [ 256 ] dip swap numeric_budget@1.admit_call
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature scan_i64 forall<S:stack>
+        [ S List<Bool> I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def scan_i64 [
+        [ pair ScanState.new ] dip scan_pages_i64
+        [ unpair gate_bits ] result@1.and_then
+        [ unpair gate_i64_call ] result@1.and_then
+        [ unpair charge_scan_work ] result@1.and_then
+    ]
+
+    # The same checked traversal retains the original signed-I64 range gate.
+    signature scan_bits_i64 forall<S:stack>
+        [ S List<Bool> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export scan_bits_i64
+    def scan_bits_i64 [ 0 swap scan_i64 ]
+
+    signature gate_bits forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export gate_bits
+    def gate_bits [
+        [ dup ] dip swap numeric_budget@1.admit_bits
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature gate_depth forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export gate_depth
+    def gate_depth [
+        [ dup checked_depth ] dip swap
+        [ numeric_budget@1.admit_call
+          [ pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+]
+13255
+module bigint_preflight@1 [
+    export preflight_from_bits
+    export preflight_same_width
+    export preflight_compare
+    export preflight_additive
+    export preflight_product
+    export preflight_small_division
+    export preflight_division
+
+    # These exports are consumed only after actual BigInt operand scans, but
+    # remain safe if another caller supplies arbitrary signed lengths. The
+    # invalid pair returns the typed Bits error before any cost arithmetic.
+    signature width_valid forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def width_valid [ dup 0 < [ drop false ] [ 112 < ] if ]
+
+    signature pair_widths_valid forall<S:stack>
+        [ S Pair<I64,I64> -- S Bool ! pure ]
+    def pair_widths_valid [
+        unpair [ width_valid ] dip width_valid
+        [ ] [ drop false ] if
+    ]
+
+    signature bits_limit forall<S:stack> [ S -- S calc_errors@1.NumericError ! pure ]
+    def bits_limit [
+        unit calc_errors@1.LimitNumeric.IntermediateIntegerBits
+        calc_errors@1.LimitPrimary.Numeric
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature work_limit forall<S:stack> [ S -- S calc_errors@1.NumericError ! pure ]
+    def work_limit [
+        unit calc_errors@1.LimitRemaining.EvaluationWork
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    # Both inputs are nonnegative sizes. Reserve their sum and one carry bit
+    # without ever computing a wrapping cost.
+    signature checked_width forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def checked_width [
+        pair dup unpair swap
+        9223372036854775806 swap - swap <
+        [ drop bits_limit result@1.Result.Err ]
+        [ unpair + 1 + result@1.Result.Ok ] if
+    ]
+
+    signature checked_sum forall<S:stack>
+        [ S I64 I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def checked_sum [
+        pair dup unpair swap
+        9223372036854775807 swap - swap <
+        [ drop bits_limit result@1.Result.Err ]
+        [ unpair + result@1.Result.Ok ] if
+    ]
+
+    signature larger forall<S:stack> [ S I64 I64 -- S I64 ! pure ]
+    def larger [
+        pair dup unpair <
+        [ unpair swap drop ] [ unpair drop ] if
+    ]
+
+    signature scaled_work forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def scaled_work [
+        swap dup 36028797018963968 <
+        [ 256 * numeric_budget@1.charge_work ]
+        [ drop drop work_limit result@1.Result.Err ] if
+    ]
+
+    # Checked canonical scans bound both widths by 111 bits, and this helper
+    # runs only after the output-width/depth gate. Its product is therefore
+    # below 256*223*112, with one checked debit equivalent to all row debits.
+    signature scaled_rows forall<S:stack>
+        [ S I64 I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def scaled_rows [
+        swap dup 36028797018963968 <
+        [ 256 * [ swap ] dip * numeric_budget@1.charge_work ]
+        [ drop drop drop work_limit result@1.Result.Err ] if
+    ]
+
+    signature gate_work forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def gate_work [
+        [ dup ] dip scaled_work
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature preflight_linear forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_linear [
+        bigint_scan@1.gate_bits
+        [ unpair bigint_scan@1.gate_depth ] result@1.and_then
+        [ unpair gate_work ] result@1.and_then
+        [ unpair swap drop result@1.Result.Ok ] result@1.and_then
+    ]
+
+    # Constructor/sign operations retain their input width; reserve a work
+    # unit for the empty case without falsely requiring an extra carry bit.
+    signature preflight_same_width forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_same_width [
+        bigint_scan@1.gate_bits
+        [ unpair bigint_scan@1.gate_depth ] result@1.and_then
+        [ unpair [ 1 + ] dip scaled_work ] result@1.and_then
+    ]
+
+    signature preflight_binary_linear forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_binary_linear [
+        [ dup unpair larger 0 checked_width ] dip swap
+        [ [ swap ] dip swap drop swap preflight_linear ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # The high-to-low bit comparator takes at most 59 source words per bit;
+    # unsigned addition/subtraction and the opposite-sign compare+subtract
+    # path take at most 166. Both include an explicit facade margin and debit
+    # native work after the shared Bits/Depth/abstract Work gates.
+    signature preflight_compare forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_compare [
+        [ dup pair_widths_valid ] dip swap
+        [
+        [ dup ] dip preflight_binary_linear
+        [ [ unpair larger 1 + 64 * 128 + ] dip
+          swap numeric_budget@1.charge_native_steps ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+            ]
+        [ drop drop bits_limit result@1.Result.Err ] if
+    ]
+
+    signature preflight_additive forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_additive [
+        [ dup pair_widths_valid ] dip swap
+        [
+        [ dup ] dip preflight_binary_linear
+        [ [ unpair larger 1 + 192 * 128 + ] dip
+          swap numeric_budget@1.charge_native_steps ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+            ]
+        [ drop drop bits_limit result@1.Result.Err ] if
+    ]
+
+    signature gate_depth_for_lengths forall<S:stack>
+        [ S Pair<I64,I64> I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<I64,numeric_budget@1.Budget>>,calc_errors@1.NumericError> ! pure ]
+    def gate_depth_for_lengths [
+        [[ dup unpair larger 0 checked_width ] dip ] dip
+        [ swap ] dip swap
+        [ swap bigint_scan@1.gate_depth
+          [ unpair [ drop ] dip pair pair result@1.Result.Ok ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preflight_product_checked forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_product_checked [
+        [ dup unpair checked_sum ] dip swap
+        [
+            swap bigint_scan@1.gate_bits
+            [ unpair gate_depth_for_lengths ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match
+            [ unpair unpair
+              [ 1 + ] dip
+              [[ unpair ] dip ] dip
+              [[[ drop ] dip ] dip ] dip
+              scaled_rows ] result@1.and_then
+        ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # Loop over the shorter operand. At most two partial-product rows touch
+    # at most max(widths)+1 bits when min(widths)<=2. Each bit-adder row has
+    # fewer than 64 words per bit; 128 per output bit covers both rows and
+    # 512 covers multiplication's sign, empty branches, and result facade.
+    # Larger products keep the conservative row bound, so 81x81 remains
+    # typed Work before entering the unmetered raw multiply.
+    signature native_product_cost forall<S:stack>
+        [ S Pair<I64,I64> -- S I64 ! pure ]
+    def native_product_cost [
+        dup unpair swap <
+        [ unpair swap ] [ unpair ] if
+        [ dup 3 < ] dip swap
+        [ swap drop 2 + 128 * 512 + ]
+        [ [ 1 + 128 * ] dip 2 + * 512 + ] if
+    ]
+
+    signature preflight_product forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_product [
+        [ dup pair_widths_valid ] dip swap
+        [
+        [ dup ] dip preflight_product_checked
+        [ [ dup native_product_cost ] dip swap
+          numeric_budget@1.charge_native_steps
+          [ swap drop result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+            ]
+        [ drop drop bits_limit result@1.Result.Err ] if
+    ]
+
+    # The bitwise trial remainder is below twice the divisor. Its width is
+    # at most max(dividend width, divisor width + 1), not their sum.
+    signature reserve_division_work forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def reserve_division_work [
+        [ dup unpair checked_width ] dip swap
+        [ swap
+          [[ unpair ] dip ] dip
+          [[ drop ] dip ] dip
+          scaled_rows ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preflight_division_checked forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_division_checked [
+        [ dup unpair 1 + larger ] dip
+        bigint_scan@1.gate_bits
+        [ unpair gate_depth_for_lengths ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+        [ unpair unpair
+          [ drop ] dip
+          reserve_division_work ] result@1.and_then
+    ]
+
+    # One long-division trial can compare and subtract the divisor; reserve
+    # the quadratic worst case before entering that unmetered bit recurrence.
+    signature native_division_cost forall<S:stack>
+        [ S Pair<I64,I64> -- S I64 ! pure ]
+    def native_division_cost [
+        unpair [ 1 + ] dip 1 + 192 * 160 + * 512 +
+    ]
+
+    signature preflight_division forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_division [
+        [ dup pair_widths_valid ] dip swap
+        [
+        [ dup ] dip preflight_division_checked
+        [ [ dup native_division_cost ] dip swap
+          numeric_budget@1.charge_native_steps
+          [ swap drop result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+            ]
+        [ drop drop bits_limit result@1.Result.Err ] if
+    ]
+
+    # The 12-bit positive-magnitude path uses guest I64 operations, not a
+    # host division. Each doubled divisor/power is at most 8190; quotient and
+    # remainder stay at most 4095. With divisor width <=2 the remainder has
+    # <=2 bits; two <=12-bit folds, <=13 ascent/unwind levels, one <=12-bit
+    # power-ascent encoder, signs and facade fit in 2560 source words.
+    # The local magnitude encoder adds at most 64 words per output bit
+    # over the former decimal chunk encoder, plus 16 per named call:
+    # 14*64+32 <=1024 for the short-divisor path. For other divisors,
+    # two 12-bit outputs add at most 24*64+32 <=2048 over 4096.
+    # Structural width/depth/work gates run before either division algorithm.
+    signature preflight_small_division forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_small_division [
+        [ dup pair_widths_valid ] dip swap
+        [
+        [ dup ] dip preflight_division_checked
+        [ [ unpair swap drop 3 <
+            [ 3584 ] [ 6144 ] if ] dip
+          swap numeric_budget@1.charge_native_steps ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+            ]
+        [ drop drop bits_limit result@1.Result.Err ] if
+    ]
+
+    # Canonicality checks traverse the accepted list once (ten words per
+    # bit). Reserve this raw decoder after the public width/depth/work gates.
+    signature preflight_from_bits forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_from_bits [
+        [ dup ] dip preflight_same_width
+        [ [ 1 + 16 * 128 + ] dip
+          swap numeric_budget@1.charge_native_steps ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+]
+2039
+module bigint_power@1 [
+    export i64_exact_width
+
+    # With state (magnitude, (power, width)), the first five multipliers
+    # cannot exceed 2^62. The final doubling checks p <= magnitude-p before
+    # multiplying, so even I64_MAX never produces a wrapping 2^63 candidate.
+    signature power_candidate forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>> I64 -- S Pair<I64,Pair<I64,I64>> I64 ! pure ]
+    def power_candidate [ [ dup unpair swap drop unpair drop ] dip * ]
+
+    signature power_choose forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>> I64 I64 -- S Pair<I64,Pair<I64,I64>> ! pure ]
+    def power_choose [
+        [ power_candidate ] dip pair pair
+        dup unpair unpair drop
+        [ unpair drop ] dip <
+        [ unpair drop ]
+        [ unpair [ unpair unpair swap drop ] dip
+          unpair [ swap ] dip + pair pair ] if
+    ]
+
+    signature power_choose_double forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>> -- S Pair<I64,Pair<I64,I64>> ! pure ]
+    def power_choose_double [
+        dup unpair unpair drop dup [ - ] dip <
+        [ ] [ 2 1 power_choose ] if
+    ]
+
+    # Six finite, exact power choices determine the top set bit. For a
+    # negative n, -(n+1) is representable even at I64_MIN; the all-ones flag
+    # says whether adding one extends that magnitude by one bit.
+    signature magnitude_info forall<S:stack>
+        [ S I64 -- S Pair<I64,Bool> ! pure ]
+    def magnitude_info [
+        dup 0 =
+        [ drop 0 true pair ]
+        [ 1 1 pair pair
+          4294967296 32 power_choose
+          65536 16 power_choose
+          256 8 power_choose
+          16 4 power_choose
+          4 2 power_choose
+          power_choose_double
+          dup unpair unpair drop
+          dup [ - ] dip 1 - =
+          [ unpair unpair swap drop swap drop ] dip pair ] if
+    ]
+
+    signature i64_exact_width forall<S:stack> [ S I64 -- S I64 ! pure ]
+    def i64_exact_width [
+        dup 0 <
+        [ 1 + 0 swap - magnitude_info unpair [ 1 + ] [ ] if ]
+        [ magnitude_info unpair drop ] if
+    ]
+
+]
+1235
+module bigint_i64_admission@1 [
+    # Public arbitrary List inputs are only returned after bounded scan and
+    # the complete signed-conversion reservation. This checks width and
+    # Budget; it does not assert canonicality or signed-I64 representability.
+    signature checked_bits forall<S:stack>
+        [ S List<Bool> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<List<Bool>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export checked_bits
+    def checked_bits [
+        [ dup ] dip bigint_scan@1.scan_bits_i64
+        [ unpair [ drop ] dip
+          16384 numeric_budget@1.charge_native_steps
+          [ 64 numeric_budget@1.admit_bits
+            [ 256 numeric_budget@1.admit_call
+              [ 33024 numeric_budget@1.charge_work
+                [ pair result@1.Result.Ok ]
+                [ swap drop result@1.Result.Err ]
+                result@1.Result.match ]
+              [ swap drop result@1.Result.Err ]
+              result@1.Result.match ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]
+2637
+module bigint_i64_encoding@1 [
+    # Only the checked signed-I64 entry point mints this private power state.
+    opaque MagnitudePowerState Pair<I64,I64> private
+
+    # The highest power is recognized by p > residual-p, so doubling is
+    # performed only when 2*p <= residual <= I64_MAX. Unwinding subtracts
+    # powers and conses canonical little-endian bits in the magnitude's width.
+    signature magnitude_power_bits forall<S:stack>
+        [ S MagnitudePowerState -- S Pair<I64,List<Bool>> ! pure ]
+    def magnitude_power_bits [
+        MagnitudePowerState.into dup unpair <
+        [ unpair drop nil pair ]
+        [ dup unpair dup [ - ] dip <
+          [ unpair - true nil cons pair ]
+          [ unpair dup
+            [ 2 * pair MagnitudePowerState.new magnitude_power_bits ] dip swap
+            unpair [ pair ] dip swap
+            dup unpair swap <
+            [ unpair swap drop swap false swap cons pair ]
+            [ unpair swap - swap true swap cons pair ] if ] if ] if
+    ]
+
+    signature raw_from_i64 forall<S:stack>
+        [ S I64 -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_from_i64 [
+        dup 0 <
+        [ 1 + 0 swap - 1 pair MagnitudePowerState.new magnitude_power_bits
+          unpair swap drop
+          # false asks adjust_bits to add one, including the 64th MIN bit.
+          false bitstep@1.adjust_bits true swap pair ]
+        [ 1 pair MagnitudePowerState.new magnitude_power_bits
+          unpair swap drop false swap pair ] if
+    ]
+
+    signature from_i64_parts forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export from_i64_parts
+    def from_i64_parts [
+        # The six-choice classifier dispatches at most 321 words; 384 pays
+        # before probing. Raw magnitude encoding costs at most 61 per bit,
+        # an optional carry costs at most 21 per bit, and 96 per actual bit
+        # plus 256 covers both, sign construction and the result facade.
+        384 numeric_budget@1.charge_native_steps
+        [ [ dup bigint_power@1.i64_exact_width ] dip
+          [ dup ] dip bigint_preflight@1.preflight_same_width
+          [ [ dup 96 * 256 + ] dip swap
+            numeric_budget@1.charge_native_steps
+            [ [ drop ] dip [ raw_from_i64 ] dip
+              pair result@1.Result.Ok ]
+            [ swap drop swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]
+1134
+module bigint_pair_scan@1 [
+    # Consumes both physical operand parts in order, returning only genuine
+    # measured widths and the single Budget lineage from paid scans. The
+    # exported pair scanner cannot accept caller-supplied widths.
+    signature inspect_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def inspect_parts [
+        [ unpair swap drop ] dip
+        bigint_scan@1.scan_bits
+    ]
+
+    signature scan_two_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<I64,I64>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export scan_two_parts
+    def scan_two_parts [
+        [ swap ] dip
+        inspect_parts
+        [ unpair [ swap ] dip inspect_parts
+          [ unpair [ pair ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]
+6230
+module bigint_structural_ops@1 [
+    # The private carrier wraps only operands that have completed BOTH paid
+    # scans. It is not exported and cannot serve as a public fee token.
+    opaque CompareOperands Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>> private
+
+    # Public structural inputs may be arbitrary bits. Scans bound physical
+    # length and charge Budget, but do not validate canonicality. Numerical
+    # and canonical-output guarantees hold only for canonical owner inputs;
+    # external helper results cannot mint the private BigInt nominal.
+    signature raw_negate forall<S:stack>
+        [ S Pair<Bool,List<Bool>> -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_negate [
+        unpair
+        dup bitstep@1.is_zero
+        [ drop drop false nil pair ]
+        [ swap [ false ] [ true ] if swap pair ] if
+    ]
+
+    signature negate_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export negate_parts
+    def negate_parts [
+        [ dup ] dip [ unpair swap drop ] dip bigint_scan@1.scan_bits
+        [ unpair
+          bigint_preflight@1.preflight_same_width
+          [ 128 numeric_budget@1.charge_native_steps
+            [ [ raw_negate ] dip pair result@1.Result.Ok ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_compare forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> -- S I64 ! pure ]
+    def raw_compare [ bitrelation@1.compare ]
+
+    # A private success continuation keeps the public compare entry point
+    # mandatory: measured widths and retained operands never form an export.
+    signature finish_compare forall<S:stack>
+        [ S CompareOperands
+            Pair<Pair<I64,I64>,numeric_budget@1.Budget>
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def finish_compare [
+        unpair bigint_preflight@1.preflight_compare
+        [ [ CompareOperands.into unpair ] dip [ raw_compare ] dip pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # The private scan returns retained caller operands only inside this
+    # module; its widths come from the exact sequential paid scans.
+    signature compare_scan forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<CompareOperands,Pair<Pair<I64,I64>,numeric_budget@1.Budget>>,calc_errors@1.NumericError> ! pure ]
+    def compare_scan [
+        [ pair ] dip [ dup unpair ] dip bigint_pair_scan@1.scan_two_parts
+        [ [ CompareOperands.new ] dip pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature compare_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export compare_parts
+    def compare_parts [
+        compare_scan
+        [ unpair finish_compare ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature raw_add forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_add [ bitaddsigned@1.add ]
+
+    signature add_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export add_parts
+    def add_parts [
+        [ pair ] dip [ dup unpair ] dip bigint_pair_scan@1.scan_two_parts
+        [ unpair bigint_preflight@1.preflight_additive
+          [ [ unpair ] dip [ raw_add ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_subtract forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_subtract [ raw_negate raw_add ]
+
+    signature subtract_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export subtract_parts
+    def subtract_parts [
+        [ pair ] dip [ dup unpair ] dip bigint_pair_scan@1.scan_two_parts
+        [ unpair bigint_preflight@1.preflight_additive
+          [ [ unpair ] dip [ raw_subtract ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_multiply forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_multiply [ bitrelation@1.multiply ]
+
+    signature raw_multiply_ordered forall<S:stack>
+        [ S Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>> Pair<I64,I64>
+          -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_multiply_ordered [
+        unpair swap <
+        [ unpair swap raw_multiply ]
+        [ unpair raw_multiply ] if
+    ]
+
+    signature multiply_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export multiply_parts
+    def multiply_parts [
+        [ pair ] dip [ dup unpair ] dip bigint_pair_scan@1.scan_two_parts
+        [ unpair [ dup ] dip bigint_preflight@1.preflight_product
+          [ [ raw_multiply_ordered ] dip pair result@1.Result.Ok ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]
+8105
+module bigint_small_division@1 [
+    # This source-only prior accepts owner-supplied parts. Neither the scan nor
+    # the short algorithm validates canonicality: canonical outputs follow only
+    # from canonical inputs. The owner alone seals paid successful parts.
+    opaque SmallDivisionState Pair<Pair<I64,I64>,Pair<I64,I64>> private
+    opaque SmallMagnitudeState Pair<I64,I64> private
+    # The private carrier is minted only after both real paid scans succeed.
+    opaque DivideOperands Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>> private
+
+    # Preserve the owner's width-only dispatch. In particular a canonical
+    # zero divisor (nil, width zero) goes through the general preflight.
+    signature short_division_widths forall<S:stack>
+        [ S Pair<I64,I64> -- S Pair<I64,I64> Bool ! pure ]
+    def short_division_widths [
+        dup unpair swap 13 <
+        [ dup 0 swap < [ 13 < ] [ drop false ] if ]
+        [ drop false ] if
+    ]
+
+    signature small_divide_unwind forall<S:stack>
+        [ S Pair<I64,I64> Pair<I64,I64> -- S Pair<I64,I64> ! pure ]
+    def small_divide_unwind [
+        pair dup unpair [ unpair drop ] dip
+        unpair swap drop swap <
+        [ unpair swap drop ]
+        [ unpair [ unpair ] dip unpair
+          [ + ] dip [ swap ] dip swap - pair ] if
+    ]
+
+    # State = ((nonnegative dividend,positive divisor),(scaled divisor,power)).
+    # Only the paid <=12-bit short path mints this state, after the folded
+    # divisor has proved nonzero. Its ascent takes at most thirteen frames.
+    signature small_divide forall<S:stack>
+        [ S SmallDivisionState -- S Pair<I64,I64> ! pure ]
+    def small_divide [
+        SmallDivisionState.into unpair
+        [ dup unpair drop ] dip swap
+        [ dup unpair drop ] dip swap <
+        [ drop unpair drop 0 swap pair ]
+        [ dup [ unpair [ 2 * ] dip 2 * pair
+                pair SmallDivisionState.new small_divide ] dip
+          swap small_divide_unwind ] if
+    ]
+
+    # Unlike the signed-I64 owner encoder, this private power state is minted
+    # only for nonnegative <=12-bit quotient and remainder magnitudes.
+    signature small_magnitude_bits forall<S:stack>
+        [ S SmallMagnitudeState -- S Pair<I64,List<Bool>> ! pure ]
+    def small_magnitude_bits [
+        SmallMagnitudeState.into dup unpair <
+        [ unpair drop nil pair ]
+        [ dup unpair dup [ - ] dip <
+          [ unpair - true nil cons pair ]
+          [ unpair dup
+            [ 2 * pair SmallMagnitudeState.new small_magnitude_bits ] dip swap
+            unpair [ pair ] dip swap
+            dup unpair swap <
+            [ unpair swap drop swap false swap cons pair ]
+            [ unpair swap - swap true swap cons pair ] if ] if ] if
+    ]
+
+    signature small_divide_bits forall<S:stack>
+        [ S I64 -- S List<Bool> ! pure ]
+    def small_divide_bits [
+        1 pair SmallMagnitudeState.new small_magnitude_bits
+        unpair swap drop
+    ]
+
+    # The selected short reservation has already been paid. Fold the bounded
+    # divisor exactly once and reject physical noncanonical zero such as
+    # [false] before constructing a division state; otherwise its scaled
+    # divisor would remain zero and recursion would never unwind.
+    signature small_divide_unsigned forall<S:stack>
+        [ S List<Bool> List<Bool>
+          -- S result@1.Result<Pair<List<Bool>,List<Bool>>,calc_errors@1.NumericError> ! pure ]
+    def small_divide_unsigned [
+        bitstep@1.fold_unsigned dup 0 =
+        [ drop drop
+          unit calc_errors@1.DomainArithmetic.DivisionByZero
+          calc_errors@1.DomainExtended.Arithmetic
+          calc_errors@1.DomainError.Extended
+          calc_errors@1.NumericError.Domain result@1.Result.Err ]
+        [ [ bitstep@1.fold_unsigned ] dip
+          dup 1 pair [ pair ] dip pair
+          SmallDivisionState.new small_divide
+          unpair [ small_divide_bits ] dip small_divide_bits pair
+          result@1.Result.Ok ] if
+    ]
+
+    signature small_sign_different forall<S:stack>
+        [ S Bool Bool -- S Bool ! pure ]
+    def small_sign_different [ [ [ false ] [ true ] if ] [ ] if ]
+
+    signature small_signed_divide_rem forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>>,calc_errors@1.NumericError> ! pure ]
+    def small_signed_divide_rem [
+        unpair [ swap ] dip swap unpair
+        [[ swap ] dip ] dip
+        swap [ swap ] dip
+        pair [ swap ] dip
+        [ small_divide_unsigned ] dip swap
+        [ swap
+          [ unpair ] dip
+          [ swap ] dip
+          dup unpair small_sign_different
+          swap [ swap bitsigned@1.normalize ] dip
+          [ swap ] dip unpair
+          [ swap ] dip
+          [[ drop ] dip ] dip
+          swap bitsigned@1.normalize pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # This nil check deliberately remains after the general preflight, as in
+    # the owner. The short folded-zero guard above covers noncanonical lists
+    # whose physical width is positive despite their numeric value being zero.
+    signature raw_divide_rem_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>>,calc_errors@1.NumericError> ! pure ]
+    def raw_divide_rem_parts [
+        dup unpair swap drop bitstep@1.is_zero
+        [ drop drop
+          unit calc_errors@1.DomainArithmetic.DivisionByZero
+          calc_errors@1.DomainExtended.Arithmetic
+          calc_errors@1.DomainError.Extended
+          calc_errors@1.NumericError.Domain result@1.Result.Err ]
+        [ bitquotient@1.divide_rem result@1.Result.Ok ] if
+    ]
+
+    # Retain the original signed parts privately across the same first and
+    # second charged scans; an error drops those parts without an export.
+    signature divide_scan forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<DivideOperands,Pair<Pair<I64,I64>,numeric_budget@1.Budget>>,calc_errors@1.NumericError> ! pure ]
+    def divide_scan [
+        [ pair ] dip [ dup unpair ] dip bigint_pair_scan@1.scan_two_parts
+        [ [ DivideOperands.new ] dip pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # Only true measured widths select ONE old reservation before either
+    # bounded short recursion or the general bit quotient is reached.
+    signature divide_dispatch forall<S:stack>
+        [ S DivideOperands
+            Pair<Pair<I64,I64>,numeric_budget@1.Budget>
+          -- S result@1.Result<Pair<Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def divide_dispatch [
+        unpair [ short_division_widths ] dip swap
+        [ bigint_preflight@1.preflight_small_division
+          [ [ DivideOperands.into unpair ] dip [ small_signed_divide_rem ] dip swap
+            [ swap pair result@1.Result.Ok ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ bigint_preflight@1.preflight_division
+          [ [ DivideOperands.into unpair ] dip [ raw_divide_rem_parts ] dip swap
+            [ swap pair result@1.Result.Ok ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ] if
+    ]
+
+    # The sole public division entry cannot bypass either scan or debit.
+    signature divide_rem_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export divide_rem_parts
+    def divide_rem_parts [
+        divide_scan
+        [ unpair divide_dispatch ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+]
+8677
+module bigint@1 [
+    # Unselected source-only scanner partition: scanner-private nominals and
+    # former scan exports now belong solely to bigint_scan@1. This changes
+    # session module/nominal IDs; old exported scan handles are retired.
+    # The former to_i64 export is retired; bigint_convert@1 owns the new
+    # signed conversion entry point without a compatibility alias.
+    opaque BigInt Pair<Bool,List<Bool>> private
+    export BigInt
+
+    variant DecodeError Noncanonical Unit public NegativeZero Unit public
+    export DecodeError
+    export DecodeError.Noncanonical
+    export DecodeError.NegativeZero
+    export DecodeError.match
+
+    variant BigIntError Decode DecodeError public Numeric calc_errors@1.NumericError public
+    export BigIntError
+    export BigIntError.Decode
+    export BigIntError.Numeric
+    export BigIntError.match
+
+    variant SmallValue Within I64 public Beyond Unit public
+    export SmallValue
+    export SmallValue.Within
+    export SmallValue.Beyond
+    export SmallValue.match
+
+    signature zero forall<S:stack> [ S -- S BigInt ! pure ]
+    export zero
+    def zero [ false nil pair BigInt.new ]
+
+    signature one forall<S:stack> [ S -- S BigInt ! pure ]
+    export one
+    def one [ false true nil cons pair BigInt.new ]
+
+    signature two forall<S:stack> [ S -- S BigInt ! pure ]
+    export two
+    def two [ false false true nil cons cons pair BigInt.new ]
+
+    signature inspect forall<S:stack>
+        [ S BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def inspect [
+        [ BigInt.into unpair swap drop ] dip
+        bigint_scan@1.scan_bits
+    ]
+
+    # Expose only the owner's canonical, width-checked sign/bits after the
+    # complete original conversion reservation has been paid. The signed
+    # range check belongs to bigint_convert@1; no constructor is exported.
+    signature checked_i64_parts forall<S:stack>
+        [ S BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export checked_i64_parts
+    def checked_i64_parts [
+        [ BigInt.into unpair ] dip
+        bigint_i64_admission@1.checked_bits
+        [ unpair [ pair ] dip pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_from_bits forall<S:stack>
+        [ S Bool List<Bool> -- S result@1.Result<BigInt,DecodeError> ! pure ]
+    def raw_from_bits [
+        dup [ true ] [ drop drop false ] list.case
+        [ drop
+          [ unit DecodeError.NegativeZero result@1.Result.Err ]
+          [ zero result@1.Result.Ok ] if
+        ] [
+          dup bitdecode@1.last_bit
+          [ pair BigInt.new result@1.Result.Ok ]
+          [ drop drop unit DecodeError.Noncanonical result@1.Result.Err ] if
+        ] if
+    ]
+
+    # Caller-built bit lists already occupy guest memory before this checked
+    # entrypoint runs. Its typed cap applies to physically bounded inputs;
+    # callers must not construct a list beyond the selected Wasm quota.
+    signature from_bits forall<S:stack>
+        [ S Bool List<Bool> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,BigIntError> ! pure ]
+    export from_bits
+    def from_bits [
+        [ pair ] dip
+        [ dup unpair swap drop ] dip bigint_scan@1.scan_bits
+        [ unpair
+          bigint_preflight@1.preflight_from_bits
+          [ [ unpair ] dip [ raw_from_bits ] dip swap
+            [ swap pair result@1.Result.Ok ]
+            [ swap drop BigIntError.Decode result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop BigIntError.Numeric result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop BigIntError.Numeric result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # All digit states and raw scratch belong to bigint_digits@1. Only this
+    # module can seal the checked canonical bit list into its private BigInt.
+    signature from_decimal_digits forall<S:stack>
+        [ S List<I64> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export from_decimal_digits
+    def from_decimal_digits [
+        bigint_digits@1.convert_decimal_digits
+        [ unpair [ false swap pair BigInt.new ] dip
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature from_i64 forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export from_i64
+    def from_i64 [
+        bigint_i64_encoding@1.from_i64_parts
+        [ unpair [ BigInt.new ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature bit_length forall<S:stack>
+        [ S BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export bit_length
+    def bit_length [ inspect ]
+
+    # The checked scan re-admits an older BigInt under the supplied Budget.
+    # Only an at-most-eight-bit magnitude is folded into signed I64.
+    signature to_small_i64 forall<S:stack>
+        [ S BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<SmallValue,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export to_small_i64
+    def to_small_i64 [
+        [ dup ] dip inspect
+        [ unpair [ dup 9 < ] dip swap
+          [ [ drop ] dip
+            512 numeric_budget@1.charge_native_steps
+            [ [ BigInt.into unpair swap [ bitstep@1.fold_unsigned ] dip
+                [ 0 swap - ] [ ] if SmallValue.Within ] dip
+              pair result@1.Result.Ok ]
+            [ swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ [ drop drop unit SmallValue.Beyond ] dip
+            pair result@1.Result.Ok ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature negate forall<S:stack>
+        [ S BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export negate
+    def negate [
+        [ BigInt.into ] dip bigint_structural_ops@1.negate_parts
+        [ unpair [ BigInt.new ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature compare forall<S:stack>
+        [ S BigInt BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export compare
+    def compare [
+        [ BigInt.into swap BigInt.into swap ] dip
+        bigint_structural_ops@1.compare_parts
+    ]
+
+    signature add forall<S:stack>
+        [ S BigInt BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export add
+    def add [
+        [ BigInt.into swap BigInt.into swap ] dip
+        bigint_structural_ops@1.add_parts
+        [ unpair [ BigInt.new ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature subtract forall<S:stack>
+        [ S BigInt BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export subtract
+    def subtract [
+        [ BigInt.into swap BigInt.into swap ] dip
+        bigint_structural_ops@1.subtract_parts
+        [ unpair [ BigInt.new ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature multiply forall<S:stack>
+        [ S BigInt BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export multiply
+    def multiply [
+        [ BigInt.into swap BigInt.into swap ] dip
+        bigint_structural_ops@1.multiply_parts
+        [ unpair [ BigInt.new ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature divide_rem forall<S:stack>
+        [ S BigInt BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<BigInt,BigInt>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export divide_rem
+    def divide_rem [
+        [ BigInt.into swap BigInt.into swap ] dip
+        bigint_small_division@1.divide_rem_parts
+        [ unpair [ unpair [ BigInt.new ] dip BigInt.new pair ] dip
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+]
+1460
+module bigint_convert@1 [
+    # Only this module folds fully admitted structural parts into a signed
+    # machine value. No unchecked List input or BigInt constructor is exported.
+    signature raw_to_i64_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def raw_to_i64_parts [
+        unpair bitstep@1.fold_unsigned
+        dup 0 <
+        [ dup -9223372036854775808 =
+          [ drop
+            [ -9223372036854775808 result@1.Result.Ok ]
+            [ unit calc_errors@1.DomainConversion.OutOfRange
+              calc_errors@1.DomainError.Conversion
+              calc_errors@1.NumericError.Domain result@1.Result.Err ] if ]
+          [ drop drop unit calc_errors@1.DomainConversion.OutOfRange
+            calc_errors@1.DomainError.Conversion
+            calc_errors@1.NumericError.Domain result@1.Result.Err ] if ]
+        [ swap [ 0 swap - ] [ ] if result@1.Result.Ok ] if
+    ]
+
+
+    signature to_i64 forall<S:stack>
+        [ S bigint@1.BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export to_i64
+    def to_i64 [
+        bigint@1.checked_i64_parts
+        [ unpair [ raw_to_i64_parts ] dip swap
+          [ swap pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]

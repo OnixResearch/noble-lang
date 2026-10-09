@@ -1,0 +1,211 @@
+module bigint@1 [
+    # Unselected source-only scanner partition: scanner-private nominals and
+    # former scan exports now belong solely to bigint_scan@1. This changes
+    # session module/nominal IDs; old exported scan handles are retired.
+    # The former to_i64 export is retired; bigint_convert@1 owns the new
+    # signed conversion entry point without a compatibility alias.
+    opaque BigInt Pair<Bool,List<Bool>> private
+    export BigInt
+
+    variant DecodeError Noncanonical Unit public NegativeZero Unit public
+    export DecodeError
+    export DecodeError.Noncanonical
+    export DecodeError.NegativeZero
+    export DecodeError.match
+
+    variant BigIntError Decode DecodeError public Numeric calc_errors@1.NumericError public
+    export BigIntError
+    export BigIntError.Decode
+    export BigIntError.Numeric
+    export BigIntError.match
+
+    variant SmallValue Within I64 public Beyond Unit public
+    export SmallValue
+    export SmallValue.Within
+    export SmallValue.Beyond
+    export SmallValue.match
+
+    signature zero forall<S:stack> [ S -- S BigInt ! pure ]
+    export zero
+    def zero [ false nil pair BigInt.new ]
+
+    signature one forall<S:stack> [ S -- S BigInt ! pure ]
+    export one
+    def one [ false true nil cons pair BigInt.new ]
+
+    signature two forall<S:stack> [ S -- S BigInt ! pure ]
+    export two
+    def two [ false false true nil cons cons pair BigInt.new ]
+
+    signature inspect forall<S:stack>
+        [ S BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def inspect [
+        [ BigInt.into unpair swap drop ] dip
+        bigint_scan@1.scan_bits
+    ]
+
+    # Expose only the owner's canonical, width-checked sign/bits after the
+    # complete original conversion reservation has been paid. The signed
+    # range check belongs to bigint_convert@1; no constructor is exported.
+    signature checked_i64_parts forall<S:stack>
+        [ S BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export checked_i64_parts
+    def checked_i64_parts [
+        [ BigInt.into unpair ] dip
+        bigint_i64_admission@1.checked_bits
+        [ unpair [ pair ] dip pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_from_bits forall<S:stack>
+        [ S Bool List<Bool> -- S result@1.Result<BigInt,DecodeError> ! pure ]
+    def raw_from_bits [
+        dup [ true ] [ drop drop false ] list.case
+        [ drop
+          [ unit DecodeError.NegativeZero result@1.Result.Err ]
+          [ zero result@1.Result.Ok ] if
+        ] [
+          dup bitdecode@1.last_bit
+          [ pair BigInt.new result@1.Result.Ok ]
+          [ drop drop unit DecodeError.Noncanonical result@1.Result.Err ] if
+        ] if
+    ]
+
+    # Caller-built bit lists already occupy guest memory before this checked
+    # entrypoint runs. Its typed cap applies to physically bounded inputs;
+    # callers must not construct a list beyond the selected Wasm quota.
+    signature from_bits forall<S:stack>
+        [ S Bool List<Bool> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,BigIntError> ! pure ]
+    export from_bits
+    def from_bits [
+        [ pair ] dip
+        [ dup unpair swap drop ] dip bigint_scan@1.scan_bits
+        [ unpair
+          bigint_preflight@1.preflight_from_bits
+          [ [ unpair ] dip [ raw_from_bits ] dip swap
+            [ swap pair result@1.Result.Ok ]
+            [ swap drop BigIntError.Decode result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop BigIntError.Numeric result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop BigIntError.Numeric result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # All digit states and raw scratch belong to bigint_digits@1. Only this
+    # module can seal the checked canonical bit list into its private BigInt.
+    signature from_decimal_digits forall<S:stack>
+        [ S List<I64> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export from_decimal_digits
+    def from_decimal_digits [
+        bigint_digits@1.convert_decimal_digits
+        [ unpair [ false swap pair BigInt.new ] dip
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature from_i64 forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export from_i64
+    def from_i64 [
+        bigint_i64_encoding@1.from_i64_parts
+        [ unpair [ BigInt.new ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature bit_length forall<S:stack>
+        [ S BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export bit_length
+    def bit_length [ inspect ]
+
+    # The checked scan re-admits an older BigInt under the supplied Budget.
+    # Only an at-most-eight-bit magnitude is folded into signed I64.
+    signature to_small_i64 forall<S:stack>
+        [ S BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<SmallValue,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export to_small_i64
+    def to_small_i64 [
+        [ dup ] dip inspect
+        [ unpair [ dup 9 < ] dip swap
+          [ [ drop ] dip
+            512 numeric_budget@1.charge_native_steps
+            [ [ BigInt.into unpair swap [ bitstep@1.fold_unsigned ] dip
+                [ 0 swap - ] [ ] if SmallValue.Within ] dip
+              pair result@1.Result.Ok ]
+            [ swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ [ drop drop unit SmallValue.Beyond ] dip
+            pair result@1.Result.Ok ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature negate forall<S:stack>
+        [ S BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export negate
+    def negate [
+        [ BigInt.into ] dip bigint_structural_ops@1.negate_parts
+        [ unpair [ BigInt.new ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature compare forall<S:stack>
+        [ S BigInt BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export compare
+    def compare [
+        [ BigInt.into swap BigInt.into swap ] dip
+        bigint_structural_ops@1.compare_parts
+    ]
+
+    signature add forall<S:stack>
+        [ S BigInt BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export add
+    def add [
+        [ BigInt.into swap BigInt.into swap ] dip
+        bigint_structural_ops@1.add_parts
+        [ unpair [ BigInt.new ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature subtract forall<S:stack>
+        [ S BigInt BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export subtract
+    def subtract [
+        [ BigInt.into swap BigInt.into swap ] dip
+        bigint_structural_ops@1.subtract_parts
+        [ unpair [ BigInt.new ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature multiply forall<S:stack>
+        [ S BigInt BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export multiply
+    def multiply [
+        [ BigInt.into swap BigInt.into swap ] dip
+        bigint_structural_ops@1.multiply_parts
+        [ unpair [ BigInt.new ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature divide_rem forall<S:stack>
+        [ S BigInt BigInt numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<BigInt,BigInt>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export divide_rem
+    def divide_rem [
+        [ BigInt.into swap BigInt.into swap ] dip
+        bigint_small_division@1.divide_rem_parts
+        [ unpair [ unpair [ BigInt.new ] dip BigInt.new pair ] dip
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+]

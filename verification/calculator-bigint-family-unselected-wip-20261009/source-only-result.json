@@ -1,0 +1,442 @@
+{
+  "pre": {
+    "at": "2026-10-09T11:03:28.926Z",
+    "census": "empty",
+    "df": "Filesystem     1024-blocks      Used Available Capacity Mounted on\ntmpfs             63700212  27942784  35757428      44% /tmp\nzroot/home       303196544 287439232  15757312      95% /home",
+    "sourcesRehashed": 38,
+    "inputSha": "c70e6bc9042d7257e11bb0a40854167e777db1623d8924333b92d8dd400da1bb",
+    "receiptSha": "a3f74480581af1f3ac8a814e7024a864b81308099fae9effa11daa4e378f81ea",
+    "binarySha": "aa0f9704d3f83e965b131c04bc0bec738417b111c65811508a873b6db9d2453e"
+  },
+  "argv": [
+    "/tmp/noble-ma1-universal-recovered-20261009-target/debug/noble",
+    "session",
+    "--framed",
+    "--declared-modules",
+    "--text-byte-cursor",
+    "--signed-self-recursion",
+    "--source-bytes",
+    "65536",
+    "--source-nodes",
+    "16384",
+    "--source-depth",
+    "64",
+    "--source-work",
+    "2000000",
+    "--retained-source-bytes",
+    "262144"
+  ],
+  "exit": 5,
+  "aborted": null,
+  "elapsedMs": 529,
+  "files": {
+    "stdout": {
+      "path": "/tmp/noble-ma1-universal-recovered-20261009-target/numeric-registration-postscan-private-operands-38-sourceonly-20261009-run-20261009-stdout.jsonl",
+      "bytes": 20000,
+      "sha": "278b64d2c64fe5131632c481e3f724a9fa2b708816c063875e6d5139b9eb63d1"
+    },
+    "stderr": {
+      "path": "/tmp/noble-ma1-universal-recovered-20261009-target/numeric-registration-postscan-private-operands-38-sourceonly-20261009-run-20261009-stderr.txt",
+      "bytes": 0,
+      "sha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "reports": 38,
+  "parseError": null,
+  "stages": [
+    {
+      "frame": 1,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitborrow",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 2,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitcompare",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 3,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitdecode",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 4,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitdiv",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 5,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitfull",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 6,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitpair",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 7,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitstep",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 8,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitsub",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 9,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bittrim",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 10,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "result",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 11,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "calc_errors",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 12,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitadd",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 13,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitmul",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 14,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitorder",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 15,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitsigned",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 16,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitsum",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 17,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "numeric_budget_limits",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 18,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "numeric_budget_preflight_depth",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 19,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "numeric_budget_preflight_late",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 20,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitaddcarry",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 21,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitaddsigned",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 22,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitquotient",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 23,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bitrelation",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 24,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "numeric_budget_preflight",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 25,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "numeric_budget",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 26,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bigint_digit_chunk",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 27,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bigint_digit_support",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 28,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bigint_digits",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 29,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bigint_scan",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 30,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bigint_preflight",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 31,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bigint_power",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 32,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bigint_i64_admission",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 33,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bigint_i64_encoding",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 34,
+      "stage": "link",
+      "outcome": "linked",
+      "module": "bigint_pair_scan",
+      "diagnostic": "module registered without guest execution",
+      "span": null,
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 35,
+      "stage": "check",
+      "outcome": "exhausted",
+      "module": "bigint_structural_ops",
+      "diagnostic": "frontend node limit exceeded",
+      "span": {
+        "start": 29,
+        "end": 35
+      },
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 36,
+      "stage": "check",
+      "outcome": "exhausted",
+      "module": "bigint_small_division",
+      "diagnostic": "frontend node limit exceeded",
+      "span": {
+        "start": 86,
+        "end": 109
+      },
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 37,
+      "stage": "resolve",
+      "outcome": "unbound-word",
+      "module": "bigint",
+      "diagnostic": "unbound or recursive module word",
+      "span": {
+        "start": 41,
+        "end": 77
+      },
+      "guest_requests": 0,
+      "acquired_authority": false
+    },
+    {
+      "frame": 38,
+      "stage": "check",
+      "outcome": "type-reject",
+      "module": "bigint_convert",
+      "diagnostic": "unknown signature value type",
+      "span": {
+        "start": 0,
+        "end": 0
+      },
+      "guest_requests": 0,
+      "acquired_authority": false
+    }
+  ],
+  "allGuestRequestsZero": true,
+  "allAuthorityFalse": true
+}

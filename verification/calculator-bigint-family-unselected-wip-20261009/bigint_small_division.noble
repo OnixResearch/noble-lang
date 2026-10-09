@@ -1,0 +1,177 @@
+module bigint_small_division@1 [
+    # This source-only prior accepts owner-supplied parts. Neither the scan nor
+    # the short algorithm validates canonicality: canonical outputs follow only
+    # from canonical inputs. The owner alone seals paid successful parts.
+    opaque SmallDivisionState Pair<Pair<I64,I64>,Pair<I64,I64>> private
+    opaque SmallMagnitudeState Pair<I64,I64> private
+    # The private carrier is minted only after both real paid scans succeed.
+    opaque DivideOperands Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>> private
+
+    # Preserve the owner's width-only dispatch. In particular a canonical
+    # zero divisor (nil, width zero) goes through the general preflight.
+    signature short_division_widths forall<S:stack>
+        [ S Pair<I64,I64> -- S Pair<I64,I64> Bool ! pure ]
+    def short_division_widths [
+        dup unpair swap 13 <
+        [ dup 0 swap < [ 13 < ] [ drop false ] if ]
+        [ drop false ] if
+    ]
+
+    signature small_divide_unwind forall<S:stack>
+        [ S Pair<I64,I64> Pair<I64,I64> -- S Pair<I64,I64> ! pure ]
+    def small_divide_unwind [
+        pair dup unpair [ unpair drop ] dip
+        unpair swap drop swap <
+        [ unpair swap drop ]
+        [ unpair [ unpair ] dip unpair
+          [ + ] dip [ swap ] dip swap - pair ] if
+    ]
+
+    # State = ((nonnegative dividend,positive divisor),(scaled divisor,power)).
+    # Only the paid <=12-bit short path mints this state, after the folded
+    # divisor has proved nonzero. Its ascent takes at most thirteen frames.
+    signature small_divide forall<S:stack>
+        [ S SmallDivisionState -- S Pair<I64,I64> ! pure ]
+    def small_divide [
+        SmallDivisionState.into unpair
+        [ dup unpair drop ] dip swap
+        [ dup unpair drop ] dip swap <
+        [ drop unpair drop 0 swap pair ]
+        [ dup [ unpair [ 2 * ] dip 2 * pair
+                pair SmallDivisionState.new small_divide ] dip
+          swap small_divide_unwind ] if
+    ]
+
+    # Unlike the signed-I64 owner encoder, this private power state is minted
+    # only for nonnegative <=12-bit quotient and remainder magnitudes.
+    signature small_magnitude_bits forall<S:stack>
+        [ S SmallMagnitudeState -- S Pair<I64,List<Bool>> ! pure ]
+    def small_magnitude_bits [
+        SmallMagnitudeState.into dup unpair <
+        [ unpair drop nil pair ]
+        [ dup unpair dup [ - ] dip <
+          [ unpair - true nil cons pair ]
+          [ unpair dup
+            [ 2 * pair SmallMagnitudeState.new small_magnitude_bits ] dip swap
+            unpair [ pair ] dip swap
+            dup unpair swap <
+            [ unpair swap drop swap false swap cons pair ]
+            [ unpair swap - swap true swap cons pair ] if ] if ] if
+    ]
+
+    signature small_divide_bits forall<S:stack>
+        [ S I64 -- S List<Bool> ! pure ]
+    def small_divide_bits [
+        1 pair SmallMagnitudeState.new small_magnitude_bits
+        unpair swap drop
+    ]
+
+    # The selected short reservation has already been paid. Fold the bounded
+    # divisor exactly once and reject physical noncanonical zero such as
+    # [false] before constructing a division state; otherwise its scaled
+    # divisor would remain zero and recursion would never unwind.
+    signature small_divide_unsigned forall<S:stack>
+        [ S List<Bool> List<Bool>
+          -- S result@1.Result<Pair<List<Bool>,List<Bool>>,calc_errors@1.NumericError> ! pure ]
+    def small_divide_unsigned [
+        bitstep@1.fold_unsigned dup 0 =
+        [ drop drop
+          unit calc_errors@1.DomainArithmetic.DivisionByZero
+          calc_errors@1.DomainExtended.Arithmetic
+          calc_errors@1.DomainError.Extended
+          calc_errors@1.NumericError.Domain result@1.Result.Err ]
+        [ [ bitstep@1.fold_unsigned ] dip
+          dup 1 pair [ pair ] dip pair
+          SmallDivisionState.new small_divide
+          unpair [ small_divide_bits ] dip small_divide_bits pair
+          result@1.Result.Ok ] if
+    ]
+
+    signature small_sign_different forall<S:stack>
+        [ S Bool Bool -- S Bool ! pure ]
+    def small_sign_different [ [ [ false ] [ true ] if ] [ ] if ]
+
+    signature small_signed_divide_rem forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>>,calc_errors@1.NumericError> ! pure ]
+    def small_signed_divide_rem [
+        unpair [ swap ] dip swap unpair
+        [[ swap ] dip ] dip
+        swap [ swap ] dip
+        pair [ swap ] dip
+        [ small_divide_unsigned ] dip swap
+        [ swap
+          [ unpair ] dip
+          [ swap ] dip
+          dup unpair small_sign_different
+          swap [ swap bitsigned@1.normalize ] dip
+          [ swap ] dip unpair
+          [ swap ] dip
+          [[ drop ] dip ] dip
+          swap bitsigned@1.normalize pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # This nil check deliberately remains after the general preflight, as in
+    # the owner. The short folded-zero guard above covers noncanonical lists
+    # whose physical width is positive despite their numeric value being zero.
+    signature raw_divide_rem_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>>,calc_errors@1.NumericError> ! pure ]
+    def raw_divide_rem_parts [
+        dup unpair swap drop bitstep@1.is_zero
+        [ drop drop
+          unit calc_errors@1.DomainArithmetic.DivisionByZero
+          calc_errors@1.DomainExtended.Arithmetic
+          calc_errors@1.DomainError.Extended
+          calc_errors@1.NumericError.Domain result@1.Result.Err ]
+        [ bitquotient@1.divide_rem result@1.Result.Ok ] if
+    ]
+
+    # Retain the original signed parts privately across the same first and
+    # second charged scans; an error drops those parts without an export.
+    signature divide_scan forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<DivideOperands,Pair<Pair<I64,I64>,numeric_budget@1.Budget>>,calc_errors@1.NumericError> ! pure ]
+    def divide_scan [
+        [ pair ] dip [ dup unpair ] dip bigint_pair_scan@1.scan_two_parts
+        [ [ DivideOperands.new ] dip pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # Only true measured widths select ONE old reservation before either
+    # bounded short recursion or the general bit quotient is reached.
+    signature divide_dispatch forall<S:stack>
+        [ S DivideOperands
+            Pair<Pair<I64,I64>,numeric_budget@1.Budget>
+          -- S result@1.Result<Pair<Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def divide_dispatch [
+        unpair [ short_division_widths ] dip swap
+        [ bigint_preflight@1.preflight_small_division
+          [ [ DivideOperands.into unpair ] dip [ small_signed_divide_rem ] dip swap
+            [ swap pair result@1.Result.Ok ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ bigint_preflight@1.preflight_division
+          [ [ DivideOperands.into unpair ] dip [ raw_divide_rem_parts ] dip swap
+            [ swap pair result@1.Result.Ok ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ] if
+    ]
+
+    # The sole public division entry cannot bypass either scan or debit.
+    signature divide_rem_parts forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Pair<Bool,List<Bool>>,Pair<Bool,List<Bool>>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export divide_rem_parts
+    def divide_rem_parts [
+        divide_scan
+        [ unpair divide_dispatch ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+]

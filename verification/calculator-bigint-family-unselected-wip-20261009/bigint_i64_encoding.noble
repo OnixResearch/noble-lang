@@ -1,0 +1,58 @@
+module bigint_i64_encoding@1 [
+    # Only the checked signed-I64 entry point mints this private power state.
+    opaque MagnitudePowerState Pair<I64,I64> private
+
+    # The highest power is recognized by p > residual-p, so doubling is
+    # performed only when 2*p <= residual <= I64_MAX. Unwinding subtracts
+    # powers and conses canonical little-endian bits in the magnitude's width.
+    signature magnitude_power_bits forall<S:stack>
+        [ S MagnitudePowerState -- S Pair<I64,List<Bool>> ! pure ]
+    def magnitude_power_bits [
+        MagnitudePowerState.into dup unpair <
+        [ unpair drop nil pair ]
+        [ dup unpair dup [ - ] dip <
+          [ unpair - true nil cons pair ]
+          [ unpair dup
+            [ 2 * pair MagnitudePowerState.new magnitude_power_bits ] dip swap
+            unpair [ pair ] dip swap
+            dup unpair swap <
+            [ unpair swap drop swap false swap cons pair ]
+            [ unpair swap - swap true swap cons pair ] if ] if ] if
+    ]
+
+    signature raw_from_i64 forall<S:stack>
+        [ S I64 -- S Pair<Bool,List<Bool>> ! pure ]
+    def raw_from_i64 [
+        dup 0 <
+        [ 1 + 0 swap - 1 pair MagnitudePowerState.new magnitude_power_bits
+          unpair swap drop
+          # false asks adjust_bits to add one, including the 64th MIN bit.
+          false bitstep@1.adjust_bits true swap pair ]
+        [ 1 pair MagnitudePowerState.new magnitude_power_bits
+          unpair swap drop false swap pair ] if
+    ]
+
+    signature from_i64_parts forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<Pair<Bool,List<Bool>>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export from_i64_parts
+    def from_i64_parts [
+        # The six-choice classifier dispatches at most 321 words; 384 pays
+        # before probing. Raw magnitude encoding costs at most 61 per bit,
+        # an optional carry costs at most 21 per bit, and 96 per actual bit
+        # plus 256 covers both, sign construction and the result facade.
+        384 numeric_budget@1.charge_native_steps
+        [ [ dup bigint_power@1.i64_exact_width ] dip
+          [ dup ] dip bigint_preflight@1.preflight_same_width
+          [ [ dup 96 * 256 + ] dip swap
+            numeric_budget@1.charge_native_steps
+            [ [ drop ] dip [ raw_from_i64 ] dip
+              pair result@1.Result.Ok ]
+            [ swap drop swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]
