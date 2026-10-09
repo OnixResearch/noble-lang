@@ -10,16 +10,34 @@ module calc_name@1 [
     export fields
     def fields [ Name.into unpair unpair ]
 
+    # Retain both immutable Text slices once, passing only the byte offset and
+    # remaining length through recursion; no cursor is rebuilt per byte.
+    opaque EqualSources Pair<Pair<Text,I64>,Pair<Text,I64>> private
+    signature current_byte forall<S:stack>
+        [ S Pair<Text,I64> I64 -- S I64 ! pure ]
+    def current_byte [ let offset unpair offset + text.byte swap drop ]
+    signature left_byte forall<S:stack>
+        [ S EqualSources I64 -- S I64 ! pure ]
+    def left_byte [ [ EqualSources.into unpair drop ] dip current_byte ]
+    signature right_byte forall<S:stack>
+        [ S EqualSources I64 -- S I64 ! pure ]
+    def right_byte [ [ EqualSources.into unpair swap drop ] dip current_byte ]
+    signature scan_equal forall<S:stack>
+        [ S EqualSources I64 I64 -- S Bool ! pure ]
+    def scan_equal [
+        let remaining let offset let sources
+        remaining 0 =
+        [ true ]
+        [ sources offset left_byte sources offset right_byte =
+          [ sources offset 1 + remaining 1 - scan_equal ]
+          [ false ] if ] if
+    ]
     signature bytes_equal forall<S:stack>
         [ S Text I64 Text I64 I64 -- S Bool ! pure ]
     def bytes_equal [
         let remaining let right_at let right let left_at let left
-        remaining 0 =
-        [ true ]
-        [ left left_at text.byte swap drop
-          right right_at text.byte swap drop =
-          [ left left_at 1 + right right_at 1 + remaining 1 - bytes_equal ]
-          [ false ] if ] if
+        left left_at pair right right_at pair pair EqualSources.new
+        0 remaining scan_equal
     ]
 
     signature equal forall<S:stack> [ S Name Name -- S Bool ! pure ]
@@ -43,7 +61,7 @@ module calc_name@1 [
         let budget let text
         text budget calc_lex@1.tokenize
         [ unpair let charged unpair let length
-          [ 0 0 calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.DefinitionError
+          [ 0 0 calc_diagnostic@1.span calc_diagnostic@1.definition_error
             result@1.Result.Err ]
           [ let rest let first
             first calc_token@1.kind 256 =
@@ -53,13 +71,13 @@ module calc_name@1 [
                   [ text 0 length make charged pair result@1.Result.Ok ]
                   [ drop drop
                     0 length calc_diagnostic@1.span
-                    calc_diagnostic@1.Diagnostic.DefinitionError result@1.Result.Err ] list.case ]
+                    calc_diagnostic@1.definition_error result@1.Result.Err ] list.case ]
                 [ 0 length calc_diagnostic@1.span
-                  calc_diagnostic@1.Diagnostic.DefinitionError result@1.Result.Err ] if ]
+                  calc_diagnostic@1.definition_error result@1.Result.Err ] if ]
               [ 0 length calc_diagnostic@1.span
-                calc_diagnostic@1.Diagnostic.DefinitionError result@1.Result.Err ] if ]
+                calc_diagnostic@1.definition_error result@1.Result.Err ] if ]
             [ 0 length calc_diagnostic@1.span
-              calc_diagnostic@1.Diagnostic.DefinitionError result@1.Result.Err ] if ] list.case ]
+              calc_diagnostic@1.definition_error result@1.Result.Err ] if ] list.case ]
         [ result@1.Result.Err ] result@1.Result.match
     ]
 ]

@@ -36,21 +36,21 @@ module calc_bind@1 [
         [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
     def unknown [
         dup calc_code@1.start swap calc_code@1.finish
-        calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.UnknownName
+        calc_diagnostic@1.span calc_diagnostic@1.unknown_name
     ]
 
     signature definition_error forall<S:stack>
         [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
     def definition_error [
         dup calc_code@1.start swap calc_code@1.finish
-        calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.DefinitionError
+        calc_diagnostic@1.span calc_diagnostic@1.definition_error
     ]
 
     signature wrong_arity forall<S:stack>
         [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
     def wrong_arity [
         dup calc_code@1.start swap calc_code@1.finish
-        calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.WrongArity
+        calc_diagnostic@1.span calc_diagnostic@1.wrong_arity
     ]
 
     signature rewrite forall<S:stack>

@@ -34,40 +34,17 @@ module calc_parse@1 [
     signature frame_token forall<S:stack> [ S Frame -- S calc_token@1.Token ! pure ]
     def frame_token [ Frame.into unpair swap drop unpair swap drop unpair swap drop unpair swap drop ]
 
-    variant Mode Operand Unit public Infix Unit public
-        CallOpen Unit public CallContinue Unit public CallRequired Unit public
-    signature classify forall<S:stack> [ S I64 -- S Mode ! pure ]
-    def classify [
-        dup 0 = [ drop unit Mode.Operand ]
-        [ dup 1 = [ drop unit Mode.Infix ]
-          [ dup 2 = [ drop unit Mode.CallOpen ]
-            [ dup 3 = [ drop unit Mode.CallContinue ]
-              [ drop unit Mode.CallRequired ] if ] if ] if ] if
-    ]
-
-    variant Prefix Unary Unit public Parenthesized Unit public
-        Number Unit public Name Unit public Invalid Unit public
-    signature prefix_kind forall<S:stack> [ S I64 -- S Prefix ! pure ]
-    def prefix_kind [
-        dup 43 = [ drop unit Prefix.Unary ]
-        [ dup 45 = [ drop unit Prefix.Unary ]
-          [ dup 40 = [ drop unit Prefix.Parenthesized ]
-            [ dup 257 = [ drop unit Prefix.Number ]
-              [ dup 256 = [ drop unit Prefix.Name ]
-                [ drop unit Prefix.Invalid ] if ] if ] if ] if ] if
-    ]
-
     # One self-recursive Pratt machine avoids a cycle of distinct module
     # definitions. Modes: 0 operand; 1 binary continuation; 2 call argument
     # or close; 3 comma or close after a completed argument; 4 required
     # argument after a comma (a trailing comma cannot close a call).
     signature syntax forall<S:stack>
         [ S calc_token@1.Token -- S calc_diagnostic@1.Diagnostic ! pure ]
-    def syntax [ calc_token@1.span calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.Syntax ]
+    def syntax [ calc_token@1.span calc_diagnostic@1.span calc_diagnostic@1.syntax_error ]
 
     signature trailing forall<S:stack>
         [ S calc_token@1.Token -- S calc_diagnostic@1.Diagnostic ! pure ]
-    def trailing [ calc_token@1.span calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.TrailingInput ]
+    def trailing [ calc_token@1.span calc_diagnostic@1.span calc_diagnostic@1.trailing_input ]
 
     signature numeric forall<S:stack>
         [ S calc_token@1.Token calc_errors@1.NumericError -- S calc_diagnostic@1.Diagnostic ! pure ]
@@ -111,10 +88,10 @@ module calc_parse@1 [
           [ let admitted
             admitted 1 numeric_budget@1.charge_work
             [ let charged
-              machine frame_mode classify
-              [ drop machine frame_token calc_token@1.kind let kind
-                kind prefix_kind
-                [ drop machine frame_state calc_parse_state@1.advance charged
+              machine frame_mode 0 =
+              [ machine frame_token calc_token@1.kind let kind
+                kind 43 = [ true ] [ kind 45 = ] if
+                [ machine frame_state calc_parse_state@1.advance charged
                   machine frame_depth 1 + 30 0 0 0 0 step
                   [ unpair let after let operand
                     operand
@@ -122,8 +99,9 @@ module calc_parse@1 [
                     0 machine frame_token calc_parse_state@1.emit let emitted
                     emitted after machine frame_depth machine frame_min_bp 1 0 0 0 step ]
                   [ result@1.Result.Err ] result@1.Result.match ]
-                [ drop machine frame_state calc_parse_state@1.advance charged
-                  machine frame_depth 1 + 0 0 0 0 0 step
+                [ kind 40 =
+                  [ machine frame_state calc_parse_state@1.advance charged
+                    machine frame_depth 1 + 0 0 0 0 0 step
                     [ unpair let after let inside
                       inside calc_parse_state@1.front let closing
                       closing calc_token@1.kind 41 =
@@ -131,19 +109,21 @@ module calc_parse@1 [
                         machine frame_depth machine frame_min_bp 1 0 0 0 step ]
                       [ closing syntax result@1.Result.Err ] if ]
                     [ result@1.Result.Err ] result@1.Result.match ]
-                [ drop machine frame_state calc_parse_state@1.advance
+                  [ kind 257 =
+                    [ machine frame_state calc_parse_state@1.advance
                       256 0 machine frame_token calc_parse_state@1.emit let emitted
                       emitted charged machine frame_depth machine frame_min_bp 1 0 0 0 step ]
-                [ drop machine frame_state calc_parse_state@1.advance let after_name
+                    [ kind 256 =
+                      [ machine frame_state calc_parse_state@1.advance let after_name
                         after_name calc_parse_state@1.front calc_token@1.kind 40 =
                         [ machine frame_token calc_token@1.span let end let begin
                           after_name calc_parse_state@1.advance
                           charged machine frame_depth machine frame_min_bp 2 begin end 0 step ]
                         [ after_name 257 0 machine frame_token calc_parse_state@1.emit
                           charged machine frame_depth machine frame_min_bp 1 0 0 0 step ] if ]
-                [ drop machine frame_token syntax result@1.Result.Err ]
-                Prefix.match ]
-              [ drop machine frame_token calc_token@1.kind binding_power
+                      [ machine frame_token syntax result@1.Result.Err ] if ] if ] if ]
+              [ machine frame_mode 1 =
+                [ machine frame_token calc_token@1.kind binding_power
                   let right_bp let left_bp
                   left_bp machine frame_min_bp <
                   [ machine frame_state charged pair result@1.Result.Ok ]
@@ -154,7 +134,8 @@ module calc_parse@1 [
                       machine frame_token calc_parse_state@1.emit
                       after machine frame_depth machine frame_min_bp 1 0 0 0 step ]
                     [ result@1.Result.Err ] result@1.Result.match ] if ]
-              [ drop machine frame_token calc_token@1.kind 41 =
+                [ machine frame_mode 2 =
+                  [ machine frame_token calc_token@1.kind 41 =
                     [ machine frame_state calc_parse_state@1.advance
                       258 machine frame_call call_arity 256
                       machine frame_call call_begin machine frame_call call_end calc_token@1.make
@@ -166,7 +147,8 @@ module calc_parse@1 [
                         machine frame_call call_begin machine frame_call call_end
                         machine frame_call call_arity 1 + step ]
                       [ result@1.Result.Err ] result@1.Result.match ] if ]
-              [ drop machine frame_token calc_token@1.kind 44 =
+                  [ machine frame_mode 3 =
+                    [ machine frame_token calc_token@1.kind 44 =
                       [ machine frame_state calc_parse_state@1.advance
                         charged machine frame_depth machine frame_min_bp 4
                         machine frame_call call_begin machine frame_call call_end
@@ -178,15 +160,15 @@ module calc_parse@1 [
                           calc_parse_state@1.emit
                           charged machine frame_depth machine frame_min_bp 1 0 0 0 step ]
                         [ machine frame_token syntax result@1.Result.Err ] if ] if ]
-              [ drop machine frame_token calc_token@1.kind 41 =
-                [ machine frame_token syntax result@1.Result.Err ]
-                [ machine frame_state charged machine frame_depth 1 + 0 0 0 0 0 step
-                  [ unpair let after let argument
-                    argument after machine frame_depth machine frame_min_bp 3
-                    machine frame_call call_begin machine frame_call call_end
-                    machine frame_call call_arity 1 + step ]
-                  [ result@1.Result.Err ] result@1.Result.match ] if ]
-              Mode.match ]
+                    [ machine frame_token calc_token@1.kind 41 =
+                      [ machine frame_token syntax result@1.Result.Err ]
+                      [ machine frame_state charged machine frame_depth 1 + 0 0 0 0 0 step
+                        [ unpair let after let argument
+                          argument after machine frame_depth machine frame_min_bp 3
+                          machine frame_call call_begin machine frame_call call_end
+                          machine frame_call call_arity 1 + step ]
+                        [ result@1.Result.Err ] result@1.Result.match ] if ]
+                    if ] if ] if ] if ] ]
             [ machine frame_token numeric result@1.Result.Err ] result@1.Result.match ]
           [ machine frame_token numeric result@1.Result.Err ] result@1.Result.match ]
         [ machine frame_token depth_error result@1.Result.Err ] if

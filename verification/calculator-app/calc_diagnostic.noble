@@ -10,18 +10,33 @@ module calc_diagnostic@1 [
     export bounds
     def bounds [ Span.into unpair ]
 
-    variant Diagnostic Syntax Span public TrailingInput Span public UnknownName Span public WrongArity Span public DefinitionError Span public Numeric Pair<Span,calc_errors@1.NumericError> public
+    # Every declared variant is binary. The public error remains one nominal
+    # Diagnostic; private levels group the six categories without I64 tags.
+    variant ParseDiagnostic SyntaxError Span private TrailingInput Span private
+    variant NameDiagnostic UnknownName Span private WrongArity Span private
+    variant EarlyDiagnostic Parse ParseDiagnostic private Name NameDiagnostic private
+    variant LateDiagnostic DefinitionError Span private Numeric Pair<Span,calc_errors@1.NumericError> private
+    variant Diagnostic Early EarlyDiagnostic private Late LateDiagnostic private
     export Diagnostic
-    export Diagnostic.Syntax
-    export Diagnostic.TrailingInput
-    export Diagnostic.UnknownName
-    export Diagnostic.WrongArity
-    export Diagnostic.DefinitionError
-    export Diagnostic.Numeric
-    export Diagnostic.match
+
+    signature syntax_error forall<S:stack> [ S Span -- S Diagnostic ! pure ]
+    export syntax_error
+    def syntax_error [ ParseDiagnostic.SyntaxError EarlyDiagnostic.Parse Diagnostic.Early ]
+    signature trailing_input forall<S:stack> [ S Span -- S Diagnostic ! pure ]
+    export trailing_input
+    def trailing_input [ ParseDiagnostic.TrailingInput EarlyDiagnostic.Parse Diagnostic.Early ]
+    signature unknown_name forall<S:stack> [ S Span -- S Diagnostic ! pure ]
+    export unknown_name
+    def unknown_name [ NameDiagnostic.UnknownName EarlyDiagnostic.Name Diagnostic.Early ]
+    signature wrong_arity forall<S:stack> [ S Span -- S Diagnostic ! pure ]
+    export wrong_arity
+    def wrong_arity [ NameDiagnostic.WrongArity EarlyDiagnostic.Name Diagnostic.Early ]
+    signature definition_error forall<S:stack> [ S Span -- S Diagnostic ! pure ]
+    export definition_error
+    def definition_error [ LateDiagnostic.DefinitionError Diagnostic.Late ]
 
     signature numeric forall<S:stack>
         [ S I64 I64 calc_errors@1.NumericError -- S Diagnostic ! pure ]
     export numeric
-    def numeric [ [ span ] dip pair Diagnostic.Numeric ]
+    def numeric [ [ span ] dip pair LateDiagnostic.Numeric Diagnostic.Late ]
 ]

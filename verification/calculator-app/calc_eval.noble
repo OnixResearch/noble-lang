@@ -22,30 +22,17 @@ module calc_eval@1 [
     signature frame_depth forall<S:stack> [ S Frame -- S I64 ! pure ]
     def frame_depth [ Frame.into unpair swap drop unpair swap drop unpair swap drop unpair swap drop unpair swap drop ]
 
-    variant Action Literal Unit public Stored Unit public Parameter Unit public
-        Function Unit public Positive Unit public Negative Unit public Operator Unit public
-    signature action forall<S:stack> [ S I64 -- S Action ! pure ]
-    def action [
-        dup 256 = [ drop unit Action.Literal ]
-        [ dup 259 = [ drop unit Action.Stored ]
-          [ dup 260 = [ drop unit Action.Parameter ]
-            [ dup 261 = [ drop unit Action.Function ]
-              [ dup 128 = [ drop unit Action.Positive ]
-                [ dup 129 = [ drop unit Action.Negative ]
-                  [ drop unit Action.Operator ] if ] if ] if ] if ] if ] if
-    ]
-
     signature syntax forall<S:stack>
         [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
     def syntax [
         dup calc_code@1.start swap calc_code@1.finish
-        calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.Syntax
+        calc_diagnostic@1.span calc_diagnostic@1.syntax_error
     ]
     signature unknown forall<S:stack>
         [ S calc_code@1.Instruction -- S calc_diagnostic@1.Diagnostic ! pure ]
     def unknown [
         dup calc_code@1.start swap calc_code@1.finish
-        calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.UnknownName
+        calc_diagnostic@1.span calc_diagnostic@1.unknown_name
     ]
     signature numeric forall<S:stack>
         [ S calc_code@1.Instruction calc_errors@1.NumericError -- S calc_diagnostic@1.Diagnostic ! pure ]
@@ -157,35 +144,38 @@ module calc_eval@1 [
     def execute [
         frame let machine
         [ machine frame_values
-          [ 0 0 calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.Syntax result@1.Result.Err ]
+          [ 0 0 calc_diagnostic@1.span calc_diagnostic@1.syntax_error result@1.Result.Err ]
           [ let leftover let answer
             leftover
             [ answer machine frame_budget pair result@1.Result.Ok ]
             [ drop drop
-              0 0 calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.Syntax result@1.Result.Err ]
+              0 0 calc_diagnostic@1.span calc_diagnostic@1.syntax_error result@1.Result.Err ]
             list.case ] list.case ]
         [ let remaining let instruction
           machine frame_budget 1 numeric_budget@1.charge_work
           [ let charged
             instruction calc_code@1.kind let kind
-            kind action
-            [ drop machine frame_source instruction calc_code@1.start instruction calc_code@1.finish
+            kind 256 =
+            [ machine frame_source instruction calc_code@1.start instruction calc_code@1.finish
               charged decimal@1.parse_range_bounded
               [ unpair let after let literal
                 remaining literal machine frame_values cons machine frame_source
                 machine frame_environment machine frame_arguments after machine frame_depth execute ]
               [ instruction swap decimal_error result@1.Result.Err ] result@1.Result.match ]
-            [ drop machine frame_environment instruction calc_code@1.count calc_env@1.get
+            [ kind 259 =
+              [ machine frame_environment instruction calc_code@1.count calc_env@1.get
                 [ calc_env@1.binding
                   [ remaining swap machine frame_values cons machine frame_source
                     machine frame_environment machine frame_arguments charged machine frame_depth execute ]
                   [ drop instruction unknown result@1.Result.Err ] calc_env@1.Binding.match ]
                 [ drop instruction unknown result@1.Result.Err ] result@1.Result.match ]
-            [ drop machine frame_arguments instruction calc_code@1.count instruction parameter
+              [ kind 260 =
+                [ machine frame_arguments instruction calc_code@1.count instruction parameter
                   [ remaining swap machine frame_values cons machine frame_source
                     machine frame_environment machine frame_arguments charged machine frame_depth execute ]
                   [ result@1.Result.Err ] result@1.Result.match ]
-            [ drop machine frame_depth 64 <
+                [ kind 261 =
+                  [ machine frame_depth 64 <
                     [ charged machine frame_depth 1 + numeric_budget@1.admit_call
                       [ let admitted
                         machine frame_environment instruction calc_code@1.count calc_env@1.get
@@ -206,12 +196,14 @@ module calc_eval@1 [
                         [ drop instruction unknown result@1.Result.Err ] result@1.Result.match ]
                       [ instruction swap numeric result@1.Result.Err ] result@1.Result.match ]
                     [ instruction call_limit result@1.Result.Err ] if ]
-            [ drop machine frame_values instruction pop
+                  [ kind 128 =
+                    [ machine frame_values instruction pop
                       [ unpair let rest let operand
                         remaining operand rest cons machine frame_source
                         machine frame_environment machine frame_arguments charged machine frame_depth execute ]
                       [ result@1.Result.Err ] result@1.Result.match ]
-            [ drop machine frame_values instruction pop
+                    [ kind 129 =
+                      [ machine frame_values instruction pop
                         [ unpair let rest let operand
                           operand charged instruction negate
                           [ unpair let after let negative
@@ -219,7 +211,7 @@ module calc_eval@1 [
                             machine frame_environment machine frame_arguments after machine frame_depth execute ]
                           [ result@1.Result.Err ] result@1.Result.match ]
                         [ result@1.Result.Err ] result@1.Result.match ]
-            [ drop kind binary
+                      [ kind binary
                         [ machine frame_values instruction pop
                           [ unpair let rest let right
                             rest instruction pop
@@ -232,8 +224,7 @@ module calc_eval@1 [
                             [ result@1.Result.Err ] result@1.Result.match ]
                           [ result@1.Result.Err ] result@1.Result.match ]
                         [ instruction syntax result@1.Result.Err ] if
-            ]
-            Action.match ]
+                      ] if ] if ] if ] if ] if ] ]
           [ instruction swap numeric result@1.Result.Err ] result@1.Result.match ]
         list.case
     ]

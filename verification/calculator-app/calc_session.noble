@@ -33,7 +33,7 @@ module calc_session@1 [
     # imported names are provisioned with stable identities and arities before
     # any body is bound. Provisional bodies are never executable or published.
     signature import_error forall<S:stack> [ S -- S calc_diagnostic@1.Diagnostic ! pure ]
-    def import_error [ 0 0 calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.DefinitionError ]
+    def import_error [ 0 0 calc_diagnostic@1.span calc_diagnostic@1.definition_error ]
 
     signature import_limit forall<S:stack> [ S -- S calc_diagnostic@1.Diagnostic ! pure ]
     def import_limit [
@@ -264,7 +264,7 @@ module calc_session@1 [
               reverse_names name contains
               [ name calc_name@1.fields let finish let begin let text
                 begin finish calc_diagnostic@1.span
-                calc_diagnostic@1.Diagnostic.DefinitionError result@1.Result.Err ]
+                calc_diagnostic@1.definition_error result@1.Result.Err ]
               [ pending name reverse_names cons charged seen 1 + collect_parameters ] if ]
             [ result@1.Result.Err ] result@1.Result.match ]
           [ 0 0

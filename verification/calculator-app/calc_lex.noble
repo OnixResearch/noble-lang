@@ -6,13 +6,13 @@ module calc_lex@1 [
 
     signature syntax forall<S:stack>
         [ S I64 I64 -- S calc_diagnostic@1.Diagnostic ! pure ]
-    def syntax [ calc_diagnostic@1.span calc_diagnostic@1.Diagnostic.Syntax ]
+    def syntax [ calc_diagnostic@1.span calc_diagnostic@1.syntax_error ]
 
     signature input_limit forall<S:stack>
         [ S I64 -- S calc_diagnostic@1.Diagnostic ! pure ]
     def input_limit [
         let at
-        at 1 +
+        at at 1 +
         unit calc_errors@1.LimitIO.InputBytes
         calc_errors@1.LimitPrimary.IO
         calc_errors@1.LimitCategory.Primary

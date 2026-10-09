@@ -65,8 +65,11 @@ export function displayExact(n, d, mode) {
   const digits = String(scaled < 0n ? -scaled : scaled).padStart(decimals + 1, '0');
   return decimals ? `${negative}${digits.slice(0, -decimals)}.${digits.slice(-decimals)}` : String(n);
 }
-const diagnostics = ['SyntaxError', 'TrailingInput', 'UnknownName',
-  'WrongArity', 'DefinitionError', 'Numeric'];
+function binary(value) {
+  const [arm, payload] = variantIndex(value);
+  if (arm !== 0 && arm !== 1) throw Error('invalid guest binary variant');
+  return [arm, payload];
+}
 function numericCategory(value) {
   const [outer, detail] = variantIndex(value);
   if (outer === 0) {
@@ -87,15 +90,27 @@ function numericCategory(value) {
   return ['ZeroDenominator', 'DivisionByZero'][variantIndex(nested)[0]] ?? 'NumericError';
 }
 export function diagnostic(value) {
-  const [kind, data] = variantIndex(value);
-  if (kind >= diagnostics.length) throw Error('unknown guest diagnostic');
-  const [spanValue, cause] = kind === 5 ? pair(data) : [data, null];
+  const [late, group] = binary(value);
+  let category, data;
+  if (late === 0) {
+    const [name, member] = binary(group);
+    const [kind, span] = binary(member);
+    category = name === 0
+      ? ['SyntaxError', 'TrailingInput'][kind]
+      : ['UnknownName', 'WrongArity'][kind];
+    data = span;
+  } else {
+    const [numeric, member] = binary(group);
+    category = numeric === 0 ? 'DefinitionError' : 'Numeric';
+    data = member;
+  }
+  const [spanValue, cause] = category === 'Numeric' ? pair(data) : [data, null];
   const [start, end] = pair(nominal(spanValue)).map(v => Number(shape(v, 'I64')));
   if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start)
     throw Error('invalid guest diagnostic span');
-  const category = kind === 5 ? numericCategory(cause) : diagnostics[kind];
-  if (kind === 5 && variantIndex(cause)[0] === 0)
-    return { category: 'ResourceLimit', limit: category,
+  if (category === 'Numeric' && binary(cause)[0] === 0)
+    return { category: 'ResourceLimit', limit: numericCategory(cause),
       span: [start, end], provenance: 'unavailable' };
-  return { category, span: [start, end], provenance: 'unavailable' };
+  return { category: category === 'Numeric' ? numericCategory(cause) : category,
+    span: [start, end], provenance: 'unavailable' };
 }
