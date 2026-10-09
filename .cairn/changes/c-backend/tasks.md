@@ -14,10 +14,12 @@ This isolated WIP adds only an inert, nonselected, checked source emitter for a
 restricted effect-free I64/Bool/Unit/Text-result Core subset, including bounded
 internal Pair/Sum/List construction/elimination, exact checked local
 type-shape preflights, immutable aggregate captures, quotation/compose/run
-and pure `dip`/`if` code. The fixed 255-element List ceiling is not an
-accepted supplied `limits.list_length` policy. The development C11
-syntax-only diagnostic is not native execution, compiler correspondence or
-C/Wasm acceptance. The requirements below remain open; no CB case is promoted.
+and pure `dip`/`if` code. It accepts an optional exact supplied
+`limits.list_length` from 0 to 255 (default 255), retaining the effective
+bound in the manifest and emitted C; this is not native quota execution.
+The development C11 syntax-only diagnostic is not native execution,
+compiler correspondence or C/Wasm acceptance. The requirements below
+remain open; no CB case is promoted.
 Text payloads bind exactly to checked source-body node identities; recursive
 contract/policy duplicate member names refuse before source-only emission.
 All eleven active MODIFIED delta bodies retain the planned first-parent
@@ -28,15 +30,15 @@ the first-parent bound, clock or descriptor requirements. This is not owner
 approval or legal sync while the eight remaining gates are undone.
 
 CB-CASE-01 still supplies `limits.list_length: 2`; the current exact
-I64/Bool/Unit/Text-only policy refuses that field, so the case cannot be counted as
-emitter admission or native runtime evidence. A later accepted list-capable
-profile must store and enforce the supplied list bound. Even an extended
-restricted source-only route accepting that policy must retain the same supplied bound in
-its manifest, not silently drop it or advertise a no-op limit.
+I64/Bool/Unit/Text-result source-only policy now accepts and preserves that
+field, including for scalar source. The selected native compiler, runner,
+complete case inputs and actual C/Wasm differential are absent, so this
+cannot count as native runtime or CB-CASE-01 evidence. The supplied bound
+cannot be silently dropped or advertised as an unenforced no-op.
 
 - [ ] [serial] Obtain explicit independent owner review of all direct canonical CB-BUILD-01/CB-LIMIT-01/CB-SANDBOX-01/CB-ADMIT-01 edits and the aligned CB-CASE-06/08 designs **before integration**; document the reviewed safety obligations and any rejection. This source-only corrective commit is not owner acceptance, native GO or permission for `cairn sync --execute`. r[CB-BUILD-01] r[CB-LIMIT-01] r[CB-SANDBOX-01] r[CB-ADMIT-01]
 - [ ] [serial] Reconcile each of the eleven active MODIFIED delta blocks against the current canonical requirement and scenario links before any `cairn sync --execute` or archive; a passing structural preview alone does not authorize replacing stronger canonical prose. Review CB-LIMIT-01's exact supplied limit and CB-SANDBOX-01/CB-ADMIT-01's sealed loader, clock and path obligations individually. r[CB-LIMIT-01] r[CB-SANDBOX-01] r[CB-ADMIT-01]
-- [ ] [serial] Bring the restricted source-only build into full input-integrity conformance before counting CB-BUILD-01/CB-LIMIT-01/CB-ADMIT-01: recursive duplicate JSON member rejection is present, but any accepted `limits.list_length` must be preserved exactly in the manifest and enforced when lists are supported, and any native admission request still needs trusted ancestor-anchored sealed input/output binding. Until then this emitter remains nonadmitted and `--native`/`execute --target c` refuse. r[CB-BUILD-01] r[CB-LIMIT-01] r[CB-ADMIT-01]
+- [ ] [serial] Bring the restricted source-only build into full input-integrity conformance before counting CB-BUILD-01/CB-LIMIT-01/CB-ADMIT-01: recursive duplicate JSON member rejection and exact supplied `limits.list_length` retention/source-only C enforcement are present, but native admission still needs trusted ancestor-anchored sealed input/output binding and independently verified execution. Until then this emitter remains nonadmitted and `--native`/`execute --target c` refuse. r[CB-BUILD-01] r[CB-LIMIT-01] r[CB-ADMIT-01]
 - [ ] [serial] Obtain owner-reviewed opt-in C compiler/runtime/runner/filter/mediator pins from the selected `octet/nixpkgs`, a feasible no-clock/no-exec loader boundary (VM or demonstrated equivalent), deterministic complete-ELF correspondence and explicit authorization for sealed native test execution. Cached host bubblewrap and the Lean proof sandbox do not satisfy this prerequisite. r[CB-SANDBOX-01] r[CB-ADMIT-01]
 - [ ] [serial] Extend the existing restricted inert C11 source emitter to the complete independently accepted Core-Bootstrap contract, pinned x86_64 Linux compilation, exact C-source and native-ELF admission, with no ordinary CLI/session fallback or source evaluator. r[CB-BUILD-01] r[CB-ADMIT-01]
 - [ ] [serial] Implement checked C11 value/arithmetic/order/runtime, immutable compiled `Program` values and bounded typed `test.emit` ABI; prove unsupported paths and exhaustion classifications through focused controls. r[CB-NUM-01] r[CB-VALUE-01] r[CB-ORDER-01] r[CB-LIMIT-01] r[CB-HOST-01]

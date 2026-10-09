@@ -108,7 +108,7 @@ into the held canonical CB-BUILD-01 paragraph.
 ```sh
 printf '20 2 quote [ + ] compose run\n' > capture.noble
 printf '%s\n' '{"expected_interface":"-- I64","resolved_host_contracts":{}}' > c-contract.json
-printf '%s\n' '{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}' > c-policy.json
+printf '%s\n' '{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024,"list_length":2}}' > c-policy.json
 noble build capture.noble --target c --contract c-contract.json \
   --policy c-policy.json --out NEW_OUTPUT_DIRECTORY
 ```
@@ -119,24 +119,25 @@ candidate and resolved-environment digest fields hash this toolchain's Rust
 Debug rendering, not a canonical external encoding. This is candidate
 evidence, **not** independent admission or C/Wasm equivalence. Contract and
 policy JSON reject duplicate member names recursively before checking limits,
-including names whose Unicode escapes decode to the same key. The exact
-source-only policy still rejects supplied `limits.list_length` rather than
-admitting an unenforced bound: the internal List arena enforces its own
-fixed 255-element ceiling, **not** the CB-CASE-01/06 policy controls.
-Input files are read through one
-bounded file descriptor each, then the observed bytes are
-copied; this does not authenticate the host-selected pathname against ancestor
-symlinks, hard links or concurrent replacement, nor seal output files against
-subsequent mutation. Output child paths are also re-resolved after creating the
-directory, so a concurrently replaced output directory is not authenticated.
+including names whose Unicode escapes decode to the same key. The source-only
+policy accepts an optional exact `limits.list_length` of 0 through 255,
+defaulting to 255 when absent. It retains the effective bound in the manifest,
+binds the supplied policy bytes in the build key, and emits the same bound as
+the C List limit, checked before `cons` grows a List. This also applies to
+scalar source. It is not native quota execution or CB-CASE-01/06 acceptance.
+Input files are read through one bounded file descriptor each, then the
+observed bytes are copied; this does not authenticate the host-selected
+pathname against ancestor symlinks, hard links or concurrent replacement,
+nor seal output files against subsequent mutation. Output child paths are
+also re-resolved after creating the directory, so a concurrently replaced
+output directory is not authenticated.
 The manifest declares fixed ceilings: 256 dynamic Program slots, 256
-aggregate slots, List length 255, 512 shape identities, 512 frames,
-256 recipe leaves, and depth 256. Every C
-dispatch iteration consumes the
-policy step budget, including empty quotations, composition traversal,
-selected branches and `dip` restore continuations. Quotation capture also
-charges a step per visited nested datum; the aggregate arena has no
-deallocation or borrowed references during an invocation.
+aggregate slots, maximum List length 255 plus its effective policy bound,
+512 shape identities, 512 frames, 256 recipe leaves, and depth 256. Every C
+dispatch iteration consumes the policy step budget, including empty quotations,
+composition traversal, selected branches and `dip` restore continuations.
+Quotation capture also charges a step per visited nested datum; the
+aggregate arena has no deallocation or borrowed references during an invocation.
 Finishing a frame also costs a step; these counts do not claim Wasm parity.
 These are source-level bounds, not native runtime acceptance. Both `--native`
 and `execute --target c` refuse: no compiler/ELF execution is authorized until
