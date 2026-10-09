@@ -1,0 +1,301 @@
+module bigint_digits@1 [
+    opaque DecimalScanState Pair<List<I64>,I64> private
+    export DecimalScanState
+    opaque SignificantState Pair<List<I64>,I64> private
+    export SignificantState
+    opaque ThirdCount I64 private
+    export ThirdCount
+    opaque DecimalCarryState Pair<List<Bool>,I64> private
+    export DecimalCarryState
+    opaque DecimalAccState Pair<List<Bool>,List<I64>> private
+    export DecimalAccState
+    opaque ChunkAssemblyState Pair<Pair<I64,List<I64>>,I64> private
+    export ChunkAssemblyState
+    # A positive decimal chunk power and residual, minted only here.
+    opaque ChunkPowerState Pair<I64,I64> private
+    export ChunkPowerState
+    opaque OutputWidthState Pair<List<Bool>,I64> private
+    export OutputWidthState
+    # A private one-visit outcome: only the scanner may recurse on Continue.
+    variant DecimalVisit Done I64 private Continue DecimalScanState private
+
+    # Called only after this visit has passed depth, call, native, and work
+    # admission. This cannot perform another scan or mint a public BigInt.
+    signature decimal_visit forall<S:stack>
+        [ S Pair<List<I64>,I64> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<DecimalVisit,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def decimal_visit [
+        [ unpair ] dip [ swap ] dip swap
+        [ [ DecimalVisit.Done ] dip pair result@1.Result.Ok ]
+        [ [ bigint_digit_support@1.decimal_digit_valid ] dip swap
+          [ swap [ swap ] dip [ 1 + ] dip
+            [ pair DecimalScanState.new DecimalVisit.Continue ] dip
+            pair result@1.Result.Ok ]
+          [ drop drop drop
+            unit calc_errors@1.DomainConversion.OutOfRange
+            calc_errors@1.DomainError.Conversion
+            calc_errors@1.NumericError.Domain result@1.Result.Err ] if ]
+        list.case
+    ]
+
+    # One metered traversal validates digits and count; intermediate Horner
+    # values are private canonical bit lists, not rescanned public BigInts.
+    # Only this function follows the privately constructed recursion state.
+    signature scan_decimal_digits forall<S:stack>
+        [ S DecimalScanState numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export scan_decimal_digits
+    def scan_decimal_digits [
+        [ DecimalScanState.into ] dip
+        [ dup unpair swap drop bigint_digit_support@1.checked_depth ] dip swap
+        [ numeric_budget@1.admit_call
+          [ 384 numeric_budget@1.charge_native_steps
+            [ 1 numeric_budget@1.charge_work
+              [ decimal_visit
+                [ unpair swap
+                  [ swap pair result@1.Result.Ok ]
+                  [ swap scan_decimal_digits ]
+                  DecimalVisit.match ]
+                [ result@1.Result.Err ]
+                result@1.Result.match ]
+              [ swap drop result@1.Result.Err ]
+              result@1.Result.match ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # Validation has already covered every digit. Removing leading zeroes
+    # retains their exact value but reserves raw work for significant digits.
+    signature significant_digits forall<S:stack>
+        [ S SignificantState -- S Pair<List<I64>,I64> ! pure ]
+    export significant_digits
+    def significant_digits [
+        SignificantState.into unpair swap
+        [ nil swap pair ]
+        [ [ dup 0 = ] dip swap
+          [ [ drop ] dip swap 1 -
+            pair SignificantState.new significant_digits ]
+          [ cons swap pair ] if ] list.case
+    ]
+
+    # 10^3 < 2^10, hence at most 3*n+ceil(n/3) bits for n decimal digits.
+    signature decimal_third_ceil forall<S:stack>
+        [ S ThirdCount -- S I64 ! pure ]
+    export decimal_third_ceil
+    def decimal_third_ceil [
+        ThirdCount.into
+        dup 0 =
+        [ ]
+        [ dup 3 < [ drop 1 ]
+          [ 3 - ThirdCount.new decimal_third_ceil 1 + ] if ] if
+    ]
+
+    signature decimal_width forall<S:stack>
+        [ S I64 -- S I64 ! pure ]
+    def decimal_width [ dup 3 * swap ThirdCount.new decimal_third_ceil + ]
+
+    # A leading group of 1..9 digits is followed only by complete groups of
+    # nine, so every subsequent Horner multiplier is exactly 1000000000.
+    signature decimal_ninth_ceil forall<S:stack>
+        [ S ThirdCount -- S I64 ! pure ]
+    export decimal_ninth_ceil
+    def decimal_ninth_ceil [
+        ThirdCount.into
+        dup 0 =
+        [ ]
+        [ dup 9 < [ drop 1 ]
+          [ 9 - ThirdCount.new decimal_ninth_ceil 1 + ] if ] if
+    ]
+
+    # A positive decimal chunk is <10^9. Ascend powers of two until p>chunk,
+    # then unwind from high to low, subtracting each set bit from the residual.
+    # p never exceeds 2^30 and residual stays nonnegative. Cons on unwind
+    # yields little-endian canonical bits, including without leading zeros;
+    # unlike a signed 64-bit probe this does no zero-padding shifts.
+    signature chunk_power_bits forall<S:stack>
+        [ S ChunkPowerState -- S Pair<I64,List<Bool>> ! pure ]
+    export chunk_power_bits
+    def chunk_power_bits [
+        ChunkPowerState.into dup unpair <
+        [ unpair drop nil pair ]
+        [ unpair dup [ 2 * pair ChunkPowerState.new chunk_power_bits ] dip swap
+          unpair [ pair ] dip
+          [ dup unpair swap < ] dip swap
+          [ [ unpair swap drop ] dip swap
+            [ false swap cons ] dip swap pair ]
+          [ [ unpair swap - ] dip swap
+            [ true swap cons ] dip swap pair ] if ] if
+    ]
+
+    signature chunk_bits forall<S:stack>
+        [ S I64 -- S List<Bool> ! pure ]
+    def chunk_bits [
+        dup 10 <
+        [ bigint_digit_support@1.decimal_digit_bits ]
+        [ 1 pair ChunkPowerState.new chunk_power_bits
+          unpair swap drop ] if
+    ]
+
+    signature chunk_step forall<S:stack>
+        [ S DecimalCarryState -- S List<Bool> ! pure ]
+    export chunk_step
+    def chunk_step [
+        DecimalCarryState.into unpair swap
+        [ chunk_bits ]
+        [ [ bigint_digit_support@1.chunk_carry_step ] dip
+          [ swap ] dip swap [ swap ] dip
+          [ pair DecimalCarryState.new chunk_step ] dip
+          swap cons ] list.case
+    ]
+
+    # The digit scan has already established every digit is in 0..9. Each
+    # private counter is minted at 1..9 and the accumulator remains <10^9.
+    signature chunk_assemble forall<S:stack>
+        [ S ChunkAssemblyState -- S Pair<I64,List<I64>> ! pure ]
+    export chunk_assemble
+    def chunk_assemble [
+        ChunkAssemblyState.into unpair [ unpair ] dip
+        dup 0 =
+        [ drop pair ]
+        [ swap
+          [ drop nil pair ]
+          [ [ swap ] dip
+            [[[ 10 * ] dip ] dip ] dip
+            [[ + ] dip ] dip
+            [ 1 - ] dip swap
+            [ pair ] dip pair ChunkAssemblyState.new chunk_assemble ]
+          list.case ] if
+    ]
+
+    signature raw_decimal_digits_acc forall<S:stack>
+        [ S DecimalAccState -- S List<Bool> ! pure ]
+    export raw_decimal_digits_acc
+    def raw_decimal_digits_acc [
+        DecimalAccState.into unpair
+        [ ] [ cons swap
+              [ 0 swap pair 9 pair
+                ChunkAssemblyState.new chunk_assemble ] dip
+              swap unpair
+              [ pair DecimalCarryState.new chunk_step ] dip
+              pair DecimalAccState.new raw_decimal_digits_acc ] list.case
+    ]
+
+    signature raw_decimal_digits forall<S:stack>
+        [ S List<I64> I64 -- S List<Bool> ! pure ]
+    def raw_decimal_digits [
+        dup 0 =
+        [ drop drop nil ]
+        [ dup ThirdCount.new decimal_ninth_ceil 9 * swap -
+          dup 0 = [ drop 9 ] [ 9 swap - ] if
+          [ 0 swap pair ] dip pair
+          ChunkAssemblyState.new chunk_assemble
+          unpair [ chunk_bits ] dip
+          pair DecimalAccState.new raw_decimal_digits_acc ] if
+    ]
+
+    # The checked width/call gates allow at most 33 significant digits.
+    # For n>9, first=n-9*(ceil(n/9)-1) digits form the first chunk.
+    # Before each later chunk, the bit width is bounded by
+    # decimal_width(first)+30*j. Per emitted bit, the 29 checked halving
+    # thresholds cost at most 349 words (346 inline + 3 named helper
+    # dispatches); the carry/recursion facade adds at most 62, or 411.
+    # Every chunk is <10^9: the terminal bit walk has at most
+    # 30 levels, each bounded by 50 words, plus its entry facade (1536
+    # total); nine digit-assembly rounds take at most 473 words and the
+    # chunk facade fits in the remaining 295, for 2304 per chunk.
+    # A final 512 covers the outer conversion/result construction.
+    # The n<=3 finite domains had raw maxima 200, 547, 745 over all
+    # 10, 100, 1000 values; fixed 512/768/1024 retain the original
+    # constructor/result margin. For n=4..9, a single first chunk uses
+    # the fixed 2304 reservation, including 295 words of facade slack.
+    # chunk_half runs only for chunks after the first, so no n<=9 path
+    # incurs any of the three added helper-call steps.
+    # Reserve before raw conversion; validation separately charges 384
+    # native words for each visited input digit.
+    signature chunk_native_cost forall<S:stack>
+        [ S I64 -- S I64 ! pure ]
+    def chunk_native_cost [
+        dup 2 <
+        [ drop 512 ]
+        [ dup 3 <
+          [ drop 768 ]
+          [ dup 4 <
+            [ drop 1024 ]
+            [ dup 10 <
+              [ drop 2304 ]
+              [ dup 19 <
+                [ 9 - decimal_width 411 * 5120 + ]
+                [ dup 28 <
+                  [ 18 - decimal_width 2 * 30 + 411 * 7424 + ]
+                  [ 27 - decimal_width 3 * 90 + 411 * 9728 + ]
+                  if ] if ] if ] if ] if ] if
+    ]
+
+    # The raw chunk algorithm creates only a private List<Bool> scratch,
+    # precharged at its conservative decimal bit bound. A subsequent bounded
+    # walk counts its *actual* canonical bits: at most 24 words per bit plus
+    # the original 256 for the result/BigInt facade before exact bit admission.
+    signature decimal_full_native_cost forall<S:stack>
+        [ S I64 -- S I64 ! pure ]
+    def decimal_full_native_cost [
+        dup chunk_native_cost
+        [ decimal_width 1 + 24 * 256 + ] dip +
+    ]
+
+    signature reserve_decimal_native forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def reserve_decimal_native [
+        [ dup 256 < ] dip swap
+        [ swap decimal_full_native_cost
+          numeric_budget@1.charge_native_steps ]
+        [ drop drop bigint_digit_support@1.work_limit result@1.Result.Err ] if
+    ]
+
+    # Only convert_decimal_digits mints this private bit-width counter after
+    # digit-count/depth/work and raw native bounds are admitted.
+    signature decimal_output_width forall<S:stack>
+        [ S OutputWidthState -- S I64 ! pure ]
+    export decimal_output_width
+    def decimal_output_width [
+        OutputWidthState.into unpair swap
+        [ ]
+        [ swap drop [ 1 + ] dip swap
+          pair OutputWidthState.new decimal_output_width ] list.case
+    ]
+
+    # Keep the original digit/preflight/raw admission and error order. Only
+    # after exact bit admission succeeds is the extra named/result work debited.
+    signature convert_decimal_digits forall<S:stack>
+        [ S List<I64> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<List<Bool>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export convert_decimal_digits
+    def convert_decimal_digits [
+        [ dup ] dip 0 swap
+        [ pair DecimalScanState.new ] dip scan_decimal_digits
+        [ unpair
+          [ pair SignificantState.new significant_digits unpair ] dip
+          [ dup decimal_width ] dip bigint_digit_support@1.preflight_decimal_scratch
+          [ [ dup ] dip reserve_decimal_native
+            [ [ raw_decimal_digits ] dip
+              [ dup 0 pair OutputWidthState.new decimal_output_width ] dip
+              bigint_digit_support@1.gate_bits
+              [ unpair [ drop ] dip
+                144 numeric_budget@1.charge_native_steps
+                [ pair result@1.Result.Ok ]
+                [ swap drop result@1.Result.Err ]
+                result@1.Result.match ]
+              [ swap drop result@1.Result.Err ]
+              result@1.Result.match ]
+            [ swap drop swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+]

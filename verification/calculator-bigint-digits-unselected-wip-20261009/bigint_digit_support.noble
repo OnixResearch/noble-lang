@@ -1,0 +1,123 @@
+module bigint_digit_support@1 [
+    export work_limit
+    export checked_depth
+    export gate_bits
+    export decimal_digit_valid
+    export decimal_digit_bits
+    export chunk_carry_step
+    export preflight_decimal_scratch
+
+    signature depth_limit forall<S:stack> [ S -- S calc_errors@1.NumericError ! pure ]
+    def depth_limit [
+        unit calc_errors@1.LimitDepth.CallDepth
+        calc_errors@1.LimitRemaining.NestedDepth
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature work_limit forall<S:stack> [ S -- S calc_errors@1.NumericError ! pure ]
+    def work_limit [
+        unit calc_errors@1.LimitRemaining.EvaluationWork
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    # Match the original BigInt digit-scan depth gate without importing the
+    # later BigInt module or changing its other numeric admission paths.
+    signature checked_depth forall<S:stack>
+        [ S I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def checked_depth [
+        dup 2305843009213693935 <
+        [ 1 + 4 * 64 + result@1.Result.Ok ]
+        [ drop depth_limit result@1.Result.Err ] if
+    ]
+
+    signature scaled_work forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def scaled_work [
+        swap dup 36028797018963968 <
+        [ 256 * numeric_budget@1.charge_work ]
+        [ drop drop work_limit result@1.Result.Err ] if
+    ]
+
+    signature gate_bits forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def gate_bits [
+        [ dup ] dip swap numeric_budget@1.admit_bits
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature gate_depth forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def gate_depth [
+        [ dup checked_depth ] dip swap
+        [ numeric_budget@1.admit_call
+          [ pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature decimal_digit_valid forall<S:stack>
+        [ S I64 -- S Bool ! pure ]
+    def decimal_digit_valid [
+        dup 0 < [ drop false ] [ 10 < ] if
+    ]
+
+    # This I64 is already checked as one decimal digit, so every branch
+    # constructs only its canonical four-or-fewer little-endian magnitude bits.
+    signature decimal_digit_bits forall<S:stack>
+        [ S I64 -- S List<Bool> ! pure ]
+    def decimal_digit_bits [
+        dup 0 <
+        [ drop true false false true nil cons cons cons cons ]
+        [ dup 5 <
+          [ dup 2 <
+            [ dup 0 = [ drop nil ] [ drop true nil cons ] if ]
+            [ dup 3 <
+              [ drop false true nil cons cons ]
+              [ dup 4 <
+                [ drop true true nil cons cons ]
+                [ drop false false true nil cons cons cons ] if ] if ] if ]
+          [ dup 7 <
+            [ dup 6 <
+              [ drop true false true nil cons cons cons ]
+              [ drop false true true nil cons cons cons ] if ]
+            [ dup 9 <
+              [ dup 8 <
+                [ drop true true true nil cons cons cons ]
+                [ drop false false false true nil cons cons cons cons ] if ]
+              [ drop true false false true nil cons cons cons cons ] if ] if ] if ]
+        if
+    ]
+
+    # Multiplication by this signed mask wraps to zero for an even carry or
+    # I64_MIN for an odd carry, without converting its magnitude to I64.
+    signature decimal_odd forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def decimal_odd [ -9223372036854775808 * 0 < ]
+
+    # 10^9*(2*tail+bit)+c emits odd(c) and leaves
+    # floor(c/2)+500000000*bit. Since c<10^9, so is the next carry.
+    signature chunk_carry_step forall<S:stack>
+        [ S I64 Bool -- S Bool I64 ! pure ]
+    def chunk_carry_step [
+        [ dup decimal_odd ] dip
+        [[ bigint_digit_chunk@1.chunk_half ] dip ] dip
+        swap [ [ 500000000 + ] [ ] if ] dip swap
+    ]
+
+    # The digit scan and conservative width/depth bound run before private
+    # scratch allocation. Bit admission uses its actual width before the
+    # later BigInt module may seal the canonical list.
+    signature preflight_decimal_scratch forall<S:stack>
+        [ S I64 numeric_budget@1.Budget
+          -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def preflight_decimal_scratch [
+        gate_depth
+        [ unpair [ 1 + ] dip scaled_work ] result@1.and_then
+    ]
+]

@@ -1,0 +1,30 @@
+MA1 NUMERIC SOURCE-ONLY RECOVERY — UNSELECTED WIP, 2026-10-09
+
+This directory preserves only the linked source frames 26–28 from the private
+recovery session, not a selected calculator library or a complete numeric family.
+Frame 26: bigint_digit_chunk@1 (bigint_digit_chunk.noble)
+  sha256 a7c2cb264702741ccb1f9fec538afc89195820382435ff6b47c3882aa7af0519
+Frame 27: bigint_digit_support@1 (bigint_digit_support.noble)
+  sha256 b196193751cdca00f10090c37b42a0795a45a9cd606916d1087c3b24593d616b
+Frame 28: bigint_digits@1 (bigint_digits.noble)
+  sha256 d41fb7d9e50fc776ed2febf9deed89aa4c33472908c57276d36b392591af0516
+
+Source-only 29-frame diagnostic reported frames 1–28 linked under unchanged
+source caps (65536 bytes/module, 16384 nodes/module, 4096 nodes/definition,
+2000000 work/module apportioned by definition count, 262144 retained bytes).
+The separately supplied ORIGINAL scratch bigint@1 frame 29, sha256
+112eafdb7b3562f3e058b31f3f6d91c4b08c1ce634c53e0be38c83d7577ff862,
+was CHECK/EXHAUSTED: frontend work limit exceeded at source span 102..105.
+Diagnostic CLI exited 5; reported stdin sha256
+8b03d891f57215393703bd338b6f0f536c2f2d81d39824ee08044d3978e88754
+and stdout sha256 b90090285455c5e1906327d6782518c5b697a3774800f9c89ff06d52020a86e5.
+Every frame reported guest_requests=0 and acquired_authority=false.
+
+BigInt registration, native hard-100000 work and 512-frame continuation
+headroom remain NO-GO. No guest conversion, arithmetic, Rat, Decimal,
+native acceptance or selected-source promotion follows from this receipt.
+The selected calculator-exact-library source (including its separately pinned
+bigint.noble sha256 58f47f6f362458da62b0dfe96619753a718401e5d96adc36d6e5121cc1340dd7),
+source-sha256.txt, validation policy and issuer are outside this unselected
+checkpoint and unchanged.
+BigInt scanner source-only candidates are intentionally NOT part of this package.

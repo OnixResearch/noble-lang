@@ -1,0 +1,54 @@
+module bigint_digit_chunk@1 [
+    export chunk_half
+
+    signature chunk_half_high forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ]
+    def chunk_half_high [
+        dup 536870912 < [ ] [ 536870912 - swap 268435456 + swap ] if
+        dup 268435456 < [ ] [ 268435456 - swap 134217728 + swap ] if
+        dup 134217728 < [ ] [ 134217728 - swap 67108864 + swap ] if
+        dup 67108864 < [ ] [ 67108864 - swap 33554432 + swap ] if
+        dup 33554432 < [ ] [ 33554432 - swap 16777216 + swap ] if
+        dup 16777216 < [ ] [ 16777216 - swap 8388608 + swap ] if
+        dup 8388608 < [ ] [ 8388608 - swap 4194304 + swap ] if
+        dup 4194304 < [ ] [ 4194304 - swap 2097152 + swap ] if
+        dup 2097152 < [ ] [ 2097152 - swap 1048576 + swap ] if
+        dup 1048576 < [ ] [ 1048576 - swap 524288 + swap ] if
+    ]
+
+    signature chunk_half_middle forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ]
+    def chunk_half_middle [
+        dup 524288 < [ ] [ 524288 - swap 262144 + swap ] if
+        dup 262144 < [ ] [ 262144 - swap 131072 + swap ] if
+        dup 131072 < [ ] [ 131072 - swap 65536 + swap ] if
+        dup 65536 < [ ] [ 65536 - swap 32768 + swap ] if
+        dup 32768 < [ ] [ 32768 - swap 16384 + swap ] if
+        dup 16384 < [ ] [ 16384 - swap 8192 + swap ] if
+        dup 8192 < [ ] [ 8192 - swap 4096 + swap ] if
+        dup 4096 < [ ] [ 4096 - swap 2048 + swap ] if
+        dup 2048 < [ ] [ 2048 - swap 1024 + swap ] if
+        dup 1024 < [ ] [ 1024 - swap 512 + swap ] if
+    ]
+
+    signature chunk_half_low forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ]
+    def chunk_half_low [
+        dup 512 < [ ] [ 512 - swap 256 + swap ] if
+        dup 256 < [ ] [ 256 - swap 128 + swap ] if
+        dup 128 < [ ] [ 128 - swap 64 + swap ] if
+        dup 64 < [ ] [ 64 - swap 32 + swap ] if
+        dup 32 < [ ] [ 32 - swap 16 + swap ] if
+        dup 16 < [ ] [ 16 - swap 8 + swap ] if
+        dup 8 < [ ] [ 8 - swap 4 + swap ] if
+        dup 4 < [ ] [ 4 - swap 2 + swap ] if
+        dup 2 < [ ] [ 2 - swap 1 + swap ] if
+    ]
+
+    # For 0<=c<10^9, greedily remove the powers 2^29..2^1. The emitted
+    # quotient is exactly floor(c/2), and every intermediate I64 stays
+    # nonnegative and below 10^9. There is no I64 division in this profile.
+    signature chunk_half forall<S:stack> [ S I64 -- S I64 ! pure ]
+    def chunk_half [
+        0 swap
+        chunk_half_high chunk_half_middle chunk_half_low
+        drop
+    ]
+]
