@@ -41,12 +41,13 @@ let contracts = import "./architecture.contracts.ncl" in
       edge_kinds = ["normal", "build"],
     },
   ],
-  # The observed Cargo graph has seven direct third-party normal edges, all
-  # from noble-cli; no application-owned ports are declared. Provider
-  # permission is role-granular: noble-syndicate is also composition-root, so
+  # The historical Cargo graph had seven direct third-party normal edges;
+  # current CLI manifest/lock/source review adds rustix and serde, pending
+  # fresh compiler graph confirmation. No application-owned ports are declared.
+  # Provider permission is role-granular: noble-syndicate is also composition-root, so
   # this policy alone would allow its future normal edges to these providers.
   # The separate native and source comparisons bind exact observed callers:
-  # seven CLI external edges are now source-reviewed, and a new syndicate
+  # nine CLI external edges are now source-reviewed, and a new syndicate
   # external edge would fail source dependency closure. Source comparison
   # remains red on other classifications; neither downstream comparator runs
   # after the blocked Octet architecture gate or attests native safety.
@@ -95,6 +96,20 @@ let contracts = import "./architecture.contracts.ncl" in
       permitted_caller_roles = ["composition-root"],
       edge_kinds = ["normal"],
       rationale = "Observed CLI use of libc open flags for no-follow path walking via Rust OpenOptions; this static edge permission does not establish FFI or native safety.",
+    },
+    {
+      package = "rustix",
+      kind = "infrastructure",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI filesystem watcher uses rustix Linux inotify and poll interfaces; kernel behavior and external/native implementation remain unproved host assumptions.",
+    },
+    {
+      package = "serde",
+      kind = "pure-value",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed CLI strict JSON value visitor implements Serde Deserialize; parsing and visitor behavior are not proof of trusted authority or external implementation safety.",
     },
     {
       package = "serde_json",

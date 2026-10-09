@@ -5123,6 +5123,8 @@ let
     body "noble-contracts::closure@crates/noble-contracts/src/source/emission/mod.rs:6737:6744" "noble-contracts" "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
     body "noble-contracts::closure@crates/noble-contracts/src/source/emission/mod.rs:8148:8152" "noble-contracts" "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
     body "noble-contracts::closure@crates/noble-contracts/src/source/preflight.rs:5971:5980" "noble-contracts" "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
+    # OPEN historical offset: current preparation.rs has changed; removal
+    # requires fresh compiler IR tied to current source identity.
     body "noble-contracts::closure@crates/noble-contracts/src/source/preparation.rs:3386:3396" "noble-contracts" "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
     body "noble-wasm::closure@crates/noble-wasm/src/component/abi.rs:5349:5360" "noble-wasm" "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
     structural "noble::core::arguments::InputType" "noble-cli" "Source declaration, implementation block, module, macro, type or import marker; body obligations are classified separately.",
@@ -5229,6 +5231,8 @@ let
     body "noble_contracts::<source::declared::Module as core::cmp::PartialEq>::eq" "noble-contracts" "Hand-written Module equality comparing retained source and published host results; extraction and refinement remain open, with no proof transferred from the historical derive.",
     generated "noble_contracts::<source::declared::Module as core::fmt::Debug>" "noble-contracts" "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
     generated "noble_contracts::<source::declared::Module as core::fmt::Debug>::fmt" "noble-contracts" "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
+    # OPEN historical derive: Module now derives Clone/Debug with handwritten
+    # PartialEq; removal of this generated item requires fresh compiler IR.
     generated "noble_contracts::<source::declared::Module as core::marker::StructuralPartialEq>" "noble-contracts" "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
     generated "noble_contracts::<source::declared::state::ModuleKind as core::clone::Clone>" "noble-contracts" "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
     generated "noble_contracts::<source::declared::state::ModuleKind as core::clone::Clone>::clone" "noble-contracts" "Compiler-generated derive or test-harness item; no independent Noble-authored source body.",
@@ -7840,8 +7844,10 @@ let
     "std::writeln",
     "words::subst::finish::attempt_segment",
   ],
-  # Seven historical internal edges and seven exact external normal edges
-  # observed from noble-cli in the complete 54-unit candidate Cargo graph.
+  # Seven historical internal edges and seven external normal edges came from
+  # the 54-unit candidate graph. The two additional CLI normal edges are
+  # reviewed against current manifest, lock and source; a fresh compiler
+  # collection has not yet confirmed this expanded expectation.
   dependencies | Array { caller | String, callee | String, edge_kind | String } = [
     { caller = "noble-cli", callee = "anyhow", edge_kind = "normal" },
     { caller = "noble-cli", callee = "blake3", edge_kind = "normal" },
@@ -7849,6 +7855,8 @@ let
     { caller = "noble-cli", callee = "noble-contracts", edge_kind = "normal" },
     { caller = "noble-cli", callee = "noble-kernel", edge_kind = "normal" },
     { caller = "noble-cli", callee = "noble-wasm", edge_kind = "normal" },
+    { caller = "noble-cli", callee = "rustix", edge_kind = "normal" },
+    { caller = "noble-cli", callee = "serde", edge_kind = "normal" },
     { caller = "noble-cli", callee = "serde_json", edge_kind = "normal" },
     { caller = "noble-cli", callee = "wasmparser", edge_kind = "normal" },
     { caller = "noble-cli", callee = "wasmtime", edge_kind = "normal" },

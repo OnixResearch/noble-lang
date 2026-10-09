@@ -302,6 +302,28 @@
       "edge_kinds": [
         "normal"
       ],
+      "kind": "infrastructure",
+      "package": "rustix",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI filesystem watcher uses rustix Linux inotify and poll interfaces; kernel behavior and external/native implementation remain unproved host assumptions."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "pure-value",
+      "package": "serde",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed CLI strict JSON value visitor implements Serde Deserialize; parsing and visitor behavior are not proof of trusted authority or external implementation safety."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
       "kind": "pure-value",
       "package": "serde_json",
       "permitted_caller_roles": [

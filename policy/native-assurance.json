@@ -53,6 +53,20 @@
         "version": "0.2.189"
       },
       {
+        "assumption": "CLI filesystem watching calls external Linux inotify/poll wrappers; kernel event delivery, OS behavior and external implementation safety remain host assumptions, not compiler or runtime proofs.",
+        "edge_kind": "normal",
+        "name": "rustix",
+        "role": "noble-cli",
+        "version": "1.1.5"
+      },
+      {
+        "assumption": "CLI strict JSON value deserialization uses Serde visitor traits; rejecting duplicate input keys still requires reviewed visitor and parser behavior, not just this external dependency classification.",
+        "edge_kind": "normal",
+        "name": "serde",
+        "role": "noble-cli",
+        "version": "1.0.229"
+      },
+      {
         "assumption": "CLI JSON parsing and serialization require separate bounded-input and authority/schema checks; syntactic parsing and external implementation safety do not establish trusted commands or receipts.",
         "edge_kind": "normal",
         "name": "serde_json",

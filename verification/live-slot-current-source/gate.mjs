@@ -44,6 +44,10 @@ const inputs = [fixtureFile, 'README.md', 'Cargo.toml', 'Cargo.lock', 'rust-tool
   'crates/noble-wasm/tests/live_slot_admission.rs',
   'crates/noble-wasm/tests/live_slot_artifact.rs',
   'crates/noble-contracts/tests/source_proof.rs',
+  'crates/noble-cli/tests/live_slot.rs',
+  'crates/noble-cli/tests/live_slot_registry.mjs',
+  'crates/noble-cli/tests/live_slot_replay_failure.mjs',
+  'crates/noble-cli/tests/live_slot_replay_failure_authority.json',
   'crates/noble-cli/tests/live_slot_capture_legacy.mjs',
   'crates/noble-cli/tests/live_slot_cas_policy.mjs',
   'crates/noble-cli/tests/live_slot_cas_policy_authority.json',
@@ -176,6 +180,21 @@ const binarySelection = { path: binary, sha256: afterBinary, before_build_sha256
   build_claim: beforeBinary === afterBinary
     ? 'offline Cargo reported the selected bin artifact; unchanged bytes do not prove a fresh bytewise compilation'
     : 'offline Cargo reported the selected bin artifact and its selected bytes changed' };
+// Both Rust/Node bridge tests must run in the selected offline toolchain, not
+// merely appear in source.json. They are controls, never canonical admission.
+const liveSlotBridge = command('LSLOT-host-and-replay-bridge', cargo,
+  ['test', '-p', 'noble-cli', '--test', 'live_slot', '--locked', '--offline']);
+let bridgeResult = liveSlotBridge.status === 0 ? 'passed' : 'failed';
+if (bridgeResult === 'passed') {
+  try {
+    assert.match(liveSlotBridge.text, /host_registry_pins_authorizes_and_retires_real_versions \.\.\. ok/);
+    assert.match(liveSlotBridge.text, /cli_scripted_effect_failure_counts_no_real_replay_operations \.\.\. ok/);
+    assert.match(liveSlotBridge.text, /test result: ok\. 2 passed;/);
+  } catch (error) {
+    bridgeResult = 'failed';
+    issues.push(`LSLOT-host-and-replay-bridge: ${error}`);
+  }
+}
 const evidenceDirectories = [];
 const work = name => {
   const dir = path.join(output, name);
@@ -1309,7 +1328,12 @@ const acceptance = {
     child_environment: env,
     rust_sysroot: standardLibraryRoot, rustc_default_sysroot: sysroot.stdout.trim(),
     ...toolFacts },
-  binary: binarySelection, commands, cases: rows, summary,
+  binary: binarySelection,
+  host_and_replay_bridge: { result: bridgeResult,
+    command: liveSlotBridge.label, exit_status: liveSlotBridge.status,
+    stdout: liveSlotBridge.stdout, stderr: liveSlotBridge.stderr,
+    claim: 'source-bound runtime control only; no canonical case promotion' },
+  commands, cases: rows, summary,
   counter_definition: {
     guest_requests_and_protected_operations:
       'selected observed attempt or explicitly named control scope only on passed rows; null for blocked canonical variants and unmeasured static checks',

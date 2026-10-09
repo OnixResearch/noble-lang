@@ -31,9 +31,10 @@
     # review but not compared. The versions were compared once against the
     # sealed Cargo.lock. Wasmtime and 29 other path packages have no
     # Cargo.lock checksum; only the selected Wasmtime source NAR binds them.
-    # The architecture policy now permits composition-root normal edges to
-    # these providers, including a possible noble-syndicate caller; this
-    # comparator separately binds the seven observed noble-cli callers.
+    # The architecture policy permits composition-root normal edges to these
+    # providers, including a possible noble-syndicate caller. The seven
+    # historical CLI edges and two additional current manifest/lock/source
+    # reviewed CLI edges await a fresh compiler-derived comparison.
     # Neither classification audits transitive dependencies,
     # external unsafe code, native linking or implementation safety.
     production | Array { name | String, version | String, role | String, edge_kind | String, assumption | String } = [
@@ -57,6 +58,20 @@
         role = "noble-cli",
         edge_kind = "normal",
         assumption = "CLI authority path walking uses Linux O_NOFOLLOW/O_DIRECTORY flags through std OpenOptions; kernel and /proc/self/fd behavior and external libc safety remain host assumptions.",
+      },
+      {
+        name = "rustix",
+        version = "1.1.5",
+        role = "noble-cli",
+        edge_kind = "normal",
+        assumption = "CLI filesystem watching calls external Linux inotify/poll wrappers; kernel event delivery, OS behavior and external implementation safety remain host assumptions, not compiler or runtime proofs.",
+      },
+      {
+        name = "serde",
+        version = "1.0.229",
+        role = "noble-cli",
+        edge_kind = "normal",
+        assumption = "CLI strict JSON value deserialization uses Serde visitor traits; rejecting duplicate input keys still requires reviewed visitor and parser behavior, not just this external dependency classification.",
       },
       {
         name = "serde_json",

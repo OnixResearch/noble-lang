@@ -31,6 +31,16 @@
       "edge_kind": "normal"
     },
     {
+      "callee": "rustix",
+      "caller": "noble-cli",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "serde",
+      "caller": "noble-cli",
+      "edge_kind": "normal"
+    },
+    {
       "callee": "serde_json",
       "caller": "noble-cli",
       "edge_kind": "normal"
