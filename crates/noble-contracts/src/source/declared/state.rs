@@ -1224,6 +1224,7 @@ impl ModuleSession {
                 history: self.source.history.clone(),
                 generation: self.source.generation,
                 hosts: false,
+                live05_harness: false,
                 text_cursor: self.source.text_cursor,
                 live_selected: None,
                 live_slots: None,

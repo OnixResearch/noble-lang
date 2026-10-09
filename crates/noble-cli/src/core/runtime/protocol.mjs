@@ -36,6 +36,9 @@ async function protocol(config) {
     session_state: engine?.proposalInspectionFailed
       ? 'terminated-after-proposal-inspection-failure' : 'terminated-after-internal-failure' });
   try {
+    if (config.slot_mode === true && config.live05_harness_grant != null) {
+      fail('live05 harness grant requires a Core live worker');
+    }
     engine = config.slot_mode === true
       ? new SlotEngine(JSON.parse(config.selection), JSON.parse(config.abi), config)
       : new CoreEngine(JSON.parse(config.selection), JSON.parse(config.abi), config);
@@ -303,6 +306,7 @@ async function protocol(config) {
             try { inputs = JSON.parse(utf8.decode(bytes)); }
             catch (error) { emit('internal-failure', reportError(error)); return; }
           }
+          let report;
           try {
             if (scalar && (!Array.isArray(inputs) || inputs.length !== 2
               || inputs.some(input => input?.type !== 'I64'
@@ -311,14 +315,16 @@ async function protocol(config) {
                 || BigInt.asIntN(64, BigInt(input.value)) !== BigInt(input.value)))) {
               fail('invalid scalar worker inputs');
             }
-            const report = engine.execute(typed
+            report = engine.execute(typed
               ? { typedValues: inputs,
                 limits: { steps: Math.min(4096, engine.abi.limits_maximum.steps) } }
               : { inputs,
                 ...((scalar || steps) ? { limits: { steps: scalar
                   ? Math.min(4096, engine.abi.limits_maximum.steps) : steps } } : {}) });
-            emit(report.outcome, report);
           } catch (error) { emit('internal-failure', reportError(error)); return; }
+          // A real Wasm abort is a completed trap report, not a protocol
+          // exception. Only a thrown execution or framing error can replace it.
+          emit(report.outcome, report);
           if (engine.poisoned) return;
           continue;
         }

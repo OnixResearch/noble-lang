@@ -235,6 +235,7 @@ impl super::Session {
             generation: self.generation,
             history: self.history.clone(),
             hosts: self.hosts,
+            live05_harness: self.live05_harness,
             text_cursor: self.text_cursor,
             live_selected: self.live_selected.clone(),
             live_slots: self.live_slots.is_some(),

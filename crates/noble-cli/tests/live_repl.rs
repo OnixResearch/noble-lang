@@ -19,6 +19,15 @@ use serde_json::Value;
 const DEADLINE: Duration = Duration::from_secs(20);
 static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(0);
 
+#[cfg(all(target_os = "linux", feature = "live05-harness-effects"))]
+const LIVE05_AFTER_SHA256: &str =
+    "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+#[cfg(all(target_os = "linux", feature = "live05-harness-effects"))]
+const LIVE05_TRAP: &str = "\"A\" test.emit test.abort";
+#[cfg(all(target_os = "linux", feature = "live05-harness-effects"))]
+const LIVE05_TRAP_SHA256: &str =
+    "b77aa84381c1c1fc9c59111eda2d07890bc2d7ac7db5661f76a148896aaee832";
+
 struct Fixture {
     directory: PathBuf,
     source: PathBuf,
@@ -89,6 +98,21 @@ impl LiveChild {
     #[cfg(target_os = "linux")]
     fn start_watch(source: &Path) -> Result<Self, Box<dyn std::error::Error>> {
         Self::start_watch_with_limit(source, None)
+    }
+
+    #[cfg(all(target_os = "linux", feature = "live05-harness-effects"))]
+    fn start_watch_with_host_grant(
+        source: &Path,
+        selected_sha256: &str,
+        generation: u64,
+        submission_sha256: &str,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command.args(["live", "watch", "--source"]).arg(source).args(["--engine", "v8"])
+            .env("NOBLE_LIVE05_HARNESS_GRANT", format!(
+                "{selected_sha256}:{generation}:{submission_sha256}"
+            ));
+        Self::spawn(command)
     }
 
     #[cfg(target_os = "linux")]
@@ -171,6 +195,12 @@ impl LiveChild {
     }
 
     fn spawn(mut command: Command) -> Result<Self, Box<dyn std::error::Error>> {
+        #[cfg(feature = "live05-harness-effects")]
+        if !command.get_envs().any(|(key, value)|
+            key == std::ffi::OsStr::new("NOBLE_LIVE05_HARNESS_GRANT") && value.is_some())
+        {
+            command.env_remove("NOBLE_LIVE05_HARNESS_GRANT");
+        }
         let mut child = command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -232,12 +262,16 @@ impl LiveChild {
         self.report()
     }
 
-    fn finish(mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn finish(self) -> Result<(), Box<dyn std::error::Error>> {
+        self.finish_with_status(0)
+    }
+
+    fn finish_with_status(mut self, expected: i32) -> Result<(), Box<dyn std::error::Error>> {
         drop(self.stdin.take());
         let deadline = Instant::now() + DEADLINE;
         loop {
             if let Some(status) = self.child.try_wait()? {
-                assert!(status.success(), "live child failed on clean EOF: {status}");
+                assert_eq!(status.code(), Some(expected), "unexpected live child exit: {status}");
                 return Ok(());
             }
             assert!(Instant::now() < deadline, "live child did not exit on EOF");
@@ -580,6 +614,108 @@ fn watched_complete_rename_acks_only_checked_bytes_and_never_runs_partial_write(
     assert!(number_field(&ack, "watch_sequence") >= 1);
     normal(&live.submit("20 addone")?, &["22"]);
     live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live05-harness-effects"))]
+#[test]
+fn watched_live05_host_issued_emit_prefix_precedes_real_abort_and_terminal_poison(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch_with_host_grant(
+        &fixture.source, LIVE05_AFTER_SHA256, 2, LIVE05_TRAP_SHA256,
+    )?;
+    assert_eq!(live_ack(&live.report()?, &[]).0, 1);
+    fixture.replace("def addone [ 2 + ]")?;
+    let (generation, source_sha256) = live_ack(&live.report()?, &[]);
+    assert_eq!(generation, 2);
+    assert_eq!(source_sha256, LIVE05_AFTER_SHA256);
+
+    let report = live.submit(LIVE05_TRAP)?;
+    assert_eq!(text_field(&report, "outcome"), "trap", "{report}");
+    assert_eq!(number_field(&report, "status"), 6);
+    assert_eq!(text_field(&report, "session_state"), "terminated-after-runtime-failure");
+    assert_eq!(report["request_trace"], serde_json::json!(["test.emit:A", "test.abort"]));
+    assert_eq!(number_field(&report, "guest_requests"), 2);
+    assert_eq!(number_field(&report, "host_requests"), 2);
+    assert_eq!(number_field(&report, "host_requests_denied"), 0);
+    assert_eq!(number_field(&report, "protected_operations"), 2);
+    assert_eq!(text_field(&report["module"], "source_sha256"), LIVE05_TRAP_SHA256);
+    let imports = report["module"]["imports"].as_array().ok_or("missing actual Wasm imports")?;
+    let host_imports: Vec<_> = imports.iter()
+        .filter(|entry| entry["kind"] == "function")
+        .map(|entry| text_field(entry, "name"))
+        .collect();
+    assert_eq!(host_imports, ["test_emit", "test_abort"]);
+    assert_eq!(report["live05_harness"], serde_json::json!({
+        "selected_source_sha256": LIVE05_AFTER_SHA256,
+        "source_generation": "2",
+        "submission_sha256": LIVE05_TRAP_SHA256,
+        "wasm_sha256": report["module"]["wasm_sha256"],
+        "allowed_effects": ["test.emit", "test.abort"],
+        "consumed": true,
+    }));
+    live.finish_with_status(2)
+}
+
+#[cfg(all(target_os = "linux", feature = "live05-harness-effects"))]
+#[test]
+fn watched_live05_default_and_stale_or_foreign_host_grants_deny_without_guest_effects(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let malformed = Command::new(env!("CARGO_BIN_EXE_noble"))
+        .args(["live", "watch", "--source"]).arg(&fixture.source)
+        .env("NOBLE_LIVE05_HARNESS_GRANT", "foreign:02:unselected")
+        .stdin(Stdio::null()).output()?;
+    assert_eq!(malformed.status.code(), Some(2));
+    let report: Value = serde_json::from_slice(&malformed.stdout)?;
+    assert_eq!(text_field(&report, "outcome"), "reload-refused");
+    assert_eq!(number_field(&report, "guest_requests"), 0);
+
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut default = Command::new(env!("CARGO_BIN_EXE_noble"));
+    default.args(["live", "watch", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8"]).env_remove("NOBLE_LIVE05_HARNESS_GRANT");
+    let mut default = LiveChild::spawn(default)?;
+    live_ack(&default.report()?, &[]);
+    fixture.replace("def addone [ 2 + ]")?;
+    live_ack(&default.report()?, &[]);
+    let denied = default.submit(LIVE05_TRAP)?;
+    assert_eq!(text_field(&denied, "outcome"), "unbound-word", "{denied}");
+    assert_eq!(number_field(&denied, "guest_requests"), 0);
+    normal(&default.submit("20 addone")?, &["22"]);
+    default.finish()?;
+
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut stale = LiveChild::start_watch_with_host_grant(
+        &fixture.source, LIVE05_AFTER_SHA256, 1, LIVE05_TRAP_SHA256,
+    )?;
+    let initial = live_ack(&stale.report()?, &[]).0;
+    assert_eq!(initial, 1);
+    let wrong_source = stale.submit(LIVE05_TRAP)?;
+    assert_eq!(text_field(&wrong_source, "outcome"), "effect-refused", "{wrong_source}");
+    assert_eq!(number_field(&wrong_source, "guest_requests"), 0);
+    fixture.replace("def addone [ 2 + ]")?;
+    let (next, digest) = live_ack(&stale.report()?, &[]);
+    assert_eq!(next, 2);
+    assert_eq!(digest, LIVE05_AFTER_SHA256);
+    let wrong_generation = stale.submit(LIVE05_TRAP)?;
+    assert_eq!(text_field(&wrong_generation, "outcome"), "effect-refused");
+    assert_eq!(number_field(&wrong_generation, "guest_requests"), 0);
+    normal(&stale.submit("20 addone")?, &["22"]);
+    stale.finish()?;
+
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut foreign = LiveChild::start_watch_with_host_grant(
+        &fixture.source, LIVE05_AFTER_SHA256, 2, LIVE05_TRAP_SHA256,
+    )?;
+    live_ack(&foreign.report()?, &[]);
+    fixture.replace("def addone [ 2 + ]")?;
+    live_ack(&foreign.report()?, &[]);
+    let denied = foreign.submit("\"B\" test.emit test.abort")?;
+    assert_eq!(text_field(&denied, "outcome"), "effect-refused", "{denied}");
+    assert_eq!(number_field(&denied, "guest_requests"), 0);
+    assert_eq!(text_field(&foreign.submit(LIVE05_TRAP)?, "outcome"), "trap");
+    foreign.finish_with_status(2)
 }
 
 #[cfg(target_os = "linux")]

@@ -20,6 +20,8 @@ static ABI: LazyLock<Result<Value, String>> = LazyLock::new(|| {
 #[derive(Clone, Copy)]
 enum ImportProfile {
     CoreLive,
+    #[cfg(feature = "live05-harness-effects")]
+    CoreLiveFixture,
     DeclaredLive,
     RuntimeBridge,
 }
@@ -191,6 +193,14 @@ fn check_import(
             }
             (ImportProfile::CoreLive, "noble", "live_generation") => {
                 Some((&[], &[ValType::I64]))
+            }
+            #[cfg(feature = "live05-harness-effects")]
+            (ImportProfile::CoreLiveFixture, "noble", "test_emit") => {
+                Some((&[ValType::I32, ValType::I32], &[ValType::I32]))
+            }
+            #[cfg(feature = "live05-harness-effects")]
+            (ImportProfile::CoreLiveFixture, "noble", "test_abort") => {
+                Some((&[], &[ValType::I32]))
             }
             (ImportProfile::DeclaredLive, "noble", "test_emit_bound") => {
                 Some((&[ValType::I32, ValType::I32, ValType::I32], &[ValType::I32]))
@@ -403,6 +413,14 @@ fn check_binary(bytes: &[u8], manifest: &Value, profile: ImportProfile) -> Resul
             return Err(format!("missing core import: {required}").into());
         }
     }
+    #[cfg(feature = "live05-harness-effects")]
+    if matches!(profile, ImportProfile::CoreLiveFixture)
+        && (!imports.contains("test_emit") || !imports.contains("test_abort"))
+    {
+        return Err(EncodeError::HostEffect(
+            "LIVE-05 fixture requires exactly test.emit and test.abort imports".into(),
+        ));
+    }
     if !exports.contains(string(&manifest["memory"], "name")?) {
         return Err("missing core memory export".into());
     }
@@ -453,6 +471,14 @@ fn encode(wat: &[u8], profile: ImportProfile) -> Result<Vec<u8>, EncodeError> {
 /// only its two explicitly typed observation/proposal imports are admitted.
 pub(super) fn encode_live_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
     encode(wat, ImportProfile::CoreLive)
+}
+
+/// Only a host-issued, one-invocation LIVE-05 fixture root may use both
+/// resource-free test effects. Unlike the normal live byte profile it cannot
+/// import self-edit or any declared-module adapter; no bridge acquires effects.
+#[cfg(feature = "live05-harness-effects")]
+pub(super) fn encode_live05_harness_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
+    encode(wat, ImportProfile::CoreLiveFixture)
 }
 
 /// The declared live source boundary permits only bound adapter effects and
@@ -571,6 +597,37 @@ mod tests {
             ),
             Ok(Some(0))
         );
+    }
+
+    #[cfg(feature = "live05-harness-effects")]
+    #[test]
+    fn fixture_effect_imports_are_exact_and_never_available_to_default_live() {
+        for (name, parameters, results) in [
+            ("test_emit", &[ValType::I32, ValType::I32][..], &[ValType::I32][..]),
+            ("test_abort", &[][..], &[ValType::I32][..]),
+        ] {
+            assert_eq!(
+                effect("noble", name, parameters, results, ImportProfile::CoreLiveFixture),
+                Ok(Some(0)),
+            );
+            assert!(matches!(
+                effect("noble", name, parameters, results, ImportProfile::CoreLive),
+                Err(EncodeError::HostEffect(_)),
+            ));
+        }
+        for (module, name, parameters, results) in [
+            ("foreign", "test_emit", &[ValType::I32, ValType::I32][..], &[ValType::I32][..]),
+            ("noble", "test_emit", &[ValType::I32][..], &[ValType::I32][..]),
+            ("noble", "test_abort", &[][..], &[][..]),
+            ("noble", "test_clock_bound", &[ValType::I32][..], &[ValType::I32, ValType::I64][..]),
+            ("noble", "live_propose",
+                &[ValType::I64, ValType::I64, ValType::I32][..], &[ValType::I32][..]),
+        ] {
+            assert!(matches!(
+                effect(module, name, parameters, results, ImportProfile::CoreLiveFixture),
+                Err(EncodeError::HostEffect(_)),
+            ), "{module}.{name}");
+        }
     }
 
     #[test]

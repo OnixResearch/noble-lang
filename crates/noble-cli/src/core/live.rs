@@ -12,6 +12,8 @@ mod watch;
 use std::os::unix::fs::MetadataExt;
 
 const LIMIT: u32 = super::SOURCE_LIMITS.bytes;
+#[cfg(feature = "live05-harness-effects")]
+const LIVE05_FIXTURE_SOURCE: &[u8] = b"\"A\" test.emit test.abort";
 
 type FileIdentity = (u64, u64, u64, u64, i64, i64, i64, i64);
 
@@ -25,6 +27,63 @@ struct Snapshot {
 struct GrantSelection {
     name: std::string::String,
     expected_generation: u64,
+}
+
+/// A private feature-built test host issues one exact Core live invocation.
+/// This is not a source-file field, guest command, production option or
+/// self-edit grant. The worker independently checks the published file and
+/// submitted guest bytes again at each actual callback.
+#[cfg(feature = "live05-harness-effects")]
+struct Live05HarnessGrant {
+    selected_source_sha256: std::string::String,
+    source_generation: u64,
+    submission_sha256: std::string::String,
+    consumed: bool,
+}
+
+#[cfg(feature = "live05-harness-effects")]
+impl Live05HarnessGrant {
+    fn selected_by_host(watch: bool, source: bool, declared: bool, self_edit: bool)
+        -> Result<Option<Self>, &'static str>
+    {
+        let Some(value) = std::env::var_os("NOBLE_LIVE05_HARNESS_GRANT") else {
+            return Ok(None);
+        };
+        if !watch || !source || declared || self_edit {
+            return Err("LIVE-05 test effects require a separate watched Core source without self-edit");
+        }
+        let value = value.into_string().map_err(|_| "invalid LIVE-05 host grant encoding")?;
+        if value.len() > 160 {
+            return Err("oversized LIVE-05 host grant");
+        }
+        let mut fields = value.split(':');
+        let (Some(selected), Some(generation), Some(submission), None) =
+            (fields.next(), fields.next(), fields.next(), fields.next())
+        else {
+            return Err("invalid LIVE-05 host grant fields");
+        };
+        let digest = |field: &str| field.len() == 64
+            && field.bytes().all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'));
+        if !digest(selected) || !digest(submission) {
+            return Err("invalid LIVE-05 host grant digest");
+        }
+        if submission != crate::workflow::intrinsic::sha256(LIVE05_FIXTURE_SOURCE) {
+            return Err("LIVE-05 host grant does not name the canonical top-level submission");
+        }
+        let source_generation = generation.parse::<u64>()
+            .map_err(|_| "invalid LIVE-05 host grant generation")?;
+        if source_generation == 0 || source_generation > i64::MAX as u64
+            || generation != source_generation.to_string()
+        {
+            return Err("noncanonical LIVE-05 host grant generation");
+        }
+        Ok(Some(Self {
+            selected_source_sha256: selected.to_owned(),
+            source_generation,
+            submission_sha256: submission.to_owned(),
+            consumed: false,
+        }))
+    }
 }
 
 struct LiveOptions {
@@ -124,6 +183,8 @@ struct Live {
     selected_file_identity: Option<(FileIdentity, (u64, u64))>,
     grant_scope: Option<std::string::String>,
     grant: Option<GrantSelection>,
+    #[cfg(feature = "live05-harness-effects")]
+    live05_harness_grant: Option<Live05HarnessGrant>,
     last_stack: serde_json::Value,
     invocation_prior_stack: Option<serde_json::Value>,
     // Source/namespace publication generation, not the Wasm submission count.
@@ -168,6 +229,16 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         }));
         return std::process::ExitCode::from(2);
     };
+    #[cfg(feature = "live05-harness-effects")]
+    let live05_harness_grant = match Live05HarnessGrant::selected_by_host(
+        watch, source.is_some(), manifest.is_some(), initial_grant.is_some(),
+    ) {
+        Ok(grant) => grant,
+        Err(problem) => {
+            emit(&refusal(0, &serde_json::json!([]), problem));
+            return std::process::ExitCode::from(2);
+        }
+    };
     let selected_grant_name = initial_grant.as_ref().map(|grant| grant.name.as_str());
     let declared = match manifest.as_ref() {
         Some(manifest) => match noble_contracts::source::ModuleSession::new(
@@ -204,14 +275,32 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         session: super::Session {
             // An empty selected spelling is not a source identifier: it keeps
             // the Core-live ABI while granting no body self-edit authority.
-            frontend: noble_contracts::source::Session::new_live(
-                selected_grant_name.unwrap_or(""),
-            ),
+            frontend: {
+                #[cfg(feature = "live05-harness-effects")]
+                if live05_harness_grant.is_some() {
+                    noble_contracts::source::Session::new_live05_harness("")
+                } else {
+                    noble_contracts::source::Session::new_live(selected_grant_name.unwrap_or(""))
+                }
+                #[cfg(not(feature = "live05-harness-effects"))]
+                noble_contracts::source::Session::new_live(selected_grant_name.unwrap_or(""))
+            },
             declared,
-            compiler: if manifest.is_some() {
-                noble_wasm::source::Compiler::new_declared_live()
-            } else {
-                noble_wasm::source::Compiler::new_live()
+            compiler: {
+                #[cfg(feature = "live05-harness-effects")]
+                if live05_harness_grant.is_some() {
+                    noble_wasm::source::Compiler::new_live05_harness()
+                } else if manifest.is_some() {
+                    noble_wasm::source::Compiler::new_declared_live()
+                } else {
+                    noble_wasm::source::Compiler::new_live()
+                }
+                #[cfg(not(feature = "live05-harness-effects"))]
+                if manifest.is_some() {
+                    noble_wasm::source::Compiler::new_declared_live()
+                } else {
+                    noble_wasm::source::Compiler::new_live()
+                }
             },
             stack: std::vec::Vec::new(),
             worker: None,
@@ -228,6 +317,8 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             name: grant.name.clone(),
             expected_generation: grant.expected_generation,
         }),
+        #[cfg(feature = "live05-harness-effects")]
+        live05_harness_grant,
         last_stack: serde_json::json!([]),
         invocation_prior_stack: None,
         generation: 0,
@@ -609,6 +700,47 @@ impl Live {
                     "Core worker did not bind checked source and {field}"
                 )));
             }
+        }
+        Ok(())
+    }
+
+    #[cfg(feature = "live05-harness-effects")]
+    fn check_live05_harness_receipt(
+        &self,
+        report: &super::output::Report,
+        binding: &LiveBinaryBinding,
+    ) -> Result<(), super::output::Failure> {
+        let grant = self.live05_harness_grant.as_ref()
+            .ok_or_else(|| fatal_failure("LIVE-05 execution lost its host-issued grant"))?;
+        if !grant.consumed {
+            return Err(fatal_failure("LIVE-05 host grant was not consumed before execution"));
+        }
+        let value: serde_json::Value = serde_json::from_str(&report.json)
+            .map_err(|_| fatal_failure("invalid LIVE-05 worker execution receipt"))?;
+        let expected = serde_json::json!({
+            "selected_source_sha256": grant.selected_source_sha256.as_str(),
+            "source_generation": grant.source_generation.to_string(),
+            "submission_sha256": grant.submission_sha256.as_str(),
+            "wasm_sha256": binding.wasm_sha256.as_str(),
+            "allowed_effects": ["test.emit", "test.abort"],
+            "consumed": true,
+        });
+        let trace = value["request_trace"].as_array();
+        if report.outcome != "trap" || value["status"].as_u64() != Some(6)
+            || value["session_state"].as_str() != Some("terminated-after-runtime-failure")
+            || value["live05_harness"] != expected
+            || value["guest_requests"].as_u64() != Some(2)
+            || value["host_requests"].as_u64() != Some(2)
+            || value["host_requests_denied"].as_u64() != Some(0)
+            || value["protected_operations"].as_u64() != Some(2)
+            || !trace.is_some_and(|requests|
+                requests.len() == 2
+                    && requests[0] == "test.emit:A"
+                    && requests[1] == "test.abort")
+        {
+            return Err(fatal_failure(
+                "LIVE-05 worker did not report exact authorized requests and terminal trap",
+            ));
         }
         Ok(())
     }
@@ -1299,7 +1431,20 @@ impl Live {
         if self.session.worker.is_none() {
             self.session.worker = Some(match &self.declared {
                 Some(state) => super::worker::Engine::start_live_declared(&state.manifest)?,
-                None => super::worker::Engine::start_live()?,
+                None => {
+                    #[cfg(feature = "live05-harness-effects")]
+                    if let Some(grant) = &self.live05_harness_grant {
+                        super::worker::Engine::start_live05_harness(
+                            &grant.selected_source_sha256,
+                            grant.source_generation,
+                            &grant.submission_sha256,
+                        )?
+                    } else {
+                        super::worker::Engine::start_live()?
+                    }
+                    #[cfg(not(feature = "live05-harness-effects"))]
+                    super::worker::Engine::start_live()?
+                }
             });
         }
         self.session.worker.as_mut().ok_or_else(|| {
@@ -1379,13 +1524,38 @@ impl Live {
             .submission()
             .ok_or_else(|| fatal_failure("missing accepted live source submission"))?;
         let effects = submission.request.expected.allowed_effects.as_slice();
-        if effects.iter().any(|effect| !matches!(effect.0, 3 | 4)) {
+        #[cfg(feature = "live05-harness-effects")]
+        let fixture_effects = effects.iter().any(|effect| matches!(effect.0, 0 | 1));
+        #[cfg(feature = "live05-harness-effects")]
+        if fixture_effects {
+            let exact_effects = matches!(effects, [emit, abort] if emit.0 == 0 && abort.0 == 1);
+            let selected = self.live05_harness_grant.as_ref().is_some_and(|grant|
+                !grant.consumed
+                    && grant.source_generation == self.generation
+                    && self.selected_file_hash.as_deref()
+                        == Some(grant.selected_source_sha256.as_str())
+                    && source == LIVE05_FIXTURE_SOURCE);
+            if !exact_effects || !selected || !self.verify_source_before_execute {
+                return Ok(self.admission_refusal(
+                    "LIVE-05 test effects require a current, exact host-issued invocation",
+                    "effect-refused",
+                ));
+            }
+        }
+        if effects.iter().any(|effect| !matches!(effect.0, 3 | 4)
+            && {
+                #[cfg(feature = "live05-harness-effects")]
+                { !(fixture_effects && matches!(effect.0, 0 | 1)) }
+                #[cfg(not(feature = "live05-harness-effects"))]
+                { true }
+            })
+        {
             return Ok(self.admission_refusal(
                 "live profile has no grant for this host effect",
                 "effect-refused",
             ));
         }
-        if !effects.is_empty()
+        if effects.iter().any(|effect| matches!(effect.0, 3 | 4))
             && self.grant.as_ref().is_none_or(|grant| {
                 grant.expected_generation != self.generation
                     || self.selected_definition.as_deref() != Some(grant.name.as_str())
@@ -1410,6 +1580,13 @@ impl Live {
                 ));
             }
         };
+        #[cfg(feature = "live05-harness-effects")]
+        let encoded = if fixture_effects {
+            encoding::encode_live05_harness_checked(compiled.wat())
+        } else {
+            encoding::encode_live_checked(compiled.wat())
+        };
+        #[cfg(not(feature = "live05-harness-effects"))]
         let encoded = encoding::encode_live_checked(compiled.wat());
         let binary = match encoded {
             Ok(binary) => binary,
@@ -1442,6 +1619,19 @@ impl Live {
                 return Ok(refusal);
             }
         }
+        #[cfg(feature = "live05-harness-effects")]
+        if fixture_effects {
+            let grant = self.live05_harness_grant.as_mut()
+                .ok_or_else(|| fatal_failure("LIVE-05 host grant disappeared before execution"))?;
+            if grant.consumed || grant.source_generation != self.generation
+                || self.selected_file_hash.as_deref()
+                    != Some(grant.selected_source_sha256.as_str())
+                || source != LIVE05_FIXTURE_SOURCE
+            {
+                return Err(fatal_failure("LIVE-05 prepared invocation outlived its host grant"));
+            }
+            grant.consumed = true;
+        }
         let code_span = compiled.code_span();
         let output = prepared.output().to_vec();
         self.session
@@ -1457,6 +1647,11 @@ impl Live {
             Some(steps) => self.worker()?.execute_with_steps(steps)?,
             None => self.worker()?.execute()?,
         };
+        #[cfg(feature = "live05-harness-effects")]
+        if fixture_effects {
+            Self::check_live_binary_binding(&report, &binding)?;
+            self.check_live05_harness_receipt(&report, &binding)?;
+        }
         if report.outcome == "normal" {
             Self::check_live_binary_binding(&report, &binding)?;
             self.session.stack = output;

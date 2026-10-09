@@ -347,6 +347,7 @@ pub struct Prepared {
     generation: u64,
     history: alloc::vec::Vec<u8>,
     hosts: bool,
+    live05_harness: bool,
     text_cursor: bool,
     live_selected: Option<alloc::string::String>,
     live_slots: bool,
@@ -397,6 +398,7 @@ pub struct Session {
     history: alloc::vec::Vec<u8>,
     generation: u64,
     hosts: bool,
+    live05_harness: bool,
     text_cursor: bool,
     live_selected: Option<alloc::string::String>,
     live_slots: Option<LiveSlots>,
@@ -424,6 +426,7 @@ impl Session {
             history: alloc::vec::Vec::new(),
             generation: 0,
             hosts: true,
+            live05_harness: false,
             text_cursor: false,
             live_selected: None,
             live_slots: None,
@@ -437,6 +440,7 @@ impl Session {
             history: alloc::vec::Vec::new(),
             generation: 0,
             hosts: false,
+            live05_harness: false,
             text_cursor: false,
             live_selected: None,
             live_slots: None,
@@ -457,6 +461,15 @@ impl Session {
         Self {
             live_selected: Some(alloc::string::String::from(selected_name)),
             ..Self::without_test_hosts()
+        }
+    }
+    /// Trusted fixture-only profile: test hosts are available to direct
+    /// top-level operations, never retained definitions or quotation bodies.
+    #[cfg(feature = "live05-harness-effects")]
+    pub fn new_live05_harness(selected_name: &str) -> Self {
+        Self {
+            live05_harness: true,
+            ..Self::new_live(selected_name)
         }
     }
     /// A separate, host-selected profile. The environment must already have
@@ -722,6 +735,7 @@ impl Session {
             history: self.history.clone(),
             generation: self.generation,
             hosts: self.hosts,
+            live05_harness: self.live05_harness,
             text_cursor: self.text_cursor,
             live_selected: self.live_selected.clone(),
             live_slots: None,
@@ -921,7 +935,7 @@ impl Session {
             Some(bindings) => bindings.effects,
             None => {
                 if self.live_selected.is_some() {
-                    (1 << 3) | (1 << 4)
+                    (if self.live05_harness { 3 } else { 0 }) | (1 << 3) | (1 << 4)
                 } else if self.hosts {
                     3
                 } else {
@@ -932,8 +946,9 @@ impl Session {
     }
 
     fn program_type_effect_universe(&self) -> u64 {
-        self.effect_universe() | self.bindings.as_ref()
-            .map_or(0, |bindings| bindings.program_type_effects)
+        let effects = self.effect_universe();
+        let latent = if self.live05_harness { effects & !3 } else { effects };
+        latent | self.bindings.as_ref().map_or(0, |bindings| bindings.program_type_effects)
     }
 
     /// Consume a preparation as an explicit deterministic namespace transition.
@@ -992,6 +1007,7 @@ impl Session {
         };
         if prepared.generation != self.generation
             || prepared.hosts != self.hosts
+            || prepared.live05_harness != self.live05_harness
             || prepared.text_cursor != self.text_cursor
             || prepared.live_selected != self.live_selected
             || prepared.live_slots != self.live_slots.is_some()
@@ -1420,5 +1436,63 @@ mod tests {
             );
             assert_eq!(session.definitions.len(), 3);
         }
+    }
+
+    #[cfg(feature = "live05-harness-effects")]
+    #[test]
+    fn live05_fixture_hosts_are_direct_root_only_and_namespace_bound() {
+        use noble_kernel::types::{EffSet, Ty};
+        let limits = live_limits();
+        let mut session = Session::new_live05_harness("watched");
+        let prepared = session.prepare(b"\"A\" test.emit test.abort", &[], limits).unwrap();
+        assert_eq!(
+            prepared.checked().unwrap().interface.effects,
+            EffSet::from_ids(&[
+                noble_kernel::contracts::TEST_EMIT,
+                noble_kernel::types::EffId(1),
+            ])
+        );
+        let after_quotation = session.prepare(
+            b"[ 1 ] drop \"A\" test.emit", &[], limits
+        ).unwrap();
+        assert_eq!(
+            after_quotation.checked().unwrap().interface.effects,
+            EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT])
+        );
+        assert!(Session::new_live("watched").prepare(
+            b"\"A\" test.emit test.abort", &[], limits
+        ).is_err());
+        assert!(Session::new_live("watched").commit(prepared.clone()).is_err(),
+            "a preparation cannot move between trusted profile snapshots");
+        for source in [
+            b"def hidden [ \"A\" test.emit ]".as_slice(),
+            b"def hidden [ test.abort ]",
+            b"[ \"A\" test.emit ]",
+            b"[ test.abort ]",
+        ] {
+            assert!(session.prepare(source, &[], limits).is_err(),
+                "latent fixture host was resolved from {source:?}");
+        }
+        let latent = Ty::program(
+            alloc::vec::Vec::new(),
+            alloc::vec::Vec::new(),
+            EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT]),
+        );
+        assert!(session.prepare(b"drop", &[latent], limits).is_err(),
+            "an input Program cannot carry the fixture grant");
+        let watched = session.prepare(b"def watched [ 1 ]", &[], limits).unwrap();
+        session.commit(watched).unwrap();
+        let replacement = session.prepare(b"def watched [ 2 ]", &[], limits).unwrap();
+        let mut successor = session.preview_core_rebuild(&replacement).unwrap();
+        let root = successor.prepare(b"watched \"A\" test.emit test.abort", &[], limits).unwrap();
+        assert_eq!(
+            root.checked().unwrap().interface.effects,
+            EffSet::from_ids(&[
+                noble_kernel::contracts::TEST_EMIT,
+                noble_kernel::types::EffId(1),
+            ])
+        );
+        successor.commit(root).unwrap();
+        assert_eq!(successor.generation(), session.generation() + 2);
     }
 }

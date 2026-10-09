@@ -14,6 +14,12 @@ path = "src/main.rs"
 # the default binary. Production host-only revocation is available without
 # this feature and does not change guest bytes.
 live-test-barrier = []
+# Only a separately feature-built private LIVE-05 harness may issue a single
+# source-bound test.emit/test.abort grant; default live and run stay unchanged.
+live05-harness-effects = [
+    "noble-contracts/live05-harness-effects",
+    "noble-wasm/live05-harness-effects",
+]
 
 [dependencies]
 noble-kernel = { path = "../noble-kernel" }

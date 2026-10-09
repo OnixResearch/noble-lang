@@ -148,7 +148,10 @@
         postUnpack = ''
           ln -s ${reviewedVendor}/source-registry-0 "$sourceRoot/reviewed-vendor"
         '';
-        cargoBuildFlags = [ "--locked" "--package" "noble-cli" "--bin" "noble" "--all-features" ];
+        # The exported CLI and m3-wasm's default CLI must exclude test-only
+        # live-test-barrier and LIVE-05 host grants; all-feature tests remain
+        # separate from the binary built for installation.
+        cargoBuildFlags = [ "--locked" "--package" "noble-cli" "--bin" "noble" "--no-default-features" ];
         cargoTestFlags = [ "--locked" "--workspace" "--all-targets" "--all-features" ];
         nativeCheckInputs = builtins.attrValues wasmVerificationTools;
         strictDeps = true;

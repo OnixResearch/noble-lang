@@ -3,6 +3,7 @@
 /// requires only these scalar positions and no second whole-state clone.
 pub(super) struct Base {
     live: bool,
+    live05_harness: bool,
     declared_live: bool,
     text_cursor: bool,
     declared_text: bool,
@@ -18,6 +19,7 @@ impl Base {
     pub(super) const fn capture(compiler: &super::Compiler) -> Self {
         Self {
             live: compiler.live,
+            live05_harness: compiler.live05_harness,
             declared_live: compiler.declared_live,
             text_cursor: compiler.text_cursor,
             declared_text: compiler.declared_text,
@@ -33,6 +35,8 @@ impl Base {
     const fn positions_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
         self.live == current.live
             && self.live == next.live
+            && self.live05_harness == current.live05_harness
+            && self.live05_harness == next.live05_harness
             && self.declared_live == current.declared_live
             && self.declared_live == next.declared_live
             && self.text_cursor == current.text_cursor

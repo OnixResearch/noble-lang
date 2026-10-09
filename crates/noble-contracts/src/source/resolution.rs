@@ -30,11 +30,25 @@ pub(super) fn resolve_prefix(
         return Err(crate::internal(tree.span));
     }
     let mut at = 0usize;
+    let mut root_at = 0usize;
     let mut failure = None;
     while at < tree.nodes.len() {
+        // Parsed root node IDs increase in lexical order. Advance the cursor
+        // for every root node, including a quotation, so checking a fixture
+        // word never rescans the (potentially attacker-sized) root body.
+        let is_root = session.live05_harness
+            && declaration.is_none()
+            && u32::try_from(at).ok().is_some_and(|id| tree.body.get(root_at) == Some(&id));
+        if is_root {
+            root_at += 1;
+        }
+        let direct_root = is_root
+            && tree.nodes.get(at).is_some_and(|node| matches!(&node.kind,
+                super::Kind::Word(word) if word.as_slice() == b"test.emit"
+                    || word.as_slice() == b"test.abort"));
         let result = match tree.nodes.get_mut(at) {
             Some(node) => resolve_node(node, declaration, session, signed_owner,
-                definition_prefix, meter),
+                definition_prefix, direct_root, meter),
             None => Err(crate::internal(tree.span)),
         };
         if let Err(problem) = result {
@@ -55,12 +69,13 @@ fn resolve_node(
     session: &super::Session,
     signed_owner: bool,
     definition_prefix: usize,
+    direct_root: bool,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(meter.charge(1, node.span));
     if let super::Kind::Word(word) = &node.kind {
         let target = attempt!(lookup(word, declaration, session, signed_owner,
-            definition_prefix, node.span, meter));
+            definition_prefix, direct_root, node.span, meter));
         node.kind = super::Kind::Call(target);
     }
     Ok(())
@@ -76,6 +91,7 @@ fn lookup(
     session: &super::Session,
     signed_owner: bool,
     definition_prefix: usize,
+    direct_root: bool,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<super::Target, crate::Diagnostic> {
@@ -155,7 +171,9 @@ fn lookup(
         };
     }
     if let Some(definition) = crate::program::bootstrap_word(word) {
-        if definition.0 < 22 || session.hosts {
+        if definition.0 < 22 || session.hosts
+            || (direct_root && matches!(definition.0, 22 | 23))
+        {
             return Ok(super::Target::Builtin(definition.0));
         }
     }

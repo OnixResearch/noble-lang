@@ -8,5 +8,8 @@ publish.workspace = true
 noble-contracts = { path = "../noble-contracts" }
 noble-kernel = { path = "../noble-kernel" }
 
+[features]
+live05-harness-effects = ["noble-contracts/live05-harness-effects"]
+
 [lints]
 workspace = true

@@ -30,7 +30,11 @@ fn worker(optimized: bool, declared: bool) -> std::string::String {
 /// The opt-in live worker uses the same selected ABI and resident Node/V8,
 /// but receives already checked binary modules instead of WAT tool requests.
 pub(super) fn live() -> std::string::String {
-    crate::workflow::encoding::object([
+    crate::workflow::encoding::Json::Object(live_settings()).encode()
+}
+
+fn live_settings() -> std::vec::Vec<(&'static str, crate::workflow::encoding::Json)> {
+    std::vec::Vec::from([
         ("selection", crate::workflow::encoding::string(super::SELECTION)),
         ("abi", crate::workflow::encoding::string(super::ABI)),
         ("optimized", crate::workflow::encoding::Json::Bool(false)),
@@ -40,7 +44,23 @@ pub(super) fn live() -> std::string::String {
         ("declared_extension", crate::workflow::encoding::Json::Null),
         ("in_process_live", crate::workflow::encoding::Json::Bool(true)),
     ])
-    .encode()
+}
+
+/// Only the feature-built Rust host injects this fixed policy into its own
+/// environment-cleared worker process; no source or guest frame sets it.
+#[cfg(feature = "live05-harness-effects")]
+pub(super) fn live05_harness(
+    selected_source_sha256: &str,
+    source_generation: u64,
+    submission_sha256: &str,
+) -> std::string::String {
+    let mut fields = live_settings();
+    fields.push(("live05_harness_grant", crate::workflow::encoding::object([
+        ("selected_source_sha256", crate::workflow::encoding::string(selected_source_sha256)),
+        ("source_generation", crate::workflow::encoding::string(source_generation.to_string())),
+        ("submission_sha256", crate::workflow::encoding::string(submission_sha256)),
+    ])));
+    crate::workflow::encoding::Json::Object(fields).encode()
 }
 
 /// Host-selected declared profile: bindings are the parsed manifest's original
