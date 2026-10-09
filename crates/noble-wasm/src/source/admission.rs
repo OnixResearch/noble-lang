@@ -204,6 +204,7 @@ fn kernel_limits(
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     live: bool,
+    live05_harness: bool,
     live_slots: bool,
     text_cursor: bool,
     declared_text: bool,
@@ -213,7 +214,7 @@ pub(super) fn check(
     attempt!(work.charge(1));
     let environment_work = attempt!(environment::work(&submission.environment));
     attempt!(work.charge(environment_work));
-    attempt!(environment::check(submission, live, live_slots, text_cursor, declared_text));
+    attempt!(environment::check(submission, live, live05_harness, live_slots, text_cursor, declared_text));
     attempt!(bounds(submission, signed, work));
     let limits = attempt!(kernel_limits(submission, environment_work, work));
     let definitions = attempt!(definitions::accept(submission, limits, signed, work));

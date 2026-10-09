@@ -68,6 +68,7 @@ impl Work {
 /// Persistent semantic identities and disjoint compiled-code allocations.
 pub struct Compiler {
     live: bool,
+    live05_harness: bool,
     declared_live: bool,
     live_slots: bool,
     text_cursor: bool,
@@ -520,6 +521,7 @@ impl Compiler {
     pub fn new() -> Self {
         Self {
             live: false,
+            live05_harness: false,
             declared_live: false,
             live_slots: false,
             text_cursor: false,
@@ -542,6 +544,16 @@ impl Compiler {
     /// separate 20-page live-slot backend acquires these root exports.
     pub fn new_live() -> Self {
         Self { live: true, ..Self::new() }
+    }
+
+    /// Explicit trusted fixture grant on the Core16 live ABI; only direct
+    /// root operations may request the two fixed test-host effects.
+    #[cfg(feature = "live05-harness-effects")]
+    pub fn new_live05_harness() -> Self {
+        Self {
+            live05_harness: true,
+            ..Self::new_live()
+        }
     }
 
     /// The opt-in declared live worker uses the checked 16-page Program owner
@@ -647,6 +659,7 @@ impl Compiler {
         let checked = attempt!(admission::check(
             submission,
             self.live,
+            self.live05_harness,
             self.live_slots,
             self.text_cursor,
             declared_text,
@@ -674,6 +687,7 @@ impl Compiler {
         }
         let mut next = Self {
             live: self.live,
+            live05_harness: self.live05_harness,
             declared_live: self.declared_live,
             live_slots: self.live_slots,
             text_cursor: self.text_cursor,
@@ -1092,7 +1106,7 @@ mod declared_text_ingress_tests {
         let mut work = Work { remaining: u64::from(original.request.limits.work) };
         assert!(preflight::check(&original, &mut work).is_ok(),
             "whole-source preflight exhausted before declared-text admission");
-        let checked = admission::check(&original, false, false, true, true, true, &mut work)
+        let checked = admission::check(&original, false, false, false, true, true, true, &mut work)
             .ok().expect("declared-text whole-submission admission exhausted");
         assert!(admission::meter::compilation(&checked, &compiler.signatures, &mut work).is_ok(),
             "checked derivation compilation meter exhausted");
@@ -1233,5 +1247,78 @@ mod signed_dispatch_tests {
         ), Outcome::Accepted(_)), "the alternate rank-1 effect call itself is well typed");
         assert!(matches!(Compiler::new().prepare_with_origin(&submission, None, true, false),
             Err(Diagnostic::Invalid)), "a valid generic alternate effect cannot invoke the owner's checked ceiling");
+    }
+}
+
+#[cfg(all(test, feature = "live05-harness-effects"))]
+mod live05_harness_tests {
+    use super::Compiler;
+    use noble_contracts::source::Session;
+    use noble_kernel::types::EffSet;
+
+    const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
+        bytes: 65_536, nodes: 16_384, depth: 64, work: 2_000_000,
+    };
+
+    #[test]
+    fn root_grant_cannot_cross_compiler_or_environment_and_survives_commit() {
+        let session = Session::new_live05_harness("watched");
+        let source = session.prepare(b"\"A\" test.emit test.abort", &[], LIMITS)
+            .expect("fixture root");
+        let submission = source.submission().expect("executable root");
+        let mut compiler = Compiler::new_live05_harness();
+        let compiled = compiler.prepare(submission).ok().expect("trusted direct root");
+        assert!(!Compiler::new_live().can_commit(&compiled),
+            "a different live profile cannot publish this preparation");
+        assert!(Compiler::new_live().prepare(submission).is_err(),
+            "ordinary live compiler never inherits the fixture grant");
+        let mut forged = submission.clone();
+        forged.environment.live_test_hosts = true;
+        assert!(compiler.prepare(&forged).is_err(),
+            "live-slot host switch cannot authorize Core16 fixture effects");
+        forged = submission.clone();
+        forged.environment.defs[22].stack_out.clear();
+        assert!(compiler.prepare(&forged).is_err(), "fixed emit row must remain canonical");
+        compiler.commit(compiled).ok().expect("profile retained on publication");
+        let subsequent = compiler.prepare(submission).ok().expect("published profile retains grant");
+        assert!(compiler.can_commit(&subsequent));
+        assert!(!Compiler::new_live().can_commit(&subsequent),
+            "published profile cannot be laundered into ordinary live state");
+    }
+
+    #[test]
+    fn kernel_valid_latent_quote_and_increased_named_ceiling_cannot_gain_hosts() {
+        let fixture = Session::new_live05_harness("watched")
+            .prepare(b"1", &[], LIMITS).expect("canonical live source");
+        let ordinary = Session::new()
+            .prepare(b"[ \"A\" test.emit ]", &[], LIMITS).expect("ordinary latent program");
+        let mut latent = ordinary.submission().unwrap().clone();
+        latent.environment = fixture.submission().unwrap().environment.clone();
+        assert!(matches!(noble_kernel::acceptance::check(
+            &latent.environment, &latent.request, &latent.body.candidate
+        ), noble_kernel::untrusted::Outcome::Accepted(_)),
+            "the independent kernel accepts this effectful latent Program");
+        let mut work = super::Work { remaining: u64::from(latent.request.limits.work) };
+        super::preflight::check(&latent, &mut work).ok().expect("bounded latent submission");
+        let checked = super::admission::check(&latent, true, true, false, false, false, false, &mut work)
+            .ok().expect("kernel-valid root and canonical live environment");
+        let mut scratch = Compiler::new_live05_harness();
+        assert!(matches!(
+            super::plan::lower(&latent, &checked, &mut scratch, &mut work),
+            Err(crate::Diagnostic::Invalid)
+        ), "the complete lowered Program table must refuse a latent host word");
+        assert!(Compiler::new_live05_harness().prepare(&latent).is_err(),
+            "lowered quotation has an unauthorized host operation");
+
+        let mut session = Session::new_live05_harness("watched");
+        let definition = session.prepare(b"def watched [ 1 ]", &[], LIMITS).unwrap();
+        session.commit(definition).unwrap();
+        let root = session.prepare(b"watched \"A\" test.emit", &[], LIMITS).unwrap();
+        let mut submission = root.submission().unwrap().clone();
+        assert_eq!(submission.definitions.len(), 1);
+        submission.definitions[0].expected.allowed_effects =
+            EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT]);
+        assert!(Compiler::new_live05_harness().prepare(&submission).is_err(),
+            "no named specialization may increase to the fixture host effect");
     }
 }

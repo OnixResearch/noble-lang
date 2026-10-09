@@ -58,11 +58,43 @@ const declaredLiveImportTypes = {
   test_clock_bound: 'i32->i32,i64',
   test_abort: '->i32',
 };
+const live05HostImportTypes = Object.freeze({
+  test_emit: 'i32,i32->i32',
+  test_abort: '->i32',
+});
 
-function checkLiveBytes(bytes, abi, declaredLive, ownerAware, bridge = false) {
+function live05HarnessGrant(value, inProcessLive, declaredModules) {
+  if (value === null || value === undefined) return null;
+  const fields = ['selected_source_sha256', 'source_generation', 'submission_sha256'];
+  if (!inProcessLive || declaredModules || typeof value !== 'object' || Array.isArray(value)
+    || Object.keys(value).length !== fields.length
+    || fields.some(field => !Object.hasOwn(value, field))
+    || typeof value.selected_source_sha256 !== 'string'
+    || !/^[0-9a-f]{64}$/.test(value.selected_source_sha256)
+    || typeof value.submission_sha256 !== 'string'
+    || !/^[0-9a-f]{64}$/.test(value.submission_sha256)
+    || typeof value.source_generation !== 'string'
+    || !/^[1-9][0-9]{0,18}$/.test(value.source_generation)
+    || BigInt(value.source_generation) > 0x7fffffffffffffffn) {
+    fail('invalid live05 harness grant');
+  }
+  const fixtureSource = Buffer.from('"A" test.emit test.abort', 'utf8');
+  if (value.submission_sha256 !== sha256(fixtureSource)) fail('invalid live05 fixture grant');
+  return Object.freeze({
+    selectedSourceSha256: value.selected_source_sha256,
+    sourceGeneration: BigInt(value.source_generation),
+    submissionSha256: value.submission_sha256,
+    fixtureSource,
+  });
+}
+
+function checkLiveBytes(bytes, abi, declaredLive, ownerAware, bridge = false, live05Harness = false) {
   if (!Buffer.isBuffer(bytes) || bytes.length < 8 || bytes.length > MAX_FRAME
     || bytes.readUInt32LE(0) !== 0x6d736100 || bytes.readUInt32LE(4) !== 1) {
     fail('invalid bounded Wasm module');
+  }
+  if (live05Harness && (bridge || declaredLive || abi.module !== 'noble')) {
+    fail('invalid live05 host module');
   }
   let at = 8, end = bytes.length, lastSection = 0;
   const byte = () => {
@@ -112,7 +144,8 @@ function checkLiveBytes(bytes, abi, declaredLive, ownerAware, bridge = false) {
     if (byte() !== 1 || uint() !== initial || uint() !== maximum) fail('incompatible Wasm arena limits');
   };
   const expectedGlobals = new Map(abi.globals.map(global => [global.name, global.type]));
-  const hostImports = bridge ? {} : declaredLive ? declaredLiveImportTypes : liveImportTypes;
+  const hostImports = bridge ? {} : declaredLive ? declaredLiveImportTypes
+    : live05Harness ? live05HostImportTypes : liveImportTypes;
   const expectedExports = bridge ? bridgeExportTypes
     : ownerAware ? liveOwnerExportTypes : liveExportTypes;
   const types = [], functionTypes = [], imports = [], exports = [];
@@ -220,6 +253,9 @@ function checkLiveBytes(bytes, abi, declaredLive, ownerAware, bridge = false) {
   }
   if (memoryImports !== 1 || tableImports !== 1 || globalImports !== expectedGlobals.size
     || seenExports.size !== Object.keys(expectedExports).length + 1) fail('incomplete Wasm arena ABI');
+  if (live05Harness && (!seenImports.has('test_emit') || !seenImports.has('test_abort'))) {
+    fail('incomplete live05 fixture host imports');
+  }
   return { imports, exports };
 }
 
@@ -275,13 +311,19 @@ function declaredLiveObject(value, fields, label) {
 export class CoreEngine {
   constructor(selection, abi, { optimized = false, artifacts = null, bindings = [],
     declared_modules = false, declared_extension = null, in_process_live = false,
-    text_byte_cursor = false, signed_self_recursion = false } = {}) {
+    text_byte_cursor = false, signed_self_recursion = false,
+    live05_harness_grant = null } = {}) {
     this.selection = selection;
     this.abi = abi;
     this.inProcessLive = in_process_live === true;
     configureDeclaredAbi(this, abi, declared_modules, declared_extension, bindings,
       text_byte_cursor, signed_self_recursion);
     this.declaredLive = this.inProcessLive && declared_modules === true;
+    this.live05HarnessGrant = live05HarnessGrant(live05_harness_grant,
+      this.inProcessLive, declared_modules);
+    this.live05PublishedSourceSha256 = null;
+    this.live05HarnessConsumed = false;
+    this.live05HarnessInvocation = null;
     this.liveCodeOwners = this.inProcessLive;
     this.externalCodeRoots = new Set();
     this.sourceEpoch = this.profile === 'Signed-Declared-Text-v1';
@@ -354,6 +396,29 @@ export class CoreEngine {
     }
     this.save('tools.json', this.tools);
     if (this.declaredExtension) this.save('declared-abi.json', this.declaredExtension);
+  }
+
+  live05CanUseHarness(submissionSha256) {
+    const grant = this.live05HarnessGrant;
+    return grant !== null && !this.live05HarnessConsumed
+      && submissionSha256 === grant.submissionSha256
+      && this.live05PublishedSourceSha256 === grant.selectedSourceSha256
+      && this.liveSourceGeneration === grant.sourceGeneration;
+  }
+
+  live05AuthorizesEffect() {
+    const grant = this.live05HarnessGrant;
+    const invocation = this.live05HarnessInvocation;
+    return grant !== null && invocation !== null && this.live05HarnessConsumed
+      && this.inProcessLive && !this.declaredLive && !this.liveInstalling
+      && this.liveExecuting && this.activeGuest === invocation.instance
+      && this.live05PublishedSourceSha256 === grant.selectedSourceSha256
+      && this.liveSourceGeneration === grant.sourceGeneration
+      && invocation.selectedSourceSha256 === grant.selectedSourceSha256
+      && invocation.sourceGeneration === grant.sourceGeneration
+      && invocation.submissionSha256 === grant.submissionSha256
+      && invocation.wasmSha256 === invocation.record.wasm_sha256
+      && invocation.submissionSha256 === invocation.record.source_sha256;
   }
 
   checkTools() {
@@ -434,7 +499,7 @@ export class CoreEngine {
   }
 
   liveModule(bytes, source, submission, bridgeBytes, signatureBytes, span,
-    watSha256, bridgeWatSha256) {
+    watSha256, bridgeWatSha256, allowHarnessEffects = false) {
     if (!this.inProcessLive || this.pending || this.parked || this.staged || this.stagedDeclared || this.poisoned
       || this.liveProposal || this.unregisteredGuest) {
       fail('live session is pending, parked, staged, or poisoned');
@@ -450,7 +515,11 @@ export class CoreEngine {
       || span.length < 0 || span.length > this.table.length - span.start
       || !Number.isInteger(span.generation) || span.generation !==
         ((this.shared.generation.value + 1) >>> 0)) fail('unbound live code span');
-    const policy = checkLiveBytes(bytes, this.abi, this.declaredLive, this.liveCodeOwners);
+    const sourceSha256 = sha256(source);
+    const harness = allowHarnessEffects && this.live05CanUseHarness(sourceSha256)
+      && source.equals(this.live05HarnessGrant.fixtureSource);
+    const policy = checkLiveBytes(bytes, this.abi, this.declaredLive,
+      this.liveCodeOwners, false, harness);
     const module = new WebAssembly.Module(bytes);
     for (const [actual, expected] of [
       [WebAssembly.Module.imports(module), policy.imports],
@@ -487,11 +556,11 @@ export class CoreEngine {
       fail('source-free Core bridge changed the checked live arena');
     }
     return { module, record: { submission, wasm_sha256: sha256(bytes),
-      source_sha256: sha256(source), optimized: false,
+      source_sha256: sourceSha256, optimized: false,
       wat_sha256: watSha256, bridge_wat_sha256: bridgeWatSha256,
       bridge_wasm_sha256: sha256(bridgeBytes), signature_catalogue_sha256: signatures.sha256,
       compilations: this.compilations + 1, imports: policy.imports },
-      bridge, signatures, span: { ...span } };
+      bridge, signatures, span: { ...span }, harness };
   }
 
   compileBinary(bytes, source, submission, bridgeBytes, signatureBytes, span,
@@ -504,7 +573,7 @@ export class CoreEngine {
     let candidate;
     try {
       candidate = this.liveModule(bytes, source, submission, bridgeBytes, signatureBytes,
-        span, watSha256, bridgeWatSha256);
+        span, watSha256, bridgeWatSha256, true);
     } catch (error) {
       if (this.poisoned) throw error;
       return this.liveRefusal(`${error.name}: ${error.message}`, 'compile-refused');
@@ -513,7 +582,12 @@ export class CoreEngine {
     this.liveInstalling = true;
     try {
       const ready = this.install(module, record, installationCapability);
-      this.pending.checkedLive = { bridge, signatures, span: candidate.span };
+      this.pending.checkedLive = { bridge, signatures, span: candidate.span,
+        live05Harness: candidate.harness ? Object.freeze({
+          selectedSourceSha256: this.live05PublishedSourceSha256,
+          sourceGeneration: this.liveSourceGeneration,
+          submissionSha256: record.source_sha256, wasmSha256: record.wasm_sha256,
+        }) : null };
       this.compilations += 1;
       return ready;
     } finally {
@@ -1402,6 +1476,7 @@ export class CoreEngine {
       globals: this.abi.globals.map(global => this.shared[global.name].value),
       trace: this.trace.slice(), boundRequests: this.boundRequests.slice(),
       hostRequestsTotal: this.hostRequestsTotal, boundRequestsTotal: this.boundRequestsTotal,
+      live05DeniedRequests: this.live05DeniedRequests,
       protectedOperations: this.protectedOperations, ambientFallbackCalls: this.ambientFallbackCalls,
       boundTraceExhausted: this.boundTraceExhausted, boundTraceTerminal: this.boundTraceTerminal,
       adapters: Array.from(this.boundAdapters.values(), adapter => [adapter.scriptIndex, adapter.invocations]),
@@ -1411,6 +1486,9 @@ export class CoreEngine {
       coreBridge: this.coreBridge,
       nextGuestOwner: this.nextGuestOwner,
       liveSourceGeneration: this.liveSourceGeneration, liveGrant: this.liveGrant,
+      live05PublishedSourceSha256: this.live05PublishedSourceSha256,
+      live05HarnessConsumed: this.live05HarnessConsumed,
+      live05HarnessInvocation: this.live05HarnessInvocation,
       compilations: this.compilations, parked: this.parked, poisoned: this.poisoned,
       externalCodeRoots: new Set(this.externalCodeRoots),
       observationWork: this.observationWork };
@@ -1427,6 +1505,7 @@ export class CoreEngine {
     this.boundRequests = saved.boundRequests;
     this.hostRequestsTotal = saved.hostRequestsTotal;
     this.boundRequestsTotal = saved.boundRequestsTotal;
+    this.live05DeniedRequests = saved.live05DeniedRequests;
     this.protectedOperations = saved.protectedOperations;
     this.ambientFallbackCalls = saved.ambientFallbackCalls;
     this.boundTraceExhausted = saved.boundTraceExhausted;
@@ -1445,6 +1524,9 @@ export class CoreEngine {
     this.lastTraceStart = saved.lastTraceStart;
     this.liveSourceGeneration = saved.liveSourceGeneration;
     this.liveGrant = saved.liveGrant;
+    this.live05PublishedSourceSha256 = saved.live05PublishedSourceSha256;
+    this.live05HarnessConsumed = this.live05HarnessConsumed || saved.live05HarnessConsumed;
+    this.live05HarnessInvocation = saved.live05HarnessInvocation;
     this.compilations = saved.compilations;
     this.externalCodeRoots = saved.externalCodeRoots;
     this.parked = saved.parked;
@@ -1477,6 +1559,7 @@ export class CoreEngine {
       }
       if (this.trace.length !== saved.trace.length || this.boundRequests.length !== saved.boundRequests.length
         || this.hostRequestsTotal !== saved.hostRequestsTotal
+        || this.live05DeniedRequests !== saved.live05DeniedRequests
         || this.boundRequestsTotal !== saved.boundRequestsTotal
         || this.protectedOperations !== saved.protectedOperations
         || this.ambientFallbackCalls !== saved.ambientFallbackCalls) {
@@ -1493,6 +1576,7 @@ export class CoreEngine {
       this.compilations += 1;
       this.lastTraceStart = this.trace.length;
       this.liveSourceGeneration += 1n;
+      this.live05PublishedSourceSha256 = record.source_sha256;
       this.liveGrant = null;
       return { schema: 'noble-core-report/v1', profile: this.profile,
         backend: 'managed-linear-memory', stage: 'wasm', outcome: 'normal',
@@ -1654,9 +1738,12 @@ export class CoreEngine {
   execute({ inputs = [], typedValues = null, limits = {} } = {}) {
     if (!this.pending || this.stagedDeclared || this.poisoned) fail('no prepared module or poisoned session');
     const { instance, record, traceStart, checkedLive } = this.pending;
+    const harness = checkedLive?.live05Harness ?? null;
+    let executedHarness = null;
     const boundStart = this.boundRequests.length;
     const boundTotalStart = this.boundRequestsTotal;
     const hostStart = this.hostRequestsTotal;
+    const live05DeniedStart = this.live05DeniedRequests;
     const traceExhaustedStart = this.boundTraceExhausted;
     const adapterStarts = this.declaredModules
       ? new Map(Array.from(this.boundAdapters, ([slot, binding]) => [slot, binding.invocations]))
@@ -1709,8 +1796,32 @@ export class CoreEngine {
         this.liveProposalDenied = false;
         this.liveExecuting = this.inProcessLive;
         this.activeGuest = this.inProcessLive ? instance : null;
-        try { status = runtime.submit(); }
-        finally { this.liveExecuting = false; this.activeGuest = null; }
+        try {
+          if (harness !== null) {
+            if (!this.live05CanUseHarness(record.source_sha256)
+              || harness.selectedSourceSha256 !== this.live05PublishedSourceSha256
+              || harness.sourceGeneration !== this.liveSourceGeneration
+              || harness.submissionSha256 !== record.source_sha256
+              || harness.wasmSha256 !== record.wasm_sha256) {
+              fail('stale live05 harness invocation');
+            }
+            // Consume before entering Wasm; a trap must not reissue authority.
+            this.live05HarnessConsumed = true;
+            executedHarness = Object.freeze({
+              instance, record,
+              selectedSourceSha256: harness.selectedSourceSha256,
+              sourceGeneration: harness.sourceGeneration,
+              submissionSha256: harness.submissionSha256,
+              wasmSha256: harness.wasmSha256,
+            });
+            this.live05HarnessInvocation = executedHarness;
+          }
+          status = runtime.submit();
+        } finally {
+          this.live05HarnessInvocation = null;
+          this.liveExecuting = false;
+          this.activeGuest = null;
+        }
         if (status === 0 && this.liveProposalDenied) status = 5;
         if (status === 0 && this.inProcessLive) {
           if (!checkedLive) fail('executed guest has no checked Core bridge');
@@ -1808,6 +1919,10 @@ export class CoreEngine {
       request_trace: isDeclared
         ? boundRequests : this.trace.slice(traceStart),
       guest_requests: isDeclared ? this.hostRequestsTotal - hostStart : this.trace.length - traceStart,
+      ...(this.live05HarnessGrant !== null ? {
+        host_requests: this.hostRequestsTotal - hostStart,
+        host_requests_denied: this.live05DeniedRequests - live05DeniedStart,
+      } : {}),
       ...(isDeclared ? {
         host_requests: this.hostRequestsTotal - hostStart,
         effect_requests: boundRequests.map(request => request.effect),
@@ -1843,6 +1958,13 @@ export class CoreEngine {
       } : {}),
       protected_operations: this.protectedOperations - protectedStart,
       candidate_prepare_requests: 0, runtime_prover_calls: 0, native_trap: nativeTrap,
+      ...(executedHarness !== null ? { live05_harness: {
+        selected_source_sha256: executedHarness.selectedSourceSha256,
+        source_generation: executedHarness.sourceGeneration.toString(),
+        submission_sha256: executedHarness.submissionSha256,
+        wasm_sha256: executedHarness.wasmSha256,
+        allowed_effects: ['test.emit', 'test.abort'], consumed: true,
+      } } : {}),
       session_state: this.poisoned ? 'terminated-after-runtime-failure' : 'retained',
       metrics, module: record,
       ...(this.sourceEpoch && status === 0 && this.lastSourceObservation !== null

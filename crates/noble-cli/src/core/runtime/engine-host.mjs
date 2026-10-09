@@ -65,6 +65,7 @@ function initializeHostState(engine, bindings) {
     engine.boundRequestsTotal = 0;
     engine.boundTraceExhausted = 0;
     engine.boundTraceTerminal = null;
+    engine.live05DeniedRequests = 0;
     if (!Array.isArray(bindings) || bindings.length > 64) fail('invalid module adapter bindings');
     engine.boundAdapters = new Map();
     for (const row of bindings) {
@@ -118,6 +119,18 @@ function installSharedGlobals(engine, abi) {
 }
 function installTestHosts(engine, declared_modules) {
     engine.shared.test_emit = (offset, count) => {
+      if (engine.inProcessLive && !declared_modules) {
+        engine.hostRequestsTotal += 1;
+        if (!engine.live05AuthorizesEffect() || engine.trace.length >= 4096) {
+          engine.live05DeniedRequests += 1;
+          if (engine.trace.length < 4096) engine.trace.push('test.emit:denied');
+          return 1;
+        }
+        const text = readText(engine, offset, count);
+        engine.trace.push(`test.emit:${text}`);
+        engine.protectedOperations += 1;
+        return 0;
+      }
       if (declared_modules) {
         engine.hostRequestsTotal += 1;
         engine.ambientFallbackCalls += 1;
@@ -197,6 +210,17 @@ function installTestHosts(engine, declared_modules) {
       return [0, step.value];
     };
     engine.shared.test_abort = () => {
+      if (engine.inProcessLive && !declared_modules) {
+        engine.hostRequestsTotal += 1;
+        if (!engine.live05AuthorizesEffect() || engine.trace.length >= 4096) {
+          engine.live05DeniedRequests += 1;
+          if (engine.trace.length < 4096) engine.trace.push('test.abort:denied');
+          return 1;
+        }
+        engine.trace.push('test.abort');
+        engine.protectedOperations += 1;
+        return 0;
+      }
       if (declared_modules) engine.hostRequestsTotal += 1;
       if (engine.trace.length < 4096) engine.trace.push('test.abort');
       return 0;

@@ -69,6 +69,13 @@ The CLI writes JSON reports. A successful run reports `normal`, with one
 `I64` value of `"42"` on the output stack. Stack order is bottom-to-top;
 integers are encoded as decimal strings.
 
+The `.#noble` package declaration builds the CLI with `--no-default-features`;
+the `m3-wasm` app selects that binary by default. The private
+`live-test-barrier` and `live05-harness-effects` modes require an explicitly
+feature-built binary and are not enabled by the normal Cargo build either.
+All-feature verification tests are separate from the binary installed by the
+package.
+
 The runtime uses pinned Node/V8, wasm-tools, and Binaryen paths from
 [its configuration](crates/noble-cli/src/core/runtime/config.json). Missing or
 incompatible tools produce an explicit refusal. The development shell alone
@@ -639,6 +646,47 @@ candidate refuse; an outside writable mapping or alias can still mutate a
 file without a selected-directory event. This cooperative watch is *not*
 proof of immutable file bytes after ACK or full H-LIVE-01/LIVE-05
 acceptance. Explicit `live repl --source` and `:reload` remain available.
+
+For a separate, private watched-Core LIVE-05 diagnostic, build the CLI with
+`cargo build -p noble-cli --bin noble --features live05-harness-effects`.
+Only that feature-built `live watch --source` host can accept a one-shot
+`NOBLE_LIVE05_HARNESS_GRANT` naming the selected watched source SHA-256, its
+publication generation, and the SHA-256 of the exact root submission
+`"A" test.emit test.abort`, in that order separated by colons. It does not
+apply to declared modules, self-edit, named definitions, saved Programs,
+ordinary live sessions or `run`. The worker separately checks the actual
+typed Wasm import pair and the active guest/source identity on each callback;
+the host requires a terminal six-field receipt. This is an opt-in diagnostic,
+not a production grant or canonical LIVE-05 acceptance.
+
+On an isolated private target, the offline locked feature-built watched
+real-child tests passed for the issued grant and for default, stale, and
+foreign-grant refusal. A separately driven CLI JSONL smoke observed watched
+source generations 1 then 2; the selected watched source SHA-256 was
+`4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad`,
+the one-shot root submission SHA-256 was
+`b77aa84381c1c1fc9c59111eda2d07890bc2d7ac7db5661f76a148896aaee832`,
+and the checked Wasm SHA-256 was
+`c45f527885b972bd5229cad2baaa82430dd930449fe4aaea7f499878b3fa6098`.
+The Wasm imported `test_emit` and `test_abort`; the report's six-field receipt
+contained `selected_source_sha256`, `source_generation`, `submission_sha256`,
+`wasm_sha256`, `allowed_effects` (`["test.emit", "test.abort"]`), and
+`consumed` (`true`). Its exact `request_trace` was `test.emit:A` then
+`test.abort`, with two guest and two host requests, zero denials, two protected
+operations, status 6, and `terminated-after-runtime-failure`.
+`CoreEngine.checkTools()` validates and hashes selected Node 24.13.0 / V8
+13.6.233.17-node.37 before returning early for in-process Core live, which
+assembles checked Wasm bytes without external `wasm-tools` or `wasm-opt`.
+Artifact and non-live modes still enforce their selected external tools.
+Scoped source, Wasm lowering, and byte-policy unit tests passed. A separately
+built `--no-default-features` CLI denied an injected fixture grant as
+`unbound-word` with zero guest requests, then executed ordinary live source.
+This does not unblock selected Nix policy: its source SHA-256 pins are stale
+even against the base revision, and its observed feature-scope assertion
+requires an empty feature list despite the existing private test feature.
+After the atomic watch and harness sources are integrated, selected pins and
+feature observation require a separate source-bound review before any Nix
+evaluation or canonical LIVE-05 claim.
 
 Scoped real-child tests also stop inside an actual old Wasm guest frame before
 queuing a reload, and after candidate A's checked V8 Wasm compilation but

@@ -128,6 +128,7 @@ pub(super) struct Layout {
     pub(super) declared_text: bool,
     pub(super) worker_inputs: bool,
     pub(super) live: bool,
+    pub(super) live05_harness: bool,
     /// Opt-in Core or declared live: the 16-page heap, never live_slots.
     pub(super) core_live: bool,
     pub(super) live_slots: bool,
@@ -246,6 +247,7 @@ fn start(
         declared_text: compiler.declared_text,
         worker_inputs: compiler.worker_inputs,
         live: submission.environment.effects.contains(&noble_kernel::types::EffId(3)),
+        live05_harness: compiler.live05_harness,
         core_live: compiler.live || compiler.declared_live,
         live_slots: submission.environment.live_slots,
         live_test_hosts: submission.environment.live_test_hosts,
@@ -273,14 +275,16 @@ fn start(
     reason = "Owner: noble-maintainers; the complete private program table is traversed after checked lowering, and forbidden ambient operations reject before any module is emitted."
 )]
 fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
-    for program in &layout.programs {
+    for (index, program) in layout.programs.iter().enumerate() {
         for operation in &program.operations {
             match operation.action {
-                Action::Word(22) if layout.live
+                Action::Word(22) if (layout.live
+                    && !(layout.live05_harness && index == layout.root))
                     || (layout.declared_modules && !layout.live_test_hosts) => {
                     return Err(crate::Diagnostic::Invalid);
                 }
-                Action::Word(23) if layout.declared_modules || layout.live => {
+                Action::Word(23) if layout.declared_modules
+                    || (layout.live && !(layout.live05_harness && index == layout.root)) => {
                     return Err(crate::Diagnostic::Invalid);
                 }
                 Action::Word(22) => layout.has_core_emit = true,

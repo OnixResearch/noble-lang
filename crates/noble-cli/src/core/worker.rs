@@ -106,6 +106,20 @@ impl Engine {
         Self::start_with_config(&configuration::live(), true)
     }
 
+    /// The separately feature-built test issuer fixes one watched source
+    /// snapshot and top-level submission; ordinary live never sends this.
+    #[cfg(feature = "live05-harness-effects")]
+    pub fn start_live05_harness(
+        selected_source_sha256: &str,
+        source_generation: u64,
+        submission_sha256: &str,
+    ) -> Result<Self, super::output::Failure> {
+        let config = configuration::live05_harness(
+            selected_source_sha256, source_generation, submission_sha256,
+        );
+        Self::start_with_config(&config, true)
+    }
+
     pub fn start_live_declared(
         manifest: &super::arguments::bindings::Manifest,
     ) -> Result<Self, super::output::Failure> {

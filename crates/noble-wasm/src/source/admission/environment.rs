@@ -56,6 +56,7 @@ fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     live: bool,
+    live05_harness: bool,
     live_slots: bool,
     text_cursor: bool,
     declared_text: bool,
@@ -87,7 +88,8 @@ pub(super) fn check(
     {
         return Err(crate::Diagnostic::Invalid);
     }
-    if env.live_slots != live_slots
+    if (live05_harness && !live)
+        || env.live_slots != live_slots
         || (env.live_test_hosts && !live_slots)
         || (live_slots && (live || text_cursor || !env.declared_modules))
         || env.text_cursor != text_cursor
@@ -113,13 +115,19 @@ pub(super) fn check(
     if !exact_effects(env, count, live_slots) {
         return Err(crate::Diagnostic::Invalid);
     }
-    if live && (submission.request.expected.allowed_effects.as_slice().iter()
-        .chain(submission.definitions.iter().flat_map(|definition| {
-            definition.expected.allowed_effects.as_slice().iter()
-        }))
-        .any(|effect| !matches!(effect.0, 3 | 4)))
-    {
-        return Err(crate::Diagnostic::Invalid);
+    if live {
+        // This is a trusted compiler mode, not a property of Env or a
+        // candidate. Definition bodies (including unused ones) never gain
+        // the fixture grant, even when the executable root does.
+        if submission.request.expected.allowed_effects.as_slice().iter()
+            .any(|effect| !matches!(effect.0, 3 | 4)
+                && !(live05_harness && matches!(effect.0, 0 | 1)))
+            || submission.definitions.iter().any(|definition|
+                definition.expected.allowed_effects.as_slice().iter()
+                    .any(|effect| !matches!(effect.0, 3 | 4)))
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
     }
     let expected = replay::ExpectedRows {
         prefix: count,
@@ -378,7 +386,7 @@ mod declared_text_profile_tests {
             .expect("source-checked explicit Text cursor");
         let original = expression.declared_text_source_owner().expect("checked source token")
             .rederive().expect("source-checked expression");
-        assert!(check(&original, false, false, true, true).is_ok());
+        assert!(check(&original, false, false, false, true, true).is_ok());
         for index in 22..28 {
             let mut forged = original.clone();
             forged.environment.kinds[index] = if index >= 23 && index <= 25 {
@@ -386,26 +394,26 @@ mod declared_text_profile_tests {
             } else {
                 noble_kernel::contracts::Behavior::Reserved
             };
-            assert!(check(&forged, false, false, true, true).is_err(),
+            assert!(check(&forged, false, false, false, true, true).is_err(),
                 "altered fixed row {index} passed merged admission");
         }
         let mut forged = original.clone();
         forged.environment.deps[26].push(noble_kernel::contracts::Definition(0));
-        assert!(check(&forged, false, false, true, true).is_err());
+        assert!(check(&forged, false, false, false, true, true).is_err());
         let mut forged = original.clone();
         forged.environment.definition_owners[26] = Some(1);
-        assert!(check(&forged, false, false, true, true).is_err());
+        assert!(check(&forged, false, false, false, true, true).is_err());
         let mut forged = original.clone();
         forged.environment.defs[26].stack_in.clear();
-        assert!(check(&forged, false, false, true, true).is_err());
+        assert!(check(&forged, false, false, false, true, true).is_err());
         let mut forged = original.clone();
         forged.environment.text_cursor = false;
-        assert!(check(&forged, false, false, true, true).is_err());
+        assert!(check(&forged, false, false, false, true, true).is_err());
         let mut forged = original.clone();
         forged.environment.declared_modules = false;
-        assert!(check(&forged, false, false, true, true).is_err());
+        assert!(check(&forged, false, false, false, true, true).is_err());
         for profile in [(false, false), (true, false), (false, true)] {
-            assert!(check(&original, false, false, profile.0, profile.1).is_err(),
+            assert!(check(&original, false, false, false, profile.0, profile.1).is_err(),
                 "calculator source was admitted through an ordinary compiler profile");
         }
     }
