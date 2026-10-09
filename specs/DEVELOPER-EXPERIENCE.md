@@ -22,6 +22,8 @@ These names record design inspiration, not audited upstream behavior, dependenci
 
 Successful editor analysis should expose stack states at word boundaries. Diagnostics must distinguish stack order, stack arity, type mismatch, branch mismatch, and resource duplication. Exact wording is not standardized.
 
+For invalid UTF-8 source bytes, the parse diagnostic span identifies the first malformed byte sequence, not the entire submission: from the valid prefix length through the malformed sequence, or through the source end for an incomplete trailing sequence. These are byte offsets in the submitted source; rejected input leaves the prior stack and declared namespace unchanged.
+
 **DX-HOLE-01.**
 
 Editor holes MUST remain incomplete syntax, not executable values or trusted witnesses. Analysis MUST report known input/output stack constraints and effect constraints, including unresolved variables. Every admission path MUST reject a candidate containing a hole. Analysis MUST NOT execute the candidate body.

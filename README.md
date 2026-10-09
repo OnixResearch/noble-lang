@@ -254,6 +254,10 @@ owner through the non-universal compiler ingress.
 Missing signatures, wrong module versions and invalid candidates do not
 publish a partially checked module. Reports identify `Declared-Text-v1` or
 `Signed-Declared-Text-v1`; no pure guest imports a host function.
+For invalid UTF-8 source, the parse report's `source_span` isolates the first
+malformed byte sequence (or the remaining incomplete suffix) using source
+byte offsets. Such a refusal leaves the existing declared namespace and
+stack unchanged; a later valid UTF-8 module can still link in that session.
 
 This combined profile also accepts immutable lexical `let name` bindings.
 Each `let` consumes the current top value until its enclosing definition,
