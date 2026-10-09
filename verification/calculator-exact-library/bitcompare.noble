@@ -1,0 +1,22 @@
+module bitcompare@1 [
+    signature compare forall<S:stack>
+        [ S List<Bool> List<Bool> -- S I64 ! pure ]
+    export compare
+    def compare [
+        swap
+        [ [ 0 ] [ drop drop -1 ] list.case ] [
+            pair swap
+            [ drop 1 ] [
+                [ swap ] dip swap unpair
+                [[ swap ] dip ] dip
+                [ swap ] dip
+                swap
+                [ swap ] dip
+                [[ swap ] dip ] dip
+                [ 1 ] [ 0 ] if swap [ 1 ] [ 0 ] if swap -
+                [ compare ] dip
+                swap dup 0 = [ drop ] [ swap drop ] if
+            ] list.case
+        ] list.case
+    ]
+]

@@ -272,6 +272,62 @@ function declaredLiveObject(value, fields, label) {
     || fields.some(field => !Object.hasOwn(value, field))) fail(`invalid ${label}`);
 }
 
+function sourceObject(value, fields, label) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)
+    || Object.keys(value).length !== fields.length
+    || fields.some(field => !Object.hasOwn(value, field))) fail(`invalid ${label}`);
+}
+
+function sourceNumber(value, maximum, label) {
+  if (!Number.isSafeInteger(value) || value < 0 || value > maximum) fail(`invalid ${label}`);
+  return value;
+}
+
+function sourceU64(value, label) {
+  if (typeof value !== 'string' || !/^(0|[1-9][0-9]*)$/.test(value)
+    || value.length > 20 || BigInt(value) > 0xffffffffffffffffn) {
+    fail(`invalid ${label}`);
+  }
+  return value;
+}
+
+function sourceI64(value, label) {
+  if (typeof value !== 'string' || !/^(0|-[1-9][0-9]*|[1-9][0-9]*)$/.test(value)
+    || value.length > 20 || BigInt.asIntN(64, BigInt(value)) !== BigInt(value)) {
+    fail(`invalid ${label}`);
+  }
+  return value;
+}
+
+function sourceSpan(span, length, label, nonempty = false) {
+  sourceObject(span, ['start', 'end'], label);
+  sourceNumber(span.start, length, label);
+  sourceNumber(span.end, length, label);
+  if (span.start > span.end || nonempty && span.start === span.end) fail(`invalid ${label}`);
+  return span;
+}
+
+function sourceCodeSpan(span, tableLength) {
+  sourceObject(span, ['start', 'length', 'generation'], 'source code span');
+  sourceNumber(span.start, tableLength, 'source code start');
+  sourceNumber(span.length, tableLength - span.start, 'source code length');
+  sourceNumber(span.generation, 0xffffffff, 'source code generation');
+  if (span.start < 4 || !span.generation) fail('invalid source code span');
+  return span;
+}
+
+function sourceBytes(base64) {
+  if (typeof base64 !== 'string' || base64.length > 87384
+    || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64)) {
+    fail('invalid original signed source bytes');
+  }
+  const bytes = Buffer.from(base64, 'base64');
+  if (bytes.length > 65536 || bytes.toString('base64') !== base64) {
+    fail('noncanonical original signed source bytes');
+  }
+  return bytes;
+}
+
 export class CoreEngine {
   constructor(selection, abi, { optimized = false, artifacts = null, bindings = [],
     declared_modules = false, declared_extension = null, in_process_live = false,
@@ -298,6 +354,11 @@ export class CoreEngine {
     this.lastSourceObservation = null;
     this.sourceModules = [];
     this.sourceCoreEntries = null;
+    this.sourceTableEntries = [];
+    this.sourceCodeOwners = new Map();
+    this.sourcePrograms = [];
+    this.sourceSignatures = new Map();
+    this.sourceLastGeneration = 0n;
     this.liveCodeSpans = new Map();
     this.liveModuleOwner = null;
     this.liveModuleNamespaceGeneration = null;
@@ -337,6 +398,12 @@ export class CoreEngine {
     this.table = new WebAssembly.Table(abi.table);
     this.shared = Object.create(null);
     installSharedGlobals(this, abi);
+    if (this.sourceEpoch) {
+      // The source epoch is not the submission generation. Old universal
+      // Program descriptors must remain valid while unrelated modules append.
+      this.shared.source_epoch_generation =
+        new WebAssembly.Global({ value: 'i32', mutable: true }, 0);
+    }
     installTestHosts(this, declared_modules);
     if (this.inProcessLive) {
       if (!this.declaredLive) {
@@ -392,8 +459,692 @@ export class CoreEngine {
     if (result.error || result.status !== 0) fail(`${label} failed: ${result.error ?? result.stderr}`);
   }
 
+  sourceCheckPinned(allowNewEntriesThrough = this.sourceTableEntries.length + 4) {
+    if (!this.sourceEpoch || this.shared.source_epoch_generation.value !== this.sourceEpochGeneration
+      || this.sourceCoreEntries !== null
+        && this.sourceCoreEntries.some((entry, index) => this.table.get(index) !== entry)
+      || this.sourceModules.length !== 0 && this.sourceCoreEntries === null) {
+      fail('signed source epoch or Core table root changed');
+    }
+    for (let index = 0; index < this.sourceTableEntries.length; index += 1) {
+      if (this.table.get(index + 4) !== this.sourceTableEntries[index]) {
+        fail('accepted old source code entry changed');
+      }
+    }
+    for (let index = allowNewEntriesThrough; index < this.table.length; index += 1) {
+      if (this.table.get(index) !== null) fail('unowned source code table entry');
+    }
+    for (const owner of this.sourceCodeOwners.values()) {
+      if (!this.sourceModules.includes(owner.instance)) fail('old source owner module was unpinned');
+      for (const entry of owner.entries) {
+        if (this.table.get(entry.index) !== entry.function) fail('old source owner code was replaced');
+      }
+    }
+    const view = new DataView(this.memory.buffer);
+    for (const signature of this.sourceSignatures.values()) {
+      const runtime = signature.instance.exports;
+      if (!this.sourceModules.includes(signature.instance)
+        || runtime.signature_address(signature.id) !== signature.address
+        || runtime.signature_length(signature.id) !== signature.bytes.length
+        || !signature.bytes.equals(Buffer.from(this.memory.buffer,
+          signature.address, signature.bytes.length))) {
+        fail('old source full-signature descriptor changed');
+      }
+    }
+    for (const installed of this.sourcePrograms) {
+      if (!this.sourceModules.includes(installed.instance)
+        || !this.sourceProgramMatches(installed, installed.instance.exports, view)) {
+        fail('accepted old source descriptor, slot or recipe changed');
+      }
+    }
+    const bySlot = new Map(this.sourcePrograms.map(program =>
+      [program.program.slot, program]));
+    for (const installed of this.sourcePrograms) {
+      for (const site of installed.program.sites) {
+        if (site.action === 3) continue;
+        const target = bySlot.get(site.target_slot);
+        if (!target || target.handle !== view.getUint32(site.target_slot, true)
+          || target.program.entry !== site.target_entry
+          || target.program.input_signature !== site.input_signature
+          || target.program.output_signature !== site.output_signature
+          || target.program.effect_mask !== site.effect_or_witness
+          || target.owner.definition_identity !== site.target_identity
+          || target.owner.definition !== site.target_definition) {
+          fail('accepted source descriptor target changed');
+        }
+      }
+    }
+  }
+
+  sourceProgramMatches(installed, runtime, view) {
+    const { program, owner, handle, descriptor, atomHandles, siteBytes } = installed;
+    if (program.slot < 262144 || program.slot > 1048576 - 4
+      || program.records < 262144
+      || program.records + siteBytes.length > 1048576) {
+      return false;
+    }
+    if (runtime.module_program_handle(program.program_index) !== handle
+      || runtime.cell_kind(handle) !== 4 || runtime.cell_a(handle) !== descriptor
+      || runtime.cell_b(handle) !== 0
+      || runtime.cell_x(handle) !== program.entry
+      || runtime.cell_y(handle) !== program.input_signature
+      || runtime.cell_z(handle) !== program.output_signature
+      || runtime.cell_w(handle) !== program.recipe_depth
+      || runtime.cell_n(handle) !== program.recipe_leaves
+      || runtime.cell_payload(handle) !== 0n
+      || runtime.cell_kind(descriptor) !== 9
+      || runtime.cell_a(descriptor) !== 0 || runtime.cell_b(descriptor) !== 0
+      || runtime.cell_c(descriptor) !== 0
+      || runtime.cell_x(descriptor) !== program.records
+      || runtime.cell_y(descriptor) !== program.sites.length
+      || runtime.cell_z(descriptor) !== this.sourceEpochGeneration
+      || runtime.cell_w(descriptor) !== program.slot
+      || runtime.cell_n(descriptor) !== owner.definition
+      || BigInt.asUintN(64, runtime.cell_payload(descriptor))
+        !== BigInt(owner.definition_identity)
+      || view.getUint32(program.slot, true) !== handle
+      || !siteBytes.equals(Buffer.from(this.memory.buffer,
+        program.records, siteBytes.length))) return false;
+    const recipe = runtime.cell_c(handle);
+    const pending = recipe ? [recipe] : [];
+    let leaf = 0, traversed = 0;
+    while (pending.length) {
+      const cell = pending.pop();
+      if (!Number.isInteger(cell) || cell < 1 || cell >= handle
+        || ++traversed > program.atoms.length * 2 + 1) return false;
+      const kind = runtime.cell_kind(cell);
+      if (kind === 9) {
+        const a = runtime.cell_a(cell), b = runtime.cell_b(cell);
+        if (!a || !b || a >= cell || b >= cell) return false;
+        pending.push(b, a);
+        continue;
+      }
+      const atom = program.atoms[leaf], expected = atomHandles[leaf++];
+      if (!atom || cell !== expected || kind !== 8
+        || runtime.cell_x(cell) !== atom.tag
+        || runtime.cell_payload(cell) !== BigInt(atom.payload)
+        || runtime.cell_y(cell) !== atom.input
+        || runtime.cell_z(cell) !== atom.output
+        || runtime.cell_w(cell) !== atom.effects
+        || runtime.cell_n(cell) !== atom.ordinal
+        || runtime.cell_b(cell) !== 0 || runtime.cell_c(cell) !== 0
+        || atom.child_program !== null
+          && !(installed.handles.get(atom.child_program) < cell)
+        || runtime.cell_a(cell) !== (atom.child_program === null ? 0
+          : installed.handles.get(atom.child_program))) return false;
+    }
+    return leaf === program.atoms.length;
+  }
+
+  sourcePreflight(receipt) {
+    sourceObject(receipt, ['schema', 'source_epoch', 'source_generation',
+      'selected_use', 'wrapper_program_index', 'wrapper_entry', 'code_span',
+      'owners', 'programs'], 'universal compiler receipt');
+    if (receipt.schema !== 'noble-source-universal-install/v1'
+      || receipt.source_epoch !== this.sourceEpochGeneration
+      || !Array.isArray(receipt.owners) || !receipt.owners.length
+      || !Array.isArray(receipt.programs) || !receipt.programs.length
+      || receipt.programs.length >= 4096
+      || receipt.owners.length > receipt.programs.length
+      || !this.sourceEpoch || this.pending || this.poisoned) {
+      fail('stale or incomplete source universal receipt');
+    }
+    sourceU64(receipt.source_generation, 'source generation');
+    if (BigInt(receipt.source_generation) < this.sourceLastGeneration) {
+      fail('source namespace generation moved backward');
+    }
+    const span = sourceCodeSpan(receipt.code_span, this.table.length);
+    const previousEnd = 4 + this.sourceTableEntries.length;
+    if (span.start !== previousEnd || !span.length
+      || span.generation !== this.shared.generation.value + 1
+      || receipt.wrapper_entry !== span.start + span.length - 1
+      || receipt.source_epoch > 0x7fffffff) {
+      fail('universal code span does not append to accepted source epoch');
+    }
+    this.sourceCheckPinned();
+    if (this.sourceCoreEntries === null
+      && Array.from({ length: 4 }, (_, index) => this.table.get(index))
+        .some(entry => entry !== null)) {
+      fail('first universal source cannot inherit an existing Core table root');
+    }
+    const owners = receipt.owners.map((row, ownerIndex) => {
+      sourceObject(row, ['owner_index', 'definition', 'definition_slot',
+        'definition_identity', 'module_identity', 'module_version',
+        'definition_ordinal', 'original_source_base64', 'source_sha256',
+        'nodes', 'stamp', 'code_span', 'body_entry', 'quotations',
+        'newly_compiled'], 'universal owner');
+      if (row.owner_index !== ownerIndex || !Array.isArray(row.nodes)
+        || row.nodes.length > 4096 || !Array.isArray(row.quotations)
+        || row.quotations.length > row.nodes.length
+        || typeof row.newly_compiled !== 'boolean') fail('invalid universal owner graph');
+      const source = sourceBytes(row.original_source_base64);
+      if (!source.length || row.source_sha256 !== sha256(source)) {
+        fail('universal owner source digest differs from retained whole module');
+      }
+      for (const field of ['definition', 'definition_slot', 'module_version',
+        'definition_ordinal', 'body_entry']) sourceNumber(row[field], 0xffffffff, field);
+      for (const field of ['definition_identity', 'module_identity']) {
+        sourceU64(row[field], field);
+      }
+      sourceObject(row.stamp, ['source_tag', 'grant_epoch', 'generation'], 'source stamp');
+      if (typeof row.stamp.source_tag !== 'string'
+        || !/^[a-f0-9]{64}$/.test(row.stamp.source_tag)) fail('invalid signed source tag');
+      sourceU64(row.stamp.grant_epoch, 'source grant epoch');
+      sourceU64(row.stamp.generation, 'source stamp generation');
+      if (BigInt(row.stamp.generation) > BigInt(receipt.source_generation)) {
+        fail('original source owner comes from a future namespace generation');
+      }
+      sourceCodeSpan(row.code_span, this.table.length);
+      for (const [node, value] of row.nodes.entries()) {
+        sourceObject(value, ['node', 'span'], 'source node origin');
+        sourceSpan(value.span, source.length, 'source node span');
+        if (value.node !== node) fail('source node association differs from original module');
+      }
+      const quotes = new Map();
+      for (const quote of row.quotations) {
+        sourceObject(quote, ['node', 'entry'], 'source quotation entry');
+        sourceNumber(quote.node, row.nodes.length - 1, 'quotation source node');
+        sourceNumber(quote.entry, this.table.length - 1, 'quotation table entry');
+        if (quotes.has(quote.node)
+          || quote.entry < row.code_span.start
+          || quote.entry >= row.code_span.start + row.code_span.length) {
+          fail('ambiguous source quotation code identity');
+        }
+        quotes.set(quote.node, quote.entry);
+      }
+      if (row.body_entry < row.code_span.start
+        || row.body_entry >= row.code_span.start + row.code_span.length) {
+        fail('unbound original owner body entry');
+      }
+      const previous = this.sourceCodeOwners.get(row.definition);
+      if (row.newly_compiled) {
+        if (previous || row.code_span.generation !== span.generation
+          || row.code_span.start < span.start
+          || row.code_span.start + row.code_span.length > receipt.wrapper_entry) {
+          fail('new universal owner replaces previously installed Definition');
+        }
+      } else if (!previous || previous.source_epoch !== this.sourceEpochGeneration
+        || previous.definition_slot !== row.definition_slot
+        || previous.definition_identity !== row.definition_identity
+        || previous.module_identity !== row.module_identity
+        || previous.module_version !== row.module_version
+        || previous.definition_ordinal !== row.definition_ordinal
+        || previous.source_sha256 !== row.source_sha256
+        || !previous.source.equals(source)
+        || previous.source_tag !== row.stamp.source_tag
+        || previous.grant_epoch !== row.stamp.grant_epoch
+        || previous.stamp_generation !== row.stamp.generation
+        || previous.nodes.length !== row.nodes.length
+        || previous.nodes.some((node, index) =>
+          node.span.start !== row.nodes[index].span.start
+          || node.span.end !== row.nodes[index].span.end)
+        || previous.code_span.start !== row.code_span.start
+        || previous.code_span.length !== row.code_span.length
+        || previous.code_span.generation !== row.code_span.generation
+        || previous.body_entry !== row.body_entry
+        || previous.quotations.size !== quotes.size
+        || [...quotes].some(([node, entry]) => previous.quotations.get(node) !== entry)) {
+        fail('original owner source, grant, dependency or old code identity changed');
+      }
+      return { ...row, source, quotes, previous };
+    });
+    if (new Set(owners.map(owner => owner.definition)).size !== owners.length) {
+      fail('duplicate source Definition owner');
+    }
+    const programs = receipt.programs.map((row, programIndex) => {
+      sourceObject(row, ['use_index', 'owner_index', 'program_index',
+        'quotation_node', 'quotation_source_span', 'entry', 'slot', 'records',
+        'input_signature', 'output_signature', 'effect_mask',
+        'recipe_depth', 'recipe_leaves', 'atoms', 'sites'],
+      'concrete source Program');
+      sourceNumber(row.owner_index, owners.length - 1, 'concrete source owner');
+      const owner = owners[row.owner_index];
+      if (!owner || row.program_index !== programIndex
+        || !Array.isArray(row.atoms) || !Array.isArray(row.sites)
+        || row.atoms.length > 4096 || row.sites.length > row.atoms.length
+        || row.effect_mask !== 0) fail('incomplete concrete Program ABI');
+      for (const field of ['use_index', 'entry', 'slot', 'records',
+        'input_signature', 'output_signature', 'recipe_depth', 'recipe_leaves']) {
+        sourceNumber(row[field], field === 'slot' || field === 'records'
+          ? 1048576 : field === 'use_index' ? 4095
+            : field === 'recipe_depth' || field === 'recipe_leaves' ? 4096 : 16383, field);
+      }
+      if (row.quotation_node === null) {
+        if (row.quotation_source_span !== null || row.entry !== owner.body_entry) {
+          fail('concrete body does not retain original owner entry');
+        }
+      } else {
+        sourceNumber(row.quotation_node, owner.nodes.length - 1, 'quoted source node');
+        const node = owner.nodes[row.quotation_node];
+        sourceSpan(row.quotation_source_span, owner.source.length, 'original quote span', true);
+        if (!node || node.span.start !== row.quotation_source_span.start
+          || node.span.end !== row.quotation_source_span.end
+          || row.entry !== owner.quotes.get(row.quotation_node)) {
+          fail('quotation source and original code entry differ');
+        }
+      }
+      const siteAtoms = new Map();
+      const quoteAtoms = new Map();
+      for (const [index, atom] of row.atoms.entries()) {
+        sourceObject(atom, ['source_node', 'tag', 'payload', 'child_program',
+          'text', 'input', 'output', 'effects', 'ordinal'], 'checked recipe atom');
+        sourceNumber(atom.source_node, owner.nodes.length - 1, 'atom source node');
+        sourceNumber(atom.tag, 34, 'atom kind');
+        sourceI64(atom.payload, 'atom payload');
+        for (const field of ['input', 'output', 'effects', 'ordinal']) {
+          sourceNumber(atom[field], field === 'ordinal' ? 0xffffffff : 4095, field);
+        }
+        const word = atom.tag === 2 ? Number(atom.payload) : 0;
+        if (atom.effects !== 0 || atom.ordinal !== 0
+          || atom.tag === 4 && atom.payload !== '0' && atom.payload !== '1'
+          || (atom.tag === 3 || atom.tag === 5) && atom.payload !== '0'
+          || atom.tag === 2 && (!Number.isInteger(word) || word < 0
+            || word > 21 && word !== 26 && word !== 27)) {
+          fail('source recipe contains a non-pure or malformed atom');
+        }
+        if (atom.text !== null || atom.tag !== 1 && atom.tag !== 2
+          && atom.tag !== 3 && atom.tag !== 4 && atom.tag !== 5 && atom.tag !== 15
+          || atom.child_program !== null
+            && (!Number.isSafeInteger(atom.child_program) || atom.child_program < 0
+              || atom.child_program >= receipt.programs.length)
+          || atom.tag === 3 !== (atom.child_program !== null)) {
+          fail(`unsupported source recipe atom ${index}`);
+        }
+        if (atom.tag === 3 || atom.tag === 15) {
+          const key = `${atom.source_node}:${atom.tag}`;
+          if (!siteAtoms.has(key)) siteAtoms.set(key, []);
+          siteAtoms.get(key).push(atom);
+        }
+        if (atom.tag === 2 && atom.payload === '8') {
+          if (!quoteAtoms.has(atom.source_node)) quoteAtoms.set(atom.source_node, []);
+          quoteAtoms.get(atom.source_node).push(atom);
+        }
+      }
+      for (const site of row.sites) {
+        sourceObject(site, ['node', 'source_span', 'action', 'target_use',
+          'target_program_index', 'target_slot', 'input_signature',
+          'output_signature', 'effect_or_witness', 'target_identity',
+          'target_definition', 'target_entry'], 'checked lexical site');
+        sourceNumber(site.node, owner.nodes.length - 1, 'site source node');
+        sourceSpan(site.source_span, owner.source.length, 'lexical site span', true);
+        const origin = owner.nodes[site.node];
+        if (origin.span.start !== site.source_span.start
+          || origin.span.end !== site.source_span.end
+          || ![1, 2, 3].includes(site.action)) fail('site is not original lexical source');
+        for (const field of ['target_slot', 'input_signature', 'output_signature',
+          'effect_or_witness', 'target_definition', 'target_entry']) {
+          sourceNumber(site[field], field === 'target_slot' ? 1048576
+            : field === 'target_definition' || field === 'target_entry'
+              ? 0xffffffff : 4095, field);
+        }
+        sourceU64(site.target_identity, 'target owner identity');
+        if (site.action === 3) {
+          if (site.target_use !== null || site.target_program_index !== null
+            || site.target_slot !== 0 || site.target_entry !== 0
+            || site.target_identity !== owner.definition_identity
+            || site.target_definition !== owner.definition) {
+            fail('invalid typed quotation witness or original source owner');
+          }
+        } else {
+          sourceNumber(site.target_use, 4095, 'target concrete use');
+          sourceNumber(site.target_program_index, receipt.programs.length - 1,
+            'target Program index');
+          const target = receipt.programs[site.target_program_index];
+          const targetOwner = target && owners[target.owner_index];
+          if (!target || !targetOwner || target.use_index !== site.target_use
+            || target.slot !== site.target_slot || target.entry !== site.target_entry
+            || target.input_signature !== site.input_signature
+            || target.output_signature !== site.output_signature
+            || target.effect_mask !== site.effect_or_witness
+            || targetOwner.definition_identity !== site.target_identity
+            || targetOwner.definition !== site.target_definition
+            || site.action === 1 && (site.target_use !== row.use_index
+              || target.owner_index !== row.owner_index
+              || target.quotation_node !== site.node)
+            || site.action === 2 && target.quotation_node !== null) {
+            fail('site target differs from the checked concrete Program');
+          }
+        }
+        const key = `${site.node}:${site.action === 1 ? 3 : 15}`;
+        const atom = site.action === 3
+          ? quoteAtoms.get(site.node)?.pop()
+          : siteAtoms.get(key)?.pop();
+        if (!atom || site.action === 1 && (atom.tag !== 3
+            || atom.child_program !== site.target_program_index)
+          || site.action === 2 && (atom.tag !== 15
+            || BigInt.asUintN(64, BigInt(atom.payload)) !== BigInt(site.target_identity))
+          || site.action === 3 && (atom.tag !== 2 || atom.payload !== '8')) {
+          fail('lexical site has no matching source recipe atom');
+        }
+      }
+      let unbound = false;
+      for (const pending of siteAtoms.values()) {
+        if (pending.length) unbound = true;
+      }
+      for (const pending of quoteAtoms.values()) {
+        if (pending.length) unbound = true;
+      }
+      if (unbound) {
+        fail('dynamic Program recipe has no checked lexical descriptor');
+      }
+      return row;
+    });
+    const roots = new Map();
+    const usePrograms = new Map();
+    const ownerPrograms = new Map();
+    const firstOwnerRoot = new Map();
+    let previousUse = -1;
+    for (const program of programs) {
+      if (program.use_index < previousUse || program.use_index > previousUse + 1
+        || previousUse === -1 && program.use_index !== 0
+        || program.use_index !== previousUse
+          && program.quotation_node !== null) {
+        fail('concrete source uses are not in compiler order');
+      }
+      previousUse = program.use_index;
+      if (!usePrograms.has(program.use_index)) usePrograms.set(program.use_index, []);
+      usePrograms.get(program.use_index).push(program);
+      if (!ownerPrograms.has(program.owner_index)) ownerPrograms.set(program.owner_index, []);
+      ownerPrograms.get(program.owner_index).push(program);
+      if (program.quotation_node === null) {
+        if (roots.has(program.use_index)) fail('ambiguous concrete owner use');
+        roots.set(program.use_index, program);
+        if (!firstOwnerRoot.has(program.owner_index)) {
+          firstOwnerRoot.set(program.owner_index, program);
+        }
+      }
+    }
+    if (!roots.has(receipt.selected_use)
+      || [...usePrograms].some(([index, entries]) => {
+        const root = roots.get(index);
+        return !root || entries[0] !== root
+          || entries.slice(1).some((entry, offset) => entry.quotation_node === null
+            || offset > 0 && entry.quotation_node
+              <= entries[offset].quotation_node);
+      })
+      || new Set(programs.map(program => program.slot)).size !== programs.length
+      || receipt.wrapper_program_index !== programs.length) {
+      fail('incomplete concrete source-use graph');
+    }
+    for (const program of programs) {
+      const root = roots.get(program.use_index);
+      if (!root || root.owner_index !== program.owner_index) {
+        fail('quotation is not owned by its concrete source use');
+      }
+    }
+    const depths = new Map();
+    const visiting = new Set();
+    const countRecipe = program => {
+      if (depths.has(program.program_index)) return depths.get(program.program_index);
+      if (visiting.has(program.program_index)) fail('cyclic immutable Program child recipe');
+      visiting.add(program.program_index);
+      let depth = 1, leaves = program.atoms.length;
+      for (const atom of program.atoms) {
+        if (atom.child_program === null) continue;
+        const child = programs[atom.child_program];
+        if (!child || child.use_index !== program.use_index
+          || child.owner_index !== program.owner_index
+          || child.quotation_node !== atom.source_node) {
+          fail('concrete quotation child is not its lexical source owner');
+        }
+        const counted = countRecipe(child);
+        depth = Math.max(depth, counted.depth + 1);
+        leaves += counted.leaves;
+      }
+      visiting.delete(program.program_index);
+      if (depth !== program.recipe_depth || leaves !== program.recipe_leaves
+        || leaves > 4096 || depth > 4096) {
+        fail('source Program has an incorrect checked recipe depth or leaves');
+      }
+      const result = { depth, leaves };
+      depths.set(program.program_index, result);
+      return result;
+    };
+    for (const program of programs) countRecipe(program);
+    for (const owner of owners) {
+      const first = firstOwnerRoot.get(owner.owner_index);
+      if (!first) fail('unreferenced universal owner code');
+      const quotes = usePrograms.get(first.use_index).slice(1);
+      const quoteByNode = new Map(quotes.map(quote => [quote.quotation_node, quote]));
+      if (quotes.length !== owner.quotations.length
+        || quotes.some((program, index) =>
+          program.quotation_node !== owner.quotations[index].node)) {
+        fail('original owner quotation tree changed');
+      }
+      let entry = owner.code_span.start;
+      for (const program of [first, ...quotes]) {
+        if (program.entry !== entry) {
+          fail('original owner body and quote code entry offset changed');
+        }
+        entry += Math.max(program.atoms.length, 1);
+      }
+      if (entry !== owner.code_span.start + owner.code_span.length) {
+        fail('original owner code span does not cover every lexical instruction');
+      }
+      for (const program of ownerPrograms.get(owner.owner_index)) {
+        const original = program.quotation_node === null ? first
+          : quoteByNode.get(program.quotation_node);
+        if (!original || original.atoms.length !== program.atoms.length) {
+          fail('concrete instance changes old symbolic code layout');
+        }
+      }
+    }
+    const ranges = [];
+    const addRange = (start, length) => {
+      if (start < 262144 || start % 4 || length < 0
+        || start + length > 1048576) {
+        fail('unbounded source descriptor address');
+      }
+      if (length) ranges.push([start, start + length]);
+    };
+    for (const old of this.sourcePrograms) {
+      addRange(old.program.slot, 4);
+      if (old.siteBytes.length) addRange(old.program.records, old.siteBytes.length);
+    }
+    for (const signature of this.sourceSignatures.values()) {
+      ranges.push([signature.address, signature.address + signature.bytes.length]);
+    }
+    const memory = new DataView(this.memory.buffer);
+    for (const program of programs) {
+      addRange(program.slot, 4);
+      if (memory.getUint32(program.slot, true) !== 0) {
+        fail('universal descriptor slot was already initialized');
+      }
+      if (program.sites.length) addRange(program.records, program.sites.length * 40);
+      else if (program.records < 262144 || program.records > 1048576
+        || program.records % 4) fail('unbounded empty source descriptor records');
+    }
+    ranges.sort((left, right) => left[0] - right[0]);
+    for (let index = 1; index < ranges.length; index += 1) {
+      if (ranges[index][0] < ranges[index - 1][1]) {
+        fail('old or pending universal descriptor ranges overlap');
+      }
+    }
+    const newOwners = owners.filter(owner => owner.newly_compiled)
+      .sort((left, right) => left.code_span.start - right.code_span.start);
+    let nextEntry = span.start;
+    for (const owner of newOwners) {
+      if (owner.code_span.start !== nextEntry) fail('unowned gap in new source code');
+      nextEntry += owner.code_span.length;
+    }
+    if (nextEntry !== receipt.wrapper_entry) fail('wrapper code does not follow checked owners');
+    return { receipt, span, owners, programs, previousEnd, reservedRanges: ranges };
+  }
+
+  sourcePostflight(installation, instance) {
+    const { receipt, owners, programs, span, previousEnd, reservedRanges } = installation;
+    const runtime = instance.exports;
+    if (this.poisoned || this.shared.source_epoch_generation.value !== receipt.source_epoch
+      || this.shared.generation.value !== span.generation
+      || runtime.module_program_count() !== programs.length + 1) {
+      fail('universal source publication has an incomplete module root');
+    }
+    this.sourceCheckPinned(span.start + span.length);
+    const core = this.sourceCoreEntries ?? Array.from({ length: 4 },
+      (_, index) => this.table.get(index));
+    if (core.some((entry, index) => typeof entry !== 'function'
+      || this.table.get(index) !== entry)) fail('universal source replaced Core bridge');
+    for (let index = previousEnd; index < span.start + span.length; index += 1) {
+      if (typeof this.table.get(index) !== 'function') {
+        fail('universal source code entry was not installed');
+      }
+    }
+    for (let index = span.start + span.length; index < this.table.length; index += 1) {
+      if (this.table.get(index) !== null) fail('unowned universal source code entry');
+    }
+    const handles = new Map();
+    const seen = new Set();
+    for (let index = 0; index <= programs.length; index += 1) {
+      const handle = runtime.module_program_handle(index);
+      if (!Number.isSafeInteger(handle) || handle <= 0
+        || handle > this.shared.heap_cursor.value || seen.has(handle)
+        || runtime.cell_kind(handle) !== 4) fail('missing concrete Program owner root');
+      handles.set(index, handle);
+      seen.add(handle);
+    }
+    const wrapper = handles.get(receipt.wrapper_program_index);
+    const selected = programs.find(program => program.use_index === receipt.selected_use
+      && program.quotation_node === null);
+    const wrapperAtom = runtime.cell_c(wrapper);
+    if (runtime.cell_x(wrapper) !== receipt.wrapper_entry
+      || runtime.cell_w(wrapper) !== 1 || runtime.cell_n(wrapper) !== 1
+      || runtime.cell_payload(wrapper) !== 0n || runtime.cell_a(wrapper) !== 0
+      || runtime.cell_b(wrapper) !== 0
+      || runtime.cell_y(wrapper) !== selected.input_signature
+      || runtime.cell_z(wrapper) !== selected.output_signature
+      || !Number.isSafeInteger(wrapperAtom) || wrapperAtom < 1 || wrapperAtom >= wrapper
+      || runtime.cell_kind(wrapperAtom) !== 8
+      || runtime.cell_x(wrapperAtom) !== 15
+      || runtime.cell_a(wrapperAtom) !== 0 || runtime.cell_b(wrapperAtom) !== 0
+      || runtime.cell_c(wrapperAtom) !== 0
+      || runtime.cell_y(wrapperAtom) !== selected.input_signature
+      || runtime.cell_z(wrapperAtom) !== selected.output_signature
+      || runtime.cell_w(wrapperAtom) !== 0 || runtime.cell_n(wrapperAtom) !== 0
+      || BigInt.asUintN(64, runtime.cell_payload(wrapperAtom))
+        !== BigInt(owners[selected.owner_index].definition_identity)) {
+      fail('selected wrapper does not invoke its exact source owner');
+    }
+    const view = new DataView(this.memory.buffer);
+    const newSignatures = new Map();
+    const checkSignature = id => {
+      if (newSignatures.has(id)) return;
+      sourceNumber(id, 4095, 'source full signature');
+      const address = runtime.signature_address(id), length = runtime.signature_length(id);
+      if (!Number.isSafeInteger(address) || address < 262144
+        || !Number.isSafeInteger(length) || length <= 0
+        || address + length > 1048576
+        || length > 16384 || !readSignature(this, runtime, id)) {
+        fail('missing exact concrete full-signature descriptor');
+      }
+      // Keep a private copy: a Buffer view over Wasm memory would mutate
+      // along with the descriptor and make later identity checks tautological.
+      const literal = Buffer.from(new Uint8Array(this.memory.buffer, address, length));
+      const installed = this.sourceSignatures.get(id);
+      if (installed && (installed.address !== address
+        || !installed.bytes.equals(literal))) {
+        fail('old full-signature identity silently changed');
+      }
+      if (!installed) {
+        if (reservedRanges.some(([start, end]) =>
+          address < end && start < address + length)) {
+          fail('source signature overlaps an installed descriptor or slot');
+        }
+        reservedRanges.push([address, address + length]);
+      }
+      newSignatures.set(id, { id, address, bytes: literal, instance });
+    };
+    const installedPrograms = [];
+    for (const program of programs) {
+      const owner = owners[program.owner_index], handle = handles.get(program.program_index);
+      const descriptor = runtime.cell_a(handle);
+      if (!Number.isSafeInteger(descriptor) || descriptor < 1 || descriptor >= handle) {
+        fail('source Program does not own an immutable backward descriptor');
+      }
+      const siteBytes = Buffer.alloc(program.sites.length * 40);
+      program.sites.forEach((site, index) => {
+        const at = index * 40;
+        for (const [offset, value] of [
+          [0, site.node], [4, site.action], [8, site.target_slot],
+          [12, site.input_signature], [16, site.output_signature],
+          [20, site.effect_or_witness], [32, site.target_definition],
+          [36, site.target_entry],
+        ]) siteBytes.writeUInt32LE(value, at + offset);
+        siteBytes.writeBigUInt64LE(BigInt(site.target_identity), at + 24);
+        for (const id of [site.input_signature, site.output_signature,
+          ...(site.action === 3 ? [site.effect_or_witness] : [])]) checkSignature(id);
+      });
+      for (const id of [program.input_signature, program.output_signature]) {
+        checkSignature(id);
+      }
+      const atomHandles = [];
+      const pending = runtime.cell_c(handle) ? [runtime.cell_c(handle)] : [];
+      while (pending.length) {
+        const cell = pending.pop();
+        if (!Number.isInteger(cell) || cell < 1 || cell >= handle
+          || atomHandles.length + pending.length > program.atoms.length * 2 + 1) {
+          fail('cyclic concrete Program recipe');
+        }
+        if (runtime.cell_kind(cell) === 9) {
+          const a = runtime.cell_a(cell), b = runtime.cell_b(cell);
+          if (!a || !b || a >= cell || b >= cell) fail('nonlinear source recipe');
+          pending.push(b, a);
+        } else {
+          if (runtime.cell_kind(cell) !== 8 || atomHandles.length >= program.atoms.length) {
+            fail('unexpected concrete recipe leaf');
+          }
+          atomHandles.push(cell);
+        }
+      }
+      for (const atom of program.atoms) {
+        if (atom.input) checkSignature(atom.input);
+        if (atom.output) checkSignature(atom.output);
+      }
+      const entry = { instance, owner, program, handle, descriptor,
+        atomHandles, siteBytes, handles };
+      if (!this.sourceProgramMatches(entry, runtime, view)) {
+        fail('concrete Program cell, descriptor, slot or checked recipe differs');
+      }
+      if (program.entry && typeof this.table.get(program.entry) !== 'function'
+        || owner.previous && owner.previous.entries.length
+          && !owner.previous.entries.some(row => row.index === program.entry)
+          && program.entry !== 0) fail('concrete use retargeted old code entry');
+      installedPrograms.push(entry);
+    }
+    for (const installed of installedPrograms) {
+      for (const site of installed.program.sites) {
+        if (site.action === 3) continue;
+        const target = installedPrograms[site.target_program_index];
+        if (!target || target.program.slot !== site.target_slot
+          || target.handle !== view.getUint32(site.target_slot, true)) {
+          fail('concrete source lexical target slot is incomplete');
+        }
+      }
+    }
+    const acceptedOwners = [];
+    for (const owner of owners) {
+      if (!owner.newly_compiled) continue;
+      const entries = [];
+      for (let index = owner.code_span.start;
+        index < owner.code_span.start + owner.code_span.length; index += 1) {
+        entries.push({ index, function: this.table.get(index) });
+      }
+      acceptedOwners.push({ instance, source_epoch: receipt.source_epoch,
+        definition: owner.definition, definition_slot: owner.definition_slot,
+        definition_identity: owner.definition_identity,
+        module_identity: owner.module_identity, module_version: owner.module_version,
+        definition_ordinal: owner.definition_ordinal, source: owner.source,
+        source_sha256: owner.source_sha256, nodes: owner.nodes,
+        source_tag: owner.stamp.source_tag, grant_epoch: owner.stamp.grant_epoch,
+        stamp_generation: owner.stamp.generation, code_span: owner.code_span,
+        body_entry: owner.body_entry, quotations: owner.quotes, entries });
+    }
+    return { owners: acceptedOwners, programs: installedPrograms,
+      signatures: newSignatures, codeEntries: Array.from(
+        { length: span.length }, (_, index) => this.table.get(span.start + index)) };
+  }
+
   prepare(wat, source = Buffer.alloc(0), submission = this.compilations + 1,
-    workerLiteralEnd = null, workerCatalog = null) {
+    workerLiteralEnd = null, workerCatalog = null, universal = null) {
     if (this.inProcessLive) fail('live mode requires binary preparation');
     if (this.pending || this.poisoned) fail('session is pending or poisoned');
     if (wat.length > MAX_FRAME || source.length > 65536) fail('preparation byte limit exceeded');
@@ -408,6 +1159,9 @@ export class CoreEngine {
       || !/^[a-f0-9]{64}$/.test(workerCatalog.schema_source_sha256))) {
       fail('invalid checked worker catalog');
     }
+    if (universal !== null && (!this.sourceEpoch || workerCatalog !== null
+      || workerLiteralEnd !== null)) fail('universal source needs its selected worker');
+    const sourceInstall = universal === null ? null : this.sourcePreflight(universal);
     const stem = `module-${submission}`;
     this.save(`${stem}.wat`, wat);
     this.save(`${stem}.noble`, source);
@@ -425,12 +1179,19 @@ export class CoreEngine {
     const bytes = fs.readFileSync(wasmPath);
     rejectStartSection(bytes);
     const module = new WebAssembly.Module(bytes);
+    if (sourceInstall && !WebAssembly.Module.imports(module).some(entry =>
+      entry.module === this.abi.module && entry.name === 'source_epoch_generation'
+        && entry.kind === 'global')) {
+      fail('universal Program lacks the shared source epoch import');
+    }
     this.compilations += 1;
-    return this.install(module, { submission, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
+    const ready = this.install(module, { submission, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
       wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations, stem,
       ...(workerLiteralEnd !== null ? { worker_literal_end: workerLiteralEnd,
         worker_catalog: workerCatalog } : {}) },
     installationCapability);
+    if (sourceInstall) this.pending.sourceInstall = sourceInstall;
+    return ready;
   }
 
   liveModule(bytes, source, submission, bridgeBytes, signatureBytes, span,
@@ -1566,6 +2327,13 @@ export class CoreEngine {
     if (this.pending || this.poisoned) fail('session is pending or poisoned');
     const imports = WebAssembly.Module.imports(module);
     const globals = new Set(this.abi.globals.map(global => global.name));
+    if (this.sourceEpoch) {
+      if (this.shared.source_epoch_generation.value !== this.sourceEpochGeneration) {
+        this.poisoned = true;
+        fail('signed source epoch global changed before installation');
+      }
+      globals.add('source_epoch_generation');
+    }
     const functions = new Set(this.hostFunctions.map(fn => fn.name));
     for (const entry of imports) {
       const allowed = entry.module === this.abi.module && (
@@ -1582,12 +2350,34 @@ export class CoreEngine {
     const ambientFallbackCalls = this.ambientFallbackCalls;
     const protectedOperations = this.protectedOperations;
     const sp = this.shared.sp.value;
-    const instance = new WebAssembly.Instance(module, { [this.abi.module]: this.shared });
+    const sourceBefore = this.sourceEpoch ? {
+      memory: Buffer.from(this.memory.buffer),
+      table: Array.from({ length: this.table.length }, (_, index) => this.table.get(index)),
+      globals: this.abi.globals.map(global => this.shared[global.name].value),
+    } : null;
+    let instance;
+    try { instance = new WebAssembly.Instance(module, { [this.abi.module]: this.shared }); }
+    catch (error) {
+      if (this.sourceEpoch) this.poisoned = true;
+      throw error;
+    }
+    if (sourceBefore && (!Buffer.from(this.memory.buffer).equals(sourceBefore.memory)
+      || sourceBefore.table.some((entry, index) => this.table.get(index) !== entry)
+      || this.abi.globals.some((global, index) =>
+        this.shared[global.name].value !== sourceBefore.globals[index]))) {
+      this.poisoned = true;
+      fail('signed source instantiation changed the pending shared arena');
+    }
     if (requests !== this.trace.length || boundRequests !== this.boundRequests.length
       || hostRequestsTotal !== this.hostRequestsTotal || boundRequestsTotal !== this.boundRequestsTotal
       || ambientFallbackCalls !== this.ambientFallbackCalls
       || protectedOperations !== this.protectedOperations || sp !== this.shared.sp.value) {
+      if (this.sourceEpoch) this.poisoned = true;
       fail('instantiation executed candidate body');
+    }
+    if (this.sourceEpoch && this.shared.source_epoch_generation.value !== this.sourceEpochGeneration) {
+      this.poisoned = true;
+      fail('instantiation changed signed source epoch');
     }
     // Shared table entries keep callable instances alive; do not retain inert
     // modules in an unbounded side list across otherwise empty submissions.
@@ -1601,7 +2391,7 @@ export class CoreEngine {
 
   execute({ inputs = [], typedValues = null, limits = {} } = {}) {
     if (!this.pending || this.stagedDeclared || this.poisoned) fail('no prepared module or poisoned session');
-    const { instance, record, traceStart, checkedLive } = this.pending;
+    const { instance, record, traceStart, checkedLive, sourceInstall } = this.pending;
     const boundStart = this.boundRequests.length;
     const boundTotalStart = this.boundRequestsTotal;
     const hostStart = this.hostRequestsTotal;
@@ -1623,6 +2413,7 @@ export class CoreEngine {
     let status = runtime.begin(...keys.map(key => integer(limits[key] ?? defaults[key], defaults[key], key)));
     let nativeTrap = null;
     let inputExhausted = null;
+    let sourcePublication = null;
     try {
       if (typedValues !== null) {
         const manifest = record.worker_catalog;
@@ -1659,6 +2450,11 @@ export class CoreEngine {
         this.activeGuest = this.inProcessLive ? instance : null;
         try { status = runtime.submit(); }
         finally { this.liveExecuting = false; this.activeGuest = null; }
+        if (status === 0 && this.sourceEpoch) {
+          sourcePublication = sourceInstall
+            ? this.sourcePostflight(sourceInstall, instance) : null;
+          if (!sourceInstall) this.sourceCheckPinned(this.table.length);
+        }
         if (status === 0 && this.liveProposalDenied) status = 5;
         if (status === 0 && this.inProcessLive) {
           if (!checkedLive) fail('executed guest has no checked Core bridge');
@@ -1815,7 +2611,38 @@ export class CoreEngine {
           fail('signed source core entries are missing');
         }
       }
+      const previousEnd = this.sourceTableEntries.length + 4;
+      let codeEnd = previousEnd;
+      while (codeEnd < this.table.length && typeof this.table.get(codeEnd) === 'function') {
+        codeEnd += 1;
+      }
+      let complete = !sourceInstall
+        || codeEnd === sourceInstall.span.start + sourceInstall.span.length;
+      for (let index = codeEnd; index < this.table.length; index += 1) {
+        if (this.table.get(index) !== null) complete = false;
+      }
+      if (!complete) {
+        this.poisoned = true;
+        fail('source table publication is not a complete append-only code span');
+      }
+      for (let index = previousEnd; index < codeEnd; index += 1) {
+        this.sourceTableEntries.push(this.table.get(index));
+      }
       this.sourceModules.push(instance);
+      if (sourcePublication) {
+        for (const owner of sourcePublication.owners) {
+          if (this.sourceCodeOwners.has(owner.definition)) {
+            this.poisoned = true;
+            fail('new source Definition was already installed');
+          }
+          this.sourceCodeOwners.set(owner.definition, owner);
+        }
+        this.sourcePrograms.push(...sourcePublication.programs);
+        for (const [id, signature] of sourcePublication.signatures) {
+          if (!this.sourceSignatures.has(id)) this.sourceSignatures.set(id, signature);
+        }
+        this.sourceLastGeneration = BigInt(sourceInstall.receipt.source_generation);
+      }
     }
     if (record.stem) this.save(`${record.stem}-execution.json`, report);
     return report;
@@ -1827,8 +2654,13 @@ export class CoreEngine {
   retireSourceEpoch(generation, codeEnd) {
     if (!this.sourceEpoch || this.poisoned || this.pending || this.parked
       || this.staged || this.stagedDeclared || this.liveProposal || this.liveExecuting
-      || this.sourceExternalHandles.size || !this.sourceModules.length
+      || this.sourceExternalHandles.size || this.sourceIngressHandles.size
+      || this.sourceObservations.size || this.sourceCurrentObservation
+      || !this.sourceModules.length
+      || this.sourceEpochGeneration >= 0x7fffffff
+      || this.shared.source_epoch_generation.value !== this.sourceEpochGeneration
       || generation !== this.shared.generation.value
+      || codeEnd !== this.sourceTableEntries.length + 4
       || !Number.isInteger(codeEnd) || codeEnd < 4 || codeEnd > this.table.length
       || this.shared.failure.value || this.shared.sp.value || this.shared.cp.value
       || this.shared.rp.value || this.shared.observed_program.value
@@ -1836,6 +2668,11 @@ export class CoreEngine {
       || !this.sourceCoreEntries
       || this.sourceCoreEntries.some((entry, index) => this.table.get(index) !== entry)) {
       return { outcome: 'source-epoch-owned' };
+    }
+    try { this.sourceCheckPinned(); }
+    catch (error) {
+      this.poisoned = true;
+      fail(`signed source owner pre-retirement check failed: ${error}`);
     }
     let programCount = 0;
     const seen = new Set();
@@ -1889,11 +2726,25 @@ export class CoreEngine {
         || this.shared.heap_cursor.value !== 0 || this.shared.heap_baseline.value !== 0
         || this.shared.generation.value !== generationBefore
         || this.runtime().metric(3) - releasedBefore !== BigInt(cellsBefore * 48)
-        || this.sourceCoreEntries.some((entry, index) => this.table.get(index) !== entry)) {
+        || this.sourceCoreEntries.some((entry, index) => this.table.get(index) !== entry)
+        || this.shared.source_epoch_generation.value !== this.sourceEpochGeneration) {
         fail('signed source heap retirement violated the checked epoch');
       }
+      const releasedAfter = Number(this.runtime().metric(3));
+      // Ordinary signed/Text modules can interleave with universal modules
+      // without a source receipt. After ALL roots, table entries, and heap
+      // cells retire, clear their entire reserved static-text region rather
+      // than infer a cursor from only the universal compiler receipts.
+      if (this.memory.buffer.byteLength < 1048576) fail('signed source text arena was lost');
+      new Uint8Array(this.memory.buffer, 262144, 1048576 - 262144).fill(0);
       this.sourceModules = [];
+      this.last = null;
+      this.sourceTableEntries = [];
+      this.sourceCodeOwners.clear();
+      this.sourcePrograms = [];
+      this.sourceSignatures.clear();
       this.sourceEpochGeneration += 1;
+      this.shared.source_epoch_generation.value = this.sourceEpochGeneration;
       return { schema: 'noble-source-epoch-retirement/v1',
         outcome: 'source-epoch-retired', generation, code_end: codeEnd,
         source_store_id: this.sourceStoreId,
@@ -1901,7 +2752,7 @@ export class CoreEngine {
         source_epoch_after: this.sourceEpochGeneration,
         heap_cells_before: cellsBefore, released_cells: cellsBefore,
         released_bytes_before: Number(releasedBefore),
-        released_bytes_after: Number(this.runtime().metric(3)),
+        released_bytes_after: releasedAfter,
         released_programs: programCount, retained_core_entries: 4,
         heap_cells_after: 0, cleared_code_entries: codeEnd - 4 };
     } catch (error) {

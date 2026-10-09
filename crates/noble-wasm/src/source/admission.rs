@@ -208,12 +208,15 @@ pub(super) fn check(
     text_cursor: bool,
     declared_text: bool,
     signed: bool,
+    inert: &[noble_kernel::contracts::Definition],
     work: &mut super::Work,
 ) -> Result<Accepted, crate::Diagnostic> {
     attempt!(work.charge(1));
     let environment_work = attempt!(environment::work(&submission.environment));
     attempt!(work.charge(environment_work));
-    attempt!(environment::check(submission, live, live_slots, text_cursor, declared_text));
+    attempt!(environment::check(
+        submission, live, live_slots, text_cursor, declared_text, inert, work,
+    ));
     attempt!(bounds(submission, signed, work));
     let limits = attempt!(kernel_limits(submission, environment_work, work));
     let definitions = attempt!(definitions::accept(submission, limits, signed, work));

@@ -41,6 +41,34 @@ pub(super) struct Engine {
     has_failed: bool,
 }
 
+fn source_hex(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        encoded.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(DIGITS[usize::from(byte & 15)]));
+    }
+    encoded
+}
+
+fn source_base64(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 64] =
+        b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut encoded = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let a = usize::from(chunk[0]);
+        let b = usize::from(*chunk.get(1).unwrap_or(&0));
+        let c = usize::from(*chunk.get(2).unwrap_or(&0));
+        encoded.push(char::from(DIGITS[a >> 2]));
+        encoded.push(char::from(DIGITS[((a & 3) << 4) | (b >> 4)]));
+        encoded.push(if chunk.len() > 1 {
+            char::from(DIGITS[((b & 15) << 2) | (c >> 6)])
+        } else { '=' });
+        encoded.push(if chunk.len() > 2 { char::from(DIGITS[c & 63]) } else { '=' });
+    }
+    encoded
+}
+
 impl Engine {
     /// A fresh engine for exactly one artifact decision; no persistent table
     /// entries or effect authority can survive a previous submission.
@@ -207,6 +235,107 @@ impl Engine {
         attempt!(self.write(header.as_bytes()));
         attempt!(self.write(wat));
         attempt!(self.write(source));
+        self.reply()
+    }
+
+    /// This receipt comes only from the private source-rederived compiler
+    /// preparation. It is not an authority token: the resident engine also
+    /// checks the original owner bytes and every previously installed entry.
+    pub fn prepare_universal(
+        &mut self,
+        compiled: &noble_wasm::source::Prepared,
+        source: &[u8],
+        submission: u64,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let metadata = attempt!(compiled.universal_metadata().ok_or_else(protocol::error));
+        let owners: Vec<_> = metadata.owners.iter().map(|owner| {
+            let source_bytes = owner.source.as_ref();
+            serde_json::json!({
+                "owner_index":owner.owner_index,
+                "definition":owner.definition.0,
+                "definition_slot":owner.definition_slot,
+                "definition_identity":owner.definition_identity.to_string(),
+                "module_identity":owner.module_identity.to_string(),
+                "module_version":owner.module_version,
+                "definition_ordinal":owner.definition_ordinal,
+                "original_source_base64":source_base64(source_bytes),
+                "source_sha256":crate::workflow::intrinsic::sha256(source_bytes),
+                "nodes":owner.nodes.iter().map(|node| serde_json::json!({
+                    "node":node.node.0,"span":{"start":node.span.start,"end":node.span.end},
+                })).collect::<Vec<_>>(),
+                "stamp":{"source_tag":source_hex(&owner.stamp.source_tag),
+                    "grant_epoch":owner.stamp.grant_epoch.to_string(),
+                    "generation":owner.stamp.generation.to_string()},
+                "code_span":{"start":owner.code_span.start,
+                    "length":owner.code_span.length,
+                    "generation":owner.code_span.generation},
+                "body_entry":owner.body_entry,
+                "quotations":owner.quotations.iter().map(|(node, entry)|
+                    serde_json::json!({"node":node.0,"entry":entry})
+                ).collect::<Vec<_>>(),
+                "newly_compiled":owner.newly_compiled,
+            })
+        }).collect();
+        let programs: Vec<_> = metadata.programs.iter().map(|program| {
+            serde_json::json!({
+                "use_index":program.use_index,
+                "owner_index":program.owner_index,
+                "program_index":program.program_index,
+                "quotation_node":program.quotation_node.map(|node| node.0),
+                "quotation_source_span":program.quotation_source_span.map(|span|
+                    serde_json::json!({"start":span.start,"end":span.end})),
+                "entry":program.entry,"slot":program.slot,"records":program.records,
+                "input_signature":program.input_signature,
+                "output_signature":program.output_signature,
+                "effect_mask":program.effect_mask,
+                "recipe_depth":program.recipe_depth,"recipe_leaves":program.recipe_leaves,
+                "atoms":program.atoms.iter().map(|atom| serde_json::json!({
+                    "source_node":atom.source_node,"tag":atom.tag,
+                    "payload":atom.payload.to_string(),
+                    "child_program":atom.child_program,
+                    "text":atom.text.map(|(start,length)|
+                        serde_json::json!({"start":start,"length":length})),
+                    "input":atom.input,"output":atom.output,
+                    "effects":atom.effects,"ordinal":atom.ordinal,
+                })).collect::<Vec<_>>(),
+                "sites":program.sites.iter().map(|site| serde_json::json!({
+                    "node":site.node.0,
+                    "source_span":{"start":site.source_span.start,"end":site.source_span.end},
+                    "action":site.action,"target_use":site.target_use,
+                    "target_program_index":site.target_program_index,
+                    "target_slot":site.target_slot,
+                    "input_signature":site.input_signature,
+                    "output_signature":site.output_signature,
+                    "effect_or_witness":site.effect_or_witness,
+                    "target_identity":site.target_identity.to_string(),
+                    "target_definition":site.target_definition.0,
+                    "target_entry":site.target_entry,
+                })).collect::<Vec<_>>(),
+            })
+        }).collect();
+        let receipt = serde_json::json!({
+            "schema":"noble-source-universal-install/v1",
+            "source_epoch":metadata.source_epoch,
+            "source_generation":metadata.source_generation.to_string(),
+            "selected_use":metadata.selected_use,
+            "wrapper_program_index":metadata.wrapper_program_index,
+            "wrapper_entry":metadata.wrapper_entry,
+            "code_span":{"start":compiled.code_span().start,
+                "length":compiled.code_span().length,
+                "generation":compiled.code_span().generation},
+            "owners":owners,"programs":programs,
+        });
+        let bytes = attempt!(serde_json::to_vec(&receipt).map_err(|_| protocol::error()));
+        if bytes.len() > 4_194_304 || source.len() > 65_536 {
+            return Err(protocol::error());
+        }
+        let wat = compiled.wat();
+        let header = std::format!("compile-universal {} {} {} {submission}\n",
+            wat.len(), source.len(), bytes.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(wat));
+        attempt!(self.write(source));
+        attempt!(self.write(&bytes));
         self.reply()
     }
 

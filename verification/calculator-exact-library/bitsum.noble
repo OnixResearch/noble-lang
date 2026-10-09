@@ -1,0 +1,45 @@
+module bitsum@1 [
+    signature bool_or forall<S:stack>
+        [ S Bool Bool -- S Bool ! pure ]
+    def bool_or [ [ drop true ] [ ] if ]
+
+    signature uncons_zero forall<S:stack>
+        [ S List<Bool> -- S Bool Pair<Bool,List<Bool>> ! pure ]
+    def uncons_zero [ [ false false nil pair ] [ pair true swap ] list.case ]
+
+    signature pop2 forall<S:stack>
+        [ S List<Bool> List<Bool> -- S Bool Bool Pair<List<Bool>,List<Bool>> Bool ! pure ]
+    def pop2 [
+        [ uncons_zero ] dip uncons_zero
+        [ swap ] dip [[ bool_or ] dip ] dip
+        pair swap
+        [ unpair [ unpair ] dip unpair [ swap ] dip pair ] dip
+    ]
+
+    signature score forall<S:stack>
+        [ S Pair<Bool,Bool> Bool Bool -- S Bool Pair<Bool,Bool> ! pure ]
+    def score [
+        [[ dup ] dip ] dip [[ unpair ] dip ] dip [[ swap ] dip ] dip
+        swap [ bitpair@1.different ] dip swap [ swap ] dip swap bitfull@1.add
+        [[ unpair ] dip ] dip swap [ swap ] dip [ drop ] dip [ pair ] dip swap
+    ]
+
+    signature prepare forall<S:stack>
+        [ S Pair<Bool,Bool> Bool Bool Pair<List<Bool>,List<Bool>>
+          -- S Pair<List<Bool>,List<Bool>> Pair<Bool,Bool> Bool ! pure ]
+    def prepare [ [ score ] dip swap [ swap ] dip swap ]
+
+    # The control pair is (subtract_rhs,carry); callers must order magnitudes
+    # before subtraction. The base appends a new high bit only for addition;
+    # its carry is not part of the canonical magnitude returned by recursion.
+    signature scan forall<S:stack>
+        [ S Pair<List<Bool>,List<Bool>> Pair<Bool,Bool>
+          -- S List<Bool> ! pure ]
+    export scan
+    def scan [
+        swap unpair pop2
+        [ prepare [ scan ] dip swap bittrim@1.trim_cons ]
+        [ drop drop drop unpair dup [ swap ] dip swap
+          [ drop nil ] [ [ true nil cons ] [ nil ] if ] if swap drop ] if
+    ]
+]

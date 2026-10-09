@@ -7,6 +7,9 @@ pub(super) fn write(
     out: &mut crate::output::Buffer,
     program: &super::super::plan::Program,
 ) -> Result<(), crate::Diagnostic> {
+    if program.operations.is_empty() && program.universal.is_some() {
+        return guard_only(out, program);
+    }
     let mut index = 0usize;
     let mut failure = None;
     while index < program.operations.len() {
@@ -22,6 +25,23 @@ pub(super) fn write(
         Some(problem) => Err(problem),
         None => Ok(()),
     }
+}
+
+fn guard_only(
+    out: &mut crate::output::Buffer,
+    program: &super::super::plan::Program,
+) -> Result<(), crate::Diagnostic> {
+    let owner = program.universal.as_ref().ok_or(crate::Diagnostic::Defective)?;
+    attempt!(out.append(b"(func $f"));
+    attempt!(out.number(u64::from(program.entry)));
+    attempt!(out.append(b" (type $entry) (param $env i32)\n\
+(drop (call $universal_entry (local.get $env) "));
+    attempt!(out.i32(program.entry));
+    attempt!(out.append(b" "));
+    attempt!(out.i64(i64::from_le_bytes(owner.source_identity.to_le_bytes())));
+    attempt!(out.append(b" "));
+    attempt!(out.i32(owner.definition));
+    out.append(b"))\n)\n")
 }
 
 #[expect(
@@ -45,6 +65,15 @@ fn function(
     attempt!(out.number(u64::from(function)));
     attempt!(out
         .append(b" (type $entry) (param $env i32)\n(if (global.get $failure) (then (return)))\n"));
+    if let Some(owner) = program.universal.as_ref() {
+        attempt!(out.append(b"(if (i32.eqz (call $universal_entry (local.get $env) "));
+        attempt!(out.i32(program.entry));
+        attempt!(out.append(b" "));
+        attempt!(out.i64(i64::from_le_bytes(owner.source_identity.to_le_bytes())));
+        attempt!(out.append(b" "));
+        attempt!(out.i32(owner.definition));
+        attempt!(out.append(b")) (then (return)))\n"));
+    }
     if index.saturating_add(1) < program.operations.len() {
         attempt!(out.append(b"(call $enqueue "));
         let next_function = match function.checked_add(1) {
@@ -55,7 +84,10 @@ fn function(
         attempt!(out.append(b" (local.get $env))\n"));
     }
     attempt!(out.append(b"(if (i32.eqz (global.get $failure)) (then\n"));
-    attempt!(instruction(out, program.operations[index].action));
+    attempt!(instruction(
+        out, program.universal.as_ref(),
+        program.operations[index].node, program.operations[index].action,
+    ));
     out.append(b"))\n)\n")
 }
 
@@ -66,6 +98,8 @@ fn function(
 )]
 fn instruction(
     out: &mut crate::output::Buffer,
+    universal: Option<&super::super::plan::UniversalProgram>,
+    node: noble_kernel::untrusted::NodeId,
     action: super::super::plan::Action,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(match action {
@@ -80,6 +114,9 @@ fn instruction(
             },
         ),
         super::super::plan::Action::Program(program) => push_program(out, program),
+        super::super::plan::Action::UniversalProgram { site, .. } =>
+            universal_site(out, b"$push_ref", site, node, 1,
+                universal.ok_or(crate::Diagnostic::Defective)?),
         super::super::plan::Action::Word(definition) => word_call(out, definition),
         super::super::plan::Action::TextByte => out.append(b"(call $op_text_byte"),
         super::super::plan::Action::I64Less => out.append(b"(call $op_i64_less"),
@@ -91,7 +128,13 @@ fn instruction(
                 witness,
             },
         ),
+        super::super::plan::Action::UniversalQuote { site } =>
+            universal_site(out, b"$universal_quote", site, node, 3,
+                universal.ok_or(crate::Diagnostic::Defective)?),
         super::super::plan::Action::Call(program, _) => enqueue_program(out, program),
+        super::super::plan::Action::UniversalCall { site, .. } =>
+            universal_site(out, b"$enqueue_program", site, node, 2,
+                universal.ok_or(crate::Diagnostic::Defective)?),
         super::super::plan::Action::NominalNew(module, ordinal, ty) => nominal_construct(
             out,
             noble_kernel::types::NominalTypeId { module, ordinal },
@@ -200,6 +243,38 @@ fn enqueue_program(
     super::get_global(out, program)
 }
 
+fn universal_site(
+    out: &mut crate::output::Buffer,
+    operation: &[u8],
+    site: u32,
+    node: noble_kernel::untrusted::NodeId,
+    tag: u32,
+    owner: &super::super::plan::UniversalProgram,
+) -> Result<(), crate::Diagnostic> {
+    if operation == b"$universal_quote" {
+        attempt!(out.append(b"(call $universal_quote (local.get $env) "));
+        attempt!(out.i32(site));
+        attempt!(out.append(b" "));
+        attempt!(out.i32(node.0));
+        attempt!(out.append(b" "));
+        attempt!(out.i64(i64::from_le_bytes(owner.source_identity.to_le_bytes())));
+        attempt!(out.append(b" "));
+        return out.i32(owner.definition);
+    }
+    attempt!(out.append(b"(call "));
+    attempt!(out.append(operation));
+    attempt!(out.append(b" (call $universal_target (local.get $env) "));
+    attempt!(out.i32(site));
+    attempt!(out.append(b" "));
+    attempt!(out.i32(node.0));
+    attempt!(out.append(b" "));
+    attempt!(out.i32(tag));
+    attempt!(out.append(b" "));
+    attempt!(out.i64(i64::from_le_bytes(owner.source_identity.to_le_bytes())));
+    attempt!(out.append(b" "));
+    attempt!(out.i32(owner.definition));
+    out.append(b")")
+}
 fn bound_call(out: &mut crate::output::Buffer, slot: u32) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(call $op_emit_bound "));
     out.i32(slot)

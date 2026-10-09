@@ -12,6 +12,7 @@ fn signature(
 ) -> Result<super::Program, crate::Diagnostic> {
     Ok(super::Program {
         entry: 0,
+        emit_code: true,
         input: attempt!(compiler.signature(input, work)),
         output: attempt!(compiler.signature(output, work)),
         effects: attempt!(super::effect_mask(effects)),
@@ -23,6 +24,7 @@ fn signature(
         operations: alloc::vec::Vec::new(),
         depth: 0,
         leaves: 0,
+        universal: None,
     })
 }
 
@@ -97,7 +99,7 @@ pub(super) fn arena(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-maintainers; each checked byte allocation appends one owned segment to the compiler-private data buffer after reserving capacity; a slice cannot express that growth."
 )]
-pub(super) fn bytes(
+pub(in crate::source) fn bytes(
     text_end: &mut u32,
     data: &mut alloc::vec::Vec<(u32, alloc::vec::Vec<u8>)>,
     bytes: &[u8],

@@ -70,7 +70,11 @@ fn program(
     attempt!(out.append(b"(global "));
     attempt!(global(out, index));
     attempt!(out.append(b" (mut i32) (i32.const 0))\n"));
-    functions::write(out, program)
+    if program.emit_code {
+        functions::write(out, program)
+    } else {
+        Ok(())
+    }
 }
 
 fn code_elements(

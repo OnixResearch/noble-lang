@@ -225,7 +225,9 @@ impl super::Session {
         limits: crate::Limits,
     ) -> Result<Analysis, super::Error> {
         let (mut builder, mut meter) = attempt!(candidate.build(limits));
-        if let Err(error) = super::resolution::resolve(&mut builder.tree, None, self, false, &mut meter) {
+        if let Err(error) = super::resolution::resolve(
+            &mut builder.tree, None, self, false, None, &mut meter,
+        ) {
             return Err(super::Error::at(super::Stage::Resolve, error));
         }
         if let Err(error) = super::preflight::check(inputs, self, builder.tree.span, &mut meter) {
@@ -239,6 +241,7 @@ impl super::Session {
             environment: &environment,
             root_signature: None,
             prospective_owner: None,
+            universal_bindings: &[],
         };
         let state = attempt!(super::inference::infer(
             scope, super::inference::Mode::EditorAnalysis, inputs, &mut meter

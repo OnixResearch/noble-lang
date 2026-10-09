@@ -77,7 +77,7 @@ fn compile_expression(
         Checked::Ready(compiled) => compiled,
         Checked::Reported(exit) => return Ok(exit),
     };
-    emit_declared_wat(options, source, compiled.wat())
+    emit_declared_wat(options, source, &compiled)
 }
 
 #[expect(
@@ -157,7 +157,12 @@ fn accepted_wat(
     let compiled = if frontend.declared_text() {
         match prepared.declared_text_source_owner() {
             Some(ref owner) => {
-                noble_wasm::source::Compiler::new_declared_text().prepare_declared_text(owner)
+                let compiler = noble_wasm::source::Compiler::new_declared_text();
+                if signed_profile && owner.selected_universal_intent() {
+                    compiler.prepare_declared_text_universal(owner)
+                } else {
+                    compiler.prepare_declared_text(owner)
+                }
             }
             None => Err(noble_wasm::Diagnostic::Invalid),
         }
@@ -201,17 +206,21 @@ fn expression_candidate(
 fn emit_declared_wat(
     options: &super::super::arguments::Options,
     source: &[u8],
-    wat: &[u8],
+    compiled: &noble_wasm::source::Prepared,
 ) -> Result<u8, super::super::output::Failure> {
     if let Some(directory) = &options.emit {
         attempt!(std::fs::create_dir(directory).map_err(super::super::framing::io_error));
         let mut engine = attempt!(super::super::worker::Engine::start(options));
-        let report = attempt!(engine.prepare(wat, source, 1));
+        let report = if compiled.universal_metadata().is_some() {
+            attempt!(engine.prepare_universal(compiled, source, 1))
+        } else {
+            attempt!(engine.prepare(compiled.wat(), source, 1))
+        };
         attempt!(super::super::output::print(&report));
         Ok(report.exit())
     } else {
         attempt!(
-            std::io::Write::write_all(&mut std::io::stdout().lock(), wat)
+            std::io::Write::write_all(&mut std::io::stdout().lock(), compiled.wat())
                 .map_err(super::super::framing::io_error)
         );
         Ok(0)

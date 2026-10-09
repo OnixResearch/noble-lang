@@ -18,7 +18,9 @@ const fn extend(
         Some(value) => value,
         None => return Err(crate::Diagnostic::Exhausted),
     };
-    if let super::Action::Program(child) = operation.action {
+    if let super::Action::Program(child)
+        | super::Action::UniversalProgram { child, .. } = operation.action
+    {
         if !done[child] {
             return Ok(false);
         }

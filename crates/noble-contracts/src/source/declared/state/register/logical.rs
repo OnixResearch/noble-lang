@@ -310,7 +310,7 @@ fn source_origin<'a>(
         (
             module.name.as_str(),
             module.version,
-            module.source.as_slice(),
+            module.source.as_ref(),
             &module.definition_spans,
         )
     };
@@ -487,7 +487,7 @@ fn bind_subject(
                 owner: dependency_owner,
                 module: module.name.clone(),
                 version: module.version,
-                full_source: module.source.clone(),
+                full_source: module.source.to_vec(),
             }
         };
         // At most one retained module per accepted definition.

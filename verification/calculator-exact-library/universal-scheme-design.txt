@@ -1,0 +1,92 @@
+MA1 universal closed stack-tail scheme: source-first design; NOT an accepted executable.
+Base: 34f254c1ded3cd080ea0fcd0dfc276897bef7603.
+Frozen source: 26 exact .noble modules in this directory and result/calc-errors fixtures;
+bitaddsigned.noble SHA-256 5cc2c1b58c0b4ece3caf65a3430aa3796a63fff8a41e5c8b62302fc967659152;
+bitsum.noble SHA-256 8b5f0849569eec5d5027bcf1d8a8fdce8d7659e46806b4053d8620c57dc7d14a.
+Do not import a mutable named tree/signature, numeric WIP source relation, or concrete examples as proof.
+
+Required trusted kernel language (missing from this base and numeric WIP):
+1. An independent kernel symbolic body checker whose type domain is not Ty:
+   Row := RigidStack(owner-binder-index) ++ Vec<ClosedTy>, with rigid prefix
+   immovable and uninspectable. Only a single leading S is admitted. No
+   symbolic value variables, nominal descriptors, effect variables, resource
+   values, or escapes of S into stored/output data. A transient quotation may
+   carry Program<Row,Row,pure> with the SAME scoped rigid S on both sides;
+   this is needed for bitsum.scan's quoted recursive call and bitorder's dip/
+   if. It must be consumed by checked control combinators, never converted
+   to a public concrete Ty::Program while S remains abstract. Effects are a
+   derived closed finite EffSet; this initial feature accepts exactly empty.
+   A primitive may act only on its known suffix; quotation requires separate
+   proof of its latent row interface and cannot capture or inspect S. Fail
+   closed on a node/primitive without an explicit symbolic transfer rule.
+2. A symbolic invocation witness maps the callee's rigid stack binder to the
+   caller's current rigid S plus a finite concrete suffix. Check kind, binder
+   scope, suffix structural type/height bounds, callee scheme substitution,
+   exact suffix join, effect inclusion, ownership visibility, and quotation
+   boundaries. Do NOT run the current Inst::Stack(Vec<Ty>) on an empty stack or
+   an arbitrary finite tail as a proxy for universal checking.
+3. A private, non-serializable CheckedScheme is constructed ONLY by kernel
+   check_scheme(source-bound request, candidate, expected_scheme, dependencies,
+   one original bounded meter). Its invariant is: every reachable source node
+   and quotation is covered; each derived symbolic transition is valid for ALL
+   admissible concrete S; the final interface alpha-equals the declared scheme;
+   derived effect set is exactly empty; every named dependency references an
+   already independently kernel-checked sealed scheme in the immutable owner
+   graph, never an untrusted Env Named contract. The required bitsum.scan
+   recursive edge is checked against its OWN provisionally declared scheme
+   with exactly the same rigid S and fully derived suffix/effects at that
+   call; it cannot change the binder, fabricate an earlier dependency, or
+   prove totality. Runtime call-depth/work quotas remain in force. Bind exact
+   immutable source bytes/parsed token positions, original
+   owner/module identity, definition ordinal, dependency source identities,
+   host grant/effect registry revision and candidate-format/semantic revisions.
+   Source reparse/resolution and kernel candidate cross-check must be metered;
+   frontend Saved Named/rigid inference only suggests a proof, never grants it.
+4. instantiate_checked(seal, concrete Inst, current session, call-site origin)
+   verifies the same immutable source/Env epoch (including import aliases,
+   owners, dependencies, effects and grants), owner visibility, kind/arity,
+   finite stack/type/effect bounds, substitution of all symbolic derivations,
+   and exact concrete input/output/effects. Return a scoped, private checked
+   call-site witness, not a publicly forgeable or portable grant. A changed
+   source, changed or revoked host grant, foreign owner, impurity, changed
+   dependencies, different effect row or stale epoch MUST refuse before call.
+5. The bounded work meter is one original per-definition allowance (4096 for
+   this selected source), including source reparse, environment validation,
+   dependency edge checks, symbolic node/quotation folds, joins, substitution
+   and certificate construction. No resetting at each callee, separate free
+   counters, amortized omitted body checks, synthetic acceptance or 16384
+   per-definition waiver. Module CLI 16384 and Wasm body 4096 remain unchanged.
+   Registered independently checked sealed dependencies can be referenced by
+   O(size of verified dependency interface + dependency edge) per call; their
+   own original registration check is never retroactively assigned to a new
+   caller. Charge instantiation and code witness creation on each selected use
+   under the already-existing selected source and compiler allowances.
+
+Required compiler/runtime changes (missing):
+- Current Wasm Program, each operation, and named Action::Call embed concrete
+  stack signatures/effect masks; named_call refuses any ABI differing from the
+  one concrete target specialization. A universal seal alone cannot enable
+  executable reuse. Emit each sealed pure body once with a parametric stack
+  calling convention preserving its caller's opaque prefix S; carry a checked
+  per-call concrete signature/quotation descriptor, not a type-erased unchecked
+  call. Install an exact, immutable old-generation code+descriptor closure
+  before publishing it. Runtime type checks of the concrete suffix, function
+  dispatch/table entry, program descriptor and call-site proof must agree.
+  Dynamic polymorphism/unknown suffix-dependent quotation ABI is unsupported.
+- Verify source-origin correspondence for EVERY named edge and executable
+  quotation, including original source span/module owner, immutable dependency
+  DAG, exact compiled function table mapping/WAT atoms and generation. Current
+  selected origin permits only one root call and cannot attest this graph.
+  Saved old-generation code is pinned to its original exact sources and table;
+  pinning code is not pinning authority. Revoked or changed grants must still
+  fail current host-operation admission even for a retained old closure.
+
+Concrete current blocker: Ty::Program and Request.expected contain Vec<Ty>;
+words::Inst::Stack binds only Vec<Ty>; acceptance Frame.stack and joins contain
+only concrete Ty; no rigid row binder can survive a candidate fold. Source
+rigid inference and SignedRelation live outside the trusted kernel and are not
+proof. Even if universal checking were added, current Wasm Program descriptors
+and named calls are concrete and cannot reuse code across distinct S without
+new ABI semantics. This design is not an implementation nor permission to
+lower the cap or call the old source accepted. The measured original signed
+registration 5762 and alternate 6599 visits each exceed the unchanged 4096.

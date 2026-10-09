@@ -84,10 +84,21 @@ pub(super) fn write(
             }
         }
     }
-    match failure {
-        Some(problem) => Err(problem),
-        None => out.append(b")\n"),
+    if let Some(problem) = failure {
+        return Err(problem);
     }
+    if plan.universal {
+        for (index, program) in plan.programs.iter().enumerate() {
+            if let Some(descriptor) = program.universal.as_ref() {
+                attempt!(out.append(b"(call $universal_bind_slot "));
+                attempt!(super::get_global(out, index));
+                attempt!(out.append(b" "));
+                attempt!(out.i32(descriptor.slot));
+                attempt!(out.append(b")\n(if (global.get $failure) (then (return)))\n"));
+            }
+        }
+    }
+    out.append(b")\n")
 }
 
 fn memory_segment(
@@ -142,18 +153,38 @@ fn program(
     }
     attempt!(out.append(b"(global.set "));
     attempt!(super::global(out, id));
-    attempt!(out.append(b" (call $program "));
+    if program.universal.is_some() {
+        attempt!(out.append(b" (call $universal_program "));
+    } else {
+        attempt!(out.append(b" (call $program "));
+    }
     attempt!(out.i32(program.entry));
     attempt!(out.append(b" "));
     attempt!(out.i32(program.input));
     attempt!(out.append(b" "));
     attempt!(out.i32(program.output));
     attempt!(out.append(b" (local.get $recipe) "));
-    attempt!(out.i64(i64::from(program.effects)));
-    attempt!(out.append(b" (i32.const 0) (i32.const 0) "));
-    attempt!(out.i32(program.depth));
-    attempt!(out.append(b" "));
-    attempt!(out.i32(program.leaves));
+    if let Some(descriptor) = program.universal.as_ref() {
+        attempt!(out.i32(program.depth));
+        attempt!(out.append(b" "));
+        attempt!(out.i32(program.leaves));
+        for value in [
+            descriptor.records, descriptor.count, descriptor.epoch, descriptor.slot,
+        ] {
+            attempt!(out.append(b" "));
+            attempt!(out.i32(value));
+        }
+        attempt!(out.append(b" "));
+        attempt!(out.i64(i64::from_le_bytes(descriptor.source_identity.to_le_bytes())));
+        attempt!(out.append(b" "));
+        attempt!(out.i32(descriptor.definition));
+    } else {
+        attempt!(out.i64(i64::from(program.effects)));
+        attempt!(out.append(b" (i32.const 0) (i32.const 0) "));
+        attempt!(out.i32(program.depth));
+        attempt!(out.append(b" "));
+        attempt!(out.i32(program.leaves));
+    }
     attempt!(out.append(b"))\n(if (global.get $failure) (then (return)))\n"));
     if plan.live_slots {
         // The module's immutable global is a real backend owner, independent

@@ -13,6 +13,7 @@ mod plan;
 mod preflight;
 mod transaction;
 mod types;
+mod universal;
 
 const TABLE_LIMIT: u32 = 16_384;
 const TEXT_START: u32 = 262_144;
@@ -74,6 +75,7 @@ pub struct Compiler {
     declared_text: bool,
     worker_inputs: bool,
     generation: u32,
+    source_epoch_generation: u32,
     functions: u32,
     retention_revision: u64,
     free_code: alloc::vec::Vec<FreeCode>,
@@ -82,6 +84,7 @@ pub struct Compiler {
     signatures: crate::signatures::Pool,
     descriptors: alloc::vec::Vec<(u32, u32)>,
     identities: alloc::vec::Vec<Identity>,
+    universal_code: alloc::vec::Vec<InstalledUniversalCode>,
 }
 
 /// One installed module's physical table allocation. The generation identifies
@@ -91,6 +94,97 @@ pub struct CodeSpan {
     pub start: u32,
     pub length: u32,
     pub generation: u32,
+}
+
+/// A previously committed, source-bound code owner. Only the private
+/// source-owner ingress can look this up; a public Submission cannot choose
+/// these table entries or resurrect code from another source epoch.
+#[derive(Clone)]
+struct InstalledUniversalCode {
+    definition: noble_kernel::contracts::Definition,
+    definition_slot: u32,
+    definition_identity: u64,
+    module_identity: u64,
+    module_version: u32,
+    definition_ordinal: u32,
+    source: alloc::sync::Arc<[u8]>,
+    stamp: noble_kernel::universal::SourceStamp,
+    span: CodeSpan,
+    body_entry: u32,
+    quotes: alloc::vec::Vec<(noble_kernel::untrusted::NodeId, u32)>,
+}
+
+#[derive(Clone, Debug)]
+pub struct UniversalNodeOrigin {
+    pub node: noble_kernel::untrusted::NodeId,
+    /// Absolute association in the original whole module, proved by private
+    /// reparse/lowering. This never claims the bytes encode this node's kind:
+    /// even a nonempty span may belong to a deterministic lowered operation.
+    pub span: noble_contracts::Span,
+}
+
+#[derive(Clone, Debug)]
+pub struct UniversalOwnerMetadata {
+    pub owner_index: usize,
+    pub definition: noble_kernel::contracts::Definition,
+    pub definition_slot: u32,
+    pub definition_identity: u64,
+    pub module_identity: u64,
+    pub module_version: u32,
+    pub definition_ordinal: u32,
+    pub source: alloc::sync::Arc<[u8]>,
+    pub nodes: alloc::vec::Vec<UniversalNodeOrigin>,
+    pub stamp: noble_kernel::universal::SourceStamp,
+    pub code_span: CodeSpan,
+    pub body_entry: u32,
+    pub quotations: alloc::vec::Vec<(noble_kernel::untrusted::NodeId, u32)>,
+    pub newly_compiled: bool,
+}
+
+#[derive(Clone, Debug)]
+pub struct UniversalSiteMetadata {
+    pub node: noble_kernel::untrusted::NodeId,
+    pub source_span: noble_contracts::Span,
+    pub action: u32,
+    pub target_use: Option<usize>,
+    pub target_program_index: Option<usize>,
+    pub target_slot: u32,
+    pub input_signature: u32,
+    pub output_signature: u32,
+    pub effect_or_witness: u32,
+    pub target_identity: u64,
+    pub target_definition: noble_kernel::contracts::Definition,
+    pub target_entry: u32,
+}
+
+#[derive(Clone, Debug)]
+pub struct UniversalProgramMetadata {
+    pub use_index: usize,
+    pub owner_index: usize,
+    pub program_index: usize,
+    pub quotation_node: Option<noble_kernel::untrusted::NodeId>,
+    pub quotation_source_span: Option<noble_contracts::Span>,
+    pub entry: u32,
+    pub slot: u32,
+    pub records: u32,
+    pub input_signature: u32,
+    pub output_signature: u32,
+    pub effect_mask: u32,
+    pub recipe_depth: u32,
+    pub recipe_leaves: u32,
+    pub atoms: alloc::vec::Vec<ProgramAtomMetadata>,
+    pub sites: alloc::vec::Vec<UniversalSiteMetadata>,
+}
+
+#[derive(Clone, Debug)]
+pub struct UniversalMetadata {
+    pub source_epoch: u32,
+    pub source_generation: u64,
+    pub selected_use: usize,
+    pub wrapper_program_index: usize,
+    pub wrapper_entry: u32,
+    pub owners: alloc::vec::Vec<UniversalOwnerMetadata>,
+    pub programs: alloc::vec::Vec<UniversalProgramMetadata>,
 }
 
 /// A compiler-bound dispatch site. The site ID is unique within this emitted
@@ -318,6 +412,7 @@ pub struct Prepared {
     selected_target: Option<SelectedTargetArtifact>,
     selected_origin: Option<SelectedOriginMetadata>,
     resource_catalog: alloc::vec::Vec<ResourceCatalogEntry>,
+    universal_metadata: Option<UniversalMetadata>,
     wat: alloc::vec::Vec<u8>,
 }
 
@@ -425,6 +520,12 @@ impl Prepared {
     pub fn resource_catalog(&self) -> &[ResourceCatalogEntry] {
         &self.resource_catalog
     }
+
+    /// Host verification must bind this entire receipt to its original
+    /// source bytes, installed table entries and pinned module instances.
+    pub const fn universal_metadata(&self) -> Option<&UniversalMetadata> {
+        self.universal_metadata.as_ref()
+    }
 }
 
 impl Compiler {
@@ -493,6 +594,7 @@ impl Compiler {
             declared_text: false,
             worker_inputs: false,
             generation: 0,
+            source_epoch_generation: 0,
             functions: 4,
             retention_revision: 0,
             free_code: alloc::vec::Vec::new(),
@@ -501,6 +603,7 @@ impl Compiler {
             signatures: crate::signatures::Pool::source(),
             descriptors: alloc::vec::Vec::new(),
             identities: alloc::vec::Vec::new(),
+            universal_code: alloc::vec::Vec::new(),
         }
     }
 
@@ -548,7 +651,7 @@ impl Compiler {
         if self.declared_text || (self.declared_live && !submission.environment.declared_modules) {
             return Err(crate::Diagnostic::Unsupported);
         }
-        self.prepare_with_origin(submission, None, false, false)
+        self.prepare_with_origin(submission, None, false, false, &[])
     }
 
     /// The signed ingress accepts only the private, borrowed staged-source
@@ -568,7 +671,7 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        self.prepare_with_origin(&submission, None, true, false)
+        self.prepare_with_origin(&submission, None, true, false, &[])
     }
 
     /// The merged cursor/declared profile has no raw Submission ingress.
@@ -582,14 +685,18 @@ impl Compiler {
             || self.worker_inputs {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
+        if source.selected_signed_universal_intent() {
+            return Err(crate::Diagnostic::Unsupported);
+        }
+        let (submission, inert) = source.rederive_ordinary()
+            .map_err(|_| crate::Diagnostic::Invalid)?;
         if !submission.environment.declared_modules || !submission.environment.text_cursor {
             return Err(crate::Diagnostic::Unsupported);
         }
         let signed = submission.definitions.iter().any(|definition|
             definition.body.candidate.nodes.iter().any(|node|
                 matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })));
-        self.prepare_with_origin(&submission, None, signed, true)
+        self.prepare_with_origin(&submission, None, signed, true, &inert)
     }
 
     fn prepare_with_origin(
@@ -598,6 +705,7 @@ impl Compiler {
         selected: Option<&noble_contracts::source::proof::CheckedSelectedTarget<'_>>,
         signed: bool,
         declared_text: bool,
+        inert: &[noble_kernel::contracts::Definition],
     ) -> Result<Prepared, crate::Diagnostic> {
         let mut work = Work {
             remaining: u64::from(submission.request.limits.work),
@@ -618,6 +726,7 @@ impl Compiler {
             self.text_cursor,
             declared_text,
             signed,
+            inert,
             &mut work
         ));
         attempt!(admission::meter::compilation(
@@ -650,6 +759,7 @@ impl Compiler {
                 Some(value) => value,
                 None => return Err(crate::Diagnostic::Exhausted),
             },
+            source_epoch_generation: self.source_epoch_generation,
             functions: self.functions,
             retention_revision: self.retention_revision,
             free_code: self.free_code.clone(),
@@ -658,6 +768,7 @@ impl Compiler {
             signatures: self.signatures.clone(),
             descriptors: self.descriptors.clone(),
             identities: self.identities.clone(),
+            universal_code: self.universal_code.clone(),
         };
         attempt!(admission::identity::check(
             submission,
@@ -777,6 +888,7 @@ impl Compiler {
             selected_target: None,
             selected_origin,
             resource_catalog,
+            universal_metadata: None,
             wat,
         })
     }
@@ -793,7 +905,8 @@ impl Compiler {
         if !self.live_slots {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let mut prepared = attempt!(self.prepare_with_origin(selected.submission(), Some(selected), false, false));
+        let mut prepared = attempt!(self.prepare_with_origin(
+            selected.submission(), Some(selected), false, false, &[]));
         let id = selected.definition_id();
         let mut matches = prepared.named_targets.iter().filter(|named| {
             named.definition == selected.definition().definition
@@ -857,10 +970,17 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Invalid);
         }
+        let next_epoch = self.source_epoch_generation.checked_add(1)
+            .ok_or(crate::Diagnostic::Exhausted)?;
+        if next_epoch > i32::MAX as u32 {
+            return Err(crate::Diagnostic::Exhausted);
+        }
         self.functions = 4;
         self.text_end = TEXT_START;
         self.signatures = crate::signatures::Pool::source();
         self.descriptors.clear();
+        self.universal_code.clear();
+        self.source_epoch_generation = next_epoch;
         self.retention_revision += 1;
         Ok(())
     }
@@ -1059,7 +1179,7 @@ mod declared_text_ingress_tests {
         let mut work = Work { remaining: u64::from(original.request.limits.work) };
         assert!(preflight::check(&original, &mut work).is_ok(),
             "whole-source preflight exhausted before declared-text admission");
-        let checked = admission::check(&original, false, false, true, true, true, &mut work)
+        let checked = admission::check(&original, false, false, true, true, true, &[], &mut work)
             .ok().expect("declared-text whole-submission admission exhausted");
         assert!(admission::meter::compilation(&checked, &compiler.signatures, &mut work).is_ok(),
             "checked derivation compilation meter exhausted");
@@ -1071,7 +1191,7 @@ mod declared_text_ingress_tests {
             .ok().expect("checked program lowering exhausted");
         assert!(emit::module(&plan, 0).is_ok(), "source Wasm emission exhausted");
         assert!(compiler.prepare_declared_text(&owner).is_ok());
-        assert!(compiler.prepare_with_origin(&original, None, true, true).is_ok());
+        assert!(compiler.prepare_with_origin(&original, None, true, true, &[]).is_ok());
         let signed_owner = prepared.signed_source_owner().expect("signed owner source");
         assert!(Compiler::new().prepare_signed(&signed_owner).is_err(),
             "ordinary signed compiler must not import the selected cursor");
@@ -1082,7 +1202,7 @@ mod declared_text_ingress_tests {
             .expect("signed fold specialization");
         definition.owner_inst.as_mut().expect("rigid owner binder").bindings[0] =
             noble_kernel::words::Binding::Stack(alloc::vec![noble_kernel::types::Ty::Bool]);
-        assert!(compiler.prepare_with_origin(&changed, None, true, true).is_err(),
+        assert!(compiler.prepare_with_origin(&changed, None, true, true, &[]).is_err(),
             "fresh or foreign self Inst cannot dispatch to checked owner");
 
     }
@@ -1158,7 +1278,7 @@ mod signed_dispatch_tests {
             b"binder@1.identity",
             &[Ty::I64],
         );
-        assert!(Compiler::new().prepare_with_origin(&submission, None, true, false).is_ok());
+        assert!(Compiler::new().prepare_with_origin(&submission, None, true, false, &[]).is_ok());
         let Some(Node::Invocation { inst, .. }) = submission.body.candidate.nodes.first_mut()
             else { panic!("missing root owner invocation"); };
         *inst.bindings.get_mut(1).expect("rank-1 value binder") =
@@ -1168,7 +1288,7 @@ mod signed_dispatch_tests {
         assert!(matches!(noble_kernel::acceptance::check(
             &submission.environment, &submission.request, &submission.body.candidate,
         ), Outcome::Accepted(_)), "the alternate rank-1 call itself is well typed");
-        assert!(matches!(Compiler::new().prepare_with_origin(&submission, None, true, false),
+        assert!(matches!(Compiler::new().prepare_with_origin(&submission, None, true, false, &[]),
             Err(Diagnostic::Invalid)), "a valid generic Bool call cannot invoke the I64 body");
     }
 
@@ -1180,7 +1300,7 @@ mod signed_dispatch_tests {
             b"binder@1.loop",
             &[],
         );
-        assert!(Compiler::new().prepare_with_origin(&submission, None, true, false).is_ok());
+        assert!(Compiler::new().prepare_with_origin(&submission, None, true, false, &[]).is_ok());
         let original = submission.definitions.iter()
             .find_map(|definition| definition.owner_inst.as_ref())
             .and_then(|inst| inst.bindings.get(1)).expect("source owner effect binder");
@@ -1198,7 +1318,7 @@ mod signed_dispatch_tests {
         assert!(matches!(noble_kernel::acceptance::check(
             &submission.environment, &submission.request, &submission.body.candidate,
         ), Outcome::Accepted(_)), "the alternate rank-1 effect call itself is well typed");
-        assert!(matches!(Compiler::new().prepare_with_origin(&submission, None, true, false),
+        assert!(matches!(Compiler::new().prepare_with_origin(&submission, None, true, false, &[]),
             Err(Diagnostic::Invalid)), "a valid generic alternate effect cannot invoke the owner's checked ceiling");
     }
 }

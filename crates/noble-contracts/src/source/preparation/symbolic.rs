@@ -75,7 +75,7 @@ fn semantic_count(tree: &Tree) -> Result<usize, crate::Diagnostic> {
     Ok(tree.nodes.len() - 1)
 }
 
-fn reachable(tree: &Tree, meter: &mut crate::Meter)
+fn reachable(tree: &Tree, require_self: bool, meter: &mut crate::Meter)
     -> Result<(Vec<bool>, Vec<u32>), crate::Diagnostic>
 {
     let mut seen = vec![false; attempt!(semantic_count(tree))];
@@ -112,7 +112,7 @@ fn reachable(tree: &Tree, meter: &mut crate::Meter)
             self_nodes.push(attempt!(crate::index(index, node.span)));
         }
     }
-    if self_nodes.is_empty() { return Err(refused(tree.span)); }
+    if require_self && self_nodes.is_empty() { return Err(refused(tree.span)); }
     Ok((seen, self_nodes))
 }
 
@@ -127,12 +127,14 @@ pub(super) fn check(
     owner: Definition,
     session: &crate::source::Session,
     environment: &noble_kernel::contracts::Env,
+    require_self: bool,
+    name_index: Option<&super::name_index::NameIndex>,
     meter: &mut crate::Meter,
 ) -> Result<SignedRelation, crate::Diagnostic> {
     let body = state.bodies.first().ok_or_else(|| refused(tree.span))?;
     let variables = body.owner_variables.as_ref().ok_or_else(|| refused(tree.span))?;
     let semantic_count = attempt!(semantic_count(tree));
-    let (live, lexical_nodes) = attempt!(reachable(tree, meter));
+    let (live, lexical_nodes) = attempt!(reachable(tree, require_self, meter));
     if body.owner != session.declared.as_ref().and_then(|context| context.owner)
         || body.owner.is_none()
         || state.definition_base != attempt!(crate::offset(owner.0, tree.span))
@@ -161,7 +163,7 @@ pub(super) fn check(
                 (Kind::Call(Target::Builtin(_)), Kind::Call(Target::Builtin(_)))
             ))
             || !lexical_kind(source, raw, parsed_name.as_deref(), source_bytes)
-            || !attempt!(named_token_matches(source, raw, session, meter))
+            || !attempt!(named_token_matches(source, raw, session, name_index, meter))
         {
             return Err(refused(source.span));
         }
@@ -236,13 +238,20 @@ fn same_edges(source: &[u32], drafts: &[noble_kernel::untrusted::NodeId],
 }
 
 fn named_token_matches(source: &crate::source::Node, raw: &crate::source::Node,
-    session: &crate::source::Session, meter: &mut crate::Meter
+    session: &crate::source::Session,
+    name_index: Option<&super::name_index::NameIndex>,
+    meter: &mut crate::Meter,
 ) -> Result<bool, crate::Diagnostic> {
     // A named word can be an imported alias. Bind it against this transaction's
     // declared namespace, not the canonical name of its target definition.
     let (Kind::Call(Target::Named(index)), Kind::Word(word)) = (&source.kind, &raw.kind)
         else { return Ok(true); };
     let Some(context) = session.declared.as_ref() else { return Ok(false); };
+    if let Some(names) = name_index {
+        return Ok(attempt!(names.lookup(
+            &context.words, context.owner, session.generation, word, source.span, meter,
+        )) == Some(Target::Named(*index)));
+    }
     for (name, target) in context.words.iter().rev() {
         attempt!(meter.charge(attempt!(crate::index(
             name.len().saturating_add(word.len()).saturating_add(1), source.span
@@ -304,6 +313,18 @@ fn draft_matches(
         }
         (Kind::Call(Target::Named(index)), DraftKind::Invocation(def)) => {
             let target = session.definitions.get(attempt!(crate::offset(*index, source.span)));
+            if let Some(target) = target {
+                if target.universal.as_ref().is_some_and(|seal| {
+                    seal.owner() == *def
+                        && environment.scheme(*def).is_some_and(|row|
+                            target.signature.as_ref() == Some(row))
+                }) {
+                    attempt!(meter.charge(1, source.span));
+                    return Ok(draft.text.is_none()
+                        && environment.scheme(*def).is_some_and(|row|
+                            witness_shape(&row.var_kinds, &draft.variables)));
+                }
+            }
             let body = usize::try_from(def.0).ok()
                 .and_then(|id| id.checked_sub(state.definition_base))
                 .and_then(|offset| offset.checked_add(1))
@@ -353,13 +374,14 @@ pub(in crate::source) fn verify(
     relation: &SignedRelation,
     name: &str,
     source_bytes: &[u8],
+    require_self: bool,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
     let n = attempt!(semantic_count(tree));
-    let (live, lexical_nodes) = attempt!(reachable(tree, meter));
+    let (live, lexical_nodes) = attempt!(reachable(tree, require_self, meter));
     if relation.symbolic_nodes.len() != n || original.nodes.len() != tree.nodes.len()
         || original.nodes.last().map(|node| node.span) != tree.nodes.last().map(|node| node.span)
-        || original.body != tree.body || relation.lexical_nodes.is_empty() {
+        || original.body != tree.body || (require_self && relation.lexical_nodes.is_empty()) {
         return Err(refused(tree.span));
     }
     let mut drafts = vec![false; live.iter().filter(|visited| **visited).count()];

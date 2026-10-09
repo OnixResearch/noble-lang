@@ -3,9 +3,13 @@
     reason = "Owner: noble-maintainers; lowering mutates only the unpublished prospective compiler, preparation-owned meter and fresh plan buffers; caller-owned submissions and checked interfaces remain immutable."
 )]
 
-mod allocation;
+pub(in crate::source) mod allocation;
 mod operations;
 mod topology;
+
+pub(in crate::source) fn order_universal(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
+    topology::order(layout)
+}
 
 #[derive(Clone, Copy)]
 pub(super) enum Action {
@@ -14,11 +18,14 @@ pub(super) enum Action {
     Unit,
     Text(u32, u32),
     Program(usize),
+    UniversalProgram { site: u32, child: usize },
     Word(u32),
     TextByte,
     I64Less,
     Quote(u32, u32, u32),
+    UniversalQuote { site: u32 },
     Call(usize, u64),
+    UniversalCall { site: u32, identity: u64 },
     NominalNew(u64, u32, u32),
     NominalInto(u64, u32, u32),
     NominalLeft(u64, u32, u32),
@@ -53,12 +60,16 @@ pub(super) fn atom_metadata(
         Action::Unit => (5, 0, None, None, 0),
         Action::Text(start, length) => (8, 0, None, Some((start, length)), 0),
         Action::Program(child) => (3, 0, Some(child), None, 0),
+        Action::UniversalProgram { child, .. } => (3, 0, Some(child), None, 0),
         Action::Word(definition) => (2, i64::from(definition), None, None, 0),
         Action::TextByte => (2, 26, None, None, 0),
         Action::I64Less => (2, 27, None, None, 0),
         Action::Quote(_, _, _) => (2, 8, None, None, 0),
+        Action::UniversalQuote { .. } => (2, 8, None, None, 0),
         Action::Call(_, identity) => (15, i64::from_le_bytes(identity.to_le_bytes()),
             None, None, 0),
+        Action::UniversalCall { identity, .. } =>
+            (15, i64::from_le_bytes(identity.to_le_bytes()), None, None, 0),
         Action::NominalNew(module, ordinal, _) => (26,
             i64::from_le_bytes(module.to_le_bytes()), None, None, ordinal),
         Action::NominalInto(module, ordinal, _) => (27,
@@ -92,6 +103,9 @@ pub(super) fn atom_metadata(
 
 pub(super) struct Program {
     pub(super) entry: u32,
+    /// A reused concrete instance has a checked entry in an older pinned
+    /// source module; only the first symbolic owner emits this function body.
+    pub(super) emit_code: bool,
     pub(super) input: u32,
     pub(super) output: u32,
     pub(super) effects: u32,
@@ -100,6 +114,16 @@ pub(super) struct Program {
     pub(super) operations: alloc::vec::Vec<Operation>,
     pub(super) depth: u32,
     pub(super) leaves: u32,
+    pub(super) universal: Option<UniversalProgram>,
+}
+
+pub(super) struct UniversalProgram {
+    pub(super) slot: u32,
+    pub(super) records: u32,
+    pub(super) count: u32,
+    pub(super) source_identity: u64,
+    pub(super) definition: u32,
+    pub(super) epoch: u32,
 }
 
 pub(super) struct ProgramTypes {
@@ -109,6 +133,7 @@ pub(super) struct ProgramTypes {
 }
 
 pub(super) struct Layout {
+    pub(super) universal: bool,
     pub(super) programs: alloc::vec::Vec<Program>,
     /// Accepted definition index to its emitted, immutable Program global.
     /// The submission root may be a wrapper invocation, not the proved value.
@@ -229,6 +254,7 @@ fn start(
         alloc::vec::Vec::new()
     };
     let layout = Layout {
+        universal: false,
         programs,
         definition_roots,
         order: alloc::vec::Vec::new(),

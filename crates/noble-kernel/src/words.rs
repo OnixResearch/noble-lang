@@ -29,8 +29,7 @@ pub enum VariableKind {
 }
 
 /// A rank-1 scheme over the fixed variable kinds.
-#[cfg_attr(test, derive(PartialEq, Eq))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Scheme {
     /// Kinds of the scheme's variables, indexed by `Variable`.
     pub var_kinds: alloc::vec::Vec<VariableKind>,

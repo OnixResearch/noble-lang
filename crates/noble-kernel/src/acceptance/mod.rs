@@ -5,13 +5,13 @@
 //! returned state. Every conclusion is derived from the candidate's premises.
 
 mod frames;
-mod nodes;
+pub(crate) mod nodes;
 mod parts;
-mod preflight;
+pub(crate) mod preflight;
 mod schemes;
 mod validate;
 
-enum Fail {
+pub(crate) enum Fail {
     Invalid(crate::untrusted::Diagnostic),
     Unsupported(crate::untrusted::UnsupportedKind),
     Exhausted(crate::untrusted::LimitKind),
@@ -192,7 +192,7 @@ fn close_frame(
     context: &parts::Ctx,
 ) -> Machine {
     let parent = machine.frames.pop();
-    let completion = match frames::complete_frame(frame, parent, candidate, context) {
+    let completion = match frames::complete_frame(frame, parent, candidate, context, &mut machine.state.work) {
         Ok(completion) => completion,
         Err(problem) => return halted(machine, Err(problem)),
     };
@@ -242,7 +242,7 @@ fn fold_current(
     node: &crate::untrusted::Node,
     context: &parts::Ctx,
 ) -> Machine {
-    let (cost, joined, interface, live_site) = match nodes::fold_node(frame, node_id, node, context) {
+    let (cost, joined, interface, live_site) = match nodes::fold_node(frame, node_id, node, context, &mut machine.state.work) {
         Ok(folded) => folded,
         Err(problem) => return halted(machine, Err(problem)),
     };
@@ -277,7 +277,7 @@ fn open_current(
     node: &crate::untrusted::Node,
     context: &parts::Ctx,
 ) -> Machine {
-    let (cost, parent, child) = match nodes::open_quotation(frame, node_id, node, context) {
+    let (cost, parent, child) = match nodes::open_quotation(frame, node_id, node, context, &mut machine.state.work) {
         Ok(opened) => opened,
         Err(problem) => return halted(machine, Err(problem)),
     };

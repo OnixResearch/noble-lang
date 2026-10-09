@@ -198,3 +198,96 @@ fn kind_crossed_reference_rejects_as_instantiation_kind() -> Result<(), String> 
     );
     Ok(())
 }
+
+/// A 15-variable acyclic chain costs 1+...+15 = 120 hops, even when its
+/// terminal Bool is substituted through a nested List<Pair<List<Bool>,Bool>>.
+/// One call is at entry and another inside a quotation. Neither invocation
+/// nor the child frame is entitled to restart the request's work allowance.
+#[test]
+fn nested_and_sequential_reference_hops_share_one_work_meter() -> Result<(), String> {
+    use noble_kernel::shapes::Pattern;
+    use noble_kernel::types::{EffSet, Ty};
+    use noble_kernel::words::{Binding, Variable, VariableKind};
+    let mut env = noble_kernel::contracts::environment()
+        .map_err(|defect| format!("table must validate: {defect:?}"))?;
+    let def = noble_kernel::contracts::Definition(env.defs.len() as u32);
+    let pattern = Pattern::List(Box::new(Pattern::Pair(
+        Box::new(Pattern::List(Box::new(Pattern::Var(Variable(1))))),
+        Box::new(Pattern::Bool),
+    )));
+    env.defs.push(noble_kernel::words::Scheme {
+        var_kinds: std::iter::once(VariableKind::Stack)
+            .chain(std::iter::repeat_n(VariableKind::Value, 16))
+            .collect(),
+        stack_in: vec![Pattern::StackVar(Variable(0)), pattern.clone()],
+        stack_out: vec![Pattern::StackVar(Variable(0)), pattern],
+        effects: vec![],
+    });
+    env.kinds.push(noble_kernel::contracts::Behavior::Named);
+    env.deps.push(vec![]);
+    env.definition_owners.push(None);
+    let value = Ty::List(Box::new(Ty::Pair(
+        Box::new(Ty::List(Box::new(Ty::Bool))),
+        Box::new(Ty::Bool),
+    )));
+    let make = |referential: bool| {
+        let mut bindings = vec![Binding::Stack(vec![])];
+        for index in 1..=16 {
+            if referential && index < 16 {
+                bindings.push(Binding::Ref(Variable(index + 1)));
+            } else {
+                bindings.push(Binding::Value(Ty::Bool));
+            }
+        }
+        crate::builders::candidate(
+            vec![
+                crate::builders::invocation(def, bindings.clone()),
+                noble_kernel::untrusted::Node::Quotation {
+                    body: vec![noble_kernel::untrusted::NodeId(2)],
+                    inst: noble_kernel::words::Inst {
+                        bindings: vec![
+                            Binding::Stack(vec![value.clone()]),
+                            Binding::Stack(vec![value.clone()]),
+                            Binding::Stack(vec![value.clone()]),
+                            Binding::Effect(EffSet::empty()),
+                        ],
+                    },
+                },
+                crate::builders::invocation(def, bindings),
+                crate::builders::invocation(
+                    noble_kernel::contracts::Definition(10),
+                    vec![
+                        Binding::Stack(vec![value.clone()]),
+                        Binding::Stack(vec![value.clone()]),
+                        Binding::Effect(EffSet::empty()),
+                    ],
+                ),
+            ],
+            vec![0, 1, 3],
+        )
+    };
+    let direct = make(false);
+    let referenced = make(true);
+    let mut request = crate::builders::request(vec![value.clone()], vec![value]);
+    let mut direct_boundary = None;
+    for available in 1..1024 {
+        request.limits.work = available;
+        if matches!(crate::builders::seen(&env, &request, &direct)?,
+            crate::builders::Seen::Accepted)
+        {
+            direct_boundary = Some(available);
+            break;
+        }
+    }
+    let boundary = direct_boundary.ok_or("direct witness has no work boundary")?;
+    request.limits.work = boundary + 239;
+    let below = crate::builders::seen(&env, &request, &referenced)?;
+    assert!(matches!(
+        &below, crate::builders::Seen::Exhausted(noble_kernel::untrusted::LimitKind::Work)
+    ), "two acyclic chains must exhaust at one below their 240 charged hops: {below:?}");
+    request.limits.work += 1;
+    let at_boundary = crate::builders::seen(&env, &request, &referenced)?;
+    assert!(matches!(&at_boundary, crate::builders::Seen::Accepted),
+        "exact 240 hop allowance must accept: {at_boundary:?}");
+    Ok(())
+}

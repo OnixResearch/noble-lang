@@ -47,6 +47,15 @@ impl super::Arena {
         Ok((known, unknown))
     }
 
+    pub(crate) fn proven_empty_effect(
+        &self,
+        id: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<bool, crate::Diagnostic> {
+        solve::proven_empty(self, id, span, meter)
+    }
+
     #[expect(
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-maintainers; node charging and appending effect/bound entries allocate or return owned diagnostics."

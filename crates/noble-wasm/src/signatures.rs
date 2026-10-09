@@ -7,6 +7,9 @@ pub(crate) const SOURCE_KEY_LIMIT: usize = 4096;
 #[derive(Clone)]
 pub(crate) struct Pool {
     pub(crate) keys: alloc::vec::Vec<alloc::vec::Vec<u8>>,
+    /// Source profiles compare canonical keys by binary search without
+    /// copying their bytes or changing their stable runtime signature IDs.
+    sorted: alloc::vec::Vec<usize>,
     bytes: usize,
     extended: bool,
 }
@@ -25,6 +28,7 @@ impl Pool {
     pub(crate) fn new() -> Self {
         Self {
             keys: alloc::vec::Vec::with_capacity(16),
+            sorted: alloc::vec::Vec::new(),
             bytes: 0,
             extended: false,
         }
@@ -33,6 +37,7 @@ impl Pool {
     pub(crate) fn source() -> Self {
         Self {
             keys: alloc::vec::Vec::with_capacity(16),
+            sorted: alloc::vec::Vec::new(),
             bytes: 0,
             extended: true,
         }
@@ -45,23 +50,40 @@ impl Pool {
         self.intern_charged(stack, |_| Ok(()))
     }
 
-    /// Charge exactly the encoded keys compared, including the matching key.
-    /// The caller owns its bounded work meter; failed charges leave the pool
-    /// unchanged, and both paths use the same canonical encoding and limits.
+    /// Charge every encoded key compared, including the match, and each
+    /// index shifted on insertion. The caller owns its original work meter;
+    /// failed charges leave both the keys and source index unchanged.
     pub(crate) fn intern_charged(
         &mut self,
         stack: &[noble_kernel::types::Ty],
         mut charge: impl FnMut(usize) -> Result<(), crate::Diagnostic>,
     ) -> Result<u32, crate::Diagnostic> {
         let key = attempt!(walk::encode(stack, self.extended));
-        let mut index = 0usize;
-        while index < self.keys.len() {
-            attempt!(charge(self.keys[index].len().saturating_add(1)));
-            if self.keys[index] == key {
-                return number(index);
+        let insertion = if self.extended {
+            let mut lower = 0usize;
+            let mut upper = self.sorted.len();
+            while lower < upper {
+                let middle = lower + (upper - lower) / 2;
+                let index = self.sorted[middle];
+                attempt!(charge(self.keys[index].len().saturating_add(1)));
+                match self.keys[index].as_slice().cmp(key.as_slice()) {
+                    core::cmp::Ordering::Less => lower = middle + 1,
+                    core::cmp::Ordering::Greater => upper = middle,
+                    core::cmp::Ordering::Equal => return number(index),
+                }
             }
-            index += 1;
-        }
+            Some(lower)
+        } else {
+            let mut index = 0usize;
+            while index < self.keys.len() {
+                attempt!(charge(self.keys[index].len().saturating_add(1)));
+                if self.keys[index] == key {
+                    return number(index);
+                }
+                index += 1;
+            }
+            None
+        };
         if self.extended && self.keys.len() >= SOURCE_KEY_LIMIT {
             return Err(crate::Diagnostic::Exhausted);
         }
@@ -73,7 +95,13 @@ impl Pool {
             return Err(crate::Diagnostic::Exhausted);
         }
         let id = attempt!(number(self.keys.len()));
+        if let Some(at) = insertion {
+            attempt!(charge(self.sorted.len() - at + 1));
+        }
         self.keys.push(key);
+        if let Some(at) = insertion {
+            self.sorted.insert(at, self.keys.len() - 1);
+        }
         self.bytes = bytes;
         Ok(id)
     }
@@ -159,40 +187,20 @@ mod tests {
     use noble_kernel::types::Ty;
 
     #[test]
-    fn signature_meter_charges_exact_compared_keys_and_rejects_underfunded_miss() {
+    fn source_signature_ids_stay_stable_and_denied_intern_is_atomic() {
         let mut pool = Pool::source();
-        assert!(matches!(pool.intern(&[]), Ok(0)));
-        assert!(matches!(pool.intern(&[Ty::I64]), Ok(1)));
+        assert!(matches!(pool.intern(&[Ty::I64]), Ok(0)));
+        assert!(matches!(pool.intern(&[]), Ok(1)));
         assert!(matches!(pool.intern(&[Ty::Bool]), Ok(2)));
-        let costs: alloc::vec::Vec<usize> = pool.keys.iter()
-            .map(|key| key.len().saturating_add(1)).collect();
-        let mut charged = 0usize;
-        assert!(matches!(pool.intern_charged(&[], |cost| {
-            charged += cost;
-            Ok(())
-        }), Ok(0)));
-        assert_eq!(charged, costs[0], "early exact hit charged unused historical keys");
-        charged = 0;
-        assert!(matches!(pool.intern_charged(&[Ty::Bool], |cost| {
-            charged += cost;
-            Ok(())
-        }), Ok(2)));
-        assert_eq!(charged, costs.iter().sum(),
-            "late exact hit skipped a compared historical key");
-        let full_miss_cost: usize = costs.iter().sum();
-        let mut remaining = full_miss_cost - 1;
-        assert!(matches!(pool.intern_charged(&[Ty::I64, Ty::Bool], |cost| {
-            remaining = remaining.checked_sub(cost)
-                .ok_or(crate::Diagnostic::Exhausted)?;
-            Ok(())
+        assert!(matches!(pool.intern(&[]), Ok(1)));
+        assert!(matches!(pool.intern(&[Ty::I64]), Ok(0)));
+        let original = pool.keys.clone();
+        assert!(matches!(pool.intern_charged(&[Ty::I64, Ty::Bool], |_| {
+            Err(crate::Diagnostic::Exhausted)
         }), Err(crate::Diagnostic::Exhausted)));
-        assert_eq!(pool.keys.len(), 3, "unfunded signature was published");
-        remaining = full_miss_cost;
-        assert!(matches!(pool.intern_charged(&[Ty::I64, Ty::Bool], |cost| {
-            remaining = remaining.checked_sub(cost)
-                .ok_or(crate::Diagnostic::Exhausted)?;
-            Ok(())
-        }), Ok(3)));
-        assert_eq!(remaining, 0);
+        assert_eq!(pool.keys, original);
+        assert!(matches!(pool.intern(&[Ty::I64, Ty::Bool]), Ok(3)));
+        assert!(matches!(pool.intern(&[Ty::Bool]), Ok(2)));
+        assert!(matches!(pool.intern(&[]), Ok(1)));
     }
 }

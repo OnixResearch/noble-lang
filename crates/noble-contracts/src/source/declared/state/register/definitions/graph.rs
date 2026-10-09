@@ -5,6 +5,7 @@ pub(super) struct Schedule<'a> {
     pending: alloc::vec::Vec<Option<super::Definition>>,
     installed: alloc::vec::Vec<bool>,
     remaining: usize,
+    remaining_nodes: u32,
     limits: crate::Limits,
     retained_bytes: u32,
 }
@@ -38,6 +39,7 @@ impl<'a> Schedule<'a> {
             pending[at] = definitions.pop();
         }
         let remaining = pending.len();
+        let remaining_nodes = work.limits.nodes;
         Ok(Self {
             session: Some(session),
             work,
@@ -45,6 +47,7 @@ impl<'a> Schedule<'a> {
             pending,
             installed: alloc::vec![false;remaining],
             remaining,
+            remaining_nodes,
             limits,
             retained_bytes,
         })
@@ -220,6 +223,20 @@ impl<'a> Schedule<'a> {
             Ok(session) => session,
             Err(problem) => return (self, Err(problem)),
         };
+        let mut definition_limits = self.limits;
+        definition_limits.nodes = definition_limits.nodes.min(self.remaining_nodes);
+        let Some((ordinal, source_span, body_span)) = self.work.definition_spans.iter()
+            .enumerate().find(|(_, source)| source.name == name)
+            .and_then(|(ordinal, source)| {
+                u32::try_from(ordinal).ok()
+                    .map(|ordinal| (ordinal, source.span, source.body_span))
+            })
+        else {
+            return (self, Err(crate::source::declared::error(
+                crate::source::Stage::Check,
+                "definition has no exact original module source span",
+            )));
+        };
         let installed = super::install_one(
             session,
             super::DefinitionInput {
@@ -231,15 +248,66 @@ impl<'a> Schedule<'a> {
                     .map(|(_, scheme)| scheme.clone()),
                 name,
                 source: definition_bytes,
-                limits: self.limits,
+                limits: definition_limits,
                 retained_bytes: self.retained_bytes,
                 exports: self.work.exports,
+                original: crate::source::preparation::OriginalDefinition {
+                    module_source: self.work.original_source,
+                    module_original: self.work.original_source,
+                    module_prefix: &self.work.source_stamp_prefix,
+                    name_index: self.work.name_index.as_ref(),
+                    module_name: self.work.name,
+                    module_version: self.work.version,
+                    ordinal,
+                    source_span,
+                    body_span,
+                },
             },
             core::mem::take(&mut self.work.local_exports),
         );
-        let (session, local_exports) = match installed {
+        let (session, local_exports, consumed_nodes, consumed_work) = match installed {
             Ok(installed) => installed,
             Err(problem) => return (self, Err(problem)),
+        };
+        // The per-definition meter bounds one body; the module meter pays
+        // its actual spent work too, including the once-only source prefix.
+        if let Err(problem) = self.work.meter.charge(
+            consumed_work, crate::source::declared::SPAN,
+        ) {
+            return (self, Err(crate::source::declared::diagnostic(
+                crate::source::Stage::Check, problem,
+            )));
+        }
+        if let Some(index) = self.work.name_index.as_mut() {
+            let Some(words) = session.source.declared.as_ref().map(|context| context.words.as_slice())
+                else {
+                    return (self, Err(crate::source::declared::error(
+                        crate::source::Stage::Check, "indexed source namespace lost its context",
+                    )));
+                };
+            let Some(ordinal) = words.len().checked_sub(1) else {
+                return (self, Err(crate::source::declared::error(
+                    crate::source::Stage::Check, "indexed source namespace has no new definition",
+                )));
+            };
+            if let Err(problem) = index.insert(
+                words, session.source.declared.as_ref().and_then(|context| context.owner),
+                session.source.generation, ordinal, crate::source::declared::SPAN,
+                &mut self.work.meter,
+            ) {
+                return (self, Err(crate::source::declared::diagnostic(
+                    crate::source::Stage::Check, problem,
+                )));
+            }
+        }
+        self.remaining_nodes = match self.remaining_nodes.checked_sub(consumed_nodes) {
+            Some(remaining) => remaining,
+            None => {
+                return (self, Err(crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "frontend module node budget exceeded",
+                )));
+            }
         };
         self.session = Some(session);
         self.work.local_exports = local_exports;

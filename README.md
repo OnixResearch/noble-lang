@@ -245,7 +245,12 @@ The combined prefix is selected by the host's flags, never by source or a
 forged kernel candidate. No `--bindings` file or host operation is permitted.
 Add `--signed-self-recursion` to allow an exported declared word with an
 explicit `signature` to call its own unqualified name at the *same* owner
-signature; different-owner/mutual or polymorphic recursion remains refused.
+signature. A source-authenticated, pure `forall<S:stack>` owner can also use
+its original body across separately checked concrete stack prefixes: its
+named and recursive calls keep the same owner and their own exact ABI.
+Different-owner/mutual recursion and unconstrained value/effect polymorphic
+recursion remain refused; an ordinary expression cannot invoke a sealed
+owner through the non-universal compiler ingress.
 Missing signatures, wrong module versions and invalid candidates do not
 publish a partially checked module. Reports identify `Declared-Text-v1` or
 `Signed-Declared-Text-v1`; no pure guest imports a host function.
@@ -266,6 +271,19 @@ not introduce exact BigInt/Rat values, the calculator's seven numeric budgets,
 or any CALC acceptance status. The compiled signed decimal-fold and lexical
 parameter precursors under `verification/calculator-precursor/` still use
 **wrapping** I64 arithmetic and are not exact-number implementations.
+With the original work, source, Wasm, and allocation limits unchanged, the
+ten original signed bit modules under `verification/calculator-exact-library/`
+link in one framed session; two ordinary pair initializers and the selected
+`bitaddsigned@1.add` execute in the actual guest and return positive two as
+`[false,true]`. This is **not** a 28-module or MA1 result. In the exact
+28-source registration attempt, the first 25 sources link, but `bigint.noble`
+is refused at its first definition by the original 2,000,000-work
+per-definition allowance (source span 0–563); `rat.noble` subsequently
+encounters an unsupported three-arm variant declaration, and `decimal.noble`
+cannot resolve the absent BigInt. A distinct experimental BigInt source with
+a factored scan helper also exhausts that unchanged work allowance; it does
+not replace or reissue the frozen source. These are source implementation
+blockers, not waived limits or calculator acceptance evidence.
 The signed lexical countdown there executes 600 checked self calls in each
 optimization mode with 12,661 guest steps and a 40-byte peak continuation
 queue. This scalar tail witness is not an exact numeric width or general
@@ -347,6 +365,12 @@ flag without declared modules, is refused. An implicit `--source-bytes 0`
 remains a valid closed quota: nonempty source exhausts without a panic.
 Increasing aggregate capacity does not evict prior module sources or replace
 original bytes with hashes; alias replay must use the exact retained source.
+Original-source definition checks share a bounded module-wide work ledger.
+Its temporary namespace index compares names byte by byte under that ledger
+and is not built for literal-only modules or when a conservative build bound
+would consume the available work. The selected linear route also charges
+each compared name byte; an over-budget registration publishes no module,
+while a subsequent independent registration can proceed.
 In framed declared sessions, a source frame above the per-input limit but at
 most 262,144 bytes is drained in bounded chunks and refused without checking
 or executing it; a following valid frame can reuse the unchanged session.

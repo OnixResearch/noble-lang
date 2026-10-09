@@ -6,7 +6,7 @@
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; check_request preserves format, byte/node, scheme, dependency, schema, stack and effect rejection order; invalid requests are typed outcomes, not assertion failures."
 )]
-pub(super) fn check_request(
+pub(crate) fn check_request(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
@@ -74,7 +74,7 @@ pub(super) fn check_request(
         let at = super::parts::site(None, Some(owner));
         let owner_cost = attempt!(guard_inst(owner_inst, request, &mut remaining));
         let (interface, _) = attempt!(super::parts::instantiate::apply(
-            scheme, owner_inst, None, at, &context,
+            scheme, owner_inst, None, at, &context, &mut remaining,
         ));
         remaining = attempt!(super::parts::charge(remaining,
             attempt!(super::parts::scheme_cost(scheme))
@@ -88,7 +88,7 @@ pub(super) fn check_request(
             if let crate::untrusted::Node::SignedSelf { inst, .. } = node {
                 let site_cost = attempt!(guard_inst(inst, request, &mut remaining));
                 let (site, _) = attempt!(super::parts::instantiate::apply(
-                    scheme, inst, None, at, &context,
+                    scheme, inst, None, at, &context, &mut remaining,
                 ));
                 remaining = attempt!(super::parts::charge(remaining,
                     attempt!(super::parts::scheme_cost(scheme))

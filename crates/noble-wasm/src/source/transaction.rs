@@ -7,11 +7,13 @@ pub(super) struct Base {
     text_cursor: bool,
     declared_text: bool,
     generation: u32,
+    source_epoch_generation: u32,
     functions: u32,
     text_end_bytes: u32,
     signature_count: usize,
     descriptor_count: usize,
     identity_count: usize,
+    universal_code_count: usize,
 }
 
 impl Base {
@@ -22,11 +24,13 @@ impl Base {
             text_cursor: compiler.text_cursor,
             declared_text: compiler.declared_text,
             generation: compiler.generation,
+            source_epoch_generation: compiler.source_epoch_generation,
             functions: compiler.functions,
             text_end_bytes: compiler.text_end,
             signature_count: compiler.signatures.keys.len(),
             descriptor_count: compiler.descriptors.len(),
             identity_count: compiler.identities.len(),
+            universal_code_count: compiler.universal_code.len(),
         }
     }
 
@@ -40,11 +44,15 @@ impl Base {
             && self.declared_text == current.declared_text
             && self.declared_text == next.declared_text
             && self.generation == current.generation
+            && self.source_epoch_generation == current.source_epoch_generation
+            && self.source_epoch_generation == next.source_epoch_generation
             && self.functions == current.functions
             && self.text_end_bytes == current.text_end
             && self.signature_count == current.signatures.keys.len()
             && self.descriptor_count == current.descriptors.len()
             && self.identity_count == current.identities.len()
+            && self.universal_code_count == current.universal_code.len()
+            && self.universal_code_count <= next.universal_code.len()
             && self.signature_count <= next.signatures.keys.len()
             && self.descriptor_count <= next.descriptors.len()
             && self.identity_count <= next.identities.len()
@@ -85,6 +93,28 @@ impl Base {
             }
             index += 1;
         }
-        index == self.identity_count
+        if index != self.identity_count {
+            return false;
+        }
+        index = 0;
+        while index < self.universal_code_count {
+            let before = &current.universal_code[index];
+            let after = &next.universal_code[index];
+            if before.definition != after.definition
+                || before.definition_slot != after.definition_slot
+                || before.definition_identity != after.definition_identity
+                || before.module_identity != after.module_identity
+                || before.module_version != after.module_version
+                || before.definition_ordinal != after.definition_ordinal
+                || !alloc::sync::Arc::ptr_eq(&before.source, &after.source)
+                || before.stamp != after.stamp
+                || before.span != after.span || before.body_entry != after.body_entry
+                || before.quotes != after.quotes
+            {
+                break;
+            }
+            index += 1;
+        }
+        index == self.universal_code_count
     }
 }

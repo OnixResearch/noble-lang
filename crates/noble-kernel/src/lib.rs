@@ -38,6 +38,7 @@ pub mod resources;
 pub mod shapes;
 pub mod types;
 pub mod untrusted;
+pub mod universal;
 pub mod words;
 
 /// Outcome of consuming one unit from an explicitly supplied budget.

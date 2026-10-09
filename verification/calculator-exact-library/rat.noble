@@ -1,0 +1,1157 @@
+module rat@1 [
+    opaque Rat Pair<bigint@1.BigInt,bigint@1.BigInt> private
+    export Rat
+
+    # The recursive power helper is exported for signed-self admission, but
+    # only this module can mint its intermediate accumulator/exponent state.
+    opaque PowerStepState Pair<Pair<Rat,Rat>,bigint@1.BigInt> private
+    export PowerStepState
+
+    # Only Euclid mints the remainder and preceding divisor together.
+    opaque GcdState Pair<Pair<bigint@1.BigInt,bigint@1.BigInt>,Pair<bigint@1.BigInt,bigint@1.BigInt>> private
+    export GcdState
+
+    # A bounded operand projection is an optimization, not an alternate
+    # authority: the original Rats and their charged Budget survive any
+    # Beyond result and return to the general BigInt arithmetic.
+    variant SmallProducts Both Pair<I64,I64> public Either Unit public
+    variant SmallRats Both Pair<Pair<I64,I64>,Pair<I64,I64>> public Either Unit public
+    variant TinyResult Finished Rat public Absent Unit public
+
+    opaque TinyGcdState Pair<Pair<I64,I64>,I64> private
+    export TinyGcdState
+    variant TinyGcdStep Found I64 public More TinyGcdState public Exhausted Unit public
+
+    opaque TinyQuotientState Pair<Pair<I64,I64>,Pair<I64,I64>> private
+    export TinyQuotientState
+    variant TinyQuotientStep Found I64 public More TinyQuotientState public Exhausted Unit public
+
+    signature numerator forall<S:stack> [ S Rat -- S bigint@1.BigInt ! pure ]
+    def numerator [ Rat.into unpair drop ]
+
+    signature denominator forall<S:stack> [ S Rat -- S bigint@1.BigInt ! pure ]
+    def denominator [ Rat.into unpair swap drop ]
+
+    signature is_zero forall<S:stack>
+        [ S bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<Bool,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def is_zero [
+        bigint@1.bit_length
+        [ unpair [ 0 = ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature is_negative forall<S:stack>
+        [ S bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<Bool,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def is_negative [
+        [ bigint@1.zero ] dip bigint@1.compare
+        [ unpair [ -1 = ] dip pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature call_depth_error forall<S:stack>
+        [ S -- S calc_errors@1.NumericError ! pure ]
+    def call_depth_error [
+        unit calc_errors@1.LimitDepth.CallDepth
+        calc_errors@1.LimitRemaining.NestedDepth
+        calc_errors@1.LimitCategory.Remaining
+        calc_errors@1.NumericError.ResourceLimit
+    ]
+
+    signature width_limit forall<S:stack>
+        [ S I64 -- S result@1.Result<I64,calc_errors@1.NumericError> ! pure ]
+    def width_limit [
+        dup 0 < [ drop call_depth_error result@1.Result.Err ]
+        [ dup 1000000000 < [ result@1.Result.Ok ]
+          [ drop call_depth_error result@1.Result.Err ] if ] if
+    ]
+
+    signature max_i64 forall<S:stack> [ S I64 I64 -- S I64 ! pure ]
+    def max_i64 [
+        pair dup unpair <
+        [ unpair swap drop ] [ unpair drop ] if
+    ]
+
+    # UNVERIFIED Rat caller-frame hypothesis over BigInt's source queue model.
+    # Compiled continuation peaks must validate 4*(current bits+1)+136.
+    signature reserve_depth forall<S:stack>
+        [ S I64 I64 numeric_budget@1.Budget -- S result@1.Result<numeric_budget@1.Budget,calc_errors@1.NumericError> ! pure ]
+    def reserve_depth [
+        [ dup 0 < ] dip swap
+        [ drop drop drop call_depth_error result@1.Result.Err ]
+        [ [ dup 480 < ] dip swap
+          [ [ swap ] dip [ 1 + 4 * ] dip [ + 136 + ] dip swap
+            dup 480 <
+          [ numeric_budget@1.admit_call ]
+          [ drop drop call_depth_error result@1.Result.Err ] if ]
+          [ drop drop drop call_depth_error result@1.Result.Err ] if ] if
+    ]
+
+    signature pair_width forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget -- S result@1.Result<Pair<Pair<Pair<bigint@1.BigInt,bigint@1.BigInt>,I64>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def pair_width [
+        [ dup unpair drop ] dip bigint@1.bit_length
+        [ unpair [ width_limit ] dip swap
+          [ swap [[ dup unpair swap drop ] dip ] dip
+            [ swap ] dip bigint@1.bit_length
+            [ unpair [ width_limit ] dip swap
+              [ swap [ max_i64 ] dip [ pair ] dip pair result@1.Result.Ok ]
+              [ swap drop swap drop swap drop result@1.Result.Err ]
+              result@1.Result.match ]
+            [ swap drop swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature reserve_pair forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget I64 -- S result@1.Result<Pair<Pair<bigint@1.BigInt,bigint@1.BigInt>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def reserve_pair [
+        [ pair_width ] dip swap
+        [ unpair [ unpair ] dip [[ swap ] dip ] dip [ swap ] dip
+          reserve_depth
+          [ pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature admit_rat forall<S:stack>
+        [ S Rat I64 numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def admit_rat [
+        [ pair ] dip [ dup unpair drop parts pair ] dip
+        [[ dup unpair swap drop ] dip ] dip [ swap ] dip swap
+        reserve_pair
+        [ unpair [ drop ] dip [ unpair drop ] dip
+          pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature abs_bigint forall<S:stack>
+        [ S bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<bigint@1.BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def abs_bigint [
+        [ dup ] dip is_negative
+        [ unpair swap
+          [ bigint@1.negate ] [ pair result@1.Result.Ok ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # Euclid uses positive inputs; every division carries and checks the budget.
+    signature gcd forall<S:stack>
+        [ S bigint@1.BigInt bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<bigint@1.BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export gcd
+    def gcd [
+        512 numeric_budget@1.charge_native_steps
+        [ [ pair ] dip 0 reserve_pair
+          [ unpair [ dup unpair swap drop ] dip is_zero
+            [ unpair swap
+              [ [ unpair ] dip [ drop ] dip pair result@1.Result.Ok ]
+              [ [ dup unpair ] dip bigint@1.divide_rem
+                [ unpair [ pair GcdState.new ] dip gcd_remainder ]
+                [ swap drop result@1.Result.Err ] result@1.Result.match ] if ]
+            [ swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # The nonnegative Euclidean remainder is either the answer's last
+    # nonzero divisor (zero), already proves gcd one, or needs another row.
+    signature gcd_remainder forall<S:stack>
+        [ S GcdState numeric_budget@1.Budget -- S result@1.Result<Pair<bigint@1.BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export gcd_remainder
+    def gcd_remainder [
+        512 numeric_budget@1.charge_native_steps
+        [ [ GcdState.into unpair ] dip
+          [ dup unpair swap drop ] dip is_zero
+          [ unpair swap
+            [ [ drop ] dip [ unpair swap drop ] dip
+              pair result@1.Result.Ok ]
+            [ [ dup unpair swap drop ] dip [ bigint@1.one ] dip bigint@1.compare
+              [ unpair [ 0 = ] dip swap
+                [ [ drop ] dip [ drop ] dip
+                  [ bigint@1.one ] dip pair result@1.Result.Ok ]
+                [ [ unpair swap drop ] dip
+                  [[ unpair swap drop ] dip ] dip gcd ] if ]
+              [ swap drop swap drop result@1.Result.Err ]
+              result@1.Result.match ] if ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature gcd_ordered forall<S:stack>
+        [ S bigint@1.BigInt bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<bigint@1.BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def gcd_ordered [
+        [ pair ] dip [ dup unpair ] dip bigint@1.compare
+        [ unpair [ dup -1 = ] dip swap
+          [ [ drop ] dip [ unpair swap ] dip gcd ]
+          [ [ drop ] dip [ unpair ] dip gcd ] if ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # The gcd is positive and divides both inputs exactly.
+    signature reduce_pair forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def reduce_pair [
+        [[ unpair ] dip ] dip
+        [ dup [ swap ] dip ] dip bigint@1.divide_rem
+        [ unpair [ unpair drop ] dip
+          [ swap ] dip [[ swap ] dip ] dip bigint@1.divide_rem
+          [ unpair [ unpair drop ] dip [ swap ] dip
+            [ pair ] dip [ Rat.new ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # gcd one proves this already-canonical pair needs no quotient construction.
+    signature reduce_gcd forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def reduce_gcd [
+        [ dup ] dip [ bigint@1.one ] dip bigint@1.compare
+        [ unpair [ 0 = ] dip swap
+          [ [ drop ] dip [ Rat.new ] dip pair result@1.Result.Ok ]
+          [ reduce_pair ] if ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature reduce_signed forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def reduce_signed [
+        [ dup unpair ] dip [ swap ] dip abs_bigint
+        [ unpair [ dup ] dip [ bigint@1.one ] dip bigint@1.compare
+          [ unpair [ 0 = ] dip swap
+            [ [ drop drop ] dip [ Rat.new ] dip pair result@1.Result.Ok ]
+            [ [ swap ] dip gcd_ordered
+              [ unpair reduce_gcd ]
+              [ swap drop result@1.Result.Err ] result@1.Result.match ] if ]
+          [ swap drop swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # make_positive already proved |n| != 1; make_positive_nonunit checks
+    # zero before invoking this path, so a second wide comparison is needless.
+    signature reduce_nonunit forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def reduce_nonunit [
+        [ dup unpair ] dip [ swap ] dip abs_bigint
+        [ unpair [ swap ] dip gcd_ordered
+          [ unpair reduce_gcd ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # A canonical positive unit denominator already has gcd one.
+    signature reduce_unit_denominator forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def reduce_unit_denominator [
+        [ dup unpair swap drop ] dip [ bigint@1.one ] dip bigint@1.compare
+        [ unpair [ 0 = ] dip swap
+          [ [ Rat.new ] dip pair result@1.Result.Ok ]
+          [ reduce_signed ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature normalize_sign forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def normalize_sign [
+        [ dup unpair swap drop ] dip is_negative
+        [ unpair swap
+          [ [ unpair ] dip bigint@1.negate
+            [ unpair [ swap ] dip bigint@1.negate
+              [ unpair [ swap ] dip [ pair ] dip reduce_unit_denominator ]
+              [ swap drop result@1.Result.Err ] result@1.Result.match ]
+            [ swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ reduce_unit_denominator ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # The denominator is positive and proved nonunit by make_positive.
+    signature make_positive_nonunit forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def make_positive_nonunit [
+        [ dup unpair drop ] dip is_zero
+        [ unpair swap
+          [ swap drop bigint@1.zero bigint@1.one pair Rat.new
+            swap pair result@1.Result.Ok ]
+          [ reduce_nonunit ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # This branch has a positive nonunit denominator and a nonunit numerator;
+    # reserve the pair only before Euclid, never for a known unit denominator.
+    signature make_regular forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def make_regular [
+        0 reserve_pair
+        [ unpair make_positive_nonunit ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature unit_candidate forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget -- S Pair<bigint@1.BigInt,bigint@1.BigInt> result@1.Result<Pair<Bool,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def unit_candidate [
+        [ dup unpair drop ] dip abs_bigint
+        [ unpair [ bigint@1.one ] dip bigint@1.compare
+          [ unpair [ 0 = ] dip pair result@1.Result.Ok ]
+          [ result@1.Result.Err ] result@1.Result.match ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # Unit d needs only one scan to admit n under the caller's Budget, never
+    # the wide sign/absolute-value comparisons or Euclid normalization.
+    # For nonunit d, |n|=1 likewise proves gcd(n,d)=1.
+    signature make_positive forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def make_positive [
+        [ dup unpair swap drop ] dip
+        [ bigint@1.one ] dip bigint@1.compare
+        [ unpair [ 0 = ] dip swap
+          [ [ dup unpair drop ] dip bigint@1.bit_length
+            [ unpair [ drop ] dip [ Rat.new ] dip
+              pair result@1.Result.Ok ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ]
+          [ unit_candidate
+            [ unpair swap
+              [ [ Rat.new ] dip pair result@1.Result.Ok ]
+              [ make_regular ] if ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature make forall<S:stack>
+        [ S bigint@1.BigInt bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export make
+    def make [
+        512 numeric_budget@1.charge_native_steps
+        [ [ pair ] dip [ dup unpair swap drop ] dip
+          [ bigint@1.zero ] dip bigint@1.compare
+          [ unpair [ dup 0 = ] dip swap
+            [ [ drop ] dip drop drop
+              unit calc_errors@1.DomainArithmetic.ZeroDenominator
+              calc_errors@1.DomainExtended.Arithmetic calc_errors@1.DomainError.Extended
+              calc_errors@1.NumericError.Domain result@1.Result.Err ]
+            [ [ dup 0 < ] dip swap
+              [ [ drop ] dip normalize_sign ]
+              [ [ drop ] dip make_positive ] if ] if ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature from_bigint forall<S:stack>
+        [ S bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export from_bigint
+    def from_bigint [
+        512 numeric_budget@1.charge_native_steps
+        [ [ dup ] dip bigint@1.bit_length
+          [ unpair [ drop ] dip [ bigint@1.one pair Rat.new ] dip
+            pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # The BigInt digit constructor has just checked this exact shared Budget.
+    # No arbitrary BigInt enters this path: callers supply validated digits
+    # rather than a previously constructed value with a different budget.
+    signature accepted_decimal_integer forall<S:stack>
+        [ S bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def accepted_decimal_integer [
+        [ bigint@1.one pair Rat.new ] dip pair result@1.Result.Ok
+    ]
+
+    signature from_decimal_digits forall<S:stack>
+        [ S List<I64> Bool numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export from_decimal_digits
+    def from_decimal_digits [
+        512 numeric_budget@1.charge_native_steps
+        [ [ swap ] dip bigint@1.from_decimal_digits
+          [ unpair [ swap ] dip swap
+            [ bigint@1.negate
+              [ unpair accepted_decimal_integer ]
+              [ result@1.Result.Err ] result@1.Result.match ]
+            [ accepted_decimal_integer ] if ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature parts forall<S:stack> [ S Rat -- S bigint@1.BigInt bigint@1.BigInt ! pure ]
+    export parts
+    def parts [ Rat.into unpair ]
+
+    signature project_small_products forall<S:stack>
+        [ S Pair<bigint@1.BigInt,bigint@1.BigInt> numeric_budget@1.Budget
+          -- S Pair<bigint@1.BigInt,bigint@1.BigInt> result@1.Result<Pair<SmallProducts,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def project_small_products [
+        [ dup ] dip [ unpair drop ] dip bigint@1.to_small_i64
+        [ unpair swap
+          [ swap
+            [[ dup unpair swap drop ] dip swap ] dip bigint@1.to_small_i64
+            [ unpair swap
+              [ swap [ pair SmallProducts.Both ] dip pair result@1.Result.Ok ]
+              [ drop [ drop ] dip [ unit SmallProducts.Either ] dip pair result@1.Result.Ok ]
+              bigint@1.SmallValue.match ]
+            [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ drop [ unit SmallProducts.Either ] dip pair result@1.Result.Ok ]
+          bigint@1.SmallValue.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature project_small_rats forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget
+          -- S Pair<Rat,Rat> result@1.Result<Pair<SmallRats,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def project_small_rats [
+        [ dup ] dip [ unpair drop parts pair ] dip project_small_products
+        [ swap drop unpair swap
+          [ swap
+            [[ dup unpair swap drop parts pair ] dip swap ] dip
+            project_small_products
+            [ swap drop unpair swap
+              [ swap [ pair SmallRats.Both ] dip pair result@1.Result.Ok ]
+              [ drop [ drop ] dip [ unit SmallRats.Either ] dip pair result@1.Result.Ok ]
+              SmallProducts.match ]
+            [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ drop [ unit SmallRats.Either ] dip pair result@1.Result.Ok ]
+          SmallProducts.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # All four projected magnitudes are at most 255. Cross products are at
+    # most 65,025 and a cross sum/difference at most 130,050: raw I64 cannot
+    # wrap. Bounds on the *inputs*, not the result, decide this path.
+    signature tiny_cross_left forall<S:stack> [ S Pair<Pair<I64,I64>,Pair<I64,I64>> -- S I64 ! pure ]
+    def tiny_cross_left [ unpair [ unpair drop ] dip unpair swap drop * ]
+    signature tiny_cross_right forall<S:stack> [ S Pair<Pair<I64,I64>,Pair<I64,I64>> -- S I64 ! pure ]
+    def tiny_cross_right [ unpair swap pair tiny_cross_left ]
+    signature tiny_numer_product forall<S:stack> [ S Pair<Pair<I64,I64>,Pair<I64,I64>> -- S I64 ! pure ]
+    def tiny_numer_product [ unpair [ unpair drop ] dip unpair drop * ]
+    signature tiny_den_product forall<S:stack> [ S Pair<Pair<I64,I64>,Pair<I64,I64>> -- S I64 ! pure ]
+    def tiny_den_product [ unpair [ unpair swap drop ] dip unpair swap drop * ]
+    signature tiny_sum_cross forall<S:stack> [ S Pair<Pair<I64,I64>,Pair<I64,I64>> -- S I64 ! pure ]
+    def tiny_sum_cross [ dup tiny_cross_left swap tiny_cross_right + ]
+    signature tiny_diff_cross forall<S:stack> [ S Pair<Pair<I64,I64>,Pair<I64,I64>> -- S I64 ! pure ]
+    def tiny_diff_cross [ dup tiny_cross_left swap tiny_cross_right - ]
+    signature tiny_plus_pair forall<S:stack> [ S Pair<Pair<I64,I64>,Pair<I64,I64>> -- S Pair<I64,I64> ! pure ]
+    def tiny_plus_pair [ dup tiny_sum_cross swap tiny_den_product pair ]
+    signature tiny_minus_pair forall<S:stack> [ S Pair<Pair<I64,I64>,Pair<I64,I64>> -- S Pair<I64,I64> ! pure ]
+    def tiny_minus_pair [ dup tiny_diff_cross swap tiny_den_product pair ]
+    signature tiny_times_pair forall<S:stack> [ S Pair<Pair<I64,I64>,Pair<I64,I64>> -- S Pair<I64,I64> ! pure ]
+    def tiny_times_pair [ dup tiny_numer_product swap tiny_den_product pair ]
+    signature tiny_divide_pair forall<S:stack> [ S Pair<Pair<I64,I64>,Pair<I64,I64>> -- S Pair<I64,I64> ! pure ]
+    def tiny_divide_pair [ dup tiny_cross_left swap tiny_cross_right pair ]
+    signature tiny_normalize_sign forall<S:stack> [ S Pair<I64,I64> -- S Pair<I64,I64> ! pure ]
+    def tiny_normalize_sign [ unpair dup 0 < [ 0 swap - [ 0 swap - ] dip pair ] [ pair ] if ]
+    signature tiny_abs forall<S:stack> [ S I64 -- S I64 ! pure ]
+    def tiny_abs [ dup 0 < [ 0 swap - ] [ ] if ]
+
+    signature tiny_subtract_pair forall<S:stack> [ S I64 I64 -- S Pair<I64,I64> ! pure ]
+    def tiny_subtract_pair [ dup [ swap ] dip - swap pair ]
+
+    # A bounded subtraction either discovers the exact positive gcd or
+    # returns Exhausted. Exhaustion must use the original, charged BigInts.
+    signature tiny_gcd_transition forall<S:stack> [ S TinyGcdState -- S TinyGcdStep ! pure ]
+    def tiny_gcd_transition [
+        TinyGcdState.into unpair
+        [ dup unpair drop 0 = ] dip swap
+        [ drop unpair swap drop TinyGcdStep.Found ]
+        [ [ dup unpair swap drop 0 = ] dip swap
+          [ drop unpair drop TinyGcdStep.Found ]
+          [ [ dup unpair = ] dip swap
+            [ drop unpair drop TinyGcdStep.Found ]
+            [ [ dup unpair drop 1 = ] dip swap
+              [ drop drop 1 TinyGcdStep.Found ]
+              [ [ dup unpair swap drop 1 = ] dip swap
+                [ drop drop 1 TinyGcdStep.Found ]
+                [ dup 0 =
+                  [ drop drop unit TinyGcdStep.Exhausted ]
+                  [ [ dup unpair > ] dip swap
+                    [ [ unpair tiny_subtract_pair ] dip 1 - pair TinyGcdState.new TinyGcdStep.More ]
+                    [ [ unpair swap tiny_subtract_pair unpair swap pair ] dip 1 - pair TinyGcdState.new TinyGcdStep.More ] if ] if ] if ] if ] if ] if ] if
+    ]
+
+    signature tiny_gcd forall<S:stack>
+        [ S TinyGcdState numeric_budget@1.Budget -- S result@1.Result<Pair<TinyGcdStep,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export tiny_gcd
+    def tiny_gcd [
+        160 numeric_budget@1.admit_call
+        [ 256 numeric_budget@1.charge_native_steps
+          [ [ tiny_gcd_transition ] dip swap
+            [ TinyGcdStep.Found swap pair result@1.Result.Ok ]
+            [ swap tiny_gcd ]
+            [ drop unit TinyGcdStep.Exhausted swap pair result@1.Result.Ok ]
+            TinyGcdStep.match ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # Quotients are minted only on zero remainder. Sixteen subtractive
+    # rounds are an optimization limit, never a limit on exact arithmetic.
+    signature tiny_quotient_transition forall<S:stack>
+        [ S TinyQuotientState -- S TinyQuotientStep ! pure ]
+    def tiny_quotient_transition [
+        TinyQuotientState.into unpair
+        [ dup unpair drop 0 = ] dip swap
+        [ swap drop unpair drop TinyQuotientStep.Found ]
+        [ dup unpair swap drop 0 =
+          [ drop drop unit TinyQuotientStep.Exhausted ]
+          [ [ dup unpair < ] dip swap
+            [ drop drop unit TinyQuotientStep.Exhausted ]
+            [ [ unpair tiny_subtract_pair ] dip
+              unpair [ 1 + ] dip 1 - pair
+              pair TinyQuotientState.new TinyQuotientStep.More ] if ] if ] if
+    ]
+
+    signature tiny_quotient forall<S:stack>
+        [ S TinyQuotientState numeric_budget@1.Budget -- S result@1.Result<Pair<TinyQuotientStep,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export tiny_quotient
+    def tiny_quotient [
+        256 numeric_budget@1.admit_call
+        [ 128 numeric_budget@1.charge_native_steps
+          [ [ tiny_quotient_transition ] dip swap
+            [ TinyQuotientStep.Found swap pair result@1.Result.Ok ]
+            [ swap tiny_quotient ]
+            [ drop unit TinyQuotientStep.Exhausted swap pair result@1.Result.Ok ]
+            TinyQuotientStep.match ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature tiny_quotient_positive forall<S:stack>
+        [ S I64 I64 numeric_budget@1.Budget -- S result@1.Result<Pair<TinyQuotientStep,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def tiny_quotient_positive [
+        [ pair 0 16 pair pair TinyQuotientState.new ] dip tiny_quotient
+    ]
+
+    signature tiny_denominator_factors forall<S:stack>
+        [ S Pair<Pair<I64,I64>,I64> -- S Pair<Pair<I64,I64>,I64> I64 I64 ! pure ]
+    def tiny_denominator_factors [ dup unpair [ unpair swap drop ] dip ]
+
+    signature tiny_sign_numerator forall<S:stack>
+        [ S Pair<Pair<I64,I64>,I64> I64 -- S Pair<Pair<I64,I64>,I64> I64 ! pure ]
+    def tiny_sign_numerator [
+        [ dup unpair drop unpair drop 0 < ] dip swap
+        [ 0 swap - ] [ ] if
+    ]
+
+    signature tiny_make forall<S:stack>
+        [ S I64 I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<TinyResult,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def tiny_make [
+        [ swap ] dip bigint@1.from_i64
+        [ unpair [ swap ] dip bigint@1.from_i64
+          [ unpair [ pair Rat.new TinyResult.Finished ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # Keep the signed source pair and its positive gcd until *both* exact
+    # quotients are known. Every reconstructed BigInt uses the same Budget.
+    signature tiny_ratio_reduced forall<S:stack>
+        [ S Pair<I64,I64> I64 numeric_budget@1.Budget
+          -- S result@1.Result<Pair<TinyResult,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def tiny_ratio_reduced [
+        [ pair ] dip
+        [ dup unpair [ unpair drop tiny_abs ] dip ] dip
+        tiny_quotient_positive
+        [ unpair swap
+          [ swap [ tiny_sign_numerator ] dip
+            [ swap ] dip [ tiny_denominator_factors ] dip
+            tiny_quotient_positive
+            [ unpair swap
+              [ swap [[ drop ] dip ] dip tiny_make ]
+              [ drop [ drop ] dip [ drop ] dip
+                unit TinyResult.Absent swap pair result@1.Result.Ok ]
+              [ drop [ drop ] dip [ drop ] dip
+                unit TinyResult.Absent swap pair result@1.Result.Ok ]
+              TinyQuotientStep.match ]
+            [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ drop [ drop ] dip unit TinyResult.Absent swap pair result@1.Result.Ok ]
+          [ drop [ drop ] dip unit TinyResult.Absent swap pair result@1.Result.Ok ]
+          TinyQuotientStep.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature tiny_ratio forall<S:stack>
+        [ S Pair<I64,I64> numeric_budget@1.Budget
+          -- S result@1.Result<Pair<TinyResult,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def tiny_ratio [
+        [ tiny_normalize_sign ] dip
+        [ dup unpair swap drop 0 = ] dip swap
+        [ [ drop ] dip unit TinyResult.Absent swap pair result@1.Result.Ok ]
+        [ [ dup unpair [ tiny_abs ] dip tiny_abs pair 8 pair TinyGcdState.new ] dip
+          tiny_gcd
+          [ unpair swap
+            [ swap [ dup 1 = ] dip swap
+              [ [ drop ] dip [ unpair ] dip tiny_make ]
+              [ tiny_ratio_reduced ] if ]
+            [ drop [ drop ] dip unit TinyResult.Absent swap pair result@1.Result.Ok ]
+            [ drop [ drop ] dip unit TinyResult.Absent swap pair result@1.Result.Ok ]
+            TinyGcdStep.match ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ] if
+    ]
+
+    signature cross_left forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<bigint@1.BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def cross_left [
+        [ unpair [ numerator ] dip denominator ] dip bigint@1.multiply
+    ]
+
+    signature cross_right forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<bigint@1.BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def cross_right [ [ unpair swap pair ] dip cross_left ]
+
+    signature numerator_product forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<bigint@1.BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def numerator_product [
+        [ unpair [ numerator ] dip numerator ] dip bigint@1.multiply
+    ]
+
+    signature denominator_product forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<bigint@1.BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def denominator_product [
+        [ unpair [ denominator ] dip denominator ] dip bigint@1.multiply
+    ]
+
+    signature cross_sum forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<bigint@1.BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def cross_sum [
+        [ dup ] dip cross_left
+        [ unpair [ swap ] dip cross_right
+          [ unpair bigint@1.add ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature cross_difference forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<bigint@1.BigInt,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def cross_difference [
+        [ dup ] dip cross_left
+        [ unpair [ swap ] dip cross_right
+          [ unpair bigint@1.subtract ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature finish_numerator forall<S:stack>
+        [ S Pair<Rat,Rat> bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def finish_numerator [
+        [ swap ] dip denominator_product
+        [ unpair make ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # Unit denominators make the sum an integer: no cross products or gcd
+    # can change its canonical denominator.
+    signature unit_denominators forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S Pair<Rat,Rat> result@1.Result<Pair<Bool,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def unit_denominators [
+        [ dup unpair drop denominator ] dip
+        [ bigint@1.one ] dip bigint@1.compare
+        [ unpair [ 0 = ] dip swap
+          [ [ dup unpair swap drop denominator ] dip
+            [ bigint@1.one ] dip bigint@1.compare
+            [ unpair [ 0 = ] dip pair result@1.Result.Ok ]
+            [ result@1.Result.Err ]
+            result@1.Result.match ]
+          [ false swap pair result@1.Result.Ok ] if ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # 0: neither unit, 1: left unit, 2: right unit, 3: both unit.
+    # Checked comparisons admit both denominators under the current Budget.
+    signature denominator_pattern forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S Pair<Rat,Rat> result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def denominator_pattern [
+        [ dup unpair drop denominator ] dip [ bigint@1.one ] dip bigint@1.compare
+        [ unpair [ 0 = ] dip
+          [[ dup unpair swap drop denominator ] dip ] dip
+          [ swap ] dip [ bigint@1.one ] dip bigint@1.compare
+          [ unpair [ 0 = ] dip
+            [ swap [ [ 3 ] [ 1 ] if ] [ [ 2 ] [ 0 ] if ] if ] dip
+            pair result@1.Result.Ok ]
+          [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # If a/1 and c/d are canonical, gcd(a*d +/- c,d)=gcd(c,d)=1.
+    # If a/b and c/1 are canonical, gcd(a +/- c*b,b)=gcd(a,b)=1.
+    # Checked products and sums also re-admit the reused denominator under
+    # this Budget; the nonunit denominator makes cancellation to zero
+    # impossible, so the direct Rat constructor remains canonical.
+    signature plus_left_unit forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def plus_left_unit [
+        [ dup ] dip cross_left
+        [ unpair
+          [[ dup unpair swap drop numerator ] dip swap ] dip bigint@1.add
+          [ unpair [[ unpair swap drop denominator ] dip swap ] dip
+            [ pair Rat.new ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature plus_right_unit forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def plus_right_unit [
+        [ dup ] dip cross_right
+        [ unpair
+          [[ dup unpair drop numerator ] dip swap ] dip bigint@1.add
+          [ unpair [[ unpair drop denominator ] dip swap ] dip
+            [ pair Rat.new ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature minus_left_unit forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def minus_left_unit [
+        [ dup ] dip cross_left
+        [ unpair
+          [[ dup unpair swap drop numerator ] dip swap ] dip bigint@1.subtract
+          [ unpair [[ unpair swap drop denominator ] dip swap ] dip
+            [ pair Rat.new ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature minus_right_unit forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def minus_right_unit [
+        [ dup ] dip cross_right
+        [ unpair
+          [[ dup unpair drop numerator ] dip ] dip bigint@1.subtract
+          [ unpair [[ unpair drop denominator ] dip swap ] dip
+            [ pair Rat.new ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature plus_unit_denominators forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def plus_unit_denominators [
+        [ unpair [ numerator ] dip numerator ] dip bigint@1.add
+        [ unpair from_bigint ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature minus_unit_denominators forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def minus_unit_denominators [
+        [ unpair [ numerator ] dip numerator ] dip bigint@1.subtract
+        [ unpair from_bigint ] [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature plus_cross forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def plus_cross [
+        8192 numeric_budget@1.charge_native_steps
+        [ [ dup ] dip cross_sum
+          [ unpair finish_numerator ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # When the positive denominators are equal, their shared denominator
+    # stays unchanged until the single final canonical reduction.
+    signature plus_same_denominator forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def plus_same_denominator [
+        [ dup unpair drop denominator ] dip
+        [ swap ] dip
+        [ dup unpair drop numerator ] dip
+        [ swap ] dip
+        [ unpair swap drop numerator ] dip
+        bigint@1.add
+        [ unpair [ swap ] dip make ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # d_large = q*d_small. n_large + q*n_small over d_large is exact;
+    # make still removes any new common factor in the resulting fraction.
+    signature plus_factor forall<S:stack>
+        [ S Pair<Rat,Rat> bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def plus_factor [
+        [[ dup unpair swap drop numerator ] dip ] dip
+        [ swap ] dip bigint@1.multiply
+        [ unpair
+          [[ dup unpair drop numerator ] dip ] dip bigint@1.add
+          [ unpair
+            [[ dup unpair drop denominator ] dip ] dip
+            [ swap ] dip make swap drop ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature plus_ordered forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def plus_ordered [
+        [ dup unpair drop denominator ] dip
+        [[ dup unpair swap drop denominator ] dip ] dip
+        [ swap ] dip
+        bigint@1.divide_rem
+        [ unpair [ dup unpair swap drop ] dip is_zero
+          [ unpair swap
+            [ [ unpair drop ] dip plus_factor ]
+            [ [ drop ] dip plus_cross ] if ]
+          [ swap drop swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature plus_nonunit forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def plus_nonunit [
+        3072 numeric_budget@1.charge_native_steps
+        [ [ dup unpair drop denominator ] dip
+          [[ dup unpair swap drop denominator ] dip ] dip
+          [ swap ] dip
+          bigint@1.compare
+          [ unpair [ dup 0 = ] dip swap
+            [ [ drop ] dip plus_same_denominator ]
+            [ [ dup -1 = ] dip swap
+              [ [ drop ] dip [ unpair swap pair ] dip plus_ordered ]
+              [ [ drop ] dip plus_ordered ] if ] if ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature plus_big forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def plus_big [
+        denominator_pattern
+        [ unpair swap dup 3 =
+          [ drop plus_unit_denominators ]
+          [ dup 1 =
+            [ drop plus_left_unit ]
+            [ dup 2 =
+              [ drop plus_right_unit ]
+              [ drop plus_nonunit ] if ] if ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature minus_big forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def minus_big [
+        denominator_pattern
+        [ unpair swap dup 3 =
+          [ drop minus_unit_denominators ]
+          [ dup 1 =
+            [ drop minus_left_unit ]
+            [ dup 2 =
+              [ drop minus_right_unit ]
+              [ drop [ dup ] dip cross_difference
+                [ unpair finish_numerator ]
+                [ swap drop result@1.Result.Err ] result@1.Result.match ] if ] if ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature times_big forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def times_big [
+        unit_denominators
+        [ unpair swap
+          [ [ unpair [ numerator ] dip numerator ] dip bigint@1.multiply
+            [ unpair from_bigint ]
+            [ result@1.Result.Err ] result@1.Result.match ]
+          [ [ dup ] dip numerator_product
+            [ unpair finish_numerator ]
+            [ swap drop result@1.Result.Err ] result@1.Result.match ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature divide_big forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def divide_big [
+        [ dup ] dip cross_left
+        [ unpair [ swap ] dip cross_right
+          [ unpair make ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # The common checked projection/normalizer returns Absent only when
+    # a bounded optimization cannot finish; the original path is still
+    # required to compute the exact result under the remaining Budget.
+    signature plus_checked forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def plus_checked [
+        project_small_rats
+        [ unpair swap
+          [ swap 512 numeric_budget@1.charge_native_steps
+            [ [ tiny_plus_pair ] dip tiny_ratio
+              [ unpair swap
+                [ swap [[ drop ] dip ] dip pair result@1.Result.Ok ]
+                [ drop plus_big ]
+                TinyResult.match ]
+              [ swap drop result@1.Result.Err ] result@1.Result.match ]
+            [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ drop plus_big ]
+          SmallRats.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature minus_checked forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def minus_checked [
+        project_small_rats
+        [ unpair swap
+          [ swap 512 numeric_budget@1.charge_native_steps
+            [ [ tiny_minus_pair ] dip tiny_ratio
+              [ unpair swap
+                [ swap [[ drop ] dip ] dip pair result@1.Result.Ok ]
+                [ drop minus_big ]
+                TinyResult.match ]
+              [ swap drop result@1.Result.Err ] result@1.Result.match ]
+            [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ drop minus_big ]
+          SmallRats.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature times_checked forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def times_checked [
+        project_small_rats
+        [ unpair swap
+          [ swap 512 numeric_budget@1.charge_native_steps
+            [ [ tiny_times_pair ] dip tiny_ratio
+              [ unpair swap
+                [ swap [[ drop ] dip ] dip pair result@1.Result.Ok ]
+                [ drop times_big ]
+                TinyResult.match ]
+              [ swap drop result@1.Result.Err ] result@1.Result.match ]
+            [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ drop times_big ]
+          SmallRats.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature divide_checked forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def divide_checked [
+        project_small_rats
+        [ unpair swap
+          [ swap 512 numeric_budget@1.charge_native_steps
+            [ [ tiny_divide_pair ] dip tiny_ratio
+              [ unpair swap
+                [ swap [[ drop ] dip ] dip pair result@1.Result.Ok ]
+                [ drop divide_big ]
+                TinyResult.match ]
+              [ swap drop result@1.Result.Err ] result@1.Result.match ]
+            [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ drop divide_big ]
+          SmallRats.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature plus forall<S:stack>
+        [ S Rat Rat numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export plus
+    def plus [
+        512 numeric_budget@1.charge_native_steps
+        [ [ pair ] dip plus_checked ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature minus forall<S:stack>
+        [ S Rat Rat numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export minus
+    def minus [
+        512 numeric_budget@1.charge_native_steps
+        [ [ pair ] dip minus_checked ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature times forall<S:stack>
+        [ S Rat Rat numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export times
+    def times [
+        512 numeric_budget@1.charge_native_steps
+        [ [ pair ] dip times_checked ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature divide_nonzero forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def divide_nonzero [ divide_checked ]
+
+    signature divide forall<S:stack>
+        [ S Rat Rat numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export divide
+    def divide [
+        512 numeric_budget@1.charge_native_steps
+        [ [ pair ] dip [ dup unpair swap drop numerator ] dip is_zero
+          [ unpair swap
+            [ drop drop unit calc_errors@1.DomainArithmetic.DivisionByZero
+              calc_errors@1.DomainExtended.Arithmetic calc_errors@1.DomainError.Extended
+              calc_errors@1.NumericError.Domain result@1.Result.Err ]
+            [ divide_nonzero ] if ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # Swapping a nonzero canonical n/d preserves gcd(|n|,d)=1. A negative
+    # numerator requires moving its sign across the fraction bar.
+    signature reciprocal forall<S:stack>
+        [ S Rat numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def reciprocal [
+        [ dup numerator ] dip is_zero
+        [ unpair swap
+          [ drop drop unit calc_errors@1.DomainArithmetic.DivisionByZero
+            calc_errors@1.DomainExtended.Arithmetic calc_errors@1.DomainError.Extended
+            calc_errors@1.NumericError.Domain result@1.Result.Err ]
+          [ [ dup numerator ] dip is_negative
+            [ unpair swap
+              [ [ Rat.into unpair ] dip [ swap ] dip bigint@1.negate
+                [ unpair [ swap ] dip bigint@1.negate
+                  [ unpair [ swap ] dip [ pair Rat.new ] dip
+                    pair result@1.Result.Ok ]
+                  [ swap drop result@1.Result.Err ]
+                  result@1.Result.match ]
+                [ swap drop result@1.Result.Err ]
+                result@1.Result.match ]
+              [ [ Rat.into unpair ] dip [ swap ] dip
+                [ pair Rat.new ] dip pair result@1.Result.Ok ] if ]
+            [ swap drop result@1.Result.Err ]
+            result@1.Result.match ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature one forall<S:stack> [ S -- S Rat ! pure ]
+    def one [ bigint@1.one bigint@1.one pair Rat.new ]
+
+    # Both inputs here are powers of the same canonical rational. If
+    # gcd(|n|,d)=1, then gcd(|n|^(a+b),d^(a+b))=1; the products therefore
+    # remain canonical without repeated Euclid normalization.
+    signature power_product forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def power_product [
+        [ dup ] dip numerator_product
+        [ unpair [ swap ] dip denominator_product
+          [ unpair [ pair Rat.new ] dip pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature multiply_accumulator forall<S:stack>
+        [ S Pair<Rat,Rat> numeric_budget@1.Budget -- S result@1.Result<Pair<Pair<Rat,Rat>,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def multiply_accumulator [
+        [ dup unpair ] dip [ pair ] dip power_product
+        [ unpair [ swap unpair drop swap pair ] dip pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature power_step forall<S:stack>
+        [ S PowerStepState numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export power_step
+    def power_step [
+        512 numeric_budget@1.charge_native_steps
+        [ [ PowerStepState.into unpair ] dip
+          [ dup ] dip is_zero
+          [ unpair swap
+            [ [ drop ] dip [ unpair swap drop ] dip pair result@1.Result.Ok ]
+            [ [[ unpair ] dip ] dip [ pair ] dip
+              [[ dup ] dip ] dip [ swap ] dip [[ swap ] dip ] dip
+              [ pair ] dip power_product
+              [ unpair [[ unpair ] dip ] dip [ swap ] dip
+                [[ swap ] dip ] dip [[ pair ] dip ] dip
+                [ pair PowerStepState.new ] dip power_nonnegative_loop ]
+              [ swap drop result@1.Result.Err ] result@1.Result.match ] if ]
+          [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    # The pair is (base, accumulated result); exponent halves at each step.
+    signature power_nonnegative_loop forall<S:stack>
+        [ S PowerStepState numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export power_nonnegative_loop
+    def power_nonnegative_loop [
+        512 numeric_budget@1.charge_native_steps
+        [ [ PowerStepState.into ] dip [ dup unpair swap drop ] dip bigint@1.bit_length
+          [ unpair [[ dup unpair drop unpair drop ] dip ] dip
+            admit_rat
+            [ unpair [ drop ] dip [ unpair ] dip
+              [ dup ] dip is_zero
+            [ unpair swap
+              [ [ drop ] dip [ unpair swap drop ] dip pair result@1.Result.Ok ]
+              [ [ bigint@1.two ] dip bigint@1.divide_rem
+                [ unpair [ unpair ] dip is_zero
+                  [ unpair swap
+                    [ [ pair PowerStepState.new ] dip power_step ]
+                    [ [ swap ] dip multiply_accumulator
+                      [ unpair [ swap ] dip [ pair PowerStepState.new ] dip power_step ]
+                      [ swap drop result@1.Result.Err ] result@1.Result.match ] if ]
+                  [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+                [ swap drop result@1.Result.Err ] result@1.Result.match ] if ]
+            [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+            [ swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature power_nonnegative forall<S:stack>
+        [ S Rat bigint@1.BigInt numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def power_nonnegative [
+        [ one ] dip [ swap ] dip [[ pair ] dip ] dip
+        [ pair PowerStepState.new ] dip power_nonnegative_loop
+    ]
+
+    signature power_body forall<S:stack>
+        [ S Rat Rat numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def power_body [
+        [ pair ] dip [ dup unpair swap drop denominator ] dip
+        [ bigint@1.one ] dip bigint@1.compare
+        [ unpair [ 0 = ] dip swap
+          [ [ unpair ] dip [ numerator ] dip
+            [ dup ] dip is_negative
+            [ unpair swap
+              [ bigint@1.negate
+                [ unpair [ swap ] dip reciprocal
+                  [ unpair [ swap ] dip power_nonnegative ]
+                  [ swap drop result@1.Result.Err ] result@1.Result.match ]
+                [ swap drop result@1.Result.Err ] result@1.Result.match ]
+              [ power_nonnegative ] if ]
+            [ swap drop swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ drop drop unit calc_errors@1.DomainExtended.NonIntegerExponent
+            calc_errors@1.DomainError.Extended calc_errors@1.NumericError.Domain
+            result@1.Result.Err ] if ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature power forall<S:stack>
+        [ S Rat Rat numeric_budget@1.Budget -- S result@1.Result<Pair<Rat,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export power
+    def power [
+        512 numeric_budget@1.charge_native_steps
+        [ [ pair ] dip [ dup unpair swap drop numerator ] dip bigint@1.bit_length
+          [ unpair [[ dup unpair drop ] dip ] dip admit_rat
+            [ unpair [ drop ] dip [ unpair ] dip power_body ]
+            [ swap drop result@1.Result.Err ] result@1.Result.match ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature to_i64 forall<S:stack>
+        [ S Rat numeric_budget@1.Budget -- S result@1.Result<Pair<I64,numeric_budget@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export to_i64
+    def to_i64 [
+        512 numeric_budget@1.charge_native_steps
+        [ [ dup denominator ] dip [ bigint@1.one ] dip bigint@1.compare
+          [ unpair [ 0 = ] dip swap
+            [ [ numerator ] dip bigint@1.to_i64 ]
+            [ drop drop unit calc_errors@1.DomainConversion.NonIntegral
+              calc_errors@1.DomainError.Conversion calc_errors@1.NumericError.Domain
+              result@1.Result.Err ] if ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+]

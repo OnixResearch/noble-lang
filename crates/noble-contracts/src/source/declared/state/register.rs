@@ -47,6 +47,7 @@ impl super::ModuleSession {
             ));
         }
         attempt!(self.check_retained(request.source.len()));
+        let original_source = alloc::sync::Arc::<[u8]>::from(request.source);
         let identity = self.next_module_identity;
         let next_module_identity = attempt!(identity.checked_add(1)
             .ok_or_else(|| super::super::error(
@@ -102,6 +103,52 @@ impl super::ModuleSession {
             core::mem::take(&mut collected.requirements),
             words
         ));
+        let mut meter = meter;
+        let source_stamp_prefix = attempt!(crate::source::preparation::module_stamp_prefix(
+            &original_source, super::super::SPAN, &mut meter,
+        ).map_err(|problem| super::super::diagnostic(crate::source::Stage::Check, problem)));
+        let mut needs_name_lookup = false;
+        if selected_locals {
+            'words: for (_, _, tree) in &collected.definitions {
+                for node in &tree.nodes {
+                    attempt!(meter.charge(1, super::super::SPAN).map_err(|problem|
+                        super::super::diagnostic(crate::source::Stage::Check, problem)));
+                    if matches!(node.kind, crate::source::Kind::Word(_)) {
+                        needs_name_lookup = true;
+                        break 'words;
+                    }
+                }
+            }
+        }
+        let name_index = if needs_name_lookup {
+            let Some(context) = next.source.declared.as_ref() else {
+                return Err(super::super::error(
+                    crate::source::Stage::Check, "indexed source namespace lacks its context",
+                ));
+            };
+            let mut longest_incoming = 0usize;
+            for (name, _, _) in &collected.definitions {
+                attempt!(meter.charge(1, super::super::SPAN).map_err(|problem|
+                    super::super::diagnostic(crate::source::Stage::Check, problem)));
+                longest_incoming = longest_incoming.max(name.len());
+            }
+            let fits = attempt!(crate::source::preparation::name_index::NameIndex::fits_original_work(
+                &context.words, collected.definitions.len(), longest_incoming,
+                super::super::SPAN, &mut meter,
+            ).map_err(|problem| super::super::diagnostic(crate::source::Stage::Check, problem)));
+            if fits {
+                Some(attempt!(crate::source::preparation::name_index::NameIndex::build(
+                    &context.words, context.owner, next.source.generation,
+                    collected.definitions.len(), super::super::SPAN, &mut meter,
+                ).map_err(|problem| super::super::diagnostic(crate::source::Stage::Check, problem))))
+            } else {
+                // Decide before any index allocation or sorting: the original
+                // fully metered reverse lookup remains the whole transaction.
+                None
+            }
+        } else {
+            None
+        };
         let (mut next, local_exports) = attempt!(definitions::install(
             next,
             definitions::Work {
@@ -111,6 +158,10 @@ impl super::ModuleSession {
                 local_exports,
                 name: &name,
                 version: request.version,
+                original_source: &original_source,
+                source_stamp_prefix,
+                name_index,
+                definition_spans: &collected.definition_spans,
                 limits: request.limits,
                 meter,
             }
@@ -138,15 +189,36 @@ impl super::ModuleSession {
                 owner: imported.identity,
             });
         }
+        let mut verified_signed_slots = alloc::vec::Vec::new();
+        for (source_slot, definition) in next.source.definitions.iter().enumerate() {
+            if definition.owner == Some(identity)
+                && definition.signed.is_some()
+                && definition.universal.is_some()
+                && definition.universal_origin.as_ref().is_some_and(|origin| {
+                    origin.module_name == name
+                        && origin.module_version == request.version
+                        && collected.definition_spans.get(origin.ordinal as usize)
+                            .is_some_and(|source| {
+                                source.name == definition.name
+                                    && source.span == origin.source_span
+                            })
+                })
+            {
+                verified_signed_slots.push(attempt!(u32::try_from(source_slot).map_err(|_|
+                    super::super::error(crate::source::Stage::Check,
+                        "universal source owner slot overflow"))));
+            }
+        }
         next.modules.push(super::super::Module {
             name,
             version: request.version,
             identity,
             exports: local_exports,
             adapter_slot,
-            source: request.source.to_vec(),
+            source: original_source,
+            source_stamp_prefix,
             definition_spans: core::mem::take(&mut collected.definition_spans),
-            verified_signed_slots: alloc::vec::Vec::new(),
+            verified_signed_slots,
             import_aliases,
             contracts: staged.contracts,
             proof_exports: staged.proof_exports,

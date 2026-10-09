@@ -1,0 +1,10 @@
+module bitaddsigned@1 [
+    signature add forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>> -- S Pair<Bool,List<Bool>> ! pure ]
+    export add
+    def add [
+        bitorder@1.order_for_add
+        bitaddcarry@1.scan_keep_sign
+        bitsigned@1.normalize
+    ]
+]

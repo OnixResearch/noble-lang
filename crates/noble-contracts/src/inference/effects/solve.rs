@@ -34,6 +34,41 @@ pub(super) fn rigid(
     if arena.rigid_effect_goals.is_empty() {
         return Ok(());
     }
+    let facts = attempt!(symbolic_facts(arena, span, meter));
+    for (body, declared) in &arena.rigid_effect_goals {
+        attempt!(meter.charge(1, span));
+        let actual = attempt!(symbol(&facts, *body, span));
+        let expected = attempt!(symbol(&facts, *declared, span));
+        if actual.unknown || expected.unknown || actual != expected {
+            return Err(crate::invalid(
+                span,
+                "source body does not preserve its universal effect bound",
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Re-read the same rigid equation facts after source inference has completed.
+/// An empty finite bound is NOT a proof; only a solved symbolic fact without
+/// a concrete, rigid, or unknown component certifies this exact effect ID.
+pub(super) fn proven_empty(
+    arena: &crate::inference::Arena,
+    id: u32,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<bool, crate::Diagnostic> {
+    let facts = attempt!(symbolic_facts(arena, span, meter));
+    let fact = attempt!(symbol(&facts, id, span));
+    Ok(fact == Symbolic::empty())
+}
+
+fn symbolic_facts(
+    arena: &crate::inference::Arena,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<alloc::vec::Vec<Symbolic>, crate::Diagnostic> {
+    attempt!(meter.charge(attempt!(crate::index(arena.effects.len(), span)), span));
     let mut facts = alloc::vec::Vec::with_capacity(arena.effects.len());
     for effect in &arena.effects {
         facts.push(match effect {
@@ -103,6 +138,7 @@ pub(super) fn rigid(
         ));
     }
     for (a, b) in &arena.effect_equations {
+        attempt!(meter.charge(1, span));
         let left = attempt!(symbol(&facts, *a, span));
         let right = attempt!(symbol(&facts, *b, span));
         // Assign every still-open hole the union of its accumulated concrete
@@ -119,17 +155,7 @@ pub(super) fn rigid(
             return Err(crate::invalid(span, reason));
         }
     }
-    for (body, declared) in &arena.rigid_effect_goals {
-        let actual = attempt!(symbol(&facts, *body, span));
-        let expected = attempt!(symbol(&facts, *declared, span));
-        if actual.unknown || expected.unknown || actual != expected {
-            return Err(crate::invalid(
-                span,
-                "source body does not preserve its universal effect bound",
-            ));
-        }
-    }
-    Ok(())
+    Ok(facts)
 }
 
 /// An equality with `pure ∪ x` constrains `x` exactly. Propagate only

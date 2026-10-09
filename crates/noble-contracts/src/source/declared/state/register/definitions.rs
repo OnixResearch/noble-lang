@@ -14,6 +14,10 @@ pub(super) struct Work<'a> {
     pub local_exports: alloc::vec::Vec<crate::source::declared::Export>,
     pub name: &'a str,
     pub version: u32,
+    pub original_source: &'a alloc::sync::Arc<[u8]>,
+    pub source_stamp_prefix: crate::source::preparation::SourceStampPrefix,
+    pub name_index: Option<crate::source::preparation::name_index::NameIndex>,
+    pub definition_spans: &'a [crate::source::declared::DefinitionSource],
     pub limits: crate::Limits,
     pub meter: crate::Meter,
 }
@@ -165,16 +169,15 @@ fn contains_word(words: &[(alloc::string::String, crate::source::Target)], word:
 
 const fn definition_limits(count: u32, limits: crate::Limits) -> Option<crate::Limits> {
     let budget = count.saturating_add(1);
-    let Some(nodes) = limits.nodes.checked_div(budget) else {
-        return None;
-    };
     let Some(work) = limits.work.checked_div(budget) else {
         return None;
     };
     Some(crate::Limits {
         // Temporary per-definition length prefixes do not count twice toward retained source bytes.
         bytes: limits.bytes.saturating_add(count.saturating_mul(4)),
-        nodes,
+        // Each body retains the original 4096-node candidate cap; the graph
+        // separately debits actual visits from the unchanged module allowance.
+        nodes: if limits.nodes < 4_096 { limits.nodes } else { 4_096 },
         depth: limits.depth,
         work,
     })
@@ -187,6 +190,7 @@ struct DefinitionInput<'a> {
     limits: crate::Limits,
     retained_bytes: u32,
     exports: &'a [alloc::string::String],
+    original: crate::source::preparation::OriginalDefinition<'a>,
 }
 
 fn install_one(
@@ -197,15 +201,18 @@ fn install_one(
     (
         crate::source::declared::ModuleSession,
         alloc::vec::Vec<crate::source::declared::Export>,
+        u32,
+        u32,
     ),
     crate::source::Error,
 > {
-    let (mut session, target) = attempt!(commit_definition(
+    let (mut session, target, consumed_nodes, consumed_work) = attempt!(commit_definition(
         session,
         &input.source,
         input.signature.as_ref(),
         input.limits,
         input.retained_bytes,
+        input.original,
     ));
     let Some(context) = session.source.declared.as_mut() else {
         return Err(crate::source::declared::error(
@@ -217,7 +224,7 @@ fn install_one(
         local_exports.push(exported_definition(&input.name, target));
     }
     context.words.push((input.name, target));
-    Ok((session, local_exports))
+    Ok((session, local_exports, consumed_nodes, consumed_work))
 }
 
 fn exported_definition(
@@ -238,19 +245,23 @@ fn commit_definition(
     signature: Option<&noble_kernel::words::Scheme>,
     limits: crate::Limits,
     retained_bytes: u32,
+    original: crate::source::preparation::OriginalDefinition<'_>,
 ) -> Result<
     (
         crate::source::declared::ModuleSession,
         crate::source::Target,
+        u32,
+        u32,
     ),
     crate::source::Error,
 > {
-    let prepared = attempt!(session.source.prepare_signed(
+    let prepared = attempt!(session.source.prepare_signed_from_module(
         definition_bytes,
         &[],
         signature,
         limits,
         retained_bytes,
+        original,
     ));
     if !prepared.is_definition() || prepared.submission().is_some() {
         return Err(crate::source::declared::error(
@@ -271,6 +282,8 @@ fn commit_definition(
             "prospective signed owner slot changed before module installation",
         ));
     }
+    let consumed_nodes = prepared.frontend_nodes();
+    let consumed_work = prepared.frontend_work_spent;
     attempt!(session.source.commit(prepared));
     let Some(index) = session.source.definitions.len().checked_sub(1) else {
         return Err(crate::source::declared::error(
@@ -279,5 +292,5 @@ fn commit_definition(
         ));
     };
     let target = crate::source::Target::Named(index as u32);
-    Ok((session, target))
+    Ok((session, target, consumed_nodes, consumed_work))
 }

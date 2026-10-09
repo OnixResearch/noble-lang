@@ -1,6 +1,6 @@
 //! Node lookup and literal, invocation, and quotation folding.
 
-mod visibility;
+pub(crate) mod visibility;
 
 /// Fetch one node, rejecting a reference outside the finite arena.
 ///
@@ -47,6 +47,7 @@ pub(super) fn fold_node(
     node_id: crate::untrusted::NodeId,
     node: &crate::untrusted::Node,
     context: &super::parts::Ctx,
+    remaining: &mut u32,
 ) -> Result<(u32, super::Frame, crate::untrusted::Interface, Option<crate::untrusted::LiveSite>), super::Fail> {
     match node {
         crate::untrusted::Node::Literal { lit, inst } => {
@@ -54,7 +55,7 @@ pub(super) fn fold_node(
             let at = super::parts::site(Some(node_id), None);
             let cost = attempt!(super::parts::scheme_cost(&scheme));
             let (interface, _resolved) = attempt!(super::parts::instantiate::apply(
-                &scheme, inst, None, at, context
+                &scheme, inst, None, at, context, remaining
             ));
             let cost = cost.saturating_add(attempt!(super::parts::join_cost(&interface)));
             let joined = attempt!(super::parts::join(frame, &interface, at, context));
@@ -86,7 +87,7 @@ pub(super) fn fold_node(
             let data_var = super::parts::instantiate::data_slot(context.env.kind(*def));
             let cost = attempt!(super::parts::scheme_cost(&scheme));
             let (interface, _resolved) = attempt!(super::parts::instantiate::apply(
-                &scheme, inst, data_var, at, context
+                &scheme, inst, data_var, at, context, remaining
             ));
             let cost = cost.saturating_add(attempt!(super::parts::join_cost(&interface)));
             let joined = attempt!(super::parts::join(frame, &interface, at, context));
@@ -259,6 +260,7 @@ pub(super) fn open_quotation(
     node_id: crate::untrusted::NodeId,
     node: &crate::untrusted::Node,
     context: &super::parts::Ctx,
+    remaining: &mut u32,
 ) -> Result<(u32, super::Frame, super::Frame), super::Fail> {
     let (body, inst) = match node {
         crate::untrusted::Node::Quotation { body, inst } => (body, inst),
@@ -277,6 +279,7 @@ pub(super) fn open_quotation(
         None,
         super::parts::site(Some(node_id), None),
         context,
+        remaining,
     ));
     if frame.depth.saturating_add(1) > context.request.limits.depth {
         return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::Depth));

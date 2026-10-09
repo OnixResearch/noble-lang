@@ -182,7 +182,6 @@ fn framed_declared_input(
     flags: &[&str],
     input: &[u8],
 ) -> Result<(std::process::ExitStatus, Vec<serde_json::Value>), Box<dyn std::error::Error>> {
-    use std::io::Write;
     let mut child = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
         .args([
             "session",
@@ -194,12 +193,15 @@ fn framed_declared_input(
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .spawn()?;
-    {
-        let stdin = child.stdin.as_mut().ok_or("missing framed session stdin")?;
-        stdin.write_all(input)?;
-    }
-    drop(child.stdin.take());
+    let mut stdin = child.stdin.take().ok_or("missing framed session stdin")?;
+    let frame_bytes = input.to_vec();
+    let writer = std::thread::spawn(move || {
+        std::io::Write::write_all(&mut stdin, &frame_bytes)
+    });
+    // Drain reports while writing: a framed input larger than both pipe
+    // capacities must not deadlock behind its own successful reports.
     let output = child.wait_with_output()?;
+    writer.join().map_err(|_| std::io::Error::other("framed input writer panicked"))??;
     let reports = std::str::from_utf8(&output.stdout)?
         .lines()
         .map(serde_json::from_str)
@@ -365,6 +367,185 @@ fn certified_signed_alias_rebind_keeps_captured_old_program_and_current_new_owne
         assert_eq!(report["host_requests"], 0);
         assert_eq!(report["protected_operations"], 0);
     }
+    Ok(())
+}
+
+#[test]
+fn source_module_import_rebind_keeps_old_signed_owner_and_selects_new_alias(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let sources: &[&[u8]] = &[
+        b"module value@1 [ signature get forall<S:stack> [ S -- S I64 ! pure ] export get def get [ 7 ] ]",
+        b"module value@2 [ signature get forall<S:stack> [ S -- S I64 ! pure ] export get def get [ 8 ] ]",
+        b"import value@1 as current",
+        b"module caller@1 [ signature run forall<S:stack> [ S -- S I64 ! pure ] export run def run [ current.get ] ]",
+        b"caller@1.run",
+        b"drop",
+        b"import value@2 as current",
+        b"module caller@2 [ signature run forall<S:stack> [ S -- S I64 ! pure ] export run def run [ current.get ] ]",
+        b"caller@2.run",
+        b"drop",
+        b"caller@1.run",
+    ];
+    let (status, reports) = framed_declared_reports(
+        &["--signed-self-recursion", "--retained-source-bytes", "262144"],
+        sources,
+    )?;
+    assert!(status.success());
+    assert_eq!(reports.len(), sources.len());
+    for index in [0, 1, 2, 3, 6, 7] {
+        assert_eq!(reports[index]["outcome"], "linked");
+    }
+    for (index, expected) in [(4, "7"), (8, "8"), (10, "7")] {
+        assert_eq!(reports[index]["stage"], "wasm");
+        assert_eq!(reports[index]["outcome"], "normal");
+        assert_eq!(reports[index]["stack"][0]["value"], expected);
+        assert_eq!(reports[index]["guest_requests"], 0);
+        assert_eq!(reports[index]["protected_operations"], 0);
+    }
+    Ok(())
+}
+
+#[test]
+fn reverse_alias_namespace_does_not_exhaust_an_unrelated_literal_module(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut exports = String::new();
+    for ordinal in 0..20 {
+        exports.push_str(&format!(
+            " signature w{ordinal} forall<S:stack> [ S -- S I64 ! pure ] \
+             export w{ordinal} def w{ordinal} [ {ordinal} ]",
+        ));
+    }
+    let mut sources = vec![format!("module many@1 [{exports} ]").into_bytes()];
+    for ordinal in (0..40).rev() {
+        sources.push(format!("import many@1 as z{ordinal}").into_bytes());
+    }
+    sources.extend([
+        b"module empty@1 [ ]".to_vec(),
+        b"module one@1 [ export one def one [ 1 ] ]".to_vec(),
+        b"one@1.one".to_vec(),
+    ]);
+    let frames = sources.iter().map(Vec::as_slice).collect::<Vec<_>>();
+    let (status, reports) = framed_declared_reports(
+        &["--signed-self-recursion", "--retained-source-bytes", "262144"],
+        &frames,
+    )?;
+    assert!(status.success());
+    assert_eq!(reports.len(), frames.len());
+    assert!(reports[..43].iter().all(|report| report["outcome"] == "linked"));
+    assert_eq!(reports[43]["stage"], "wasm");
+    assert_eq!(reports[43]["outcome"], "normal");
+    assert_eq!(reports[43]["stack"][0]["value"], "1");
+    assert_eq!(reports[43]["guest_requests"], 0);
+    assert_eq!(reports[43]["protected_operations"], 0);
+    Ok(())
+}
+
+#[test]
+fn long_prefix_aliases_charge_compared_bytes_without_publishing_failed_module(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let prefix = "n".repeat(5_000);
+    let mut exports = String::new();
+    for ordinal in 0..20 {
+        exports.push_str(&format!(
+            " signature w{ordinal} forall<S:stack> [ S -- S I64 ! pure ] \
+             export w{ordinal} def w{ordinal} [ {ordinal} ]",
+        ));
+    }
+    let mut sources = vec![format!("module {prefix}@1 [{exports} ]").into_bytes()];
+    for ordinal in (0..40).rev() {
+        sources.push(format!("import {prefix}@1 as {prefix}{ordinal:02}").into_bytes());
+    }
+    sources.extend([
+        b"module empty@1 [ ]".to_vec(),
+        b"module one@1 [ export one def one [ 1 ] ]".to_vec(),
+        b"one@1.one".to_vec(),
+        b"drop".to_vec(),
+        format!(
+            "module named@1 [ signature run forall<S:stack> [ S -- S I64 ! pure ] \
+             export run def run [ {prefix}00.w0 ] ]",
+        ).into_bytes(),
+        b"named@1.run".to_vec(),
+        b"drop".to_vec(),
+    ]);
+    let first_alias = format!("{prefix}39.w0");
+    sources.push(format!(
+        "module tooearly@1 [ signature run forall<S:stack> [ S -- S I64 ! pure ] \
+         export run def run [ {} ] ]",
+        vec![first_alias.as_str(); 9].join(" drop "),
+    ).into_bytes());
+    sources.push(b"module stilllive@1 [ export one def one [ 2 ] ]".to_vec());
+    sources.push(b"stilllive@1.one".to_vec());
+    let frames = sources.iter().map(Vec::as_slice).collect::<Vec<_>>();
+    let (status, reports) = framed_declared_reports(
+        &["--signed-self-recursion", "--retained-source-bytes", "262144"],
+        &frames,
+    )?;
+    assert_eq!(status.code(), Some(5));
+    assert_eq!(reports.len(), frames.len());
+    assert!(reports[..43].iter().all(|report| report["outcome"] == "linked"));
+    assert_eq!(reports[43]["outcome"], "normal");
+    assert_eq!(reports[43]["stack"][0]["value"], "1");
+    assert_eq!(reports[45]["outcome"], "linked");
+    assert_eq!(reports[46]["outcome"], "normal");
+    assert_eq!(reports[46]["stack"][0]["value"], "0");
+    assert_eq!(reports[48]["stage"], "resolve");
+    assert_eq!(reports[48]["outcome"], "exhausted");
+    assert_eq!(reports[48]["diagnostic"], "frontend work limit exceeded");
+    assert_eq!(reports[49]["outcome"], "linked");
+    assert_eq!(reports[50]["outcome"], "normal");
+    assert_eq!(reports[50]["stack"][0]["value"], "2");
+    assert_eq!(reports[50]["guest_requests"], 0);
+    Ok(())
+}
+
+#[test]
+fn original_signed_addition_executes_after_sealed_module_registration(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let sources: &[&[u8]] = &[
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../verification/calculator-exact-library/bitstep.noble")),
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../verification/calculator-exact-library/bitpair.noble")),
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../verification/calculator-exact-library/bitfull.noble")),
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../verification/calculator-exact-library/bitcompare.noble")),
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../verification/calculator-exact-library/bittrim.noble")),
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../verification/calculator-exact-library/bitsigned.noble")),
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../verification/calculator-exact-library/bitsum.noble")),
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../verification/calculator-exact-library/bitaddcarry.noble")),
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../verification/calculator-exact-library/bitorder.noble")),
+        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../verification/calculator-exact-library/bitaddsigned.noble")),
+        b"false true nil cons pair",
+        b"false true nil cons pair",
+        b"bitaddsigned@1.add",
+    ];
+    let (status, reports) = framed_declared_reports(
+        &["--signed-self-recursion", "--retained-source-bytes", "262144"],
+        sources,
+    )?;
+    assert!(status.success());
+    assert_eq!(reports.len(), sources.len());
+    assert!(reports[..10].iter().all(|report| report["outcome"] == "linked"));
+    assert!(reports[10..].iter().all(|report|
+        report["stage"] == "wasm" && report["outcome"] == "normal"));
+    let result = &reports[12];
+    assert_eq!(result["stack"][0]["value"][0]["value"], false);
+    let bits = result["stack"][0]["value"][1]["value"]
+        .as_array().ok_or("signed result did not return a bit list")?;
+    assert_eq!(bits.iter().map(|bit| bit["value"].as_bool()).collect::<Vec<_>>(),
+        vec![Some(false), Some(true)]);
+    assert_eq!(result["guest_requests"], 0);
+    assert_eq!(result["host_requests"], 0);
+    assert_eq!(result["protected_operations"], 0);
+    assert!(result["metrics"]["allocation_peak_bytes"].as_u64()
+        .is_some_and(|bytes| bytes <= 65_536));
     Ok(())
 }
 

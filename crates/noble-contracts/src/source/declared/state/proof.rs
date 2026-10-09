@@ -74,10 +74,10 @@ impl super::ModuleSession {
             || goal.subject.effects != bound.subject.effects
             || proof.reference.module != module.name
             || proof.reference.version != module.version
-            || proof.reference.source != module.source
+            || proof.reference.source.as_slice() != module.source.as_ref()
             || goal.subject.module != module.name
             || goal.subject.version != module.version
-            || goal.subject.module_source != module.source
+            || goal.subject.module_source.as_slice() != module.source.as_ref()
         {
             return Err(Refusal::MismatchedClaim);
         }

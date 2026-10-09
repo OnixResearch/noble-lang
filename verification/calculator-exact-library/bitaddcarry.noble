@@ -1,0 +1,7 @@
+module bitaddcarry@1 [
+    signature scan_keep_sign forall<S:stack>
+        [ S Pair<List<Bool>,List<Bool>> Pair<Bool,Bool> Bool
+          -- S Bool List<Bool> ! pure ]
+    export scan_keep_sign
+    def scan_keep_sign [ [ bitsum@1.scan ] dip swap ]
+]

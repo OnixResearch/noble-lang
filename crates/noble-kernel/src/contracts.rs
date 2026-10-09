@@ -113,7 +113,7 @@ pub enum Behavior {
 /// A declaration that names itself — a recursive schema — is unsupported
 /// (B-CHECK-02) and rejected during preflight; a non-recursive declaration
 /// is still validated as a scheme before any candidate body is checked.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SchemaDecl {
     /// The declared schema's identity.
     pub id: SchemaId,
@@ -124,7 +124,7 @@ pub struct SchemaDecl {
 }
 
 /// Checked descriptor independently supplied as part of a module interface.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct NominalDecl {
     pub id: crate::types::NominalTypeId,
     pub shape: crate::types::NominalShape,
@@ -136,7 +136,7 @@ pub struct NominalDecl {
 
 /// A source-declared family with exactly two type parameters. Each arm's
 /// payload is the indicated parameter (0 or 1), in source-declared order.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct GenericVariantDecl {
     pub id: crate::types::NominalTypeId,
     pub payload_params: [u8; 2],
@@ -162,7 +162,7 @@ pub enum NominalError {
 }
 
 /// Trusted manifest mapping for one required host operation.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct BoundAdapter {
     pub definition: Definition,
     pub adapter_identity: alloc::string::String,

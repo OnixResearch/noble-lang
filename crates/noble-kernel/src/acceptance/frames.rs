@@ -68,6 +68,7 @@ pub(super) fn complete_frame(
     parent: Option<super::Frame>,
     candidate: &crate::untrusted::Candidate,
     ctx: &super::parts::Ctx,
+    remaining: &mut u32,
 ) -> Result<Completion, super::Fail> {
     if frame.stack != frame.claimed_out {
         return Err(super::parts::invalid(
@@ -115,6 +116,7 @@ pub(super) fn complete_frame(
                 None,
                 super::parts::site(Some(node_id), None),
                 ctx,
+                remaining,
             ));
             let cost = attempt!(super::parts::join_cost(&interface));
             let joined = attempt!(super::parts::join(

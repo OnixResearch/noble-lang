@@ -3,6 +3,9 @@ mod prepare;
 mod proof;
 mod rebind;
 mod register;
+mod universal;
+pub use universal::{UniversalCheckedOwner, UniversalCheckedUse, UniversalLexicalBody,
+    UniversalSourceClosure};
 
 macro_rules! present {
     ($candidate:expr) => {
@@ -164,6 +167,21 @@ pub struct DeclaredTextSourceOwner<'a> {
 }
 
 impl DeclaredTextSourceOwner<'_> {
+    /// Source-authenticated sealed rows are inert in an ordinary expression;
+    /// their checked bodies are available only through universal admission.
+    pub fn rederive_ordinary(
+        &self,
+    ) -> Result<
+        (noble_kernel::execution::Submission, alloc::vec::Vec<noble_kernel::contracts::Definition>),
+        crate::source::Error,
+    > {
+        let submission = attempt!(self.rederive());
+        let inert = self.prepared.staged.source.definitions.iter()
+            .filter_map(|definition| definition.universal.as_ref().map(|seal| seal.owner()))
+            .collect();
+        Ok((submission, inert))
+    }
+
     pub fn rederive(&self) -> Result<noble_kernel::execution::Submission, crate::source::Error> {
         let prepared = self.prepared;
         if !prepared
@@ -804,6 +822,7 @@ impl ModulePrepared {
                 relation,
                 &definition.name,
                 bytes,
+                true,
                 &mut meter,
             )
             .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
@@ -1642,8 +1661,8 @@ mod symbolic_owner_tests {
             );
             original_history.extend_from_slice(source);
         }
-        assert_eq!(before.modules[0].source.as_slice(), first);
-        assert_eq!(before.modules[1].source.as_slice(), second);
+        assert_eq!(before.modules[0].source.as_ref(), first);
+        assert_eq!(before.modules[1].source.as_ref(), second);
         assert_eq!(before.source.history, original_history);
         assert_eq!(
             before
@@ -1671,8 +1690,8 @@ mod symbolic_owner_tests {
         );
         let (after, result) = session.commit(prepared);
         result.expect("publish complete rebind");
-        assert_eq!(after.modules[0].source.as_slice(), first);
-        assert_eq!(after.modules[1].source.as_slice(), second);
+        assert_eq!(after.modules[0].source.as_ref(), first);
+        assert_eq!(after.modules[1].source.as_ref(), second);
         let mut replayed_history = original_history.clone();
         replayed_history.extend_from_slice(&original_history);
         assert_eq!(

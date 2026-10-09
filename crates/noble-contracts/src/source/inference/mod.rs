@@ -110,6 +110,7 @@ pub(super) struct Scope<'a> {
     pub(super) environment: &'a noble_kernel::contracts::Env,
     pub(super) root_signature: Option<&'a noble_kernel::words::Scheme>,
     pub(super) prospective_owner: Option<noble_kernel::contracts::Definition>,
+    pub(super) universal_bindings: &'a [(u32, noble_kernel::contracts::Definition)],
 }
 
 impl Scope<'_> {

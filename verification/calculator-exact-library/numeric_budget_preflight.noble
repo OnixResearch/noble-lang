@@ -1,0 +1,49 @@
+module numeric_budget_preflight@1 [
+    # Preserve all seven caps until every check has succeeded. No Budget is
+    # constructed here; the opaque owner alone creates the validated value.
+    signature check_input_bytes forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_input_bytes [
+        unpair [ 0 numeric_budget_limits@1.input_bytes ] dip swap
+        [ swap pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature check_numeric_digits forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_numeric_digits [
+        unpair unpair [ 0 numeric_budget_limits@1.numeric_digits ] dip swap
+        [ swap pair pair result@1.Result.Ok ]
+        [ swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature check_bits forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def check_bits [
+        unpair unpair unpair [ 0 numeric_budget_limits@1.limit_bits ] dip swap
+        [ swap pair pair pair result@1.Result.Ok ]
+        [ swap drop swap drop swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature validate_early forall<S:stack>
+        [ S Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    def validate_early [
+        result@1.Result.Ok
+        [ check_input_bytes ] result@1.and_then
+        [ check_numeric_digits ] result@1.and_then
+        [ check_bits ] result@1.and_then
+    ]
+
+    signature validate forall<S:stack>
+        [ S I64 I64 I64 I64 I64 I64 I64
+          -- S result@1.Result<Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,Pair<I64,I64>>>>>>,calc_errors@1.NumericError> ! pure ]
+    export validate
+    def validate [
+        pair pair pair pair pair pair validate_early
+        [ numeric_budget_preflight_late@1.validate_late ] result@1.and_then
+    ]
+]

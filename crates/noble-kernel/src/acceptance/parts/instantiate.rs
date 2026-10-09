@@ -103,6 +103,7 @@ pub(crate) fn apply(
     data_var: Option<crate::words::Variable>,
     at: super::Site,
     ctx: &super::Ctx,
+    remaining: &mut u32,
 ) -> Result<(crate::untrusted::Interface, crate::words::Inst), super::super::Fail> {
     if !valid_bindings(inst.bindings.as_slice(), ctx.env) {
         return Err(super::invalid_without_stacks(
@@ -111,7 +112,7 @@ pub(crate) fn apply(
         ));
     }
     attempt!(check_bounds(scheme, inst, at, ctx));
-    let resolved = attempt!(resolve_witness(scheme, inst, at, ctx));
+    let resolved = attempt!(resolve_witness(scheme, inst, at, remaining));
     let interface = attempt!(project(scheme, &resolved, data_var, at, ctx));
     Ok((interface, resolved))
 }
@@ -159,10 +160,16 @@ fn resolve_witness(
     scheme: &crate::words::Scheme,
     inst: &crate::words::Inst,
     at: super::Site,
-    ctx: &super::Ctx,
+    remaining: &mut u32,
 ) -> Result<crate::words::Inst, super::super::Fail> {
-    match crate::words::resolve::bindings(&scheme.var_kinds, inst, ctx.request.limits.work) {
-        Ok((resolved, _spent)) => Ok(resolved),
+    // One remaining request meter, not a fresh allowance per binding,
+    // invocation, or nested quotation. `bindings` charges each hop before
+    // traversal and returns the *total* actual hops across all bindings.
+    match crate::words::resolve::bindings(&scheme.var_kinds, inst, *remaining) {
+        Ok((resolved, spent)) => {
+            *remaining = attempt!(super::charge(*remaining, spent));
+            Ok(resolved)
+        }
         Err(crate::words::InstError::CyclicWitness) => Err(super::invalid_without_stacks(
             at,
             crate::untrusted::Constraint::CyclicWitness,

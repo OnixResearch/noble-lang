@@ -48,6 +48,15 @@ pub(super) fn visit(
                 *ordinal, node.span, &mut frame, state, meter,
             ));
         }
+        crate::source::Kind::Call(crate::source::Target::Named(source_slot))
+            if let Some((_, definition)) = scope.universal_bindings.iter()
+                .find(|(slot, _)| slot == source_slot) =>
+        {
+            attempt!(super::operations::builtin(
+                super::operations::Call { id: definition.0, span: node.span },
+                &mut frame, state, scope.environment, meter
+            ));
+        }
         crate::source::Kind::Call(crate::source::Target::Named(_))
         | crate::source::Kind::Quotation(_) => {
             attempt!(meter.depth(

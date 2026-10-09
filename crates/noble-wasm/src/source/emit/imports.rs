@@ -48,6 +48,9 @@ pub(super) fn write(
         attempt!(out.append(b"(import \"noble\" \"live_generation\" (func $host_live_generation (result i64)))\n"));
     }
     attempt!(globals(out));
+    if plan.universal {
+        attempt!(global_import(out, b"source_epoch_generation", b"i32"));
+    }
     attempt!(global_import(out, b"allocated_total", b"i64"));
     attempt!(global_import(out, b"released_total", b"i64"));
     if plan.live_slots {
@@ -303,6 +306,9 @@ pub(super) fn runtime(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat"))
     ));
+    if plan.universal {
+        attempt!(fragment(out, include_str!("universal.wat")));
+    }
     if plan.worker_inputs {
         attempt!(fragment(
             out,

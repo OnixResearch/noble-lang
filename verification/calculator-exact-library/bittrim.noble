@@ -1,0 +1,13 @@
+module bittrim@1 [
+    signature trim_cons forall<S:stack>
+        [ S Bool List<Bool> -- S List<Bool> ! pure ]
+    export trim_cons
+    def trim_cons [
+        dup bitstep@1.is_zero
+        [ drop [ true nil cons ] [ nil ] if ] [ cons ] if
+    ]
+
+    signature trim forall<S:stack> [ S List<Bool> -- S List<Bool> ! pure ]
+    export trim
+    def trim [ [ nil ] [ swap [ trim ] dip swap trim_cons ] list.case ]
+]

@@ -14,6 +14,7 @@ fn infer(
         environment,
         root_signature: definition.signature.as_ref(),
         prospective_owner: None,
+        universal_bindings: &[],
     };
     super::inference::infer(scope, super::inference::Mode::Declaration, &[], &mut meter)
 }

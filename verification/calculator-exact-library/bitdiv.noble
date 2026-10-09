@@ -1,0 +1,25 @@
+module bitdiv@1 [
+    signature divide_rem forall<S:stack>
+        [ S List<Bool> List<Bool> -- S Pair<List<Bool>,List<Bool>> ! pure ]
+    export divide_rem
+    def divide_rem [
+        swap
+        [ drop nil nil pair ] [
+            # Pair the next bit with its divisor across recursive descent.
+            swap [ swap ] dip [ dup ] dip swap
+            pair [ divide_rem ] dip unpair
+            swap [ swap ] dip swap
+            unpair
+            [ swap ] dip
+            [ [ true nil cons ] [ nil ] if ] [ cons cons ] list.case
+            [ swap ] dip
+            swap [ dup ] dip
+            false bitborrow@1.subtract_with_borrow swap
+            [ drop false swap ]
+            [ swap drop true swap ] if
+            [ swap ] dip
+            [ [ [ true nil cons ] [ nil ] if ] [ cons cons ] list.case ] dip
+            pair
+        ] list.case
+    ]
+]

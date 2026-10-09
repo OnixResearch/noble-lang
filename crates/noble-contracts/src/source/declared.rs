@@ -5,7 +5,7 @@ mod parsing;
 mod signatures;
 mod state;
 pub(super) mod types;
-pub use state::{CheckedNominal, CheckedProgramInterface, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition, SignedSourceOwner};
+pub use state::{CheckedNominal, CheckedProgramInterface, CheckedProgramOwner, DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition, SignedSourceOwner, UniversalCheckedOwner, UniversalCheckedUse, UniversalLexicalBody, UniversalSourceClosure};
 
 const SPAN: crate::Span = crate::Span { start: 0, end: 0 };
 const MODULE_CAP: usize = 128;
@@ -52,10 +52,12 @@ struct Module {
     identity: u64,
     exports: alloc::vec::Vec<Export>,
     adapter_slot: Option<u32>,
-    source: alloc::vec::Vec<u8>,
+    source: alloc::sync::Arc<[u8]>,
+    source_stamp_prefix: crate::source::preparation::SourceStampPrefix,
     definition_spans: alloc::vec::Vec<DefinitionSource>,
-    /// Slots backed by at least one independently checked concrete owner
-    /// specialization; another instance must still be checked independently.
+    /// Slots backed by an independently checked concrete owner specialization
+    /// or a source-bound universal rigid-row seal. Every concrete instance
+    /// of a universal owner must still be checked independently.
     verified_signed_slots: alloc::vec::Vec<u32>,
     import_aliases: alloc::vec::Vec<ImportAlias>,
     contracts: alloc::vec::Vec<LogicalContract>,
@@ -102,6 +104,7 @@ impl PartialEq for Module {
             && self.exports == other.exports
             && self.adapter_slot == other.adapter_slot
             && self.source == other.source
+            && self.source_stamp_prefix == other.source_stamp_prefix
             && self.definition_spans == other.definition_spans
             && self.verified_signed_slots == other.verified_signed_slots
             && self.import_aliases == other.import_aliases

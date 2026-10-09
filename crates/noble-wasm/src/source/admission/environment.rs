@@ -59,6 +59,8 @@ pub(super) fn check(
     live_slots: bool,
     text_cursor: bool,
     declared_text: bool,
+    inert: &[noble_kernel::contracts::Definition],
+    work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
     let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(28);
@@ -113,6 +115,7 @@ pub(super) fn check(
     if !exact_effects(env, count, live_slots) {
         return Err(crate::Diagnostic::Invalid);
     }
+    attempt!(check_inert_source_rows(submission, inert, count, declared_text, work));
     if live && (submission.request.expected.allowed_effects.as_slice().iter()
         .chain(submission.definitions.iter().flat_map(|definition| {
             definition.expected.allowed_effects.as_slice().iter()
@@ -123,7 +126,8 @@ pub(super) fn check(
     }
     let expected = replay::ExpectedRows {
         prefix: count,
-        named: submission.definitions.len(),
+        named: submission.definitions.len()
+            .checked_add(inert.len()).ok_or(crate::Diagnostic::Exhausted)?,
     };
     if live_slots && !env.live_resource_nominals.is_empty() {
         // A host resource is a type descriptor, not a guest constructor row.
@@ -142,6 +146,62 @@ pub(super) fn check(
     } else {
         replay::check(env, fixed, expected)
     }
+}
+
+fn check_inert_source_rows(
+    submission: &noble_kernel::execution::Submission,
+    inert: &[noble_kernel::contracts::Definition],
+    prefix: usize,
+    declared_text: bool,
+    work: &mut super::super::Work,
+) -> Result<(), crate::Diagnostic> {
+    if inert.is_empty() { return Ok(()); }
+    if !declared_text { return Err(crate::Diagnostic::Invalid); }
+    let env = &submission.environment;
+    attempt!(work.entries(env.defs.len().saturating_add(inert.len())
+        .saturating_add(submission.definitions.len())));
+    let mut rows = alloc::vec![0u8; env.defs.len()];
+    for definition in inert {
+        let index = usize::try_from(definition.0).map_err(|_| crate::Diagnostic::Invalid)?;
+        if index < prefix || env.kinds.get(index)
+            != Some(&noble_kernel::contracts::Behavior::Named)
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        let row = rows.get_mut(index).ok_or(crate::Diagnostic::Invalid)?;
+        if *row != 0 { return Err(crate::Diagnostic::Invalid); }
+        *row = 1;
+    }
+    for definition in &submission.definitions {
+        let index = usize::try_from(definition.definition.0)
+            .map_err(|_| crate::Diagnostic::Invalid)?;
+        let row = rows.get_mut(index).ok_or(crate::Diagnostic::Invalid)?;
+        if *row != 0 { return Err(crate::Diagnostic::Invalid); }
+        *row = 2;
+    }
+    for (index, kind) in env.kinds.iter().enumerate().skip(prefix) {
+        if *kind == noble_kernel::contracts::Behavior::Named
+            && rows[index] == 0
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+    }
+    for body in core::iter::once(&submission.body)
+        .chain(submission.definitions.iter().map(|definition| &definition.body))
+    {
+        attempt!(work.entries(body.candidate.nodes.len()));
+        for node in &body.candidate.nodes {
+            let target = match node {
+                noble_kernel::untrusted::Node::Invocation { def, .. }
+                | noble_kernel::untrusted::Node::SignedSelf { def, .. } => def,
+                _ => continue,
+            };
+            if rows.get(target.0 as usize) == Some(&1) {
+                return Err(crate::Diagnostic::Invalid);
+            }
+        }
+    }
+    Ok(())
 }
 
 fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: bool) -> bool {
@@ -368,6 +428,15 @@ mod declared_text_profile_tests {
     use super::check;
     use noble_contracts::source::ModuleSession;
 
+    fn source_environment_check(
+        submission: &noble_kernel::execution::Submission,
+        text_cursor: bool,
+        declared_text: bool,
+    ) -> Result<(), crate::Diagnostic> {
+        let mut work = super::super::super::Work { remaining: 2_000_000 };
+        check(submission, false, false, text_cursor, declared_text, &[], &mut work)
+    }
+
     #[test]
     fn merged_prefix_rejects_mutations_even_under_selected_profile() {
         let limits = noble_contracts::Limits {
@@ -378,7 +447,7 @@ mod declared_text_profile_tests {
             .expect("source-checked explicit Text cursor");
         let original = expression.declared_text_source_owner().expect("checked source token")
             .rederive().expect("source-checked expression");
-        assert!(check(&original, false, false, true, true).is_ok());
+        assert!(source_environment_check(&original, true, true).is_ok());
         for index in 22..28 {
             let mut forged = original.clone();
             forged.environment.kinds[index] = if index >= 23 && index <= 25 {
@@ -386,27 +455,75 @@ mod declared_text_profile_tests {
             } else {
                 noble_kernel::contracts::Behavior::Reserved
             };
-            assert!(check(&forged, false, false, true, true).is_err(),
+            assert!(source_environment_check(&forged, true, true).is_err(),
                 "altered fixed row {index} passed merged admission");
         }
         let mut forged = original.clone();
         forged.environment.deps[26].push(noble_kernel::contracts::Definition(0));
-        assert!(check(&forged, false, false, true, true).is_err());
+        assert!(source_environment_check(&forged, true, true).is_err());
         let mut forged = original.clone();
         forged.environment.definition_owners[26] = Some(1);
-        assert!(check(&forged, false, false, true, true).is_err());
+        assert!(source_environment_check(&forged, true, true).is_err());
         let mut forged = original.clone();
         forged.environment.defs[26].stack_in.clear();
-        assert!(check(&forged, false, false, true, true).is_err());
+        assert!(source_environment_check(&forged, true, true).is_err());
         let mut forged = original.clone();
         forged.environment.text_cursor = false;
-        assert!(check(&forged, false, false, true, true).is_err());
+        assert!(source_environment_check(&forged, true, true).is_err());
         let mut forged = original.clone();
         forged.environment.declared_modules = false;
-        assert!(check(&forged, false, false, true, true).is_err());
+        assert!(source_environment_check(&forged, true, true).is_err());
         for profile in [(false, false), (true, false), (false, true)] {
-            assert!(check(&original, false, false, profile.0, profile.1).is_err(),
+            assert!(source_environment_check(&original, profile.0, profile.1).is_err(),
                 "calculator source was admitted through an ordinary compiler profile");
+        }
+    }
+
+    #[test]
+    fn inert_signed_owner_rejects_unbound_named_rows_and_ordinary_calls() {
+        let limits = noble_contracts::Limits::default();
+        let session = ModuleSession::new_declared_text(&[], true,
+            noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .expect("valid retained source limit"))
+            .expect("signed declared Text source");
+        let staged = session.prepare(
+            b"module gate@1 [ signature pass forall<S:stack> [ S I64 -- S I64 ! pure ] export pass def pass [ 1 + ] ]",
+            &[], limits,
+        ).expect("sealed owner module");
+        let (session, linked) = session.commit(staged);
+        linked.expect("sealed owner registered");
+        let prepared = session.prepare(b"false", &[], limits)
+            .expect("ordinary source expression");
+        let owner = prepared.declared_text_source_owner().expect("original source owner");
+        let (original, inert) = owner.rederive_ordinary()
+            .expect("source-authenticated inert row");
+        assert_eq!(inert.len(), 1);
+        let admitted = |submission: &noble_kernel::execution::Submission| {
+            let mut work = super::super::super::Work { remaining: 2_000_000 };
+            check(submission, false, false, true, true, &inert, &mut work)
+        };
+        assert!(admitted(&original).is_ok(),
+            "an ordinary literal must remain executable beside a sealed owner");
+        let mut forged = original.clone();
+        let row = inert[0].0 as usize;
+        forged.environment.defs.push(original.environment.defs[row].clone());
+        forged.environment.kinds.push(original.environment.kinds[row]);
+        forged.environment.deps.push(original.environment.deps[row].clone());
+        forged.environment.definition_owners.push(original.environment.definition_owners[row]);
+        assert!(matches!(admitted(&forged), Err(crate::Diagnostic::Invalid)),
+            "an extra unproved Named Env row acquired inert-source authority");
+        for expression in [
+            b"0 gate@1.pass".as_slice(),
+            b"0 [ gate@1.pass ] run".as_slice(),
+        ] {
+            let prepared = session.prepare(expression, &[], limits)
+                .expect("ordinary sealed-owner reference is source-checked");
+            let owner = prepared.declared_text_source_owner().expect("original source owner");
+            let (submission, targets) = owner.rederive_ordinary()
+                .expect("authentic namespace rederived");
+            assert_eq!(targets, inert);
+            assert!(matches!(admitted(&submission), Err(crate::Diagnostic::Invalid)),
+                "ordinary code directly or through a quotation invoked inert sealed owner");
         }
     }
 }

@@ -247,6 +247,9 @@ impl super::Session {
                 )));
         let compiled = if options.declared_text() {
             match prepared.declared_text_source_owner() {
+                Some(ref owner) if options.signed_self_recursion
+                    && owner.selected_universal_intent() =>
+                    self.compiler.prepare_declared_text_universal(owner),
                 Some(ref owner) => self.compiler.prepare_declared_text(owner),
                 None => Err(noble_wasm::Diagnostic::Invalid),
             }
@@ -282,7 +285,7 @@ impl super::Session {
         source: &[u8],
         options: &super::arguments::Options,
     ) -> Result<super::output::Report, super::output::Failure> {
-        let ready = attempt!(self.prepare_declared_worker(compiled.wat(), source, options));
+        let ready = attempt!(self.prepare_declared_worker(&compiled, source, options));
         if ready.outcome != "ready" {
             return Ok(ready);
         }
@@ -397,7 +400,7 @@ impl super::Session {
 
     fn prepare_declared_worker(
         &mut self,
-        wat: &[u8],
+        compiled: &noble_wasm::source::Prepared,
         source: &[u8],
         options: &super::arguments::Options,
     ) -> Result<super::output::Report, super::output::Failure> {
@@ -405,7 +408,12 @@ impl super::Session {
             self.worker = Some(attempt!(super::worker::Engine::start(options)));
         }
         let submission = self.submissions;
-        attempt!(self.declared_worker()).prepare(wat, source, submission)
+        let worker = attempt!(self.declared_worker());
+        if compiled.universal_metadata().is_some() {
+            worker.prepare_universal(compiled, source, submission)
+        } else {
+            worker.prepare(compiled.wat(), source, submission)
+        }
     }
 
     fn declared_worker(&mut self) -> Result<&mut super::worker::Engine, super::output::Failure> {

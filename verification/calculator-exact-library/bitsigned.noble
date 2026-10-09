@@ -1,0 +1,10 @@
+module bitsigned@1 [
+    signature normalize forall<S:stack>
+        [ S Bool List<Bool> -- S Pair<Bool,List<Bool>> ! pure ]
+    export normalize
+    def normalize [
+        dup bitstep@1.is_zero
+        [ drop drop false nil pair ] [ pair ] if
+    ]
+
+]

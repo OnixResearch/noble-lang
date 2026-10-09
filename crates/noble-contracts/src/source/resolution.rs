@@ -10,13 +10,14 @@ pub(super) fn resolve(
     declaration: Option<&str>,
     session: &super::Session,
     signed_owner: bool,
+    name_index: Option<&super::preparation::name_index::NameIndex>,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
     let mut at = 0usize;
     let mut failure = None;
     while at < tree.nodes.len() {
         let result = match tree.nodes.get_mut(at) {
-            Some(node) => resolve_node(node, declaration, session, signed_owner, meter),
+            Some(node) => resolve_node(node, declaration, session, signed_owner, name_index, meter),
             None => Err(crate::internal(tree.span)),
         };
         if let Err(problem) = result {
@@ -36,11 +37,14 @@ fn resolve_node(
     declaration: Option<&str>,
     session: &super::Session,
     signed_owner: bool,
+    name_index: Option<&super::preparation::name_index::NameIndex>,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(meter.charge(1, node.span));
     if let super::Kind::Word(word) = &node.kind {
-        let target = attempt!(lookup(word, declaration, session, signed_owner, node.span, meter));
+        let target = attempt!(lookup(
+            word, declaration, session, signed_owner, name_index, node.span, meter,
+        ));
         node.kind = super::Kind::Call(target);
     }
     Ok(())
@@ -55,6 +59,7 @@ fn lookup(
     declaration: Option<&str>,
     session: &super::Session,
     signed_owner: bool,
+    name_index: Option<&super::preparation::name_index::NameIndex>,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<super::Target, crate::Diagnostic> {
@@ -85,7 +90,10 @@ fn lookup(
         return Ok(super::Target::SlotInvoke(ordinal));
     }
     if let Some(context) = &session.declared {
-        return declared_lookup(word, declaration, context, signed_owner, span, meter);
+        return declared_lookup(
+            word, declaration, context, signed_owner, name_index,
+            session.generation, span, meter,
+        );
     }
     let mut at = session.definitions.len();
     let mut found = None;
@@ -169,6 +177,8 @@ fn declared_lookup(
     declaration: Option<&str>,
     context: &super::declared::Context,
     signed_owner: bool,
+    name_index: Option<&super::preparation::name_index::NameIndex>,
+    generation: u64,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<super::Target, crate::Diagnostic> {
@@ -177,24 +187,31 @@ fn declared_lookup(
     {
         return Ok(super::Target::SelfOwner);
     }
-    let mut at = context.words.len();
-    let mut found = None;
-    let mut failure = None;
-    while at > 0 {
-        at -= 1;
-        let entry = &context.words[at];
-        if let Err(problem) = meter.charge(1, span) {
-            failure = Some(problem);
-            break;
+    let found = if let Some(index) = name_index {
+        attempt!(index.lookup(&context.words, context.owner, generation, word, span, meter))
+    } else {
+        let mut at = context.words.len();
+        let mut found = None;
+        let mut failure = None;
+        while at > 0 {
+            at -= 1;
+            let entry = &context.words[at];
+            if let Err(problem) = meter.charge(1, span) {
+                failure = Some(problem);
+                break;
+            }
+            if attempt!(super::preparation::name_index::compare(
+                entry.0.as_bytes(), word, span, meter,
+            )) == core::cmp::Ordering::Equal {
+                found = Some(entry.1);
+                break;
+            }
         }
-        if entry.0.as_bytes() == word {
-            found = Some(entry.1);
-            break;
+        if let Some(problem) = failure {
+            return Err(problem);
         }
-    }
-    if let Some(problem) = failure {
-        return Err(problem);
-    }
+        found
+    };
     if let Some(target) = found {
         return Ok(target);
     }

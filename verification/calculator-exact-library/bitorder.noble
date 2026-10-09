@@ -1,0 +1,17 @@
+module bitorder@1 [
+    signature order_for_add forall<S:stack>
+        [ S Pair<Bool,List<Bool>> Pair<Bool,List<Bool>>
+          -- S Pair<List<Bool>,List<Bool>> Pair<Bool,Bool> Bool ! pure ]
+    export order_for_add
+    def order_for_add [
+        bitpair@1.unpack
+        [ dup ] dip bitpair@1.different
+        [ swap [ swap ] dip
+          pair dup unpair bitcompare@1.compare -1 =
+          [ unpair swap true ] [ unpair false ] if
+          [ pair ] dip [ swap ] dip
+          bitpair@1.different true ]
+        [ [ pair ] dip false ] if
+        dup pair swap
+    ]
+]

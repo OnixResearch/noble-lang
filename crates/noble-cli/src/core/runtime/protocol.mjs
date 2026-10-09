@@ -232,17 +232,28 @@ async function protocol(config) {
                   || command.bytes + command.bridge + command.signatures + command.source
                     > 2 * MAX_FRAME + 65536) fail('invalid bounded live module frame');
               } else {
-                const match = /^(compile|compile-typed) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+) ([0-9]+))?$/.exec(header);
-                if (!match) fail('invalid engine command');
-                command = { kind: match[1],
-                  bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
-                  source: integer(Number(match[3]), 65536, 'source frame'),
-                  submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission') };
-                if (command.kind === 'compile-typed') {
-                  if (match[5] === undefined || match[6] === undefined) fail('worker manifest absent');
-                  command.literalEnd = integer(Number(match[5]), 983040, 'worker literal end');
-                  command.catalog = integer(Number(match[6]), 65536, 'worker schema frame');
-                } else if (match[5] !== undefined || match[6] !== undefined) fail('unexpected worker manifest');
+                const universal = /^compile-universal ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+                if (universal) {
+                  if (!engine.sourceEpoch) fail('universal install requires selected signed source');
+                  command = { kind: 'compile-universal',
+                    bytes: integer(Number(universal[1]), MAX_FRAME, 'module frame'),
+                    source: integer(Number(universal[2]), 65536, 'source frame'),
+                    metadata: integer(Number(universal[3]), MAX_FRAME, 'universal receipt'),
+                    submission: integer(Number(universal[4]), Number.MAX_SAFE_INTEGER, 'submission') };
+                  if (command.metadata === 0) fail('empty universal receipt');
+                } else {
+                  const match = /^(compile|compile-typed) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+) ([0-9]+))?$/.exec(header);
+                  if (!match) fail('invalid engine command');
+                  command = { kind: match[1],
+                    bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
+                    source: integer(Number(match[3]), 65536, 'source frame'),
+                    submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission') };
+                  if (command.kind === 'compile-typed') {
+                    if (match[5] === undefined || match[6] === undefined) fail('worker manifest absent');
+                    command.literalEnd = integer(Number(match[5]), 983040, 'worker literal end');
+                    command.catalog = integer(Number(match[6]), 65536, 'worker schema frame');
+                  } else if (match[5] !== undefined || match[6] !== undefined) fail('unexpected worker manifest');
+                }
               }
             }
           }
@@ -345,7 +356,8 @@ async function protocol(config) {
           continue;
         }
         if (pending.length < command.bytes + (command.bridge ?? 0)
-          + (command.signatures ?? 0) + command.source + (command.catalog ?? 0)) break;
+          + (command.signatures ?? 0) + command.source + (command.catalog ?? 0)
+          + (command.metadata ?? 0)) break;
         const bytes = pending.subarray(0, command.bytes);
         const bridgeEnd = command.bytes + (command.bridge ?? 0);
         const signaturesEnd = bridgeEnd + (command.signatures ?? 0);
@@ -353,14 +365,20 @@ async function protocol(config) {
         const policy = command.kind === 'compile-typed'
           ? pending.subarray(signaturesEnd + command.source,
             signaturesEnd + command.source + command.catalog) : null;
+        const universal = command.kind === 'compile-universal'
+          ? pending.subarray(signaturesEnd + command.source,
+            signaturesEnd + command.source + command.metadata) : null;
         const bridge = command.bridge ? pending.subarray(command.bytes, bridgeEnd) : null;
         const signatures = command.signatures ? pending.subarray(bridgeEnd, signaturesEnd) : null;
-        pending = pending.subarray(signaturesEnd + command.source + (command.catalog ?? 0));
+        pending = pending.subarray(signaturesEnd + command.source
+          + (command.catalog ?? 0) + (command.metadata ?? 0));
         try {
           const report = command.kind === 'compile' || command.kind === 'compile-typed'
+            || command.kind === 'compile-universal'
             ? engine.prepare(bytes, source, command.submission,
               command.kind === 'compile-typed' ? command.literalEnd : null,
-              policy === null ? null : JSON.parse(utf8.decode(policy)))
+              policy === null ? null : JSON.parse(utf8.decode(policy)),
+              universal === null ? null : JSON.parse(utf8.decode(universal)))
             : command.kind === 'compile-bin'
               ? engine.compileBinary(bytes, source, command.submission,
                 bridge, signatures, command.span, command.watSha256, command.bridgeWatSha256)

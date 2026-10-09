@@ -24,7 +24,8 @@ pub(crate) use declared::{
 pub use declared::{
     BoundOperation, CheckedNominal, CheckedProgramInterface, CheckedProgramOwner,
     DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession,
-    RebuiltImportDefinition, SignedSourceOwner,
+    RebuiltImportDefinition, SignedSourceOwner, UniversalCheckedOwner,
+    UniversalCheckedUse, UniversalLexicalBody, UniversalSourceClosure,
 };
 
 /// Core vocabulary resolved by the same checker as a worker's pure source.
@@ -294,6 +295,17 @@ struct SignedRelation {
     lexical_nodes: alloc::vec::Vec<u32>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+struct UniversalOrigin {
+    relation: SignedRelation,
+    original_source: alloc::sync::Arc<[u8]>,
+    module_name: alloc::string::String,
+    module_version: u32,
+    ordinal: u32,
+    source_span: crate::Span,
+    body_span: crate::Span,
+}
+
 #[derive(Clone, Debug)]
 struct Named {
     name: alloc::string::String,
@@ -302,6 +314,8 @@ struct Named {
     tree: Tree,
     signature: Option<noble_kernel::words::Scheme>,
     signed: Option<SignedRelation>,
+    universal: Option<alloc::sync::Arc<noble_kernel::universal::CheckedScheme>>,
+    universal_origin: Option<UniversalOrigin>,
     /// Original alias spellings and exact source nodes bound to their
     /// independently resolved module owners at definition admission.
     alias_uses: alloc::vec::Vec<AliasUse>,
@@ -329,6 +343,14 @@ impl PartialEq for Named {
             && self.tree == other.tree
             && same_signature
             && self.signed == other.signed
+            && self.universal_origin == other.universal_origin
+            && self.universal.is_some() == other.universal.is_some()
+            && self.universal.as_ref().zip(other.universal.as_ref())
+                .is_none_or(|(left, right)| {
+                    left.owner() == right.owner()
+                        && left.stamp() == right.stamp()
+                        && left.candidate().nodes.len() == right.candidate().nodes.len()
+                })
             && self.alias_uses == other.alias_uses
             && self.history_start == other.history_start
     }
@@ -351,6 +373,8 @@ pub struct Prepared {
     live_selected: Option<alloc::string::String>,
     live_slots: bool,
     limits: crate::Limits,
+    frontend_nodes: u32,
+    frontend_work_spent: u32,
     boundary: Option<alloc::vec::Vec<u8>>,
     definition: Option<Named>,
     selected_root: Option<u32>,
@@ -361,6 +385,10 @@ pub struct Prepared {
 }
 
 impl Prepared {
+    pub(crate) const fn frontend_nodes(&self) -> u32 {
+        self.frontend_nodes
+    }
+
     pub const fn submission(&self) -> Option<&noble_kernel::execution::Submission> {
         self.submission.as_ref()
     }
@@ -969,6 +997,41 @@ impl Session {
         if let Some(mut definition) = prepared.definition {
             if definition.owner.is_none() {
                 definition.history_start = Some(self.history.len());
+            }
+            if let Some(seal) = definition.universal.as_ref() {
+                let Some(context) = self.declared.as_mut() else {
+                    return Err(Error::at(Stage::Acceptance, crate::invalid(
+                        span, "universal owner has no declared module context",
+                    )));
+                };
+                let Some(scheme) = definition.signature.as_ref() else {
+                    return Err(Error::at(Stage::Acceptance, crate::invalid(
+                        span, "universal owner has no immutable signature",
+                    )));
+                };
+                if context.owner != definition.owner
+                    || context.environment.caller_module != definition.owner
+                    || usize::try_from(seal.owner().0).ok() != Some(context.environment.defs.len())
+                {
+                    return Err(Error::at(Stage::Acceptance, crate::invalid(
+                        span, "universal owner environment changed before publication",
+                    )));
+                }
+                let mut dependencies = alloc::vec::Vec::new();
+                for node in &seal.candidate().nodes {
+                    if let noble_kernel::universal::SymbolicNode::Invocation { def, .. } = node {
+                        if context.environment.kind(*def)
+                            == Some(noble_kernel::contracts::Behavior::Named)
+                            && !dependencies.contains(def)
+                        {
+                            dependencies.push(*def);
+                        }
+                    }
+                }
+                context.environment.defs.push(scheme.clone());
+                context.environment.kinds.push(noble_kernel::contracts::Behavior::Named);
+                context.environment.deps.push(dependencies);
+                context.environment.definition_owners.push(definition.owner);
             }
             self.definitions.push(definition);
             self.history.extend_from_slice(&prepared.addition);

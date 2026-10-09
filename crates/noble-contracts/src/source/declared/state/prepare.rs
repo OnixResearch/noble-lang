@@ -318,7 +318,7 @@ impl super::ModuleSession {
             || batch.generation != prepared.generation
             || batch.module != module.name
             || batch.version != module.version
-            || batch.source != module.source
+            || batch.source.as_slice() != module.source.as_ref()
         {
             return (
                 self,

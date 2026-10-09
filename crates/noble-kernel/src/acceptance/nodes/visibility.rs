@@ -19,7 +19,7 @@ pub(super) fn check(
 }
 
 /// An unrecognized behavior is private until its visibility rule is defined.
-fn visible_behavior(
+pub(crate) fn visible_behavior(
     env: &crate::contracts::Env,
     def: crate::contracts::Definition,
     kind: crate::contracts::Behavior,
