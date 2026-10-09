@@ -622,13 +622,18 @@ selected-file hash, and does not complete DX-LIVE-01 or any LIVE case.
 On Linux, `noble live watch --source /absolute/math.noble --engine v8`
 also accepts a **cooperative** complete save: write and `fsync` its
 same-directory `math.noble.tmp` sibling, then atomically rename it onto
-`math.noble`. The host pairs the inotify rename events, pins the selected
-directory and file, requires a regular single-link final inode, hashes the
-bounded candidate bytes, and checks that exact version again before
-publication. A later complete save supersedes an in-flight candidate rather
-than receiving a false ACK. The `watch_sequence`, `watch_save_protocol`,
-`source_sha256`, and `source_freshness` report fields identify what was
-actually published and whether a later save was observed at ACK time.
+`math.noble`. The host cannot observe the editor's `fsync`: the paired
+inotify events only nominate a save. It pins the selected directory and file,
+requires a bounded regular single-link snapshot, writes those exact bytes to
+a separate host-owned private file, syncs that file and its directory, and
+checks both the private bytes and the unchanged selected source again before
+publication. It never replaces the editor's selected path. A later complete
+save supersedes an in-flight candidate rather than receiving a false ACK.
+On an automatic watch ACK, `watch_save_protocol` describes the observed
+paired rename and host-fsynced snapshot, **not** producer fsync;
+`watch_sequence`, `source_sha256`, and `source_freshness` identify the
+published version and bounded ACK-time path observation. Explicit `:reload`
+and startup file selection have no automatic-save protocol attestation.
 Unpaired renames, in-place writes, symlinks, hardlinks, and a changed
 candidate refuse; an outside writable mapping or alias can still mutate a
 file without a selected-directory event. This cooperative watch is *not*

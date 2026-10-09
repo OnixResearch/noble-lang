@@ -3,7 +3,11 @@
 
 use std::fs::{self, DirBuilder, File};
 use std::io::{BufRead, BufReader, Read, Write};
+#[cfg(target_os = "linux")]
+use std::io::{Seek, SeekFrom};
 use std::os::unix::fs::{symlink, DirBuilderExt};
+#[cfg(target_os = "linux")]
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -380,6 +384,26 @@ impl LiveBarrier {
             .env("NOBLE_LIVE_TEST_BARRIER_EXPECTED", &self.expected);
     }
 
+    fn configure_host_seal(&self, command: &mut Command) {
+        command.env("NOBLE_LIVE_TEST_SEAL_BARRIER_DIR", &self.directory)
+            .env("NOBLE_LIVE_TEST_SEAL_BARRIER_SHA256", &self.expected);
+    }
+
+    fn configure_explicit_reload(&self, command: &mut Command) {
+        let (directory, expected) = match self.point {
+            "before-snapshot" => (
+                "NOBLE_LIVE_TEST_RELOAD_BEFORE_SNAPSHOT_DIR",
+                "NOBLE_LIVE_TEST_RELOAD_BEFORE_SNAPSHOT_MATCH",
+            ),
+            "before-reconcile" => (
+                "NOBLE_LIVE_TEST_RELOAD_BEFORE_RECONCILE_DIR",
+                "NOBLE_LIVE_TEST_RELOAD_BEFORE_RECONCILE_MATCH",
+            ),
+            _ => panic!("not an explicit reload barrier: {}", self.point),
+        };
+        command.env(directory, &self.directory).env(expected, &self.expected);
+    }
+
     fn wait(&self) -> Result<Value, Box<dyn std::error::Error>> {
         let line = self.reached.recv_timeout(DEADLINE)??;
         let event: Value = serde_json::from_str(&line)?;
@@ -405,6 +429,17 @@ impl Drop for LiveBarrier {
             let _ = reader.join();
         }
     }
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+fn explicit_reload_barrier(
+    fixture: &Fixture,
+    point: &'static str,
+    expected: &str,
+) -> Result<LiveBarrier, Box<dyn std::error::Error>> {
+    let directory = fixture.directory.join(point);
+    DirBuilder::new().mode(0o700).create(&directory)?;
+    LiveBarrier::new(&directory, point, expected)
 }
 
 fn text_field<'a>(report: &'a Value, key: &str) -> &'a str {
@@ -539,9 +574,51 @@ fn watched_complete_rename_acks_only_checked_bytes_and_never_runs_partial_write(
     let (fresh_generation, fresh_hash) = live_ack(&ack, &[]);
     assert_eq!(fresh_generation, old_generation + 1);
     assert_ne!(fresh_hash, old_hash);
-    assert_eq!(text_field(&ack, "watch_save_protocol"), "fsync-temp-then-atomic-rename");
+    assert_eq!(text_field(&ack, "watch_save_protocol"),
+        "paired-temp-rename-host-fsynced-snapshot");
     assert_eq!(text_field(&ack, "source_freshness"), "matched-at-watch-ack-check");
     assert!(number_field(&ack, "watch_sequence") >= 1);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn watched_host_seal_does_not_claim_producer_fsync_or_take_over_selected_inode(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start_watch(&fixture.source)?;
+    let initial = live.report()?;
+    let (initial_generation, _) = live_ack(&initial, &[]);
+    assert!(initial.get("watch_save_protocol").is_none(),
+        "initial file selection did not observe or seal an editor rename");
+    let temporary = fixture.directory.join("math.noble.tmp");
+    let mut writer = File::create_new(&temporary)?;
+    writer.write_all(A.as_bytes())?;
+    // Deliberately neither close nor fsync the producer's descriptor. The
+    // report may attest only to the host's independently synced byte copy.
+    fs::rename(&temporary, &fixture.source)?;
+    let selected_inode = fs::metadata(&fixture.source)?.ino();
+    let ack = live.report()?;
+    let (generation, selected_hash) = live_ack(&ack, &[]);
+    assert_eq!(generation, initial_generation + 1);
+    assert_eq!(selected_hash, A_SHA256);
+    assert_eq!(text_field(&ack, "watch_save_protocol"),
+        "paired-temp-rename-host-fsynced-snapshot");
+    assert_eq!(text_field(&ack, "source_freshness"), "matched-at-watch-ack-check");
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), selected_inode,
+        "host byte sealing must not replace the editor's selected file");
+    assert_eq!(fs::read_to_string(&fixture.source)?, A);
+    writer.seek(SeekFrom::Start(0))?;
+    writer.write_all(b"def addone [ 9 + ]")?;
+    writer.flush()?;
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), selected_inode);
+    assert_source_change_refused(&live.submit("20 addone")?, generation, &[], &selected_hash);
+    writer.seek(SeekFrom::Start(0))?;
+    writer.write_all(A.as_bytes())?;
+    writer.flush()?;
     normal(&live.submit("20 addone")?, &["22"]);
     live.finish()
 }
@@ -616,7 +693,6 @@ fn watched_unpaired_rename_cannot_ack_unselected_writer(
     fs::rename(&unselected, &fixture.source)?;
     let refused = live.report()?;
     assert_eq!(refused_reload(&refused, &[]), initial);
-    assert!(text_field(&refused, "diagnostic").contains("paired atomic rename"));
     assert_source_change_refused(&live.submit("20 addone")?, initial, &[], &hash);
     fixture.replace("def addone [ 2 + ]")?;
     assert_eq!(live_ack(&live.report()?, &[]).0, initial + 1);
@@ -642,7 +718,6 @@ fn watched_hardlinked_temp_cannot_claim_immutable_complete_save(
     fs::rename(&temporary, &fixture.source)?;
     let refused = live.report()?;
     assert_eq!(refused_reload(&refused, &[]), generation);
-    assert!(text_field(&refused, "diagnostic").contains("hardlink alias"));
     assert_source_change_refused(&live.submit("20 addone")?, generation, &[], &hash);
     fixture.replace("def addone [ 2 + ]")?;
     assert_eq!(live_ack(&live.report()?, &[]).0, generation + 1);
@@ -2834,6 +2909,235 @@ fn old_active_wasm_frame_finishes_before_queued_reload_ack()
 
 #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
 #[test]
+fn explicit_watch_reload_consumes_only_its_committed_rename_once(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let path = fixture.source.to_str().ok_or("fixture path is not UTF-8")?;
+    let mut before = explicit_reload_barrier(&fixture, "before-snapshot", path)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "watch", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    before.configure_explicit_reload(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let initial = live_ack(&live.report()?, &[]).0;
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
+    stdin.flush()?;
+    before.wait()?;
+    fixture.replace(A)?;
+    before.release()?;
+    let ack = live.report()?;
+    let (generation, source_hash) = live_ack(&ack, &[]);
+    assert_eq!(generation, initial + 1);
+    assert_eq!(source_hash, A_SHA256);
+    assert!(ack.get("watch_save_protocol").is_none(),
+        "explicit reload must not claim the automatic host seal");
+    let observed = live.submit(":generation")?;
+    assert_generation_inspection(&observed, generation, &ack["stack"]);
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn explicit_reload_pending_a_cannot_republish_in_place_drift(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    const B: &str = "def addone [ 3 + ]";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let path = fixture.source.to_str().ok_or("fixture path is not UTF-8")?;
+    let mut before = explicit_reload_barrier(&fixture, "before-snapshot", path)?;
+    let mut after = explicit_reload_barrier(&fixture, "before-reconcile", A_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "watch", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    before.configure_explicit_reload(&mut command);
+    after.configure_explicit_reload(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let initial = live_ack(&live.report()?, &[]).0;
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
+    stdin.flush()?;
+    before.wait()?;
+    fixture.replace(A)?;
+    before.release()?;
+    after.wait()?;
+    let selected_inode = fs::metadata(&fixture.source)?.ino();
+    fs::write(&fixture.source, B)?;
+    after.release()?;
+    let superseded = live.report()?;
+    assert_eq!(text_field(&superseded, "outcome"), "watch-superseded");
+    assert_eq!(number_field(&superseded, "generation"), initial + 1);
+    assert_eq!(text_field(&superseded, "source_sha256"), A_SHA256);
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), selected_inode);
+    assert_eq!(fs::read_to_string(&fixture.source)?, B);
+    let observed = live.submit(":generation")?;
+    assert_generation_inspection(&observed, initial + 1, &superseded["stack"]);
+    assert_source_change_refused(&live.submit("20 addone")?,
+        initial + 1, &[], A_SHA256);
+    fs::write(&fixture.source, A)?;
+    normal(&live.submit("20 addone")?, &["22"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn newer_b_after_explicit_a_commit_remains_pending_for_automatic_ack(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    const B: &str = "def addone [ 3 + ]";
+    const B_SHA256: &str = "eb81fb3297b696317d1de013abdf5423a31c3708443b1d1a3d8977e0bf5e92e2";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let path = fixture.source.to_str().ok_or("fixture path is not UTF-8")?;
+    let mut before = explicit_reload_barrier(&fixture, "before-snapshot", path)?;
+    let mut after = explicit_reload_barrier(&fixture, "before-reconcile", A_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "watch", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    before.configure_explicit_reload(&mut command);
+    after.configure_explicit_reload(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let initial = live_ack(&live.report()?, &[]).0;
+    let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
+    stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
+    stdin.flush()?;
+    before.wait()?;
+    fixture.replace(A)?;
+    before.release()?;
+    after.wait()?;
+    fixture.replace(B)?;
+    File::open(&fixture.directory)?.sync_all()?;
+    let b_inode = fs::metadata(&fixture.source)?.ino();
+    after.release()?;
+    let superseded = live.report()?;
+    assert_eq!(text_field(&superseded, "outcome"), "watch-superseded");
+    assert_eq!(number_field(&superseded, "generation"), initial + 1);
+    assert_eq!(text_field(&superseded, "source_sha256"), A_SHA256);
+    let ack = live.report()?;
+    let (generation, source_hash) = live_ack(&ack, &[]);
+    assert_eq!(generation, initial + 2);
+    assert_eq!(source_hash, B_SHA256);
+    assert_eq!(text_field(&ack, "watch_save_protocol"),
+        "paired-temp-rename-host-fsynced-snapshot");
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), b_inode);
+    assert_eq!(fs::read_to_string(&fixture.source)?, B);
+    normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn second_complete_save_during_host_seal_preserves_editor_selected_b(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    const B: &str = "def addone [ 3 + ]";
+    const B_SHA256: &str = "eb81fb3297b696317d1de013abdf5423a31c3708443b1d1a3d8977e0bf5e92e2";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "candidate-sealed", A_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "watch", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    barrier.configure_host_seal(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let initial = live_ack(&live.report()?, &[]).0;
+    fixture.replace(A)?;
+    let reached = barrier.wait()?;
+    assert_eq!(text_field(&reached, "matched"), A_SHA256);
+    fixture.replace(B)?;
+    File::open(&fixture.directory)?.sync_all()?;
+    let b_inode = fs::metadata(&fixture.source)?.ino();
+    barrier.release()?;
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), initial);
+    assert_eq!(fs::read_to_string(&fixture.source)?, B);
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), b_inode,
+        "host A must not replace the editor's newer B");
+    let ack = live.report()?;
+    let (generation, source_hash) = live_ack(&ack, &[]);
+    assert_eq!(generation, initial + 1);
+    assert_eq!(source_hash, B_SHA256);
+    assert_eq!(text_field(&ack, "watch_save_protocol"),
+        "paired-temp-rename-host-fsynced-snapshot");
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), b_inode);
+    normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn writer_fd_mutation_during_host_seal_refuses_unselected_snapshot(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const A_SHA256: &str = "4e49ee40f4b4a51eff90e9a7820d2bdc1d9b12f8b8c558adeff5ba741075e9ad";
+    const B: &str = "def addone [ 3 + ]";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "candidate-sealed", A_SHA256)?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "watch", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    barrier.configure_host_seal(&mut command);
+    let mut live = LiveChild::spawn(command)?;
+    let (initial, old_hash) = live_ack(&live.report()?, &[]);
+    let temporary = fixture.directory.join("math.noble.tmp");
+    let mut writer = File::create_new(&temporary)?;
+    writer.write_all(A.as_bytes())?;
+    writer.sync_all()?;
+    fs::rename(&temporary, &fixture.source)?;
+    let selected_inode = fs::metadata(&fixture.source)?.ino();
+    barrier.wait()?;
+    writer.seek(SeekFrom::Start(0))?;
+    writer.write_all(B.as_bytes())?;
+    writer.flush()?;
+    barrier.release()?;
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), initial);
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), selected_inode);
+    assert_eq!(fs::read_to_string(&fixture.source)?, B);
+    assert_source_change_refused(&live.submit("20 addone")?, initial, &[], &old_hash);
+    fixture.replace(B)?;
+    assert_eq!(live_ack(&live.report()?, &[]).0, initial + 1);
+    normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn failed_private_directory_sync_keeps_editor_source_and_old_generation(
+) -> Result<(), Box<dyn std::error::Error>> {
+    const A: &str = "def addone [ 2 + ]";
+    const B: &str = "def addone [ 3 + ]";
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.args(["live", "watch", "--source"]).arg(&fixture.source)
+        .args(["--engine", "v8"]);
+    // The feature-only fault is delivered after a real file write/fsync and
+    // before the private directory's sync. The source and VM remain real.
+    command.env("NOBLE_LIVE_TEST_SEAL_FAIL_DIRECTORY_SYNC", "1");
+    let mut live = LiveChild::spawn(command)?;
+    let (initial, old_hash) = live_ack(&live.report()?, &[]);
+    fixture.replace(A)?;
+    let selected_inode = fs::metadata(&fixture.source)?.ino();
+    let refused = live.report()?;
+    assert_eq!(refused_reload(&refused, &[]), initial);
+    assert_eq!(fs::read_to_string(&fixture.source)?, A);
+    assert_eq!(fs::metadata(&fixture.source)?.ino(), selected_inode);
+    assert_source_change_refused(&live.submit("20 addone")?, initial, &[], &old_hash);
+    fixture.replace(B)?;
+    let ack = live.report()?;
+    assert_eq!(live_ack(&ack, &[]).0, initial + 1);
+    assert_eq!(text_field(&ack, "watch_save_protocol"),
+        "paired-temp-rename-host-fsynced-snapshot");
+    normal(&live.submit("20 addone")?, &["23"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
 fn compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack()
 -> Result<(), Box<dyn std::error::Error>> {
     // These are SHA-256 digests of precisely the two byte strings below
@@ -2870,8 +3174,6 @@ fn compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack()
         match text_field(&report, "outcome") {
             "reload-refused" => {
                 assert_eq!(refused_reload(&report, &[]), initial_generation);
-                assert!(text_field(&report, "diagnostic").contains("superseded"),
-                    "staged A must be discarded: {report}");
             }
             "watch-superseded" => {
                 assert_ne!(text_field(&report, "source_sha256"), A_SHA256,

@@ -133,6 +133,10 @@ struct Live {
     live_module_installed: bool,
     live_code_spans: std::vec::Vec<InstalledCode>,
     #[cfg(target_os = "linux")]
+    pending_watch_seal: Option<watch::SealedSnapshot>,
+    #[cfg(target_os = "linux")]
+    accepted_watch_seal: Option<watch::SealedSnapshot>,
+    #[cfg(target_os = "linux")]
     watch: Option<watch::Watcher>,
 }
 
@@ -232,6 +236,10 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         live_module_installed: false,
         live_code_spans: std::vec::Vec::new(),
         #[cfg(target_os = "linux")]
+        pending_watch_seal: None,
+        #[cfg(target_os = "linux")]
+        accepted_watch_seal: None,
+        #[cfg(target_os = "linux")]
         watch: watcher,
     };
     if let Some(source) = source {
@@ -313,6 +321,15 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             }
         };
         if let Some(path) = line.strip_prefix(":reload ") {
+            #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+            if live.watch.is_some() {
+                if let Err(problem) = watch::pause_explicit_reload_for_test(
+                    "before-snapshot", path,
+                ) {
+                    emit(&fatal(&problem));
+                    return std::process::ExitCode::from(2);
+                }
+            }
             if !live.respond_reload(std::path::Path::new(path)) {
                 return std::process::ExitCode::from(2);
             }
@@ -1516,10 +1533,18 @@ impl Live {
             Ok(mut outcome) => {
                 #[cfg(target_os = "linux")]
                 if outcome["outcome"] == "reload-committed" && self.watch.is_some() {
+                    // Explicit file selection is not an inotify save or a
+                    // producer-fsync receipt. Prior automatic seals no longer
+                    // describe this newly selected generation.
+                    self.accepted_watch_seal = None;
                     let Some(selected) = self.selected.as_ref().cloned() else {
                         emit(&fatal("committed watch reload lost its selected file"));
                         return false;
                     };
+                    if let Err(error) = self.reconcile_explicit_watch_commit(&outcome) {
+                        emit(&fatal(&error.message));
+                        return false;
+                    }
                     if let Err(error) = self.finalize_watch_report(&mut outcome, &selected, None) {
                         emit(&fatal(&error.message));
                         return false;
@@ -1538,6 +1563,33 @@ impl Live {
                 false
             }
         }
+    }
+
+    #[cfg(target_os = "linux")]
+    fn reconcile_explicit_watch_commit(
+        &mut self,
+        report: &serde_json::Value,
+    ) -> Result<(), super::output::Failure> {
+        let sequence = report["watch_sequence"].as_u64()
+            .ok_or_else(|| fatal_failure("explicit watch commit omitted its save sequence"))?;
+        let source_hash = report["source_sha256"].as_str()
+            .ok_or_else(|| fatal_failure("explicit watch commit omitted its source hash"))?;
+        if self.selected_file_hash.as_deref() != Some(source_hash)
+            || self.selected_file_identity.is_none()
+            || report["generation"].as_u64() != Some(self.generation)
+        {
+            return Err(fatal_failure(
+                "explicit watch commit differs from its selected source identity"));
+        }
+        #[cfg(feature = "live-test-barrier")]
+        watch::pause_explicit_reload_for_test("before-reconcile", source_hash)
+            .map_err(fatal_failure)?;
+        // A committed A must never be automatically reloaded from a leftover
+        // A notification, even if an unsupported in-place edit drifts after
+        // its commit. B has a different sequence and stays pending.
+        self.watch.as_mut().ok_or_else(||
+            fatal_failure("explicit watch commit lost its directory watcher"))?
+            .consume_published_pending(sequence).map_err(fatal_failure)
     }
 
     fn reload_report(
@@ -1564,18 +1616,18 @@ impl Live {
 
     #[cfg(target_os = "linux")]
     fn respond_watch(&mut self) -> bool {
-        let (selected, sequence, trusted_save) = {
+        let (selected, sequence, paired_rename) = {
             let watcher = self.watch.as_mut().expect("watch loop requires a watcher");
             if let Err(problem) = watcher.drain() {
                 emit(&fatal(&problem));
                 return false;
             }
-            let Some((sequence, trusted_save)) = watcher.take_pending() else {
+            let Some((sequence, paired_rename)) = watcher.take_pending() else {
                 return true;
             };
-            (watcher.selected().to_path_buf(), sequence, trusted_save)
+            (watcher.selected().to_path_buf(), sequence, paired_rename)
         };
-        if !trusted_save {
+        if !paired_rename {
             emit(&refusal(self.generation, &self.last_stack,
                 "watched save requires a paired atomic rename of the selected .tmp file"));
             return true;
@@ -1587,19 +1639,33 @@ impl Live {
                 return true;
             }
         };
+        let sealed = match self.watch.as_mut().expect("watch loop requires a watcher")
+            .seal_snapshot(&candidate, sequence, self.generation)
+        {
+            Ok(sealed) => sealed,
+            Err(problem) => {
+                emit(&refusal(self.generation, &self.last_stack, &problem));
+                return true;
+            }
+        };
+        self.pending_watch_seal = Some(sealed);
         let decision = self.reload_candidate(selected.clone(), candidate);
         let mut report = match self.reload_report(decision) {
             Ok(report) => report,
             Err(error) => {
+                self.pending_watch_seal = None;
                 emit(&fatal(&error.message));
                 return false;
             }
         };
         if report["outcome"] == "reload-committed" {
+            self.accepted_watch_seal = self.pending_watch_seal.take();
             if let Err(error) = self.finalize_watch_report(&mut report, &selected, Some(sequence)) {
                 emit(&fatal(&error.message));
                 return false;
             }
+        } else {
+            self.pending_watch_seal = None;
         }
         emit(&report);
         true
@@ -1618,16 +1684,23 @@ impl Live {
         watcher.drain().map_err(fatal_failure)?;
         let sequence = report["watch_sequence"].as_u64();
         let observed = snapshot(selected).ok();
+        let sealed_current = expected_sequence.is_none_or(|event_sequence|
+            self.accepted_watch_seal.as_ref().is_some_and(|seal|
+                observed.as_ref().is_some_and(|after|
+                    seal.committed_matches(after, event_sequence, self.generation))));
         let current = sequence == Some(watcher.sequence())
             && expected_sequence.is_none_or(|event_sequence| sequence == Some(event_sequence))
+            && sealed_current
             && report["source_freshness"] == "matched-at-postpublish-check"
             && observed.as_ref().is_some_and(|after|
                 report["source_sha256"].as_str() == Some(after.digest.as_str())
                     && selected_identity == Some((after.identity, after.directory)));
         let fields = report.as_object_mut()
             .ok_or_else(|| fatal_failure("committed reload report is not an object"))?;
-        fields.insert("watch_save_protocol".into(),
-            serde_json::json!("fsync-temp-then-atomic-rename"));
+        if expected_sequence.is_some() {
+            fields.insert("watch_save_protocol".into(),
+                serde_json::json!("paired-temp-rename-host-fsynced-snapshot"));
+        }
         if current {
             fields.insert("source_freshness".into(),
                 serde_json::json!("matched-at-watch-ack-check"));
@@ -1728,6 +1801,11 @@ impl Live {
         };
         #[cfg(not(target_os = "linux"))]
         let watch_sequence = None;
+        #[cfg(target_os = "linux")]
+        if !self.sealed_candidate_is_current(&candidate, watch_sequence) {
+            return Ok(ReloadDecision::Refused(
+                "watched source or host seal changed before reload preparation".into()));
+        }
         if self.declared.is_some() {
             return self.reload_declared_candidate(selected, candidate, watch_sequence);
         }
@@ -1784,6 +1862,10 @@ impl Live {
         candidate: &Snapshot,
         watch_sequence: Option<u64>,
     ) -> Result<bool, super::output::Failure> {
+        #[cfg(target_os = "linux")]
+        if !self.sealed_candidate_is_current(candidate, watch_sequence) {
+            return Ok(false);
+        }
         if !same_snapshot(selected, candidate) {
             return Ok(false);
         }
@@ -1798,7 +1880,23 @@ impl Live {
         }
         #[cfg(not(target_os = "linux"))]
         let _ = watch_sequence;
-        Ok(same_snapshot(selected, candidate))
+        let selected_current = same_snapshot(selected, candidate);
+        #[cfg(target_os = "linux")]
+        return Ok(selected_current
+            && self.sealed_candidate_is_current(candidate, watch_sequence));
+        #[cfg(not(target_os = "linux"))]
+        Ok(selected_current)
+    }
+
+    #[cfg(target_os = "linux")]
+    fn sealed_candidate_is_current(
+        &self,
+        candidate: &Snapshot,
+        watch_sequence: Option<u64>,
+    ) -> bool {
+        self.pending_watch_seal.as_ref().is_none_or(|seal|
+            watch_sequence.is_some_and(|sequence|
+                seal.matches(candidate, sequence, self.generation)))
     }
 
     /// File reload, guest proposal and direct definition admission share one
