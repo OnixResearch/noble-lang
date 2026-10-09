@@ -148,11 +148,11 @@
         postUnpack = ''
           ln -s ${reviewedVendor}/source-registry-0 "$sourceRoot/reviewed-vendor"
         '';
-        # The exported CLI and m3-wasm's default CLI must exclude test-only
-        # live-test-barrier and LIVE-05 host grants; all-feature tests remain
-        # separate from the binary built for installation.
+        # Neither the exported CLI nor the package's pre-install test build may
+        # contain live-test-barrier or LIVE-05 host grants. The all-feature
+        # suite is the separate rust-tests check, not the installed artifact.
         cargoBuildFlags = [ "--locked" "--package" "noble-cli" "--bin" "noble" "--no-default-features" ];
-        cargoTestFlags = [ "--locked" "--workspace" "--all-targets" "--all-features" ];
+        cargoTestFlags = [ "--locked" "--workspace" "--all-targets" "--no-default-features" ];
         nativeCheckInputs = builtins.attrValues wasmVerificationTools;
         strictDeps = true;
       };

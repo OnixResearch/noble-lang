@@ -157,7 +157,7 @@
   "crates/noble-wasm/wit/worker-send.wit" = "b4adfaa688269289a28a5c8a71e9e5a5565ce1b8d6dcc5edf757fd679f71d5d9",
   "dylint.toml" = "e25769e8a4ee2f1fff0d98e22744289a3bebe1b676c74dda98d72e0ee70354e4",
   "flake.lock" = "3c0558d476937ec8d50f2e2185847ea33ea9d394e5f228f6f103b9fa5ffc3d2d",
-  "flake.nix" = "3c82823367c00fbe266287dd71631ce77aba70643772a2095b8c63c735f09b43",
+  "flake.nix" = "0864651bba59272d458a9bd7b65657546efc850d03043d05ab95e0366c500bc6",
   "nix/aeneas-string-escaping.patch" = "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
   "nix/boundary-controls.nix" = "80c70cdc8dd6b66e53e7086555b3ebcae91b794f3e0045897b4f1b0415ccf4ae",
   "nix/m3-wasm-app.nix" = "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
