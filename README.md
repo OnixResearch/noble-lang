@@ -683,8 +683,8 @@ Artifact and non-live modes still enforce their selected external tools.
 Scoped source, Wasm lowering, and byte-policy unit tests passed. A separately
 built `--no-default-features` CLI denied an injected fixture grant as
 `unbound-word` with zero guest requests, then executed ordinary live source.
-These donor-only runs predate the combined watch/harness source; its guest
-behavior has not yet been exercised.
+These donor-only runs predate the combined watch/harness source; they are
+not evidence for the integrated tree's guest behavior.
 The separately combined watch and harness source rebinds the changed
 selection-policy file SHA-256 entries in authored Nickel and exported JSON.
 Extraction `configuration.features` remains `[]` (no individually named
@@ -695,6 +695,24 @@ workspace feature-name set is exactly `["live-test-barrier",
 source-bound policy update, not a selected Nix execution or LIVE-05
 acceptance: selected Octet standards, reviewed vendor and NAR inputs remain
 unavailable here.
+
+At combined source `727488acef1297ae52f572a53f87f98e91553fe6`, separate
+offline locked real-child checks passed for the watched missing-import lexer
+refusal, the accepted old `21` before fsynced watch sequence 1 / generation 2
+ACK and new `22`, the one-shot `test.emit:A` then `test.abort` terminal trap,
+and default/stale/foreign grant denial. Both private feature flags were enabled
+together for the latter three checks. Focused source (1), Wasm compiler (2),
+and checked import-byte (5) admission tests passed. A separately built
+`--no-default-features` CLI rejected an injected fixture grant with zero guest
+requests and then returned ordinary `21`. An attempted direct combined-feature
+JSONL smoke observed only its startup ACK (generation 1 / watch sequence 0);
+the driver used an incorrect expected startup digest and stopped before the
+paired rename or guest effect. No combined direct-feature JSONL effect receipt
+was obtained, and the scenario was not repeated after the exclusive Aspen
+process slot was lost to unrelated work. The private scoped receipt at
+`$HOME/.cache/noble-live05-combined-20261009-scoped-receipt.json` binds the
+combined source, selected tool and CLI hashes, and bounded logs. These are
+scoped tests, not a selected Nix gate or canonical LIVE-05 acceptance.
 
 Scoped real-child tests also stop inside an actual old Wasm guest frame before
 queuing a reload, and after candidate A's checked V8 Wasm compilation but

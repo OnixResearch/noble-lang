@@ -54,6 +54,23 @@ binding; its SHA-256 is reported separately because it cannot be embedded
 in the commit it binds. Full module/ABI artifact provenance and canonical
 proof remain open.
 
+The separate combined watch/harness source `727488acef1297ae52f572a53f87f98e91553fe6`
+passed focused offline locked real-child watched lexer refusal, old `21` before
+fsynced watch sequence 1 / generation 2 ACK then new `22`, actual one-shot
+`test.emit:A` followed by `test.abort` terminal trap, and default/stale/foreign
+grant denial. The latter three ran with both private feature flags together.
+Source/Wasm/import-byte admission checks passed 1/2/5; a separately built
+feature-free CLI refused an injected fixture grant with zero guest requests
+and still returned ordinary `21`. A direct combined-feature JSONL attempt
+stopped at startup generation 1 / sequence 0 on the driver's incorrect
+expected initial SHA-256, before any rename or effect request; no direct
+combined effect receipt was obtained or rerun after loss of the exclusive
+process slot. The external private scoped receipt at
+`$HOME/.cache/noble-live05-combined-20261009-scoped-receipt.json` binds the
+source, CLI and bounded test logs without embedding its own hash in this
+commit. Selected Nix prerequisites and canonical LIVE-05 case/proof remain
+absent/not-run/open.
+
 Indirect self-rebind/cycle refusal was exercised in scoped live-child checks;
 general proof remains open. Integrated source `8b1504b` passed 55 scoped
 live CLI tests and five selected real guest traces on CLI SHA-256
