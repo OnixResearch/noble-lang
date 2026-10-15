@@ -25,7 +25,7 @@ It performs no process execution and emits no execution receipt.
 Every flake output forces its rejection decision before exposing a package or check.
 
 The checker requires eight immutable source revisions with NAR hashes.
-This isolated candidate selection compares 142 file digests across the flake and
+This isolated candidate selection compares 143 file digests across the flake and
 offline inputs, workspace/runtime source, proof projects, selected component
 pins, the content-hashed Octet correction recipe and five patches,
 source-bound verification/build recipes, the architecture capacity policy,
@@ -89,8 +89,8 @@ Result-library, and declared-modules-v1 peer locks: eight locks in all. It
 rejects conflicting or missing registry checksums, checks all 237 distinct
 crate archive SHA-256 values, and produces `source-registry-0` plus a
 lock/archive provenance manifest. The locally realized candidate output
-`/nix/store/3sl4kjvccw33wbrhb7qf57myyrzj371c-noble-reviewed-offline-vendor`
-has measured NAR `sha256-23BKxkztQ6megprdki32gwDS8LXsqQPIsCnI1CYGHTQ=`,
+`/nix/store/vnxgnkzna9csg9m7rd31pazj945ibf38-noble-reviewed-offline-vendor`
+has measured NAR `sha256-Yhlrb3Idkjir0HiUIb4RpH/ulhgX6/aEAFK8S84fwBo=`,
 bound in both candidate [`M5`](m5/pins.json) and [`M6`](m6/pins.json).
 These candidate-only pins are not a selected Nix, source-inventory, or
 native-assurance gate pass or independently verified signed-substitute proof.
