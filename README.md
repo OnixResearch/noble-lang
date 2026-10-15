@@ -192,15 +192,18 @@ orchestrates the checked guest phases and supplies bounded bytes and budgets.
 
 It is very slow: in a local CALC-01/02/03/09 sweep (four processes at a time)
 each line that printed a value took about 3–31 minutes (most 8–18), numeric
-errors 4.5–9 minutes and syntax/name errors under 3. Every line also replays
-each earlier `let`/`fn` first, adding roughly 6–8 minutes per definition.
+errors 4.5–9 minutes and syntax/name errors under 3. Lines run on one
+committed session: a failed line restores a byte-exact snapshot of it instead
+of replaying earlier definitions, so a line's cost does not grow with the
+number of earlier `let`/`fn` lines.
 
 The `Calculator-v1` source/worker profile is separate from Core-Bootstrap,
 Declared-Modules-v1, Text-Byte-Cursor-v1 and live profiles. Its compiler has a
 4 MiB emitted WAT ceiling rather than the ordinary 1 MiB ceiling recorded in
 the unchanged [Core ABI](crates/noble-cli/src/core/runtime/abi.json). Its
-imported Wasm memory starts at 16 pages and can grow to at most 64 pages; the
-other profiles remain fixed at 16 pages. Its worker selects ceilings of 72,362
+modules import a Wasm memory of 16 to at most 64 pages, which the worker
+allocates at 64 pages so that restores never meet a resized arena; the other
+profiles remain fixed at 16 pages. Its worker selects ceilings of 72,362
 session cells / 1,376,208 allocation bytes rather than 4,096 / 196,608; raw
 Text ingress accepts at most 65,536 bytes. Source preparation separately
 bounds 512 reachable named bodies and 896 environment rows, including derived
