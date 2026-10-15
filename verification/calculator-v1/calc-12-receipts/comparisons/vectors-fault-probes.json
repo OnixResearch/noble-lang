@@ -1,0 +1,181 @@
+{
+  "schema": "noble-calculator-vectors/v1",
+  "vectors": [
+    {
+      "id": "CALC-12/fault/integer-division",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "7 / 2",
+          "expect": {
+            "value": "7/2"
+          }
+        }
+      ],
+      "fault_prediction": {
+        "stdout": [
+          "3"
+        ],
+        "categories": []
+      },
+      "also_separates": []
+    },
+    {
+      "id": "CALC-12/fault/binary-float-decimal-parser",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "0.1",
+          "expect": {
+            "value": "1/10"
+          }
+        }
+      ],
+      "fault_prediction": {
+        "stdout": [
+          "3602879701896397/36028797018963968"
+        ],
+        "categories": []
+      },
+      "also_separates": []
+    },
+    {
+      "id": "CALC-12/fault/I64-wrapping",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "9223372036854775807 + 1",
+          "expect": {
+            "value": "9223372036854775808"
+          }
+        }
+      ],
+      "fault_prediction": {
+        "stdout": [
+          "-9223372036854775808"
+        ],
+        "categories": []
+      },
+      "also_separates": [
+        "binary-float-decimal-parser"
+      ]
+    },
+    {
+      "id": "CALC-12/fault/reversed-subtraction",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "10 - 3",
+          "expect": {
+            "value": "7"
+          }
+        }
+      ],
+      "fault_prediction": {
+        "stdout": [
+          "-7"
+        ],
+        "categories": []
+      },
+      "also_separates": []
+    },
+    {
+      "id": "CALC-12/fault/left-associated-power",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2^3^2",
+          "expect": {
+            "value": "512"
+          }
+        }
+      ],
+      "fault_prediction": {
+        "stdout": [
+          "64"
+        ],
+        "categories": []
+      },
+      "also_separates": []
+    },
+    {
+      "id": "CALC-12/fault/non-normalized-rational",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2 / 4",
+          "expect": {
+            "value": "1/2"
+          }
+        }
+      ],
+      "fault_prediction": {
+        "stdout": [
+          "2/4"
+        ],
+        "categories": []
+      },
+      "also_separates": [
+        "integer-division"
+      ]
+    },
+    {
+      "id": "CALC-12/fault/failure-mutates-session",
+      "case": "CALC-12-seeded-fault",
+      "kind": "session",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "let x = 20",
+          "expect": {
+            "value": "20"
+          }
+        },
+        {
+          "line": "let x = 1 / 0",
+          "expect": {
+            "diagnostic": {
+              "category": "DivisionByZero",
+              "span": null
+            }
+          }
+        },
+        {
+          "line": "x",
+          "expect": {
+            "value": "20"
+          }
+        }
+      ],
+      "fault_prediction": {
+        "stdout": [
+          "20"
+        ],
+        "categories": [
+          "DivisionByZero",
+          "UnknownName"
+        ]
+      },
+      "also_separates": []
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"at":"2026-10-15T17:29:59.645Z","id":"CALC-12/fault/reversed-subtraction","classification":"fail","wall_ms":520755.331136,"reasons":["stdout [\"-7\"], expected [\"7\"]"]}

@@ -1,0 +1,4 @@
+{"at":"2026-10-15T18:29:06.279Z","id":"CALC-12/shrink/00","classification":"fail","wall_ms":1143519.632704,"reasons":["stdout [\"7/4\"], expected [\"-7/4\"]"]}
+{"at":"2026-10-15T18:36:01.451Z","id":"CALC-12/shrink/01","classification":"pass","wall_ms":415081.744822,"reasons":[]}
+{"at":"2026-10-15T18:42:15.006Z","id":"CALC-12/shrink/02","classification":"pass","wall_ms":373461.608776,"reasons":[]}
+{"at":"2026-10-15T18:53:21.583Z","id":"CALC-12/shrink/03","classification":"fail","wall_ms":666481.291608,"reasons":["stdout [\"-1\"], expected [\"1\"]"]}

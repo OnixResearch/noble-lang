@@ -1,0 +1,7 @@
+{"at":"2026-10-15T19:06:49.449Z","id":"CALC-12/fault/failure-mutates-session","classification":"pass","wall_ms":1031739.703213,"reasons":[]}
+{"at":"2026-10-15T19:11:31.198Z","id":"CALC-12/fault/integer-division","classification":"pass","wall_ms":281679.944313,"reasons":[]}
+{"at":"2026-10-15T19:13:37.386Z","id":"CALC-12/fault/binary-float-decimal-parser","classification":"pass","wall_ms":126122.1447,"reasons":[]}
+{"at":"2026-10-15T19:23:27.548Z","id":"CALC-12/fault/I64-wrapping","classification":"pass","wall_ms":590107.676681,"reasons":[]}
+{"at":"2026-10-15T19:27:45.670Z","id":"CALC-12/fault/reversed-subtraction","classification":"pass","wall_ms":258062.233159,"reasons":[]}
+{"at":"2026-10-15T19:36:42.654Z","id":"CALC-12/fault/left-associated-power","classification":"pass","wall_ms":536927.559964,"reasons":[]}
+{"at":"2026-10-15T19:40:53.815Z","id":"CALC-12/fault/non-normalized-rational","classification":"pass","wall_ms":251097.053628,"reasons":[]}

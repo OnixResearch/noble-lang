@@ -1,0 +1,14 @@
+diff --git a/crates/noble-contracts/src/fixtures/calculator-expression.noble b/crates/noble-contracts/src/fixtures/calculator-expression.noble
+index 134fc35..d197499 100644
+--- a/crates/noble-contracts/src/fixtures/calculator-expression.noble
++++ b/crates/noble-contracts/src/fixtures/calculator-expression.noble
+@@ -291,7 +291,8 @@ module expr@1 [
+         swap unpair drop precedence
+         [ dup precedence ] dip swap i64.cmp
+         dup 1 = [ drop drop true ]
+-        [ dup 0 = [ drop 5 = [ false ] [ true ] if ]
++        # SEEDED FAULT left-associated-power (CALC-12): equal precedence always pops, so ^ groups left.
++        [ dup 0 = [ drop drop true ]
+           [ drop drop false ] if ] if
+     ]
+ 

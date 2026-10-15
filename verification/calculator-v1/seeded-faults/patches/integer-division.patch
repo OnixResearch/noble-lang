@@ -1,0 +1,24 @@
+diff --git a/crates/noble-contracts/src/fixtures/calculator-numeric.noble b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+index e492bbb..8ca3a5d 100644
+--- a/crates/noble-contracts/src/fixtures/calculator-numeric.noble
++++ b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+@@ -1207,7 +1207,18 @@ module num@1 [
+     signature op_divisor_admit forall<S:stack>
+         [ S Pair<Pair<Rat,Rat>,Budget> -- S OpInput ! pure ]
+     export op_divisor_admit
+-    def op_divisor_admit [ unpair 3 op_input ]
++    # SEEDED FAULT integer-division (CALC-12): integer operands divide with
++    # the truncating I64 quotient, so a / b becomes trunc(a/b) / 1.
++    def op_divisor_admit [
++        unpair
++        [ dup unpair rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = swap rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = [ ] [ drop false ] if
++          [ unpair [ rat_num ] dip rat_num
++            pair dup unpair [ calc_big@1.big_sign ] dip calc_big@1.big_sign calc_bits@1.bool_xor
++            swap unpair [ calc_big@1.big_bits calc_bits@1.bits_to_i64_positive ] dip calc_big@1.big_bits calc_bits@1.bits_to_i64_positive i64.div-rem drop drop
++            swap [ 0 swap - ] [ ] if calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new 1 calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new pair ]
++          [ ] if ] dip
++        3 op_input
++    ]
+ 
+     signature op_divisor_deny forall<S:stack>
+         [ S Unit -- S calc_errors@1.NumericError ! pure ]

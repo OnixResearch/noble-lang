@@ -1,0 +1,14 @@
+diff --git a/crates/noble-contracts/src/fixtures/calculator-numeric.noble b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+index e492bbb..78fe0fc 100644
+--- a/crates/noble-contracts/src/fixtures/calculator-numeric.noble
++++ b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+@@ -1161,7 +1161,8 @@ module num@1 [
+     signature op_begin_sub forall<S:stack>
+         [ S Rat Rat Budget -- S OpInput ! pure ]
+     export op_begin_sub
+-    def op_begin_sub [ [ pair ] dip 1 op_input ]
++    # SEEDED FAULT reversed-subtraction (CALC-12): the operands are swapped, so a - b computes b - a.
++    def op_begin_sub [ [ swap pair ] dip 1 op_input ]
+ 
+     signature op_begin_mul forall<S:stack>
+         [ S Rat Rat Budget -- S OpInput ! pure ]

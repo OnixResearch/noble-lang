@@ -1,0 +1,4 @@
+fault=failure-mutates-session
+base_rev=ffcce532e94965d90417ca0687c155b343d7ca8d
+patch_sha256=951105a67b55fbd2b4bd18cb72ccdfa9dbad176c91196861374c1068f4f466fc
+binary_sha256=dd13adb0c5adff463c587500c13cfa33f92a97a9881fb7eeb0cd68971c75cf52

@@ -1,0 +1,46 @@
+diff --git a/crates/noble-contracts/src/fixtures/calculator-numeric.noble b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+index e492bbb..c407621 100644
+--- a/crates/noble-contracts/src/fixtures/calculator-numeric.noble
++++ b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+@@ -1156,17 +1156,38 @@ module num@1 [
+     signature op_begin_add forall<S:stack>
+         [ S Rat Rat Budget -- S OpInput ! pure ]
+     export op_begin_add
+-    def op_begin_add [ [ pair ] dip 0 op_input ]
++    # SEEDED FAULT I64-wrapping (CALC-12): integer operands are combined with
++    # Core's wrapping I64 word, so the result wraps modulo 2^64.
++    def op_begin_add [
++        [ pair dup unpair rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = swap rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = [ ] [ drop false ] if
++          [ unpair [ rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if ] dip rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if +
++            calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new 0 calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new pair ]
++          [ ] if ] dip 0 op_input
++    ]
+ 
+     signature op_begin_sub forall<S:stack>
+         [ S Rat Rat Budget -- S OpInput ! pure ]
+     export op_begin_sub
+-    def op_begin_sub [ [ pair ] dip 1 op_input ]
++    # SEEDED FAULT I64-wrapping (CALC-12): integer operands are combined with
++    # Core's wrapping I64 word, so the result wraps modulo 2^64.
++    def op_begin_sub [
++        [ pair dup unpair rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = swap rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = [ ] [ drop false ] if
++          [ unpair [ rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if ] dip rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if -
++            calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new 0 calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new pair ]
++          [ ] if ] dip 1 op_input
++    ]
+ 
+     signature op_begin_mul forall<S:stack>
+         [ S Rat Rat Budget -- S OpInput ! pure ]
+     export op_begin_mul
+-    def op_begin_mul [ [ pair ] dip 2 op_input ]
++    # SEEDED FAULT I64-wrapping (CALC-12): integer operands are combined with
++    # Core's wrapping I64 word, so the result wraps modulo 2^64.
++    def op_begin_mul [
++        [ pair dup unpair rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = swap rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = [ ] [ drop false ] if
++          [ unpair [ rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if ] dip rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if *
++            calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new 1 calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new pair ]
++          [ ] if ] dip 2 op_input
++    ]
+ 
+     signature op_begin_div forall<S:stack>
+         [ S Rat Rat Budget

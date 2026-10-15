@@ -1,0 +1,1 @@
+{"at":"2026-10-15T17:48:23.601Z","id":"CALC-12/fault/integer-division","classification":"native-failure","wall_ms":418686.440256,"reasons":["exit 1","InfrastructureFailure: swap [ [ unpair swap [ num.op_first_stage_div_raw ] dip swap [ pair inl ] [ drop drop unit inr ] result@1.Result.match ] [ inr ] case ] dip swap: independent source compilation refused (exhausted)"]}

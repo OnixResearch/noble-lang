@@ -1,0 +1,1 @@
+{"at":"2026-10-15T21:05:25.593Z","id":"CALC-12/fault/I64-wrapping","classification":"native-failure","wall_ms":297299.779617,"reasons":["exit 1","InfrastructureFailure: swap [ [ unpair unpair [ unpair ] dip num.op_begin_add pair result@1.Result.Ok ] [ result@1.Result.Err ] result@1.Result.match ] dip swap: Check [0,137): calculator selected environment clone fanout exceeded"]}

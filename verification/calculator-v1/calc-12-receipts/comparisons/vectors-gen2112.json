@@ -1,0 +1,294 @@
+{
+  "schema": "noble-calculator-vectors/v1",
+  "generator": {
+    "seed": 2112,
+    "count": 12,
+    "sessions": 2,
+    "provenance": {
+      "oracle_files": {
+        "rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+        "calculator.mjs": "eb09edad9726d25539bb4dffe69f26bd6457316351518b828d0e6f698ab820c9",
+        "generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+        "faults.mjs": "1199a4f0c7aec7cc700b2d20dc84f3486631003696f5c2c6a4e350269130e413",
+        "compare.mjs": "19a483254a3d1be5bb21e4c8fdd5c3f557c69c43f9860dde02b8a1c36b3249bd"
+      },
+      "node": "v24.13.0",
+      "node_path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node"
+    }
+  },
+  "vectors": [
+    {
+      "id": "CALC-12/gen-2112/01",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "11 / (2 + 8.68)",
+          "expect": {
+            "value": "275/267"
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/02",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "1^-3 - 4",
+          "expect": {
+            "value": "-3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/03",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "5 / 4 - 6 / 2",
+          "expect": {
+            "value": "-7/4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/04",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2.3 - (0.5 + 2)",
+          "expect": {
+            "value": "-1/5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/05",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "3 / (4 - 4)",
+          "expect": {
+            "diagnostic": {
+              "category": "DivisionByZero",
+              "span": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/06",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "((4))^0 + )",
+          "expect": {
+            "diagnostic": {
+              "category": "SyntaxError",
+              "span": [
+                10,
+                11
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/07",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2^64 + 1",
+          "expect": {
+            "value": "18446744073709551617"
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/08",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "1^3^-2",
+          "expect": {
+            "diagnostic": {
+              "category": "NonIntegerExponent",
+              "span": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/09",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "5 * (9)",
+          "expect": {
+            "value": "45"
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/10",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "10 - (10)",
+          "expect": {
+            "value": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/11",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "3^-1 - 4",
+          "expect": {
+            "value": "-11/3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/12",
+      "case": "CALC-12-generated",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "4 / 8 - 2 / 6",
+          "expect": {
+            "value": "1/6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/session-1",
+      "case": "CALC-12-generated",
+      "kind": "session",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "let x = 5",
+          "expect": {
+            "silent": true
+          }
+        },
+        {
+          "line": "fn f(y)=x * y",
+          "expect": {
+            "silent": true
+          }
+        },
+        {
+          "line": "let x = 8",
+          "expect": {
+            "silent": true
+          }
+        },
+        {
+          "line": "f(2)",
+          "expect": {
+            "value": "10"
+          }
+        },
+        {
+          "line": "let x = 3 / 0",
+          "expect": {
+            "diagnostic": {
+              "category": "DivisionByZero",
+              "span": null
+            }
+          }
+        },
+        {
+          "line": "x",
+          "expect": {
+            "value": "8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "CALC-12/gen-2112/session-2",
+      "case": "CALC-12-generated",
+      "kind": "session",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "let x = 1",
+          "expect": {
+            "silent": true
+          }
+        },
+        {
+          "line": "fn f(y)=x * y",
+          "expect": {
+            "silent": true
+          }
+        },
+        {
+          "line": "let x = 8",
+          "expect": {
+            "silent": true
+          }
+        },
+        {
+          "line": "f(1)",
+          "expect": {
+            "value": "1"
+          }
+        }
+      ]
+    }
+  ]
+}

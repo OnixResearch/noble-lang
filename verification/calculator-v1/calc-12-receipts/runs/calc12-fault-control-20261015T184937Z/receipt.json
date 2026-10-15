@@ -1,0 +1,1308 @@
+{
+  "schema": "noble-calculator-v1-cli-observation/v1",
+  "result": "completed",
+  "mode": "prebuilt-binary-cli-vector-observation",
+  "claim": "finite-prebuilt-calculator-cli-observation-only",
+  "non_claims": [
+    "canonical CALC case promotion or any state/evidence change",
+    "Calculator-v1 acceptance",
+    "source-bound release evidence: the binary hash is checked, its build source is owner-supplied",
+    "CALC-04, CALC-05, CALC-08 and CALC-10 through CALC-13",
+    "independent numeric oracle: expectations are the cases file values",
+    "parser correctness or a universal arithmetic property from finite vectors",
+    "a timeout, host limit or native failure as a ResourceLimit or as a pass",
+    "performance targets"
+  ],
+  "run": {
+    "started": "2026-10-15T18:49:37.553Z",
+    "finished": "2026-10-15T19:40:53.816Z",
+    "host": "aspen3",
+    "kernel": "6.18.54",
+    "cpus": 32,
+    "memory_bytes": 130458030080,
+    "argv": [
+      "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "/home/brittonr/.cache/noble-issues/wt/issue-19/verification/calculator-v1/acceptance.mjs",
+      "--binary",
+      "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+      "--binary-sha256",
+      "97774049ad60747b283a254ee6d586db4515e39b1e9fe699baa48220dcb7aae6",
+      "--source-id",
+      "ffcce53 + seeded-faults/patches/control.patch (issue-21 mutant; control = unpatched)",
+      "--build-profile",
+      "release",
+      "--out",
+      "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z",
+      "--memory-max",
+      "2G",
+      "--concurrency",
+      "1",
+      "--no-controls",
+      "--vectors",
+      "/home/brittonr/.cache/noble-issues/work/issue-21/fv/all.json"
+    ]
+  },
+  "source": {
+    "repository": "/home/brittonr/.cache/noble-issues/wt/issue-19",
+    "commit": "1e16953b8d69084b1bcc946ab03cab7e2da53fd2",
+    "tracked_changes": "",
+    "cases": {
+      "path": "specs/conformance/calculator-cases.json",
+      "sha256": "2afc188ff6d2abca2d85b879e65235ee833ed7e72add24df68ea5c027a405202",
+      "revision": "0.1.0-draft.5"
+    },
+    "mapping": {
+      "path": "verification/calculator-v1/cli-mapping.json",
+      "sha256": "133c515668357a85aadd565df288af4f92eb4169c4002758c7da58e68aa94ec1"
+    },
+    "runner": [
+      {
+        "path": "verification/calculator-v1/acceptance.mjs",
+        "sha256": "ad6945ffada81646e4051ecb9ffe9d7230020297d8f3ff40c068031c10aab81e"
+      },
+      {
+        "path": "verification/calculator-v1/supervise.mjs",
+        "sha256": "3076b60b768c7b668e15bcc42d125e8edd0673aa1604abb4c3c88198d3853202"
+      },
+      {
+        "path": "verification/calculator-v1/vectors.mjs",
+        "sha256": "43e71eb5a7e918e27abda101e09feadff1ddbcb2b592b85497d8483f5b750b25"
+      },
+      {
+        "path": "verification/calculator-v1/cli-mapping.json",
+        "sha256": "133c515668357a85aadd565df288af4f92eb4169c4002758c7da58e68aa94ec1"
+      }
+    ],
+    "embedded": [
+      {
+        "path": "crates/noble-cli/src/calculator.rs",
+        "sha256": "1dc01894a5c432df2e8b878026a9a1ce588ce0afc8bfed1e611b16ce5ca6825c"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/abi.json",
+        "sha256": "1284792be03cf5e544dc51b977e9d7c0ee7b38d743698c0420f14ef408249a44"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/config.json",
+        "sha256": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/declared-abi.json",
+        "sha256": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/engine-host.mjs",
+        "sha256": "9bac85c54b39dc7491047b835e698ee2f242fbaea685573a85ea6b9f4d61491d"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/engine.mjs",
+        "sha256": "e4a10966004297933606823a356f54393c809f638dd98afc275dc188033d4acf"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/preamble.mjs",
+        "sha256": "1787a81093cfb8c0286fa09d5bc4129dcb5ba5cd75a3a407b9f25009d75ceb28"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/protocol.mjs",
+        "sha256": "43ee76af0da8e21c04daec383ca4d7db90c98ee9a29ba240663726591c1f13e8"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+        "sha256": "bd18a6fb8a89ca85a2e162ac1ee7b0bbba6b77e68632f0d9090cbbf42f9933c2"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-policy.mjs",
+        "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+        "sha256": "a2c5eb2b42955ad565b71d0f67f2ebab9c88ac124fbe2996b74f150f1cf29692"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/values.mjs",
+        "sha256": "add0eda94de18275fd8552ec5e0b5fa0f4a0f2ba80ffe02ed55d9931e9deafb4"
+      },
+      {
+        "path": "crates/noble-cli/src/core/worker.rs",
+        "sha256": "eacf5553483aaedda93f6b4ce014454840eda52198caa487a722f27068d93121"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calc-errors.noble",
+        "sha256": "319efe57c1044d650d356744aa94b783205f56d3b65b3383a753dfc26115aa3d"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-bigint.noble",
+        "sha256": "ff93762aba8f2e9a14853f1c258f23fd6ed7b93dbe2f5963c1dc4083aadbcade"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-bindings.noble",
+        "sha256": "d35ec885d16df3b880867e2fd1c57cb16d7dc5cdb8cb48793f9e88913e580166"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-bits.noble",
+        "sha256": "8b9ad75b3b19d180732f348d27497ce60fbcc6c9922e32e102e5e137f46ade7a"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-decimal.noble",
+        "sha256": "a7664741535f30a36befa428d4626befdd3e29a042f896d5bc67f6ca773cb7ea"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-definitions.noble",
+        "sha256": "da61b1eebc4bec5270a88f4b7dfe560e5641a7b05212dc352dc89d5a0678f7ab"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-display.noble",
+        "sha256": "f3976f0ded740f45a666ebfa81b8b1f85a094bbc91be9db7b2eb69a1724a98f7"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-expression.noble",
+        "sha256": "eed139b3c176c1a24adaa63a5a34bdaf20b30c80a3b4eb5585272a04d2a40efa"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-lexical.noble",
+        "sha256": "4c9f9d80528ff4ba2cff6d22181b34f684b5de3e2e4a3f2c029c4be8a4979dcf"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-numeric.noble",
+        "sha256": "22b9811481c8806f6eb9dd094e212d69f71208a27fa17fd669f2c7ea81c9544a"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/result.noble",
+        "sha256": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80"
+      }
+    ],
+    "vector_file": {
+      "path": "/home/brittonr/.cache/noble-issues/work/issue-21/fv/all.json",
+      "sha256": "ec9a457af3ac2fb2494c534fe10b97252577064485f24508ce446135694aadeb"
+    }
+  },
+  "binary": {
+    "path": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+    "realpath": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+    "sha256": "97774049ad60747b283a254ee6d586db4515e39b1e9fe699baa48220dcb7aae6",
+    "bytes": 28281808,
+    "build_profile": "release",
+    "source_identity": "ffcce53 + seeded-faults/patches/control.patch (issue-21 mutant; control = unpatched)"
+  },
+  "toolchain": {
+    "runner_node": {
+      "path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "version": "v24.13.0"
+    },
+    "worker_node": {
+      "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "version": "v24.13.0",
+      "error": null
+    },
+    "assembler": {
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+        "--internal-calculator-wat-version"
+      ],
+      "status": 0,
+      "stdout": "noble-calculator-wat 1.243.0"
+    }
+  },
+  "config": {
+    "concurrency": 1,
+    "vector_timeout_ms": 7200000,
+    "session_timeout_ms": 21600000,
+    "memory_max": "2G",
+    "memory_wrapper": [
+      "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+      "--user",
+      "--scope",
+      "--quiet",
+      "--collect",
+      "-p",
+      "MemoryMax=2G",
+      "-p",
+      "MemorySwapMax=0",
+      "-p",
+      "OOMPolicy=continue",
+      "--"
+    ],
+    "sample_ms": 1000,
+    "calculator_args": [],
+    "child_env": {
+      "PATH": "/nonexistent",
+      "LANG": "C",
+      "LC_ALL": "C",
+      "RUST_BACKTRACE": "1",
+      "TMPDIR": "<OUTPUT>/tmp/<vector>"
+    },
+    "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-19",
+    "selection": {
+      "cases": [],
+      "vectors": [],
+      "controls": false,
+      "controls_only": false
+    }
+  },
+  "vectors": [
+    {
+      "id": "CALC-12/fault/integer-division",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-19/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/vectors/CALC-12_fault_integer-division/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-19",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/tmp/CALC-12_fault_integer-division"
+      },
+      "timeout_ms": 7200000,
+      "stdin": {
+        "file": "vectors/CALC-12_fault_integer-division/stdin",
+        "sha256": "640d730e6142ba1f432aaa4dbb176fa104c6b8f6b5421bc1107df40783d0a339",
+        "bytes": 6,
+        "text": "7 / 2\n"
+      },
+      "expected": {
+        "stdout": [
+          "7/2"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "observed": {
+        "started_at": "2026-10-15T19:06:49.453Z",
+        "status": 0,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 281679.944313,
+        "stdout": {
+          "file": "vectors/CALC-12_fault_integer-division/stdout",
+          "sha256": "c81a4cae90bb0ee73c120b0f74c292afe1fa5d48a8a4988802451662e0d943ae",
+          "bytes": 4,
+          "text": "7/2\n"
+        },
+        "stderr": {
+          "file": "vectors/CALC-12_fault_integer-division/stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "text": ""
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 282,
+          "processes": {
+            "2102533": {
+              "name": "noble-control",
+              "peak_rss_kib": 60668
+            },
+            "2102859": {
+              "name": "MainThread",
+              "peak_rss_kib": 107680
+            },
+            "2103206": {
+              "name": "MainThread",
+              "peak_rss_kib": 220932
+            },
+            "2122046": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "2167740": {
+              "name": "noble-control",
+              "peak_rss_kib": 4120
+            }
+          },
+          "peak_tree_rss_kib": 328104,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p2102526-i94312940.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 289079296,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "7 / 2",
+          "expect": {
+            "value": "7/2"
+          },
+          "observed_positional": "7/2"
+        }
+      ],
+      "classification": "pass",
+      "reasons": []
+    },
+    {
+      "id": "CALC-12/fault/binary-float-decimal-parser",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-19/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/vectors/CALC-12_fault_binary-float-decimal-parser/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-19",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/tmp/CALC-12_fault_binary-float-decimal-parser"
+      },
+      "timeout_ms": 7200000,
+      "stdin": {
+        "file": "vectors/CALC-12_fault_binary-float-decimal-parser/stdin",
+        "sha256": "a6311009c6c322ca8ac2e620cff5204f0c3af23115d403293a0cb5be36796688",
+        "bytes": 4,
+        "text": "0.1\n"
+      },
+      "expected": {
+        "stdout": [
+          "1/10"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "observed": {
+        "started_at": "2026-10-15T19:11:31.199Z",
+        "status": 0,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 126122.1447,
+        "stdout": {
+          "file": "vectors/CALC-12_fault_binary-float-decimal-parser/stdout",
+          "sha256": "54142ecf32950a6324db3fded22e0da191a8d881ae586026d22eb580acb5802b",
+          "bytes": 5,
+          "text": "1/10\n"
+        },
+        "stderr": {
+          "file": "vectors/CALC-12_fault_binary-float-decimal-parser/stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "text": ""
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 126,
+          "processes": {
+            "2170753": {
+              "name": "noble-control",
+              "peak_rss_kib": 60480
+            },
+            "2171206": {
+              "name": "MainThread",
+              "peak_rss_kib": 106728
+            },
+            "2171613": {
+              "name": "MainThread",
+              "peak_rss_kib": 207036
+            }
+          },
+          "peak_tree_rss_kib": 370740,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p2170677-i94381091.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 334110720,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "0.1",
+          "expect": {
+            "value": "1/10"
+          },
+          "observed_positional": "1/10"
+        }
+      ],
+      "classification": "pass",
+      "reasons": []
+    },
+    {
+      "id": "CALC-12/fault/I64-wrapping",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-19/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/vectors/CALC-12_fault_I64-wrapping/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-19",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/tmp/CALC-12_fault_I64-wrapping"
+      },
+      "timeout_ms": 7200000,
+      "stdin": {
+        "file": "vectors/CALC-12_fault_I64-wrapping/stdin",
+        "sha256": "a1de396186c1a8fb137a975b4e94fd4c2d3e569de8e8ff9d1aa554f1dba58a96",
+        "bytes": 24,
+        "text": "9223372036854775807 + 1\n"
+      },
+      "expected": {
+        "stdout": [
+          "9223372036854775808"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "observed": {
+        "started_at": "2026-10-15T19:13:37.387Z",
+        "status": 0,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 590107.676681,
+        "stdout": {
+          "file": "vectors/CALC-12_fault_I64-wrapping/stdout",
+          "sha256": "83acd6ec9b70e1b3d1bf22d3451ebba0ea14c2de3fc46dcc761886521b339147",
+          "bytes": 20,
+          "text": "9223372036854775808\n"
+        },
+        "stderr": {
+          "file": "vectors/CALC-12_fault_I64-wrapping/stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "text": ""
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 590,
+          "processes": {
+            "2200771": {
+              "name": "noble-control",
+              "peak_rss_kib": 60916
+            },
+            "2200987": {
+              "name": "MainThread",
+              "peak_rss_kib": 108316
+            },
+            "2201578": {
+              "name": "MainThread",
+              "peak_rss_kib": 219748
+            },
+            "2203408": {
+              "name": "noble-control",
+              "peak_rss_kib": 3916
+            },
+            "2206761": {
+              "name": "noble-control",
+              "peak_rss_kib": 3860
+            },
+            "2236379": {
+              "name": "noble-control",
+              "peak_rss_kib": 2268
+            },
+            "2236791": {
+              "name": "noble-control",
+              "peak_rss_kib": 4692
+            },
+            "2239764": {
+              "name": "noble-control",
+              "peak_rss_kib": 5372
+            },
+            "2253542": {
+              "name": "noble-control",
+              "peak_rss_kib": 0
+            },
+            "2271773": {
+              "name": "noble-control",
+              "peak_rss_kib": 4776
+            },
+            "2273030": {
+              "name": "noble-control",
+              "peak_rss_kib": 5032
+            },
+            "2297033": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "2335989": {
+              "name": "noble-control",
+              "peak_rss_kib": 4524
+            }
+          },
+          "peak_tree_rss_kib": 327296,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p2200724-i94411138.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 290189312,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "9223372036854775807 + 1",
+          "expect": {
+            "value": "9223372036854775808"
+          },
+          "observed_positional": "9223372036854775808"
+        }
+      ],
+      "classification": "pass",
+      "reasons": []
+    },
+    {
+      "id": "CALC-12/fault/reversed-subtraction",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-19/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/vectors/CALC-12_fault_reversed-subtraction/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-19",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/tmp/CALC-12_fault_reversed-subtraction"
+      },
+      "timeout_ms": 7200000,
+      "stdin": {
+        "file": "vectors/CALC-12_fault_reversed-subtraction/stdin",
+        "sha256": "0ae0e51aee07bfd04300fbdbbaaa26cbfc1c2f1846eee7f4df7941d45fc96a2c",
+        "bytes": 7,
+        "text": "10 - 3\n"
+      },
+      "expected": {
+        "stdout": [
+          "7"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "observed": {
+        "started_at": "2026-10-15T19:23:27.549Z",
+        "status": 0,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 258062.233159,
+        "stdout": {
+          "file": "vectors/CALC-12_fault_reversed-subtraction/stdout",
+          "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+          "bytes": 2,
+          "text": "7\n"
+        },
+        "stderr": {
+          "file": "vectors/CALC-12_fault_reversed-subtraction/stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "text": ""
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 258,
+          "processes": {
+            "2344288": {
+              "name": "noble-control",
+              "peak_rss_kib": 60772
+            },
+            "2344579": {
+              "name": "node",
+              "peak_rss_kib": 109588
+            },
+            "2344988": {
+              "name": "MainThread",
+              "peak_rss_kib": 212876
+            },
+            "2358919": {
+              "name": "noble-control",
+              "peak_rss_kib": 4860
+            },
+            "2359131": {
+              "name": "noble-control",
+              "peak_rss_kib": 4568
+            },
+            "2360716": {
+              "name": "noble-control",
+              "peak_rss_kib": 3008
+            },
+            "2364351": {
+              "name": "noble-control",
+              "peak_rss_kib": 3692
+            },
+            "2387985": {
+              "name": "noble-control",
+              "peak_rss_kib": 4440
+            }
+          },
+          "peak_tree_rss_kib": 374024,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p2344241-i94554655.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 332718080,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "10 - 3",
+          "expect": {
+            "value": "7"
+          },
+          "observed_positional": "7"
+        }
+      ],
+      "classification": "pass",
+      "reasons": []
+    },
+    {
+      "id": "CALC-12/fault/left-associated-power",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-19/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/vectors/CALC-12_fault_left-associated-power/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-19",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/tmp/CALC-12_fault_left-associated-power"
+      },
+      "timeout_ms": 7200000,
+      "stdin": {
+        "file": "vectors/CALC-12_fault_left-associated-power/stdin",
+        "sha256": "f09c3b1882aa759a742c1010398ee872e49908dea59c2e9ce0c08284d885ffb6",
+        "bytes": 6,
+        "text": "2^3^2\n"
+      },
+      "expected": {
+        "stdout": [
+          "512"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "observed": {
+        "started_at": "2026-10-15T19:27:45.671Z",
+        "status": 0,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 536927.559964,
+        "stdout": {
+          "file": "vectors/CALC-12_fault_left-associated-power/stdout",
+          "sha256": "240269e94afb4bbc4c643851e366bf4f0d870ff0753d250b854f748cf3516285",
+          "bytes": 4,
+          "text": "512\n"
+        },
+        "stderr": {
+          "file": "vectors/CALC-12_fault_left-associated-power/stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "text": ""
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 537,
+          "processes": {
+            "2406920": {
+              "name": "noble-control",
+              "peak_rss_kib": 60752
+            },
+            "2407336": {
+              "name": "MainThread",
+              "peak_rss_kib": 110356
+            },
+            "2407673": {
+              "name": "MainThread",
+              "peak_rss_kib": 212560
+            },
+            "2445042": {
+              "name": "noble-control",
+              "peak_rss_kib": 4512
+            },
+            "2460837": {
+              "name": "noble-control",
+              "peak_rss_kib": 5240
+            },
+            "2464798": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "2466558": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "2516902": {
+              "name": "noble-control",
+              "peak_rss_kib": 4356
+            },
+            "2528012": {
+              "name": "noble-control",
+              "peak_rss_kib": 3772
+            }
+          },
+          "peak_tree_rss_kib": 320592,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p2406913-i94617327.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 281796608,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "2^3^2",
+          "expect": {
+            "value": "512"
+          },
+          "observed_positional": "512"
+        }
+      ],
+      "classification": "pass",
+      "reasons": []
+    },
+    {
+      "id": "CALC-12/fault/non-normalized-rational",
+      "case": "CALC-12-seeded-fault",
+      "kind": "line",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-19/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/vectors/CALC-12_fault_non-normalized-rational/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-19",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/tmp/CALC-12_fault_non-normalized-rational"
+      },
+      "timeout_ms": 7200000,
+      "stdin": {
+        "file": "vectors/CALC-12_fault_non-normalized-rational/stdin",
+        "sha256": "b11f0b74ef91c88de981ee18836780047d032fac1932d464d154183c30671980",
+        "bytes": 6,
+        "text": "2 / 4\n"
+      },
+      "expected": {
+        "stdout": [
+          "1/2"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "observed": {
+        "started_at": "2026-10-15T19:36:42.655Z",
+        "status": 0,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 251097.053628,
+        "stdout": {
+          "file": "vectors/CALC-12_fault_non-normalized-rational/stdout",
+          "sha256": "de7e55cd172f2065828bdd6c2015c5e92fdd6271ab1bd0f30a5e15104e64678d",
+          "bytes": 4,
+          "text": "1/2\n"
+        },
+        "stderr": {
+          "file": "vectors/CALC-12_fault_non-normalized-rational/stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "text": ""
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 251,
+          "processes": {
+            "2551041": {
+              "name": "noble-control",
+              "peak_rss_kib": 60948
+            },
+            "2551239": {
+              "name": "MainThread",
+              "peak_rss_kib": 107992
+            },
+            "2551593": {
+              "name": "MainThread",
+              "peak_rss_kib": 220012
+            },
+            "2560121": {
+              "name": "MainThread",
+              "peak_rss_kib": 132680
+            }
+          },
+          "peak_tree_rss_kib": 415264,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p2551034-i94761318.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 287322112,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "2 / 4",
+          "expect": {
+            "value": "1/2"
+          },
+          "observed_positional": "1/2"
+        }
+      ],
+      "classification": "pass",
+      "reasons": []
+    },
+    {
+      "id": "CALC-12/fault/failure-mutates-session",
+      "case": "CALC-12-seeded-fault",
+      "kind": "session",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-19/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/vectors/CALC-12_fault_failure-mutates-session/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-19",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/tmp/CALC-12_fault_failure-mutates-session"
+      },
+      "timeout_ms": 21600000,
+      "stdin": {
+        "file": "vectors/CALC-12_fault_failure-mutates-session/stdin",
+        "sha256": "280ade843d6ee2ee22398953052a3a88193ba1a3e3bb6f11740b6f87edca4887",
+        "bytes": 27,
+        "text": "let x = 20\nlet x = 1 / 0\nx\n"
+      },
+      "expected": {
+        "stdout": [
+          "20",
+          "20"
+        ],
+        "stderr": [
+          {
+            "category": "DivisionByZero",
+            "span": null
+          }
+        ],
+        "status": 1
+      },
+      "observed": {
+        "started_at": "2026-10-15T18:49:37.621Z",
+        "status": 1,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 1031739.703213,
+        "stdout": {
+          "file": "vectors/CALC-12_fault_failure-mutates-session/stdout",
+          "sha256": "b37a67cda633f0d713c6b4f0bb351418218ccc064766a4bb8ff110e524f9d092",
+          "bytes": 6,
+          "text": "20\n20\n"
+        },
+        "stderr": {
+          "file": "vectors/CALC-12_fault_failure-mutates-session/stderr",
+          "sha256": "4d0ccc30150bac409c6d98575ca2c472dde36397b5e3dc64827f6818e1f73c50",
+          "bytes": 46,
+          "text": "DivisionByZero [10,11) provenance=unavailable\n"
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 1031,
+          "processes": {
+            "1842025": {
+              "name": "noble-control",
+              "peak_rss_kib": 62520
+            },
+            "1842415": {
+              "name": "node",
+              "peak_rss_kib": 104028
+            },
+            "1843306": {
+              "name": "MainThread",
+              "peak_rss_kib": 232120
+            },
+            "1843550": {
+              "name": "noble-control",
+              "peak_rss_kib": 3988
+            },
+            "1866282": {
+              "name": "noble-control",
+              "peak_rss_kib": 5032
+            },
+            "1873844": {
+              "name": "noble-control",
+              "peak_rss_kib": 4568
+            },
+            "1878444": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "1906350": {
+              "name": "MainThread",
+              "peak_rss_kib": 214032
+            },
+            "1910383": {
+              "name": "noble-control",
+              "peak_rss_kib": 5052
+            },
+            "1947724": {
+              "name": "noble-control",
+              "peak_rss_kib": 3812
+            },
+            "1951128": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "1959608": {
+              "name": "noble-control",
+              "peak_rss_kib": 3704
+            },
+            "2005970": {
+              "name": "noble-control",
+              "peak_rss_kib": 4116
+            },
+            "2014471": {
+              "name": "noble-control",
+              "peak_rss_kib": 4736
+            },
+            "2022261": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "2037421": {
+              "name": "MainThread",
+              "peak_rss_kib": 212604
+            },
+            "2050937": {
+              "name": "noble-control",
+              "peak_rss_kib": 5200
+            },
+            "2051736": {
+              "name": "noble-control",
+              "peak_rss_kib": 4132
+            },
+            "2070915": {
+              "name": "noble-control",
+              "peak_rss_kib": 4792
+            },
+            "2083607": {
+              "name": "MainThread",
+              "peak_rss_kib": 167860
+            },
+            "2087792": {
+              "name": "noble-control",
+              "peak_rss_kib": 3628
+            }
+          },
+          "peak_tree_rss_kib": 587680,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p1842016-i94052462.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 405504000,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "let x = 20",
+          "expect": {
+            "value": "20"
+          },
+          "observed_positional": "20"
+        },
+        {
+          "line": "let x = 1 / 0",
+          "expect": {
+            "diagnostic": {
+              "category": "DivisionByZero",
+              "span": null
+            }
+          },
+          "observed_positional": "DivisionByZero [10,11) provenance=unavailable"
+        },
+        {
+          "line": "x",
+          "expect": {
+            "value": "20"
+          },
+          "observed_positional": "20"
+        }
+      ],
+      "classification": "pass",
+      "reasons": []
+    }
+  ],
+  "unsupported": [],
+  "controls": [],
+  "summary": {
+    "selected": 7,
+    "by_class": {
+      "pass": 7,
+      "fail": 0,
+      "timeout": 0,
+      "native-failure": 0,
+      "host-limit": 0
+    },
+    "by_case": {
+      "CALC-12-seeded-fault": {
+        "pass": 7,
+        "fail": 0,
+        "timeout": 0,
+        "native-failure": 0,
+        "host-limit": 0
+      }
+    },
+    "unsupported": [],
+    "all_selected_pass": true,
+    "controls": 0,
+    "controls_ok": true
+  },
+  "error": null
+}

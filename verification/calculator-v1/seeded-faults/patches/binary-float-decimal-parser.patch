@@ -1,0 +1,23 @@
+diff --git a/crates/noble-contracts/src/fixtures/calculator-numeric.noble b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+index e492bbb..a470a18 100644
+--- a/crates/noble-contracts/src/fixtures/calculator-numeric.noble
++++ b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+@@ -2395,7 +2395,17 @@ module num@1 [
+     export parse_decimal_finish
+     def parse_decimal_finish [
+         ParseDecimalDone.into unpair
+-        [ calc_decimal@1.cursor_finish RawRat.new ] dip
++        # SEEDED FAULT binary-float-decimal-parser (CALC-12): a non-integer
++        # literal num/den becomes round_half_up(num * 2^55 / den) / 2^55,
++        # computed in I64; for 0.1 this is the IEEE-754 binary64 value.
++        [ calc_decimal@1.cursor_finish
++          dup unpair swap drop calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 =
++          [ ]
++          [ unpair [ calc_big@1.big_bits calc_bits@1.bits_to_i64_positive ] dip
++            calc_big@1.big_bits calc_bits@1.bits_to_i64_positive
++            swap 72057594037927936 * swap dup [ + ] dip 2 * i64.div-rem drop drop
++            calc_big@1.big_from_i64_raw 36028797018963968 calc_big@1.big_from_i64_raw pair ] if
++          RawRat.new ] dip
+         pair
+     ]
+ 

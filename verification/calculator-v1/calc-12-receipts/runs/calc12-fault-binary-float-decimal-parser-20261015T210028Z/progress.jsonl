@@ -1,0 +1,1 @@
+{"at":"2026-10-15T21:01:37.202Z","id":"CALC-12/fault/binary-float-decimal-parser","classification":"native-failure","wall_ms":68911.997019,"reasons":["exit 1","InfrastructureFailure: swap [ expr.literal_decimal_finish_guest ] dip swap: independent source compilation refused (exhausted)"]}

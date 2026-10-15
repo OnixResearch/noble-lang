@@ -1,0 +1,15 @@
+diff --git a/crates/noble-cli/src/calculator.rs b/crates/noble-cli/src/calculator.rs
+index 85cc9df..28a9407 100644
+--- a/crates/noble-cli/src/calculator.rs
++++ b/crates/noble-cli/src/calculator.rs
+@@ -485,6 +485,10 @@ impl Session {
+                 });
+             }
+             *self = candidate;
++        } else {
++            // SEEDED FAULT failure-mutates-session (CALC-12): a failed line
++            // discards the accepted session instead of preserving it.
++            self.accepted.clear();
+         }
+         Ok(outcome)
+     }

@@ -1,0 +1,157 @@
+{
+  "schema": "noble-calculator-evidence-controls/v1",
+  "lane": "CALC-12 invalid-evidence refusal checks (distinct from the #19 acceptance runner and from any proof)",
+  "binary": {
+    "path": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "sha256": "e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127"
+  },
+  "manifest": {
+    "binary_sha256": "e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127",
+    "fixtures": {
+      "crates/noble-contracts/src/fixtures/calc-errors.noble": "319efe57c1044d650d356744aa94b783205f56d3b65b3383a753dfc26115aa3d",
+      "crates/noble-contracts/src/fixtures/calculator-bigint.noble": "ff93762aba8f2e9a14853f1c258f23fd6ed7b93dbe2f5963c1dc4083aadbcade",
+      "crates/noble-contracts/src/fixtures/calculator-bindings.noble": "d35ec885d16df3b880867e2fd1c57cb16d7dc5cdb8cb48793f9e88913e580166",
+      "crates/noble-contracts/src/fixtures/calculator-bits.noble": "8b9ad75b3b19d180732f348d27497ce60fbcc6c9922e32e102e5e137f46ade7a",
+      "crates/noble-contracts/src/fixtures/calculator-decimal.noble": "a7664741535f30a36befa428d4626befdd3e29a042f896d5bc67f6ca773cb7ea",
+      "crates/noble-contracts/src/fixtures/calculator-definitions.noble": "da61b1eebc4bec5270a88f4b7dfe560e5641a7b05212dc352dc89d5a0678f7ab",
+      "crates/noble-contracts/src/fixtures/calculator-display.noble": "f3976f0ded740f45a666ebfa81b8b1f85a094bbc91be9db7b2eb69a1724a98f7",
+      "crates/noble-contracts/src/fixtures/calculator-expression.noble": "eed139b3c176c1a24adaa63a5a34bdaf20b30c80a3b4eb5585272a04d2a40efa",
+      "crates/noble-contracts/src/fixtures/calculator-lexical.noble": "4c9f9d80528ff4ba2cff6d22181b34f684b5de3e2e4a3f2c029c4be8a4979dcf",
+      "crates/noble-contracts/src/fixtures/calculator-numeric.noble": "22b9811481c8806f6eb9dd094e212d69f71208a27fa17fd669f2c7ea81c9544a",
+      "crates/noble-contracts/src/fixtures/result.noble": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80"
+    },
+    "profile": "Calculator-v1"
+  },
+  "rules": {
+    "wrong-numeric-model": "CALC-EVIDENCE-02: a claim about wrapping I64, floating point or another model cannot certify exact rational calculator arithmetic",
+    "subject-not-actual-implementation": "CALC-EVIDENCE-01/02: the claim must bind the actual calculator binary and guest modules, not a rewritten or hand-written reference",
+    "unmet-zero-divisor-precondition": "CALC-EVIDENCE-02: zero-divisor preconditions and DivisionByZero branches must stay explicit; a nonzero-divisor assumption cannot cover all inputs",
+    "unrelated-wasm": "CALC-EVIDENCE-01: Wasm evidence must come from the actual calculator backend (Calculator-v1 profile, produced by the pinned binary)",
+    "tests-claimed-universal": "CALC-EVIDENCE-01: passing finite tests cannot establish parser correctness or a universal arithmetic theorem",
+    "artifact-hash-mismatch": "every cited artifact must exist and match its recorded SHA-256",
+    "malformed-claim": "the claim does not follow the claim schema"
+  },
+  "gate_sha256": "ebc755716271b370dcf4c5a81a4b5f39b9656ea987375d103ab6b53174fa1228",
+  "controls_sha256": "3d724ed78bdbb8be4ec9a65373d806d0d1cfe5ddcea88a1e5618e15a861f4057",
+  "node": "v24.13.0",
+  "results": [
+    {
+      "id": "proof-for-wrapping-I64",
+      "claim_file": "/home/brittonr/.cache/noble-issues/receipts/calc12-evidence-controls-20261015T205438Z/claims/proof-for-wrapping-I64.json",
+      "claim_sha256": "95a99286912b4170cacabb2265f665b0f36ce332b9643fbecc97cae4bc38d121",
+      "intended": [
+        "wrong-numeric-model"
+      ],
+      "expected_decision": "refused",
+      "decision": "refused",
+      "refusals": [
+        {
+          "code": "wrong-numeric-model",
+          "rule": "CALC-EVIDENCE-02: a claim about wrapping I64, floating point or another model cannot certify exact rational calculator arithmetic",
+          "detail": "claim model is wrapping-i64"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "proof-for-handwritten-reference-only",
+      "claim_file": "/home/brittonr/.cache/noble-issues/receipts/calc12-evidence-controls-20261015T205438Z/claims/proof-for-handwritten-reference-only.json",
+      "claim_sha256": "08bd227b1c5a87d3128e3451d7555fd212b6b27b579789bff7f4903cf8377701",
+      "intended": [
+        "subject-not-actual-implementation"
+      ],
+      "expected_decision": "refused",
+      "decision": "refused",
+      "refusals": [
+        {
+          "code": "subject-not-actual-implementation",
+          "rule": "CALC-EVIDENCE-01/02: the claim must bind the actual calculator binary and guest modules, not a rewritten or hand-written reference",
+          "detail": "subject reference-model binary=none fixtures=not bound"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "proof-with-unmet-zero-divisor-precondition",
+      "claim_file": "/home/brittonr/.cache/noble-issues/receipts/calc12-evidence-controls-20261015T205438Z/claims/proof-with-unmet-zero-divisor-precondition.json",
+      "claim_sha256": "2d15c754fc6ccb1d41f20e0d271cd3e7adbf64d1b2542e3d6345005648a16052",
+      "intended": [
+        "unmet-zero-divisor-precondition"
+      ],
+      "expected_decision": "refused",
+      "decision": "refused",
+      "refusals": [
+        {
+          "code": "unmet-zero-divisor-precondition",
+          "rule": "CALC-EVIDENCE-02: zero-divisor preconditions and DivisionByZero branches must stay explicit; a nonzero-divisor assumption cannot cover all inputs",
+          "detail": "domain=all-inputs, nonzero-divisor precondition=true, DivisionByZero branch=false"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "unrelated-Wasm",
+      "claim_file": "/home/brittonr/.cache/noble-issues/receipts/calc12-evidence-controls-20261015T205438Z/claims/unrelated-Wasm.json",
+      "claim_sha256": "d596ff26ec4488b08b406ae17d26f26bd901a08896164e4c7343afc7ea50963c",
+      "intended": [
+        "unrelated-wasm"
+      ],
+      "expected_decision": "refused",
+      "decision": "refused",
+      "refusals": [
+        {
+          "code": "unrelated-wasm",
+          "rule": "CALC-EVIDENCE-01: Wasm evidence must come from the actual calculator backend (Calculator-v1 profile, produced by the pinned binary)",
+          "detail": "/home/brittonr/.cache/noble-issues/receipts/calc12-evidence-controls-20261015T205438Z/unrelated-wasm/engine/module-1.wasm: report profile=Core-Bootstrap, produced by e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "calibration/test-claimed-universal",
+      "claim_file": "/home/brittonr/.cache/noble-issues/receipts/calc12-evidence-controls-20261015T205438Z/claims/calibration_test-claimed-universal.json",
+      "claim_sha256": "6a93fabcd32e5ca9851cb7f95c8d9ba194c7eab5945c0cae42e20d720a46cca4",
+      "intended": [
+        "tests-claimed-universal"
+      ],
+      "expected_decision": "refused",
+      "decision": "refused",
+      "refusals": [
+        {
+          "code": "tests-claimed-universal",
+          "rule": "CALC-EVIDENCE-01: passing finite tests cannot establish parser correctness or a universal arithmetic theorem",
+          "detail": "a finite test observation states a universal quantifier"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "calibration/bound-proof-shape",
+      "claim_file": "/home/brittonr/.cache/noble-issues/receipts/calc12-evidence-controls-20261015T205438Z/claims/calibration_bound-proof-shape.json",
+      "claim_sha256": "0d444143b025cfe54005659a4c53ecc6896d7417716e0469adc0fd40ab784aad",
+      "intended": [],
+      "expected_decision": "not-refused-structurally",
+      "decision": "not-refused-structurally",
+      "refusals": [],
+      "note": "a proof checker and CALC-EVIDENCE-02 proof report are required; nothing is accepted here",
+      "ok": true
+    },
+    {
+      "id": "calibration/bound-test-observation",
+      "claim_file": "/home/brittonr/.cache/noble-issues/receipts/calc12-evidence-controls-20261015T205438Z/claims/calibration_bound-test-observation.json",
+      "claim_sha256": "2b538a086583b1c5941f06363de8f4e1f9842d7f0e4687711eb4a48c00d25ac8",
+      "intended": [],
+      "expected_decision": "admissible-test-observation",
+      "decision": "admissible-test-observation",
+      "refusals": [],
+      "note": "finite observation only; establishes no universal property",
+      "ok": true
+    }
+  ],
+  "all_ok": true,
+  "non_claims": [
+    "No proof is checked or accepted; `not-refused-structurally` is not acceptance.",
+    "An admissible test observation establishes no universal property.",
+    "No canonical case state or evidence changes."
+  ]
+}

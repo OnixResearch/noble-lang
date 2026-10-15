@@ -1,0 +1,18 @@
+diff --git a/crates/noble-contracts/src/fixtures/calculator-numeric.noble b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+index e492bbb..c069433 100644
+--- a/crates/noble-contracts/src/fixtures/calculator-numeric.noble
++++ b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+@@ -664,11 +664,8 @@ module num@1 [
+     # costs constant Work, not another scan of an admitted 512-bit operand.
+     signature gcd_unit_bits_p forall<S:stack>
+         [ S List<Bool> -- S Bool ! pure ]
+-    def gcd_unit_bits_p [
+-        [ false ]
+-        [ calc_bits@1.bits_empty swap calc_bits@1.bool_and ]
+-        list.case
+-    ]
++    # SEEDED FAULT non-normalized-rational (CALC-12): every gcd is taken as one.
++    def gcd_unit_bits_p [ drop true ]
+ 
+     signature gcd_unit_big_p forall<S:stack>
+         [ S calc_big@1.BigInt -- S Bool ! pure ]

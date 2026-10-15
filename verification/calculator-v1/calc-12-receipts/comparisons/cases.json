@@ -1,0 +1,667 @@
+{
+  "schema": "noble-calculator-oracle-cases-check/v1",
+  "cases_file_sha256": "2afc188ff6d2abca2d85b879e65235ee833ed7e72add24df68ea5c027a405202",
+  "provenance": {
+    "oracle_files": {
+      "rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+      "calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+      "generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+      "faults.mjs": "1199a4f0c7aec7cc700b2d20dc84f3486631003696f5c2c6a4e350269130e413",
+      "compare.mjs": "53fced6b32db8af05f134848cdaa6f2a7d27ebf249a42f0787a9a3b08143c29b"
+    },
+    "node": "v24.13.0",
+    "node_path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node"
+  },
+  "agree": 38,
+  "total": 38,
+  "rows": [
+    {
+      "id": "CALC-01/1",
+      "lines": [
+        "1 / 3 + 1 / 6"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "1/2"
+      },
+      "oracle": {
+        "value": "1/2"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/2",
+      "lines": [
+        "0.1 + 0.2"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "3/10"
+      },
+      "oracle": {
+        "value": "3/10"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/3",
+      "lines": [
+        "0.00000000000000000001"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "1/100000000000000000000"
+      },
+      "oracle": {
+        "value": "1/100000000000000000000"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/4",
+      "lines": [
+        "9223372036854775807 + 1"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "9223372036854775808"
+      },
+      "oracle": {
+        "value": "9223372036854775808"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/5",
+      "lines": [
+        "9007199254740993 - 9007199254740992"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "1"
+      },
+      "oracle": {
+        "value": "1"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/6",
+      "lines": [
+        "2 + 3 * 4"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "14"
+      },
+      "oracle": {
+        "value": "14"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/7",
+      "lines": [
+        "(2 + 3) * 4"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "20"
+      },
+      "oracle": {
+        "value": "20"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/8",
+      "lines": [
+        "10 - 3"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "7"
+      },
+      "oracle": {
+        "value": "7"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/9",
+      "lines": [
+        "8 / 4 / 2"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "1"
+      },
+      "oracle": {
+        "value": "1"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/10",
+      "lines": [
+        "-2^2"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "-4"
+      },
+      "oracle": {
+        "value": "-4"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/11",
+      "lines": [
+        "(-2)^2"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "4"
+      },
+      "oracle": {
+        "value": "4"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/12",
+      "lines": [
+        "2^3^2"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "512"
+      },
+      "oracle": {
+        "value": "512"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/13",
+      "lines": [
+        "2^-3"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "1/8"
+      },
+      "oracle": {
+        "value": "1/8"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/14",
+      "lines": [
+        "4^(2/2)"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "4"
+      },
+      "oracle": {
+        "value": "4"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-01/15",
+      "lines": [
+        "0^0"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "1"
+      },
+      "oracle": {
+        "value": "1"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-02/1",
+      "lines": [
+        "1 + )"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "SyntaxError",
+        "span": [
+          4,
+          5
+        ]
+      },
+      "oracle": {
+        "category": "SyntaxError",
+        "span": [
+          4,
+          5
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-02/2",
+      "lines": [
+        "1 2"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "TrailingInput",
+        "span": [
+          2,
+          3
+        ]
+      },
+      "oracle": {
+        "category": "TrailingInput",
+        "span": [
+          2,
+          3
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-02/3",
+      "lines": [
+        "missing + 1"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "UnknownName",
+        "span": [
+          0,
+          7
+        ]
+      },
+      "oracle": {
+        "category": "UnknownName",
+        "span": [
+          0,
+          7
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-02/4",
+      "lines": [
+        "2(3)"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "TrailingInput",
+        "span": [
+          1,
+          2
+        ]
+      },
+      "oracle": {
+        "category": "TrailingInput",
+        "span": [
+          1,
+          2
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-02/5",
+      "lines": [
+        "0.1.2"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "SyntaxError",
+        "span": [
+          3,
+          4
+        ]
+      },
+      "oracle": {
+        "category": "SyntaxError",
+        "span": [
+          3,
+          4
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-03/1",
+      "lines": [
+        "1 / 0"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "DivisionByZero"
+      },
+      "oracle": {
+        "category": "DivisionByZero",
+        "span": [
+          2,
+          3
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-03/2",
+      "lines": [
+        "0 / 0"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "DivisionByZero"
+      },
+      "oracle": {
+        "category": "DivisionByZero",
+        "span": [
+          2,
+          3
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-03/3",
+      "lines": [
+        "0^-1"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "DivisionByZero"
+      },
+      "oracle": {
+        "category": "DivisionByZero",
+        "span": [
+          1,
+          2
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-03/4",
+      "lines": [
+        "4^(1/2)"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "NonIntegerExponent"
+      },
+      "oracle": {
+        "category": "NonIntegerExponent",
+        "span": [
+          1,
+          2
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-09/1",
+      "lines": [
+        "2/1"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "2"
+      },
+      "oracle": {
+        "value": "2"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-09/2",
+      "lines": [
+        "3/10"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "3/10"
+      },
+      "oracle": {
+        "value": "3/10"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-09/3",
+      "lines": [
+        "3/10"
+      ],
+      "mode": "finite-decimal",
+      "cases_file": {
+        "value": "0.3"
+      },
+      "oracle": {
+        "value": "0.3"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-09/4",
+      "lines": [
+        "1/3"
+      ],
+      "mode": "finite-decimal",
+      "cases_file": {
+        "value": "1/3"
+      },
+      "oracle": {
+        "value": "1/3"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-06/4",
+      "lines": [
+        "let x = 10",
+        "fn f(y)=x + y",
+        "let x = 20",
+        "f(1)"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "11"
+      },
+      "oracle": {
+        "value": "11"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-06/6",
+      "lines": [
+        "let x = 10",
+        "fn f(y)=x + y",
+        "let x = 20",
+        "f(1)",
+        "fn g(x)=x + 1",
+        "g(2)"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "3"
+      },
+      "oracle": {
+        "value": "3"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-06/7",
+      "lines": [
+        "let x = 10",
+        "fn f(y)=x + y",
+        "let x = 20",
+        "f(1)",
+        "fn g(x)=x + 1",
+        "g(2)",
+        "let x = 1 / 0"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "DivisionByZero"
+      },
+      "oracle": {
+        "category": "DivisionByZero",
+        "span": [
+          10,
+          11
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-06/8",
+      "lines": [
+        "let x = 10",
+        "fn f(y)=x + y",
+        "let x = 20",
+        "f(1)",
+        "fn g(x)=x + 1",
+        "g(2)",
+        "let x = 1 / 0",
+        "x"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "value": "20"
+      },
+      "oracle": {
+        "value": "20"
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-06/9",
+      "lines": [
+        "let x = 10",
+        "fn f(y)=x + y",
+        "let x = 20",
+        "f(1)",
+        "fn g(x)=x + 1",
+        "g(2)",
+        "let x = 1 / 0",
+        "x",
+        "f(1, 2)"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "WrongArity"
+      },
+      "oracle": {
+        "category": "WrongArity",
+        "span": [
+          0,
+          7
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-07/unused-body-with-unknown-name",
+      "lines": [
+        "fn h()=q"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "UnknownName"
+      },
+      "oracle": {
+        "category": "UnknownName",
+        "span": [
+          7,
+          8
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-07/duplicate-parameter-name",
+      "lines": [
+        "fn f(y, y)=y"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "DefinitionError"
+      },
+      "oracle": {
+        "category": "DefinitionError",
+        "span": [
+          8,
+          9
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-07/self-recursive-definition",
+      "lines": [
+        "fn f(y)=f(y)"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "DefinitionError"
+      },
+      "oracle": {
+        "category": "DefinitionError",
+        "span": [
+          8,
+          9
+        ]
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-07/zero-argument-function-body-1-divided-by-0",
+      "lines": [
+        "fn z()=1 / 0"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "silent": true
+      },
+      "oracle": {
+        "silent": true
+      },
+      "agrees": true
+    },
+    {
+      "id": "CALC-07/call-that-zero-argument-function",
+      "lines": [
+        "fn z()=1 / 0",
+        "z()"
+      ],
+      "mode": "default",
+      "cases_file": {
+        "category": "DivisionByZero"
+      },
+      "oracle": {
+        "category": "DivisionByZero",
+        "span": [
+          9,
+          10
+        ]
+      },
+      "agrees": true
+    }
+  ],
+  "non_claims": [
+    "Agreement on finitely many inputs does not establish parser correctness or any universal arithmetic theorem.",
+    "The oracle is a test reference, not a proof; no CALC-EVIDENCE-02 proof claim is made.",
+    "No canonical case state or evidence is changed by this report.",
+    "The oracle has no model of the seven guest budgets; a ResourceLimit is reported as a divergence, never as agreement."
+  ]
+}

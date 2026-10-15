@@ -1,0 +1,35 @@
+{
+  "schema": "noble-calculator-evidence-claim/v1",
+  "kind": "proof",
+  "statement": "Calculator division returns the exact quotient for all inputs, assuming the divisor is nonzero.",
+  "subject": {
+    "kind": "calculator-binary",
+    "binary_sha256": "e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127",
+    "fixtures": {
+      "crates/noble-contracts/src/fixtures/calc-errors.noble": "319efe57c1044d650d356744aa94b783205f56d3b65b3383a753dfc26115aa3d",
+      "crates/noble-contracts/src/fixtures/calculator-bigint.noble": "ff93762aba8f2e9a14853f1c258f23fd6ed7b93dbe2f5963c1dc4083aadbcade",
+      "crates/noble-contracts/src/fixtures/calculator-bindings.noble": "d35ec885d16df3b880867e2fd1c57cb16d7dc5cdb8cb48793f9e88913e580166",
+      "crates/noble-contracts/src/fixtures/calculator-bits.noble": "8b9ad75b3b19d180732f348d27497ce60fbcc6c9922e32e102e5e137f46ade7a",
+      "crates/noble-contracts/src/fixtures/calculator-decimal.noble": "a7664741535f30a36befa428d4626befdd3e29a042f896d5bc67f6ca773cb7ea",
+      "crates/noble-contracts/src/fixtures/calculator-definitions.noble": "da61b1eebc4bec5270a88f4b7dfe560e5641a7b05212dc352dc89d5a0678f7ab",
+      "crates/noble-contracts/src/fixtures/calculator-display.noble": "f3976f0ded740f45a666ebfa81b8b1f85a094bbc91be9db7b2eb69a1724a98f7",
+      "crates/noble-contracts/src/fixtures/calculator-expression.noble": "eed139b3c176c1a24adaa63a5a34bdaf20b30c80a3b4eb5585272a04d2a40efa",
+      "crates/noble-contracts/src/fixtures/calculator-lexical.noble": "4c9f9d80528ff4ba2cff6d22181b34f684b5de3e2e4a3f2c029c4be8a4979dcf",
+      "crates/noble-contracts/src/fixtures/calculator-numeric.noble": "22b9811481c8806f6eb9dd094e212d69f71208a27fa17fd669f2c7ea81c9544a",
+      "crates/noble-contracts/src/fixtures/result.noble": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80"
+    }
+  },
+  "model": "exact-rational",
+  "covers": [
+    "division"
+  ],
+  "domain": "all-inputs",
+  "preconditions": [
+    {
+      "kind": "nonzero-divisor",
+      "text": "divisor <> 0"
+    }
+  ],
+  "error_branches": [],
+  "artifacts": []
+}
