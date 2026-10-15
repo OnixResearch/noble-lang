@@ -9,7 +9,7 @@
  "plan_sha256": "85bed3371d0e2e4933301d67268f67a366001383070564e263f3821ff050397b",
  "receipts": [
   {
-   "sha256": "be297a5aa693ac6506040eb56733486b58ec6f29f55c2a74ea489497997c4f88",
+   "sha256": "828d456dfbce9df38b070575bcc125e53ed62e4a1d231beced2d9a62c284ea13",
    "plan_sha256": "083d057b38ac38e0666138949ead1a0028bc027b8ef2e1f4672b216579d3d658",
    "runner_sha256": "11324703e31fc22db1cfab08c1478c126bddb5336d961ed9a37e161847abf560",
    "node": "v24.13.0",
@@ -603,19 +603,177 @@
   },
   {
    "id": "syntax-depth/N",
-   "observed": false
+   "category": "SyntaxDepth",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--syntax-depth",
+    "3"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "(((x)))",
+    "x"
+   ],
+   "stdin_sha256": "4714c342b89068b65928f031d26d6aa97a6c888d4faa615c9c9bf46b5771cdd7",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7",
+    "7"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 1002.4,
+   "max_rss_kib": 208152,
+   "resource_limit_lines": 0,
+   "matched_plan": true
   },
   {
    "id": "evaluation-work/N-2",
-   "observed": false
+   "category": "EvaluationWork",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--evaluation-work",
+    "38051"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "77",
+    "x"
+   ],
+   "stdin_sha256": "4cd9dea4194439856483ea8826de5aea095e30ac74500db56b248ea21eb7fdbc",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit EvaluationWork"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit EvaluationWork [3,3) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 919.7,
+   "max_rss_kib": 206416,
+   "resource_limit_lines": 1,
+   "matched_plan": true
   },
   {
    "id": "evaluation-work/N-1",
-   "observed": false
+   "category": "EvaluationWork",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--evaluation-work",
+    "38052"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "77",
+    "x"
+   ],
+   "stdin_sha256": "4cd9dea4194439856483ea8826de5aea095e30ac74500db56b248ea21eb7fdbc",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit EvaluationWork"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit EvaluationWork [3,3) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 919.6,
+   "max_rss_kib": 212928,
+   "resource_limit_lines": 1,
+   "matched_plan": true
   },
   {
    "id": "evaluation-work/N",
-   "observed": false
+   "category": "EvaluationWork",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--evaluation-work",
+    "38053"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "77",
+    "x"
+   ],
+   "stdin_sha256": "4cd9dea4194439856483ea8826de5aea095e30ac74500db56b248ea21eb7fdbc",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "77"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "77",
+    "7"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 963.9,
+   "max_rss_kib": 207528,
+   "resource_limit_lines": 0,
+   "matched_plan": true
   },
   {
    "id": "control/history-bytes",
