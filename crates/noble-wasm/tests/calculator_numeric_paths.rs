@@ -420,8 +420,10 @@ fn gate(deny: &str, admit: &str) -> String {
 
 /// Observers push scalars above the carrier.
 const STATUS: &str = "dup [ drop 0 ] [ ] result@1.Result.match";
-const FLAG: &str =
-    "dup [ unpair swap drop [ 1 ] [ 0 ] if ] [ 1000 + 0 swap - ] result@1.Result.match";
+/// Splits C<Pair<X,Bool>> into C<X> and a scalar flag (1/0, or -1000-code on
+/// a refused carrier) without duplicating the carrier.
+const FLAG: &str = "[ unpair [ result@1.Result.Ok ] dip [ 1 ] [ 0 ] if ] \
+     [ dup 1000 + 0 swap - [ result@1.Result.Err ] dip ] result@1.Result.match";
 const I64_RESULT: &str = "dup [ unpair drop 0 ] [ 1 ] result@1.Result.match";
 
 fn flag(value: i64) -> Result<bool, String> {
@@ -559,7 +561,6 @@ fn binary(guest: &mut Guest, operator: Operator) -> Result<(), String> {
             "num.op_first_stage_sum_finish_sub"
         };
         guest.run(&[
-            lift("unpair drop"),
             lift_unit(finish),
             lift_unit("num.op_first_stage_sum_den_mul"),
         ])?;
@@ -585,44 +586,29 @@ fn signed_product(guest: &mut Guest) -> Result<(), String> {
             1,
         )?[0];
         if flag(done)? {
-            return guest.run(&[lift("unpair drop"), lift_unit("num.op_first_stage_finish")]);
+            return guest.run(&[lift_unit("num.op_first_stage_finish")]);
         }
         let add = guest.observe(
-            &[
-                lift("unpair drop"),
-                lift_unit("num.op_first_stage_add_probe"),
-                FLAG.to_owned(),
-            ],
+            &[lift_unit("num.op_first_stage_add_probe"), FLAG.to_owned()],
             1,
         )?[0];
         if flag(add)? {
-            guest.run(&[
-                lift("unpair drop"),
-                lift_unit("num.op_first_stage_add_begin"),
-            ])?;
+            guest.run(&[lift_unit("num.op_first_stage_add_begin")])?;
             let mut more = true;
-            let mut first = true;
             while more {
-                let mut stages = Vec::new();
-                if !first {
-                    stages.push(lift("unpair drop"));
-                }
-                first = false;
-                stages.extend([
+                let stages = [
                     lift_unit("num.op_first_stage_add_digit"),
                     lift_unit("num.op_first_stage_add_more"),
                     FLAG.to_owned(),
-                ]);
+                ];
                 more = flag(guest.observe(&stages, 1)?[0])?;
             }
             guest.run(&[
-                lift("unpair drop"),
                 lift_unit("num.op_first_stage_add_finish"),
                 lift_unit("num.op_first_stage_shift"),
             ])?;
         } else {
             guest.run(&[
-                lift("unpair drop"),
                 lift_unit("num.op_first_stage_add_keep"),
                 lift_unit("num.op_first_stage_shift"),
             ])?;
@@ -646,8 +632,10 @@ fn normalize(guest: &mut Guest) -> Result<(), String> {
         lift("num.gcd_one_probe"),
         lift("num.gcd_one_route"),
     ])?;
-    let route = "dup [ [ drop 0 ] [ drop 1 ] num.GcdRoute.match ] [ 1000 + 0 swap - ] \
-                 result@1.Result.match";
+    // Split the guest's own GcdRoute tag into a scalar without duplicating it.
+    let route = "[ [ num.GcdRoute.Done result@1.Result.Ok 0 ] \
+                   [ num.GcdRoute.Iterate result@1.Result.Ok 1 ] num.GcdRoute.match ] \
+                 [ dup 1000 + 0 swap - [ result@1.Result.Err ] dip ] result@1.Result.match";
     for _ in 0..4096 {
         if !flag(guest.observe(&[route.to_owned()], 1)?[0])? {
             guest.run(&[flat(
@@ -703,7 +691,8 @@ fn finish(guest: &mut Guest, part: &str) -> Result<(), String> {
         ],
         1,
     )?[0];
-    guest.run(&[lift(&format!("num.finish_{part}_route"))])?;
+    // The route re-certifies the unit GCD itself and ignores the probe Bool.
+    guest.run(&[lift(&format!("true pair num.finish_{part}_route"))])?;
     if flag(one)? {
         return guest.run(&[flat(&format!(
             "[ result@1.Result.Ok ] [ drop -1 result@1.Result.Err ] num.{route}.match"
