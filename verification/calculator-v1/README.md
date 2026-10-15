@@ -24,6 +24,11 @@ must report `UnknownName`, observing `rejected_definition_installed: false`.
 Expected values and categories come from the cases file; where a case states
 no span (CALC-03, CALC-06, CALC-07) the observed span is recorded but not
 judged.
+A successful `let` prints its bound value, and a successful `fn` prints
+nothing. The cases file states no value for a definition. The runner
+therefore requires the echoed value to equal the expression only when the
+expression is a canonical integer literal (both CALC-06 `let`s are). Any
+other echo only has to be an exact display.
 
 Ids are `CALC-01/01`…, `CALC-06/session` and `CALC-07/<variant>`.
 `--emit-vectors NEW_FILE` writes the generated list without running anything;

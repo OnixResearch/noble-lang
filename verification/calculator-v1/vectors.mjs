@@ -4,7 +4,8 @@
 import assert from 'node:assert/strict';
 
 export const VECTOR_SCHEMA = 'noble-calculator-vectors/v1';
-export const RUNTIME_CASES = ['CALC-01', 'CALC-02', 'CALC-03', 'CALC-06', 'CALC-07', 'CALC-09'];
+// A display line that is some exact value (`n`, `n/d` or a finite decimal).
+export const EXACT_DISPLAY = /^-?\d+(?:\/\d+|\.\d+)?$/;
 
 const pad = index => String(index + 1).padStart(2, '0');
 
@@ -18,6 +19,15 @@ const fraction = text => {
   const match = /^(-?\d+)\/(\d+)$/.exec(text);
   assert.ok(match, `unsupported expected fraction ${text}`);
   return display(match[1], match[2]);
+};
+
+// A successful `let` prints the bound value (calculator.rs formats it before
+// committing State). The cases file states no value for a definition, so the
+// echo is judged only when the expression is a canonical integer literal,
+// whose display is the literal itself; otherwise any exact display matches.
+const echo = (mapping, operation) => {
+  assert.equal(mapping['define-variable-success'], 'echo');
+  return { echo: /^(?:0|-?[1-9]\d*)$/.test(operation.expression) ? operation.expression : null };
 };
 
 export const render = (mapping, operation) => {
@@ -81,7 +91,7 @@ export const generate = (cases, mapping) => {
       expect = { value: fraction(operation.expected_fraction) };
     } else {
       assert.ok(operation.operation.startsWith('define-'), 'CALC-06 evaluation lacks an expectation');
-      expect = { silent: true };
+      expect = operation.operation === 'define-variable' ? echo(mapping, operation) : { silent: true };
     }
     return { line: render(mapping, operation), expect, source: operation };
   });
@@ -141,17 +151,19 @@ export const validate = file => {
     for (const operation of vector.operations) {
       assert.equal(typeof operation.line, 'string');
       assert.ok(!operation.line.includes('\n'), `${vector.id}: one line per operation`);
-      const kinds = ['value', 'diagnostic', 'silent'].filter(key => operation.expect?.[key] !== undefined);
+      const kinds = ['value', 'echo', 'diagnostic', 'silent'].filter(key => operation.expect?.[key] !== undefined);
       assert.equal(kinds.length, 1, `${vector.id}: each operation expects exactly one outcome`);
     }
   }
   return file;
 };
 
-// Expected streams for the whole process. Defines print nothing on success,
-// values go to stdout, guest diagnostics to stderr; exit 1 iff any line failed.
+// Expected streams for the whole process. `fn` prints nothing on success,
+// values and `let` echoes go to stdout (null: any exact display), guest
+// diagnostics to stderr; exit 1 iff any line failed.
 export const transcript = vector => ({
-  stdout: vector.operations.filter(op => op.expect.value !== undefined).map(op => op.expect.value),
+  stdout: vector.operations.filter(op => op.expect.value !== undefined || op.expect.echo !== undefined)
+    .map(op => op.expect.value ?? op.expect.echo),
   stderr: vector.operations.filter(op => op.expect.diagnostic !== undefined)
     .map(op => op.expect.diagnostic),
   status: vector.operations.some(op => op.expect.diagnostic !== undefined) ? 1 : 0,

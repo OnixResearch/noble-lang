@@ -9,6 +9,9 @@
     "parameter-separator": ", ",
     "evaluate": "{expression}"
   },
+  "define-variable-success": "echo",
+  "define-variable-success-source": "crates/noble-cli/src/calculator.rs: a `let` line formats its value before committing State and returns Outcome::Value, so the CLI prints it; a successful `fn` returns Outcome::Defined and prints nothing",
+  "echo-expectation": "the printed value equals the expression when the expression is a canonical integer literal; otherwise any exact display line matches (the cases file states no value for a definition)",
   "display": {
     "source": "README.md: results print as `n/d`, or `n` when the denominator is 1",
     "default": "numerator when denominator is \"1\", else numerator/denominator"
@@ -22,7 +25,7 @@
     "CALC-01": {"input": "vector.expression is one stdin line", "expect": "value: display(vector.numerator, vector.denominator) in default mode"},
     "CALC-02": {"input": "vector.expression is one stdin line", "expect": "diagnostic: vector.category with vector.span"},
     "CALC-03": {"input": "vector.expression is one stdin line", "expect": "diagnostic: vector.category (the case states no span; the observed span is recorded only)"},
-    "CALC-06": {"input": "all operations, rendered with `spelling`, form one session (one process, one stdin)", "expect": "define-* without expected_error: silent; expected_fraction: value in default display; expected_error: diagnostic category only"},
+    "CALC-06": {"input": "all operations, rendered with `spelling`, form one session (one process, one stdin)", "expect": "define-variable without expected_error: echo; define-function without expected_error: silent; expected_fraction: value in default display; expected_error: diagnostic category only"},
     "CALC-09": {"input": "vector.fraction (`n/d`) is one stdin line evaluated as an exact division", "flags": "modes[vector.mode]", "expect": "value: vector.display"}
   },
   "CALC-07": {

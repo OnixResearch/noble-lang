@@ -12,7 +12,7 @@ import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { RUNTIME_CASES, generate, transcript, validate } from './vectors.mjs';
+import { EXACT_DISPLAY, generate, transcript, validate } from './vectors.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = fs.realpathSync(path.resolve(here, '../..'));
@@ -277,7 +277,10 @@ const classify = (vector, observed, stdoutLines, stderrLines) => {
   if (host.length > 0) return { classification: 'host-limit', reasons: host };
   const expected = transcript(vector);
   if (observed.status !== expected.status) reasons.push(`exit ${observed.status}, expected ${expected.status}`);
-  if (JSON.stringify(stdoutLines) !== JSON.stringify(expected.stdout)) {
+  const stdoutMatches = stdoutLines.length === expected.stdout.length
+    && expected.stdout.every((want, index) => (want === null
+      ? EXACT_DISPLAY.test(stdoutLines[index]) : stdoutLines[index] === want));
+  if (!stdoutMatches) {
     reasons.push(`stdout ${JSON.stringify(stdoutLines)}, expected ${JSON.stringify(expected.stdout)}`);
   }
   if (stderrLines.length !== expected.stderr.length) {
@@ -305,7 +308,9 @@ const attribute = (vector, stdoutLines, stderrLines) => {
   let err = 0;
   return vector.operations.map(operation => {
     let observed = 'silent';
-    if (operation.expect.value !== undefined) observed = stdoutLines[out++] ?? null;
+    if (operation.expect.value !== undefined || operation.expect.echo !== undefined) {
+      observed = stdoutLines[out++] ?? null;
+    }
     if (operation.expect.diagnostic !== undefined) observed = stderrLines[err++] ?? null;
     return { line: operation.line, expect: operation.expect, observed_positional: observed };
   });
