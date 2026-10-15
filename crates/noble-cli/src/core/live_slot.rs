@@ -50,8 +50,10 @@ fn selected_origin_json(
         }
     }
     if target["definition_index"] != origin.definition_id.index()
-        || target["definition_identity"] != origin.definition_id.identity().to_string()
-        || target["source_generation"] != origin.source_generation.to_string()
+        || target["definition_identity"].as_str()
+            != Some(origin.definition_id.identity().to_string().as_str())
+        || target["source_generation"].as_str()
+            != Some(origin.source_generation.to_string().as_str())
         || target["named_program_index"] != origin.named_program_index
     {
         return Err(reject(
@@ -1600,10 +1602,10 @@ fn route_checkpoints_inner(
         if !matches!(import, "live_select" | "test_emit" | "test_abort") {
             return Err(reject("unknown protected import checkpoint"));
         }
-        if let Some(_) = checkpoint.get("site") {
+        if checkpoint.get("site").is_some() {
             uint(&checkpoint, "site")?;
         }
-        if let Some(_) = checkpoint.get("ordinal") {
+        if checkpoint.get("ordinal").is_some() {
             uint(&checkpoint, "ordinal")?;
         }
         if root != selected_root {
@@ -1889,9 +1891,8 @@ impl Host {
                     reject("worker returned unbounded operator receipts")
                 })?;
             for row in rows {
-                let control_id = text(row, "control_id", 20).map_err(|problem| {
+                let control_id = text(row, "control_id", 20).inspect_err(|_| {
                     self.poisoned = true;
-                    problem
                 })?;
                 if self
                     .control_events
@@ -2703,9 +2704,9 @@ impl Host {
                     != self.authority.source_digests[&module_id]
                 || frozen_identity["caller"]["artifactSha256"] != candidate.artifact_sha256
                 || frozen_identity["caller"]["handle"] != candidate.handle
-                || !frozen_identity["slots"]
+                || frozen_identity["slots"]
                     .as_array()
-                    .is_some_and(|rows| rows.len() <= MAX_TYPES)
+                    .is_none_or(|rows| rows.len() > MAX_TYPES)
             {
                 self.poisoned = true;
                 return Err(reject(

@@ -248,7 +248,7 @@ fn quotation_program_has_its_own_checked_interface_and_code_owner() -> Result<()
     let program = Ty::program(vec![Ty::I64], vec![Ty::I64], EffSet::empty());
     let span = prepared.code_span();
     if wrapper.program_index == saved.program_index
-        || wrapper.stack_in != []
+        || !wrapper.stack_in.is_empty()
         || wrapper.stack_out != [program]
         || saved.stack_in != [Ty::I64]
         || saved.stack_out != [Ty::I64]
@@ -320,11 +320,11 @@ fn explicitly_granted_test_host_retains_two_checked_effects_and_selected_body() 
     if prepared.selected_target().is_none_or(|binding| {
         binding.definition_id != selected.definition_id()
             || binding.named_program_index != named.program_index
-    }) || named.stack_in != []
+    }) || !named.stack_in.is_empty()
         || named.stack_out != [Ty::Unit, Ty::Unit, Ty::I64]
         || named.effect_mask != 1
         || global.effect_mask != 1
-        || global.stack_in != []
+        || !global.stack_in.is_empty()
         || global.stack_out != [Ty::Unit, Ty::Unit, Ty::I64]
         || root.effect_mask != 1
     {

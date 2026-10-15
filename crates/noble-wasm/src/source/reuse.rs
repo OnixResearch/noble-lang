@@ -7,7 +7,10 @@
 //! therefore depend on the committed compiler only through the profile flags,
 //! whether the compiler is still at generation 0 (the module that installs the
 //! fixed core table entries) and the static literal Text cursor `text_end`,
-//! which is never rewound. Calculator modules do not bake the preparation
+//! which no preparation rewinds (a calculator session restore returns it to
+//! the last commit together with the arena bytes and the generation, so the
+//! restored compiler's epoch is exactly the committed one). Calculator
+//! modules do not bake the preparation
 //! generation into their bytes (the engine binds it per instance), so a
 //! preparation's generation affects only the prospective generation, which
 //! reuse recomputes. `CanonicalEpoch` is exactly that dependency; reuse is
@@ -112,7 +115,7 @@ impl super::Compiler {
             Some(value) => value,
             None => return Err(crate::Diagnostic::Exhausted),
         };
-        let mut next = artifact.next.duplicate();
+        let mut next = artifact.next.clone();
         next.generation = generation;
         next.retention_revision = self.retention_revision;
         Ok(super::Prepared {
@@ -136,24 +139,6 @@ impl super::Compiler {
             epoch: Some(artifact.epoch),
             work_issued: artifact.work_issued,
         })
-    }
-
-    fn duplicate(&self) -> Self {
-        Self {
-            live: self.live,
-            live_slots: self.live_slots,
-            text_cursor: self.text_cursor,
-            calculator: self.calculator,
-            generation: self.generation,
-            functions: self.functions,
-            retention_revision: self.retention_revision,
-            free_code: self.free_code.clone(),
-            installed_code: self.installed_code.clone(),
-            text_end: self.text_end,
-            signatures: self.signatures.clone(),
-            descriptors: self.descriptors.clone(),
-            identities: self.identities.clone(),
-        }
     }
 }
 
@@ -193,7 +178,7 @@ impl super::Prepared {
         }
         Some(Reusable {
             epoch,
-            next: self.next.duplicate(),
+            next: self.next.clone(),
             code_start: self.code_span.start,
             code_length: self.code_span.length,
             work_issued: self.work_issued,

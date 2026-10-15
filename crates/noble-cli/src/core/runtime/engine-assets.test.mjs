@@ -79,7 +79,7 @@ test('calculator worker reuses assembled modules only for byte-identical WAT',
       assert.notEqual(other.module.wasm_sha256, first.module.wasm_sha256);
       const record = JSON.parse(fs.readFileSync(
         path.join(reusing.directory, 'module-2-calculator-assemble.json'), 'utf8'));
-      assert.equal(record.reused_assembly, 'module-1');
+      assert.equal(record.reused_assembly, true);
       assert.deepEqual([prepare(plain, wat, 1), prepare(plain, wat, 2)]
         .map(ready => ready.timing.worker_cache), ['miss', 'miss']);
       // Every calculator module must carry its host-validated generation.

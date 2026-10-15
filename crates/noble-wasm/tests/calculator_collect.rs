@@ -1021,7 +1021,7 @@ fn calculator_reuse_refuses_non_canonical_compiler_state() -> Result<(), String>
         .compiler
         .reuse_program_free(&recorded.artifact)
         .is_ok());
-    // A static literal advances `text_end`, which is never rewound.
+    // A static literal advances `text_end`, which no preparation rewinds.
     arena.normal("drop \"a\" drop")?;
     let advanced = arena
         .compiler

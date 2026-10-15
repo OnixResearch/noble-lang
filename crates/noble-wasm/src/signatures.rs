@@ -19,7 +19,7 @@ const CALCULATOR_EXPANDED_KEY_LIMIT: usize = 4 * crate::OUTPUT_BYTE_LIMIT;
 // The first key of each block is independent; decoding never follows more
 // than 31 predecessors. Hashes only skip unequal keys: a collision must
 // still compare every expanded byte before sharing an identity.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 struct PrefixKey {
     prefix: u32,
     length: u32,
@@ -46,7 +46,7 @@ const fn index_probe_cost(entries: usize) -> usize {
 /// The canonical grammar is injective and contains no caller-provided text.
 /// Calculator uses compact printable tokens so a long-lived selected session
 /// does not repeat verbose type names in every distinct structural key.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct Pool {
     pub(crate) keys: alloc::vec::Vec<alloc::vec::Vec<u8>>,
     prefix_keys: alloc::vec::Vec<PrefixKey>,

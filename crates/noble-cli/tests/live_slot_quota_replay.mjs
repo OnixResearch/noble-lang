@@ -40,7 +40,7 @@ function start(name) {
   const commands = path.join(evidenceDir, `${name}.requests.jsonl`);
   const stderrFile = path.join(evidenceDir, `${name}.stderr.txt`);
   for (const file of [output, commands]) fs.closeSync(fs.openSync(file, 'wx', 0o600));
-  const child = spawn('/bin/bash', [
+  const child = spawn('/bin/sh', [
     '-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
     'sh', binary, authority,
   ], { stdio: ['pipe', 'pipe', 'pipe'] });

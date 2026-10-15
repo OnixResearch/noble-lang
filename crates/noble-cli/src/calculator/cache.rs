@@ -13,9 +13,30 @@
 //! The guest still executes every module.
 //!
 //! The namespace component is the process-constant calculator module recipe:
-//! every `Session::new` builds its namespace from exactly that recipe, and a
+//! `Session::with_worker` builds its namespace from exactly that recipe, and a
 //! calculator session commits only checked Expression modules afterwards,
 //! which never change namespace content (only its staleness generations).
+//!
+//! Failed lines and restore. The committed session (`Session::transact`)
+//! restores the namespace, compiler, stack and worker arena after a failed
+//! line, but not this cache, which may keep entries recorded by modules of
+//! that line. Such an entry stays exact: it was recorded only after its
+//! module checked, prepared and executed normally, and it is the value of a
+//! pure function at its full key, independent of whether the line later
+//! committed. A restore only changes which key the next lookup presents. The
+//! restored compiler's canonical epoch is that of the last commit (its
+//! `text_end` and generation return with it), so an entry recorded at an
+//! epoch the failed line reached (after lowering a literal, say) matches only
+//! when a later line reaches exactly that epoch again; at any other epoch the
+//! lookup misses and the module is checked and prepared in full. The
+//! restored namespace has the same content (only its staleness generation
+//! differs), so the namespace component is unchanged. Conversely, the
+//! restore never reads this cache. The worker's exact-WAT module cache is
+//! likewise outside its committed arena: a compiled `WebAssembly.Module` is
+//! immutable code with no instance state (every execution instantiates it
+//! against the current memory, table and globals, with its own per-instance
+//! `submit_generation`), matched on the full WAT bytes, so one compiled during
+//! a failed line is exactly what recompiling those bytes would produce.
 
 use noble_kernel::types::Ty;
 

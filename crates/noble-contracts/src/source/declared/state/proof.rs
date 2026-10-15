@@ -13,6 +13,10 @@ impl super::ModuleSession {
     /// source proof in this immutable namespace. This does not authenticate
     /// the host's Lean callback or attest an installed Wasm artifact; those
     /// independent host gates are prerequisites for any publication.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Owner: noble-maintainers; module, version, contract and proof names are independent namespace selectors that refuse separately; bundling them would change the public noble-contracts API and its reviewed source inventory."
+    )]
     pub fn correspond_checked_target<'a>(
         &'a self,
         module_name: &str,

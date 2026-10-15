@@ -7,11 +7,13 @@
 //! (`"record": "module"`) carry:
 //!
 //! - `schema`: `"noble-calculator-trace/1"`.
-//! - `session`: process-local candidate session number (each session owns one
-//!   worker process); `line`: 1-based submitted line (0 = the startup session);
-//!   `phase`: `"session-init"` (the State initialization module of a new
-//!   session), `"replay"` (an accepted definition replayed into a candidate)
-//!   or `"line"` (the submitted line itself); `module`: session serial.
+//! - `session`: process-local session number (the calculator runs one
+//!   committed session with one worker process); `line`: 1-based submitted
+//!   line (0 = session startup); `phase`: `"session-init"` (the State
+//!   initialization module) or `"line"` (a module of a submitted line, which
+//!   runs directly on the committed session); `module`: session serial. A
+//!   failed line is restored, so its serials are issued again by the next
+//!   line: `(line, module)` is unique, `module` alone is not.
 //! - `source`, `source_sha256`, `source_bytes`: the exact guest module source
 //!   (a host-composed stage; a merged probe consumer is part of it).
 //! - `input_types`, `output_types`: operand stack heights before and after.

@@ -250,18 +250,21 @@ fn calculator_trace_is_observation_only() -> Result<(), Box<dyn std::error::Erro
     assert!(records
         .iter()
         .all(|record| record["schema"] == "noble-calculator-trace/1"));
-    // The startup session and the line's candidate session each initialize
-    // their State, then the line runs as guest modules of the candidate.
+    // One committed session initializes its State, then the line runs as
+    // guest modules directly on it (no candidate, no replay).
     assert_eq!(
         records
             .iter()
             .filter(|record| record["record"] == "session")
             .count(),
-        2
+        1
     );
     assert!(modules
         .iter()
         .any(|record| record["phase"] == "line" && record["line"] == 1));
+    assert!(modules
+        .iter()
+        .all(|record| record["phase"] == "line" || record["phase"] == "session-init"));
     for record in &modules {
         for key in [
             "check_us",
@@ -345,5 +348,33 @@ fn calculator_module_reuse_is_byte_identical_to_fresh_preparation(
     assert_eq!(states(&fresh_records, "worker", "hit"), 0);
     assert!(states(&reused_records, "host", "hit") > 0);
     assert!(states(&reused_records, "worker", "hit") > 0);
+    Ok(())
+}
+
+/// The calculator runtime's Node tests skip without an assembler. Run them
+/// with the selected Node and this build's CLI so they execute or fail here.
+#[test]
+fn calculator_runtime_node_tests_run_with_built_assembler() -> Result<(), std::io::Error> {
+    let runtime = concat!(env!("CARGO_MANIFEST_DIR"), "/src/core/runtime");
+    let output = std::process::Command::new(
+        "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    )
+    .args(["--test", "--test-reporter=tap"])
+    .arg(format!("{runtime}/engine-assets.test.mjs"))
+    .arg(format!("{runtime}/engine-calculator.test.mjs"))
+    .env("NOBLE_CALCULATOR_ASSEMBLER", env!("CARGO_BIN_EXE_noble"))
+    .output()?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "calculator runtime Node tests failed: stdout={stdout} stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    for summary in ["# tests 6", "# pass 6", "# fail 0", "# skipped 0"] {
+        assert!(
+            stdout.lines().any(|line| line == summary),
+            "missing `{summary}` in Node test summary: {stdout}"
+        );
+    }
     Ok(())
 }

@@ -192,9 +192,7 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
             env.effects == [TEST_EMIT, LIVE_DISPATCH]
         };
     }
-    let mut effects = if count == 23 {
-        alloc::vec![TEST_EMIT]
-    } else if count == 27 || count == 32 {
+    let mut effects = if count == 23 || count == 27 || count == 32 {
         alloc::vec![TEST_EMIT]
     } else {
         alloc::vec![TEST_EMIT, noble_kernel::types::EffId(1)]

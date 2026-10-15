@@ -129,10 +129,8 @@ fn lookup(
         return Ok(super::Target::Builtin(26));
     }
     if word == b"self.propose" {
-        if session.live_selected.as_deref() == declaration {
-            if declaration.is_some() {
-                return Ok(super::Target::Builtin(24));
-            }
+        if session.live_selected.as_deref() == declaration && declaration.is_some() {
+            return Ok(super::Target::Builtin(24));
         }
         return Err(crate::invalid(
             span,
