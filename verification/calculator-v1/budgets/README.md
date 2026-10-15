@@ -98,6 +98,25 @@ Work charge.
   runtime step quota is a runtime status with quota reason 6, and produces no
   guest value.
 
+## Slow numeric-path tier on the integrated tree
+
+The ignored release tier ran on `main` at `05a50b0`, whose sources match the
+integration commit `2edb977`, with the pinned toolchain and reviewed vendor:
+
+```sh
+cargo test --release -p noble-wasm --test calculator_numeric_paths -- --ignored
+```
+
+| Test | Result |
+|---|---|
+| `calc_04_constructor_and_decoder_vectors` | pass |
+| `calc_05_i64_bound_vectors` | pass |
+| `calc_05_out_of_range_below_and_non_integral` | pass |
+
+The tier passed 3 of 3 in 528.8 s (531 s wall, including the build check). The
+four default-tier tests also pass in `rust-tests` on `2edb977`. These are
+runtime observations; no CALC case state changed.
+
 ## Non-claims
 
 - No canonical CALC case state, evidence or implementation status changes.
