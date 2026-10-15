@@ -96,7 +96,7 @@ try {
     for (const line of code.split('\n')) {
       const ns = line.match(/^namespace\s+(\S+)/);
       if (ns) namespace = ns[1];
-      const th = line.match(/^(?:@\[[^\]]*\]\s*)?theorem\s+(\S+)/);
+      const th = line.match(/^\s*(?:@\[[^\]]*\]\s*)?theorem\s+(\S+)/);
       if (th) declared.push(th[1].startsWith('_root_.') ? th[1].slice(7) : `${namespace}.${th[1]}`);
     }
   }

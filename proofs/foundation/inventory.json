@@ -530,6 +530,150 @@
       "phase": 4,
       "role": "comparator-instantiation",
       "claim": "inputs then [ ops ] quote run run equals refRun, any prefix"
+    },
+    {
+      "name": "NobleFoundation.stackTyped_length",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "typed stacks have the length of their type list"
+    },
+    {
+      "name": "NobleFoundation.stackTyped_append_inv",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "typed concatenation splits at a known-length boundary"
+    },
+    {
+      "name": "NobleFoundation.ityped_cons",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "internal push typing is public snoc typing"
+    },
+    {
+      "name": "NobleFoundation.ityped_cons2",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "two-value internal typing"
+    },
+    {
+      "name": "NobleFoundation.ityped_cons3",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "three-value internal typing"
+    },
+    {
+      "name": "NobleFoundation.Run.preserve",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "typed code preserves typing on every normal-return Run (mutual with Step.preserve)"
+    },
+    {
+      "name": "NobleFoundation.Step.preserve",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "every MC1 word preserves typing on normal return, including dip/run/case/if/list.case"
+    },
+    {
+      "name": "NobleFoundation.exec_preserves",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "PO-02 slice for the pure MC1 model: CodeTyped + StackTyped input + Exec => StackTyped output"
+    },
+    {
+      "name": "NobleFoundation.ityped_snoc_inv",
+      "phase": 2,
+      "role": "progress",
+      "claim": "typed nonempty interface implies a nonempty stack"
+    },
+    {
+      "name": "NobleFoundation.progress_primitive",
+      "phase": 2,
+      "role": "progress",
+      "claim": "typed primitive (non-control, non-host) operations always step: no forbidden stuck state"
+    },
+    {
+      "name": "NobleFoundation.host_word_outside_model",
+      "phase": 2,
+      "role": "progress",
+      "claim": "host word 22 has no MC1 rule (host contracts outside the model)"
+    },
+    {
+      "name": "NobleFoundation.BehEq.refl",
+      "phase": 2,
+      "role": "laws",
+      "claim": "behavioral equality is reflexive"
+    },
+    {
+      "name": "NobleFoundation.BehEq.append",
+      "phase": 2,
+      "role": "laws",
+      "claim": "behavioral equality is a congruence for sequencing"
+    },
+    {
+      "name": "NobleFoundation.BehEq.run",
+      "phase": 2,
+      "role": "laws",
+      "claim": "running behaviorally equal programs gives equal normal results"
+    },
+    {
+      "name": "NobleFoundation.construction_is_pure",
+      "phase": 2,
+      "role": "laws",
+      "claim": "building a program pushes exactly that value for any body"
+    },
+    {
+      "name": "NobleFoundation.latent_effect_not_performed",
+      "phase": 2,
+      "role": "laws",
+      "claim": "a program containing the host word is constructible but has no normal run"
+    },
+    {
+      "name": "NobleFoundation.compose_assoc",
+      "phase": 2,
+      "role": "laws",
+      "claim": "compose is recipe-associative"
+    },
+    {
+      "name": "NobleFoundation.compose_identity",
+      "phase": 2,
+      "role": "laws",
+      "claim": "the empty program is a two-sided recipe identity for compose"
+    },
+    {
+      "name": "NobleFoundation.quote_laws",
+      "phase": 2,
+      "role": "laws",
+      "claim": "quote then run pushes the value; quote then reflect observes [lit v]"
+    },
+    {
+      "name": "NobleFoundation.reflect_compose",
+      "phase": 2,
+      "role": "laws",
+      "claim": "reflect of a composition observes the unnormalized concatenated recipe"
+    },
+    {
+      "name": "NobleFoundation.behavior_is_not_recipe",
+      "phase": 2,
+      "role": "laws",
+      "claim": "1 1 + and 2 are behaviorally equal, recipe-distinct, and reflect distinguishes them"
+    },
+    {
+      "name": "NobleFoundation.compose_requires_exact_middle",
+      "phase": 2,
+      "role": "laws",
+      "claim": "compose is untypable when the interfaces differ in the middle"
+    },
+    {
+      "name": "NobleFoundation.wrong_subject_evidence",
+      "phase": 2,
+      "role": "laws",
+      "claim": "the increment claim holds for [1 +] and fails for [2 +]"
+    },
+    {
+      "name": "NobleFoundation.program_duplicable",
+      "phase": 2,
+      "role": "laws",
+      "claim": "program values are typable and steppable under dup"
     }
   ]
 }
