@@ -58,6 +58,21 @@ the commit that adds this note.
 - `1164d18`: merge of `verification/calc-integration-eccbc02` `ee5eef7`
   (integrated CALC receipt JSON and tar.gz, plus README and tasks.md
   references).
+- `0605034`: this list.
+- `ba0d7c7`: merge of `feat/issue-21-calculator-oracle` `8260310`, which
+  adds files only under `verification/calculator-v1/`:
+  - Node oracle and comparison scripts;
+  - seeded-fault patches applied only to scratch mutant builds;
+  - evidence controls;
+  - the CALC-12 receipts and the CALC-10–13 records.
+
+  Its Node self-checks were run on the merged tree with the pinned Node 24.13.0:
+  - `compare.mjs cases` agrees with all 38 cases-file expectations;
+  - `compare.mjs generate --seed 2112` produced 14 vectors;
+  - `compare.mjs harness` was run on those vectors once per fault model, and
+    each of the 7 fault models disagreed on at least one vector;
+  - `evidence-controls/controls.mjs` was run against the integrated release
+    binary (`f7f02dfb…85ec`) and reported all 6 controls ok (`all_ok`).
 
 Integration also renews the collection capacity to 58 units (`1d074ea`), with
 collector evidence in `receipt.json`, and renews the source inventory
