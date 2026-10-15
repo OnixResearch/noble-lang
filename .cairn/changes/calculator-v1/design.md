@@ -51,6 +51,43 @@ r[CALC-LIMIT-01]
 
 **Rationale:** Each charge is at least the number of guest list-element visits of the work it admits, so admission bounds work deterministically before it runs. The former operator charge, 150·b², charged integer addition as a full multiplication. It also undercounted lopsided products, because the guest shift-and-add iterates over the multiplier and pays a Q² term. The former literal width 4d+2 overestimated bits by about 20%, and that overestimate was squared. The tighter forms keep the 4,000,000 default: two 16-digit integer operands no longer exhaust it. Runtime quotas (steps, allocation, session cells) depend only on the widths a submission touches. Every value of width X still requires a gate costing at least 100·X², through power, literal or normalization. Operator submissions above 384 bits pay at least 150·b². So the largest width an admitted line can touch is at most max(384, the former frontier) for the same budget, and no new runtime-quota exposure is introduced. A denial remains a deterministic `ResourceLimit EvaluationWork`, never a host timeout.
 
+### Host stack protocol
+
+**Choice:** Every host stage is a separately compiled guest module typed over the whole retained operand stack, so the shell arranges that stack to keep each compile under the selected caps. The cost model, from the compiler:
+
+- *Quotation concretization.* A quotation's row variables are instantiated to the concrete stack beneath it. `dip : S a Program<S,T,e> -- T a ! e` therefore types its quotation as `Program<S,T>` over every cell below the one held item, and preflight counts that whole type against the request's `type_size` of 256 structural nodes per instantiated stack entry or value binding (`concrete::count`). A `Program` counts 1 plus every node of its input and output rows: a quotation pays for everything beneath it, once on each side.
+- *`dip` excludes exactly one item.* Only the top cell is outside the quotation's type; every deeper cell is inside it.
+- *Generic nominals count twice.* `type_children` walks both the arguments and the substituted descriptor of a generic nominal, so `Result<A,B>` counts 1 + 2|A| + 2|B|. A builtin `Sum<A,B>` or `Pair<A,B>` counts 1 + |A| + |B|.
+- *Work scales with the environment.* Preflight prices every node against the concrete frame beneath it, including each nominal lookup times the environment's nominal and generic-variant rows. Admission then grants an allowance of `environment_work × (named + 3)` and spends it on one whole-environment scan, the named schemes and one independent kernel environment validation per body. Every environment row therefore raises the cost of every stage, and every named body in a stage's closure raises it by a further `environment_work`. All of it shares the 2,000,000,000-unit issued ceiling per preparation.
+
+The rules the host follows where a stage is near a cap:
+
+- *Register on top, stage under `dip`.* Move the large context (State, display flag, `FrameHot`) into one cell on top and run the stage as `[ stage ] dip`, so the stage's quotation types over its small operands only. `swap [ stage ] dip swap` is the same rule when the context sits second.
+- *Stage wrapper rule.* A wrapped stage W must satisfy 1 + |W_in| + |W_out| ≤ 256, where |W_in| and |W_out| are the node totals of the cells below the held one before and after; inside it, every quotation obeys the same bound over its own concrete stack.
+- *Park large values above heavy callees.* When the cells a callee must not see do not fit in one held item, pair them and hold the pair: `[ pair ] dip swap [ X ] dip swap [ unpair ] dip`. When the callee's closure is near the Work ceiling, park, run and unpark in separate compiles, so no single preparation types the callee's nodes over the State-carrying cells.
+- *Prefer builtin sums for large payloads.* Carry a large Pending/cursor pair in `Sum<_,Unit>` (`inl`/`inr`) while it is large and convert back to `Result` once it is small (`TO_SUM`/`FROM_SUM`).
+
+The layout `main` actually uses:
+
+- *Lexing* runs top-level words over `[ State Bool Text cursor… ]` with no `dip`; the finite-decimal flag and source arrive above State.
+- *Parsing* uses `phase()`, `[ swap ] dip swap [ w ] dip swap [ swap ] dip`, which hides the third cell of `[ hidden Bool Parser ]`. The hidden cell is State, `Pair<State,Name>` for a let, or State paired with function metadata.
+- *Evaluation* runs over `[ Ctx FrameHot ]`, then `[ Ctx carrier ]`, with `Ctx = Pair<State,Bool>` or, for a let, `Pair<Pair<State,Bool>,Result<Name,Unit>>`. The numeric stage macros (`eval_stage!`, `span_stage!`, `sum_*`) hide Ctx with `swap [ … ] dip swap`; literal and binary-operator stages hide two cells. Heavy numeric, GCD, finish and parser-fault stages use the pair-parked form. `count_finite_round` and the ASCII fraction finish park, run and restore in separate compiles.
+- *Calls* never park the caller frame on the typed stack. During a callee the worker holds exactly `[ Ctx FrameHot ]`. The guest stashes the caller Text and remaining tokens in a State-held function frame and restores the exact caller State when the body completes. Call stages type over `[ Reg Carrier ]` with `Reg = Pair<Ctx,FrameHot>` second, and push status above it with `calc_bits@1.rot`.
+- *Display* stages over `Bool Pair<State,X>` and the parked `Pair<State,Bool>`. The ASCII bit scan keeps State on top and runs its stages under `dip`.
+- *Status* is read from the top cell (`stack.last()`), then consumed by a quotation-free `drop` or `unpair drop` prefixed to the next module. The exceptions are variable lookup, which reads its probe under the register (second cell), and the power-loop probe, which reads `[ carrier Bool Ctx ]`.
+
+An unpublished pre-port draft stated invariants I1–I5: one register on top; stages run as `[ stage ] dip` under the wrapper rule and an inner rule 1 + |below| + |consumed| + |out| ≤ 256; quotation-free register moves; no large values beneath a quotation; status read from the working top (`stack[len-2]`). `main` departs from it:
+
+- I1 holds only for variable lookup, the power-loop probe and the ASCII bit scan. Arithmetic keeps Ctx second, the call path keeps its register second, parsing hides the third cell, and display keeps State inside the top pair.
+- I2 holds in substance through `swap [ … ] dip swap`, the double-hiding `span_stage!` and `phase()`. Top-level frame words such as `frame_hot_failed` and `frame_peek_kind` run with no `dip` over `[ Ctx FrameHot ]`.
+- I3 is not followed. `phase()`, the stage macros and the call path move cells with quotations (`[ swap ] dip`, `calc_bits@1.rot`).
+- I4 is applied selectively, by parking, splitting and builtin sums, where a measured stage crossed a cap. It is not a global invariant.
+- I5 applies only to the two probes above. Every other status read takes the top cell.
+
+The calculator headroom check (`tools/calculator-headroom.mjs`) reports each stage's distance from every cap on real stage chains. A rewrite to the full draft is warranted only where that report shows a stage under its margin.
+
+**Rationale:** The type-size and Work caps are per preparation, and every stage is its own preparation, so the cost of a stage is set by the stack it is typed over, not by the work it does. Keeping these rules only in host comments let later additions of nominals or environment rows push formatter and evaluator words over a cap without warning. Recording the cost model, the rules and the actual layout lets a change predict which stages it affects; the headroom check measures the result. r[CALC-LIMIT-01]
+
 ### Evidence and lifecycle
 
 **Choice:** Exercise full compiled guest paths and negative controls separately from document validation. Preserve canonical CALC-01 through CALC-13 states and older M1–M4 evidence. Do not infer an accepted case from one arithmetic vector, a source typecheck, successful WAT assembly, a local native delta or proof about wrapping `I64`. This package remains active/unselected until its source and actual guest observations meet their gates. Pinned Cairn lifecycle gates are unrun under the current explicit no-Nix/low-space directive; offline local specification checks, if run, cannot substitute for them. r[CALC-GATE-01]
