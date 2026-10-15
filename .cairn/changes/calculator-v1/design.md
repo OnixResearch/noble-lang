@@ -36,20 +36,55 @@ The accepted CALC requirements describe an application, not a new language confo
 
 - Preparse: 1 per input byte.
 - Decimal literal of d digits: estimated width w = ⌊(3322·d + 999)/1000⌋ + 2 = ⌈3.322·d⌉ + 2 for d ≤ 256 (the default NumericDigits budget), else the former 4d + 2. This is at least the bit width of the magnitude and of its 10^f denominator, because 3.322 > log₂10. The literal costs 50·(2w+1)², and w is also the literal's IntermediateIntegerBits estimate.
-- Raw rational normalization, with g = width(num) + width(den) + 2: gcd 50·g², numerator finish 25·g², denominator finish 25·g².
+- Raw rational normalization, with g = width(num) + width(den) + 2: gcd 50·g², numerator finish 25·g², denominator finish 25·g'², where g' = width(reduced num) + width(den) + 2 (`finish_den_measure`), so g' = g when the gcd is 1.
 - Power: 100·W² for the projected width W.
 - Display: 100·w², where w = width(num) + width(den) + 2.
 - Binary operator: 150·C. With a=|n1|, c=|d1|, e=|n2|, f=|d2| and b = a+c+e+f+2, C counts list-element visits of the operator's actual loops. A stepped shift-and-add product with multiplicand width P and multiplier width Q costs M(P,Q) = 4PQ + 2Q² + 9Q + 2. Per operator:
   - × is M(a,e) + M(c,f).
-  - ÷ is M(a,f) + M(c,e).
-  - ± is M(a,f) + M(c,e) + M(c,f) + 5b + 9.
+  - ÷ is S = M(a,f) + M(max(c,e), min(c,e)) + c + e + 2.
+  - ± is S + M(c,f) + 5b + 9.
   - Every operator adds 2b + 4 for its width measurements.
   - When b exceeds 384, the widths are not packed and C = 8b² + 25b + 19.
   - `op_work_limit` and `op_work_probe` measure the operand widths, and `op_work_route` counts and decides.
+- Product roles. The guest loop iterates over the multiplier, so each product's charge follows its stage's operand order:
+
+  | Operator | Product | Stage | Multiplicand | Multiplier | Count |
+  |---|---|---|---|---|---|
+  | × | n1·n2 | `op_first_stage_seed_mul` | n1 (a) | n2 (e) | M(a,e) |
+  | × | d1·d2 | `op_first_stage_second_mul` | d1 (c) | d2 (f) | M(c,f) |
+  | ±, ÷ | n1·d2 | `op_first_stage_seed_cross` | n1 (a) | d2 (f) | M(a,f) |
+  | ±, ÷ | d1·n2 | `op_first_stage_second_cross` | wider of d1, n2 | narrower; d1 on a tie | M(max(c,e), min(c,e)) + c + e + 2 |
+  | ± | d1·d2 | `op_first_stage_sum_den_mul` | d1 (c) | d2 (f) | M(c,f) |
+
+  `op_first_stage_second_cross` measures both widths with `big_width` (c+1 and e+1 positions of `bit_count`, hence c + e + 2) and passes the narrower operand as multiplier. `op_work_probe` orders the same pair the same way, d1 as multiplier on a tie.
+- Visit count of M(P,Q). One unit is one position of a guest loop pass. Multiplier bit i (0 ≤ i < Q) sees the multiplicand shifted to width P+i and an accumulator below 2^(P+i), so their sum has at most P+i+1 positions. Each bit costs 7 fixed units: route, probe and shift, plus the add's begin and the terminal steps of its continue, trim and reverse passes. A set bit's add also costs 4(P+i+1): digit, continue, trim and reverse over each sum position. Summed over the Q bits, this is 4PQ + 2Q(Q−1) + 4Q + 7Q = 4PQ + 2Q² + 9Q, and the cursor start and the final route on the empty multiplier add 2. The Q² term follows the multiplier: with d1 = 1, the former d1·n2 order cost M(1,e) = 2e² + 13e + 2, and the width-ordered stage costs M(e,1) + e + 3 = 5e + 16.
+- Above-384-bit bound. With s = a+c+e+f = b−2 and Q* = min(c,e), so that Q*² ≤ ce:
+  - ± is 4(af + ce + cf) + 2Q*² + 4f² + 18f + 9Q* + c + e + 7b + 21.
+  - Its quadratic terms are at most 4s², because 4s² ≥ 4f² + 8af + 8ce + 8cf. Its linear terms 18f + 9Q* + c + e are at most 18s. So C(±) ≤ 4s² + 18s + 7b + 21 = 4b² + 9b + 1.
+  - ÷ is ± without M(c,f) + 5b + 9, so it is smaller.
+  - × is 4ae + 2e² + 4cf + 2f² + 9e + 9f + 2b + 8 ≤ 4s² + 9s + 2b + 8 = 4b² − 5b + 6.
+  - Every kind is therefore below 8b² + 25b + 19, and the landed cap stays a sound bound. Its value is unchanged, so admission above 384 bits does not change.
 
 r[CALC-LIMIT-01]
 
-**Rationale:** Each charge is at least the number of guest list-element visits of the work it admits, so admission bounds work deterministically before it runs. The former operator charge, 150·b², charged integer addition as a full multiplication. It also undercounted lopsided products, because the guest shift-and-add iterates over the multiplier and pays a Q² term. The former literal width 4d+2 overestimated bits by about 20%, and that overestimate was squared. The tighter forms keep the 4,000,000 default: two 16-digit integer operands no longer exhaust it. Runtime quotas (steps, allocation, session cells) depend only on the widths a submission touches. Every value of width X still requires a gate costing at least 100·X², through power, literal or normalization. Operator submissions above 384 bits pay at least 150·b². So the largest width an admitted line can touch is at most max(384, the former frontier) for the same budget, and no new runtime-quota exposure is introduced. A denial remains a deterministic `ResourceLimit EvaluationWork`, never a host timeout.
+**Rationale:** Each charge is at least the number of guest list-element visits of the work it admits, so admission bounds work deterministically before it runs. The former operator charge, 150·b², charged integer addition as a full multiplication. It also undercounted lopsided products, because the guest shift-and-add iterates over the multiplier and pays a Q² term. The ± and ÷ cross product d1·n2 formerly took n2 as multiplier. Integer ± and ÷ (d1 = 1) therefore paid 2e² in Work and one stepped stage per bit of n2, plus an add for each set bit. The width-ordered stage pays M(max, min) plus the c + e + 2 width count. That is never more than either fixed order plus at most b units, and it adds no guest submission. A fixed swap (d1 always the multiplier) would instead move the Q² term onto d1, and decimal and rational left operands have wide denominators. Charges C per order, with the d1·n2 product's guest submissions in parentheses:
+
+| Operands | a,c,e,f / b | Former n2 multiplier | Fixed d1 multiplier | Width-ordered |
+|---|---|---|---|---|
+| `9007199254740993 - 9007199254740992` | 54,1,54,1 / 112 | 7,579 (546) | 1,272 (175) | 1,329 (175) |
+| `9223372036854775807 + 1` | 63,1,1,1 / 68 | 788 (16) | 788 (16) | 792 (16) |
+| `1 + 18014398509481983` | 1,1,54,1 / 59 | 6,996 (4,892) | 689 (175) | 746 (175) |
+| `1/3 + 1/6` | 1,2,1,3 / 9 | 227 (19) | 242 (30) | 232 (19) |
+| `0.1 + 0.2` | 1,4,1,3 / 11 | 273 (25) | 330 (53) | 280 (25) |
+| `0.000001 + 1` | 1,20,1,1 / 25 | 391 (73) | 1,360 (470) | 414 (73) |
+| `2^-60 + 3` | 1,61,2,1 / 67 | 1,272 (390) | 9,237 (619) | 1,337 (390) |
+| `1.5 + 2.25` | 2,2,4,3 / 13 | 348 (56) | 306 (35) | 314 (35) |
+| `1 / 18014398509481983` | 1,1,54,1 / 59 | 6,675 (4,892) | 368 (175) | 425 (175) |
+| `0.000001 / 3` | 1,20,2,1 / 26 | 261 (147) | 1,215 (500) | 285 (147) |
+
+The former literal width 4d+2 overestimated bits by about 20%, and that overestimate was squared.
+
+The tighter forms keep the 4,000,000 default: two 16-digit integer operands no longer exhaust it. Runtime quotas (steps, allocation, session cells) depend only on the widths a submission touches. Every value of width X still requires a gate costing at least 100·X², through power, literal or normalization. Operator submissions above 384 bits pay at least 150·b². So the largest width an admitted line can touch is at most max(384, the former frontier) for the same budget, and no new runtime-quota exposure is introduced. A denial remains a deterministic `ResourceLimit EvaluationWork`, never a host timeout.
 
 ### Evidence and lifecycle
 
