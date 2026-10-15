@@ -16,13 +16,52 @@ let
   shell = "crates/noble-cli/src/main.rs";
   shellManifest = "crates/noble-cli/Cargo.toml";
   kernelManifest = "crates/noble-kernel/Cargo.toml";
+  # Remove one whole top-level TOML table (header through the next header).
+  dropTable =
+    header: text:
+    let
+      step =
+        acc: line:
+        if lib.hasPrefix "[" line then
+          {
+            skip = line == header;
+            out = acc.out ++ lib.optional (line != header) line;
+          }
+        else if acc.skip then
+          acc
+        else
+          acc // { out = acc.out ++ [ line ]; };
+    in
+    builtins.concatStringsSep "\n"
+      (builtins.foldl' step {
+        skip = false;
+        out = [ ];
+      } (lib.splitString "\n" text)).out;
+  # Move every normal shell dependency to [dev-dependencies]. An existing
+  # dev-dependency table may be folded in only when each of its entries is
+  # already an identical normal dependency; anything else is not this control.
+  shellDevManifest =
+    text:
+    let
+      manifest = builtins.fromTOML text;
+      normal = manifest.dependencies or { };
+      dev = manifest.dev-dependencies or { };
+      redundant = builtins.all (name: normal ? ${name} && normal.${name} == dev.${name}) (
+        builtins.attrNames dev
+      );
+    in
+    if dev == { } then
+      replaceOnce "[dependencies]" "[dev-dependencies]" text
+    else if redundant then
+      replaceOnce "[dependencies]" "[dev-dependencies]" (dropTable "[dev-dependencies]" text)
+    else
+      throw "boundary fixture: shell dev-dependencies differ from its normal dependencies";
   acyclic =
     if case.base == "acyclic_shell" then
       {
         # Isolate normal dependencies without disabling real integration targets.
         # Test-only edges permit their imports without a production kernel cycle.
-        ${shellManifest} =
-          replaceOnce "[dependencies]" "[dev-dependencies]" files.${shellManifest};
+        ${shellManifest} = shellDevManifest files.${shellManifest};
         ${shell} = ''
           //! Standalone acyclic shell fixture; compiled, never executed.
           fn main() {

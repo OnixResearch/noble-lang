@@ -40,6 +40,26 @@ let
       cases.randomness // { base = "acyclic_shell"; }
     ) files)
     (
+      let
+        before = builtins.fromTOML files."crates/noble-cli/Cargo.toml";
+        after = builtins.fromTOML (render cases.acyclic-shell files)."crates/noble-cli/Cargo.toml";
+      in
+      assert !(after ? dependencies);
+      assert after.dev-dependencies == before.dependencies;
+      assert builtins.removeAttrs after [ "dev-dependencies" ]
+        == builtins.removeAttrs before [
+          "dependencies"
+          "dev-dependencies"
+        ];
+      "acyclic shell manifest parses and moves exactly the normal dependencies to dev-dependencies"
+    )
+    (rejects "acyclic shell rejects a dev-dependency that is not a normal dependency"
+      cases.acyclic-shell
+      (files // {
+        "crates/noble-cli/Cargo.toml" =
+          files."crates/noble-cli/Cargo.toml" + "\n[dev-dependencies.unreviewed]\nversion = \"=1.0.0\"\n";
+      }))
+    (
       assert render cases.workspace files == { };
       "workspace baseline has no source mutation"
     )
