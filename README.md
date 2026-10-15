@@ -208,6 +208,9 @@ The [calculator acceptance runner](verification/calculator-v1/README.md) runs
 the canonical CALC-01/02/03/06/07/09 CLI vectors against an exact prebuilt
 binary, one process per vector, and keeps raw I/O and a JSON receipt outside
 the repository. Its results are observations; they do not promote cases.
+On the `44329dc` release snapshot all 34 runnable vectors passed
+([receipt](verification/calculator-v1/receipt-44329dc-release.json)); a
+single-line vector took 51–2,051 s and the CALC-06 session 8,689 s.
 
 The `Calculator-v1` source/worker profile is separate from Core-Bootstrap,
 Declared-Modules-v1, Text-Byte-Cursor-v1 and live profiles. Its compiler has a

@@ -101,3 +101,53 @@ The receipt records:
 
 The runner checks the binary hash. It cannot prove that the binary was built
 from the recorded source.
+
+## Receipt: 44329dc release snapshot
+
+[`receipt-44329dc-release.json`](receipt-44329dc-release.json) is a compact
+field subset of one full run. The complete runner receipt and the raw
+per-vector stdin, stdout, stderr and supervisor files are in
+[`receipt-44329dc-release.tar.gz`](receipt-44329dc-release.tar.gz) (its
+`receipt.json` has SHA-256 `a6256582…b1d65d`, recorded in the compact file).
+The run used:
+
+- binary `noble` built from `44329dc` (owner-supplied identity), release
+  profile, SHA-256
+  `e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127`;
+- runner commit `1e16953` with no tracked changes, on host aspen3 (32 CPUs),
+  from 2026-10-15 17:20:22Z to 19:45:11Z;
+- concurrency 6, a 7,200 s vector timeout, a 21,600 s session timeout,
+  `MemoryMax=2G` and `MemorySwapMax=0` per vector scope, and default guest
+  budgets.
+
+| Case | Run | Pass | Wall time (s) | Peak scope memory (MiB) |
+|---|---|---|---|---|
+| CALC-01 | 15 | 15 | 392.9–2,051.1 | 270 |
+| CALC-02 | 5 | 5 (category and span) | 51.0–169.3 | 257 |
+| CALC-03 | 4 | 4 | 292.6–554.0 | 261 |
+| CALC-06 | 1 session (9 lines) | 1 | 8,689.0 | 473 |
+| CALC-07 | 5 (+2 unsupported on the CLI) | 5 | 266.6–851.5 | 414 |
+| CALC-09 | 4 | 4 | 431.6–732.8 | 268 |
+
+No vector timed out, failed natively, hit a host limit or was OOM-killed.
+"Peak scope memory" is the scope's `memory.peak`, which includes the
+supervisor. The largest single-process peak RSS was 243 MiB. Per-vector wall
+times summed to 28,772 s.
+
+CALC-06 printed `10`, `20`, `11`, `3`, `DivisionByZero [10,11)`, `20` and
+`WrongArity [0,1)`. So the failed `let x = 1 / 0` left `x = 20`.
+CALC-07 produced:
+
+- `fn h()=q` → `UnknownName [7,8)`;
+- `fn f(y, y)=y` → `DefinitionError [8,9)`;
+- `fn f(y)=f(y)` → `DefinitionError [8,9)`.
+
+Each of these three was followed by a call that reported `UnknownName`, so
+the rejected function was not installed. `fn z()=1 / 0` was accepted
+silently, and the call `z()` then gave `DivisionByZero [9,10)`. Both negative
+controls classified as required (`fail` and `timeout`).
+
+These are finite implementation observations of one prebuilt binary. They do
+not change any case `state` or `evidence` in
+[`calculator-cases.json`](../../specs/conformance/calculator-cases.json), and
+they are not Calculator-v1 acceptance.
