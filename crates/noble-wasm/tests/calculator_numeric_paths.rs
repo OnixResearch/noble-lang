@@ -524,17 +524,20 @@ fn binary(guest: &mut Guest, operator: Operator) -> Result<(), String> {
     };
     guest.run(&[
         begin,
-        lift("num.op_bits_measure_left num.op_bits_measure_right num.op_bits_limit"),
-        flat(&format!(
-            "num.op_bits_probe {}",
-            gate("unit num.op_bits_deny", "num.op_bits_admit")
-        )),
+        lift("num.op_bits_measure_left"),
+        lift("num.op_bits_measure_right"),
+        lift("num.op_bits_limit"),
+        lift("num.op_bits_probe"),
+        flat(&gate("unit num.op_bits_deny", "num.op_bits_admit")),
+        lift("num.op_work_limit"),
+        lift("num.op_work_probe"),
+        lift("num.op_work_route"),
         flat(
-            "num.op_work_limit num.op_work_probe num.op_work_route unpair \
-             [ drop num.op_work_admit num.op_work_commit result@1.Result.Ok ] \
+            "unpair [ drop num.op_work_admit result@1.Result.Ok ] \
              [ swap drop num.op_work_deny calc_errors@1.numeric_code result@1.Result.Err ] \
              result@1.Result.match",
         ),
+        lift("num.op_work_commit"),
         lift_unit("num.op_first_stage_seed_cross"),
     ])?;
     signed_product(guest)?;
@@ -632,75 +635,95 @@ fn signed_product(guest: &mut Guest) -> Result<(), String> {
 /// numerator-finish and denominator-finish gates and materialization.
 fn normalize(guest: &mut Guest) -> Result<(), String> {
     guest.run(&[
-        flat(&format!(
-            "unpair num.gcd_measure num.gcd_bits_limit num.gcd_bits_probe {}",
-            gate("unit num.gcd_bits_deny", "num.gcd_bits_admit")
-        )),
-        flat(&format!(
-            "num.gcd_work_limit num.gcd_work_probe {}",
-            gate(
-                "unit num.gcd_work_deny",
-                "num.gcd_work_admit num.gcd_commit_work"
-            )
-        )),
-        lift("num.gcd_one_probe num.gcd_one_route"),
+        lift("unpair num.gcd_measure"),
+        lift("num.gcd_bits_limit"),
+        lift("num.gcd_bits_probe"),
+        flat(&gate("unit num.gcd_bits_deny", "num.gcd_bits_admit")),
+        lift("num.gcd_work_limit"),
+        lift("num.gcd_work_probe"),
+        flat(&gate("unit num.gcd_work_deny", "num.gcd_work_admit")),
+        lift("num.gcd_commit_work"),
+        lift("num.gcd_one_probe"),
+        lift("num.gcd_one_route"),
     ])?;
     let route = "dup [ [ drop 0 ] [ drop 1 ] num.GcdRoute.match ] [ 1000 + 0 swap - ] \
                  result@1.Result.match";
     for _ in 0..4096 {
         if !flag(guest.observe(&[route.to_owned()], 1)?[0])? {
-            guest.run(&[
-                flat("[ result@1.Result.Ok ] [ drop -1 result@1.Result.Err ] num.GcdRoute.match"),
-                flat(&format!(
-                    "unpair num.finish_num_measure num.finish_num_bits_limit \
-                     num.finish_num_bits_probe {}",
-                    gate("unit num.finish_num_bits_deny", "num.finish_num_bits_admit")
-                )),
-                flat(&format!(
-                    "num.finish_num_work_limit num.finish_num_work_probe {}",
-                    gate(
-                        "unit num.finish_num_work_deny",
-                        "num.finish_num_work_admit num.finish_num_commit_work"
-                    )
-                )),
-                lift("num.finish_num_one_probe num.finish_num_route"),
-                lift(
-                    "[ ] [ num.finish_num_bit_batch_begin num.finish_num_bit_batch_step \
-                     num.finish_num_bit_batch_done_direct num.finish_num_divide_bits \
-                     num.finish_num_divide_materialize num.finish_num_divide_finish ] \
-                     num.FinishNumRoute.match",
-                ),
-                flat(&format!(
-                    "unpair num.finish_den_measure num.finish_den_bits_limit \
-                     num.finish_den_bits_probe {}",
-                    gate("unit num.finish_den_bits_deny", "num.finish_den_bits_admit")
-                )),
-                flat(&format!(
-                    "num.finish_den_work_limit num.finish_den_work_probe {}",
-                    gate(
-                        "unit num.finish_den_work_deny",
-                        "num.finish_den_work_admit num.finish_den_commit_work"
-                    )
-                )),
-                lift("num.finish_den_one_probe num.finish_den_route"),
-                lift(
-                    "[ ] [ num.finish_den_bit_batch_begin num.finish_den_bit_batch_step \
-                     num.finish_den_bit_batch_done_direct num.finish_den_divide_bits \
-                     num.finish_den_divide_materialize num.finish_den_divide_finish ] \
-                     num.FinishDenRoute.match",
-                ),
-                lift("unpair num.finish_materialize"),
-            ]);
+            guest.run(&[flat(
+                "[ result@1.Result.Ok ] [ drop -1 result@1.Result.Err ] num.GcdRoute.match",
+            )])?;
+            finish(guest, "num")?;
+            finish(guest, "den")?;
+            return guest.run(&[lift("unpair num.finish_materialize")]);
         }
-        guest.run(&[flat(
-            "[ drop -1 result@1.Result.Err ] \
-             [ num.gcd_remainder_start num.gcd_remainder_run \
-               [ drop -1 result@1.Result.Err ] \
-               [ num.gcd_remainder_end num.gcd_cursor_check result@1.Result.Ok ] \
-               num.GcdRemainderProgress.match ] num.GcdRoute.match",
-        )])?;
+        guest.run(&[
+            flat("[ drop -1 result@1.Result.Err ] [ result@1.Result.Ok ] num.GcdRoute.match"),
+            lift("num.gcd_remainder_start"),
+            lift("num.gcd_remainder_run"),
+            flat(
+                "[ drop -1 result@1.Result.Err ] [ result@1.Result.Ok ] \
+                 num.GcdRemainderProgress.match",
+            ),
+            lift("num.gcd_remainder_end"),
+            lift("num.gcd_cursor_check"),
+        ])?;
     }
     Err("gcd exceeded 4096 remainder steps".into())
+}
+
+/// One of num@1's numerator/denominator finish gates and quotient routes,
+/// one exported word per phase as the calculator host schedules them.
+fn finish(guest: &mut Guest, part: &str) -> Result<(), String> {
+    let route = if part == "num" {
+        "FinishNumRoute"
+    } else {
+        "FinishDenRoute"
+    };
+    guest.run(&[
+        lift(&format!("unpair num.finish_{part}_measure")),
+        lift(&format!("num.finish_{part}_bits_limit")),
+        lift(&format!("num.finish_{part}_bits_probe")),
+        flat(&gate(
+            &format!("unit num.finish_{part}_bits_deny"),
+            &format!("num.finish_{part}_bits_admit"),
+        )),
+        lift(&format!("num.finish_{part}_work_limit")),
+        lift(&format!("num.finish_{part}_work_probe")),
+        flat(&gate(
+            &format!("unit num.finish_{part}_work_deny"),
+            &format!("num.finish_{part}_work_admit"),
+        )),
+        lift(&format!("num.finish_{part}_commit_work")),
+    ])?;
+    let one = guest.observe(
+        &[
+            lift(&format!("num.finish_{part}_one_probe")),
+            FLAG.to_owned(),
+        ],
+        1,
+    )?[0];
+    guest.run(&[lift(&format!("num.finish_{part}_route"))])?;
+    if flag(one)? {
+        return guest.run(&[flat(&format!(
+            "[ result@1.Result.Ok ] [ drop -1 result@1.Result.Err ] num.{route}.match"
+        ))]);
+    }
+    let mut stages = vec![flat(&format!(
+        "[ drop -1 result@1.Result.Err ] [ result@1.Result.Ok ] num.{route}.match"
+    ))];
+    stages.extend(
+        [
+            "bit_batch_begin",
+            "bit_batch_step",
+            "bit_batch_done_direct",
+            "divide_bits",
+            "divide_materialize",
+            "divide_finish",
+        ]
+        .map(|word| lift(&format!("num.finish_{part}_{word}"))),
+    );
+    guest.run(&stages)
 }
 
 /// C<Pair<Rat,Budget>> -> C<Pair<Rat,Budget>> through num@1's staged negation.
@@ -881,23 +904,23 @@ fn report(label: &str, guest: &Guest, started: std::time::Instant) {
 
 // ---------------------------------------------------------------- CALC-05
 
-/// CALC-05 vectors 1, 2 and 6, the NonIntegral-free OutOfRange vector 3,
-/// explicit-only conversion, and the core wrap on the same backend.
+/// Core-Bootstrap I64 wraps on the same selected backend. This is core
+/// semantics, recorded beside CALC-05; it is not a calculator conversion.
 #[test]
-fn calc_05_explicit_i64_conversions() -> Result<(), String> {
-    let started = std::time::Instant::now();
+fn calc_05_core_wrap_is_core_semantics() -> Result<(), String> {
+    let mut core = Guest::new()?;
+    core.phase("9223372036854775807 1 +", &[])?;
+    assert_eq!(core.stack, [Ty::I64]);
+    assert_eq!(core.scalar(0)?, i64::MIN);
+    Ok(())
+}
+
+/// No implicit conversion: the source checker refuses an I64 where a Rat is
+/// required and a Rat where an I64 is required, while the explicit staged
+/// words check over the same retained stacks.
+#[test]
+fn calc_05_no_implicit_conversion() -> Result<(), String> {
     let mut guest = Guest::new()?;
-    // from-I64: -2^63 enters as the exact Rat -9223372036854775808/1.
-    budget(&mut guest)?;
-    rat_from_i64(&mut guest, i64::MIN)?;
-    let (num, den) = decode(&mut guest)?;
-    assert_eq!(accepted_rat(&num, &den)?, (i128::from(i64::MIN), 1));
-    assert_eq!((num.width, num.ones), (64, 1));
-    // to-I64 at the lower bound: the same Rat converts back exactly.
-    assert_eq!(to_i64(&mut guest)?, Ok(i64::MIN));
-    // No implicit conversion: an I64 where a Rat is required, and a Rat where
-    // an I64 is required, are both refused by the source checker.
-    guest.run(&["drop".to_owned()])?;
     budget(&mut guest)?;
     implicit_refused(
         &guest,
@@ -909,13 +932,28 @@ fn calc_05_explicit_i64_conversions() -> Result<(), String> {
         &guest,
         "[ unpair drop 1 + result@1.Result.Ok ] [ result@1.Result.Err ] result@1.Result.match",
         "[ unpair num.to_i64_input result@1.Result.Ok ] [ result@1.Result.Err ] result@1.Result.match",
-    )?;
-    // to-I64 at the upper bound.
+    )
+}
+
+/// CALC-05 vectors 1, 2, 3 and 6: from-I64 -2^63, to-I64 at both bounds, and
+/// 2^63 (num@1 negation of -2^63) refused as OutOfRange instead of wrapping.
+#[test]
+#[ignore = "slow (~40 phases); run: cargo test --release -p noble-wasm --test calculator_numeric_paths -- --ignored"]
+fn calc_05_i64_bound_vectors() -> Result<(), String> {
+    let started = std::time::Instant::now();
+    let mut guest = Guest::new()?;
+    budget(&mut guest)?;
+    rat_from_i64(&mut guest, i64::MIN)?;
+    let (num, den) = decode(&mut guest)?;
+    assert_eq!(accepted_rat(&num, &den)?, (i128::from(i64::MIN), 1));
+    assert_eq!((num.width, num.ones), (64, 1));
+    assert_eq!(to_i64(&mut guest)?, Ok(i64::MIN));
+    guest.run(&["drop".to_owned()])?;
+    budget(&mut guest)?;
+    rat_from_i64(&mut guest, i64::MAX)?;
     let (num, den) = decode(&mut guest)?;
     assert_eq!(accepted_rat(&num, &den)?, (i128::from(i64::MAX), 1));
     assert_eq!(to_i64(&mut guest)?, Ok(i64::MAX));
-    // to-I64 just above the upper bound: 2^63 = -(-2^63), built by num@1's
-    // staged negation, is refused as OutOfRange instead of wrapping.
     guest.run(&["drop".to_owned()])?;
     budget(&mut guest)?;
     rat_from_i64(&mut guest, i64::MIN)?;
@@ -923,21 +961,14 @@ fn calc_05_explicit_i64_conversions() -> Result<(), String> {
     let (num, den) = decode(&mut guest)?;
     assert_eq!(accepted_rat(&num, &den)?, (1_i128 << 63, 1));
     assert_eq!(to_i64(&mut guest)?, Err(OUT_OF_RANGE));
-    report("calc_05_explicit_i64_conversions", &guest, started);
-
-    // Core-Bootstrap I64 wraps; this is core semantics on the same selected
-    // backend, not a calculator conversion.
-    let mut core = Guest::new()?;
-    core.phase("9223372036854775807 1 +", &[])?;
-    assert_eq!(core.stack, [Ty::I64]);
-    assert_eq!(core.scalar(0)?, i64::MIN);
+    report("calc_05_i64_bound_vectors", &guest, started);
     Ok(())
 }
 
 /// CALC-05 vectors 4 and 5 need exact subtraction/division, which runs the
 /// whole staged operator and normalization pipeline (hundreds of phases).
 #[test]
-#[ignore = "slow: full staged num@1 operator pipeline; run with --ignored (release recommended)"]
+#[ignore = "slow (staged num@1 operator pipeline); run: cargo test --release -p noble-wasm --test calculator_numeric_paths -- --ignored"]
 fn calc_05_out_of_range_below_and_non_integral() -> Result<(), String> {
     let started = std::time::Instant::now();
     let mut guest = Guest::new()?;
@@ -980,7 +1011,7 @@ fn calc_04_zero_denominator() -> Result<(), String> {
 
 /// CALC-04 vectors 1-4 through both paths, and equality by normalized value.
 #[test]
-#[ignore = "slow: full staged num@1 division and normalization; run with --ignored (release recommended)"]
+#[ignore = "slow (staged num@1 division and normalization); run: cargo test --release -p noble-wasm --test calculator_numeric_paths -- --ignored"]
 fn calc_04_constructor_and_decoder_vectors() -> Result<(), String> {
     let started = std::time::Instant::now();
     let mut guest = Guest::new()?;
