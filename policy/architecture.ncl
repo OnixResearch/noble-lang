@@ -301,10 +301,13 @@ let contracts = import "./architecture.contracts.ncl" in
     # targets (calculator_collect, calculator_profile) make exactly 56. Earlier
     # acyclic controls on a different source also selected 56, but the fixture's
     # duplicate Cargo dev-dependencies table cannot establish extra units here.
+    # The issue #22 integration adds noble-cli tests/calculator_engine.rs (#17)
+    # and noble-wasm tests/calculator_numeric_paths.rs (#20); a scratch
+    # collection of integration eccbc02 observed exactly 58 complete units.
     # This exact capacity is not a classification waiver, source/native
     # assurance approval, or a gate PASS.
-    max_units = 56,
-    max_shards = 56,
+    max_units = 58,
+    max_shards = 58,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,
