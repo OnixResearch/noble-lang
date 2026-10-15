@@ -195,6 +195,12 @@ each line that printed a value took about 3–31 minutes (most 8–18), numeric
 errors 4.5–9 minutes and syntax/name errors under 3. Every line also replays
 each earlier `let`/`fn` first, adding roughly 6–8 minutes per definition.
 
+Setting `NOBLE_CALCULATOR_TRACE=<file>` appends one JSON line per executed
+guest module (source, stage identity, source-check / backend / worker times,
+WAT and Wasm sizes and digests) to that file; the record schema is documented
+in `crates/noble-cli/src/calculator/trace.rs`. Tracing is off by default and
+does not change any output.
+
 The `Calculator-v1` source/worker profile is separate from Core-Bootstrap,
 Declared-Modules-v1, Text-Byte-Cursor-v1 and live profiles. Its compiler has a
 4 MiB emitted WAT ceiling rather than the ordinary 1 MiB ceiling recorded in

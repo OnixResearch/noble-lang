@@ -102,8 +102,10 @@ impl Engine {
         Self::start_with_host(&configuration::slot(), SLOT_HOST, true)
     }
 
-    pub fn start_calculator(optimized: bool) -> Result<Self, super::output::Failure> {
-        let config = attempt!(configuration::calculator(optimized));
+    /// `trace` asks the worker for per-module preparation timings in its
+    /// ready reports (the opt-in calculator trace); it changes nothing else.
+    pub fn start_calculator(optimized: bool, trace: bool) -> Result<Self, super::output::Failure> {
+        let config = attempt!(configuration::calculator(optimized, trace));
         let (send, replies) = std::sync::mpsc::sync_channel(1);
         let mut engine = Self {
             child: attempt!(launch_calculator(&config)),

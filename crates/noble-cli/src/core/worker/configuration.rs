@@ -86,6 +86,7 @@ pub(super) fn slot() -> std::string::String {
 /// Calculator expressions receive only explicitly injected data, never test host bindings.
 pub(super) fn calculator(
     optimized: bool,
+    trace: bool,
 ) -> Result<std::string::String, super::super::output::Failure> {
     let executable = attempt!(std::env::current_exe().map_err(super::super::framing::io_error));
     let executable =
@@ -127,6 +128,10 @@ pub(super) fn calculator(
         (
             "calculator_assembler",
             crate::workflow::encoding::string(executable),
+        ),
+        (
+            "calculator_trace",
+            crate::workflow::encoding::Json::Bool(trace),
         ),
         (
             "bindings",

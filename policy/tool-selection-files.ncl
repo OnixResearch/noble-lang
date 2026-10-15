@@ -12,7 +12,7 @@
   "crates/noble-cli/src/core/runtime/config.json" = "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db",
   "crates/noble-cli/src/core/runtime/declared-abi.json" = "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d",
   "crates/noble-cli/src/core/runtime/engine-host.mjs" = "9bac85c54b39dc7491047b835e698ee2f242fbaea685573a85ea6b9f4d61491d",
-  "crates/noble-cli/src/core/runtime/engine.mjs" = "e4a10966004297933606823a356f54393c809f638dd98afc275dc188033d4acf",
+  "crates/noble-cli/src/core/runtime/engine.mjs" = "2b320079fc9b8fe5cef7e526d70fea739cc0918959f56bf1b5ab8a17768c0c54",
   "crates/noble-cli/src/core/runtime/host.mjs" = "271d8add2c5ab940fec867d822cbb68fed9b0c57e98f9243ffed879065d59494",
   "crates/noble-cli/src/core/runtime/preamble.mjs" = "1787a81093cfb8c0286fa09d5bc4129dcb5ba5cd75a3a407b9f25009d75ceb28",
   "crates/noble-cli/src/core/runtime/protocol.mjs" = "43ee76af0da8e21c04daec383ca4d7db90c98ee9a29ba240663726591c1f13e8",

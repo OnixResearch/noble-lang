@@ -196,7 +196,7 @@ export class CoreEngine {
   constructor(selection, abi, { optimized = false, artifacts = null, bindings = [],
     declared_modules = false, declared_extension = null, in_process_live = false,
     text_byte_cursor = false, calculator = false, calculator_shell_state = false,
-    calculator_assembler = null } = {}) {
+    calculator_assembler = null, calculator_trace = false } = {}) {
     this.selection = selection;
     // This larger bounded cell arena belongs only to Calculator-v1. Do not
     // mutate the parsed ABI shared with the ordinary and cursor profiles.
@@ -212,8 +212,12 @@ export class CoreEngine {
       text_byte_cursor, calculator);
     if (!calculator && calculator_assembler !== null) fail('calculator assembler cannot enter another profile');
     if (calculator_shell_state && !calculator) fail('opaque calculator state requires the calculator profile');
+    if (calculator_trace !== false && (calculator_trace !== true || !calculator))
+      fail('calculator timings require the calculator profile');
     this.calculatorShellState = calculator_shell_state;
     this.calculatorAssembler = calculator_assembler;
+    // Observation only: ready reports gain a `timing` object, nothing else.
+    this.calculatorTrace = calculator_trace;
     this.optimized = optimized;
     initializeHostState(this, bindings);
     this.pending = null;
@@ -317,11 +321,21 @@ export class CoreEngine {
     this.save(`${stem}.noble`, source);
     let wasmPath = null;
     let bytes;
+    const clock = () => process.hrtime.bigint();
+    const micros = (start, end) => Number((end - start) / 1000n);
+    const timing = this.calculatorTrace ? { worker_cache: 'miss' } : null;
     if (this.profile === 'Calculator-v1') {
+      const rehashing = clock();
       if (sha256(fs.readFileSync(this.calculatorAssembler)) !== this.tools.calculator_wat.sha256)
         fail('calculator assembler changed after selection');
+      const assembling = clock();
       const result = spawnSync(this.calculatorAssembler, ['--internal-calculator-wat-assemble'],
         { input: wat, env: {}, timeout: 60000, maxBuffer: MAX_FRAME });
+      if (timing) {
+        const assembled = clock();
+        timing.rehash_us = micros(rehashing, assembling);
+        timing.assemble_us = micros(assembling, assembled);
+      }
       this.save(`${stem}-calculator-assemble.json`, { toolchain: 'calculator-experimental-wat-v1',
         assembler_sha256: this.tools.calculator_wat.sha256, wat_sha256: sha256(wat),
         status: result.status, signal: result.signal,
@@ -351,13 +365,23 @@ export class CoreEngine {
       bytes = fs.readFileSync(wasmPath);
     }
     rejectStartSection(bytes);
+    const compiling = clock();
     const module = new WebAssembly.Module(bytes);
+    const compiled = clock();
     this.compilations += 1;
-    return this.install(module, { submission, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
+    const record = { submission, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
       wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations, stem,
       ...(this.profile === 'Calculator-v1' ? { assembly_toolchain: 'calculator-experimental-wat-v1',
-        assembler_sha256: this.tools.calculator_wat.sha256 } : {}) },
-    installationCapability);
+        assembler_sha256: this.tools.calculator_wat.sha256 } : {}) };
+    const instantiating = clock();
+    const ready = this.install(module, record, installationCapability);
+    if (timing) {
+      timing.compile_us = micros(compiling, compiled);
+      timing.instantiate_us = micros(instantiating, clock());
+      timing.wasm_bytes = bytes.length;
+      ready.timing = timing;
+    }
+    return ready;
   }
 
   liveModule(bytes, source, submission) {

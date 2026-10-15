@@ -1,6 +1,9 @@
 //! Calculator shell: terminal framing and an opaque, source-checked guest session.
 //! Parsing, name resolution, arithmetic and display decisions live in the Noble modules.
 
+#[path = "calculator/trace.rs"]
+mod trace;
+
 use noble_contracts::source::{ModuleKind, ModuleSession};
 use noble_kernel::types::Ty;
 use std::io::Write;
@@ -100,7 +103,11 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             return std::process::ExitCode::from(2);
         }
     };
-    let mut session = match Session::new() {
+    if let Err(message) = trace::open() {
+        eprintln!("noble calculator: {message}");
+        return std::process::ExitCode::from(2);
+    }
+    let mut session = match Session::new(0) {
         Ok(session) => session,
         Err(message) => {
             eprintln!("noble calculator: {message}");
@@ -228,6 +235,11 @@ struct Session {
     // A quotation-free consumer of the last guest probe (`drop`, `unpair
     // drop`), run as the prefix of the next module instead of as its own.
     deferred: Option<&'static [u8]>,
+    // Identity of this candidate in the opt-in per-module trace; unused
+    // (and never observed by the guest) when tracing is off.
+    trace_session: u64,
+    trace_line: u64,
+    trace_phase: &'static str,
 }
 
 struct Accepted {
@@ -297,7 +309,8 @@ impl Session {
         Ok(Some(Outcome::Diagnostic(diagnostic)))
     }
 
-    fn new() -> Result<Self, String> {
+    fn new(line: u64) -> Result<Self, String> {
+        let started = std::time::Instant::now();
         let mut modules = ModuleSession::new_calculator().map_err(source_error)?;
         for (name, source) in [
             ("result@1", RESULT),
@@ -336,11 +349,15 @@ impl Session {
             committed.map_err(source_error)?;
             modules = next;
         }
+        let namespace_us = trace::micros(started);
+        let worker_started = std::time::Instant::now();
+        let worker = crate::core::worker::Engine::start_calculator(false, trace::enabled())
+            .map_err(|error| error.message)?;
+        let worker_start_us = trace::micros(worker_started);
         let mut session = Self {
             modules: Some(modules),
             compiler: noble_wasm::source::Compiler::new_calculator(),
-            worker: crate::core::worker::Engine::start_calculator(false)
-                .map_err(|error| error.message)?,
+            worker,
             stack: Vec::new(),
             serial: 0,
             quiescent: false,
@@ -348,7 +365,19 @@ impl Session {
             accepted: Vec::new(),
             state_changing_header: false,
             deferred: None,
+            trace_session: trace::next_session(),
+            trace_line: line,
+            trace_phase: "session-init",
         };
+        if trace::enabled() {
+            trace::write(serde_json::json!({
+                "record": "session",
+                "session": session.trace_session,
+                "line": line,
+                "namespace_us": namespace_us,
+                "worker_start_us": worker_start_us,
+            }))?;
+        }
         let report = session.execute(b"calc_env@1.initial", &[], None)?;
         if report.outcome != "normal" || session.stack.len() != 1 {
             return Err("guest calculator state initialization failed".into());
@@ -443,7 +472,13 @@ impl Session {
         // worker. Reconstruct a *candidate* from source-checked accepted
         // submissions, preserving the previous worker until this command's
         // guest result and bounded display have both been validated.
-        let mut candidate = Self::new()?;
+        let line = self
+            .trace_line
+            .checked_add(1)
+            .ok_or("calculator line counter exhausted")?;
+        self.trace_line = line;
+        let mut candidate = Self::new(line)?;
+        candidate.trace_phase = "replay";
         for accepted in &self.accepted {
             match candidate.submit_uncommitted(
                 &accepted.source,
@@ -459,6 +494,7 @@ impl Session {
                 }
             }
         }
+        candidate.trace_phase = "line";
         let outcome = match candidate.submit_uncommitted(expression, finite_decimal, budget) {
             Ok(outcome) => outcome,
             Err(message) => return Ok(Outcome::InfrastructureFailure(message)),
@@ -5104,6 +5140,7 @@ impl Session {
         injected: &[Ty],
         frame: Option<&str>,
     ) -> Result<crate::core::output::Report, String> {
+        let started = std::time::Instant::now();
         let merged;
         let source = match self.deferred {
             Some(consumer) if injected.is_empty() => {
@@ -5130,6 +5167,8 @@ impl Session {
             augmented = [self.stack.as_slice(), injected].concat();
             augmented.as_slice()
         };
+        let input_types = stack.len();
+        let checking = std::time::Instant::now();
         let prepared = self
             .modules
             .as_ref()
@@ -5145,10 +5184,20 @@ impl Session {
         if prepared.kind() != ModuleKind::Expression {
             return Err("calculator command did not check as guest expression".into());
         }
+        let check_us = trace::micros(checking);
         let output = prepared.output().to_vec();
+        let output_types = output.len();
         let submission = prepared
             .submission()
             .ok_or("checked expression has no guest program")?;
+        let epoch = if self.program_free {
+            "program_free"
+        } else if self.quiescent {
+            "quiescent"
+        } else {
+            "normal"
+        };
+        let compiling = std::time::Instant::now();
         let compiled = if self.program_free {
             self.compiler.prepare_program_free(submission)
         } else if self.quiescent {
@@ -5163,6 +5212,9 @@ impl Session {
                 backend_error(error)
             )
         })?;
+        let backend_us = trace::micros(compiling);
+        let wat_bytes = compiled.wat().len();
+        let preparing = std::time::Instant::now();
         let ready = self
             .worker
             .prepare(compiled.wat(), source, self.serial)
@@ -5170,11 +5222,15 @@ impl Session {
         if ready.outcome != "ready" {
             return Err(format!("calculator Wasm assembly refused: {}", ready.json));
         }
+        let prepare_us = trace::micros(preparing);
+        let executing = std::time::Instant::now();
         let report = match frame {
             Some(frame) => self.worker.execute_inputs(frame),
             None => self.worker.execute(),
         }
         .map_err(|error| error.message)?;
+        let execute_us = trace::micros(executing);
+        let committing = std::time::Instant::now();
         if report.outcome == "normal" {
             let (compiled_reachable, programs_reachable) = boundary_reachability(&report.json)?;
             self.compiler.commit(compiled).map_err(backend_error)?;
@@ -5188,6 +5244,44 @@ impl Session {
             self.stack = output;
             self.quiescent = !compiled_reachable;
             self.program_free = !programs_reachable;
+        }
+        if trace::enabled() {
+            let commit_us = trace::micros(committing);
+            let ready: serde_json::Value =
+                serde_json::from_str(&ready.json).map_err(|error| error.to_string())?;
+            let timing = &ready["timing"];
+            let module = &ready["module"];
+            trace::write(serde_json::json!({
+                "record": "module",
+                "session": self.trace_session,
+                "line": self.trace_line,
+                "phase": self.trace_phase,
+                "module": self.serial,
+                "source": String::from_utf8_lossy(source),
+                "source_sha256": trace::sha256(source),
+                "source_bytes": source.len(),
+                "input_types": input_types,
+                "output_types": output_types,
+                "epoch": epoch,
+                "first": self.serial == 1,
+                "cache": { "host": "off", "worker": timing["worker_cache"] },
+                "check_us": check_us,
+                "backend_us": backend_us,
+                "prepare_us": prepare_us,
+                "rehash_us": timing["rehash_us"],
+                "assemble_us": timing["assemble_us"],
+                "compile_us": timing["compile_us"],
+                "instantiate_us": timing["instantiate_us"],
+                "execute_us": execute_us,
+                "commit_us": commit_us,
+                "total_us": trace::micros(started),
+                "wat_bytes": wat_bytes,
+                "wasm_bytes": timing["wasm_bytes"],
+                "wat_sha256": module["wat_sha256"],
+                "wasm_sha256": module["wasm_sha256"],
+                "report_sha256": trace::sha256(report.json.as_bytes()),
+                "outcome": report.outcome,
+            }))?;
         }
         Ok(report)
     }

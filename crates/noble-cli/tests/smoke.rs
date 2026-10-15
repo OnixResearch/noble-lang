@@ -186,3 +186,101 @@ fn calculator_retains_state_after_exact_tiny_decimal() -> Result<(), Box<dyn std
     assert!(output.stderr.is_empty());
     Ok(())
 }
+
+fn calculator_run(
+    input: &[u8],
+    environment: &[(&str, &std::ffi::OsStr)],
+) -> Result<std::process::Output, Box<dyn std::error::Error>> {
+    let mut command = std::process::Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .arg("calculator")
+        .env_remove("NOBLE_CALCULATOR_TRACE")
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
+    for (name, value) in environment {
+        command.env(name, value);
+    }
+    let mut child = command.spawn()?;
+    std::io::Write::write_all(
+        child.stdin.as_mut().ok_or("missing calculator stdin")?,
+        input,
+    )?;
+    drop(child.stdin.take());
+    Ok(child.wait_with_output()?)
+}
+
+fn trace_records(
+    path: &std::path::Path,
+) -> Result<Vec<serde_json::Value>, Box<dyn std::error::Error>> {
+    let text = std::fs::read_to_string(path)?;
+    let mut records = Vec::new();
+    for line in text.lines() {
+        records.push(serde_json::from_str::<serde_json::Value>(line)?);
+    }
+    Ok(records)
+}
+
+#[test]
+fn calculator_trace_is_observation_only() -> Result<(), Box<dyn std::error::Error>> {
+    // A diagnostic line exercises the guest lexer, parser and the guest
+    // diagnostic path while staying among the cheapest calculator vectors.
+    let input = b"1 2\n";
+    let directory =
+        std::env::temp_dir().join(format!("noble-calculator-trace-{}", std::process::id()));
+    std::fs::create_dir_all(&directory)?;
+    let path = directory.join("trace.jsonl");
+    let _ = std::fs::remove_file(&path);
+    let plain = calculator_run(input, &[])?;
+    let traced = calculator_run(input, &[("NOBLE_CALCULATOR_TRACE", path.as_os_str())])?;
+    assert_eq!(plain.status.code(), traced.status.code());
+    assert_eq!(plain.stdout, traced.stdout);
+    assert_eq!(plain.stderr, traced.stderr);
+    assert_eq!(
+        String::from_utf8_lossy(&plain.stderr),
+        "TrailingInput [2,3) provenance=unavailable\n"
+    );
+    let records = trace_records(&path)?;
+    std::fs::remove_dir_all(&directory)?;
+    let modules: Vec<_> = records
+        .iter()
+        .filter(|record| record["record"] == "module")
+        .collect();
+    assert!(records
+        .iter()
+        .all(|record| record["schema"] == "noble-calculator-trace/1"));
+    // The startup session and the line's candidate session each initialize
+    // their State, then the line runs as guest modules of the candidate.
+    assert_eq!(
+        records
+            .iter()
+            .filter(|record| record["record"] == "session")
+            .count(),
+        2
+    );
+    assert!(modules
+        .iter()
+        .any(|record| record["phase"] == "line" && record["line"] == 1));
+    for record in &modules {
+        for key in [
+            "check_us",
+            "backend_us",
+            "prepare_us",
+            "rehash_us",
+            "assemble_us",
+            "compile_us",
+            "instantiate_us",
+            "execute_us",
+            "total_us",
+            "wat_bytes",
+            "wasm_bytes",
+            "source_bytes",
+        ] {
+            assert!(record[key].is_u64(), "{key} missing in {record}");
+        }
+        let source = record["source"].as_str().ok_or("trace source missing")?;
+        assert_eq!(record["source_bytes"].as_u64(), Some(source.len() as u64));
+        assert_eq!(record["outcome"], "normal");
+    }
+    Ok(())
+}
