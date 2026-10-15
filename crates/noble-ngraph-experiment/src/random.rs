@@ -147,7 +147,7 @@ pub fn graph(seed: u64, ops: usize) -> RandomGraph {
             }
             7 => {
                 // step on a known-[0,1] value, or on a guarded random value.
-                let s = if rng.below(4) == 0 {
+                let s = if rng.below(8) == 0 {
                     let x = pick(&mut rng, &pool);
                     b.guard(crate::fixtures::range(0.0, 1.0), x);
                     x
@@ -214,8 +214,8 @@ pub fn graph(seed: u64, ops: usize) -> RandomGraph {
 }
 
 /// One random input vector for `g`: plain inputs from [`random_f32`]; the bit
-/// input is a bit 90% of the time; the index input is an in-fact integer 90%
-/// of the time (otherwise fractional, NaN or out of its range fact).
+/// input is a bit 90% of the time; the index input is an in-fact integer 85%
+/// of the time (55% inside `[0, 6)`), otherwise fractional, NaN or out of its range fact.
 pub fn inputs(g: &RandomGraph, rng: &mut SplitMix64) -> Vec<f32> {
     let mut v: Vec<f32> = (0..g.plain).map(|_| random_f32(rng)).collect();
     v.push(match rng.below(10) {
@@ -226,6 +226,7 @@ pub fn inputs(g: &RandomGraph, rng: &mut SplitMix64) -> Vec<f32> {
         0 => 2.5,
         1 => f32::NAN,
         2 => 100.0,
+        3..=13 => rng.below(6) as f32,
         _ => (rng.below(21) as f32) - 8.0,
     });
     v

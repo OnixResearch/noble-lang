@@ -19,6 +19,7 @@ pub mod facts;
 pub mod fixtures;
 pub mod grad;
 pub mod ir;
+pub mod json;
 pub mod oracle;
 pub mod prng;
 pub mod random;
