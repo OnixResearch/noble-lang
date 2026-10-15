@@ -115,10 +115,16 @@ c01-05 and 993 for the wide-right case.
 - `cargo test -p noble-contracts`: all suites passed.
 - `cargo test --release -p noble-cli --test smoke -- calculator`: 1 passed.
 
-## Pending
+## CALC-01 on the integrated build
 
-CALC-01 15/15 has not yet been run through the calculator acceptance runner
-(#19) on the integrated build.
+The calculator acceptance runner (#19) ran CALC-01 on the integrated release
+build of `eccbc02`. That build contains this change (`ca07c5c`), and its
+`calculator-numeric.noble` is byte-identical to `main`'s (SHA-256
+`0e8cb623…a176`). The [receipt](../receipt-eccbc02-release.json) records
+CALC-01 15/15 pass. That receipt has SHA-256 `2388a2a4…6c9e`, and the binary
+it ran has SHA-256 `f7f02dfb…85ec`. The same run passed all 34 selected
+CALC-01/02/03/06/07/09 vectors. These are runtime observations; no case
+state is promoted.
 
 ## Non-claims
 
@@ -127,4 +133,5 @@ CALC-01 15/15 has not yet been run through the calculator acceptance runner
   metrics output.
 - The normalization, literal and display charges are unchanged and remain
   quadratic.
-- This record does not claim CALC-01 acceptance.
+- This record does not claim CALC-01 acceptance. The receipt above is an
+  observation, not a case promotion.

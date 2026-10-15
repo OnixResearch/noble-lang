@@ -5,39 +5,213 @@
   "source_commit": "ca07c5c2d84817b68004a70835a38e9fc0e7c288",
   "base_commit": "44329dcbe0c0d3c0e83d4d154aab8a357a06f9a2",
   "binaries": {
-    "base_release": {"tree": "44329dc", "profile": "release", "sha256": "e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127"},
-    "after_release": {"tree": "ca07c5c (source identical to the measured worktree)", "profile": "release", "sha256": "e5741ef0af9a854ef3c65d177027540db9858dfbb210b88e30336099bc509db1"},
-    "after_instrumented": {"tree": "after + temporary uncommitted metrics patch", "profile": "release", "sha256": "c7ef5d80cf2242ed87e13ad6771b1661862156a2d460a7ef0de7d0a16155f77d", "patch_sha256": "5360c3389e7a1b7fd2dedc9faa4e1750a4f49fbdb2dadeeed2e59fd3e64f646d"}
+    "base_release": {
+      "tree": "44329dc",
+      "profile": "release",
+      "sha256": "e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127"
+    },
+    "after_release": {
+      "tree": "ca07c5c (source identical to the measured worktree)",
+      "profile": "release",
+      "sha256": "e5741ef0af9a854ef3c65d177027540db9858dfbb210b88e30336099bc509db1"
+    },
+    "after_instrumented": {
+      "tree": "after + temporary uncommitted metrics patch",
+      "profile": "release",
+      "sha256": "c7ef5d80cf2242ed87e13ad6771b1661862156a2d460a7ef0de7d0a16155f77d",
+      "patch_sha256": "5360c3389e7a1b7fd2dedc9faa4e1750a4f49fbdb2dadeeed2e59fd3e64f646d"
+    }
   },
   "decision": {
     "chosen": "width-ordered",
-    "columns": ["operands", "a,c,e,f/b", "C former (n2 multiplier)", "C fixed swap (d1 multiplier)", "C width-ordered", "d1*n2 submissions former/fixed/ordered"],
+    "columns": [
+      "operands",
+      "a,c,e,f/b",
+      "C former (n2 multiplier)",
+      "C fixed swap (d1 multiplier)",
+      "C width-ordered",
+      "d1*n2 submissions former/fixed/ordered"
+    ],
     "rows": [
-      ["9007199254740993 - 9007199254740992", "54,1,54,1/112", 7579, 1272, 1329, "546/175/175"],
-      ["9223372036854775807 + 1", "63,1,1,1/68", 788, 788, 792, "16/16/16"],
-      ["1 + 18014398509481983", "1,1,54,1/59", 6996, 689, 746, "4892/175/175"],
-      ["1/3 + 1/6", "1,2,1,3/9", 227, 242, 232, "19/30/19"],
-      ["0.1 + 0.2", "1,4,1,3/11", 273, 330, 280, "25/53/25"],
-      ["0.000001 + 1", "1,20,1,1/25", 391, 1360, 414, "73/470/73"],
-      ["2^-60 + 3", "1,61,2,1/67", 1272, 9237, 1337, "390/619/390"],
-      ["1.5 + 2.25", "2,2,4,3/13", 348, 306, 314, "56/35/35"],
-      ["1 / 18014398509481983", "1,1,54,1/59", 6675, 368, 425, "4892/175/175"],
-      ["0.000001 / 3", "1,20,2,1/26", 261, 1215, 285, "147/500/147"]
+      [
+        "9007199254740993 - 9007199254740992",
+        "54,1,54,1/112",
+        7579,
+        1272,
+        1329,
+        "546/175/175"
+      ],
+      [
+        "9223372036854775807 + 1",
+        "63,1,1,1/68",
+        788,
+        788,
+        792,
+        "16/16/16"
+      ],
+      [
+        "1 + 18014398509481983",
+        "1,1,54,1/59",
+        6996,
+        689,
+        746,
+        "4892/175/175"
+      ],
+      [
+        "1/3 + 1/6",
+        "1,2,1,3/9",
+        227,
+        242,
+        232,
+        "19/30/19"
+      ],
+      [
+        "0.1 + 0.2",
+        "1,4,1,3/11",
+        273,
+        330,
+        280,
+        "25/53/25"
+      ],
+      [
+        "0.000001 + 1",
+        "1,20,1,1/25",
+        391,
+        1360,
+        414,
+        "73/470/73"
+      ],
+      [
+        "2^-60 + 3",
+        "1,61,2,1/67",
+        1272,
+        9237,
+        1337,
+        "390/619/390"
+      ],
+      [
+        "1.5 + 2.25",
+        "2,2,4,3/13",
+        348,
+        306,
+        314,
+        "56/35/35"
+      ],
+      [
+        "1 / 18014398509481983",
+        "1,1,54,1/59",
+        6675,
+        368,
+        425,
+        "4892/175/175"
+      ],
+      [
+        "0.000001 / 3",
+        "1,20,2,1/26",
+        261,
+        1215,
+        285,
+        "147/500/147"
+      ]
     ]
   },
   "brackets": {
     "binary": "after_release",
     "argv": "noble calculator --evaluation-work N, expression on stdin followed by a newline",
     "rows": [
-      {"expression": "10 - 3", "kind": "integer -", "predicted_n": 64357, "n_minus_1": {"work": 64356, "rc": 1, "stderr": "ResourceLimit EvaluationWork [7,7) provenance=unavailable"}, "n": {"work": 64357, "rc": 0, "stdout": "7"}, "former_model_n": 65857},
-      {"expression": "1 + 18014398509481983", "kind": "wide-right integer +", "predicted_n": 1827722, "n_minus_1": {"work": 1827721, "rc": 1, "stderr": "ResourceLimit EvaluationWork [22,22) provenance=unavailable"}, "n": {"work": 1827722, "rc": 0, "stdout": "18014398509481984"}, "former_model_n": 2765222},
-      {"expression": "0.1 + 0.2", "kind": "rational +, d1 stays multiplier", "predicted_n": 108735, "n_minus_1": {"work": 108734, "rc": 1, "stderr": "ResourceLimit EvaluationWork [10,10) provenance=unavailable"}, "n": {"work": 108735, "rc": 0, "stdout": "3/10"}, "former_model_n": 107685, "note": "a first prediction of 110210 omitted the reduced-numerator width of the denominator finish; 110209 printed 3/10, and the corrected prediction was then confirmed"},
-      {"expression": "1.5 + 2.25", "kind": "rational +, multiplier flips to d1", "predicted_n": 151086, "n_minus_1": {"work": 151085, "rc": 1, "stderr": "ResourceLimit EvaluationWork [11,11) provenance=unavailable"}, "n": {"work": 151086, "rc": 0, "stdout": "15/4"}, "former_model_n": 156186},
-      {"expression": "1 / 3", "kind": "division", "predicted_n": 35156, "n_minus_1": {"work": 35155, "rc": 1, "stderr": "ResourceLimit EvaluationWork [6,6) provenance=unavailable"}, "n": {"work": 35156, "rc": 0, "stdout": "1/3"}, "former_model_n": 36656}
+      {
+        "expression": "10 - 3",
+        "kind": "integer -",
+        "predicted_n": 64357,
+        "n_minus_1": {
+          "work": 64356,
+          "rc": 1,
+          "stderr": "ResourceLimit EvaluationWork [7,7) provenance=unavailable"
+        },
+        "n": {
+          "work": 64357,
+          "rc": 0,
+          "stdout": "7"
+        },
+        "former_model_n": 65857
+      },
+      {
+        "expression": "1 + 18014398509481983",
+        "kind": "wide-right integer +",
+        "predicted_n": 1827722,
+        "n_minus_1": {
+          "work": 1827721,
+          "rc": 1,
+          "stderr": "ResourceLimit EvaluationWork [22,22) provenance=unavailable"
+        },
+        "n": {
+          "work": 1827722,
+          "rc": 0,
+          "stdout": "18014398509481984"
+        },
+        "former_model_n": 2765222
+      },
+      {
+        "expression": "0.1 + 0.2",
+        "kind": "rational +, d1 stays multiplier",
+        "predicted_n": 108735,
+        "n_minus_1": {
+          "work": 108734,
+          "rc": 1,
+          "stderr": "ResourceLimit EvaluationWork [10,10) provenance=unavailable"
+        },
+        "n": {
+          "work": 108735,
+          "rc": 0,
+          "stdout": "3/10"
+        },
+        "former_model_n": 107685,
+        "note": "a first prediction of 110210 omitted the reduced-numerator width of the denominator finish; 110209 printed 3/10, and the corrected prediction was then confirmed"
+      },
+      {
+        "expression": "1.5 + 2.25",
+        "kind": "rational +, multiplier flips to d1",
+        "predicted_n": 151086,
+        "n_minus_1": {
+          "work": 151085,
+          "rc": 1,
+          "stderr": "ResourceLimit EvaluationWork [11,11) provenance=unavailable"
+        },
+        "n": {
+          "work": 151086,
+          "rc": 0,
+          "stdout": "15/4"
+        },
+        "former_model_n": 156186
+      },
+      {
+        "expression": "1 / 3",
+        "kind": "division",
+        "predicted_n": 35156,
+        "n_minus_1": {
+          "work": 35155,
+          "rc": 1,
+          "stderr": "ResourceLimit EvaluationWork [6,6) provenance=unavailable"
+        },
+        "n": {
+          "work": 35156,
+          "rc": 0,
+          "stdout": "1/3"
+        },
+        "former_model_n": 36656
+      }
     ],
     "n_only": [
-      {"expression": "9007199254740993 - 9007199254740992", "work": 2129286, "stdout": "1"},
-      {"expression": "9223372036854775807 + 1", "work": 2346724, "stdout": "9223372036854775808"}
+      {
+        "expression": "9007199254740993 - 9007199254740992",
+        "work": 2129286,
+        "stdout": "1"
+      },
+      {
+        "expression": "9223372036854775807 + 1",
+        "work": 2346724,
+        "stdout": "9223372036854775808"
+      }
     ]
   },
   "timings": {
@@ -45,28 +219,109 @@
     "pairing": "each before/after pair started together on the same host",
     "load_caveat": "shared host, load average about 50 on 32 cores from other workers; wall times are comparable only within a pair",
     "rows": [
-      {"case": "c01-05", "expression": "9007199254740993 - 9007199254740992", "stdout": "1", "base_wall": "34:43.87", "after_wall": "29:37.32", "base_max_rss_kb": 204028, "after_max_rss_kb": 200644},
-      {"case": "c01-04", "expression": "9223372036854775807 + 1", "stdout": "9223372036854775808", "base_wall": "21:37.73", "after_wall": "21:44.89", "base_max_rss_kb": 204196, "after_max_rss_kb": 208132},
-      {"case": "wide-right", "expression": "1 + 18014398509481983", "stdout": "18014398509481984", "base_wall": "1:55:15", "base_user_s": 6687.08, "after_wall": "20:17.09", "base_max_rss_kb": 205344, "after_max_rss_kb": 203732}
+      {
+        "case": "c01-05",
+        "expression": "9007199254740993 - 9007199254740992",
+        "stdout": "1",
+        "base_wall": "34:43.87",
+        "after_wall": "29:37.32",
+        "base_max_rss_kb": 204028,
+        "after_max_rss_kb": 200644
+      },
+      {
+        "case": "c01-04",
+        "expression": "9223372036854775807 + 1",
+        "stdout": "9223372036854775808",
+        "base_wall": "21:37.73",
+        "after_wall": "21:44.89",
+        "base_max_rss_kb": 204196,
+        "after_max_rss_kb": 208132
+      },
+      {
+        "case": "wide-right",
+        "expression": "1 + 18014398509481983",
+        "stdout": "18014398509481984",
+        "base_wall": "1:55:15",
+        "base_user_s": 6687.08,
+        "after_wall": "20:17.09",
+        "base_max_rss_kb": 205344,
+        "after_max_rss_kb": 203732
+      }
     ],
     "unpaired": [
-      {"expression": "1 + 18014398509481983", "binary": "base_release", "wall": "2:18:12", "user_s": 7841.55, "max_rss_kb": 203120},
-      {"expression": "1 + 18014398509481983", "binary": "after_release", "wall": "17:04.54", "max_rss_kb": 199032},
-      {"expression": "9007199254740993 - 9007199254740992", "binary": "base_release", "wall": "24:08.63", "max_rss_kb": 203064},
-      {"expression": "9223372036854775807 + 1", "binary": "base_release", "wall": "13:08.57", "max_rss_kb": 209048}
+      {
+        "expression": "1 + 18014398509481983",
+        "binary": "base_release",
+        "wall": "2:18:12",
+        "user_s": 7841.55,
+        "max_rss_kb": 203120
+      },
+      {
+        "expression": "1 + 18014398509481983",
+        "binary": "after_release",
+        "wall": "17:04.54",
+        "max_rss_kb": 199032
+      },
+      {
+        "expression": "9007199254740993 - 9007199254740992",
+        "binary": "base_release",
+        "wall": "24:08.63",
+        "max_rss_kb": 203064
+      },
+      {
+        "expression": "9223372036854775807 + 1",
+        "binary": "base_release",
+        "wall": "13:08.57",
+        "max_rss_kb": 209048
+      }
     ]
   },
   "margins": {
     "binary": "after_instrumented",
-    "quotas": {"steps": 100000, "allocation_bytes": 1376208, "source": "crates/noble-cli/src/core/runtime/engine.mjs Calculator-v1 limits_maximum"},
+    "quotas": {
+      "steps": 100000,
+      "allocation_bytes": 1376208,
+      "source": "crates/noble-cli/src/core/runtime/engine.mjs Calculator-v1 limits_maximum"
+    },
     "rows": [
-      {"expression": "1 + 18014398509481983", "submission": "op_first_stage_sum_finish_add", "steps": 9319, "allocated_bytes": 80544, "role": "heaviest +/- submission"},
-      {"expression": "9007199254740993 - 9007199254740992", "submission": "op_first_stage_sum_finish_sub", "steps": 8982, "allocated_bytes": 76848},
-      {"expression": "9007199254740993 - 9007199254740992", "submission": "op_first_stage_sum_begin", "steps": 6051, "allocated_bytes": 61680},
-      {"expression": "9007199254740993 - 9007199254740992", "submission": "op_first_stage_second_cross", "steps": 1359, "allocated_bytes": 32064, "role": "changed stage"},
-      {"expression": "9007199254740993 - 9007199254740992", "submission": "op_work_probe", "steps": 1469, "allocated_bytes": 36240, "role": "changed stage"}
+      {
+        "expression": "1 + 18014398509481983",
+        "submission": "op_first_stage_sum_finish_add",
+        "steps": 9319,
+        "allocated_bytes": 80544,
+        "role": "heaviest +/- submission"
+      },
+      {
+        "expression": "9007199254740993 - 9007199254740992",
+        "submission": "op_first_stage_sum_finish_sub",
+        "steps": 8982,
+        "allocated_bytes": 76848
+      },
+      {
+        "expression": "9007199254740993 - 9007199254740992",
+        "submission": "op_first_stage_sum_begin",
+        "steps": 6051,
+        "allocated_bytes": 61680
+      },
+      {
+        "expression": "9007199254740993 - 9007199254740992",
+        "submission": "op_first_stage_second_cross",
+        "steps": 1359,
+        "allocated_bytes": 32064,
+        "role": "changed stage"
+      },
+      {
+        "expression": "9007199254740993 - 9007199254740992",
+        "submission": "op_work_probe",
+        "steps": 1469,
+        "allocated_bytes": 36240,
+        "role": "changed stage"
+      }
     ],
-    "submission_counts": {"9007199254740993 - 9007199254740992": 1488, "1 + 18014398509481983": 993},
+    "submission_counts": {
+      "9007199254740993 - 9007199254740992": 1488,
+      "1 + 18014398509481983": 993
+    },
     "all_outcomes_normal": true
   },
   "tests": [
@@ -75,12 +330,21 @@
     "cargo test -p noble-contracts: all suites passed",
     "cargo test --release -p noble-cli --test smoke -- calculator: 1 passed"
   ],
-  "pending": ["CALC-01 15/15 through the calculator acceptance runner (#19) on the integrated build"],
+  "pending": [],
   "non_claims": [
     "no proof of the Work bound; design.md carries a reviewed written derivation",
     "timings are single samples on a loaded shared host, not benchmarks",
     "margins come from a temporary uncommitted instrumentation patch, not a supported metrics output",
     "normalization, literal and display charges are unchanged and remain quadratic",
     "CALC-01 acceptance is not claimed by this record"
-  ]
+  ],
+  "calc_01_integrated": {
+    "receipt": "verification/calculator-v1/receipt-eccbc02-release.json",
+    "receipt_sha256": "2388a2a400fe974ade14160b2c1e94e758d9b3057ff2c4d9d95b85a60bb16c9e",
+    "commit": "eccbc024c837f21caf26ffe2d6be7e6c1d6bb1fb",
+    "binary_sha256": "f7f02dfbc9f6723a10879fd269abd4319a8736aa9d952ebb06f5d9bc2c5085ec",
+    "calculator_numeric_noble_sha256": "0e8cb62321d32314e181c81160708567795da3cf77ff8020a76c9134f454a176",
+    "calc_01": "15/15 pass",
+    "note": "calculator-numeric.noble at eccbc02 is byte-identical to main"
+  }
 }
