@@ -201,7 +201,7 @@ orchestrates the checked guest phases and supplies bounded bytes and budgets.
 It is slow: each line runs about 300–450 separately checked guest modules.
 Measured on a release build of `7bae596` (with module reuse, below, and
 before lines ran on one committed session), on a 32-thread host at 1-minute
-load average 48–60 with four calculator processes at a time, a fresh `1+2`
+load average 45.74–60.54 with four calculator processes at a time, a fresh `1+2`
 took 267 s, `2*3` 296 s, `12.34` 240 s and `0.3` with `--finite-decimal`
 292 s; without reuse the same lines took 464, 538, 349 and 569 s in the same
 window. A module seen for the first time costs about 1.1–1.5 s there (source
