@@ -233,12 +233,11 @@ pub(super) fn verify(bytes: &[u8], origin: &Value, install: &Value) -> Result<()
                     if export.kind == wasmparser::ExternalKind::Table {
                         return Err(denied("selected module exports its dispatch table"));
                     }
-                    if export.name == "install_target" {
-                        if export.kind != wasmparser::ExternalKind::Func
-                            || exported_installer.replace(export.index).is_some()
-                        {
-                            return Err(denied("ambiguous target installer export"));
-                        }
+                    if export.name == "install_target"
+                        && (export.kind != wasmparser::ExternalKind::Func
+                            || exported_installer.replace(export.index).is_some())
+                    {
+                        return Err(denied("ambiguous target installer export"));
                     }
                 }
             }
