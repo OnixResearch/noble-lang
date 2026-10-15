@@ -461,6 +461,13 @@ name = "noble-kernel"
 version = "0.0.0"
 
 [[package]]
+name = "noble-ngraph-experiment"
+version = "0.0.0"
+dependencies = [
+ "blake3",
+]
+
+[[package]]
 name = "noble-syndicate"
 version = "0.0.0"
 dependencies = [
