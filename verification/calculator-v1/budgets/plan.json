@@ -1,0 +1,543 @@
+{
+ "schema": "noble-calculator-budget-plan/v1",
+ "case": "CALC-08",
+ "note": "Each session is one `noble calculator` process. Every category bracket changes exactly one of the seven budgets; the other six keep their defaults (1024/256/4096/32/16/4000000/4096), which the setup, probe and follow-up lines all fit. N is predicted from the guest accounting documented in .cairn/changes/calculator-v1/design.md. Unframed input counts each line with its newline terminator (InputBytes and the 1-per-byte preparse Work charge).",
+ "non_claims": [
+  "No canonical CALC case state, evidence or implementation status is changed.",
+  "Observations hold for the recorded binary only; the runner cannot prove which source built it.",
+  "A bracket shows one deterministic boundary per category, not that every charge site or every input is bounded.",
+  "Controls show distinct labels for a host timeout, a killed worker, a memory-capped scope and host replay/transport preflight; they do not enumerate every native failure.",
+  "No proof of the accounting, of exact arithmetic or of conversions is claimed."
+ ],
+ "sessions": [
+  {
+   "id": "output-size/N-1",
+   "category": "OutputSize",
+   "flags": [
+    "--output-size",
+    "6"
+   ],
+   "lines": [
+    "let x=7",
+    "let x=1234567",
+    "x",
+    "let y=1234567",
+    "y"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit OutputSize"
+    },
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit OutputSize"
+    },
+    {
+     "stderr": "UnknownName"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "output-size/N",
+   "category": "OutputSize",
+   "flags": [
+    "--output-size",
+    "7"
+   ],
+   "lines": [
+    "let x=7",
+    "let x=1234567",
+    "x",
+    "let y=1234567",
+    "y"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "1234567"
+    }
+   ],
+   "expect_status": 0
+  },
+  {
+   "id": "call-depth/N-1",
+   "category": "CallDepth",
+   "flags": [
+    "--call-depth",
+    "1"
+   ],
+   "lines": [
+    "fn g(y)=y+1",
+    "fn f(y)=g(y)+1",
+    "f(1)",
+    "g(1)"
+   ],
+   "expect": [
+    {
+     "silent": true
+    },
+    {
+     "silent": true
+    },
+    {
+     "stderr": "ResourceLimit CallDepth"
+    },
+    {
+     "stdout": "2"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "call-depth/N",
+   "category": "CallDepth",
+   "flags": [
+    "--call-depth",
+    "2"
+   ],
+   "lines": [
+    "fn g(y)=y+1",
+    "fn f(y)=g(y)+1",
+    "f(1)",
+    "g(1)"
+   ],
+   "expect": [
+    {
+     "silent": true
+    },
+    {
+     "silent": true
+    },
+    {
+     "stdout": "3"
+    },
+    {
+     "stdout": "2"
+    }
+   ],
+   "expect_status": 0
+  },
+  {
+   "id": "input-bytes/N-2",
+   "category": "InputBytes",
+   "flags": [
+    "--input-bytes",
+    "7"
+   ],
+   "lines": [
+    "let x=7",
+    "x+100000",
+    "x"
+   ],
+   "expect": [
+    {
+     "stderr": "ResourceLimit InputBytes"
+    },
+    {
+     "stderr": "ResourceLimit InputBytes"
+    },
+    {
+     "stderr": "UnknownName"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "input-bytes/N-1",
+   "category": "InputBytes",
+   "flags": [
+    "--input-bytes",
+    "8"
+   ],
+   "lines": [
+    "let x=7",
+    "x+100000",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit InputBytes"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "input-bytes/N",
+   "category": "InputBytes",
+   "flags": [
+    "--input-bytes",
+    "9"
+   ],
+   "lines": [
+    "let x=7",
+    "x+100000",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "100007"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 0
+  },
+  {
+   "id": "numeric-digits/N-1",
+   "category": "NumericDigits",
+   "flags": [
+    "--numeric-digits",
+    "2"
+   ],
+   "lines": [
+    "let x=7",
+    "x+123",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit NumericDigits"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "numeric-digits/N",
+   "category": "NumericDigits",
+   "flags": [
+    "--numeric-digits",
+    "3"
+   ],
+   "lines": [
+    "let x=7",
+    "x+123",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "130"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 0
+  },
+  {
+   "id": "intermediate-bits/N-1",
+   "category": "IntermediateIntegerBits",
+   "flags": [
+    "--intermediate-bits",
+    "25"
+   ],
+   "lines": [
+    "let x=7",
+    "1234567",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit IntermediateIntegerBits"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "intermediate-bits/N",
+   "category": "IntermediateIntegerBits",
+   "flags": [
+    "--intermediate-bits",
+    "26"
+   ],
+   "lines": [
+    "let x=7",
+    "1234567",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 0
+  },
+  {
+   "id": "syntax-depth/N-1",
+   "category": "SyntaxDepth",
+   "flags": [
+    "--syntax-depth",
+    "2"
+   ],
+   "lines": [
+    "let x=7",
+    "(((x)))",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit SyntaxDepth"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "syntax-depth/N",
+   "category": "SyntaxDepth",
+   "flags": [
+    "--syntax-depth",
+    "3"
+   ],
+   "lines": [
+    "let x=7",
+    "(((x)))",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 0
+  },
+  {
+   "id": "evaluation-work/N-2",
+   "category": "EvaluationWork",
+   "flags": [
+    "--evaluation-work",
+    "38051"
+   ],
+   "lines": [
+    "let x=7",
+    "77",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit EvaluationWork"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "evaluation-work/N-1",
+   "category": "EvaluationWork",
+   "flags": [
+    "--evaluation-work",
+    "38052"
+   ],
+   "lines": [
+    "let x=7",
+    "77",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit EvaluationWork"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "evaluation-work/N",
+   "category": "EvaluationWork",
+   "flags": [
+    "--evaluation-work",
+    "38053"
+   ],
+   "lines": [
+    "let x=7",
+    "77",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "77"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 0
+  },
+  {
+   "id": "control/history-bytes",
+   "category": "host-limit",
+   "flags": [],
+   "lines": [
+    "let x=7",
+    {
+     "repeat": "1",
+     "count": 65530
+    },
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "HostLimit HistoryBytes [0,65531) provenance=host-replay-preflight"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "control/replay-work",
+   "category": "host-limit",
+   "flags": [],
+   "lines": [
+    "let x=7",
+    {
+     "repeat": "1",
+     "count": 65400
+    },
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "HostLimit ReplayWork [0,65401) provenance=host-replay-preflight"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "expect_status": 1
+  },
+  {
+   "id": "control/worker-killed",
+   "category": "native-failure",
+   "flags": [],
+   "lines": [
+    "let x=7",
+    "1+2",
+    "x"
+   ],
+   "expect": [
+    {
+     "stdout": "7"
+    }
+   ],
+   "kill_worker_after_stdout_lines": 1
+  },
+  {
+   "id": "control/host-timeout",
+   "category": "host-timeout",
+   "flags": [],
+   "lines": [
+    "1+2"
+   ],
+   "expect": [],
+   "timeout_s": 20,
+   "expect_timeout": true,
+   "expect_signal": "SIGKILL"
+  },
+  {
+   "id": "control/transport-limit",
+   "category": "transport-limit",
+   "flags": [],
+   "lines": [
+    {
+     "repeat": "1",
+     "count": 65537
+    }
+   ],
+   "expect": [
+    {
+     "stderr": "TransportLimit InputFrameBytes"
+    }
+   ],
+   "expect_status": 2
+  },
+  {
+   "id": "control/memory-cap",
+   "category": "host-memory-limit",
+   "flags": [],
+   "lines": [
+    "1+2"
+   ],
+   "expect": [],
+   "memory_max": "48M"
+  }
+ ]
+}
