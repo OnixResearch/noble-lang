@@ -364,4 +364,47 @@ theorem exec_quote_program_run_run (p : List Op) (s t : Stack) :
     exact ⟨s ++ [.program p], exec_append_iff.mpr ⟨_, exec_block_iff.mpr rfl,
       exec_quote_run_iff.mpr rfl⟩, exec_run_iff.mpr h⟩
 
+/-- Inputs pushed by literal operations, then a constructed program is run:
+the whole run equals the reference machine from the empty operand stack, above
+any preserved prefix. This is the per-case statement the differential
+comparator instantiates. -/
+theorem PExpr.exec_inputs_run (P : PExpr) (ins : List AOp) {zs' : List ℤ}
+    (h : refRun (ins ++ P.flat) [] = some zs') (pre t : Stack) :
+    Exec (lowerAll ins ++ (P.code ++ [.word 10])) pre t ↔ t = pre ++ enc zs' := by
+  rw [refRun_append] at h
+  cases hm : refRun ins [] with
+  | none => rw [hm] at h; cases h
+  | some m =>
+      rw [hm, Option.bind_some] at h
+      rw [exec_append_iff]
+      have hins := exec_lowerAll hm pre
+      simp only [enc, List.map_nil, List.reverse_nil, List.append_nil] at hins
+      constructor
+      · rintro ⟨u, hu, hr⟩
+        rw [(hins u).mp hu] at hr
+        exact (P.exec_run_ref h pre t).mp hr
+      · intro ht
+        exact ⟨_, (hins _).mpr rfl, (P.exec_run_ref h pre t).mpr ht⟩
+
+/-- Straight-line form of the same statement (no program construction). -/
+theorem exec_lowerAll_from_empty {ops : List AOp} {zs' : List ℤ} (h : refRun ops [] = some zs')
+    (pre t : Stack) : Exec (lowerAll ops) pre t ↔ t = pre ++ enc zs' := by
+  have := exec_lowerAll h pre t
+  simpa [enc] using this
+
+/-- Nested quotation form: `ins [ ops ] quote run run`. -/
+theorem exec_inputs_nested (ins ops : List AOp) {zs' : List ℤ}
+    (h : refRun (ins ++ ops) [] = some zs') (pre t : Stack) :
+    Exec (lowerAll ins ++ [.block (lowerAll ops), .word 8, .word 10, .word 10]) pre t ↔
+      t = pre ++ enc zs' := by
+  have h' : refRun (ins ++ (PExpr.arith ops).flat) [] = some zs' := h
+  rw [← (PExpr.arith ops).exec_inputs_run ins h' pre t, exec_append_iff, exec_append_iff]
+  constructor
+  · rintro ⟨u, hu, hr⟩
+    exact ⟨u, hu, (PExpr.arith ops).exec_code_run u t |>.mpr
+      ((exec_quote_program_run_run _ u t).mp hr)⟩
+  · rintro ⟨u, hu, hr⟩
+    exact ⟨u, hu, (exec_quote_program_run_run _ u t).mpr
+      (((PExpr.arith ops).exec_code_run u t).mp hr)⟩
+
 end NobleFoundation

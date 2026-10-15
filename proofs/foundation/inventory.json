@@ -512,6 +512,24 @@
       "phase": 3,
       "role": "slice",
       "claim": "41 |-> 42 and max |-> min through the driver"
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_inputs_run",
+      "phase": 4,
+      "role": "comparator-instantiation",
+      "claim": "literal inputs then construct-and-run equals refRun from empty stack, any prefix (per-case comparator theorem)"
+    },
+    {
+      "name": "NobleFoundation.exec_lowerAll_from_empty",
+      "phase": 4,
+      "role": "comparator-instantiation",
+      "claim": "straight-line sequence equals refRun from empty stack, any prefix"
+    },
+    {
+      "name": "NobleFoundation.exec_inputs_nested",
+      "phase": 4,
+      "role": "comparator-instantiation",
+      "claim": "inputs then [ ops ] quote run run equals refRun, any prefix"
     }
   ]
 }
