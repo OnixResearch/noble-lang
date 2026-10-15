@@ -296,14 +296,15 @@ let contracts = import "./architecture.contracts.ncl" in
   admission = null,
   waivers = [],
   collection_limits = {
-    # The candidate's pinned offline all-targets/all-features Cargo plan selects
-    # exactly 54 workspace units. Earlier acyclic controls on a different source
-    # selected 56, but the candidate's fixture currently has a duplicate Cargo
-    # dev-dependencies table and cannot establish those two extra units here.
-    # This exact candidate capacity is not a classification waiver, source/native
+    # The pinned offline all-targets/all-features Cargo plan selected exactly 54
+    # workspace units before Calculator-v1; its two noble-wasm integration test
+    # targets (calculator_collect, calculator_profile) make exactly 56. Earlier
+    # acyclic controls on a different source also selected 56, but the fixture's
+    # duplicate Cargo dev-dependencies table cannot establish extra units here.
+    # This exact capacity is not a classification waiver, source/native
     # assurance approval, or a gate PASS.
-    max_units = 54,
-    max_shards = 54,
+    max_units = 56,
+    max_shards = 56,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,
@@ -312,11 +313,13 @@ let contracts = import "./architecture.contracts.ncl" in
     max_traits = 512,
     max_implementations = 1024,
     max_signatures = 4096,
-    # A different, non-ancestor 54-unit source measured 16,646 CLI bin+test
-    # calls. That does not measure this candidate; retain the existing bound
-    # until a fresh candidate shard demonstrates any necessary renewal.
-    max_calls = 16384,
-    max_constructors = 16384,
+    # Calculator-v1 (issue #22 collection of 44329dc + fmt/clippy): both CLI
+    # noble bin and bin+test shards reached the 16,384 call cap, and the bin
+    # shard also reached the 16,384 constructor cap, so both were incomplete.
+    # Double both bounds for one complete re-collection; truncation is never
+    # an inventory.
+    max_calls = 32768,
+    max_constructors = 32768,
     max_effects = 4096,
     max_expansions = 8192,
     # M5's frontend saturates the previous 1024 compiler-observed attribute/
@@ -335,10 +338,11 @@ let contracts = import "./architecture.contracts.ncl" in
     # Permit one bounded re-collection; the incomplete shard is not an inventory.
     max_spans = 32768,
     max_span_bytes = 1048576,
-    # The candidate's incomplete CLI shard was 22,854,847 bytes; its complete
-    # size and normalized IR remain unmeasured. Keep the independent byte caps.
-    max_shard_bytes = 33554432,
-    max_artifact_bytes = 134217728,
+    # The truncated issue #22 CLI shards were already 27,781,842 and
+    # 26,658,831 bytes, so complete shards cannot fit 32 MiB. Double the
+    # independent shard and artifact byte caps with the call caps above.
+    max_shard_bytes = 67108864,
+    max_artifact_bytes = 268435456,
   },
   non_claims = [
     "complete-fcis-proof",
