@@ -1,0 +1,1453 @@
+{
+  "schema": "noble-foundation-check/v1",
+  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and transcribed runtime helpers). No implementation theorem.",
+  "source_commit": "ce2e5ce8de5f1fd6f5c3d57a2a278326f7971d7c",
+  "source_tree": "b20649ef1ed196e0d6228d7bb32dc453f8f4c790",
+  "clean_source": true,
+  "allow_dirty": false,
+  "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+  "lean_path": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lean",
+  "lean_sha256": "8d4a77a004e609ed02b22c1f314fd3a8a49da78672220ecdb34c93d6c26e141a",
+  "mathlib_commit": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+  "packages": {
+    "aeneas": {
+      "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
+      "tree": "af23d5d9d866050c2158700cedab07501443bcdd"
+    },
+    "mathlib": {
+      "rev": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+      "tree": "1b8fcc589cb2eeb1258449f844eed7924edc9a04"
+    },
+    "plausible": {
+      "rev": "63045536fe95024e6c18fc7b48e03f506701c5bc",
+      "tree": "19a07a6a4ce1eaa48c5ff480bf8c040829e52657"
+    },
+    "LeanSearchClient": {
+      "rev": "c5d5b8fe6e5158def25cd28eb94e4141ad97c843",
+      "tree": "d0224b6df6c90cc0b4ed2db6218037d31bfd6f52"
+    },
+    "importGraph": {
+      "rev": "5c7542ed018c78194f1e2b903eaf6a792b74c03d",
+      "tree": "fd246b0ab3af2e9f66b71b041438d3b5afc6b0e3"
+    },
+    "proofwidgets": {
+      "rev": "24b0d9dc081c5423f8eec7e866c441e5184f29d9",
+      "tree": "041e31bf91e3dd5032921f618de8acffe333b783"
+    },
+    "aesop": {
+      "rev": "e3cb2f741431ce31bf73549fb52316a57368b06f",
+      "tree": "366e5c46b71252ebe7be10ed65fe4e7b5e837aff"
+    },
+    "Qq": {
+      "rev": "f46324995fca5f0483b742e4eb4daec7f4ee50d2",
+      "tree": "47d0a089e7bd378581b0f978e7cabdfb3e0345d0"
+    },
+    "batteries": {
+      "rev": "fa08db58b30eb033edcdab331bba000827f9f785",
+      "tree": "01494ad63f97095e17e2c512e02e98dd6ee62777"
+    },
+    "Cli": {
+      "rev": "92564e5770e4d09f2d86dfbf8ada1e9c715b384c",
+      "tree": "6a5b2d2f0d92bddcd096c36be79a2eb1a83bc2fe"
+    }
+  },
+  "mathlib_oleans": "downloaded Lake cache (lake exe cache get), not rebuilt: separate trust assumption",
+  "sources_sha256": {
+    "proofs/foundation/NobleFoundation.lean": "b57c8fae57ec5e86156723007741c20b9d6fe18bc65556dc44f67f6e8600e697",
+    "proofs/foundation/NobleFoundation/Helper.lean": "16d04590fea51c2984438090f85632fe554c1095a3295ad96cb72ab92a74cf76",
+    "proofs/foundation/NobleFoundation/Instr.lean": "793416b20827d2c0ef5c8ecca6996fdade3447a51486363d58f4ae36eb3100e9",
+    "proofs/foundation/NobleFoundation/Laws.lean": "fdaf9eafaea872645a7e744380b8346fb3fe7a0a82af83bf2ad2d4e42c20acc2",
+    "proofs/foundation/NobleFoundation/Literal.lean": "9c02a9426076058717f870b14ba0ef279f89d2ca6739164915665e364619cf61",
+    "proofs/foundation/NobleFoundation/Preservation.lean": "eca891529026afc160fb72313224253cd3624f8581f4171b37405cfca2b4a46f",
+    "proofs/foundation/NobleFoundation/Regressions.lean": "5a945960477c2692fa0d714e88624cb5c3257ee21dc1c8c0f0ebd24092f8d727",
+    "proofs/foundation/NobleFoundation/Repr.lean": "b8fb9ab30fb80e75c4df5d51b56fe3b178eef1415e7f09ba85a3a2b1d08d93f8",
+    "proofs/foundation/NobleFoundation/Sequence.lean": "4b2d84b438845b345b7a8a98232a82dedda79d19d1c05e12b0d8a2972c02d73e",
+    "proofs/foundation/NobleFoundation/Slice.lean": "ba0408f65203afc6f6f527742aa435ea550cdc3f0ad466a29ed02ec1d5c8577c",
+    "proofs/foundation/inventory.json": "bae6f0f8a3d91795046455d9358180df7a73e1da0d425c5b4552be33c8c501fd",
+    "proofs/foundation/lakefile.toml": "dde8be0ee9b607e6f46d7dd80e6ad5b88ad5eddab4c589a897c3613ab3c086b9",
+    "proofs/foundation/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
+    "proofs/foundation/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
+    "proofs/m3/MathlibI64.lean": "deb32a80f4593d042b20c636ffebaeed69347f0b248e4a19490e0133048dc618",
+    "proofs/mc1/NobleContracts/Model.lean": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3",
+    "proofs/mc1/NobleContracts/Rules.lean": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b",
+    "proofs/mc1/NobleContracts/Obligation.lean": "13dddb8d47346ba648eb2dd372031ccd2f2e090f3312f1797a1ca567ab9cd616",
+    "proofs/mc1/NobleContracts/Composition.lean": "baae47050f6d445dc7b85ebff72a6bfe40a1f96de92c310ad6ae507bcb0b1d89",
+    "proofs/mc1/NobleContracts/Examples.lean": "280088bedaac3432addc18cb03ec97659c71dca7507fd112623844a09f4ae549",
+    "policy/tool-selection.json": "83fda5de740430829860b8e96a695c1c519d0ac3b8758d187c95e4ecf6313050",
+    "verification/foundation/check.mjs": "d0a571e05a743e92061736bdbccdc2f42a2d2e61e09e9b52757ef744b2f16d74"
+  },
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "theorem_count": 111,
+  "theorems": [
+    {
+      "name": "NobleFoundation.toZ_ofZ",
+      "phase": 1,
+      "role": "representation",
+      "claim": "ofZ then toZ is the identity on ZMod (2^64)",
+      "status": "proved",
+      "statement": "NobleFoundation.toZ_ofZ : ∀ (r : NobleFoundation.Z64), NobleFoundation.toZ (NobleFoundation.ofZ r) = r",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ofZ_toZ",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ then ofZ is the identity on BitVec 64",
+      "status": "proved",
+      "statement": "NobleFoundation.ofZ_toZ : ∀ (x : BitVec 64), NobleFoundation.ofZ (NobleFoundation.toZ x) = x",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toZ_injective",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ is injective",
+      "status": "proved",
+      "statement": "NobleFoundation.toZ_injective : Function.Injective NobleFoundation.toZ",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ofZ_injective",
+      "phase": 1,
+      "role": "representation",
+      "claim": "ofZ is injective",
+      "status": "proved",
+      "statement": "NobleFoundation.ofZ_injective : Function.Injective NobleFoundation.ofZ",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toZ_ofInt",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ (BitVec.ofInt 64 n) = (n : ZMod (2^64))",
+      "status": "proved",
+      "statement": "NobleFoundation.toZ_ofInt : ∀ (n : ℤ), NobleFoundation.toZ (BitVec.ofInt 64 n) = ↑n",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ofZ_intCast",
+      "phase": 1,
+      "role": "representation",
+      "claim": "ofZ (n : ZMod (2^64)) = BitVec.ofInt 64 n",
+      "status": "proved",
+      "statement": "NobleFoundation.ofZ_intCast : ∀ (n : ℤ), NobleFoundation.ofZ ↑n = BitVec.ofInt 64 n",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toZ_add",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ is additive",
+      "status": "proved",
+      "statement": "NobleFoundation.toZ_add : ∀ (a b : BitVec 64), NobleFoundation.toZ (a + b) = NobleFoundation.toZ a + NobleFoundation.toZ b",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toZ_mul",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ is multiplicative",
+      "status": "proved",
+      "statement": "NobleFoundation.toZ_mul : ∀ (a b : BitVec 64), NobleFoundation.toZ (a * b) = NobleFoundation.toZ a * NobleFoundation.toZ b",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toZ_sub",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ preserves subtraction",
+      "status": "proved",
+      "statement": "NobleFoundation.toZ_sub : ∀ (a b : BitVec 64), NobleFoundation.toZ (a - b) = NobleFoundation.toZ a - NobleFoundation.toZ b",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toZ_neg",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ preserves negation",
+      "status": "proved",
+      "statement": "NobleFoundation.toZ_neg : ∀ (a : BitVec 64), NobleFoundation.toZ (-a) = -NobleFoundation.toZ a",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.wrap_eq_bmod",
+      "phase": 1,
+      "role": "signed-decoding",
+      "claim": "MathlibI64.wrap n = Int.bmod n (2^64)",
+      "status": "proved",
+      "statement": "NobleFoundation.wrap_eq_bmod : ∀ (n : ℤ), MathlibI64.wrap n = n.bmod (2 ^ 64)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.wrap_eq_toInt_ofInt",
+      "phase": 1,
+      "role": "signed-decoding",
+      "claim": "MathlibI64.wrap n = (BitVec.ofInt 64 n).toInt",
+      "status": "proved",
+      "statement": "NobleFoundation.wrap_eq_toInt_ofInt : ∀ (n : ℤ), MathlibI64.wrap n = (BitVec.ofInt 64 n).toInt",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.wrap_eq_knum01",
+      "phase": 1,
+      "role": "signed-decoding",
+      "claim": "MathlibI64.wrap z = ((z + 2^63) mod 2^64) - 2^63 (K-NUM-01 formula)",
+      "status": "proved",
+      "statement": "NobleFoundation.wrap_eq_knum01 : ∀ (z : ℤ), MathlibI64.wrap z = (z + 2 ^ 63) % 2 ^ 64 - 2 ^ 63",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.signed_eq_toInt",
+      "phase": 1,
+      "role": "signed-decoding",
+      "claim": "MathlibI64.signed r = (ofZ r).toInt",
+      "status": "proved",
+      "statement": "NobleFoundation.signed_eq_toInt : ∀ (r : NobleFoundation.Z64), MathlibI64.signed r = (NobleFoundation.ofZ r).toInt",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.signed_toZ",
+      "phase": 1,
+      "role": "signed-decoding",
+      "claim": "MathlibI64.signed (toZ x) = x.toInt",
+      "status": "proved",
+      "statement": "NobleFoundation.signed_toZ : ∀ (x : BitVec 64), MathlibI64.signed (NobleFoundation.toZ x) = x.toInt",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toInt_range",
+      "phase": 1,
+      "role": "range",
+      "claim": "every BitVec 64 decodes into [-2^63, 2^63)",
+      "status": "proved",
+      "statement": "NobleFoundation.toInt_range : ∀ (x : BitVec 64), NobleFoundation.I64Range x.toInt",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.signed_range",
+      "phase": 1,
+      "role": "range",
+      "claim": "every residue decodes into [-2^63, 2^63)",
+      "status": "proved",
+      "statement": "NobleFoundation.signed_range : ∀ (r : NobleFoundation.Z64), NobleFoundation.I64Range (MathlibI64.signed r)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.intCast_toInt",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "((x.toInt : ℤ) : ZMod (2^64)) = toZ x",
+      "status": "proved",
+      "statement": "NobleFoundation.intCast_toInt : ∀ (x : BitVec 64), ↑x.toInt = NobleFoundation.toZ x",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.intCast_signed",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "residue -> signed integer -> residue is the identity",
+      "status": "proved",
+      "statement": "NobleFoundation.intCast_signed : ∀ (r : NobleFoundation.Z64), ↑(MathlibI64.signed r) = r",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toInt_ofInt_of_range",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "integer -> BitVec -> integer is the identity on the I64 range",
+      "status": "proved",
+      "statement": "@NobleFoundation.toInt_ofInt_of_range : ∀ {n : ℤ}, NobleFoundation.I64Range n → (BitVec.ofInt 64 n).toInt = n",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toInt_ofInt_eq_iff",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "(BitVec.ofInt 64 n).toInt = n iff n is in the I64 range",
+      "status": "proved",
+      "statement": "NobleFoundation.toInt_ofInt_eq_iff : ∀ (n : ℤ), (BitVec.ofInt 64 n).toInt = n ↔ NobleFoundation.I64Range n",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.signed_intCast_eq_iff",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "signed (n : ZMod (2^64)) = n iff n is in the I64 range",
+      "status": "proved",
+      "statement": "NobleFoundation.signed_intCast_eq_iff : ∀ (n : ℤ), MathlibI64.signed ↑n = n ↔ NobleFoundation.I64Range n",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ofInt_toInt",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "BitVec -> integer -> BitVec is the identity",
+      "status": "proved",
+      "statement": "NobleFoundation.ofInt_toInt : ∀ (x : BitVec 64), BitVec.ofInt 64 x.toInt = x",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ofInt_wrap",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "BitVec.ofInt 64 (wrap n) = BitVec.ofInt 64 n",
+      "status": "proved",
+      "statement": "NobleFoundation.ofInt_wrap : ∀ (n : ℤ), BitVec.ofInt 64 (MathlibI64.wrap n) = BitVec.ofInt 64 n",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ofInt_sub",
+      "phase": 1,
+      "role": "representation",
+      "claim": "BitVec.ofInt 64 (x - y) = ofInt x - ofInt y",
+      "status": "proved",
+      "statement": "NobleFoundation.ofInt_sub : ∀ (x y : ℤ), BitVec.ofInt 64 (x - y) = BitVec.ofInt 64 x - BitVec.ofInt 64 y",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toInt_add",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "(a + b).toInt = wrap (a.toInt + b.toInt)",
+      "status": "proved",
+      "statement": "NobleFoundation.toInt_add : ∀ (a b : BitVec 64), (a + b).toInt = MathlibI64.wrap (a.toInt + b.toInt)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toInt_sub",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "(a - b).toInt = wrap (a.toInt - b.toInt)",
+      "status": "proved",
+      "statement": "NobleFoundation.toInt_sub : ∀ (a b : BitVec 64), (a - b).toInt = MathlibI64.wrap (a.toInt - b.toInt)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.toInt_mul",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "(a * b).toInt = wrap (a.toInt * b.toInt)",
+      "status": "proved",
+      "statement": "NobleFoundation.toInt_mul : ∀ (a b : BitVec 64), (a * b).toInt = MathlibI64.wrap (a.toInt * b.toInt)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.oracle_add",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "wrap (x + y) = (ofInt x + ofInt y).toInt",
+      "status": "proved",
+      "statement": "NobleFoundation.oracle_add : ∀ (x y : ℤ), MathlibI64.wrap (x + y) = (BitVec.ofInt 64 x + BitVec.ofInt 64 y).toInt",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.oracle_sub",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "wrap (x - y) = (ofInt x - ofInt y).toInt",
+      "status": "proved",
+      "statement": "NobleFoundation.oracle_sub : ∀ (x y : ℤ), MathlibI64.wrap (x - y) = (BitVec.ofInt 64 x - BitVec.ofInt 64 y).toInt",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.oracle_mul",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "wrap (x * y) = (ofInt x * ofInt y).toInt",
+      "status": "proved",
+      "statement": "NobleFoundation.oracle_mul : ∀ (x y : ℤ), MathlibI64.wrap (x * y) = (BitVec.ofInt 64 x * BitVec.ofInt 64 y).toInt",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.accumulate_eq_acceptLiteral",
+      "phase": 1,
+      "role": "literal",
+      "claim": "the transcribed checked i64 digit accumulator accepts exactly the in-range literals, unchanged",
+      "status": "proved",
+      "statement": "NobleFoundation.accumulate_eq_acceptLiteral : ∀ (negative : Bool) (ds : List (Fin 10)), NobleFoundation.accumulate negative ds = NobleFoundation.acceptLiteral negative ds",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.accepted_literal_exact",
+      "phase": 1,
+      "role": "literal",
+      "claim": "an accepted literal is in range and decodes without wrapping",
+      "status": "proved",
+      "statement": "@NobleFoundation.accepted_literal_exact : ∀ {negative : Bool} {ds : List (Fin 10)} {n : ℤ}, NobleFoundation.acceptLiteral negative ds = some n → NobleFoundation.I64Range n ∧ n = NobleFoundation.literalValue negative ds ∧ (BitVec.ofInt 64 n).toInt = n",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.acceptLiteral_eq_none_iff",
+      "phase": 1,
+      "role": "literal",
+      "claim": "a literal is rejected iff its value is outside the I64 range",
+      "status": "proved",
+      "statement": "NobleFoundation.acceptLiteral_eq_none_iff : ∀ (negative : Bool) (ds : List (Fin 10)), NobleFoundation.acceptLiteral negative ds = none ↔ ¬NobleFoundation.I64Range (NobleFoundation.literalValue negative ds)",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ofInt_collapses_out_of_range",
+      "phase": 1,
+      "role": "literal",
+      "claim": "BitVec.ofInt identifies 2^63 with -2^63; only the latter is an accepted literal",
+      "status": "proved",
+      "statement": "NobleFoundation.ofInt_collapses_out_of_range : BitVec.ofInt 64 (2 ^ 63) = BitVec.ofInt 64 (-2 ^ 63) ∧ 2 ^ 63 ≠ -2 ^ 63 ∧ ¬NobleFoundation.I64Range (2 ^ 63) ∧ NobleFoundation.I64Range (-2 ^ 63)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.literal_range_iff_no_wrap",
+      "phase": 1,
+      "role": "literal",
+      "claim": "I64Range n iff BitVec.ofInt 64 n decodes to n",
+      "status": "proved",
+      "statement": "NobleFoundation.literal_range_iff_no_wrap : ∀ (n : ℤ), NobleFoundation.I64Range n ↔ (BitVec.ofInt 64 n).toInt = n",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.literal_boundary_regressions",
+      "phase": 1,
+      "role": "regression",
+      "claim": "accumulator: 2^63 rejected; -2^63, 2^63-1, -(2^63-1), -0 accepted; -(2^63+1) rejected",
+      "status": "proved",
+      "statement": "NobleFoundation.literal_boundary_regressions : NobleFoundation.accumulate false NobleFoundation.digitsTwoPow63 = none ∧ NobleFoundation.accumulate true NobleFoundation.digitsTwoPow63 = some (-9223372036854775808) ∧ NobleFoundation.accumulate false NobleFoundation.digitsMax = some 9223372036854775807 ∧ NobleFoundation.accumulate true NobleFoundation.digitsMax = some (-9223372036854775807) ∧ NobleFoundation.accumulate true [0] = some 0 ∧ NobleFoundation.accumulate true [9, 2, 2, 3, 3, 7, 2, 0, 3, 6, 8, 5, 4, 7, 7, 5, 8, 0, 9] = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.represents_iff",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "Represents v n iff v = .i64 x with x.toInt = n",
+      "status": "proved",
+      "statement": "NobleFoundation.represents_iff : ∀ (v : NobleContracts.Value) (n : ℤ), NobleFoundation.Represents v n ↔ ∃ x, v = NobleContracts.Value.i64 x ∧ x.toInt = n",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.represents_functional",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "an I64 value represents at most one integer",
+      "status": "proved",
+      "statement": "@NobleFoundation.represents_functional : ∀ {v : NobleContracts.Value} {n m : ℤ}, NobleFoundation.Represents v n → NobleFoundation.Represents v m → n = m",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.represents_of_hasType",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "every well-typed I64 value represents its toInt",
+      "status": "proved",
+      "statement": "@NobleFoundation.represents_of_hasType : ∀ {v : NobleContracts.Value} (h : NobleContracts.HasType v NobleContracts.Ty.i64), NobleFoundation.Represents v (match v, h with | NobleContracts.Value.i64 x, h => x.toInt | x, h => 0)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.hasType_of_represents",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "represented values are typed I64",
+      "status": "proved",
+      "statement": "@NobleFoundation.hasType_of_represents : ∀ {v : NobleContracts.Value} {n : ℤ}, NobleFoundation.Represents v n → NobleContracts.HasType v NobleContracts.Ty.i64",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.represents_wrap",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "i64v (wrap z) represents wrap z",
+      "status": "proved",
+      "statement": "NobleFoundation.represents_wrap : ∀ (z : ℤ), NobleFoundation.Represents (NobleFoundation.i64v (MathlibI64.wrap z)) (MathlibI64.wrap z)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleContracts.StackTyped.append",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "StackTyped is closed under public-orientation concatenation",
+      "status": "proved",
+      "statement": "@NobleContracts.StackTyped.append : ∀ {s t : NobleContracts.Stack} {ts tt : List NobleContracts.Ty}, NobleContracts.StackTyped s ts → NobleContracts.StackTyped t tt → NobleContracts.StackTyped (s ++ t) (ts ++ tt)",
+      "axioms": []
+    },
+    {
+      "name": "NobleFoundation.stackTyped_snoc_i64",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "pushing an I64 extends the typed public stack",
+      "status": "proved",
+      "statement": "@NobleFoundation.stackTyped_snoc_i64 : ∀ {s : NobleContracts.Stack} {ts : List NobleContracts.Ty}, NobleContracts.StackTyped s ts → ∀ (n : ℤ), NobleContracts.StackTyped (s ++ [NobleFoundation.i64v n]) (ts ++ [NobleContracts.Ty.i64])",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.internal_of_public",
+      "phase": 1,
+      "role": "orientation",
+      "claim": "public pre ++ [a, b] is internal b :: a :: reverse pre",
+      "status": "proved",
+      "statement": "NobleFoundation.internal_of_public : ∀ (pre : NobleContracts.Stack) (a b : NobleContracts.Value), List.reverse (pre ++ [a, b]) = b :: a :: List.reverse pre",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_sub_is_internal_step",
+      "phase": 1,
+      "role": "orientation",
+      "claim": "public subtraction is internal Step.sub with the public top as subtrahend",
+      "status": "proved",
+      "statement": "NobleFoundation.exec_sub_is_internal_step : ∀ (pre : NobleContracts.Stack) (a b : BitVec 64) (t : NobleContracts.Stack), NobleContracts.Exec [NobleContracts.Op.word 5] (pre ++ [NobleContracts.Value.i64 a, NobleContracts.Value.i64 b]) t ↔ NobleContracts.Step (NobleContracts.Op.word 5) (NobleContracts.Value.i64 b :: NobleContracts.Value.i64 a :: List.reverse pre) (List.reverse t)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.add_spec",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "ArithSpec 4 (+): typed, prefix preserved, unique normal result i64v (wrap (x + y))",
+      "status": "proved",
+      "statement": "NobleFoundation.add_spec : NobleFoundation.ArithSpec 4 fun x1 x2 => x1 + x2",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.sub_spec",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "ArithSpec 5 (-): typed, prefix preserved, unique normal result i64v (wrap (x - y)), x deeper",
+      "status": "proved",
+      "statement": "NobleFoundation.sub_spec : NobleFoundation.ArithSpec 5 fun x1 x2 => x1 - x2",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.mul_spec",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "ArithSpec 6 (*): typed, prefix preserved, unique normal result i64v (wrap (x * y))",
+      "status": "proved",
+      "statement": "NobleFoundation.mul_spec : NobleFoundation.ArithSpec 6 fun x1 x2 => x1 * x2",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_arith_toInt",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "for arbitrary BitVec operands the add/sub/mul result decodes to wrap of decoded operands",
+      "status": "proved",
+      "statement": "NobleFoundation.exec_arith_toInt : ∀ (pre : NobleContracts.Stack) (a b : BitVec 64) (t : NobleContracts.Stack), (NobleContracts.Exec [NobleContracts.Op.word 4] (pre ++ [NobleContracts.Value.i64 a, NobleContracts.Value.i64 b]) t ↔ ∃ r, t = pre ++ [NobleContracts.Value.i64 r] ∧ r.toInt = MathlibI64.wrap (a.toInt + b.toInt)) ∧ (NobleContracts.Exec [NobleContracts.Op.word 5] (pre ++ [NobleContracts.Value.i64 a, NobleContracts.Value.i64 b]) t ↔ ∃ r, t = pre ++ [NobleContracts.Value.i64 r] ∧ r.toInt = MathlibI64.wrap (a.toInt - b.toInt)) ∧ (NobleContracts.Exec [NobleContracts.Op.word 6] (pre ++ [NobleContracts.Value.i64 a, NobleContracts.Value.i64 b]) t ↔ ∃ r, t = pre ++ [NobleContracts.Value.i64 r] ∧ r.toInt = MathlibI64.wrap (a.toInt * b.toInt))",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.add_needs_i64",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "add has no normal transition when either operand is not I64",
+      "status": "proved",
+      "statement": "NobleFoundation.add_needs_i64 : ∀ (pre : NobleContracts.Stack) (b : BitVec 64) (t : NobleContracts.Stack), ¬NobleContracts.Exec [NobleContracts.Op.word 4] (pre ++ [NobleContracts.Value.bool true, NobleContracts.Value.i64 b]) t ∧ ¬NobleContracts.Exec [NobleContracts.Op.word 4] (pre ++ [NobleContracts.Value.i64 b, NobleContracts.Value.bool true]) t",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.refRun_append",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "reference machine sequencing",
+      "status": "proved",
+      "statement": "NobleFoundation.refRun_append : ∀ (a b : List NobleFoundation.AOp) (zs : List ℤ), NobleFoundation.refRun (a ++ b) zs = (NobleFoundation.refRun a zs).bind (NobleFoundation.refRun b)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.depthRun_append",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "static depth sequencing",
+      "status": "proved",
+      "statement": "NobleFoundation.depthRun_append : ∀ (a b : List NobleFoundation.AOp) (k : ℕ), NobleFoundation.depthRun (a ++ b) k = (NobleFoundation.depthRun a k).bind (NobleFoundation.depthRun b)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.run_lowerAll",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "internal-orientation simulation of lowered sequences by the reference machine",
+      "status": "proved",
+      "statement": "@NobleFoundation.run_lowerAll : ∀ {ops : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.refRun ops zs = some zs' → ∀ (r t : NobleContracts.Stack), NobleContracts.Run (NobleFoundation.lowerAll ops) (List.map NobleFoundation.i64v zs ++ r) t ↔ t = List.map NobleFoundation.i64v zs' ++ r",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_lowerAll",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "public lifting: any prefix, unique normal result pre ++ enc (reference result)",
+      "status": "proved",
+      "statement": "@NobleFoundation.exec_lowerAll : ∀ {ops : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.refRun ops zs = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ops) (pre ++ NobleFoundation.enc zs) t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.refRun_range",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "reference stacks stay in the I64 range",
+      "status": "proved",
+      "statement": "@NobleFoundation.refRun_range : ∀ {ops : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.refRun ops zs = some zs' → (∀ z ∈ zs, NobleFoundation.I64Range z) → ∀ z ∈ zs', NobleFoundation.I64Range z",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.depthRun_of_refRun",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "reference success implies the static depth check",
+      "status": "proved",
+      "statement": "@NobleFoundation.depthRun_of_refRun : ∀ {ops : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.refRun ops zs = some zs' → NobleFoundation.depthRun ops zs.length = some zs'.length",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.codeTyped_lowerAll",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "depth check implies CodeTyped from base ++ k*I64 to base ++ k'*I64",
+      "status": "proved",
+      "statement": "@NobleFoundation.codeTyped_lowerAll : ∀ {ops : List NobleFoundation.AOp} {k k' : ℕ}, NobleFoundation.depthRun ops k = some k' → ∀ (base : List NobleContracts.Ty), NobleContracts.CodeTyped (NobleFoundation.lowerAll ops) (base ++ List.replicate k NobleContracts.Ty.i64) (base ++ List.replicate k' NobleContracts.Ty.i64)",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.body_eq",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "composed body is the lowering of the flattened sequence",
+      "status": "proved",
+      "statement": "NobleFoundation.PExpr.body_eq : ∀ (P : NobleFoundation.PExpr), P.body = NobleFoundation.lowerAll P.flat",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_code",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "construction pushes exactly one program value and executes nothing",
+      "status": "proved",
+      "statement": "NobleFoundation.PExpr.exec_code : ∀ (P : NobleFoundation.PExpr) (s t : NobleContracts.Stack), NobleContracts.Exec P.code s t ↔ t = s ++ [NobleContracts.Value.program P.body]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_code_run",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "construct then run = execute the composed body",
+      "status": "proved",
+      "statement": "NobleFoundation.PExpr.exec_code_run : ∀ (P : NobleFoundation.PExpr) (s t : NobleContracts.Stack), NobleContracts.Exec (P.code ++ [NobleContracts.Op.word 10]) s t ↔ NobleContracts.Exec P.body s t",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_code_reflect",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "reflect observes exactly the composed recipe",
+      "status": "proved",
+      "statement": "NobleFoundation.PExpr.exec_code_reflect : ∀ (P : NobleFoundation.PExpr) (s t : NobleContracts.Stack), NobleContracts.Exec (P.code ++ [NobleContracts.Op.word 11]) s t ↔ t = s ++ [NobleContracts.Value.syntax P.body]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_run_ref",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "quote/block/compose/run equals the reference machine with any preserved prefix",
+      "status": "proved",
+      "statement": "NobleFoundation.PExpr.exec_run_ref : ∀ (P : NobleFoundation.PExpr) {zs zs' : List ℤ}, NobleFoundation.refRun P.flat zs = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (P.code ++ [NobleContracts.Op.word 10]) (pre ++ NobleFoundation.enc zs) t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.codeTyped",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "construction code is CodeTyped on any stack type",
+      "status": "proved",
+      "statement": "NobleFoundation.PExpr.codeTyped : ∀ (P : NobleFoundation.PExpr) (S base : List NobleContracts.Ty) {k k' : ℕ}, NobleFoundation.depthRun P.flat k = some k' → NobleContracts.CodeTyped P.code S (S ++ [NobleContracts.Ty.program (base ++ List.replicate k NobleContracts.Ty.i64) (base ++ List.replicate k' NobleContracts.Ty.i64)])",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.codeTyped_run",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "construct-then-run is CodeTyped with the whole-stack input premise",
+      "status": "proved",
+      "statement": "NobleFoundation.PExpr.codeTyped_run : ∀ (P : NobleFoundation.PExpr) (base : List NobleContracts.Ty) {k k' : ℕ}, NobleFoundation.depthRun P.flat k = some k' → NobleContracts.CodeTyped (P.code ++ [NobleContracts.Op.word 10]) (base ++ List.replicate k NobleContracts.Ty.i64) (base ++ List.replicate k' NobleContracts.Ty.i64)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_quote_program_run_run",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "nested quotation: quote a program, run twice = run it",
+      "status": "proved",
+      "statement": "NobleFoundation.exec_quote_program_run_run : ∀ (p : List NobleContracts.Op) (s t : NobleContracts.Stack), NobleContracts.Exec [NobleContracts.Op.block p, NobleContracts.Op.word 8, NobleContracts.Op.word 10, NobleContracts.Op.word 10] s t ↔ NobleContracts.Exec p s t",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.oracle_boundaries",
+      "phase": 1,
+      "role": "regression",
+      "claim": "signed min/max, zero and negative oracle boundaries",
+      "status": "proved",
+      "statement": "NobleFoundation.oracle_boundaries : MathlibI64.wrap (9223372036854775807 + 1) = -9223372036854775808 ∧ MathlibI64.wrap (-9223372036854775808 - 1) = 9223372036854775807 ∧ MathlibI64.wrap (-9223372036854775808 * -1) = -9223372036854775808 ∧ MathlibI64.wrap (9223372036854775807 * 2) = -2 ∧ MathlibI64.wrap (-9223372036854775808 + -1) = 9223372036854775807 ∧ MathlibI64.wrap (9223372036854775807 - -1) = -9223372036854775808 ∧ MathlibI64.wrap (0 + 0) = 0 ∧ MathlibI64.wrap (-9223372036854775808 * 0) = 0 ∧ MathlibI64.wrap (-7 + -13) = -20 ∧ MathlibI64.wrap (-7 - -13) = 6 ∧ MathlibI64.wrap (-7 * -13) = 91",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.sub_operand_order",
+      "phase": 1,
+      "role": "regression",
+      "claim": "3 8 - is -5, 8 3 - is 5, and they differ",
+      "status": "proved",
+      "statement": "NobleFoundation.sub_operand_order : ∀ (pre t : NobleContracts.Stack), (NobleContracts.Exec (NobleFoundation.lowerAll [NobleFoundation.AOp.push 3, NobleFoundation.AOp.push 8, NobleFoundation.AOp.sub]) pre t ↔ t = pre ++ [NobleFoundation.i64v (-5)]) ∧ (NobleContracts.Exec (NobleFoundation.lowerAll [NobleFoundation.AOp.push 8, NobleFoundation.AOp.push 3, NobleFoundation.AOp.sub]) pre t ↔ t = pre ++ [NobleFoundation.i64v 5]) ∧ NobleFoundation.i64v (-5) ≠ NobleFoundation.i64v 5",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.add_max_wraps_preserving_prefix",
+      "phase": 1,
+      "role": "regression",
+      "claim": "max + 1 wraps to min above a non-I64 prefix",
+      "status": "proved",
+      "statement": "NobleFoundation.add_max_wraps_preserving_prefix : ∀ (t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll [NobleFoundation.AOp.push 9223372036854775807, NobleFoundation.AOp.push 1, NobleFoundation.AOp.add]) [NobleContracts.Value.bool true, NobleContracts.Value.text \"kept\"] t ↔ t = [NobleContracts.Value.bool true, NobleContracts.Value.text \"kept\", NobleFoundation.i64v (-9223372036854775808)]",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.out_of_range_push_refused",
+      "phase": 1,
+      "role": "regression",
+      "claim": "reference refuses push 2^63 although MC1 lowering would alias it to -2^63",
+      "status": "proved",
+      "statement": "NobleFoundation.out_of_range_push_refused : NobleFoundation.refRun [NobleFoundation.AOp.push 9223372036854775808] [] = none ∧ (NobleFoundation.AOp.push 9223372036854775808).lower = (NobleFoundation.AOp.push (-9223372036854775808)).lower",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.quote_compose_run_examples",
+      "phase": 1,
+      "role": "regression",
+      "claim": "5 quote [1 +] compose run = 6; max quote [1 +] compose run = min",
+      "status": "proved",
+      "statement": "NobleFoundation.quote_compose_run_examples : ∀ (pre t : NobleContracts.Stack), (NobleContracts.Exec (((NobleFoundation.PExpr.quoted 5).compose (NobleFoundation.PExpr.arith [NobleFoundation.AOp.push 1, NobleFoundation.AOp.add])).code ++ [NobleContracts.Op.word 10]) pre t ↔ t = pre ++ [NobleFoundation.i64v 6]) ∧ (NobleContracts.Exec (((NobleFoundation.PExpr.quoted 9223372036854775807).compose (NobleFoundation.PExpr.arith [NobleFoundation.AOp.push 1, NobleFoundation.AOp.add])).code ++ [NobleContracts.Op.word 10]) pre t ↔ t = pre ++ [NobleFoundation.i64v (-9223372036854775808)])",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.compose_order_matters",
+      "phase": 1,
+      "role": "regression",
+      "claim": "[2 *][1 +] compose and reverse differ on 5",
+      "status": "proved",
+      "statement": "NobleFoundation.compose_order_matters : ∀ (pre t : NobleContracts.Stack), (NobleContracts.Exec (((NobleFoundation.PExpr.arith [NobleFoundation.AOp.push 2, NobleFoundation.AOp.mul]).compose (NobleFoundation.PExpr.arith [NobleFoundation.AOp.push 1, NobleFoundation.AOp.add])).code ++ [NobleContracts.Op.word 10]) (pre ++ [NobleFoundation.i64v 5]) t ↔ t = pre ++ [NobleFoundation.i64v 11]) ∧ (NobleContracts.Exec (((NobleFoundation.PExpr.arith [NobleFoundation.AOp.push 1, NobleFoundation.AOp.add]).compose (NobleFoundation.PExpr.arith [NobleFoundation.AOp.push 2, NobleFoundation.AOp.mul])).code ++ [NobleContracts.Op.word 10]) (pre ++ [NobleFoundation.i64v 5]) t ↔ t = pre ++ [NobleFoundation.i64v 12]) ∧ NobleFoundation.i64v 11 ≠ NobleFoundation.i64v 12",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.wrap_sub_noncommutative",
+      "phase": 1,
+      "role": "regression",
+      "claim": "wrap (3 - 8) /= wrap (8 - 3)",
+      "status": "proved",
+      "statement": "NobleFoundation.wrap_sub_noncommutative : MathlibI64.wrap (3 - 8) ≠ MathlibI64.wrap (8 - 3)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.SlotsRel.length_eq",
+      "phase": 3,
+      "role": "helper-model",
+      "claim": "slot layout relation preserves stack length",
+      "status": "proved",
+      "statement": "@NobleFoundation.SlotsRel.length_eq : ∀ {vs : NobleContracts.Stack} {ss : List NobleFoundation.Slot}, NobleFoundation.SlotsRel vs ss → List.length vs = ss.length",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.helper_refines_step",
+      "phase": 3,
+      "role": "helper-model",
+      "claim": "transcribed $op_add/$op_sub/$op_mul refine MC1 Step: unique successor, untouched remainder, left = deeper operand",
+      "status": "proved",
+      "statement": "@NobleFoundation.helper_refines_step : ∀ {limit quota w : ℕ} {f : NobleFoundation.WState → NobleFoundation.WState}, NobleFoundation.helper limit quota w = some f → ∀ {a b : BitVec 64} {vs : NobleContracts.Stack} {ss : List NobleFoundation.Slot}, NobleFoundation.SlotsRel vs ss → (ss.length + 2) * 16 ≤ limit → ∃ t, NobleContracts.Step (NobleContracts.Op.word w) (NobleContracts.Value.i64 b :: NobleContracts.Value.i64 a :: vs) t ∧ (∀ (t' : NobleContracts.Stack), NobleContracts.Step (NobleContracts.Op.word w) (NobleContracts.Value.i64 b :: NobleContracts.Value.i64 a :: vs) t' → t' = t) ∧ ∃ ss', f { slots := { tag := 1, payload := b } :: { tag := 1, payload := a } :: ss, failure := 0 } = { slots := ss', failure := 0 } ∧ NobleFoundation.SlotsRel t ss'",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.helper_fails_when_stuck",
+      "phase": 3,
+      "role": "helper-model",
+      "claim": "non-I64 operand: MC1 has no step and the transcribed helper records failure 4",
+      "status": "proved",
+      "statement": "@NobleFoundation.helper_fails_when_stuck : ∀ {limit quota w : ℕ} {f : NobleFoundation.WState → NobleFoundation.WState}, NobleFoundation.helper limit quota w = some f → ∀ {u v : NobleContracts.Value} {vs : NobleContracts.Stack} {su sv : NobleFoundation.Slot} {ss : List NobleFoundation.Slot}, NobleFoundation.SlotsRel (v :: u :: vs) (sv :: su :: ss) → ((∀ (x : BitVec 64), v ≠ NobleContracts.Value.i64 x) ∨ ∀ (x : BitVec 64), u ≠ NobleContracts.Value.i64 x) → (∀ (t : NobleContracts.Stack), ¬NobleContracts.Step (NobleContracts.Op.word w) (v :: u :: vs) t) ∧ (f { slots := sv :: su :: ss, failure := 0 }).failure = 4",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.swapped_helper_refuted",
+      "phase": 3,
+      "role": "helper-model",
+      "claim": "a helper popping left first computes 5 instead of -5 on 3 8 -",
+      "status": "proved",
+      "statement": "NobleFoundation.swapped_helper_refuted : NobleFoundation.opBinary 64 1 (fun x1 x2 => x1 - x2) { slots := [{ tag := 1, payload := 8 }, { tag := 1, payload := 3 }], failure := 0 } = { slots := [{ tag := 1, payload := BitVec.ofInt 64 (-5) }], failure := 0 } ∧ NobleFoundation.opBinarySwapped 64 1 (fun x1 x2 => x1 - x2) { slots := [{ tag := 1, payload := 8 }, { tag := 1, payload := 3 }], failure := 0 } = { slots := [{ tag := 1, payload := 5 }], failure := 0 } ∧ BitVec.ofInt 64 (-5) ≠ 5",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.slice_body_exec",
+      "phase": 3,
+      "role": "slice",
+      "claim": "[ quote [ 1 + ] compose run ] body: any prefix, unique result n + 1",
+      "status": "proved",
+      "statement": "NobleFoundation.slice_body_exec : ∀ (pre : NobleContracts.Stack) (n : BitVec 64) (t : NobleContracts.Stack), NobleContracts.Exec NobleFoundation.sliceBody (pre ++ [NobleContracts.Value.i64 n]) t ↔ t = pre ++ [NobleContracts.Value.i64 (n + 1)]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.slice_body_signed",
+      "phase": 3,
+      "role": "slice",
+      "claim": "slice body against the oracle: i64v x |-> i64v (wrap (x + 1))",
+      "status": "proved",
+      "statement": "NobleFoundation.slice_body_signed : ∀ (pre : NobleContracts.Stack) (x : ℤ) (t : NobleContracts.Stack), NobleContracts.Exec NobleFoundation.sliceBody (pre ++ [NobleFoundation.i64v x]) t ↔ t = pre ++ [NobleFoundation.i64v (MathlibI64.wrap (x + 1))]",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.slice_root_inert",
+      "phase": 3,
+      "role": "slice",
+      "claim": "the subject root only pushes its program",
+      "status": "proved",
+      "statement": "NobleFoundation.slice_root_inert : ∀ (s t : NobleContracts.Stack), NobleContracts.Exec NobleFoundation.sliceRoot s t ↔ t = s ++ [NobleContracts.Value.program NobleFoundation.sliceBody]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.slice_driver",
+      "phase": 3,
+      "role": "slice",
+      "claim": "x [ ... ] run |-> wrap (x + 1) with any preserved prefix",
+      "status": "proved",
+      "statement": "NobleFoundation.slice_driver : ∀ (pre : NobleContracts.Stack) (x : ℤ) (t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.sliceRoot ++ [NobleContracts.Op.word 10]) (pre ++ [NobleFoundation.i64v x]) t ↔ t = pre ++ [NobleFoundation.i64v (MathlibI64.wrap (x + 1))]",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.slice_body_typed",
+      "phase": 3,
+      "role": "slice",
+      "claim": "slice body is CodeTyped base ++ [I64] -> base ++ [I64]",
+      "status": "proved",
+      "statement": "NobleFoundation.slice_body_typed : ∀ (base : List NobleContracts.Ty), NobleContracts.CodeTyped NobleFoundation.sliceBody (base ++ [NobleContracts.Ty.i64]) (base ++ [NobleContracts.Ty.i64])",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.slice_exported_claim",
+      "phase": 3,
+      "role": "slice",
+      "claim": "MC1 exportedClaim for the slice body (MC2 contract form)",
+      "status": "proved",
+      "statement": "NobleFoundation.slice_exported_claim : NobleContracts.exportedClaim NobleFoundation.sliceBody [NobleContracts.Ty.i64] [NobleContracts.Ty.i64] [] (fun x x_1 x_2 => True) fun before after x => ∃ n, before = [NobleContracts.Value.i64 n] ∧ after = [NobleContracts.Value.i64 (n + 1)]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.slice_examples",
+      "phase": 3,
+      "role": "slice",
+      "claim": "41 |-> 42 and max |-> min through the driver",
+      "status": "proved",
+      "statement": "NobleFoundation.slice_examples : ∀ (pre t : NobleContracts.Stack), (NobleContracts.Exec (NobleFoundation.sliceRoot ++ [NobleContracts.Op.word 10]) (pre ++ [NobleFoundation.i64v 41]) t ↔ t = pre ++ [NobleFoundation.i64v 42]) ∧ (NobleContracts.Exec (NobleFoundation.sliceRoot ++ [NobleContracts.Op.word 10]) (pre ++ [NobleFoundation.i64v 9223372036854775807]) t ↔ t = pre ++ [NobleFoundation.i64v (-9223372036854775808)])",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_inputs_run",
+      "phase": 4,
+      "role": "comparator-instantiation",
+      "claim": "literal inputs then construct-and-run equals refRun from empty stack, any prefix (per-case comparator theorem)",
+      "status": "proved",
+      "statement": "NobleFoundation.PExpr.exec_inputs_run : ∀ (P : NobleFoundation.PExpr) (ins : List NobleFoundation.AOp) {zs' : List ℤ}, NobleFoundation.refRun (ins ++ P.flat) [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ins ++ (P.code ++ [NobleContracts.Op.word 10])) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_lowerAll_from_empty",
+      "phase": 4,
+      "role": "comparator-instantiation",
+      "claim": "straight-line sequence equals refRun from empty stack, any prefix",
+      "status": "proved",
+      "statement": "@NobleFoundation.exec_lowerAll_from_empty : ∀ {ops : List NobleFoundation.AOp} {zs' : List ℤ}, NobleFoundation.refRun ops [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ops) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_inputs_nested",
+      "phase": 4,
+      "role": "comparator-instantiation",
+      "claim": "inputs then [ ops ] quote run run equals refRun, any prefix",
+      "status": "proved",
+      "statement": "NobleFoundation.exec_inputs_nested : ∀ (ins ops : List NobleFoundation.AOp) {zs' : List ℤ}, NobleFoundation.refRun (ins ++ ops) [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ins ++ [NobleContracts.Op.block (NobleFoundation.lowerAll ops), NobleContracts.Op.word 8, NobleContracts.Op.word 10, NobleContracts.Op.word 10]) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.stackTyped_length",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "typed stacks have the length of their type list",
+      "status": "proved",
+      "statement": "@NobleFoundation.stackTyped_length : ∀ {s : NobleContracts.Stack} {ts : List NobleContracts.Ty}, NobleContracts.StackTyped s ts → List.length s = ts.length",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.stackTyped_append_inv",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "typed concatenation splits at a known-length boundary",
+      "status": "proved",
+      "statement": "@NobleFoundation.stackTyped_append_inv : ∀ {xs ys : NobleContracts.Stack} {ts us : List NobleContracts.Ty}, NobleContracts.StackTyped (xs ++ ys) (ts ++ us) → List.length ys = us.length → NobleContracts.StackTyped xs ts ∧ NobleContracts.StackTyped ys us",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ityped_cons",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "internal push typing is public snoc typing",
+      "status": "proved",
+      "statement": "@NobleFoundation.ityped_cons : ∀ {v : NobleContracts.Value} {s : NobleContracts.Stack} {t : NobleContracts.Ty} {ts : List NobleContracts.Ty}, NobleFoundation.ITyped (v :: s) (ts ++ [t]) ↔ NobleFoundation.ITyped s ts ∧ NobleContracts.HasType v t",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ityped_cons2",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "two-value internal typing",
+      "status": "proved",
+      "statement": "@NobleFoundation.ityped_cons2 : ∀ {a b : NobleContracts.Value} {s : NobleContracts.Stack} {ta tb : NobleContracts.Ty} {ts : List NobleContracts.Ty}, NobleFoundation.ITyped (b :: a :: s) (ts ++ [ta, tb]) ↔ NobleFoundation.ITyped s ts ∧ NobleContracts.HasType a ta ∧ NobleContracts.HasType b tb",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ityped_cons3",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "three-value internal typing",
+      "status": "proved",
+      "statement": "@NobleFoundation.ityped_cons3 : ∀ {a b c : NobleContracts.Value} {s : NobleContracts.Stack} {ta tb tc : NobleContracts.Ty} {ts : List NobleContracts.Ty}, NobleFoundation.ITyped (c :: b :: a :: s) (ts ++ [ta, tb, tc]) ↔ NobleFoundation.ITyped s ts ∧ NobleContracts.HasType a ta ∧ NobleContracts.HasType b tb ∧ NobleContracts.HasType c tc",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Run.preserve",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "typed code preserves typing on every normal-return Run (mutual with Step.preserve)",
+      "status": "proved",
+      "statement": "@NobleFoundation.Run.preserve : ∀ {code : List NobleContracts.Op} {s t : NobleContracts.Stack}, NobleContracts.Run code s t → ∀ {ts ts' : List NobleContracts.Ty}, NobleContracts.CodeTyped code ts ts' → NobleFoundation.ITyped s ts → NobleFoundation.ITyped t ts'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Step.preserve",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "every MC1 word preserves typing on normal return, including dip/run/case/if/list.case",
+      "status": "proved",
+      "statement": "@NobleFoundation.Step.preserve : ∀ {op : NobleContracts.Op} {s t : NobleContracts.Stack}, NobleContracts.Step op s t → ∀ {ts ts' : List NobleContracts.Ty}, NobleContracts.OpTyped op ts ts' → NobleFoundation.ITyped s ts → NobleFoundation.ITyped t ts'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_preserves",
+      "phase": 2,
+      "role": "preservation",
+      "claim": "PO-02 slice for the pure MC1 model: CodeTyped + StackTyped input + Exec => StackTyped output",
+      "status": "proved",
+      "statement": "@NobleFoundation.exec_preserves : ∀ {code : List NobleContracts.Op} {ts ts' : List NobleContracts.Ty} {s t : NobleContracts.Stack}, NobleContracts.CodeTyped code ts ts' → NobleContracts.StackTyped s ts → NobleContracts.Exec code s t → NobleContracts.StackTyped t ts'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.ityped_snoc_inv",
+      "phase": 2,
+      "role": "progress",
+      "claim": "typed nonempty interface implies a nonempty stack",
+      "status": "proved",
+      "statement": "@NobleFoundation.ityped_snoc_inv : ∀ {s : NobleContracts.Stack} {ts : List NobleContracts.Ty} {t : NobleContracts.Ty}, NobleFoundation.ITyped s (ts ++ [t]) → ∃ v r, s = v :: r ∧ NobleFoundation.ITyped r ts ∧ NobleContracts.HasType v t",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.progress_primitive",
+      "phase": 2,
+      "role": "progress",
+      "claim": "typed primitive (non-control, non-host) operations always step: no forbidden stuck state",
+      "status": "proved",
+      "statement": "@NobleFoundation.progress_primitive : ∀ {op : NobleContracts.Op} {ts ts' : List NobleContracts.Ty} {s : NobleContracts.Stack}, NobleFoundation.Primitive op → NobleContracts.OpTyped op ts ts' → NobleFoundation.ITyped s ts → ∃ t, NobleContracts.Step op s t",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.host_word_outside_model",
+      "phase": 2,
+      "role": "progress",
+      "claim": "host word 22 has no MC1 rule (host contracts outside the model)",
+      "status": "proved",
+      "statement": "NobleFoundation.host_word_outside_model : ∀ (s t : NobleContracts.Stack), ¬NobleContracts.Step (NobleContracts.Op.word 22) s t",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.BehEq.refl",
+      "phase": 2,
+      "role": "laws",
+      "claim": "behavioral equality is reflexive",
+      "status": "proved",
+      "statement": "NobleFoundation.BehEq.refl : ∀ (p : List NobleContracts.Op), NobleFoundation.BehEq p p",
+      "axioms": []
+    },
+    {
+      "name": "NobleFoundation.BehEq.append",
+      "phase": 2,
+      "role": "laws",
+      "claim": "behavioral equality is a congruence for sequencing",
+      "status": "proved",
+      "statement": "@NobleFoundation.BehEq.append : ∀ {p p' q q' : List NobleContracts.Op}, NobleFoundation.BehEq p p' → NobleFoundation.BehEq q q' → NobleFoundation.BehEq (p ++ q) (p' ++ q')",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.BehEq.run",
+      "phase": 2,
+      "role": "laws",
+      "claim": "running behaviorally equal programs gives equal normal results",
+      "status": "proved",
+      "statement": "@NobleFoundation.BehEq.run : ∀ {p q : List NobleContracts.Op}, NobleFoundation.BehEq p q → ∀ (s t : NobleContracts.Stack), NobleContracts.Exec [NobleContracts.Op.block p, NobleContracts.Op.word 10] s t ↔ NobleContracts.Exec [NobleContracts.Op.block q, NobleContracts.Op.word 10] s t",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.construction_is_pure",
+      "phase": 2,
+      "role": "laws",
+      "claim": "building a program pushes exactly that value for any body",
+      "status": "proved",
+      "statement": "NobleFoundation.construction_is_pure : ∀ (p : List NobleContracts.Op) (s t : NobleContracts.Stack), NobleContracts.Exec [NobleContracts.Op.block p] s t ↔ t = s ++ [NobleContracts.Value.program p]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.latent_effect_not_performed",
+      "phase": 2,
+      "role": "laws",
+      "claim": "a program containing the host word is constructible but has no normal run",
+      "status": "proved",
+      "statement": "NobleFoundation.latent_effect_not_performed : ∀ (s : NobleContracts.Stack), NobleContracts.Exec [NobleContracts.Op.block [NobleContracts.Op.word 22]] s (s ++ [NobleContracts.Value.program [NobleContracts.Op.word 22]]) ∧ ∀ (t : NobleContracts.Stack), ¬NobleContracts.Exec [NobleContracts.Op.block [NobleContracts.Op.word 22], NobleContracts.Op.word 10] s t",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.compose_assoc",
+      "phase": 2,
+      "role": "laws",
+      "claim": "compose is recipe-associative",
+      "status": "proved",
+      "statement": "NobleFoundation.compose_assoc : ∀ (p q r : List NobleContracts.Op) (s t : NobleContracts.Stack), (NobleContracts.Exec [NobleContracts.Op.block p, NobleContracts.Op.block q, NobleContracts.Op.word 9, NobleContracts.Op.block r, NobleContracts.Op.word 9] s t ↔ t = s ++ [NobleContracts.Value.program (p ++ q ++ r)]) ∧ (NobleContracts.Exec [NobleContracts.Op.block p, NobleContracts.Op.block q, NobleContracts.Op.block r, NobleContracts.Op.word 9, NobleContracts.Op.word 9] s t ↔ t = s ++ [NobleContracts.Value.program (p ++ q ++ r)])",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.compose_identity",
+      "phase": 2,
+      "role": "laws",
+      "claim": "the empty program is a two-sided recipe identity for compose",
+      "status": "proved",
+      "statement": "NobleFoundation.compose_identity : ∀ (p : List NobleContracts.Op) (s t : NobleContracts.Stack), (NobleContracts.Exec [NobleContracts.Op.block [], NobleContracts.Op.block p, NobleContracts.Op.word 9] s t ↔ t = s ++ [NobleContracts.Value.program p]) ∧ (NobleContracts.Exec [NobleContracts.Op.block p, NobleContracts.Op.block [], NobleContracts.Op.word 9] s t ↔ t = s ++ [NobleContracts.Value.program p])",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.quote_laws",
+      "phase": 2,
+      "role": "laws",
+      "claim": "quote then run pushes the value; quote then reflect observes [lit v]",
+      "status": "proved",
+      "statement": "NobleFoundation.quote_laws : ∀ (v : NobleContracts.Value) (s t : NobleContracts.Stack), (NobleContracts.Exec [NobleContracts.Op.word 8, NobleContracts.Op.word 10] (s ++ [v]) t ↔ t = s ++ [v]) ∧ (NobleContracts.Exec [NobleContracts.Op.word 8, NobleContracts.Op.word 11] (s ++ [v]) t ↔ t = s ++ [NobleContracts.Value.syntax [NobleContracts.Op.lit v]])",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.reflect_compose",
+      "phase": 2,
+      "role": "laws",
+      "claim": "reflect of a composition observes the unnormalized concatenated recipe",
+      "status": "proved",
+      "statement": "NobleFoundation.reflect_compose : ∀ (p q : List NobleContracts.Op) (s t : NobleContracts.Stack), NobleContracts.Exec [NobleContracts.Op.block p, NobleContracts.Op.block q, NobleContracts.Op.word 9, NobleContracts.Op.word 11] s t ↔ t = s ++ [NobleContracts.Value.syntax (p ++ q)]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.behavior_is_not_recipe",
+      "phase": 2,
+      "role": "laws",
+      "claim": "1 1 + and 2 are behaviorally equal, recipe-distinct, and reflect distinguishes them",
+      "status": "proved",
+      "statement": "NobleFoundation.behavior_is_not_recipe : NobleFoundation.BehEq [NobleContracts.Op.lit (NobleFoundation.i64v 1), NobleContracts.Op.lit (NobleFoundation.i64v 1), NobleContracts.Op.word 4] [NobleContracts.Op.lit (NobleFoundation.i64v 2)] ∧ [NobleContracts.Op.lit (NobleFoundation.i64v 1), NobleContracts.Op.lit (NobleFoundation.i64v 1), NobleContracts.Op.word 4] ≠ [NobleContracts.Op.lit (NobleFoundation.i64v 2)] ∧ ∀ (s t : NobleContracts.Stack), NobleContracts.Exec [NobleContracts.Op.block [NobleContracts.Op.lit (NobleFoundation.i64v 1), NobleContracts.Op.lit (NobleFoundation.i64v 1), NobleContracts.Op.word 4], NobleContracts.Op.word 11] s t → ¬NobleContracts.Exec [NobleContracts.Op.block [NobleContracts.Op.lit (NobleFoundation.i64v 2)], NobleContracts.Op.word 11] s t",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.compose_requires_exact_middle",
+      "phase": 2,
+      "role": "laws",
+      "claim": "compose is untypable when the interfaces differ in the middle",
+      "status": "proved",
+      "statement": "@NobleFoundation.compose_requires_exact_middle : ∀ {s i m m' o out : List NobleContracts.Ty}, m ≠ m' → ¬NobleContracts.OpTyped (NobleContracts.Op.word 9) (s ++ [NobleContracts.Ty.program i m, NobleContracts.Ty.program m' o]) out",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.wrong_subject_evidence",
+      "phase": 2,
+      "role": "laws",
+      "claim": "the increment claim holds for [1 +] and fails for [2 +]",
+      "status": "proved",
+      "statement": "NobleFoundation.wrong_subject_evidence : (NobleContracts.exportedClaim [NobleContracts.Op.lit (NobleFoundation.i64v 1), NobleContracts.Op.word 4] [NobleContracts.Ty.i64] [NobleContracts.Ty.i64] [] (fun x x_1 x_2 => True) fun before after x => ∃ n, before = [NobleContracts.Value.i64 n] ∧ after = [NobleContracts.Value.i64 (n + 1)]) ∧ ¬NobleContracts.exportedClaim [NobleContracts.Op.lit (NobleFoundation.i64v 2), NobleContracts.Op.word 4] [NobleContracts.Ty.i64] [NobleContracts.Ty.i64] [] (fun x x_1 x_2 => True) fun before after x => ∃ n, before = [NobleContracts.Value.i64 n] ∧ after = [NobleContracts.Value.i64 (n + 1)]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.program_duplicable",
+      "phase": 2,
+      "role": "laws",
+      "claim": "program values are typable and steppable under dup",
+      "status": "proved",
+      "statement": "NobleFoundation.program_duplicable : ∀ (p : List NobleContracts.Op) (i o s : List NobleContracts.Ty) (r : NobleContracts.Stack), NobleContracts.OpTyped (NobleContracts.Op.word 0) (s ++ [NobleContracts.Ty.program i o]) (s ++ [NobleContracts.Ty.program i o, NobleContracts.Ty.program i o]) ∧ NobleContracts.Step (NobleContracts.Op.word 0) (NobleContracts.Value.program p :: r) (NobleContracts.Value.program p :: NobleContracts.Value.program p :: r)",
+      "axioms": []
+    }
+  ],
+  "implementation_theorem": false,
+  "artifact_directory": "/home/brittonr/.cache/noble-issues/receipts/issue-15/final/check"
+}
