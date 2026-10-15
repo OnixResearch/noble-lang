@@ -1,0 +1,2074 @@
+{
+ "schema": "noble-calculator-v1-cli-observation-compact/v1",
+ "derived_from": {
+  "file": "receipt.json in receipt-44329dc-release.tar.gz",
+  "sha256": "a6256582de451698a0c82c98f9ed736daf04b031916d70ad7850eb41e4b1d65d",
+  "note": "Field subset of the full runner receipt; raw stdin/stdout/stderr, supervisor results and the full receipt are in the tarball."
+ },
+ "result": "completed",
+ "mode": "prebuilt-binary-cli-vector-observation",
+ "claim": "finite-prebuilt-calculator-cli-observation-only",
+ "non_claims": [
+  "canonical CALC case promotion or any state/evidence change",
+  "Calculator-v1 acceptance",
+  "source-bound release evidence: the binary hash is checked, its build source is owner-supplied",
+  "CALC-04, CALC-05, CALC-08 and CALC-10 through CALC-13",
+  "independent numeric oracle: expectations are the cases file values",
+  "parser correctness or a universal arithmetic property from finite vectors",
+  "a timeout, host limit or native failure as a ResourceLimit or as a pass",
+  "performance targets"
+ ],
+ "run": {
+  "started": "2026-10-15T17:20:22.577Z",
+  "finished": "2026-10-15T19:45:11.709Z",
+  "host": "aspen3",
+  "kernel": "6.18.54",
+  "cpus": 32,
+  "memory_bytes": 130458030080
+ },
+ "source": {
+  "commit": "1e16953b8d69084b1bcc946ab03cab7e2da53fd2",
+  "tracked_changes": "",
+  "cases": {
+   "path": "specs/conformance/calculator-cases.json",
+   "sha256": "2afc188ff6d2abca2d85b879e65235ee833ed7e72add24df68ea5c027a405202",
+   "revision": "0.1.0-draft.5"
+  },
+  "mapping": {
+   "path": "verification/calculator-v1/cli-mapping.json",
+   "sha256": "133c515668357a85aadd565df288af4f92eb4169c4002758c7da58e68aa94ec1"
+  },
+  "runner": [
+   {
+    "path": "verification/calculator-v1/acceptance.mjs",
+    "sha256": "ad6945ffada81646e4051ecb9ffe9d7230020297d8f3ff40c068031c10aab81e"
+   },
+   {
+    "path": "verification/calculator-v1/supervise.mjs",
+    "sha256": "3076b60b768c7b668e15bcc42d125e8edd0673aa1604abb4c3c88198d3853202"
+   },
+   {
+    "path": "verification/calculator-v1/vectors.mjs",
+    "sha256": "43e71eb5a7e918e27abda101e09feadff1ddbcb2b592b85497d8483f5b750b25"
+   },
+   {
+    "path": "verification/calculator-v1/cli-mapping.json",
+    "sha256": "133c515668357a85aadd565df288af4f92eb4169c4002758c7da58e68aa94ec1"
+   }
+  ],
+  "embedded": [
+   {
+    "path": "crates/noble-cli/src/calculator.rs",
+    "sha256": "1dc01894a5c432df2e8b878026a9a1ce588ce0afc8bfed1e611b16ce5ca6825c"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/abi.json",
+    "sha256": "1284792be03cf5e544dc51b977e9d7c0ee7b38d743698c0420f14ef408249a44"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/config.json",
+    "sha256": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/declared-abi.json",
+    "sha256": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/engine-host.mjs",
+    "sha256": "9bac85c54b39dc7491047b835e698ee2f242fbaea685573a85ea6b9f4d61491d"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/engine.mjs",
+    "sha256": "e4a10966004297933606823a356f54393c809f638dd98afc275dc188033d4acf"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/preamble.mjs",
+    "sha256": "1787a81093cfb8c0286fa09d5bc4129dcb5ba5cd75a3a407b9f25009d75ceb28"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/protocol.mjs",
+    "sha256": "43ee76af0da8e21c04daec383ca4d7db90c98ee9a29ba240663726591c1f13e8"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+    "sha256": "bd18a6fb8a89ca85a2e162ac1ee7b0bbba6b77e68632f0d9090cbbf42f9933c2"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/slot-policy.mjs",
+    "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+    "sha256": "a2c5eb2b42955ad565b71d0f67f2ebab9c88ac124fbe2996b74f150f1cf29692"
+   },
+   {
+    "path": "crates/noble-cli/src/core/runtime/values.mjs",
+    "sha256": "add0eda94de18275fd8552ec5e0b5fa0f4a0f2ba80ffe02ed55d9931e9deafb4"
+   },
+   {
+    "path": "crates/noble-cli/src/core/worker.rs",
+    "sha256": "eacf5553483aaedda93f6b4ce014454840eda52198caa487a722f27068d93121"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/calc-errors.noble",
+    "sha256": "319efe57c1044d650d356744aa94b783205f56d3b65b3383a753dfc26115aa3d"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/calculator-bigint.noble",
+    "sha256": "ff93762aba8f2e9a14853f1c258f23fd6ed7b93dbe2f5963c1dc4083aadbcade"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/calculator-bindings.noble",
+    "sha256": "d35ec885d16df3b880867e2fd1c57cb16d7dc5cdb8cb48793f9e88913e580166"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/calculator-bits.noble",
+    "sha256": "8b9ad75b3b19d180732f348d27497ce60fbcc6c9922e32e102e5e137f46ade7a"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/calculator-decimal.noble",
+    "sha256": "a7664741535f30a36befa428d4626befdd3e29a042f896d5bc67f6ca773cb7ea"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/calculator-definitions.noble",
+    "sha256": "da61b1eebc4bec5270a88f4b7dfe560e5641a7b05212dc352dc89d5a0678f7ab"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/calculator-display.noble",
+    "sha256": "f3976f0ded740f45a666ebfa81b8b1f85a094bbc91be9db7b2eb69a1724a98f7"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/calculator-expression.noble",
+    "sha256": "eed139b3c176c1a24adaa63a5a34bdaf20b30c80a3b4eb5585272a04d2a40efa"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/calculator-lexical.noble",
+    "sha256": "4c9f9d80528ff4ba2cff6d22181b34f684b5de3e2e4a3f2c029c4be8a4979dcf"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/calculator-numeric.noble",
+    "sha256": "22b9811481c8806f6eb9dd094e212d69f71208a27fa17fd669f2c7ea81c9544a"
+   },
+   {
+    "path": "crates/noble-contracts/src/fixtures/result.noble",
+    "sha256": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80"
+   }
+  ]
+ },
+ "binary": {
+  "sha256": "e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127",
+  "bytes": 28221672,
+  "build_profile": "release",
+  "source_identity": "44329dc"
+ },
+ "toolchain": {
+  "runner_node": {
+   "path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+   "version": "v24.13.0"
+  },
+  "worker_node": {
+   "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+   "version": "v24.13.0",
+   "error": null
+  },
+  "assembler": {
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "--internal-calculator-wat-version"
+   ],
+   "status": 0,
+   "stdout": "noble-calculator-wat 1.243.0"
+  }
+ },
+ "config": {
+  "concurrency": 6,
+  "vector_timeout_ms": 7200000,
+  "session_timeout_ms": 21600000,
+  "memory_max": "2G",
+  "memory_wrapper": [
+   "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+   "--user",
+   "--scope",
+   "--quiet",
+   "--collect",
+   "-p",
+   "MemoryMax=2G",
+   "-p",
+   "MemorySwapMax=0",
+   "-p",
+   "OOMPolicy=continue",
+   "--"
+  ],
+  "calculator_args": [],
+  "child_env": {
+   "PATH": "/nonexistent",
+   "LANG": "C",
+   "LC_ALL": "C",
+   "RUST_BACKTRACE": "1",
+   "TMPDIR": "<OUTPUT>/tmp/<vector>"
+  },
+  "selection": {
+   "cases": [
+    "CALC-01",
+    "CALC-02",
+    "CALC-03",
+    "CALC-06",
+    "CALC-07",
+    "CALC-09"
+   ],
+   "vectors": [],
+   "controls": true,
+   "controls_only": false
+  }
+ },
+ "summary": {
+  "selected": 34,
+  "by_class": {
+   "pass": 34,
+   "fail": 0,
+   "timeout": 0,
+   "native-failure": 0,
+   "host-limit": 0
+  },
+  "by_case": {
+   "CALC-01": {
+    "pass": 15,
+    "fail": 0,
+    "timeout": 0,
+    "native-failure": 0,
+    "host-limit": 0
+   },
+   "CALC-02": {
+    "pass": 5,
+    "fail": 0,
+    "timeout": 0,
+    "native-failure": 0,
+    "host-limit": 0
+   },
+   "CALC-03": {
+    "pass": 4,
+    "fail": 0,
+    "timeout": 0,
+    "native-failure": 0,
+    "host-limit": 0
+   },
+   "CALC-06": {
+    "pass": 1,
+    "fail": 0,
+    "timeout": 0,
+    "native-failure": 0,
+    "host-limit": 0
+   },
+   "CALC-07": {
+    "pass": 5,
+    "fail": 0,
+    "timeout": 0,
+    "native-failure": 0,
+    "host-limit": 0
+   },
+   "CALC-09": {
+    "pass": 4,
+    "fail": 0,
+    "timeout": 0,
+    "native-failure": 0,
+    "host-limit": 0
+   }
+  },
+  "unsupported": [
+   "CALC-07/cyclic-imported-definition-graph",
+   "CALC-07/resource-capability-capture"
+  ],
+  "all_selected_pass": true,
+  "controls": 2,
+  "controls_ok": true
+ },
+ "unsupported": [
+  {
+   "id": "CALC-07/cyclic-imported-definition-graph",
+   "case": "CALC-07",
+   "variant": "cyclic-imported-definition-graph",
+   "outcome": "DefinitionError",
+   "support": "unsupported-on-cli",
+   "reason": "The calculator line grammar has no import or module syntax, so an imported definition graph has no CLI spelling."
+  },
+  {
+   "id": "CALC-07/resource-capability-capture",
+   "case": "CALC-07",
+   "variant": "resource-capability-capture",
+   "outcome": "DefinitionError",
+   "support": "unsupported-on-cli",
+   "reason": "The calculator line grammar names no resources or capabilities, so a capture has no CLI spelling."
+  }
+ ],
+ "controls": [
+  {
+   "id": "control/wrong-expected/CALC-02/02",
+   "case": "CALC-02",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "f251ddc12234e0da8d3b778bd0f7463fb477f16f47757f5617dc8b4ff4d4f14a",
+    "bytes": 4,
+    "text": "1 2\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 83056,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "05a9502debd53243059baaf028e0ab7d9bf2ba9074eb0c8a55bbaefdd8d896e4",
+    "text": "TrailingInput [2,3) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 307072,
+    "max_process_peak_rss_kib": 198572,
+    "cgroup_memory_peak_bytes": 267264000,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "1 2",
+     "expect": {
+      "diagnostic": {
+       "category": "SyntaxError",
+       "span": [
+        2,
+        3
+       ]
+      }
+     },
+     "observed_positional": "TrailingInput [2,3) provenance=unavailable"
+    }
+   ],
+   "classification": "fail",
+   "reasons": [
+    "diagnostic 0: TrailingInput, expected SyntaxError"
+   ],
+   "control": {
+    "base": "CALC-02/02",
+    "mutation": "last operation expectation replaced by a deliberately wrong value",
+    "expected_classification": "fail"
+   },
+   "control_ok": true
+  },
+  {
+   "id": "control/forced-timeout/CALC-02/02",
+   "case": "CALC-02",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "f251ddc12234e0da8d3b778bd0f7463fb477f16f47757f5617dc8b4ff4d4f14a",
+    "bytes": 4,
+    "text": "1 2\n"
+   },
+   "timeout_ms": 1000,
+   "status": null,
+   "signal": "SIGKILL",
+   "timed_out": true,
+   "wall_ms": 1014,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 24636,
+    "max_process_peak_rss_kib": 24636,
+    "cgroup_memory_peak_bytes": 36495360,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "1 2",
+     "expect": {
+      "diagnostic": {
+       "category": "TrailingInput",
+       "span": [
+        2,
+        3
+       ]
+      }
+     },
+     "observed_positional": null
+    }
+   ],
+   "classification": "timeout",
+   "reasons": [
+    "killed after 1000 ms"
+   ],
+   "control": {
+    "base": "CALC-02/02",
+    "mutation": "timeout forced to 1000 ms",
+    "expected_classification": "timeout"
+   },
+   "control_ok": true
+  }
+ ],
+ "vectors": [
+  {
+   "id": "CALC-01/01",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "eadd79c32e4e7455f1c79f9af36542a6a0782c9e3be20f83cf096da8fc37ef83",
+    "bytes": 14,
+    "text": "1 / 3 + 1 / 6\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 1121698,
+   "stdout": {
+    "sha256": "de7e55cd172f2065828bdd6c2015c5e92fdd6271ab1bd0f30a5e15104e64678d",
+    "text": "1/2\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 475084,
+    "max_process_peak_rss_kib": 206648,
+    "cgroup_memory_peak_bytes": 279830528,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "1 / 3 + 1 / 6",
+     "expect": {
+      "value": "1/2"
+     },
+     "observed_positional": "1/2"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/02",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "5bf8c160b2911d2226a532ea41647f4f7f06b8ff60676f7996ff8a12b21489e4",
+    "bytes": 10,
+    "text": "0.1 + 0.2\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 671540,
+   "stdout": {
+    "sha256": "ab863118836f917c8908b3284d7a79c81e0040a44684a39fe4d77bd89ee129d2",
+    "text": "3/10\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 468108,
+    "max_process_peak_rss_kib": 209900,
+    "cgroup_memory_peak_bytes": 282984448,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "0.1 + 0.2",
+     "expect": {
+      "value": "3/10"
+     },
+     "observed_positional": "3/10"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/03",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "f564695674af7cfd6e6181305959973784857d308c67dc4d3ae121b2a3c45f1e",
+    "bytes": 23,
+    "text": "0.00000000000000000001\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 663284,
+   "stdout": {
+    "sha256": "766ef35c856478ade5733cf094432bda3156ef5de424b3a8cdbc19e5a7d15570",
+    "text": "1/100000000000000000000\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 415052,
+    "max_process_peak_rss_kib": 209028,
+    "cgroup_memory_peak_bytes": 280875008,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "0.00000000000000000001",
+     "expect": {
+      "value": "1/100000000000000000000"
+     },
+     "observed_positional": "1/100000000000000000000"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/04",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "a1de396186c1a8fb137a975b4e94fd4c2d3e569de8e8ff9d1aa554f1dba58a96",
+    "bytes": 24,
+    "text": "9223372036854775807 + 1\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 1156852,
+   "stdout": {
+    "sha256": "83acd6ec9b70e1b3d1bf22d3451ebba0ea14c2de3fc46dcc761886521b339147",
+    "text": "9223372036854775808\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 322760,
+    "max_process_peak_rss_kib": 208624,
+    "cgroup_memory_peak_bytes": 280506368,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "9223372036854775807 + 1",
+     "expect": {
+      "value": "9223372036854775808"
+     },
+     "observed_positional": "9223372036854775808"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/05",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "b1e338c8908751091f185604486ade3e26e2e4b3859a733e9df764854a1e5f1f",
+    "bytes": 36,
+    "text": "9007199254740993 - 9007199254740992\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 2051149,
+   "stdout": {
+    "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "text": "1\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 478756,
+    "max_process_peak_rss_kib": 210460,
+    "cgroup_memory_peak_bytes": 281231360,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "9007199254740993 - 9007199254740992",
+     "expect": {
+      "value": "1"
+     },
+     "observed_positional": "1"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/06",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "eefcfd823bb1dca3bf58171a82f562957ce6da60ffc24e427ae981dff39fb53e",
+    "bytes": 10,
+    "text": "2 + 3 * 4\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 871773,
+   "stdout": {
+    "sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+    "text": "14\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 471388,
+    "max_process_peak_rss_kib": 204608,
+    "cgroup_memory_peak_bytes": 276779008,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "2 + 3 * 4",
+     "expect": {
+      "value": "14"
+     },
+     "observed_positional": "14"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/07",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "cdf744d7883a63e6c7de32fc6a1401ad2343363b563f14b023d16151ea35ae3e",
+    "bytes": 12,
+    "text": "(2 + 3) * 4\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 890783,
+   "stdout": {
+    "sha256": "5378796307535df3ec8d8b15a2e2dc5641419c3d3060cfe32238c0fa973f7aa3",
+    "text": "20\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 318544,
+    "max_process_peak_rss_kib": 206968,
+    "cgroup_memory_peak_bytes": 278040576,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "(2 + 3) * 4",
+     "expect": {
+      "value": "20"
+     },
+     "observed_positional": "20"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/08",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "0ae0e51aee07bfd04300fbdbbaaa26cbfc1c2f1846eee7f4df7941d45fc96a2c",
+    "bytes": 7,
+    "text": "10 - 3\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 597132,
+   "stdout": {
+    "sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+    "text": "7\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 316928,
+    "max_process_peak_rss_kib": 205328,
+    "cgroup_memory_peak_bytes": 276672512,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "10 - 3",
+     "expect": {
+      "value": "7"
+     },
+     "observed_positional": "7"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/09",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "593b07712d185c5bcad01f4bb6d42afd22877bedcbe798cc9dac8edcfcabda05",
+    "bytes": 10,
+    "text": "8 / 4 / 2\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 908361,
+   "stdout": {
+    "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "text": "1\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 474508,
+    "max_process_peak_rss_kib": 207052,
+    "cgroup_memory_peak_bytes": 279199744,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "8 / 4 / 2",
+     "expect": {
+      "value": "1"
+     },
+     "observed_positional": "1"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/10",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "c857c64a530f545e584d29014a0eb73e130b5e291f28fbe36d78a112d218c349",
+    "bytes": 5,
+    "text": "-2^2\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 647011,
+   "stdout": {
+    "sha256": "8fbfec21acf8f74313698199401f9eb352920bd889b4865b272e657167808aa0",
+    "text": "-4\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 464696,
+    "max_process_peak_rss_kib": 203128,
+    "cgroup_memory_peak_bytes": 275042304,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "-2^2",
+     "expect": {
+      "value": "-4"
+     },
+     "observed_positional": "-4"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/11",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "3f7c1da55e6d64c9895b33979ecaefe19c527657d9c5e458fae26a3602f9a145",
+    "bytes": 7,
+    "text": "(-2)^2\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 692145,
+   "stdout": {
+    "sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+    "text": "4\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 315568,
+    "max_process_peak_rss_kib": 203436,
+    "cgroup_memory_peak_bytes": 274452480,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "(-2)^2",
+     "expect": {
+      "value": "4"
+     },
+     "observed_positional": "4"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/12",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "f09c3b1882aa759a742c1010398ee872e49908dea59c2e9ce0c08284d885ffb6",
+    "bytes": 6,
+    "text": "2^3^2\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 1212992,
+   "stdout": {
+    "sha256": "240269e94afb4bbc4c643851e366bf4f0d870ff0753d250b854f748cf3516285",
+    "text": "512\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 317748,
+    "max_process_peak_rss_kib": 204952,
+    "cgroup_memory_peak_bytes": 276422656,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "2^3^2",
+     "expect": {
+      "value": "512"
+     },
+     "observed_positional": "512"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/13",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "90ece8ec721369013e6c7dfaf5afd36b80d1388597f1a8ce639c3c54a3cc7a0c",
+    "bytes": 5,
+    "text": "2^-3\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 632299,
+   "stdout": {
+    "sha256": "f52a037516e9d8a71532215840e69e2c6de83e20ae593fb3a176fa652dac9586",
+    "text": "1/8\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 459884,
+    "max_process_peak_rss_kib": 203080,
+    "cgroup_memory_peak_bytes": 274837504,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "2^-3",
+     "expect": {
+      "value": "1/8"
+     },
+     "observed_positional": "1/8"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/14",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "29b46c3429f7a356e14964ad9fd81adf6d0b74483e71946cb60d75e724e8bde0",
+    "bytes": 8,
+    "text": "4^(2/2)\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 773039,
+   "stdout": {
+    "sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+    "text": "4\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 315488,
+    "max_process_peak_rss_kib": 204820,
+    "cgroup_memory_peak_bytes": 276643840,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "4^(2/2)",
+     "expect": {
+      "value": "4"
+     },
+     "observed_positional": "4"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-01/15",
+   "case": "CALC-01",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "90ecb3404125b7cc816b42dbb56d2ce47df0dc74f4ef91b135414537ce62ff4b",
+    "bytes": 4,
+    "text": "0^0\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 392913,
+   "stdout": {
+    "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "text": "1\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 314100,
+    "max_process_peak_rss_kib": 202132,
+    "cgroup_memory_peak_bytes": 273682432,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "0^0",
+     "expect": {
+      "value": "1"
+     },
+     "observed_positional": "1"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-02/01",
+   "case": "CALC-02",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "a08bcbdd883c15b42be0e4fcd11ceaf50cf11c8d4658666aa027b654b70cdc1a",
+    "bytes": 6,
+    "text": "1 + )\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 136003,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "04133a016d171b0cc242a5abc0f6f7a6ba2f29402901cb7f2612414959ed8286",
+    "text": "SyntaxError [4,5) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 401128,
+    "max_process_peak_rss_kib": 199988,
+    "cgroup_memory_peak_bytes": 268345344,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "1 + )",
+     "expect": {
+      "diagnostic": {
+       "category": "SyntaxError",
+       "span": [
+        4,
+        5
+       ]
+      }
+     },
+     "observed_positional": "SyntaxError [4,5) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-02/02",
+   "case": "CALC-02",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "f251ddc12234e0da8d3b778bd0f7463fb477f16f47757f5617dc8b4ff4d4f14a",
+    "bytes": 4,
+    "text": "1 2\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 95486,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "05a9502debd53243059baaf028e0ab7d9bf2ba9074eb0c8a55bbaefdd8d896e4",
+    "text": "TrailingInput [2,3) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 400636,
+    "max_process_peak_rss_kib": 199016,
+    "cgroup_memory_peak_bytes": 267636736,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "1 2",
+     "expect": {
+      "diagnostic": {
+       "category": "TrailingInput",
+       "span": [
+        2,
+        3
+       ]
+      }
+     },
+     "observed_positional": "TrailingInput [2,3) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-02/03",
+   "case": "CALC-02",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "790619bfa7dcb8e705c7e773465037e595b8a66c7762b1a2bc09c7dd75ae315a",
+    "bytes": 12,
+    "text": "missing + 1\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 169283,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "7456c89cb1c3fe4c8245d4f8f77916ed8b20986a325af66f412e8ef3d8410e74",
+    "text": "UnknownName [0,7) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 311320,
+    "max_process_peak_rss_kib": 200568,
+    "cgroup_memory_peak_bytes": 269795328,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "missing + 1",
+     "expect": {
+      "diagnostic": {
+       "category": "UnknownName",
+       "span": [
+        0,
+        7
+       ]
+      }
+     },
+     "observed_positional": "UnknownName [0,7) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-02/04",
+   "case": "CALC-02",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "3ad05d8ae183f9781b06dde19726fdb4f5f4d494e8d7c06c3f4b96ffab50c096",
+    "bytes": 5,
+    "text": "2(3)\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 108938,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "2d4294d17a8d6f70ae770cfaa99f865e01ed96e1d2ebbf316a539c2c0f18c204",
+    "text": "TrailingInput [1,2) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 309176,
+    "max_process_peak_rss_kib": 199668,
+    "cgroup_memory_peak_bytes": 268038144,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "2(3)",
+     "expect": {
+      "diagnostic": {
+       "category": "TrailingInput",
+       "span": [
+        1,
+        2
+       ]
+      }
+     },
+     "observed_positional": "TrailingInput [1,2) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-02/05",
+   "case": "CALC-02",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "297b50f08386d3521f8fdaf2f78eb8d9d0acdf452d2e61596905fba37208c792",
+    "bytes": 6,
+    "text": "0.1.2\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 51007,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "4a37293a6379f5b1d72175d1d1182daef1b875c66d777ebeb11346db066250a6",
+    "text": "SyntaxError [3,4) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 309308,
+    "max_process_peak_rss_kib": 194796,
+    "cgroup_memory_peak_bytes": 264617984,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "0.1.2",
+     "expect": {
+      "diagnostic": {
+       "category": "SyntaxError",
+       "span": [
+        3,
+        4
+       ]
+      }
+     },
+     "observed_positional": "SyntaxError [3,4) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-03/01",
+   "case": "CALC-03",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "5faf0dde2eeedd038959cc2ef00551732a2c360fb66839f83e9113ce8fbf9280",
+    "bytes": 6,
+    "text": "1 / 0\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 292601,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "0e7e4aaa113390080ebf3df68a08caf6626caf89732d0467c59cb1c3884c384e",
+    "text": "DivisionByZero [2,3) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 465236,
+    "max_process_peak_rss_kib": 202200,
+    "cgroup_memory_peak_bytes": 270376960,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "1 / 0",
+     "expect": {
+      "diagnostic": {
+       "category": "DivisionByZero",
+       "span": null
+      }
+     },
+     "observed_positional": "DivisionByZero [2,3) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-03/02",
+   "case": "CALC-03",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "2a09c93e4031a6d942c54a681873248768b1e4884cca04ea6f10bd0961becddb",
+    "bytes": 6,
+    "text": "0 / 0\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 296090,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "0e7e4aaa113390080ebf3df68a08caf6626caf89732d0467c59cb1c3884c384e",
+    "text": "DivisionByZero [2,3) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 410588,
+    "max_process_peak_rss_kib": 203720,
+    "cgroup_memory_peak_bytes": 272207872,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "0 / 0",
+     "expect": {
+      "diagnostic": {
+       "category": "DivisionByZero",
+       "span": null
+      }
+     },
+     "observed_positional": "DivisionByZero [2,3) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-03/03",
+   "case": "CALC-03",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "adc6a6661b97f2afc9cd77c49f5a641914266fdac5b13c0d26ea0f9174699eab",
+    "bytes": 5,
+    "text": "0^-1\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 317891,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "a44093d25c44a0a93e6e2f9760ef89d2aa069970d0d3cc1911c367195957a1b9",
+    "text": "DivisionByZero [1,2) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 314416,
+    "max_process_peak_rss_kib": 203132,
+    "cgroup_memory_peak_bytes": 270868480,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "0^-1",
+     "expect": {
+      "diagnostic": {
+       "category": "DivisionByZero",
+       "span": null
+      }
+     },
+     "observed_positional": "DivisionByZero [1,2) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-03/04",
+   "case": "CALC-03",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "31124176361b23860071bde229e76768ec164b831fc561a83c6f0876c49b9a71",
+    "bytes": 8,
+    "text": "4^(1/2)\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 553973,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "39296f8ce094d4dc931625f28d019a0c7c42220ceeab0f36c936526210493fc5",
+    "text": "NonIntegerExponent [1,2) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 316752,
+    "max_process_peak_rss_kib": 205008,
+    "cgroup_memory_peak_bytes": 273473536,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "4^(1/2)",
+     "expect": {
+      "diagnostic": {
+       "category": "NonIntegerExponent",
+       "span": null
+      }
+     },
+     "observed_positional": "NonIntegerExponent [1,2) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-06/session",
+   "case": "CALC-06",
+   "kind": "session",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "2b9a8bfa6ad8d62d7074e07a2d55b9c40695151cb73e3ae910fb85c388e484c7",
+    "bytes": 84,
+    "text": "let x = 10\nfn f(y)=x + y\nlet x = 20\nf(1)\nfn g(x)=x + 1\ng(2)\nlet x = 1 / 0\nx\nf(1, 2)\n"
+   },
+   "timeout_ms": 21600000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 8688970,
+   "stdout": {
+    "sha256": "77b444eb6fe43682a8f265629a66b013385d32d919b518b3699881220a53e0a3",
+    "text": "10\n20\n11\n3\n20\n"
+   },
+   "stderr": {
+    "sha256": "18f14793a4f8f3cb516633f1ab26b30e9c0d6e7b42294efe01d01d5044e76fe8",
+    "text": "DivisionByZero [10,11) provenance=unavailable\nWrongArity [0,1) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 585404,
+    "max_process_peak_rss_kib": 248480,
+    "cgroup_memory_peak_bytes": 495620096,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "let x = 10",
+     "expect": {
+      "echo": "10"
+     },
+     "observed_positional": "10"
+    },
+    {
+     "line": "fn f(y)=x + y",
+     "expect": {
+      "silent": true
+     },
+     "observed_positional": "silent"
+    },
+    {
+     "line": "let x = 20",
+     "expect": {
+      "echo": "20"
+     },
+     "observed_positional": "20"
+    },
+    {
+     "line": "f(1)",
+     "expect": {
+      "value": "11"
+     },
+     "observed_positional": "11"
+    },
+    {
+     "line": "fn g(x)=x + 1",
+     "expect": {
+      "silent": true
+     },
+     "observed_positional": "silent"
+    },
+    {
+     "line": "g(2)",
+     "expect": {
+      "value": "3"
+     },
+     "observed_positional": "3"
+    },
+    {
+     "line": "let x = 1 / 0",
+     "expect": {
+      "diagnostic": {
+       "category": "DivisionByZero",
+       "span": null
+      }
+     },
+     "observed_positional": "DivisionByZero [10,11) provenance=unavailable"
+    },
+    {
+     "line": "x",
+     "expect": {
+      "value": "20"
+     },
+     "observed_positional": "20"
+    },
+    {
+     "line": "f(1, 2)",
+     "expect": {
+      "diagnostic": {
+       "category": "WrongArity",
+       "span": null
+      }
+     },
+     "observed_positional": "WrongArity [0,1) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-07/unused-body-with-unknown-name",
+   "case": "CALC-07",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "a6a6416d5a02a15d294f45ad73e2467a1e1dd78ccdb77979f7d4ea1d02ea4302",
+    "bytes": 13,
+    "text": "fn h()=q\nh()\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 355764,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "591157ad326156ddb4297838690a0d08beffed6d5beeb89916e2b60bda9be5f9",
+    "text": "UnknownName [7,8) provenance=unavailable\nUnknownName [0,1) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 314104,
+    "max_process_peak_rss_kib": 202572,
+    "cgroup_memory_peak_bytes": 271343616,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "fn h()=q",
+     "expect": {
+      "diagnostic": {
+       "category": "UnknownName",
+       "span": null
+      }
+     },
+     "observed_positional": "UnknownName [7,8) provenance=unavailable"
+    },
+    {
+     "line": "h()",
+     "expect": {
+      "diagnostic": {
+       "category": "UnknownName",
+       "span": null
+      }
+     },
+     "observed_positional": "UnknownName [0,1) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-07/duplicate-parameter-name",
+   "case": "CALC-07",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "15d2a717355d0b4032942124888b39b14e0ce33c7d0ce17c8b264566d73eb3ee",
+    "bytes": 21,
+    "text": "fn f(y, y)=y\nf(1, 2)\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 610373,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "acf6c314bcdffee4645a1f9fccdca27b3039cb99dad6c3a3f4f155d0e8d4d193",
+    "text": "DefinitionError [8,9) provenance=unavailable\nUnknownName [0,1) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 320308,
+    "max_process_peak_rss_kib": 206748,
+    "cgroup_memory_peak_bytes": 278437888,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "fn f(y, y)=y",
+     "expect": {
+      "diagnostic": {
+       "category": "DefinitionError",
+       "span": null
+      }
+     },
+     "observed_positional": "DefinitionError [8,9) provenance=unavailable"
+    },
+    {
+     "line": "f(1, 2)",
+     "expect": {
+      "diagnostic": {
+       "category": "UnknownName",
+       "span": null
+      }
+     },
+     "observed_positional": "UnknownName [0,1) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-07/self-recursive-definition",
+   "case": "CALC-07",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "28f023c1a0723f42dbfbf128e41023be6d43cc35d922ae8ece727267b36626ec",
+    "bytes": 18,
+    "text": "fn f(y)=f(y)\nf(1)\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 563261,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "acf6c314bcdffee4645a1f9fccdca27b3039cb99dad6c3a3f4f155d0e8d4d193",
+    "text": "DefinitionError [8,9) provenance=unavailable\nUnknownName [0,1) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 341168,
+    "max_process_peak_rss_kib": 231236,
+    "cgroup_memory_peak_bytes": 303341568,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "fn f(y)=f(y)",
+     "expect": {
+      "diagnostic": {
+       "category": "DefinitionError",
+       "span": null
+      }
+     },
+     "observed_positional": "DefinitionError [8,9) provenance=unavailable"
+    },
+    {
+     "line": "f(1)",
+     "expect": {
+      "diagnostic": {
+       "category": "UnknownName",
+       "span": null
+      }
+     },
+     "observed_positional": "UnknownName [0,1) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-07/zero-argument-function-body-1-divided-by-0",
+   "case": "CALC-07",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "ac7aa330a19bc7c40322df6b21d673f4743a30ee154bb6336fae332ac6ad3d77",
+    "bytes": 13,
+    "text": "fn z()=1 / 0\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 266588,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 313188,
+    "max_process_peak_rss_kib": 201484,
+    "cgroup_memory_peak_bytes": 270241792,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "fn z()=1 / 0",
+     "expect": {
+      "silent": true
+     },
+     "observed_positional": "silent"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-07/call-that-zero-argument-function",
+   "case": "CALC-07",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "e145cac2ae04e4c48655c4a4c3d16a13961e8b22e303e2d7a484c9e8a25e7547",
+    "bytes": 17,
+    "text": "fn z()=1 / 0\nz()\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 851505,
+   "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "stderr": {
+    "sha256": "cca435cdeb614a764c8c91bff0bc16ada6a8eebdd077a9c58139e8ef79503a66",
+    "text": "DivisionByZero [9,10) provenance=unavailable\n"
+   },
+   "memory": {
+    "peak_tree_rss_kib": 638948,
+    "max_process_peak_rss_kib": 219272,
+    "cgroup_memory_peak_bytes": 433614848,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "fn z()=1 / 0",
+     "expect": {
+      "silent": true
+     },
+     "observed_positional": "silent"
+    },
+    {
+     "line": "z()",
+     "expect": {
+      "diagnostic": {
+       "category": "DivisionByZero",
+       "span": null
+      }
+     },
+     "observed_positional": "DivisionByZero [9,10) provenance=unavailable"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-09/01",
+   "case": "CALC-09",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "ed4ea85aeb9badc7d78cf58c5d2aa6d3be45e4371821c1be46132bced0c315f3",
+    "bytes": 4,
+    "text": "2/1\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 431597,
+   "stdout": {
+    "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+    "text": "2\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 468288,
+    "max_process_peak_rss_kib": 203880,
+    "cgroup_memory_peak_bytes": 273616896,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "2/1",
+     "expect": {
+      "value": "2"
+     },
+     "observed_positional": "2"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-09/02",
+   "case": "CALC-09",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator"
+   ],
+   "stdin": {
+    "sha256": "ab863118836f917c8908b3284d7a79c81e0040a44684a39fe4d77bd89ee129d2",
+    "bytes": 5,
+    "text": "3/10\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 512866,
+   "stdout": {
+    "sha256": "ab863118836f917c8908b3284d7a79c81e0040a44684a39fe4d77bd89ee129d2",
+    "text": "3/10\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 497688,
+    "max_process_peak_rss_kib": 218208,
+    "cgroup_memory_peak_bytes": 276279296,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "3/10",
+     "expect": {
+      "value": "3/10"
+     },
+     "observed_positional": "3/10"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-09/03",
+   "case": "CALC-09",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator",
+    "--finite-decimal"
+   ],
+   "stdin": {
+    "sha256": "ab863118836f917c8908b3284d7a79c81e0040a44684a39fe4d77bd89ee129d2",
+    "bytes": 5,
+    "text": "3/10\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 732781,
+   "stdout": {
+    "sha256": "e2556a181068db2c7e3b2b127de33540448820fb1e97da29239833b6a8e09764",
+    "text": "0.3\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 339484,
+    "max_process_peak_rss_kib": 217816,
+    "cgroup_memory_peak_bytes": 280776704,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "3/10",
+     "expect": {
+      "value": "0.3"
+     },
+     "observed_positional": "0.3"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  },
+  {
+   "id": "CALC-09/04",
+   "case": "CALC-09",
+   "kind": "line",
+   "argv": [
+    "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "calculator",
+    "--finite-decimal"
+   ],
+   "stdin": {
+    "sha256": "96820234ffb744ae66aff9d4589648fa8433d554cbb9d9eea2a5775372a75701",
+    "bytes": 4,
+    "text": "1/3\n"
+   },
+   "timeout_ms": 7200000,
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_ms": 454333,
+   "stdout": {
+    "sha256": "96820234ffb744ae66aff9d4589648fa8433d554cbb9d9eea2a5775372a75701",
+    "text": "1/3\n"
+   },
+   "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "text": ""
+   },
+   "memory": {
+    "peak_tree_rss_kib": 344452,
+    "max_process_peak_rss_kib": 218036,
+    "cgroup_memory_peak_bytes": 275824640,
+    "cgroup_oom_kill": 0
+   },
+   "operations": [
+    {
+     "line": "1/3",
+     "expect": {
+      "value": "1/3"
+     },
+     "observed_positional": "1/3"
+    }
+   ],
+   "classification": "pass",
+   "reasons": []
+  }
+ ]
+}
