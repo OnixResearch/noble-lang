@@ -9,18 +9,18 @@ The lanes are documented separately: the [oracle](oracle/README.md), the
 [invalid-evidence controls](evidence-controls/README.md). The full receipts were written outside the repository under
 `/home/brittonr/.cache/noble-issues/receipts/`; the directory names are given
 below. Compact durable copies are committed in
-[`calc-12-receipts/`](calc-12-receipts/):
+`verification/calculator-v1/calc-12-receipts/`:
 
-- [`comparisons/`](calc-12-receipts/comparisons/): every oracle comparison
+- `verification/calculator-v1/calc-12-receipts/comparisons/`: every oracle comparison
   report cited here, the harness-level model reports, and the two vector files;
-- [`runs/`](calc-12-receipts/runs/): each of this lane's #19-runner runs as
+- `verification/calculator-v1/calc-12-receipts/runs/`: each of this lane's #19-runner runs as
   `receipt.json` and `progress.jsonl`;
 - [`raw-io.tar.gz`](calc-12-receipts/raw-io.tar.gz): the raw stdin, stdout,
   stderr and supervisor files of those runs and the unrelated-Wasm artifacts
   (reproducible: sorted names, mtime 0, `gzip -n`);
-- [`evidence-controls/`](calc-12-receipts/evidence-controls/): the refusal
+- `verification/calculator-v1/calc-12-receipts/evidence-controls/`: the refusal
   receipt and every generated claim;
-- [`mutants/`](calc-12-receipts/mutants/): mutant build records and startup
+- `verification/calculator-v1/calc-12-receipts/mutants/`: mutant build records and startup
   checks;
 - [`index.json`](calc-12-receipts/index.json): the SHA-256 of every committed
   file and every file in the tarball, plus the hashes of the #19 and
@@ -131,7 +131,7 @@ defect on the real binary.
 The startup checks are retained in
 [`mutants/attempt2-20261015T210525Z/`](calc-12-receipts/mutants/attempt2-20261015T210525Z/startup.txt),
 and the comparisons as `comparisons/fault-FAULT-attemptN.json` in
-[`calc-12-receipts/comparisons/`](calc-12-receipts/comparisons/). That directory's
+`verification/calculator-v1/calc-12-receipts/comparisons/`. That directory's
 `startup.txt` lists the attempt-3 binary-float mutant; the attempt-2
 binary-float mutant (`d3d8c611…f4dc`) was checked separately and exits 0.
 
@@ -146,7 +146,7 @@ fault.
 [`oracle/faults.mjs`](oracle/faults.mjs) ran as the implementation on the
 same seed-2112 vectors and on the seven fault probes (reports
 `harness-FAULT-gen2112.json` and `harness-FAULT-fault-probes.json` in
-[`calc-12-receipts/comparisons/`](calc-12-receipts/comparisons/)). Every disagreement below is
+`verification/calculator-v1/calc-12-receipts/comparisons/`). Every disagreement below is
 attributed only to the fault itself, and bounded shrinking reduces it:
 
 | Fault model | Disagreeing input | Model output | Oracle | Shrunk to |

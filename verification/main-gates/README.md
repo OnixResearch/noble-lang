@@ -73,6 +73,9 @@ the commit that adds this note.
     each of the 7 fault models disagreed on at least one vector;
   - `evidence-controls/controls.mjs` was run against the integrated release
     binary (`f7f02dfb…85ec`) and reported all 6 controls ok (`all_ok`).
+- The commit that adds this entry fixes two directory links in #21's Markdown (`calc-12-results.md`,
+  `seeded-faults/README.md`) that the `documents` local-link checker rejects. They
+  are now inline code paths; no linked content changed.
 
 Integration also renews the collection capacity to 58 units (`1d074ea`), with
 collector evidence in `receipt.json`, and renews the source inventory

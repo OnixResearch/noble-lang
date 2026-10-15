@@ -3,7 +3,7 @@
 CALC-EVIDENCE-01 requires that seeded incorrect implementations exercise the
 calculator harness. Each fault named by
 [CALC-12](../../../specs/conformance/calculator-cases.json) is a real source
-mutant: a patch in [`patches/`](patches/), built into its own `noble` binary
+mutant: a patch in `verification/calculator-v1/seeded-faults/patches/`, built into its own `noble` binary
 and run through the #19 acceptance runner. The [oracle lane](../oracle/README.md)
 then judges the run. A mutant counts as rejected for its intended reason only
 when both of these hold:
