@@ -1,0 +1,20 @@
+# First recorded output of tools/calculator-headroom.mjs (issue #23), 2026-10-15.
+# Binary: release noble built from this branch's working tree at 19aede8 plus the
+# then-uncommitted metrics/tool change of the following feat(#23) commit,
+# sha256 dfc40a292773c77b27a9c6a2840f86a752a4e02fbce38b6a7368dee5a48623b0.
+# Traces: NOBLE_CALCULATOR_TRACE of `run --jobs 2` over the default vectors.
+# Complete vectors: add (1+2 -> 3), juxtaposed (1 2 -> diagnostic). Partial when
+# recorded (run still in progress): call (fn f(y)=y*2; f(3)) 423 records,
+# power (2^10) 115 records; display and fraction not yet reached.
+# Command: bun tools/calculator-headroom.mjs check add.jsonl call.jsonl juxtaposed.jsonl power.jsonl
+# Exit status 0 (warn only; Work margin 100M is the only fail margin).
+status: warn (1051 compiles)
+  work_issued       min headroom   234454196  session 2 line 1 module 296: swap [ swap [ [ unpair swap [ num.op_work_probe ] dip swap pair result@1.Result.Ok ] [ result@1.Result.Err ] result@1.Result.match ] dip swap ] dip swap
+  type_size         min headroom           0  session 2 line 1 module 195: [ expr.preparse_quota_fault ] dip
+  environment_rows  min headroom          82  session 2 line 1 module 440: expr.format_ascii_quotient
+  named_bodies      min headroom         484  session 2 line 1 module 440: expr.format_ascii_quotient
+  signature_keys    min headroom        7958  session 2 line 1 module 440: expr.format_ascii_quotient
+  table_entries     min headroom       16127  session 2 line 1 module 440: expr.format_ascii_quotient
+  wat_bytes         min headroom     3536869  session 2 line 1 module 440: expr.format_ascii_quotient
+  text_bytes        min headroom      458747  session 2 line 1 module 128: calc_defs@1.header_fn_pair
+WARN: type_size headroom 0 < margin 8 ([ expr.preparse_quota_fault ] dip)
