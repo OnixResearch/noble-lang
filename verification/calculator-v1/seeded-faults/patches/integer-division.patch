@@ -1,0 +1,15 @@
+diff --git a/crates/noble-contracts/src/fixtures/calculator-numeric.noble b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+index e492bbb..997ad23 100644
+--- a/crates/noble-contracts/src/fixtures/calculator-numeric.noble
++++ b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+@@ -1863,7 +1863,9 @@ module num@1 [
+         [ OpFirstC.into unpair unpair
+           [ [ op_first_stage_exact_four ] dip swap
+             [ unpair drop swap pair
+-              calc_big@1.pair_den_positive RawRat.new
++              # SEEDED FAULT integer-division (CALC-12): the quotient is truncated to an integer.
++              calc_big@1.pair_den_positive unpair calc_big@1.big_bits calc_big@1.divide_big_by_bits
++              calc_big@1.big_one pair RawRat.new
+               swap unpair drop pair result@1.Result.Ok ]
+             [ drop drop drop unit result@1.Result.Err ]
+             result@1.Result.match ]
