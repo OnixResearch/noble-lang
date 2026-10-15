@@ -190,10 +190,18 @@ run in checked Noble guest modules
 (`crates/noble-contracts/src/fixtures/calculator-*.noble`); the host shell
 orchestrates the checked guest phases and supplies bounded bytes and budgets.
 
-It is very slow: in a local CALC-01/02/03/09 sweep (four processes at a time)
-each line that printed a value took about 3–31 minutes (most 8–18), numeric
-errors 4.5–9 minutes and syntax/name errors under 3. Every line also replays
-each earlier `let`/`fn` first, adding roughly 6–8 minutes per definition.
+It is slow: each line runs about 300–450 separately checked guest modules. On
+a release build with module reuse (below), on a 32-thread host at 1-minute
+load average 48–60 with four calculator processes at a time, a fresh `1+2`
+took 267 s, `2*3` 296 s, `12.34` 240 s and `0.3` with `--finite-decimal`
+292 s; without reuse the same lines took 464, 538, 349 and 569 s in the same
+window. A module seen for the first time costs about 1.1–1.5 s there (source
+check and backend preparation about 0.45–0.65 s each, worker assembly and V8
+compilation about 0.1 s, commit 0.06–0.07 s); a reused one about 4 ms. Every
+line also replays each earlier `let`/`fn` first: the session `fn f(y)=y*2`,
+`fn g(x)=f(x)+1`, `g(2)` ran 2,193 modules (1,613 reused) in 866 s. A debug
+build is slower still: `0.3 --finite-decimal` without reuse took 1,141 s
+against 471 s for a release build run alongside it (load about 30).
 
 Setting `NOBLE_CALCULATOR_TRACE=<file>` appends one JSON line per executed
 guest module (source, stage identity, source-check / backend / worker times,
