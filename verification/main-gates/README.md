@@ -43,6 +43,22 @@ Two failures differ from the `8df6c43` run:
   attempt failed earlier on an invalid store path on that host, so the
   recorded log is a local re-run of the same commit.
 
+### Docs-only commits after the tested commit
+
+These commits follow `2edb977`. None of them changes Rust, WAT, `.noble`,
+Nix, Cargo, proof or `policy/` sources; `git diff --stat` shows only
+Markdown, receipt JSON and receipt archives. The heavy-check results above
+therefore still apply to these commits. The doc-sensitive gates
+(`documents`, `cairn`, `tool-selection`, `policy`, `format`) were re-run on
+the commit that adds this note.
+
+- `b03ed86`: this receipt.
+- `5bedea4`: merge of `perf/issue-16-calculator-latency` `4437ebc`
+  (README and tasks.md: reuse on/off on the merged build).
+- `1164d18`: merge of `verification/calc-integration-eccbc02` `ee5eef7`
+  (integrated CALC receipt JSON and tar.gz, plus README and tasks.md
+  references).
+
 Integration also renews the collection capacity to 58 units (`1d074ea`), with
 collector evidence in `receipt.json`, and renews the source inventory
 (`2edb977`). The pure comparator returns `valid=true`.
