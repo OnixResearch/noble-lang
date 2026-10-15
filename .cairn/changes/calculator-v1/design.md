@@ -42,6 +42,29 @@ The accepted CALC requirements describe an application, not a new language confo
 
 **Rationale:** The ten separately checked calculator guest modules now exceed 262,144 bytes together while each remains below the individual source cap. A bounded selected retention allowance admits that real guest closure without inflating caller-supplied limits or granting it to unrelated profiles. This source-retention policy is not a completed calculator scenario or compiled-guest execution claim.
 
+### Guest budget units
+
+**Choice:** Each submitted line builds a fresh guest `num@1.Budget` from the seven CLI values, in slot order `--input-bytes` (0, default 1,024), `--numeric-digits` (1, 256), `--intermediate-bits` (2, 4,096), `--syntax-depth` (3, 32), `--call-depth` (4, 16), `--evaluation-work` (5, 4,000,000) and `--output-size` (6, 4,096). `num@1.budget` refuses a negative slot; the CLI already rejects one. The budget does not carry over between lines. Replay of an accepted line reuses that line's original seven values. Every refusal is a guest `ResourceLimit` naming its slot's category. A gate compares before the guarded work runs. A *debit* stores the remaining allowance in the line's Budget; an *admission* only compares and stores nothing. Units:
+
+- **InputBytes:** bytes of the submitted text as framed: an unframed line includes its `\n` terminator (`let x=7` is 8 bytes), and a `--framed` submission is exactly its counted bytes. The same length is the preparse EvaluationWork charge. `expr.preparse_input_*` debits the line's `text.length` once, after the guest lexer has certified the token list and before parsing; it refuses when the length exceeds the allowance. The host's 65,536-byte frame bound (`TransportLimit InputFrameBytes`) and replay preflight (`HostLimit`) are separate host limits that act earlier.
+- **NumericDigits:** decimal digits of numeric literals, the `.` excluded. `num@1.parse_digit_*` counts each literal's digits and debits them before any width estimate or BigInt is built, so the allowance is shared by all literals of the line. A literal whose count exceeds the remaining allowance refuses.
+- **IntermediateIntegerBits:** bits, where width(x) is the bit length of |x| (0 for zero). Gates compare a measured or estimated width W with the allowance and refuse when W exceeds it. All gates are admissions except the power gate, which debits W:
+  - A decimal literal of d digits: the estimate w from the Evaluation Work section.
+  - A binary operator: width(n1) + width(d1) + width(n2) + width(d2) + 2.
+  - Rational normalization: width(num) + width(den) + 2, at the gcd, the numerator finish and the denominator finish.
+  - Negation: width(num) + width(den).
+  - Power: the projected width W (debited).
+  - `to_i64`: width(num). `from_i64`: the bit length of the I64's magnitude, at least 1.
+  - Display: width(num) + width(den) + 2, and the width of each finite-decimal digit product.
+- **SyntaxDepth:** nesting levels of open parentheses, grouping or call argument list. The parser starts at depth 0. An opening parenthesis is admitted only when depth + 1 ≤ the allowance, and its closing parenthesis returns to the outer depth. The refusal spans the opening parenthesis. The parser keeps the depth itself, so this gate is an admission.
+- **CallDepth:** active user-function calls. `num@1.call_enter` debits 1 when a call is entered and refuses if the remaining allowance would become negative. `call_leave` restores the caller's value on return, while the other slots keep the callee's consumption. The top-level expression starts with the full allowance. Defining a function does not evaluate its body and does not charge this slot.
+- **EvaluationWork:** the abstract units of the next section. Four charges are not listed there: `from_i64` 250 per bit of that magnitude width, `to_i64` 300 per numerator bit, negation 100·(width(num) + width(den))², and unary plus 1.
+- **OutputSize:** bytes of the exact display text, without the newline that the terminal adds. The guest counts them from the canonical Rat before constructing the text, and debits them once. The default display counts a `-` for a negative value, the numerator's decimal digits, and, when the denominator is not 1, `/` plus the denominator's digits. Finite-decimal display counts the sign, the integer digits, and, for f > 0 fraction digits, the point and f digits. A `let` displays its value: this charge runs before the candidate State is published, so a refused display leaves the earlier binding, or its absence, unchanged. After formatting, the host also asserts that the text is at most the budget and 65,536 bytes. A violation is an infrastructure error, never a guest result.
+
+r[CALC-LIMIT-01] r[CALC-STATE-02]
+
+**Rationale:** Each unit is the quantity its guarded loop actually traverses, measured inside the guest from authenticated values, so a bracket N−1/N is deterministic and host-independent. Admissions and debits never approximate: they refuse with `ResourceLimit`. A host timeout, native quota, worker failure or host replay/transport limit is reported under its own label and cannot satisfy or impersonate any of these categories.
+
 ### Evaluation Work accounting
 
 **Choice:** `--evaluation-work` (default 4,000,000) is guest Budget slot 5. Every charge is checked quotient-first against the remaining allowance by its own probe before the guarded work runs, and subtracted by its admit. Charges:

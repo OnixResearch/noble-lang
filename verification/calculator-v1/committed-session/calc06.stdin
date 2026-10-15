@@ -1,0 +1,9 @@
+let x = 10
+fn f(y)=x + y
+let x = 20
+f(1)
+fn g(x)=x + 1
+g(2)
+let x = 1 / 0
+x
+f(1, 2)
