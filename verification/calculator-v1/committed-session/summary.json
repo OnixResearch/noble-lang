@@ -1,0 +1,314 @@
+{
+  "schema": "noble-issue17-committed-session-measurement/v1",
+  "issue": 17,
+  "base_commit": "ffcce532e94965d90417ca0687c155b343d7ca8d",
+  "after_commit": "5d2a963",
+  "profile": "release",
+  "instrumentation": {
+    "file": "instrumentation.patch",
+    "sha256": "36be86c388d9867bfd67856d0d0e4e0213dfa4e41bc9af2df8508150484344e4",
+    "note": "temporary, uncommitted to source; counts Session::execute calls (one guest module each) and prints per-line wall time"
+  },
+  "binaries": {
+    "before_instrumented": "f1488f981ee959013f3742b4cff0d5374beae3444329e45b03c909b711cb7fec",
+    "after_instrumented": "5bc66ffadd1620de369da881b0e07d92a3b506c9f106540df7cd9db929b7b1f2",
+    "baseline_44329dc_release_uninstrumented": "e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127"
+  },
+  "inputs": {
+    "calc06.stdin": "2b9a8bfa6ad8d62d7074e07a2d55b9c40695151cb73e3ae910fb85c388e484c7",
+    "perline.stdin": "b578a5929ab519f605b3981039c2ccb9e83bd05c71d16259707e081d62b2ee81"
+  },
+  "runs": [
+    {
+      "run": "before-perline",
+      "binary_sha256": "f1488f981ee959013f3742b4cff0d5374beae3444329e45b03c909b711cb7fec",
+      "exit": 0,
+      "wall_ms": 6741082,
+      "stdout": [
+        "3",
+        "1",
+        "3",
+        "3",
+        "2",
+        "3"
+      ],
+      "diagnostics": [],
+      "lines": [
+        {
+          "line": 1,
+          "modules": 459,
+          "ms": 332777,
+          "total_modules": 460
+        },
+        {
+          "line": 2,
+          "modules": 266,
+          "ms": 204713,
+          "total_modules": 726
+        },
+        {
+          "line": 3,
+          "modules": 724,
+          "ms": 672465,
+          "total_modules": 1450
+        },
+        {
+          "line": 4,
+          "modules": 528,
+          "ms": 590973,
+          "total_modules": 1978
+        },
+        {
+          "line": 5,
+          "modules": 986,
+          "ms": 1123210,
+          "total_modules": 2964
+        },
+        {
+          "line": 6,
+          "modules": 793,
+          "ms": 1091364,
+          "total_modules": 3757
+        },
+        {
+          "line": 7,
+          "modules": 1055,
+          "ms": 1231925,
+          "total_modules": 4812
+        },
+        {
+          "line": 8,
+          "modules": 1513,
+          "ms": 1491201,
+          "total_modules": 6325
+        }
+      ]
+    },
+    {
+      "run": "after-perline",
+      "binary_sha256": "5bc66ffadd1620de369da881b0e07d92a3b506c9f106540df7cd9db929b7b1f2",
+      "exit": 0,
+      "wall_ms": 3208824,
+      "stdout": [
+        "3",
+        "1",
+        "3",
+        "3",
+        "2",
+        "3"
+      ],
+      "diagnostics": [],
+      "lines": [
+        {
+          "line": 1,
+          "modules": 458,
+          "ms": 508163,
+          "total_modules": 459
+        },
+        {
+          "line": 2,
+          "modules": 265,
+          "ms": 303877,
+          "total_modules": 724
+        },
+        {
+          "line": 3,
+          "modules": 458,
+          "ms": 551671,
+          "total_modules": 1182
+        },
+        {
+          "line": 4,
+          "modules": 262,
+          "ms": 342783,
+          "total_modules": 1444
+        },
+        {
+          "line": 5,
+          "modules": 458,
+          "ms": 467203,
+          "total_modules": 1902
+        },
+        {
+          "line": 6,
+          "modules": 265,
+          "ms": 278511,
+          "total_modules": 2167
+        },
+        {
+          "line": 7,
+          "modules": 262,
+          "ms": 283132,
+          "total_modules": 2429
+        },
+        {
+          "line": 8,
+          "modules": 458,
+          "ms": 468066,
+          "total_modules": 2887
+        }
+      ]
+    },
+    {
+      "run": "before-calc06",
+      "binary_sha256": "f1488f981ee959013f3742b4cff0d5374beae3444329e45b03c909b711cb7fec",
+      "exit": 1,
+      "wall_ms": 9340493,
+      "stdout": [
+        "10",
+        "20",
+        "11",
+        "3",
+        "20"
+      ],
+      "diagnostics": [
+        "DivisionByZero [10,11) provenance=unavailable",
+        "WrongArity [0,1) provenance=unavailable"
+      ],
+      "lines": [
+        {
+          "line": 1,
+          "modules": 290,
+          "ms": 219969,
+          "total_modules": 291
+        },
+        {
+          "line": 2,
+          "modules": 575,
+          "ms": 459518,
+          "total_modules": 866
+        },
+        {
+          "line": 3,
+          "modules": 864,
+          "ms": 889196,
+          "total_modules": 1730
+        },
+        {
+          "line": 4,
+          "modules": 1308,
+          "ms": 1547023,
+          "total_modules": 3038
+        },
+        {
+          "line": 5,
+          "modules": 1126,
+          "ms": 1451696,
+          "total_modules": 4164
+        },
+        {
+          "line": 6,
+          "modules": 1642,
+          "ms": 1728761,
+          "total_modules": 5806
+        },
+        {
+          "line": 7,
+          "modules": 1506,
+          "ms": 1346805,
+          "total_modules": 7312
+        },
+        {
+          "line": 8,
+          "modules": 1239,
+          "ms": 852709,
+          "total_modules": 8551
+        },
+        {
+          "line": 9,
+          "modules": 1485,
+          "ms": 842552,
+          "total_modules": 10036
+        }
+      ]
+    },
+    {
+      "run": "after-calc06",
+      "binary_sha256": "5bc66ffadd1620de369da881b0e07d92a3b506c9f106540df7cd9db929b7b1f2",
+      "exit": 1,
+      "wall_ms": 3382923,
+      "stdout": [
+        "10",
+        "20",
+        "11",
+        "3",
+        "20"
+      ],
+      "diagnostics": [
+        "DivisionByZero [10,11) provenance=unavailable",
+        "WrongArity [0,1) provenance=unavailable"
+      ],
+      "lines": [
+        {
+          "line": 1,
+          "modules": 289,
+          "ms": 320479,
+          "total_modules": 290
+        },
+        {
+          "line": 2,
+          "modules": 285,
+          "ms": 376193,
+          "total_modules": 575
+        },
+        {
+          "line": 3,
+          "modules": 289,
+          "ms": 363139,
+          "total_modules": 864
+        },
+        {
+          "line": 4,
+          "modules": 444,
+          "ms": 591031,
+          "total_modules": 1308
+        },
+        {
+          "line": 5,
+          "modules": 262,
+          "ms": 302480,
+          "total_modules": 1570
+        },
+        {
+          "line": 6,
+          "modules": 516,
+          "ms": 550254,
+          "total_modules": 2086
+        },
+        {
+          "line": 7,
+          "modules": 380,
+          "ms": 384311,
+          "total_modules": 2466
+        },
+        {
+          "line": 8,
+          "modules": 113,
+          "ms": 130073,
+          "total_modules": 2579
+        },
+        {
+          "line": 9,
+          "modules": 359,
+          "ms": 359758,
+          "total_modules": 2938
+        }
+      ]
+    }
+  ],
+  "calc_state_02_ignored_test": {
+    "exit": 0,
+    "wall_ms": 2414368,
+    "test_sha256": "5e29de3c0465ffec7653150460722212287c488270b7d1ea67b6de8397e2f6a5",
+    "noble_sha256": "0c9c00ad8c94aea617cb9bc8030e61b0809be0c4c70a0bbe85f2db6856b10d88",
+    "result": "ok",
+    "diagnostics": [
+      "DivisionByZero [10,11) provenance=unavailable",
+      "ResourceLimit IntermediateIntegerBits [2,3) provenance=unavailable"
+    ],
+    "outputs": [
+      "11",
+      "20"
+    ]
+  }
+}
