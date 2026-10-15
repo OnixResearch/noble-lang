@@ -1,10 +1,55 @@
 # Main gate restoration (issue #22)
 
-This receipt records one run of every pinned flake check on a single commit, `8df6c43`,
-of the issue #22 branch. The branch starts at Calculator-v1 `44329dc`.
+This receipt records one run of every pinned flake check on the integration
+commit `2edb977` (`integration/issues-20261015`). It also keeps the earlier run on
+the issue #22 branch commit `8df6c43`. That branch starts at Calculator-v1
+`44329dc`.
 [`receipt.json`](receipt.json) holds the tested commit, each check's result,
 log path, log SHA-256 and duration, plus the selected tool paths. The logs
 stay outside the repository; their hashes bind them.
+
+## Results at integration `2edb977`
+
+| check | result | branch `8df6c43` | parent `0ea10d3f` | follow-up |
+|---|---|---|---|---|
+| `tool-selection` | pass | pass | not run |  |
+| `tool-versions` | pass | pass | not run |  |
+| `tool-overrides` | pass | pass | not run |  |
+| `format` | pass | pass | fail |  |
+| `rust-tests` | pass | pass | fail |  |
+| `clippy` | pass | pass | fail |  |
+| `documents` | pass | pass | not run |  |
+| `cairn` | pass | pass | not run |  |
+| `policy` | pass | pass | not run |  |
+| `source-inventory-controls` | pass | pass | not run |  |
+| `boundary-controls` | fail | fail | fail | draft `issue-22-followup-boundary-controls.md` |
+| `octet` | fail | fail | fail | draft `issue-22-followup-octet.md` |
+| `source-coverage` | fail | fail | fail | draft `issue-22-followup-source-coverage.md` |
+| `native-assurance` | fail | fail | fail | draft `issue-22-followup-native-assurance.md` |
+
+On the integration commit, `rust-tests` ran 423 tests: 423 passed, 0
+failed and 4 ignored by design. The ignored tests are the hour-long
+`calc_state_02` test and the slow release tier of `calculator_numeric_paths`.
+
+Two failures differ from the `8df6c43` run:
+
+- **`octet`** has the same 236 findings (232 errors).
+- **Architecture phase** (`source-coverage`, `native-assurance`) reports
+  2,703 required compiler unknowns: 2,165 `?`, 379 `for`, 25 range and 134
+  unresolved.
+- **`boundary-controls`** no longer hits the duplicate-key fixture error
+  (fixed in `b7927b0`). The `acyclic-shell` case now fails like `workspace`:
+  deny-all aborts before writing its `deny` artifact. The remote builder
+  attempt failed earlier on an invalid store path on that host, so the
+  recorded log is a local re-run of the same commit.
+
+Integration also renews the collection capacity to 58 units (`1d074ea`), with
+collector evidence in `receipt.json`, and renews the source inventory
+(`2edb977`). The pure comparator returns `valid=true`.
+
+The rest of this document describes the issue #22 branch run on `8df6c43`.
+That run's per-check logs remain listed under `parent_comparison` and in
+`/home/brittonr/.cache/noble-issues/logs/gates/`.
 
 ## Results at `8df6c43`
 

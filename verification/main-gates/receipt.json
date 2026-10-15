@@ -1,134 +1,134 @@
 {
   "schema": "noble-main-gates-receipt/v1",
   "issue": "https://github.com/OnixResearch/noble-lang/issues/22",
-  "tested_commit": "8df6c43d66ba3cd59cebb250f35c39712172e1f2",
+  "tested_commit": "2edb9774494eda4c742010f24bf2ce220e3ffadf",
   "base_upstream_commit": "44329dcbe0c0d3c0e83d4d154aab8a357a06f9a2",
   "flake_checks": [
     {
       "check": "boundary-controls",
       "result": "fail",
       "exit": 1,
-      "duration": "70s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/boundary-controls.log",
-      "log_sha256": "3aad2ea6d9f5ca83d9acf924a6197f2b750b27a3af95d8e84ba1c788061a4ff1",
+      "duration": "69s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration-local/2edb9774494eda4c742010f24bf2ce220e3ffadf/boundary-controls.log",
+      "log_sha256": "62599df24737d653b27fda4fb201a3fc3d82935e8dbd88a9572c27c8947c73e7",
       "output": null
     },
     {
       "check": "cairn",
       "result": "pass",
       "exit": 0,
-      "duration": "65s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/cairn.log",
-      "log_sha256": "c6d49f9675bcd3bd8b484d79d887720f5eafbf729c16d4979d39f5935adfe20d",
-      "output": "/nix/store/kvxh7rbjc7gc11a1467bzkhg9mk2hiw2-noble-cairn"
+      "duration": "27s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/cairn.log",
+      "log_sha256": "86b7ecacf166a003af70fa21bf3c30c8e0a6ee7222a424125e7cdd17728c00ed",
+      "output": "/nix/store/fqbscd9af79l1ifawrvrd85m4nizj6iq-noble-cairn"
     },
     {
       "check": "clippy",
       "result": "pass",
       "exit": 0,
-      "duration": "149s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/clippy.log",
-      "log_sha256": "981266ede2aabc45a92bf891091f54dc14b0b72cca0196ae25c59a392ded5004",
-      "output": "/nix/store/cp6c3mv436h8b9zy4gwalf7nbjj0dq0g-noble-clippy"
+      "duration": "95s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/clippy.log",
+      "log_sha256": "0e7cbafb9852de64e489116673aa96ca211b29c142368f590d1d4096e6592618",
+      "output": "/nix/store/y3m3mn1gz75fxcb55fkpg99z2n6d41fz-noble-clippy"
     },
     {
       "check": "documents",
       "result": "pass",
       "exit": 0,
-      "duration": "107s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/documents.log",
-      "log_sha256": "eac11ac8438b60141ae5b4baa938eee9b3e1f375ec8d716b3c26adf07cecefb8",
-      "output": "/nix/store/36szn59h2apr57mvghh3m85l67ywnfaj-noble-documents"
+      "duration": "69s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/documents.log",
+      "log_sha256": "d19f77bf8b02770cbc60b2d443bd7736ac4c48ef3f80e8ba4e0f509afcb78c95",
+      "output": "/nix/store/47ayg4hp2m7sncwbf15xzsqn3hakkmhx-noble-documents"
     },
     {
       "check": "format",
       "result": "pass",
       "exit": 0,
-      "duration": "67s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/format.log",
-      "log_sha256": "880a0cc0aabee5837f5669239a199d74488033024a918e60116fd9c3fdcbdccb",
-      "output": "/nix/store/8z2w8jvxrsb0l4mcw812ivmv40qibn00-noble-format"
+      "duration": "29s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/format.log",
+      "log_sha256": "fe052897ab22b128a385ddeb63026414f8613a00c8a310d446714f7e4a565ed0",
+      "output": "/nix/store/pm72s98h9xqyyxscn60wlyffm7pm0c74-noble-format"
     },
     {
       "check": "native-assurance",
       "result": "fail",
       "exit": 1,
-      "duration": "349s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/native-assurance.log",
-      "log_sha256": "5874cf61bc9b9e86f696aa1c437e869708fd60fcb8a42f8d849ad43a0145865b",
+      "duration": "256s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/native-assurance.log",
+      "log_sha256": "d993f36b249293a172d1d89890d0b52b2a737a6ba95c98d2c04b5e692e586ae4",
       "output": null
     },
     {
       "check": "octet",
       "result": "fail",
       "exit": 1,
-      "duration": "92s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/octet.log",
-      "log_sha256": "33d4ab0ccb4fb3fd65a091a6cd6e1990fa29089e758ec5ad19f16d522d3986b5",
+      "duration": "105s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/octet.log",
+      "log_sha256": "5e2f63d34dc107c3422426b3dde1e64df6b6a907b88bd3349731fb8a8f602c76",
       "output": null
     },
     {
       "check": "policy",
       "result": "pass",
       "exit": 0,
-      "duration": "1s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/policy.log",
-      "log_sha256": "91b756efebf15195c92fd5f0e75de14858a0e66190deb9c50fd2d273e7b0faed",
-      "output": "/nix/store/72zv65zgcfsc78xb30xmcdivmcdsfrgx-noble-policy-freshness"
+      "duration": "72s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/policy.log",
+      "log_sha256": "41e9ebbf004020a30c0f3ee145264d73e4fef96e25510530c9269abcd902cd97",
+      "output": "/nix/store/mps7n033dplagdr6g1vjkfbl2afi33k9-noble-policy-freshness"
     },
     {
       "check": "rust-tests",
       "result": "pass",
       "exit": 0,
-      "duration": "2089s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/rust-tests.log",
-      "log_sha256": "6632e9a89a1fe01eb5f3956de0636dba24a9f4955cfa36994b6a14ed92bc1e97",
-      "output": "/nix/store/izn66a3v027lxb8g1sqbmwc1fx7xag90-noble-rust-tests"
+      "duration": "849s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/rust-tests.log",
+      "log_sha256": "36a0210f84259620dadd52b990b29f50618c0f286d47cd2300104d4145400167",
+      "output": "/nix/store/xnvrbcnzk3xzafpqs2f6v9p3r98mlklp-noble-rust-tests"
     },
     {
       "check": "source-coverage",
       "result": "fail",
       "exit": 1,
-      "duration": "556s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/source-coverage.log",
-      "log_sha256": "722c41e2301a1982f8186ff1a13c3ad461864c4a5cfecb57796a289d2a0f9e84",
+      "duration": "258s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/source-coverage.log",
+      "log_sha256": "79c6ff4a090a577e8a204951013d2fc1cce03d74950205b96a471f9c9a5836f6",
       "output": null
     },
     {
       "check": "source-inventory-controls",
       "result": "pass",
       "exit": 0,
-      "duration": "47s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/source-inventory-controls.log",
-      "log_sha256": "ab68a404668e1a968467fc65e643949ba0dcee34613fdb8528d6f5af0c45bc78",
+      "duration": "13s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/source-inventory-controls.log",
+      "log_sha256": "5f4520dbebf32e3eab536c43f3192b953c3dc414aceedc59e479fe17df62241f",
       "output": "/nix/store/5xz3rkiw83922krwcddzwwwlclbyi7l3-noble-source-inventory-controls"
     },
     {
       "check": "tool-overrides",
       "result": "pass",
       "exit": 0,
-      "duration": "64s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/tool-overrides.log",
-      "log_sha256": "5a4ea4ccad6c44c5a27479de478fce674e66b3aecf7010047d959b7bc3cdec8b",
-      "output": "/nix/store/dqpggmc2vwyifykah5xib0w9d5xy4wcy-noble-tool-overrides"
+      "duration": "25s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/tool-overrides.log",
+      "log_sha256": "dd9429b8de0b85f62ce5a5b360bdfa0d9f305ee7d3ba112b351f2ab774b41db8",
+      "output": "/nix/store/jc43acp75799r8cd9q2y6f62np21ly9z-noble-tool-overrides"
     },
     {
       "check": "tool-selection",
       "result": "pass",
       "exit": 0,
-      "duration": "62s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/tool-selection.log",
-      "log_sha256": "babb2d878d900a899bd3dbd9bc1e3b50d32416013718ed9c9581171f808c13a5",
-      "output": "/nix/store/7fw69n8l7746akqmisx22az44gwh6lkd-noble-tool-selection"
+      "duration": "250s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/tool-selection.log",
+      "log_sha256": "c1f2f3efba363daab49b793d3b5218ff8482a4a1d433cec4ea639853efbd6fbd",
+      "output": "/nix/store/jdb3kzz0g4zb983jwrsbnk1jcwm3448i-noble-tool-selection"
     },
     {
       "check": "tool-versions",
       "result": "pass",
       "exit": 0,
-      "duration": "60s",
-      "log": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/tool-versions.log",
-      "log_sha256": "3be1b8e06fe929299d50b4c9079bde92fa10f25696ffcd1fbac73425b639c79d",
-      "output": "/nix/store/a0hvic6kjc63070fg3w2hsgbgvkfk1gg-noble-tool-versions"
+      "duration": "26s",
+      "log": "/home/brittonr/.cache/noble-issues/logs/integration/2edb9774494eda4c742010f24bf2ce220e3ffadf/tool-versions.log",
+      "log_sha256": "dafd156df91f318d4a11956816e0a48f0d4a72afaa20e4b5d5357022c743f896",
+      "output": "/nix/store/1bzs64aw9gb29dycyqk4q1j29hhw86hv-noble-tool-versions"
     }
   ],
   "tools": {
@@ -145,40 +145,8 @@
   },
   "commits": [
     {
-      "sha": "d154e8b02087d6141a41fb03918522ae789a8508",
-      "purpose": "style: cargo fmt with the pinned nightly-2026-03-21 rustfmt"
-    },
-    {
-      "sha": "ffcce532e94965d90417ca0687c155b343d7ca8d",
-      "purpose": "re-pin reviewed vendor (Cargo.lock change) and formatted file hashes; restores flake evaluation"
-    },
-    {
-      "sha": "5aa5517bb44c40292feb66878e65d7c7e0c172f6",
-      "purpose": "clear clippy -D warnings; two reviewed #[expect] exceptions"
-    },
-    {
-      "sha": "ab6b85a",
-      "purpose": "calculator-v1 tasks: missing requirement reference and Cairn gate results"
-    },
-    {
-      "sha": "c56106b",
-      "purpose": "architecture collection capacity renewal for the two new Calculator-v1 units and saturated CLI shards"
-    },
-    {
-      "sha": "2bb7e5a",
-      "purpose": "run engine-assets/engine-calculator Node tests from rust-tests with the built assembler"
-    },
-    {
-      "sha": "207b65f",
-      "purpose": "renew policy/source-inventory with tools/source-inventory-renew.mjs"
-    },
-    {
-      "sha": "eaf2b8f",
-      "purpose": "cite the receipt path as text in calculator-v1 tasks.md (documents link check)"
-    },
-    {
-      "sha": "8df6c43",
-      "purpose": "spawn live-slot Node test cases through POSIX /bin/sh (sandbox has no /bin/bash)"
+      "sha": "integration/issues-20261015",
+      "purpose": "issue #22 branch (fix/issue-22-gates through b7927b0) plus merges #6/#12, #8/#9/#10, #1/#3/#5, #7/#11, #4/#2, #14, #13, #15, #19, #18, #17, #20, #16, #23; integration fixes 730d45b (#20 README link), 1d074ea (58-unit capacity), 2edb977 (inventory renewal)"
     }
   ],
   "vendor_repin": {
@@ -204,33 +172,41 @@
     "max_units_and_shards": "54 -> 56: the collector observed exactly 56 units; the two new ones are the noble-wasm test+test units crates/noble-wasm/tests/calculator_collect.rs and calculator_profile.rs, both added by 44329dc (git diff --name-status 0ea10d3 44329dc). At 54 the collector refused: 'selected compiler architecture units exceed policy limit 54'.",
     "max_calls_and_constructors": "16384 -> 32768: at 56 units the noble CLI bin and bin+test shards were incomplete with exactly 16,384 call facts each, and the bin shard 16,384 constructor facts (shards under source/.octet/compiler-architecture/shards of the local reproduction).",
     "byte_caps": "max_shard_bytes 32 -> 64 MiB and max_artifact_bytes 128 -> 256 MiB: the truncated CLI shards were already 27,781,842 and 26,658,831 bytes; the complete normalized IR is 135,137,886 bytes.",
-    "not": "These are completeness bounds. Truncation yields no inventory, so they only allow a complete collection; no finding, unknown, waiver or classification rule changed."
+    "not": "These are completeness bounds. Truncation yields no inventory, so they only allow a complete collection; no finding, unknown, waiver or classification rule changed.",
+    "integration": {
+      "commit": "1d074ea",
+      "change": "max_units/max_shards 56 -> 58",
+      "evidence": "collector of eccbc02 refused at 56; scratch collection observed exactly 58 complete units incl. noble-cli tests/calculator_engine.rs (#17) and noble-wasm tests/calculator_numeric_paths.rs (#20); largest shards 20,870/18,616 calls, 18,242/16,577 constructors, 31,130,159/27,944,184 bytes; IR 140,348,477 bytes: call/constructor/byte bounds unchanged",
+      "unit_list": "/home/brittonr/.cache/noble-issues/logs/integration/eccbc02/probe-units.tsv"
+    }
   },
   "inventory": {
     "tool": "tools/source-inventory-renew.mjs",
-    "collection": "complete 56/56 units of 2bb7e5a (local reproduction of inventoryArtifacts under /var/tmp/noble-issue22-collect with the pinned cargo-octet, quality Rust and reviewed vendor)",
-    "retained": 5964,
-    "removed_stale": 278,
-    "added": 2860,
+    "collection": "complete 58/58 units of 1d074ea",
+    "retained": 8609,
+    "removed_stale": 215,
+    "added": 454,
     "final": {
-      "paths": 8824,
-      "body_open": 4407,
-      "generated": 2589,
-      "structural": 1828,
-      "test_only": 2565,
-      "macro_origins": 79,
+      "paths": 9063,
+      "body_open": 4538,
+      "generated": 2651,
+      "structural": 1874,
+      "test_only": 2761,
+      "macro_origins": 80,
       "dependency_edges": 14
     },
-    "pure_comparator": "valid=true, no diagnostics (nix/source-inventory.nix over the derived inventory)",
-    "surface_review": "noble_wasm::source::Compiler::{new_calculator, prepare_quiescent, prepare_program_free} and noble_contracts::source::Session::new_calculator are new OPEN bodies; the older live surface Compiler::{new_live, prepare_checked_selected, retire_code} and Session::{new_live, new_live_slots} are OPEN bodies; Compiler::{new, prepare, commit, signature} were retained unchanged; calculator.rs contributes 218 paths (192 OPEN bodies, 26 structural). Stale removals are 272 closure byte spans moved by formatting plus 6 named paths no longer compiled.",
-    "renewal_report": "/home/brittonr/.cache/noble-issues/inventory/2bb7e5a/renewal-report.json"
+    "pure_comparator": "valid=true",
+    "removed_named": [
+      "noble::calculator::Accepted",
+      "noble::calculator::HISTORY_BYTES_LIMIT",
+      "noble::calculator::HISTORY_COMMANDS_LIMIT",
+      "noble::calculator::HISTORY_WORK_LIMIT",
+      "noble::calculator::REPLAY_STEP_WORK"
+    ],
+    "renewal_report": "/home/brittonr/.cache/noble-issues/inventory/1d074ea/renewal-report.json"
   },
   "node_tests": {
-    "harness": "crates/noble-cli/tests/smoke.rs calculator_runtime_node_tests_run_with_built_assembler (rust-tests)",
-    "with_assembler_log": "/home/brittonr/.cache/noble-issues/logs/gates/node/engine-tests-with-assembler.tap",
-    "with_assembler": "tests 2, pass 2, fail 0, skipped 0",
-    "without_assembler_log": "/home/brittonr/.cache/noble-issues/logs/gates/node/engine-tests-without-assembler.tap",
-    "without_assembler": "pass 0, skipped 2 (the skip the harness now forbids)"
+    "harness": "smoke.rs calculator_runtime_node_tests_run_with_built_assembler (requires 6 tests, 6 passed, 0 skipped) and calculator_engine.rs (#17)"
   },
   "cairn": {
     "revision": "15f00875562025e7ea7e0d1f4af24d1a2e2ac06f",
@@ -360,13 +336,36 @@
       "files": 13,
       "all_in_files_changed_by_44329dc": true,
       "table": "/home/brittonr/.cache/noble-issues/logs/gates/arch-unknowns-delta.tsv"
+    },
+    "integration_total": 2703,
+    "integration_by_cause": {
+      "Desugaring(QuestionMark)": 2165,
+      "Desugaring(ForLoop)": 379,
+      "Desugaring(RangeExpr)": 25,
+      "UnresolvedDefinition": 134
     }
   },
-  "flake_note": "policy was first realized by an interrupted remote attempt; it was then re-run locally with nix --rebuild (outputs checked deterministic) and that log is recorded.",
+  "flake_note": "boundary-controls: the remote (leviathan) attempt failed on an invalid store path (syn-2.0.106.crate not valid on the builder), an infrastructure fault; the recorded log is a local --builders \"\" re-run of the same commit (log of the remote attempt kept as boundary-controls.remote-infra.log).",
+  "pending_merges": [
+    "feat/issue-21 (verification-only): re-check documents and cairn after merge"
+  ],
+  "release_binary": {
+    "path": "/home/brittonr/.cache/noble-issues/bin/noble-integration-eccbc02-release",
+    "sha256": "f7f02dfbc9f6723a10879fd269abd4319a8736aa9d952ebb06f5d9bc2c5085ec",
+    "built_from": "eccbc024c837f21caf26ffe2d6be7e6c1d6bb1fb"
+  },
   "rust_tests": {
-    "passed": 402,
+    "passed": 423,
     "failed": 0,
-    "ignored": 0,
-    "note": "cargo test --workspace --all-targets --all-features in the pinned sandbox; includes the 16 noble-cli tests that failed in the earlier tool-less sandbox and the new Node engine harness test"
+    "ignored": 4,
+    "ignored_by_design": [
+      "calculator::tests::calc_state_02_failed_lines_leave_definitions_byte_identical (about an hour)",
+      "3 slow-tier calculator_numeric_paths tests (release --ignored)"
+    ]
+  },
+  "branch_run": {
+    "commit": "8df6c43d66ba3cd59cebb250f35c39712172e1f2",
+    "receipt": "git show a012cd4:verification/main-gates/receipt.json",
+    "logs": "/home/brittonr/.cache/noble-issues/logs/gates/8df6c43d66ba3cd59cebb250f35c39712172e1f2/"
   }
 }
