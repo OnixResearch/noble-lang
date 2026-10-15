@@ -183,7 +183,16 @@ pub(super) fn module(
         return Ok(out.finish());
     }
     attempt!(out.append(b"(func (export \"submit\") (result i32)\n(if (global.get $failure) (then (return (global.get $failure))))\n(if (i32.or (global.get $cp) (i32.ne (global.get $generation) "));
-    attempt!(out.i32(generation));
+    // A calculator module does not bake its preparation generation into its
+    // bytes: the trusted engine binds the exact compiler generation that the
+    // host validated this module against as an immutable per-instance import,
+    // so byte-identical modules can be reused across preparations while the
+    // guard still refuses any arena whose submission count differs.
+    if plan.calculator {
+        attempt!(out.append(b"(global.get $submit_generation)"));
+    } else {
+        attempt!(out.i32(generation));
+    }
     attempt!(out.append(b")) (then (call $fail (i32.const 4)) (return (global.get $failure))))\n"));
     // A calculator module is entered exactly once. Reset after host injection,
     // immediately before validating its first input, even if the host observed

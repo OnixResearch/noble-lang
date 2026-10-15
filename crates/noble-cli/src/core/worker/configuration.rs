@@ -87,6 +87,7 @@ pub(super) fn slot() -> std::string::String {
 pub(super) fn calculator(
     optimized: bool,
     trace: bool,
+    module_cache: bool,
 ) -> Result<std::string::String, super::super::output::Failure> {
     let executable = attempt!(std::env::current_exe().map_err(super::super::framing::io_error));
     let executable =
@@ -132,6 +133,10 @@ pub(super) fn calculator(
         (
             "calculator_trace",
             crate::workflow::encoding::Json::Bool(trace),
+        ),
+        (
+            "calculator_module_cache",
+            crate::workflow::encoding::Json::Bool(module_cache),
         ),
         (
             "bindings",

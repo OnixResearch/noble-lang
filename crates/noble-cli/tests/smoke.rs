@@ -195,6 +195,7 @@ fn calculator_run(
     command
         .arg("calculator")
         .env_remove("NOBLE_CALCULATOR_TRACE")
+        .env_remove("NOBLE_CALCULATOR_MODULE_CACHE")
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped());
@@ -282,5 +283,67 @@ fn calculator_trace_is_observation_only() -> Result<(), Box<dyn std::error::Erro
         assert_eq!(record["source_bytes"].as_u64(), Some(source.len() as u64));
         assert_eq!(record["outcome"], "normal");
     }
+    Ok(())
+}
+
+/// Exact module reuse must be unobservable: with reuse off and on, the same
+/// guest modules run in the same order with byte-identical WAT, Wasm and
+/// execution reports, the same issued Work, and identical terminal output.
+#[test]
+fn calculator_module_reuse_is_byte_identical_to_fresh_preparation(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let input = b"1 2\n";
+    let directory =
+        std::env::temp_dir().join(format!("noble-calculator-reuse-{}", std::process::id()));
+    std::fs::create_dir_all(&directory)?;
+    let fresh_path = directory.join("fresh.jsonl");
+    let reused_path = directory.join("reused.jsonl");
+    let off = std::ffi::OsStr::new("off");
+    let fresh = calculator_run(
+        input,
+        &[
+            ("NOBLE_CALCULATOR_TRACE", fresh_path.as_os_str()),
+            ("NOBLE_CALCULATOR_MODULE_CACHE", off),
+        ],
+    )?;
+    let reused = calculator_run(
+        input,
+        &[("NOBLE_CALCULATOR_TRACE", reused_path.as_os_str())],
+    )?;
+    let fresh_records = trace_records(&fresh_path)?;
+    let reused_records = trace_records(&reused_path)?;
+    std::fs::remove_dir_all(&directory)?;
+    assert_eq!(fresh.status.code(), reused.status.code());
+    assert_eq!(fresh.stdout, reused.stdout);
+    assert_eq!(fresh.stderr, reused.stderr);
+    let modules = |records: &[serde_json::Value]| -> Vec<serde_json::Value> {
+        records
+            .iter()
+            .filter(|record| record["record"] == "module")
+            .map(|record| {
+                serde_json::json!([
+                    record["session"],
+                    record["module"],
+                    record["source"],
+                    record["wat_sha256"],
+                    record["wasm_sha256"],
+                    record["report_sha256"],
+                    record["work_issued"],
+                    record["outcome"],
+                ])
+            })
+            .collect()
+    };
+    assert_eq!(modules(&fresh_records), modules(&reused_records));
+    let states = |records: &[serde_json::Value], side: &str, state: &str| {
+        records
+            .iter()
+            .filter(|record| record["record"] == "module" && record["cache"][side] == state)
+            .count()
+    };
+    assert_eq!(states(&fresh_records, "host", "hit"), 0);
+    assert_eq!(states(&fresh_records, "worker", "hit"), 0);
+    assert!(states(&reused_records, "host", "hit") > 0);
+    assert!(states(&reused_records, "worker", "hit") > 0);
     Ok(())
 }

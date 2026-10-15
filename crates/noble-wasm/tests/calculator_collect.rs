@@ -68,6 +68,20 @@ struct Arena {
     /// recipe cell is reachable, so the next preparation restarts signatures.
     program_free: bool,
     last: Option<Instance>,
+    /// When set, Program-free preparations at a canonical epoch are recorded
+    /// and later replaced by `Compiler::reuse_program_free`, as the
+    /// calculator host's exact module cache does.
+    reuse: Option<Vec<Recorded>>,
+    hits: usize,
+    /// Overrides the per-instance `submit_generation` binding once.
+    forged_generation: Option<i32>,
+}
+
+struct Recorded {
+    source: String,
+    input: Vec<Ty>,
+    output: Vec<Ty>,
+    artifact: noble_wasm::source::Reusable,
 }
 
 struct Phase {
@@ -77,6 +91,9 @@ struct Phase {
     after: i32,
     /// `(first slot, slot count)` of this module's compiled-code table init.
     table: Option<(u32, u32)>,
+    wat: Vec<u8>,
+    work_issued: u64,
+    reused: bool,
 }
 
 impl Arena {
@@ -92,6 +109,8 @@ impl Arena {
         )
         .map_err(|e| e.to_string())?;
         let mut linker = Linker::new(&engine);
+        // Each instance binds its own immutable `submit_generation`.
+        linker.allow_shadowing(true);
         linker
             .define(&mut store, "noble", "memory", memory)
             .map_err(|e| e.to_string())?;
@@ -126,6 +145,9 @@ impl Arena {
             quiescent: false,
             program_free: false,
             last: None,
+            reuse: None,
+            hits: 0,
+            forged_generation: None,
         })
     }
 
@@ -187,23 +209,77 @@ impl Arena {
         if text.is_some() {
             inputs.push(Ty::Text);
         }
-        let checked = self
-            .session
-            .prepare(source.as_bytes(), &inputs, limits())
-            .map_err(|error| format!("{source}: {error:?}"))?;
-        let output = checked.output().to_vec();
-        let submission = checked.submission().ok_or("no submission")?;
-        let prepared = if self.reclaim && self.program_free {
-            self.compiler.prepare_program_free(submission)
-        } else if self.reclaim && self.quiescent {
-            self.compiler.prepare_quiescent(submission)
+        let program_free = self.reclaim && self.program_free;
+        let epoch = if program_free {
+            self.compiler.canonical_epoch()
         } else {
-            self.compiler.prepare(submission)
+            None
+        };
+        let recorded = match (&self.reuse, epoch) {
+            (Some(records), Some(epoch)) => records.iter().find(|record| {
+                record.source == source
+                    && record.input == inputs
+                    && record.artifact.epoch() == epoch
+            }),
+            _ => None,
+        };
+        let (checked, output, prepared) = match recorded {
+            Some(record) => (
+                None,
+                record.output.clone(),
+                self.compiler
+                    .reuse_program_free(&record.artifact)
+                    .map_err(|_| format!("{source}: calculator reuse refused"))?,
+            ),
+            None => {
+                let checked = self
+                    .session
+                    .prepare(source.as_bytes(), &inputs, limits())
+                    .map_err(|error| format!("{source}: {error:?}"))?;
+                let output = checked.output().to_vec();
+                let submission = checked.submission().ok_or("no submission")?;
+                let prepared = if program_free {
+                    self.compiler.prepare_program_free(submission)
+                } else if self.reclaim && self.quiescent {
+                    self.compiler.prepare_quiescent(submission)
+                } else {
+                    self.compiler.prepare(submission)
+                }
+                .map_err(|_| format!("{source}: calculator compiler refused"))?;
+                (Some(checked), output, prepared)
+            }
+        };
+        let reused = checked.is_none();
+        if reused {
+            self.hits += 1;
+        } else if let Some(records) = &mut self.reuse {
+            if let Some(artifact) = prepared.reusable() {
+                records.push(Recorded {
+                    source: source.to_owned(),
+                    input: inputs.clone(),
+                    output: output.clone(),
+                    artifact,
+                });
+            }
         }
-        .map_err(|_| format!("{source}: calculator compiler refused"))?;
+        let wat = prepared.wat().to_vec();
+        let work_issued = prepared.work_issued();
         let table = table_span(prepared.wat());
         let wasm = wat::parse_bytes(prepared.wat()).map_err(|e| e.to_string())?;
         let module = Module::new(self.store.engine(), wasm.as_ref()).map_err(|e| e.to_string())?;
+        let generation = self
+            .forged_generation
+            .take()
+            .unwrap_or(prepared.submit_generation() as i32);
+        let generation = Global::new(
+            &mut self.store,
+            GlobalType::new(ValType::I32, Mutability::Const),
+            Val::I32(generation),
+        )
+        .map_err(|e| e.to_string())?;
+        self.linker
+            .define(&mut self.store, "noble", "submit_generation", generation)
+            .map_err(|e| e.to_string())?;
         let instance = self
             .linker
             .instantiate(&mut self.store, &module)
@@ -249,7 +325,9 @@ impl Arena {
             self.compiler
                 .commit(prepared)
                 .map_err(|_| format!("{source}: compiler commit refused"))?;
-            self.session.commit(checked).map_err(|e| format!("{e:?}"))?;
+            if let Some(checked) = checked {
+                self.session.commit(checked).map_err(|e| format!("{e:?}"))?;
+            }
             self.stack = output;
             self.quiescent = quiescent;
             self.program_free = program_free;
@@ -260,6 +338,9 @@ impl Arena {
             before,
             after,
             table,
+            wat,
+            work_issued,
+            reused,
         })
     }
 
@@ -857,5 +938,140 @@ fn calculator_any_reachable_program_blocks_the_signature_restart() -> Result<(),
         !arena.program_free,
         "a Program nested in an aggregate is reachable"
     );
+    Ok(())
+}
+
+/// Phases that return to an empty stack without static literal Text. Every
+/// boundary is Program-free except the one after `[ 1 + ]`, so `5 swap run`
+/// is a normal preparation that depends on the compiler state committed by
+/// the (reused) `[ 1 + ]` module: its functions, signatures and descriptors.
+const ROUND: [&str; 6] = [
+    "1 2 pair",
+    "unpair +",
+    "drop",
+    "[ 1 + ]",
+    "5 swap run",
+    "drop",
+];
+
+/// Two arenas run the same phases; the second reuses every recorded
+/// Program-free preparation it can. Every phase must produce identical WAT,
+/// issued Work, status, quota and operand stack, and the reusing arena must
+/// actually hit, including across generations and before a Program-carrying
+/// (non-Program-free) phase whose WAT depends on the restored compiler state.
+#[test]
+fn calculator_reuse_is_byte_identical_to_fresh_preparation() -> Result<(), String> {
+    let mut fresh = Arena::new(true)?;
+    let mut reusing = Arena::new(true)?;
+    for arena in [&mut fresh, &mut reusing] {
+        arena.reclaim = true;
+    }
+    reusing.reuse = Some(Vec::new());
+    // The first module of each arena installs the core table entries; it is
+    // not at a Program-free boundary, so it is never reused.
+    let mut phases = vec!["7 drop"];
+    for _ in 0..3 {
+        phases.extend(ROUND);
+    }
+    for source in phases {
+        let expected = fresh.normal(source)?;
+        let actual = reusing.normal(source)?;
+        assert_eq!(expected.wat, actual.wat, "{source}: WAT differs");
+        assert_eq!(expected.work_issued, actual.work_issued, "{source}: Work");
+        assert_eq!(expected.table, actual.table, "{source}: table span");
+        assert_eq!(
+            (
+                expected.status,
+                expected.quota,
+                expected.before,
+                expected.after
+            ),
+            (actual.status, actual.quota, actual.before, actual.after),
+            "{source}: execution"
+        );
+        assert_eq!(fresh.snapshot()?, reusing.snapshot()?, "{source}: stack");
+        assert_eq!(fresh.global("generation"), reusing.global("generation"));
+        assert!(!expected.reused);
+    }
+    // The first round records its Program-free modules (its second `drop`
+    // already hits); later rounds hit all but the normal `5 swap run`.
+    assert_eq!(reusing.hits, 1 + 2 * 5);
+    Ok(())
+}
+
+/// Reuse is refused unless the committed compiler is in exactly the recorded
+/// canonical epoch; nothing is published by a refusal.
+#[test]
+fn calculator_reuse_refuses_non_canonical_compiler_state() -> Result<(), String> {
+    let mut arena = Arena::new(true)?;
+    arena.reclaim = true;
+    arena.reuse = Some(Vec::new());
+    arena.normal("7 drop")?;
+    arena.normal("1 2 pair")?;
+    let recorded = arena
+        .reuse
+        .as_mut()
+        .and_then(Vec::pop)
+        .ok_or("no recorded preparation")?;
+    let epoch = recorded.artifact.epoch();
+    assert!(!epoch.first());
+    assert!(arena.program_free);
+    // Same epoch: accepted (and dropped without commit).
+    assert!(arena
+        .compiler
+        .reuse_program_free(&recorded.artifact)
+        .is_ok());
+    // A static literal advances `text_end`, which is never rewound.
+    arena.normal("drop \"a\" drop")?;
+    let advanced = arena
+        .compiler
+        .canonical_epoch()
+        .ok_or("calculator compiler lost its epoch")?;
+    assert!(advanced.text_end() > epoch.text_end());
+    assert!(matches!(
+        arena.compiler.reuse_program_free(&recorded.artifact),
+        Err(noble_wasm::Diagnostic::Invalid)
+    ));
+    // The generation-0 module installs core entries: never reused later.
+    let mut first = Arena::new(true)?;
+    first.reclaim = true;
+    first.program_free = true;
+    first.reuse = Some(Vec::new());
+    first.normal("1 drop")?;
+    let initial = first
+        .reuse
+        .as_mut()
+        .and_then(Vec::pop)
+        .ok_or("no recorded first preparation")?;
+    assert!(initial.artifact.epoch().first());
+    assert!(matches!(
+        first.compiler.reuse_program_free(&initial.artifact),
+        Err(noble_wasm::Diagnostic::Invalid)
+    ));
+    // Other profiles have no canonical epoch at all.
+    assert!(noble_wasm::source::Compiler::new()
+        .canonical_epoch()
+        .is_none());
+    assert!(matches!(
+        noble_wasm::source::Compiler::new().reuse_program_free(&recorded.artifact),
+        Err(noble_wasm::Diagnostic::Invalid)
+    ));
+    Ok(())
+}
+
+/// Calculator modules no longer bake their generation; the per-instance
+/// binding still refuses a module submitted at any other arena generation.
+#[test]
+fn calculator_submit_generation_binding_guards_the_arena() -> Result<(), String> {
+    let mut arena = Arena::new(true)?;
+    arena.reclaim = true;
+    arena.normal("7 drop")?;
+    arena.normal("1 2 pair")?;
+    let generation = arena.global("generation");
+    arena.forged_generation = Some(generation + 1);
+    let refused = arena.phase("unpair +", None)?;
+    assert_ne!(refused.status, 0, "stale generation binding was accepted");
+    assert_eq!(arena.global("failure"), 4);
+    assert_eq!(arena.global("generation"), generation);
     Ok(())
 }

@@ -201,6 +201,16 @@ WAT and Wasm sizes and digests) to that file; the record schema is documented
 in `crates/noble-cli/src/calculator/trace.rs`. Tracing is off by default and
 does not change any output.
 
+Most guest modules of a line repeat earlier ones exactly (same source, same
+stack types, same compiler epoch). The calculator reuses such a module's
+already checked artifact instead of re-running the source check and backend
+preparation, and each worker reuses the assembled Wasm and compiled V8 module
+of byte-identical WAT; every module still runs in the guest. Reuse is exact
+(full source, type and WAT comparison, never a digest alone), keeps every
+cap, and is bounded to 96 MiB of host and 64 MiB of per-worker retained
+bytes. `NOBLE_CALCULATOR_MODULE_CACHE=off` disables it; outputs are identical
+either way.
+
 The `Calculator-v1` source/worker profile is separate from Core-Bootstrap,
 Declared-Modules-v1, Text-Byte-Cursor-v1 and live profiles. Its compiler has a
 4 MiB emitted WAT ceiling rather than the ordinary 1 MiB ceiling recorded in

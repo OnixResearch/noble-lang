@@ -49,6 +49,12 @@ pub(super) fn write(
         ));
     }
     attempt!(globals(out));
+    if plan.calculator {
+        // Immutable and per instance: the compiler generation this module was
+        // validated against, bound by the engine at instantiation.
+        attempt!(out
+            .append(b"(import \"noble\" \"submit_generation\" (global $submit_generation i32))\n"));
+    }
     attempt!(global_import(out, b"allocated_total", b"i64"));
     attempt!(global_import(out, b"released_total", b"i64"));
     if plan.live_slots {
