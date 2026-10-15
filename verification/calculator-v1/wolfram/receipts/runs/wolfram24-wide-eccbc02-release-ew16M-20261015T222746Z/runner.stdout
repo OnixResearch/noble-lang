@@ -1,0 +1,35 @@
+native-failure      84.3 s  WOLFRAM/seed-2424/wide-05
+native-failure      98.0 s  WOLFRAM/edge/wide-quotient
+native-failure      98.2 s  WOLFRAM/seed-2424/wide-04
+native-failure     105.1 s  WOLFRAM/edge/u64-squared
+native-failure     109.8 s  WOLFRAM/seed-2424/wide-06
+native-failure     111.7 s  WOLFRAM/seed-2424/wide-01
+native-failure     122.4 s  WOLFRAM/seed-2424/wide-03
+{
+  "result": "completed",
+  "receipt": "/home/brittonr/.cache/noble-issues/receipts/wolfram24-wide-eccbc02-release-ew16M-20261015T222746Z/receipt.json",
+  "summary": {
+    "selected": 7,
+    "by_class": {
+      "pass": 0,
+      "fail": 0,
+      "timeout": 0,
+      "native-failure": 7,
+      "host-limit": 0
+    },
+    "by_case": {
+      "CALC-12-wolfram": {
+        "pass": 0,
+        "fail": 0,
+        "timeout": 0,
+        "native-failure": 7,
+        "host-limit": 0
+      }
+    },
+    "unsupported": [],
+    "all_selected_pass": false,
+    "controls": 0,
+    "controls_ok": true
+  },
+  "error": null
+}

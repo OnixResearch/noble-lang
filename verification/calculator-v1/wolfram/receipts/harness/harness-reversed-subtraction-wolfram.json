@@ -1,0 +1,1229 @@
+{
+  "schema": "noble-wolfram-harness/v1",
+  "implementation": "fault:reversed-subtraction",
+  "fault_reason": "`a - b` computes `b - a`",
+  "label": "fresh-oracle",
+  "expectation_source": "fresh Wolfram computation",
+  "reference_status": "oracle-unavailable",
+  "lane_result": "oracle-unavailable",
+  "stale_provenance": [],
+  "provenance": {
+    "lane": {
+      "policy_version": "noble-wolfram-policy/1",
+      "files": {
+        "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
+        "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+        "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+      },
+      "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb",
+      "repository": {
+        "commit": "05a50b0fd1d41f337509ef663488caf5193df848",
+        "tracked_changes": ""
+      },
+      "node": "v24.13.0"
+    },
+    "reference": {
+      "file": "/home/brittonr/.cache/noble-issues/tmp/w24/final/reference-wolfram.json",
+      "sha256": "015c8c36717de2a643ca7ee2fdb802280e3ba27140b36718ba4fc76bbe9fbab3",
+      "policy_version": "noble-wolfram-policy/1",
+      "adapter": {
+        "policy_version": "noble-wolfram-policy/1",
+        "files": {
+          "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
+          "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+          "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+        },
+        "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb"
+      },
+      "environment": null,
+      "probes": null,
+      "corpus": {
+        "path": "/home/brittonr/.cache/noble-issues/tmp/w24/final/corpus-seed2424.json",
+        "sha256": "bf9c4f64e5a30b9288e133f892ba4430e165f4ecc5230442c57f20ac44eeac52",
+        "generator": {
+          "seed": 2424,
+          "count": 12,
+          "wide": 6,
+          "prng": "mulberry32 (#21 oracle/generate.mjs)",
+          "files": {
+            "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+            "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+            "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+            "wolfram/lane.mjs": "6dfacc132742c02858e07843e29eb4d7fd8ccc0378b81d68280c7cd87abda9e0",
+            "wolfram/fixtures/edge-cases.json": "cebbd7b2e8a2913512dd30f522396a32c32209a8e14e2b6d746def0b5c24c57d"
+          }
+        }
+      },
+      "started": "2026-10-15T22:11:05.964Z",
+      "finished": "2026-10-15T22:11:06.164Z"
+    },
+    "corpus": {
+      "path": "/home/brittonr/.cache/noble-issues/tmp/w24/final/corpus-seed2424.json",
+      "sha256": "bf9c4f64e5a30b9288e133f892ba4430e165f4ecc5230442c57f20ac44eeac52"
+    }
+  },
+  "summary": {
+    "oracle-unavailable": 48
+  },
+  "results": [
+    {
+      "id": "edge/decimal-sum",
+      "text": "0.1 + 0.2",
+      "observed": {
+        "stdout": [
+          "3/10"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-literal",
+      "text": "0.1",
+      "observed": {
+        "stdout": [
+          "1/10"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-tiny",
+      "text": "0.00000000000000000001",
+      "observed": {
+        "stdout": [
+          "1/100000000000000000000"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-scaled",
+      "text": "3.14159 - 3",
+      "observed": {
+        "stdout": [
+          "-14159/100000"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-times-integer",
+      "text": "1.5 * 2",
+      "observed": {
+        "stdout": [
+          "3"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/rational-sum",
+      "text": "1 / 3 + 1 / 6",
+      "observed": {
+        "stdout": [
+          "1/2"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/normalize-quotient",
+      "text": "2 / 4",
+      "observed": {
+        "stdout": [
+          "1/2"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/rational-quotient",
+      "text": "7 / 2",
+      "observed": {
+        "stdout": [
+          "7/2"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/signed-quotient",
+      "text": "7 / -14",
+      "observed": {
+        "stdout": [
+          "-1/2"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/subtract",
+      "text": "10 - 3",
+      "observed": {
+        "stdout": [
+          "-7"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/negative-result",
+      "text": "0 - 5",
+      "observed": {
+        "stdout": [
+          "5"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/negative-zero",
+      "text": "-0",
+      "observed": {
+        "stdout": [
+          "0"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/i64-max-plus-one",
+      "text": "9223372036854775807 + 1",
+      "observed": {
+        "stdout": [
+          "9223372036854775808"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/i64-min-minus-one",
+      "text": "-9223372036854775808 - 1",
+      "observed": {
+        "stdout": [
+          "9223372036854775809"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/float-precision-trap",
+      "text": "9007199254740993 - 9007199254740992",
+      "observed": {
+        "stdout": [
+          "-1"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/u64-squared",
+      "text": "18446744073709551616 * 18446744073709551616",
+      "observed": {
+        "stdout": [
+          "340282366920938463463374607431768211456"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/wide-quotient",
+      "text": "123456789012345678901234567890 / 987654321098765432109876543210",
+      "observed": {
+        "stdout": [
+          "13717421/109739369"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-right-associative",
+      "text": "2^3^2",
+      "observed": {
+        "stdout": [
+          "512"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-negative-exponent",
+      "text": "2^-3",
+      "observed": {
+        "stdout": [
+          "1/8"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-rational-base",
+      "text": "(2 / 3)^-2",
+      "observed": {
+        "stdout": [
+          "9/4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-negative-base",
+      "text": "(-2)^3",
+      "observed": {
+        "stdout": [
+          "-8"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-unary-precedence",
+      "text": "-2^2",
+      "observed": {
+        "stdout": [
+          "-4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-integral-by-value",
+      "text": "4^(2 / 2)",
+      "observed": {
+        "stdout": [
+          "4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-power-zero",
+      "text": "0^0",
+      "observed": {
+        "stdout": [
+          "1"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/divide-by-zero",
+      "text": "1 / 0",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-over-zero",
+      "text": "0 / 0",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-negative-power",
+      "text": "0^-1",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/nonintegral-exponent-exact-root",
+      "text": "4^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/nonintegral-exponent",
+      "text": "2^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/first-error-left",
+      "text": "(1 / 0)^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [3,4) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/first-error-right",
+      "text": "2^(1 / 2) + 1 / 0",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-01",
+      "text": "4 * 3 * 4",
+      "observed": {
+        "stdout": [
+          "48"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-02",
+      "text": "-4^1",
+      "observed": {
+        "stdout": [
+          "-4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-03",
+      "text": "3 / 3 - 8 / 5",
+      "observed": {
+        "stdout": [
+          "3/5"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-04",
+      "text": "1.3 - (0.7 + 6)",
+      "observed": {
+        "stdout": [
+          "27/5"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-05",
+      "text": "5^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-07",
+      "text": "2^64 + 3",
+      "observed": {
+        "stdout": [
+          "18446744073709551619"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-08",
+      "text": "3^2^0",
+      "observed": {
+        "stdout": [
+          "3"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-09",
+      "text": "4.32 + -1",
+      "observed": {
+        "stdout": [
+          "83/25"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-10",
+      "text": "0.26 + 7.57 / (4.10 + 2)",
+      "observed": {
+        "stdout": [
+          "2289/1525"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-11",
+      "text": "-3^3",
+      "observed": {
+        "stdout": [
+          "-27"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-12",
+      "text": "2 / 6 - 9 / 8",
+      "observed": {
+        "stdout": [
+          "19/24"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-01",
+      "text": "4960813911821797228 + 2191235954361036929315404390",
+      "observed": {
+        "stdout": [
+          "2191235959321850841137201618"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-02",
+      "text": "59039983304222846951 - 801507105833160313081525",
+      "observed": {
+        "stdout": [
+          "801448065849856090234574"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-03",
+      "text": "152493688672462140629 * 694674453390552926151",
+      "observed": {
+        "stdout": [
+          "105933469824051790035249342573421213688979"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-04",
+      "text": "9945638250859729114534795789 / 4165748366043675355632459975",
+      "observed": {
+        "stdout": [
+          "9945638250859729114534795789/4165748366043675355632459975"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-05",
+      "text": "-94104936821152130319 + 0.6533108844480794817601",
+      "observed": {
+        "stdout": [
+          "-941049368211521303183466891155519205182399/10000000000000000000000"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-06",
+      "text": "(3646291547905551258222 - 5636524886904287854174) / 700",
+      "observed": {
+        "stdout": [
+          "497558334749684148988/175"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "oracle-unavailable",
+        "detail": "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      },
+      "verdict": "oracle-unavailable",
+      "mismatch": null,
+      "reasons": [
+        "no usable Wolfram kernel: WolframKernelException: Cannot locate a kernel automatically. Please provide an explicit kernel path."
+      ],
+      "signature": "oracle-unavailable:-:oracle-unavailable:-",
+      "matches_fault_models": []
+    }
+  ],
+  "non_claims": [
+    "Agreement on finitely many inputs is test evidence only; it establishes no universal arithmetic theorem and no parser correctness (CALC-EVIDENCE-01).",
+    "Reference output (Wolfram or otherwise) is untrusted candidate data: it mints no Certified status, discharges no proof obligation, changes no accepted program semantics and changes no canonical case state.",
+    "Only a fresh-oracle run is a Wolfram comparison; stand-in-reference and offline-fixture-replay results are labeled as such and never count as one.",
+    "Grammar, diagnostic spans, lexical sessions, session rollback, deterministic budgets and host failures are outside this lane (CALC-12 oracle #21, runner #19, budgets #20).",
+    "A Wolfram timeout or memory abort is an oracle failure, not Noble's ResourceLimit; a Noble ResourceLimit is a budget divergence, not a disagreement."
+  ]
+}

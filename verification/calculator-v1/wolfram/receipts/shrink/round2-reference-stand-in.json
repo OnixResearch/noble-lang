@@ -1,0 +1,89 @@
+{
+  "schema": "noble-wolfram-reference/v1",
+  "label": "stand-in-reference",
+  "arithmetic": "python-fractions",
+  "status": "ok",
+  "reason": null,
+  "policy_version": "noble-wolfram-policy/1",
+  "adapter": {
+    "policy_version": "noble-wolfram-policy/1",
+    "files": {
+      "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
+      "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+      "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+    },
+    "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb"
+  },
+  "corpus": {
+    "path": "/home/brittonr/.cache/noble-issues/tmp/w24/final/shrink2-corpus.json",
+    "sha256": "ca1eea7546224c35271b033dab9baee84d6593248b2220384d00d22b255f16e1",
+    "generator": {
+      "shrink_round_of": "input",
+      "corpus_sha256": null,
+      "candidates": 3,
+      "files": {
+        "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+        "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+        "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+        "wolfram/lane.mjs": "6dfacc132742c02858e07843e29eb4d7fd8ccc0378b81d68280c7cd87abda9e0",
+        "wolfram/fixtures/edge-cases.json": "cebbd7b2e8a2913512dd30f522396a32c32209a8e14e2b6d746def0b5c24c57d"
+      }
+    }
+  },
+  "environment": {
+    "implementation": "CPython fractions.Fraction",
+    "python": "3.13.12"
+  },
+  "probes": [],
+  "bridge": {
+    "python": "/nix/store/m1fw8l8y9ycxh5dzispbb7cwl6rra14l-python3-3.13.12/bin/python3",
+    "exit_status": 0,
+    "stderr_tail": "",
+    "launch_error": null,
+    "response_policy_version": "noble-wolfram-policy/1"
+  },
+  "started": "2026-10-15T22:29:57.250Z",
+  "finished": "2026-10-15T22:29:57.293Z",
+  "results": [
+    {
+      "id": "shrink/00",
+      "interchange_sha256": "e767a69b3d0774e46fa892ddd5055327d951e942747deb70616710c8c8c7e997",
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "1",
+        "steps": 5
+      }
+    },
+    {
+      "id": "shrink/01",
+      "interchange_sha256": "7e2354bf77022bb429a5ddc9f5d14b552acd13c6ce546b486cc2a758c9ce58ab",
+      "reference": {
+        "kind": "value",
+        "n": "4",
+        "d": "1",
+        "steps": 1
+      }
+    },
+    {
+      "id": "shrink/02",
+      "interchange_sha256": "1e54dde402942140459c5374dcf7fb36810dff59036c07f6e38ac8f7437cbe57",
+      "reference": {
+        "kind": "value",
+        "n": "2",
+        "d": "1",
+        "steps": 3
+      }
+    },
+    {
+      "id": "shrink/03",
+      "interchange_sha256": "5455edbc774b3ed8c3a9ea9628d29b60ada1e5518d2d90ab8c026ff57e56b5be",
+      "reference": {
+        "kind": "value",
+        "n": "-2",
+        "d": "1",
+        "steps": 3
+      }
+    }
+  ]
+}

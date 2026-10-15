@@ -1,0 +1,67 @@
+{
+  "schema": "noble-calculator-vectors/v1",
+  "lane": "optional Wolfram lane (#24); expectations are runner bookkeeping from the CALC-12 oracle",
+  "corpus_sha256": "ca1eea7546224c35271b033dab9baee84d6593248b2220384d00d22b255f16e1",
+  "vectors": [
+    {
+      "id": "WOLFRAM/shrink/00",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "4 - 6 / 2",
+          "expect": {
+            "value": "1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/shrink/01",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "4",
+          "expect": {
+            "value": "4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/shrink/02",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "4 - 2",
+          "expect": {
+            "value": "2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/shrink/03",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "4 - 6",
+          "expect": {
+            "value": "-2"
+          }
+        }
+      ]
+    }
+  ]
+}
