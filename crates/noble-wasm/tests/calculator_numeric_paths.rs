@@ -353,6 +353,93 @@ impl Guest {
             .map_err(|e| e.to_string())
     }
 
+    fn cell(&mut self, export: &str, handle: i32) -> Result<i32, String> {
+        let instance = self.last.ok_or("no instance")?;
+        instance
+            .get_typed_func::<i32, i32>(&mut self.store, export)
+            .map_err(|e| e.to_string())?
+            .call(&mut self.store, handle)
+            .map_err(|e| e.to_string())
+    }
+
+    /// A boxed scalar cell (kind 1 I64, 2 Bool) and its payload.
+    fn boxed(&mut self, handle: i32) -> Result<(i32, i64), String> {
+        let kind = self.cell("cell_kind", handle)?;
+        let instance = self.last.ok_or("no instance")?;
+        let payload = instance
+            .get_typed_func::<i32, i64>(&mut self.store, "cell_payload")
+            .map_err(|e| e.to_string())?
+            .call(&mut self.store, handle)
+            .map_err(|e| e.to_string())?;
+        Ok((kind, payload))
+    }
+
+    /// A nominal variant cell (marker w = 2): Ok(true) for its first
+    /// constructor (kind 12), Ok(false) for its second (kind 13), and its
+    /// boxed payload handle. Layout: abi.json `cells`/`value_tags`.
+    fn variant(&mut self, handle: i32) -> Result<(bool, i32), String> {
+        let kind = self.cell("cell_kind", handle)?;
+        if self.cell("cell_w", handle)? != 2 || !(kind == 12 || kind == 13) {
+            return Err(format!(
+                "cell {handle} is not a nominal variant (kind {kind})"
+            ));
+        }
+        Ok((kind == 12, self.cell("cell_a", handle)?))
+    }
+
+    /// The top operand slot's live cell handle.
+    fn top_handle(&mut self) -> Result<i32, String> {
+        let instance = self.last.ok_or("no instance")?;
+        let index = self.call0("stack_length")? - 1;
+        let kind = instance
+            .get_typed_func::<i32, i32>(&mut self.store, "stack_kind")
+            .map_err(|e| e.to_string())?
+            .call(&mut self.store, index)
+            .map_err(|e| e.to_string())?;
+        if kind < 4 {
+            return Err("top operand is a scalar, not a carrier".into());
+        }
+        let value = instance
+            .get_typed_func::<i32, i64>(&mut self.store, "stack_value")
+            .map_err(|e| e.to_string())?
+            .call(&mut self.store, index)
+            .map_err(|e| e.to_string())?;
+        i32::try_from(value).map_err(|e| e.to_string())
+    }
+
+    /// Read the guest's Bool from the top carrier C<Pair<X,Bool>> in memory,
+    /// as the calculator host reads it from the engine's stack report. No
+    /// phase is compiled, and the carrier is left unchanged.
+    fn carrier_flag(&mut self) -> Result<bool, String> {
+        let top = self.top_handle()?;
+        let (ok, payload) = self.variant(top)?;
+        if !ok {
+            let (_, code) = self.boxed(payload)?;
+            return Err(format!("carrier refused with code {code}"));
+        }
+        if self.cell("cell_kind", payload)? != 5 {
+            return Err("carrier payload is not a Pair".into());
+        }
+        let right = self.cell("cell_b", payload)?;
+        match self.boxed(right)? {
+            (2, 0) => Ok(false),
+            (2, 1) => Ok(true),
+            other => Err(format!("carrier flag is not a Bool: {other:?}")),
+        }
+    }
+
+    /// The constructor of the guest variant inside the top carrier C<V>:
+    /// true for V's first constructor.
+    fn carrier_variant(&mut self) -> Result<bool, String> {
+        let top = self.top_handle()?;
+        let (ok, payload) = self.variant(top)?;
+        if !ok {
+            let (_, code) = self.boxed(payload)?;
+            return Err(format!("carrier refused with code {code}"));
+        }
+        Ok(self.variant(payload)?.0)
+    }
+
     /// The scalar in operand slot `depth` below the top (0 is the top).
     fn scalar(&mut self, depth: i32) -> Result<i64, String> {
         let instance = self.last.ok_or("no instance")?;
@@ -420,18 +507,13 @@ fn gate(deny: &str, admit: &str) -> String {
 
 /// Observers push scalars above the carrier.
 const STATUS: &str = "dup [ drop 0 ] [ ] result@1.Result.match";
-/// Splits C<Pair<X,Bool>> into C<X> and a scalar flag (1/0, or -1000-code on
-/// a refused carrier) without duplicating the carrier.
-const FLAG: &str = "[ unpair [ result@1.Result.Ok ] dip [ 1 ] [ 0 ] if ] \
-     [ dup 1000 + 0 swap - [ result@1.Result.Err ] dip ] result@1.Result.match";
 const I64_RESULT: &str = "dup [ unpair drop 0 ] [ 1 ] result@1.Result.match";
 
-fn flag(value: i64) -> Result<bool, String> {
-    match value {
-        0 => Ok(false),
-        1 => Ok(true),
-        refused => Err(format!("carrier refused with code {}", -refused - 1000)),
-    }
+/// Run stages ending in a guest probe C<Pair<X,Bool>> and read its Bool from
+/// memory. The carrier keeps the Bool; the next stage consumes it.
+fn probe(guest: &mut Guest, stages: &[String]) -> Result<bool, String> {
+    guest.run(stages)?;
+    guest.carrier_flag()
 }
 
 /// C<Budget> from fresh generous guest budgets.
@@ -546,21 +628,21 @@ fn binary(guest: &mut Guest, operator: Operator) -> Result<(), String> {
     guest.run(&[lift_unit("num.op_first_stage_second_cross")])?;
     signed_product(guest)?;
     if operator == Operator::Subtract {
-        let adds = guest.observe(
+        let adds = probe(
+            guest,
             &[
                 lift_unit("num.op_first_stage_sum_prepare_sub"),
                 lift_unit("num.op_first_stage_sum_begin"),
                 lift_unit("num.op_first_stage_sum_route_probe"),
-                FLAG.to_owned(),
             ],
-            1,
-        )?[0];
-        let finish = if flag(adds)? {
+        )?;
+        let finish = if adds {
             "num.op_first_stage_sum_finish_add"
         } else {
             "num.op_first_stage_sum_finish_sub"
         };
         guest.run(&[
+            lift("unpair drop"),
             lift_unit(finish),
             lift_unit("num.op_first_stage_sum_den_mul"),
         ])?;
@@ -577,38 +659,50 @@ fn binary(guest: &mut Guest, operator: Operator) -> Result<(), String> {
 fn signed_product(guest: &mut Guest) -> Result<(), String> {
     guest.run(&[lift_unit("num.op_first_stage_begin")])?;
     for _ in 0..256 {
-        let done = guest.observe(
+        let done = probe(
+            guest,
             &[
                 lift_unit("num.op_first_stage_route"),
                 lift_unit("num.op_first_stage_route_probe"),
-                FLAG.to_owned(),
             ],
-            1,
-        )?[0];
-        if flag(done)? {
-            return guest.run(&[lift_unit("num.op_first_stage_finish")]);
+        )?;
+        if done {
+            return guest.run(&[lift("unpair drop"), lift_unit("num.op_first_stage_finish")]);
         }
-        let add = guest.observe(
-            &[lift_unit("num.op_first_stage_add_probe"), FLAG.to_owned()],
-            1,
-        )?[0];
-        if flag(add)? {
-            guest.run(&[lift_unit("num.op_first_stage_add_begin")])?;
+        let add = probe(
+            guest,
+            &[
+                lift("unpair drop"),
+                lift_unit("num.op_first_stage_add_probe"),
+            ],
+        )?;
+        if add {
+            guest.run(&[
+                lift("unpair drop"),
+                lift_unit("num.op_first_stage_add_begin"),
+            ])?;
             let mut more = true;
+            let mut first = true;
             while more {
-                let stages = [
+                let mut stages = Vec::new();
+                if !first {
+                    stages.push(lift("unpair drop"));
+                }
+                first = false;
+                stages.extend([
                     lift_unit("num.op_first_stage_add_digit"),
                     lift_unit("num.op_first_stage_add_more"),
-                    FLAG.to_owned(),
-                ];
-                more = flag(guest.observe(&stages, 1)?[0])?;
+                ]);
+                more = probe(guest, &stages)?;
             }
             guest.run(&[
+                lift("unpair drop"),
                 lift_unit("num.op_first_stage_add_finish"),
                 lift_unit("num.op_first_stage_shift"),
             ])?;
         } else {
             guest.run(&[
+                lift("unpair drop"),
                 lift_unit("num.op_first_stage_add_keep"),
                 lift_unit("num.op_first_stage_shift"),
             ])?;
@@ -632,12 +726,9 @@ fn normalize(guest: &mut Guest) -> Result<(), String> {
         lift("num.gcd_one_probe"),
         lift("num.gcd_one_route"),
     ])?;
-    // Split the guest's own GcdRoute tag into a scalar without duplicating it.
-    let route = "[ [ num.GcdRoute.Done result@1.Result.Ok 0 ] \
-                   [ num.GcdRoute.Iterate result@1.Result.Ok 1 ] num.GcdRoute.match ] \
-                 [ dup 1000 + 0 swap - [ result@1.Result.Err ] dip ] result@1.Result.match";
     for _ in 0..4096 {
-        if !flag(guest.observe(&[route.to_owned()], 1)?[0])? {
+        // GcdRoute's first constructor is Done; read the guest's own tag.
+        if guest.carrier_variant()? {
             guest.run(&[flat(
                 "[ result@1.Result.Ok ] [ drop -1 result@1.Result.Err ] num.GcdRoute.match",
             )])?;
@@ -684,16 +775,9 @@ fn finish(guest: &mut Guest, part: &str) -> Result<(), String> {
         )),
         lift(&format!("num.finish_{part}_commit_work")),
     ])?;
-    let one = guest.observe(
-        &[
-            lift(&format!("num.finish_{part}_one_probe")),
-            FLAG.to_owned(),
-        ],
-        1,
-    )?[0];
-    // The route re-certifies the unit GCD itself and ignores the probe Bool.
-    guest.run(&[lift(&format!("true pair num.finish_{part}_route"))])?;
-    if flag(one)? {
+    let one = probe(guest, &[lift(&format!("num.finish_{part}_one_probe"))])?;
+    guest.run(&[lift(&format!("num.finish_{part}_route"))])?;
+    if one {
         return guest.run(&[flat(&format!(
             "[ result@1.Result.Ok ] [ drop -1 result@1.Result.Err ] num.{route}.match"
         ))]);
