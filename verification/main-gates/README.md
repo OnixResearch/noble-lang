@@ -150,7 +150,10 @@ The follow-ups are filed by root cause:
 - **Node engine tests.** `engine-assets.test.mjs` and
   `engine-calculator.test.mjs` now run inside `rust-tests`, through
   `smoke.rs` with the built CLI as assembler. The test fails unless the TAP
-  output reports 2 passed, 0 failed and 0 skipped.
+  output reports every test passed and none skipped. On `8df6c43` that was
+  2 tests. On the integration commit it is 6 tests, 6 passed, 0 failed and
+  0 skipped: 2 in `engine-assets` and 4 in `engine-calculator`, after #16 and
+  #17. #17's `calculator_engine.rs` also runs `engine-calculator` separately.
 - **Sandbox shell.** Six live-slot Node test scripts spawned `/bin/bash`.
   The Nix sandbox has no `/bin/bash`, so `rust-tests` failed with
   `spawn /bin/bash ENOENT`; the parent `0ea10d3f` failed the same way. Their
