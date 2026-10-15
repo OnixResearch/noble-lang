@@ -2167,9 +2167,18 @@ impl Session {
                     }
                     loop {
                         report = self.execute(
-                            b"swap [ expr.call_lookup_tick_guest unpair ] dip calc_bits@1.rot calc_bits@1.rot",
-                            &[], None,
+                            b"swap [ expr.call_lookup_tick_guest unpair ] dip",
+                            &[],
+                            None,
                         )?;
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
+                        }
+                        // The register move runs as its own compile: in the
+                        // tick's compile calc_bits@1.rot's named body left under
+                        // 100M of Work headroom, and an inline `swap [ swap ] dip`
+                        // types its quotation over the register past TypeSize.
+                        report = self.execute(b"calc_bits@1.rot calc_bits@1.rot", &[], None)?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
@@ -2221,7 +2230,13 @@ impl Session {
                     for source in [
                         b"[ unpair ] dip calc_bits@1.rot [ expr.call_enter_frame_guest ] dip \
                           swap [ swap pair ] dip".as_slice(),
-                        b"[ unpair ] dip swap [ [ unpair ] dip swap [ expr.call_enter_stash_guest ] dip \
+                        // Preparing the caller stash and pushing it into State
+                        // run as separate compiles over the same layout: in one
+                        // compile their 17-body closure left under 100M of the
+                        // 2e9 Work ceiling (calculator headroom check).
+                        b"[ unpair ] dip swap [ [ unpair ] dip swap [ expr.call_enter_stash_prep_guest ] dip \
+                          swap [ pair ] dip ] dip swap [ pair ] dip",
+                        b"[ unpair ] dip swap [ [ unpair ] dip swap [ expr.call_enter_stash_push_guest ] dip \
                           swap [ pair ] dip ] dip swap [ pair ] dip",
                         b"swap dup unpair drop unpair drop swap [ swap expr.call_enter_scope_guest ] dip swap",
                         b"swap [ expr.call_enter_bind_guest ] dip swap",
@@ -2246,6 +2261,15 @@ impl Session {
                         self.defer_consume(b"drop");
                         match status {
                             0 => {
+                                // The variable search and its Result compile separately.
+                                report = self.execute(
+                                    b"swap [ expr.call_scan_search_guest ] dip swap",
+                                    &[],
+                                    None,
+                                )?;
+                                if report.outcome != "normal" {
+                                    return Ok(Outcome::NativeFailure(report.json));
+                                }
                                 report = self.execute(
                                     b"swap [ expr.call_scan_resolve_guest ] dip calc_bits@1.rot calc_bits@1.rot",
                                     &[], None,

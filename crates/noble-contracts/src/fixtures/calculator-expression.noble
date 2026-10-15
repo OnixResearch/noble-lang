@@ -2915,13 +2915,26 @@ module expr@1 [
         [ [ [ swap ] dip ] dip rot rot pair pair ] dip
     ]
 
-    signature call_enter_stash_guest forall<S:stack>
-        [ S calc_env@1.State Sum<Pair<Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,Pair<I64,I64>>,Pair<calc_env@1.Function,Pair<calc_env@1.Name,List<num@1.Rat>>>>,Sum<CompactDiagnostic,Unit>>
-          -- S calc_env@1.State Sum<Pair<calc_env@1.Function,List<num@1.Rat>>,Unit> ! pure ]
-    export call_enter_stash_guest
-    def call_enter_stash_guest [
-        [ swap [ call_stash_prep ] dip swap [ rot rot call_stash_push ] dip inl ]
+    # Call entry stashes the caller frame in two separately compiled stages:
+    # preparing the stash and pushing it into State together exceed the
+    # compiler's Work headroom in one preparation.
+    signature call_enter_stash_prep_guest forall<S:stack>
+        [ S Sum<Pair<Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,Pair<I64,I64>>,Pair<calc_env@1.Function,Pair<calc_env@1.Name,List<num@1.Rat>>>>,Sum<CompactDiagnostic,Unit>>
+          -- S Sum<Pair<Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,Pair<I64,Pair<I64,I64>>>,Pair<calc_env@1.Function,List<num@1.Rat>>>,Unit> ! pure ]
+    export call_enter_stash_prep_guest
+    def call_enter_stash_prep_guest [
+        [ call_stash_prep [ pair ] dip pair inl ]
         [ drop unit inr ]
+        case
+    ]
+
+    signature call_enter_stash_push_guest forall<S:stack>
+        [ S calc_env@1.State Sum<Pair<Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,Pair<I64,Pair<I64,I64>>>,Pair<calc_env@1.Function,List<num@1.Rat>>>,Unit>
+          -- S calc_env@1.State Sum<Pair<calc_env@1.Function,List<num@1.Rat>>,Unit> ! pure ]
+    export call_enter_stash_push_guest
+    def call_enter_stash_push_guest [
+        [ unpair [ unpair call_stash_push ] dip inl ]
+        [ inr ]
         case
     ]
 
@@ -2986,18 +2999,33 @@ module expr@1 [
 
     # A checked body never names a variable outside its lexical scope, so
     # a failed lookup is infrastructure (3), never a fabricated value.
-    signature call_scan_resolve_guest forall<S:stack>
+    # The search and its Result run as separately compiled stages: in one
+    # compile they left under 100M of the compiler's Work headroom.
+    signature call_scan_search_guest forall<S:stack>
         [ S Pair<Sum<Pair<Pair<Text,List<calc_env@1.Variable>>,List<Pair<I64,Pair<I64,I64>>>>,Unit>,Sum<calc_env@1.Name,Unit>>
+          -- S Pair<Sum<Pair<Pair<Text,List<calc_env@1.Variable>>,List<Pair<I64,Pair<I64,I64>>>>,Unit>,Sum<Pair<calc_env@1.Name,calc_env@1.VariableSearch>,Unit>> ! pure ]
+    export call_scan_search_guest
+    def call_scan_search_guest [
+        unpair
+        [ [ dup [ unpair drop unpair swap drop ] [ drop nil ] case ] dip rot
+          [ dup [ calc_env@1.variable_search_begin [ calc_env@1.variable_search_step ] iterate ] dip
+            swap pair inl ] dip
+          swap pair ]
+        [ drop unit inr pair ]
+        case
+    ]
+
+    signature call_scan_resolve_guest forall<S:stack>
+        [ S Pair<Sum<Pair<Pair<Text,List<calc_env@1.Variable>>,List<Pair<I64,Pair<I64,I64>>>>,Unit>,Sum<Pair<calc_env@1.Name,calc_env@1.VariableSearch>,Unit>>
           -- S Pair<Sum<Pair<Pair<Text,List<calc_env@1.Variable>>,List<Pair<I64,Pair<I64,I64>>>>,Unit>,Sum<Pair<calc_env@1.Name,num@1.Rat>,Unit>> I64 ! pure ]
     export call_scan_resolve_guest
     def call_scan_resolve_guest [
-        unpair
-        [ [ dup [ unpair drop unpair swap drop ] [ drop nil ] case ] dip rot
-          [ dup [ calc_env@1.lookup_variable ] dip swap
-            [ pair inl 0 ] [ drop drop unit inr 3 ] result@1.Result.match ] dip
-          rot pair swap ]
-        [ drop unit inr pair 3 ]
-        case
+        unpair swap
+        [ [ unpair calc_env@1.variable_search_finish
+            [ pair inl 0 ] [ drop drop unit inr 3 ] result@1.Result.match ]
+          [ drop unit inr 3 ]
+          case ] dip
+        rot rot [ pair ] dip
     ]
 
     signature call_scan_bind_guest forall<S:stack,B:value>
