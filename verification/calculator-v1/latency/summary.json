@@ -1,0 +1,31 @@
+{
+  "schema": "noble-calculator-latency-summary/v1",
+  "issue": 16,
+  "host": "aspen3 (shared x86_64 workstation; concurrent builds)",
+  "trace_schema": "noble-calculator-trace/1",
+  "binaries": {
+    "6468294-release": {"commit": "6468294", "profile": "release", "sha256": "1f7e8fecae7b696fd6a2939832040ab5f1172f2e9c4f9da80e5a2e5ec066998c", "role": "before (trace only)"},
+    "6468294-debug": {"commit": "6468294", "profile": "debug", "sha256": "99c241742f6dddb3ab44266f9840d93608965073592046cb119e5497ffe794d8", "role": "before (trace only)"},
+    "7bae596-release": {"commit": "7bae596", "profile": "release", "sha256": "af8f79c1b3dda2614a0334756040ba2ec48de48671b673845c2d8a9ea8062248", "role": "after (module reuse)"},
+    "7bae596-debug": {"commit": "7bae596", "profile": "debug", "sha256": "109b29d6578975b9f67a2bc976ed6228efd6eacfd9f6a0880addba698ded913f", "role": "after (module reuse)"},
+    "merged-debug": {"commit": "0b8c7f9", "profile": "debug", "sha256": "410f7b30606ad369ee8a106e7370dff32a765ec0186cae065b3b4237117de561", "role": "#16 merged with #17 committed session"}
+  },
+  "baseline": {"binaries": ["6468294-release", "6468294-debug"], "concurrency": "4 processes", "load_1min_start": 32.43,
+    "complete": {"release-mul23": {"output": "6", "wall": "7:20.92", "modules": 438, "mean_ms_per_module": 989.7},
+                 "release-fd03": {"output": "0.3", "wall": "7:51.31", "modules": 405, "mean_ms_per_module": 1149},
+                 "debug-fd03": {"output": "0.3", "wall": "19:01.48", "modules": 405, "mean_ms_per_module": 2784}},
+    "interrupted": ["release-dec1234", "release-session", "debug-mul23", "debug-session"]},
+  "pairs": {
+    "concurrency": "before and after concurrently per vector; 2 vector pairs (4 processes) at a time",
+    "release": {"speedup": {"1+2": "1.74x", "2*3": "1.82x", "12.34": "1.45x", "0.3 --finite-decimal": "1.95x", "session": "3.14x"}, "wall_s_before_after": {"1+2": [464, 267], "2*3": [538, 296], "12.34": [349, 240], "0.3 --finite-decimal": [569, 292], "session": [2721, 866]}, "load_1min_range": [45.74, 60.54]},
+    "debug": {"speedup": {"1+2": "1.68x", "2*3": "1.73x", "12.34": "1.38x", "0.3 --finite-decimal": "1.84x", "session": "2.43x"}, "wall_s_before_after": {"1+2": [710, 422], "2*3": [967, 559], "12.34": [544, 395], "0.3 --finite-decimal": [1131, 615], "session": [4261, 1754]}, "load_1min_range": [13.38, 44.65]},
+    "outputs_identical": true
+  },
+  "merged_cache_on_off": {
+    "binary": "merged-debug", "input": "1+2 twice", "concurrency": "on and off concurrently", "load_1min": [12.01, 8.78],
+    "on": {"output": ["3", "3"], "wall": "5:08.12", "max_rss_kib": 503836, "line_ms": [303293, 673], "modules_per_line": [441, 441], "cache_states": {"hit/hit": 660, "miss/miss": 222, "bypass/miss": 1}},
+    "off": {"output": ["3", "3"], "wall": "18:08.07", "max_rss_kib": 357000, "line_ms": [547095, 537345], "modules_per_line": [441, 441], "cache_states": {"off/miss": 883}},
+    "per_module_identity": "source, WAT, Wasm, report SHA-256 and work_issued identical for all 883 modules"
+  },
+  "non_claims": ["not a benchmark: shared loaded host", "reuse changes preparation time only; every module still executes", "no CALC case state change"]
+}
