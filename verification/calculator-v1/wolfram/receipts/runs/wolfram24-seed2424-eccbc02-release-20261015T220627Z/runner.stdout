@@ -1,0 +1,78 @@
+timeout              1.0 s  control/forced-timeout/CALC-02/02
+fail                21.1 s  control/wrong-expected/CALC-02/02
+pass                92.5 s  WOLFRAM/edge/decimal-literal
+pass                94.0 s  WOLFRAM/edge/decimal-tiny
+pass               135.2 s  WOLFRAM/edge/decimal-scaled
+pass               136.2 s  WOLFRAM/edge/decimal-times-integer
+pass               143.4 s  WOLFRAM/edge/decimal-sum
+pass               143.4 s  WOLFRAM/edge/rational-sum
+pass               124.6 s  WOLFRAM/edge/rational-quotient
+pass               131.1 s  WOLFRAM/edge/normalize-quotient
+pass               125.7 s  WOLFRAM/edge/subtract
+pass               102.1 s  WOLFRAM/edge/negative-zero
+pass               125.2 s  WOLFRAM/edge/negative-result
+pass               141.3 s  WOLFRAM/edge/signed-quotient
+fail                69.0 s  WOLFRAM/edge/wide-quotient
+pass               129.4 s  WOLFRAM/edge/i64-max-plus-one
+fail                82.8 s  WOLFRAM/edge/u64-squared
+pass               142.2 s  WOLFRAM/edge/i64-min-minus-one
+pass               133.3 s  WOLFRAM/edge/float-precision-trap
+pass               155.4 s  WOLFRAM/edge/power-right-associative
+pass               165.8 s  WOLFRAM/edge/power-negative-exponent
+pass               171.1 s  WOLFRAM/edge/power-negative-base
+pass               165.1 s  WOLFRAM/edge/power-unary-precedence
+pass               205.4 s  WOLFRAM/edge/power-rational-base
+pass               126.3 s  WOLFRAM/edge/zero-power-zero
+pass                79.3 s  WOLFRAM/edge/divide-by-zero
+pass               187.5 s  WOLFRAM/edge/power-integral-by-value
+pass                78.7 s  WOLFRAM/edge/zero-over-zero
+pass                88.2 s  WOLFRAM/edge/zero-negative-power
+pass               112.1 s  WOLFRAM/edge/nonintegral-exponent-exact-root
+pass                82.9 s  WOLFRAM/edge/first-error-left
+pass               112.4 s  WOLFRAM/edge/nonintegral-exponent
+pass               112.2 s  WOLFRAM/edge/first-error-right
+pass               124.6 s  WOLFRAM/seed-2424/calc12-01
+pass               141.5 s  WOLFRAM/seed-2424/calc12-02
+pass               109.4 s  WOLFRAM/seed-2424/calc12-05
+pass               140.6 s  WOLFRAM/seed-2424/calc12-03
+pass               150.9 s  WOLFRAM/seed-2424/calc12-04
+fail               158.6 s  WOLFRAM/seed-2424/calc12-07
+pass               132.4 s  WOLFRAM/seed-2424/calc12-08
+pass               149.0 s  WOLFRAM/seed-2424/calc12-09
+fail                67.4 s  WOLFRAM/seed-2424/wide-01
+pass               151.3 s  WOLFRAM/seed-2424/calc12-10
+fail               100.2 s  WOLFRAM/seed-2424/wide-02
+pass               140.0 s  WOLFRAM/seed-2424/calc12-12
+pass               151.3 s  WOLFRAM/seed-2424/calc12-11
+fail                67.2 s  WOLFRAM/seed-2424/wide-04
+fail                80.1 s  WOLFRAM/seed-2424/wide-03
+fail                81.7 s  WOLFRAM/seed-2424/wide-05
+fail               100.1 s  WOLFRAM/seed-2424/wide-06
+{
+  "result": "completed",
+  "receipt": "/home/brittonr/.cache/noble-issues/receipts/wolfram24-seed2424-eccbc02-release-20261015T220627Z/receipt.json",
+  "summary": {
+    "selected": 48,
+    "by_class": {
+      "pass": 39,
+      "fail": 9,
+      "timeout": 0,
+      "native-failure": 0,
+      "host-limit": 0
+    },
+    "by_case": {
+      "CALC-12-wolfram": {
+        "pass": 39,
+        "fail": 9,
+        "timeout": 0,
+        "native-failure": 0,
+        "host-limit": 0
+      }
+    },
+    "unsupported": [],
+    "all_selected_pass": false,
+    "controls": 2,
+    "controls_ok": true
+  },
+  "error": null
+}

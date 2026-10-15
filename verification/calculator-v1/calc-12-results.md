@@ -4,6 +4,9 @@ These are implementation observations recorded on 2026-10-15. They do not
 change the state or evidence of any canonical case; CALC-12 stays
 `absent` / `not-run`.
 
+The optional [Wolfram lane](wolfram/README.md) (#24) and its
+[results](wolfram/results.md) are recorded separately.
+
 The lanes are documented separately: the [oracle](oracle/README.md), the
 [seeded faults](seeded-faults/README.md) and the
 [invalid-evidence controls](evidence-controls/README.md). The full receipts were written outside the repository under

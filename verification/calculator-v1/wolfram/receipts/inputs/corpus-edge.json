@@ -1,0 +1,829 @@
+{
+  "schema": "noble-wolfram-corpus/v1",
+  "policy_version": "noble-wolfram-policy/1",
+  "generator": {
+    "seed": 0,
+    "count": 0,
+    "wide": 0,
+    "prng": "mulberry32 (#21 oracle/generate.mjs)",
+    "files": {
+      "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+      "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+      "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+      "wolfram/lane.mjs": "6dfacc132742c02858e07843e29eb4d7fd8ccc0378b81d68280c7cd87abda9e0",
+      "wolfram/fixtures/edge-cases.json": "cebbd7b2e8a2913512dd30f522396a32c32209a8e14e2b6d746def0b5c24c57d"
+    }
+  },
+  "cases": [
+    {
+      "id": "edge/decimal-sum",
+      "text": "0.1 + 0.2",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "exact decimal interpretation: 3/10, not a binary float",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "add",
+        "x": {
+          "op": "lit",
+          "digits": "01",
+          "scale": 1
+        },
+        "y": {
+          "op": "lit",
+          "digits": "02",
+          "scale": 1
+        }
+      },
+      "interchange_sha256": "a0f988af42ada11352b04a6dd72d9c5fae4608bcd92bdb552966c550025d8ca6"
+    },
+    {
+      "id": "edge/decimal-literal",
+      "text": "0.1",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "CALC-12 probe: one tenth is exact",
+      "calc12_fault": "binary-float-decimal-parser",
+      "operators": 0,
+      "interchange": {
+        "op": "lit",
+        "digits": "01",
+        "scale": 1
+      },
+      "interchange_sha256": "e6fb91dfeef498329d2b48490957381b8fb4d479c569774934d849aec1d9a975"
+    },
+    {
+      "id": "edge/decimal-tiny",
+      "text": "0.00000000000000000001",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "a decimal far below double precision granularity",
+      "calc12_fault": null,
+      "operators": 0,
+      "interchange": {
+        "op": "lit",
+        "digits": "000000000000000000001",
+        "scale": 20
+      },
+      "interchange_sha256": "69d90b45a5f1ddf85b2a3d26a0fe716c5b2f4ed8aafdfccbdec229257f8052eb"
+    },
+    {
+      "id": "edge/decimal-scaled",
+      "text": "3.14159 - 3",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "decimal minus integer",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "sub",
+        "x": {
+          "op": "lit",
+          "digits": "314159",
+          "scale": 5
+        },
+        "y": {
+          "op": "lit",
+          "digits": "3",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "47e31fe527c56ea547dcda11b6bb570ace74c730cce1c3d7887425dee2aa5355"
+    },
+    {
+      "id": "edge/decimal-times-integer",
+      "text": "1.5 * 2",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "a decimal product that is integral",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "mul",
+        "x": {
+          "op": "lit",
+          "digits": "15",
+          "scale": 1
+        },
+        "y": {
+          "op": "lit",
+          "digits": "2",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "f95baf9682d427c1c56dab6bdc89fb01551dd5c98444a3511249cd36e5874174"
+    },
+    {
+      "id": "edge/rational-sum",
+      "text": "1 / 3 + 1 / 6",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "rational normalization of a sum",
+      "calc12_fault": null,
+      "operators": 3,
+      "interchange": {
+        "op": "add",
+        "x": {
+          "op": "div",
+          "x": {
+            "op": "lit",
+            "digits": "1",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "3",
+            "scale": 0
+          }
+        },
+        "y": {
+          "op": "div",
+          "x": {
+            "op": "lit",
+            "digits": "1",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "6",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "d4e51e14537bf56dedcd95252f66c31faedf5b1058a355b0598cb8195764f58f"
+    },
+    {
+      "id": "edge/normalize-quotient",
+      "text": "2 / 4",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "CALC-12 probe: normalized rational display",
+      "calc12_fault": "non-normalized-rational",
+      "operators": 1,
+      "interchange": {
+        "op": "div",
+        "x": {
+          "op": "lit",
+          "digits": "2",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "4",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "d92a2f98ca2472c4b7e57cfe73307116b97ab89e7705a6f5a03716c3191f7710"
+    },
+    {
+      "id": "edge/rational-quotient",
+      "text": "7 / 2",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "CALC-12 probe: rational, not truncating, division",
+      "calc12_fault": "integer-division",
+      "operators": 1,
+      "interchange": {
+        "op": "div",
+        "x": {
+          "op": "lit",
+          "digits": "7",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "2",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "fa29f47a031fd20c8a774e1f52a0b2f5664b49410b04c06c4a2f26391aef01c8"
+    },
+    {
+      "id": "edge/signed-quotient",
+      "text": "7 / -14",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "sign moves to the numerator",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "div",
+        "x": {
+          "op": "lit",
+          "digits": "7",
+          "scale": 0
+        },
+        "y": {
+          "op": "neg",
+          "x": {
+            "op": "lit",
+            "digits": "14",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "32b42b1a918899cfad7869fe12118a4d25e49ef764ab45e00a04144e0cb345f4"
+    },
+    {
+      "id": "edge/subtract",
+      "text": "10 - 3",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "CALC-12 probe: operand order of subtraction",
+      "calc12_fault": "reversed-subtraction",
+      "operators": 1,
+      "interchange": {
+        "op": "sub",
+        "x": {
+          "op": "lit",
+          "digits": "10",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "3",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "2f0b2a3ea9df25c477e5e2afb8858c237df36223e052b501b354cee98383d472"
+    },
+    {
+      "id": "edge/negative-result",
+      "text": "0 - 5",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "a negative integer result",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "sub",
+        "x": {
+          "op": "lit",
+          "digits": "0",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "5",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "03027c6ac657909b3a49a4cd47e7d912b66c6655542b177b894950609356c214"
+    },
+    {
+      "id": "edge/negative-zero",
+      "text": "-0",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "negated zero is 0",
+      "calc12_fault": null,
+      "operators": 0,
+      "interchange": {
+        "op": "neg",
+        "x": {
+          "op": "lit",
+          "digits": "0",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "33fb3de1197112812ed259c20631f24990610594847b4dc288b9ab06fc9f885d"
+    },
+    {
+      "id": "edge/i64-max-plus-one",
+      "text": "9223372036854775807 + 1",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "CALC-12 probe: beyond I64 without wrapping",
+      "calc12_fault": "I64-wrapping",
+      "operators": 1,
+      "interchange": {
+        "op": "add",
+        "x": {
+          "op": "lit",
+          "digits": "9223372036854775807",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "1",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "8abbb2119cafa10284372cdfc84347ba46033b219bde93d884f5010f29ebfd30"
+    },
+    {
+      "id": "edge/i64-min-minus-one",
+      "text": "-9223372036854775808 - 1",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "below the I64 minimum",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "sub",
+        "x": {
+          "op": "neg",
+          "x": {
+            "op": "lit",
+            "digits": "9223372036854775808",
+            "scale": 0
+          }
+        },
+        "y": {
+          "op": "lit",
+          "digits": "1",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "836f4ebf9a9666262e97ad5588b1dbb69106f38fb002037b837efd30acdedd91"
+    },
+    {
+      "id": "edge/float-precision-trap",
+      "text": "9007199254740993 - 9007199254740992",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "operands that collide as doubles",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "sub",
+        "x": {
+          "op": "lit",
+          "digits": "9007199254740993",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "9007199254740992",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "81e2db5f6d044a53454825eb927991d06e6c10ba5fae1a40dbde89d3826787b3"
+    },
+    {
+      "id": "edge/u64-squared",
+      "text": "18446744073709551616 * 18446744073709551616",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "a 129-bit product of two 65-bit literals",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "mul",
+        "x": {
+          "op": "lit",
+          "digits": "18446744073709551616",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "18446744073709551616",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "6ab44423167563b39caeed60b87286b007fc1b523c8b6a538f55cfbb505e7da5"
+    },
+    {
+      "id": "edge/wide-quotient",
+      "text": "123456789012345678901234567890 / 987654321098765432109876543210",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "a normalized quotient of two 30-digit integers",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "div",
+        "x": {
+          "op": "lit",
+          "digits": "123456789012345678901234567890",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "987654321098765432109876543210",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "c6561cec79992a612600dcbd6918c5367d601b5a414fff84a3f294c9728312d7"
+    },
+    {
+      "id": "edge/power-right-associative",
+      "text": "2^3^2",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "CALC-12 probe: ^ groups to the right",
+      "calc12_fault": "left-associated-power",
+      "operators": 2,
+      "interchange": {
+        "op": "pow",
+        "x": {
+          "op": "lit",
+          "digits": "2",
+          "scale": 0
+        },
+        "y": {
+          "op": "pow",
+          "x": {
+            "op": "lit",
+            "digits": "3",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "a878d0de0ecc7c90c4553bf107e0231652f77b5a0e12d3175dfd48c66472cc5c"
+    },
+    {
+      "id": "edge/power-negative-exponent",
+      "text": "2^-3",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "a negative integral exponent takes the exact reciprocal",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "pow",
+        "x": {
+          "op": "lit",
+          "digits": "2",
+          "scale": 0
+        },
+        "y": {
+          "op": "neg",
+          "x": {
+            "op": "lit",
+            "digits": "3",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "ffdc8e797d3229358359c413056329b703b06cd2bdea305849a3e95006b7eab0"
+    },
+    {
+      "id": "edge/power-rational-base",
+      "text": "(2 / 3)^-2",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "a rational base with a negative exponent",
+      "calc12_fault": null,
+      "operators": 2,
+      "interchange": {
+        "op": "pow",
+        "x": {
+          "op": "div",
+          "x": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "3",
+            "scale": 0
+          }
+        },
+        "y": {
+          "op": "neg",
+          "x": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "022f716443a9b9dcd42bcc4ac52fdb00d62ad8f6cf3a7af0fe72e82ae2cf5fec"
+    },
+    {
+      "id": "edge/power-negative-base",
+      "text": "(-2)^3",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "a negative base with an odd exponent",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "pow",
+        "x": {
+          "op": "neg",
+          "x": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          }
+        },
+        "y": {
+          "op": "lit",
+          "digits": "3",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "f5507bb1e9eb9b6dceb235fc608af25c14d3a762fe1c7b9a73a7100570fabd7d"
+    },
+    {
+      "id": "edge/power-unary-precedence",
+      "text": "-2^2",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "unary minus binds looser than ^",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "neg",
+        "x": {
+          "op": "pow",
+          "x": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "2a72468bcd96cb021ce990c9f93fec0a18fbb060189faf1f3e1cf753fa7c7a90"
+    },
+    {
+      "id": "edge/power-integral-by-value",
+      "text": "4^(2 / 2)",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "the exponent 2/2 is integral by value",
+      "calc12_fault": null,
+      "operators": 2,
+      "interchange": {
+        "op": "pow",
+        "x": {
+          "op": "lit",
+          "digits": "4",
+          "scale": 0
+        },
+        "y": {
+          "op": "div",
+          "x": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "4d60d1177456ea681b880b863c79d0d9bc7686c243c44f708bde5cc0e3fe505d"
+    },
+    {
+      "id": "edge/zero-power-zero",
+      "text": "0^0",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "policy: Noble 0^0 = 1; raw Wolfram Power[0, 0] is Indeterminate",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "pow",
+        "x": {
+          "op": "lit",
+          "digits": "0",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "0",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "3f2f54be01fad986353ea68187c64ff8ec70101a331c63069b675cd2a5b6f361"
+    },
+    {
+      "id": "edge/divide-by-zero",
+      "text": "1 / 0",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "policy: zero divisor is DivisionByZero; raw Wolfram gives ComplexInfinity",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "div",
+        "x": {
+          "op": "lit",
+          "digits": "1",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "0",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "9304a2d2e7dcdeeb82965336dae9f4079d72c42a8acf71adf43665e851d15f47"
+    },
+    {
+      "id": "edge/zero-over-zero",
+      "text": "0 / 0",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "policy: zero divisor is DivisionByZero; raw Wolfram gives Indeterminate",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "div",
+        "x": {
+          "op": "lit",
+          "digits": "0",
+          "scale": 0
+        },
+        "y": {
+          "op": "lit",
+          "digits": "0",
+          "scale": 0
+        }
+      },
+      "interchange_sha256": "4a53cf9da38791d177a6abd57cbaf474bc3bbb473b9d18bc30d3c37ed47d78bb"
+    },
+    {
+      "id": "edge/zero-negative-power",
+      "text": "0^-1",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "policy: zero base with negative exponent is DivisionByZero; raw Wolfram gives ComplexInfinity",
+      "calc12_fault": null,
+      "operators": 1,
+      "interchange": {
+        "op": "pow",
+        "x": {
+          "op": "lit",
+          "digits": "0",
+          "scale": 0
+        },
+        "y": {
+          "op": "neg",
+          "x": {
+            "op": "lit",
+            "digits": "1",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "caae3583a2d862604d8b4702a3952359f0c552f19dda8cfcb4e3e05edcc25d6f"
+    },
+    {
+      "id": "edge/nonintegral-exponent-exact-root",
+      "text": "4^(1 / 2)",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "policy: NonIntegerExponent although raw Wolfram Power[4, 1/2] is 2",
+      "calc12_fault": null,
+      "operators": 2,
+      "interchange": {
+        "op": "pow",
+        "x": {
+          "op": "lit",
+          "digits": "4",
+          "scale": 0
+        },
+        "y": {
+          "op": "div",
+          "x": {
+            "op": "lit",
+            "digits": "1",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "5d917bea039a97656e134c6c195eca0140b76db6130df04495281128b7600828"
+    },
+    {
+      "id": "edge/nonintegral-exponent",
+      "text": "2^(1 / 2)",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "policy: NonIntegerExponent; raw Wolfram keeps Sqrt[2]",
+      "calc12_fault": null,
+      "operators": 2,
+      "interchange": {
+        "op": "pow",
+        "x": {
+          "op": "lit",
+          "digits": "2",
+          "scale": 0
+        },
+        "y": {
+          "op": "div",
+          "x": {
+            "op": "lit",
+            "digits": "1",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "3e4b2e258b0696671b0a1caad0c838fd23b82bf32fe357935e34d8abd656c7c6"
+    },
+    {
+      "id": "edge/first-error-left",
+      "text": "(1 / 0)^(1 / 2)",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "left-to-right: the base's DivisionByZero comes first",
+      "calc12_fault": null,
+      "operators": 3,
+      "interchange": {
+        "op": "pow",
+        "x": {
+          "op": "div",
+          "x": {
+            "op": "lit",
+            "digits": "1",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "0",
+            "scale": 0
+          }
+        },
+        "y": {
+          "op": "div",
+          "x": {
+            "op": "lit",
+            "digits": "1",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "2be80b980e18de161d3c267dc813658b21ca9799a7cd238948711e0335d5a67f"
+    },
+    {
+      "id": "edge/first-error-right",
+      "text": "2^(1 / 2) + 1 / 0",
+      "flags": [],
+      "origin": "edge-fixture",
+      "purpose": "left-to-right: the left NonIntegerExponent comes first",
+      "calc12_fault": null,
+      "operators": 4,
+      "interchange": {
+        "op": "add",
+        "x": {
+          "op": "pow",
+          "x": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          },
+          "y": {
+            "op": "div",
+            "x": {
+              "op": "lit",
+              "digits": "1",
+              "scale": 0
+            },
+            "y": {
+              "op": "lit",
+              "digits": "2",
+              "scale": 0
+            }
+          }
+        },
+        "y": {
+          "op": "div",
+          "x": {
+            "op": "lit",
+            "digits": "1",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "0",
+            "scale": 0
+          }
+        }
+      },
+      "interchange_sha256": "05a9b11217e0f978d6a1513244bafcac834b5b6d6cbe715789515df7aa4b3ecd"
+    }
+  ],
+  "excluded": []
+}

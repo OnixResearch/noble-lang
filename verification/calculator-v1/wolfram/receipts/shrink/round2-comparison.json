@@ -1,0 +1,518 @@
+{
+  "schema": "noble-wolfram-comparison/v1",
+  "lane": "optional Wolfram exact-arithmetic lane (#24); distinct from the CALC-12 oracle (#21), #19 acceptance and proofs",
+  "label": "stand-in-reference",
+  "expectation_source": "fresh python-fractions stand-in computation (not Wolfram)",
+  "reference_status": "ok",
+  "reference_reason": null,
+  "lane_result": "fail",
+  "stale_provenance": [],
+  "provenance": {
+    "lane": {
+      "policy_version": "noble-wolfram-policy/1",
+      "files": {
+        "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
+        "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+        "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+      },
+      "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb",
+      "repository": {
+        "commit": "be9fcaf0d3df2147d5bd1dbada91908f1a48ddb6",
+        "tracked_changes": "M verification/calculator-v1/calc-12-results.md\n M verification/calculator-v1/oracle/README.md"
+      },
+      "node": "v24.13.0"
+    },
+    "reference": {
+      "file": "/home/brittonr/.cache/noble-issues/tmp/w24/final/receipts/shrink/round2-reference-stand-in.json",
+      "sha256": "483f47049ca19fc7c0ac064d405774105d8b09d63843555a3cbcf2b6face6d5e",
+      "policy_version": "noble-wolfram-policy/1",
+      "adapter": {
+        "policy_version": "noble-wolfram-policy/1",
+        "files": {
+          "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
+          "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+          "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+        },
+        "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb"
+      },
+      "environment": {
+        "implementation": "CPython fractions.Fraction",
+        "python": "3.13.12"
+      },
+      "probes": [],
+      "corpus": {
+        "path": "/home/brittonr/.cache/noble-issues/tmp/w24/final/shrink2-corpus.json",
+        "sha256": "ca1eea7546224c35271b033dab9baee84d6593248b2220384d00d22b255f16e1",
+        "generator": {
+          "shrink_round_of": "input",
+          "corpus_sha256": null,
+          "candidates": 3,
+          "files": {
+            "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+            "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+            "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+            "wolfram/lane.mjs": "6dfacc132742c02858e07843e29eb4d7fd8ccc0378b81d68280c7cd87abda9e0",
+            "wolfram/fixtures/edge-cases.json": "cebbd7b2e8a2913512dd30f522396a32c32209a8e14e2b6d746def0b5c24c57d"
+          }
+        }
+      },
+      "started": "2026-10-15T22:29:57.250Z",
+      "finished": "2026-10-15T22:29:57.293Z"
+    },
+    "corpus": {
+      "path": "/home/brittonr/.cache/noble-issues/tmp/w24/final/shrink2-corpus.json",
+      "sha256": "ca1eea7546224c35271b033dab9baee84d6593248b2220384d00d22b255f16e1",
+      "generator": {
+        "shrink_round_of": "input",
+        "corpus_sha256": null,
+        "candidates": 3,
+        "files": {
+          "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+          "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+          "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+          "wolfram/lane.mjs": "6dfacc132742c02858e07843e29eb4d7fd8ccc0378b81d68280c7cd87abda9e0",
+          "wolfram/fixtures/edge-cases.json": "cebbd7b2e8a2913512dd30f522396a32c32209a8e14e2b6d746def0b5c24c57d"
+        }
+      }
+    },
+    "noble": {
+      "binary": {
+        "path": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+        "realpath": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+        "sha256": "22f2b54727af9bc658df162b5588719de8468ca2a2bbec2ca33ece584d2ca6e9",
+        "bytes": 28281696,
+        "build_profile": "release",
+        "source_identity": "ffcce53 + seeded-faults/patches/reversed-subtraction.patch (issue-21 mutant)"
+      },
+      "source": {
+        "commit": "05a50b0fd1d41f337509ef663488caf5193df848",
+        "tracked_changes": "",
+        "embedded": [
+          {
+            "path": "crates/noble-cli/src/calculator.rs",
+            "sha256": "fa28f9c3a13786e2363c782c811f80b1a45cbbdda10fc9a688a23df63679be51"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/abi.json",
+            "sha256": "1284792be03cf5e544dc51b977e9d7c0ee7b38d743698c0420f14ef408249a44"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/config.json",
+            "sha256": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/declared-abi.json",
+            "sha256": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/engine-host.mjs",
+            "sha256": "9bac85c54b39dc7491047b835e698ee2f242fbaea685573a85ea6b9f4d61491d"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/engine.mjs",
+            "sha256": "c5b24822375031af15d658b7905925b2e9b836cde4e3ad563ff12b97096d4a40"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/preamble.mjs",
+            "sha256": "1787a81093cfb8c0286fa09d5bc4129dcb5ba5cd75a3a407b9f25009d75ceb28"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/protocol.mjs",
+            "sha256": "fdaf4be48f32de5d2f698021595807a63f72e860eebbf67ba619a6b2eb81545a"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+            "sha256": "bd18a6fb8a89ca85a2e162ac1ee7b0bbba6b77e68632f0d9090cbbf42f9933c2"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/slot-policy.mjs",
+            "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+            "sha256": "a2c5eb2b42955ad565b71d0f67f2ebab9c88ac124fbe2996b74f150f1cf29692"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/values.mjs",
+            "sha256": "add0eda94de18275fd8552ec5e0b5fa0f4a0f2ba80ffe02ed55d9931e9deafb4"
+          },
+          {
+            "path": "crates/noble-cli/src/core/worker.rs",
+            "sha256": "b11f5dba48f55a0e35e320ca8d5100e40465554f1c9ad040885248a15e936b4c"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calc-errors.noble",
+            "sha256": "319efe57c1044d650d356744aa94b783205f56d3b65b3383a753dfc26115aa3d"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-bigint.noble",
+            "sha256": "ff93762aba8f2e9a14853f1c258f23fd6ed7b93dbe2f5963c1dc4083aadbcade"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-bindings.noble",
+            "sha256": "d35ec885d16df3b880867e2fd1c57cb16d7dc5cdb8cb48793f9e88913e580166"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-bits.noble",
+            "sha256": "8b9ad75b3b19d180732f348d27497ce60fbcc6c9922e32e102e5e137f46ade7a"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-decimal.noble",
+            "sha256": "a7664741535f30a36befa428d4626befdd3e29a042f896d5bc67f6ca773cb7ea"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-definitions.noble",
+            "sha256": "da61b1eebc4bec5270a88f4b7dfe560e5641a7b05212dc352dc89d5a0678f7ab"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-display.noble",
+            "sha256": "f3976f0ded740f45a666ebfa81b8b1f85a094bbc91be9db7b2eb69a1724a98f7"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-expression.noble",
+            "sha256": "4245ebcc3fe68db00e52509024aff5136852e7466c1ee8d9a32b0362705c44ca"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-lexical.noble",
+            "sha256": "4c9f9d80528ff4ba2cff6d22181b34f684b5de3e2e4a3f2c029c4be8a4979dcf"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-numeric.noble",
+            "sha256": "0e8cb62321d32314e181c81160708567795da3cf77ff8020a76c9134f454a176"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/result.noble",
+            "sha256": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80"
+          }
+        ]
+      },
+      "toolchain": {
+        "runner_node": {
+          "path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+          "version": "v24.13.0"
+        },
+        "worker_node": {
+          "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+          "version": "v24.13.0",
+          "error": null
+        },
+        "assembler": {
+          "argv": [
+            "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+            "--internal-calculator-wat-version"
+          ],
+          "status": 0,
+          "stdout": "noble-calculator-wat 1.243.0"
+        }
+      },
+      "config": {
+        "concurrency": 4,
+        "vector_timeout_ms": 3600000,
+        "session_timeout_ms": 21600000,
+        "memory_max": "2G",
+        "memory_wrapper": [
+          "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+          "--user",
+          "--scope",
+          "--quiet",
+          "--collect",
+          "-p",
+          "MemoryMax=2G",
+          "-p",
+          "MemorySwapMax=0",
+          "-p",
+          "OOMPolicy=continue",
+          "--"
+        ],
+        "sample_ms": 1000,
+        "calculator_args": [],
+        "child_env": {
+          "PATH": "/nonexistent",
+          "LANG": "C",
+          "LC_ALL": "C",
+          "RUST_BACKTRACE": "1",
+          "TMPDIR": "<OUTPUT>/tmp/<vector>"
+        },
+        "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-24",
+        "selection": {
+          "cases": [],
+          "vectors": [],
+          "controls": false,
+          "controls_only": false
+        }
+      },
+      "run": {
+        "started": "2026-10-15T22:11:49.938Z",
+        "finished": "2026-10-15T22:18:36.857Z",
+        "host": "aspen3",
+        "kernel": "6.18.54",
+        "cpus": 32,
+        "memory_bytes": 130458030080,
+        "argv": [
+          "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+          "/home/brittonr/.cache/noble-issues/wt/issue-24/verification/calculator-v1/acceptance.mjs",
+          "--binary",
+          "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+          "--binary-sha256",
+          "22f2b54727af9bc658df162b5588719de8468ca2a2bbec2ca33ece584d2ca6e9",
+          "--source-id",
+          "ffcce53 + seeded-faults/patches/reversed-subtraction.patch (issue-21 mutant)",
+          "--build-profile",
+          "release",
+          "--out",
+          "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z",
+          "--memory-max",
+          "2G",
+          "--concurrency",
+          "4",
+          "--vector-timeout",
+          "3600",
+          "--no-controls",
+          "--vectors",
+          "/home/brittonr/.cache/noble-issues/tmp/w24/final/shrink2-vectors.json"
+        ]
+      }
+    },
+    "run_dir": "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z",
+    "run_receipt": "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z/receipt.json"
+  },
+  "summary": {
+    "disagree": 3,
+    "agree": 1
+  },
+  "results": [
+    {
+      "id": "shrink/00",
+      "text": "4 - 6 / 2",
+      "slug": "WOLFRAM_shrink_00",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+      "flags": [],
+      "stdin_sha256": "fc30ab132bde523c665994bd4e17d9e8fad2c9acd4cfff61b7cd849acef2927a",
+      "wall_ms": 406806.498105,
+      "observed": {
+        "stdout": [
+          "-1"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value -1 != reference 1"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "reversed-subtraction"
+      ]
+    },
+    {
+      "id": "shrink/01",
+      "text": "4",
+      "slug": "WOLFRAM_shrink_01",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+      "flags": [],
+      "stdin_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+      "wall_ms": 100847.834851,
+      "observed": {
+        "stdout": [
+          "4"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "4",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "shrink/02",
+      "text": "4 - 2",
+      "slug": "WOLFRAM_shrink_02",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+      "flags": [],
+      "stdin_sha256": "8fa38d22bb5d12270c84e9bb65da9d9bacaa6a57c6ba62e1839c8846768b46db",
+      "wall_ms": 259897.709202,
+      "observed": {
+        "stdout": [
+          "-2"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "2",
+        "d": "1"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value -2 != reference 2"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "reversed-subtraction"
+      ]
+    },
+    {
+      "id": "shrink/03",
+      "text": "4 - 6",
+      "slug": "WOLFRAM_shrink_03",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+      "flags": [],
+      "stdin_sha256": "e5013183c674f1cb037ccfc8385b6c58bf92d30970ec0664187c8dcc620936b7",
+      "wall_ms": 262559.205284,
+      "observed": {
+        "stdout": [
+          "2"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-2",
+        "d": "1"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 2 != reference -2"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "reversed-subtraction"
+      ]
+    }
+  ],
+  "outside_lane": [],
+  "not_run": [],
+  "non_claims": [
+    "Agreement on finitely many inputs is test evidence only; it establishes no universal arithmetic theorem and no parser correctness (CALC-EVIDENCE-01).",
+    "Reference output (Wolfram or otherwise) is untrusted candidate data: it mints no Certified status, discharges no proof obligation, changes no accepted program semantics and changes no canonical case state.",
+    "Only a fresh-oracle run is a Wolfram comparison; stand-in-reference and offline-fixture-replay results are labeled as such and never count as one.",
+    "Grammar, diagnostic spans, lexical sessions, session rollback, deterministic budgets and host failures are outside this lane (CALC-12 oracle #21, runner #19, budgets #20).",
+    "A Wolfram timeout or memory abort is an oracle failure, not Noble's ResourceLimit; a Noble ResourceLimit is a budget divergence, not a disagreement."
+  ],
+  "shrink_selection": {
+    "status": "reduced",
+    "original": {
+      "text": "4 - 6 / 2",
+      "signature": "disagree:value-mismatch:value:-"
+    },
+    "candidates": [
+      {
+        "text": "4",
+        "signature": "agree:-:value:-"
+      },
+      {
+        "text": "4 - 2",
+        "signature": "disagree:value-mismatch:value:-"
+      },
+      {
+        "text": "4 - 6",
+        "signature": "disagree:value-mismatch:value:-"
+      }
+    ],
+    "minimal": {
+      "text": "4 - 2",
+      "signature": "disagree:value-mismatch:value:-",
+      "replay": {
+        "text": "4 - 2",
+        "flags": [],
+        "interchange": {
+          "op": "sub",
+          "x": {
+            "op": "lit",
+            "digits": "4",
+            "scale": 0
+          },
+          "y": {
+            "op": "lit",
+            "digits": "2",
+            "scale": 0
+          }
+        },
+        "interchange_sha256": "1e54dde402942140459c5374dcf7fb36810dff59036c07f6e38ac8f7437cbe57",
+        "noble": {
+          "vector_file": {
+            "schema": "noble-calculator-vectors/v1",
+            "vectors": [
+              {
+                "id": "WOLFRAM/replay",
+                "case": "CALC-12-wolfram",
+                "kind": "line",
+                "support": "cli",
+                "flags": [],
+                "operations": [
+                  {
+                    "line": "4 - 2",
+                    "expect": {
+                      "value": "2"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+        },
+        "oracle": {
+          "request": {
+            "schema": "noble-wolfram-request/v1",
+            "policy_version": "noble-wolfram-policy/1",
+            "arithmetic": "python-fractions",
+            "kernel": null,
+            "timeout_seconds": 30,
+            "memory_bytes": 1073741824,
+            "cases": [
+              {
+                "id": "shrink/02",
+                "interchange": {
+                  "op": "sub",
+                  "x": {
+                    "op": "lit",
+                    "digits": "4",
+                    "scale": 0
+                  },
+                  "y": {
+                    "op": "lit",
+                    "digits": "2",
+                    "scale": 0
+                  }
+                }
+              }
+            ]
+          },
+          "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+          "available_in_this_report": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{"at":"2026-10-15T22:06:29.282Z","id":"control/forced-timeout/CALC-02/02","classification":"timeout","wall_ms":1006.659051,"reasons":["killed after 1000 ms"]}
+{"at":"2026-10-15T22:06:49.340Z","id":"control/wrong-expected/CALC-02/02","classification":"fail","wall_ms":21070.772524,"reasons":["diagnostic 0: TrailingInput, expected SyntaxError"]}
+{"at":"2026-10-15T22:08:00.777Z","id":"WOLFRAM/edge/decimal-literal","classification":"pass","wall_ms":92500.505855,"reasons":[]}
+{"at":"2026-10-15T22:08:02.284Z","id":"WOLFRAM/edge/decimal-tiny","classification":"pass","wall_ms":94009.256341,"reasons":[]}
+{"at":"2026-10-15T22:08:43.480Z","id":"WOLFRAM/edge/decimal-scaled","classification":"pass","wall_ms":135204.429656,"reasons":[]}
+{"at":"2026-10-15T22:08:45.559Z","id":"WOLFRAM/edge/decimal-times-integer","classification":"pass","wall_ms":136215.152284,"reasons":[]}
+{"at":"2026-10-15T22:08:51.712Z","id":"WOLFRAM/edge/decimal-sum","classification":"pass","wall_ms":143436.253573,"reasons":[]}
+{"at":"2026-10-15T22:09:12.788Z","id":"WOLFRAM/edge/rational-sum","classification":"pass","wall_ms":143391.766553,"reasons":[]}
+{"at":"2026-10-15T22:10:06.932Z","id":"WOLFRAM/edge/rational-quotient","classification":"pass","wall_ms":124587.944703,"reasons":[]}
+{"at":"2026-10-15T22:10:11.949Z","id":"WOLFRAM/edge/normalize-quotient","classification":"pass","wall_ms":131121.346168,"reasons":[]}
+{"at":"2026-10-15T22:10:51.309Z","id":"WOLFRAM/edge/subtract","classification":"pass","wall_ms":125690.51093,"reasons":[]}
+{"at":"2026-10-15T22:10:54.931Z","id":"WOLFRAM/edge/negative-zero","classification":"pass","wall_ms":102082.515295,"reasons":[]}
+{"at":"2026-10-15T22:10:56.959Z","id":"WOLFRAM/edge/negative-result","classification":"pass","wall_ms":125185.841366,"reasons":[]}
+{"at":"2026-10-15T22:11:04.840Z","id":"WOLFRAM/edge/signed-quotient","classification":"pass","wall_ms":141293.306507,"reasons":[]}
+{"at":"2026-10-15T22:12:06.027Z","id":"WOLFRAM/edge/wide-quotient","classification":"fail","wall_ms":69005.837589,"reasons":["exit 1, expected 0","stdout [], expected [\"13717421/109739369\"]","1 diagnostic lines, expected 0"]}
+{"at":"2026-10-15T22:12:16.376Z","id":"WOLFRAM/edge/i64-max-plus-one","classification":"pass","wall_ms":129388.334526,"reasons":[]}
+{"at":"2026-10-15T22:12:17.843Z","id":"WOLFRAM/edge/u64-squared","classification":"fail","wall_ms":82844.037667,"reasons":["exit 1, expected 0","stdout [], expected [\"340282366920938463463374607431768211456\"]","1 diagnostic lines, expected 0"]}
+{"at":"2026-10-15T22:12:34.217Z","id":"WOLFRAM/edge/i64-min-minus-one","classification":"pass","wall_ms":142210.341508,"reasons":[]}
+{"at":"2026-10-15T22:13:04.625Z","id":"WOLFRAM/edge/float-precision-trap","classification":"pass","wall_ms":133255.314399,"reasons":[]}
+{"at":"2026-10-15T22:13:40.348Z","id":"WOLFRAM/edge/power-right-associative","classification":"pass","wall_ms":155447.012337,"reasons":[]}
+{"at":"2026-10-15T22:14:51.900Z","id":"WOLFRAM/edge/power-negative-exponent","classification":"pass","wall_ms":165789.958627,"reasons":[]}
+{"at":"2026-10-15T22:15:08.963Z","id":"WOLFRAM/edge/power-negative-base","classification":"pass","wall_ms":171059.365039,"reasons":[]}
+{"at":"2026-10-15T22:15:19.335Z","id":"WOLFRAM/edge/power-unary-precedence","classification":"pass","wall_ms":165056.391472,"reasons":[]}
+{"at":"2026-10-15T22:15:41.851Z","id":"WOLFRAM/edge/power-rational-base","classification":"pass","wall_ms":205410.046575,"reasons":[]}
+{"at":"2026-10-15T22:15:46.682Z","id":"WOLFRAM/edge/zero-power-zero","classification":"pass","wall_ms":126271.523712,"reasons":[]}
+{"at":"2026-10-15T22:16:11.221Z","id":"WOLFRAM/edge/divide-by-zero","classification":"pass","wall_ms":79264.261376,"reasons":[]}
+{"at":"2026-10-15T22:16:12.135Z","id":"WOLFRAM/edge/power-integral-by-value","classification":"pass","wall_ms":187454.229291,"reasons":[]}
+{"at":"2026-10-15T22:16:27.724Z","id":"WOLFRAM/edge/zero-over-zero","classification":"pass","wall_ms":78692.306613,"reasons":[]}
+{"at":"2026-10-15T22:16:47.557Z","id":"WOLFRAM/edge/zero-negative-power","classification":"pass","wall_ms":88163.076048,"reasons":[]}
+{"at":"2026-10-15T22:17:34.027Z","id":"WOLFRAM/edge/nonintegral-exponent-exact-root","classification":"pass","wall_ms":112121.67265,"reasons":[]}
+{"at":"2026-10-15T22:17:34.178Z","id":"WOLFRAM/edge/first-error-left","classification":"pass","wall_ms":82896.808406,"reasons":[]}
+{"at":"2026-10-15T22:17:39.160Z","id":"WOLFRAM/edge/nonintegral-exponent","classification":"pass","wall_ms":112416.048954,"reasons":[]}
+{"at":"2026-10-15T22:18:04.434Z","id":"WOLFRAM/edge/first-error-right","classification":"pass","wall_ms":112233.470499,"reasons":[]}
+{"at":"2026-10-15T22:18:32.362Z","id":"WOLFRAM/seed-2424/calc12-01","classification":"pass","wall_ms":124581.705878,"reasons":[]}
+{"at":"2026-10-15T22:19:09.147Z","id":"WOLFRAM/seed-2424/calc12-02","classification":"pass","wall_ms":141530.923845,"reasons":[]}
+{"at":"2026-10-15T22:19:28.584Z","id":"WOLFRAM/seed-2424/calc12-05","classification":"pass","wall_ms":109361.28708,"reasons":[]}
+{"at":"2026-10-15T22:19:54.688Z","id":"WOLFRAM/seed-2424/calc12-03","classification":"pass","wall_ms":140603.833151,"reasons":[]}
+{"at":"2026-10-15T22:20:05.127Z","id":"WOLFRAM/seed-2424/calc12-04","classification":"pass","wall_ms":150894.913174,"reasons":[]}
+{"at":"2026-10-15T22:20:43.133Z","id":"WOLFRAM/seed-2424/calc12-07","classification":"fail","wall_ms":158635.747696,"reasons":["exit 1, expected 0","stdout [], expected [\"18446744073709551619\"]","1 diagnostic lines, expected 0"]}
+{"at":"2026-10-15T22:20:44.782Z","id":"WOLFRAM/seed-2424/calc12-08","classification":"pass","wall_ms":132358.027095,"reasons":[]}
+{"at":"2026-10-15T22:21:38.246Z","id":"WOLFRAM/seed-2424/calc12-09","classification":"pass","wall_ms":149035.077737,"reasons":[]}
+{"at":"2026-10-15T22:21:50.619Z","id":"WOLFRAM/seed-2424/wide-01","classification":"fail","wall_ms":67416.592143,"reasons":["exit 1, expected 0","stdout [], expected [\"2191235959321850841137201618\"]","1 diagnostic lines, expected 0"]}
+{"at":"2026-10-15T22:21:59.964Z","id":"WOLFRAM/seed-2424/calc12-10","classification":"pass","wall_ms":151330.657225,"reasons":[]}
+{"at":"2026-10-15T22:22:25.091Z","id":"WOLFRAM/seed-2424/wide-02","classification":"fail","wall_ms":100246.304289,"reasons":["exit 1, expected 0","stdout [], expected [\"-801448065849856090234574\"]","1 diagnostic lines, expected 0"]}
+{"at":"2026-10-15T22:22:25.216Z","id":"WOLFRAM/seed-2424/calc12-12","classification":"pass","wall_ms":140027.66525,"reasons":[]}
+{"at":"2026-10-15T22:22:25.991Z","id":"WOLFRAM/seed-2424/calc12-11","classification":"pass","wall_ms":151250.436834,"reasons":[]}
+{"at":"2026-10-15T22:22:57.863Z","id":"WOLFRAM/seed-2424/wide-04","classification":"fail","wall_ms":67191.371556,"reasons":["exit 1, expected 0","stdout [], expected [\"9945638250859729114534795789/4165748366043675355632459975\"]","1 diagnostic lines, expected 0"]}
+{"at":"2026-10-15T22:22:58.373Z","id":"WOLFRAM/seed-2424/wide-03","classification":"fail","wall_ms":80066.810064,"reasons":["exit 1, expected 0","stdout [], expected [\"105933469824051790035249342573421213688979\"]","1 diagnostic lines, expected 0"]}
+{"at":"2026-10-15T22:23:21.715Z","id":"WOLFRAM/seed-2424/wide-05","classification":"fail","wall_ms":81687.934986,"reasons":["exit 1, expected 0","stdout [], expected [\"-941049368211521303183466891155519205182399/10000000000000000000000\"]","1 diagnostic lines, expected 0"]}
+{"at":"2026-10-15T22:24:05.266Z","id":"WOLFRAM/seed-2424/wide-06","classification":"fail","wall_ms":100118.89722,"reasons":["exit 1, expected 0","stdout [], expected [\"-497558334749684148988/175\"]","1 diagnostic lines, expected 0"]}

@@ -1,0 +1,347 @@
+{
+  "schema": "noble-wolfram-comparison/v1",
+  "lane": "optional Wolfram exact-arithmetic lane (#24); distinct from the CALC-12 oracle (#21), #19 acceptance and proofs",
+  "label": "offline-fixture-replay",
+  "expectation_source": "python-fractions-stand-in",
+  "reference_status": "ok",
+  "reference_reason": null,
+  "lane_result": "fail",
+  "stale_provenance": [],
+  "provenance": {
+    "lane": {
+      "policy_version": "noble-wolfram-policy/1",
+      "files": {
+        "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
+        "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+        "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+      },
+      "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb",
+      "repository": {
+        "commit": "be9fcaf0d3df2147d5bd1dbada91908f1a48ddb6",
+        "tracked_changes": "M verification/calculator-v1/calc-12-results.md\n M verification/calculator-v1/oracle/README.md"
+      },
+      "node": "v24.13.0"
+    },
+    "reference": {
+      "file": "/home/brittonr/.cache/noble-issues/wt/issue-24/verification/calculator-v1/wolfram/fixtures/edge-expected-stand-in.json",
+      "sha256": "7a2580193a9e22a5a3062fe6da5cf3890910ced9823e396e2e6a7510ca0e1734",
+      "policy_version": "noble-wolfram-policy/1",
+      "adapter": {
+        "policy_version": "noble-wolfram-policy/1",
+        "files": {
+          "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
+          "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+          "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+        },
+        "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb"
+      },
+      "expectation_source": "python-fractions-stand-in",
+      "reference_provenance": {
+        "file_sha256": "e162f0e099e762c4e0fd62342308f23d931f3aead3b5c7ff0750230924beabc4",
+        "label": "stand-in-reference",
+        "arithmetic": "python-fractions",
+        "environment": {
+          "implementation": "CPython fractions.Fraction",
+          "python": "3.13.12"
+        },
+        "probes": [],
+        "corpus_sha256": "1707a0be7d2312df55e050dda267fd89322a75c1dd9d11ba0993aa4c4a6b1cd0",
+        "started": "2026-10-15T22:09:26.023Z"
+      }
+    },
+    "corpus": {
+      "path": "/home/brittonr/.cache/noble-issues/tmp/w24/final/receipts/inputs/corpus-edge.json",
+      "sha256": "1707a0be7d2312df55e050dda267fd89322a75c1dd9d11ba0993aa4c4a6b1cd0",
+      "generator": {
+        "seed": 0,
+        "count": 0,
+        "wide": 0,
+        "prng": "mulberry32 (#21 oracle/generate.mjs)",
+        "files": {
+          "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+          "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+          "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+          "wolfram/lane.mjs": "6dfacc132742c02858e07843e29eb4d7fd8ccc0378b81d68280c7cd87abda9e0",
+          "wolfram/fixtures/edge-cases.json": "cebbd7b2e8a2913512dd30f522396a32c32209a8e14e2b6d746def0b5c24c57d"
+        }
+      }
+    },
+    "noble": {
+      "binary": {
+        "path": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-non-normalized-rational",
+        "realpath": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-non-normalized-rational",
+        "sha256": "91efbef215607ef80cc3d94c1d621b104572029c36e518748a08d995210285d0",
+        "bytes": 28281752,
+        "build_profile": "release",
+        "source_identity": "ffcce53 + seeded-faults/patches/non-normalized-rational.patch (issue-21 mutant; control = unpatched)"
+      },
+      "source": {
+        "commit": "1e16953b8d69084b1bcc946ab03cab7e2da53fd2",
+        "tracked_changes": "",
+        "embedded": [
+          {
+            "path": "crates/noble-cli/src/calculator.rs",
+            "sha256": "1dc01894a5c432df2e8b878026a9a1ce588ce0afc8bfed1e611b16ce5ca6825c"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/abi.json",
+            "sha256": "1284792be03cf5e544dc51b977e9d7c0ee7b38d743698c0420f14ef408249a44"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/config.json",
+            "sha256": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/declared-abi.json",
+            "sha256": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/engine-host.mjs",
+            "sha256": "9bac85c54b39dc7491047b835e698ee2f242fbaea685573a85ea6b9f4d61491d"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/engine.mjs",
+            "sha256": "e4a10966004297933606823a356f54393c809f638dd98afc275dc188033d4acf"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/preamble.mjs",
+            "sha256": "1787a81093cfb8c0286fa09d5bc4129dcb5ba5cd75a3a407b9f25009d75ceb28"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/protocol.mjs",
+            "sha256": "43ee76af0da8e21c04daec383ca4d7db90c98ee9a29ba240663726591c1f13e8"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+            "sha256": "bd18a6fb8a89ca85a2e162ac1ee7b0bbba6b77e68632f0d9090cbbf42f9933c2"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/slot-policy.mjs",
+            "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+            "sha256": "a2c5eb2b42955ad565b71d0f67f2ebab9c88ac124fbe2996b74f150f1cf29692"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/values.mjs",
+            "sha256": "add0eda94de18275fd8552ec5e0b5fa0f4a0f2ba80ffe02ed55d9931e9deafb4"
+          },
+          {
+            "path": "crates/noble-cli/src/core/worker.rs",
+            "sha256": "eacf5553483aaedda93f6b4ce014454840eda52198caa487a722f27068d93121"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calc-errors.noble",
+            "sha256": "319efe57c1044d650d356744aa94b783205f56d3b65b3383a753dfc26115aa3d"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-bigint.noble",
+            "sha256": "ff93762aba8f2e9a14853f1c258f23fd6ed7b93dbe2f5963c1dc4083aadbcade"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-bindings.noble",
+            "sha256": "d35ec885d16df3b880867e2fd1c57cb16d7dc5cdb8cb48793f9e88913e580166"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-bits.noble",
+            "sha256": "8b9ad75b3b19d180732f348d27497ce60fbcc6c9922e32e102e5e137f46ade7a"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-decimal.noble",
+            "sha256": "a7664741535f30a36befa428d4626befdd3e29a042f896d5bc67f6ca773cb7ea"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-definitions.noble",
+            "sha256": "da61b1eebc4bec5270a88f4b7dfe560e5641a7b05212dc352dc89d5a0678f7ab"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-display.noble",
+            "sha256": "f3976f0ded740f45a666ebfa81b8b1f85a094bbc91be9db7b2eb69a1724a98f7"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-expression.noble",
+            "sha256": "eed139b3c176c1a24adaa63a5a34bdaf20b30c80a3b4eb5585272a04d2a40efa"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-lexical.noble",
+            "sha256": "4c9f9d80528ff4ba2cff6d22181b34f684b5de3e2e4a3f2c029c4be8a4979dcf"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-numeric.noble",
+            "sha256": "22b9811481c8806f6eb9dd094e212d69f71208a27fa17fd669f2c7ea81c9544a"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/result.noble",
+            "sha256": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80"
+          }
+        ]
+      },
+      "toolchain": {
+        "runner_node": {
+          "path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+          "version": "v24.13.0"
+        },
+        "worker_node": {
+          "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+          "version": "v24.13.0",
+          "error": null
+        },
+        "assembler": {
+          "argv": [
+            "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-non-normalized-rational",
+            "--internal-calculator-wat-version"
+          ],
+          "status": 0,
+          "stdout": "noble-calculator-wat 1.243.0"
+        }
+      },
+      "config": {
+        "concurrency": 1,
+        "vector_timeout_ms": 7200000,
+        "session_timeout_ms": 21600000,
+        "memory_max": "2G",
+        "memory_wrapper": [
+          "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+          "--user",
+          "--scope",
+          "--quiet",
+          "--collect",
+          "-p",
+          "MemoryMax=2G",
+          "-p",
+          "MemorySwapMax=0",
+          "-p",
+          "OOMPolicy=continue",
+          "--"
+        ],
+        "sample_ms": 1000,
+        "calculator_args": [],
+        "child_env": {
+          "PATH": "/nonexistent",
+          "LANG": "C",
+          "LC_ALL": "C",
+          "RUST_BACKTRACE": "1",
+          "TMPDIR": "<OUTPUT>/tmp/<vector>"
+        },
+        "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-19",
+        "selection": {
+          "cases": [],
+          "vectors": [],
+          "controls": false,
+          "controls_only": false
+        }
+      },
+      "run": {
+        "started": "2026-10-15T17:32:40.100Z",
+        "finished": "2026-10-15T17:41:24.307Z",
+        "host": "aspen3",
+        "kernel": "6.18.54",
+        "cpus": 32,
+        "memory_bytes": 130458030080,
+        "argv": [
+          "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+          "/home/brittonr/.cache/noble-issues/wt/issue-19/verification/calculator-v1/acceptance.mjs",
+          "--binary",
+          "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-non-normalized-rational",
+          "--binary-sha256",
+          "91efbef215607ef80cc3d94c1d621b104572029c36e518748a08d995210285d0",
+          "--source-id",
+          "ffcce53 + seeded-faults/patches/non-normalized-rational.patch (issue-21 mutant; control = unpatched)",
+          "--build-profile",
+          "release",
+          "--out",
+          "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-non-normalized-rational-20261015T173239Z",
+          "--memory-max",
+          "2G",
+          "--concurrency",
+          "1",
+          "--no-controls",
+          "--vectors",
+          "/home/brittonr/.cache/noble-issues/work/issue-21/fv/non-normalized-rational.json"
+        ]
+      }
+    },
+    "run_dir": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-non-normalized-rational-20261015T173239Z",
+    "run_receipt": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-non-normalized-rational-20261015T173239Z/receipt.json"
+  },
+  "summary": {
+    "disagree": 1,
+    "not-run": 30
+  },
+  "results": [
+    {
+      "id": "edge/normalize-quotient",
+      "text": "2 / 4",
+      "slug": "CALC-12_fault_non-normalized-rational",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-non-normalized-rational",
+      "flags": [],
+      "stdin_sha256": "b11f0b74ef91c88de981ee18836780047d032fac1932d464d154183c30671980",
+      "wall_ms": 523988.334479,
+      "observed": {
+        "stdout": [
+          "2/4"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display 2/4 has the reference value but not the normalized form 1/2"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ]
+    }
+  ],
+  "outside_lane": [],
+  "not_run": [
+    "edge/decimal-sum",
+    "edge/decimal-literal",
+    "edge/decimal-tiny",
+    "edge/decimal-scaled",
+    "edge/decimal-times-integer",
+    "edge/rational-sum",
+    "edge/rational-quotient",
+    "edge/signed-quotient",
+    "edge/subtract",
+    "edge/negative-result",
+    "edge/negative-zero",
+    "edge/i64-max-plus-one",
+    "edge/i64-min-minus-one",
+    "edge/float-precision-trap",
+    "edge/u64-squared",
+    "edge/wide-quotient",
+    "edge/power-right-associative",
+    "edge/power-negative-exponent",
+    "edge/power-rational-base",
+    "edge/power-negative-base",
+    "edge/power-unary-precedence",
+    "edge/power-integral-by-value",
+    "edge/zero-power-zero",
+    "edge/divide-by-zero",
+    "edge/zero-over-zero",
+    "edge/zero-negative-power",
+    "edge/nonintegral-exponent-exact-root",
+    "edge/nonintegral-exponent",
+    "edge/first-error-left",
+    "edge/first-error-right"
+  ],
+  "non_claims": [
+    "Agreement on finitely many inputs is test evidence only; it establishes no universal arithmetic theorem and no parser correctness (CALC-EVIDENCE-01).",
+    "Reference output (Wolfram or otherwise) is untrusted candidate data: it mints no Certified status, discharges no proof obligation, changes no accepted program semantics and changes no canonical case state.",
+    "Only a fresh-oracle run is a Wolfram comparison; stand-in-reference and offline-fixture-replay results are labeled as such and never count as one.",
+    "Grammar, diagnostic spans, lexical sessions, session rollback, deterministic budgets and host failures are outside this lane (CALC-12 oracle #21, runner #19, budgets #20).",
+    "A Wolfram timeout or memory abort is an oracle failure, not Noble's ResourceLimit; a Noble ResourceLimit is a budget divergence, not a disagreement."
+  ]
+}

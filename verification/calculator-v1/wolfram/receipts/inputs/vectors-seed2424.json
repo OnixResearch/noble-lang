@@ -1,0 +1,751 @@
+{
+  "schema": "noble-calculator-vectors/v1",
+  "lane": "optional Wolfram lane (#24); expectations are runner bookkeeping from the CALC-12 oracle",
+  "corpus_sha256": "bf9c4f64e5a30b9288e133f892ba4430e165f4ecc5230442c57f20ac44eeac52",
+  "vectors": [
+    {
+      "id": "WOLFRAM/edge/decimal-sum",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "0.1 + 0.2",
+          "expect": {
+            "value": "3/10"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/decimal-literal",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "0.1",
+          "expect": {
+            "value": "1/10"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/decimal-tiny",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "0.00000000000000000001",
+          "expect": {
+            "value": "1/100000000000000000000"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/decimal-scaled",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "3.14159 - 3",
+          "expect": {
+            "value": "14159/100000"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/decimal-times-integer",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "1.5 * 2",
+          "expect": {
+            "value": "3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/rational-sum",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "1 / 3 + 1 / 6",
+          "expect": {
+            "value": "1/2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/normalize-quotient",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2 / 4",
+          "expect": {
+            "value": "1/2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/rational-quotient",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "7 / 2",
+          "expect": {
+            "value": "7/2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/signed-quotient",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "7 / -14",
+          "expect": {
+            "value": "-1/2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/subtract",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "10 - 3",
+          "expect": {
+            "value": "7"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/negative-result",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "0 - 5",
+          "expect": {
+            "value": "-5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/negative-zero",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "-0",
+          "expect": {
+            "value": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/i64-max-plus-one",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "9223372036854775807 + 1",
+          "expect": {
+            "value": "9223372036854775808"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/i64-min-minus-one",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "-9223372036854775808 - 1",
+          "expect": {
+            "value": "-9223372036854775809"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/float-precision-trap",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "9007199254740993 - 9007199254740992",
+          "expect": {
+            "value": "1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/u64-squared",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "18446744073709551616 * 18446744073709551616",
+          "expect": {
+            "value": "340282366920938463463374607431768211456"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/wide-quotient",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "123456789012345678901234567890 / 987654321098765432109876543210",
+          "expect": {
+            "value": "13717421/109739369"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/power-right-associative",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2^3^2",
+          "expect": {
+            "value": "512"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/power-negative-exponent",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2^-3",
+          "expect": {
+            "value": "1/8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/power-rational-base",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "(2 / 3)^-2",
+          "expect": {
+            "value": "9/4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/power-negative-base",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "(-2)^3",
+          "expect": {
+            "value": "-8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/power-unary-precedence",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "-2^2",
+          "expect": {
+            "value": "-4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/power-integral-by-value",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "4^(2 / 2)",
+          "expect": {
+            "value": "4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/zero-power-zero",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "0^0",
+          "expect": {
+            "value": "1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/divide-by-zero",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "1 / 0",
+          "expect": {
+            "diagnostic": {
+              "category": "DivisionByZero",
+              "span": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/zero-over-zero",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "0 / 0",
+          "expect": {
+            "diagnostic": {
+              "category": "DivisionByZero",
+              "span": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/zero-negative-power",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "0^-1",
+          "expect": {
+            "diagnostic": {
+              "category": "DivisionByZero",
+              "span": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/nonintegral-exponent-exact-root",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "4^(1 / 2)",
+          "expect": {
+            "diagnostic": {
+              "category": "NonIntegerExponent",
+              "span": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/nonintegral-exponent",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2^(1 / 2)",
+          "expect": {
+            "diagnostic": {
+              "category": "NonIntegerExponent",
+              "span": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/first-error-left",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "(1 / 0)^(1 / 2)",
+          "expect": {
+            "diagnostic": {
+              "category": "DivisionByZero",
+              "span": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/edge/first-error-right",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2^(1 / 2) + 1 / 0",
+          "expect": {
+            "diagnostic": {
+              "category": "NonIntegerExponent",
+              "span": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-01",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "4 * 3 * 4",
+          "expect": {
+            "value": "48"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-02",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "-4^1",
+          "expect": {
+            "value": "-4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-03",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "3 / 3 - 8 / 5",
+          "expect": {
+            "value": "-3/5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-04",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "1.3 - (0.7 + 6)",
+          "expect": {
+            "value": "-27/5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-05",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "5^(1 / 2)",
+          "expect": {
+            "diagnostic": {
+              "category": "NonIntegerExponent",
+              "span": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-07",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2^64 + 3",
+          "expect": {
+            "value": "18446744073709551619"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-08",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "3^2^0",
+          "expect": {
+            "value": "3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-09",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "4.32 + -1",
+          "expect": {
+            "value": "83/25"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-10",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "0.26 + 7.57 / (4.10 + 2)",
+          "expect": {
+            "value": "2289/1525"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-11",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "-3^3",
+          "expect": {
+            "value": "-27"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/calc12-12",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "2 / 6 - 9 / 8",
+          "expect": {
+            "value": "-19/24"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/wide-01",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "4960813911821797228 + 2191235954361036929315404390",
+          "expect": {
+            "value": "2191235959321850841137201618"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/wide-02",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "59039983304222846951 - 801507105833160313081525",
+          "expect": {
+            "value": "-801448065849856090234574"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/wide-03",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "152493688672462140629 * 694674453390552926151",
+          "expect": {
+            "value": "105933469824051790035249342573421213688979"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/wide-04",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "9945638250859729114534795789 / 4165748366043675355632459975",
+          "expect": {
+            "value": "9945638250859729114534795789/4165748366043675355632459975"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/wide-05",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "-94104936821152130319 + 0.6533108844480794817601",
+          "expect": {
+            "value": "-941049368211521303183466891155519205182399/10000000000000000000000"
+          }
+        }
+      ]
+    },
+    {
+      "id": "WOLFRAM/seed-2424/wide-06",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "support": "cli",
+      "flags": [],
+      "operations": [
+        {
+          "line": "(3646291547905551258222 - 5636524886904287854174) / 700",
+          "expect": {
+            "value": "-497558334749684148988/175"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,854 @@
+{
+  "schema": "noble-calculator-v1-cli-observation/v1",
+  "result": "completed",
+  "mode": "prebuilt-binary-cli-vector-observation",
+  "claim": "finite-prebuilt-calculator-cli-observation-only",
+  "non_claims": [
+    "canonical CALC case promotion or any state/evidence change",
+    "Calculator-v1 acceptance",
+    "source-bound release evidence: the binary hash is checked, its build source is owner-supplied",
+    "CALC-04, CALC-05, CALC-08 and CALC-10 through CALC-13",
+    "independent numeric oracle: expectations are the cases file values",
+    "parser correctness or a universal arithmetic property from finite vectors",
+    "a timeout, host limit or native failure as a ResourceLimit or as a pass",
+    "performance targets"
+  ],
+  "run": {
+    "started": "2026-10-15T22:11:49.938Z",
+    "finished": "2026-10-15T22:18:36.857Z",
+    "host": "aspen3",
+    "kernel": "6.18.54",
+    "cpus": 32,
+    "memory_bytes": 130458030080,
+    "argv": [
+      "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "/home/brittonr/.cache/noble-issues/wt/issue-24/verification/calculator-v1/acceptance.mjs",
+      "--binary",
+      "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+      "--binary-sha256",
+      "22f2b54727af9bc658df162b5588719de8468ca2a2bbec2ca33ece584d2ca6e9",
+      "--source-id",
+      "ffcce53 + seeded-faults/patches/reversed-subtraction.patch (issue-21 mutant)",
+      "--build-profile",
+      "release",
+      "--out",
+      "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z",
+      "--memory-max",
+      "2G",
+      "--concurrency",
+      "4",
+      "--vector-timeout",
+      "3600",
+      "--no-controls",
+      "--vectors",
+      "/home/brittonr/.cache/noble-issues/tmp/w24/final/shrink2-vectors.json"
+    ]
+  },
+  "source": {
+    "repository": "/home/brittonr/.cache/noble-issues/wt/issue-24",
+    "commit": "05a50b0fd1d41f337509ef663488caf5193df848",
+    "tracked_changes": "",
+    "cases": {
+      "path": "specs/conformance/calculator-cases.json",
+      "sha256": "2afc188ff6d2abca2d85b879e65235ee833ed7e72add24df68ea5c027a405202",
+      "revision": "0.1.0-draft.5"
+    },
+    "mapping": {
+      "path": "verification/calculator-v1/cli-mapping.json",
+      "sha256": "133c515668357a85aadd565df288af4f92eb4169c4002758c7da58e68aa94ec1"
+    },
+    "runner": [
+      {
+        "path": "verification/calculator-v1/acceptance.mjs",
+        "sha256": "ad6945ffada81646e4051ecb9ffe9d7230020297d8f3ff40c068031c10aab81e"
+      },
+      {
+        "path": "verification/calculator-v1/supervise.mjs",
+        "sha256": "3076b60b768c7b668e15bcc42d125e8edd0673aa1604abb4c3c88198d3853202"
+      },
+      {
+        "path": "verification/calculator-v1/vectors.mjs",
+        "sha256": "43e71eb5a7e918e27abda101e09feadff1ddbcb2b592b85497d8483f5b750b25"
+      },
+      {
+        "path": "verification/calculator-v1/cli-mapping.json",
+        "sha256": "133c515668357a85aadd565df288af4f92eb4169c4002758c7da58e68aa94ec1"
+      }
+    ],
+    "embedded": [
+      {
+        "path": "crates/noble-cli/src/calculator.rs",
+        "sha256": "fa28f9c3a13786e2363c782c811f80b1a45cbbdda10fc9a688a23df63679be51"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/abi.json",
+        "sha256": "1284792be03cf5e544dc51b977e9d7c0ee7b38d743698c0420f14ef408249a44"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/config.json",
+        "sha256": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/declared-abi.json",
+        "sha256": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/engine-host.mjs",
+        "sha256": "9bac85c54b39dc7491047b835e698ee2f242fbaea685573a85ea6b9f4d61491d"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/engine.mjs",
+        "sha256": "c5b24822375031af15d658b7905925b2e9b836cde4e3ad563ff12b97096d4a40"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/preamble.mjs",
+        "sha256": "1787a81093cfb8c0286fa09d5bc4129dcb5ba5cd75a3a407b9f25009d75ceb28"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/protocol.mjs",
+        "sha256": "fdaf4be48f32de5d2f698021595807a63f72e860eebbf67ba619a6b2eb81545a"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+        "sha256": "bd18a6fb8a89ca85a2e162ac1ee7b0bbba6b77e68632f0d9090cbbf42f9933c2"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-policy.mjs",
+        "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+        "sha256": "a2c5eb2b42955ad565b71d0f67f2ebab9c88ac124fbe2996b74f150f1cf29692"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/values.mjs",
+        "sha256": "add0eda94de18275fd8552ec5e0b5fa0f4a0f2ba80ffe02ed55d9931e9deafb4"
+      },
+      {
+        "path": "crates/noble-cli/src/core/worker.rs",
+        "sha256": "b11f5dba48f55a0e35e320ca8d5100e40465554f1c9ad040885248a15e936b4c"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calc-errors.noble",
+        "sha256": "319efe57c1044d650d356744aa94b783205f56d3b65b3383a753dfc26115aa3d"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-bigint.noble",
+        "sha256": "ff93762aba8f2e9a14853f1c258f23fd6ed7b93dbe2f5963c1dc4083aadbcade"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-bindings.noble",
+        "sha256": "d35ec885d16df3b880867e2fd1c57cb16d7dc5cdb8cb48793f9e88913e580166"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-bits.noble",
+        "sha256": "8b9ad75b3b19d180732f348d27497ce60fbcc6c9922e32e102e5e137f46ade7a"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-decimal.noble",
+        "sha256": "a7664741535f30a36befa428d4626befdd3e29a042f896d5bc67f6ca773cb7ea"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-definitions.noble",
+        "sha256": "da61b1eebc4bec5270a88f4b7dfe560e5641a7b05212dc352dc89d5a0678f7ab"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-display.noble",
+        "sha256": "f3976f0ded740f45a666ebfa81b8b1f85a094bbc91be9db7b2eb69a1724a98f7"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-expression.noble",
+        "sha256": "4245ebcc3fe68db00e52509024aff5136852e7466c1ee8d9a32b0362705c44ca"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-lexical.noble",
+        "sha256": "4c9f9d80528ff4ba2cff6d22181b34f684b5de3e2e4a3f2c029c4be8a4979dcf"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/calculator-numeric.noble",
+        "sha256": "0e8cb62321d32314e181c81160708567795da3cf77ff8020a76c9134f454a176"
+      },
+      {
+        "path": "crates/noble-contracts/src/fixtures/result.noble",
+        "sha256": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80"
+      }
+    ],
+    "vector_file": {
+      "path": "/home/brittonr/.cache/noble-issues/tmp/w24/final/shrink2-vectors.json",
+      "sha256": "b6cd377586fcdfe175360754b170fb90b46fa8ea04b457bdc8fe375265c7220a"
+    }
+  },
+  "binary": {
+    "path": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+    "realpath": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+    "sha256": "22f2b54727af9bc658df162b5588719de8468ca2a2bbec2ca33ece584d2ca6e9",
+    "bytes": 28281696,
+    "build_profile": "release",
+    "source_identity": "ffcce53 + seeded-faults/patches/reversed-subtraction.patch (issue-21 mutant)"
+  },
+  "toolchain": {
+    "runner_node": {
+      "path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "version": "v24.13.0"
+    },
+    "worker_node": {
+      "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "version": "v24.13.0",
+      "error": null
+    },
+    "assembler": {
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+        "--internal-calculator-wat-version"
+      ],
+      "status": 0,
+      "stdout": "noble-calculator-wat 1.243.0"
+    }
+  },
+  "config": {
+    "concurrency": 4,
+    "vector_timeout_ms": 3600000,
+    "session_timeout_ms": 21600000,
+    "memory_max": "2G",
+    "memory_wrapper": [
+      "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+      "--user",
+      "--scope",
+      "--quiet",
+      "--collect",
+      "-p",
+      "MemoryMax=2G",
+      "-p",
+      "MemorySwapMax=0",
+      "-p",
+      "OOMPolicy=continue",
+      "--"
+    ],
+    "sample_ms": 1000,
+    "calculator_args": [],
+    "child_env": {
+      "PATH": "/nonexistent",
+      "LANG": "C",
+      "LC_ALL": "C",
+      "RUST_BACKTRACE": "1",
+      "TMPDIR": "<OUTPUT>/tmp/<vector>"
+    },
+    "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-24",
+    "selection": {
+      "cases": [],
+      "vectors": [],
+      "controls": false,
+      "controls_only": false
+    }
+  },
+  "vectors": [
+    {
+      "id": "WOLFRAM/shrink/00",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-24/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z/vectors/WOLFRAM_shrink_00/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-24",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z/tmp/WOLFRAM_shrink_00"
+      },
+      "timeout_ms": 3600000,
+      "stdin": {
+        "file": "vectors/WOLFRAM_shrink_00/stdin",
+        "sha256": "fc30ab132bde523c665994bd4e17d9e8fad2c9acd4cfff61b7cd849acef2927a",
+        "bytes": 10,
+        "text": "4 - 6 / 2\n"
+      },
+      "expected": {
+        "stdout": [
+          "1"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "observed": {
+        "started_at": "2026-10-15T22:11:49.982Z",
+        "status": 0,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 406806.498105,
+        "stdout": {
+          "file": "vectors/WOLFRAM_shrink_00/stdout",
+          "sha256": "ee3aa64bb94a50845d5024cd4bd20202a4567aed5cd5328c0d97e9920775fc28",
+          "bytes": 3,
+          "text": "-1\n"
+        },
+        "stderr": {
+          "file": "vectors/WOLFRAM_shrink_00/stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "text": ""
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 407,
+          "processes": {
+            "928912": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 60564
+            },
+            "929130": {
+              "name": "MainThread",
+              "peak_rss_kib": 106712
+            },
+            "929529": {
+              "name": "MainThread",
+              "peak_rss_kib": 219212
+            },
+            "930480": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "949372": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 0
+            },
+            "969964": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 4420
+            },
+            "980908": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "983275": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 3924
+            },
+            "997921": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 5196
+            },
+            "1010970": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 4916
+            },
+            "1015437": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 5356
+            },
+            "1025792": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "1034688": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 4224
+            }
+          },
+          "peak_tree_rss_kib": 367708,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p928881-i97330886.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 330502144,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "4 - 6 / 2",
+          "expect": {
+            "value": "1"
+          },
+          "observed_positional": "-1"
+        }
+      ],
+      "classification": "fail",
+      "reasons": [
+        "stdout [\"-1\"], expected [\"1\"]"
+      ]
+    },
+    {
+      "id": "WOLFRAM/shrink/01",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-24/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z/vectors/WOLFRAM_shrink_01/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-24",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z/tmp/WOLFRAM_shrink_01"
+      },
+      "timeout_ms": 3600000,
+      "stdin": {
+        "file": "vectors/WOLFRAM_shrink_01/stdin",
+        "sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+        "bytes": 2,
+        "text": "4\n"
+      },
+      "expected": {
+        "stdout": [
+          "4"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "observed": {
+        "started_at": "2026-10-15T22:11:49.984Z",
+        "status": 0,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 100847.834851,
+        "stdout": {
+          "file": "vectors/WOLFRAM_shrink_01/stdout",
+          "sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+          "bytes": 2,
+          "text": "4\n"
+        },
+        "stderr": {
+          "file": "vectors/WOLFRAM_shrink_01/stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "text": ""
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 101,
+          "processes": {
+            "928911": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 60588
+            },
+            "929132": {
+              "name": "MainThread",
+              "peak_rss_kib": 107924
+            },
+            "929551": {
+              "name": "MainThread",
+              "peak_rss_kib": 236960
+            },
+            "931958": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 2488
+            },
+            "937552": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 4268
+            },
+            "941271": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 4644
+            },
+            "943279": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 5652
+            },
+            "953696": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 5772
+            }
+          },
+          "peak_tree_rss_kib": 349660,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p928882-i97330887.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 309907456,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "4",
+          "expect": {
+            "value": "4"
+          },
+          "observed_positional": "4"
+        }
+      ],
+      "classification": "pass",
+      "reasons": []
+    },
+    {
+      "id": "WOLFRAM/shrink/02",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-24/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z/vectors/WOLFRAM_shrink_02/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-24",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z/tmp/WOLFRAM_shrink_02"
+      },
+      "timeout_ms": 3600000,
+      "stdin": {
+        "file": "vectors/WOLFRAM_shrink_02/stdin",
+        "sha256": "8fa38d22bb5d12270c84e9bb65da9d9bacaa6a57c6ba62e1839c8846768b46db",
+        "bytes": 6,
+        "text": "4 - 2\n"
+      },
+      "expected": {
+        "stdout": [
+          "2"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "observed": {
+        "started_at": "2026-10-15T22:11:49.986Z",
+        "status": 0,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 259897.709202,
+        "stdout": {
+          "file": "vectors/WOLFRAM_shrink_02/stdout",
+          "sha256": "4b883e04ed1a2af32c21811a12f2ccc766a1d73040b533ae4bcdfad8aca74293",
+          "bytes": 3,
+          "text": "-2\n"
+        },
+        "stderr": {
+          "file": "vectors/WOLFRAM_shrink_02/stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "text": ""
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 260,
+          "processes": {
+            "928910": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 60552
+            },
+            "929128": {
+              "name": "MainThread",
+              "peak_rss_kib": 107032
+            },
+            "929536": {
+              "name": "MainThread",
+              "peak_rss_kib": 223552
+            },
+            "937986": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 3500
+            },
+            "941889": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 5188
+            },
+            "956498": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 3744
+            },
+            "956999": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 5628
+            },
+            "974080": {
+              "name": "MainThread",
+              "peak_rss_kib": 4
+            },
+            "980678": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 7132
+            },
+            "991795": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 5304
+            }
+          },
+          "peak_tree_rss_kib": 370132,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p928883-i97330888.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 331829248,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "4 - 2",
+          "expect": {
+            "value": "2"
+          },
+          "observed_positional": "-2"
+        }
+      ],
+      "classification": "fail",
+      "reasons": [
+        "stdout [\"-2\"], expected [\"2\"]"
+      ]
+    },
+    {
+      "id": "WOLFRAM/shrink/03",
+      "case": "CALC-12-wolfram",
+      "kind": "line",
+      "flags": [],
+      "argv": [
+        "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+        "calculator"
+      ],
+      "supervisor_argv": [
+        "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--collect",
+        "-p",
+        "MemoryMax=2G",
+        "-p",
+        "MemorySwapMax=0",
+        "-p",
+        "OOMPolicy=continue",
+        "--",
+        "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "/home/brittonr/.cache/noble-issues/wt/issue-24/verification/calculator-v1/supervise.mjs",
+        "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z/vectors/WOLFRAM_shrink_03/supervisor-spec.json"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-issues/wt/issue-24",
+      "env": {
+        "PATH": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "RUST_BACKTRACE": "1",
+        "TMPDIR": "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z/tmp/WOLFRAM_shrink_03"
+      },
+      "timeout_ms": 3600000,
+      "stdin": {
+        "file": "vectors/WOLFRAM_shrink_03/stdin",
+        "sha256": "e5013183c674f1cb037ccfc8385b6c58bf92d30970ec0664187c8dcc620936b7",
+        "bytes": 6,
+        "text": "4 - 6\n"
+      },
+      "expected": {
+        "stdout": [
+          "-2"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "observed": {
+        "started_at": "2026-10-15T22:11:49.988Z",
+        "status": 0,
+        "signal": null,
+        "timed_out": false,
+        "launch_error": null,
+        "stdin_error": null,
+        "wall_ms": 262559.205284,
+        "stdout": {
+          "file": "vectors/WOLFRAM_shrink_03/stdout",
+          "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+          "bytes": 2,
+          "text": "2\n"
+        },
+        "stderr": {
+          "file": "vectors/WOLFRAM_shrink_03/stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "text": ""
+        },
+        "memory": {
+          "sample_ms": 1000,
+          "samples": 263,
+          "processes": {
+            "928913": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 60488
+            },
+            "929126": {
+              "name": "MainThread",
+              "peak_rss_kib": 107556
+            },
+            "929538": {
+              "name": "MainThread",
+              "peak_rss_kib": 216820
+            },
+            "955386": {
+              "name": "noble-reversed-",
+              "peak_rss_kib": 4860
+            }
+          },
+          "peak_tree_rss_kib": 375652,
+          "cgroup": {
+            "path": "/sys/fs/cgroup/user.slice/user-1555.slice/user@1555.service/app.slice/run-p928884-i97330889.scope",
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "memory_peak_bytes": 334352384,
+            "memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          }
+        },
+        "group_survivors_killed": false,
+        "supervisor_lost": false,
+        "supervisor_exit": {
+          "status": 0,
+          "signal": null,
+          "error": null
+        }
+      },
+      "operations": [
+        {
+          "line": "4 - 6",
+          "expect": {
+            "value": "-2"
+          },
+          "observed_positional": "2"
+        }
+      ],
+      "classification": "fail",
+      "reasons": [
+        "stdout [\"2\"], expected [\"-2\"]"
+      ]
+    }
+  ],
+  "unsupported": [],
+  "controls": [],
+  "summary": {
+    "selected": 4,
+    "by_class": {
+      "pass": 1,
+      "fail": 3,
+      "timeout": 0,
+      "native-failure": 0,
+      "host-limit": 0
+    },
+    "by_case": {
+      "CALC-12-wolfram": {
+        "pass": 1,
+        "fail": 3,
+        "timeout": 0,
+        "native-failure": 0,
+        "host-limit": 0
+      }
+    },
+    "unsupported": [],
+    "all_selected_pass": false,
+    "controls": 0,
+    "controls_ok": true
+  },
+  "error": null
+}

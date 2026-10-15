@@ -1,0 +1,32 @@
+pass               100.8 s  WOLFRAM/shrink/01
+fail               259.9 s  WOLFRAM/shrink/02
+fail               262.6 s  WOLFRAM/shrink/03
+fail               406.8 s  WOLFRAM/shrink/00
+{
+  "result": "completed",
+  "receipt": "/home/brittonr/.cache/noble-issues/receipts/wolfram24-shrink-reversed-subtraction-20261015T221149Z/receipt.json",
+  "summary": {
+    "selected": 4,
+    "by_class": {
+      "pass": 1,
+      "fail": 3,
+      "timeout": 0,
+      "native-failure": 0,
+      "host-limit": 0
+    },
+    "by_case": {
+      "CALC-12-wolfram": {
+        "pass": 1,
+        "fail": 3,
+        "timeout": 0,
+        "native-failure": 0,
+        "host-limit": 0
+      }
+    },
+    "unsupported": [],
+    "all_selected_pass": false,
+    "controls": 0,
+    "controls_ok": true
+  },
+  "error": null
+}

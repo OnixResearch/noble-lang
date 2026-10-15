@@ -1,0 +1,338 @@
+{
+  "schema": "noble-wolfram-fixtures/v1",
+  "expectation_source": "python-fractions-stand-in",
+  "policy_version": "noble-wolfram-policy/1",
+  "adapter": {
+    "policy_version": "noble-wolfram-policy/1",
+    "files": {
+      "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
+      "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+      "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+    },
+    "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb"
+  },
+  "reference_provenance": {
+    "file_sha256": "e162f0e099e762c4e0fd62342308f23d931f3aead3b5c7ff0750230924beabc4",
+    "label": "stand-in-reference",
+    "arithmetic": "python-fractions",
+    "environment": {
+      "implementation": "CPython fractions.Fraction",
+      "python": "3.13.12"
+    },
+    "probes": [],
+    "corpus_sha256": "1707a0be7d2312df55e050dda267fd89322a75c1dd9d11ba0993aa4c4a6b1cd0",
+    "started": "2026-10-15T22:09:26.023Z"
+  },
+  "cases": [
+    {
+      "id": "edge/decimal-sum",
+      "text": "0.1 + 0.2",
+      "interchange_sha256": "a0f988af42ada11352b04a6dd72d9c5fae4608bcd92bdb552966c550025d8ca6",
+      "expected": {
+        "kind": "value",
+        "n": "3",
+        "d": "10"
+      }
+    },
+    {
+      "id": "edge/decimal-literal",
+      "text": "0.1",
+      "interchange_sha256": "e6fb91dfeef498329d2b48490957381b8fb4d479c569774934d849aec1d9a975",
+      "expected": {
+        "kind": "value",
+        "n": "1",
+        "d": "10"
+      }
+    },
+    {
+      "id": "edge/decimal-tiny",
+      "text": "0.00000000000000000001",
+      "interchange_sha256": "69d90b45a5f1ddf85b2a3d26a0fe716c5b2f4ed8aafdfccbdec229257f8052eb",
+      "expected": {
+        "kind": "value",
+        "n": "1",
+        "d": "100000000000000000000"
+      }
+    },
+    {
+      "id": "edge/decimal-scaled",
+      "text": "3.14159 - 3",
+      "interchange_sha256": "47e31fe527c56ea547dcda11b6bb570ace74c730cce1c3d7887425dee2aa5355",
+      "expected": {
+        "kind": "value",
+        "n": "14159",
+        "d": "100000"
+      }
+    },
+    {
+      "id": "edge/decimal-times-integer",
+      "text": "1.5 * 2",
+      "interchange_sha256": "f95baf9682d427c1c56dab6bdc89fb01551dd5c98444a3511249cd36e5874174",
+      "expected": {
+        "kind": "value",
+        "n": "3",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/rational-sum",
+      "text": "1 / 3 + 1 / 6",
+      "interchange_sha256": "d4e51e14537bf56dedcd95252f66c31faedf5b1058a355b0598cb8195764f58f",
+      "expected": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      }
+    },
+    {
+      "id": "edge/normalize-quotient",
+      "text": "2 / 4",
+      "interchange_sha256": "d92a2f98ca2472c4b7e57cfe73307116b97ab89e7705a6f5a03716c3191f7710",
+      "expected": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      }
+    },
+    {
+      "id": "edge/rational-quotient",
+      "text": "7 / 2",
+      "interchange_sha256": "fa29f47a031fd20c8a774e1f52a0b2f5664b49410b04c06c4a2f26391aef01c8",
+      "expected": {
+        "kind": "value",
+        "n": "7",
+        "d": "2"
+      }
+    },
+    {
+      "id": "edge/signed-quotient",
+      "text": "7 / -14",
+      "interchange_sha256": "32b42b1a918899cfad7869fe12118a4d25e49ef764ab45e00a04144e0cb345f4",
+      "expected": {
+        "kind": "value",
+        "n": "-1",
+        "d": "2"
+      }
+    },
+    {
+      "id": "edge/subtract",
+      "text": "10 - 3",
+      "interchange_sha256": "2f0b2a3ea9df25c477e5e2afb8858c237df36223e052b501b354cee98383d472",
+      "expected": {
+        "kind": "value",
+        "n": "7",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/negative-result",
+      "text": "0 - 5",
+      "interchange_sha256": "03027c6ac657909b3a49a4cd47e7d912b66c6655542b177b894950609356c214",
+      "expected": {
+        "kind": "value",
+        "n": "-5",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/negative-zero",
+      "text": "-0",
+      "interchange_sha256": "33fb3de1197112812ed259c20631f24990610594847b4dc288b9ab06fc9f885d",
+      "expected": {
+        "kind": "value",
+        "n": "0",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/i64-max-plus-one",
+      "text": "9223372036854775807 + 1",
+      "interchange_sha256": "8abbb2119cafa10284372cdfc84347ba46033b219bde93d884f5010f29ebfd30",
+      "expected": {
+        "kind": "value",
+        "n": "9223372036854775808",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/i64-min-minus-one",
+      "text": "-9223372036854775808 - 1",
+      "interchange_sha256": "836f4ebf9a9666262e97ad5588b1dbb69106f38fb002037b837efd30acdedd91",
+      "expected": {
+        "kind": "value",
+        "n": "-9223372036854775809",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/float-precision-trap",
+      "text": "9007199254740993 - 9007199254740992",
+      "interchange_sha256": "81e2db5f6d044a53454825eb927991d06e6c10ba5fae1a40dbde89d3826787b3",
+      "expected": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/u64-squared",
+      "text": "18446744073709551616 * 18446744073709551616",
+      "interchange_sha256": "6ab44423167563b39caeed60b87286b007fc1b523c8b6a538f55cfbb505e7da5",
+      "expected": {
+        "kind": "value",
+        "n": "340282366920938463463374607431768211456",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/wide-quotient",
+      "text": "123456789012345678901234567890 / 987654321098765432109876543210",
+      "interchange_sha256": "c6561cec79992a612600dcbd6918c5367d601b5a414fff84a3f294c9728312d7",
+      "expected": {
+        "kind": "value",
+        "n": "13717421",
+        "d": "109739369"
+      }
+    },
+    {
+      "id": "edge/power-right-associative",
+      "text": "2^3^2",
+      "interchange_sha256": "a878d0de0ecc7c90c4553bf107e0231652f77b5a0e12d3175dfd48c66472cc5c",
+      "expected": {
+        "kind": "value",
+        "n": "512",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/power-negative-exponent",
+      "text": "2^-3",
+      "interchange_sha256": "ffdc8e797d3229358359c413056329b703b06cd2bdea305849a3e95006b7eab0",
+      "expected": {
+        "kind": "value",
+        "n": "1",
+        "d": "8"
+      }
+    },
+    {
+      "id": "edge/power-rational-base",
+      "text": "(2 / 3)^-2",
+      "interchange_sha256": "022f716443a9b9dcd42bcc4ac52fdb00d62ad8f6cf3a7af0fe72e82ae2cf5fec",
+      "expected": {
+        "kind": "value",
+        "n": "9",
+        "d": "4"
+      }
+    },
+    {
+      "id": "edge/power-negative-base",
+      "text": "(-2)^3",
+      "interchange_sha256": "f5507bb1e9eb9b6dceb235fc608af25c14d3a762fe1c7b9a73a7100570fabd7d",
+      "expected": {
+        "kind": "value",
+        "n": "-8",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/power-unary-precedence",
+      "text": "-2^2",
+      "interchange_sha256": "2a72468bcd96cb021ce990c9f93fec0a18fbb060189faf1f3e1cf753fa7c7a90",
+      "expected": {
+        "kind": "value",
+        "n": "-4",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/power-integral-by-value",
+      "text": "4^(2 / 2)",
+      "interchange_sha256": "4d60d1177456ea681b880b863c79d0d9bc7686c243c44f708bde5cc0e3fe505d",
+      "expected": {
+        "kind": "value",
+        "n": "4",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/zero-power-zero",
+      "text": "0^0",
+      "interchange_sha256": "3f2f54be01fad986353ea68187c64ff8ec70101a331c63069b675cd2a5b6f361",
+      "expected": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/divide-by-zero",
+      "text": "1 / 0",
+      "interchange_sha256": "9304a2d2e7dcdeeb82965336dae9f4079d72c42a8acf71adf43665e851d15f47",
+      "expected": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      }
+    },
+    {
+      "id": "edge/zero-over-zero",
+      "text": "0 / 0",
+      "interchange_sha256": "4a53cf9da38791d177a6abd57cbaf474bc3bbb473b9d18bc30d3c37ed47d78bb",
+      "expected": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      }
+    },
+    {
+      "id": "edge/zero-negative-power",
+      "text": "0^-1",
+      "interchange_sha256": "caae3583a2d862604d8b4702a3952359f0c552f19dda8cfcb4e3e05edcc25d6f",
+      "expected": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-base-negative-exponent"
+      }
+    },
+    {
+      "id": "edge/nonintegral-exponent-exact-root",
+      "text": "4^(1 / 2)",
+      "interchange_sha256": "5d917bea039a97656e134c6c195eca0140b76db6130df04495281128b7600828",
+      "expected": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      }
+    },
+    {
+      "id": "edge/nonintegral-exponent",
+      "text": "2^(1 / 2)",
+      "interchange_sha256": "3e4b2e258b0696671b0a1caad0c838fd23b82bf32fe357935e34d8abd656c7c6",
+      "expected": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      }
+    },
+    {
+      "id": "edge/first-error-left",
+      "text": "(1 / 0)^(1 / 2)",
+      "interchange_sha256": "2be80b980e18de161d3c267dc813658b21ca9799a7cd238948711e0335d5a67f",
+      "expected": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      }
+    },
+    {
+      "id": "edge/first-error-right",
+      "text": "2^(1 / 2) + 1 / 0",
+      "interchange_sha256": "05a9b11217e0f978d6a1513244bafcac834b5b6d6cbe715789515df7aa4b3ecd",
+      "expected": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      }
+    }
+  ]
+}

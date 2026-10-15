@@ -1,0 +1,2379 @@
+{
+  "schema": "noble-wolfram-harness/v1",
+  "implementation": "fault:non-normalized-rational",
+  "fault_reason": "arithmetic results keep common factors (no gcd reduction)",
+  "label": "stand-in-reference",
+  "expectation_source": "fresh python-fractions stand-in computation (not Wolfram)",
+  "reference_status": "ok",
+  "lane_result": "fail",
+  "stale_provenance": [],
+  "provenance": {
+    "lane": {
+      "policy_version": "noble-wolfram-policy/1",
+      "files": {
+        "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
+        "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+        "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+      },
+      "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb",
+      "repository": {
+        "commit": "05a50b0fd1d41f337509ef663488caf5193df848",
+        "tracked_changes": ""
+      },
+      "node": "v24.13.0"
+    },
+    "reference": {
+      "file": "/home/brittonr/.cache/noble-issues/tmp/w24/final/reference-stand-in.json",
+      "sha256": "b2459f497ec42cf159c6e59ac9521ce585b8524f3baf6922405f462db8c540c5",
+      "policy_version": "noble-wolfram-policy/1",
+      "adapter": {
+        "policy_version": "noble-wolfram-policy/1",
+        "files": {
+          "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
+          "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+          "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+        },
+        "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb"
+      },
+      "environment": {
+        "implementation": "CPython fractions.Fraction",
+        "python": "3.13.12"
+      },
+      "probes": [],
+      "corpus": {
+        "path": "/home/brittonr/.cache/noble-issues/tmp/w24/final/corpus-seed2424.json",
+        "sha256": "bf9c4f64e5a30b9288e133f892ba4430e165f4ecc5230442c57f20ac44eeac52",
+        "generator": {
+          "seed": 2424,
+          "count": 12,
+          "wide": 6,
+          "prng": "mulberry32 (#21 oracle/generate.mjs)",
+          "files": {
+            "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+            "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+            "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+            "wolfram/lane.mjs": "6dfacc132742c02858e07843e29eb4d7fd8ccc0378b81d68280c7cd87abda9e0",
+            "wolfram/fixtures/edge-cases.json": "cebbd7b2e8a2913512dd30f522396a32c32209a8e14e2b6d746def0b5c24c57d"
+          }
+        }
+      },
+      "started": "2026-10-15T22:11:05.776Z",
+      "finished": "2026-10-15T22:11:05.814Z"
+    },
+    "corpus": {
+      "path": "/home/brittonr/.cache/noble-issues/tmp/w24/final/corpus-seed2424.json",
+      "sha256": "bf9c4f64e5a30b9288e133f892ba4430e165f4ecc5230442c57f20ac44eeac52"
+    }
+  },
+  "summary": {
+    "disagree": 12,
+    "agree": 36
+  },
+  "results": [
+    {
+      "id": "edge/decimal-sum",
+      "text": "0.1 + 0.2",
+      "observed": {
+        "stdout": [
+          "15/50"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "10"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display 15/50 has the reference value but not the normalized form 3/10"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "0.1 + 0.2",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 0,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [],
+        "replay": {
+          "text": "0.1 + 0.2",
+          "flags": [],
+          "interchange": {
+            "op": "add",
+            "x": {
+              "op": "lit",
+              "digits": "01",
+              "scale": 1
+            },
+            "y": {
+              "op": "lit",
+              "digits": "02",
+              "scale": 1
+            }
+          },
+          "interchange_sha256": "a0f988af42ada11352b04a6dd72d9c5fae4608bcd92bdb552966c550025d8ca6",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "0.1 + 0.2",
+                      "expect": {
+                        "value": "3/10"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "add",
+                    "x": {
+                      "op": "lit",
+                      "digits": "01",
+                      "scale": 1
+                    },
+                    "y": {
+                      "op": "lit",
+                      "digits": "02",
+                      "scale": 1
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/decimal-literal",
+      "text": "0.1",
+      "observed": {
+        "stdout": [
+          "1/10"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "10"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-tiny",
+      "text": "0.00000000000000000001",
+      "observed": {
+        "stdout": [
+          "1/100000000000000000000"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "100000000000000000000"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-scaled",
+      "text": "3.14159 - 3",
+      "observed": {
+        "stdout": [
+          "14159/100000"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "14159",
+        "d": "100000"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-times-integer",
+      "text": "1.5 * 2",
+      "observed": {
+        "stdout": [
+          "6/2"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "1"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display 6/2 has the reference value but not the normalized form 3"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "1.5 * 2",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 0,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [],
+        "replay": {
+          "text": "1.5 * 2",
+          "flags": [],
+          "interchange": {
+            "op": "mul",
+            "x": {
+              "op": "lit",
+              "digits": "15",
+              "scale": 1
+            },
+            "y": {
+              "op": "lit",
+              "digits": "2",
+              "scale": 0
+            }
+          },
+          "interchange_sha256": "f95baf9682d427c1c56dab6bdc89fb01551dd5c98444a3511249cd36e5874174",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "1.5 * 2",
+                      "expect": {
+                        "value": "3"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "mul",
+                    "x": {
+                      "op": "lit",
+                      "digits": "15",
+                      "scale": 1
+                    },
+                    "y": {
+                      "op": "lit",
+                      "digits": "2",
+                      "scale": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/rational-sum",
+      "text": "1 / 3 + 1 / 6",
+      "observed": {
+        "stdout": [
+          "9/18"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display 9/18 has the reference value but not the normalized form 1/2"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "1 / 3 + 1 / 6",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 0,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [],
+        "replay": {
+          "text": "1 / 3 + 1 / 6",
+          "flags": [],
+          "interchange": {
+            "op": "add",
+            "x": {
+              "op": "div",
+              "x": {
+                "op": "lit",
+                "digits": "1",
+                "scale": 0
+              },
+              "y": {
+                "op": "lit",
+                "digits": "3",
+                "scale": 0
+              }
+            },
+            "y": {
+              "op": "div",
+              "x": {
+                "op": "lit",
+                "digits": "1",
+                "scale": 0
+              },
+              "y": {
+                "op": "lit",
+                "digits": "6",
+                "scale": 0
+              }
+            }
+          },
+          "interchange_sha256": "d4e51e14537bf56dedcd95252f66c31faedf5b1058a355b0598cb8195764f58f",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "1 / 3 + 1 / 6",
+                      "expect": {
+                        "value": "1/2"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "add",
+                    "x": {
+                      "op": "div",
+                      "x": {
+                        "op": "lit",
+                        "digits": "1",
+                        "scale": 0
+                      },
+                      "y": {
+                        "op": "lit",
+                        "digits": "3",
+                        "scale": 0
+                      }
+                    },
+                    "y": {
+                      "op": "div",
+                      "x": {
+                        "op": "lit",
+                        "digits": "1",
+                        "scale": 0
+                      },
+                      "y": {
+                        "op": "lit",
+                        "digits": "6",
+                        "scale": 0
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/normalize-quotient",
+      "text": "2 / 4",
+      "observed": {
+        "stdout": [
+          "2/4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display 2/4 has the reference value but not the normalized form 1/2"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "2 / 2",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 5,
+            "kept": "2 / 2"
+          }
+        ],
+        "replay": {
+          "text": "2 / 2",
+          "flags": [],
+          "interchange": {
+            "op": "div",
+            "x": {
+              "op": "lit",
+              "digits": "2",
+              "scale": 0
+            },
+            "y": {
+              "op": "lit",
+              "digits": "2",
+              "scale": 0
+            }
+          },
+          "interchange_sha256": "d0b41d971634f8da7ad049762b6cd7ac4dab2056b00c56ec9da2f4e9176c2961",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "2 / 2",
+                      "expect": {
+                        "value": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "div",
+                    "x": {
+                      "op": "lit",
+                      "digits": "2",
+                      "scale": 0
+                    },
+                    "y": {
+                      "op": "lit",
+                      "digits": "2",
+                      "scale": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/rational-quotient",
+      "text": "7 / 2",
+      "observed": {
+        "stdout": [
+          "7/2"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "7",
+        "d": "2"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/signed-quotient",
+      "text": "7 / -14",
+      "observed": {
+        "stdout": [
+          "-7/14"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-1",
+        "d": "2"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display -7/14 has the reference value but not the normalized form -1/2"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "7 / 7",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 2,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "7 / -7"
+          },
+          {
+            "round": 2,
+            "tried": 6,
+            "kept": "7 / 7"
+          }
+        ],
+        "replay": {
+          "text": "7 / 7",
+          "flags": [],
+          "interchange": {
+            "op": "div",
+            "x": {
+              "op": "lit",
+              "digits": "7",
+              "scale": 0
+            },
+            "y": {
+              "op": "lit",
+              "digits": "7",
+              "scale": 0
+            }
+          },
+          "interchange_sha256": "140fd7406b788ad52a893a2e3b5f359f53501ae5a2180028759b65e5f3a52116",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "7 / 7",
+                      "expect": {
+                        "value": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "div",
+                    "x": {
+                      "op": "lit",
+                      "digits": "7",
+                      "scale": 0
+                    },
+                    "y": {
+                      "op": "lit",
+                      "digits": "7",
+                      "scale": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/subtract",
+      "text": "10 - 3",
+      "observed": {
+        "stdout": [
+          "7"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "7",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/negative-result",
+      "text": "0 - 5",
+      "observed": {
+        "stdout": [
+          "-5"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-5",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/negative-zero",
+      "text": "-0",
+      "observed": {
+        "stdout": [
+          "0"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "0",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/i64-max-plus-one",
+      "text": "9223372036854775807 + 1",
+      "observed": {
+        "stdout": [
+          "9223372036854775808"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "9223372036854775808",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/i64-min-minus-one",
+      "text": "-9223372036854775808 - 1",
+      "observed": {
+        "stdout": [
+          "-9223372036854775809"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-9223372036854775809",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/float-precision-trap",
+      "text": "9007199254740993 - 9007199254740992",
+      "observed": {
+        "stdout": [
+          "1"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/u64-squared",
+      "text": "18446744073709551616 * 18446744073709551616",
+      "observed": {
+        "stdout": [
+          "340282366920938463463374607431768211456"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "340282366920938463463374607431768211456",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/wide-quotient",
+      "text": "123456789012345678901234567890 / 987654321098765432109876543210",
+      "observed": {
+        "stdout": [
+          "123456789012345678901234567890/987654321098765432109876543210"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "13717421",
+        "d": "109739369"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display 123456789012345678901234567890/987654321098765432109876543210 has the reference value but not the normalized form 13717421/109739369"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "123456789012345678901234567890 / 987654321098765432109876543210",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 0,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [],
+        "replay": {
+          "text": "123456789012345678901234567890 / 987654321098765432109876543210",
+          "flags": [],
+          "interchange": {
+            "op": "div",
+            "x": {
+              "op": "lit",
+              "digits": "123456789012345678901234567890",
+              "scale": 0
+            },
+            "y": {
+              "op": "lit",
+              "digits": "987654321098765432109876543210",
+              "scale": 0
+            }
+          },
+          "interchange_sha256": "c6561cec79992a612600dcbd6918c5367d601b5a414fff84a3f294c9728312d7",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "123456789012345678901234567890 / 987654321098765432109876543210",
+                      "expect": {
+                        "value": "13717421/109739369"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "div",
+                    "x": {
+                      "op": "lit",
+                      "digits": "123456789012345678901234567890",
+                      "scale": 0
+                    },
+                    "y": {
+                      "op": "lit",
+                      "digits": "987654321098765432109876543210",
+                      "scale": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/power-right-associative",
+      "text": "2^3^2",
+      "observed": {
+        "stdout": [
+          "512"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "512",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-negative-exponent",
+      "text": "2^-3",
+      "observed": {
+        "stdout": [
+          "1/8"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "8"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-rational-base",
+      "text": "(2 / 3)^-2",
+      "observed": {
+        "stdout": [
+          "9/4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "9",
+        "d": "4"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-negative-base",
+      "text": "(-2)^3",
+      "observed": {
+        "stdout": [
+          "-8"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-8",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-unary-precedence",
+      "text": "-2^2",
+      "observed": {
+        "stdout": [
+          "-4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-4",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-integral-by-value",
+      "text": "4^(2 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "value",
+        "n": "4",
+        "d": "1"
+      },
+      "verdict": "disagree",
+      "mismatch": "category-mismatch",
+      "reasons": [
+        "diagnostic NonIntegerExponent where the reference has value 4",
+        "exit status 1 != 0"
+      ],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "disagree:category-mismatch:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "1^(2 / 2)",
+        "signature": "disagree:category-mismatch:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "1^(2 / 2)"
+          }
+        ],
+        "replay": {
+          "text": "1^(2 / 2)",
+          "flags": [],
+          "interchange": {
+            "op": "pow",
+            "x": {
+              "op": "lit",
+              "digits": "1",
+              "scale": 0
+            },
+            "y": {
+              "op": "div",
+              "x": {
+                "op": "lit",
+                "digits": "2",
+                "scale": 0
+              },
+              "y": {
+                "op": "lit",
+                "digits": "2",
+                "scale": 0
+              }
+            }
+          },
+          "interchange_sha256": "60cb0a08b463bfa7695ac86c5cc7cdcb09765afb90928d980e5be23358976a4c",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "1^(2 / 2)",
+                      "expect": {
+                        "value": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "pow",
+                    "x": {
+                      "op": "lit",
+                      "digits": "1",
+                      "scale": 0
+                    },
+                    "y": {
+                      "op": "div",
+                      "x": {
+                        "op": "lit",
+                        "digits": "2",
+                        "scale": 0
+                      },
+                      "y": {
+                        "op": "lit",
+                        "digits": "2",
+                        "scale": 0
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/zero-power-zero",
+      "text": "0^0",
+      "observed": {
+        "stdout": [
+          "1"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/divide-by-zero",
+      "text": "1 / 0",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          2,
+          3
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-over-zero",
+      "text": "0 / 0",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          2,
+          3
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-negative-power",
+      "text": "0^-1",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-base-negative-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/nonintegral-exponent-exact-root",
+      "text": "4^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/nonintegral-exponent",
+      "text": "2^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/first-error-left",
+      "text": "(1 / 0)^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [3,4) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          3,
+          4
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/first-error-right",
+      "text": "2^(1 / 2) + 1 / 0",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-01",
+      "text": "4 * 3 * 4",
+      "observed": {
+        "stdout": [
+          "48"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "48",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-02",
+      "text": "-4^1",
+      "observed": {
+        "stdout": [
+          "-4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-4",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-03",
+      "text": "3 / 3 - 8 / 5",
+      "observed": {
+        "stdout": [
+          "-9/15"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-3",
+        "d": "5"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display -9/15 has the reference value but not the normalized form -3/5"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "3 / 3",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "3 / 3"
+          }
+        ],
+        "replay": {
+          "text": "3 / 3",
+          "flags": [],
+          "interchange": {
+            "op": "div",
+            "x": {
+              "op": "lit",
+              "digits": "3",
+              "scale": 0
+            },
+            "y": {
+              "op": "lit",
+              "digits": "3",
+              "scale": 0
+            }
+          },
+          "interchange_sha256": "59ed47ddbf81baa16fa83e1c77ccaf427edcc3ade2c684f8fc9ccbc57a81a3d3",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "3 / 3",
+                      "expect": {
+                        "value": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "div",
+                    "x": {
+                      "op": "lit",
+                      "digits": "3",
+                      "scale": 0
+                    },
+                    "y": {
+                      "op": "lit",
+                      "digits": "3",
+                      "scale": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/calc12-04",
+      "text": "1.3 - (0.7 + 6)",
+      "observed": {
+        "stdout": [
+          "-540/100"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-27",
+        "d": "5"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display -540/100 has the reference value but not the normalized form -27/5"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "1.3 - 0.7",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 2,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "1.3 - (0.7)"
+          },
+          {
+            "round": 2,
+            "tried": 5,
+            "kept": "1.3 - 0.7"
+          }
+        ],
+        "replay": {
+          "text": "1.3 - 0.7",
+          "flags": [],
+          "interchange": {
+            "op": "sub",
+            "x": {
+              "op": "lit",
+              "digits": "13",
+              "scale": 1
+            },
+            "y": {
+              "op": "lit",
+              "digits": "07",
+              "scale": 1
+            }
+          },
+          "interchange_sha256": "618eb10257e6e63ce7fd56f105ddc1fd78f7353e966d29f4109c16c242a04ee5",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "1.3 - 0.7",
+                      "expect": {
+                        "value": "3/5"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "sub",
+                    "x": {
+                      "op": "lit",
+                      "digits": "13",
+                      "scale": 1
+                    },
+                    "y": {
+                      "op": "lit",
+                      "digits": "07",
+                      "scale": 1
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/calc12-05",
+      "text": "5^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-07",
+      "text": "2^64 + 3",
+      "observed": {
+        "stdout": [
+          "18446744073709551619"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "18446744073709551619",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-08",
+      "text": "3^2^0",
+      "observed": {
+        "stdout": [
+          "3"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-09",
+      "text": "4.32 + -1",
+      "observed": {
+        "stdout": [
+          "83/25"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "83",
+        "d": "25"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-10",
+      "text": "0.26 + 7.57 / (4.10 + 2)",
+      "observed": {
+        "stdout": [
+          "457800/305000"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "2289",
+        "d": "1525"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display 457800/305000 has the reference value but not the normalized form 2289/1525"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "0.26 + 7.57",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "0.26 + 7.57"
+          }
+        ],
+        "replay": {
+          "text": "0.26 + 7.57",
+          "flags": [],
+          "interchange": {
+            "op": "add",
+            "x": {
+              "op": "lit",
+              "digits": "026",
+              "scale": 2
+            },
+            "y": {
+              "op": "lit",
+              "digits": "757",
+              "scale": 2
+            }
+          },
+          "interchange_sha256": "6d639bc7453caabe9f3d5407670ebc5b7b876f53202128f255f4bc19f409dd5f",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "0.26 + 7.57",
+                      "expect": {
+                        "value": "783/100"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "add",
+                    "x": {
+                      "op": "lit",
+                      "digits": "026",
+                      "scale": 2
+                    },
+                    "y": {
+                      "op": "lit",
+                      "digits": "757",
+                      "scale": 2
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/calc12-11",
+      "text": "-3^3",
+      "observed": {
+        "stdout": [
+          "-27"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-27",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-12",
+      "text": "2 / 6 - 9 / 8",
+      "observed": {
+        "stdout": [
+          "-38/48"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-19",
+        "d": "24"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display -38/48 has the reference value but not the normalized form -19/24"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "2 / 6",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "2 / 6"
+          }
+        ],
+        "replay": {
+          "text": "2 / 6",
+          "flags": [],
+          "interchange": {
+            "op": "div",
+            "x": {
+              "op": "lit",
+              "digits": "2",
+              "scale": 0
+            },
+            "y": {
+              "op": "lit",
+              "digits": "6",
+              "scale": 0
+            }
+          },
+          "interchange_sha256": "3240acf3c5fcff7b7240e533c34d49c865e916cb988895241e7d29d05e8f3fbc",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "2 / 6",
+                      "expect": {
+                        "value": "1/3"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "div",
+                    "x": {
+                      "op": "lit",
+                      "digits": "2",
+                      "scale": 0
+                    },
+                    "y": {
+                      "op": "lit",
+                      "digits": "6",
+                      "scale": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/wide-01",
+      "text": "4960813911821797228 + 2191235954361036929315404390",
+      "observed": {
+        "stdout": [
+          "2191235959321850841137201618"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "2191235959321850841137201618",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-02",
+      "text": "59039983304222846951 - 801507105833160313081525",
+      "observed": {
+        "stdout": [
+          "-801448065849856090234574"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-801448065849856090234574",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-03",
+      "text": "152493688672462140629 * 694674453390552926151",
+      "observed": {
+        "stdout": [
+          "105933469824051790035249342573421213688979"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "105933469824051790035249342573421213688979",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-04",
+      "text": "9945638250859729114534795789 / 4165748366043675355632459975",
+      "observed": {
+        "stdout": [
+          "9945638250859729114534795789/4165748366043675355632459975"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "9945638250859729114534795789",
+        "d": "4165748366043675355632459975"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-05",
+      "text": "-94104936821152130319 + 0.6533108844480794817601",
+      "observed": {
+        "stdout": [
+          "-941049368211521303183466891155519205182399/10000000000000000000000"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-941049368211521303183466891155519205182399",
+        "d": "10000000000000000000000"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-06",
+      "text": "(3646291547905551258222 - 5636524886904287854174) / 700",
+      "observed": {
+        "stdout": [
+          "-1990233338998736595952/700"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-497558334749684148988",
+        "d": "175"
+      },
+      "verdict": "disagree",
+      "mismatch": "non-normalized-display",
+      "reasons": [
+        "display -1990233338998736595952/700 has the reference value but not the normalized form -497558334749684148988/175"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:non-normalized-display:value:-",
+      "matches_fault_models": [
+        "non-normalized-rational"
+      ],
+      "shrunk": {
+        "input": "3646291547905551258222 / 350",
+        "signature": "disagree:non-normalized-display:value:-",
+        "rounds_used": 3,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "(3646291547905551258222) / 700"
+          },
+          {
+            "round": 2,
+            "tried": 6,
+            "kept": "3646291547905551258222 / 700"
+          },
+          {
+            "round": 3,
+            "tried": 5,
+            "kept": "3646291547905551258222 / 350"
+          }
+        ],
+        "replay": {
+          "text": "3646291547905551258222 / 350",
+          "flags": [],
+          "interchange": {
+            "op": "div",
+            "x": {
+              "op": "lit",
+              "digits": "3646291547905551258222",
+              "scale": 0
+            },
+            "y": {
+              "op": "lit",
+              "digits": "350",
+              "scale": 0
+            }
+          },
+          "interchange_sha256": "c5b86dd9eb01cd587cbf44b53d719adfbab6fe4b6601bddac5cd3bfaefe5f36f",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOLFRAM/replay",
+                  "case": "CALC-12-wolfram",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "3646291547905551258222 / 350",
+                      "expect": {
+                        "value": "1823145773952775629111/175"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-wolfram-request/v1",
+              "policy_version": "noble-wolfram-policy/1",
+              "arithmetic": "python-fractions",
+              "kernel": null,
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "div",
+                    "x": {
+                      "op": "lit",
+                      "digits": "3646291547905551258222",
+                      "scale": 0
+                    },
+                    "y": {
+                      "op": "lit",
+                      "digits": "350",
+                      "scale": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "command": "python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": false
+          }
+        }
+      }
+    }
+  ],
+  "non_claims": [
+    "Agreement on finitely many inputs is test evidence only; it establishes no universal arithmetic theorem and no parser correctness (CALC-EVIDENCE-01).",
+    "Reference output (Wolfram or otherwise) is untrusted candidate data: it mints no Certified status, discharges no proof obligation, changes no accepted program semantics and changes no canonical case state.",
+    "Only a fresh-oracle run is a Wolfram comparison; stand-in-reference and offline-fixture-replay results are labeled as such and never count as one.",
+    "Grammar, diagnostic spans, lexical sessions, session rollback, deterministic budgets and host failures are outside this lane (CALC-12 oracle #21, runner #19, budgets #20).",
+    "A Wolfram timeout or memory abort is an oracle failure, not Noble's ResourceLimit; a Noble ResourceLimit is a budget divergence, not a disagreement."
+  ]
+}
