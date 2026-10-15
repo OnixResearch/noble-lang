@@ -861,8 +861,7 @@ fn calculator_any_reachable_program_blocks_the_signature_restart() -> Result<(),
 }
 
 #[test]
-fn calculator_static_literals_stay_content_addressed_across_a_long_session() -> Result<(), String>
-{
+fn calculator_static_literals_stay_content_addressed_across_a_long_session() -> Result<(), String> {
     let mut arena = Arena::new(true)?;
     arena.normal("\"let\"")?;
     let live = arena.snapshot()?;

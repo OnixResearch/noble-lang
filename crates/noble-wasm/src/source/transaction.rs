@@ -23,7 +23,11 @@ pub(super) struct Base {
 }
 
 impl Base {
-    pub(super) const fn capture(
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; the content-addressed calculator literal table is a BTreeMap whose len is not const-stable."
+    )]
+    pub(super) fn capture(
         compiler: &super::Compiler,
         identity_base: usize,
         signature_base: usize,
@@ -46,7 +50,11 @@ impl Base {
         }
     }
 
-    const fn positions_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; comparing the content-addressed calculator literal table size uses the non-const BTreeMap::len."
+    )]
+    fn positions_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
         // The descriptor table has exactly one entry for every emitted
         // signature, so its transactional base shares the profile key bound.
         let key_limit = if self.calculator {

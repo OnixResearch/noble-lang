@@ -769,6 +769,9 @@ fn calculator_dynamic_text_carveout_does_not_reduce_cursor_static_text_space() -
     let mut calculator_compiler = noble_wasm::source::Compiler::new_calculator();
 
     for generation in 0..10 {
+        // Calculator literals are content-addressed: only distinct contents
+        // consume static Text, so each generation lowers a different one.
+        source[1] = b'a' + generation as u8;
         let pending = cursor
             .prepare(&source, &[], limits())
             .map_err(|e| format!("{e:?}"))?;
