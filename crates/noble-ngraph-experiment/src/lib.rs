@@ -10,14 +10,24 @@
 //! model (NG-PO-D) correct. NG-PO-A..H stay open.
 
 pub mod check;
+pub mod compiled;
 pub mod diag;
+pub mod differential;
 pub mod eval;
 pub mod extract;
 pub mod facts;
+pub mod fixtures;
+pub mod grad;
 pub mod ir;
 pub mod l1;
+pub mod oracle;
+pub mod prng;
+pub mod random;
+pub mod rejections;
 pub mod sem;
 pub mod snapshot;
+pub mod text;
+pub mod train;
 
 pub use check::{check, check_with, Budgets, CheckedGraph};
 pub use diag::{BudgetKind, Code, Diagnostic, Malformed, Site};
