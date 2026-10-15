@@ -35,8 +35,23 @@ PATH=/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin:$
   lake exe cache get        # downloads Mathlib .oleans (not rebuilt)
 cd ../..
 NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
-env -i "$NODE" verification/foundation/check.mjs --output "$HOME/.cache/noble-foundation-$(date +%s)"
+OUT=$HOME/.cache/noble-foundation-$(date +%s); mkdir -p "$OUT"
+# 1. proofs, axioms, inventory -> foundation-check.json
+env -i "$NODE" verification/foundation/check.mjs --output "$OUT/check"
+# 2. Phase 3 slice (needs the user systemd manager for the sandboxed Lean consumer)
+env -i XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" "$NODE" verification/foundation/slice.mjs \
+  --foundation "$OUT/check/foundation-check.json" --output "$OUT/slice"
+# 3. Phase 4 differential comparison (+ kernel 1000/200 checker lanes)
+env -i "$NODE" verification/foundation/differential.mjs --seed 15 --count 80 \
+  --foundation "$OUT/check/foundation-check.json" --output "$OUT/differential"
+# 4. reject stale evidence: succeeds only on the clean tree the receipt names
+env -i "$NODE" verification/foundation/differential.mjs --verify "$OUT/differential/differential.json"
 ```
+
+The existing fixed-vector comparator
+(`verification/mathlib-i64/compare.mjs`, 12 vectors, opt off) is
+unchanged. It needs `proofs/m3/.lake` populated the same way
+(`lake exe cache get` in `proofs/m3`).
 
 `check.mjs` does the following:
 - refuses a dirty worktree (`--allow-dirty` records `clean_source:false`)
@@ -132,3 +147,154 @@ Typing premises are stated exactly:
 The full list with printed statements and axioms is in
 [`inventory.json`](inventory.json) and in every `foundation-check.json`
 receipt.
+
+## Phase 3: one checked chain to the loaded bytes
+
+Subject: `[ quote [ 1 + ] compose run ]`. It is one closed, inert quotation
+root with no definitions or resources, which is the
+`MC2-pure-quotation@1` shape that #10 selected for its PAA-1 admission
+envelope (`.cairn/changes/artifact-correspondence-extension/design.md` on
+`design/contracts-8-9-10`).
+
+PAA-1 is a design and is **not implemented**. Instead of a second
+admission route, `verification/foundation/slice.mjs` runs the two
+existing routes that PAA-1 joins, over the same consumer-selected source
+bytes:
+- Route B: `noble build --require-proof`;
+- Route A: `noble admit-artifact`.
+
+This is a strengthened trusted build. It is **not** translation
+validation.
+
+| Edge | What happens | Status |
+|---|---|---|
+| E1 Lean specification | `slice_body_exec` (any prefix, `n ↦ n + 1`), `slice_body_signed`/`slice_driver` (oracle `wrap (x + 1)`), `slice_root_inert`, `slice_body_typed`, `slice_exported_claim`, `slice_examples` | **proved** (model) |
+| E2 frozen law → regenerated MC1 statement | `noble explain-proof` output must equal [`slice/expected-statement.lean`](../../verification/foundation/slice/expected-statement.lean) byte for byte. This is the PAA-1 `owner_law` analogue | **checked**. The exporter itself is assumed (PO-16/PO-19) |
+| E3 regenerated statement ↔ foundation | Lean kernel: `MC1Obligation.program = NobleFoundation.sliceBody := rfl`, and the foundation proves the regenerated `MC1Obligation.claim` | **proved** per artifact |
+| E4 source ↔ subject with evidence | Route B: an independent sandboxed recheck of the self-contained MC1 proof [`compose-increment.proof.lean`](../../verification/foundation/slice/compose-increment.proof.lean); `bind_artifact` binds the source | **checked**. `bind_artifact` is trusted Rust (PAA-1 O6 / PO-16 open) |
+| E5 `noble-wasm` lowering | source → WAT | **open** (PO-17, PAA-1 O1). Trusted compiler |
+| E6 runtime helpers | [`Helper.lean`](NobleFoundation/Helper.lean) transcribes `$op_add/$op_sub/$op_mul`, `$pop_kind`, `$take`, `$push_tag`, `$need`, `$fail`. `helper_refines_step`/`helper_fails_when_stuck` prove they refine MC1 `Step` (operand order, untouched remainder, refusal of non-I64). The text of each transcribed function is pinned in [`helper-transcription.json`](../../verification/foundation/slice/helper-transcription.json) | **proved over a transcription**. Pin **checked**. Transcription fidelity is **assumed** (manual review). `$op_quote_typed`, `$op_compose` and `$op_run` are **open** |
+| E7 WAT → Wasm (`wasm-tools parse`) | pinned path and hash | **assumed**. Validation shows format/type only |
+| E8 `wasm-opt -O2` (opt on) | separate receipts per mode | **assumed** (PAA-1 O2 open) |
+| E9 candidate = consumer rebuild | `admit-artifact` reports `correspondence: byte-exact` for opt off and opt on | **checked** (identity, not semantics) |
+| E10 instantiation/loader/V8 | Route A instantiates the compared buffer (code reading) | **assumed** (PO-18, PAA-1 O3 open) |
+| E11 execution | drivers `x [ … ] run` for `x ∈ {41, max, min}` and a `Bool`/`I64` preserved prefix, opt off/on, through admission. Expectations are kernel-checked against `MathlibI64.wrap` | **tested** (finite) |
+| E12 one PAA-1 envelope joining A and B | — | **open** (#10) |
+
+Refusal controls. Each one must fail for its intended reason, or the run
+fails.
+
+| Control | #10 id | Result required |
+|---|---|---|
+| valid `[1 +]` proof, source `[ quote [ 2 + ] compose run ]` | ACORR-CASE-03 | Route B not released |
+| `[2 +]` bytes admitted against the `[1 +]` source | ACORR-CASE-03 | `correspondence-reject` |
+| opt-on bytes admitted under consumer opt off | S-CASE-07 option mismatch | `correspondence-reject` |
+| `$op_sub` with swapped pops, reassembled for `3 8 -` | ACORR-CASE-08 (changed helper, operand order) | `correspondence-reject`; the Lean transcription pin also refuses (`helper-transcription-stale`) |
+| interface/recipe data string `[I64]` → `[I65]`, code unchanged | ACORR-CASE-06 | `correspondence-reject` |
+| foundation receipt from another tree | ACORR-CASE-04 (stale version) | `stale-proof-subject` |
+| weakened regenerated statement | ACORR-CASE-05 | `law-mismatch` |
+| post-check artifact replacement | ACORR-CASE-09 | **not executed**. There is no hook between comparison and instantiation, and the PAA-1 `load` hash is not implemented |
+
+Stale dependencies do not occur in this profile, which has no definitions.
+Recorded deviation: the reviewed sandbox `bubblewrap-0.11.2` store path
+from `verification/mc2/gate.mjs` was absent on the checking host. The
+runner then uses `bubblewrap-0.12.0` and records that path in the receipt.
+
+## Phase 4: differential evidence
+
+`verification/foundation/differential.mjs` works as follows:
+- It generates seeded (splitmix64) cases:
+  - straight-line arithmetic;
+  - `quote`/block/`compose` trees, nested up to depth 2, then `run`;
+  - nested quotation `[ … ] quote run run`;
+  - preserved `Bool`/`I64` prefixes;
+  - three out-of-range-literal refusal cases.
+- Constants are boundary-biased: half are drawn from
+  {0, ±1, ±2, ±3, max, min, max-1, min+1, ±2^31, 2^32, 2^32-1, ±2^62,
+  ±⌈√2^63⌉}, and half are uniform.
+- Expected values come from a BigInt transcription of `refRun`. **Lean
+  kernel-checks every expectation**: `refRun … = some …` (or `= none`) by
+  `decide`, and instantiates the proved MC1 theorem for that case
+  (`PExpr.exec_inputs_run`, `exec_lowerAll_from_empty`,
+  `exec_inputs_nested`). The implementation under test never supplies an
+  expected value.
+- Each case runs with `--opt off` and `--opt on`. The run checks:
+  - the optimization flag;
+  - the executed-bytes hash against the emitted file;
+  - the source hash;
+  - the ordered stack, including the untouched prefix;
+  - an empty request trace;
+  - zero guest requests.
+- A mismatch is shrunk greedily. At most 48 shrink candidates are
+  executed, and every one must stay valid under the reference.
+- Mutation controls each have to be detected, and every detection has to
+  be attributable to its mutation:
+  - reversed subtraction;
+  - unsigned decoding;
+  - prefix corruption;
+  - wrong composition order;
+  - phantom host-trace expectation;
+  - literal wrapping instead of refusal;
+  - stale proof subject (Lean case rebound to another program, foundation
+    receipt for another tree).
+
+  The receipt keeps the shrunk witness of each control.
+- It runs the existing kernel lanes
+  (`cargo test -p noble-kernel --test property`: 1,000 oracle candidates
+  and 200 malformed). They are recorded as **checker acceptance**
+  coverage, which is distinct from execution semantics.
+- The receipt records:
+  - source commit/tree;
+  - the hashes of the comparator, the Lean sources, the oracle, MC1, the
+    runtime helpers, the lowering table, the frontend literal code, the
+    config, the policy, `Cargo.lock` and the property test;
+  - the CLI and tool hashes;
+  - the Lean version and Mathlib revision;
+  - the theorem names with their printed statements and axioms (from the
+    foundation receipt, which must be for the same tree);
+  - the seed, count and modes;
+  - claims labelled **proved**, **tested**, **assumed** or **open**.
+- `--verify RECEIPT` refuses source drift and stale evidence.
+
+Unsupported modes: none. Both `off` and `on` are supported by
+`Core-Bootstrap`.
+
+## Phase 2: law/obligation matrix (pure MC1 model)
+
+Observation relations are kept separate:
+- `BehEq` is normal-return behavioral equality.
+- Recipe equality (`List Op` equality) is what `reflect` observes.
+- Definition/proof-subject identity has no MC1 counterpart. On the
+  executable path it is covered by Route B subject binding and the
+  ACORR-CASE-03 controls.
+
+These pure laws are the base cases that #11's resource-aware wiring laws
+and #7's law bundles should specialize. Nothing here carries a resource
+premise.
+
+| Obligation | Checked here (theorems) | Premises | Remains open |
+|---|---|---|---|
+| PO-02 preservation | `exec_preserves`, `Run.preserve`, `Step.preserve`: all 22 pure words, including `dip`/`run`/`case`/`if`/`list.case`, nested executions and list/sum/pair values | `CodeTyped code ts ts'`, `StackTyped s ts`, normal-return `Exec` | the whole language, host/resource/failure states, implementation |
+| PO-03 progress | `progress_primitive`: every well-typed non-control pure op steps (no forbidden stuck state); `host_word_outside_model` | `OpTyped`, typed stack, `Primitive op` | control words (a body's normal return is a termination question), host contracts, failure/exhaustion classes |
+| PO-04 effect soundness | — (MC1 has no effects) | — | all of it, including denied/failed requests and order |
+| PO-05 ownership | — (MC1 has no resources) | — | all of it (#3) |
+| PO-06 recursive eligibility | `program_duplicable` (immutable programs are duplicable data) | — | resource-free capture closure (#3/#11) |
+| PO-07 construction/execution | `construction_is_pure`, `latent_effect_not_performed`, `PExpr.exec_code`, `PExpr.exec_code_run`, `BehEq.append`, `BehEq.run`, `compose_assoc`, `compose_identity` | normal returns; `BehEq` observation | effectful laws (same host responses, ordered traces), allocation/quota (deliberately not promised) |
+| PO-08 recipe/quotation/reflection | `quote_laws`, `reflect_compose`, `PExpr.exec_code_reflect`, `exec_quote_program_run_run` | — | recipe *normalization* (MC1 does not normalize), named-definition reflection |
+| negative: behavior ≠ recipe | `behavior_is_not_recipe` (`1 1 +` vs `2`; `BehEq` is not a congruence under `reflect`) | — | — |
+| negative: incompatible ordered interfaces | `compose_requires_exact_middle` | `m ≠ m'` | — |
+| negative: wrong-subject evidence | `wrong_subject_evidence` (+ ACORR-CASE-03 executed in Phase 3) | — | — |
+| negative: resource duplication/discard/capture | — | — | open (#3/#11); MC1 has no resources |
+
+`specs/verification/obligations.json` is **unchanged**. Every proved item
+above is a pure-MC1-model slice. None discharges a registry obligation as
+stated, because those cover the whole language or the implementation.
+
+## Status by phase
+
+| Phase | Done (checked) | Open |
+|---|---|---|
+| 1 | whitelist/representation/observation table; signed ZMod/BitVec/K-NUM-01 correspondence; universal add/sub/mul with preserved typed prefix and orientation; literal refusal vs wrapping (spec and transcription); lifting to sequences and quote/compose/run; regressions; inventory and axiom audit | Rust frontend ↔ transcription refinement; MC1 `CodeTyped` ↔ kernel acceptance |
+| 3 | one example from Lean spec to admitted bytes (opt off/on), helper model, ACORR-mapped refusals | E5 lowering, E7 assembler, E8 optimizer, E10 loader/engine, E12 PAA-1 envelope, ACORR-CASE-09, quote/compose/run helper models |
+| 4 | seeded differential comparator, Lean-checked expectations, opt off/on, shrinking, mutation controls, checker lanes, source-bound receipts, `--verify` | CI wiring (commands are reproducible but not added to a CI workflow); rebuilt Mathlib `.olean` files |
+| 2 | preservation and primitive progress for pure MC1; pure laws and negative cases | effects, ownership, eligibility, failures, host contracts, normalization |
