@@ -114,6 +114,9 @@ impl Work {
 }
 
 /// Persistent semantic identities and disjoint compiled-code allocations.
+/// A clone is an independent copy of the committed state, so a calculator
+/// host can restore it after a failed submission.
+#[derive(Clone, Debug)]
 pub struct Compiler {
     live: bool,
     live_slots: bool,
@@ -320,13 +323,13 @@ pub struct ResourceCatalogEntry {
     pub kind: noble_kernel::types::ResourceKind,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct FreeCode {
     start: u32,
     length: u32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Identity {
     id: u64,
     recipe: alloc::vec::Vec<u8>,
