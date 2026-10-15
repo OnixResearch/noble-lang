@@ -274,17 +274,17 @@ premise.
 
 | Obligation | Checked here (theorems) | Premises | Remains open |
 |---|---|---|---|
-| PO-02 preservation | `exec_preserves`, `Run.preserve`, `Step.preserve`: all 22 pure words, including `dip`/`run`/`case`/`if`/`list.case`, nested executions and list/sum/pair values | `CodeTyped code ts ts'`, `StackTyped s ts`, normal-return `Exec` | the whole language, host/resource/failure states, implementation |
-| PO-03 progress | `progress_primitive`: every well-typed non-control pure op steps (no forbidden stuck state); `host_word_outside_model` | `OpTyped`, typed stack, `Primitive op` | control words (a body's normal return is a termination question), host contracts, failure/exhaustion classes |
-| PO-04 effect soundness | — (MC1 has no effects) | — | all of it, including denied/failed requests and order |
-| PO-05 ownership | — (MC1 has no resources) | — | all of it (#3) |
-| PO-06 recursive eligibility | `program_duplicable` (immutable programs are duplicable data) | — | resource-free capture closure (#3/#11) |
+| PO-02 preservation | MC1: `exec_preserves`, `Run.preserve`, `Step.preserve` (all 22 pure words, including `dip`/`run`/`case`/`if`/`list.case`, nested executions and list/sum/pair values). Effects layer: `Effects.preserve`, `Effects.preserve_reach` (every small step, including halting host steps) | MC1: `CodeTyped code ts ts'`, `StackTyped s ts`, normal-return `Exec`. Effects: `WT E c` | the whole language, implementation |
+| PO-03 progress | MC1: `progress_primitive`, `host_word_outside_model`. Effects layer: `Effects.progress` (a typed running configuration with code steps for **every** host response, `run` included, so there are no forbidden stuck states) and `Effects.halted_no_step` | Effects: `WT E c`, `status = running`, `code ≠ []`, total host oracle `H` | termination (not claimed), quota/exhaustion classes, MC1 big-step control words, the whole language |
+| PO-04 effect soundness | Effects layer: `Effects.effect_sound` (every finite prefix: `trace' = trace ++ new`, append-only, and every new label is in the bound `E`, **including denied/failed requests**), `step_trace`, `trace_within_bound`. Negative: `bound_does_not_fix_order` (the same bound allows different orders, so a bound does not justify reordering), `denied_request_recorded_and_halts` | `WT E c` (or a typed program from `init`); `Reach H` for any host oracle | effects beyond emit/acquire/release, real host contracts and `test.emit` implementation, ordered-trace *equivalence* laws |
+| PO-05 ownership | Effects layer: `Effects.own_preserve` (stack resources are a permutation of the host live set, no duplicates, fresh ids), `live_change` (the live set changes only by a recorded, permitted `acquire` or `release`; moves are stack permutations), `reachable_sound`, `move_then_release` | `WT E c`, `Own c` | temporaries/heap, borrowing, abnormal-stop cleanup (state is preserved but not cleaned), whole language (#3) |
+| PO-06 recursive eligibility | MC1: `program_duplicable`. Effects layer: `ValT.rfree`/`OpT.rfree`/`CodeT.rfree` (typed programs contain no resource at any nesting depth), `typed_rfree` (continuation and every stack program are resource-free), `program_expecting_resource_is_copyable` | `WT E c` | aggregates (pairs/lists) and named captures (MC1 aggregates carry no resources; this layer has no aggregates), #3/#11 vocabulary |
 | PO-07 construction/execution | `construction_is_pure`, `latent_effect_not_performed`, `PExpr.exec_code`, `PExpr.exec_code_run`, `BehEq.append`, `BehEq.run`, `compose_assoc`, `compose_identity` | normal returns; `BehEq` observation | effectful laws (same host responses, ordered traces), allocation/quota (deliberately not promised) |
 | PO-08 recipe/quotation/reflection | `quote_laws`, `reflect_compose`, `PExpr.exec_code_reflect`, `exec_quote_program_run_run` | — | recipe *normalization* (MC1 does not normalize), named-definition reflection |
 | negative: behavior ≠ recipe | `behavior_is_not_recipe` (`1 1 +` vs `2`; `BehEq` is not a congruence under `reflect`) | — | — |
 | negative: incompatible ordered interfaces | `compose_requires_exact_middle` | `m ≠ m'` | — |
 | negative: wrong-subject evidence | `wrong_subject_evidence` (+ ACORR-CASE-03 executed in Phase 3) | — | — |
-| negative: resource duplication/discard/capture | — | — | open (#3/#11); MC1 has no resources |
+| negative: resource duplication/discard/capture | `dup_res_untypable`, `drop_res_untypable`, `quote_res_untypable`, `push_res_untypable`. The untyped runs `untyped_dup_breaks_ownership`, `untyped_drop_breaks_ownership` and `untyped_capture_breaks_ownership` reach states that violate `Own`/`RFreeV`, so the typing premise is load-bearing | — | resource-aware wiring laws (#11) |
 
 `specs/verification/obligations.json` is **unchanged**. Every proved item
 above is a pure-MC1-model slice. None discharges a registry obligation as
@@ -297,4 +297,28 @@ stated, because those cover the whole language or the implementation.
 | 1 | whitelist/representation/observation table; signed ZMod/BitVec/K-NUM-01 correspondence; universal add/sub/mul with preserved typed prefix and orientation; literal refusal vs wrapping (spec and transcription); lifting to sequences and quote/compose/run; regressions; inventory and axiom audit | Rust frontend ↔ transcription refinement; MC1 `CodeTyped` ↔ kernel acceptance |
 | 3 | one example from Lean spec to admitted bytes (opt off/on), helper model, ACORR-mapped refusals | E5 lowering, E7 assembler, E8 optimizer, E10 loader/engine, E12 PAA-1 envelope, ACORR-CASE-09, quote/compose/run helper models |
 | 4 | seeded differential comparator, Lean-checked expectations, opt off/on, shrinking, mutation controls, checker lanes, source-bound receipts, `--verify` | CI wiring (commands are reproducible but not added to a CI workflow); rebuilt Mathlib `.olean` files |
-| 2 | preservation and primitive progress for pure MC1; pure laws and negative cases | effects, ownership, eligibility, failures, host contracts, normalization |
+| 2 | MC1: preservation and primitive progress, pure laws and negative cases. Effects/resource layer: preservation, total progress, effect soundness for every prefix including denied/failed, ownership preservation with declared transitions, resource-free capture, resource negative cases | the whole language and implementation, abnormal cleanup, aggregates/borrowing, effectful equivalence laws, normalization |
+
+### Effect and resource layer (`NobleFoundation/Effects.lean`)
+
+This is a separate small-step model; MC1 is unchanged. It has:
+- I64, move-only resource tokens, and programs with a latent effect bound
+  `prog i o e`;
+- the host words `emit`, `acquire` and `release`, which a total host oracle
+  `H : Nat → Response` answers with `permitted`, `denied` or `failed`;
+- an ordered request trace that records every request, including denied and
+  failed ones;
+- a continuation `code` that serves as the frame stack (`run` prepends the
+  body);
+- a host-tracked `live` set and a fresh-id counter.
+
+A non-permitted response halts the configuration with status `denied` or
+`failed` and leaves the stack, code and ownership unchanged. Cleanup after
+an abnormal stop is **not** modelled.
+
+Stacks are top-first in this file. Every claim is a model claim. It does not
+describe the Rust kernel, `test.emit`, or the runtime's handle tables.
+
+The CI recipe and its limits are in the Phase 4 section above. The retained
+receipts are under
+[`verification/foundation/receipts/`](../../verification/foundation/receipts/README.md).

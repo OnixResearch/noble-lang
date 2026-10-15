@@ -674,6 +674,192 @@
       "phase": 2,
       "role": "laws",
       "claim": "program values are typable and steppable under dup"
+    },
+    {
+      "name": "NobleFoundation.Effects.OpT.weaken",
+      "phase": 2,
+      "role": "effects-structure",
+      "claim": "operation typing is monotone in the effect bound"
+    },
+    {
+      "name": "NobleFoundation.Effects.CodeT.weaken",
+      "phase": 2,
+      "role": "effects-structure",
+      "claim": "code typing is monotone in the effect bound"
+    },
+    {
+      "name": "NobleFoundation.Effects.CodeT.append",
+      "phase": 2,
+      "role": "effects-structure",
+      "claim": "typed code composes at the exact intermediate stack type"
+    },
+    {
+      "name": "NobleFoundation.Effects.preserve",
+      "phase": 2,
+      "role": "effects-preservation",
+      "claim": "every step (including halting host steps) preserves configuration typing"
+    },
+    {
+      "name": "NobleFoundation.Effects.preserve_reach",
+      "phase": 2,
+      "role": "effects-preservation",
+      "claim": "typing holds in every finite execution prefix"
+    },
+    {
+      "name": "NobleFoundation.Effects.progress",
+      "phase": 2,
+      "role": "effects-progress",
+      "claim": "typed running configuration with code always steps, for every host response (no forbidden stuck state; no termination claim)"
+    },
+    {
+      "name": "NobleFoundation.Effects.halted_no_step",
+      "phase": 2,
+      "role": "effects-progress",
+      "claim": "denied/failed configurations take no further step"
+    },
+    {
+      "name": "NobleFoundation.Effects.step_trace",
+      "phase": 2,
+      "role": "effect-soundness",
+      "claim": "a step appends at most one event, whose label is in the bound"
+    },
+    {
+      "name": "NobleFoundation.Effects.effect_sound",
+      "phase": 2,
+      "role": "effect-soundness",
+      "claim": "every finite prefix: trace = old ++ new (order preserved, append-only) and every new label is in the bound, incl. denied/failed requests"
+    },
+    {
+      "name": "NobleFoundation.Effects.init_wt",
+      "phase": 2,
+      "role": "effect-soundness",
+      "claim": "a typed program gives a typed initial configuration"
+    },
+    {
+      "name": "NobleFoundation.Effects.trace_within_bound",
+      "phase": 2,
+      "role": "effect-soundness",
+      "claim": "every event of every reachable configuration of a typed program is within the bound"
+    },
+    {
+      "name": "NobleFoundation.Effects.bound_does_not_fix_order",
+      "phase": 2,
+      "role": "effect-negative",
+      "claim": "same bound, different ordered traces: the bound does not justify reordering"
+    },
+    {
+      "name": "NobleFoundation.Effects.denied_request_recorded_and_halts",
+      "phase": 2,
+      "role": "effect-negative",
+      "claim": "a denied request is recorded and halts; the later request is never performed"
+    },
+    {
+      "name": "NobleFoundation.Effects.topIds_copy",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "copyable values hold no top-level resource"
+    },
+    {
+      "name": "NobleFoundation.Effects.own_preserve",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "on typed configurations every step preserves: stack resources ~ live set, no duplicates, freshness"
+    },
+    {
+      "name": "NobleFoundation.Effects.live_change",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "the live set changes only by a recorded permitted acquire (fresh id) or release (erase)"
+    },
+    {
+      "name": "NobleFoundation.Effects.ValT.rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "typed copyable values contain no resource anywhere (mutual)"
+    },
+    {
+      "name": "NobleFoundation.Effects.OpT.rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "typed operations contain no resource anywhere (mutual)"
+    },
+    {
+      "name": "NobleFoundation.Effects.CodeT.rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "typed code contains no resource anywhere, including nested programs (mutual)"
+    },
+    {
+      "name": "NobleFoundation.Effects.StackT.rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "every typed stack value is a top-level resource or resource-free"
+    },
+    {
+      "name": "NobleFoundation.Effects.typed_rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "typed configurations: continuation and all stack programs are resource-free"
+    },
+    {
+      "name": "NobleFoundation.Effects.reachable_sound",
+      "phase": 2,
+      "role": "effects-ownership",
+      "claim": "typed program: every finite prefix is typed, within bound, ownership-preserving and capture-free"
+    },
+    {
+      "name": "NobleFoundation.Effects.dup_res_untypable",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "dup of a resource is untypable"
+    },
+    {
+      "name": "NobleFoundation.Effects.drop_res_untypable",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "drop (discard) of a resource is untypable"
+    },
+    {
+      "name": "NobleFoundation.Effects.quote_res_untypable",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "quote (capture) of a resource is untypable"
+    },
+    {
+      "name": "NobleFoundation.Effects.push_res_untypable",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "a resource literal is untypable"
+    },
+    {
+      "name": "NobleFoundation.Effects.untyped_dup_breaks_ownership",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "untyped acquire dup reaches a state violating Own"
+    },
+    {
+      "name": "NobleFoundation.Effects.untyped_drop_breaks_ownership",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "untyped acquire drop leaks a live resource"
+    },
+    {
+      "name": "NobleFoundation.Effects.untyped_capture_breaks_ownership",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "untyped acquire quote captures a live resource in a program"
+    },
+    {
+      "name": "NobleFoundation.Effects.move_then_release",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "typed move (swap) then release ends with no live resource"
+    },
+    {
+      "name": "NobleFoundation.Effects.program_expecting_resource_is_copyable",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "a program whose input expects a resource is still copyable data"
     }
   ]
 }

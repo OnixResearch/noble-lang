@@ -7,3 +7,4 @@ import NobleFoundation.Helper
 import NobleFoundation.Slice
 import NobleFoundation.Preservation
 import NobleFoundation.Laws
+import NobleFoundation.Effects
