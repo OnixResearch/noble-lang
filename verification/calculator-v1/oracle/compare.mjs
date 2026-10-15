@@ -10,6 +10,7 @@
 //   compare.mjs generate --seed N --count N [--sessions N] --out NEW_FILE
 //   compare.mjs harness --vectors FILE --implementation fault:NAME|oracle --out NEW_FILE
 //            [--shrink-rounds N] [--shrink-candidates N]
+//   compare.mjs shrink --input TEXT [--shrink-candidates N] --out NEW_FILE
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -286,16 +287,31 @@ const harness = options => {
   console.log(`${options.implementation}: ${JSON.stringify(summarize(results))}`);
 };
 
+// One bounded shrinking round against a real binary: the disagreeing input
+// plus at most N strictly smaller, spec-determined candidates, as a #19
+// runner vector file. Each candidate costs one CLI process; the caller runs
+// the file, then `receipts` names the smallest candidate that still disagrees.
+const shrink = options => {
+  const width = Number(options['shrink-candidates'] ?? 3);
+  const inputs = [options.input, ...shrinkCandidates(options.input, { limit: width })];
+  const vectors = inputs.map((line, index) => ({
+    id: `CALC-12/shrink/${String(index).padStart(2, '0')}`, case: 'CALC-12-shrink', kind: 'line', support: 'cli',
+    flags: [], operations: [{ line, expect: expectOf(run([line]).outcomes[0]) }],
+  }));
+  write(options.out, { schema: VECTOR_SCHEMA, shrink: { input: options.input, candidates: width, provenance: provenance() }, vectors });
+  console.log(inputs.join('\n'));
+};
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [command, ...rest] = process.argv.slice(2);
   const { values } = parseArgs({ args: rest, options: {
     run: { type: 'string' }, out: { type: 'string' }, 'ids-prefix': { type: 'string' },
     seed: { type: 'string' }, count: { type: 'string' }, sessions: { type: 'string' },
     vectors: { type: 'string' }, implementation: { type: 'string' },
-    'shrink-rounds': { type: 'string' }, 'shrink-candidates': { type: 'string' },
+    'shrink-rounds': { type: 'string' }, 'shrink-candidates': { type: 'string' }, input: { type: 'string' },
   } });
-  const commands = { receipts, cases, generate, harness };
-  assert.ok(commands[command], 'usage: compare.mjs receipts|cases|generate|harness …');
+  const commands = { receipts, cases, generate, harness, shrink };
+  assert.ok(commands[command], 'usage: compare.mjs receipts|cases|generate|harness|shrink …');
   assert.ok(values.out, '--out NEW_FILE is required');
   commands[command](values);
 }

@@ -86,7 +86,10 @@ Shrinking is bounded. Each round proposes at most `--shrink-candidates`
 strictly smaller inputs, smallest first. The input must stay a disagreement,
 and shrinking stops after `--shrink-rounds` rounds. Harness mode shrinks in
 process. Against a real binary, each candidate costs one CLI process, so
-those rounds are run explicitly as runner vector files.
+each round is run as a runner vector file. `compare.mjs shrink --input TEXT
+--shrink-candidates N --out NEW.json` emits the input plus at most N
+candidates, then `compare.mjs receipts` shows which candidates still
+disagree.
 
 ## Seeded faults
 
