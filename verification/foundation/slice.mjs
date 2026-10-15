@@ -278,7 +278,7 @@ try {
     for (const mode of ['off', 'on']) {
       const candidate = emit(source, mode, d.name);
       const r = admit(candidate.file, source, mode).report;
-      const stack = (r.stack ?? []).map(v => [v.type, v.value]);
+      const stack = (r.stack ?? []).map(v => [v.type, String(v.value)]);
       const expected = [...d.prefix, ['I64', String(wrap(d.x + 1n))]];
       requireThat(r.outcome === 'normal' && r.admission?.correspondence === 'byte-exact' &&
         JSON.stringify(stack) === JSON.stringify(expected) && r.request_trace?.length === 0,
