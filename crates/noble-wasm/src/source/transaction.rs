@@ -43,6 +43,10 @@ impl Base {
         }
     }
 
+    pub(super) const fn generation(&self) -> u32 {
+        self.generation
+    }
+
     const fn positions_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
         // The descriptor table has exactly one entry for every emitted
         // signature, so its transactional base shares the profile key bound.

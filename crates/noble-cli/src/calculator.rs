@@ -1,6 +1,11 @@
 //! Calculator shell: terminal framing and an opaque, source-checked guest session.
 //! Parsing, name resolution, arithmetic and display decisions live in the Noble modules.
 
+#[path = "calculator/cache.rs"]
+mod cache;
+#[path = "calculator/trace.rs"]
+mod trace;
+
 use noble_contracts::source::{ModuleKind, ModuleSession};
 use noble_kernel::types::Ty;
 use std::io::Write;
@@ -42,6 +47,28 @@ const EXPRESSION: &[u8] =
     include_bytes!("../../noble-contracts/src/fixtures/calculator-expression.noble");
 const DEFINITIONS: &[u8] =
     include_bytes!("../../noble-contracts/src/fixtures/calculator-definitions.noble");
+/// The checked guest modules and then the imports every calculator session
+/// namespace is built from, in order; the namespace component of the
+/// module-reuse key.
+const NAMESPACE: cache::Namespace = &[
+    ("result@1", RESULT),
+    ("calc_errors@1", ERRORS),
+    ("calc_lex@1", LEXICAL),
+    ("calc_bits@1", BITS),
+    ("calc_big@1", BIGINT),
+    ("calc_decimal@1", DECIMAL),
+    ("num@1", NUMERIC),
+    ("calc_env@1", BINDINGS),
+    ("calc_display@1", DISPLAY),
+    ("expr@1", EXPRESSION),
+    ("calc_defs@1", DEFINITIONS),
+    ("expression", b"import expr@1 as expr"),
+    ("numeric", b"import num@1 as num"),
+];
+const NAMESPACE_MODULES: usize = 11;
+/// `NOBLE_CALCULATOR_MODULE_CACHE=off` disables exact module reuse in the
+/// host and the worker (a diagnostic control; outputs are identical).
+const MODULE_CACHE_VARIABLE: &str = "NOBLE_CALCULATOR_MODULE_CACHE";
 
 pub(crate) fn assembler_version(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     if arguments.len() != 1 {
@@ -96,7 +123,21 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             return std::process::ExitCode::from(2);
         }
     };
-    let mut session = match Session::new() {
+    if let Err(message) = trace::open() {
+        eprintln!("noble calculator: {message}");
+        return std::process::ExitCode::from(2);
+    }
+    let cache = match std::env::var(MODULE_CACHE_VARIABLE).as_deref() {
+        Err(std::env::VarError::NotPresent) | Ok("on") => Some(std::rc::Rc::new(
+            std::cell::RefCell::new(cache::ModuleCache::new(NAMESPACE, cache::HOST_CACHE_BYTES)),
+        )),
+        Ok("off") => None,
+        _ => {
+            eprintln!("noble calculator: {MODULE_CACHE_VARIABLE} must be `on` or `off`");
+            return std::process::ExitCode::from(2);
+        }
+    };
+    let mut session = match Session::new(cache) {
         Ok(session) => session,
         Err(message) => {
             eprintln!("noble calculator: {message}");
@@ -216,9 +257,21 @@ struct Session {
     // A quotation-free consumer of the last guest probe (`drop`, `unpair
     // drop`), run as the prefix of the next module instead of as its own.
     deferred: Option<&'static [u8]>,
+    // Identity of this session and line in the opt-in per-module trace;
+    // unused (and never observed by the guest) when tracing is off.
+    trace_session: u64,
+    trace_line: u64,
+    trace_phase: &'static str,
+    // Exact module reuse; None when disabled. Deliberately not part of
+    // `Committed`: see `cache` for why entries recorded by a failed, restored
+    // line stay exact.
+    cache: Option<std::rc::Rc<std::cell::RefCell<cache::ModuleCache>>>,
 }
 
-/// The host half of the last commit; the worker holds the arena half.
+/// The host half of the last commit; the worker holds the arena half. Neither
+/// half includes the host module cache or the worker's exact-WAT module
+/// cache: both are memos of pure functions of their full keys, so restoring
+/// never needs them and they never need restoring.
 struct Committed {
     modules: ModuleSession,
     compiler: noble_wasm::source::Compiler,
@@ -290,27 +343,25 @@ impl Session {
         Ok(Some(Outcome::Diagnostic(diagnostic)))
     }
 
-    fn new() -> Result<Self, String> {
-        Self::with_worker(
-            crate::core::worker::Engine::start_calculator(false).map_err(|error| error.message)?,
-        )
+    fn new(
+        cache: Option<std::rc::Rc<std::cell::RefCell<cache::ModuleCache>>>,
+    ) -> Result<Self, String> {
+        let started = std::time::Instant::now();
+        let worker =
+            crate::core::worker::Engine::start_calculator(false, trace::enabled(), cache.is_some())
+                .map_err(|error| error.message)?;
+        Self::with_worker(worker, trace::micros(started), cache)
     }
 
-    fn with_worker(worker: crate::core::worker::Engine) -> Result<Self, String> {
+    fn with_worker(
+        worker: crate::core::worker::Engine,
+        worker_start_us: u64,
+        cache: Option<std::rc::Rc<std::cell::RefCell<cache::ModuleCache>>>,
+    ) -> Result<Self, String> {
+        let started = std::time::Instant::now();
         let mut modules = ModuleSession::new_calculator().map_err(source_error)?;
-        for (name, source) in [
-            ("result@1", RESULT),
-            ("calc_errors@1", ERRORS),
-            ("calc_lex@1", LEXICAL),
-            ("calc_bits@1", BITS),
-            ("calc_big@1", BIGINT),
-            ("calc_decimal@1", DECIMAL),
-            ("num@1", NUMERIC),
-            ("calc_env@1", BINDINGS),
-            ("calc_display@1", DISPLAY),
-            ("expr@1", EXPRESSION),
-            ("calc_defs@1", DEFINITIONS),
-        ] {
+        let (dependencies, imports) = NAMESPACE.split_at(NAMESPACE_MODULES);
+        for &(name, source) in dependencies {
             let prepared = modules
                 .prepare(source, &[], LIMITS)
                 .map_err(|error| format!("{name}: {}", source_error(error)))?;
@@ -323,10 +374,7 @@ impl Session {
             committed.map_err(|error| format!("{name}: {}", source_error(error)))?;
             modules = next;
         }
-        for (source, name) in [
-            (b"import expr@1 as expr".as_slice(), "expression"),
-            (b"import num@1 as num".as_slice(), "numeric"),
-        ] {
+        for &(name, source) in imports {
             let imported = modules.prepare(source, &[], LIMITS).map_err(source_error)?;
             if imported.kind() != ModuleKind::Import {
                 return Err(format!("calculator {name} module import refused"));
@@ -335,6 +383,7 @@ impl Session {
             committed.map_err(source_error)?;
             modules = next;
         }
+        let namespace_us = trace::micros(started);
         let mut session = Self {
             modules: Some(modules),
             compiler: noble_wasm::source::Compiler::new_calculator(),
@@ -344,7 +393,20 @@ impl Session {
             quiescent: false,
             program_free: false,
             deferred: None,
+            trace_session: trace::next_session(),
+            trace_line: 0,
+            trace_phase: "session-init",
+            cache,
         };
+        if trace::enabled() {
+            trace::write(serde_json::json!({
+                "record": "session",
+                "session": session.trace_session,
+                "line": 0,
+                "namespace_us": namespace_us,
+                "worker_start_us": worker_start_us,
+            }))?;
+        }
         let report = session.execute(b"calc_env@1.initial", &[], None)?;
         if report.outcome != "normal" || session.stack.len() != 1 {
             return Err("guest calculator state initialization failed".into());
@@ -402,6 +464,10 @@ impl Session {
         finite_decimal: bool,
         budget: [i64; 7],
     ) -> Result<Outcome, String> {
+        // Trace bookkeeping only: neither committed nor restored, and never
+        // observed by the guest.
+        self.trace_line = self.trace_line.saturating_add(1);
+        self.trace_phase = "line";
         self.transact(|session| {
             let outcome = session.submit_uncommitted(expression, finite_decimal, budget)?;
             if matches!(outcome, Outcome::Value(_) | Outcome::Defined) {
@@ -5101,6 +5167,7 @@ impl Session {
         injected: &[Ty],
         frame: Option<&str>,
     ) -> Result<crate::core::output::Report, String> {
+        let started = std::time::Instant::now();
         let merged;
         let source = match self.deferred {
             Some(consumer) if injected.is_empty() => {
@@ -5127,64 +5194,190 @@ impl Session {
             augmented = [self.stack.as_slice(), injected].concat();
             augmented.as_slice()
         };
-        let prepared = self
+        let input_types = stack.len();
+        let checking = std::time::Instant::now();
+        let namespace = self
             .modules
             .as_ref()
-            .ok_or("calculator namespace unavailable")?
-            .prepare(source, stack, LIMITS)
-            .map_err(|error| {
-                format!(
-                    "{}: {}",
-                    String::from_utf8_lossy(source),
-                    source_error(error)
-                )
-            })?;
-        if prepared.kind() != ModuleKind::Expression {
-            return Err("calculator command did not check as guest expression".into());
-        }
-        let output = prepared.output().to_vec();
-        let submission = prepared
-            .submission()
-            .ok_or("checked expression has no guest program")?;
-        let compiled = if self.program_free {
-            self.compiler.prepare_program_free(submission)
+            .ok_or("calculator namespace unavailable")?;
+        let epoch = if self.program_free {
+            "program_free"
         } else if self.quiescent {
-            self.compiler.prepare_quiescent(submission)
+            "quiescent"
         } else {
-            self.compiler.prepare(submission)
-        }
-        .map_err(|error| {
-            format!(
-                "{}: {}",
-                String::from_utf8_lossy(source),
-                backend_error(error)
-            )
-        })?;
+            "normal"
+        };
+        // Exact reuse applies only at a Program-free boundary of a compiler
+        // in a canonical epoch; every other preparation runs in full.
+        let canonical = if self.program_free {
+            self.compiler.canonical_epoch()
+        } else {
+            None
+        };
+        let reusing = std::time::Instant::now();
+        let reused = match (&self.cache, canonical) {
+            (Some(cache), Some(canonical)) => cache
+                .borrow_mut()
+                .get(NAMESPACE, source, stack, canonical)
+                .map(|hit| {
+                    (
+                        hit.output.to_vec(),
+                        self.compiler.reuse_program_free(hit.artifact),
+                    )
+                }),
+            _ => None,
+        };
+        let cache_state = match (&self.cache, canonical, &reused) {
+            (None, _, _) => "off",
+            (Some(_), None, _) => "bypass",
+            (Some(_), Some(_), None) => "miss",
+            (Some(_), Some(_), Some(_)) => "hit",
+        };
+        let check_us;
+        let backend_us;
+        let mut checked = None;
+        let (output, compiled) = match reused {
+            Some((output, compiled)) => {
+                check_us = 0;
+                let compiled = compiled.map_err(|error| {
+                    format!(
+                        "{}: {}",
+                        String::from_utf8_lossy(source),
+                        backend_error(error)
+                    )
+                })?;
+                backend_us = trace::micros(reusing);
+                (output, compiled)
+            }
+            None => {
+                let prepared = namespace.prepare(source, stack, LIMITS).map_err(|error| {
+                    format!(
+                        "{}: {}",
+                        String::from_utf8_lossy(source),
+                        source_error(error)
+                    )
+                })?;
+                if prepared.kind() != ModuleKind::Expression {
+                    return Err("calculator command did not check as guest expression".into());
+                }
+                check_us = trace::micros(checking);
+                let output = prepared.output().to_vec();
+                let submission = prepared
+                    .submission()
+                    .ok_or("checked expression has no guest program")?;
+                let compiling = std::time::Instant::now();
+                let compiled = if self.program_free {
+                    self.compiler.prepare_program_free(submission)
+                } else if self.quiescent {
+                    self.compiler.prepare_quiescent(submission)
+                } else {
+                    self.compiler.prepare(submission)
+                }
+                .map_err(|error| {
+                    format!(
+                        "{}: {}",
+                        String::from_utf8_lossy(source),
+                        backend_error(error)
+                    )
+                })?;
+                backend_us = trace::micros(compiling);
+                checked = Some(prepared);
+                (output, compiled)
+            }
+        };
+        let output_types = output.len();
+        let work_issued = compiled.work_issued();
+        // Retain a fresh Program-free preparation before commit consumes it.
+        let reusable = match (&self.cache, &checked) {
+            (Some(_), Some(_)) => compiled.reusable(),
+            _ => None,
+        };
+        let wat_bytes = compiled.wat().len();
+        let preparing = std::time::Instant::now();
         let ready = self
             .worker
-            .prepare(compiled.wat(), source, self.serial)
+            .prepare_calculator(
+                compiled.wat(),
+                source,
+                self.serial,
+                compiled.submit_generation(),
+            )
             .map_err(|error| error.message)?;
         if ready.outcome != "ready" {
             return Err(format!("calculator Wasm assembly refused: {}", ready.json));
         }
+        let prepare_us = trace::micros(preparing);
+        let executing = std::time::Instant::now();
         let report = match frame {
             Some(frame) => self.worker.execute_inputs(frame),
             None => self.worker.execute(),
         }
         .map_err(|error| error.message)?;
+        let execute_us = trace::micros(executing);
+        let committing = std::time::Instant::now();
         if report.outcome == "normal" {
             let (compiled_reachable, programs_reachable) = boundary_reachability(&report.json)?;
             self.compiler.commit(compiled).map_err(backend_error)?;
-            let (next, committed) = self
-                .modules
-                .take()
-                .ok_or("calculator namespace unavailable")?
-                .commit(prepared);
-            self.modules = Some(next);
-            committed.map_err(source_error)?;
+            // A reused module was not re-checked, so it has no namespace
+            // preparation to publish: an Expression commit changes only the
+            // namespace's staleness generations, never its content.
+            if let Some(prepared) = checked {
+                let (next, committed) = self
+                    .modules
+                    .take()
+                    .ok_or("calculator namespace unavailable")?
+                    .commit(prepared);
+                self.modules = Some(next);
+                committed.map_err(source_error)?;
+            }
+            if let (Some(cache), Some(reusable)) = (&self.cache, reusable) {
+                cache
+                    .borrow_mut()
+                    .insert(NAMESPACE, source, stack, &output, reusable);
+            }
             self.stack = output;
             self.quiescent = !compiled_reachable;
             self.program_free = !programs_reachable;
+        }
+        if trace::enabled() {
+            let commit_us = trace::micros(committing);
+            let ready: serde_json::Value =
+                serde_json::from_str(&ready.json).map_err(|error| error.to_string())?;
+            let timing = &ready["timing"];
+            let module = &ready["module"];
+            trace::write(serde_json::json!({
+                "record": "module",
+                "session": self.trace_session,
+                "line": self.trace_line,
+                "phase": self.trace_phase,
+                "module": self.serial,
+                "source": String::from_utf8_lossy(source),
+                "source_sha256": trace::sha256(source),
+                "source_bytes": source.len(),
+                "input_types": input_types,
+                "output_types": output_types,
+                "epoch": epoch,
+                "first": self.serial == 1,
+                "cache": { "host": cache_state, "worker": timing["worker_cache"] },
+                "check_us": check_us,
+                "backend_us": backend_us,
+                "prepare_us": prepare_us,
+                "rehash_us": timing["rehash_us"],
+                "assemble_us": timing["assemble_us"],
+                "compile_us": timing["compile_us"],
+                "instantiate_us": timing["instantiate_us"],
+                "execute_us": execute_us,
+                "commit_us": commit_us,
+                "total_us": trace::micros(started),
+                "wat_bytes": wat_bytes,
+                "wasm_bytes": timing["wasm_bytes"],
+                "work_issued": work_issued,
+                "host_cache_bytes": self.cache.as_ref().map(|cache| cache.borrow().bytes()),
+                "wat_sha256": module["wat_sha256"],
+                "wasm_sha256": module["wasm_sha256"],
+                "report_sha256": trace::sha256(report.json.as_bytes()),
+                "outcome": report.outcome,
+            }))?;
         }
         Ok(report)
     }
@@ -5746,7 +5939,7 @@ fn numeric_category(value: &serde_json::Value) -> Result<String, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Outcome, Session, DEFAULT_BUDGET};
+    use super::{cache, Outcome, Session, DEFAULT_BUDGET, NAMESPACE};
     use noble_kernel::types::Ty;
 
     /// One calculator line run through `Session::transact`.
@@ -5768,10 +5961,19 @@ mod tests {
     }
 
     fn session() -> Session {
-        let worker = crate::core::worker::Engine::start_calculator_with(false, &assembler())
-            .map_err(|error| error.message)
-            .unwrap();
-        Session::with_worker(worker).unwrap()
+        session_with(None)
+    }
+
+    fn session_with(cache: Option<std::rc::Rc<std::cell::RefCell<cache::ModuleCache>>>) -> Session {
+        let worker = crate::core::worker::Engine::start_calculator_with(
+            false,
+            &assembler(),
+            false,
+            cache.is_some(),
+        )
+        .map_err(|error| error.message)
+        .unwrap();
+        Session::with_worker(worker, 0, cache).unwrap()
     }
 
     /// Everything a later line can observe: the host's namespace, compiler,
@@ -5779,6 +5981,29 @@ mod tests {
     /// every table entry, every ABI global, the published signatures and the
     /// engine counters.
     fn fingerprint(session: &mut Session) -> String {
+        let namespace = format!("{:?}", session.modules);
+        fingerprint_with(session, namespace)
+    }
+
+    /// `fingerprint` with the namespace's staleness generations masked. A
+    /// host module cache hit skips the namespace commit of its Expression
+    /// module, which advances only those generations, never namespace content.
+    fn fingerprint_content(session: &mut Session) -> String {
+        const GENERATION: &str = "generation: ";
+        let namespace = format!("{:?}", session.modules);
+        let mut masked = String::new();
+        let mut rest = namespace.as_str();
+        while let Some(at) = rest.find(GENERATION) {
+            let (head, tail) = rest.split_at(at + GENERATION.len());
+            masked.push_str(head);
+            masked.push('_');
+            rest = tail.trim_start_matches(|digit: char| digit.is_ascii_digit());
+        }
+        masked.push_str(rest);
+        fingerprint_with(session, masked)
+    }
+
+    fn fingerprint_with(session: &mut Session, namespace: String) -> String {
         let arena = session
             .worker
             .calculator_arena()
@@ -5786,8 +6011,7 @@ mod tests {
             .unwrap();
         let arena: serde_json::Value = serde_json::from_str(&arena.json).unwrap();
         format!(
-            "{:?}\n{:?}\n{:?}\nserial={} quiescent={} program_free={} deferred={:?}\n{}",
-            session.modules,
+            "{namespace}\n{:?}\n{:?}\nserial={} quiescent={} program_free={} deferred={:?}\n{}",
             session.compiler,
             session.stack,
             session.serial,
@@ -5928,6 +6152,79 @@ mod tests {
                 b"swap run",
             ],
         );
+    }
+
+    /// Exact module reuse across a restore. A failed line records host and
+    /// worker cache entries before it is restored; neither cache is part of
+    /// the commit, so the entries survive. A later line reuses an entry only
+    /// at exactly its recorded canonical epoch, and ends exactly where a
+    /// session without the cache ends (the namespace differs only in the
+    /// staleness generations of the Expression commits a hit skips).
+    #[test]
+    fn failed_line_module_cache_entries_hit_only_at_their_exact_epoch() {
+        let cache = std::rc::Rc::new(std::cell::RefCell::new(cache::ModuleCache::new(
+            NAMESPACE,
+            cache::HOST_CACHE_BYTES,
+        )));
+        let mut cached = session_with(Some(cache.clone()));
+        let mut reference = session();
+        assert_eq!(
+            fingerprint_content(&mut cached),
+            fingerprint_content(&mut reference)
+        );
+        let committed = fingerprint(&mut cached);
+        let epoch = |session: &Session| {
+            assert!(session.program_free, "reuse needs a Program-free boundary");
+            session.compiler.canonical_epoch().unwrap()
+        };
+        let committed_epoch = epoch(&cached);
+        let recorded = cache.borrow().bytes();
+        // The failed line lowers a static literal, so its last module runs
+        // at an epoch past the committed one.
+        let line: [&[u8]; 3] = [b"drop 7 35 +", b"\"a\" drop 2 *", b"3 +"];
+        let outcome = cached
+            .transact(|session| {
+                for source in line {
+                    let report = session.execute(source, &[], None)?;
+                    assert_eq!(report.outcome, "normal", "{}", report.json);
+                }
+                assert!(epoch(session).text_end() > committed_epoch.text_end());
+                Ok(Outcome::Diagnostic("injected failure".into()))
+            })
+            .unwrap();
+        assert!(matches!(outcome, Outcome::Diagnostic(_)));
+        assert_eq!(fingerprint(&mut cached), committed);
+        assert_eq!(epoch(&cached), committed_epoch);
+        assert!(
+            cache.borrow().bytes() > recorded,
+            "the failed line recorded entries"
+        );
+        // `3 +` first runs at the committed epoch, where only the failed
+        // line's later-epoch entry exists, so it misses; after the literal
+        // advances `text_end` exactly as in the failed line, it hits.
+        let later: [(&[u8], bool); 4] = [
+            (b"drop 7 35 +", true),
+            (b"3 +", false),
+            (b"\"a\" drop 2 *", true),
+            (b"3 +", true),
+        ];
+        for (source, hit) in later {
+            let name = String::from_utf8_lossy(source);
+            let found = cache
+                .borrow_mut()
+                .get(NAMESPACE, source, &cached.stack, epoch(&cached))
+                .is_some();
+            assert_eq!(found, hit, "{name}");
+            let bytes = cache.borrow().bytes();
+            assert_eq!(accept(&mut cached, source), accept(&mut reference, source));
+            // Only a miss records a new entry.
+            assert_eq!(cache.borrow().bytes() == bytes, hit, "{name}");
+            assert_eq!(
+                fingerprint_content(&mut cached),
+                fingerprint_content(&mut reference),
+                "{name}"
+            );
+        }
     }
 
     /// CALC-STATE-02 on real calculator lines. Each definition costs minutes

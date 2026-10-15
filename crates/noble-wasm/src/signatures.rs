@@ -99,6 +99,27 @@ impl Pool {
         self.compact = true;
     }
 
+    /// A conservative heap accounting of this pool for byte-bounded caches:
+    /// every stored byte plus a fixed per-record allowance for vector, map
+    /// and allocation overhead. It never under-counts the stored key bytes.
+    pub(crate) fn retained_bytes(&self) -> usize {
+        const RECORD: usize = 64;
+        let keys = self.keys.iter().fold(0usize, |total, key| {
+            total.saturating_add(key.len()).saturating_add(RECORD)
+        });
+        let prefixes = self.prefix_keys.iter().fold(0usize, |total, key| {
+            total
+                .saturating_add(key.suffix.len())
+                .saturating_add(RECORD)
+        });
+        let candidates = self.candidates.values().fold(0usize, |total, ids| {
+            total
+                .saturating_add(ids.len().saturating_mul(4))
+                .saturating_add(RECORD)
+        });
+        keys.saturating_add(prefixes).saturating_add(candidates)
+    }
+
     pub(crate) const fn len(&self) -> usize {
         if self.compact {
             self.prefix_keys.len()

@@ -167,6 +167,8 @@ impl Guest {
         )
         .map_err(|e| e.to_string())?;
         let mut linker = Linker::new(&engine);
+        // Each instance binds its own immutable `submit_generation`.
+        linker.allow_shadowing(true);
         linker
             .define(&mut store, "noble", "memory", memory)
             .map_err(|e| e.to_string())?;
@@ -258,6 +260,17 @@ impl Guest {
         };
         let wasm = wat::parse_bytes(prepared.wat()).map_err(|e| e.to_string())?;
         let module = Module::new(self.store.engine(), wasm.as_ref()).map_err(|e| e.to_string())?;
+        // Calculator modules import the generation the host validated them
+        // against; the runtime still refuses any other arena generation.
+        let generation = Global::new(
+            &mut self.store,
+            GlobalType::new(ValType::I32, Mutability::Const),
+            Val::I32(prepared.submit_generation() as i32),
+        )
+        .map_err(|e| e.to_string())?;
+        self.linker
+            .define(&mut self.store, "noble", "submit_generation", generation)
+            .map_err(|e| e.to_string())?;
         let instance = self
             .linker
             .instantiate(&mut self.store, &module)

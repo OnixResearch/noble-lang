@@ -187,6 +187,170 @@ fn calculator_retains_state_after_exact_tiny_decimal() -> Result<(), Box<dyn std
     Ok(())
 }
 
+fn calculator_run(
+    input: &[u8],
+    environment: &[(&str, &std::ffi::OsStr)],
+) -> Result<std::process::Output, Box<dyn std::error::Error>> {
+    let mut command = std::process::Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .arg("calculator")
+        .env_remove("NOBLE_CALCULATOR_TRACE")
+        .env_remove("NOBLE_CALCULATOR_MODULE_CACHE")
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
+    for (name, value) in environment {
+        command.env(name, value);
+    }
+    let mut child = command.spawn()?;
+    std::io::Write::write_all(
+        child.stdin.as_mut().ok_or("missing calculator stdin")?,
+        input,
+    )?;
+    drop(child.stdin.take());
+    Ok(child.wait_with_output()?)
+}
+
+fn trace_records(
+    path: &std::path::Path,
+) -> Result<Vec<serde_json::Value>, Box<dyn std::error::Error>> {
+    let text = std::fs::read_to_string(path)?;
+    let mut records = Vec::new();
+    for line in text.lines() {
+        records.push(serde_json::from_str::<serde_json::Value>(line)?);
+    }
+    Ok(records)
+}
+
+#[test]
+fn calculator_trace_is_observation_only() -> Result<(), Box<dyn std::error::Error>> {
+    // A diagnostic line exercises the guest lexer, parser and the guest
+    // diagnostic path while staying among the cheapest calculator vectors.
+    let input = b"1 2\n";
+    let directory =
+        std::env::temp_dir().join(format!("noble-calculator-trace-{}", std::process::id()));
+    std::fs::create_dir_all(&directory)?;
+    let path = directory.join("trace.jsonl");
+    let _ = std::fs::remove_file(&path);
+    let plain = calculator_run(input, &[])?;
+    let traced = calculator_run(input, &[("NOBLE_CALCULATOR_TRACE", path.as_os_str())])?;
+    assert_eq!(plain.status.code(), traced.status.code());
+    assert_eq!(plain.stdout, traced.stdout);
+    assert_eq!(plain.stderr, traced.stderr);
+    assert_eq!(
+        String::from_utf8_lossy(&plain.stderr),
+        "TrailingInput [2,3) provenance=unavailable\n"
+    );
+    let records = trace_records(&path)?;
+    std::fs::remove_dir_all(&directory)?;
+    let modules: Vec<_> = records
+        .iter()
+        .filter(|record| record["record"] == "module")
+        .collect();
+    assert!(records
+        .iter()
+        .all(|record| record["schema"] == "noble-calculator-trace/1"));
+    // One committed session initializes its State, then the line runs as
+    // guest modules directly on it (no candidate, no replay).
+    assert_eq!(
+        records
+            .iter()
+            .filter(|record| record["record"] == "session")
+            .count(),
+        1
+    );
+    assert!(modules
+        .iter()
+        .any(|record| record["phase"] == "line" && record["line"] == 1));
+    assert!(modules
+        .iter()
+        .all(|record| record["phase"] == "line" || record["phase"] == "session-init"));
+    for record in &modules {
+        for key in [
+            "check_us",
+            "backend_us",
+            "prepare_us",
+            "rehash_us",
+            "assemble_us",
+            "compile_us",
+            "instantiate_us",
+            "execute_us",
+            "total_us",
+            "wat_bytes",
+            "wasm_bytes",
+            "source_bytes",
+        ] {
+            assert!(record[key].is_u64(), "{key} missing in {record}");
+        }
+        let source = record["source"].as_str().ok_or("trace source missing")?;
+        assert_eq!(record["source_bytes"].as_u64(), Some(source.len() as u64));
+        assert_eq!(record["outcome"], "normal");
+    }
+    Ok(())
+}
+
+/// Exact module reuse must be unobservable: with reuse off and on, the same
+/// guest modules run in the same order with byte-identical WAT, Wasm and
+/// execution reports, the same issued Work, and identical terminal output.
+#[test]
+fn calculator_module_reuse_is_byte_identical_to_fresh_preparation(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let input = b"1 2\n";
+    let directory =
+        std::env::temp_dir().join(format!("noble-calculator-reuse-{}", std::process::id()));
+    std::fs::create_dir_all(&directory)?;
+    let fresh_path = directory.join("fresh.jsonl");
+    let reused_path = directory.join("reused.jsonl");
+    let off = std::ffi::OsStr::new("off");
+    let fresh = calculator_run(
+        input,
+        &[
+            ("NOBLE_CALCULATOR_TRACE", fresh_path.as_os_str()),
+            ("NOBLE_CALCULATOR_MODULE_CACHE", off),
+        ],
+    )?;
+    let reused = calculator_run(
+        input,
+        &[("NOBLE_CALCULATOR_TRACE", reused_path.as_os_str())],
+    )?;
+    let fresh_records = trace_records(&fresh_path)?;
+    let reused_records = trace_records(&reused_path)?;
+    std::fs::remove_dir_all(&directory)?;
+    assert_eq!(fresh.status.code(), reused.status.code());
+    assert_eq!(fresh.stdout, reused.stdout);
+    assert_eq!(fresh.stderr, reused.stderr);
+    let modules = |records: &[serde_json::Value]| -> Vec<serde_json::Value> {
+        records
+            .iter()
+            .filter(|record| record["record"] == "module")
+            .map(|record| {
+                serde_json::json!([
+                    record["session"],
+                    record["module"],
+                    record["source"],
+                    record["wat_sha256"],
+                    record["wasm_sha256"],
+                    record["report_sha256"],
+                    record["work_issued"],
+                    record["outcome"],
+                ])
+            })
+            .collect()
+    };
+    assert_eq!(modules(&fresh_records), modules(&reused_records));
+    let states = |records: &[serde_json::Value], side: &str, state: &str| {
+        records
+            .iter()
+            .filter(|record| record["record"] == "module" && record["cache"][side] == state)
+            .count()
+    };
+    assert_eq!(states(&fresh_records, "host", "hit"), 0);
+    assert_eq!(states(&fresh_records, "worker", "hit"), 0);
+    assert!(states(&reused_records, "host", "hit") > 0);
+    assert!(states(&reused_records, "worker", "hit") > 0);
+    Ok(())
+}
+
 /// The calculator runtime's Node tests skip without an assembler. Run them
 /// with the selected Node and this build's CLI so they execute or fail here.
 #[test]
@@ -206,7 +370,7 @@ fn calculator_runtime_node_tests_run_with_built_assembler() -> Result<(), std::i
         "calculator runtime Node tests failed: stdout={stdout} stderr={}",
         String::from_utf8_lossy(&output.stderr),
     );
-    for summary in ["# tests 4", "# pass 4", "# fail 0", "# skipped 0"] {
+    for summary in ["# tests 6", "# pass 6", "# fail 0", "# skipped 0"] {
         assert!(
             stdout.lines().any(|line| line == summary),
             "missing `{summary}` in Node test summary: {stdout}"

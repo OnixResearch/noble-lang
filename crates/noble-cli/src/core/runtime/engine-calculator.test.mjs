@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -90,6 +91,41 @@ test('calculator restore returns the whole committed arena byte for byte',
       assert.deepEqual(engine.calculatorRestore().arena, committed.arena);
     } finally {
       engine.close();
+    }
+  });
+
+// The exact-WAT module cache is outside the committed arena: a restore neither
+// reads nor rolls it back. A Module compiled by the failed submission is
+// reused afterwards, under the stem the restore removed and reissues.
+test('calculator restore keeps exact-WAT modules and removes the undone artifacts',
+  { skip: !assembler && 'requires a built noble calculator assembler' }, () => {
+    const artifacts = fs.mkdtempSync(path.join(os.tmpdir(), 'noble-calculator-restore-'));
+    const engine = new CoreEngine(selection, abi, { calculator: true, calculator_shell_state: true,
+      calculator_assembler: assembler, calculator_trace: true, calculator_module_cache: true,
+      artifacts });
+    try {
+      const wat = Buffer.from('(module)');
+      const committed = engine.calculatorCommit();
+      const failed = engine.prepare(wat, Buffer.from('unit'), 1, 0);
+      assert.equal(failed.timing.worker_cache, 'miss');
+      const undone = ['module-1.noble', 'module-1.wat', 'module-1.wasm',
+        'module-1-calculator-assemble.json'].map(file => path.join(engine.directory, file));
+      assert.ok(undone.every(file => fs.existsSync(file)));
+
+      assert.deepEqual(engine.calculatorRestore().arena, committed.arena);
+      assert.deepEqual(undone.filter(file => fs.existsSync(file)), []);
+      assert.equal(engine.calculatorModules.size, 1);
+
+      const again = engine.prepare(Buffer.from(wat), Buffer.from('unit'), 1, 0);
+      assert.equal(again.timing.worker_cache, 'hit');
+      assert.equal(again.module.wasm_sha256, failed.module.wasm_sha256);
+      assert.ok(undone.every(file => fs.existsSync(file)));
+      const record = JSON.parse(fs.readFileSync(undone[3], 'utf8'));
+      assert.equal(record.reused_assembly, true);
+      assert.deepEqual(engine.calculatorRestore().arena, committed.arena);
+    } finally {
+      engine.close();
+      fs.rmSync(artifacts, { recursive: true, force: true });
     }
   });
 

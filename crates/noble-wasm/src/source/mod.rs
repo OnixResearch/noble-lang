@@ -11,8 +11,11 @@ mod emit;
 mod origin;
 mod plan;
 mod preflight;
+mod reuse;
 mod transaction;
 mod types;
+
+pub use reuse::{CanonicalEpoch, Reusable};
 
 const TABLE_LIMIT: u32 = 16_384;
 // Calculator table slots 0..=4 hold the generation-0 core entries; compiled
@@ -350,6 +353,10 @@ pub struct Prepared {
     selected_origin: Option<SelectedOriginMetadata>,
     resource_catalog: alloc::vec::Vec<ResourceCatalogEntry>,
     wat: alloc::vec::Vec<u8>,
+    /// Set only for a calculator Program-free preparation made at a
+    /// canonical epoch; see `reuse`.
+    epoch: Option<CanonicalEpoch>,
+    work_issued: u64,
 }
 
 impl Prepared {
@@ -819,6 +826,12 @@ impl Compiler {
             selected_origin,
             resource_catalog,
             wat,
+            epoch: if program_free {
+                self.canonical_epoch()
+            } else {
+                None
+            },
+            work_issued: work.issued,
         })
     }
 

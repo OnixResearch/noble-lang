@@ -2,6 +2,10 @@
 // compiler path and the byte-exact artifact path may cross into install().
 const installationCapability = Symbol('compiler-validated module');
 
+// Upper bound on the WAT plus Wasm bytes a Calculator-v1 worker retains for
+// exact module reuse (compiled V8 code for those modules is owned by V8).
+const CALCULATOR_MODULE_CACHE_BYTES = 64 * 1024 * 1024;
+
 const artifactEffects = new Map([
   ['test_emit', 'test.emit'],
   ['test_abort', 'test.abort'],
@@ -196,7 +200,7 @@ export class CoreEngine {
   constructor(selection, abi, { optimized = false, artifacts = null, bindings = [],
     declared_modules = false, declared_extension = null, in_process_live = false,
     text_byte_cursor = false, calculator = false, calculator_shell_state = false,
-    calculator_assembler = null } = {}) {
+    calculator_assembler = null, calculator_trace = false, calculator_module_cache = false } = {}) {
     this.selection = selection;
     // This larger bounded cell arena belongs only to Calculator-v1. Do not
     // mutate the parsed ABI shared with the ordinary and cursor profiles.
@@ -212,8 +216,14 @@ export class CoreEngine {
       text_byte_cursor, calculator);
     if (!calculator && calculator_assembler !== null) fail('calculator assembler cannot enter another profile');
     if (calculator_shell_state && !calculator) fail('opaque calculator state requires the calculator profile');
+    if (calculator_trace !== false && (calculator_trace !== true || !calculator))
+      fail('calculator timings require the calculator profile');
+    if (calculator_module_cache !== false && (calculator_module_cache !== true || !calculator))
+      fail('module reuse requires the calculator profile');
     this.calculatorShellState = calculator_shell_state;
     this.calculatorAssembler = calculator_assembler;
+    // Observation only: ready reports gain a `timing` object, nothing else.
+    this.calculatorTrace = calculator_trace;
     this.optimized = optimized;
     initializeHostState(this, bindings);
     this.pending = null;
@@ -222,6 +232,10 @@ export class CoreEngine {
     // Calculator-v1 signature ID -> canonical key, as published by the
     // latest executed module and its predecessors (see recordSignatures).
     this.signatures = [];
+    // Exact-WAT module reuse within this worker (Calculator-v1 only).
+    this.calculatorModuleCache = calculator_module_cache;
+    this.calculatorModules = new Map();
+    this.calculatorModuleBytes = 0;
     this.compilations = 0;
     this.lastTraceStart = 0;
     this.staged = null;
@@ -319,30 +333,66 @@ export class CoreEngine {
     if (result.error || result.status !== 0) fail(`${label} failed: ${result.error ?? result.stderr}`);
   }
 
-  prepare(wat, source = Buffer.alloc(0), submission = this.compilations + 1) {
+  prepare(wat, source = Buffer.alloc(0), submission = this.compilations + 1, generation = null) {
     if (this.inProcessLive) fail('live mode requires binary preparation');
     if (this.pending || this.poisoned) fail('session is pending or poisoned');
     if (wat.length > MAX_FRAME || source.length > 65536) fail('preparation byte limit exceeded');
+    // Only a calculator module imports the compiler generation its host
+    // validated it against; every other profile bakes its own guard.
+    if ((this.profile === 'Calculator-v1') !== (generation !== null)) fail('invalid submit generation');
+    if (generation !== null) integer(generation, 0x7fffffff, 'submit generation');
     const stem = `module-${submission}`;
     const persistCompiledAssets = this.profile !== 'Calculator-v1' || !this.owned;
     if (persistCompiledAssets) this.save(`${stem}.wat`, wat);
     this.save(`${stem}.noble`, source);
     let wasmPath = null;
     let bytes;
-    if (this.profile === 'Calculator-v1') {
+    let reused = null;
+    const clock = () => process.hrtime.bigint();
+    const micros = (start, end) => Number((end - start) / 1000n);
+    const timing = this.calculatorTrace ? { worker_cache: 'miss' } : null;
+    const watDigest = sha256(wat);
+    if (this.calculatorModuleCache) {
+      const cached = this.calculatorModules.get(watDigest);
+      if (cached && cached.wat.equals(wat)) reused = cached;
+    }
+    if (reused) {
+      // The exact WAT bytes were already assembled by the selected assembler
+      // in this worker and compiled by this V8; reuse that Wasm and Module.
+      this.calculatorModules.delete(watDigest);
+      this.calculatorModules.set(watDigest, reused);
+      if (timing) timing.worker_cache = 'hit';
+      if (timing) Object.assign(timing, { rehash_us: 0, assemble_us: 0 });
+      // Content-addressed provenance, not the earlier stem: a calculator
+      // restore removes the files of the submissions it undoes and later
+      // reissues their stems to different modules.
+      this.save(`${stem}-calculator-assemble.json`, { toolchain: 'calculator-experimental-wat-v1',
+        assembler_sha256: this.tools.calculator_wat.sha256, wat_sha256: watDigest,
+        reused_assembly: true });
+      if (persistCompiledAssets) this.save(`${stem}.wasm`, reused.bytes);
+      bytes = reused.bytes;
+    } else if (this.profile === 'Calculator-v1') {
+      const rehashing = clock();
       if (sha256(fs.readFileSync(this.calculatorAssembler)) !== this.tools.calculator_wat.sha256)
         fail('calculator assembler changed after selection');
+      const assembling = clock();
       const result = spawnSync(this.calculatorAssembler, ['--internal-calculator-wat-assemble'],
         { input: wat, env: {}, timeout: 60000, maxBuffer: MAX_FRAME });
+      if (timing) {
+        const assembled = clock();
+        timing.rehash_us = micros(rehashing, assembling);
+        timing.assemble_us = micros(assembling, assembled);
+      }
       this.save(`${stem}-calculator-assemble.json`, { toolchain: 'calculator-experimental-wat-v1',
-        assembler_sha256: this.tools.calculator_wat.sha256, wat_sha256: sha256(wat),
+        assembler_sha256: this.tools.calculator_wat.sha256, wat_sha256: watDigest,
         status: result.status, signal: result.signal,
         stderr: result.stderr.toString(), error: result.error ? String(result.error) : null });
       if (result.error || result.status !== 0 || !result.stdout.length || result.stdout.length > MAX_FRAME)
         fail(`calculator-only WAT assembly refused: ${result.error ?? result.stderr.toString()}`);
       if (persistCompiledAssets) {
         wasmPath = path.join(this.directory, `${stem}.wasm`);
-        fs.writeFileSync(wasmPath, result.stdout, { flag: 'wx' });
+        // Tracked like every saved file, so an arena rollback removes it.
+        this.save(`${stem}.wasm`, result.stdout);
       } else {
         bytes = result.stdout;
       }
@@ -363,13 +413,49 @@ export class CoreEngine {
       bytes = fs.readFileSync(wasmPath);
     }
     rejectStartSection(bytes);
-    const module = new WebAssembly.Module(bytes);
+    const compiling = clock();
+    const module = reused ? reused.module : new WebAssembly.Module(bytes);
+    const compiled = clock();
+    if (this.calculatorModuleCache && !reused) this.retainCalculatorModule(watDigest, wat, bytes, module);
     this.compilations += 1;
-    return this.install(module, { submission, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
-      wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations, stem,
+    const record = { submission, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
+      wat_sha256: watDigest, optimized: this.optimized, compilations: this.compilations, stem,
       ...(this.profile === 'Calculator-v1' ? { assembly_toolchain: 'calculator-experimental-wat-v1',
-        assembler_sha256: this.tools.calculator_wat.sha256 } : {}) },
-    installationCapability);
+        assembler_sha256: this.tools.calculator_wat.sha256 } : {}) };
+    const instantiating = clock();
+    const ready = this.install(module, record, installationCapability, generation);
+    if (timing) {
+      timing.compile_us = micros(compiling, compiled);
+      timing.instantiate_us = micros(instantiating, clock());
+      timing.wasm_bytes = bytes.length;
+      ready.timing = timing;
+    }
+    return ready;
+  }
+
+  // Calculator-v1 module reuse: exact WAT bytes -> the Wasm the selected
+  // assembler produced for them and its compiled V8 Module, never keyed or
+  // matched by digest alone. Instances are not retained. Retained WAT and
+  // Wasm bytes are bounded; the least recently used entries are evicted.
+  // The cache is not part of a calculator commit and a restore never reads
+  // it: a compiled Module is immutable code without instance state, so one
+  // compiled during a failed, restored submission stays exact.
+  retainCalculatorModule(digest, wat, bytes, module) {
+    const size = wat.length + bytes.length;
+    if (size > CALCULATOR_MODULE_CACHE_BYTES) return;
+    // A digest collision with different bytes replaces the older entry.
+    const previous = this.calculatorModules.get(digest);
+    if (previous) {
+      this.calculatorModules.delete(digest);
+      this.calculatorModuleBytes -= previous.size;
+    }
+    this.calculatorModules.set(digest, { wat: Buffer.from(wat), bytes: Buffer.from(bytes), module, size });
+    this.calculatorModuleBytes += size;
+    for (const [key, entry] of this.calculatorModules) {
+      if (this.calculatorModuleBytes <= CALCULATOR_MODULE_CACHE_BYTES) break;
+      this.calculatorModules.delete(key);
+      this.calculatorModuleBytes -= entry.size;
+    }
   }
 
   liveModule(bytes, source, submission) {
@@ -976,11 +1062,14 @@ export class CoreEngine {
     } };
   }
 
-  install(module, record = {}, capability) {
+  install(module, record = {}, capability, generation = null) {
     if (capability !== installationCapability) fail('raw module installation is not artifact admission');
     if (this.pending || this.poisoned) fail('session is pending or poisoned');
+    if ((this.profile === 'Calculator-v1') !== (generation !== null)) fail('invalid submit generation');
     const imports = WebAssembly.Module.imports(module);
     const globals = new Set(this.abi.globals.map(global => global.name));
+    // The calculator's immutable per-instance generation binding.
+    if (generation !== null) globals.add('submit_generation');
     const functions = new Set(this.hostFunctions.map(fn => fn.name));
     for (const entry of imports) {
       const allowed = entry.module === this.abi.module && (
@@ -997,7 +1086,9 @@ export class CoreEngine {
     const ambientFallbackCalls = this.ambientFallbackCalls;
     const protectedOperations = this.protectedOperations;
     const sp = this.shared.sp.value;
-    const instance = new WebAssembly.Instance(module, { [this.abi.module]: this.shared });
+    const bound = generation === null ? this.shared : Object.assign(Object.create(null), this.shared,
+      { submit_generation: new WebAssembly.Global({ value: 'i32', mutable: false }, generation) });
+    const instance = new WebAssembly.Instance(module, { [this.abi.module]: bound });
     if (requests !== this.trace.length || boundRequests !== this.boundRequests.length
       || hostRequestsTotal !== this.hostRequestsTotal || boundRequestsTotal !== this.boundRequestsTotal
       || ambientFallbackCalls !== this.ambientFallbackCalls

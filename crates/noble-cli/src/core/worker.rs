@@ -106,17 +106,31 @@ impl Engine {
         Self::start_with_host(&configuration::slot(), SLOT_HOST, true)
     }
 
-    pub fn start_calculator(optimized: bool) -> Result<Self, super::output::Failure> {
+    /// `trace` asks the worker for per-module preparation timings in its
+    /// ready reports (the opt-in calculator trace); it changes nothing else.
+    /// `module_cache` enables the worker's exact-WAT module reuse.
+    pub fn start_calculator(
+        optimized: bool,
+        trace: bool,
+        module_cache: bool,
+    ) -> Result<Self, super::output::Failure> {
         let executable = attempt!(std::env::current_exe().map_err(super::framing::io_error));
-        Self::start_calculator_with(optimized, &executable)
+        Self::start_calculator_with(optimized, &executable, trace, module_cache)
     }
 
     /// A calculator worker whose WAT assembler is the given `noble` binary.
     pub fn start_calculator_with(
         optimized: bool,
         assembler: &std::path::Path,
+        trace: bool,
+        module_cache: bool,
     ) -> Result<Self, super::output::Failure> {
-        let config = attempt!(configuration::calculator(optimized, assembler));
+        let config = attempt!(configuration::calculator(
+            optimized,
+            assembler,
+            trace,
+            module_cache
+        ));
         let (send, replies) = std::sync::mpsc::sync_channel(1);
         let mut engine = Self {
             child: attempt!(launch_calculator(&config)),
@@ -227,6 +241,28 @@ impl Engine {
         submission: u64,
     ) -> Result<super::output::Report, super::output::Failure> {
         let header = std::format!("compile {} {} {submission}\n", wat.len(), source.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(wat));
+        attempt!(self.write(source));
+        self.reply()
+    }
+
+    /// Prepare one calculator module. `generation` is the exact compiler
+    /// generation the host validated the module against; the engine binds it
+    /// as the instance's immutable `submit_generation` import, which the
+    /// module's `submit` guard compares with the arena's `generation` global.
+    pub fn prepare_calculator(
+        &mut self,
+        wat: &[u8],
+        source: &[u8],
+        submission: u64,
+        generation: u32,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!(
+            "compile {} {} {submission} {generation}\n",
+            wat.len(),
+            source.len()
+        );
         attempt!(self.write(header.as_bytes()));
         attempt!(self.write(wat));
         attempt!(self.write(source));

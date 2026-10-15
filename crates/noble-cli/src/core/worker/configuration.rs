@@ -87,6 +87,8 @@ pub(super) fn slot() -> std::string::String {
 pub(super) fn calculator(
     optimized: bool,
     assembler: &std::path::Path,
+    trace: bool,
+    module_cache: bool,
 ) -> Result<std::string::String, super::super::output::Failure> {
     let executable =
         attempt!(std::fs::canonicalize(assembler).map_err(super::super::framing::io_error));
@@ -127,6 +129,14 @@ pub(super) fn calculator(
         (
             "calculator_assembler",
             crate::workflow::encoding::string(executable),
+        ),
+        (
+            "calculator_trace",
+            crate::workflow::encoding::Json::Bool(trace),
+        ),
+        (
+            "calculator_module_cache",
+            crate::workflow::encoding::Json::Bool(module_cache),
         ),
         (
             "bindings",

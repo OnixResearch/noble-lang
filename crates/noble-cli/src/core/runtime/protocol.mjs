@@ -154,12 +154,15 @@ async function protocol(config) {
                 claims: integer(Number(admission[4]), 1024, 'claim frame'),
                 allowed: integer(Number(admission[5]), 1024, 'host-policy frame') };
             } else {
-              const match = /^(compile|compile-bin|stage-bin) ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+              const match = /^(compile|compile-bin|stage-bin) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+))?$/.exec(header);
               if (!match) fail('invalid engine command');
+              if (match[5] !== undefined && match[1] !== 'compile') fail('invalid engine command');
               command = { kind: match[1],
                 bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
                 source: integer(Number(match[3]), 65536, 'source frame'),
-                submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission') };
+                submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission'),
+                generation: match[5] === undefined ? null
+                  : integer(Number(match[5]), 0x7fffffff, 'submit generation') };
               if (command.kind !== 'compile' && command.bytes < 8) fail('invalid Wasm frame size');
             }
           }
@@ -235,7 +238,8 @@ async function protocol(config) {
         const source = pending.subarray(command.bytes, command.bytes + command.source);
         pending = pending.subarray(command.bytes + command.source);
         try {
-          const report = command.kind === 'compile' ? engine.prepare(bytes, source, command.submission)
+          const report = command.kind === 'compile'
+            ? engine.prepare(bytes, source, command.submission, command.generation)
             : command.kind === 'compile-bin' ? engine.compileBinary(bytes, source, command.submission)
               : engine.stageBinary(bytes, source, command.submission);
           emit(report.outcome, report);
