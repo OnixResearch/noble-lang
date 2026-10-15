@@ -1384,3 +1384,53 @@ fn applying_value_binder_preserves_later_dependent_type_codes() -> Result<(), St
     );
     Ok(())
 }
+
+/// `n` inferred `Result.Ok` layers whose error types are fixed to `I64` by
+/// nested matches, with no explicit nested `Result<...>` annotation.
+fn nested_inferred_results(depth: usize) -> String {
+    let mut matcher = String::new();
+    for _ in 0..depth {
+        matcher = format!("[ {matcher} ] [ 1 + ] result@1.Result.match");
+    }
+    format!("1 {}{matcher}", "result@1.Result.Ok ".repeat(depth))
+}
+
+#[test]
+fn nested_inferred_results_refuse_descriptor_expansion_before_admission() -> Result<(), String> {
+    let mut session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
+    session = super::commit(session, noble_contracts::source::RESULT_LIBRARY_SOURCE)?;
+    for depth in [1, 2, 4, 8] {
+        let accepted = session
+            .prepare(
+                nested_inferred_results(depth).as_bytes(),
+                &[],
+                super::LIMITS,
+            )
+            .map_err(|e| format!("depth {depth}: {e:?}"))?;
+        assert_eq!(accepted.output(), &[noble_kernel::types::Ty::I64]);
+    }
+    // Owned descriptor nodes double per layer while the logical size stays
+    // far below 256 constructors. Refusal must come from inference before
+    // the copies are made, not from kernel admission of an expanded witness.
+    for depth in [11, 12, 16] {
+        let refused = session
+            .prepare(
+                nested_inferred_results(depth).as_bytes(),
+                &[],
+                super::LIMITS,
+            )
+            .err()
+            .ok_or_else(|| format!("depth {depth} was accepted"))?;
+        assert_eq!(refused.stage(), noble_contracts::source::Stage::Check);
+        assert_eq!(
+            refused.diagnostic().kind,
+            noble_contracts::DiagnosticKind::Exhausted
+        );
+        assert_eq!(
+            refused.diagnostic().message,
+            "inferred type representation exceeds the 4096-node limit"
+        );
+    }
+    Ok(())
+}
