@@ -1,6 +1,8 @@
 //! Calculator shell: terminal framing and an opaque, source-checked guest session.
 //! Parsing, name resolution, arithmetic and display decisions live in the Noble modules.
 
+#[path = "calculator/metrics.rs"]
+mod metrics;
 #[path = "calculator/trace.rs"]
 mod trace;
 
@@ -5213,6 +5215,7 @@ impl Session {
             )
         })?;
         let backend_us = trace::micros(compiling);
+        let compile_metrics = compiled.metrics();
         let wat_bytes = compiled.wat().len();
         let preparing = std::time::Instant::now();
         let ready = self
@@ -5281,6 +5284,7 @@ impl Session {
                 "wasm_sha256": module["wasm_sha256"],
                 "report_sha256": trace::sha256(report.json.as_bytes()),
                 "outcome": report.outcome,
+                "compile": metrics::compile_json(&compile_metrics),
             }))?;
         }
         Ok(report)

@@ -111,7 +111,7 @@ pub(super) fn bytes(
     };
     if end_bytes
         > if calculator {
-            983_040
+            super::super::CALCULATOR_TEXT_END
         } else {
             super::super::MEMORY_BYTES
         }

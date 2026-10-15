@@ -96,6 +96,8 @@ fn interface_work(
     Ok(())
 }
 
+/// Charges every retained signature key and accepted interface before
+/// lowering; returns the retained-key length charged.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; every actual retained signature key and accepted interface is charged in order before lowering; first-failure loops retain exhaustion diagnostics without assertions or hypothetical duplicate-pool costs."
@@ -104,12 +106,17 @@ pub(in crate::source) fn compilation(
     checked: &super::Accepted,
     pool: &crate::signatures::Pool,
     work: &mut super::super::Work,
-) -> Result<(), crate::Diagnostic> {
+) -> Result<u64, crate::Diagnostic> {
     let mut index = 0usize;
+    let mut key_charge = 0u64;
     let mut failure = None;
     while index < pool.len() {
-        match work.entries(pool.key_len(index)) {
-            Ok(()) => index += 1,
+        let length = pool.key_len(index);
+        match work.entries(length) {
+            Ok(()) => {
+                key_charge = key_charge.saturating_add(length as u64);
+                index += 1;
+            }
             Err(problem) => {
                 failure = Some(problem);
                 break;
@@ -132,5 +139,6 @@ pub(in crate::source) fn compilation(
     if let Some(problem) = failure {
         return Err(problem);
     }
-    checked_work(&checked.root, work)
+    attempt!(checked_work(&checked.root, work));
+    Ok(key_charge)
 }

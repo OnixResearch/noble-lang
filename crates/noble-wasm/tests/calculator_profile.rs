@@ -1258,3 +1258,75 @@ fn calculator_refuses_maximum_named_clone_fanout_before_kernel_copy() -> Result<
     ));
     Ok(())
 }
+
+#[test]
+fn calculator_compile_metrics_track_issued_work_types_and_session_state() -> Result<(), String> {
+    let caps = noble_wasm::source::CALCULATOR_CAPS;
+    let mut session = noble_contracts::source::Session::new_calculator();
+    let mut compiler = noble_wasm::source::Compiler::new_calculator();
+    let mut text_end = caps.text_start;
+    let mut carried = Vec::new();
+    for (generation, source) in ["\"abcd\" drop 1 2 pair 3 pair", "drop \"abcd\" drop"]
+        .into_iter()
+        .enumerate()
+    {
+        let checked = session
+            .prepare(source.as_bytes(), &carried, limits())
+            .map_err(|error| format!("generation {generation} source: {error:?}"))?;
+        let submission = checked.submission().ok_or("no submission")?;
+        let prepared = compiler
+            .prepare(submission)
+            .map_err(|_| format!("generation {generation} compilation failed"))?;
+        let metrics = prepared.metrics();
+        // The grants partition every issued unit, under the one ceiling.
+        assert_eq!(
+            metrics.work_initial
+                + metrics.work_preflight_grant
+                + metrics.work_environment_grant
+                + metrics.work_plan_grant,
+            metrics.work_issued
+        );
+        assert!(metrics.work_issued <= caps.work_issued);
+        assert!(metrics.work_spent <= metrics.work_issued);
+        assert_eq!(
+            metrics.work_environment_grant,
+            metrics.environment_work * (metrics.named_bodies + 3)
+        );
+        assert_eq!(
+            metrics.environment_rows,
+            submission.environment.defs.len() as u64
+        );
+        assert_eq!(metrics.wat_bytes, prepared.wat().len() as u64);
+        let span = prepared.code_span();
+        assert_eq!(metrics.table_end, span.start + span.length);
+        // Pair<Pair<I64,I64>,I64> is the largest admitted type: 5 nodes.
+        assert_eq!(metrics.max_type_size, 5);
+        // Every literal occurrence allocates fresh static Text.
+        text_end += 4;
+        assert_eq!(metrics.text_end, text_end);
+        if generation == 0 {
+            assert_eq!(metrics.signature_key_charge, 0);
+        } else {
+            assert!(metrics.signature_key_charge > 0);
+        }
+        carried = checked.output().to_vec();
+        compiler
+            .commit(prepared)
+            .map_err(|_| format!("generation {generation} commit failed"))?;
+        session
+            .commit(checked)
+            .map_err(|error| format!("generation {generation} source commit: {error:?}"))?;
+    }
+    // A Program-free epoch restarts the key pool, so no retained key is
+    // charged, but static Text is never rewound.
+    let checked = session
+        .prepare(b"\"ab\" drop", &carried, limits())
+        .map_err(|error| format!("program-free source: {error:?}"))?;
+    let metrics = compiler
+        .prepare_program_free(checked.submission().ok_or("no submission")?)
+        .map_err(|_| "program-free compilation failed")?
+        .metrics();
+    assert_eq!(metrics.signature_key_charge, 0);
+    assert_eq!(metrics.text_end, text_end + 2);
+    Ok(())
+}
