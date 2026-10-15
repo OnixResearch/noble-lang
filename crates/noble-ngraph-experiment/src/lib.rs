@@ -14,6 +14,7 @@ pub mod compiled;
 pub mod diag;
 pub mod differential;
 pub mod eval;
+pub mod evidence;
 pub mod facts;
 pub mod fixtures;
 pub mod grad;
@@ -24,6 +25,7 @@ pub mod random;
 pub mod rejections;
 pub mod sem;
 pub mod snapshot;
+pub mod suites;
 pub mod text;
 pub mod train;
 

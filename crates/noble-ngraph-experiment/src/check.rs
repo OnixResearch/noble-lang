@@ -420,7 +420,8 @@ fn find_cycle(g: &Graph) -> Option<NodeId> {
         }
         let mut stack = vec![(start, 0usize)];
         color[start] = 1;
-        while let Some(&mut (v, ref mut next)) = stack.last_mut() {
+        while let Some((v, next)) = stack.last_mut() {
+            let v = *v;
             if let Some(&w) = ops[v].get(*next) {
                 *next += 1;
                 match color[w.index()] {
@@ -936,7 +937,8 @@ pub fn expansion_bound(closure: &[CallGraphEntry], root: u64) -> Option<u64> {
     // Iterative post-order.
     let mut stack: Vec<(u64, usize)> = vec![(root, 0)];
     on_stack.insert(root, ());
-    while let Some(&mut (id, ref mut next)) = stack.last_mut() {
+    while let Some((id, next)) = stack.last_mut() {
+        let id = *id;
         let e = by_id.get(&id)?;
         if let Some(&c) = e.callees.get(*next) {
             *next += 1;
