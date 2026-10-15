@@ -1,0 +1,79 @@
+{
+  "schema": "noble-calculator-cli-mapping/v1",
+  "status": "reviewed-mapping-not-case-evidence",
+  "note": "The only table translating structured specs/conformance/calculator-cases.json inputs into `noble calculator` stdin lines. Expected values and categories always come from the cases file; this table never adds an expected span or value the case does not state, except the explicitly derived follow-up probes for CALC-07 `rejected_definition_installed: false`.",
+  "spelling": {
+    "source": "README.md, Experimental calculator: `let NAME = EXPR` or `fn NAME(P, ...)=EXPR`",
+    "define-variable": "let {name} = {expression}",
+    "define-function": "fn {name}({parameters})={body}",
+    "parameter-separator": ", ",
+    "evaluate": "{expression}"
+  },
+  "define-variable-success": "echo",
+  "define-variable-success-source": "crates/noble-cli/src/calculator.rs: a `let` line formats its value before committing State and returns Outcome::Value, so the CLI prints it; a successful `fn` returns Outcome::Defined and prints nothing",
+  "echo-expectation": "the printed value equals the expression when the expression is a canonical integer literal; otherwise any exact display line matches (the cases file states no value for a definition)",
+  "display": {
+    "source": "README.md: results print as `n/d`, or `n` when the denominator is 1",
+    "default": "numerator when denominator is \"1\", else numerator/denominator"
+  },
+  "modes": {
+    "default": [],
+    "finite-decimal": ["--finite-decimal"]
+  },
+  "diagnostic-line": "^{category} \\[{start},{end}\\) provenance=unavailable$",
+  "cases": {
+    "CALC-01": {"input": "vector.expression is one stdin line", "expect": "value: display(vector.numerator, vector.denominator) in default mode"},
+    "CALC-02": {"input": "vector.expression is one stdin line", "expect": "diagnostic: vector.category with vector.span"},
+    "CALC-03": {"input": "vector.expression is one stdin line", "expect": "diagnostic: vector.category (the case states no span; the observed span is recorded only)"},
+    "CALC-06": {"input": "all operations, rendered with `spelling`, form one session (one process, one stdin)", "expect": "define-variable without expected_error: echo; define-function without expected_error: silent; expected_fraction: value in default display; expected_error: diagnostic category only"},
+    "CALC-09": {"input": "vector.fraction (`n/d`) is one stdin line evaluated as an exact division", "flags": "modes[vector.mode]", "expect": "value: vector.display"}
+  },
+  "CALC-07": {
+    "unused-body-with-unknown-name": {
+      "support": "cli",
+      "operations": [
+        {"operation": "define-function", "name": "h", "parameters": [], "body": "q", "expect": "case-outcome"},
+        {"operation": "evaluate", "expression": "h()", "expect": {"diagnostic": "UnknownName"}, "derived_from": "expected.rejected_definition_installed=false"}
+      ]
+    },
+    "duplicate-parameter-name": {
+      "support": "cli",
+      "operations": [
+        {"operation": "define-function", "name": "f", "parameters": ["y", "y"], "body": "y", "expect": "case-outcome"},
+        {"operation": "evaluate", "expression": "f(1, 2)", "expect": {"diagnostic": "UnknownName"}, "derived_from": "expected.rejected_definition_installed=false"}
+      ]
+    },
+    "self-recursive-definition": {
+      "support": "cli",
+      "operations": [
+        {"operation": "define-function", "name": "f", "parameters": ["y"], "body": "f(y)", "expect": "case-outcome"},
+        {"operation": "evaluate", "expression": "f(1)", "expect": {"diagnostic": "UnknownName"}, "derived_from": "expected.rejected_definition_installed=false"}
+      ]
+    },
+    "cyclic-imported-definition-graph": {
+      "support": "unsupported-on-cli",
+      "reason": "The calculator line grammar has no import or module syntax, so an imported definition graph has no CLI spelling."
+    },
+    "resource-capability-capture": {
+      "support": "unsupported-on-cli",
+      "reason": "The calculator line grammar names no resources or capabilities, so a capture has no CLI spelling."
+    },
+    "zero-argument-function-body-1-divided-by-0": {
+      "support": "cli",
+      "operations": [
+        {"operation": "define-function", "name": "z", "parameters": [], "body": "1 / 0", "expect": "case-outcome"}
+      ]
+    },
+    "call-that-zero-argument-function": {
+      "support": "cli",
+      "operations": [
+        {"operation": "define-function", "name": "z", "parameters": [], "body": "1 / 0", "expect": "silent", "derived_from": "variant zero-argument-function-body-1-divided-by-0"},
+        {"operation": "evaluate", "expression": "z()", "expect": "case-outcome"}
+      ]
+    }
+  },
+  "CALC-07-outcomes": {
+    "definition-accepted-body-not-evaluated": "silent (no stdout, no stderr line)",
+    "otherwise": "diagnostic with that category; the case states no span, so the observed span is recorded only"
+  }
+}

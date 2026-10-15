@@ -202,6 +202,10 @@ It is very slow: in a local CALC-01/02/03/09 sweep (four processes at a time)
 each line that printed a value took about 3–31 minutes (most 8–18), numeric
 errors 4.5–9 minutes and syntax/name errors under 3. Every line also replays
 each earlier `let`/`fn` first, adding roughly 6–8 minutes per definition.
+The [calculator acceptance runner](verification/calculator-v1/README.md) runs
+the canonical CALC-01/02/03/06/07/09 CLI vectors against an exact prebuilt
+binary, one process per vector, and keeps raw I/O and a JSON receipt outside
+the repository. Its results are observations; they do not promote cases.
 
 The `Calculator-v1` source/worker profile is separate from Core-Bootstrap,
 Declared-Modules-v1, Text-Byte-Cursor-v1 and live profiles. Its compiler has a
