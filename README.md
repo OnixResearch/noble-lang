@@ -124,6 +124,14 @@ verified by this check; CALC-EVIDENCE-01/02 remain open,
 CALC-01 and related scenario statuses remain unchanged, and the separate
 VC-NUM-01 contract obligation does not inherit a calculator proof.
 
+[`proofs/foundation`](proofs/foundation/README.md) (issue #15) proves that
+this oracle agrees with the MC1 `BitVec 64` model, which gives universal
+instruction, sequence and quote/compose/run statements over that model.
+Its seeded sibling `verification/foundation/differential.mjs` runs
+generated programs with opt off and on, and Lean kernel-checks every
+expected value. Both remain model theorems plus finite tests. The README
+there lists every unproved edge to the executed Wasm.
+
 To retain the source, reports, WAT, Wasm, and tool observations:
 
 ```sh

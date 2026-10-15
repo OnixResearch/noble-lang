@@ -1,0 +1,635 @@
+{
+  "schema": "noble-foundation-slice/v1",
+  "subject": "[ quote [ 1 + ] compose run ]",
+  "profile": "MC2-pure-quotation@1 shape (one closed quotation root, no definitions/resources)",
+  "route": "Route B (build --require-proof) + Route A (admit-artifact); PAA-1 envelope not implemented",
+  "not_translation_validation": true,
+  "universal_backend_proof": false,
+  "source_commit": "898cfe162bc3d72c4f51ea5aee6cabf79f4196e8",
+  "source_tree": "d11cd3c706212e2781d62fe73a5352ed7d07ba3d",
+  "clean_source": true,
+  "foundation": {
+    "receipt_sha256": "110cf9951f52c0dd201c4bcd65054a23a95af330b328fd0c98688e0798258265",
+    "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+    "mathlib_commit": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
+    "theorems": [
+      {
+        "name": "NobleFoundation.sub_operand_order",
+        "statement": "NobleFoundation.sub_operand_order : ∀ (pre t : NobleContracts.Stack), (NobleContracts.Exec (NobleFoundation.lowerAll [NobleFoundation.AOp.push 3, NobleFoundation.AOp.push 8, NobleFoundation.AOp.sub]) pre t ↔ t = pre ++ [NobleFoundation.i64v (-5)]) ∧ (NobleContracts.Exec (NobleFoundation.lowerAll [NobleFoundation.AOp.push 8, NobleFoundation.AOp.push 3, NobleFoundation.AOp.sub]) pre t ↔ t = pre ++ [NobleFoundation.i64v 5]) ∧ NobleFoundation.i64v (-5) ≠ NobleFoundation.i64v 5",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ]
+      },
+      {
+        "name": "NobleFoundation.helper_refines_step",
+        "statement": "@NobleFoundation.helper_refines_step : ∀ {limit quota w : ℕ} {f : NobleFoundation.WState → NobleFoundation.WState}, NobleFoundation.helper limit quota w = some f → ∀ {a b : BitVec 64} {vs : NobleContracts.Stack} {ss : List NobleFoundation.Slot}, NobleFoundation.SlotsRel vs ss → (ss.length + 2) * 16 ≤ limit → ∃ t, NobleContracts.Step (NobleContracts.Op.word w) (NobleContracts.Value.i64 b :: NobleContracts.Value.i64 a :: vs) t ∧ (∀ (t' : NobleContracts.Stack), NobleContracts.Step (NobleContracts.Op.word w) (NobleContracts.Value.i64 b :: NobleContracts.Value.i64 a :: vs) t' → t' = t) ∧ ∃ ss', f { slots := { tag := 1, payload := b } :: { tag := 1, payload := a } :: ss, failure := 0 } = { slots := ss', failure := 0 } ∧ NobleFoundation.SlotsRel t ss'",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "name": "NobleFoundation.helper_fails_when_stuck",
+        "statement": "@NobleFoundation.helper_fails_when_stuck : ∀ {limit quota w : ℕ} {f : NobleFoundation.WState → NobleFoundation.WState}, NobleFoundation.helper limit quota w = some f → ∀ {u v : NobleContracts.Value} {vs : NobleContracts.Stack} {su sv : NobleFoundation.Slot} {ss : List NobleFoundation.Slot}, NobleFoundation.SlotsRel (v :: u :: vs) (sv :: su :: ss) → ((∀ (x : BitVec 64), v ≠ NobleContracts.Value.i64 x) ∨ ∀ (x : BitVec 64), u ≠ NobleContracts.Value.i64 x) → (∀ (t : NobleContracts.Stack), ¬NobleContracts.Step (NobleContracts.Op.word w) (v :: u :: vs) t) ∧ (f { slots := sv :: su :: ss, failure := 0 }).failure = 4",
+        "axioms": [
+          "propext"
+        ]
+      },
+      {
+        "name": "NobleFoundation.swapped_helper_refuted",
+        "statement": "NobleFoundation.swapped_helper_refuted : NobleFoundation.opBinary 64 1 (fun x1 x2 => x1 - x2) { slots := [{ tag := 1, payload := 8 }, { tag := 1, payload := 3 }], failure := 0 } = { slots := [{ tag := 1, payload := BitVec.ofInt 64 (-5) }], failure := 0 } ∧ NobleFoundation.opBinarySwapped 64 1 (fun x1 x2 => x1 - x2) { slots := [{ tag := 1, payload := 8 }, { tag := 1, payload := 3 }], failure := 0 } = { slots := [{ tag := 1, payload := 5 }], failure := 0 } ∧ BitVec.ofInt 64 (-5) ≠ 5",
+        "axioms": [
+          "propext"
+        ]
+      },
+      {
+        "name": "NobleFoundation.slice_body_exec",
+        "statement": "NobleFoundation.slice_body_exec : ∀ (pre : NobleContracts.Stack) (n : BitVec 64) (t : NobleContracts.Stack), NobleContracts.Exec NobleFoundation.sliceBody (pre ++ [NobleContracts.Value.i64 n]) t ↔ t = pre ++ [NobleContracts.Value.i64 (n + 1)]",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "name": "NobleFoundation.slice_body_signed",
+        "statement": "NobleFoundation.slice_body_signed : ∀ (pre : NobleContracts.Stack) (x : ℤ) (t : NobleContracts.Stack), NobleContracts.Exec NobleFoundation.sliceBody (pre ++ [NobleFoundation.i64v x]) t ↔ t = pre ++ [NobleFoundation.i64v (MathlibI64.wrap (x + 1))]",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ]
+      },
+      {
+        "name": "NobleFoundation.slice_root_inert",
+        "statement": "NobleFoundation.slice_root_inert : ∀ (s t : NobleContracts.Stack), NobleContracts.Exec NobleFoundation.sliceRoot s t ↔ t = s ++ [NobleContracts.Value.program NobleFoundation.sliceBody]",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "name": "NobleFoundation.slice_driver",
+        "statement": "NobleFoundation.slice_driver : ∀ (pre : NobleContracts.Stack) (x : ℤ) (t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.sliceRoot ++ [NobleContracts.Op.word 10]) (pre ++ [NobleFoundation.i64v x]) t ↔ t = pre ++ [NobleFoundation.i64v (MathlibI64.wrap (x + 1))]",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ]
+      },
+      {
+        "name": "NobleFoundation.slice_body_typed",
+        "statement": "NobleFoundation.slice_body_typed : ∀ (base : List NobleContracts.Ty), NobleContracts.CodeTyped NobleFoundation.sliceBody (base ++ [NobleContracts.Ty.i64]) (base ++ [NobleContracts.Ty.i64])",
+        "axioms": [
+          "propext"
+        ]
+      },
+      {
+        "name": "NobleFoundation.slice_exported_claim",
+        "statement": "NobleFoundation.slice_exported_claim : NobleContracts.exportedClaim NobleFoundation.sliceBody [NobleContracts.Ty.i64] [NobleContracts.Ty.i64] [] (fun x x_1 x_2 => True) fun before after x => ∃ n, before = [NobleContracts.Value.i64 n] ∧ after = [NobleContracts.Value.i64 (n + 1)]",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      {
+        "name": "NobleFoundation.slice_examples",
+        "statement": "NobleFoundation.slice_examples : ∀ (pre t : NobleContracts.Stack), (NobleContracts.Exec (NobleFoundation.sliceRoot ++ [NobleContracts.Op.word 10]) (pre ++ [NobleFoundation.i64v 41]) t ↔ t = pre ++ [NobleFoundation.i64v 42]) ∧ (NobleContracts.Exec (NobleFoundation.sliceRoot ++ [NobleContracts.Op.word 10]) (pre ++ [NobleFoundation.i64v 9223372036854775807]) t ↔ t = pre ++ [NobleFoundation.i64v (-9223372036854775808)])",
+        "axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ]
+      }
+    ]
+  },
+  "toolchain": {
+    "cli_sha256": "bad878784fc9a94be052493d8c459883ac071dbf0dc70626c1d9b3efffea23ef",
+    "tools": {
+      "node": {
+        "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+        "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b"
+      },
+      "wasm_tools": {
+        "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+        "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f"
+      },
+      "wasm_opt": {
+        "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+        "sha256": "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2"
+      }
+    },
+    "runtime_helpers_sha256": {
+      "accounting.wat": "e23e4fad5985ca7a6e62c3825827be4b87032c4cc31b7cbaf35966ecbc945b4a",
+      "calculator-linear-address.wat": "a19a69e02f9ab59ecac6423f930803c747fbd9253adc673129339d4a87918008",
+      "calculator.wat": "e3e6b50b0834b6e32cd837b7e4fd6aaf5ff96f60a5e7c724392083ea892f5d51",
+      "common.wat": "4645cd1a9fe249627a757311c04c9f105831e304dd766a27b12993ee6216dd96",
+      "data.wat": "3680e0487bd20d7f701879f9f99fd1f0e5d16e32e56cbb5c40d7efee1a9d11bf",
+      "experiment.wat": "8fb13ca3686e356dd392cab41ebfd7bb4ff930093c8bbcc54d019e4fe94ed0c3",
+      "gc-storage.wat": "10f03f88ef8f250d69e88a0f8297f8a0bfc9a6d54b7b94a6bce2621060cc5c17",
+      "linear-address.wat": "6938ce872bda9eaca8238c2e67efe5366a4cdcea384784c741cea0e079dc7ad5",
+      "linear-storage.wat": "0db9a4088c0bc36502f04db40e2b6d8f5ce420c00a911dd9a7dd5ba750995305",
+      "live-accounting.wat": "8ccaa8ccb366f0df3e41ad552bb5190994f041bcfd80b565062a2bc0b2b96685",
+      "live-borrows.wat": "1a19928453d90f7099ecdc6566357002dc5e617b4fb7d0c9b81a69e1a59d0baf",
+      "live-linear-storage.wat": "3d776393020a2cee0de24ca2eb6ad0474039ca7c383ac25c151e9002565535e6",
+      "live-source.wat": "5d98e55fefa0f739696a1ebbb8d74810a10b3d059fa400ba74ecec03b21270ae",
+      "live-stack.wat": "174b97eb73e6b54d55faeb2ca232a5fab3baa6efa4cfc7aaf5cccccca1e5d1cb",
+      "operations.wat": "ed8b474eaf8209030a7fa53f249c5743da6edb67887d94a32dfaef08f7c2897d",
+      "programs.wat": "ef6432e7f40e619494a65de802add69b3376185bfd802579364410ee5c6af3be",
+      "reflection.wat": "ca6a9f1b6c31caf83edbc8868d7f0c0c9792c4fe2bfb11deb50a225eb54cd01d",
+      "resource.wat": "8d3978ef6f90c8d9c21e06057f335b03d01040d6c065ff340b17111d0492e547",
+      "source.wat": "9e55ac86abfde1bc7e9865ee50bc7e66942dc2fd7a0fb07351981c75871d4440",
+      "stack.wat": "6abc22e80a016b4f6f0f263e696bf401d370c3685e732606e388636d9f230db0",
+      "text-byte.wat": "6b7a8b95227b50fba227702d913b84edf11264d628b84461e61b31ad0df194ce"
+    },
+    "consumer_sandbox": {
+      "NOBLE_LEAN": "/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0/bin/lean",
+      "NOBLE_BWRAP": "/nix/store/y0ra9qr3rz81d9wl7dfrldv3j25dc98q-bubblewrap-0.12.0/bin/bwrap",
+      "NOBLE_PRLIMIT": "/nix/store/mqvbf0flamqaq9c3ihb496aahag897n0-util-linux-2.42.3-bin/bin/prlimit",
+      "NOBLE_SYSTEMD_RUN": "/nix/store/baxgs06659w4i6ggsfr56srjrb52v1h8-systemd-261.2/bin/systemd-run",
+      "NOBLE_CONTRACT_LIBRARY": "/home/brittonr/.cache/noble-issues/wt/issue-15/proofs/mc1"
+    },
+    "consumer_deviation": "reviewed bubblewrap 0.11.2 absent; used /nix/store/y0ra9qr3rz81d9wl7dfrldv3j25dc98q-bubblewrap-0.12.0/bin/bwrap",
+    "optimizer_flags": {
+      "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+      "version": "125"
+    }
+  },
+  "helper_transcription": {
+    "crates/noble-wasm/runtime/operations.wat#$op_add": "eb5745f7a90309a29d6edd91a0b24c9d5f406aa4fca10e1d802bb942e00ece8f",
+    "crates/noble-wasm/runtime/operations.wat#$op_sub": "b6bb3a271ed57d2618efa82712566802fe2f78aa1fb26acc4ab697f5ce2dbb30",
+    "crates/noble-wasm/runtime/operations.wat#$op_mul": "2a9198afb21f81d42b16488ada5c9b38be6d0e2ae640828904bdccb56d91bc39",
+    "crates/noble-wasm/runtime/stack.wat#$need": "f6fb7adebeebd2f734894b237419abebaa19692ded46f4764393d481c2c49fc5",
+    "crates/noble-wasm/runtime/stack.wat#$slot_kind": "74bfc81f3919ad0166c02245e5a7ac23aac94f7a61a744df5dd4c0b6df686908",
+    "crates/noble-wasm/runtime/stack.wat#$push_tag": "3509802fc41c3ffbda398ef8e9179b9dfc457048c589a81447ea8281533b734f",
+    "crates/noble-wasm/runtime/stack.wat#$push_i64": "3b0c6a0b80a4a4919b4e816ad346fb1ebcf74d986950068aae4f6d7d706e90be",
+    "crates/noble-wasm/runtime/stack.wat#$take": "f7005c417c0c9cccb63c82d13ac6e20829f74726420900b55665dd4c9a8fb6a7",
+    "crates/noble-wasm/runtime/stack.wat#$pop_kind": "44ee057fd622bb74dd7d498aadda2c02e39528e5e2f3ff87ce628956fa3dfeec",
+    "crates/noble-wasm/runtime/accounting.wat#$fail": "6dd7fff77abe6a0f85000b3e84ddec9ff50029ac21aeea084603b1511cb1622a"
+  },
+  "law": {
+    "contract_sha256": "1d630656ad3c91b9ad378bd352567668fc959aa64b0cb196b6aa963fe51ef4f5",
+    "statement_sha256": "ece4a7326246656e7f9a1d2c15f93ed69899bf7f8a2007a3cd0a24c09f7e861c"
+  },
+  "bridge": {
+    "lean_sha256": "cf3409d6953bdad8a3a887a948bd2426c57fb370720d8165084bff18e74c6a3a",
+    "axioms": "'bridge_claim' depends on axioms: [propext, Classical.choice, Quot.sound]"
+  },
+  "route_b": {
+    "exit": 0,
+    "outcome": "proved",
+    "allowed": true,
+    "reason": "independently checked evidence binds the compiled subject, claim, context and policy revision 1",
+    "subject_identity": "8bac593ca0325cd7",
+    "evidence": {
+      "supplied": true,
+      "class": "LeanExact",
+      "independent_recheck": true,
+      "declaration_bytes": 881,
+      "accepted_transitive_axioms": [
+        "Classical.choice",
+        "propext",
+        "Quot.sound"
+      ],
+      "checks": "isolated Lean producer plus independent consumer declaration replay; producer status text never establishes acceptance"
+    },
+    "refusals": [],
+    "diagnostics": []
+  },
+  "route_a": {
+    "off": {
+      "wasm_sha256": "ad113a79d22f95e88976805b12df9b5ebcaab57df7d83d09e362ef6536de56a2",
+      "wasm_bytes": 11088,
+      "wat_sha256": "56894f29337461eab5e2545b5fb331ae0236b5de68a674c1b655a87c80eb25fc",
+      "source_sha256": "2f73a0380cc92c3edd0d75165d0a7258c4444ee1309d3a9b67f9919c098fb7b9",
+      "correspondence": "byte-exact",
+      "interface": {
+        "stack_in": "[I64]",
+        "stack_out": "[I64]",
+        "effects": []
+      },
+      "recipe": [
+        "builtin:quote",
+        "quotation",
+        "builtin:compose",
+        "builtin:run"
+      ]
+    },
+    "on": {
+      "wasm_sha256": "fe24beea66781e540634f1c299f453a1e2172d8a8ce88fd73c148789734d14f4",
+      "wasm_bytes": 6502,
+      "wat_sha256": "56894f29337461eab5e2545b5fb331ae0236b5de68a674c1b655a87c80eb25fc",
+      "source_sha256": "2f73a0380cc92c3edd0d75165d0a7258c4444ee1309d3a9b67f9919c098fb7b9",
+      "correspondence": "byte-exact",
+      "interface": {
+        "stack_in": "[I64]",
+        "stack_out": "[I64]",
+        "effects": []
+      },
+      "recipe": [
+        "builtin:quote",
+        "quotation",
+        "builtin:compose",
+        "builtin:run"
+      ]
+    }
+  },
+  "executions": [
+    {
+      "name": "driver-41",
+      "mode": "off",
+      "source_sha256": "5457f85bc4c0baae7014a36cb69ad3f30beaf1853fd0b2bb95a9aa467e308472",
+      "wasm_sha256": "d9733d15bcb1fdeffa4ef4eeecff57222b7ac33e19075bd66575d8aa63c9f166",
+      "stack": [
+        [
+          "I64",
+          "42"
+        ]
+      ],
+      "expected": [
+        [
+          "I64",
+          "42"
+        ]
+      ],
+      "lean_checked_expected": true,
+      "matched": true
+    },
+    {
+      "name": "driver-41",
+      "mode": "on",
+      "source_sha256": "5457f85bc4c0baae7014a36cb69ad3f30beaf1853fd0b2bb95a9aa467e308472",
+      "wasm_sha256": "cb38a8946f88bf1a0ea350be27b9699ac391e70e90fcdabb6f25cf0a0b6bd618",
+      "stack": [
+        [
+          "I64",
+          "42"
+        ]
+      ],
+      "expected": [
+        [
+          "I64",
+          "42"
+        ]
+      ],
+      "lean_checked_expected": true,
+      "matched": true
+    },
+    {
+      "name": "driver-max",
+      "mode": "off",
+      "source_sha256": "f2372d0eb9134691110dbdf2cf7c0a0aceaa4a2d320c3089d4480412f8f5002d",
+      "wasm_sha256": "9b314599b173aa69a89dd2f0cd08f2906edd46a178e3b5dbf3d19e4c77435c59",
+      "stack": [
+        [
+          "I64",
+          "-9223372036854775808"
+        ]
+      ],
+      "expected": [
+        [
+          "I64",
+          "-9223372036854775808"
+        ]
+      ],
+      "lean_checked_expected": true,
+      "matched": true
+    },
+    {
+      "name": "driver-max",
+      "mode": "on",
+      "source_sha256": "f2372d0eb9134691110dbdf2cf7c0a0aceaa4a2d320c3089d4480412f8f5002d",
+      "wasm_sha256": "b2ffd154016340c0a12a99bf33f5f53a8357d0fcd5971b657d67be443471a822",
+      "stack": [
+        [
+          "I64",
+          "-9223372036854775808"
+        ]
+      ],
+      "expected": [
+        [
+          "I64",
+          "-9223372036854775808"
+        ]
+      ],
+      "lean_checked_expected": true,
+      "matched": true
+    },
+    {
+      "name": "driver-min",
+      "mode": "off",
+      "source_sha256": "3fb0f81ad923741f80e744f87cb6c1f58b94fd4dedcede59a21cb62fe13660f3",
+      "wasm_sha256": "2c14ac3550d9f759729e07815a23712b4b5012d1991d3bc745aabfdf0431445b",
+      "stack": [
+        [
+          "I64",
+          "-9223372036854775807"
+        ]
+      ],
+      "expected": [
+        [
+          "I64",
+          "-9223372036854775807"
+        ]
+      ],
+      "lean_checked_expected": true,
+      "matched": true
+    },
+    {
+      "name": "driver-min",
+      "mode": "on",
+      "source_sha256": "3fb0f81ad923741f80e744f87cb6c1f58b94fd4dedcede59a21cb62fe13660f3",
+      "wasm_sha256": "6047da4ba2d54fb7f62d54a8c03957ac5eeef7427fbfaa9926ca9fe976ff6a67",
+      "stack": [
+        [
+          "I64",
+          "-9223372036854775807"
+        ]
+      ],
+      "expected": [
+        [
+          "I64",
+          "-9223372036854775807"
+        ]
+      ],
+      "lean_checked_expected": true,
+      "matched": true
+    },
+    {
+      "name": "driver-prefix",
+      "mode": "off",
+      "source_sha256": "6e3a5e111d5f1c1dd86ec0cd2e429eec81a188be23079b49f1992184b23bb9c5",
+      "wasm_sha256": "bc2c46a23fd69f6eb42293846c2781a8ba9699fa9f29403455b63e71c4dc0633",
+      "stack": [
+        [
+          "Bool",
+          "true"
+        ],
+        [
+          "I64",
+          "-3"
+        ],
+        [
+          "I64",
+          "1"
+        ]
+      ],
+      "expected": [
+        [
+          "Bool",
+          "true"
+        ],
+        [
+          "I64",
+          "-3"
+        ],
+        [
+          "I64",
+          "1"
+        ]
+      ],
+      "lean_checked_expected": true,
+      "matched": true
+    },
+    {
+      "name": "driver-prefix",
+      "mode": "on",
+      "source_sha256": "6e3a5e111d5f1c1dd86ec0cd2e429eec81a188be23079b49f1992184b23bb9c5",
+      "wasm_sha256": "b586c45efedf97a0c919c6da5d523911df370abf1265efb457543946564ee869",
+      "stack": [
+        [
+          "Bool",
+          "true"
+        ],
+        [
+          "I64",
+          "-3"
+        ],
+        [
+          "I64",
+          "1"
+        ]
+      ],
+      "expected": [
+        [
+          "Bool",
+          "true"
+        ],
+        [
+          "I64",
+          "-3"
+        ],
+        [
+          "I64",
+          "1"
+        ]
+      ],
+      "lean_checked_expected": true,
+      "matched": true
+    }
+  ],
+  "expected_lean_sha256": "b7703faacf943108358a9b7507e6daa72e7aef7d750c105649beac5e9e2181db",
+  "controls": [
+    {
+      "id": "wrong-body-proof",
+      "acorr": "ACORR-CASE-03",
+      "intended": "valid proof of [1 +] law must not release [2 +] body",
+      "outcome": {
+        "outcome": "unknown",
+        "allowed": false,
+        "reason": "admitted evidence is not applicable to the exact subject, claim or current policy revision: correspondence-mismatch"
+      },
+      "refused_for_intended_reason": true
+    },
+    {
+      "id": "wrong-body-bytes",
+      "acorr": "ACORR-CASE-03",
+      "intended": "bytes of [2 +] body against SOURCE [1 +]",
+      "outcome": {
+        "schema": "noble-artifact-admission/v1",
+        "profile": "Wasm-Draft",
+        "stage": "admission",
+        "outcome": "correspondence-reject",
+        "diagnostic": "final artifact bytes differ from independent host-selected compilation",
+        "actual_imports": [],
+        "claimed_effects": [],
+        "allowed_effects": [],
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "refused_for_intended_reason": true
+    },
+    {
+      "id": "opt-mode-mismatch",
+      "acorr": "S-CASE-07 option mismatch / PAA-1 build.opt",
+      "intended": "opt-on bytes admitted under consumer opt off",
+      "outcome": {
+        "schema": "noble-artifact-admission/v1",
+        "profile": "Wasm-Draft",
+        "stage": "admission",
+        "outcome": "correspondence-reject",
+        "diagnostic": "final artifact bytes differ from independent host-selected compilation",
+        "actual_imports": [],
+        "claimed_effects": [],
+        "allowed_effects": [],
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "refused_for_intended_reason": true
+    },
+    {
+      "id": "reversed-operand-helper",
+      "acorr": "ACORR-CASE-08",
+      "intended": "$op_sub with swapped pops (changed helper / operand order)",
+      "outcome": {
+        "schema": "noble-artifact-admission/v1",
+        "profile": "Wasm-Draft",
+        "stage": "admission",
+        "outcome": "correspondence-reject",
+        "diagnostic": "final artifact bytes differ from independent host-selected compilation",
+        "actual_imports": [],
+        "claimed_effects": [],
+        "allowed_effects": [],
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "refused_for_intended_reason": true
+    },
+    {
+      "id": "helper-transcription-pin",
+      "acorr": null,
+      "intended": "Lean helper model no longer matches the runtime helper text",
+      "outcome": {
+        "accepted": false,
+        "refusal": "helper-transcription-stale",
+        "at": "crates/noble-wasm/runtime/operations.wat#$op_sub",
+        "observed": {
+          "crates/noble-wasm/runtime/operations.wat#$op_add": "eb5745f7a90309a29d6edd91a0b24c9d5f406aa4fca10e1d802bb942e00ece8f",
+          "crates/noble-wasm/runtime/operations.wat#$op_sub": "c5f87b10f81a49aaaa189d1648ae05c9210b08e619a6a267a2620d5d6a77dbaf"
+        }
+      },
+      "refused_for_intended_reason": true
+    },
+    {
+      "id": "code-recipe-divergence",
+      "acorr": "ACORR-CASE-06",
+      "intended": "recipe/interface data changed, code unchanged",
+      "outcome": {
+        "schema": "noble-artifact-admission/v1",
+        "profile": "Wasm-Draft",
+        "stage": "admission",
+        "outcome": "correspondence-reject",
+        "diagnostic": "final artifact bytes differ from independent host-selected compilation",
+        "actual_imports": [],
+        "claimed_effects": [],
+        "allowed_effects": [],
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "refused_for_intended_reason": true
+    },
+    {
+      "id": "stale-proof-subject",
+      "acorr": "ACORR-CASE-04 (stale version)",
+      "intended": "foundation receipt from another source tree",
+      "outcome": {
+        "accepted": false,
+        "refusal": "stale-proof-subject"
+      },
+      "refused_for_intended_reason": true
+    },
+    {
+      "id": "law-substitution",
+      "acorr": "ACORR-CASE-05",
+      "intended": "weakened statement differs from the frozen law",
+      "outcome": {
+        "equal": false
+      },
+      "refused_for_intended_reason": true
+    },
+    {
+      "id": "post-check-replacement",
+      "acorr": "ACORR-CASE-09",
+      "refused_for_intended_reason": null,
+      "status": "not-executed",
+      "reason": "admit-artifact exposes no hook between comparison and instantiation; PAA-1 load hash is not implemented"
+    }
+  ],
+  "sources_sha256": {
+    "verification/foundation/slice.mjs": "17e230a83eb093db71b060eee79ab59902c42567400aed7290ddb5c331d791bf",
+    "verification/foundation/slice/subject.noble": "2f73a0380cc92c3edd0d75165d0a7258c4444ee1309d3a9b67f9919c098fb7b9",
+    "verification/foundation/slice/compose-increment.contract": "1d630656ad3c91b9ad378bd352567668fc959aa64b0cb196b6aa963fe51ef4f5",
+    "verification/foundation/slice/compose-increment.proof.lean": "cee0e1fe26e22d69eafe705d03d98faac392b6572cb7a57f39fe04233ef14954",
+    "verification/foundation/slice/expected-statement.lean": "ece4a7326246656e7f9a1d2c15f93ed69899bf7f8a2007a3cd0a24c09f7e861c",
+    "verification/foundation/slice/helper-transcription.json": "a835c67c6b8be83c2d62669e2b55c4f1a6aa150c0b6f66fee2fb98892a043833",
+    "proofs/foundation/NobleFoundation/Slice.lean": "ba0408f65203afc6f6f527742aa435ea550cdc3f0ad466a29ed02ec1d5c8577c",
+    "proofs/foundation/NobleFoundation/Helper.lean": "16d04590fea51c2984438090f85632fe554c1095a3295ad96cb72ab92a74cf76",
+    "crates/noble-wasm/src/operations.rs": "011486bba310dc34d93e08fa72792b580df96702c530486370b91515970b6fbd",
+    "crates/noble-cli/src/core/runtime/config.json": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db",
+    "policy/tool-selection.json": "83fda5de740430829860b8e96a695c1c519d0ac3b8758d187c95e4ecf6313050"
+  },
+  "chain": [
+    {
+      "edge": "E1 Lean specification (MC1 model, Mathlib oracle)",
+      "status": "proved",
+      "evidence": "foundation receipt theorems"
+    },
+    {
+      "edge": "E2 frozen contract law -> regenerated MC1 statement bytes",
+      "status": "checked",
+      "evidence": "byte equality with expected-statement.lean; exporter itself assumed (PO-16/PO-19)"
+    },
+    {
+      "edge": "E3 regenerated statement program = NobleFoundation.sliceBody; foundation proves the regenerated claim",
+      "status": "proved",
+      "evidence": "Bridge.lean kernel rfl + bridge_claim"
+    },
+    {
+      "edge": "E4 source -> subject binding with independently rechecked evidence",
+      "status": "checked",
+      "evidence": "Route B outcome proved; bind_artifact is trusted Rust (O6/PO-16 open)"
+    },
+    {
+      "edge": "E5 noble-wasm lowering source -> WAT",
+      "status": "open",
+      "evidence": "PO-17 / PAA-1 O1; trusted compiler"
+    },
+    {
+      "edge": "E6 runtime helpers $op_add/$op_sub/$op_mul (+ stack helpers)",
+      "status": "proved-over-transcription",
+      "evidence": "helper_refines_step/helper_fails_when_stuck; transcription text pinned (checked), transcription fidelity assumed; $op_quote_typed/$op_compose/$op_run open"
+    },
+    {
+      "edge": "E7 wasm-tools assembly WAT -> Wasm",
+      "status": "assumed",
+      "evidence": "pinned path+hash; validation is format/type only"
+    },
+    {
+      "edge": "E8 wasm-opt -O2 (opt on)",
+      "status": "assumed",
+      "evidence": "residual trusted optimizer (PAA-1 O2 open); separate per-mode receipts"
+    },
+    {
+      "edge": "E9 candidate bytes = consumer rebuild",
+      "status": "checked",
+      "evidence": "admit-artifact byte-exact per mode (identity, not semantics)"
+    },
+    {
+      "edge": "E10 instantiate compared buffer / loader / V8",
+      "status": "assumed",
+      "evidence": "PO-18 / PAA-1 O3 open; post-check replacement control not executed"
+    },
+    {
+      "edge": "E11 executed observations equal Lean-checked expectations",
+      "status": "tested",
+      "evidence": "drivers off/on, finite"
+    },
+    {
+      "edge": "E12 single PAA-1 envelope joining Route A and Route B",
+      "status": "open",
+      "evidence": "#10 design only; this runner joins them over the same consumer-selected source but in an unreviewed script"
+    }
+  ],
+  "commands": 41
+}
