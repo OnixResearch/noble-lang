@@ -23,6 +23,9 @@ const TABLE_LIMIT: u32 = 16_384;
 const CALCULATOR_FUNCTION_BASE: u32 = 5;
 const TEXT_START: u32 = 262_144;
 const CALCULATOR_TEXT_START: u32 = 524_288;
+// Exclusive end of calculator static literal Text; signature keys are copied
+// through the scratch region that starts here.
+const CALCULATOR_TEXT_END: u32 = 983_040;
 const MEMORY_BYTES: u32 = 1_048_576;
 const NODE_LIMIT: usize = 4096;
 const DEFINITION_LIMIT: usize = 256;
@@ -61,6 +64,9 @@ struct Work {
     // on top of the caller's still-reserved kernel acceptance budget.
     calculator_preflight: bool,
     calculator_plan: bool,
+    // Observation only: the largest structural node count admitted against
+    // the request's `type_size` by borrowed preflight. Never charged.
+    max_type_size: u32,
 }
 
 #[expect(
@@ -114,6 +120,74 @@ impl Work {
             Err(_) => Err(crate::Diagnostic::Exhausted),
         }
     }
+
+    const fn observe_type_size(&mut self, nodes: u32) {
+        if nodes > self.max_type_size {
+            self.max_type_size = nodes;
+        }
+    }
+}
+
+/// The selected calculator's fixed compiler ceilings, published beside
+/// [`CompileMetrics`] so a headroom report compares against the code's own
+/// constants rather than a copy.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CalculatorCaps {
+    pub work_issued: u64,
+    pub environment_rows: u64,
+    pub named_bodies: u64,
+    pub signature_keys: u64,
+    pub table_entries: u32,
+    pub wat_bytes: u64,
+    pub text_start: u32,
+    pub text_end: u32,
+}
+
+pub const CALCULATOR_CAPS: CalculatorCaps = CalculatorCaps {
+    work_issued: CALCULATOR_COMPILER_WORK_LIMIT,
+    environment_rows: noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT as u64,
+    named_bodies: CALCULATOR_DEFINITION_LIMIT as u64,
+    signature_keys: crate::signatures::CALCULATOR_SOURCE_KEY_LIMIT as u64,
+    table_entries: TABLE_LIMIT,
+    wat_bytes: 4 * crate::OUTPUT_BYTE_LIMIT as u64,
+    text_start: CALCULATOR_TEXT_START,
+    text_end: CALCULATOR_TEXT_END,
+};
+
+/// Observed accounting of one successful preparation, for headroom reports.
+/// Collecting it never changes admission, charging or the emitted bytes. The
+/// `work_*` grants partition `work_issued - work_initial`; the session fields
+/// (`signature_keys`, `table_end`, `text_end`) describe the prospective
+/// compiler this preparation would commit.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct CompileMetrics {
+    /// The caller's preparation allowance the ledger starts from.
+    pub work_initial: u64,
+    /// Measured borrowed-preflight charges granted on top of the allowance.
+    pub work_preflight_grant: u64,
+    /// The calculator environment allowance, `environment_work × (named + 3)`.
+    pub work_environment_grant: u64,
+    /// Plan-lowering shortfalls issued after kernel acceptance.
+    pub work_plan_grant: u64,
+    /// Cumulative issued units, bounded by `CALCULATOR_CAPS.work_issued`.
+    pub work_issued: u64,
+    pub work_spent: u64,
+    pub environment_rows: u64,
+    /// One weighted environment scan; every stage pays it `named + 3` times.
+    pub environment_work: u64,
+    pub named_bodies: u64,
+    /// Largest instantiated stack-entry or value type admitted by preflight.
+    pub max_type_size: u32,
+    /// The request's `type_size` ceiling that `max_type_size` was checked against.
+    pub type_size_limit: u32,
+    pub signature_keys: u64,
+    /// Retained-key length charged before lowering; grows with the pool.
+    pub signature_key_charge: u64,
+    /// Retained identity-recipe length charged before lowering.
+    pub identity_charge: u64,
+    pub table_end: u32,
+    pub text_end: u32,
+    pub wat_bytes: u64,
 }
 
 /// Persistent semantic identities and disjoint compiled-code allocations.
@@ -131,6 +205,9 @@ pub struct Compiler {
     free_code: alloc::vec::Vec<FreeCode>,
     installed_code: alloc::vec::Vec<CodeSpan>,
     text_end: u32,
+    // Calculator only: each distinct static literal's first address. Like
+    // `text_end` it is never rewound, so a recorded address stays valid.
+    static_literals: alloc::collections::BTreeMap<alloc::vec::Vec<u8>, u32>,
     signatures: crate::signatures::Pool,
     descriptors: alloc::vec::Vec<(u32, u32)>,
     identities: alloc::vec::Vec<Identity>,
@@ -353,6 +430,7 @@ pub struct Prepared {
     selected_origin: Option<SelectedOriginMetadata>,
     resource_catalog: alloc::vec::Vec<ResourceCatalogEntry>,
     wat: alloc::vec::Vec<u8>,
+    metrics: CompileMetrics,
     /// Set only for a calculator Program-free preparation made at a
     /// canonical epoch; see `reuse`.
     epoch: Option<CanonicalEpoch>,
@@ -363,6 +441,11 @@ impl Prepared {
     /// The complete module. Instantiation does not execute its body.
     pub fn wat(&self) -> &[u8] {
         &self.wat
+    }
+
+    /// Observed accounting of this preparation; see [`CompileMetrics`].
+    pub const fn metrics(&self) -> CompileMetrics {
+        self.metrics
     }
 
     /// The exact table span installed by this module's successful submission.
@@ -501,6 +584,7 @@ impl Compiler {
             free_code: alloc::vec::Vec::new(),
             installed_code: alloc::vec::Vec::new(),
             text_end: TEXT_START,
+            static_literals: alloc::collections::BTreeMap::new(),
             signatures: crate::signatures::Pool::source(),
             descriptors: alloc::vec::Vec::new(),
             identities: alloc::vec::Vec::new(),
@@ -603,9 +687,11 @@ impl Compiler {
             issued: u64::from(submission.request.limits.work),
             calculator_preflight: self.calculator,
             calculator_plan: false,
+            max_type_size: 0,
         };
         attempt!(preflight::check(submission, self.calculator, &mut work));
         work.calculator_preflight = false;
+        let preflight_issued = work.issued;
         let checked = attempt!(admission::check(
             submission,
             self.live,
@@ -614,6 +700,7 @@ impl Compiler {
             self.calculator,
             &mut work,
         ));
+        let admission_issued = work.issued;
         // A Program-free epoch interns into a fresh calculator pool, so no
         // committed key is retained, copied or charged.
         let fresh_signatures = if program_free {
@@ -623,7 +710,7 @@ impl Compiler {
         } else {
             None
         };
-        attempt!(admission::meter::compilation(
+        let signature_key_charge = attempt!(admission::meter::compilation(
             &checked,
             fresh_signatures.as_ref().unwrap_or(&self.signatures),
             &mut work
@@ -632,10 +719,15 @@ impl Compiler {
         // the committed ledger is retained, so none of it is copied or charged.
         let retained = if quiescent { 0 } else { self.identities.len() };
         let mut identity = 0usize;
+        let mut identity_charge = 0u64;
         let mut failure = None;
         while identity < retained {
-            match work.entries(self.identities[identity].recipe.len()) {
-                Ok(()) => identity += 1,
+            let length = self.identities[identity].recipe.len();
+            match work.entries(length) {
+                Ok(()) => {
+                    identity_charge = identity_charge.saturating_add(length as u64);
+                    identity += 1;
+                }
                 Err(problem) => {
                     failure = Some(problem);
                     break;
@@ -645,6 +737,12 @@ impl Compiler {
         if let Some(problem) = failure {
             return Err(problem);
         }
+        // The literal table is copied into the prospective compiler.
+        attempt!(work.entries(
+            self.static_literals
+                .keys()
+                .fold(0usize, |total, key| total.saturating_add(key.len() + 1))
+        ));
         let mut next = Self {
             live: self.live,
             live_slots: self.live_slots,
@@ -659,6 +757,7 @@ impl Compiler {
             free_code: self.free_code.clone(),
             installed_code: self.installed_code.clone(),
             text_end: self.text_end,
+            static_literals: self.static_literals.clone(),
             signatures: match fresh_signatures {
                 Some(pool) => pool,
                 None => self.signatures.clone(),
@@ -803,6 +902,28 @@ impl Compiler {
                 });
             }
         }
+        let named_bodies = submission.definitions.len() as u64;
+        let work_environment_grant = admission_issued - preflight_issued;
+        let metrics = CompileMetrics {
+            work_initial: u64::from(submission.request.limits.work),
+            work_preflight_grant: preflight_issued - u64::from(submission.request.limits.work),
+            work_environment_grant,
+            work_plan_grant: work.issued - admission_issued,
+            work_issued: work.issued,
+            work_spent: work.issued - work.remaining,
+            environment_rows: submission.environment.defs.len() as u64,
+            // The allowance is exactly `environment_work × (named + 3)`.
+            environment_work: work_environment_grant / named_bodies.saturating_add(3),
+            named_bodies,
+            max_type_size: work.max_type_size,
+            type_size_limit: submission.request.limits.type_size,
+            signature_keys: next.signatures.len() as u64,
+            signature_key_charge,
+            identity_charge,
+            table_end: plan.functions,
+            text_end: next.text_end,
+            wat_bytes: wat.len() as u64,
+        };
         Ok(Prepared {
             base: transaction::Base::capture(
                 self,
@@ -826,6 +947,7 @@ impl Compiler {
             selected_origin,
             resource_catalog,
             wat,
+            metrics,
             epoch: if program_free {
                 self.canonical_epoch()
             } else {
@@ -1090,6 +1212,7 @@ mod tests {
             issued: CALCULATOR_COMPILER_WORK_LIMIT - 8,
             calculator_preflight: true,
             calculator_plan: false,
+            max_type_size: 0,
         };
         assert!(work.charge(7).is_ok());
         assert_eq!(work.remaining, 7);
@@ -1112,6 +1235,7 @@ mod tests {
             issued: 7,
             calculator_preflight: false,
             calculator_plan: false,
+            max_type_size: 0,
         };
         assert!(matches!(
             ordinary.charge(8),
@@ -1313,6 +1437,7 @@ mod tests {
             issued: CALCULATOR_COMPILER_WORK_LIMIT - 1_000_000,
             calculator_preflight: false,
             calculator_plan: true,
+            max_type_size: 0,
         };
         for length in 1..=64 {
             assert!(

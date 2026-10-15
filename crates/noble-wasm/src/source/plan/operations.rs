@@ -119,12 +119,22 @@ fn lower_node(
             lit: noble_kernel::untrusted::Lit::Text,
             ..
         } => {
-            let (address, length) = attempt!(super::allocation::bytes(
-                &mut compiler.text_end,
-                &mut layout.data,
-                attempt!(super::super::admission::text(input.body, id)),
-                compiler.calculator,
-            ));
+            let text = attempt!(super::super::admission::text(input.body, id));
+            let (address, length) = if compiler.calculator {
+                attempt!(super::allocation::literal(
+                    compiler,
+                    &mut layout.data,
+                    text,
+                    work
+                ))
+            } else {
+                attempt!(super::allocation::bytes(
+                    &mut compiler.text_end,
+                    &mut layout.data,
+                    text,
+                    false
+                ))
+            };
             super::Action::Text(address, length)
         }
         noble_kernel::untrusted::Node::Quotation { .. } => {

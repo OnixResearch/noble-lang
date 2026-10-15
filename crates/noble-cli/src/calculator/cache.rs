@@ -94,7 +94,7 @@ impl ModuleCache {
         namespace: Namespace,
         source: &[u8],
         input: &[Ty],
-        epoch: noble_wasm::source::CanonicalEpoch,
+        epoch: &noble_wasm::source::CanonicalEpoch,
     ) -> Option<Hit<'_>> {
         if !same_namespace(self.namespace, namespace) {
             return None;
@@ -105,7 +105,7 @@ impl ModuleCache {
             .entries
             .get_mut(source)?
             .iter_mut()
-            .find(|entry| entry.epoch == epoch && entry.input.as_slice() == input)?;
+            .find(|entry| entry.epoch == *epoch && entry.input.as_slice() == input)?;
         entry.used = tick;
         Some(Hit {
             output: &entry.output,
@@ -127,7 +127,7 @@ impl ModuleCache {
         if !same_namespace(self.namespace, namespace) {
             return;
         }
-        let epoch = artifact.epoch();
+        let epoch = artifact.epoch().clone();
         let bytes = ENTRY_BYTES
             .saturating_add(source.len().saturating_mul(2))
             .saturating_add(stack_bytes(input))
@@ -278,19 +278,19 @@ mod tests {
         let mut cache = ModuleCache::new(NAMESPACE, usize::MAX);
         cache.insert(NAMESPACE, b"1 drop", &[Ty::I64], &output, recorded);
         let hit = cache
-            .get(NAMESPACE, b"1 drop", &[Ty::I64], epoch)
+            .get(NAMESPACE, b"1 drop", &[Ty::I64], &epoch)
             .expect("exact key hits");
         assert_eq!(hit.output, output.as_slice());
         assert_eq!(hit.artifact.wat(), wat.as_slice());
         // Source bytes, input types, namespace and canonical epoch each miss.
         assert!(cache
-            .get(NAMESPACE, b"1  drop", &[Ty::I64], epoch)
+            .get(NAMESPACE, b"1  drop", &[Ty::I64], &epoch)
             .is_none());
         assert!(cache
-            .get(NAMESPACE, b"1 drop", &[Ty::Bool], epoch)
+            .get(NAMESPACE, b"1 drop", &[Ty::Bool], &epoch)
             .is_none());
-        assert!(cache.get(NAMESPACE, b"1 drop", &[], epoch).is_none());
-        assert!(cache.get(OTHER, b"1 drop", &[Ty::I64], epoch).is_none());
+        assert!(cache.get(NAMESPACE, b"1 drop", &[], &epoch).is_none());
+        assert!(cache.get(OTHER, b"1 drop", &[Ty::I64], &epoch).is_none());
         let mut advanced = noble_wasm::source::Compiler::new_calculator();
         let session = noble_contracts::source::Session::new_calculator();
         let literal = session
@@ -302,11 +302,13 @@ mod tests {
         assert!(advanced.commit(prepared).is_ok());
         let later = advanced.canonical_epoch().expect("calculator epoch");
         assert_ne!(later, epoch);
-        assert!(cache.get(NAMESPACE, b"1 drop", &[Ty::I64], later).is_none());
+        assert!(cache
+            .get(NAMESPACE, b"1 drop", &[Ty::I64], &later)
+            .is_none());
         // Inserting under a different namespace retains nothing.
         let (output, other) = artifact(&compiler, "2 drop", &[Ty::I64]);
         cache.insert(OTHER, b"2 drop", &[Ty::I64], &output, other);
-        assert!(cache.get(OTHER, b"2 drop", &[Ty::I64], epoch).is_none());
+        assert!(cache.get(OTHER, b"2 drop", &[Ty::I64], &epoch).is_none());
     }
 
     #[test]
@@ -331,18 +333,26 @@ mod tests {
         }
         assert_eq!(cache.bytes(), limit);
         // Touch the first entry so the second is least recently used.
-        assert!(cache.get(NAMESPACE, b"1 drop", &[Ty::I64], epoch).is_some());
+        assert!(cache
+            .get(NAMESPACE, b"1 drop", &[Ty::I64], &epoch)
+            .is_some());
         let (output, recorded) = artifact(&compiler, sources[2], &[Ty::I64]);
         cache.insert(NAMESPACE, b"3 drop", &[Ty::I64], &output, recorded);
         assert!(cache.bytes() <= limit);
-        assert!(cache.get(NAMESPACE, b"2 drop", &[Ty::I64], epoch).is_none());
-        assert!(cache.get(NAMESPACE, b"1 drop", &[Ty::I64], epoch).is_some());
-        assert!(cache.get(NAMESPACE, b"3 drop", &[Ty::I64], epoch).is_some());
+        assert!(cache
+            .get(NAMESPACE, b"2 drop", &[Ty::I64], &epoch)
+            .is_none());
+        assert!(cache
+            .get(NAMESPACE, b"1 drop", &[Ty::I64], &epoch)
+            .is_some());
+        assert!(cache
+            .get(NAMESPACE, b"3 drop", &[Ty::I64], &epoch)
+            .is_some());
         // An entry larger than the whole bound is never retained.
         let mut tiny = ModuleCache::new(NAMESPACE, sizes[0] - 1);
         let (output, recorded) = artifact(&compiler, sources[0], &[Ty::I64]);
         tiny.insert(NAMESPACE, b"1 drop", &[Ty::I64], &output, recorded);
         assert_eq!(tiny.bytes(), 0);
-        assert!(tiny.get(NAMESPACE, b"1 drop", &[Ty::I64], epoch).is_none());
+        assert!(tiny.get(NAMESPACE, b"1 drop", &[Ty::I64], &epoch).is_none());
     }
 }

@@ -434,7 +434,7 @@
         '';
         documents = mkCheck "noble-documents" [ pkgs.bun ] ''
           bun tools/cairn-specs.mjs --self-test
-          bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs
+          bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs tools/calculator-headroom.test.mjs
           bun tools/check-specs.mjs --self-test
         '';
         cairn = mkCheck "noble-cairn" [ cairn.packages.${system}.cairn ] ''

@@ -107,7 +107,9 @@ fn binding(
 ) -> Result<(), crate::Diagnostic> {
     match binding {
         noble_kernel::words::Binding::Stack(value) => concrete::stack(value, limits, work),
-        noble_kernel::words::Binding::Value(value) => concrete::ty(value, limits.type_size, work),
+        noble_kernel::words::Binding::Value(value) => {
+            concrete::sized(value, limits.type_size, work)
+        }
         noble_kernel::words::Binding::Effect(value) => {
             if value.as_slice().len() > 6 {
                 Err(crate::Diagnostic::Exhausted)

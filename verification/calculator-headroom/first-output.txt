@@ -1,0 +1,25 @@
+# First recorded output of tools/calculator-headroom.mjs (issue #23), 2026-10-15.
+# Binary: release noble built from 55dbd52 (compile metrics, before the
+# content-addressed static literals of 2e6d64a, which change only header-stage
+# literal Work and text_end), sha256 dfc40a292773c77b27a9c6a2840f86a752a4e02fbce38b6a7368dee5a48623b0.
+# Command: bun tools/calculator-headroom.mjs run --noble BIN --out DIR --jobs 2
+# (all six default vectors), then: bun tools/calculator-headroom.mjs check DIR/*.jsonl
+# Vectors (per-vector headroom status; exit status and stdout matched the expected values; wall time):
+#   add        ["1+2"]  -> headroom warn, expected exit and output "3\n", 643 s, 450 compiles
+#   juxtaposed ["1 2"]  -> headroom pass, expected exit and output "", 134 s, 68 compiles
+#   call       ["fn f(y)=y*2","f(3)"]  -> headroom fail, expected exit and output "6\n", 2022 s, 1011 compiles
+#   power      ["2^10"]  -> headroom warn, expected exit and output "1024\n", 1648 s, 756 compiles
+#   display    ["1/8"] --finite-decimal -> headroom warn, expected exit and output "0.125\n", 1734 s, 856 compiles
+#   fraction   ["22/7"]  -> headroom warn, expected exit and output "22/7\n", 786 s, 500 compiles
+# check exit status 1: the 100M Work margin fails on one stage.
+status: fail (3641 compiles)
+  work_issued       min headroom    68463258  session 3 line 2 module 477: [ unpair ] dip swap [ [ unpair ] dip swap [ expr.call_enter_stash_guest ] dip swap [ pair ] dip ] dip swap [ pair ] dip
+  type_size         min headroom           0  session 2 line 1 module 195: [ expr.preparse_quota_fault ] dip
+  environment_rows  min headroom          76  session 2 line 1 module 460: calc_display@1.ascii_fraction_multiply_with_state
+  named_bodies      min headroom         478  session 2 line 1 module 460: calc_display@1.ascii_fraction_multiply_with_state
+  signature_keys    min headroom        7958  session 2 line 1 module 440: expr.format_ascii_quotient
+  table_entries     min headroom       16127  session 2 line 1 module 440: expr.format_ascii_quotient
+  wat_bytes         min headroom     3536869  session 2 line 1 module 440: expr.format_ascii_quotient
+  text_bytes        min headroom      458742  session 3 line 2 module 321: calc_defs@1.header_fn_pair
+FAIL: work_issued headroom 68463258 < margin 100000000 ([ unpair ] dip swap [ [ unpair ] dip swap [ expr.call_enter_stash_guest ] dip swap [ pair ] dip ] dip swap [ pair ] dip)
+WARN: type_size headroom 0 < margin 8 ([ expr.preparse_quota_fault ] dip)

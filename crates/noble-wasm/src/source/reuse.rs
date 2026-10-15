@@ -6,8 +6,9 @@
 //! from ID 0. Its emitted bytes, prospective state, issued Work and refusal
 //! therefore depend on the committed compiler only through the profile flags,
 //! whether the compiler is still at generation 0 (the module that installs the
-//! fixed core table entries) and the static literal Text cursor `text_end`,
-//! which no preparation rewinds (a calculator session restore returns it to
+//! fixed core table entries), the static literal Text cursor `text_end` and
+//! the content-addressed static literal table, neither of which any
+//! preparation rewinds (a calculator session restore returns it to
 //! the last commit together with the arena bytes and the generation, so the
 //! restored compiler's epoch is exactly the committed one). Calculator
 //! modules do not bake the preparation
@@ -19,10 +20,13 @@
 /// The exact committed-compiler component of a calculator reuse key. Only a
 /// calculator compiler with no live, slot or text-cursor state and no
 /// reusable or installed code spans has one.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct CanonicalEpoch {
     first: bool,
     text_end: u32,
+    // Content-addressed static literals decide whether a literal reuses an
+    // address or advances `text_end`; equal cursors do not imply equal tables.
+    static_literals: alloc::collections::BTreeMap<alloc::vec::Vec<u8>, u32>,
 }
 
 impl CanonicalEpoch {
@@ -48,12 +52,13 @@ pub struct Reusable {
     code_start: u32,
     code_length: u32,
     work_issued: u64,
+    metrics: super::CompileMetrics,
     wat: alloc::vec::Vec<u8>,
 }
 
 impl Reusable {
-    pub const fn epoch(&self) -> CanonicalEpoch {
-        self.epoch
+    pub const fn epoch(&self) -> &CanonicalEpoch {
+        &self.epoch
     }
 
     pub fn wat(&self) -> &[u8] {
@@ -77,6 +82,9 @@ impl Reusable {
             .saturating_add(self.wat.len())
             .saturating_add(self.next.signatures.retained_bytes())
             .saturating_add(self.next.descriptors.len().saturating_mul(8))
+            .saturating_add(self.next.static_literals.keys().fold(0usize, |total, key| {
+                total.saturating_add(key.len() + RECORD)
+            }))
             .saturating_add(identities)
     }
 }
@@ -91,9 +99,10 @@ impl super::Compiler {
             && !self.text_cursor
             && self.free_code.is_empty()
             && self.installed_code.is_empty())
-        .then_some(CanonicalEpoch {
+        .then(|| CanonicalEpoch {
             first: self.generation == 0,
             text_end: self.text_end,
+            static_literals: self.static_literals.clone(),
         })
     }
 
@@ -108,7 +117,7 @@ impl super::Compiler {
         &self,
         artifact: &Reusable,
     ) -> Result<super::Prepared, crate::Diagnostic> {
-        if self.canonical_epoch() != Some(artifact.epoch) {
+        if self.canonical_epoch().as_ref() != Some(&artifact.epoch) {
             return Err(crate::Diagnostic::Invalid);
         }
         let generation = match self.generation.checked_add(1) {
@@ -136,8 +145,9 @@ impl super::Compiler {
             selected_origin: None,
             resource_catalog: alloc::vec::Vec::new(),
             wat: artifact.wat.clone(),
-            epoch: Some(artifact.epoch),
+            epoch: Some(artifact.epoch.clone()),
             work_issued: artifact.work_issued,
+            metrics: artifact.metrics,
         })
     }
 }
@@ -157,15 +167,15 @@ impl super::Prepared {
 
     /// The canonical epoch this preparation was made at, if it is a
     /// calculator Program-free preparation that may be reused.
-    pub const fn epoch(&self) -> Option<CanonicalEpoch> {
-        self.epoch
+    pub const fn epoch(&self) -> Option<&CanonicalEpoch> {
+        self.epoch.as_ref()
     }
 
     /// Retain this checked Program-free preparation for exact reuse. Only a
     /// calculator Program-free preparation at a canonical epoch, carrying no
     /// live, selected, origin or resource metadata, is reusable.
     pub fn reusable(&self) -> Option<Reusable> {
-        let epoch = self.epoch?;
+        let epoch = self.epoch.clone()?;
         if !self.live_sites.is_empty()
             || self.target_metadata.is_some()
             || !self.program_metadata.is_empty()
@@ -182,6 +192,7 @@ impl super::Prepared {
             code_start: self.code_span.start,
             code_length: self.code_span.length,
             work_issued: self.work_issued,
+            metrics: self.metrics,
             wat: self.wat.clone(),
         })
     }

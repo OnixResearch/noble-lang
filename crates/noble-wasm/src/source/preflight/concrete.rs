@@ -197,6 +197,18 @@ pub(super) fn ty(
     Ok(())
 }
 
+/// [`ty`] against the request's `type_size`, also recording the admitted
+/// node count as the preparation's observed TypeSize high-water mark.
+pub(super) fn sized(
+    root: &noble_kernel::types::Ty,
+    type_size: u32,
+    work: &mut super::super::Work,
+) -> Result<(), crate::Diagnostic> {
+    let (nodes, _, _) = attempt!(count(root, type_size, work));
+    work.observe_type_size(u32::try_from(nodes).unwrap_or(u32::MAX));
+    Ok(())
+}
+
 /// One already-metered borrowed walk measures the total depth-weighted
 /// substitution binding volume and nominal lookups. Kernel Ty::size and
 /// interface joins clone ancestors while visiting descendants, not just
@@ -263,7 +275,7 @@ pub(super) fn stack(
     let mut index = 0usize;
     let mut failure = None;
     while index < stack.len() {
-        match ty(&stack[index], limits.type_size, work) {
+        match sized(&stack[index], limits.type_size, work) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);

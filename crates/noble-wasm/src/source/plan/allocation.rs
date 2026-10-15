@@ -111,7 +111,7 @@ pub(super) fn bytes(
     };
     if end_bytes
         > if calculator {
-            983_040
+            super::super::CALCULATOR_TEXT_END
         } else {
             super::super::MEMORY_BYTES
         }
@@ -122,6 +122,36 @@ pub(super) fn bytes(
     data.reserve(1);
     data.push((address_bytes, bytes.to_vec()));
     Ok((address_bytes, length_bytes))
+}
+
+/// Calculator static literal Text is content-addressed: an exact byte string
+/// keeps the address it was first allocated at, and every module that lowers
+/// it still writes it there through its own segment. An address only ever
+/// holds one content, static Text is immutable and never rewound, so cells
+/// from earlier modules keep reading the same bytes. `text_end` then grows
+/// only with distinct literal contents, not with sessions or lines.
+pub(super) fn literal(
+    compiler: &mut super::super::Compiler,
+    data: &mut alloc::vec::Vec<(u32, alloc::vec::Vec<u8>)>,
+    bytes: &[u8],
+    work: &mut super::super::Work,
+) -> Result<(u32, u32), crate::Diagnostic> {
+    // A lookup compares at most one key per tree level.
+    let levels = compiler
+        .static_literals
+        .len()
+        .checked_ilog2()
+        .map_or(1, |height| height as usize + 2);
+    attempt!(work.entries(bytes.len().saturating_add(1).saturating_mul(levels)));
+    if let Some(&address) = compiler.static_literals.get(bytes) {
+        let length = attempt!(super::number(bytes.len()));
+        data.reserve(1);
+        data.push((address, bytes.to_vec()));
+        return Ok((address, length));
+    }
+    let (address, length) = attempt!(self::bytes(&mut compiler.text_end, data, bytes, true));
+    compiler.static_literals.insert(bytes.to_vec(), address);
+    Ok((address, length))
 }
 
 #[expect(

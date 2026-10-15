@@ -11,6 +11,8 @@ pub(super) struct Base {
     signature_count: usize,
     descriptor_count: usize,
     identity_count: usize,
+    /// Content-addressed calculator literals only grow, like `text_end`.
+    static_literal_count: usize,
     /// The committed identity prefix the preparation retained: all of it, or
     /// none at a calculator quiescent boundary.
     identity_base: usize,
@@ -21,7 +23,11 @@ pub(super) struct Base {
 }
 
 impl Base {
-    pub(super) const fn capture(
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; the content-addressed calculator literal table is a BTreeMap whose len is not const-stable."
+    )]
+    pub(super) fn capture(
         compiler: &super::Compiler,
         identity_base: usize,
         signature_base: usize,
@@ -37,6 +43,7 @@ impl Base {
             signature_count: compiler.signatures.len(),
             descriptor_count: compiler.descriptors.len(),
             identity_count: compiler.identities.len(),
+            static_literal_count: compiler.static_literals.len(),
             identity_base,
             signature_base,
             descriptor_base,
@@ -47,7 +54,11 @@ impl Base {
         self.generation
     }
 
-    const fn positions_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; comparing the content-addressed calculator literal table size uses the non-const BTreeMap::len."
+    )]
+    fn positions_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
         // The descriptor table has exactly one entry for every emitted
         // signature, so its transactional base shares the profile key bound.
         let key_limit = if self.calculator {
@@ -64,6 +75,8 @@ impl Base {
             && self.generation == current.generation
             && self.functions == current.functions
             && self.text_end_bytes == current.text_end
+            && self.static_literal_count == current.static_literals.len()
+            && self.static_literal_count <= next.static_literals.len()
             && self.signature_count == current.signatures.len()
             && self.descriptor_count == current.descriptors.len()
             && self.identity_count == current.identities.len()

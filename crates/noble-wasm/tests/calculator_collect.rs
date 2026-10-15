@@ -219,7 +219,7 @@ impl Arena {
             (Some(records), Some(epoch)) => records.iter().find(|record| {
                 record.source == source
                     && record.input == inputs
-                    && record.artifact.epoch() == epoch
+                    && *record.artifact.epoch() == epoch
             }),
             _ => None,
         };
@@ -941,6 +941,34 @@ fn calculator_any_reachable_program_blocks_the_signature_restart() -> Result<(),
     Ok(())
 }
 
+#[test]
+fn calculator_static_literals_stay_content_addressed_across_a_long_session() -> Result<(), String> {
+    let mut arena = Arena::new(true)?;
+    arena.normal("\"let\"")?;
+    let live = arena.snapshot()?;
+    for _ in 0..200 {
+        arena.normal("\"let\" drop \"fn\" drop")?;
+    }
+    // Every module rewrote the same bytes at the same address, so the
+    // first module's live static Text still reads "let".
+    assert_eq!(arena.snapshot()?, live);
+    // Only distinct literal contents ever advance the static cursor.
+    let checked = arena
+        .session
+        .prepare(b"\"fn\" drop \"x\" drop", &arena.stack, limits())
+        .map_err(|error| format!("{error:?}"))?;
+    let metrics = arena
+        .compiler
+        .prepare(checked.submission().ok_or("no submission")?)
+        .map_err(|_| "calculator compiler refused")?
+        .metrics();
+    assert_eq!(
+        metrics.text_end,
+        noble_wasm::source::CALCULATOR_CAPS.text_start + 3 + 2 + 1
+    );
+    Ok(())
+}
+
 /// Phases that return to an empty stack without static literal Text. Every
 /// boundary is Program-free except the one after `[ 1 + ]`, so `5 swap run`
 /// is a normal preparation that depends on the compiler state committed by
@@ -1073,5 +1101,41 @@ fn calculator_submit_generation_binding_guards_the_arena() -> Result<(), String>
     assert_ne!(refused.status, 0, "stale generation binding was accepted");
     assert_eq!(arena.global("failure"), 4);
     assert_eq!(arena.global("generation"), generation);
+    Ok(())
+}
+
+/// Equal `text_end` does not imply an equal content-addressed literal
+/// table: a preparation recorded after `"ab"` must not be reused after
+/// `"ba"`, where the same literal would land at a different address.
+#[test]
+fn calculator_reuse_refuses_a_different_static_literal_table() -> Result<(), String> {
+    let mut recorded = Arena::new(true)?;
+    recorded.reclaim = true;
+    recorded.normal("\"ab\" drop")?;
+    recorded.reuse = Some(Vec::new());
+    recorded.normal("1 drop")?;
+    let artifact = recorded
+        .reuse
+        .as_mut()
+        .and_then(Vec::pop)
+        .ok_or("no recorded preparation")?
+        .artifact;
+    let mut other = Arena::new(true)?;
+    other.reclaim = true;
+    other.normal("\"ba\" drop")?;
+    assert!(other.program_free);
+    let epoch = other
+        .compiler
+        .canonical_epoch()
+        .ok_or("calculator compiler lost its epoch")?;
+    assert_eq!(epoch.text_end(), artifact.epoch().text_end());
+    assert_eq!(epoch.first(), artifact.epoch().first());
+    assert_ne!(&epoch, artifact.epoch());
+    assert!(matches!(
+        other.compiler.reuse_program_free(&artifact),
+        Err(noble_wasm::Diagnostic::Invalid)
+    ));
+    // The recording compiler itself is still at the recorded epoch.
+    assert!(recorded.compiler.reuse_program_free(&artifact).is_ok());
     Ok(())
 }
