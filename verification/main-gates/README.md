@@ -22,10 +22,10 @@ stay outside the repository; their hashes bind them.
 | `cairn` | pass | pass | not run |  |
 | `policy` | pass | pass | not run |  |
 | `source-inventory-controls` | pass | pass | not run |  |
-| `boundary-controls` | fail | fail | fail | draft `issue-22-followup-boundary-controls.md` |
-| `octet` | fail | fail | fail | draft `issue-22-followup-octet.md` |
-| `source-coverage` | fail | fail | fail | draft `issue-22-followup-source-coverage.md` |
-| `native-assurance` | fail | fail | fail | draft `issue-22-followup-native-assurance.md` |
+| `boundary-controls` | fail | fail | fail | [#26](https://github.com/OnixResearch/noble-lang/issues/26), [#27](https://github.com/OnixResearch/noble-lang/issues/27) |
+| `octet` | fail | fail | fail | [#26](https://github.com/OnixResearch/noble-lang/issues/26) |
+| `source-coverage` | fail | fail | fail | [#25](https://github.com/OnixResearch/noble-lang/issues/25) |
+| `native-assurance` | fail | fail | fail | [#25](https://github.com/OnixResearch/noble-lang/issues/25) |
 
 On the integration commit, `rust-tests` ran 423 tests: 423 passed, 0
 failed and 4 ignored by design. The ignored tests are the hour-long
@@ -99,12 +99,16 @@ That run's per-check logs remain listed under `parent_comparison` and in
 | `cairn` | pass | not run |  |
 | `policy` | pass | not run |  |
 | `source-inventory-controls` | pass | not run |  |
-| `boundary-controls` | fail | fail | draft `issue-22-followup-boundary-controls.md` |
-| `octet` | fail | fail | draft `issue-22-followup-octet.md` |
-| `source-coverage` | fail | fail | draft `issue-22-followup-source-coverage.md` |
-| `native-assurance` | fail | fail | draft `issue-22-followup-native-assurance.md` |
+| `boundary-controls` | fail | fail | [#26](https://github.com/OnixResearch/noble-lang/issues/26), [#27](https://github.com/OnixResearch/noble-lang/issues/27) |
+| `octet` | fail | fail | [#26](https://github.com/OnixResearch/noble-lang/issues/26) |
+| `source-coverage` | fail | fail | [#25](https://github.com/OnixResearch/noble-lang/issues/25) |
+| `native-assurance` | fail | fail | [#25](https://github.com/OnixResearch/noble-lang/issues/25) |
 
-Follow-up drafts are in `/home/brittonr/.cache/noble-issues/drafts/` and have not been filed.
+The follow-ups are filed by root cause:
+
+- [#25](https://github.com/OnixResearch/noble-lang/issues/25): Octet architecture unknowns, which block `source-coverage` and `native-assurance`.
+- [#26](https://github.com/OnixResearch/noble-lang/issues/26): noble-kernel deny-all errors, which block `octet` and the `boundary-controls` deny bundles.
+- [#27](https://github.com/OnixResearch/noble-lang/issues/27): the `boundary-controls` unit roster and capacity reservation.
 
 ## What changed to restore the gates
 
@@ -161,7 +165,7 @@ Follow-up drafts are in `/home/brittonr/.cache/noble-issues/drafts/` and have no
 Every remaining failure also fails at the parent `0ea10d3f`. The parent was run
 with the same runner, and its logs are in `receipt.json` under
 `parent_comparison`. None of them is weakened here. Each failure has a
-follow-up issue draft.
+follow-up issue: #25, #26 or #27.
 
 **`source-coverage` and `native-assurance`.** Both checks build
 `inventoryArtifacts`, which runs `cargo-octet check`. That command exits 1

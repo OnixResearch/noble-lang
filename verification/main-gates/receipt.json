@@ -224,20 +224,30 @@
   },
   "follow_ups": [
     {
-      "check": "octet",
-      "draft": "/home/brittonr/.cache/noble-issues/drafts/issue-22-followup-octet.md"
+      "issue": 25,
+      "url": "https://github.com/OnixResearch/noble-lang/issues/25",
+      "title": "Octet required compiler unknowns block source-coverage and native-assurance",
+      "checks": [
+        "source-coverage",
+        "native-assurance"
+      ]
     },
     {
-      "check": "boundary-controls",
-      "draft": "/home/brittonr/.cache/noble-issues/drafts/issue-22-followup-boundary-controls.md"
+      "issue": 26,
+      "url": "https://github.com/OnixResearch/noble-lang/issues/26",
+      "title": "Octet deny-all Tigerstyle errors in noble-kernel block the octet check and the boundary-controls workspace/acyclic-shell cases",
+      "checks": [
+        "octet",
+        "boundary-controls"
+      ]
     },
     {
-      "check": "source-coverage",
-      "draft": "/home/brittonr/.cache/noble-issues/drafts/issue-22-followup-source-coverage.md"
-    },
-    {
-      "check": "native-assurance",
-      "draft": "/home/brittonr/.cache/noble-issues/drafts/issue-22-followup-native-assurance.md"
+      "issue": 27,
+      "url": "https://github.com/OnixResearch/noble-lang/issues/27",
+      "title": "Renew the boundary-controls unit list and capacity reservation",
+      "checks": [
+        "boundary-controls"
+      ]
     }
   ],
   "non_claims": [
