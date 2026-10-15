@@ -17,8 +17,10 @@ pub mod proof;
 mod replacement;
 mod resolution;
 
+pub(crate) use declared::{
+    verify_definition_origin, verify_named_call_origin, verify_named_export, DefinitionOrigin,
+};
 pub use declared::{BoundOperation, ModuleKind, ModulePrepared, ModuleSession};
-pub(crate) use declared::{DefinitionOrigin, verify_definition_origin, verify_named_call_origin, verify_named_export};
 
 /// Immutable source authority for the versioned Result interface. The same
 /// declaration bytes are checked through ordinary module registration.
@@ -110,19 +112,23 @@ fn reaches_index(
     let mut current = Some(tree);
     while let Some(body) = current {
         for node in &body.nodes {
-            work = work.checked_sub(1).ok_or_else(|| Error::at(
-                Stage::Acceptance,
-                exhausted(span, "live replacement dependency walk exhausted"),
-            ))?;
+            work = work.checked_sub(1).ok_or_else(|| {
+                Error::at(
+                    Stage::Acceptance,
+                    exhausted(span, "live replacement dependency walk exhausted"),
+                )
+            })?;
             if let Kind::Call(Target::Named(index)) = &node.kind {
                 let index = *index as usize;
                 if index == target {
                     return Ok(true);
                 }
-                let seen = visited.get_mut(index).ok_or_else(|| Error::at(
-                    Stage::Acceptance,
-                    crate::invalid(span, "invalid retained definition target"),
-                ))?;
+                let seen = visited.get_mut(index).ok_or_else(|| {
+                    Error::at(
+                        Stage::Acceptance,
+                        crate::invalid(span, "invalid retained definition target"),
+                    )
+                })?;
                 if !*seen {
                     *seen = true;
                     pending.push(index);
@@ -145,21 +151,21 @@ fn replay_preserves_targets(
     if original.body != replayed.body || original.nodes.len() != replayed.nodes.len() {
         return false;
     }
-    original.nodes.iter().zip(&replayed.nodes).all(|(old, new)| {
-        match (&old.kind, &new.kind) {
+    original
+        .nodes
+        .iter()
+        .zip(&replayed.nodes)
+        .all(|(old, new)| match (&old.kind, &new.kind) {
             (Kind::Literal(a), Kind::Literal(b)) => a == b,
             (Kind::Text(a), Kind::Text(b)) => a == b,
             (Kind::Quotation(a), Kind::Quotation(b)) => a == b,
             (Kind::Call(Target::Builtin(a)), Kind::Call(Target::Builtin(b))) => a == b,
             (Kind::Call(Target::SlotInvoke(a)), Kind::Call(Target::SlotInvoke(b))) => a == b,
-            (Kind::Call(Target::Named(a)), Kind::Call(Target::Named(b))) => {
-                replacements.get(*a as usize).is_some_and(|replacement| {
-                    replacement.unwrap_or(*a as usize) == *b as usize
-                })
-            }
+            (Kind::Call(Target::Named(a)), Kind::Call(Target::Named(b))) => replacements
+                .get(*a as usize)
+                .is_some_and(|replacement| replacement.unwrap_or(*a as usize) == *b as usize),
             _ => false,
-        }
-    })
+        })
 }
 
 #[derive(Clone, Debug)]
@@ -201,10 +207,14 @@ impl Prepared {
         self.checked.as_ref()
     }
     pub fn live_sites(&self) -> Option<&[noble_kernel::untrusted::LiveSite]> {
-        self.checked.as_ref().map(|checked| checked.live_sites.as_slice())
+        self.checked
+            .as_ref()
+            .map(|checked| checked.live_sites.as_slice())
     }
     pub fn definition_name(&self) -> Option<&str> {
-        self.definition.as_ref().map(|definition| definition.name.as_str())
+        self.definition
+            .as_ref()
+            .map(|definition| definition.name.as_str())
     }
     pub const fn output(&self) -> &[noble_kernel::types::Ty] {
         self.output.as_slice()
@@ -292,10 +302,13 @@ impl Session {
     /// Core and guarded Live-Wasm-Draft environments cannot gain slot syntax.
     pub fn new_live_slots(environment: noble_kernel::contracts::Env) -> Result<Self, Error> {
         if !environment.live_slots || environment.text_cursor {
-            return Err(Error::at(Stage::Acceptance, crate::invalid(
-                crate::Span { start: 0, end: 0 },
-                "live slots require a host-enabled independent source environment",
-            )));
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(
+                    crate::Span { start: 0, end: 0 },
+                    "live slots require a host-enabled independent source environment",
+                ),
+            ));
         }
         Ok(Self {
             live_slots: Some(LiveSlots {
@@ -327,55 +340,73 @@ impl Session {
     ) -> Result<(), Error> {
         let span = crate::Span { start: 0, end: 0 };
         let Some((base, version)) = name.rsplit_once('@') else {
-            return Err(Error::at(Stage::Acceptance, crate::invalid(
-                span, "live resource name requires a version suffix",
-            )));
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "live resource name requires a version suffix"),
+            ));
         };
-        if base.is_empty() || !base.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+        if base.is_empty()
+            || !base
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
             || !base.as_bytes()[0].is_ascii_alphabetic()
-            || version.is_empty() || (version.len() > 1 && version.starts_with('0'))
+            || version.is_empty()
+            || (version.len() > 1 && version.starts_with('0'))
             || !version.bytes().all(|byte| byte.is_ascii_digit())
             || version.parse::<u32>().is_err()
         {
-            return Err(Error::at(Stage::Acceptance, crate::invalid(
-                span, "invalid versioned live resource name",
-            )));
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "invalid versioned live resource name"),
+            ));
         }
         let Some(profile) = self.live_slots.as_mut() else {
-            return Err(Error::at(Stage::Acceptance, crate::invalid(
-                span, "live resource registration requires the live-slot profile",
-            )));
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(
+                    span,
+                    "live resource registration requires the live-slot profile",
+                ),
+            ));
         };
         let Some(declaration) = profile.environment.nominal(id) else {
-            return Err(Error::at(Stage::Acceptance, crate::invalid(
-                span, "unregistered nominal resource schema",
-            )));
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "unregistered nominal resource schema"),
+            ));
         };
         let noble_kernel::types::NominalShape::Opaque(payload) = &declaration.shape else {
-            return Err(Error::at(Stage::Acceptance, crate::invalid(
-                span, "live resource schema must be opaque",
-            )));
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "live resource schema must be opaque"),
+            ));
         };
         let noble_kernel::types::Ty::Resource(kind) = &**payload else {
-            return Err(Error::at(Stage::Acceptance, crate::invalid(
-                span, "live resource schema must own a registered resource",
-            )));
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "live resource schema must own a registered resource"),
+            ));
         };
         if !profile.environment.live_resource_nominals.contains(&id)
             || !profile.environment.resource_kinds.contains(kind)
             || !declaration.exported
             || declaration.public != [false, false]
             || profile.resources.iter().any(|(existing, ty)| {
-                existing == name || matches!(ty, noble_kernel::types::Ty::Nominal(other, _) if *other == id)
+                existing == name
+                    || matches!(ty, noble_kernel::types::Ty::Nominal(other, _) if *other == id)
             })
         {
-            return Err(Error::at(Stage::Acceptance, crate::invalid(
-                span, "duplicate or constructible live resource schema",
-            )));
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "duplicate or constructible live resource schema"),
+            ));
         }
-        let next = self.generation.checked_add(1).ok_or_else(|| Error::at(
-            Stage::Acceptance, exhausted(span, "session generation limit exceeded"),
-        ))?;
+        let next = self.generation.checked_add(1).ok_or_else(|| {
+            Error::at(
+                Stage::Acceptance,
+                exhausted(span, "session generation limit exceeded"),
+            )
+        })?;
         profile.resources.push((
             alloc::string::String::from(name),
             noble_kernel::types::Ty::Nominal(id, alloc::boxed::Box::new(declaration.shape.clone())),
@@ -389,13 +420,20 @@ impl Session {
     pub fn parse_live_type(&self, text: &str) -> Result<noble_kernel::types::Ty, Error> {
         let span = crate::Span { start: 0, end: 0 };
         let Some(profile) = &self.live_slots else {
-            return Err(Error::at(Stage::Check, crate::invalid(
-                span, "live reference types require the live-slot profile",
-            )));
+            return Err(Error::at(
+                Stage::Check,
+                crate::invalid(span, "live reference types require the live-slot profile"),
+            ));
         };
         declared::types::parse_with_families(
-            text, &profile.resources, &[], Some(&profile.environment), span,
-        ).map(|parsed| parsed.ty).map_err(|error| Error::at(Stage::Check, error))
+            text,
+            &profile.resources,
+            &[],
+            Some(&profile.environment),
+            span,
+        )
+        .map(|parsed| parsed.ty)
+        .map_err(|error| Error::at(Stage::Check, error))
     }
     /// Opt-in pure calculator profile; nominal modules use ModuleSession.
     pub fn new_calculator() -> Self {
@@ -413,14 +451,20 @@ impl Session {
         if self.live_selected.as_deref() != Some(name) {
             return None;
         }
-        self.definitions.iter().rev().find(|definition| definition.name == name)
+        self.definitions
+            .iter()
+            .rev()
+            .find(|definition| definition.name == name)
             .map(|definition| definition.identity)
     }
 
     /// Only current named bodies count as live dependents. Old Programs may
     /// retain historical definitions without acquiring the guest edit grant.
     pub fn live_definition_has_dependents(&self, name: &str) -> bool {
-        let Some(index) = self.definitions.iter().rposition(|definition| definition.name == name)
+        let Some(index) = self
+            .definitions
+            .iter()
+            .rposition(|definition| definition.name == name)
         else {
             return true;
         };
@@ -436,13 +480,18 @@ impl Session {
         let mut dependents = alloc::vec::Vec::new();
         for (index, definition) in self.definitions.iter().enumerate() {
             if index == original
-                || self.definitions.iter().skip(index + 1).any(|later| later.name == definition.name)
+                || self
+                    .definitions
+                    .iter()
+                    .skip(index + 1)
+                    .any(|later| later.name == definition.name)
             {
                 continue;
             }
             if definition.tree.nodes.iter().any(|node| match &node.kind {
-                Kind::Call(Target::Named(target)) => affected
-                    .get(*target as usize).copied().unwrap_or(false),
+                Kind::Call(Target::Named(target)) => {
+                    affected.get(*target as usize).copied().unwrap_or(false)
+                }
                 _ => false,
             }) {
                 affected[index] = true;
@@ -457,7 +506,9 @@ impl Session {
     /// Historical definitions stay in place for already captured Programs.
     pub fn preview_core_rebuild(&self, prepared: &Prepared) -> Result<Self, Error> {
         let span = crate::Span { start: 0, end: 0 };
-        if !prepared.is_definition() || self.bindings.is_some() || self.declared.is_some()
+        if !prepared.is_definition()
+            || self.bindings.is_some()
+            || self.declared.is_some()
             || !self.is_current_namespace(prepared)
         {
             return Err(Error::at(
@@ -472,27 +523,44 @@ impl Session {
             ));
         };
         let name = &replacement.name;
-        let original = self.definitions.iter().rposition(|definition| definition.name == *name);
+        let original = self
+            .definitions
+            .iter()
+            .rposition(|definition| definition.name == *name);
         if let Some(index) = original {
             let compatible = replacement::compatible(
-                self, &self.definitions[index], replacement, prepared.limits,
-            ).map_err(|diagnostic| Error::at(Stage::Check, diagnostic))?;
+                self,
+                &self.definitions[index],
+                replacement,
+                prepared.limits,
+            )
+            .map_err(|diagnostic| Error::at(Stage::Check, diagnostic))?;
             if !compatible {
-                return Err(Error::at(Stage::Acceptance, crate::invalid(
-                    span, "live replacement changes the checked stack interface or increases effects",
-                )));
+                return Err(Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(
+                        span,
+                        "live replacement changes the checked stack interface or increases effects",
+                    ),
+                ));
             }
             if reaches_index(
-                &replacement.tree, &self.definitions, index, prepared.limits.work,
+                &replacement.tree,
+                &self.definitions,
+                index,
+                prepared.limits.work,
             )? {
-                return Err(Error::at(Stage::Acceptance, crate::invalid(
-                    span, "live replacement transitively depends on its previous identity",
-                )));
+                return Err(Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(
+                        span,
+                        "live replacement transitively depends on its previous identity",
+                    ),
+                ));
             }
         }
-        let dependents = original.map_or_else(alloc::vec::Vec::new, |index| {
-            self.current_dependents(index)
-        });
+        let dependents =
+            original.map_or_else(alloc::vec::Vec::new, |index| self.current_dependents(index));
         let mut successor = Self {
             definitions: self.definitions.clone(),
             history: self.history.clone(),
@@ -510,39 +578,54 @@ impl Session {
         if let Some(index) = original {
             replacements[index] = Some(self.definitions.len());
         }
-        let replay_work = prepared.limits.work
-            / u32::try_from(dependents.len().max(1)).unwrap_or(u32::MAX);
+        let replay_work =
+            prepared.limits.work / u32::try_from(dependents.len().max(1)).unwrap_or(u32::MAX);
         if replay_work == 0 {
-            return Err(Error::at(Stage::Acceptance, exhausted(
-                span, "live dependent rebuild work limit exceeded",
-            )));
+            return Err(Error::at(
+                Stage::Acceptance,
+                exhausted(span, "live dependent rebuild work limit exceeded"),
+            ));
         }
         for index in dependents {
             let bytes = self.definition_source(index)?;
-            let limits = crate::Limits { work: replay_work, ..prepared.limits };
+            let limits = crate::Limits {
+                work: replay_work,
+                ..prepared.limits
+            };
             let dependent = successor.prepare(bytes, &[], limits)?;
             let Some(rebuilt) = dependent.definition.as_ref() else {
-                return Err(Error::at(Stage::Acceptance, crate::invalid(
-                    span, "retained dependent source is not a definition",
-                )));
+                return Err(Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(span, "retained dependent source is not a definition"),
+                ));
             };
             if rebuilt.name != self.definitions[index].name
                 || successor.core_definition_requires_host_effects(&dependent)
             {
-                return Err(Error::at(Stage::Acceptance, crate::invalid(
-                    span, "retained dependent changed name or requires unavailable host effects",
-                )));
+                return Err(Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(
+                        span,
+                        "retained dependent changed name or requires unavailable host effects",
+                    ),
+                ));
             }
             if !replay_preserves_targets(
-                &self.definitions[index].tree, &rebuilt.tree, &replacements,
+                &self.definitions[index].tree,
+                &rebuilt.tree,
+                &replacements,
             ) {
-                return Err(Error::at(Stage::Acceptance, crate::invalid(
-                    span, "retained dependent changed an unapproved resolved call target",
-                )));
+                return Err(Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(
+                        span,
+                        "retained dependent changed an unapproved resolved call target",
+                    ),
+                ));
             }
-            let compatible = replacement::compatible(
-                &successor, &self.definitions[index], rebuilt, limits,
-            ).map_err(|diagnostic| Error::at(Stage::Check, diagnostic))?;
+            let compatible =
+                replacement::compatible(&successor, &self.definitions[index], rebuilt, limits)
+                    .map_err(|diagnostic| Error::at(Stage::Check, diagnostic))?;
             if !compatible {
                 return Err(Error::at(Stage::Acceptance, crate::invalid(
                     span, "rebuilt dependent changes the checked stack interface or increases effects",
@@ -560,36 +643,44 @@ impl Session {
     fn definition_source(&self, index: usize) -> Result<&[u8], Error> {
         let span = crate::Span { start: 0, end: 0 };
         if index >= self.definitions.len() {
-            return Err(Error::at(Stage::Acceptance, crate::invalid(
-                span, "retained dependent has no source provenance",
-            )));
+            return Err(Error::at(
+                Stage::Acceptance,
+                crate::invalid(span, "retained dependent has no source provenance"),
+            ));
         }
         let mut at = 0usize;
         for position in 0..=index {
             let header = self.history.get(at..at.saturating_add(4)).ok_or_else(|| {
-                Error::at(Stage::Acceptance, crate::invalid(
-                    span, "retained dependent has no source provenance",
-                ))
+                Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(span, "retained dependent has no source provenance"),
+                )
             })?;
-            let length = u32::from_le_bytes(
-                <[u8; 4]>::try_from(header).map_err(|_| Error::at(
-                    Stage::Acceptance, crate::invalid(span, "invalid retained source length"),
-                ))?,
-            ) as usize;
+            let length = u32::from_le_bytes(<[u8; 4]>::try_from(header).map_err(|_| {
+                Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(span, "invalid retained source length"),
+                )
+            })?) as usize;
             at += 4;
-            let bytes = self.history.get(at..at.saturating_add(length)).ok_or_else(|| {
-                Error::at(Stage::Acceptance, crate::invalid(
-                    span, "retained dependent source is incomplete",
-                ))
-            })?;
+            let bytes = self
+                .history
+                .get(at..at.saturating_add(length))
+                .ok_or_else(|| {
+                    Error::at(
+                        Stage::Acceptance,
+                        crate::invalid(span, "retained dependent source is incomplete"),
+                    )
+                })?;
             if position == index {
                 return Ok(bytes);
             }
             at += length;
         }
-        Err(Error::at(Stage::Acceptance, crate::invalid(
-            span, "retained dependent has no source provenance",
-        )))
+        Err(Error::at(
+            Stage::Acceptance,
+            crate::invalid(span, "retained dependent has no source provenance"),
+        ))
     }
 
     /// A definition declaration has no executable root; checking only an
@@ -612,17 +703,15 @@ impl Session {
             for node in &tree.nodes {
                 match &node.kind {
                     Kind::Call(Target::Builtin(index)) => {
-                        if environment
-                            .defs
-                            .get(*index as usize)
-                            .is_none_or(|scheme| scheme.effects.iter().any(|effect| {
+                        if environment.defs.get(*index as usize).is_none_or(|scheme| {
+                            scheme.effects.iter().any(|effect| {
                                 !matches!(effect,
                                     noble_kernel::shapes::EffectSlot::Effect(
                                         noble_kernel::types::EffId(3 | 4)
                                     ) | noble_kernel::shapes::EffectSlot::Var(_)
                                         if self.live_selected.is_some())
-                            }))
-                        {
+                            })
+                        }) {
                             return true;
                         }
                     }
@@ -654,12 +743,18 @@ impl Session {
 
     fn effect_universe(&self) -> u64 {
         if let Some(profile) = &self.live_slots {
-            return profile.environment.effects.iter().fold(0u64, |mask, id| {
-                mask | 1u64.checked_shl(id.0).unwrap_or(0)
-            });
+            return profile
+                .environment
+                .effects
+                .iter()
+                .fold(0u64, |mask, id| mask | 1u64.checked_shl(id.0).unwrap_or(0));
         }
         if let Some(context) = &self.declared {
-            return if context.environment.effects.contains(&noble_kernel::contracts::TEST_CLOCK) {
+            return if context
+                .environment
+                .effects
+                .contains(&noble_kernel::contracts::TEST_CLOCK)
+            {
                 1 | (1 << noble_kernel::contracts::TEST_CLOCK.0)
             } else {
                 1
@@ -787,9 +882,15 @@ fn live_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic>
     let stack = Pattern::StackVar(Variable(0));
     let propose = Scheme {
         var_kinds: alloc::vec![VariableKind::Stack],
-        stack_in: alloc::vec![stack.clone(), Pattern::I64,
-            Pattern::program(alloc::vec![Pattern::I64], alloc::vec![Pattern::I64],
-                alloc::vec::Vec::new())],
+        stack_in: alloc::vec![
+            stack.clone(),
+            Pattern::I64,
+            Pattern::program(
+                alloc::vec![Pattern::I64],
+                alloc::vec![Pattern::I64],
+                alloc::vec::Vec::new()
+            )
+        ],
         stack_out: alloc::vec![stack.clone(), Pattern::Unit],
         effects: alloc::vec![EffectSlot::Effect(EffId(3))],
     };
@@ -839,23 +940,34 @@ mod tests {
     fn live_slots_forward_ordered_borrows_and_reuse_the_same_input() {
         use noble_kernel::types::Ty;
         let session = Session::new_live_slots(
-            noble_kernel::contracts::environment().unwrap().enable_live_slots(),
-        ).unwrap();
+            noble_kernel::contracts::environment()
+                .unwrap()
+                .enable_live_slots(),
+        )
+        .unwrap();
         let c = borrowed(alloc::vec![Ty::I64], alloc::vec![Ty::I64], &[]);
         let b = borrowed(
-            alloc::vec![Ty::I64, c.clone()], alloc::vec![Ty::I64],
+            alloc::vec![Ty::I64, c.clone()],
+            alloc::vec![Ty::I64],
             &[noble_kernel::contracts::LIVE_DISPATCH],
         );
         let a = borrowed(
-            alloc::vec![Ty::I64, c.clone(), b.clone()], alloc::vec![Ty::I64],
+            alloc::vec![Ty::I64, c.clone(), b.clone()],
+            alloc::vec![Ty::I64],
             &[noble_kernel::contracts::LIVE_DISPATCH],
         );
-        let root = session.prepare(
-            b"slot.invoke", &[Ty::I64, c.clone(), b.clone(), a], live_limits(),
-        ).unwrap();
+        let root = session
+            .prepare(
+                b"slot.invoke",
+                &[Ty::I64, c.clone(), b.clone(), a],
+                live_limits(),
+            )
+            .unwrap();
         let root_submission = root.submission().unwrap();
-        assert!(matches!(crate::wire::lower_subject(&root_submission.body.candidate),
-            Err(crate::wire::ProjectionError::LiveSlot)));
+        assert!(matches!(
+            crate::wire::lower_subject(&root_submission.body.candidate),
+            Err(crate::wire::ProjectionError::LiveSlot)
+        ));
         assert_eq!(root_submission.request.expected.stack_in.len(), 4);
         assert_eq!(root_submission.request.expected.stack_out, [Ty::I64]);
         assert_eq!(root.live_sites().unwrap().len(), 1);
@@ -864,18 +976,30 @@ mod tests {
         assert_eq!(site.root_logical_input_position, 3);
         assert_eq!(site.forwarded_ref_ordinals, [1, 2]);
         assert_eq!(site.stack_in, [Ty::I64, c.clone(), b.clone()]);
-        assert_eq!(site.allowed_effects,
-            noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::LIVE_DISPATCH]));
-        assert_eq!(root.checked().unwrap().interface.effects,
-            noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::LIVE_DISPATCH]));
+        assert_eq!(
+            site.allowed_effects,
+            noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::LIVE_DISPATCH])
+        );
+        assert_eq!(
+            root.checked().unwrap().interface.effects,
+            noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::LIVE_DISPATCH])
+        );
 
-        let reversed = session.prepare(
-            b"slot.invoke.0", &[Ty::I64, b.clone(), c.clone()], live_limits(),
-        ).unwrap();
+        let reversed = session
+            .prepare(
+                b"slot.invoke.0",
+                &[Ty::I64, b.clone(), c.clone()],
+                live_limits(),
+            )
+            .unwrap();
         assert!(!site.admits_target(&reversed.checked().unwrap().interface));
-        let nested = session.prepare(
-            b"slot.invoke slot.invoke", &[Ty::I64, c.clone(), b], live_limits(),
-        ).unwrap();
+        let nested = session
+            .prepare(
+                b"slot.invoke slot.invoke",
+                &[Ty::I64, c.clone(), b],
+                live_limits(),
+            )
+            .unwrap();
         assert!(site.admits_target(&nested.checked().unwrap().interface));
         let sites = nested.live_sites().unwrap();
         assert_eq!(sites.len(), 2);
@@ -886,7 +1010,9 @@ mod tests {
         assert_eq!(sites[1].root_logical_input_position, 2);
         assert_eq!(sites[0].forwarded_ref_ordinals, [1]);
         assert_eq!(sites[1].forwarded_ref_ordinals, [1]);
-        let leaf = session.prepare(b"slot.invoke", &[Ty::I64, c], live_limits()).unwrap();
+        let leaf = session
+            .prepare(b"slot.invoke", &[Ty::I64, c], live_limits())
+            .unwrap();
         assert!(sites[0].admits_target(&leaf.checked().unwrap().interface));
         assert_eq!(leaf.live_sites().unwrap()[0].forwarded_ref_ordinals, []);
     }
@@ -895,40 +1021,64 @@ mod tests {
     fn live_slot_rejects_capture_forgery_ambiguity_and_legacy_profiles() {
         use noble_kernel::types::Ty;
         let session = Session::new_live_slots(
-            noble_kernel::contracts::environment().unwrap().enable_live_slots(),
-        ).unwrap();
+            noble_kernel::contracts::environment()
+                .unwrap()
+                .enable_live_slots(),
+        )
+        .unwrap();
         let reference = borrowed(alloc::vec![Ty::I64], alloc::vec![Ty::I64], &[]);
         let inputs = [Ty::I64, reference.clone()];
         for source in [b"[ slot.invoke ]".as_slice(), b"def f [ slot.invoke ]"] {
             assert!(session.prepare(source, &inputs, live_limits()).is_err());
         }
-        assert!(session.prepare(
-            b"slot.invoke", &[Ty::I64, Ty::Pair(
-                alloc::boxed::Box::new(Ty::I64),
-                alloc::boxed::Box::new(reference.clone()),
-            )], live_limits(),
-        ).is_err());
-        assert!(session.prepare(
-            b"slot.invoke", &[Ty::I64, reference.clone(), reference.clone()], live_limits(),
-        ).is_err());
-        let selected = session.prepare(
-            b"slot.invoke.1", &[Ty::I64, reference.clone(), reference.clone()],
-            live_limits(),
-        ).unwrap();
+        assert!(session
+            .prepare(
+                b"slot.invoke",
+                &[
+                    Ty::I64,
+                    Ty::Pair(
+                        alloc::boxed::Box::new(Ty::I64),
+                        alloc::boxed::Box::new(reference.clone()),
+                    )
+                ],
+                live_limits(),
+            )
+            .is_err());
+        assert!(session
+            .prepare(
+                b"slot.invoke",
+                &[Ty::I64, reference.clone(), reference.clone()],
+                live_limits(),
+            )
+            .is_err());
+        let selected = session
+            .prepare(
+                b"slot.invoke.1",
+                &[Ty::I64, reference.clone(), reference.clone()],
+                live_limits(),
+            )
+            .unwrap();
         assert_eq!(selected.live_sites().unwrap()[0].ref_ordinal, 1);
         for core in [Session::new(), Session::new_live("f")] {
-            assert!(core.prepare(b"slot.invoke", &[Ty::I64], live_limits()).is_err());
-            assert!(core.prepare(b"1", &[reference.clone()], live_limits()).is_err());
+            assert!(core
+                .prepare(b"slot.invoke", &[Ty::I64], live_limits())
+                .is_err());
+            assert!(core
+                .prepare(b"1", &[reference.clone()], live_limits())
+                .is_err());
         }
-        let escaping = borrowed(alloc::vec![Ty::I64],
-            alloc::vec![reference.clone()], &[]);
-        assert!(session.prepare(b"slot.invoke", &[Ty::I64, escaping], live_limits()).is_err());
+        let escaping = borrowed(alloc::vec![Ty::I64], alloc::vec![reference.clone()], &[]);
+        assert!(session
+            .prepare(b"slot.invoke", &[Ty::I64, escaping], live_limits())
+            .is_err());
     }
 
     #[test]
     fn versioned_resource_names_resolve_only_registered_exact_schema() {
         use noble_kernel::types::{NominalShape, NominalTypeId, ResourceKind, Ty};
-        let mut environment = noble_kernel::contracts::environment().unwrap().enable_live_slots();
+        let mut environment = noble_kernel::contracts::environment()
+            .unwrap()
+            .enable_live_slots();
         let make = |module, kind| noble_kernel::contracts::NominalDecl {
             id: NominalTypeId { module, ordinal: 0 },
             shape: NominalShape::Opaque(alloc::boxed::Box::new(Ty::Resource(ResourceKind(kind)))),
@@ -953,35 +1103,48 @@ mod tests {
             &[noble_kernel::contracts::TEST_EMIT],
         );
         assert_eq!(
-            session.parse_live_type(
-                "LiveRef<Account@1+I64,Account@1+I64,test.emit>"
-            ).unwrap(),
+            session
+                .parse_live_type("LiveRef<Account@1+I64,Account@1+I64,test.emit>")
+                .unwrap(),
             reference,
         );
-        let prepared = session.prepare(b"slot.invoke",
-            &[account_one.clone(), Ty::I64, reference.clone()], live_limits()).unwrap();
+        let prepared = session
+            .prepare(
+                b"slot.invoke",
+                &[account_one.clone(), Ty::I64, reference.clone()],
+                live_limits(),
+            )
+            .unwrap();
         assert_eq!(prepared.output(), &[account_one.clone(), Ty::I64]);
-        assert_eq!(prepared.checked().unwrap().interface.effects,
+        assert_eq!(
+            prepared.checked().unwrap().interface.effects,
             noble_kernel::types::EffSet::from_ids(&[
-                noble_kernel::contracts::TEST_EMIT, noble_kernel::contracts::LIVE_DISPATCH,
-            ]));
-        let exact_target = session.prepare(
-            b"1 +", &[account_one.clone(), Ty::I64], live_limits(),
-        ).unwrap();
+                noble_kernel::contracts::TEST_EMIT,
+                noble_kernel::contracts::LIVE_DISPATCH,
+            ])
+        );
+        let exact_target = session
+            .prepare(b"1 +", &[account_one.clone(), Ty::I64], live_limits())
+            .unwrap();
         assert!(prepared.live_sites().unwrap()[0]
             .admits_target(&exact_target.checked().unwrap().interface));
-        let wrong_schema = session.prepare(
-            b"1 +", &[account_two.clone(), Ty::I64], live_limits(),
-        ).unwrap();
+        let wrong_schema = session
+            .prepare(b"1 +", &[account_two.clone(), Ty::I64], live_limits())
+            .unwrap();
         assert!(!prepared.live_sites().unwrap()[0]
             .admits_target(&wrong_schema.checked().unwrap().interface));
-        let wrong_order = session.prepare(
-            b"", &[Ty::I64, account_one], live_limits(),
-        ).unwrap();
+        let wrong_order = session
+            .prepare(b"", &[Ty::I64, account_one], live_limits())
+            .unwrap();
         assert!(!prepared.live_sites().unwrap()[0]
             .admits_target(&wrong_order.checked().unwrap().interface));
-        assert!(session.prepare(b"slot.invoke",
-            &[account_two, Ty::I64, reference], live_limits()).is_err());
+        assert!(session
+            .prepare(
+                b"slot.invoke",
+                &[account_two, Ty::I64, reference],
+                live_limits()
+            )
+            .is_err());
     }
 
     #[test]
@@ -1002,7 +1165,10 @@ mod tests {
             let prepared = session.prepare(source, &[], limits).unwrap();
             session.commit(prepared).unwrap();
         }
-        let original = session.definitions.iter().map(|definition| definition.identity)
+        let original = session
+            .definitions
+            .iter()
+            .map(|definition| definition.identity)
             .collect::<alloc::vec::Vec<_>>();
         let replacement = session.prepare(b"def addone [ 2 + ]", &[], limits).unwrap();
         let preview = session.preview_core_rebuild(&replacement).unwrap();
@@ -1015,8 +1181,14 @@ mod tests {
         assert_ne!(preview.definitions[4].identity, original[0]);
         assert_ne!(preview.definitions[5].identity, original[1]);
         assert_ne!(preview.definitions[6].identity, original[2]);
-        assert_eq!(session.definitions.iter().map(|definition| definition.identity)
-            .collect::<alloc::vec::Vec<_>>(), original);
+        assert_eq!(
+            session
+                .definitions
+                .iter()
+                .map(|definition| definition.identity)
+                .collect::<alloc::vec::Vec<_>>(),
+            original
+        );
     }
 
     #[test]
@@ -1046,7 +1218,10 @@ mod tests {
             let replacement = session.prepare(b"def f [ 2 + ]", &[], limits).unwrap();
             let failure = session.preview_core_rebuild(&replacement).unwrap_err();
             assert!(
-                failure.diagnostic().message.contains("unapproved resolved call target"),
+                failure
+                    .diagnostic()
+                    .message
+                    .contains("unapproved resolved call target"),
                 "{failure:?}",
             );
             assert_eq!(session.definitions.len(), 4);
@@ -1062,18 +1237,11 @@ mod tests {
             work: 2_000_000,
         };
         let mut session = Session::new();
-        for source in [
-            b"def f [ 1 + ]".as_slice(),
-            b"def g [ f ]",
-            b"def h [ g ]",
-        ] {
+        for source in [b"def f [ 1 + ]".as_slice(), b"def g [ f ]", b"def h [ g ]"] {
             let prepared = session.prepare(source, &[], limits).unwrap();
             session.commit(prepared).unwrap();
         }
-        for source in [
-            b"def f [ h ]".as_slice(),
-            b"def f [ [ h ] run ]",
-        ] {
+        for source in [b"def f [ h ]".as_slice(), b"def f [ [ h ] run ]"] {
             let replacement = session.prepare(source, &[], limits).unwrap();
             let failure = session.preview_core_rebuild(&replacement).unwrap_err();
             assert!(

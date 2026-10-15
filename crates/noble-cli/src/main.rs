@@ -36,13 +36,22 @@ enum InputError {
 )]
 fn main() -> std::process::ExitCode {
     let arguments: std::vec::Vec<std::ffi::OsString> = read_arguments().skip(1).collect();
-    if arguments.first().is_some_and(|argument| argument == "--internal-calculator-wat-assemble") {
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "--internal-calculator-wat-assemble")
+    {
         return calculator::assemble_wat(&arguments);
     }
-    if arguments.first().is_some_and(|argument| argument == "--internal-calculator-wat-version") {
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "--internal-calculator-wat-version")
+    {
         return calculator::assembler_version(&arguments);
     }
-    if arguments.first().is_some_and(|argument| argument == "calculator") {
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "calculator")
+    {
         return calculator::run(&arguments);
     }
     if arguments
@@ -65,10 +74,16 @@ fn main() -> std::process::ExitCode {
     {
         return core::entry::run(&arguments);
     }
-    if arguments.first().is_some_and(|argument| argument == "admit-artifact") {
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "admit-artifact")
+    {
         return core::artifact::run(&arguments);
     }
-    if arguments.first().is_some_and(|argument| argument == "editor") {
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "editor")
+    {
         return core::editor::run(&arguments);
     }
     if arguments
@@ -83,7 +98,10 @@ fn main() -> std::process::ExitCode {
     {
         return workflow::run(&arguments);
     }
-    if arguments.first().is_some_and(|argument| argument == "verify-module") {
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "verify-module")
+    {
         return workflow::intrinsic::run(&arguments);
     }
     if arguments

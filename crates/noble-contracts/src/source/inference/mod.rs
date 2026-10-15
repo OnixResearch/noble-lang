@@ -207,8 +207,12 @@ pub(super) fn infer(
     let mut failure = None;
     while let Some(frame) = frames.pop() {
         if let Err(problem) = traversal::visit(
-            frame, &mut frames, &mut state, &scope,
-            matches!(mode, Mode::EditorAnalysis), meter
+            frame,
+            &mut frames,
+            &mut state,
+            &scope,
+            matches!(mode, Mode::EditorAnalysis),
+            meter,
         ) {
             failure = Some(problem);
             break;
@@ -272,8 +276,12 @@ fn initial(
         arena.nominals = nominals;
         arena.generic_nominals = context.environment.generic_variants.clone();
     } else if let Some(profile) = &session.live_slots {
-        arena.nominals = profile.environment.nominals.iter()
-            .map(|decl| (decl.id, decl.shape.clone())).collect();
+        arena.nominals = profile
+            .environment
+            .nominals
+            .iter()
+            .map(|decl| (decl.id, decl.shape.clone()))
+            .collect();
         arena.generic_nominals = profile.environment.generic_variants.clone();
     }
     let mut borrows = alloc::vec::Vec::new();
@@ -297,8 +305,13 @@ fn initial(
     )]
     let input = match mode {
         Mode::Submission => attempt!(arena.stack(
-            if session.live_slots.is_some() { &value_inputs } else { inputs },
-            tree.span, meter
+            if session.live_slots.is_some() {
+                &value_inputs
+            } else {
+                inputs
+            },
+            tree.span,
+            meter
         )),
         Mode::EditorAnalysis => {
             let mut stack = attempt!(arena.add(
@@ -308,7 +321,11 @@ fn initial(
             ));
             for ty in inputs {
                 let item = attempt!(arena.ty(ty, tree.span, meter));
-                stack = attempt!(arena.add(crate::inference::Term::Push(stack, item), tree.span, meter));
+                stack = attempt!(arena.add(
+                    crate::inference::Term::Push(stack, item),
+                    tree.span,
+                    meter
+                ));
             }
             stack
         }

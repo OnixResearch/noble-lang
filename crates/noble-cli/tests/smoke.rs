@@ -96,8 +96,8 @@ fn conditional_join_reports_are_located_and_never_execute() -> Result<(), Box<dy
 }
 
 #[test]
-fn word_and_branch_failures_report_constraints_and_honest_value_origins()
--> Result<(), Box<dyn std::error::Error>> {
+fn word_and_branch_failures_report_constraints_and_honest_value_origins(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut child = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
         .arg("session")
         .stdin(std::process::Stdio::piped())
@@ -159,9 +159,12 @@ fn calculator_retains_state_after_exact_tiny_decimal() -> Result<(), Box<dyn std
     let mut child = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
         .args([
             "calculator",
-            "--intermediate-bits", "512",
-            "--evaluation-work", "100000000",
-            "--output-size", "64",
+            "--intermediate-bits",
+            "512",
+            "--evaluation-work",
+            "100000000",
+            "--output-size",
+            "64",
         ])
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
@@ -173,7 +176,12 @@ fn calculator_retains_state_after_exact_tiny_decimal() -> Result<(), Box<dyn std
     )?;
     drop(child.stdin.take());
     let output = child.wait_with_output()?;
-    assert_eq!(output.status.code(), Some(0), "{}", String::from_utf8_lossy(&output.stderr));
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
     assert_eq!(output.stdout, b"1/100000000000000000000\n1\n");
     assert!(output.stderr.is_empty());
     Ok(())

@@ -47,11 +47,14 @@ fn commit(
 
 #[test]
 fn calculator_retains_ten_individually_bounded_module_sources() -> Result<(), String> {
-    let limits = noble_contracts::Limits { bytes: 262_144, ..LIMITS };
+    let limits = noble_contracts::Limits {
+        bytes: 262_144,
+        ..LIMITS
+    };
     let mut calculator = noble_contracts::source::ModuleSession::new_calculator()
         .map_err(|error| format!("{error:?}"))?;
-    let mut ordinary = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
+    let mut ordinary =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     let mut aggregate = 0usize;
     for index in 0..10 {
         let source = format!(
@@ -88,7 +91,10 @@ fn calculator_retains_ten_individually_bounded_module_sources() -> Result<(), St
 
 #[test]
 fn calculator_aggregate_preflight_preserves_candidate_byte_cap() -> Result<(), String> {
-    let limits = noble_contracts::Limits { bytes: 262_144, ..LIMITS };
+    let limits = noble_contracts::Limits {
+        bytes: 262_144,
+        ..LIMITS
+    };
     let mut session = noble_contracts::source::ModuleSession::new_calculator()
         .map_err(|error| format!("{error:?}"))?;
     for index in 0..2 {

@@ -175,8 +175,14 @@ fn same_target(
         }
         (crate::source::Target::Builtin(_), crate::source::Target::Named(_))
         | (crate::source::Target::Named(_), crate::source::Target::Builtin(_))
-        | (crate::source::Target::SlotInvoke(_), crate::source::Target::Builtin(_) | crate::source::Target::Named(_))
-        | (crate::source::Target::Builtin(_) | crate::source::Target::Named(_), crate::source::Target::SlotInvoke(_)) => Ok(false),
+        | (
+            crate::source::Target::SlotInvoke(_),
+            crate::source::Target::Builtin(_) | crate::source::Target::Named(_),
+        )
+        | (
+            crate::source::Target::Builtin(_) | crate::source::Target::Named(_),
+            crate::source::Target::SlotInvoke(_),
+        ) => Ok(false),
     }
 }
 

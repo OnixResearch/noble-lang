@@ -29,12 +29,19 @@ fn refusal(outcome: &'static str, message: impl AsRef<str>) -> Report {
             ("diagnostic", string(message)),
             ("guest_requests", Json::Number(0)),
             ("protected_operations", Json::Number(0)),
-        ]).encode(),
+        ])
+        .encode(),
     }
 }
 
 fn usage() -> Failure {
-    Failure::new(ErrorContext { stage: "admission", outcome: "invalid-input" }, USAGE)
+    Failure::new(
+        ErrorContext {
+            stage: "admission",
+            outcome: "invalid-input",
+        },
+        USAGE,
+    )
 }
 
 fn parse_effects(text: &str) -> Result<std::vec::Vec<&'static str>, Failure> {
@@ -43,7 +50,11 @@ fn parse_effects(text: &str) -> Result<std::vec::Vec<&'static str>, Failure> {
     }
     let mut effects = std::vec::Vec::new();
     for name in text.split(',') {
-        let effect = attempt!(EFFECTS.iter().copied().find(|effect| *effect == name).ok_or_else(usage));
+        let effect = attempt!(EFFECTS
+            .iter()
+            .copied()
+            .find(|effect| *effect == name)
+            .ok_or_else(usage));
         if effects.contains(&effect) {
             return Err(usage());
         }
@@ -68,10 +79,14 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, Failure> {
     for pair in arguments[2..].chunks_exact(2) {
         let key = attempt!(pair[0].to_str().ok_or_else(usage));
         match key {
-            "--effects" if manifest.is_none() => manifest = Some(std::path::PathBuf::from(&pair[1])),
+            "--effects" if manifest.is_none() => {
+                manifest = Some(std::path::PathBuf::from(&pair[1]))
+            }
             "--source" if source.is_none() => source = Some(std::path::PathBuf::from(&pair[1])),
             "--allow-effects" if allowed.is_none() => {
-                allowed = Some(attempt!(parse_effects(attempt!(pair[1].to_str().ok_or_else(usage)))));
+                allowed = Some(attempt!(parse_effects(attempt!(pair[1]
+                    .to_str()
+                    .ok_or_else(usage)))));
             }
             "--opt" if optimized.is_none() => {
                 optimized = Some(match pair[1].to_str() {
@@ -98,31 +113,46 @@ fn claims(bytes: &[u8]) -> Result<std::vec::Vec<&'static str>, std::string::Stri
     let Value::Object(fields) = manifest else {
         return Err("candidate manifest must be an object".into());
     };
-    if fields.keys().any(|key| !matches!(key.as_str(),
-        "claimed_effects" | "trusted_correspondence" | "allowed" | "source" | "digest")) {
+    if fields.keys().any(|key| {
+        !matches!(
+            key.as_str(),
+            "claimed_effects" | "trusted_correspondence" | "allowed" | "source" | "digest"
+        )
+    }) {
         return Err("unknown candidate manifest field".into());
     }
     for field in ["trusted_correspondence", "allowed"] {
-        if fields.get(field).is_some_and(|value| !matches!(value, Value::Bool(_))) {
+        if fields
+            .get(field)
+            .is_some_and(|value| !matches!(value, Value::Bool(_)))
+        {
             return Err("candidate manifest boolean has wrong type".into());
         }
     }
     for field in ["source", "digest"] {
-        if fields.get(field).is_some_and(|value| !matches!(value, Value::Text(_))) {
+        if fields
+            .get(field)
+            .is_some_and(|value| !matches!(value, Value::Text(_)))
+        {
             return Err("candidate manifest text has wrong type".into());
         }
     }
     // These four optional fields are deliberately discarded. A candidate's
     // true value, digest, or source string is never an authority decision.
-    let values = fields.get("claimed_effects")
-        .and_then(Value::items).ok_or("candidate claimed_effects must be an array")?;
+    let values = fields
+        .get("claimed_effects")
+        .and_then(Value::items)
+        .ok_or("candidate claimed_effects must be an array")?;
     if values.len() > EFFECTS.len() {
         return Err("too many claimed effects".into());
     }
     let mut effects = std::vec::Vec::new();
     for value in values {
         let name = value.text().ok_or("effect identity must be text")?;
-        let effect = EFFECTS.iter().copied().find(|effect| *effect == name)
+        let effect = EFFECTS
+            .iter()
+            .copied()
+            .find(|effect| *effect == name)
             .ok_or("unknown effect identity")?;
         if effects.contains(&effect) {
             return Err("duplicate effect identity".into());
@@ -139,9 +169,14 @@ fn claims(bytes: &[u8]) -> Result<std::vec::Vec<&'static str>, std::string::Stri
 
 fn checked_source(source: &[u8]) -> Result<std::vec::Vec<u8>, Failure> {
     let frontend = noble_contracts::source::Session::new();
-    let prepared = attempt!(frontend.prepare(source, &[], super::SOURCE_LIMITS).map_err(Failure::source));
+    let prepared = attempt!(frontend
+        .prepare(source, &[], super::SOURCE_LIMITS)
+        .map_err(Failure::source));
     let submission = attempt!(prepared.submission().ok_or_else(|| Failure::new(
-        ErrorContext { stage: "admission", outcome: "correspondence-reject" },
+        ErrorContext {
+            stage: "admission",
+            outcome: "correspondence-reject"
+        },
         "selected source is not an executable expression",
     )));
     let compiler = noble_wasm::source::Compiler::new();
@@ -176,7 +211,10 @@ fn decide(arguments: &[std::ffi::OsString]) -> Result<Report, Failure> {
         ));
     };
     if wat.len() > module_bound {
-        return Ok(refusal("correspondence-reject", "selected source WAT exceeds module bound"));
+        return Ok(refusal(
+            "correspondence-reject",
+            "selected source WAT exceeds module bound",
+        ));
     }
     let mut engine = attempt!(super::worker::Engine::start_admission(options.optimized));
     engine.admit(&candidate, &wat, &source, &claimed, &options.allowed)

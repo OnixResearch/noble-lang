@@ -25,23 +25,34 @@ pub(super) fn imports(
     let mut retain = |alias: &str, owner: u64| {
         if let Some(module_index) = dependencies.iter().position(|module| module.owner == owner) {
             saved.push(crate::intrinsic::NamedImportBinding {
-                alias: alloc::string::String::from(alias), owner, module_index,
+                alias: alloc::string::String::from(alias),
+                owner,
+                module_index,
             });
         }
     };
     if original_owner == request.identity {
         for alias in &request.session.aliases {
             let imported = request.session.modules.get(alias.module).ok_or_else(|| {
-                mismatch(crate::Span { start: 0, end: 0 },
-                    "original imported alias has no retained module")
+                mismatch(
+                    crate::Span { start: 0, end: 0 },
+                    "original imported alias has no retained module",
+                )
             })?;
             retain(&alias.spelling, imported.identity);
         }
     } else {
-        let original = request.session.modules.iter()
+        let original = request
+            .session
+            .modules
+            .iter()
             .find(|module| module.identity == original_owner)
-            .ok_or_else(|| mismatch(crate::Span { start: 0, end: 0 },
-                "original named caller module is absent"))?;
+            .ok_or_else(|| {
+                mismatch(
+                    crate::Span { start: 0, end: 0 },
+                    "original named caller module is absent",
+                )
+            })?;
         for alias in &original.import_aliases {
             retain(&alias.alias, alias.owner);
         }
@@ -55,24 +66,41 @@ pub(super) fn trace(
     submission: &noble_kernel::execution::Submission,
     dependencies: &[crate::intrinsic::ResolvedSourceModule],
 ) -> Result<alloc::vec::Vec<crate::intrinsic::NamedUseOrigin>, crate::source::Error> {
-    let span = usize::try_from(root_source_index).ok()
+    let span = usize::try_from(root_source_index)
+        .ok()
         .and_then(|index| request.session.source.definitions.get(index))
-        .map_or(crate::Span { start: 0, end: 0 }, |definition| definition.tree.span);
+        .map_or(crate::Span { start: 0, end: 0 }, |definition| {
+            definition.tree.span
+        });
     let candidate = &submission.body.candidate;
     let [root] = candidate.body.as_slice() else {
-        return Err(mismatch(span, "named contract requires one selected subject invocation"));
+        return Err(mismatch(
+            span,
+            "named contract requires one selected subject invocation",
+        ));
     };
     if candidate.nodes.len() != 1 || !submission.body.texts.is_empty() {
-        return Err(mismatch(span, "named contract root is not a single source invocation"));
+        return Err(mismatch(
+            span,
+            "named contract root is not a single source invocation",
+        ));
     }
-    let Some(noble_kernel::untrusted::Node::Invocation { def, .. }) =
-        usize::try_from(root.0).ok().and_then(|index| candidate.nodes.get(index)) else {
-        return Err(mismatch(span, "named contract root does not invoke its subject"));
+    let Some(noble_kernel::untrusted::Node::Invocation { def, .. }) = usize::try_from(root.0)
+        .ok()
+        .and_then(|index| candidate.nodes.get(index))
+    else {
+        return Err(mismatch(
+            span,
+            "named contract root does not invoke its subject",
+        ));
     };
     let mut preceding = None;
     for body in &submission.definitions {
         if preceding.is_some_and(|prior| prior >= body.definition.0) {
-            return Err(mismatch(span, "named specialization slots are not unique and ordered"));
+            return Err(mismatch(
+                span,
+                "named specialization slots are not unique and ordered",
+            ));
         }
         preceding = Some(body.definition.0);
     }
@@ -87,45 +115,78 @@ pub(super) fn trace(
     let mut seen = alloc::vec![false; submission.definitions.len()];
     let mut result = alloc::vec::Vec::with_capacity(submission.definitions.len());
     while let Some(use_site) = pending.pop() {
-        let Some(named) = usize::try_from(use_site.source_index).ok()
-            .and_then(|index| request.session.source.definitions.get(index)) else {
-            return Err(mismatch(span, "named invocation has no resolved source definition"));
+        let Some(named) = usize::try_from(use_site.source_index)
+            .ok()
+            .and_then(|index| request.session.source.definitions.get(index))
+        else {
+            return Err(mismatch(
+                span,
+                "named invocation has no resolved source definition",
+            ));
         };
         let original = attempt!(super::source_origin(request, named, span));
-        let module_index = dependencies.iter().position(|module| module.owner == original.owner)
-            .ok_or_else(|| mismatch(original.definition.span,
-                "named invocation owner has no retained source module"))?;
+        let module_index = dependencies
+            .iter()
+            .position(|module| module.owner == original.owner)
+            .ok_or_else(|| {
+                mismatch(
+                    original.definition.span,
+                    "named invocation owner has no retained source module",
+                )
+            })?;
         let module = &dependencies[module_index];
-        if module.module != original.module_name || module.version != original.version ||
-            module.full_source.as_slice() != original.module_source {
-            return Err(mismatch(original.definition.span,
-                "named invocation source module differs from immutable owner"));
+        if module.module != original.module_name
+            || module.version != original.version
+            || module.full_source.as_slice() != original.module_source
+        {
+            return Err(mismatch(
+                original.definition.span,
+                "named invocation source module differs from immutable owner",
+            ));
         }
-        let position = submission.definitions.binary_search_by_key(
-            &use_site.definition.0, |body| body.definition.0,
-        ).map_err(|_| mismatch(original.definition.span,
-            "named invocation has no accepted specialization"))?;
+        let position = submission
+            .definitions
+            .binary_search_by_key(&use_site.definition.0, |body| body.definition.0)
+            .map_err(|_| {
+                mismatch(
+                    original.definition.span,
+                    "named invocation has no accepted specialization",
+                )
+            })?;
         if seen[position] {
-            return Err(mismatch(original.definition.span,
-                "named invocation reuses an accepted specialization"));
+            return Err(mismatch(
+                original.definition.span,
+                "named invocation reuses an accepted specialization",
+            ));
         }
         seen[position] = true;
         let body = &submission.definitions[position];
-        let slot = usize::try_from(body.definition.0).map_err(|_| mismatch(
-            original.definition.span, "named specialization slot exceeds address space",
-        ))?;
-        if body.identity != named.identity ||
-            submission.environment.definition_owners.get(slot) != Some(&Some(original.owner)) ||
-            submission.environment.kind(body.definition) != Some(noble_kernel::contracts::Behavior::Named) {
-            return Err(mismatch(original.definition.span,
-                "named specialization differs from resolved source owner or identity"));
+        let slot = usize::try_from(body.definition.0).map_err(|_| {
+            mismatch(
+                original.definition.span,
+                "named specialization slot exceeds address space",
+            )
+        })?;
+        if body.identity != named.identity
+            || submission.environment.definition_owners.get(slot) != Some(&Some(original.owner))
+            || submission.environment.kind(body.definition)
+                != Some(noble_kernel::contracts::Behavior::Named)
+        {
+            return Err(mismatch(
+                original.definition.span,
+                "named specialization differs from resolved source owner or identity",
+            ));
         }
         let tree = &named.tree;
         let candidate = &body.body.candidate;
-        if tree.body.len() != candidate.body.len() ||
-            candidate.nodes.len() != candidate.body.len() || !body.body.texts.is_empty() {
-            return Err(mismatch(original.definition.span,
-                "named body is not a flat original source body"));
+        if tree.body.len() != candidate.body.len()
+            || candidate.nodes.len() != candidate.body.len()
+            || !body.body.texts.is_empty()
+        {
+            return Err(mismatch(
+                original.definition.span,
+                "named body is not a flat original source body",
+            ));
         }
         result.push(crate::intrinsic::NamedUseOrigin {
             definition: use_site.definition,
@@ -145,34 +206,70 @@ pub(super) fn trace(
         // once in the same order as the original, separately parsed body.
         for (source_id, accepted_id) in tree.body.iter().zip(&candidate.body).rev() {
             if source_id != &accepted_id.0 {
-                return Err(mismatch(original.definition.span,
-                    "named candidate node order differs from original source body"));
+                return Err(mismatch(
+                    original.definition.span,
+                    "named candidate node order differs from original source body",
+                ));
             }
-            let source_node = attempt!(tree.node(*source_id).map_err(|problem|
-                crate::source::declared::diagnostic(crate::source::Stage::Check, problem)));
-            let Some(accepted) = usize::try_from(accepted_id.0).ok()
-                .and_then(|index| candidate.nodes.get(index)) else {
-                return Err(mismatch(original.definition.span,
-                    "named body has an invalid accepted node"));
+            let source_node = attempt!(tree.node(*source_id).map_err(|problem| {
+                crate::source::declared::diagnostic(crate::source::Stage::Check, problem)
+            }));
+            let Some(accepted) = usize::try_from(accepted_id.0)
+                .ok()
+                .and_then(|index| candidate.nodes.get(index))
+            else {
+                return Err(mismatch(
+                    original.definition.span,
+                    "named body has an invalid accepted node",
+                ));
             };
             match (&source_node.kind, accepted) {
-                (crate::source::Kind::Literal(expected),
-                 noble_kernel::untrusted::Node::Literal { lit, .. }) if expected == lit => (),
-                (crate::source::Kind::Call(crate::source::Target::Builtin(expected)),
-                 noble_kernel::untrusted::Node::Invocation { def, .. }) if *expected == def.0 => (),
-                (crate::source::Kind::Call(crate::source::Target::Named(next)),
-                 noble_kernel::untrusted::Node::Invocation { def, .. }) => {
-                    let start = original.definition.span.start.checked_add(source_node.span.start)
-                        .ok_or_else(|| mismatch(original.definition.span,
-                            "named source occurrence span overflows"))?;
-                    let end = original.definition.span.start.checked_add(source_node.span.end)
-                        .ok_or_else(|| mismatch(original.definition.span,
-                            "named source occurrence span overflows"))?;
-                    if start < original.definition.body_span.start || end > original.definition.body_span.end ||
-                        usize::try_from(start).ok().zip(usize::try_from(end).ok())
-                            .and_then(|(start, end)| original.module_source.get(start..end)).is_none() {
-                        return Err(mismatch(original.definition.span,
-                            "named invocation is outside its original body"));
+                (
+                    crate::source::Kind::Literal(expected),
+                    noble_kernel::untrusted::Node::Literal { lit, .. },
+                ) if expected == lit => (),
+                (
+                    crate::source::Kind::Call(crate::source::Target::Builtin(expected)),
+                    noble_kernel::untrusted::Node::Invocation { def, .. },
+                ) if *expected == def.0 => (),
+                (
+                    crate::source::Kind::Call(crate::source::Target::Named(next)),
+                    noble_kernel::untrusted::Node::Invocation { def, .. },
+                ) => {
+                    let start = original
+                        .definition
+                        .span
+                        .start
+                        .checked_add(source_node.span.start)
+                        .ok_or_else(|| {
+                            mismatch(
+                                original.definition.span,
+                                "named source occurrence span overflows",
+                            )
+                        })?;
+                    let end = original
+                        .definition
+                        .span
+                        .start
+                        .checked_add(source_node.span.end)
+                        .ok_or_else(|| {
+                            mismatch(
+                                original.definition.span,
+                                "named source occurrence span overflows",
+                            )
+                        })?;
+                    if start < original.definition.body_span.start
+                        || end > original.definition.body_span.end
+                        || usize::try_from(start)
+                            .ok()
+                            .zip(usize::try_from(end).ok())
+                            .and_then(|(start, end)| original.module_source.get(start..end))
+                            .is_none()
+                    {
+                        return Err(mismatch(
+                            original.definition.span,
+                            "named invocation is outside its original body",
+                        ));
                     }
                     pending.push(PendingUse {
                         source_index: *next,
@@ -183,13 +280,20 @@ pub(super) fn trace(
                         candidate_node: *accepted_id,
                     });
                 }
-                _ => return Err(mismatch(original.definition.span,
-                    "accepted named operation differs from original source node")),
+                _ => {
+                    return Err(mismatch(
+                        original.definition.span,
+                        "accepted named operation differs from original source node",
+                    ))
+                }
             }
         }
     }
     if seen.iter().any(|visited| !visited) {
-        return Err(mismatch(span, "accepted named graph contains an untraced specialization"));
+        return Err(mismatch(
+            span,
+            "accepted named graph contains an untraced specialization",
+        ));
     }
     Ok(result)
 }

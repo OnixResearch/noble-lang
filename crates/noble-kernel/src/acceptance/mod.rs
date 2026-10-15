@@ -223,7 +223,8 @@ fn fold_current(
     node: &crate::untrusted::Node,
     context: &parts::Ctx,
 ) -> Machine {
-    let (cost, joined, interface, live_site) = match nodes::fold_node(frame, node_id, node, context) {
+    let (cost, joined, interface, live_site) = match nodes::fold_node(frame, node_id, node, context)
+    {
         Ok(folded) => folded,
         Err(problem) => return halted(machine, Err(problem)),
     };

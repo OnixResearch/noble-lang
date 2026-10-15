@@ -89,8 +89,10 @@ impl Encoding {
                             let index = attempt!(super::definition_index(submission, *def));
                             attempt!(self.out.number(submission.definitions[index].identity));
                         }
-                        Some(noble_kernel::contracts::Behavior::BoundEmit(slot)
-                            | noble_kernel::contracts::Behavior::BoundClock(slot)) => {
+                        Some(
+                            noble_kernel::contracts::Behavior::BoundEmit(slot)
+                            | noble_kernel::contracts::Behavior::BoundClock(slot),
+                        ) => {
                             let mut found = None;
                             let mut at = 0usize;
                             while at < submission.environment.bound_adapters.len() {
@@ -109,7 +111,11 @@ impl Encoding {
                             let marker = if matches!(
                                 behavior,
                                 Some(noble_kernel::contracts::Behavior::BoundClock(_))
-                            ) { b"c" } else { b"a" };
+                            ) {
+                                b"c"
+                            } else {
+                                b"a"
+                            };
                             attempt!(self.out.append(marker));
                             attempt!(self.out.number(u64::from(slot)));
                             attempt!(self.out.append(b":"));

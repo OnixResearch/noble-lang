@@ -141,10 +141,13 @@ pub(super) fn slot_invoke(
         let noble_kernel::types::Ty::LiveRef(input, _, _) = &borrowed.ty else {
             return Err(crate::internal(span));
         };
-        let value_count = input.iter()
-            .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..))).count();
+        let value_count = input
+            .iter()
+            .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
+            .count();
         if value_count > actual.len()
-            || !input.iter()
+            || !input
+                .iter()
                 .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
                 .zip(&actual[actual.len() - value_count..])
                 .all(|(left, right)| left == right)
@@ -153,8 +156,13 @@ pub(super) fn slot_invoke(
         }
         let mut forwarded = alloc::vec::Vec::new();
         let mut compatible = true;
-        for formal in input.iter().filter(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(..))) {
-            let mut positions = state.borrows.iter()
+        for formal in input
+            .iter()
+            .filter(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
+        {
+            let mut positions = state
+                .borrows
+                .iter()
                 .filter(|candidate| &candidate.ty == formal)
                 .map(|candidate| candidate.logical_position);
             match (positions.next(), positions.next()) {
@@ -169,50 +177,72 @@ pub(super) fn slot_invoke(
             continue;
         }
         let specificity = forwarded.len();
-        if selected.is_some() || choice.as_ref().is_none_or(|(_, _, previous)| specificity > *previous) {
+        if selected.is_some()
+            || choice
+                .as_ref()
+                .is_none_or(|(_, _, previous)| specificity > *previous)
+        {
             choice = Some((borrowed.ordinal, forwarded, specificity));
             ambiguous = false;
-        } else if choice.as_ref().is_some_and(|(_, _, previous)| specificity == *previous) {
+        } else if choice
+            .as_ref()
+            .is_some_and(|(_, _, previous)| specificity == *previous)
+        {
             ambiguous = true;
         }
     }
     if ambiguous {
-        return Err(crate::invalid(span,
-            "ambiguous compatible borrowed references; select slot.invoke.N"));
+        return Err(crate::invalid(
+            span,
+            "ambiguous compatible borrowed references; select slot.invoke.N",
+        ));
     }
     let Some((ordinal, forwarded, _)) = choice else {
-        return Err(crate::invalid(span,
-            "slot.invoke requires a compatible host-issued borrowed input and exact forwarded refs"));
+        return Err(crate::invalid(
+            span,
+            "slot.invoke requires a compatible host-issued borrowed input and exact forwarded refs",
+        ));
     };
     let noble_kernel::types::Ty::LiveRef(input, output, ceiling) =
-        &state.borrows[ordinal as usize].ty else {
+        &state.borrows[ordinal as usize].ty
+    else {
         return Err(crate::internal(span));
     };
     // Source preflight excludes refs from output; only values enter the stack.
-    if output.iter().any(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(..))) {
+    if output
+        .iter()
+        .any(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
+    {
         return Err(crate::invalid(span, "live reference cannot be returned"));
     }
-    let value_count = input.iter()
-        .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..))).count();
+    let value_count = input
+        .iter()
+        .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
+        .count();
     let prefix = &actual[..actual.len() - value_count];
     let mut resulting = alloc::vec::Vec::with_capacity(prefix.len().saturating_add(output.len()));
     resulting.extend_from_slice(prefix);
     resulting.extend_from_slice(output);
     let after = attempt!(state.arena.stack(&resulting, span, meter));
-    let invoked = ceiling.union(&noble_kernel::types::EffSet::from_ids(
-        &[noble_kernel::contracts::LIVE_DISPATCH],
-    ));
+    let invoked = ceiling.union(&noble_kernel::types::EffSet::from_ids(&[
+        noble_kernel::contracts::LIVE_DISPATCH,
+    ]));
     let effect = attempt!(state.arena.effect_constant(&invoked, span, meter));
     frame.effect = attempt!(state.arena.effect_union(frame.effect, effect, span, meter));
-    let node = attempt!(super::add(frame.body, super::Draft {
-        kind: super::DraftKind::SlotInvoke {
-            ref_ordinal: ordinal,
-            forwarded_ref_ordinals: forwarded,
+    let node = attempt!(super::add(
+        frame.body,
+        super::Draft {
+            kind: super::DraftKind::SlotInvoke {
+                ref_ordinal: ordinal,
+                forwarded_ref_ordinals: forwarded,
+            },
+            variables: alloc::vec::Vec::new(),
+            text: None,
+            span,
         },
-        variables: alloc::vec::Vec::new(),
-        text: None,
-        span,
-    }, state, meter));
+        state,
+        meter
+    ));
     frame.sequence.push(node);
     frame.stack = after;
     Ok(())

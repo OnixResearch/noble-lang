@@ -18,9 +18,9 @@ pub(super) fn invoke(
     attempt!(validate_arguments(operation, &arguments, &mut state.code));
     let result_type = attempt!(super::super::abi::result(&operation.results));
     let returned = match result_type {
-        Some(ty) => Some(attempt!(state.value(
-            attempt!(world.noble_type(ty).ok_or(crate::Diagnostic::Invalid))
-        ))),
+        Some(ty) => Some(attempt!(state.value(attempt!(world
+            .noble_type(ty)
+            .ok_or(crate::Diagnostic::Invalid))))),
         None => None,
     };
     let area = match result_type {

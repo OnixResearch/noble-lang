@@ -51,16 +51,28 @@ pub(crate) struct Source {
     reason = "Owner: noble-maintainers; all component refusals become structured diagnostics and a failing exit code; caller arguments and tool failures must not trigger assertion panics."
 )]
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
-    if arguments.get(1).is_some_and(|argument| argument == "read-region") {
+    if arguments
+        .get(1)
+        .is_some_and(|argument| argument == "read-region")
+    {
         return bounded_region::run(arguments);
     }
-    if arguments.get(1).is_some_and(|argument| argument == "callback-owner") {
+    if arguments
+        .get(1)
+        .is_some_and(|argument| argument == "callback-owner")
+    {
         return callback_owner::run(arguments);
     }
-    if arguments.get(1).is_some_and(|argument| argument == "read-fs") {
+    if arguments
+        .get(1)
+        .is_some_and(|argument| argument == "read-fs")
+    {
         return authorized_fs::run(arguments);
     }
-    if arguments.get(1).is_some_and(|argument| argument == "quota-core") {
+    if arguments
+        .get(1)
+        .is_some_and(|argument| argument == "quota-core")
+    {
         return quota::run(arguments);
     }
     let (document, exit) = match execute(arguments) {
@@ -109,11 +121,14 @@ fn execute(
     ));
     let world = attempt!(if mode == "compile-checked-u64" {
         noble_contracts::component::World::parse_checked_u64(
-            &wit, selected_world, crate::core::SOURCE_LIMITS)
+            &wit,
+            selected_world,
+            crate::core::SOURCE_LIMITS,
+        )
     } else {
-        noble_contracts::component::World::parse(
-            &wit, selected_world, crate::core::SOURCE_LIMITS)
-    }.map_err(report::diagnostic));
+        noble_contracts::component::World::parse(&wit, selected_world, crate::core::SOURCE_LIMITS)
+    }
+    .map_err(report::diagnostic));
     match mode {
         "bindings" if arguments.len() == 4 => report::bindings(&world),
         "check-effect" if arguments.len() >= 5 && arguments.len() <= 69 => {

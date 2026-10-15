@@ -184,10 +184,13 @@ impl Cursor {
         slot: u32,
     ) -> Result<Self, crate::Diagnostic> {
         let def = noble_kernel::contracts::Definition(
-            u32::try_from(index).map_err(|_| crate::Diagnostic::Invalid)?
+            u32::try_from(index).map_err(|_| crate::Diagnostic::Invalid)?,
         );
-        let row = env.bound_adapters.iter().find(|row| row.definition == def
-            && row.adapter_slot == slot).ok_or(crate::Diagnostic::Invalid)?;
+        let row = env
+            .bound_adapters
+            .iter()
+            .find(|row| row.definition == def && row.adapter_slot == slot)
+            .ok_or(crate::Diagnostic::Invalid)?;
         let owner = env.definition_owners[index].ok_or(crate::Diagnostic::Invalid)?;
         let registration = noble_kernel::contracts::BoundClockRegistration {
             adapter_identity: row.adapter_identity.clone(),
@@ -197,7 +200,9 @@ impl Cursor {
             output: row.output.clone(),
             effects: row.effects.clone(),
         };
-        let (fixed, actual) = self.fixed.declare_bound_clock(registration)
+        let (fixed, actual) = self
+            .fixed
+            .declare_bound_clock(registration)
             .map_err(|_| crate::Diagnostic::Invalid)?;
         if actual != def {
             return Err(crate::Diagnostic::Invalid);

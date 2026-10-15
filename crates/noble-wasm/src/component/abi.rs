@@ -43,8 +43,9 @@ pub(super) const fn lane(
         return Err(crate::Diagnostic::Defective);
     }
     match ty {
-        noble_contracts::component::Type::S64
-        | noble_contracts::component::Type::CheckedU64 => Ok(Lane::I64),
+        noble_contracts::component::Type::S64 | noble_contracts::component::Type::CheckedU64 => {
+            Ok(Lane::I64)
+        }
         noble_contracts::component::Type::ResultS64String if at == 1 => Ok(Lane::I64),
         noble_contracts::component::Type::Boolean
         | noble_contracts::component::Type::String
@@ -110,8 +111,9 @@ pub(super) const fn memory_layout(ty: noble_contracts::component::Type) -> (u32,
         | noble_contracts::component::Type::StreamU8
         | noble_contracts::component::Type::FutureS64
         | noble_contracts::component::Type::FutureResultS64String => (4, 4),
-        noble_contracts::component::Type::S64
-        | noble_contracts::component::Type::CheckedU64 => (8, 8),
+        noble_contracts::component::Type::S64 | noble_contracts::component::Type::CheckedU64 => {
+            (8, 8)
+        }
         noble_contracts::component::Type::String | noble_contracts::component::Type::Bytes => {
             (4, 8)
         }

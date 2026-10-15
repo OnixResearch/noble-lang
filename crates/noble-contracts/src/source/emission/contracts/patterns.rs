@@ -161,8 +161,10 @@ impl Traversal {
                 return Ok(None);
             }
             noble_kernel::types::Ty::LiveRef(..) => {
-                return Err(crate::invalid(span,
-                    "borrowed live reference cannot enter a reusable definition scheme"));
+                return Err(crate::invalid(
+                    span,
+                    "borrowed live reference cannot enter a reusable definition scheme",
+                ));
             }
         };
         Ok(Some(value))

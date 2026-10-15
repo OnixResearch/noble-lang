@@ -176,7 +176,8 @@ fn calculator_signature_address(
         let Some(&(address, length)) = descriptors.get(index) else {
             return Err(crate::Diagnostic::Defective);
         };
-        if address != 983_040 || usize::try_from(length).ok() != Some(key.len()) || length > 65_536 {
+        if address != 983_040 || usize::try_from(length).ok() != Some(key.len()) || length > 65_536
+        {
             return Err(crate::Diagnostic::Defective);
         }
         let Some(id) = first.checked_add(index) else {
@@ -284,27 +285,37 @@ mod tests {
         let short_memory = Memory::new(&mut short_store, MemoryType::new(15, Some(64)))
             .unwrap_or_else(|_| panic!("fifteen-page memory failed to allocate"));
         let mut short_linker = Linker::new(&engine);
-        short_linker.define(&mut short_store, "noble", "memory", short_memory)
+        short_linker
+            .define(&mut short_store, "noble", "memory", short_memory)
             .unwrap_or_else(|_| panic!("fifteen-page import failed to register"));
-        assert!(short_linker.instantiate(&mut short_store, &module).is_err(),
-            "the selected module must not import less than sixteen pages");
+        assert!(
+            short_linker.instantiate(&mut short_store, &module).is_err(),
+            "the selected module must not import less than sixteen pages"
+        );
 
         let mut store = Store::new(&engine, ());
         let memory = Memory::new(&mut store, MemoryType::new(16, Some(64)))
             .unwrap_or_else(|_| panic!("sixteen-page memory failed to allocate"));
         let mut linker = Linker::new(&engine);
-        linker.define(&mut store, "noble", "memory", memory)
+        linker
+            .define(&mut store, "noble", "memory", memory)
             .unwrap_or_else(|_| panic!("selected memory import failed to register"));
-        let instance = linker.instantiate(&mut store, &module)
+        let instance = linker
+            .instantiate(&mut store, &module)
             .unwrap_or_else(|_| panic!("sixteen-page selected module refused"));
-        let address = instance.get_typed_func::<i32, i32>(&mut store, "signature_address")
+        let address = instance
+            .get_typed_func::<i32, i32>(&mut store, "signature_address")
             .unwrap_or_else(|_| panic!("signature address export missing"));
-        let length = instance.get_typed_func::<i32, i32>(&mut store, "signature_length")
+        let length = instance
+            .get_typed_func::<i32, i32>(&mut store, "signature_length")
             .unwrap_or_else(|_| panic!("signature length export missing"));
-        let range = |name: &str, store: &mut Store<()>| instance
-            .get_typed_func::<(), i32>(&mut *store, name)
-            .unwrap_or_else(|_| panic!("signature range export missing"))
-            .call(store, ()).ok();
+        let range = |name: &str, store: &mut Store<()>| {
+            instance
+                .get_typed_func::<(), i32>(&mut *store, name)
+                .unwrap_or_else(|_| panic!("signature range export missing"))
+                .call(store, ())
+                .ok()
+        };
         assert_eq!(range("signature_first", &mut store), Some(1));
         assert_eq!(range("signature_end", &mut store), Some(4));
         for id in [3, 1, 2, 3] {
@@ -312,8 +323,11 @@ mod tests {
             assert_eq!(address.call(&mut store, id).ok(), Some(983_040));
             assert_eq!(length.call(&mut store, id).ok(), Some(key.len() as i32));
             let end = 983_040 + key.len();
-            assert_eq!(&memory.data(&store)[983_040..end], key,
-                "source identity must copy complete exact canonical bytes");
+            assert_eq!(
+                &memory.data(&store)[983_040..end],
+                key,
+                "source identity must copy complete exact canonical bytes"
+            );
         }
         // A previously published ID is not re-emitted, and neither is an
         // unknown one: both refuse rather than copying another key's bytes.
@@ -323,13 +337,18 @@ mod tests {
 
         let oversized = alloc::vec![b'z'; 65_537];
         let mut rejected = Buffer::new(128);
-        assert!(matches!(signature_segment(&mut rejected, 0, &oversized),
-            Err(Diagnostic::Exhausted)));
-        assert!(matches!(calculator_signature_address(
-            &mut rejected, 0, &[(983_040, 65_537)], &[oversized]
-        ), Err(Diagnostic::Defective)));
-        assert!(matches!(descriptors(&mut rejected, &rows, Some((5, &[][..]))),
-            Err(Diagnostic::Defective)));
+        assert!(matches!(
+            signature_segment(&mut rejected, 0, &oversized),
+            Err(Diagnostic::Exhausted)
+        ));
+        assert!(matches!(
+            calculator_signature_address(&mut rejected, 0, &[(983_040, 65_537)], &[oversized]),
+            Err(Diagnostic::Defective)
+        ));
+        assert!(matches!(
+            descriptors(&mut rejected, &rows, Some((5, &[][..]))),
+            Err(Diagnostic::Defective)
+        ));
     }
 
     #[test]
@@ -345,11 +364,14 @@ mod tests {
         let module = Module::new(&engine, wasm.as_ref())
             .unwrap_or_else(|_| panic!("ordinary descriptor WAT did not validate"));
         let mut store = Store::new(&engine, ());
-        let instance = Linker::new(&engine).instantiate(&mut store, &module)
+        let instance = Linker::new(&engine)
+            .instantiate(&mut store, &module)
             .unwrap_or_else(|_| panic!("ordinary descriptor module refused"));
-        let address = instance.get_typed_func::<i32, i32>(&mut store, "signature_address")
+        let address = instance
+            .get_typed_func::<i32, i32>(&mut store, "signature_address")
             .unwrap_or_else(|_| panic!("ordinary address export missing"));
-        let length = instance.get_typed_func::<i32, i32>(&mut store, "signature_length")
+        let length = instance
+            .get_typed_func::<i32, i32>(&mut store, "signature_length")
             .unwrap_or_else(|_| panic!("ordinary length export missing"));
         assert_eq!(address.call(&mut store, 0).ok(), Some(12_345));
         assert_eq!(length.call(&mut store, 0).ok(), Some(7));

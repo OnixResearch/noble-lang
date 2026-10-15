@@ -68,8 +68,12 @@ pub(super) fn dependencies(
     let mut root: usize = 0;
     while root < count {
         if walk.colors[root] == 0 {
-            let (next, step) =
-                dep_root(env, crate::contracts::Definition(root as u32), walk, remaining);
+            let (next, step) = dep_root(
+                env,
+                crate::contracts::Definition(root as u32),
+                walk,
+                remaining,
+            );
             walk = next;
             match step {
                 Ok(()) => root += 1,
@@ -200,10 +204,7 @@ fn dep_step(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; schemas charges work before each declaration, then returns RecursiveSchema or SchemeForm in order; invalid external schemas must not trigger assertions."
 )]
-pub(super) fn schemas(
-    env: &crate::contracts::Env,
-    remaining: u32,
-) -> Result<u32, super::Fail> {
+pub(super) fn schemas(env: &crate::contracts::Env, remaining: u32) -> Result<u32, super::Fail> {
     let mut spent: u32 = 0;
     let mut failure: Option<super::Fail> = None;
     let mut index: usize = 0;

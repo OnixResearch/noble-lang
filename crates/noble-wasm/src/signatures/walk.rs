@@ -77,7 +77,13 @@ fn advance(walk: &mut State) -> Result<(), crate::Diagnostic> {
         Some(Step::Byte(byte)) => walk.out.append(&[byte]),
         Some(Step::Effects(effects)) => emit_effects(&effects, &mut walk.out),
         Some(Step::Stack(entries)) => push_stack(entries, &mut walk.work, &mut walk.out),
-        Some(Step::Type(ty)) => push_type(ty, &mut walk.work, &mut walk.out, walk.extended, walk.compact),
+        Some(Step::Type(ty)) => push_type(
+            ty,
+            &mut walk.work,
+            &mut walk.out,
+            walk.extended,
+            walk.compact,
+        ),
     }
 }
 
@@ -133,10 +139,18 @@ fn push_type(
         noble_kernel::types::Ty::Bool => attempt!(out.append(if compact { b"b" } else { b"Bool" })),
         noble_kernel::types::Ty::I64 => attempt!(out.append(if compact { b"i" } else { b"I64" })),
         noble_kernel::types::Ty::Text => attempt!(out.append(if compact { b"t" } else { b"Text" })),
-        noble_kernel::types::Ty::Syntax => attempt!(out.append(if compact { b"x" } else { b"Syntax" })),
-        noble_kernel::types::Ty::Contract => attempt!(out.append(if compact { b"c" } else { b"Contract" })),
-        noble_kernel::types::Ty::Evidence => attempt!(out.append(if compact { b"e" } else { b"Evidence" })),
-        noble_kernel::types::Ty::Certified => attempt!(out.append(if compact { b"f" } else { b"Certified" })),
+        noble_kernel::types::Ty::Syntax => {
+            attempt!(out.append(if compact { b"x" } else { b"Syntax" }))
+        }
+        noble_kernel::types::Ty::Contract => {
+            attempt!(out.append(if compact { b"c" } else { b"Contract" }))
+        }
+        noble_kernel::types::Ty::Evidence => {
+            attempt!(out.append(if compact { b"e" } else { b"Evidence" }))
+        }
+        noble_kernel::types::Ty::Certified => {
+            attempt!(out.append(if compact { b"f" } else { b"Certified" }))
+        }
         noble_kernel::types::Ty::Resource(kind) => {
             if !extended {
                 return Err(crate::Diagnostic::Unsupported);
@@ -210,8 +224,16 @@ fn push_type(
         }
         noble_kernel::types::Ty::Pair(left, right) | noble_kernel::types::Ty::Sum(left, right) => {
             attempt!(out.append(if compact {
-                if is_pair { b"P(" } else { b"S(" }
-            } else if is_pair { b"Pair(" } else { b"Sum(" }));
+                if is_pair {
+                    b"P("
+                } else {
+                    b"S("
+                }
+            } else if is_pair {
+                b"Pair("
+            } else {
+                b"Sum("
+            }));
             work.push(Step::Byte(b')'));
             work.push(Step::Type(*right));
             work.push(Step::Byte(b','));

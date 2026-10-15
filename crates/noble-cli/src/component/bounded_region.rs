@@ -6,7 +6,9 @@ use anyhow::{bail, Context as _, Result};
 use noble_kernel::{resources as ownership, types::ResourceKind};
 use std::ffi::OsString;
 use wasmtime::{
-    component::{types::ComponentItem, Component, Linker, Resource, ResourceAny, ResourceType, Val},
+    component::{
+        types::ComponentItem, Component, Linker, Resource, ResourceAny, ResourceType, Val,
+    },
     Config, Engine, Store, StoreLimits, StoreLimitsBuilder,
 };
 
@@ -32,33 +34,74 @@ struct Host {
 
 impl Host {
     fn new(bytes: Vec<u8>) -> Result<Self> {
-        if bytes.len() > MAX_REGION_BYTES { bail!("region exceeds host limit"); }
+        if bytes.len() > MAX_REGION_BYTES {
+            bail!("region exceeds host limit");
+        }
         let identity = super::identity::reserve(1)?;
         let context = ownership::Context(identity);
-        let required = ownership::Requirement { context, kind: KIND, rights: READ };
-        let mut table = ownership::Table::new(ownership::TableId(identity), ownership::Limits {
-            slots: 1, pins: 1, owners_per_context: 1, generations: 1, scopes: 64,
-        }).map_err(|error| anyhow::anyhow!("resource table: {error:?}"))?;
-        let owner = table.register(required)
+        let required = ownership::Requirement {
+            context,
+            kind: KIND,
+            rights: READ,
+        };
+        let mut table = ownership::Table::new(
+            ownership::TableId(identity),
+            ownership::Limits {
+                slots: 1,
+                pins: 1,
+                owners_per_context: 1,
+                generations: 1,
+                scopes: 64,
+            },
+        )
+        .map_err(|error| anyhow::anyhow!("resource table: {error:?}"))?;
+        let owner = table
+            .register(required)
             .map_err(|error| anyhow::anyhow!("host registration: {error:?}"))?;
-        Ok(Self { limits: StoreLimitsBuilder::new().memory_size(4_194_304)
-            .instances(16).tables(16).build(), context, table, owner: Some(owner),
-            bytes: bytes.into_boxed_slice(), protected_operations: 0,
-            region_reads: 0, releases: 0 })
+        Ok(Self {
+            limits: StoreLimitsBuilder::new()
+                .memory_size(4_194_304)
+                .instances(16)
+                .tables(16)
+                .build(),
+            context,
+            table,
+            owner: Some(owner),
+            bytes: bytes.into_boxed_slice(),
+            protected_operations: 0,
+            region_reads: 0,
+            releases: 0,
+        })
     }
 
     const fn required(&self) -> ownership::Requirement {
-        ownership::Requirement { context: self.context, kind: KIND, rights: READ }
+        ownership::Requirement {
+            context: self.context,
+            kind: KIND,
+            rights: READ,
+        }
     }
 
     // Claims are untrusted even when Wasmtime has already checked the resource
     // representation. Every read still checks the independently retained table.
-    fn read(&mut self, rep: u32, claim: ownership::Handle, offset: i64, length: i64) -> Result<Vec<u8>, &'static str> {
-        if rep != 1 { return Err("invalid-handle"); }
+    fn read(
+        &mut self,
+        rep: u32,
+        claim: ownership::Handle,
+        offset: i64,
+        length: i64,
+    ) -> Result<Vec<u8>, &'static str> {
+        if rep != 1 {
+            return Err("invalid-handle");
+        }
         let actual = self.owner.as_ref().ok_or("invalid-handle")?.handle();
         let required = self.required();
-        self.table.validate(claim, required).map_err(|_| "invalid-handle")?;
-        if claim != actual { return Err("invalid-handle"); }
+        self.table
+            .validate(claim, required)
+            .map_err(|_| "invalid-handle")?;
+        if claim != actual {
+            return Err("invalid-handle");
+        }
         let end = offset.checked_add(length).ok_or("bounds-reject")?;
         let start = usize::try_from(offset).map_err(|_| "bounds-reject")?;
         let count = usize::try_from(length).map_err(|_| "bounds-reject")?;
@@ -69,29 +112,50 @@ impl Host {
         let owner = self.owner.take().ok_or("invalid-handle")?;
         let admitted = match self.table.begin(owner, required) {
             Ok(admitted) => admitted,
-            Err(rejection) => { self.owner = Some(rejection.input); return Err("invalid-handle"); }
+            Err(rejection) => {
+                self.owner = Some(rejection.input);
+                return Err("invalid-handle");
+            }
         };
         let authorized = self.table.native_access(&admitted.borrow).is_ok();
         let output = if authorized {
             self.region_reads += 1;
             Some(self.bytes[start..finish].to_vec())
-        } else { None };
-        let completed = self.table.complete(admitted.borrow.scope(),
-            if authorized { ownership::Completion::Success } else { ownership::Completion::DomainError })
+        } else {
+            None
+        };
+        let completed = self
+            .table
+            .complete(
+                admitted.borrow.scope(),
+                if authorized {
+                    ownership::Completion::Success
+                } else {
+                    ownership::Completion::DomainError
+                },
+            )
             .map_err(|_| "invalid-handle")?;
         self.owner = completed.owner;
         match output {
-            Some(bytes) => { self.protected_operations += 1; Ok(bytes) }
+            Some(bytes) => {
+                self.protected_operations += 1;
+                Ok(bytes)
+            }
             None => Err("invalid-handle"),
         }
     }
 
     fn release(&mut self, rep: u32) -> Result<()> {
-        if rep != 1 { bail!("invalid region representation"); }
+        if rep != 1 {
+            bail!("invalid region representation");
+        }
         let required = self.required();
         let owner = self.owner.take().context("region already released")?;
         match self.table.release(owner, required) {
-            Ok(_) => { self.releases += 1; Ok(()) }
+            Ok(_) => {
+                self.releases += 1;
+                Ok(())
+            }
             Err(rejected) => {
                 self.owner = Some(rejected.input);
                 bail!("region release refused: {:?}", rejected.error)
@@ -105,9 +169,15 @@ impl Host {
             ("schema", encoding::string("noble-bounded-region/v1")),
             ("stage", encoding::string("adapter")),
             ("outcome", encoding::string(outcome)),
-            ("bytes_hex", bytes.map_or(Json::Null, |value| encoding::string(encoding::hex(value)))),
+            (
+                "bytes_hex",
+                bytes.map_or(Json::Null, |value| encoding::string(encoding::hex(value))),
+            ),
             ("error", error.map_or(Json::Null, encoding::string)),
-            ("protected_operations", Json::Number(self.protected_operations)),
+            (
+                "protected_operations",
+                Json::Number(self.protected_operations),
+            ),
             ("region_reads", Json::Number(self.region_reads)),
             ("native_memory_access", Json::Bool(false)),
             ("released_owners", Json::Number(self.releases)),
@@ -125,34 +195,62 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                 for (function, item) in interface.exports(engine) {
                     match item {
                         ComponentItem::Resource(_) if function == "region" => {
-                            instance.resource(function, ResourceType::host::<Region>(), |mut store, rep| {
-                                if store.data().owner.is_some() { store.data_mut().release(rep)?; }
-                                Ok(())
-                            })?;
+                            instance.resource(
+                                function,
+                                ResourceType::host::<Region>(),
+                                |mut store, rep| {
+                                    if store.data().owner.is_some() {
+                                        store.data_mut().release(rep)?;
+                                    }
+                                    Ok(())
+                                },
+                            )?;
                         }
                         ComponentItem::ComponentFunc(_) if function == "[method]region.read" => {
                             instance.func_new(function, |mut store, _, params, results| {
-                                let [Val::Resource(resource), Val::S64(offset), Val::S64(length)] = params else {
+                                let [Val::Resource(resource), Val::S64(offset), Val::S64(length)] =
+                                    params
+                                else {
                                     bail!("invalid region read arguments")
                                 };
                                 let region = resource.try_into_resource::<Region>(&mut store)?;
-                                if region.owned() { bail!("read receiver must be borrowed"); }
-                                let claim = store.data().owner.as_ref().context("missing region")?.handle();
-                                let value = store.data_mut().read(region.rep(), claim, *offset, *length);
-                                let [slot] = results else { bail!("invalid region read result"); };
+                                if region.owned() {
+                                    bail!("read receiver must be borrowed");
+                                }
+                                let claim = store
+                                    .data()
+                                    .owner
+                                    .as_ref()
+                                    .context("missing region")?
+                                    .handle();
+                                let value =
+                                    store.data_mut().read(region.rep(), claim, *offset, *length);
+                                let [slot] = results else {
+                                    bail!("invalid region read result");
+                                };
                                 *slot = match value {
-                                    Ok(bytes) => Val::Result(Ok(Some(Box::new(Val::List(bytes.into_iter().map(Val::U8).collect()))))),
-                                    Err(reason) => Val::Result(Err(Some(Box::new(Val::String(reason.into()))))),
+                                    Ok(bytes) => Val::Result(Ok(Some(Box::new(Val::List(
+                                        bytes.into_iter().map(Val::U8).collect(),
+                                    ))))),
+                                    Err(reason) => {
+                                        Val::Result(Err(Some(Box::new(Val::String(reason.into())))))
+                                    }
                                 };
                                 Ok(())
                             })?;
                         }
                         ComponentItem::ComponentFunc(_) if function == "release" => {
                             instance.func_new(function, |mut store, _, params, results| {
-                                let [Val::Resource(resource)] = params else { bail!("invalid release arguments"); };
-                                if !results.is_empty() { bail!("invalid release result"); }
+                                let [Val::Resource(resource)] = params else {
+                                    bail!("invalid release arguments");
+                                };
+                                if !results.is_empty() {
+                                    bail!("invalid release result");
+                                }
                                 let region = resource.try_into_resource::<Region>(&mut store)?;
-                                if !region.owned() { bail!("release requires an owner"); }
+                                if !region.owned() {
+                                    bail!("release requires an owner");
+                                }
                                 store.data_mut().release(region.rep())
                             })?;
                         }
@@ -162,10 +260,16 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                 }
             }
             ComponentItem::Resource(_) if name == "region" => {
-                linker.root().resource(name, ResourceType::host::<Region>(), |mut store, rep| {
-                    if store.data().owner.is_some() { store.data_mut().release(rep)?; }
-                    Ok(())
-                })?;
+                linker.root().resource(
+                    name,
+                    ResourceType::host::<Region>(),
+                    |mut store, rep| {
+                        if store.data().owner.is_some() {
+                            store.data_mut().release(rep)?;
+                        }
+                        Ok(())
+                    },
+                )?;
             }
             ComponentItem::Type(_) => {}
             _ => bail!("unapproved component import {name}"),
@@ -175,11 +279,16 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
 }
 
 fn parse_hex(text: &str) -> Result<Vec<u8>> {
-    if !text.len().is_multiple_of(2) || text.len() > MAX_REGION_BYTES * 2 { bail!("invalid bounded region hex length"); }
-    text.as_bytes().chunks_exact(2).map(|pair| {
-        let ascii = std::str::from_utf8(pair)?;
-        Ok(u8::from_str_radix(ascii, 16)?)
-    }).collect()
+    if !text.len().is_multiple_of(2) || text.len() > MAX_REGION_BYTES * 2 {
+        bail!("invalid bounded region hex length");
+    }
+    text.as_bytes()
+        .chunks_exact(2)
+        .map(|pair| {
+            let ascii = std::str::from_utf8(pair)?;
+            Ok(u8::from_str_radix(ascii, 16)?)
+        })
+        .collect()
 }
 
 fn execute(arguments: &[OsString]) -> Result<Json> {
@@ -191,8 +300,9 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
     let offset: i64 = offset.to_str().context("offset must be UTF-8")?.parse()?;
     let length: i64 = length.to_str().context("length must be UTF-8")?.parse()?;
     let bytes = parse_hex(hex)?;
-    let component_bytes = crate::workflow::read_bounded(path, 4_194_304, "bounded-region-component")
-        .map_err(|error| anyhow::anyhow!("component input: {}", error.json().encode()))?;
+    let component_bytes =
+        crate::workflow::read_bounded(path, 4_194_304, "bounded-region-component")
+            .map_err(|error| anyhow::anyhow!("component input: {}", error.json().encode()))?;
     let mut config = Config::new();
     config.wasm_component_model(true).consume_fuel(true);
     let engine = Engine::new(&config)?;
@@ -204,22 +314,39 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
     store.limiter(|host| &mut host.limits);
     store.set_fuel(10_000_000)?;
     let instance = linker.instantiate(&mut store, &component)?;
-    let function = instance.get_func(&mut store, "read-region").context("missing read-region export")?;
+    let function = instance
+        .get_func(&mut store, "read-region")
+        .context("missing read-region export")?;
     let owner = ResourceAny::try_from_resource(Resource::<Region>::new_own(1), &mut store)?;
     let mut results = [Val::Bool(false)];
     let invoked = (|| -> Result<(String, Option<Vec<u8>>, Option<String>)> {
-        function.call(&mut store, &[Val::Resource(owner), Val::S64(offset), Val::S64(length)], &mut results)?;
+        function.call(
+            &mut store,
+            &[Val::Resource(owner), Val::S64(offset), Val::S64(length)],
+            &mut results,
+        )?;
         function.post_return(&mut store)?;
-        let [Val::Result(result)] = &results else { bail!("invalid read-region result"); };
+        let [Val::Result(result)] = &results else {
+            bail!("invalid read-region result");
+        };
         match result {
             Ok(Some(value)) => {
-                let Val::List(list) = value.as_ref() else { bail!("invalid success payload"); };
-                let bytes = list.iter().map(|value| match value { Val::U8(byte) => Ok(*byte), _ => bail!("invalid byte result") })
+                let Val::List(list) = value.as_ref() else {
+                    bail!("invalid success payload");
+                };
+                let bytes = list
+                    .iter()
+                    .map(|value| match value {
+                        Val::U8(byte) => Ok(*byte),
+                        _ => bail!("invalid byte result"),
+                    })
                     .collect::<Result<Vec<_>>>()?;
                 Ok(("read".into(), Some(bytes), None))
             }
             Err(Some(value)) => {
-                let Val::String(reason) = value.as_ref() else { bail!("invalid rejection payload"); };
+                let Val::String(reason) = value.as_ref() else {
+                    bail!("invalid rejection payload");
+                };
                 Ok((reason.clone(), None, Some(reason.clone())))
             }
             _ => bail!("invalid read-region variant"),
@@ -230,13 +357,20 @@ fn execute(arguments: &[OsString]) -> Result<Json> {
         Err(error) => ("adapter-trap".into(), None, Some(error.to_string())),
     };
     // Abnormal guest exit must retire its owner even if no destructor ran.
-    if store.data().owner.is_some() { store.data_mut().release(1)?; }
-    Ok(store.data().report(&outcome, returned.as_deref(), error.as_deref()))
+    if store.data().owner.is_some() {
+        store.data_mut().release(1)?;
+    }
+    Ok(store
+        .data()
+        .report(&outcome, returned.as_deref(), error.as_deref()))
 }
 
 pub(super) fn run(arguments: &[OsString]) -> std::process::ExitCode {
     match execute(arguments) {
-        Ok(report) => { println!("{}", report.encode()); std::process::ExitCode::SUCCESS }
+        Ok(report) => {
+            println!("{}", report.encode());
+            std::process::ExitCode::SUCCESS
+        }
         Err(error) => {
             eprintln!("bounded-region adapter: {error:#}");
             std::process::ExitCode::from(2)
@@ -265,9 +399,7 @@ mod tests {
         for claim in [forged, foreign, wrong_kind, stale, wrong_right] {
             assert_eq!(host.read(1, claim, 1, 2), Err("invalid-handle"));
         }
-        for (offset, length) in [
-            (3, 1), (2, 2), (4, 0), (-1, 1), (0, -1), (i64::MAX, 1),
-        ] {
+        for (offset, length) in [(3, 1), (2, 2), (4, 0), (-1, 1), (0, -1), (i64::MAX, 1)] {
             assert_eq!(host.read(1, original, offset, length), Err("bounds-reject"));
         }
         assert_eq!(host.region_reads, 0);

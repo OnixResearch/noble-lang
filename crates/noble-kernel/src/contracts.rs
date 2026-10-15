@@ -5,8 +5,8 @@
 //! Contracts are rank-1 schemes; the bootstrap table lives in `bootstrap`.
 
 pub mod bootstrap;
-mod live;
 mod clone_budget;
+mod live;
 mod nominal;
 pub use clone_budget::{
     CloneBudget, CALCULATOR_ENVIRONMENT_ROW_LIMIT, CALCULATOR_ENV_CLONE_BYTES_LIMIT,
@@ -404,9 +404,7 @@ impl Env {
     pub fn declare_nominal(self, decl: NominalDecl) -> Result<(Self, NominalOps), NominalError> {
         let resource_payload = match &decl.shape {
             crate::types::NominalShape::Opaque(inner) => !inner.is_data(),
-            crate::types::NominalShape::Variant(left, right) => {
-                !left.is_data() || !right.is_data()
-            }
+            crate::types::NominalShape::Variant(left, right) => !left.is_data() || !right.is_data(),
         };
         if self.live_slots && resource_payload {
             return Err(NominalError::InvalidRepresentation);
@@ -612,7 +610,10 @@ pub fn calculator_environment() -> Result<Env, crate::shapes::Defect> {
     };
     let text = Scheme {
         var_kinds: alloc::vec![VariableKind::Stack],
-        stack_in: alloc::vec![row.clone(), Pattern::List(alloc::boxed::Box::new(Pattern::I64))],
+        stack_in: alloc::vec![
+            row.clone(),
+            Pattern::List(alloc::boxed::Box::new(Pattern::I64))
+        ],
         stack_out: alloc::vec![row.clone(), Pattern::Text, Pattern::Bool],
         effects: alloc::vec![],
     };

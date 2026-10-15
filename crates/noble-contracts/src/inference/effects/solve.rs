@@ -417,7 +417,9 @@ mod tests {
         arena.effects.push(Effect::Constant(1));
         arena.effect_equations.push((1, 4));
         let mut meter = crate::Meter::new(crate::Limits::default());
-        assert!(super::rigid(&arena, span, &mut meter).is_err(),
-            "a concrete host effect cannot satisfy the pure signature");
+        assert!(
+            super::rigid(&arena, span, &mut meter).is_err(),
+            "a concrete host effect cannot satisfy the pure signature"
+        );
     }
 }

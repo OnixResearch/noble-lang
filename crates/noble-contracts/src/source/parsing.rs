@@ -263,7 +263,10 @@ fn step(
         super::lexer::TokenKind::Text(bytes) => super::Kind::Text(bytes),
         super::lexer::TokenKind::Word(word) => super::Kind::Word(word),
         super::lexer::TokenKind::ProofColon | super::lexer::TokenKind::LogicalBody(_) => {
-            return Err(crate::invalid(token.span, "logical token outside a proof declaration"));
+            return Err(crate::invalid(
+                token.span,
+                "logical token outside a proof declaration",
+            ));
         }
     };
     append(

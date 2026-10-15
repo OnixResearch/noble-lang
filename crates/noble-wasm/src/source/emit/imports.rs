@@ -44,7 +44,9 @@ pub(super) fn write(
         attempt!(out.append(b"(import \"noble\" \"live_propose\" (func $host_live_propose (param i64 i64 i32) (result i32)))\n"));
     }
     if plan.has_live_generation {
-        attempt!(out.append(b"(import \"noble\" \"live_generation\" (func $host_live_generation (result i64)))\n"));
+        attempt!(out.append(
+            b"(import \"noble\" \"live_generation\" (func $host_live_generation (result i64)))\n"
+        ));
     }
     attempt!(globals(out));
     attempt!(global_import(out, b"allocated_total", b"i64"));
@@ -54,7 +56,9 @@ pub(super) fn write(
         attempt!(global_import(out, b"live_frame", b"i32"));
         attempt!(out.append(b"(global $live_module_installed (mut i32) (i32.const 0))\n"));
     }
-    attempt!(out.append(b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n"));
+    attempt!(out.append(
+        b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n"
+    ));
     if plan.calculator {
         out.append(b"(global $cell_limit i32 (i32.const 72362))\n(global $allocation_ceiling i32 (i32.const 1376208))\n")
     } else {
@@ -120,18 +124,34 @@ pub(super) fn runtime(
     plan: &super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
     if plan.live_slots {
-        attempt!(fragment(out, include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"), "/runtime/live-accounting.wat"
-        ))));
-        attempt!(fragment(out, include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"), "/runtime/live-linear-storage.wat"
-        ))));
-        attempt!(fragment(out, include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"), "/runtime/live-borrows.wat"
-        ))));
-        attempt!(fragment(out, include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"), "/runtime/live-stack.wat"
-        ))));
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/live-accounting.wat"
+            ))
+        ));
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/live-linear-storage.wat"
+            ))
+        ));
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/live-borrows.wat"
+            ))
+        ));
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/live-stack.wat"
+            ))
+        ));
     } else {
         attempt!(fragment(
             out,
@@ -141,13 +161,21 @@ pub(super) fn runtime(
             ))
         ));
         if plan.calculator {
-            attempt!(fragment(out, include_str!(concat!(
-                env!("CARGO_MANIFEST_DIR"), "/runtime/calculator-linear-address.wat"
-            ))));
+            attempt!(fragment(
+                out,
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/runtime/calculator-linear-address.wat"
+                ))
+            ));
         } else {
-            attempt!(fragment(out, include_str!(concat!(
-                env!("CARGO_MANIFEST_DIR"), "/runtime/linear-address.wat"
-            ))));
+            attempt!(fragment(
+                out,
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/runtime/linear-address.wat"
+                ))
+            ));
         }
         attempt!(fragment(
             out,
@@ -210,9 +238,9 @@ pub(super) fn runtime(
             // The kernel's live-slot bootstrap emits Unit; Core source keeps
             // its historical no-result effect. Do not materialize a response
             // when the independently authorized host call denied the effect.
-            attempt!(out.append(
-                b" (if (i32.eqz (global.get $failure)) (then (call $push_unit)))\n"
-            ));
+            attempt!(
+                out.append(b" (if (i32.eqz (global.get $failure)) (then (call $push_unit)))\n")
+            );
         }
         attempt!(out.append(b")\n"));
     }
@@ -247,13 +275,15 @@ pub(super) fn runtime(
 "));
     }
     if plan.has_live_generation {
-        attempt!(out.append(b"(func $op_live_generation (local $current i64)
+        attempt!(out.append(
+            b"(func $op_live_generation (local $current i64)
  (if (global.get $failure) (then (return)))
  (global.set $failure (i32.const 5))
  (local.set $current (call $host_live_generation))
  (global.set $failure (i32.const 0))
  (call $push_i64 (local.get $current)))
-"));
+"
+        ));
     }
     attempt!(super::reflection::write(out, plan.declared_modules));
     attempt!(fragment(
@@ -261,12 +291,17 @@ pub(super) fn runtime(
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat"))
     ));
     if plan.live_slots {
-        attempt!(fragment(out, include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"), "/runtime/resource.wat"
-        ))));
-        attempt!(fragment(out, include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"), "/runtime/live-source.wat"
-        ))));
+        attempt!(fragment(
+            out,
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/resource.wat"))
+        ));
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/live-source.wat"
+            ))
+        ));
     }
     Ok(())
 }

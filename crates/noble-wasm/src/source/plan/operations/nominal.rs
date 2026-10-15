@@ -59,7 +59,8 @@ impl<'a> Output<'a> {
             if row.adapter_slot == slot
                 && row.input.is_empty()
                 && row.output.as_slice() == [noble_kernel::types::Ty::I64]
-                && row.effects.as_slice() == [noble_kernel::contracts::TEST_CLOCK] {
+                && row.effects.as_slice() == [noble_kernel::contracts::TEST_CLOCK]
+            {
                 return Ok(super::super::Action::ClockBound(slot));
             }
         }

@@ -265,10 +265,8 @@ pub(crate) fn check(
                 }
             };
             let mut problem = crate::invalid(at, message);
-            if let (
-                Some(definition),
-                noble_kernel::untrusted::Constraint::Eligibility(ty),
-            ) = (diagnostic.def, &diagnostic.constraint)
+            if let (Some(definition), noble_kernel::untrusted::Constraint::Eligibility(ty)) =
+                (diagnostic.def, &diagnostic.constraint)
             {
                 let mut word = alloc::string::String::new();
                 append_bootstrap_spelling(definition, &mut word);

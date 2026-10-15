@@ -512,53 +512,77 @@ fn exact_intrinsic_source_proofs_stage_without_ordinary_publication() -> Result<
     [ (intro (A Type0) (intro (x A) (refl x))) ]
 ]
 ";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let prepared = session
+        .prepare(logic, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    let prepared = session.prepare(logic, &[], super::LIMITS)
-        .map_err(|error| format!("{error:?}"))?;
-    let batch = prepared.proof_obligations().ok_or("missing pending source proof")?;
+    let batch = prepared
+        .proof_obligations()
+        .ok_or("missing pending source proof")?;
     assert_eq!(batch.module, "logic");
     assert_eq!(batch.version, 1);
     assert_eq!(batch.source.as_slice(), logic.as_slice());
     assert_eq!(batch.obligations[0].name, "polymorphic-reflexivity");
-    assert!(matches!(&batch.obligations[0].goal, noble_contracts::intrinsic::PendingGoal::Pure { .. }));
+    assert!(matches!(
+        &batch.obligations[0].goal,
+        noble_contracts::intrinsic::PendingGoal::Pure { .. }
+    ));
     let (session, result) = session.commit(prepared);
-    assert!(matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance));
+    assert!(
+        matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
+    );
     assert_eq!(session.generation(), 0);
-    let source_checked = session.prepare(logic, &[], super::LIMITS)
+    let source_checked = session
+        .prepare(logic, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     let (session, result) = session.commit_verified(source_checked, |batch| {
         noble_contracts::intrinsic::check_batch(batch, super::LIMITS)
             .map_err(|error| format!("{error:?}"))
     });
-    assert!(matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance),
-        "source-only checking without a host model/checker revision must not publish a proof");
+    assert!(
+        matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance),
+        "source-only checking without a host model/checker revision must not publish a proof"
+    );
     assert_eq!(session.generation(), 0);
-    let ordinary = session.prepare(b"module ordinary@1 [ export proof def proof [ 1 ] ]", &[], super::LIMITS)
+    let ordinary = session
+        .prepare(
+            b"module ordinary@1 [ export proof def proof [ 1 ] ]",
+            &[],
+            super::LIMITS,
+        )
         .map_err(|error| format!("{error:?}"))?;
     assert!(ordinary.proof_obligations().is_none());
     let (session, result) = session.commit(ordinary);
     result.map_err(|error| format!("{error:?}"))?;
-    let callable = session.prepare(b"ordinary@1.proof", &[], super::LIMITS)
+    let callable = session
+        .prepare(b"ordinary@1.proof", &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(callable.output(), &[noble_kernel::types::Ty::I64]);
     let mixed = session.prepare(
         b"module mixed@1 [ export proof def proof [ 1 ] proof 1 theorem : [ (Eq I64 0 0) ] [ (refl 0) ] ]",
         &[], super::LIMITS,
     ).map_err(|error| format!("{error:?}"))?;
-    assert_eq!(mixed.proof_obligations().ok_or("mixed module lost logical body")?
-        .obligations[0].name, "theorem");
+    assert_eq!(
+        mixed
+            .proof_obligations()
+            .ok_or("mixed module lost logical body")?
+            .obligations[0]
+            .name,
+        "theorem"
+    );
     Ok(())
 }
 
 #[test]
 fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), String> {
-    let mut session = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
+    let mut session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     session = super::commit(session, b"module anchor@1 [ export alive def alive [ 1 ] ]")?;
     let prior = session.generation();
     let invalid = b"module bad@1 [ proof 1 unsound : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl missing)) ] ]";
-    let prepared = session.prepare(invalid, &[], super::LIMITS)
+    let prepared = session
+        .prepare(invalid, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     let mut invoked = false;
     let (next, result) = session.commit_verified(prepared, |batch| {
@@ -572,13 +596,19 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
             checker_revision: "b".repeat(64),
         }])
     });
-    assert!(!invoked, "source-invalid proof must reject before invoking host");
-    assert!(matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance));
+    assert!(
+        !invoked,
+        "source-invalid proof must reject before invoking host"
+    );
+    assert!(
+        matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
+    );
     session = next;
     assert_eq!(session.generation(), prior);
 
     let unsupported = b"module identity@1 [ def id [ ] contract 1 id-law [ subject id input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (in x)) ] ] proof 1 forged for id-law [ (export-unary-I64 (intro (tail Stack) (intro (x I64) (pc-sequence (pc-exact (exec-literal 1)) (pc-exact (exec-add)) (bridge (by-exact-append-assoc)) (join (by-exact-result))))) (mc1-true-eq-wrap)) ] ]";
-    let prepared = session.prepare(unsupported, &[], super::LIMITS)
+    let prepared = session
+        .prepare(unsupported, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     let mut invoked = false;
     let (next, result) = session.commit_verified(prepared, |batch| {
@@ -592,14 +622,20 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
             checker_revision: "b".repeat(64),
         }])
     });
-    assert!(!invoked, "unsupported program proof must reject before invoking host");
-    assert!(matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance));
+    assert!(
+        !invoked,
+        "unsupported program proof must reject before invoking host"
+    );
+    assert!(
+        matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
+    );
     session = next;
     assert_eq!(session.generation(), prior);
 
     let valid = b"module logic@1 [ proof 1 refl : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] ]";
     for change_claim in [true, false] {
-        let prepared = session.prepare(valid, &[], super::LIMITS)
+        let prepared = session
+            .prepare(valid, &[], super::LIMITS)
             .map_err(|error| format!("{error:?}"))?;
         let (next, result) = session.commit_verified(prepared, |batch| {
             let mut checked = noble_contracts::intrinsic::check_batch(batch, super::LIMITS)
@@ -618,14 +654,23 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
             }
             Ok(checked)
         });
-        assert!(matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance));
+        assert!(
+            matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
+        );
         session = next;
         assert_eq!(session.generation(), prior);
     }
-    assert!(session.prepare(b"import bad@1 as absent", &[], super::LIMITS).is_err());
-    assert!(session.prepare(b"import identity@1 as absent", &[], super::LIMITS).is_err());
-    assert!(session.prepare(b"import logic@1 as absent", &[], super::LIMITS).is_err());
-    let preserved = session.prepare(b"anchor@1.alive", &[], super::LIMITS)
+    assert!(session
+        .prepare(b"import bad@1 as absent", &[], super::LIMITS)
+        .is_err());
+    assert!(session
+        .prepare(b"import identity@1 as absent", &[], super::LIMITS)
+        .is_err());
+    assert!(session
+        .prepare(b"import logic@1 as absent", &[], super::LIMITS)
+        .is_err());
+    let preserved = session
+        .prepare(b"anchor@1.alive", &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(preserved.output(), &[noble_kernel::types::Ty::I64]);
     Ok(())
@@ -634,18 +679,25 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
 #[test]
 fn retained_proof_dependency_budget_rejects_atomically() -> Result<(), String> {
     let source = b"module logic@1 [ proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] proof 1 derived : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use base) x)) ] export derived ]";
-    let replicated = source.len().checked_mul(3)
+    let replicated = source
+        .len()
+        .checked_mul(3)
         .ok_or("proof dependency fixture overflows host byte count")?;
-    let exact_bytes = u32::try_from(replicated)
-        .map_err(|_| "proof dependency fixture exceeds u32 byte limit")?;
-    let short_bytes = exact_bytes.checked_sub(1)
+    let exact_bytes =
+        u32::try_from(replicated).map_err(|_| "proof dependency fixture exceeds u32 byte limit")?;
+    let short_bytes = exact_bytes
+        .checked_sub(1)
         .ok_or("proof dependency fixture has no byte below its exact budget")?;
-    let limits = noble_contracts::Limits { bytes: short_bytes, ..super::LIMITS };
-    let mut session = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
+    let limits = noble_contracts::Limits {
+        bytes: short_bytes,
+        ..super::LIMITS
+    };
+    let mut session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     session = super::commit(session, b"module anchor@1 [ export alive def alive [ 1 ] ]")?;
     let prior = session.generation();
-    let prepared = session.prepare(source, &[], limits)
+    let prepared = session
+        .prepare(source, &[], limits)
         .map_err(|error| format!("{error:?}"))?;
     let (session, outcome) = session.commit_verified(prepared, |batch| {
         let mut checked = noble_contracts::intrinsic::check_batch(batch, limits)
@@ -662,12 +714,19 @@ fn retained_proof_dependency_budget_rejects_atomically() -> Result<(), String> {
         error.stage() == noble_contracts::source::Stage::Acceptance &&
         error.diagnostic().message == "proof publication dependency budget exhausted"));
     assert_eq!(session.generation(), prior);
-    assert!(session.prepare(b"import logic@1 as absent", &[], super::LIMITS).is_err());
-    let retained = session.prepare(b"anchor@1.alive", &[], super::LIMITS)
+    assert!(session
+        .prepare(b"import logic@1 as absent", &[], super::LIMITS)
+        .is_err());
+    let retained = session
+        .prepare(b"anchor@1.alive", &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(retained.output(), &[noble_kernel::types::Ty::I64]);
-    let exact = noble_contracts::Limits { bytes: exact_bytes, ..super::LIMITS };
-    let prepared = session.prepare(source, &[], exact)
+    let exact = noble_contracts::Limits {
+        bytes: exact_bytes,
+        ..super::LIMITS
+    };
+    let prepared = session
+        .prepare(source, &[], exact)
         .map_err(|error| format!("{error:?}"))?;
     let (published, result) = session.commit_verified(prepared, |batch| {
         let mut checked = noble_contracts::intrinsic::check_batch(batch, exact)
@@ -679,9 +738,12 @@ fn retained_proof_dependency_budget_rejects_atomically() -> Result<(), String> {
         Ok(checked)
     });
     result.map_err(|error| format!("{error:?}"))?;
-    let next_generation = prior.checked_add(1).ok_or("fixture generation cannot advance")?;
+    let next_generation = prior
+        .checked_add(1)
+        .ok_or("fixture generation cannot advance")?;
     assert_eq!(published.generation(), next_generation);
-    let usable = published.prepare(b"import logic@1 as accepted", &[], super::LIMITS)
+    let usable = published
+        .prepare(b"import logic@1 as accepted", &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert!(usable.proof_obligations().is_none());
     Ok(())
@@ -697,9 +759,10 @@ fn imported_proof_dependency_budget_counts_each_obligation() -> Result<(), Strin
       proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ]
       export base
     ]";
-    let module = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
-    let staged = module.prepare(source, &[], super::LIMITS)
+    let module =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let staged = module
+        .prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     let (published, result) = module.commit_verified(staged, |batch| {
         let mut checked = noble_contracts::intrinsic::check_batch(batch, super::LIMITS)
@@ -716,27 +779,49 @@ fn imported_proof_dependency_budget_counts_each_obligation() -> Result<(), Strin
       proof 1 first : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use p.base) x)) ]
       proof 1 second : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use p.base) x)) ]
     ]";
-    let staged = imported.prepare(dependent, &[], super::LIMITS)
+    let staged = imported
+        .prepare(dependent, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    let batch = staged.proof_obligations().ok_or("missing imported proof obligations")?;
+    let batch = staged
+        .proof_obligations()
+        .ok_or("missing imported proof obligations")?;
     assert_eq!(batch.obligations.len(), 2);
     let [dependency] = batch.dependencies.as_slice() else {
         return Err("expected one deduplicated imported proof".into());
     };
-    assert!(!dependency.source.is_empty(), "imported proof has no retained source");
-    let replicated = dependency.source.len().checked_mul(batch.obligations.len())
+    assert!(
+        !dependency.source.is_empty(),
+        "imported proof has no retained source"
+    );
+    let replicated = dependency
+        .source
+        .len()
+        .checked_mul(batch.obligations.len())
         .ok_or("imported proof fixture overflows host byte count")?;
-    let exact_bytes = u32::try_from(replicated)
-        .map_err(|_| "imported proof fixture exceeds u32 byte limit")?;
-    let exact = noble_contracts::Limits { bytes: exact_bytes, ..super::LIMITS };
-    imported.prepare(dependent, &[], exact).map_err(|error| format!("{error:?}"))?;
-    let short_bytes = exact_bytes.checked_sub(1)
+    let exact_bytes =
+        u32::try_from(replicated).map_err(|_| "imported proof fixture exceeds u32 byte limit")?;
+    let exact = noble_contracts::Limits {
+        bytes: exact_bytes,
+        ..super::LIMITS
+    };
+    imported
+        .prepare(dependent, &[], exact)
+        .map_err(|error| format!("{error:?}"))?;
+    let short_bytes = exact_bytes
+        .checked_sub(1)
         .ok_or("imported proof fixture has no byte below its exact budget")?;
-    let short = noble_contracts::Limits { bytes: short_bytes, ..exact };
-    let refused = imported.prepare(dependent, &[], short)
+    let short = noble_contracts::Limits {
+        bytes: short_bytes,
+        ..exact
+    };
+    let refused = imported
+        .prepare(dependent, &[], short)
         .expect_err("one byte below the replicated dependency must fail");
     assert_eq!(refused.stage(), noble_contracts::source::Stage::Check);
-    assert_eq!(refused.diagnostic().message, "proof dependency snapshot byte budget exhausted");
+    assert_eq!(
+        refused.diagnostic().message,
+        "proof dependency snapshot byte budget exhausted"
+    );
     Ok(())
 }
 
@@ -758,27 +843,49 @@ fn exact_increment_contract_binds_checked_definition_not_text_only() -> Result<(
         (mc1-true-eq-wrap)) ]
 ]
 ";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let prepared = session
+        .prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    let prepared = session.prepare(source, &[], super::LIMITS)
-        .map_err(|error| format!("{error:?}"))?;
-    let batch = prepared.proof_obligations().ok_or("missing pending program proof")?;
-    let noble_contracts::intrinsic::PendingGoal::Contract { contract } = &batch.obligations[0].goal else {
+    let batch = prepared
+        .proof_obligations()
+        .ok_or("missing pending program proof")?;
+    let noble_contracts::intrinsic::PendingGoal::Contract { contract } = &batch.obligations[0].goal
+    else {
         return Err("missing resolved MC1 contract claim".into());
     };
     assert_eq!(contract.contract_name, "increment-law");
-    assert_eq!(contract.subject.definition_source.as_slice(), b"def increment [ 1 + ]");
+    assert_eq!(
+        contract.subject.definition_source.as_slice(),
+        b"def increment [ 1 + ]"
+    );
     assert_eq!(contract.subject.module_source.as_slice(), source.as_slice());
     assert_eq!(contract.subject.input_types, [noble_kernel::types::Ty::I64]);
-    assert_eq!(contract.subject.output_types, [noble_kernel::types::Ty::I64]);
+    assert_eq!(
+        contract.subject.output_types,
+        [noble_kernel::types::Ty::I64]
+    );
     assert_eq!(contract.subject.accepted_submission.definitions.len(), 1);
     assert_eq!(contract.subject.source_dependencies.len(), 1);
-    assert_eq!(contract.subject.source_dependencies[0].full_source.as_slice(), source.as_slice());
-    assert_eq!(contract.subject.effects, noble_kernel::types::EffSet::empty());
+    assert_eq!(
+        contract.subject.source_dependencies[0]
+            .full_source
+            .as_slice(),
+        source.as_slice()
+    );
+    assert_eq!(
+        contract.subject.effects,
+        noble_kernel::types::EffSet::empty()
+    );
     let (session, result) = session.commit(prepared);
-    assert!(matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance));
+    assert!(
+        matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
+    );
     assert_eq!(session.generation(), 0);
-    assert!(session.prepare(b"arithmetic@1.increment", &[], super::LIMITS).is_err());
+    assert!(session
+        .prepare(b"arithmetic@1.increment", &[], super::LIMITS)
+        .is_err());
     Ok(())
 }
 
@@ -797,97 +904,169 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         (bridge (by-exact-append-assoc)) (join (by-exact-result)))))
     (mc1-true-eq-wrap)) ]
 ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let prepared = session
+        .prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    let prepared = session.prepare(source, &[], super::LIMITS)
-        .map_err(|error| format!("{error:?}"))?;
-    let batch = prepared.proof_obligations().ok_or("missing contract proof")?;
-    let PendingGoal::Contract {contract} = &batch.obligations[0].goal else {
+    let batch = prepared
+        .proof_obligations()
+        .ok_or("missing contract proof")?;
+    let PendingGoal::Contract { contract } = &batch.obligations[0].goal else {
         return Err("missing resolved contract".into());
     };
-    prepare_contract(contract,super::LIMITS).map_err(|error| format!("{error:?}"))?;
-    noble_contracts::intrinsic::check_batch(batch,super::LIMITS)
+    prepare_contract(contract, super::LIMITS).map_err(|error| format!("{error:?}"))?;
+    noble_contracts::intrinsic::check_batch(batch, super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    assert_eq!(contract.subject.definition_ordinal,1);
+    assert_eq!(contract.subject.definition_ordinal, 1);
     let mut changed = contract.clone();
     changed.subject.definition_source = b"def increment [ 2 + ]".to_vec();
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"forged definition bytes");
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "forged definition bytes"
+    );
     let mut changed = contract.clone();
-    let at = changed.subject.module_source.windows(b"def increment [ 1 + ]".len())
-        .position(|window|window == b"def increment [ 1 + ]").ok_or("missing source occurrence")?;
-    let literal = at.checked_add(b"def increment [ ".len()).ok_or("source literal offset overflows")?;
+    let at = changed
+        .subject
+        .module_source
+        .windows(b"def increment [ 1 + ]".len())
+        .position(|window| window == b"def increment [ 1 + ]")
+        .ok_or("missing source occurrence")?;
+    let literal = at
+        .checked_add(b"def increment [ ".len())
+        .ok_or("source literal offset overflows")?;
     changed.subject.module_source[literal] = b'2';
     changed.subject.definition_source = b"def increment [ 2 + ]".to_vec();
     changed.subject.source_dependencies[0].full_source = changed.subject.module_source.clone();
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"source changed but accepted recipe stayed old");
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "source changed but accepted recipe stayed old"
+    );
     let mut changed = contract.clone();
     changed.subject.source_span.start += 1;
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"forged lexical span");
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "forged lexical span"
+    );
     let mut changed = contract.clone();
     changed.subject.definition_ordinal = 0;
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"forged source ordinal");
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "forged source ordinal"
+    );
     let mut changed = contract.clone();
     changed.subject.definition_owner += 1;
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"forged owner");
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "forged owner"
+    );
     let mut changed = contract.clone();
     changed.subject.source_dependencies[0].full_source[0] = b'x';
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"forged source dependency");
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "forged source dependency"
+    );
     let mut changed = contract.clone();
-    changed.subject.accepted_submission.environment.kinds[4] = noble_kernel::contracts::Behavior::Equals;
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"forged builtin behavior");
+    changed.subject.accepted_submission.environment.kinds[4] =
+        noble_kernel::contracts::Behavior::Equals;
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "forged builtin behavior"
+    );
     let mut changed = contract.clone();
-    let definition = changed.subject.accepted_submission.definitions.iter_mut()
-        .find(|definition|definition.identity == changed.subject.definition_identity)
+    let definition = changed
+        .subject
+        .accepted_submission
+        .definitions
+        .iter_mut()
+        .find(|definition| definition.identity == changed.subject.definition_identity)
         .ok_or("missing accepted specialization")?;
     let first = usize::try_from(definition.body.candidate.body[0].0)
         .map_err(|_| "accepted literal node exceeds host address space")?;
-    let Node::Literal {lit,..} = &mut definition.body.candidate.nodes[first] else {
+    let Node::Literal { lit, .. } = &mut definition.body.candidate.nodes[first] else {
         return Err("missing literal".into());
     };
     *lit = noble_kernel::untrusted::Lit::I64(2);
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"same interface but different accepted code");
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "same interface but different accepted code"
+    );
     let mut changed = contract.clone();
-    let definition = changed.subject.accepted_submission.definitions.iter_mut()
-        .find(|definition|definition.identity == changed.subject.definition_identity)
+    let definition = changed
+        .subject
+        .accepted_submission
+        .definitions
+        .iter_mut()
+        .find(|definition| definition.identity == changed.subject.definition_identity)
         .ok_or("missing accepted specialization")?;
     let first = usize::try_from(definition.body.candidate.body[0].0)
         .map_err(|_| "accepted literal node exceeds host address space")?;
-    let Node::Literal {inst,..} = &mut definition.body.candidate.nodes[first] else {
+    let Node::Literal { inst, .. } = &mut definition.body.candidate.nodes[first] else {
         return Err("missing literal".into());
     };
     inst.bindings.clear();
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"forged literal instantiation");
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "forged literal instantiation"
+    );
     let mut changed = contract.clone();
-    let definition = changed.subject.accepted_submission.definitions.iter_mut()
-        .find(|definition|definition.identity == changed.subject.definition_identity)
+    let definition = changed
+        .subject
+        .accepted_submission
+        .definitions
+        .iter_mut()
+        .find(|definition| definition.identity == changed.subject.definition_identity)
         .ok_or("missing accepted specialization")?;
     let second = usize::try_from(definition.body.candidate.body[1].0)
         .map_err(|_| "accepted add node exceeds host address space")?;
-    let Node::Invocation {inst,..} = &mut definition.body.candidate.nodes[second] else {
+    let Node::Invocation { inst, .. } = &mut definition.body.candidate.nodes[second] else {
         return Err("missing add".into());
     };
     inst.bindings.clear();
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"forged add instantiation");
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "forged add instantiation"
+    );
     let mut changed = contract.clone();
-    let definition = changed.subject.accepted_submission.definitions.iter_mut()
-        .find(|definition|definition.identity == changed.subject.definition_identity)
+    let definition = changed
+        .subject
+        .accepted_submission
+        .definitions
+        .iter_mut()
+        .find(|definition| definition.identity == changed.subject.definition_identity)
         .ok_or("missing accepted specialization")?;
-    definition.body.candidate.body = vec![NodeId(0),NodeId(0)];
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"wrong complete recipe");
+    definition.body.candidate.body = vec![NodeId(0), NodeId(0)];
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "wrong complete recipe"
+    );
     let mut changed = contract.clone();
-    let definition = changed.subject.accepted_submission.definitions.iter_mut()
-        .find(|definition|definition.identity == changed.subject.definition_identity)
+    let definition = changed
+        .subject
+        .accepted_submission
+        .definitions
+        .iter_mut()
+        .find(|definition| definition.identity == changed.subject.definition_identity)
         .ok_or("missing accepted specialization")?;
     definition.definition.0 += 1;
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"wrong specialization slot");
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "wrong specialization slot"
+    );
     let mut changed = contract.clone();
     let root = usize::try_from(changed.subject.accepted_submission.body.candidate.body[0].0)
         .map_err(|_| "accepted root node exceeds host address space")?;
-    let Node::Invocation {inst,..} = &mut changed.subject.accepted_submission.body.candidate.nodes[root] else {
+    let Node::Invocation { inst, .. } =
+        &mut changed.subject.accepted_submission.body.candidate.nodes[root]
+    else {
         return Err("missing root invocation".into());
     };
-    inst.bindings.push(noble_kernel::words::Binding::Stack(vec![]));
-    assert!(prepare_contract(&changed,super::LIMITS).is_err(),"forged root instantiation");
+    inst.bindings
+        .push(noble_kernel::words::Binding::Stack(vec![]));
+    assert!(
+        prepare_contract(&changed, super::LIMITS).is_err(),
+        "forged root instantiation"
+    );
     Ok(())
 }
 
@@ -900,16 +1079,25 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
   contract 1 law [ subject increment input [ x I64 ] output [ y I64 ]
     requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ]
 ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let prepared = session
+        .prepare(formatted, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    let prepared = session.prepare(formatted,&[],super::LIMITS)
-        .map_err(|error| format!("{error:?}"))?;
-    assert!(prepared.proof_obligations().is_none(),"proof-free contract remains inert metadata");
+    assert!(
+        prepared.proof_obligations().is_none(),
+        "proof-free contract remains inert metadata"
+    );
     let (session, committed) = session.commit(prepared);
     committed.map_err(|error| format!("{error:?}"))?;
-    let typed = session.prepare(b"formatted@1.increment",&[noble_kernel::types::Ty::I64],super::LIMITS)
+    let typed = session
+        .prepare(
+            b"formatted@1.increment",
+            &[noble_kernel::types::Ty::I64],
+            super::LIMITS,
+        )
         .map_err(|error| format!("{error:?}"))?;
-    assert_eq!(typed.output(),&[noble_kernel::types::Ty::I64]);
+    assert_eq!(typed.output(), &[noble_kernel::types::Ty::I64]);
 
     let two = b"module two@1 [
       def increment [ 2 + ]
@@ -921,30 +1109,42 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
             (bridge (by-exact-append-assoc)) (join (by-exact-result)))))
         (mc1-true-eq-wrap)) ]
     ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
-    let prepared = session.prepare(two,&[],super::LIMITS)
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let prepared = session
+        .prepare(two, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     noble_contracts::intrinsic::check_batch(
-        prepared.proof_obligations().ok_or("missing nonunit literal proof")?,super::LIMITS,
-    ).map_err(|error| format!("{error:?}"))?;
+        prepared
+            .proof_obligations()
+            .ok_or("missing nonunit literal proof")?,
+        super::LIMITS,
+    )
+    .map_err(|error| format!("{error:?}"))?;
 
     let named = b"module named@1 [ def one [ 1 ] export increment def increment [ one + ] ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session = super::commit(session, named)?;
+    let ordinary = session
+        .prepare(
+            b"named@1.increment",
+            &[noble_kernel::types::Ty::I64],
+            super::LIMITS,
+        )
         .map_err(|error| format!("{error:?}"))?;
-    let session = super::commit(session,named)?;
-    let ordinary = session.prepare(b"named@1.increment",&[noble_kernel::types::Ty::I64],super::LIMITS)
-        .map_err(|error| format!("{error:?}"))?;
-    assert_eq!(ordinary.output(),&[noble_kernel::types::Ty::I64]);
+    assert_eq!(ordinary.output(), &[noble_kernel::types::Ty::I64]);
     let named_contract = b"module named_law@1 [
       def one [ 1 ] def increment [ one + ]
       contract 1 law [ subject increment input [ x I64 ] output [ y I64 ]
         requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ]
     ]";
-    let fresh = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
-    assert!(fresh.prepare(named_contract,&[],super::LIMITS).is_err(),
-        "named ordinary runtime is not an MC1-v1 contract theorem");
+    let fresh =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    assert!(
+        fresh.prepare(named_contract, &[], super::LIMITS).is_err(),
+        "named ordinary runtime is not an MC1-v1 contract theorem"
+    );
     let named_proof = b"module named_proof@1 [
       def one [ 1 ] def increment [ one + ]
       contract 1 law [ subject increment input [ x I64 ] output [ y I64 ]
@@ -955,8 +1155,10 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
             (bridge (by-exact-append-assoc)) (join (by-exact-result)))))
         (mc1-true-eq-wrap)) ]
     ]";
-    assert!(fresh.prepare(named_proof,&[],super::LIMITS).is_err(),
-        "a named runtime call cannot be silently exported as a v1 proof");
+    assert!(
+        fresh.prepare(named_proof, &[], super::LIMITS).is_err(),
+        "a named runtime call cannot be silently exported as a v1 proof"
+    );
     Ok(())
 }
 
@@ -964,20 +1166,24 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
 fn unproved_contract_metadata_erases_without_shifting_definition_ids() -> Result<(), String> {
     let plain = b"module arithmetic@1 [ export increment def increment [ 1 + ] ]";
     let decorated = b"module arithmetic@1 [ export increment def increment [ 1 + ] contract 1 increment-law [ subject increment input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] ]";
-    let mut bare = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
-    let mut logical = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
+    let mut bare =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let mut logical =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     bare = super::commit(bare, plain)?;
     logical = super::commit(logical, decorated)?;
     let input = [noble_kernel::types::Ty::I64];
-    let original = bare.prepare(b"arithmetic@1.increment", &input, super::LIMITS)
+    let original = bare
+        .prepare(b"arithmetic@1.increment", &input, super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    let erased = logical.prepare(b"arithmetic@1.increment", &input, super::LIMITS)
+    let erased = logical
+        .prepare(b"arithmetic@1.increment", &input, super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(original.output(), erased.output());
     let original = original.submission().ok_or("missing plain typed program")?;
-    let erased = erased.submission().ok_or("missing decorated typed program")?;
+    let erased = erased
+        .submission()
+        .ok_or("missing decorated typed program")?;
     assert_eq!(original.definitions.len(), erased.definitions.len());
     for (before, after) in original.definitions.iter().zip(&erased.definitions) {
         assert_eq!(before.definition, after.definition);
@@ -987,59 +1193,90 @@ fn unproved_contract_metadata_erases_without_shifting_definition_ids() -> Result
 
 #[test]
 fn proof_lexer_modes_and_stale_host_gate_leave_prior_namespace_intact() -> Result<(), String> {
-    let mut session = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
+    let mut session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     session = super::commit(session, b"module logic@1 [ export value def value [ 1 ] ]")?;
     let staged = session.prepare(
         b"module theorem@1 [ proof 1 poly-refl : [ (Eq I64 0 0) # ordinary comment\n ] [ (refl 0) ] ]",
         &[], super::LIMITS,
     ).map_err(|error| format!("{error:?}"))?;
-    assert_eq!(staged.proof_obligations().ok_or("proof was not staged")?.obligations.len(), 1);
-    assert!(session.prepare(
-        b"module bad@1 [ def value [ (refl 0) ] ]", &[], super::LIMITS,
-    ).is_err(), "logical proof syntax must not become an ordinary guest word");
+    assert_eq!(
+        staged
+            .proof_obligations()
+            .ok_or("proof was not staged")?
+            .obligations
+            .len(),
+        1
+    );
+    assert!(
+        session
+            .prepare(
+                b"module bad@1 [ def value [ (refl 0) ] ]",
+                &[],
+                super::LIMITS,
+            )
+            .is_err(),
+        "logical proof syntax must not become an ordinary guest word"
+    );
     for bad in [
         b"module bad@1 [ proof 01 p : [ (Eq I64 0 0) ] [ (refl 0) ] ]".as_slice(),
         b"module bad@1 [ proof 1 p : [ (Eq I64 0 0) ] [ (refl 0\\) ] ]".as_slice(),
         b"module bad@1 [ proof 1 p : [ (Eq I64 0 0) ] [ (refl 0) (refl 0) ] ]".as_slice(),
         b"module bad@1 [ proof 1 p : [ (Eq I64 0 0 ] [ (refl 0) ] ]".as_slice(),
     ] {
-        assert!(matches!(session.prepare(bad, &[], super::LIMITS), Err(error)
-            if error.stage() == noble_contracts::source::Stage::Parse));
+        assert!(
+            matches!(session.prepare(bad, &[], super::LIMITS), Err(error)
+            if error.stage() == noble_contracts::source::Stage::Parse)
+        );
     }
     session = super::commit(session, b"import logic@1 as alias")?;
     let prior = session.generation();
     let (session, result) = session.commit_verified(staged, |_| -> Result<_, String> {
         panic!("stale staged source must not invoke the independent checker")
     });
-    assert!(matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance));
+    assert!(
+        matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
+    );
     assert_eq!(session.generation(), prior);
-    let callable = session.prepare(b"alias.value", &[], super::LIMITS)
+    let callable = session
+        .prepare(b"alias.value", &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(callable.output(), &[noble_kernel::types::Ty::I64]);
     Ok(())
 }
 
 #[test]
-fn general_mc1_contract_is_unproved_metadata_and_alias_resolves_exact_subject() -> Result<(), String> {
+fn general_mc1_contract_is_unproved_metadata_and_alias_resolves_exact_subject() -> Result<(), String>
+{
     let source = b"module generic@1 [ def identity [ ] contract 1 identity-law [ subject identity input [ x I64 ] output [ y I64 ] requires [ (le (in x) 4) ] ensures [ (eq (out y) (in x)) ] ] export identity-law ]";
-    let mut session = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
-    let prepared = session.prepare(source, &[], super::LIMITS)
+    let mut session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let prepared = session
+        .prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert!(prepared.proof_obligations().is_none());
     let (next, outcome) = session.commit(prepared);
     outcome.map_err(|error| format!("{error:?}"))?;
     session = next;
-    assert!(session.prepare(b"generic@1.identity-law", &[], super::LIMITS).is_err(),
-        "logical export must not create a guest word");
+    assert!(
+        session
+            .prepare(b"generic@1.identity-law", &[], super::LIMITS)
+            .is_err(),
+        "logical export must not create a guest word"
+    );
     session = super::commit(session, b"import generic@1 as g")?;
-    let next = session.prepare(
-        b"module uses@1 [ proof 1 identity-check for g.identity-law [ (refl 0) ] ]",
-        &[], super::LIMITS,
-    ).map_err(|error| format!("{error:?}"))?;
-    let batch = next.proof_obligations().ok_or("missing imported-contract proof goal")?;
-    let noble_contracts::intrinsic::PendingGoal::Contract { contract } = &batch.obligations[0].goal else {
+    let next = session
+        .prepare(
+            b"module uses@1 [ proof 1 identity-check for g.identity-law [ (refl 0) ] ]",
+            &[],
+            super::LIMITS,
+        )
+        .map_err(|error| format!("{error:?}"))?;
+    let batch = next
+        .proof_obligations()
+        .ok_or("missing imported-contract proof goal")?;
+    let noble_contracts::intrinsic::PendingGoal::Contract { contract } = &batch.obligations[0].goal
+    else {
         return Err("imported contract did not resolve to a typed goal".into());
     };
     assert_eq!(contract.subject.module, "generic");
@@ -1052,15 +1289,21 @@ fn general_mc1_contract_is_unproved_metadata_and_alias_resolves_exact_subject() 
 #[test]
 fn local_named_proof_use_is_ordered_and_not_an_executable_word() -> Result<(), String> {
     let source = b"module logic@1 [ proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] proof 1 derived : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use base) x)) ] export derived ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let prepared = session
+        .prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    let prepared = session.prepare(source, &[], super::LIMITS)
-        .map_err(|error| format!("{error:?}"))?;
-    let batch = prepared.proof_obligations().ok_or("missing ordered proof obligations")?;
+    let batch = prepared
+        .proof_obligations()
+        .ok_or("missing ordered proof obligations")?;
     assert_eq!(batch.obligations.len(), 2);
     assert_eq!(batch.obligations[0].name, "base");
     assert_eq!(batch.obligations[1].name, "derived");
-    assert!(batch.dependencies.is_empty(), "local proof may not impersonate imported metadata");
+    assert!(
+        batch.dependencies.is_empty(),
+        "local proof may not impersonate imported metadata"
+    );
     let exact = noble_contracts::Limits {
         bytes: u32::try_from(source.len()).map_err(|_| "proof source exceeds u32 byte limit")?,
         ..super::LIMITS
@@ -1068,17 +1311,24 @@ fn local_named_proof_use_is_ordered_and_not_an_executable_word() -> Result<(), S
     let checked = noble_contracts::intrinsic::check_batch(batch, exact)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(checked[0].claim, checked[1].claim);
-    let short_bytes = exact.bytes.checked_sub(1)
+    let short_bytes = exact
+        .bytes
+        .checked_sub(1)
         .ok_or("proof source has no byte below its exact budget")?;
-    let short = noble_contracts::Limits { bytes: short_bytes, ..exact };
+    let short = noble_contracts::Limits {
+        bytes: short_bytes,
+        ..exact
+    };
     let refused = noble_contracts::intrinsic::check_batch(batch, short)
         .expect_err("one byte below retained source length must exhaust proof budget");
     assert_eq!(refused.kind, noble_contracts::DiagnosticKind::Exhausted);
     assert_eq!(refused.span, noble_contracts::Span { start: 0, end: 0 });
     assert_eq!(refused.message, "proof size, depth or work limit exhausted");
     let forward = b"module bad@1 [ proof 1 derived : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use base) x)) ] proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] ]";
-    assert!(matches!(session.prepare(forward, &[], super::LIMITS), Err(error)
-        if error.stage() == noble_contracts::source::Stage::Resolve));
+    assert!(
+        matches!(session.prepare(forward, &[], super::LIMITS), Err(error)
+        if error.stage() == noble_contracts::source::Stage::Resolve)
+    );
     assert_eq!(session.generation(), 0);
     Ok(())
 }
@@ -1093,16 +1343,23 @@ fn applying_value_binder_preserves_later_dependent_type_codes() -> Result<(), St
           [ (Pi (x I64) (Pi (z (Pair (List I64) I64)) (Eq (Pair (List I64) I64) z z))) ]
           [ (intro (x I64) (intro (z (Pair (List I64) I64)) (apply (apply (apply (apply (use base) x) (refl x)) I64) z))) ]
     ]";
-    let session = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
-    let prepared = session.prepare(source, &[], super::LIMITS)
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let prepared = session
+        .prepare(source, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     let checked = noble_contracts::intrinsic::check_batch(
-        prepared.proof_obligations().ok_or("missing dependent proof obligations")?,
+        prepared
+            .proof_obligations()
+            .ok_or("missing dependent proof obligations")?,
         super::LIMITS,
-    ).map_err(|error| format!("{error:?}"))?;
+    )
+    .map_err(|error| format!("{error:?}"))?;
     assert_eq!(checked[0].claim, "(∀ (v0 : El .i64), (∀ (v1 : v0 = v0), (∀ (v2 : PureTyCode), (∀ (v3 : El (.pair (.list v2) .i64)), v3 = v3))))");
-    assert_eq!(checked[1].claim, "(∀ (v0 : El .i64), (∀ (v1 : El (.pair (.list .i64) .i64)), v1 = v1))");
+    assert_eq!(
+        checked[1].claim,
+        "(∀ (v0 : El .i64), (∀ (v1 : El (.pair (.list .i64) .i64)), v1 = v1))"
+    );
 
     let invalid = b"module bad@1 [
         proof 1 base :
@@ -1112,11 +1369,18 @@ fn applying_value_binder_preserves_later_dependent_type_codes() -> Result<(), St
           [ (Pi (x I64) (Pi (z (Pair (List I64) I64)) (Pi (w Bool) (Eq (Pair (List I64) I64) z z)))) ]
           [ (intro (x I64) (intro (z (Pair (List I64) I64)) (intro (w Bool) (apply (apply (apply (apply (use base) x) (refl x)) I64) w)))) ]
     ]";
-    let prepared = session.prepare(invalid, &[], super::LIMITS)
+    let prepared = session
+        .prepare(invalid, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    assert!(noble_contracts::intrinsic::check_batch(
-        prepared.proof_obligations().ok_or("missing hostile proof obligations")?,
-        super::LIMITS,
-    ).is_err(), "a Bool sibling cannot stand in for the composite value argument");
+    assert!(
+        noble_contracts::intrinsic::check_batch(
+            prepared
+                .proof_obligations()
+                .ok_or("missing hostile proof obligations")?,
+            super::LIMITS,
+        )
+        .is_err(),
+        "a Bool sibling cannot stand in for the composite value argument"
+    );
     Ok(())
 }

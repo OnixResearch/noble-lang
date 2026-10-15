@@ -114,8 +114,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     }
     let mut input = std::io::BufReader::new(std::io::stdin());
     loop {
-        let next = super::framing::read_line(&mut input, LIMIT)
-            .map_err(|error| error.message);
+        let next = super::framing::read_line(&mut input, LIMIT).map_err(|error| error.message);
         let bytes = match next {
             Ok(Some(bytes)) => bytes,
             Ok(None) => return std::process::ExitCode::SUCCESS,
@@ -229,7 +228,14 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
 
 fn parse(
     arguments: &[std::ffi::OsString],
-) -> Result<(Option<std::path::PathBuf>, &'static str, Option<GrantSelection>), std::string::String> {
+) -> Result<
+    (
+        Option<std::path::PathBuf>,
+        &'static str,
+        Option<GrantSelection>,
+    ),
+    std::string::String,
+> {
     if arguments.get(1).and_then(|argument| argument.to_str()) != Some("repl") {
         return Err("usage: noble live repl [--source ABS_PATH]".into());
     }
@@ -245,9 +251,7 @@ fn parse(
             .and_then(|value| value.to_str())
             .ok_or("missing live option value")?;
         match flag {
-            "--source" if source.is_none() => {
-                source = Some(std::path::PathBuf::from(value))
-            }
+            "--source" if source.is_none() => source = Some(std::path::PathBuf::from(value)),
             "--engine" if engine.is_none() => {
                 engine = Some(match value {
                     "v8" => "v8",
@@ -439,7 +443,9 @@ impl Live {
                     Some(&problem),
                 ),
             Ok(ReloadDecision::SelectedSourceRefused(_)) => {
-                return Err(fatal_failure("guest proposal reported a selected-file source error"));
+                return Err(fatal_failure(
+                    "guest proposal reported a selected-file source error",
+                ));
             }
             Err(error) => return Err(error),
         };
@@ -496,7 +502,11 @@ impl Live {
         // H-LIVE-04's bounded guest lane does not grant a dependent rebuild.
         // Host-selected file reload/direct definitions use the full batch
         // transaction; a guest proposal must refuse before candidate staging.
-        if self.session.frontend.live_definition_has_dependents(selected) {
+        if self
+            .session
+            .frontend
+            .live_definition_has_dependents(selected)
+        {
             return Ok(ReloadDecision::Refused(
                 "bounded guest self-edit refuses dependent definitions".into(),
             ));
@@ -725,9 +735,9 @@ impl Live {
                 ReloadDecision::Refused(problem) => {
                     Ok(self.admission_refusal(&problem, "definition-refused"))
                 }
-                ReloadDecision::SelectedSourceRefused(_) => {
-                    Err(fatal_failure("direct definition reported a selected-file source error"))
-                }
+                ReloadDecision::SelectedSourceRefused(_) => Err(fatal_failure(
+                    "direct definition reported a selected-file source error",
+                )),
             };
         }
         let submission = prepared
@@ -904,7 +914,11 @@ impl Live {
         selected: std::path::PathBuf,
         candidate: Snapshot,
     ) -> Result<ReloadDecision, super::output::Failure> {
-        if self.selected.as_ref().is_some_and(|prior| prior != &selected) {
+        if self
+            .selected
+            .as_ref()
+            .is_some_and(|prior| prior != &selected)
+        {
             return Ok(ReloadDecision::Refused(
                 "reload path differs from selected source".into(),
             ));
@@ -1033,8 +1047,7 @@ impl Live {
                 Ok(after)
                     if after.digest == candidate.digest
                         && after.identity == candidate.identity
-                        && after.directory == candidate.directory => {
-                }
+                        && after.directory == candidate.directory => {}
                 other => {
                     let discarded = self.worker()?.discard_binary()?;
                     if discarded.outcome != "discarded" {
@@ -1286,9 +1299,7 @@ fn snapshot(path: &std::path::Path) -> Result<Snapshot, std::string::String> {
     let directory_before = directory.metadata().map_err(|error| error.to_string())?;
     let parent_before = std::fs::symlink_metadata(parent).map_err(|error| error.to_string())?;
     let directory_identity = (directory_before.dev(), directory_before.ino());
-    if !parent_before.is_dir()
-        || directory_identity != (parent_before.dev(), parent_before.ino())
-    {
+    if !parent_before.is_dir() || directory_identity != (parent_before.dev(), parent_before.ino()) {
         return Err("selected source directory changed before snapshot".into());
     }
     let before = std::fs::symlink_metadata(path).map_err(|error| error.to_string())?;
@@ -1440,18 +1451,14 @@ mod tests {
             b"def evolve [ 2 + ]"
         );
         proposal["events"][5]["value"] = serde_json::json!("1");
-        assert!(
-            candidate_source("evolve", &proposal, 65_536)
-                .unwrap_err()
-                .contains("invocation signatures disagree")
-        );
+        assert!(candidate_source("evolve", &proposal, 65_536)
+            .unwrap_err()
+            .contains("invocation signatures disagree"));
         proposal["events"][5]["value"] = serde_json::json!("2");
         proposal["events"][1]["value"] = serde_json::json!("2");
-        assert!(
-            candidate_source("evolve", &proposal, 65_536)
-                .unwrap_err()
-                .contains("differs from checked Program interface")
-        );
+        assert!(candidate_source("evolve", &proposal, 65_536)
+            .unwrap_err()
+            .contains("differs from checked Program interface"));
     }
 
     #[test]

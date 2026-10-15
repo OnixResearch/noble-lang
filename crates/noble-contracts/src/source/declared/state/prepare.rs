@@ -32,14 +32,19 @@ impl super::ModuleSession {
             let mut scanner = attempt!(crate::source::lexer::Scanner::new_declared(
                 input_bytes,
                 &mut meter,
-            ).map_err(|problem| crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)));
+            )
+            .map_err(|problem| crate::source::declared::diagnostic(
+                crate::source::Stage::Parse,
+                problem
+            )));
             let first = attempt!(scanner.next(&mut meter).map_err(|problem| {
                 crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
             }));
             if matches!(first, Some(crate::source::lexer::Token {
                 kind: crate::source::lexer::TokenKind::Word(ref spelling),
                 ..
-            }) if spelling == b"module") {
+            }) if spelling == b"module")
+            {
                 return Err(error);
             }
         }
@@ -49,49 +54,81 @@ impl super::ModuleSession {
             })
         );
         if self.source.calculator {
-            let environment = attempt!(self.source.declared.as_ref()
-                .ok_or_else(|| crate::source::declared::diagnostic(
+            let environment = attempt!(self.source.declared.as_ref().ok_or_else(|| {
+                crate::source::declared::diagnostic(
                     crate::source::Stage::Check,
-                    crate::source::exhausted(super::super::SPAN,
-                        "calculator source environment missing"))));
+                    crate::source::exhausted(
+                        super::super::SPAN,
+                        "calculator source environment missing",
+                    ),
+                )
+            }));
             if environment.environment.defs.len()
                 > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
             {
                 return Err(crate::source::declared::diagnostic(
                     crate::source::Stage::Check,
-                    crate::source::exhausted(super::super::SPAN,
-                        "calculator environment row limit exceeded")));
+                    crate::source::exhausted(
+                        super::super::SPAN,
+                        "calculator environment row limit exceeded",
+                    ),
+                ));
             }
-            let budget = attempt!(environment.environment.calculator_clone_budget()
+            let budget = attempt!(environment
+                .environment
+                .calculator_clone_budget()
                 .ok_or_else(|| crate::source::declared::diagnostic(
                     crate::source::Stage::Check,
-                    crate::source::exhausted(super::super::SPAN,
-                        "calculator environment clone bound exceeded"))));
-            let copies = attempt!(budget.reserved_bytes.checked_mul(2)
-                .filter(|total| *total <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
-                .ok_or_else(|| crate::source::declared::diagnostic(
-                    crate::source::Stage::Check,
-                    crate::source::exhausted(super::super::SPAN,
-                        "calculator environment clone fanout exceeded"))));
+                    crate::source::exhausted(
+                        super::super::SPAN,
+                        "calculator environment clone bound exceeded"
+                    )
+                )));
+            let copies =
+                attempt!(budget
+                    .reserved_bytes
+                    .checked_mul(2)
+                    .filter(|total| *total
+                        <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
+                    .ok_or_else(|| crate::source::declared::diagnostic(
+                        crate::source::Stage::Check,
+                        crate::source::exhausted(
+                            super::super::SPAN,
+                            "calculator environment clone fanout exceeded"
+                        )
+                    )));
             if copies > u64::from(limits.work) {
                 return Err(crate::source::declared::diagnostic(
                     crate::source::Stage::Check,
-                    crate::source::exhausted(super::super::SPAN,
-                        "calculator environment clone work exceeded")));
+                    crate::source::exhausted(
+                        super::super::SPAN,
+                        "calculator environment clone work exceeded",
+                    ),
+                ));
             }
         }
-        let StagedUnit { session: staged, kind, submission, output, pending } =
-            attempt!(self
-                .snapshot()
-                .stage_unit(unit, input_bytes, inputs, limits));
-        if staged.source.calculator && staged.source.declared.as_ref()
-            .is_none_or(|context| context.environment.defs.len()
-                > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT)
+        let StagedUnit {
+            session: staged,
+            kind,
+            submission,
+            output,
+            pending,
+        } = attempt!(self
+            .snapshot()
+            .stage_unit(unit, input_bytes, inputs, limits));
+        if staged.source.calculator
+            && staged.source.declared.as_ref().is_none_or(|context| {
+                context.environment.defs.len()
+                    > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+            })
         {
             return Err(crate::source::declared::diagnostic(
                 crate::source::Stage::Check,
-                crate::source::exhausted(super::super::SPAN,
-                    "calculator environment row limit exceeded")));
+                crate::source::exhausted(
+                    super::super::SPAN,
+                    "calculator environment row limit exceeded",
+                ),
+            ));
         }
         attempt!(staged.retained(limits));
         Ok(super::ModulePrepared {
@@ -130,7 +167,12 @@ impl super::ModuleSession {
                     limits,
                 }));
                 self = next;
-                (super::ModuleKind::Module, None, alloc::vec::Vec::new(), pending)
+                (
+                    super::ModuleKind::Module,
+                    None,
+                    alloc::vec::Vec::new(),
+                    pending,
+                )
             }
             crate::source::declared::parsing::ParsedUnit::Import {
                 name,
@@ -167,7 +209,13 @@ impl super::ModuleSession {
                 (kind, submission, output, None)
             }
         };
-        Ok(StagedUnit { session: self, kind, submission, output, pending })
+        Ok(StagedUnit {
+            session: self,
+            kind,
+            submission,
+            output,
+            pending,
+        })
     }
 
     /// Publish the entire scanned declaration/import as one stale-checked transition.
@@ -225,7 +273,10 @@ impl super::ModuleSession {
         recheck: F,
     ) -> (Self, Result<(), crate::source::Error>)
     where
-        F: FnOnce(&crate::intrinsic::ProofBatch) -> Result<alloc::vec::Vec<crate::intrinsic::CheckedProof>, alloc::string::String>,
+        F: FnOnce(
+            &crate::intrinsic::ProofBatch,
+        )
+            -> Result<alloc::vec::Vec<crate::intrinsic::CheckedProof>, alloc::string::String>,
     {
         if !self.current_snapshot(&prepared) {
             return (
@@ -283,7 +334,10 @@ impl super::ModuleSession {
             Err(message) => {
                 return (
                     self,
-                    Err(crate::source::declared::error(crate::source::Stage::Acceptance, &message)),
+                    Err(crate::source::declared::error(
+                        crate::source::Stage::Acceptance,
+                        &message,
+                    )),
                 );
             }
         };
@@ -291,19 +345,28 @@ impl super::ModuleSession {
             || checked.iter().zip(&source_checked).any(|(result, source)| {
                 result.claim != source.claim || result.lean_term != source.lean_term
             })
-            || checked.iter().zip(&batch.obligations).any(|(result, obligation)| {
-                result.name != obligation.name
-                    || !revision(&result.model_revision)
-                    || !revision(&result.checker_revision)
-                    || result.kind
-                        != match &obligation.goal {
-                            crate::intrinsic::PendingGoal::Pure { .. } => crate::intrinsic::ProofKind::Pure,
-                            crate::intrinsic::PendingGoal::Contract { contract } if
-                                contract.revision == 2 && obligation.revision == 2 =>
-                                crate::intrinsic::ProofKind::NamedContract,
-                            crate::intrinsic::PendingGoal::Contract { .. } => crate::intrinsic::ProofKind::Contract,
-                        }
-            })
+            || checked
+                .iter()
+                .zip(&batch.obligations)
+                .any(|(result, obligation)| {
+                    result.name != obligation.name
+                        || !revision(&result.model_revision)
+                        || !revision(&result.checker_revision)
+                        || result.kind
+                            != match &obligation.goal {
+                                crate::intrinsic::PendingGoal::Pure { .. } => {
+                                    crate::intrinsic::ProofKind::Pure
+                                }
+                                crate::intrinsic::PendingGoal::Contract { contract }
+                                    if contract.revision == 2 && obligation.revision == 2 =>
+                                {
+                                    crate::intrinsic::ProofKind::NamedContract
+                                }
+                                crate::intrinsic::PendingGoal::Contract { .. } => {
+                                    crate::intrinsic::ProofKind::Contract
+                                }
+                            }
+                })
         {
             return (
                 self,
@@ -331,9 +394,7 @@ impl super::ModuleSession {
             );
         };
         for obligation in &batch.obligations {
-            if remaining_bytes.checked_sub(batch.source.len()).is_none()
-                || remaining_nodes == 0
-            {
+            if remaining_bytes.checked_sub(batch.source.len()).is_none() || remaining_nodes == 0 {
                 return (
                     self,
                     Err(crate::source::declared::error(
@@ -467,7 +528,10 @@ impl super::ModuleSession {
 }
 
 fn revision(value: &str) -> bool {
-    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 /// Charges a retained dependency and its transitive closure in the same
@@ -500,11 +564,15 @@ fn charge_dependency(
                 inline[inline_len] = Some(child);
                 inline_len = inline_len.saturating_add(1);
             } else {
-                if spill.len() >= nodes { return None; }
+                if spill.len() >= nodes {
+                    return None;
+                }
                 spill.push(child);
             }
         }
-        current = next.dependencies.first()
+        current = next
+            .dependencies
+            .first()
             .or_else(|| spill.pop())
             .or_else(|| {
                 let top = inline_len.checked_sub(1)?;
@@ -539,8 +607,12 @@ mod tests {
     fn calculator_source_refuses_897_lightweight_rows_before_namespace_snapshot_clone() {
         let mut session = ModuleSession::new_calculator()
             .unwrap_or_else(|_| panic!("calculator environment unavailable"));
-        let environment = &mut session.source.declared.as_mut()
-            .unwrap_or_else(|| panic!("calculator declaration context unavailable")).environment;
+        let environment = &mut session
+            .source
+            .declared
+            .as_mut()
+            .unwrap_or_else(|| panic!("calculator declaration context unavailable"))
+            .environment;
         while environment.defs.len() < 897 {
             environment.defs.push(Scheme {
                 var_kinds: alloc::vec::Vec::new(),
@@ -552,13 +624,20 @@ mod tests {
             environment.deps.push(alloc::vec::Vec::new());
             environment.definition_owners.push(None);
         }
-        assert!(environment.calculator_clone_budget().is_some(),
-            "lightweight row 897 must not be confused with clone-byte exhaustion");
+        assert!(
+            environment.calculator_clone_budget().is_some(),
+            "lightweight row 897 must not be confused with clone-byte exhaustion"
+        );
         let limits = crate::Limits {
-            bytes: 262_144, nodes: 524_288, depth: 64, work: 512_000_000,
+            bytes: 262_144,
+            nodes: 524_288,
+            depth: 64,
+            work: 512_000_000,
         };
-        let refused = session.prepare(b"1", &[], limits)
-            .err().unwrap_or_else(|| panic!("oversized environment reached snapshot cloning"));
+        let refused = session
+            .prepare(b"1", &[], limits)
+            .err()
+            .unwrap_or_else(|| panic!("oversized environment reached snapshot cloning"));
         assert_eq!(refused.stage(), crate::source::Stage::Check);
         assert_eq!(refused.diagnostic().kind, crate::DiagnosticKind::Exhausted);
     }
@@ -567,8 +646,12 @@ mod tests {
     fn calculator_source_refuses_deep_environment_before_namespace_snapshot_clone() {
         let mut session = ModuleSession::new_calculator()
             .unwrap_or_else(|_| panic!("calculator environment unavailable"));
-        let environment = &mut session.source.declared.as_mut()
-            .unwrap_or_else(|| panic!("calculator declaration context unavailable")).environment;
+        let environment = &mut session
+            .source
+            .declared
+            .as_mut()
+            .unwrap_or_else(|| panic!("calculator declaration context unavailable"))
+            .environment;
         let program = Pattern::program(
             alloc::vec![Pattern::Unit; 128],
             alloc::vec![Pattern::Unit; 128],
@@ -582,13 +665,20 @@ mod tests {
                 effects: alloc::vec::Vec::new(),
             });
         }
-        assert!(environment.calculator_clone_budget().is_none(),
-            "nested program stacks must contribute every retained node to the clone bound");
+        assert!(
+            environment.calculator_clone_budget().is_none(),
+            "nested program stacks must contribute every retained node to the clone bound"
+        );
         let limits = crate::Limits {
-            bytes: 262_144, nodes: 524_288, depth: 64, work: 512_000_000,
+            bytes: 262_144,
+            nodes: 524_288,
+            depth: 64,
+            work: 512_000_000,
         };
-        let refused = session.prepare(b"1", &[], limits)
-            .err().unwrap_or_else(|| panic!("oversized environment reached snapshot cloning"));
+        let refused = session
+            .prepare(b"1", &[], limits)
+            .err()
+            .unwrap_or_else(|| panic!("oversized environment reached snapshot cloning"));
         assert_eq!(refused.stage(), crate::source::Stage::Check);
         assert_eq!(refused.diagnostic().kind, crate::DiagnosticKind::Exhausted);
     }

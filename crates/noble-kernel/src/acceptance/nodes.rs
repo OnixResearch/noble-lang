@@ -47,7 +47,15 @@ pub(super) fn fold_node(
     node_id: crate::untrusted::NodeId,
     node: &crate::untrusted::Node,
     context: &super::parts::Ctx,
-) -> Result<(u32, super::Frame, crate::untrusted::Interface, Option<crate::untrusted::LiveSite>), super::Fail> {
+) -> Result<
+    (
+        u32,
+        super::Frame,
+        crate::untrusted::Interface,
+        Option<crate::untrusted::LiveSite>,
+    ),
+    super::Fail,
+> {
     match node {
         crate::untrusted::Node::Literal { lit, inst } => {
             let scheme = super::parts::instantiate::literal_scheme(*lit);
@@ -109,7 +117,15 @@ fn fold_slot(
     site_id: u32,
     forwarded: &[u32],
     context: &super::parts::Ctx,
-) -> Result<(u32, super::Frame, crate::untrusted::Interface, Option<crate::untrusted::LiveSite>), super::Fail> {
+) -> Result<
+    (
+        u32,
+        super::Frame,
+        crate::untrusted::Interface,
+        Option<crate::untrusted::LiveSite>,
+    ),
+    super::Fail,
+> {
     let at = super::parts::site(Some(node_id), None);
     if !context.env.live_slots || frame.depth != 0 {
         return Err(super::parts::invalid_without_stacks(
@@ -212,7 +228,11 @@ fn fold_slot(
     };
     let root_logical_input_position = match u32::try_from(root_position) {
         Ok(position) => position,
-        Err(_) => return Err(super::Fail::Exhausted(crate::untrusted::LimitKind::StackHeight)),
+        Err(_) => {
+            return Err(super::Fail::Exhausted(
+                crate::untrusted::LimitKind::StackHeight,
+            ))
+        }
     };
     let joined = attempt!(super::parts::join(frame, &interface, at, context));
     let Some(super::BorrowedInput {
@@ -231,12 +251,7 @@ fn fold_slot(
         stack_out: site_out.as_ref().clone(),
         allowed_effects: site_ceiling.clone(),
     };
-    Ok((
-        cost,
-        joined,
-        interface,
-        Some(site),
-    ))
+    Ok((cost, joined, interface, Some(site)))
 }
 
 /// Validate one quotation node and build its parent and child frames.
@@ -256,9 +271,7 @@ pub(super) fn open_quotation(
         crate::untrusted::Node::Quotation { body, inst } => (body, inst),
         crate::untrusted::Node::Literal { .. }
         | crate::untrusted::Node::Invocation { .. }
-        | crate::untrusted::Node::SlotInvoke { .. } => {
-            return Err(super::Fail::Internal)
-        }
+        | crate::untrusted::Node::SlotInvoke { .. } => return Err(super::Fail::Internal),
     };
     let scheme = super::parts::instantiate::quotation_scheme();
     let cost = attempt!(super::parts::scheme_cost(&scheme));

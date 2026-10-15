@@ -119,7 +119,12 @@ fn checked_versioned_slot_admits_exact_ordered_target_before_any_body_runs() -> 
     for accepted in [&caller, &target, &wrong_version, &wrong_order] {
         Compiler::new_live_slots()
             .prepare(accepted)
-            .map_err(|problem| format!("genuine checked slot-profile source was refused: {}", diagnostic(problem)))?;
+            .map_err(|problem| {
+                format!(
+                    "genuine checked slot-profile source was refused: {}",
+                    diagnostic(problem)
+                )
+            })?;
     }
     Ok(())
 }
@@ -128,7 +133,11 @@ fn checked_versioned_slot_admits_exact_ordered_target_before_any_body_runs() -> 
 fn legacy_profiles_and_forged_slot_metadata_are_rejected() -> Result<(), String> {
     let (session, one, _) = source()?;
     let (caller, _) = submission(&session, b"slot.invoke", &live_inputs(&one))?;
-    for legacy in [Compiler::new(), Compiler::new_live(), Compiler::new_text_cursor()] {
+    for legacy in [
+        Compiler::new(),
+        Compiler::new_live(),
+        Compiler::new_text_cursor(),
+    ] {
         if legacy.prepare(&caller).err() != Some(noble_wasm::Diagnostic::Invalid) {
             return Err("legacy profile admitted a slot environment".into());
         }
@@ -145,12 +154,18 @@ fn legacy_profiles_and_forged_slot_metadata_are_rejected() -> Result<(), String>
         return Err("forged host nominal schema was admitted".into());
     }
     forged = caller.clone();
-    forged.environment.live_resource_nominals[0] = NominalTypeId { module: 912, ordinal: 0 };
+    forged.environment.live_resource_nominals[0] = NominalTypeId {
+        module: 912,
+        ordinal: 0,
+    };
     if Compiler::new_live_slots().prepare(&forged).err() != Some(noble_wasm::Diagnostic::Invalid) {
         return Err("unregistered nominal identity was admitted".into());
     }
     forged = caller.clone();
-    forged.environment.effects.retain(|effect| *effect != LIVE_DISPATCH);
+    forged
+        .environment
+        .effects
+        .retain(|effect| *effect != LIVE_DISPATCH);
     if Compiler::new_live_slots().prepare(&forged).err() != Some(noble_wasm::Diagnostic::Invalid) {
         return Err("unavailable live dispatch effect was admitted".into());
     }
@@ -181,10 +196,10 @@ fn legacy_profiles_and_forged_slot_metadata_are_rejected() -> Result<(), String>
 }
 
 #[test]
-fn registered_host_clock_is_replayed_without_granting_unknown_host_contracts() -> Result<(), String> {
+fn registered_host_clock_is_replayed_without_granting_unknown_host_contracts() -> Result<(), String>
+{
     for clock_first in [false, true] {
-        let mut host = environment()
-            .map_err(|problem| format!("bootstrap: {problem:?}"))?;
+        let mut host = environment().map_err(|problem| format!("bootstrap: {problem:?}"))?;
         if !clock_first {
             host = host.enable_live_slots();
         }
@@ -206,10 +221,14 @@ fn registered_host_clock_is_replayed_without_granting_unknown_host_contracts() -
         let (submission, _) = submission(&session, b"1", &[])?;
         Compiler::new_live_slots()
             .prepare(&submission)
-            .map_err(|problem| format!("registered host clock was refused: {}", diagnostic(problem)))?;
+            .map_err(|problem| {
+                format!("registered host clock was refused: {}", diagnostic(problem))
+            })?;
 
         let mut forged = submission;
-        forged.environment.bound_adapters[0].adapter_identity.clear();
+        forged.environment.bound_adapters[0]
+            .adapter_identity
+            .clear();
         if Compiler::new_live_slots().prepare(&forged).err()
             != Some(noble_wasm::Diagnostic::Invalid)
         {
@@ -251,7 +270,12 @@ fn named_body_is_independently_checked_against_exact_slot_profile_contract() -> 
     named.body.texts.clear();
     Compiler::new_live_slots()
         .prepare(&named)
-        .map_err(|problem| format!("independently checked nominal definition was refused: {}", diagnostic(problem)))?;
+        .map_err(|problem| {
+            format!(
+                "independently checked nominal definition was refused: {}",
+                diagnostic(problem)
+            )
+        })?;
 
     let (incorrect, _) = submission(&session, b"true", &[one, Ty::I64])?;
     let mut forged = named;

@@ -100,8 +100,8 @@ impl super::Cursor<'_> {
                     Ok(super::RawType::Borrow(resource))
                 }
             }
-            "u8" | "s8" | "u16" | "s16" | "u32" | "s32" | "f32" | "f64" | "char"
-            | "tuple" | "option" => Err(crate::component::unsupported(
+            "u8" | "s8" | "u16" | "s16" | "u32" | "s32" | "f32" | "f64" | "char" | "tuple"
+            | "option" => Err(crate::component::unsupported(
                 "WIT type has no exact supported bounded adapter",
             )),
             _ => {

@@ -146,17 +146,31 @@ pub(crate) fn verify_definition_origin(
     definition_source: &[u8],
     limits: crate::Limits,
 ) -> Result<crate::Span, crate::Diagnostic> {
-    let DefinitionOrigin { module_source, module, version, definition, ordinal, span: source_span } = origin;
+    let DefinitionOrigin {
+        module_source,
+        module,
+        version,
+        definition,
+        ordinal,
+        span: source_span,
+    } = origin;
     let parsed = attempt!(parsing::parse(module_source, limits));
     let parsing::ParsedUnit::Module {
         name,
         version: parsed_version,
         members,
-    } = parsed else {
-        return Err(crate::invalid(source_span, "subject source is not a module"));
+    } = parsed
+    else {
+        return Err(crate::invalid(
+            source_span,
+            "subject source is not a module",
+        ));
     };
     if name != module || parsed_version != version {
-        return Err(crate::invalid(source_span, "subject module identity differs from source"));
+        return Err(crate::invalid(
+            source_span,
+            "subject module identity differs from source",
+        ));
     }
     let mut at = 0u32;
     let mut found = None;
@@ -169,10 +183,15 @@ pub(crate) fn verify_definition_origin(
         } = member
         {
             if name == definition {
-                if found.is_some() || at != ordinal || span != source_span
+                if found.is_some()
+                    || at != ordinal
+                    || span != source_span
                     || bytes.as_slice() != definition_source
                 {
-                    return Err(crate::invalid(source_span, "ambiguous or mismatched lexical subject definition"));
+                    return Err(crate::invalid(
+                        source_span,
+                        "ambiguous or mismatched lexical subject definition",
+                    ));
                 }
                 found = Some(body_span);
             }
@@ -181,7 +200,12 @@ pub(crate) fn verify_definition_origin(
             }));
         }
     }
-    found.ok_or_else(|| crate::invalid(source_span, "subject definition is absent from module source"))
+    found.ok_or_else(|| {
+        crate::invalid(
+            source_span,
+            "subject definition is absent from module source",
+        )
+    })
 }
 
 /// Recover the complete, independently tokenized original caller word. A
@@ -193,38 +217,65 @@ pub(crate) fn verify_named_call_origin<'a>(
     source_span: crate::Span,
     limits: crate::Limits,
 ) -> Result<&'a str, crate::Diagnostic> {
-    let DefinitionOrigin { module_source, definition: caller_definition, span: caller_span, .. } = caller;
+    let DefinitionOrigin {
+        module_source,
+        definition: caller_definition,
+        span: caller_span,
+        ..
+    } = caller;
     let start = usize::try_from(caller_span.start)
         .map_err(|_| crate::invalid(caller_span, "named caller span exceeds address space"))?;
     let end = usize::try_from(caller_span.end)
         .map_err(|_| crate::invalid(caller_span, "named caller span exceeds address space"))?;
-    let source = module_source.get(start..end)
+    let source = module_source
+        .get(start..end)
         .ok_or_else(|| crate::invalid(caller_span, "named caller lies outside retained module"))?;
     let body_span = attempt!(verify_definition_origin(caller, source, limits));
     let mut meter = crate::Meter::new(limits);
     let (tree, parsed_name) = attempt!(crate::source::parsing::parse_declared(source, &mut meter));
-    if parsed_name.as_deref() != Some(caller_definition) ||
-        tree.body.iter().filter(|id| **id == source_node).count() != 1 {
-        return Err(crate::invalid(source_span, "named call is not a unique original body node"));
+    if parsed_name.as_deref() != Some(caller_definition)
+        || tree.body.iter().filter(|id| **id == source_node).count() != 1
+    {
+        return Err(crate::invalid(
+            source_span,
+            "named call is not a unique original body node",
+        ));
     }
     let node = attempt!(tree.node(source_node));
     let crate::source::Kind::Word(spelling) = &node.kind else {
-        return Err(crate::invalid(source_span, "named call is not an original source word"));
+        return Err(crate::invalid(
+            source_span,
+            "named call is not an original source word",
+        ));
     };
-    let absolute_start = attempt!(caller_span.start.checked_add(node.span.start)
+    let absolute_start = attempt!(caller_span
+        .start
+        .checked_add(node.span.start)
         .ok_or_else(|| crate::invalid(source_span, "named call source span overflows")));
-    let absolute_end = attempt!(caller_span.start.checked_add(node.span.end)
+    let absolute_end = attempt!(caller_span
+        .start
+        .checked_add(node.span.end)
         .ok_or_else(|| crate::invalid(source_span, "named call source span overflows")));
     let source_start = usize::try_from(absolute_start)
         .map_err(|_| crate::invalid(source_span, "named call source span exceeds address space"))?;
     let source_end = usize::try_from(absolute_end)
         .map_err(|_| crate::invalid(source_span, "named call source span exceeds address space"))?;
-    let original_word = module_source.get(source_start..source_end)
+    let original_word = module_source
+        .get(source_start..source_end)
         .ok_or_else(|| crate::invalid(source_span, "named call lies outside retained module"))?;
-    if source_span != (crate::Span { start: absolute_start, end: absolute_end }) ||
-        absolute_start <= body_span.start || absolute_end >= body_span.end ||
-        original_word != spelling.as_slice() {
-        return Err(crate::invalid(source_span, "named call differs from exact original word token"));
+    if source_span
+        != (crate::Span {
+            start: absolute_start,
+            end: absolute_end,
+        })
+        || absolute_start <= body_span.start
+        || absolute_end >= body_span.end
+        || original_word != spelling.as_slice()
+    {
+        return Err(crate::invalid(
+            source_span,
+            "named call differs from exact original word token",
+        ));
     }
     core::str::from_utf8(original_word)
         .map_err(|_| crate::invalid(source_span, "named call word is not UTF-8"))
@@ -247,11 +298,18 @@ pub(crate) fn verify_named_export(
         name,
         version: parsed_version,
         members,
-    } = parsed else {
-        return Err(crate::invalid(definition_span, "named export source is not a module"));
+    } = parsed
+    else {
+        return Err(crate::invalid(
+            definition_span,
+            "named export source is not a module",
+        ));
     };
     if name != module || parsed_version != version {
-        return Err(crate::invalid(definition_span, "named export module differs from source"));
+        return Err(crate::invalid(
+            definition_span,
+            "named export module differs from source",
+        ));
     }
     let mut at = 0u32;
     let mut found = false;
@@ -260,28 +318,38 @@ pub(crate) fn verify_named_export(
         match member {
             parsing::Member::Export(name) if name == definition => {
                 if exported {
-                    return Err(crate::invalid(definition_span, "duplicate named source export"));
+                    return Err(crate::invalid(
+                        definition_span,
+                        "duplicate named source export",
+                    ));
                 }
                 exported = true;
             }
             parsing::Member::Definition { name, span, .. } => {
                 if name == definition {
                     if found || at != ordinal || span != definition_span {
-                        return Err(crate::invalid(definition_span,
-                            "named source export has a different lexical definition"));
+                        return Err(crate::invalid(
+                            definition_span,
+                            "named source export has a different lexical definition",
+                        ));
                     }
                     found = true;
                 }
                 at = attempt!(at.checked_add(1).ok_or_else(|| {
-                    crate::source::exhausted(definition_span, "module definition ordinal limit exceeded")
+                    crate::source::exhausted(
+                        definition_span,
+                        "module definition ordinal limit exceeded",
+                    )
                 }));
             }
             _ => (),
         }
     }
     if !found || !exported {
-        return Err(crate::invalid(definition_span,
-            "named source definition is absent or not exported"));
+        return Err(crate::invalid(
+            definition_span,
+            "named source definition is absent or not exported",
+        ));
     }
     Ok(())
 }

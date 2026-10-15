@@ -82,10 +82,10 @@ struct Session {
 impl Session {
     fn new(options: &arguments::Options) -> Result<Self, output::Failure> {
         let declared = match &options.manifest {
-            Some(manifest) => Some(attempt!(
-                noble_contracts::source::ModuleSession::new(&manifest.operations())
-                    .map_err(output::Failure::source)
-            )),
+            Some(manifest) => Some(attempt!(noble_contracts::source::ModuleSession::new(
+                &manifest.operations()
+            )
+            .map_err(output::Failure::source))),
             None => None,
         };
         Ok(Self {
@@ -129,18 +129,22 @@ impl Session {
         }
         let prepared = match self.frontend.prepare(source, &self.stack, options.limits) {
             Ok(prepared) => prepared,
-            Err(error) => return Ok(output::Report::source_error_for_profile(
-                &error, self.submissions, options.text_byte_cursor,
-            )),
+            Err(error) => {
+                return Ok(output::Report::source_error_for_profile(
+                    &error,
+                    self.submissions,
+                    options.text_byte_cursor,
+                ))
+            }
         };
         if prepared.is_definition() {
-            attempt!(
-                self.frontend
-                    .commit(prepared)
-                    .map_err(output::Failure::source)
-            );
+            attempt!(self
+                .frontend
+                .commit(prepared)
+                .map_err(output::Failure::source));
             return Ok(output::Report::defined_for_profile(
-                self.submissions, options.text_byte_cursor,
+                self.submissions,
+                options.text_byte_cursor,
             ));
         }
         let submission = attempt!(prepared.submission().ok_or_else(|| {
@@ -154,9 +158,13 @@ impl Session {
         }));
         let compiled = match self.compiler.prepare(submission) {
             Ok(compiled) => compiled,
-            Err(error) => return Ok(output::Report::backend_error_for_profile(
-                error, self.submissions, options.text_byte_cursor,
-            )),
+            Err(error) => {
+                return Ok(output::Report::backend_error_for_profile(
+                    error,
+                    self.submissions,
+                    options.text_byte_cursor,
+                ))
+            }
         };
         if self.worker.is_none() {
             self.worker = Some(attempt!(worker::Engine::start(options)));
@@ -175,16 +183,14 @@ impl Session {
             return Ok(prepared_report);
         }
         let output_types = prepared.output().to_vec();
-        attempt!(
-            self.compiler
-                .commit(compiled)
-                .map_err(output::Failure::backend)
-        );
-        attempt!(
-            self.frontend
-                .commit(prepared)
-                .map_err(output::Failure::source)
-        );
+        attempt!(self
+            .compiler
+            .commit(compiled)
+            .map_err(output::Failure::backend));
+        attempt!(self
+            .frontend
+            .commit(prepared)
+            .map_err(output::Failure::source));
         let report = attempt!(engine.execute());
         if report.outcome == "normal" {
             self.stack = output_types;

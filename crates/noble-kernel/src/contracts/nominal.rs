@@ -281,7 +281,10 @@ pub(super) fn register_bound_clock(
         || !registration.input.is_empty()
         || registration.output.as_slice() != [crate::types::Ty::I64]
         || registration.effects.as_slice() != [super::TEST_CLOCK]
-        || env.bound_adapters.iter().any(|row| row.adapter_slot == registration.adapter_slot)
+        || env
+            .bound_adapters
+            .iter()
+            .any(|row| row.adapter_slot == registration.adapter_slot)
     {
         return Err(super::NominalError::InvalidRepresentation);
     }

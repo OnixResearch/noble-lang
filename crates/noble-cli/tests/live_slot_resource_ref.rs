@@ -11,10 +11,12 @@ fn run_selected_cases(script: &str) {
         .arg(env!("CARGO_BIN_EXE_noble"))
         .output()
         .expect("launch pinned Node over genuine noble CLI child cases");
-    assert!(output.status.success(),
+    assert!(
+        output.status.success(),
         "selected CLI cases failed: stdout={} stderr={}",
         String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr));
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 #[test]

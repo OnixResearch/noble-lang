@@ -9,7 +9,8 @@ pub(in crate::workflow) fn verify(
     let deadline = attempt!(crate::sandbox::now()
         .checked_add(std::time::Duration::from_millis(timeout_ms))
         .ok_or_else(|| super::super::output::Failure::error(
-            "timeout-overflow", "invalid named proof deadline".into()
+            "timeout-overflow",
+            "invalid named proof deadline".into()
         )));
     let sandbox = attempt!(crate::sandbox::Environment::discover(deadline));
     let probe = attempt!(super::probe_toolchain(&sandbox, deadline));
@@ -21,7 +22,8 @@ pub(in crate::workflow) fn verify(
     attempt!(session.compile_library(library));
     let generated = &session.workspace.obligation;
     attempt!(super::super::artifacts::write_source(
-        &generated.join("NamedV2Obligation.lean"), obligation.as_bytes()
+        &generated.join("NamedV2Obligation.lean"),
+        obligation.as_bytes()
     ));
     let object = std::path::Path::new("NamedV2Obligation.olean");
     let writable = attempt!(super::super::artifacts::output_slots(generated, object));
@@ -30,10 +32,13 @@ pub(in crate::workflow) fn verify(
             super::super::artifacts::read_mount(&session.workspace.library, "/library"),
             super::super::artifacts::read_mount(generated, "/obligation"),
         ],
-        generated, &writable, "/obligation"
+        generated,
+        &writable,
+        "/obligation"
     ));
     let transcript = attempt!(session.compile_module(
-        mounts, "/library:/obligation",
+        mounts,
+        "/library:/obligation",
         super::compilation::Job {
             source: "/obligation/NamedV2Obligation.lean",
             root: "/obligation",
@@ -41,13 +46,17 @@ pub(in crate::workflow) fn verify(
         }
     ));
     attempt!(super::require_success(
-        transcript, "named-obligation-rejected",
+        transcript,
+        "named-obligation-rejected",
         "generated named source obligation failed strict Lean compilation"
     ));
-    attempt!(super::super::artifacts::finish_outputs(generated, object, &writable));
+    attempt!(super::super::artifacts::finish_outputs(
+        generated, object, &writable
+    ));
     // The only inserted text is the finite reviewed lowering of the checked
     // source rule, not a submitted Lean proof, declaration, tactic or import.
-    let consumer = std::format!(r#"import Lean
+    let consumer = std::format!(
+        r#"import Lean
 import NamedV2Obligation
 open NobleContracts
 open Lean Elab Command
@@ -78,10 +87,12 @@ elab "check_named_v2_axioms" : command => do
   for ax in axioms do
     logInfo m!"NOBLE-NAMED-V2-AXIOM:{{ax}}"
 check_named_v2_axioms
-"#);
+"#
+    );
     if consumer.len() > super::super::PROOF_LIMIT {
         return Err(super::super::output::Failure::error(
-            "named-proof-limit", "lowered named proof exceeded bounded source size".into()
+            "named-proof-limit",
+            "lowered named proof exceeded bounded source size".into(),
         ));
     }
     attempt!(super::super::artifacts::write_source(
@@ -94,17 +105,25 @@ check_named_v2_axioms
         super::super::artifacts::read_mount(&session.workspace.consumer, "/consumer"),
     ];
     let transcript = attempt!(session.sandbox.run(
-        &mounts, "/library:/obligation",
+        &mounts,
+        "/library:/obligation",
         &std::vec![
-            "-R".into(), "/consumer".into(), "-j".into(), "2".into(),
+            "-R".into(),
+            "/consumer".into(),
+            "-j".into(),
+            "2".into(),
             "/consumer/NamedV2Consumer.lean".into()
         ],
         deadline
     ));
     let transcript = attempt!(super::require_intrinsic_consumer_success(transcript));
-    let axioms = attempt!(super::intrinsic_axioms(&transcript.stdout, "NOBLE-NAMED-V2"));
+    let axioms = attempt!(super::intrinsic_axioms(
+        &transcript.stdout,
+        "NOBLE-NAMED-V2"
+    ));
     Ok(super::Acceptance {
-        axioms, wire: consumer,
+        axioms,
+        wire: consumer,
         tools: super::tools(&session.sandbox, &probe.stdout),
     })
 }

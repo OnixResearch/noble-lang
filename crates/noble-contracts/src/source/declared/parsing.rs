@@ -400,7 +400,10 @@ fn scan(
             crate::source::lexer::TokenKind::Open => match depth.checked_add(1) {
                 Some(next) => next,
                 None => {
-                    failure = Some(parse_diagnostic(token.span, "module nesting exceeds finite format"));
+                    failure = Some(parse_diagnostic(
+                        token.span,
+                        "module nesting exceeds finite format",
+                    ));
                     break;
                 }
             },

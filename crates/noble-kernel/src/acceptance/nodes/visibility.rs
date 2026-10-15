@@ -37,8 +37,7 @@ fn visible_behavior(
         return !env.calculator && bound_emit_visible(env, def);
     }
     if kind == crate::contracts::Behavior::TextByte {
-        return ((env.text_cursor && !env.declared_modules) || env.calculator)
-            && def.0 == 26;
+        return ((env.text_cursor && !env.declared_modules) || env.calculator) && def.0 == 26;
     }
     if env.calculator {
         match kind {

@@ -32,10 +32,13 @@ fn account_type(decl: &NominalDecl) -> Ty {
 fn live_environment() -> (Env, Ty, Ty) {
     let one = account(71, 1, 41);
     let two = account(71, 2, 42);
-    let env = environment().expect("bootstrap")
+    let env = environment()
+        .expect("bootstrap")
         .enable_live_slots()
-        .register_live_resource(one.clone()).expect("host registered @1")
-        .register_live_resource(two.clone()).expect("host registered @2");
+        .register_live_resource(one.clone())
+        .expect("host registered @1")
+        .register_live_resource(two.clone())
+        .expect("host registered @2");
     (env, account_type(&one), account_type(&two))
 }
 
@@ -109,20 +112,39 @@ fn ordered_borrowed_sidecar_checks_effect_and_admits_exact_target() {
     };
     assert_eq!(checked.interface.stack_in, request.expected.stack_in);
     assert_eq!(checked.interface.stack_out, vec![account_one.clone()]);
-    assert_eq!(checked.interface.effects, effects(&[TEST_EMIT, LIVE_DISPATCH]));
+    assert_eq!(
+        checked.interface.effects,
+        effects(&[TEST_EMIT, LIVE_DISPATCH])
+    );
     assert_eq!(
         effects(&[TEST_EMIT, LIVE_DISPATCH]).with_id(LIVE_DISPATCH),
         effects(&[TEST_EMIT, LIVE_DISPATCH]),
         "an existing dispatch effect must not be duplicated",
     );
-    assert_eq!(checked.derivations[0].interface.stack_in, vec![account_one.clone(), Ty::Text]);
-    assert_eq!(checked.derivations[0].interface.stack_out, vec![account_one.clone()]);
+    assert_eq!(
+        checked.derivations[0].interface.stack_in,
+        vec![account_one.clone(), Ty::Text]
+    );
+    assert_eq!(
+        checked.derivations[0].interface.stack_out,
+        vec![account_one.clone()]
+    );
     let [site] = checked.live_sites.as_slice() else {
         panic!("expected one dispatch site");
     };
-    assert_eq!((site.site_id, site.ref_ordinal, site.root_logical_input_position), (0, 0, 0));
+    assert_eq!(
+        (
+            site.site_id,
+            site.ref_ordinal,
+            site.root_logical_input_position
+        ),
+        (0, 0, 0)
+    );
     assert_eq!(site.forwarded_ref_ordinals, vec![2]);
-    assert_eq!(site.stack_in, vec![account_one.clone(), forwarded, Ty::Text]);
+    assert_eq!(
+        site.stack_in,
+        vec![account_one.clone(), forwarded, Ty::Text]
+    );
     assert_eq!(site.stack_out, vec![account_one.clone()]);
     assert_eq!(site.allowed_effects, effects(&[TEST_EMIT]));
 
@@ -136,12 +158,22 @@ fn ordered_borrowed_sidecar_checks_effect_and_admits_exact_target() {
         stack_in: vec![account_two.clone(), site.stack_in[1].clone(), Ty::Text],
         ..target.clone()
     };
-    assert!(!site.admits_target(&version_mismatch), "nominal @2 is not @1");
+    assert!(
+        !site.admits_target(&version_mismatch),
+        "nominal @2 is not @1"
+    );
     let resource_mismatch = Interface {
-        stack_in: vec![Ty::Resource(ResourceKind(41)), site.stack_in[1].clone(), Ty::Text],
+        stack_in: vec![
+            Ty::Resource(ResourceKind(41)),
+            site.stack_in[1].clone(),
+            Ty::Text,
+        ],
         ..target.clone()
     };
-    assert!(!site.admits_target(&resource_mismatch), "bare resource is not Account@1");
+    assert!(
+        !site.admits_target(&resource_mismatch),
+        "bare resource is not Account@1"
+    );
     let order_mismatch = Interface {
         stack_in: vec![Ty::Text, site.stack_in[1].clone(), account_one],
         ..target.clone()
@@ -171,10 +203,22 @@ fn borrowed_refs_cannot_be_forged_forwarded_incorrectly_or_leaked() {
         vec![account.clone()],
         &[TEST_EMIT, LIVE_DISPATCH],
     );
-    rejected(check(&env, &without_root, &slot(vec![])), Constraint::BorrowProvenance);
-    rejected(check(&env, &base, &slot(vec![1])), Constraint::BorrowProvenance);
-    rejected(check(&env, &base, &slot(vec![2, 2])), Constraint::BorrowProvenance);
-    rejected(check(&env, &base, &slot(vec![])), Constraint::BorrowProvenance);
+    rejected(
+        check(&env, &without_root, &slot(vec![])),
+        Constraint::BorrowProvenance,
+    );
+    rejected(
+        check(&env, &base, &slot(vec![1])),
+        Constraint::BorrowProvenance,
+    );
+    rejected(
+        check(&env, &base, &slot(vec![2, 2])),
+        Constraint::BorrowProvenance,
+    );
+    rejected(
+        check(&env, &base, &slot(vec![])),
+        Constraint::BorrowProvenance,
+    );
     forged.nodes[0] = Node::SlotInvoke {
         ref_ordinal: 0,
         site_id: 9,
@@ -184,7 +228,10 @@ fn borrowed_refs_cannot_be_forged_forwarded_incorrectly_or_leaked() {
 
     let mut wrong_version = base.clone();
     wrong_version.expected.stack_in[1] = other_version;
-    rejected(check(&env, &wrong_version, &slot(vec![2])), Constraint::StackJoin);
+    rejected(
+        check(&env, &wrong_version, &slot(vec![2])),
+        Constraint::StackJoin,
+    );
     let mut wrong_forwarded_schema = base.clone();
     wrong_forwarded_schema.expected.stack_in[2] =
         Ty::live_ref(vec![], vec![Ty::I64], EffSet::empty());
@@ -195,32 +242,47 @@ fn borrowed_refs_cannot_be_forged_forwarded_incorrectly_or_leaked() {
 
     let mut escaped = base.clone();
     escaped.expected.stack_out = vec![base.expected.stack_in[0].clone()];
-    rejected(check(&env, &escaped, &slot(vec![2])), Constraint::InvalidType);
+    rejected(
+        check(&env, &escaped, &slot(vec![2])),
+        Constraint::InvalidType,
+    );
     let mut ref_return = base.clone();
     ref_return.expected.stack_in[0] = Ty::live_ref(
         vec![account.clone(), Ty::Text],
         vec![base.expected.stack_in[2].clone()],
         effects(&[TEST_EMIT]),
     );
-    rejected(check(&env, &ref_return, &slot(vec![])), Constraint::InvalidType);
+    rejected(
+        check(&env, &ref_return, &slot(vec![])),
+        Constraint::InvalidType,
+    );
     let mut captured = base.clone();
     captured.expected.stack_out = vec![Ty::program(
         vec![],
         vec![base.expected.stack_in[0].clone()],
         EffSet::empty(),
     )];
-    rejected(check(&env, &captured, &slot(vec![2])), Constraint::InvalidType);
+    rejected(
+        check(&env, &captured, &slot(vec![2])),
+        Constraint::InvalidType,
+    );
     let mut aggregate = base.clone();
     aggregate.expected.stack_in[0] = Ty::Pair(
         Box::new(base.expected.stack_in[0].clone()),
         Box::new(Ty::Unit),
     );
-    rejected(check(&env, &aggregate, &slot(vec![2])), Constraint::InvalidType);
+    rejected(
+        check(&env, &aggregate, &slot(vec![2])),
+        Constraint::InvalidType,
+    );
     assert!(!base.expected.stack_in[0].is_data());
     assert!(!Ty::List(Box::new(base.expected.stack_in[0].clone())).is_data());
     let mut raw_resource = base.clone();
     raw_resource.expected.stack_in[1] = Ty::Resource(ResourceKind(41));
-    rejected(check(&env, &raw_resource, &slot(vec![2])), Constraint::InvalidType);
+    rejected(
+        check(&env, &raw_resource, &slot(vec![2])),
+        Constraint::InvalidType,
+    );
 }
 
 #[test]
@@ -228,7 +290,12 @@ fn forwarding_can_reborrow_one_root_reference_twice_in_formal_order() {
     let (env, account, _) = live_environment();
     let (mut request, forwarded) = borrowed_request(account.clone());
     request.expected.stack_in[0] = Ty::live_ref(
-        vec![account.clone(), forwarded.clone(), forwarded.clone(), Ty::Text],
+        vec![
+            account.clone(),
+            forwarded.clone(),
+            forwarded.clone(),
+            Ty::Text,
+        ],
         vec![account.clone()],
         effects(&[TEST_EMIT]),
     );
@@ -284,28 +351,48 @@ fn profile_gate_quotation_capture_and_effect_ceiling_reject() {
         body: vec![NodeId(0)],
     };
     let mut quote_request = base.clone();
-    quote_request.expected.stack_out = vec![account, Ty::Text, Ty::program(
-        vec![base.expected.stack_in[1].clone(), Ty::Text],
-        vec![base.expected.stack_in[1].clone()],
-        effects(&[TEST_EMIT, LIVE_DISPATCH]),
-    )];
-    rejected(check(&env, &quote_request, &quoted), Constraint::BorrowProvenance);
+    quote_request.expected.stack_out = vec![
+        account,
+        Ty::Text,
+        Ty::program(
+            vec![base.expected.stack_in[1].clone(), Ty::Text],
+            vec![base.expected.stack_in[1].clone()],
+            effects(&[TEST_EMIT, LIVE_DISPATCH]),
+        ),
+    ];
+    rejected(
+        check(&env, &quote_request, &quoted),
+        Constraint::BorrowProvenance,
+    );
 }
 
 #[test]
 fn host_registration_rejects_alias_kinds_and_guest_resource_constructors() {
     let (env, _, _) = live_environment();
-    assert!(env.clone().register_live_resource(account(80, 3, 41)).is_err());
-    assert!(env.clone().register_live_resource(account(71, 1, 45)).is_err());
+    assert!(env
+        .clone()
+        .register_live_resource(account(80, 3, 41))
+        .is_err());
+    assert!(env
+        .clone()
+        .register_live_resource(account(71, 1, 45))
+        .is_err());
     assert!(env.clone().declare_nominal(account(80, 1, 45)).is_err());
     let mut forged = env.clone();
     forged.effects.clear();
     let request = request(vec![], vec![], &[LIVE_DISPATCH]);
-    rejected(check(&forged, &request, &candidate(Node::SlotInvoke {
-        ref_ordinal: 0,
-        site_id: 0,
-        forwarded_ref_ordinals: vec![],
-    })), Constraint::InvalidContract);
+    rejected(
+        check(
+            &forged,
+            &request,
+            &candidate(Node::SlotInvoke {
+                ref_ordinal: 0,
+                site_id: 0,
+                forwarded_ref_ordinals: vec![],
+            }),
+        ),
+        Constraint::InvalidContract,
+    );
 }
 
 #[test]
@@ -313,16 +400,15 @@ fn core_retains_existing_non_live_resource_admission() {
     let mut env = environment().expect("bootstrap");
     let extra = ResourceKind(99);
     env.resource_kinds.push(extra);
-    let interface = request(
-        vec![Ty::Resource(extra)],
-        vec![Ty::Resource(extra)],
-        &[],
-    );
+    let interface = request(vec![Ty::Resource(extra)], vec![Ty::Resource(extra)], &[]);
     let empty = Candidate {
         format: CANDIDATE_FORMAT,
         revision: SEMANTIC_REVISION,
         nodes: vec![],
         body: vec![],
     };
-    assert!(matches!(check(&env, &interface, &empty), Outcome::Accepted(_)));
+    assert!(matches!(
+        check(&env, &interface, &empty),
+        Outcome::Accepted(_)
+    ));
 }

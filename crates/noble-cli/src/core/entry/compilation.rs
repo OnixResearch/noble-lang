@@ -242,8 +242,12 @@ fn preload_module(
     let (next, outcome) = if prepared.proof_obligations().is_some() {
         frontend.commit_verified(prepared, |batch| {
             crate::workflow::intrinsic::verify_batch(
-                batch, &module, limits, crate::workflow::DEFAULT_TIMEOUT
-            ).map_err(|error| std::format!("{}: {}",error.code,error.message))
+                batch,
+                &module,
+                limits,
+                crate::workflow::DEFAULT_TIMEOUT,
+            )
+            .map_err(|error| std::format!("{}: {}", error.code, error.message))
         })
     } else {
         frontend.commit(prepared)

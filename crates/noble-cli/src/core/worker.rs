@@ -52,7 +52,10 @@ impl Engine {
         if ready.outcome != "ready" {
             engine.has_failed = true;
             return Err(super::output::Failure::new(
-                super::output::ErrorContext { stage: "wasm", outcome: "unsupported" },
+                super::output::ErrorContext {
+                    stage: "wasm",
+                    outcome: "unsupported",
+                },
                 ready.json,
             ));
         }
@@ -71,7 +74,11 @@ impl Engine {
         let policy = crate::workflow::encoding::strings(allowed).encode();
         let header = std::format!(
             "admit {} {} {} {} {}\n",
-            artifact.len(), wat.len(), source.len(), claims.len(), policy.len()
+            artifact.len(),
+            wat.len(),
+            source.len(),
+            claims.len(),
+            policy.len()
         );
         attempt!(self.write(header.as_bytes()));
         for bytes in [artifact, wat, source, claims.as_bytes(), policy.as_bytes()] {
@@ -80,7 +87,9 @@ impl Engine {
         self.reply()
     }
 
-    pub(super) fn start(options: &super::arguments::Options) -> Result<Self, super::output::Failure> {
+    pub(super) fn start(
+        options: &super::arguments::Options,
+    ) -> Result<Self, super::output::Failure> {
         let config = attempt!(configuration::build(options));
         Self::start_with_config(&config)
     }
@@ -112,7 +121,10 @@ impl Engine {
         if ready.outcome != "ready" {
             engine.has_failed = true;
             return Err(super::output::Failure::new(
-                super::output::ErrorContext { stage: "wasm", outcome: "unsupported" },
+                super::output::ErrorContext {
+                    stage: "wasm",
+                    outcome: "unsupported",
+                },
                 ready.json,
             ));
         }
@@ -125,7 +137,8 @@ impl Engine {
         &self,
     ) -> Result<std::os::unix::net::UnixDatagram, super::output::Failure> {
         attempt!(self.control.as_ref().ok_or_else(protocol::error))
-            .try_clone().map_err(super::framing::io_error)
+            .try_clone()
+            .map_err(super::framing::io_error)
     }
 
     /// Slot mode must report worker shutdown failures through JSONL and its
@@ -146,12 +159,20 @@ impl Engine {
         Self::start_with_host(config, HOST, false)
     }
 
-    fn start_with_host(config: &str, host: &str, slot: bool) -> Result<Self, super::output::Failure> {
+    fn start_with_host(
+        config: &str,
+        host: &str,
+        slot: bool,
+    ) -> Result<Self, super::output::Failure> {
         let (control, child_control) = if slot {
-            let (parent, child) = attempt!(std::os::unix::net::UnixDatagram::pair()
+            let (parent, child) = attempt!(
+                std::os::unix::net::UnixDatagram::pair().map_err(super::framing::io_error)
+            );
+            attempt!(parent
+                .set_nonblocking(true)
                 .map_err(super::framing::io_error));
-            attempt!(parent.set_nonblocking(true).map_err(super::framing::io_error));
-            attempt!(child.set_read_timeout(Some(std::time::Duration::from_secs(10)))
+            attempt!(child
+                .set_read_timeout(Some(std::time::Duration::from_secs(10)))
                 .map_err(super::framing::io_error));
             (Some(parent), Some(child))
         } else {
@@ -209,16 +230,23 @@ impl Engine {
         const MAX_BINARY: usize = 4_194_304;
         let json = attempt!(serde_json::to_vec(request).map_err(|error| {
             super::output::Failure::new(
-                super::output::ErrorContext { stage: "shell", outcome: "invalid-input" },
+                super::output::ErrorContext {
+                    stage: "shell",
+                    outcome: "invalid-input",
+                },
                 std::format!("cannot encode slot request: {error}"),
             )
         }));
-        if json.len() > MAX_REQUEST || binary.len() > MAX_BINARY
+        if json.len() > MAX_REQUEST
+            || binary.len() > MAX_BINARY
             || (request.get("operation").and_then(serde_json::Value::as_str) != Some("install")
                 && !binary.is_empty())
         {
             return Err(super::output::Failure::new(
-                super::output::ErrorContext { stage: "shell", outcome: "exhausted" },
+                super::output::ErrorContext {
+                    stage: "shell",
+                    outcome: "exhausted",
+                },
                 "slot request exceeds bounded worker protocol",
             ));
         }
@@ -281,10 +309,7 @@ impl Engine {
         owner: u64,
         source_generation: u64,
     ) -> Result<super::output::Report, super::output::Failure> {
-        let header = std::format!(
-            "live-grant {} {owner} {source_generation}\n",
-            name.len()
-        );
+        let header = std::format!("live-grant {} {owner} {source_generation}\n", name.len());
         attempt!(self.write(header.as_bytes()));
         attempt!(self.write(name.as_bytes()));
         self.reply()
@@ -478,8 +503,8 @@ fn launch(
 }
 
 fn launch_calculator(config: &str) -> Result<std::process::Child, super::output::Failure> {
-    let temp = attempt!(std::fs::canonicalize(std::env::temp_dir())
-        .map_err(super::framing::io_error));
+    let temp =
+        attempt!(std::fs::canonicalize(std::env::temp_dir()).map_err(super::framing::io_error));
     launch_with_temp(config, HOST, None, Some(&temp))
 }
 
@@ -539,18 +564,19 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
     }
     if let Some(control) = child_control {
         command.env("NOBLE_SLOT_CONTROL_FD", "2");
-        command.stderr(std::process::Stdio::from(std::os::fd::OwnedFd::from(control)));
+        command.stderr(std::process::Stdio::from(std::os::fd::OwnedFd::from(
+            control,
+        )));
     } else {
         command.stderr(std::process::Stdio::inherit());
     }
-    command.spawn()
-        .map_err(|error| {
-            super::output::Failure::new(
-                super::output::ErrorContext {
-                    stage: "wasm",
-                    outcome: "unsupported",
-                },
-                std::format!("cannot start selected Node engine: {error}"),
-            )
-        })
+    command.spawn().map_err(|error| {
+        super::output::Failure::new(
+            super::output::ErrorContext {
+                stage: "wasm",
+                outcome: "unsupported",
+            },
+            std::format!("cannot start selected Node engine: {error}"),
+        )
+    })
 }

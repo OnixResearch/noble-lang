@@ -172,16 +172,24 @@ pub(super) fn check(
         return Err(crate::Diagnostic::Exhausted);
     }
     if calculator {
-        let budget = attempt!(submission.environment.calculator_clone_budget()
+        let budget = attempt!(submission
+            .environment
+            .calculator_clone_budget()
             .ok_or(crate::Diagnostic::Exhausted));
-        let count = attempt!(submission.definitions.len().checked_add(1)
+        let count = attempt!(submission
+            .definitions
+            .len()
+            .checked_add(1)
             .ok_or(crate::Diagnostic::Exhausted));
-        let copies = attempt!(u64::try_from(count)
-            .map_err(|_| crate::Diagnostic::Exhausted));
-        attempt!(budget.reserved_bytes.checked_mul(copies)
+        let copies = attempt!(u64::try_from(count).map_err(|_| crate::Diagnostic::Exhausted));
+        attempt!(budget
+            .reserved_bytes
+            .checked_mul(copies)
             .filter(|total| *total <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
             .ok_or(crate::Diagnostic::Exhausted));
-        attempt!(work.charge(attempt!(budget.bytes.checked_mul(copies)
+        attempt!(work.charge(attempt!(budget
+            .bytes
+            .checked_mul(copies)
             .ok_or(crate::Diagnostic::Exhausted))));
     }
     let mut index = 0usize;

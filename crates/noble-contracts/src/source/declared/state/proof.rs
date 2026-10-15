@@ -1,6 +1,12 @@
-use crate::source::proof::{CheckedSelectedTarget, ProofContext,
-    SourceCorrespondenceCandidate, SourceProofRefusal as Refusal};
-use noble_kernel::{contracts::Definition, types::{EffSet, Ty}, untrusted::{Node, NodeId}};
+use crate::source::proof::{
+    CheckedSelectedTarget, ProofContext, SourceCorrespondenceCandidate,
+    SourceProofRefusal as Refusal,
+};
+use noble_kernel::{
+    contracts::Definition,
+    types::{EffSet, Ty},
+    untrusted::{Node, NodeId},
+};
 
 impl super::ModuleSession {
     /// Compare the *full* checked source target to one host-retained verified
@@ -32,25 +38,34 @@ impl super::ModuleSession {
         if context.module_generation != self.generation {
             return Err(Refusal::StaleContext);
         }
-        let mut modules = self.modules.iter().filter(|entry|
-            entry.name == module_name && entry.version == version);
+        let mut modules = self
+            .modules
+            .iter()
+            .filter(|entry| entry.name == module_name && entry.version == version);
         let module = modules.next().ok_or(Refusal::MissingEvidence)?;
         if modules.next().is_some() {
             return Err(Refusal::MismatchedSource);
         }
-        let mut contracts = module.contracts.iter().filter(|entry| entry.name == contract_name);
+        let mut contracts = module
+            .contracts
+            .iter()
+            .filter(|entry| entry.name == contract_name);
         let contract = contracts.next().ok_or(Refusal::MissingEvidence)?;
         if contracts.next().is_some() {
             return Err(Refusal::MismatchedClaim);
         }
-        let mut proofs = module.proofs.iter().filter(|entry| entry.reference.name == proof_name);
+        let mut proofs = module
+            .proofs
+            .iter()
+            .filter(|entry| entry.reference.name == proof_name);
         let proof = proofs.next().ok_or(Refusal::MissingEvidence)?;
         if proofs.next().is_some() {
             return Err(Refusal::MismatchedClaim);
         }
         let goal = &contract.goal;
         let crate::intrinsic::PendingGoal::Contract { contract: bound } =
-            &proof.reference.declaration.goal else {
+            &proof.reference.declaration.goal
+        else {
             return Err(Refusal::MismatchedClaim);
         };
         if goal.revision != 1
@@ -61,8 +76,10 @@ impl super::ModuleSession {
         }
         if goal.contract_name != bound.contract_name
             || goal.contract_span != bound.contract_span
-            || goal.inputs != bound.inputs || goal.outputs != bound.outputs
-            || goal.requires != bound.requires || goal.ensures != bound.ensures
+            || goal.inputs != bound.inputs
+            || goal.outputs != bound.outputs
+            || goal.requires != bound.requires
+            || goal.ensures != bound.ensures
             || goal.subject.module_source != bound.subject.module_source
             || goal.subject.definition_source != bound.subject.definition_source
             || goal.subject.definition_identity != bound.subject.definition_identity
@@ -134,20 +151,44 @@ fn same_candidate(
     left: &noble_kernel::untrusted::Candidate,
     right: &noble_kernel::untrusted::Candidate,
 ) -> bool {
-    if left.format != right.format || left.revision != right.revision
-        || left.body.len() != 2 || left.body != [NodeId(0), NodeId(1)]
-        || right.body != left.body || left.nodes.len() != 2 || right.nodes.len() != 2
+    if left.format != right.format
+        || left.revision != right.revision
+        || left.body.len() != 2
+        || left.body != [NodeId(0), NodeId(1)]
+        || right.body != left.body
+        || left.nodes.len() != 2
+        || right.nodes.len() != 2
     {
         return false;
     }
-    let (Node::Literal { lit: noble_kernel::untrusted::Lit::I64(a), inst: ai },
-         Node::Literal { lit: noble_kernel::untrusted::Lit::I64(b), inst: bi }) =
-        (&left.nodes[0], &right.nodes[0]) else { return false; };
+    let (
+        Node::Literal {
+            lit: noble_kernel::untrusted::Lit::I64(a),
+            inst: ai,
+        },
+        Node::Literal {
+            lit: noble_kernel::untrusted::Lit::I64(b),
+            inst: bi,
+        },
+    ) = (&left.nodes[0], &right.nodes[0])
+    else {
+        return false;
+    };
     if a != b || !crate::intrinsic::same_inst(ai, bi) {
         return false;
     }
-    let (Node::Invocation { def: Definition(4), inst: ai },
-         Node::Invocation { def: Definition(4), inst: bi }) =
-        (&left.nodes[1], &right.nodes[1]) else { return false; };
+    let (
+        Node::Invocation {
+            def: Definition(4),
+            inst: ai,
+        },
+        Node::Invocation {
+            def: Definition(4),
+            inst: bi,
+        },
+    ) = (&left.nodes[1], &right.nodes[1])
+    else {
+        return false;
+    };
     crate::intrinsic::same_inst(ai, bi)
 }

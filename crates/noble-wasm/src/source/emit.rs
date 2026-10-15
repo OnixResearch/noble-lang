@@ -147,13 +147,21 @@ pub(super) fn module(
     }
     if plan.calculator {
         for (offset, key) in signature_keys.iter().enumerate() {
-            attempt!(metadata::signature_segment(&mut out, signature_base + offset, key));
+            attempt!(metadata::signature_segment(
+                &mut out,
+                signature_base + offset,
+                key
+            ));
         }
     }
     attempt!(metadata::descriptors(
         &mut out,
         &plan.descriptors,
-        if plan.calculator { Some((signature_base, signature_keys)) } else { None },
+        if plan.calculator {
+            Some((signature_base, signature_keys))
+        } else {
+            None
+        },
     ));
     attempt!(initialize::write(&mut out, plan, generation));
     attempt!(metadata::stack_check(

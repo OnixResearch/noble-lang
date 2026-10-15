@@ -100,7 +100,11 @@ impl Pool {
     }
 
     pub(crate) const fn len(&self) -> usize {
-        if self.compact { self.prefix_keys.len() } else { self.keys.len() }
+        if self.compact {
+            self.prefix_keys.len()
+        } else {
+            self.keys.len()
+        }
     }
 
     pub(crate) fn key_len(&self, index: usize) -> usize {
@@ -163,9 +167,7 @@ impl Pool {
             attempt!(charge(record.suffix.len().saturating_add(1)));
             scratch.extend_from_slice(&record.suffix);
             attempt!(charge(scratch.len()));
-            if scratch.len() != record.length as usize
-                || fingerprint(&scratch) != record.hash
-            {
+            if scratch.len() != record.length as usize || fingerprint(&scratch) != record.hash {
                 return Err(crate::Diagnostic::Defective);
             }
             if index >= first {
@@ -198,7 +200,9 @@ impl Pool {
         }
         let mut index = 0usize;
         while index < self.keys.len() {
-            attempt!(charge(self.keys[index].len().min(key.len()).saturating_add(1)));
+            attempt!(charge(
+                self.keys[index].len().min(key.len()).saturating_add(1)
+            ));
             if self.keys[index] == key {
                 return number(index);
             }
@@ -282,7 +286,10 @@ impl Pool {
             attempt!(charge(prefix.saturating_add(1)));
         }
         let suffix = &key[prefix..];
-        let size = match self.bytes.checked_add(suffix.len().saturating_add(PREFIX_RECORD_BYTES)) {
+        let size = match self
+            .bytes
+            .checked_add(suffix.len().saturating_add(PREFIX_RECORD_BYTES))
+        {
             Some(size) => size,
             None => return Err(crate::Diagnostic::Exhausted),
         };
@@ -401,16 +408,27 @@ mod tests {
         // expansion ceiling, while front-coded storage exceeds one MiB.
         for first in 0..64u8 {
             let key = alloc::vec![first; 65_536];
-            assert_eq!(pool.intern_prefix(key, &mut |_| Ok(())).ok(), Some(u32::from(first)));
+            assert_eq!(
+                pool.intern_prefix(key, &mut |_| Ok(())).ok(),
+                Some(u32::from(first))
+            );
         }
         assert_eq!(pool.expanded_bytes, CALCULATOR_EXPANDED_KEY_LIMIT);
         assert!(pool.bytes > crate::OUTPUT_BYTE_LIMIT);
         let previous_bytes = pool.bytes;
-        assert_eq!(pool.intern_prefix(alloc::vec![0; 65_536], &mut |_| Ok(())).ok(), Some(0));
+        assert_eq!(
+            pool.intern_prefix(alloc::vec![0; 65_536], &mut |_| Ok(()))
+                .ok(),
+            Some(0)
+        );
         assert_eq!(pool.expanded_bytes, CALCULATOR_EXPANDED_KEY_LIMIT);
         assert_eq!(pool.bytes, previous_bytes);
         for _ in 0..128 {
-            assert_eq!(pool.intern_prefix(alloc::vec![0; 65_536], &mut |_| Ok(())).ok(), Some(0));
+            assert_eq!(
+                pool.intern_prefix(alloc::vec![0; 65_536], &mut |_| Ok(()))
+                    .ok(),
+                Some(0)
+            );
         }
         assert_eq!(pool.expanded_bytes, CALCULATOR_EXPANDED_KEY_LIMIT);
         assert_eq!(pool.bytes, previous_bytes);
@@ -424,7 +442,9 @@ mod tests {
         ));
         assert_eq!(pool.len(), 64);
         assert_eq!(pool.bytes, previous_bytes);
-        let expanded = pool.expanded_keys(0, |_| Ok(())).unwrap_or_else(|_| panic!("bounded keys did not decode"));
+        let expanded = pool
+            .expanded_keys(0, |_| Ok(()))
+            .unwrap_or_else(|_| panic!("bounded keys did not decode"));
         for (first, key) in expanded.iter().enumerate() {
             assert_eq!(key.len(), 65_536);
             assert!(key.iter().all(|&byte| byte == first as u8));
@@ -437,19 +457,31 @@ mod tests {
         pool.select_calculator();
         let original = alloc::vec![1, 2, 3, 4];
         let different = alloc::vec![4, 3, 2, 1];
-        assert_eq!(pool.intern_prefix(original.clone(), &mut |_| Ok(())).ok(), Some(0));
+        assert_eq!(
+            pool.intern_prefix(original.clone(), &mut |_| Ok(())).ok(),
+            Some(0)
+        );
         // Force a genuine fingerprint collision: record 0 is also indexed
         // under the different key's fingerprint, so lookup must decode and
         // compare its bytes rather than trust the matching hash.
         pool.prefix_keys[0].hash = fingerprint(&different);
-        pool.candidates.entry((fingerprint(&different), 4)).or_default().push(0);
-        assert_eq!(pool.intern_prefix(different.clone(), &mut |_| Ok(())).ok(), Some(1));
+        pool.candidates
+            .entry((fingerprint(&different), 4))
+            .or_default()
+            .push(0);
+        assert_eq!(
+            pool.intern_prefix(different.clone(), &mut |_| Ok(())).ok(),
+            Some(1)
+        );
         pool.prefix_keys[0].hash = fingerprint(&original);
         assert_eq!(pool.intern_prefix(original, &mut |_| Ok(())).ok(), Some(0));
         assert_eq!(pool.intern_prefix(different, &mut |_| Ok(())).ok(), Some(1));
         for value in 2..CALCULATOR_SOURCE_KEY_LIMIT {
             let key = (value as u32).to_le_bytes().to_vec();
-            assert_eq!(pool.intern_prefix(key, &mut |_| Ok(())).ok(), Some(value as u32));
+            assert_eq!(
+                pool.intern_prefix(key, &mut |_| Ok(())).ok(),
+                Some(value as u32)
+            );
         }
         let before = pool.bytes;
         assert!(matches!(
@@ -458,39 +490,65 @@ mod tests {
         ));
         assert_eq!(pool.bytes, before);
         assert_eq!(pool.len(), CALCULATOR_SOURCE_KEY_LIMIT);
-        assert_eq!(pool.intern_prefix(alloc::vec![4, 3, 2, 1], &mut |_| Ok(())).ok(), Some(1));
-        let keys = pool.expanded_keys(0, |_| Ok(()))
+        assert_eq!(
+            pool.intern_prefix(alloc::vec![4, 3, 2, 1], &mut |_| Ok(()))
+                .ok(),
+            Some(1)
+        );
+        let keys = pool
+            .expanded_keys(0, |_| Ok(()))
             .unwrap_or_else(|_| panic!("bounded source keys did not decode"));
-        assert_eq!(keys[SOURCE_KEY_LIMIT], (SOURCE_KEY_LIMIT as u32).to_le_bytes());
-        assert_eq!(keys[CALCULATOR_SOURCE_KEY_LIMIT - 1],
-            ((CALCULATOR_SOURCE_KEY_LIMIT - 1) as u32).to_le_bytes());
+        assert_eq!(
+            keys[SOURCE_KEY_LIMIT],
+            (SOURCE_KEY_LIMIT as u32).to_le_bytes()
+        );
+        assert_eq!(
+            keys[CALCULATOR_SOURCE_KEY_LIMIT - 1],
+            ((CALCULATOR_SOURCE_KEY_LIMIT - 1) as u32).to_le_bytes()
+        );
         // A delta that starts mid-block still decodes its front-coded
         // predecessors, but returns and charges output for only its own IDs.
         let mut copied = 0usize;
-        let delta = pool.expanded_keys(CALCULATOR_SOURCE_KEY_LIMIT - 1, |bytes| {
-            copied += bytes;
-            Ok(())
-        }).unwrap_or_else(|_| panic!("bounded source delta did not decode"));
+        let delta = pool
+            .expanded_keys(CALCULATOR_SOURCE_KEY_LIMIT - 1, |bytes| {
+                copied += bytes;
+                Ok(())
+            })
+            .unwrap_or_else(|_| panic!("bounded source delta did not decode"));
         assert_eq!(delta, [keys[CALCULATOR_SOURCE_KEY_LIMIT - 1].clone()]);
-        assert!(copied < 32 * 16, "delta decode charged {copied} for one four-byte key");
-        assert_eq!(pool.expanded_keys(CALCULATOR_SOURCE_KEY_LIMIT, |_| Ok(())).ok(),
-            Some(alloc::vec::Vec::new()));
-        assert!(matches!(pool.expanded_keys(CALCULATOR_SOURCE_KEY_LIMIT + 1, |_| Ok(())),
-            Err(crate::Diagnostic::Defective)));
+        assert!(
+            copied < 32 * 16,
+            "delta decode charged {copied} for one four-byte key"
+        );
+        assert_eq!(
+            pool.expanded_keys(CALCULATOR_SOURCE_KEY_LIMIT, |_| Ok(()))
+                .ok(),
+            Some(alloc::vec::Vec::new())
+        );
+        assert!(matches!(
+            pool.expanded_keys(CALCULATOR_SOURCE_KEY_LIMIT + 1, |_| Ok(())),
+            Err(crate::Diagnostic::Defective)
+        ));
     }
 
     #[test]
     fn calculator_pool_lookup_charge_does_not_grow_with_retained_keys() {
         fn charged(pool: &mut Pool, key: alloc::vec::Vec<u8>) -> (Option<u32>, usize) {
             let mut total = 0usize;
-            let id = pool.intern_prefix(key, &mut |amount| {
-                total += amount;
-                Ok(())
-            }).ok();
+            let id = pool
+                .intern_prefix(key, &mut |amount| {
+                    total += amount;
+                    Ok(())
+                })
+                .ok();
             (id, total)
         }
-        let key = |value: u32| alloc::vec![b'k', b'0' + (value % 10) as u8]
-            .into_iter().chain(value.to_le_bytes()).collect::<alloc::vec::Vec<u8>>();
+        let key = |value: u32| {
+            alloc::vec![b'k', b'0' + (value % 10) as u8]
+                .into_iter()
+                .chain(value.to_le_bytes())
+                .collect::<alloc::vec::Vec<u8>>()
+        };
         let mut pool = Pool::source();
         pool.select_calculator();
         for value in 0..64 {
@@ -510,8 +568,14 @@ mod tests {
         assert_eq!(large_new_id, Some(8_000));
         // A 125x larger pool may deepen the ordered probe, but a linear scan
         // would charge thousands of comparisons for the same lookups.
-        assert!(large_hit <= small_hit + 16, "hit charge grew from {small_hit} to {large_hit}");
-        assert!(large_new <= small_new + 32, "insert charge grew from {small_new} to {large_new}");
+        assert!(
+            large_hit <= small_hit + 16,
+            "hit charge grew from {small_hit} to {large_hit}"
+        );
+        assert!(
+            large_new <= small_new + 32,
+            "insert charge grew from {small_new} to {large_new}"
+        );
     }
 
     #[test]
@@ -522,17 +586,31 @@ mod tests {
         for index in 0..CALCULATOR_SOURCE_KEY_LIMIT {
             let key = (index as u32).to_le_bytes().to_vec();
             if index < SOURCE_KEY_LIMIT {
-                assert_eq!(ordinary.intern(&[Ty::Resource(ResourceKind(index as u32))]).ok(),
-                    Some(index as u32));
+                assert_eq!(
+                    ordinary
+                        .intern(&[Ty::Resource(ResourceKind(index as u32))])
+                        .ok(),
+                    Some(index as u32)
+                );
             }
-            assert_eq!(selected.intern_prefix(key, &mut |_| Ok(())).ok(), Some(index as u32));
+            assert_eq!(
+                selected.intern_prefix(key, &mut |_| Ok(())).ok(),
+                Some(index as u32)
+            );
             if index == SOURCE_KEY_LIMIT {
                 assert_eq!(selected.len(), SOURCE_KEY_LIMIT + 1);
             }
         }
         let previous = selected.clone();
-        assert_eq!(selected.intern_prefix((SOURCE_KEY_LIMIT as u32).to_le_bytes().to_vec(),
-            &mut |_| Ok(())).ok(), Some(SOURCE_KEY_LIMIT as u32));
+        assert_eq!(
+            selected
+                .intern_prefix(
+                    (SOURCE_KEY_LIMIT as u32).to_le_bytes().to_vec(),
+                    &mut |_| Ok(())
+                )
+                .ok(),
+            Some(SOURCE_KEY_LIMIT as u32)
+        );
         assert!(selected.prefix_keys == previous.prefix_keys);
         assert_eq!(selected.bytes, previous.bytes);
         assert_eq!(selected.expanded_bytes, previous.expanded_bytes);
@@ -540,8 +618,10 @@ mod tests {
         assert_eq!(count, SOURCE_KEY_LIMIT);
         // Ordinary source always uses complete, uncompressed stack keys.
         let ordinary_bytes = ordinary.bytes;
-        assert!(matches!(ordinary.intern(&[Ty::Resource(ResourceKind(4096))]),
-            Err(crate::Diagnostic::Exhausted)));
+        assert!(matches!(
+            ordinary.intern(&[Ty::Resource(ResourceKind(4096))]),
+            Err(crate::Diagnostic::Exhausted)
+        ));
         assert_eq!(ordinary.len(), count);
         assert_eq!(ordinary.bytes, ordinary_bytes);
     }
@@ -560,8 +640,14 @@ mod tests {
                 break;
             }
         }
-        assert!(refused, "ordinary source keys unexpectedly crossed their byte ceiling");
-        assert!(pool.len() < 256, "key count, rather than bytes, refused first");
+        assert!(
+            refused,
+            "ordinary source keys unexpectedly crossed their byte ceiling"
+        );
+        assert!(
+            pool.len() < 256,
+            "key count, rather than bytes, refused first"
+        );
         assert!(pool.bytes <= crate::OUTPUT_BYTE_LIMIT);
         assert!(pool.bytes > crate::OUTPUT_BYTE_LIMIT - 8_192);
     }
@@ -581,37 +667,58 @@ mod tests {
         let mut types = alloc::vec::Vec::new();
         let mut wats = alloc::vec::Vec::new();
         for source in [
-            &b"module choice@1 [ variant Choice<A,B> Left A public Right B public export Choice ]"[..],
-            &b"module choice@1 [ variant Choice<A,B> Left B public Right A public export Choice ]"[..],
+            &b"module choice@1 [ variant Choice<A,B> Left A public Right B public export Choice ]"
+                [..],
+            &b"module choice@1 [ variant Choice<A,B> Left B public Right A public export Choice ]"
+                [..],
         ] {
             let session = noble_contracts::source::ModuleSession::new_calculator()
                 .unwrap_or_else(|_| panic!("selected source session refused"));
-            let module = session.prepare(source, &[], limits)
+            let module = session
+                .prepare(source, &[], limits)
                 .unwrap_or_else(|_| panic!("generic module refused"));
             let (session, installed) = session.commit(module);
             assert!(installed.is_ok(), "generic module did not commit");
-            let ty = session.resolve_type("choice@1.Choice<I64,Bool>")
+            let ty = session
+                .resolve_type("choice@1.Choice<I64,Bool>")
                 .unwrap_or_else(|_| panic!("generic concrete type refused"));
-            let input = session.prepare(b"", core::slice::from_ref(&ty), limits)
+            let input = session
+                .prepare(b"", core::slice::from_ref(&ty), limits)
                 .unwrap_or_else(|_| panic!("source refused checked empty-body input"));
-            let prepared = compiler.prepare(input.submission()
-                .unwrap_or_else(|| panic!("missing checked input submission")))
+            let prepared = compiler
+                .prepare(
+                    input
+                        .submission()
+                        .unwrap_or_else(|| panic!("missing checked input submission")),
+                )
                 .unwrap_or_else(|_| panic!("selected compiler refused checked input"));
             wats.push(prepared.wat().to_vec());
-            compiler.commit(prepared)
+            compiler
+                .commit(prepared)
                 .unwrap_or_else(|_| panic!("selected compiler did not commit checked input"));
-            ids.push(pool.intern(core::slice::from_ref(&ty))
-                .unwrap_or_else(|_| panic!("selected signature refused checked input")));
+            ids.push(
+                pool.intern(core::slice::from_ref(&ty))
+                    .unwrap_or_else(|_| panic!("selected signature refused checked input")),
+            );
             types.push(ty);
         }
         let [first_id, second_id] = [ids[0], ids[1]];
-        assert!(types[0] != types[1], "independent module declarations must have different canonical types");
-        assert!(matches!((&types[0], &types[1]),
+        assert!(
+            types[0] != types[1],
+            "independent module declarations must have different canonical types"
+        );
+        assert!(
+            matches!((&types[0], &types[1]),
             (Ty::GenericNominal(first, first_args, _), Ty::GenericNominal(second, second_args, _))
             if first == second && first_args.as_ref() == second_args.as_ref()),
-            "test must isolate payload mapping from nominal identity and generic arguments");
-        assert_ne!(first_id, second_id, "different payload mappings cannot share a selected signature");
-        let keys = pool.expanded_keys(0, |_| Ok(()))
+            "test must isolate payload mapping from nominal identity and generic arguments"
+        );
+        assert_ne!(
+            first_id, second_id,
+            "different payload mappings cannot share a selected signature"
+        );
+        let keys = pool
+            .expanded_keys(0, |_| Ok(()))
             .unwrap_or_else(|_| panic!("selected signature prefix did not decode"));
         // Each module publishes only signatures new since the committed base,
         // so every distinct identity appears in exactly one compiled module.
@@ -619,10 +726,17 @@ mod tests {
             let mut suffix = alloc::vec![b' ', b'"'];
             suffix.extend_from_slice(key);
             suffix.extend_from_slice(b"\")");
-            let published = wats.iter().filter(|wat| wat.split(|byte| *byte == b'\n').any(|line|
-                line.starts_with(b"(data $sig") && line.ends_with(&suffix))).count();
-            assert_eq!(published, 1,
-                "each distinct passive signature identity must be published exactly once");
+            let published = wats
+                .iter()
+                .filter(|wat| {
+                    wat.split(|byte| *byte == b'\n')
+                        .any(|line| line.starts_with(b"(data $sig") && line.ends_with(&suffix))
+                })
+                .count();
+            assert_eq!(
+                published, 1,
+                "each distinct passive signature identity must be published exactly once"
+            );
         }
     }
 }

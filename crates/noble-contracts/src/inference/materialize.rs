@@ -50,7 +50,8 @@ impl super::Arena {
                     suffix.push(described);
                     id = stack;
                 }
-                super::Term::Hole(super::Sort::Stack) | super::Term::Empty
+                super::Term::Hole(super::Sort::Stack)
+                | super::Term::Empty
                 | super::Term::RigidStack(_) => break,
                 _ => return Err(crate::internal(span)),
             }

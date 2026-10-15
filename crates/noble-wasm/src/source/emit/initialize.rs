@@ -92,7 +92,9 @@ pub(super) fn write(
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func $initialize (local $recipe i32) (local $atom i32)\n"));
     if plan.live_slots && generation == 0 {
-        attempt!(out.append(b"(if (i32.eqz (global.get $heap_cursor)) (then (call $storage_init)))\n"));
+        attempt!(
+            out.append(b"(if (i32.eqz (global.get $heap_cursor)) (then (call $storage_init)))\n")
+        );
     }
     if generation == 0 {
         if plan.calculator {
@@ -210,9 +212,7 @@ fn program(
         // every program, including quotation/named bodies, before publication.
         attempt!(out.append(b"(if (call $storage_root_program "));
         attempt!(super::get_global(out, id));
-        attempt!(out.append(
-            b") (then (call $fail (i32.const 4)) (return)))\n"
-        ));
+        attempt!(out.append(b") (then (call $fail (i32.const 4)) (return)))\n"));
     }
     Ok(())
 }

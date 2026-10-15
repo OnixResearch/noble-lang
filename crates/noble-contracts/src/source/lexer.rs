@@ -125,7 +125,10 @@ impl<'a> Scanner<'a> {
     /// Consume one *complete* bracketed logical body. Ordinary `next` never
     /// recognizes parentheses, so malformed proof text cannot escape into a
     /// definition or alter executable word tokenization.
-    pub fn next_logical_body(&mut self, meter: &mut crate::Meter) -> Result<Token, crate::Diagnostic> {
+    pub fn next_logical_body(
+        &mut self,
+        meter: &mut crate::Meter,
+    ) -> Result<Token, crate::Diagnostic> {
         attempt!(self.skip(meter));
         let start = self.at;
         if !self.declared || self.source.get(start) != Some(&b'[') {
@@ -189,13 +192,19 @@ impl<'a> Scanner<'a> {
                     LogicalKind::Comma
                 }
                 b'[' | b'"' | b'\\' => {
-                    return Err(crate::invalid(self.full, "invalid logical delimiter or escape"));
+                    return Err(crate::invalid(
+                        self.full,
+                        "invalid logical delimiter or escape",
+                    ));
                 }
                 _ => LogicalKind::Atom(attempt!(self.logical_atom(meter))),
             };
             // Every logical token, including a nonempty atom, consumes a source byte.
             if tokens.len() >= self.source.len() {
-                return Err(crate::invalid(self.full, "logical body exceeds its source bytes"));
+                return Err(crate::invalid(
+                    self.full,
+                    "logical body exceeds its source bytes",
+                ));
             }
             tokens.push(LogicalToken {
                 kind,
@@ -204,14 +213,30 @@ impl<'a> Scanner<'a> {
         }
     }
 
-    fn logical_atom(&mut self, meter: &mut crate::Meter) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
+    fn logical_atom(
+        &mut self,
+        meter: &mut crate::Meter,
+    ) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
         let start = self.at;
         while let Some(byte) = self.source.get(self.at).copied() {
             if whitespace(byte) || matches!(byte, b'#' | b'[' | b']' | b'(' | b')' | b':' | b',') {
                 break;
             }
             if !(byte.is_ascii_alphanumeric()
-                || matches!(byte, b'_' | b'+' | b'-' | b'*' | b'/' | b'=' | b'<' | b'>' | b'?' | b'!' | b'.' | b'@'))
+                || matches!(
+                    byte,
+                    b'_' | b'+'
+                        | b'-'
+                        | b'*'
+                        | b'/'
+                        | b'='
+                        | b'<'
+                        | b'>'
+                        | b'?'
+                        | b'!'
+                        | b'.'
+                        | b'@'
+                ))
             {
                 return Err(crate::invalid(self.full, "unsupported logical atom"));
             }

@@ -233,7 +233,8 @@ pub(super) fn valid_clock_scheme(actual: &crate::words::Scheme) -> bool {
     actual.var_kinds.as_slice() == [crate::words::VariableKind::Stack]
         && actual.stack_in.as_slice() == [stack(0)]
         && actual.stack_out.as_slice() == [stack(0), crate::shapes::Pattern::I64]
-        && actual.effects.as_slice() == [crate::shapes::EffectSlot::Effect(super::super::TEST_CLOCK)]
+        && actual.effects.as_slice()
+            == [crate::shapes::EffectSlot::Effect(super::super::TEST_CLOCK)]
 }
 
 pub(super) fn same_scheme(actual: &crate::words::Scheme, expected: &crate::words::Scheme) -> bool {

@@ -41,15 +41,21 @@ fn write_site(
     attempt!(out.i64(!i64::from(site.effect_mask)));
     attempt!(out.append(b") (i64.const 0)) (then (call $fail (i32.const 3)) (return)))\n"));
     attempt!(out.append(b"(local.set $frame (call $live_frame_new "));
-    attempt!(out.i32(attempt!(u32::try_from(site.forwarded_source_positions.len())
-        .map_err(|_| crate::Diagnostic::Exhausted))));
+    attempt!(out.i32(attempt!(u32::try_from(
+        site.forwarded_source_positions.len()
+    )
+    .map_err(|_| crate::Diagnostic::Exhausted))));
     attempt!(out.append(b" (local.get $handle)))\n(if (global.get $failure) (then (return)))\n"));
-    for (index, (source, target)) in site.forwarded_source_positions.iter()
-        .zip(&site.forwarded_target_positions).enumerate()
+    for (index, (source, target)) in site
+        .forwarded_source_positions
+        .iter()
+        .zip(&site.forwarded_target_positions)
+        .enumerate()
     {
         attempt!(out.append(b"(call $live_frame_bind (local.get $frame) "));
-        attempt!(out.i32(attempt!(u32::try_from(index)
-            .map_err(|_| crate::Diagnostic::Exhausted))));
+        attempt!(out.i32(attempt!(
+            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
+        )));
         attempt!(out.append(b" "));
         attempt!(out.i32(*target));
         attempt!(out.append(b" (call $live_frame_get "));
@@ -66,13 +72,15 @@ pub(super) fn root_check(
     positions: &[u32],
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func $check_borrows\n(if (i32.ne (call $live_root_count) "));
-    attempt!(out.i32(attempt!(u32::try_from(positions.len())
-        .map_err(|_| crate::Diagnostic::Exhausted))));
+    attempt!(out.i32(attempt!(
+        u32::try_from(positions.len()).map_err(|_| crate::Diagnostic::Exhausted)
+    )));
     attempt!(out.append(b") (then (call $fail (i32.const 3)) (return)))\n"));
     for (index, position) in positions.iter().enumerate() {
         attempt!(out.append(b"(if (i32.ne (call $live_root_position "));
-        attempt!(out.i32(attempt!(u32::try_from(index)
-            .map_err(|_| crate::Diagnostic::Exhausted))));
+        attempt!(out.i32(attempt!(
+            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
+        )));
         attempt!(out.append(b") "));
         attempt!(out.i32(*position));
         attempt!(out.append(b") (then (call $fail (i32.const 3)) (return)))\n"));
@@ -80,28 +88,32 @@ pub(super) fn root_check(
     out.append(b")\n")
 }
 
-
 pub(super) fn root_frame_for(
     out: &mut crate::output::Buffer,
     root: usize,
     positions: &[u32],
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(local.set $root_frame (call $live_frame_new "));
-    attempt!(out.i32(attempt!(u32::try_from(positions.len())
-        .map_err(|_| crate::Diagnostic::Exhausted))));
+    attempt!(out.i32(attempt!(
+        u32::try_from(positions.len()).map_err(|_| crate::Diagnostic::Exhausted)
+    )));
     attempt!(out.append(b" "));
     attempt!(super::get_global(out, root));
     attempt!(out.append(b"))\n(if (global.get $failure) (then (return (global.get $failure))))\n"));
     for (index, position) in positions.iter().enumerate() {
         attempt!(out.append(b"(call $live_frame_bind (local.get $root_frame) "));
-        attempt!(out.i32(attempt!(u32::try_from(index)
-            .map_err(|_| crate::Diagnostic::Exhausted))));
+        attempt!(out.i32(attempt!(
+            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
+        )));
         attempt!(out.append(b" "));
         attempt!(out.i32(*position));
         attempt!(out.append(b" (call $live_root_ordinal "));
-        attempt!(out.i32(attempt!(u32::try_from(index)
-            .map_err(|_| crate::Diagnostic::Exhausted))));
-        attempt!(out.append(b"))\n(if (global.get $failure) (then (return (global.get $failure))))\n"));
+        attempt!(out.i32(attempt!(
+            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
+        )));
+        attempt!(
+            out.append(b"))\n(if (global.get $failure) (then (return (global.get $failure))))\n")
+        );
     }
     out.append(b"(call $live_frame_register (local.get $root_frame) (i32.const -1))\n(if (global.get $failure) (then (return (global.get $failure))))\n")
 }
@@ -111,13 +123,15 @@ pub(super) fn program_accessors(
     programs: usize,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func (export \"module_program_count\") (result i32) "));
-    attempt!(out.i32(attempt!(u32::try_from(programs)
-        .map_err(|_| crate::Diagnostic::Exhausted))));
+    attempt!(out.i32(attempt!(
+        u32::try_from(programs).map_err(|_| crate::Diagnostic::Exhausted)
+    )));
     attempt!(out.append(b")\n(func (export \"module_program_handle\") (param $index i32) (result i32)\n(if (i32.eqz (global.get $live_module_installed)) (then (return (i32.const 0))))\n"));
     for index in 0..programs {
         attempt!(out.append(b"(if (i32.eq (local.get $index) "));
-        attempt!(out.i32(attempt!(u32::try_from(index)
-            .map_err(|_| crate::Diagnostic::Exhausted))));
+        attempt!(out.i32(attempt!(
+            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
+        )));
         attempt!(out.append(b") (then (return "));
         attempt!(super::get_global(out, index));
         attempt!(out.append(b")))\n"));
@@ -132,18 +146,22 @@ pub(super) fn exports(
 ) -> Result<(), crate::Diagnostic> {
     // Installing a target constructs checked immutable code only. It does
     // not enqueue an entry or execute the candidate body.
-    attempt!(out.append(b"(func (export \"install_target\") (result i32)\n\
+    attempt!(out.append(
+        b"(func (export \"install_target\") (result i32)\n\
 (if (global.get $failure) (then (return (i32.const 0))))\n\
 (if (i32.or (global.get $cp) (i32.or (global.get $sp) (global.get $live_module_installed)))\
  (then (call $fail (i32.const 4)) (return (i32.const 0))))\n\
-(if (i32.ne (global.get $generation) "));
+(if (i32.ne (global.get $generation) "
+    ));
     attempt!(out.i32(generation));
-    attempt!(out.append(b") (then (call $fail (i32.const 4)) (return (i32.const 0))))\n\
+    attempt!(out.append(
+        b") (then (call $fail (i32.const 4)) (return (i32.const 0))))\n\
 (global.set $phase (i32.const 0))\n\
 (call $initialize)\n\
 (if (global.get $failure) (then (return (i32.const 0))))\n\
 (global.set $live_module_installed (i32.const 1))\n\
-(global.set $generation (i32.add (global.get $generation) (i32.const 1)))\n"));
+(global.set $generation (i32.add (global.get $generation) (i32.const 1)))\n"
+    ));
     attempt!(super::get_global(out, plan.root));
     attempt!(out.append(b")\n"));
 
@@ -158,17 +176,24 @@ pub(super) fn exports(
 (call $check_borrows)\n\
 (if (global.get $failure) (then (return (global.get $failure))))\n\
 (global.set $phase (i32.const 1))\n"));
-    attempt!(root_frame_for(out, plan.root, &plan.borrowed_input_positions));
+    attempt!(root_frame_for(
+        out,
+        plan.root,
+        &plan.borrowed_input_positions
+    ));
     attempt!(out.append(b"(call $enqueue_program "));
     attempt!(super::get_global(out, plan.root));
-    attempt!(out.append(b")\n(call $dispatch)\n\
+    attempt!(out.append(
+        b")\n(call $dispatch)\n\
 (call $live_frame_restore (i32.const 0))\n\
 (if (i32.eqz (global.get $failure)) (then (call $check_output)))\n\
-(global.get $failure))\n"));
+(global.get $failure))\n"
+    ));
 
     // Preserve the one-shot submit boundary for a newly prepared module,
     // while the host may instead install once and call invoke_live repeatedly.
-    attempt!(out.append(b"(func (export \"submit\") (result i32)\n\
+    attempt!(out.append(
+        b"(func (export \"submit\") (result i32)\n\
 (if (global.get $failure) (then (return (global.get $failure))))\n\
 (if (i32.or (global.get $cp) (global.get $live_module_installed))\
  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n\
@@ -176,23 +201,28 @@ pub(super) fn exports(
 (if (global.get $failure) (then (return (global.get $failure))))\n\
 (call $check_borrows)\n\
 (if (global.get $failure) (then (return (global.get $failure))))\n\
-(if (i32.ne (global.get $generation) "));
+(if (i32.ne (global.get $generation) "
+    ));
     attempt!(out.i32(generation));
-    attempt!(out.append(b") (then (call $fail (i32.const 4)) (return (global.get $failure))))\n\
+    attempt!(out.append(
+        b") (then (call $fail (i32.const 4)) (return (global.get $failure))))\n\
 (global.set $phase (i32.const 0))\n(call $initialize)\n\
 (if (global.get $failure) (then (return (global.get $failure))))\n\
 (global.set $live_module_installed (i32.const 1))\n\
 (global.set $generation (i32.add (global.get $generation) (i32.const 1)))\n\
-(call $invoke_live_internal))\n"));
+(call $invoke_live_internal))\n"
+    ));
     // Releasing the module's own immutable Program globals is distinct from
     // retiring its table span: a saved exact cell or map/frame owner may still
     // keep that code reachable. The host reads code_owners before table.clear.
-    attempt!(out.append(b"(func (export \"release_module_roots\") (result i32)\n\
+    attempt!(out.append(
+        b"(func (export \"release_module_roots\") (result i32)\n\
 (if (i32.or (i32.or (global.get $cp) (global.get $sp))\
  (i32.or (global.get $rp) (global.get $live_frame)))\
  (then (return (i32.const 4))))\n\
 (if (i32.eqz (global.get $live_module_installed))\
- (then (return (i32.const 4))))\n"));
+ (then (return (i32.const 4))))\n"
+    ));
     for id in 0..plan.programs.len() {
         attempt!(out.append(b"(if (call $storage_unroot_program "));
         attempt!(super::get_global(out, id));

@@ -119,11 +119,13 @@ impl super::ModuleSession {
         for alias in &next.aliases {
             let Some(imported) = next.modules.get(alias.module) else {
                 return Err(super::super::error(
-                    crate::source::Stage::Check, "retained import alias has no original module",
+                    crate::source::Stage::Check,
+                    "retained import alias has no original module",
                 ));
             };
             import_aliases.push(super::super::ImportAlias {
-                alias: alias.spelling.clone(), owner: imported.identity,
+                alias: alias.spelling.clone(),
+                owner: imported.identity,
             });
         }
         next.modules.push(super::super::Module {
@@ -153,7 +155,10 @@ impl super::ModuleSession {
         let mut bytes = candidate_bytes;
         for module in &self.modules {
             bytes = attempt!(bytes.checked_add(module.source.len()).ok_or_else(|| {
-                super::super::error(crate::source::Stage::Check, "retained module byte count overflow")
+                super::super::error(
+                    crate::source::Stage::Check,
+                    "retained module byte count overflow",
+                )
             }));
         }
         if bytes > limit {

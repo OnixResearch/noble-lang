@@ -74,15 +74,31 @@ impl Action {
 
     pub(super) const fn can_fall_through(self) -> bool {
         match self {
-            Self::Call(..) | Self::CalculatorIterate | Self::NominalMatch(..)
-            | Self::EmitBound(_) | Self::ClockBound(_) | Self::LivePropose(_)
-            | Self::LiveGeneration | Self::SlotInvoke(..) => false,
+            Self::Call(..)
+            | Self::CalculatorIterate
+            | Self::NominalMatch(..)
+            | Self::EmitBound(_)
+            | Self::ClockBound(_)
+            | Self::LivePropose(_)
+            | Self::LiveGeneration
+            | Self::SlotInvoke(..) => false,
             Self::Word(3 | 9 | 10 | 17 | 18 | 21) => false,
-            Self::Word(_) | Self::I64(_) | Self::Bool(_) | Self::Unit | Self::Text(..)
-            | Self::Program(_) | Self::TextByte | Self::CalculatorCompare
-            | Self::CalculatorDivRem | Self::CalculatorTextFromAscii
-            | Self::CalculatorTextLength | Self::Quote(..) | Self::NominalNew(..)
-            | Self::NominalInto(..) | Self::NominalLeft(..) | Self::NominalRight(..) => true,
+            Self::Word(_)
+            | Self::I64(_)
+            | Self::Bool(_)
+            | Self::Unit
+            | Self::Text(..)
+            | Self::Program(_)
+            | Self::TextByte
+            | Self::CalculatorCompare
+            | Self::CalculatorDivRem
+            | Self::CalculatorTextFromAscii
+            | Self::CalculatorTextLength
+            | Self::Quote(..)
+            | Self::NominalNew(..)
+            | Self::NominalInto(..)
+            | Self::NominalLeft(..)
+            | Self::NominalRight(..) => true,
         }
     }
 }
@@ -93,8 +109,7 @@ impl Program {
     pub(super) fn next_entry(&self, start: usize, calculator: bool) -> usize {
         let mut end = start + 1;
         if calculator {
-            while end < self.operations.len()
-                && self.operations[end - 1].action.can_fall_through()
+            while end < self.operations.len() && self.operations[end - 1].action.can_fall_through()
             {
                 end += 1;
             }
@@ -233,7 +248,10 @@ fn start(
         borrowed_input_positions: alloc::vec::Vec::new(),
         text_witness: 0,
         declared_modules: submission.environment.declared_modules,
-        live: submission.environment.effects.contains(&noble_kernel::types::EffId(3)),
+        live: submission
+            .environment
+            .effects
+            .contains(&noble_kernel::types::EffId(3)),
         live_slots: submission.environment.live_slots,
         live_test_hosts: submission.environment.live_test_hosts,
         live_sites: alloc::vec::Vec::new(),
@@ -263,12 +281,20 @@ fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
     for program in &layout.programs {
         for operation in &program.operations {
             match operation.action {
-                Action::Word(22) if layout.live || layout.text_cursor || layout.calculator
-                    || (layout.declared_modules && !layout.live_test_hosts) => {
+                Action::Word(22)
+                    if layout.live
+                        || layout.text_cursor
+                        || layout.calculator
+                        || (layout.declared_modules && !layout.live_test_hosts) =>
+                {
                     return Err(crate::Diagnostic::Invalid);
                 }
-                Action::Word(23) if layout.declared_modules || layout.live
-                    || layout.text_cursor || layout.calculator => {
+                Action::Word(23)
+                    if layout.declared_modules
+                        || layout.live
+                        || layout.text_cursor
+                        || layout.calculator =>
+                {
                     return Err(crate::Diagnostic::Invalid);
                 }
                 Action::Word(22) => layout.has_core_emit = true,
@@ -329,7 +355,12 @@ pub(super) fn lower(
     attempt!(operations::fill(input, compiler, &mut layout, work));
     attempt!(host_footprint(&mut layout));
     attempt!(topology::order(&mut layout));
-    attempt!(allocation::finish(&mut layout, compiler, &checked.root, work));
+    attempt!(allocation::finish(
+        &mut layout,
+        compiler,
+        &checked.root,
+        work
+    ));
     Ok(layout)
 }
 

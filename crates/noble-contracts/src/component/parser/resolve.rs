@@ -74,9 +74,17 @@ pub(super) fn world(
     {
         return Err(crate::component::exhausted());
     }
-    let unsigned = world.imports.iter().chain(world.exports.iter()).any(|operation|
-        operation.parameters.iter().chain(operation.results.iter())
-            .any(|ty| *ty == crate::component::Type::CheckedU64));
+    let unsigned = world
+        .imports
+        .iter()
+        .chain(world.exports.iter())
+        .any(|operation| {
+            operation
+                .parameters
+                .iter()
+                .chain(operation.results.iter())
+                .any(|ty| *ty == crate::component::Type::CheckedU64)
+        });
     if !checked_u64 && unsigned {
         return Err(crate::component::error(
             crate::component::Stage::Binding,
@@ -91,14 +99,25 @@ pub(super) fn world(
             "checked u64 boundary requires an import-free world",
         ));
     }
-    if checked_u64 && world.exports.iter().any(|operation| {
-        let unsigned = operation.parameters.iter().chain(operation.results.iter())
-            .any(|ty| *ty == crate::component::Type::CheckedU64);
-        unsigned && (world.asynchronous || operation.asynchronous
-            || operation.parameters.len() != 1 || operation.results.len() != 1
-            || operation.parameters.iter().chain(operation.results.iter())
-                .any(|ty| *ty != crate::component::Type::CheckedU64))
-    }) {
+    if checked_u64
+        && world.exports.iter().any(|operation| {
+            let unsigned = operation
+                .parameters
+                .iter()
+                .chain(operation.results.iter())
+                .any(|ty| *ty == crate::component::Type::CheckedU64);
+            unsigned
+                && (world.asynchronous
+                    || operation.asynchronous
+                    || operation.parameters.len() != 1
+                    || operation.results.len() != 1
+                    || operation
+                        .parameters
+                        .iter()
+                        .chain(operation.results.iter())
+                        .any(|ty| *ty != crate::component::Type::CheckedU64))
+        })
+    {
         return Err(crate::component::error(
             crate::component::Stage::Binding,
             crate::DiagnosticKind::Unsupported,

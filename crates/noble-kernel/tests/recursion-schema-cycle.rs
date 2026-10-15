@@ -183,13 +183,17 @@ fn dependency_and_schema_walks_share_request_work() -> Result<(), String> {
     request.limits.work = 2;
     let observed = crate::builders::seen(&env, &request, &crate::builders::empty_program())?;
     let crate::builders::Seen::Accepted = observed else {
-        return Err(format!("two preflight stages must fit exactly, got {observed:?}"));
+        return Err(format!(
+            "two preflight stages must fit exactly, got {observed:?}"
+        ));
     };
     request.limits.work = 1;
     let observed = crate::builders::seen(&env, &request, &crate::builders::empty_program())?;
     let crate::builders::Seen::Exhausted(noble_kernel::untrusted::LimitKind::Work) = observed
     else {
-        return Err(format!("preflight must not reset request work, got {observed:?}"));
+        return Err(format!(
+            "preflight must not reset request work, got {observed:?}"
+        ));
     };
     Ok(())
 }
@@ -215,13 +219,17 @@ fn preflight_spending_reduces_body_work() -> Result<(), String> {
     request.limits.work = 8;
     let observed = crate::builders::seen(&env, &request, &candidate)?;
     let crate::builders::Seen::Accepted = observed else {
-        return Err(format!("body plus preflight must fit exactly, got {observed:?}"));
+        return Err(format!(
+            "body plus preflight must fit exactly, got {observed:?}"
+        ));
     };
     request.limits.work = 7;
     let observed = crate::builders::seen(&env, &request, &candidate)?;
     let crate::builders::Seen::Exhausted(noble_kernel::untrusted::LimitKind::Work) = observed
     else {
-        return Err(format!("body must inherit preflight spending, got {observed:?}"));
+        return Err(format!(
+            "body must inherit preflight spending, got {observed:?}"
+        ));
     };
     Ok(())
 }
@@ -262,38 +270,50 @@ fn module_declarations_share_preflight_and_body_work() -> Result<(), String> {
     request.limits.work = 11;
     let observed = crate::builders::seen(&env, &request, &candidate)?;
     let crate::builders::Seen::Accepted = observed else {
-        return Err(format!("mixed stages must accept at work=11, got {observed:?}"));
+        return Err(format!(
+            "mixed stages must accept at work=11, got {observed:?}"
+        ));
     };
     request.limits.work = 10;
     let observed = crate::builders::seen(&env, &request, &candidate)?;
     let crate::builders::Seen::Exhausted(noble_kernel::untrusted::LimitKind::Work) = observed
     else {
-        return Err(format!("mixed stages must exhaust at work=10, got {observed:?}"));
+        return Err(format!(
+            "mixed stages must exhaust at work=10, got {observed:?}"
+        ));
     };
     let mut preflight = crate::builders::request(vec![], vec![]);
     let empty = crate::builders::empty_program();
     preflight.limits.work = 5;
     let observed = crate::builders::seen(&env, &preflight, &empty)?;
     let crate::builders::Seen::Accepted = observed else {
-        return Err(format!("all preflight stages must fit at work=5, got {observed:?}"));
+        return Err(format!(
+            "all preflight stages must fit at work=5, got {observed:?}"
+        ));
     };
     preflight.limits.work = 4;
     let observed = crate::builders::seen(&env, &preflight, &empty)?;
     let crate::builders::Seen::Exhausted(noble_kernel::untrusted::LimitKind::Work) = observed
     else {
-        return Err(format!("nominal charge must exhaust at work=4, got {observed:?}"));
+        return Err(format!(
+            "nominal charge must exhaust at work=4, got {observed:?}"
+        ));
     };
     preflight.limits.work = 3;
     let observed = crate::builders::seen(&env, &preflight, &empty)?;
     let crate::builders::Seen::Exhausted(noble_kernel::untrusted::LimitKind::Work) = observed
     else {
-        return Err(format!("declared-definition charge must exhaust at work=3, got {observed:?}"));
+        return Err(format!(
+            "declared-definition charge must exhaust at work=3, got {observed:?}"
+        ));
     };
     preflight.limits.nodes = 1;
     let observed = crate::builders::seen(&env, &preflight, &empty)?;
     let crate::builders::Seen::Exhausted(noble_kernel::untrusted::LimitKind::Nodes) = observed
     else {
-        return Err(format!("declared node limit must precede work limit, got {observed:?}"));
+        return Err(format!(
+            "declared node limit must precede work limit, got {observed:?}"
+        ));
     };
     preflight.limits.nodes = 256;
     preflight.limits.type_size = 1;
@@ -301,13 +321,17 @@ fn module_declarations_share_preflight_and_body_work() -> Result<(), String> {
     let observed = crate::builders::seen(&env, &preflight, &empty)?;
     let crate::builders::Seen::Exhausted(noble_kernel::untrusted::LimitKind::TypeSize) = observed
     else {
-        return Err(format!("nominal payload type limit must remain, got {observed:?}"));
+        return Err(format!(
+            "nominal payload type limit must remain, got {observed:?}"
+        ));
     };
     preflight.limits.work = 4;
     let observed = crate::builders::seen(&env, &preflight, &empty)?;
     let crate::builders::Seen::Exhausted(noble_kernel::untrusted::LimitKind::Work) = observed
     else {
-        return Err(format!("nominal work preflight must precede type-size check, got {observed:?}"));
+        return Err(format!(
+            "nominal work preflight must precede type-size check, got {observed:?}"
+        ));
     };
     Ok(())
 }

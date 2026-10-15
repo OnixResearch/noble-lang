@@ -231,7 +231,11 @@ pub enum OriginAction {
     Swap,
     Drop,
     StaticProgram(usize),
-    QuoteI64 { input: u32, output: u32, witness: u32 },
+    QuoteI64 {
+        input: u32,
+        output: u32,
+        witness: u32,
+    },
     Compose,
     CallSelected(usize),
 }
@@ -453,7 +457,9 @@ impl Compiler {
         let bytes = attempt!(admission::meter::stack(stack, work));
         attempt!(work.charge(bytes));
         if self.calculator {
-            return self.signatures.intern_charged(stack, |visited| work.entries(visited));
+            return self
+                .signatures
+                .intern_charged(stack, |visited| work.entries(visited));
         }
         let mut index = 0usize;
         let mut failure = None;
@@ -494,7 +500,10 @@ impl Compiler {
     /// A separate admission profile: the ordinary compiler never emits the
     /// proposal or generation imports.
     pub fn new_live() -> Self {
-        Self { live: true, ..Self::new() }
+        Self {
+            live: true,
+            ..Self::new()
+        }
     }
 
     /// Opt in to checked live references and generation-safe physical reuse.
@@ -507,7 +516,10 @@ impl Compiler {
 
     /// The pure byte cursor is a separate compiler admission profile.
     pub fn new_text_cursor() -> Self {
-        Self { text_cursor: true, ..Self::new() }
+        Self {
+            text_cursor: true,
+            ..Self::new()
+        }
     }
 
     /// Independent calculator admission with one reserved trampoline slot.
@@ -664,12 +676,23 @@ impl Compiler {
         // committed compiler's descriptor table (all of its own after a
         // Program-free rewind); the trusted engine retains that published
         // prefix, so per-module metadata is history-independent.
-        let published = if program_free { 0 } else { self.descriptors.len() };
+        let published = if program_free {
+            0
+        } else {
+            self.descriptors.len()
+        };
         let wat = if next.calculator {
-            let keys = attempt!(next.signatures.expanded_keys(published, |bytes| work.entries(bytes)));
+            let keys = attempt!(next
+                .signatures
+                .expanded_keys(published, |bytes| work.entries(bytes)));
             attempt!(emit::module(&plan, self.generation, published, &keys))
         } else {
-            attempt!(emit::module(&plan, self.generation, 0, &next.signatures.keys))
+            attempt!(emit::module(
+                &plan,
+                self.generation,
+                0,
+                &next.signatures.keys
+            ))
         };
         let code_span = CodeSpan {
             start: plan.first_function,
@@ -677,7 +700,10 @@ impl Compiler {
             generation: next.generation,
         };
         let target_metadata = if self.live_slots {
-            let root = attempt!(plan.programs.get(plan.root).ok_or(crate::Diagnostic::Invalid));
+            let root = attempt!(plan
+                .programs
+                .get(plan.root)
+                .ok_or(crate::Diagnostic::Invalid));
             Some(TargetMetadata {
                 root_program_index: plan.root,
                 input_signature: root.input,
@@ -693,13 +719,22 @@ impl Compiler {
         let mut named_targets = alloc::vec::Vec::new();
         if self.live_slots {
             for (index, definition) in submission.definitions.iter().enumerate() {
-                let checked_body = attempt!(checked.definitions.get(index)
+                let checked_body = attempt!(checked
+                    .definitions
+                    .get(index)
                     .ok_or(crate::Diagnostic::Invalid));
-                let program_index = attempt!(plan.definition_roots.get(index).copied()
+                let program_index = attempt!(plan
+                    .definition_roots
+                    .get(index)
+                    .copied()
                     .ok_or(crate::Diagnostic::Invalid));
-                let program = attempt!(plan.programs.get(program_index)
+                let program = attempt!(plan
+                    .programs
+                    .get(program_index)
                     .ok_or(crate::Diagnostic::Invalid));
-                let recipe = attempt!(next.identities.iter()
+                let recipe = attempt!(next
+                    .identities
+                    .iter()
                     .find(|identity| identity.id == definition.identity)
                     .ok_or(crate::Diagnostic::Invalid));
                 named_targets.push(NamedTargetMetadata {
@@ -722,8 +757,7 @@ impl Compiler {
         if self.live_slots {
             program_metadata.reserve(plan.programs.len());
             for (program_index, program) in plan.programs.iter_mut().enumerate() {
-                let logical = attempt!(program.logical.take()
-                    .ok_or(crate::Diagnostic::Defective));
+                let logical = attempt!(program.logical.take().ok_or(crate::Diagnostic::Defective));
                 program_metadata.push(ProgramMetadata {
                     program_index,
                     entry: program.entry,
@@ -743,7 +777,9 @@ impl Compiler {
         let mut resource_catalog = alloc::vec::Vec::new();
         if self.live_slots {
             for id in &submission.environment.live_resource_nominals {
-                let declaration = attempt!(submission.environment.nominal(*id)
+                let declaration = attempt!(submission
+                    .environment
+                    .nominal(*id)
                     .ok_or(crate::Diagnostic::Invalid));
                 let noble_kernel::types::NominalShape::Opaque(value) = &declaration.shape else {
                     return Err(crate::Diagnostic::Invalid);
@@ -761,7 +797,11 @@ impl Compiler {
             base: transaction::Base::capture(
                 self,
                 retained,
-                if program_free { 0 } else { self.signatures.len() },
+                if program_free {
+                    0
+                } else {
+                    self.signatures.len()
+                },
                 published,
             ),
             base_live_slots: self.live_slots,
@@ -879,7 +919,9 @@ impl Compiler {
         }
         attempt!(verify_and_clear(span));
         self.installed_code.remove(index);
-        let mut index = self.free_code.partition_point(|free| free.start < span.start);
+        let mut index = self
+            .free_code
+            .partition_point(|free| free.start < span.start);
         self.free_code.insert(
             index,
             FreeCode {
@@ -887,15 +929,17 @@ impl Compiler {
                 length: span.length,
             },
         );
-        if index > 0 && self.free_code[index - 1].start + self.free_code[index - 1].length
-            == self.free_code[index].start
+        if index > 0
+            && self.free_code[index - 1].start + self.free_code[index - 1].length
+                == self.free_code[index].start
         {
             let right = self.free_code.remove(index);
             self.free_code[index - 1].length += right.length;
             index -= 1;
         }
         if index + 1 < self.free_code.len()
-            && self.free_code[index].start + self.free_code[index].length == self.free_code[index + 1].start
+            && self.free_code[index].start + self.free_code[index].length
+                == self.free_code[index + 1].start
         {
             let right = self.free_code.remove(index + 1);
             self.free_code[index].length += right.length;
@@ -934,16 +978,25 @@ mod retention_tests {
         let reused = compiler.reserve_code(2).ok().expect("reused span");
         assert_eq!((reused.start, reused.length), (4, 2));
         assert_ne!(reused.generation, former.generation);
-        assert!(matches!(compiler.retire_code(former, |_| Ok(())), Err(Diagnostic::Invalid)));
         assert!(matches!(
-            compiler.retire_code(CodeSpan {
-                length: 1,
-                ..pinned
-            }, |_| Ok(())),
+            compiler.retire_code(former, |_| Ok(())),
+            Err(Diagnostic::Invalid)
+        ));
+        assert!(matches!(
+            compiler.retire_code(
+                CodeSpan {
+                    length: 1,
+                    ..pinned
+                },
+                |_| Ok(())
+            ),
             Err(Diagnostic::Invalid)
         ));
         compiler.generation = 4;
-        assert_eq!(compiler.reserve_code(1).ok().expect("last free slot").start, 6);
+        assert_eq!(
+            compiler.reserve_code(1).ok().expect("last free slot").start,
+            6
+        );
         assert_eq!(compiler.functions, 9);
         assert!(compiler.retire_code(pinned, |_| Ok(())).is_ok());
         assert_eq!(compiler.functions, 7);
@@ -982,14 +1035,23 @@ mod retention_tests {
         assert_eq!(compiler.functions, next);
         assert_eq!(compiler.installed_code.as_slice(), &[occupied]);
         compiler.generation = 2;
-        assert_eq!(compiler.reserve_code(1).ok().expect("fresh span").start, next);
+        assert_eq!(
+            compiler.reserve_code(1).ok().expect("fresh span").start,
+            next
+        );
 
         let mut called = false;
         assert!(matches!(
-            compiler.retire_code(CodeSpan { generation: 0, ..occupied }, |_| {
-                called = true;
-                Ok(())
-            }),
+            compiler.retire_code(
+                CodeSpan {
+                    generation: 0,
+                    ..occupied
+                },
+                |_| {
+                    called = true;
+                    Ok(())
+                }
+            ),
             Err(Diagnostic::Invalid)
         ));
         assert!(!called);
@@ -999,7 +1061,10 @@ mod retention_tests {
 
 #[cfg(test)]
 mod tests {
-    use super::{transaction, Compiler, Identity, Work, CALCULATOR_COMPILER_WORK_LIMIT, CALCULATOR_DEFINITION_LIMIT};
+    use super::{
+        transaction, Compiler, Identity, Work, CALCULATOR_COMPILER_WORK_LIMIT,
+        CALCULATOR_DEFINITION_LIMIT,
+    };
     use noble_kernel::types::{ResourceKind, Ty};
 
     #[test]
@@ -1032,7 +1097,10 @@ mod tests {
             calculator_preflight: false,
             calculator_plan: false,
         };
-        assert!(matches!(ordinary.charge(8), Err(crate::Diagnostic::Exhausted)));
+        assert!(matches!(
+            ordinary.charge(8),
+            Err(crate::Diagnostic::Exhausted)
+        ));
         assert_eq!(ordinary.issued, 7);
         assert_eq!(ordinary.remaining, 7);
     }
@@ -1046,12 +1114,17 @@ mod tests {
             work: 512_000_000,
         };
         let mut session = noble_contracts::source::Session::new_calculator();
-        let defined = session.prepare(b"def identity_epoch_word [ 1 drop ]", &[], limits)
+        let defined = session
+            .prepare(b"def identity_epoch_word [ 1 drop ]", &[], limits)
             .unwrap_or_else(|_| panic!("calculator definition refused"));
-        session.commit(defined).unwrap_or_else(|_| panic!("calculator definition commit refused"));
-        let input = session.prepare(b"identity_epoch_word", &[], limits)
+        session
+            .commit(defined)
+            .unwrap_or_else(|_| panic!("calculator definition commit refused"));
+        let input = session
+            .prepare(b"identity_epoch_word", &[], limits)
             .unwrap_or_else(|_| panic!("calculator call refused"));
-        let submission = input.submission()
+        let submission = input
+            .submission()
             .unwrap_or_else(|| panic!("missing checked source submission"));
         assert!(!submission.definitions.is_empty());
         // A committed ledger already holding the limit of unrelated identities,
@@ -1059,33 +1132,59 @@ mod tests {
         let full = |count: usize| {
             let mut compiler = Compiler::new_calculator();
             compiler.identities = (0..count as u64)
-                .map(|index| Identity { id: u64::MAX - index, recipe: alloc::vec![0] })
+                .map(|index| Identity {
+                    id: u64::MAX - index,
+                    recipe: alloc::vec![0],
+                })
                 .collect();
             compiler
         };
 
         let cumulative = full(CALCULATOR_DEFINITION_LIMIT);
-        assert!(matches!(cumulative.prepare(submission), Err(crate::Diagnostic::Exhausted)),
-            "a non-quiescent preparation still refuses a new identity at the limit");
+        assert!(
+            matches!(
+                cumulative.prepare(submission),
+                Err(crate::Diagnostic::Exhausted)
+            ),
+            "a non-quiescent preparation still refuses a new identity at the limit"
+        );
         assert_eq!(cumulative.identities.len(), CALCULATOR_DEFINITION_LIMIT);
 
         let mut epochs = full(CALCULATOR_DEFINITION_LIMIT);
-        let stale = transaction::Base::capture(&epochs, epochs.identities.len(), epochs.signatures.len(), epochs.descriptors.len());
-        let prepared = epochs.prepare_quiescent(submission)
+        let stale = transaction::Base::capture(
+            &epochs,
+            epochs.identities.len(),
+            epochs.signatures.len(),
+            epochs.descriptors.len(),
+        );
+        let prepared = epochs
+            .prepare_quiescent(submission)
             .unwrap_or_else(|_| panic!("quiescent preparation refused past the cumulative limit"));
         assert!(epochs.can_commit(&prepared));
-        assert!(!stale.matches(&epochs, &prepared.next),
-            "a whole-ledger base cannot vouch for the restarted epoch");
-        epochs.commit(prepared).unwrap_or_else(|_| panic!("quiescent commit refused"));
-        assert_eq!(epochs.identities.len(), submission.definitions.len(),
-            "the new epoch holds only this module's identities");
+        assert!(
+            !stale.matches(&epochs, &prepared.next),
+            "a whole-ledger base cannot vouch for the restarted epoch"
+        );
+        epochs
+            .commit(prepared)
+            .unwrap_or_else(|_| panic!("quiescent commit refused"));
+        assert_eq!(
+            epochs.identities.len(),
+            submission.definitions.len(),
+            "the new epoch holds only this module's identities"
+        );
 
         // The limit is still enforced within an epoch: an ordinary preparation
         // retains the epoch's ledger and refuses once it is full again.
         let missing = CALCULATOR_DEFINITION_LIMIT - epochs.identities.len();
-        epochs.identities.extend((0..missing as u64)
-            .map(|index| Identity { id: u64::MAX - index, recipe: alloc::vec![0] }));
-        let kept = epochs.prepare(submission)
+        epochs
+            .identities
+            .extend((0..missing as u64).map(|index| Identity {
+                id: u64::MAX - index,
+                recipe: alloc::vec![0],
+            }));
+        let kept = epochs
+            .prepare(submission)
             .unwrap_or_else(|_| panic!("known identities need no new ledger entry"));
         assert_eq!(kept.next.identities.len(), CALCULATOR_DEFINITION_LIMIT);
         assert!(epochs.can_commit(&kept));
@@ -1100,53 +1199,94 @@ mod tests {
             work: 512_000_000,
         };
         let mut session = noble_contracts::source::Session::new_calculator();
-        let defined = session.prepare(b"def signature_epoch_word [ 1 drop ]", &[], limits)
+        let defined = session
+            .prepare(b"def signature_epoch_word [ 1 drop ]", &[], limits)
             .unwrap_or_else(|_| panic!("calculator definition refused"));
-        session.commit(defined).unwrap_or_else(|_| panic!("calculator definition commit refused"));
-        let input = session.prepare(b"signature_epoch_word", &[], limits)
+        session
+            .commit(defined)
+            .unwrap_or_else(|_| panic!("calculator definition commit refused"));
+        let input = session
+            .prepare(b"signature_epoch_word", &[], limits)
             .unwrap_or_else(|_| panic!("calculator call refused"));
-        let submission = input.submission()
+        let submission = input
+            .submission()
             .unwrap_or_else(|| panic!("missing checked source submission"));
         // A committed pool already holding the key limit of unrelated
         // signatures, as after many earlier modules of one long session.
         let full = || {
             let mut compiler = Compiler::new_calculator();
             for index in 0..crate::signatures::CALCULATOR_SOURCE_KEY_LIMIT as u32 {
-                assert_eq!(compiler.signatures.intern(&[Ty::Resource(ResourceKind(index))]).ok(),
-                    Some(index));
+                assert_eq!(
+                    compiler
+                        .signatures
+                        .intern(&[Ty::Resource(ResourceKind(index))])
+                        .ok(),
+                    Some(index)
+                );
             }
             compiler
         };
 
         let cumulative = full();
-        assert!(matches!(cumulative.prepare(submission), Err(crate::Diagnostic::Exhausted)),
-            "an ordinary preparation still refuses a new key at the limit");
-        assert!(matches!(cumulative.prepare_quiescent(submission), Err(crate::Diagnostic::Exhausted)),
-            "a merely quiescent preparation keeps every committed key");
-        assert_eq!(cumulative.signatures.len(), crate::signatures::CALCULATOR_SOURCE_KEY_LIMIT);
+        assert!(
+            matches!(
+                cumulative.prepare(submission),
+                Err(crate::Diagnostic::Exhausted)
+            ),
+            "an ordinary preparation still refuses a new key at the limit"
+        );
+        assert!(
+            matches!(
+                cumulative.prepare_quiescent(submission),
+                Err(crate::Diagnostic::Exhausted)
+            ),
+            "a merely quiescent preparation keeps every committed key"
+        );
+        assert_eq!(
+            cumulative.signatures.len(),
+            crate::signatures::CALCULATOR_SOURCE_KEY_LIMIT
+        );
 
         let mut epochs = full();
-        let stale = transaction::Base::capture(&epochs, epochs.identities.len(),
-            epochs.signatures.len(), epochs.descriptors.len());
-        let prepared = epochs.prepare_program_free(submission)
-            .unwrap_or_else(|_| panic!("Program-free preparation refused past the cumulative limit"));
+        let stale = transaction::Base::capture(
+            &epochs,
+            epochs.identities.len(),
+            epochs.signatures.len(),
+            epochs.descriptors.len(),
+        );
+        let prepared = epochs.prepare_program_free(submission).unwrap_or_else(|_| {
+            panic!("Program-free preparation refused past the cumulative limit")
+        });
         assert!(epochs.can_commit(&prepared));
-        assert!(!stale.matches(&epochs, &prepared.next),
-            "a whole-pool base cannot vouch for the restarted epoch");
+        assert!(
+            !stale.matches(&epochs, &prepared.next),
+            "a whole-pool base cannot vouch for the restarted epoch"
+        );
         let fresh = prepared.next.signatures.len();
-        assert!(fresh > 0 && fresh < 64, "the new epoch holds only this module's keys");
+        assert!(
+            fresh > 0 && fresh < 64,
+            "the new epoch holds only this module's keys"
+        );
         assert_eq!(prepared.next.descriptors.len(), fresh);
-        epochs.commit(prepared).unwrap_or_else(|_| panic!("Program-free commit refused"));
+        epochs
+            .commit(prepared)
+            .unwrap_or_else(|_| panic!("Program-free commit refused"));
         assert_eq!(epochs.signatures.len(), fresh);
 
         // The key limit still applies within an epoch, and an ordinary
         // preparation keeps and checks the epoch's whole pool.
-        let kept = epochs.prepare(submission)
+        let kept = epochs
+            .prepare(submission)
             .unwrap_or_else(|_| panic!("known keys need no new pool entry"));
         assert_eq!(kept.next.signatures.len(), fresh);
         assert!(epochs.can_commit(&kept));
-        assert!(matches!(Compiler::new().prepare_program_free(submission),
-            Err(crate::Diagnostic::Invalid)), "only the calculator profile may restart signatures");
+        assert!(
+            matches!(
+                Compiler::new().prepare_program_free(submission),
+                Err(crate::Diagnostic::Invalid)
+            ),
+            "only the calculator profile may restart signatures"
+        );
     }
 
     #[test]
@@ -1159,8 +1299,12 @@ mod tests {
             calculator_plan: true,
         };
         for length in 1..=64 {
-            assert!(compiler.signature(&alloc::vec![Ty::I64; length], &mut work).is_ok(),
-                "finite distinct structural signatures fit the remaining ceiling");
+            assert!(
+                compiler
+                    .signature(&alloc::vec![Ty::I64; length], &mut work)
+                    .is_ok(),
+                "finite distinct structural signatures fit the remaining ceiling"
+            );
         }
         assert_eq!(compiler.signatures.len(), 64);
         assert!(work.issued < CALCULATOR_COMPILER_WORK_LIMIT);
@@ -1185,7 +1329,10 @@ mod tests {
         assert_eq!(work.issued, CALCULATOR_COMPILER_WORK_LIMIT - 1);
         assert_eq!(work.remaining, 0);
         assert_eq!(compiler.signatures.len(), 64);
-        assert!(matches!(work.charge(u64::MAX), Err(crate::Diagnostic::Exhausted)));
+        assert!(matches!(
+            work.charge(u64::MAX),
+            Err(crate::Diagnostic::Exhausted)
+        ));
         assert_eq!(work.issued, CALCULATOR_COMPILER_WORK_LIMIT - 1);
         assert_eq!(work.remaining, 0);
     }
@@ -1200,19 +1347,27 @@ mod tests {
             depth: 64,
             work: 512_000_000,
         };
-        let input = session.prepare(b"", &[], limits)
+        let input = session
+            .prepare(b"", &[], limits)
             .unwrap_or_else(|_| panic!("empty calculator source refused"));
-        let submission = input.submission()
+        let submission = input
+            .submission()
             .unwrap_or_else(|| panic!("missing checked source submission"));
         let step = |compiler: &mut Compiler| {
-            let prepared = compiler.prepare(submission)
+            let prepared = compiler
+                .prepare(submission)
                 .unwrap_or_else(|_| panic!("calculator prepare refused"));
             let wat = prepared.wat().to_vec();
-            compiler.commit(prepared).unwrap_or_else(|_| panic!("calculator commit refused"));
+            compiler
+                .commit(prepared)
+                .unwrap_or_else(|_| panic!("calculator commit refused"));
             wat
         };
-        let published = |wat: &[u8]| wat.split(|byte| *byte == b'\n')
-            .filter(|line| line.starts_with(b"(data $sig")).count();
+        let published = |wat: &[u8]| {
+            wat.split(|byte| *byte == b'\n')
+                .filter(|line| line.starts_with(b"(data $sig"))
+                .count()
+        };
 
         let mut fresh = Compiler::new_calculator();
         step(&mut fresh);
@@ -1235,8 +1390,11 @@ mod tests {
         // from a fresh session's only in the decimal published-range bounds.
         assert_eq!(published(&fresh_steady), 0);
         assert_eq!(published(&retained_steady), 0);
-        assert!(retained_steady.len() <= fresh_steady.len() + 16,
+        assert!(
+            retained_steady.len() <= fresh_steady.len() + 16,
             "steady module grew from {} to {} bytes with retained history",
-            fresh_steady.len(), retained_steady.len());
+            fresh_steady.len(),
+            retained_steady.len()
+        );
     }
 }

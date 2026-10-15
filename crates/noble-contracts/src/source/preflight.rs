@@ -99,7 +99,11 @@ impl Traversal {
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<(), crate::Diagnostic> {
-        let Visit { step, depth, borrow_allowed } = entry;
+        let Visit {
+            step,
+            depth,
+            borrow_allowed,
+        } = entry;
         attempt!(meter.charge(1, span));
         attempt!(meter.depth(depth, span));
         // LIFO siblings share the prefix above their depth. Both the path and
@@ -155,7 +159,8 @@ impl Traversal {
             noble_kernel::types::Ty::Resource(kind) => {
                 if session.live_slots.is_some() {
                     return Err(crate::invalid(
-                        span, "live resource requires a registered versioned nominal schema",
+                        span,
+                        "live resource requires a registered versioned nominal schema",
                     ));
                 }
                 let is_known = if let Some(context) = &session.declared {
@@ -178,11 +183,19 @@ impl Traversal {
                 }
             }
             noble_kernel::types::Ty::Nominal(id, shape) => {
-                let environment = session.declared.as_ref().map(|context| &context.environment)
-                    .or_else(|| session.live_slots.as_ref().map(|profile| &profile.environment));
-                if environment.is_some_and(|env| {
-                    env.nominal(*id).is_some_and(|decl| decl.shape == **shape)
-                }) {
+                let environment = session
+                    .declared
+                    .as_ref()
+                    .map(|context| &context.environment)
+                    .or_else(|| {
+                        session
+                            .live_slots
+                            .as_ref()
+                            .map(|profile| &profile.environment)
+                    });
+                if environment
+                    .is_some_and(|env| env.nominal(*id).is_some_and(|decl| decl.shape == **shape))
+                {
                     Ok(())
                 } else {
                     Err(crate::invalid(
@@ -192,8 +205,16 @@ impl Traversal {
                 }
             }
             noble_kernel::types::Ty::GenericNominal(_, _, _) => {
-                if session.declared.as_ref().map(|context| &context.environment)
-                    .or_else(|| session.live_slots.as_ref().map(|profile| &profile.environment))
+                if session
+                    .declared
+                    .as_ref()
+                    .map(|context| &context.environment)
+                    .or_else(|| {
+                        session
+                            .live_slots
+                            .as_ref()
+                            .map(|profile| &profile.environment)
+                    })
                     .is_some_and(|env| env.valid_generic_instance(ty))
                 {
                     Ok(())
@@ -247,14 +268,24 @@ impl Traversal {
             }
             noble_kernel::types::Ty::LiveRef(input, output, effects) => {
                 if !borrow_allowed || session.live_slots.is_none() {
-                    return Err(crate::invalid(span,
-                        "LiveRef is only an invocation-input borrow or forwarded input"));
+                    return Err(crate::invalid(
+                        span,
+                        "LiveRef is only an invocation-input borrow or forwarded input",
+                    ));
                 }
                 let cap = attempt!(crate::offset(crate::inference::STACK_CAP, span));
                 if input.len() > cap || output.len() > cap {
-                    return Err(super::exhausted(span, "live target interface stack limit exceeded"));
+                    return Err(super::exhausted(
+                        span,
+                        "live target interface stack limit exceeded",
+                    ));
                 }
-                attempt!(host_effects(effects, session.effect_universe(), span, meter));
+                attempt!(host_effects(
+                    effects,
+                    session.effect_universe(),
+                    span,
+                    meter
+                ));
                 attempt!(self.schedule(input.len(), false, true, next_depth, span, meter));
                 self.schedule(output.len(), true, false, next_depth, span, meter)
             }
@@ -291,7 +322,11 @@ impl Traversal {
             } else {
                 PathStep::Input(at)
             };
-            self.pending.push(Visit { step, depth, borrow_allowed });
+            self.pending.push(Visit {
+                step,
+                depth,
+                borrow_allowed,
+            });
             at = at.saturating_add(1);
         }
         match failure {

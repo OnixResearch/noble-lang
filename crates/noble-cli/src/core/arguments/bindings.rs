@@ -50,8 +50,10 @@ pub(super) fn load(path: &std::path::Path) -> Result<Manifest, super::super::out
 
 fn parse_line(line: &str, slot: u32) -> Result<Entry, super::super::output::Failure> {
     let words = std::vec::Vec::from_iter(line.split_ascii_whitespace());
-    if words.len() < 8 || words.first() != Some(&"bind")
-        || !matches!(words.get(2), Some(&"test.emit" | &"test.clock")) {
+    if words.len() < 8
+        || words.first() != Some(&"bind")
+        || !matches!(words.get(2), Some(&"test.emit" | &"test.clock"))
+    {
         return Err(invalid("binding line requires bind MODULE@VERSION test.emit|test.clock ADAPTER INPUT -- OUTPUT ! EFFECT allow|deny [script VALUES]"));
     }
     let (module, version) = attempt!(module_version(words[1]));
@@ -67,8 +69,9 @@ fn parse_line(line: &str, slot: u32) -> Result<Entry, super::super::output::Fail
             allowed: signature.allowed,
             script: &signature.script,
         };
-        attempt!(plan.decide(words[2], 0)
-            .map_err(|_| invalid("test.clock binding requires [] -- I64 ! test.clock and a finite script")));
+        attempt!(plan.decide(words[2], 0).map_err(|_| invalid(
+            "test.clock binding requires [] -- I64 ! test.clock and a finite script"
+        )));
     }
     Ok(Entry {
         module: module.into(),
@@ -193,36 +196,52 @@ impl Manifest {
 
     /// Worker-owned policy and immutable slot identity, never guest source.
     pub fn worker(&self) -> Result<crate::workflow::encoding::Json, super::super::output::Failure> {
-        let bindings = self.entries.iter().map(|entry| {
-                    Ok(crate::workflow::encoding::object([
-                        (
-                            "slot",
-                            crate::workflow::encoding::Json::Number(u64::from(entry.slot)),
+        let bindings = self
+            .entries
+            .iter()
+            .map(|entry| {
+                Ok(crate::workflow::encoding::object([
+                    (
+                        "slot",
+                        crate::workflow::encoding::Json::Number(u64::from(entry.slot)),
+                    ),
+                    ("adapter", crate::workflow::encoding::string(&entry.adapter)),
+                    (
+                        "operation",
+                        crate::workflow::encoding::string(&entry.operation),
+                    ),
+                    ("module", crate::workflow::encoding::string(&entry.module)),
+                    (
+                        "version",
+                        crate::workflow::encoding::Json::Number(u64::from(entry.version)),
+                    ),
+                    (
+                        "allowed",
+                        crate::workflow::encoding::Json::Bool(entry.allowed),
+                    ),
+                    (
+                        "script",
+                        crate::workflow::encoding::Json::Array(
+                            entry
+                                .script
+                                .iter()
+                                .map(|value| {
+                                    crate::workflow::encoding::Json::String(value.to_string())
+                                })
+                                .collect(),
                         ),
-                        ("adapter", crate::workflow::encoding::string(&entry.adapter)),
-                        ("operation", crate::workflow::encoding::string(&entry.operation)),
-                        ("module", crate::workflow::encoding::string(&entry.module)),
-                        (
-                            "version",
-                            crate::workflow::encoding::Json::Number(u64::from(entry.version)),
-                        ),
-                        (
-                            "allowed",
-                            crate::workflow::encoding::Json::Bool(entry.allowed),
-                        ),
-                        ("script", crate::workflow::encoding::Json::Array(
-                            entry.script.iter().map(|value|
-                                crate::workflow::encoding::Json::String(value.to_string())
-                            ).collect(),
-                        )),
-                        ("dispatch", attempt!(dispatch(entry))),
-                    ]))
-                }).collect::<Result<std::vec::Vec<_>, _>>()?;
+                    ),
+                    ("dispatch", attempt!(dispatch(entry))),
+                ]))
+            })
+            .collect::<Result<std::vec::Vec<_>, _>>()?;
         Ok(crate::workflow::encoding::Json::Array(bindings))
     }
 }
 
-fn dispatch(entry: &Entry) -> Result<crate::workflow::encoding::Json, super::super::output::Failure> {
+fn dispatch(
+    entry: &Entry,
+) -> Result<crate::workflow::encoding::Json, super::super::output::Failure> {
     if entry.operation != "test.clock" {
         return Ok(crate::workflow::encoding::Json::Array(std::vec::Vec::new()));
     }
@@ -237,19 +256,27 @@ fn dispatch(entry: &Entry) -> Result<crate::workflow::encoding::Json, super::sup
     };
     let mut steps = std::vec::Vec::with_capacity(entry.script.len().saturating_add(1));
     for index in 0..=entry.script.len() {
-        let decision = attempt!(plan.decide("test.clock", index)
+        let decision = attempt!(plan
+            .decide("test.clock", index)
             .map_err(|_| invalid("test.clock dispatch contract is invalid")));
         let (name, value) = match decision {
-            noble_kernel::contracts::ClockDecision::Value(value) =>
-                ("allow", Some(value.to_string())),
+            noble_kernel::contracts::ClockDecision::Value(value) => {
+                ("allow", Some(value.to_string()))
+            }
             noble_kernel::contracts::ClockDecision::Denied => ("deny", None),
             noble_kernel::contracts::ClockDecision::ScriptExhausted => ("script-exhausted", None),
-            noble_kernel::contracts::ClockDecision::UnexpectedOperation =>
-                return Err(invalid("test.clock dispatch unexpectedly changed operation")),
+            noble_kernel::contracts::ClockDecision::UnexpectedOperation => {
+                return Err(invalid(
+                    "test.clock dispatch unexpectedly changed operation",
+                ))
+            }
         };
         steps.push(crate::workflow::encoding::object([
-            ("decision",crate::workflow::encoding::string(name)),
-            ("value",crate::workflow::encoding::optional_string(value.as_deref())),
+            ("decision", crate::workflow::encoding::string(name)),
+            (
+                "value",
+                crate::workflow::encoding::optional_string(value.as_deref()),
+            ),
         ]));
     }
     Ok(crate::workflow::encoding::Json::Array(steps))

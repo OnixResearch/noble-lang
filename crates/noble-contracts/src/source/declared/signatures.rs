@@ -118,7 +118,8 @@ pub(super) fn parse(
     let Some(bang) = words.iter().position(|word| word == "!") else {
         return Err(invalid("signature requires latent effect bound"));
     };
-    let (Some(output_start), Some(effect_index)) = (arrow.checked_add(1), bang.checked_add(1)) else {
+    let (Some(output_start), Some(effect_index)) = (arrow.checked_add(1), bang.checked_add(1))
+    else {
         return Err(invalid("malformed signature stack or effect bound"));
     };
     if arrow == 0 || bang <= output_start || effect_index.checked_add(1) != Some(words.len()) {
@@ -259,7 +260,9 @@ fn pattern(
                     Some(match kind {
                         VariableKind::Stack => Pattern::StackVar(Variable(index as u32)),
                         VariableKind::Value => Pattern::Var(Variable(index as u32)),
-                        VariableKind::Effect => return Err(invalid("effect binder used as value type")),
+                        VariableKind::Effect => {
+                            return Err(invalid("effect binder used as value type"))
+                        }
                     })
                 } else {
                     match word {
@@ -277,13 +280,16 @@ fn pattern(
                                 let Some(inner) = inner.strip_suffix('>') else {
                                     return Err(invalid("unclosed signature type arguments"));
                                 };
-                                let next = attempt!(depth.checked_add(1)
-                                    .ok_or_else(|| invalid("signature type nesting limit exceeded")));
+                                let next = attempt!(depth.checked_add(1).ok_or_else(|| invalid(
+                                    "signature type nesting limit exceeded"
+                                )));
                                 if constructor == "Resource" {
                                     if inner != "test.counter" {
                                         return Err(invalid("unknown signature resource kind"));
                                     }
-                                    Some(Pattern::Resource(noble_kernel::contracts::FIXTURE_RESOURCE))
+                                    Some(Pattern::Resource(
+                                        noble_kernel::contracts::FIXTURE_RESOURCE,
+                                    ))
                                 } else if constructor == "List" {
                                     pending.push(Step::List);
                                     pending.push(Step::Parse(inner, next));
@@ -295,16 +301,22 @@ fn pattern(
                                             return Err(invalid("Program signature requires input, output and effects"));
                                         }
                                         let input = attempt!((parts[0] != "empty")
-                                            .then(|| split_delimited(parts[0], b'+')).transpose());
+                                            .then(|| split_delimited(parts[0], b'+'))
+                                            .transpose());
                                         pending.push(Step::ProgramInput(
-                                            input.as_ref().map_or(0, Vec::len), parts[1], parts[2], next,
+                                            input.as_ref().map_or(0, Vec::len),
+                                            parts[1],
+                                            parts[2],
+                                            next,
                                         ));
                                         for component in input.into_iter().flatten().rev() {
                                             pending.push(Step::Parse(component, next));
                                         }
                                     } else {
                                         if parts.len() != 2 {
-                                            return Err(invalid("signature type requires two arguments"));
+                                            return Err(invalid(
+                                                "signature type requires two arguments",
+                                            ));
                                         }
                                         pending.push(Step::Binary(constructor));
                                         pending.push(Step::Parse(parts[1], next));
@@ -328,22 +340,39 @@ fn pattern(
                     return Err(invalid("invalid source signature scheme"));
                 };
                 Some(match constructor {
-                    "Pair" => Pattern::Pair(alloc::boxed::Box::new(first), alloc::boxed::Box::new(second)),
-                    "Sum" => Pattern::Sum(alloc::boxed::Box::new(first), alloc::boxed::Box::new(second)),
+                    "Pair" => Pattern::Pair(
+                        alloc::boxed::Box::new(first),
+                        alloc::boxed::Box::new(second),
+                    ),
+                    "Sum" => Pattern::Sum(
+                        alloc::boxed::Box::new(first),
+                        alloc::boxed::Box::new(second),
+                    ),
                     _ => {
-                        let Some((_, id, payload_params)) =
-                            families.generic.iter().find(|(name, _, _)| name == constructor)
+                        let Some((_, id, payload_params)) = families
+                            .generic
+                            .iter()
+                            .find(|(name, _, _)| name == constructor)
                         else {
                             return Err(invalid("unknown or unexported generic signature family"));
                         };
-                        Pattern::GenericNominal(*id, alloc::boxed::Box::new([first, second]), *payload_params)
+                        Pattern::GenericNominal(
+                            *id,
+                            alloc::boxed::Box::new([first, second]),
+                            *payload_params,
+                        )
                     }
                 })
             }
             Step::ProgramInput(inputs, output_word, effect, depth) => {
                 let output = attempt!((output_word != "empty")
-                    .then(|| split_delimited(output_word, b'+')).transpose());
-                pending.push(Step::Program(inputs, output.as_ref().map_or(0, Vec::len), effect));
+                    .then(|| split_delimited(output_word, b'+'))
+                    .transpose());
+                pending.push(Step::Program(
+                    inputs,
+                    output.as_ref().map_or(0, Vec::len),
+                    effect,
+                ));
                 for component in output.into_iter().flatten().rev() {
                     pending.push(Step::Parse(component, depth));
                 }
@@ -408,14 +437,23 @@ fn exported_nominal(word: &str, families: &Families<'_>) -> Option<Pattern> {
         return None;
     }
     let version = version.parse::<u32>().ok()?;
-    let module = families.modules.iter()
+    let module = families
+        .modules
+        .iter()
         .find(|module| module.name == module_name && module.version == version)?;
-    let ty = module.exports.iter().find(|export| export.name == export_name)?
-        .ty.as_ref()?;
+    let ty = module
+        .exports
+        .iter()
+        .find(|export| export.name == export_name)?
+        .ty
+        .as_ref()?;
     let noble_kernel::types::Ty::Nominal(id, shape) = ty else {
         return None;
     };
-    families.environment?.nominal(*id).filter(|declaration| declaration.exported)?;
+    families
+        .environment?
+        .nominal(*id)
+        .filter(|declaration| declaration.exported)?;
     Some(Pattern::Nominal(*id, shape.clone()))
 }
 
@@ -476,20 +514,34 @@ mod tests {
             identity: 0,
             environment: None,
         };
-        let value = pattern("Program<Pair<I64,Bool>+List<Text>,Sum<Bool,I64>,pure>", &binders, &families)
-            .expect("nested program signature");
+        let value = pattern(
+            "Program<Pair<I64,Bool>+List<Text>,Sum<Bool,I64>,pure>",
+            &binders,
+            &families,
+        )
+        .expect("nested program signature");
         let Pattern::Program(input, output, _) = value else {
             panic!("expected program");
         };
-        assert!(matches!(input.as_slice(), [Pattern::Pair(_, _), Pattern::List(_)]));
+        assert!(matches!(
+            input.as_slice(),
+            [Pattern::Pair(_, _), Pattern::List(_)]
+        ));
         assert!(matches!(output.as_slice(), [Pattern::Sum(_, _)]));
 
-        let error = pattern("Program<Unknown,Resource<unknown>,pure>", &binders, &families)
-            .expect_err("input error takes precedence");
+        let error = pattern(
+            "Program<Unknown,Resource<unknown>,pure>",
+            &binders,
+            &families,
+        )
+        .expect_err("input error takes precedence");
         assert_eq!(error.diagnostic().message, "unknown signature value type");
 
         let deep = alloc::format!("{}I64{}", "List<".repeat(32), ">".repeat(32));
         let error = pattern(&deep, &binders, &families).expect_err("type depth bound");
-        assert_eq!(error.diagnostic().message, "signature type nesting limit exceeded");
+        assert_eq!(
+            error.diagnostic().message,
+            "signature type nesting limit exceeded"
+        );
     }
 }

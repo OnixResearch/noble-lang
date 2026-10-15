@@ -86,9 +86,7 @@ impl Collected {
                         bytes,
                         span,
                         body_span,
-                    } => {
-                        collected.add_definition(name, bytes, span, body_span, limits)
-                    }
+                    } => collected.add_definition(name, bytes, span, body_span, limits),
                     crate::source::declared::parsing::Member::Contract(contract) => {
                         collected.add_contract(contract)
                     }
@@ -278,9 +276,12 @@ impl Collected {
             ));
         }
         self.names.push(name.clone());
-        self.definition_spans.push(crate::source::declared::DefinitionSource {
-            name: name.clone(), span, body_span,
-        });
+        self.definition_spans
+            .push(crate::source::declared::DefinitionSource {
+                name: name.clone(),
+                span,
+                body_span,
+            });
         self.definitions.push((name, bytes, tree));
         Ok(self)
     }
@@ -347,7 +348,10 @@ impl Collected {
                 }
             }
             if !has_declaration {
-                has_declaration = self.contracts.iter().any(|contract| contract.name == *exported)
+                has_declaration = self
+                    .contracts
+                    .iter()
+                    .any(|contract| contract.name == *exported)
                     || self.proofs.iter().any(|proof| proof.name == *exported);
             }
             if !has_declaration {

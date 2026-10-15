@@ -129,7 +129,10 @@ fn parse_word_member<'a>(
 
 fn revision(mut cursor: super::Cursor<'_>) -> Result<(super::Cursor<'_>, u32), crate::Diagnostic> {
     let Some(token) = cursor.tokens.get(cursor.at) else {
-        return Err(super::parse_diagnostic(cursor.span, "missing logical declaration revision"));
+        return Err(super::parse_diagnostic(
+            cursor.span,
+            "missing logical declaration revision",
+        ));
     };
     let version = attempt!(super::logical_revision(token).ok_or_else(|| {
         super::parse_diagnostic(token.span, "expected logical declaration revision 1 or 2")
@@ -142,10 +145,16 @@ fn logical(
     mut cursor: super::Cursor<'_>,
 ) -> Result<(super::Cursor<'_>, crate::intrinsic::Form), crate::Diagnostic> {
     let Some(token) = cursor.tokens.get(cursor.at) else {
-        return Err(super::parse_diagnostic(cursor.span, "missing bracketed logical form"));
+        return Err(super::parse_diagnostic(
+            cursor.span,
+            "missing bracketed logical form",
+        ));
     };
     let crate::source::lexer::TokenKind::LogicalBody(tokens) = &token.kind else {
-        return Err(super::parse_diagnostic(token.span, "expected bracketed logical form"));
+        return Err(super::parse_diagnostic(
+            token.span,
+            "expected bracketed logical form",
+        ));
     };
     let form = attempt!(super::logic::parse(tokens, token.span));
     cursor.at += 1;
@@ -156,13 +165,19 @@ fn binding_block(
     mut cursor: super::Cursor<'_>,
 ) -> Result<(super::Cursor<'_>, alloc::vec::Vec<super::Binding>), crate::Diagnostic> {
     if !super::open_at(cursor.tokens, cursor.at) {
-        return Err(super::parse_diagnostic(cursor.span, "expected bracketed stack bindings"));
+        return Err(super::parse_diagnostic(
+            cursor.span,
+            "expected bracketed stack bindings",
+        ));
     }
     cursor.at += 1;
     let mut bindings = alloc::vec::Vec::new();
     loop {
         let Some(token) = cursor.tokens.get(cursor.at) else {
-            return Err(super::parse_diagnostic(cursor.span, "unclosed stack bindings"));
+            return Err(super::parse_diagnostic(
+                cursor.span,
+                "unclosed stack bindings",
+            ));
         };
         if matches!(&token.kind, crate::source::lexer::TokenKind::Close) {
             cursor.at += 1;
@@ -171,13 +186,19 @@ fn binding_block(
         let span = token.span;
         let (next, name) = attempt!(cursor.ident());
         let (next, ty) = attempt!(next.next());
-        if bindings.iter().any(|known: &super::Binding| known.name == name) {
+        if bindings
+            .iter()
+            .any(|known: &super::Binding| known.name == name)
+        {
             return Err(super::parse_diagnostic(span, "duplicate stack binding"));
         }
         // Each binding consumes two tokens, so this bound is never reached
         // before the duplicate or unclosed-block diagnostics.
         if bindings.len() >= next.tokens.len() {
-            return Err(super::parse_diagnostic(span, "stack bindings exceed their token block"));
+            return Err(super::parse_diagnostic(
+                span,
+                "stack bindings exceed their token block",
+            ));
         }
         bindings.push(super::Binding {
             name,
@@ -220,7 +241,10 @@ fn contract(
     let (cursor, revision) = attempt!(revision(cursor));
     let (mut cursor, name) = attempt!(cursor.logical_ident());
     if !super::open_at(cursor.tokens, cursor.at) {
-        return Err(super::parse_diagnostic(span, "contract requires one bracketed declaration"));
+        return Err(super::parse_diagnostic(
+            span,
+            "contract requires one bracketed declaration",
+        ));
     }
     cursor.at += 1;
     let cursor = attempt!(cursor.expected("subject"));
@@ -229,7 +253,10 @@ fn contract(
     };
     let (cursor, subject) = attempt!(cursor.next());
     if !reference(subject, false) {
-        return Err(super::parse_diagnostic(subject_span, "invalid qualified contract subject"));
+        return Err(super::parse_diagnostic(
+            subject_span,
+            "invalid qualified contract subject",
+        ));
     }
     let cursor = attempt!(cursor.expected("input"));
     let (cursor, inputs) = attempt!(binding_block(cursor));
@@ -240,10 +267,16 @@ fn contract(
     let cursor = attempt!(cursor.expected("ensures"));
     let (mut cursor, ensures) = attempt!(logical(cursor));
     let Some(close) = cursor.tokens.get(cursor.at) else {
-        return Err(super::parse_diagnostic(span, "unclosed contract declaration"));
+        return Err(super::parse_diagnostic(
+            span,
+            "unclosed contract declaration",
+        ));
     };
     if !matches!(&close.kind, crate::source::lexer::TokenKind::Close) {
-        return Err(super::parse_diagnostic(close.span, "contract contains trailing fields"));
+        return Err(super::parse_diagnostic(
+            close.span,
+            "contract contains trailing fields",
+        ));
     }
     cursor.at += 1;
     Ok((
@@ -277,7 +310,10 @@ fn proof(
     let claim = match &head.kind {
         crate::source::lexer::TokenKind::ProofColon => {
             if revision != 1 {
-                return Err(super::parse_diagnostic(head.span, "proof revision 2 requires a contract claim"));
+                return Err(super::parse_diagnostic(
+                    head.span,
+                    "proof revision 2 requires a contract claim",
+                ));
             }
             cursor.at += 1;
             let (next, proposition) = attempt!(logical(cursor));
@@ -291,16 +327,31 @@ fn proof(
             };
             let (next, target) = attempt!(cursor.next());
             if !reference(target, true) {
-                return Err(super::parse_diagnostic(target_span, "invalid qualified proof contract"));
+                return Err(super::parse_diagnostic(
+                    target_span,
+                    "invalid qualified proof contract",
+                ));
             }
             cursor = next;
             super::ProofClaim::For(alloc::string::String::from(target), target_span)
         }
-        _ => return Err(super::parse_diagnostic(head.span, "expected proof for or : claim")),
+        _ => {
+            return Err(super::parse_diagnostic(
+                head.span,
+                "expected proof for or : claim",
+            ))
+        }
     };
     let (cursor, term) = attempt!(logical(cursor));
-    let Some(last) = cursor.at.checked_sub(1).and_then(|index| cursor.tokens.get(index)) else {
-        return Err(super::parse_diagnostic(span, "proof term has no closing token"));
+    let Some(last) = cursor
+        .at
+        .checked_sub(1)
+        .and_then(|index| cursor.tokens.get(index))
+    else {
+        return Err(super::parse_diagnostic(
+            span,
+            "proof term has no closing token",
+        ));
     };
     let end = last.span.end;
     Ok((
@@ -352,7 +403,10 @@ fn signature(
         let (next, word) = attempt!(cursor.next());
         // Each word consumes one token of this bracketed interface.
         if words.len() >= next.tokens.len() {
-            return Err(super::parse_diagnostic(next.span, "signature interface exceeds its token block"));
+            return Err(super::parse_diagnostic(
+                next.span,
+                "signature interface exceeds its token block",
+            ));
         }
         words.push(alloc::string::String::from(word));
         cursor = next;

@@ -35,7 +35,11 @@ pub(super) fn compatible(
     // A replacement may drop an effect, never add one. An effectful old
     // definition therefore admits a pure new implementation of the same
     // ordered stack interface.
-    if new_effects.as_slice().iter().any(|effect| !old_effects.as_slice().contains(effect)) {
+    if new_effects
+        .as_slice()
+        .iter()
+        .any(|effect| !old_effects.as_slice().contains(effect))
+    {
         return Ok(false);
     }
     let mut comparison = Comparison {
@@ -78,7 +82,8 @@ impl Comparison<'_> {
                     }
                 }
                 (Term::RigidValue(a), Term::RigidValue(b))
-                | (Term::RigidStack(a), Term::RigidStack(b)) if a == b => {}
+                | (Term::RigidStack(a), Term::RigidStack(b))
+                    if a == b => {}
                 (Term::Unit, Term::Unit)
                 | (Term::Bool, Term::Bool)
                 | (Term::I64, Term::I64)

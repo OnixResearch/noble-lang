@@ -153,10 +153,7 @@ impl Report {
                 "schema",
                 crate::workflow::encoding::string("noble-core-report/v1"),
             ),
-            (
-                "profile",
-                crate::workflow::encoding::string(profile),
-            ),
+            ("profile", crate::workflow::encoding::string(profile)),
             (
                 "backend",
                 crate::workflow::encoding::string("managed-linear-memory"),
@@ -216,7 +213,10 @@ impl Report {
                     crate::workflow::encoding::string(&join.actual_stack),
                 ),
                 ("source_location", source_span(Some(span))),
-                ("word_or_join", crate::workflow::encoding::string(&join.word)),
+                (
+                    "word_or_join",
+                    crate::workflow::encoding::string(&join.word),
+                ),
                 (
                     "required_stack",
                     crate::workflow::encoding::string(&join.expected_stack),

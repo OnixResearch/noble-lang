@@ -24,24 +24,37 @@ impl super::Session {
         prepared: noble_contracts::source::ModulePrepared,
         source: &[u8],
         limits: noble_contracts::Limits,
-    ) -> Result<(Result<(), noble_contracts::source::Error>, crate::workflow::encoding::Json), super::output::Failure> {
+    ) -> Result<
+        (
+            Result<(), noble_contracts::source::Error>,
+            crate::workflow::encoding::Json,
+        ),
+        super::output::Failure,
+    > {
         let previous = attempt!(self.declared.take().ok_or_else(|| {
             super::output::Failure::new(
-                super::output::ErrorContext { stage: "session", outcome: "internal-failure" },
+                super::output::ErrorContext {
+                    stage: "session",
+                    outcome: "internal-failure",
+                },
                 "declared namespace is unavailable",
             )
         }));
         let mut report = crate::workflow::encoding::Json::Null;
         let (next, outcome) = previous.commit_verified(prepared, |batch| {
-            let (checked,evidence,_) = crate::workflow::intrinsic::verify_with_evidence(
-                batch, source, limits, crate::workflow::DEFAULT_TIMEOUT,
-                noble_contracts::intrinsic::ProofBudgets::from_limits(limits))
-                .map_err(|problem| std::format!("{}: {}",problem.code,problem.message))?;
-            report = crate::workflow::intrinsic::session_proof_report(batch,&checked,&evidence);
+            let (checked, evidence, _) = crate::workflow::intrinsic::verify_with_evidence(
+                batch,
+                source,
+                limits,
+                crate::workflow::DEFAULT_TIMEOUT,
+                noble_contracts::intrinsic::ProofBudgets::from_limits(limits),
+            )
+            .map_err(|problem| std::format!("{}: {}", problem.code, problem.message))?;
+            report = crate::workflow::intrinsic::session_proof_report(batch, &checked, &evidence);
             Ok(checked)
         });
         self.declared = Some(next);
-        Ok((outcome,report))
+        Ok((outcome, report))
     }
 
     pub(super) fn submit_declared(
@@ -61,7 +74,9 @@ impl super::Session {
         };
         match prepared.kind() {
             noble_contracts::source::ModuleKind::Module
-            | noble_contracts::source::ModuleKind::Import => self.link_declared(prepared,source,options),
+            | noble_contracts::source::ModuleKind::Import => {
+                self.link_declared(prepared, source, options)
+            }
             noble_contracts::source::ModuleKind::Definition => self.define_declared(prepared),
             noble_contracts::source::ModuleKind::Expression => {
                 self.execute_declared(prepared, source, options)
@@ -111,45 +126,108 @@ impl super::Session {
                 1 => noble_contracts::intrinsic::prepare_contract(goal, options.limits)
                     .map(|typed| noble_contracts::export_lean(&typed)),
                 2 => noble_contracts::intrinsic::prepare_named_contract(goal, options.limits),
-                _ => return Err(super::output::Failure::new(
-                    super::output::ErrorContext { stage: "check", outcome: "internal-failure" },
-                    "unsupported contract revision",
-                )),
+                _ => {
+                    return Err(super::output::Failure::new(
+                        super::output::ErrorContext {
+                            stage: "check",
+                            outcome: "internal-failure",
+                        },
+                        "unsupported contract revision",
+                    ))
+                }
             };
-            let generated_statement = attempt!(generated_statement.map_err(|problem|
-                super::output::Failure::new(
-                    super::output::ErrorContext { stage: "check", outcome: "internal-failure" },
-                    problem.message,
-                )));
-            let mut fields=std::vec::Vec::from([
-                ("name",crate::workflow::encoding::string(&goal.contract_name)),
-                ("definition",crate::workflow::encoding::string(&goal.subject.definition)),
-                ("definition_identity",crate::workflow::encoding::string(goal.subject.definition_identity.to_string())),
-                ("module_source_sha256",crate::workflow::encoding::string(crate::workflow::intrinsic::sha256(&goal.subject.module_source))),
-                ("definition_source_sha256",crate::workflow::encoding::string(crate::workflow::intrinsic::sha256(&goal.subject.definition_source))),
+            let generated_statement =
+                attempt!(
+                    generated_statement.map_err(|problem| super::output::Failure::new(
+                        super::output::ErrorContext {
+                            stage: "check",
+                            outcome: "internal-failure"
+                        },
+                        problem.message,
+                    ))
+                );
+            let mut fields = std::vec::Vec::from([
+                (
+                    "name",
+                    crate::workflow::encoding::string(&goal.contract_name),
+                ),
+                (
+                    "definition",
+                    crate::workflow::encoding::string(&goal.subject.definition),
+                ),
+                (
+                    "definition_identity",
+                    crate::workflow::encoding::string(goal.subject.definition_identity.to_string()),
+                ),
+                (
+                    "module_source_sha256",
+                    crate::workflow::encoding::string(crate::workflow::intrinsic::sha256(
+                        &goal.subject.module_source,
+                    )),
+                ),
+                (
+                    "definition_source_sha256",
+                    crate::workflow::encoding::string(crate::workflow::intrinsic::sha256(
+                        &goal.subject.definition_source,
+                    )),
+                ),
             ]);
             if goal.revision == 2 {
-                fields.push(("generated_statement_sha256",crate::workflow::encoding::string(
-                    crate::workflow::intrinsic::sha256(generated_statement.as_bytes()))));
-                fields.push(("generated_claim",crate::workflow::encoding::string("NamedV2Obligation.claim")));
+                fields.push((
+                    "generated_statement_sha256",
+                    crate::workflow::encoding::string(crate::workflow::intrinsic::sha256(
+                        generated_statement.as_bytes(),
+                    )),
+                ));
+                fields.push((
+                    "generated_claim",
+                    crate::workflow::encoding::string("NamedV2Obligation.claim"),
+                ));
             } else {
-                fields.push(("generated_statement",crate::workflow::encoding::string(&generated_statement)));
+                fields.push((
+                    "generated_statement",
+                    crate::workflow::encoding::string(&generated_statement),
+                ));
             }
-            fields.push(("accepted_recipe",crate::workflow::encoding::string(
-                std::format!("{:?}",goal.subject.accepted_submission.definitions))));
+            fields.push((
+                "accepted_recipe",
+                crate::workflow::encoding::string(std::format!(
+                    "{:?}",
+                    goal.subject.accepted_submission.definitions
+                )),
+            ));
             if goal.revision == 2 {
-                fields.push(("revision",crate::workflow::encoding::Json::Number(2)));
-                fields.push(("original_sources",crate::workflow::encoding::Json::Array(
-                    goal.subject.source_dependencies.iter().map(|module|
-                        crate::workflow::encoding::object([
-                            ("module",crate::workflow::encoding::string(&module.module)),
-                            ("version",crate::workflow::encoding::Json::Number(u64::from(module.version))),
-                            ("owner_session_local",crate::workflow::encoding::Json::Number(module.owner)),
-                            ("module_source_sha256",crate::workflow::encoding::string(
-                                crate::workflow::intrinsic::sha256(&module.full_source))),
-                        ])
-                    ).collect()
-                )));
+                fields.push(("revision", crate::workflow::encoding::Json::Number(2)));
+                fields.push((
+                    "original_sources",
+                    crate::workflow::encoding::Json::Array(
+                        goal.subject
+                            .source_dependencies
+                            .iter()
+                            .map(|module| {
+                                crate::workflow::encoding::object([
+                                    ("module", crate::workflow::encoding::string(&module.module)),
+                                    (
+                                        "version",
+                                        crate::workflow::encoding::Json::Number(u64::from(
+                                            module.version,
+                                        )),
+                                    ),
+                                    (
+                                        "owner_session_local",
+                                        crate::workflow::encoding::Json::Number(module.owner),
+                                    ),
+                                    (
+                                        "module_source_sha256",
+                                        crate::workflow::encoding::string(
+                                            crate::workflow::intrinsic::sha256(&module.full_source),
+                                        ),
+                                    ),
+                                ])
+                            })
+                            .collect(),
+                    ),
+                ));
             }
             // Each goal is a distinct contract declaration within `source`, so
             // this bound is never reached; it is a separate exit ahead of each push.
@@ -165,10 +243,13 @@ impl super::Session {
             contract_reports.push(crate::workflow::encoding::Json::Object(fields));
         }
         let contracts = crate::workflow::encoding::Json::Array(contract_reports);
-        let (committed,proof_report) = if has_proofs {
-            attempt!(self.commit_declared_proofs(prepared,source,options.limits))
+        let (committed, proof_report) = if has_proofs {
+            attempt!(self.commit_declared_proofs(prepared, source, options.limits))
         } else {
-            (attempt!(self.commit_declared(prepared)),crate::workflow::encoding::Json::Null)
+            (
+                attempt!(self.commit_declared(prepared)),
+                crate::workflow::encoding::Json::Null,
+            )
         };
         match committed {
             Ok(()) => Ok(super::output::Report::declared_link(

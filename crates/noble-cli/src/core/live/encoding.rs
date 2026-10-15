@@ -155,7 +155,10 @@ fn check_import(
 ) -> Result<Option<u32>, EncodeError> {
     if let TypeRef::Func(index) | TypeRef::FuncExact(index) = import.ty {
         let required = match (live, import.module, import.name) {
-            (true, "noble", "live_propose") => Some((&[ValType::I64, ValType::I64, ValType::I32][..], ValType::I32)),
+            (true, "noble", "live_propose") => Some((
+                &[ValType::I64, ValType::I64, ValType::I32][..],
+                ValType::I32,
+            )),
             (true, "noble", "live_generation") => Some((&[][..], ValType::I64)),
             _ => None,
         };

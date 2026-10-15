@@ -165,7 +165,12 @@ pub(super) fn function(
     let mut state = attempt!(inputs::initial(world, &operation.parameters));
     attempt!(nodes(world, body, data, &mut state));
     let result = attempt!(super::abi::result(&operation.results));
-    attempt!(results::finish(world, result, operation.asynchronous, &mut state));
+    attempt!(results::finish(
+        world,
+        result,
+        operation.asynchronous,
+        &mut state
+    ));
     let ordinal = match u32::try_from(export.index()) {
         Ok(ordinal) => ordinal,
         Err(_) => return Err(crate::Diagnostic::Exhausted),

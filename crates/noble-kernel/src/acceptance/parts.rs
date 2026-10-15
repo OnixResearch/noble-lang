@@ -64,10 +64,7 @@ pub(crate) fn limits_of(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), sup
 
 /// Entry input is the only stack permitted to carry borrowed references,
 /// which are subsequently moved into the frame's ordered sidecar.
-pub(crate) fn limits_of_entry(
-    stack: &[crate::types::Ty],
-    ctx: &Ctx,
-) -> Result<(), super::Fail> {
+pub(crate) fn limits_of_entry(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(), super::Fail> {
     limits_of_with(stack, ctx, true)
 }
 
@@ -96,7 +93,8 @@ fn limits_of_with(
     let mut valid = true;
     let mut index = 0;
     while index < stack.len() {
-        let next = if allow_borrowed && matches!(&stack[index], crate::types::Ty::LiveRef(_, _, _)) {
+        let next = if allow_borrowed && matches!(&stack[index], crate::types::Ty::LiveRef(_, _, _))
+        {
             ctx.env.valid_live_ref(&stack[index])
         } else {
             ctx.env.valid_type(&stack[index], 512)

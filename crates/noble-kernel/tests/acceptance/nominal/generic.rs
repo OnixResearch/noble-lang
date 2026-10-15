@@ -484,9 +484,8 @@ fn malformed_families_forged_shapes_and_resource_arguments_fail_closed() -> Resu
 }
 
 #[test]
-fn generic_declarations_reject_duplicate_ids_invalid_payload_and_nominal_collisions()
-    -> Result<(), String>
-{
+fn generic_declarations_reject_duplicate_ids_invalid_payload_and_nominal_collisions(
+) -> Result<(), String> {
     let (env, _) = ready()?;
     let request = crate::support::request(vec![], vec![], &[]);
     let empty = crate::support::candidate(vec![], vec![]);
@@ -499,12 +498,14 @@ fn generic_declarations_reject_duplicate_ids_invalid_payload_and_nominal_collisi
     let mut invalid_payload = env.clone();
     invalid_payload.generic_variants[0].payload_params = [0, 0];
     let mut collision = env.clone();
-    collision.nominals.push(noble_kernel::contracts::NominalDecl {
-        id: family().id,
-        shape: NominalShape::Opaque(Box::new(Ty::I64)),
-        exported: true,
-        public: [true, true],
-    });
+    collision
+        .nominals
+        .push(noble_kernel::contracts::NominalDecl {
+            id: family().id,
+            shape: NominalShape::Opaque(Box::new(Ty::I64)),
+            exported: true,
+            public: [true, true],
+        });
     let malformed_body = crate::support::candidate(vec![], vec![42]);
     for (name, forged) in [
         ("duplicate generic identity", duplicate),

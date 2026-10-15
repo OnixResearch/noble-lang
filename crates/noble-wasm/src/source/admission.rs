@@ -81,7 +81,10 @@ fn checked_interface(
 ) -> Result<(), crate::Diagnostic> {
     if checked.interface.stack_in != expected.stack_in
         || checked.interface.stack_out != expected.stack_out
-        || !checked.interface.effects.is_subset_of(&expected.allowed_effects)
+        || !checked
+            .interface
+            .effects
+            .is_subset_of(&expected.allowed_effects)
     {
         return Err(crate::Diagnostic::Invalid);
     }
@@ -216,8 +219,10 @@ fn calculator_environment_allowance(
     environment_work: u64,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
-    let bodies = attempt!(u64::try_from(submission.definitions.len().saturating_add(1))
-        .map_err(|_| crate::Diagnostic::Exhausted));
+    let bodies = attempt!(
+        u64::try_from(submission.definitions.len().saturating_add(1))
+            .map_err(|_| crate::Diagnostic::Exhausted)
+    );
     // The already-checked whole environment is scanned once above, each
     // distinct named definition's own scheme is substituted once below
     // (their combined bounds cannot exceed one environment scan), and every
@@ -225,8 +230,10 @@ fn calculator_environment_allowance(
     // Debit all of these scans as usual, but give this selected compiler a
     // separate finite structural-work allowance on top of the caller's body
     // work. Nothing is elided, and the absolute ceiling fails closed.
-    let scans = attempt!(bodies.checked_add(2).and_then(|count|
-        environment_work.checked_mul(count)).ok_or(crate::Diagnostic::Exhausted));
+    let scans = attempt!(bodies
+        .checked_add(2)
+        .and_then(|count| environment_work.checked_mul(count))
+        .ok_or(crate::Diagnostic::Exhausted));
     work.grant_calculator(scans)
 }
 
@@ -244,9 +251,19 @@ pub(super) fn check(
     }
     let environment_work = attempt!(environment::work(&submission.environment, calculator, work));
     attempt!(work.charge(environment_work));
-    attempt!(environment::check(submission, live, live_slots, text_cursor, calculator));
+    attempt!(environment::check(
+        submission,
+        live,
+        live_slots,
+        text_cursor,
+        calculator
+    ));
     if calculator {
-        attempt!(calculator_environment_allowance(submission, environment_work, work));
+        attempt!(calculator_environment_allowance(
+            submission,
+            environment_work,
+            work
+        ));
     }
     attempt!(bounds(submission, environment_work, calculator, work));
     let limits = attempt!(kernel_limits(submission, environment_work, work));

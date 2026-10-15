@@ -104,7 +104,8 @@ fn instruction(
         super::super::plan::Action::CalculatorIterate => out.append(b"(call $op_iterate"),
         super::super::plan::Action::CalculatorCompare => out.append(b"(call $op_calc_compare"),
         super::super::plan::Action::CalculatorDivRem => out.append(b"(call $op_calc_div_rem"),
-        super::super::plan::Action::CalculatorTextFromAscii => out.append(b"(call $op_text_from_ascii"),
+        super::super::plan::Action::CalculatorTextFromAscii =>
+            out.append(b"(call $op_text_from_ascii"),
         super::super::plan::Action::CalculatorTextLength => out.append(b"(call $op_text_length"),
         super::super::plan::Action::Quote(input, output_signature, witness) => typed_quote(
             out,

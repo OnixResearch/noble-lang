@@ -56,8 +56,7 @@ fn ty(
     attempt!(work.charge(1));
     let next = attempt!(step(depth));
     let children = match value {
-        noble_kernel::types::Ty::Pair(left, right)
-        | noble_kernel::types::Ty::Sum(left, right) => {
+        noble_kernel::types::Ty::Pair(left, right) | noble_kernel::types::Ty::Sum(left, right) => {
             let left = attempt!(ty(left, next, lookups, work));
             attempt!(add(left, attempt!(ty(right, next, lookups, work))))
         }
@@ -136,7 +135,10 @@ fn pattern(
         noble_kernel::shapes::Pattern::GenericNominal(_, arguments, _) => {
             *lookups = attempt!(add(*lookups, 1));
             let first = attempt!(pattern(&arguments[0], next, lookups, work));
-            attempt!(add(first, attempt!(pattern(&arguments[1], next, lookups, work))))
+            attempt!(add(
+                first,
+                attempt!(pattern(&arguments[1], next, lookups, work))
+            ))
         }
         noble_kernel::shapes::Pattern::Unit
         | noble_kernel::shapes::Pattern::Bool
@@ -167,8 +169,7 @@ fn root(
     // environment, compared against nominal descriptors, and substituted.
     // Each pass may copy ancestor subtrees; W counts their descendant sizes.
     let scans = attempt!(weighted.checked_mul(16).ok_or(crate::Diagnostic::Exhausted));
-    let rows = attempt!(u64::try_from(lookup_rows)
-        .map_err(|_| crate::Diagnostic::Exhausted));
+    let rows = attempt!(u64::try_from(lookup_rows).map_err(|_| crate::Diagnostic::Exhausted));
     let lookup_cost = attempt!(lookups
         .checked_mul(rows)
         .and_then(|count| count.checked_mul(2))
@@ -188,9 +189,14 @@ pub(super) fn scheme(
     {
         return Err(crate::Diagnostic::Exhausted);
     }
-    let scalar = attempt!(u64::try_from(scheme.var_kinds.len()
-        .saturating_add(scheme.effects.len()).saturating_add(1))
-        .map_err(|_| crate::Diagnostic::Exhausted));
+    let scalar = attempt!(u64::try_from(
+        scheme
+            .var_kinds
+            .len()
+            .saturating_add(scheme.effects.len())
+            .saturating_add(1)
+    )
+    .map_err(|_| crate::Diagnostic::Exhausted));
     attempt!(work.entries(scheme.var_kinds.len().saturating_add(scheme.effects.len())));
     let mut cost = attempt!(scalar.checked_mul(512).ok_or(crate::Diagnostic::Exhausted));
     for value in &scheme.stack_in {

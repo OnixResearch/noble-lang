@@ -176,8 +176,15 @@ impl Parser<'_> {
     }
 
     fn read_callable(mut self, live_ref: bool) -> Result<Self, crate::Diagnostic> {
-        if live_ref && !self.environment.is_some_and(|environment| environment.live_slots) {
-            return Err(crate::invalid(self.span, "LiveRef requires the live-slot profile"));
+        if live_ref
+            && !self
+                .environment
+                .is_some_and(|environment| environment.live_slots)
+        {
+            return Err(crate::invalid(
+                self.span,
+                "LiveRef requires the live-slot profile",
+            ));
         }
         let start = self.at;
         let mut depth = 0usize;
@@ -226,7 +233,9 @@ impl Parser<'_> {
             nested,
         ));
         let effects = attempt!(parse_callable_effects(
-            fields[2], self.environment, self.span,
+            fields[2],
+            self.environment,
+            self.span,
         ));
         self.nodes = self
             .nodes
@@ -353,10 +362,12 @@ fn parse_callable_effects(
         if !environment.is_some_and(|environment| {
             environment.effects.contains(&id)
                 && (id != noble_kernel::contracts::LIVE_DISPATCH || environment.live_slots)
-        })
-            || effects.contains(&id)
+        }) || effects.contains(&id)
         {
-            return Err(crate::invalid(span, "unregistered or duplicate callable effect"));
+            return Err(crate::invalid(
+                span,
+                "unregistered or duplicate callable effect",
+            ));
         }
         effects.push(id);
     }
@@ -414,7 +425,10 @@ fn split_top_level(
             byte if byte == separator && depth == 0 => {
                 // Parts end at distinct separator bytes, so this bound is never reached.
                 if parts.len() >= word.len() {
-                    return Err(crate::invalid(span, "unbalanced or oversized type argument"));
+                    return Err(crate::invalid(
+                        span,
+                        "unbalanced or oversized type argument",
+                    ));
                 }
                 parts.push(&word[start..at]);
                 start = attempt!(at

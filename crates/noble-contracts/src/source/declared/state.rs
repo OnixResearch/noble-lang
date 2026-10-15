@@ -141,7 +141,8 @@ impl ModulePrepared {
                         if let Some(
                             noble_kernel::contracts::Behavior::BoundEmit(slot)
                             | noble_kernel::contracts::Behavior::BoundClock(slot),
-                        ) = submission.environment.kind(*def) {
+                        ) = submission.environment.kind(*def)
+                        {
                             if selected.is_some_and(|previous| previous != slot) {
                                 is_ambiguous = true;
                                 break;

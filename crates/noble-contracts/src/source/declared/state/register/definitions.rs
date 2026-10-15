@@ -39,12 +39,14 @@ pub(super) fn install(
         work.meter.limits.bytes = work.limits.bytes.saturating_add(count.saturating_mul(4));
         None
     } else {
-        Some(attempt!(definition_limits(count, work.limits).ok_or_else(|| {
-            crate::source::declared::error(
-                crate::source::Stage::Check,
-                "invalid definition resource budget",
-            )
-        })))
+        Some(attempt!(definition_limits(count, work.limits).ok_or_else(
+            || {
+                crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "invalid definition resource budget",
+                )
+            }
+        )))
     };
     let history_start = session.source.history.len();
     let graph = attempt!(graph::Schedule::setup(session, work, definition_limits));
@@ -234,7 +236,9 @@ fn commit_definition(
     crate::source::Error,
 > {
     let prepared = if let Some(limits) = limits {
-        session.source.prepare_signed(definition_bytes, &[], signature, limits)
+        session
+            .source
+            .prepare_signed(definition_bytes, &[], signature, limits)
     } else {
         // Each calculator definition is a separate source-checking body. Its
         // nodes are bounded independently; rechecking a retained dependency
@@ -243,7 +247,10 @@ fn commit_definition(
         let mut body_meter = crate::Meter::new(meter.limits);
         body_meter.work = meter.work;
         let prepared = session.source.prepare_signed_metered(
-            definition_bytes, &[], signature, &mut body_meter,
+            definition_bytes,
+            &[],
+            signature,
+            &mut body_meter,
         );
         meter.work = body_meter.work;
         prepared

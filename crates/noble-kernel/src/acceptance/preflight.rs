@@ -37,7 +37,10 @@ pub(super) fn check_request(
     if !env.live_slots {
         let mut index = 0;
         while index < candidate.nodes.len() {
-            if matches!(candidate.nodes[index], crate::untrusted::Node::SlotInvoke { .. }) {
+            if matches!(
+                candidate.nodes[index],
+                crate::untrusted::Node::SlotInvoke { .. }
+            ) {
                 return Err(super::Fail::Unsupported(
                     crate::untrusted::UnsupportedKind::NodeForm,
                 ));

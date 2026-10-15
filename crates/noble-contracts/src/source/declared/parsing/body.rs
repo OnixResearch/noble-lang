@@ -17,8 +17,14 @@ pub(super) fn parse<'a>(
         super::Member::Definition {
             name,
             bytes: input_bytes[start..end].to_vec(),
-            span: crate::Span { start: token.span.start, end: end_span },
-            body_span: crate::Span { start: opening.start, end: end_span },
+            span: crate::Span {
+                start: token.span.start,
+                end: end_span,
+            },
+            body_span: crate::Span {
+                start: opening.start,
+                end: end_span,
+            },
         },
     ))
 }

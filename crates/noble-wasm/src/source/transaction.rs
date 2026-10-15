@@ -71,11 +71,12 @@ impl Base {
             && self.identity_base <= next.identities.len()
             && self.signature_count <= key_limit
             && self.descriptor_count <= key_limit
-            && self.identity_count <= if self.calculator {
-                super::CALCULATOR_DEFINITION_LIMIT
-            } else {
-                super::DEFINITION_LIMIT
-            }
+            && self.identity_count
+                <= if self.calculator {
+                    super::CALCULATOR_DEFINITION_LIMIT
+                } else {
+                    super::DEFINITION_LIMIT
+                }
     }
 
     pub(super) fn matches(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
@@ -85,9 +86,7 @@ impl Base {
         // The profile-scoped signature pool bounds exact canonical key bytes;
         // provenance still compares every retained record, never just a hash.
         let mut index = 0usize;
-        while index < self.signature_base
-            && current.signatures.same_key(&next.signatures, index)
-        {
+        while index < self.signature_base && current.signatures.same_key(&next.signatures, index) {
             index += 1;
         }
         if index != self.signature_base {
@@ -125,8 +124,13 @@ mod tests {
     fn calculator_cumulative_prepare_commit_keeps_ids_beyond_ordinary_boundary() {
         let mut compiler = Compiler::new_calculator();
         for index in 0..=crate::signatures::SOURCE_KEY_LIMIT {
-            assert_eq!(compiler.signatures.intern(&[Ty::Resource(ResourceKind(index as u32))]).ok(),
-                Some(index as u32));
+            assert_eq!(
+                compiler
+                    .signatures
+                    .intern(&[Ty::Resource(ResourceKind(index as u32))])
+                    .ok(),
+                Some(index as u32)
+            );
         }
         let session = noble_contracts::source::ModuleSession::new_calculator()
             .unwrap_or_else(|_| panic!("calculator session refused"));
@@ -136,32 +140,67 @@ mod tests {
             depth: 64,
             work: 2_000_000,
         };
-        let input = session.prepare(b"", &[], limits)
+        let input = session
+            .prepare(b"", &[], limits)
             .unwrap_or_else(|_| panic!("empty calculator source refused"));
-        let submission = input.submission()
+        let submission = input
+            .submission()
             .unwrap_or_else(|| panic!("missing checked source submission"));
-        let first = compiler.prepare(submission)
+        let first = compiler
+            .prepare(submission)
             .unwrap_or_else(|_| panic!("calculator prepare refused previous signatures"));
         assert!(compiler.can_commit(&first));
-        compiler.commit(first).unwrap_or_else(|_| panic!("calculator commit refused previous signatures"));
-        assert_eq!(compiler.signatures.intern(&[Ty::Resource(ResourceKind(4096))]).ok(),
-            Some(4096));
+        compiler
+            .commit(first)
+            .unwrap_or_else(|_| panic!("calculator commit refused previous signatures"));
+        assert_eq!(
+            compiler
+                .signatures
+                .intern(&[Ty::Resource(ResourceKind(4096))])
+                .ok(),
+            Some(4096)
+        );
         let expected_id = compiler.signatures.len() as u32;
-        let next_id = compiler.signatures.intern(&[Ty::Resource(ResourceKind(4097))])
+        let next_id = compiler
+            .signatures
+            .intern(&[Ty::Resource(ResourceKind(4097))])
             .unwrap_or_else(|_| panic!("calculator refused next stable signature"));
         assert_eq!(next_id, expected_id);
-        let second = compiler.prepare(submission)
+        let second = compiler
+            .prepare(submission)
             .unwrap_or_else(|_| panic!("calculator cumulative prepare refused"));
         assert!(compiler.can_commit(&second));
-        let stale = Base::capture(&compiler, compiler.identities.len(), compiler.signatures.len(), compiler.descriptors.len());
-        compiler.commit(second).unwrap_or_else(|_| panic!("calculator cumulative commit refused"));
-        assert_eq!(compiler.signatures.intern(&[Ty::Resource(ResourceKind(4097))]).ok(),
-            Some(next_id));
+        let stale = Base::capture(
+            &compiler,
+            compiler.identities.len(),
+            compiler.signatures.len(),
+            compiler.descriptors.len(),
+        );
+        compiler
+            .commit(second)
+            .unwrap_or_else(|_| panic!("calculator cumulative commit refused"));
+        assert_eq!(
+            compiler
+                .signatures
+                .intern(&[Ty::Resource(ResourceKind(4097))])
+                .ok(),
+            Some(next_id)
+        );
         assert!(!stale.matches(&compiler, &compiler));
-        let mut bogus = Base::capture(&compiler, compiler.identities.len(), compiler.signatures.len(), compiler.descriptors.len());
+        let mut bogus = Base::capture(
+            &compiler,
+            compiler.identities.len(),
+            compiler.signatures.len(),
+            compiler.descriptors.len(),
+        );
         bogus.signature_count = crate::signatures::CALCULATOR_SOURCE_KEY_LIMIT + 1;
         assert!(!bogus.matches(&compiler, &compiler));
-        let mut bogus = Base::capture(&compiler, compiler.identities.len(), compiler.signatures.len(), compiler.descriptors.len());
+        let mut bogus = Base::capture(
+            &compiler,
+            compiler.identities.len(),
+            compiler.signatures.len(),
+            compiler.descriptors.len(),
+        );
         bogus.descriptor_count = crate::signatures::CALCULATOR_SOURCE_KEY_LIMIT + 1;
         assert!(!bogus.matches(&compiler, &compiler));
     }

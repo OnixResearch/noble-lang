@@ -91,7 +91,9 @@ pub(super) fn load(
             attempt!(buffer.append(b" i32.load8_u\n"));
             capture_lane(value, 0, buffer)
         }
-        Some(noble_contracts::component::Type::S64 | noble_contracts::component::Type::CheckedU64) => {
+        Some(
+            noble_contracts::component::Type::S64 | noble_contracts::component::Type::CheckedU64,
+        ) => {
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i64.load\n"));
             capture_lane(value, 0, buffer)
@@ -246,8 +248,9 @@ pub(super) fn store(
     attempt!(read_lane(value, 0, buffer));
     match ty {
         noble_contracts::component::Type::Boolean => buffer.append(b" i32.store8\n"),
-        noble_contracts::component::Type::S64
-        | noble_contracts::component::Type::CheckedU64 => buffer.append(b" i64.store\n"),
+        noble_contracts::component::Type::S64 | noble_contracts::component::Type::CheckedU64 => {
+            buffer.append(b" i64.store\n")
+        }
         noble_contracts::component::Type::Own(_)
         | noble_contracts::component::Type::Borrow(_)
         | noble_contracts::component::Type::StreamU8

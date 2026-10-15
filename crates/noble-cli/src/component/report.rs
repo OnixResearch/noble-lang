@@ -54,13 +54,23 @@ pub(super) fn bindings(
         ("world", crate::workflow::encoding::string(world.identity())),
         (
             "imports",
-            crate::workflow::encoding::Json::Array(world.imports().iter()
-                .map(|op| operation(world, op)).collect::<Result<std::vec::Vec<_>, _>>()?),
+            crate::workflow::encoding::Json::Array(
+                world
+                    .imports()
+                    .iter()
+                    .map(|op| operation(world, op))
+                    .collect::<Result<std::vec::Vec<_>, _>>()?,
+            ),
         ),
         (
             "exports",
-            crate::workflow::encoding::Json::Array(world.exports().iter()
-                .map(|op| operation(world, op)).collect::<Result<std::vec::Vec<_>, _>>()?),
+            crate::workflow::encoding::Json::Array(
+                world
+                    .exports()
+                    .iter()
+                    .map(|op| operation(world, op))
+                    .collect::<Result<std::vec::Vec<_>, _>>()?,
+            ),
         ),
         (
             "resources",
@@ -103,10 +113,16 @@ fn operation(
     operation: &noble_contracts::component::Operation,
 ) -> Result<crate::workflow::encoding::Json, crate::workflow::output::Failure> {
     let input_types = operation.input_types(world).ok_or_else(|| {
-        crate::workflow::output::Failure::error("component-check", "resolved world input types unavailable".into())
+        crate::workflow::output::Failure::error(
+            "component-check",
+            "resolved world input types unavailable".into(),
+        )
     })?;
     let output_types = operation.output_types(world).ok_or_else(|| {
-        crate::workflow::output::Failure::error("component-check", "resolved world output types unavailable".into())
+        crate::workflow::output::Failure::error(
+            "component-check",
+            "resolved world output types unavailable".into(),
+        )
     })?;
     Ok(crate::workflow::encoding::object([
         (
@@ -122,14 +138,8 @@ fn operation(
             "export",
             crate::workflow::encoding::string(&operation.export_name),
         ),
-        (
-            "input_types",
-            types(&input_types),
-        ),
-        (
-            "output_types",
-            types(&output_types),
-        ),
+        ("input_types", types(&input_types)),
+        ("output_types", types(&output_types)),
         (
             "wit_parameters",
             crate::workflow::encoding::Json::Array(

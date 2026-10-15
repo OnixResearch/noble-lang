@@ -8,28 +8,53 @@ pub(super) fn build(
 /// Artifact admission never inherits a declared binding or persistent session.
 pub(super) fn admission(optimized: bool) -> std::string::String {
     crate::workflow::encoding::object([
-        ("selection", crate::workflow::encoding::string(super::SELECTION)),
+        (
+            "selection",
+            crate::workflow::encoding::string(super::SELECTION),
+        ),
         ("abi", crate::workflow::encoding::string(super::ABI)),
-        ("optimized", crate::workflow::encoding::Json::Bool(optimized)),
+        (
+            "optimized",
+            crate::workflow::encoding::Json::Bool(optimized),
+        ),
         ("artifacts", crate::workflow::encoding::Json::Null),
-        ("declared_modules", crate::workflow::encoding::Json::Bool(false)),
-        ("bindings", crate::workflow::encoding::Json::Array(std::vec::Vec::new())),
+        (
+            "declared_modules",
+            crate::workflow::encoding::Json::Bool(false),
+        ),
+        (
+            "bindings",
+            crate::workflow::encoding::Json::Array(std::vec::Vec::new()),
+        ),
         ("declared_extension", crate::workflow::encoding::Json::Null),
-    ]).encode()
+    ])
+    .encode()
 }
 
 /// The opt-in live worker uses the same selected ABI and resident Node/V8,
 /// but receives already checked binary modules instead of WAT tool requests.
 pub(super) fn live() -> std::string::String {
     crate::workflow::encoding::object([
-        ("selection", crate::workflow::encoding::string(super::SELECTION)),
+        (
+            "selection",
+            crate::workflow::encoding::string(super::SELECTION),
+        ),
         ("abi", crate::workflow::encoding::string(super::ABI)),
         ("optimized", crate::workflow::encoding::Json::Bool(false)),
         ("artifacts", crate::workflow::encoding::Json::Null),
-        ("declared_modules", crate::workflow::encoding::Json::Bool(false)),
-        ("bindings", crate::workflow::encoding::Json::Array(std::vec::Vec::new())),
+        (
+            "declared_modules",
+            crate::workflow::encoding::Json::Bool(false),
+        ),
+        (
+            "bindings",
+            crate::workflow::encoding::Json::Array(std::vec::Vec::new()),
+        ),
         ("declared_extension", crate::workflow::encoding::Json::Null),
-        ("in_process_live", crate::workflow::encoding::Json::Bool(true)),
+        (
+            "in_process_live",
+            crate::workflow::encoding::Json::Bool(true),
+        ),
     ])
     .encode()
 }
@@ -37,12 +62,21 @@ pub(super) fn live() -> std::string::String {
 /// Independent opt-in slot profile; Core and legacy live modes are unchanged.
 pub(super) fn slot() -> std::string::String {
     crate::workflow::encoding::object([
-        ("selection", crate::workflow::encoding::string(super::SELECTION)),
+        (
+            "selection",
+            crate::workflow::encoding::string(super::SELECTION),
+        ),
         ("abi", crate::workflow::encoding::string(super::ABI)),
         ("optimized", crate::workflow::encoding::Json::Bool(false)),
         ("artifacts", crate::workflow::encoding::Json::Null),
-        ("declared_modules", crate::workflow::encoding::Json::Bool(false)),
-        ("bindings", crate::workflow::encoding::Json::Array(std::vec::Vec::new())),
+        (
+            "declared_modules",
+            crate::workflow::encoding::Json::Bool(false),
+        ),
+        (
+            "bindings",
+            crate::workflow::encoding::Json::Array(std::vec::Vec::new()),
+        ),
         ("declared_extension", crate::workflow::encoding::Json::Null),
         ("slot_mode", crate::workflow::encoding::Json::Bool(true)),
     ])
@@ -50,26 +84,57 @@ pub(super) fn slot() -> std::string::String {
 }
 
 /// Calculator expressions receive only explicitly injected data, never test host bindings.
-pub(super) fn calculator(optimized: bool) -> Result<std::string::String, super::super::output::Failure> {
+pub(super) fn calculator(
+    optimized: bool,
+) -> Result<std::string::String, super::super::output::Failure> {
     let executable = attempt!(std::env::current_exe().map_err(super::super::framing::io_error));
-    let executable = attempt!(std::fs::canonicalize(executable).map_err(super::super::framing::io_error));
-    let executable = attempt!(executable.to_str().ok_or_else(|| super::super::output::Failure::new(
-        super::super::output::ErrorContext { stage: "wasm", outcome: "unsupported" },
-        "calculator WAT assembler executable path is not UTF-8",
-    )));
+    let executable =
+        attempt!(std::fs::canonicalize(executable).map_err(super::super::framing::io_error));
+    let executable =
+        attempt!(executable
+            .to_str()
+            .ok_or_else(|| super::super::output::Failure::new(
+                super::super::output::ErrorContext {
+                    stage: "wasm",
+                    outcome: "unsupported"
+                },
+                "calculator WAT assembler executable path is not UTF-8",
+            )));
     Ok(crate::workflow::encoding::object([
-        ("selection", crate::workflow::encoding::string(super::SELECTION)),
+        (
+            "selection",
+            crate::workflow::encoding::string(super::SELECTION),
+        ),
         ("abi", crate::workflow::encoding::string(super::ABI)),
-        ("optimized", crate::workflow::encoding::Json::Bool(optimized)),
+        (
+            "optimized",
+            crate::workflow::encoding::Json::Bool(optimized),
+        ),
         ("artifacts", crate::workflow::encoding::Json::Null),
-        ("declared_modules", crate::workflow::encoding::Json::Bool(false)),
-        ("text_byte_cursor", crate::workflow::encoding::Json::Bool(false)),
+        (
+            "declared_modules",
+            crate::workflow::encoding::Json::Bool(false),
+        ),
+        (
+            "text_byte_cursor",
+            crate::workflow::encoding::Json::Bool(false),
+        ),
         ("calculator", crate::workflow::encoding::Json::Bool(true)),
-        ("calculator_shell_state", crate::workflow::encoding::Json::Bool(true)),
-        ("calculator_assembler", crate::workflow::encoding::string(executable)),
-        ("bindings", crate::workflow::encoding::Json::Array(std::vec::Vec::new())),
+        (
+            "calculator_shell_state",
+            crate::workflow::encoding::Json::Bool(true),
+        ),
+        (
+            "calculator_assembler",
+            crate::workflow::encoding::string(executable),
+        ),
+        (
+            "bindings",
+            crate::workflow::encoding::Json::Array(std::vec::Vec::new()),
+        ),
         ("declared_extension", crate::workflow::encoding::Json::Null),
-    ]).encode())
+    ])
+    .encode())
 }
 
 /// The worker receives a canonical artifact path; its creation precedes launch.
@@ -129,7 +194,9 @@ fn payload(
     .encode())
 }
 
-fn bindings(options: &super::super::arguments::Options) -> Result<crate::workflow::encoding::Json, super::super::output::Failure> {
+fn bindings(
+    options: &super::super::arguments::Options,
+) -> Result<crate::workflow::encoding::Json, super::super::output::Failure> {
     match &options.manifest {
         Some(manifest) => manifest.worker(),
         None => Ok(crate::workflow::encoding::Json::Array(std::vec::Vec::new())),

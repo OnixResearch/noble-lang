@@ -38,8 +38,10 @@ pub(super) fn visit(
         }
         crate::source::Kind::Call(crate::source::Target::SlotInvoke(ordinal)) => {
             if !matches!(frame.origin, super::Origin::Root) {
-                return Err(crate::invalid(node.span,
-                    "slot.invoke cannot capture a borrowed reference in a quotation or definition"));
+                return Err(crate::invalid(
+                    node.span,
+                    "slot.invoke cannot capture a borrowed reference in a quotation or definition",
+                ));
             }
             attempt!(super::operations::slot_invoke(
                 *ordinal, node.span, &mut frame, state, meter,
@@ -60,7 +62,10 @@ pub(super) fn visit(
         }
         crate::source::Kind::EditorHole => {
             if !editor_analysis {
-                return Err(crate::invalid(node.span, "editor hole cannot enter source admission"));
+                return Err(crate::invalid(
+                    node.span,
+                    "editor hole cannot enter source admission",
+                ));
             }
             let output = attempt!(state.arena.add(
                 crate::inference::Term::Hole(crate::inference::Sort::Stack),
@@ -76,7 +81,10 @@ pub(super) fn visit(
                 span: node.span,
             });
             frame.stack = output;
-            frame.effect = attempt!(state.arena.effect_union(frame.effect, effect, node.span, meter));
+            frame.effect =
+                attempt!(state
+                    .arena
+                    .effect_union(frame.effect, effect, node.span, meter));
         }
         crate::source::Kind::Word(_) => return Err(crate::internal(node.span)),
     }

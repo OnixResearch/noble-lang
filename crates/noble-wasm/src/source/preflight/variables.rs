@@ -98,24 +98,40 @@ fn pattern(
         }
         Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
             let first = attempt!(pattern(left, sizes, next, lookup_rows, work));
-            add(attempt!(add(first, attempt!(pattern(right, sizes, next, lookup_rows, work)))),
-                attempt!(mul(next, 16)))
+            add(
+                attempt!(add(
+                    first,
+                    attempt!(pattern(right, sizes, next, lookup_rows, work))
+                )),
+                attempt!(mul(next, 16)),
+            )
         }
-        Pattern::List(item) => add(attempt!(pattern(item, sizes, next, lookup_rows, work)),
-            attempt!(mul(next, 16))),
+        Pattern::List(item) => add(
+            attempt!(pattern(item, sizes, next, lookup_rows, work)),
+            attempt!(mul(next, 16)),
+        ),
         Pattern::Program(input, output, effects) | Pattern::LiveRef(input, output, effects) => {
             attempt!(work.entries(effects.len()));
-            let mut total = attempt!(mul(attempt!(add(effects.len() as u64, 1)), attempt!(mul(next, 16))));
+            let mut total = attempt!(mul(
+                attempt!(add(effects.len() as u64, 1)),
+                attempt!(mul(next, 16))
+            ));
             for item in input.iter().chain(output.iter()) {
-                total = attempt!(add(total, attempt!(pattern(item, sizes, next, lookup_rows, work))));
+                total = attempt!(add(
+                    total,
+                    attempt!(pattern(item, sizes, next, lookup_rows, work))
+                ));
             }
             Ok(total)
         }
         Pattern::GenericNominal(_, arguments, _) => {
             let first = attempt!(pattern(&arguments[0], sizes, next, lookup_rows, work));
-            let children = attempt!(add(first, attempt!(pattern(&arguments[1], sizes, next, lookup_rows, work))));
-            let constructor = attempt!(add(attempt!(mul(next, 16)),
-                attempt!(mul(lookup_rows, 16))));
+            let children = attempt!(add(
+                first,
+                attempt!(pattern(&arguments[1], sizes, next, lookup_rows, work))
+            ));
+            let constructor =
+                attempt!(add(attempt!(mul(next, 16)), attempt!(mul(lookup_rows, 16))));
             add(attempt!(mul(children, 4)), constructor)
         }
         Pattern::Nominal(_, shape) => {
@@ -124,13 +140,20 @@ fn pattern(
                 noble_kernel::types::NominalShape::Opaque(ty) => {
                     let (_, weighted, lookups) = attempt!(super::concrete::count(ty, 512, work));
                     total = attempt!(add(total, attempt!(mul(weighted, 16))));
-                    total = attempt!(add(total, attempt!(mul(lookups, attempt!(mul(lookup_rows, 16))))));
+                    total = attempt!(add(
+                        total,
+                        attempt!(mul(lookups, attempt!(mul(lookup_rows, 16))))
+                    ));
                 }
                 noble_kernel::types::NominalShape::Variant(left, right) => {
                     for ty in [left, right] {
-                        let (_, weighted, lookups) = attempt!(super::concrete::count(ty, 512, work));
+                        let (_, weighted, lookups) =
+                            attempt!(super::concrete::count(ty, 512, work));
                         total = attempt!(add(total, attempt!(mul(weighted, 16))));
-                        total = attempt!(add(total, attempt!(mul(lookups, attempt!(mul(lookup_rows, 16))))));
+                        total = attempt!(add(
+                            total,
+                            attempt!(mul(lookups, attempt!(mul(lookup_rows, 16))))
+                        ));
                     }
                 }
             }
@@ -167,16 +190,20 @@ impl Volume {
     }
 
     fn cost(self, lookup_rows: u64) -> Result<u64, crate::Diagnostic> {
-        add(self.weighted, attempt!(mul(self.lookups, attempt!(mul(lookup_rows, 16)))))
+        add(
+            self.weighted,
+            attempt!(mul(self.lookups, attempt!(mul(lookup_rows, 16)))),
+        )
     }
 
     fn constructed(self, copies: u64, nominal: bool) -> Result<Self, crate::Diagnostic> {
         Ok(Self {
             height: 1,
             nodes: attempt!(add(1, attempt!(mul(self.nodes, copies)))),
-            weighted: attempt!(add(1, attempt!(mul(
-                attempt!(add(self.weighted, self.nodes)), copies
-            )))),
+            weighted: attempt!(add(
+                1,
+                attempt!(mul(attempt!(add(self.weighted, self.nodes)), copies))
+            )),
             lookups: attempt!(add(u64::from(nominal), attempt!(mul(self.lookups, copies)))),
         })
     }
@@ -187,7 +214,12 @@ fn type_volume(
     work: &mut super::super::Work,
 ) -> Result<Volume, crate::Diagnostic> {
     let (nodes, weighted, lookups) = attempt!(super::concrete::count(ty, 512, work));
-    Ok(Volume { height: 1, nodes, weighted, lookups })
+    Ok(Volume {
+        height: 1,
+        nodes,
+        weighted,
+        lookups,
+    })
 }
 
 /// Project a rank-1 pattern's concrete stack volume without materializing
@@ -207,7 +239,10 @@ fn projected(
     match value {
         Pattern::Var(var) | Pattern::StackVar(var) => {
             let index = attempt!(usize::try_from(var.0).map_err(|_| crate::Diagnostic::Invalid));
-            bindings.get(index).copied().ok_or(crate::Diagnostic::Invalid)
+            bindings
+                .get(index)
+                .copied()
+                .ok_or(crate::Diagnostic::Invalid)
         }
         Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
             let left = attempt!(projected(left, bindings, next, work));
@@ -257,7 +292,10 @@ fn projected(
         | Pattern::Evidence
         | Pattern::Certified
         | Pattern::Resource(_) => Ok(Volume {
-            height: 1, nodes: 1, weighted: 1, lookups: 0,
+            height: 1,
+            nodes: 1,
+            weighted: 1,
+            lookups: 0,
         }),
     }
 }
@@ -296,7 +334,10 @@ fn witness(
                 Ok(total)
             }
             Binding::Effect(effects) => Ok(Volume {
-                height: 0, nodes: 0, weighted: effects.as_slice().len() as u64, lookups: 0,
+                height: 0,
+                nodes: 0,
+                weighted: effects.as_slice().len() as u64,
+                lookups: 0,
             }),
             Binding::Ref(_) => Ok(Volume::default()),
         });
@@ -314,7 +355,9 @@ fn witness(
                 }
                 match &inst.bindings[current] {
                     Binding::Ref(var) => {
-                        current = attempt!(usize::try_from(var.0).map_err(|_| crate::Diagnostic::Invalid));
+                        current = attempt!(
+                            usize::try_from(var.0).map_err(|_| crate::Diagnostic::Invalid)
+                        );
                         if current >= inst.bindings.len() {
                             return Err(crate::Diagnostic::Invalid);
                         }
@@ -355,9 +398,14 @@ fn node(
         // The kernel refuses borrowed dispatch outside the live-slot profile.
         Node::SlotInvoke { .. } => return Err(crate::Diagnostic::Unsupported),
     };
-    let lookup_rows = attempt!(u64::try_from(submission.environment.nominals.len()
-        .saturating_add(submission.environment.generic_variants.len()))
-        .map_err(|_| crate::Diagnostic::Exhausted));
+    let lookup_rows = attempt!(u64::try_from(
+        submission
+            .environment
+            .nominals
+            .len()
+            .saturating_add(submission.environment.generic_variants.len())
+    )
+    .map_err(|_| crate::Diagnostic::Exhausted));
     let (sizes, volumes, witness_size) = attempt!(witness(inst, lookup_rows, work));
     let mut size = attempt!(mul(witness_size, 16));
     let input;
@@ -382,11 +430,17 @@ fn node(
         }
         Node::Quotation { body, .. } => {
             size = attempt!(add(size, attempt!(mul(body.len() as u64, 16))));
-            let stack = attempt!(add(attempt!(mul(sizes[0], 2)), attempt!(add(sizes[1], sizes[2]))));
+            let stack = attempt!(add(
+                attempt!(mul(sizes[0], 2)),
+                attempt!(add(sizes[1], sizes[2]))
+            ));
             size = attempt!(add(size, attempt!(mul(stack, 16))));
             let constructed = attempt!(volumes[1].add(volumes[2])).constructed(1, false);
             input = sizes[0];
-            output = attempt!(add(input, attempt!(attempt!(constructed).cost(lookup_rows))));
+            output = attempt!(add(
+                input,
+                attempt!(attempt!(constructed).cost(lookup_rows))
+            ));
             quotation_input = sizes[1];
             quotation_output = sizes[2];
             input_height = volumes[0].height;
@@ -395,10 +449,21 @@ fn node(
             quotation_output_height = volumes[2].height;
         }
         Node::Invocation { def, .. } => {
-            let scheme = attempt!(submission.environment.scheme(*def).ok_or(crate::Diagnostic::Invalid));
-            size = attempt!(add(size, attempt!(super::super::admission::witness_scheme(submission, *def, work))));
+            let scheme = attempt!(submission
+                .environment
+                .scheme(*def)
+                .ok_or(crate::Diagnostic::Invalid));
+            size = attempt!(add(
+                size,
+                attempt!(super::super::admission::witness_scheme(
+                    submission, *def, work
+                ))
+            ));
             for value in scheme.stack_in.iter().chain(scheme.stack_out.iter()) {
-                size = attempt!(add(size, attempt!(pattern(value, &sizes, 0, lookup_rows, work))));
+                size = attempt!(add(
+                    size,
+                    attempt!(pattern(value, &sizes, 0, lookup_rows, work))
+                ));
             }
             let projected_input = attempt!(projected_stack(&scheme.stack_in, &volumes, 0, work));
             let projected_output = attempt!(projected_stack(&scheme.stack_out, &volumes, 0, work));
@@ -413,8 +478,17 @@ fn node(
         }
         Node::SlotInvoke { .. } => return Err(crate::Diagnostic::Unsupported),
     }
-    Ok(Cost { clone: size, input, output, quotation_input, quotation_output,
-        input_height, output_height, quotation_input_height, quotation_output_height })
+    Ok(Cost {
+        clone: size,
+        input,
+        output,
+        quotation_input,
+        quotation_output,
+        input_height,
+        output_height,
+        quotation_input_height,
+        quotation_output_height,
+    })
 }
 
 /// The immutable inputs shared by every recursive `appearance` visit.
@@ -440,29 +514,53 @@ fn appearance(
     }
     attempt!(work.charge(1));
     let index = attempt!(usize::try_from(id.0).map_err(|_| crate::Diagnostic::Invalid));
-    let node = attempt!(walk.body.candidate.nodes.get(index).ok_or(crate::Diagnostic::Invalid));
+    let node = attempt!(walk
+        .body
+        .candidate
+        .nodes
+        .get(index)
+        .ok_or(crate::Diagnostic::Invalid));
     let size = attempt!(walk.sizes.get(index).ok_or(crate::Diagnostic::Invalid));
     // match_tail compares this carried frame with this invocation's input,
     // never a later frame against an earlier interface. Keep charging each
     // successful join's entire carried frame separately below.
     *largest = (*largest).max(attempt!(mismatch_reserve(
-        *frame, size.input, *frame_height, size.input_height, walk.permitted_height)));
+        *frame,
+        size.input,
+        *frame_height,
+        size.input_height,
+        walk.permitted_height
+    )));
     attempt!(work.charge(attempt!(mul(*frame, 16))));
     attempt!(work.charge(size.clone));
     if let Node::Quotation { body: children, .. } = node {
         let mut child_frame = size.quotation_input;
         let mut child_height = size.quotation_input_height;
         for child in children {
-            attempt!(appearance(walk, *child, depth + 1, &mut child_frame, &mut child_height,
-                largest, work));
+            attempt!(appearance(
+                walk,
+                *child,
+                depth + 1,
+                &mut child_frame,
+                &mut child_height,
+                largest,
+                work
+            ));
         }
         // Even an empty quotation body completes against its claimed Stack2.
         *largest = (*largest).max(attempt!(mismatch_reserve(
-            child_frame, size.quotation_output, child_height,
-            size.quotation_output_height, walk.permitted_height)));
+            child_frame,
+            size.quotation_output,
+            child_height,
+            size.quotation_output_height,
+            walk.permitted_height
+        )));
     }
-    let remainder = attempt!(frame.checked_sub(size.input).ok_or(crate::Diagnostic::Invalid));
-    let remainder_height = attempt!(frame_height.checked_sub(size.input_height)
+    let remainder = attempt!(frame
+        .checked_sub(size.input)
+        .ok_or(crate::Diagnostic::Invalid));
+    let remainder_height = attempt!(frame_height
+        .checked_sub(size.input_height)
         .ok_or(crate::Diagnostic::Invalid));
     *frame = attempt!(add(remainder, size.output));
     *frame_height = attempt!(add(remainder_height, size.output_height));
@@ -478,35 +576,62 @@ fn body(
     permitted_height: u32,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
-    let lookup_rows = attempt!(u64::try_from(submission.environment.nominals.len()
-        .saturating_add(submission.environment.generic_variants.len()))
-        .map_err(|_| crate::Diagnostic::Exhausted));
+    let lookup_rows = attempt!(u64::try_from(
+        submission
+            .environment
+            .nominals
+            .len()
+            .saturating_add(submission.environment.generic_variants.len())
+    )
+    .map_err(|_| crate::Diagnostic::Exhausted));
     let mut frame = 0u64;
     let mut frame_height = 0u64;
     for ty in input {
         let (_, weighted, lookups) = attempt!(super::concrete::count(ty, 512, work));
         frame = attempt!(add(frame, weighted));
-        frame = attempt!(add(frame, attempt!(mul(lookups, attempt!(mul(lookup_rows, 16))))));
+        frame = attempt!(add(
+            frame,
+            attempt!(mul(lookups, attempt!(mul(lookup_rows, 16))))
+        ));
         frame_height = attempt!(add(frame_height, 1));
     }
     let mut claimed_volume = 0u64;
     let mut claimed_height = 0u64;
     for ty in claimed {
-        claimed_volume = attempt!(add(claimed_volume,
-            attempt!(attempt!(type_volume(ty, work)).cost(lookup_rows))));
+        claimed_volume = attempt!(add(
+            claimed_volume,
+            attempt!(attempt!(type_volume(ty, work)).cost(lookup_rows))
+        ));
         claimed_height = attempt!(add(claimed_height, 1));
     }
     let mut sizes = alloc::vec::Vec::with_capacity(body.candidate.nodes.len());
     for item in &body.candidate.nodes {
         sizes.push(attempt!(node(item, submission, work)));
     }
-    let walk = Walk { body, sizes: &sizes, permitted_height };
+    let walk = Walk {
+        body,
+        sizes: &sizes,
+        permitted_height,
+    };
     for id in &body.candidate.body {
-        attempt!(appearance(&walk, *id, 0, &mut frame, &mut frame_height, largest, work));
+        attempt!(appearance(
+            &walk,
+            *id,
+            0,
+            &mut frame,
+            &mut frame_height,
+            largest,
+            work
+        ));
     }
     // A named definition or root can mismatch at completion with zero nodes.
     *largest = (*largest).max(attempt!(mismatch_reserve(
-        frame, claimed_volume, frame_height, claimed_height, permitted_height)));
+        frame,
+        claimed_volume,
+        frame_height,
+        claimed_height,
+        permitted_height
+    )));
     Ok(())
 }
 
@@ -535,13 +660,25 @@ pub(super) fn check(
     // Borrowed scans, successful joins and witness walks remain cumulative.
     let permitted_height = submission.request.limits.stack_height;
     let mut largest = 0u64;
-    attempt!(body(&submission.body, &submission.request.expected.stack_in,
-        &submission.request.expected.stack_out, submission, &mut largest,
-        permitted_height, work));
+    attempt!(body(
+        &submission.body,
+        &submission.request.expected.stack_in,
+        &submission.request.expected.stack_out,
+        submission,
+        &mut largest,
+        permitted_height,
+        work
+    ));
     for definition in &submission.definitions {
-        attempt!(body(&definition.body, &definition.expected.stack_in,
-            &definition.expected.stack_out, submission, &mut largest,
-            permitted_height, work));
+        attempt!(body(
+            &definition.body,
+            &definition.expected.stack_in,
+            &definition.expected.stack_out,
+            submission,
+            &mut largest,
+            permitted_height,
+            work
+        ));
     }
     attempt!(work.charge(largest));
     Ok(())

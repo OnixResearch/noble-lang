@@ -42,25 +42,34 @@ impl super::Session {
             Ok(parsed) => parsed,
             Err(error) => return Err(super::Error::at(super::Stage::Parse, error)),
         };
-        if let Err(error) = super::resolution::resolve(&mut tree, name.as_deref(), self, meter)
-        {
+        if let Err(error) = super::resolution::resolve(&mut tree, name.as_deref(), self, meter) {
             return Err(super::Error::at(super::Stage::Resolve, error));
         }
-        if name.is_some() && self.live_slots.is_some() && tree.nodes.iter().any(|node| {
-            matches!(node.kind, super::Kind::Call(super::Target::SlotInvoke(_)))
-        }) {
-            return Err(super::Error::at(super::Stage::Check, crate::invalid(
-                tree.span, "live-slot declarations cannot contain borrowed dispatch",
-            )));
+        if name.is_some()
+            && self.live_slots.is_some()
+            && tree
+                .nodes
+                .iter()
+                .any(|node| matches!(node.kind, super::Kind::Call(super::Target::SlotInvoke(_))))
+        {
+            return Err(super::Error::at(
+                super::Stage::Check,
+                crate::invalid(
+                    tree.span,
+                    "live-slot declarations cannot contain borrowed dispatch",
+                ),
+            ));
         }
         if let Err(error) = super::preflight::check(inputs, self, tree.span, meter) {
             return Err(super::Error::at(super::Stage::Check, error));
         }
         let selected_root = if tree.body.len() == 1 {
-            tree.nodes.get(tree.body[0] as usize).and_then(|node| match &node.kind {
-                super::Kind::Call(super::Target::Named(index)) => Some(*index),
-                _ => None,
-            })
+            tree.nodes
+                .get(tree.body[0] as usize)
+                .and_then(|node| match &node.kind {
+                    super::Kind::Call(super::Target::Named(index)) => Some(*index),
+                    _ => None,
+                })
         } else {
             None
         };
@@ -92,14 +101,14 @@ impl super::Session {
         let mut addition = alloc::vec::Vec::new();
         let (definition, submission, checked, output) = match name {
             Some(name) => {
-                let definition =
-                    match declaration(tree, name, source_bytes, signature, self, meter) {
-                        Ok((definition, bytes)) => {
-                            addition = bytes;
-                            definition
-                        }
-                        Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
-                    };
+                let definition = match declaration(tree, name, source_bytes, signature, self, meter)
+                {
+                    Ok((definition, bytes)) => {
+                        addition = bytes;
+                        definition
+                    }
+                    Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
+                };
                 (Some(definition), None, None, inputs.to_vec())
             }
             None => {
@@ -107,22 +116,46 @@ impl super::Session {
                     if borrowed.defs.len()
                         > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
                     {
-                        return Err(super::Error::at(super::Stage::Check,
-                            super::exhausted(tree.span, "calculator environment row limit exceeded")));
+                        return Err(super::Error::at(
+                            super::Stage::Check,
+                            super::exhausted(
+                                tree.span,
+                                "calculator environment row limit exceeded",
+                            ),
+                        ));
                     }
                     let budget = match borrowed.calculator_clone_budget() {
                         Some(budget) => budget,
-                        None => return Err(super::Error::at(super::Stage::Check,
-                            super::exhausted(tree.span, "calculator environment clone bound exceeded"))),
+                        None => {
+                            return Err(super::Error::at(
+                                super::Stage::Check,
+                                super::exhausted(
+                                    tree.span,
+                                    "calculator environment clone bound exceeded",
+                                ),
+                            ))
+                        }
                     };
                     if budget.reserved_bytes > u64::from(meter.limits.work) {
-                        return Err(super::Error::at(super::Stage::Check,
-                            super::exhausted(tree.span, "calculator environment clone work exceeded")));
+                        return Err(super::Error::at(
+                            super::Stage::Check,
+                            super::exhausted(
+                                tree.span,
+                                "calculator environment clone work exceeded",
+                            ),
+                        ));
                     }
                     let bytes = match u32::try_from(budget.bytes) {
                         Ok(bytes) => bytes,
-                        Err(_) => return Err(super::Error::at(super::Stage::Check,
-                            super::exhausted(tree.span, "calculator environment clone work exceeded"))),
+                        Err(_) => {
+                            return Err(super::Error::at(
+                                super::Stage::Check,
+                                super::exhausted(
+                                    tree.span,
+                                    "calculator environment clone work exceeded",
+                                ),
+                            ))
+                        }
                     };
                     if let Err(error) = meter.charge(bytes, tree.span) {
                         return Err(super::Error::at(super::Stage::Check, error));
@@ -160,7 +193,9 @@ impl super::Session {
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-maintainers; calculator declared inference borrows its retained environment, while ordinary profiles still clone bindings or build a checked bootstrap environment."
     )]
-    pub(super) fn environment(&self) -> Result<Cow<'_, noble_kernel::contracts::Env>, crate::Diagnostic> {
+    pub(super) fn environment(
+        &self,
+    ) -> Result<Cow<'_, noble_kernel::contracts::Env>, crate::Diagnostic> {
         if let Some(declared) = &self.declared {
             if self.calculator {
                 return Ok(Cow::Borrowed(&declared.environment));
@@ -173,9 +208,11 @@ impl super::Session {
         match &self.bindings {
             Some(bindings) => Ok(Cow::Owned(bindings.environment.clone())),
             None if self.calculator => noble_kernel::contracts::calculator_environment()
-                .map(Cow::Owned).map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
+                .map(Cow::Owned)
+                .map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
             None if self.text_cursor => noble_kernel::contracts::text_cursor_environment()
-                .map(Cow::Owned).map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
+                .map(Cow::Owned)
+                .map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
             None if self.live_selected.is_some() => super::live_environment().map(Cow::Owned),
             None => super::environment().map(Cow::Owned),
         }

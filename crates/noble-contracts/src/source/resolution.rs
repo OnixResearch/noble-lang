@@ -58,26 +58,34 @@ fn lookup(
     if word == b"slot.invoke" || word.starts_with(b"slot.invoke.") {
         if session.live_slots.is_none() {
             return Err(crate::Diagnostic::new(
-                crate::DiagnosticKind::Unsupported, span,
+                crate::DiagnosticKind::Unsupported,
+                span,
                 "slot.invoke requires the opt-in live-slot source profile",
             ));
         }
         if declaration.is_some() {
-            return Err(crate::invalid(span,
-                "a live slot cannot be captured inside a named definition"));
+            return Err(crate::invalid(
+                span,
+                "a live slot cannot be captured inside a named definition",
+            ));
         }
         let ordinal = if word == b"slot.invoke" {
             None
         } else {
             let suffix = &word[b"slot.invoke.".len()..];
-            if suffix.is_empty() || suffix.len() > 10 || (suffix.len() > 1 && suffix[0] == b'0')
+            if suffix.is_empty()
+                || suffix.len() > 10
+                || (suffix.len() > 1 && suffix[0] == b'0')
                 || !suffix.iter().all(u8::is_ascii_digit)
             {
                 return Err(crate::invalid(span, "invalid borrowed input ordinal"));
             }
-            Some(core::str::from_utf8(suffix).ok()
-                .and_then(|digits| digits.parse::<u32>().ok())
-                .ok_or_else(|| crate::invalid(span, "borrowed input ordinal exceeds u32"))?)
+            Some(
+                core::str::from_utf8(suffix)
+                    .ok()
+                    .and_then(|digits| digits.parse::<u32>().ok())
+                    .ok_or_else(|| crate::invalid(span, "borrowed input ordinal exceeds u32"))?,
+            )
         };
         return Ok(super::Target::SlotInvoke(ordinal));
     }
@@ -126,13 +134,19 @@ fn lookup(
                 return Ok(super::Target::Builtin(24));
             }
         }
-        return Err(crate::invalid(span, "self.propose requires the selected named definition"));
+        return Err(crate::invalid(
+            span,
+            "self.propose requires the selected named definition",
+        ));
     }
     if word == b"self.generation" {
         return if declaration.is_some() && session.live_selected.as_deref() == declaration {
             Ok(super::Target::Builtin(25))
         } else {
-            Err(crate::invalid(span, "self.generation requires the selected named definition"))
+            Err(crate::invalid(
+                span,
+                "self.generation requires the selected named definition",
+            ))
         };
     }
     if let Some(definition) = crate::program::bootstrap_word(word) {

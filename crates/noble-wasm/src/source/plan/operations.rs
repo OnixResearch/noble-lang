@@ -149,7 +149,12 @@ fn lower_node(
             if !layout.live_slots || *site_id != id.0 {
                 return Err(crate::Diagnostic::Invalid);
             }
-            let site = match input.checked.live_sites.iter().find(|site| site.site_id == *site_id) {
+            let site = match input
+                .checked
+                .live_sites
+                .iter()
+                .find(|site| site.site_id == *site_id)
+            {
                 Some(site) => site,
                 None => return Err(crate::Diagnostic::Invalid),
             };
@@ -257,8 +262,7 @@ impl Input<'_> {
             Some(noble_kernel::contracts::Behavior::Named) => self.named_call(def),
             Some(kind) => match kind {
                 noble_kernel::contracts::Behavior::BoundEmit(slot) => output.bound_action(slot),
-                noble_kernel::contracts::Behavior::BoundClock(slot) =>
-                    output.clock_action(slot),
+                noble_kernel::contracts::Behavior::BoundClock(slot) => output.clock_action(slot),
                 noble_kernel::contracts::Behavior::NominalNew(id) => output.new_action(id),
                 noble_kernel::contracts::Behavior::NominalInto(id) => {
                     let ty = attempt!(nominal::Output::checked_input(
@@ -360,8 +364,9 @@ fn fill_quotation(
             Some(value) => value,
             None => return Err(crate::Diagnostic::Defective),
         };
-        layout.programs[program].operations =
-            attempt!(lower_sequence(input, program, entries, compiler, layout, work));
+        layout.programs[program].operations = attempt!(lower_sequence(
+            input, program, entries, compiler, layout, work
+        ));
     }
     Ok(())
 }

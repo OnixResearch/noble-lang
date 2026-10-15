@@ -35,9 +35,15 @@ fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
     [
         Scheme {
             var_kinds: alloc::vec![VariableKind::Stack],
-            stack_in: alloc::vec![stack.clone(), Pattern::I64,
-                Pattern::program(alloc::vec![Pattern::I64], alloc::vec![Pattern::I64],
-                    alloc::vec::Vec::new())],
+            stack_in: alloc::vec![
+                stack.clone(),
+                Pattern::I64,
+                Pattern::program(
+                    alloc::vec![Pattern::I64],
+                    alloc::vec![Pattern::I64],
+                    alloc::vec::Vec::new()
+                )
+            ],
             stack_out: alloc::vec![stack.clone(), Pattern::Unit],
             effects: alloc::vec![EffectSlot::Effect(EffId(3))],
         },
@@ -72,9 +78,7 @@ pub(super) fn check(
     } else {
         definition_limit.saturating_add(27)
     };
-    if env.defs.len() > maximum_rows
-        || submission.definitions.len() > definition_limit
-    {
+    if env.defs.len() > maximum_rows || submission.definitions.len() > definition_limit {
         return Err(crate::Diagnostic::Exhausted);
     }
     if env.defs.len() < 23 {
@@ -114,20 +118,34 @@ pub(super) fn check(
             || !env.bound_adapters.is_empty());
     let has_invalid_metadata = !env.schemas.is_empty()
         || env.caller_module.is_some()
-        || (!live_slots
-            && env.resource_kinds != [noble_kernel::contracts::FIXTURE_RESOURCE]);
+        || (!live_slots && env.resource_kinds != [noble_kernel::contracts::FIXTURE_RESOURCE]);
     if has_invalid_metadata || has_noncanonical_core_declarations {
         return Err(crate::Diagnostic::Invalid);
     }
-    let (fixed, count) = attempt!(canonical_prefix(env, live, live_slots, text_cursor, calculator));
+    let (fixed, count) = attempt!(canonical_prefix(
+        env,
+        live,
+        live_slots,
+        text_cursor,
+        calculator
+    ));
     if !exact_effects(env, count, live_slots) {
         return Err(crate::Diagnostic::Invalid);
     }
-    if live && (submission.request.expected.allowed_effects.as_slice().iter()
-        .chain(submission.definitions.iter().flat_map(|definition| {
-            definition.expected.allowed_effects.as_slice().iter()
-        }))
-        .any(|effect| !matches!(effect.0, 3 | 4)))
+    if live
+        && (submission
+            .request
+            .expected
+            .allowed_effects
+            .as_slice()
+            .iter()
+            .chain(
+                submission
+                    .definitions
+                    .iter()
+                    .flat_map(|definition| definition.expected.allowed_effects.as_slice().iter()),
+            )
+            .any(|effect| !matches!(effect.0, 3 | 4)))
     {
         return Err(crate::Diagnostic::Invalid);
     }
@@ -140,10 +158,13 @@ pub(super) fn check(
         // Replay the ordinary declarations without these already-reconstructed
         // descriptors; replay still checks every actual definition in order.
         let mut ordinary = env.clone();
-        ordinary.nominals.retain(|decl| {
-            !env.live_resource_nominals.contains(&decl.id)
-        });
-        if ordinary.nominals.len().saturating_add(env.live_resource_nominals.len())
+        ordinary
+            .nominals
+            .retain(|decl| !env.live_resource_nominals.contains(&decl.id));
+        if ordinary
+            .nominals
+            .len()
+            .saturating_add(env.live_resource_nominals.len())
             != env.nominals.len()
         {
             return Err(crate::Diagnostic::Invalid);
@@ -156,9 +177,10 @@ pub(super) fn check(
 
 fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: bool) -> bool {
     use noble_kernel::contracts::{LIVE_DISPATCH, TEST_CLOCK, TEST_EMIT};
-    let has_clock = env.kinds.iter().any(|kind| {
-        matches!(kind, noble_kernel::contracts::Behavior::BoundClock(_))
-    });
+    let has_clock = env
+        .kinds
+        .iter()
+        .any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundClock(_)));
     if live_slots {
         // Clock registration may precede or follow the host's slot opt-in.
         // Both orderings are produced by the checked Env APIs, but no other
@@ -375,7 +397,9 @@ pub(super) fn contract_work(
 }
 
 fn lookup_rows(env: &noble_kernel::contracts::Env) -> Result<usize, crate::Diagnostic> {
-    env.nominals.len().checked_add(env.generic_variants.len())
+    env.nominals
+        .len()
+        .checked_add(env.generic_variants.len())
         .ok_or(crate::Diagnostic::Exhausted)
 }
 

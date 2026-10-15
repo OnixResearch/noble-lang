@@ -87,8 +87,10 @@ impl<'a> super::build::State<'a> {
                 return Ok(self);
             }
             noble_kernel::types::Ty::LiveRef(..) => {
-                return Err(crate::invalid(span,
-                    "LiveRef is not a value; it belongs only to a live root input sidecar"));
+                return Err(crate::invalid(
+                    span,
+                    "LiveRef is not a value; it belongs only to a live root input sidecar",
+                ));
             }
             noble_kernel::types::Ty::Resource(kind) => {
                 if arena.resources {
@@ -184,8 +186,10 @@ impl<'a> super::build::State<'a> {
                 return Ok(self);
             }
             noble_kernel::shapes::Pattern::LiveRef(..) => {
-                return Err(crate::invalid(span,
-                    "LiveRef cannot be instantiated as a value or captured in a Program"));
+                return Err(crate::invalid(
+                    span,
+                    "LiveRef cannot be instantiated as a value or captured in a Program",
+                ));
             }
             noble_kernel::shapes::Pattern::Var(variable) => {
                 match super::variable_at(variables, variable.0, span) {

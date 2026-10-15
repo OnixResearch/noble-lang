@@ -49,12 +49,19 @@ fn split_signature<'a>(
     else {
         return Err(super::invalid("binding signature has invalid delimiters"));
     };
-    let trailer = words.get(bang..).ok_or_else(|| super::invalid("binding signature has invalid delimiters"))?;
+    let trailer = words
+        .get(bang..)
+        .ok_or_else(|| super::invalid("binding signature has invalid delimiters"))?;
     let (effect, policy, script) = match (operation, trailer) {
         ("test.emit", ["!", effect, policy]) => (*effect, *policy, None),
-        ("test.clock", ["!", effect, policy, "script", script]) =>
-            (*effect, *policy, Some(*script)),
-        _ => return Err(super::invalid("binding signature requires exact effect, policy and operation script")),
+        ("test.clock", ["!", effect, policy, "script", script]) => {
+            (*effect, *policy, Some(*script))
+        }
+        _ => {
+            return Err(super::invalid(
+                "binding signature requires exact effect, policy and operation script",
+            ))
+        }
     };
 
     Ok(SignatureWords {
@@ -92,7 +99,10 @@ fn types(
 }
 
 impl Signature {
-    pub(super) fn parse(words: &[&str], operation: &str) -> Result<Self, super::super::super::output::Failure> {
+    pub(super) fn parse(
+        words: &[&str],
+        operation: &str,
+    ) -> Result<Self, super::super::super::output::Failure> {
         let SignatureWords {
             inputs,
             outputs,
@@ -133,10 +143,14 @@ impl Signature {
                     }
                     if digits.is_empty()
                         || !digits.bytes().all(|digit| digit.is_ascii_digit())
-                        || digits.starts_with('0') && (digits.len() > 1 || negative) {
-                        return Err(super::invalid("binding script is noncanonical or exceeds 16 values"));
+                        || digits.starts_with('0') && (digits.len() > 1 || negative)
+                    {
+                        return Err(super::invalid(
+                            "binding script is noncanonical or exceeds 16 values",
+                        ));
                     }
-                    script.push(attempt!(value.parse::<i64>()
+                    script.push(attempt!(value
+                        .parse::<i64>()
                         .map_err(|_| super::invalid("binding script value is not I64"))));
                 }
                 script

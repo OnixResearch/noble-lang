@@ -20,20 +20,32 @@ const REPLAY_STEP_WORK: u64 = 128;
 const HISTORY_WORK_LIMIT: u64 = 65_536;
 const DEFAULT_BUDGET: [i64; 7] = [1_024, 256, 4_096, 32, 16, 4_000_000, 4_096];
 const BUDGET_NAMES: [&str; 7] = [
-    "--input-bytes", "--numeric-digits", "--intermediate-bits", "--syntax-depth",
-    "--call-depth", "--evaluation-work", "--output-size",
+    "--input-bytes",
+    "--numeric-digits",
+    "--intermediate-bits",
+    "--syntax-depth",
+    "--call-depth",
+    "--evaluation-work",
+    "--output-size",
 ];
 const RESULT: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/result.noble");
 const ERRORS: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/calc-errors.noble");
-const LEXICAL: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/calculator-lexical.noble");
+const LEXICAL: &[u8] =
+    include_bytes!("../../noble-contracts/src/fixtures/calculator-lexical.noble");
 const BITS: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/calculator-bits.noble");
 const BIGINT: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/calculator-bigint.noble");
-const DECIMAL: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/calculator-decimal.noble");
-const NUMERIC: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/calculator-numeric.noble");
-const BINDINGS: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/calculator-bindings.noble");
-const DISPLAY: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/calculator-display.noble");
-const EXPRESSION: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/calculator-expression.noble");
-const DEFINITIONS: &[u8] = include_bytes!("../../noble-contracts/src/fixtures/calculator-definitions.noble");
+const DECIMAL: &[u8] =
+    include_bytes!("../../noble-contracts/src/fixtures/calculator-decimal.noble");
+const NUMERIC: &[u8] =
+    include_bytes!("../../noble-contracts/src/fixtures/calculator-numeric.noble");
+const BINDINGS: &[u8] =
+    include_bytes!("../../noble-contracts/src/fixtures/calculator-bindings.noble");
+const DISPLAY: &[u8] =
+    include_bytes!("../../noble-contracts/src/fixtures/calculator-display.noble");
+const EXPRESSION: &[u8] =
+    include_bytes!("../../noble-contracts/src/fixtures/calculator-expression.noble");
+const DEFINITIONS: &[u8] =
+    include_bytes!("../../noble-contracts/src/fixtures/calculator-definitions.noble");
 
 pub(crate) fn assembler_version(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     if arguments.len() != 1 {
@@ -52,7 +64,8 @@ pub(crate) fn assemble_wat(arguments: &[std::ffi::OsString]) -> std::process::Ex
     let mut source = Vec::new();
     let stdin = std::io::stdin();
     if let Err(error) = std::io::Read::read_to_end(
-        &mut std::io::Read::take(stdin.lock(), ASSEMBLY_LIMIT + 1), &mut source
+        &mut std::io::Read::take(stdin.lock(), ASSEMBLY_LIMIT + 1),
+        &mut source,
     ) {
         eprintln!("calculator WAT ingress failed: {error}");
         return std::process::ExitCode::from(2);
@@ -85,7 +98,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         Err(message) => {
             eprintln!("{message}\nusage: noble calculator [--framed] [--finite-decimal] [--input-bytes N] [--numeric-digits N] [--intermediate-bits N] [--syntax-depth N] [--call-depth N] [--evaluation-work N] [--output-size N]");
             return std::process::ExitCode::from(2);
-        },
+        }
     };
     let mut session = match Session::new() {
         Ok(session) => session,
@@ -139,7 +152,11 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             return std::process::ExitCode::from(2);
         }
     }
-    if failed { std::process::ExitCode::from(1) } else { std::process::ExitCode::SUCCESS }
+    if failed {
+        std::process::ExitCode::from(1)
+    } else {
+        std::process::ExitCode::SUCCESS
+    }
 }
 
 fn parse_options(arguments: &[std::ffi::OsString]) -> Result<(bool, bool, [i64; 7]), String> {
@@ -149,22 +166,30 @@ fn parse_options(arguments: &[std::ffi::OsString]) -> Result<(bool, bool, [i64; 
     let mut finite_decimal = false;
     let mut at = 0;
     while at < arguments.len() {
-        let word = arguments[at].to_str().ok_or("non-UTF-8 calculator option")?;
+        let word = arguments[at]
+            .to_str()
+            .ok_or("non-UTF-8 calculator option")?;
         match word {
             "--framed" if !framed => framed = true,
             "--finite-decimal" if !finite_decimal => finite_decimal = true,
             _ => {
-                let index = BUDGET_NAMES.iter().position(|name| *name == word)
+                let index = BUDGET_NAMES
+                    .iter()
+                    .position(|name| *name == word)
                     .ok_or_else(|| format!("unknown or duplicate calculator option: {word}"))?;
                 if selected[index] {
                     return Err(format!("duplicate calculator option: {word}"));
                 }
                 selected[index] = true;
                 at += 1;
-                let value = arguments.get(at).and_then(|word| word.to_str())
+                let value = arguments
+                    .get(at)
+                    .and_then(|word| word.to_str())
                     .ok_or_else(|| format!("missing {word} value"))?;
-                budget[index] = value.parse::<i64>()
-                    .ok().filter(|value| *value >= 0)
+                budget[index] = value
+                    .parse::<i64>()
+                    .ok()
+                    .filter(|value| *value >= 0)
                     .ok_or_else(|| format!("invalid {word} value"))?;
             }
         }
@@ -177,7 +202,10 @@ enum Outcome {
     Value(String),
     Defined,
     Diagnostic(String),
-    HostLimit { category: &'static str, span_end: usize },
+    HostLimit {
+        category: &'static str,
+        span_end: usize,
+    },
     NativeFailure(String),
     InfrastructureFailure(String),
 }
@@ -265,25 +293,32 @@ impl Session {
         } else {
             checked_error(&public.json)?
         };
-        let diagnostic = checked
-            .ok_or("guest parser fault lost its original error")?;
+        let diagnostic = checked.ok_or("guest parser fault lost its original error")?;
         Ok(Some(Outcome::Diagnostic(diagnostic)))
     }
 
     fn new() -> Result<Self, String> {
         let mut modules = ModuleSession::new_calculator().map_err(source_error)?;
         for (name, source) in [
-            ("result@1", RESULT), ("calc_errors@1", ERRORS), ("calc_lex@1", LEXICAL),
-            ("calc_bits@1", BITS), ("calc_big@1", BIGINT),
-            ("calc_decimal@1", DECIMAL), ("num@1", NUMERIC),
+            ("result@1", RESULT),
+            ("calc_errors@1", ERRORS),
+            ("calc_lex@1", LEXICAL),
+            ("calc_bits@1", BITS),
+            ("calc_big@1", BIGINT),
+            ("calc_decimal@1", DECIMAL),
+            ("num@1", NUMERIC),
             ("calc_env@1", BINDINGS),
-            ("calc_display@1", DISPLAY), ("expr@1", EXPRESSION),
+            ("calc_display@1", DISPLAY),
+            ("expr@1", EXPRESSION),
             ("calc_defs@1", DEFINITIONS),
         ] {
-            let prepared = modules.prepare(source, &[], LIMITS)
+            let prepared = modules
+                .prepare(source, &[], LIMITS)
                 .map_err(|error| format!("{name}: {}", source_error(error)))?;
             if prepared.kind() != ModuleKind::Module {
-                return Err(format!("{name}: calculator dependency is not a checked Noble module"));
+                return Err(format!(
+                    "{name}: calculator dependency is not a checked Noble module"
+                ));
             }
             let (next, committed) = modules.commit(prepared);
             committed.map_err(|error| format!("{name}: {}", source_error(error)))?;
@@ -293,8 +328,7 @@ impl Session {
             (b"import expr@1 as expr".as_slice(), "expression"),
             (b"import num@1 as num".as_slice(), "numeric"),
         ] {
-            let imported = modules.prepare(source, &[], LIMITS)
-                .map_err(source_error)?;
+            let imported = modules.prepare(source, &[], LIMITS).map_err(source_error)?;
             if imported.kind() != ModuleKind::Import {
                 return Err(format!("calculator {name} module import refused"));
             }
@@ -334,17 +368,21 @@ impl Session {
         if report.outcome != "normal" {
             return Ok(Outcome::NativeFailure(report.json));
         }
-        let json: serde_json::Value = serde_json::from_str(&report.json)
-            .map_err(|error| error.to_string())?;
-        let routed = json["stack"].as_array().and_then(|stack| stack.last())
+        let json: serde_json::Value =
+            serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+        let routed = json["stack"]
+            .as_array()
+            .and_then(|stack| stack.last())
             .ok_or("guest hot failure returned no category")?;
         let (_, category) = pair(routed)?;
         if category["type"] != "I64" {
             return Err("guest hot failure returned a non-I64 category".into());
         }
-        let category = category["value"].as_str()
+        let category = category["value"]
+            .as_str()
             .ok_or("guest hot failure returned an invalid category")?
-            .parse::<i64>().map_err(|error| error.to_string())?;
+            .parse::<i64>()
+            .map_err(|error| error.to_string())?;
         let decoder = match category {
             0 => b"expr.frame_hot_simple".as_slice(),
             1 | 2 => b"expr.frame_hot_terminal".as_slice(),
@@ -358,24 +396,37 @@ impl Session {
         Ok(Outcome::Diagnostic(checked_hot_terminal(&report.json)?))
     }
 
-    fn submit(&mut self, expression: &[u8], finite_decimal: bool, budget: [i64; 7])
-        -> Result<Outcome, String> {
+    fn submit(
+        &mut self,
+        expression: &[u8],
+        finite_decimal: bool,
+        budget: [i64; 7],
+    ) -> Result<Outcome, String> {
         // Replay only admitted definitions: evaluating an expression leaves
         // the guest State unchanged, even when its transient numeric cells
         // fill the worker. These checks precede worker startup and replay.
-        let count = self.accepted.len().checked_add(1)
+        let count = self
+            .accepted
+            .len()
+            .checked_add(1)
             .ok_or("calculator replay count overflow")?;
-        let bytes = self.accepted.iter().try_fold(expression.len(), |total, command|
-            total.checked_add(command.source.len()))
+        let bytes = self
+            .accepted
+            .iter()
+            .try_fold(expression.len(), |total, command| {
+                total.checked_add(command.source.len())
+            })
             .ok_or("calculator replay byte accounting overflow")?;
         if count > HISTORY_COMMANDS_LIMIT {
             return Ok(Outcome::HostLimit {
-                category: "HistoryCommands", span_end: expression.len(),
+                category: "HistoryCommands",
+                span_end: expression.len(),
             });
         }
         if bytes > HISTORY_BYTES_LIMIT {
             return Ok(Outcome::HostLimit {
-                category: "HistoryBytes", span_end: expression.len(),
+                category: "HistoryBytes",
+                span_end: expression.len(),
             });
         }
         let replay_work = (bytes as u64)
@@ -383,7 +434,8 @@ impl Session {
             .ok_or("calculator replay work accounting overflow")?;
         if replay_work > HISTORY_WORK_LIMIT {
             return Ok(Outcome::HostLimit {
-                category: "ReplayWork", span_end: expression.len(),
+                category: "ReplayWork",
+                span_end: expression.len(),
             });
         }
         // A native quota/trap poisons its Wasm instance, including every old
@@ -394,11 +446,15 @@ impl Session {
         let mut candidate = Self::new()?;
         for accepted in &self.accepted {
             match candidate.submit_uncommitted(
-                &accepted.source, accepted.finite_decimal, accepted.budget,
+                &accepted.source,
+                accepted.finite_decimal,
+                accepted.budget,
             )? {
                 Outcome::Value(_) | Outcome::Defined => (),
-                Outcome::Diagnostic(_) | Outcome::HostLimit { .. }
-                | Outcome::NativeFailure(_) | Outcome::InfrastructureFailure(_) => {
+                Outcome::Diagnostic(_)
+                | Outcome::HostLimit { .. }
+                | Outcome::NativeFailure(_)
+                | Outcome::InfrastructureFailure(_) => {
                     return Err("accepted calculator command did not replay".into());
                 }
             }
@@ -408,13 +464,16 @@ impl Session {
             Err(message) => return Ok(Outcome::InfrastructureFailure(message)),
         };
         if matches!(outcome, Outcome::Value(_) | Outcome::Defined) {
-            let state = candidate.modules.as_ref()
+            let state = candidate
+                .modules
+                .as_ref()
                 .ok_or("calculator namespace unavailable")?
                 .resolve_type("calc_env@1.State")
                 .map_err(source_error)?;
             if candidate.stack.as_slice() != [state] {
                 return Ok(Outcome::InfrastructureFailure(
-                    "guest calculator did not retain its checked State after command completion".into(),
+                    "guest calculator did not retain its checked State after command completion"
+                        .into(),
                 ));
             }
             candidate.accepted = std::mem::take(&mut self.accepted);
@@ -430,8 +489,12 @@ impl Session {
         Ok(outcome)
     }
 
-    fn submit_uncommitted(&mut self, expression: &[u8], finite_decimal: bool, budget: [i64; 7])
-        -> Result<Outcome, String> {
+    fn submit_uncommitted(
+        &mut self,
+        expression: &[u8],
+        finite_decimal: bool,
+        budget: [i64; 7],
+    ) -> Result<Outcome, String> {
         let outcome = self.submit_line(expression, finite_decimal, budget)?;
         // An accepted command never leaves a probe consumer pending; any
         // other outcome discards this worker's candidate state anyway.
@@ -445,8 +508,12 @@ impl Session {
         })
     }
 
-    fn submit_line(&mut self, expression: &[u8], finite_decimal: bool, budget: [i64; 7])
-        -> Result<Outcome, String> {
+    fn submit_line(
+        &mut self,
+        expression: &[u8],
+        finite_decimal: bool,
+        budget: [i64; 7],
+    ) -> Result<Outcome, String> {
         if self.stack.len() != 1 {
             return Err("guest calculator retained state is unavailable".into());
         }
@@ -460,12 +527,15 @@ impl Session {
         let frame = serde_json::to_string(&inputs).map_err(|error| error.to_string())?;
         let mut report = self.execute(
             b"dup calc_lex@1.scan_start",
-            &[Ty::Bool, Ty::Text], Some(&frame),
+            &[Ty::Bool, Ty::Text],
+            Some(&frame),
         )?;
         if report.outcome != "normal" {
             return Ok(Outcome::NativeFailure(report.json));
         }
-        let scan_limit = expression.len().checked_mul(9)
+        let scan_limit = expression
+            .len()
+            .checked_mul(9)
             .map(|steps| steps / 2)
             .and_then(|steps| steps.checked_add(2))
             .ok_or("guest lexer progress bound overflow")?;
@@ -473,11 +543,7 @@ impl Session {
         for _ in 0..scan_limit {
             // Only the guest cursor chooses a lexical microphase. The shell
             // sees its certified opcode, not a byte, token, digit, or mode.
-            report = self.execute(
-                b"calc_lex@1.scan_phase_code",
-                &[],
-                None,
-            )?;
+            report = self.execute(b"calc_lex@1.scan_phase_code", &[], None)?;
             if report.outcome != "normal" {
                 return Ok(Outcome::NativeFailure(report.json));
             }
@@ -556,7 +622,9 @@ impl Session {
         if report.outcome != "normal" {
             return Ok(Outcome::NativeFailure(report.json));
         }
-        let reverse_limit = expression.len().checked_add(1)
+        let reverse_limit = expression
+            .len()
+            .checked_add(1)
             .ok_or("guest lexer reverse progress bound overflow")?;
         let mut reversed = false;
         for _ in 0..reverse_limit {
@@ -582,8 +650,10 @@ impl Session {
         // Retain the actual original list inside the worker so an invalid
         // header can return its source-bound Diagnostic without inventing a
         // replacement token list. The body list is still guest-owned.
-        for word in [b"dup [ swap ] dip calc_defs@1.header_cursor".as_slice(),
-                     b"calc_defs@1.header_identifier_route"] {
+        for word in [
+            b"dup [ swap ] dip calc_defs@1.header_cursor".as_slice(),
+            b"calc_defs@1.header_identifier_route",
+        ] {
             report = self.execute(word, &[], None)?;
             if report.outcome != "normal" {
                 return Ok(Outcome::NativeFailure(report.json));
@@ -592,20 +662,22 @@ impl Session {
         let identifier = checked_guest_bool(&report.json)?;
         self.defer_consume(b"drop");
         let header_kind = if identifier {
-            for word in [b"calc_defs@1.header_word".as_slice(),
-                         b"calc_defs@1.header_let_pair",
-                         b"calc_defs@1.header_pair_size",
-                         b"0 calc_defs@1.header_pair_byte_if",
-                         b"1 calc_defs@1.header_pair_byte_if",
-                         b"2 calc_defs@1.header_pair_byte_if",
-                         b"calc_defs@1.header_pair_finish",
-                         b"swap",
-                         b"calc_defs@1.header_fn_pair",
-                         b"calc_defs@1.header_pair_size",
-                         b"0 calc_defs@1.header_pair_byte_if",
-                         b"1 calc_defs@1.header_pair_byte_if",
-                         b"calc_defs@1.header_pair_finish",
-                         b"calc_defs@1.header_opcode_flags"] {
+            for word in [
+                b"calc_defs@1.header_word".as_slice(),
+                b"calc_defs@1.header_let_pair",
+                b"calc_defs@1.header_pair_size",
+                b"0 calc_defs@1.header_pair_byte_if",
+                b"1 calc_defs@1.header_pair_byte_if",
+                b"2 calc_defs@1.header_pair_byte_if",
+                b"calc_defs@1.header_pair_finish",
+                b"swap",
+                b"calc_defs@1.header_fn_pair",
+                b"calc_defs@1.header_pair_size",
+                b"0 calc_defs@1.header_pair_byte_if",
+                b"1 calc_defs@1.header_pair_byte_if",
+                b"calc_defs@1.header_pair_finish",
+                b"calc_defs@1.header_opcode_flags",
+            ] {
                 report = self.execute(word, &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -650,8 +722,10 @@ impl Session {
             }
         }
         if is_function {
-            for word in [b"calc_defs@1.fn_params_begin".as_slice(),
-                         b"[ pair pair pair ] dip"] {
+            for word in [
+                b"calc_defs@1.fn_params_begin".as_slice(),
+                b"[ pair pair pair ] dip",
+            ] {
                 report = self.execute(word, &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -659,8 +733,10 @@ impl Session {
             }
             let mut finished = false;
             for _ in 0..=expression.len() {
-                for word in [b"swap [ calc_defs@1.fn_param_expected ] dip swap".as_slice(),
-                             b"calc_bits@1.rot swap"] {
+                for word in [
+                    b"swap [ calc_defs@1.fn_param_expected ] dip swap".as_slice(),
+                    b"calc_bits@1.rot swap",
+                ] {
                     report = self.execute(word, &[], None)?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
@@ -718,14 +794,16 @@ impl Session {
             if !finished {
                 return Err("guest function parameters exceeded their source-byte bound".into());
             }
-            for word in [b"[ unpair unpair unpair ] dip".as_slice(),
-                         b"calc_defs@1.fn_params_end",
-                         b"calc_defs@1.fn_end_unpack",
-                         b"[ pair pair pair ] dip",
-                         b"swap [ calc_defs@1.fn_end_params ] dip swap",
-                         b"calc_bits@1.rot swap",
-                         b"[ pair ] dip",
-                         b"swap [ calc_defs@1.fn_end_validation_begin ] dip swap"] {
+            for word in [
+                b"[ unpair unpair unpair ] dip".as_slice(),
+                b"calc_defs@1.fn_params_end",
+                b"calc_defs@1.fn_end_unpack",
+                b"[ pair pair pair ] dip",
+                b"swap [ calc_defs@1.fn_end_params ] dip swap",
+                b"calc_bits@1.rot swap",
+                b"[ pair ] dip",
+                b"swap [ calc_defs@1.fn_end_validation_begin ] dip swap",
+            ] {
                 report = self.execute(word, &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -735,7 +813,8 @@ impl Session {
             for _ in 0..=expression.len() {
                 report = self.execute(
                     b"swap [ calc_defs@1.fn_end_validation_tick ] dip swap",
-                    &[], None,
+                    &[],
+                    None,
                 )?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -753,12 +832,14 @@ impl Session {
             if !validated {
                 return Err("guest parameter validation exceeded its source-byte bound".into());
             }
-            for word in [b"swap [ calc_defs@1.fn_end_validation_result ] dip swap".as_slice(),
-                         b"[ unpair ] dip",
-                         b"calc_bits@1.rot [ calc_defs@1.fn_end_validated_result ] dip swap",
-                         b"swap [ calc_defs@1.fn_end_equals ] dip swap",
-                         b"swap [ calc_defs@1.fn_end_command ] dip swap",
-                         b"[ unpair unpair unpair ] dip"] {
+            for word in [
+                b"swap [ calc_defs@1.fn_end_validation_result ] dip swap".as_slice(),
+                b"[ unpair ] dip",
+                b"calc_bits@1.rot [ calc_defs@1.fn_end_validated_result ] dip swap",
+                b"swap [ calc_defs@1.fn_end_equals ] dip swap",
+                b"swap [ calc_defs@1.fn_end_command ] dip swap",
+                b"[ unpair unpair unpair ] dip",
+            ] {
                 report = self.execute(word, &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -767,25 +848,29 @@ impl Session {
             // Capture only the checked Name/parameter witnesses from this
             // authentic guest command. Keep them below parser inputs on the
             // same worker; they are never decoded or parked by the host.
-            for word in [b"dup".as_slice(),
-                         b"[ [ pair pair pair ] dip ] dip",
-                         b"[ pair ] dip",
-                         b"swap [ calc_defs@1.header_function_metadata ] dip swap",
-                         b"[ unpair ] dip",
-                         b"swap",
-                         b"[ [ unpair unpair unpair ] dip ] dip",
-                         b"[ swap ] dip",
-                         b"[ calc_bits@1.rot ] dip"] {
+            for word in [
+                b"dup".as_slice(),
+                b"[ [ pair pair pair ] dip ] dip",
+                b"[ pair ] dip",
+                b"swap [ calc_defs@1.header_function_metadata ] dip swap",
+                b"[ unpair ] dip",
+                b"swap",
+                b"[ [ unpair unpair unpair ] dip ] dip",
+                b"[ swap ] dip",
+                b"[ calc_bits@1.rot ] dip",
+            ] {
                 report = self.execute(word, &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
                 }
             }
         } else if is_let {
-            for word in [b"dup".as_slice(),
-                         b"swap [ calc_defs@1.header_let_metadata ] dip swap",
-                         b"swap",
-                         b"[ [ unpair unpair unpair ] dip ] dip"] {
+            for word in [
+                b"dup".as_slice(),
+                b"swap [ calc_defs@1.header_let_metadata ] dip swap",
+                b"swap",
+                b"[ [ unpair unpair unpair ] dip ] dip",
+            ] {
                 report = self.execute(word, &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -793,8 +878,10 @@ impl Session {
             }
         }
         if is_let {
-            for word in [b"[ calc_bits@1.rot ] dip".as_slice(),
-                         b"[ [ swap ] dip ] dip"] {
+            for word in [
+                b"[ calc_bits@1.rot ] dip".as_slice(),
+                b"[ [ swap ] dip ] dip",
+            ] {
                 report = self.execute(word, &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -836,9 +923,11 @@ impl Session {
         }
         self.defer_consume(b"drop");
         if is_function {
-            for word in [b"unpair unpair unpair unpair".as_slice(),
-                         b"[ [ swap ] dip ] dip",
-                         b"[ [ [ pair ] dip ] dip ] dip"] {
+            for word in [
+                b"unpair unpair unpair unpair".as_slice(),
+                b"[ [ swap ] dip ] dip",
+                b"[ [ [ pair ] dip ] dip ] dip",
+            ] {
                 report = self.execute(word, &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -847,9 +936,11 @@ impl Session {
         } else if is_let {
             // Keep the parser's [ hidden Bool X ] shape: the checked
             // declaration Name rides with State in the hidden cell.
-            for word in [b"swap".as_slice(),
-                         b"[ swap ] dip",
-                         b"[ [ swap [ pair ] dip ] dip ] dip"] {
+            for word in [
+                b"swap".as_slice(),
+                b"[ swap ] dip",
+                b"[ [ swap [ pair ] dip ] dip ] dip",
+            ] {
                 report = self.execute(word, &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -861,11 +952,10 @@ impl Session {
         // below that list. A denied guest charge stays a NumericError until
         // parse_begin binds the real span to a ParseFault; a public Diagnostic
         // is constructed only if that guest error actually terminates parsing.
-        let quota_inputs = budget.map(|value|
-            serde_json::json!({ "type": "I64", "value": value.to_string() })
-        );
-        let quota_frame = serde_json::to_string(&quota_inputs)
-            .map_err(|error| error.to_string())?;
+        let quota_inputs =
+            budget.map(|value| serde_json::json!({ "type": "I64", "value": value.to_string() }));
+        let quota_frame =
+            serde_json::to_string(&quota_inputs).map_err(|error| error.to_string())?;
         report = self.execute(b"num@1.budget", &[const { Ty::I64 }; 7], Some(&quota_frame))?;
         if report.outcome != "normal" {
             return Ok(Outcome::NativeFailure(report.json));
@@ -967,8 +1057,10 @@ impl Session {
                     return Ok(Outcome::NativeFailure(report.json));
                 }
                 if kind == 6 && selected {
-                    for word in [b"expr.parse_open_measure".as_slice(),
-                                 b"expr.parse_open_admit"] {
+                    for word in [
+                        b"expr.parse_open_measure".as_slice(),
+                        b"expr.parse_open_admit",
+                    ] {
                         report = self.phase(word)?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
@@ -1058,7 +1150,9 @@ impl Session {
                     }
                 }
                 if !reduced {
-                    return Err("guest parser precedence reduction exceeded its source-byte bound".into());
+                    return Err(
+                        "guest parser precedence reduction exceeded its source-byte bound".into(),
+                    );
                 }
                 report = self.phase(b"expr.parse_apply_open_checked")?;
                 if report.outcome != "normal" {
@@ -1096,7 +1190,9 @@ impl Session {
                     }
                 }
                 if !reduced {
-                    return Err("guest parser close reduction exceeded its source-byte bound".into());
+                    return Err(
+                        "guest parser close reduction exceeded its source-byte bound".into(),
+                    );
                 }
                 report = self.phase(b"expr.parse_close_finish")?;
                 if report.outcome != "normal" {
@@ -1126,11 +1222,15 @@ impl Session {
         // A let carries its checked declaration Name inside the hidden
         // evaluator cell, K = Pair<Pair<State,Bool>,Result<Name,Unit>>, so no
         // stage ever types over it; only Ctx-consuming phases unpack K.
-        report = self.execute(if is_let {
-            b"[ swap unpair calc_bits@1.rot swap [ pair ] dip pair ] dip".as_slice()
-        } else {
-            b"[ pair ] dip"
-        }, &[], None)?;
+        report = self.execute(
+            if is_let {
+                b"[ swap unpair calc_bits@1.rot swap [ pair ] dip pair ] dip".as_slice()
+            } else {
+                b"[ pair ] dip"
+            },
+            &[],
+            None,
+        )?;
         if report.outcome != "normal" {
             return Ok(Outcome::NativeFailure(report.json));
         }
@@ -1152,14 +1252,19 @@ impl Session {
         // this candidate worker's typed stack.
         // RPN actions plus two source-byte passes (digit admission and exact
         // decimal materialization) each make independently checked progress.
-        let mut remaining = (budget[5] as u64)
-            .saturating_add((expression.len() as u64).saturating_mul(3).saturating_add(1));
+        let mut remaining = (budget[5] as u64).saturating_add(
+            (expression.len() as u64)
+                .saturating_mul(3)
+                .saturating_add(1),
+        );
         // A route is a source-bound guest variant; call sites interpret its
         // first arm according to that route's checked Done/More declaration.
         let guest_span_route_left = |report: &str| -> Result<bool, String> {
-            let json: serde_json::Value = serde_json::from_str(report)
-                .map_err(|error| error.to_string())?;
-            let outer = json["stack"].as_array().and_then(|stack| stack.last())
+            let json: serde_json::Value =
+                serde_json::from_str(report).map_err(|error| error.to_string())?;
+            let outer = json["stack"]
+                .as_array()
+                .and_then(|stack| stack.last())
                 .ok_or("guest numeric route returned no checked outcome")?;
             let (ready, payload) = variant(outer)?;
             if !ready {
@@ -1169,9 +1274,11 @@ impl Session {
             variant(route).map(|(left, _)| left)
         };
         let guest_eval_route_left = |report: &str| -> Result<bool, String> {
-            let json: serde_json::Value = serde_json::from_str(report)
-                .map_err(|error| error.to_string())?;
-            let outer = json["stack"].as_array().and_then(|stack| stack.last())
+            let json: serde_json::Value =
+                serde_json::from_str(report).map_err(|error| error.to_string())?;
+            let outer = json["stack"]
+                .as_array()
+                .and_then(|stack| stack.last())
                 .ok_or("guest arithmetic route returned no checked outcome")?;
             let (ready, payload) = variant(outer)?;
             if !ready {
@@ -1182,9 +1289,11 @@ impl Session {
             variant(route).map(|(left, _)| left)
         };
         let guest_numeric_bool = |report: &str| -> Result<bool, String> {
-            let json: serde_json::Value = serde_json::from_str(report)
-                .map_err(|error| error.to_string())?;
-            let outer = json["stack"].as_array().and_then(|stack| stack.last())
+            let json: serde_json::Value =
+                serde_json::from_str(report).map_err(|error| error.to_string())?;
+            let outer = json["stack"]
+                .as_array()
+                .and_then(|stack| stack.last())
                 .ok_or("guest numeric probe returned no checked outcome")?;
             let (ready, payload) = carrier_variant(outer)?;
             if !ready {
@@ -1195,13 +1304,16 @@ impl Session {
             if flag["type"] != "Bool" {
                 return Err("guest numeric probe returned a non-Bool progress flag".into());
             }
-            flag["value"].as_bool()
+            flag["value"]
+                .as_bool()
                 .ok_or("guest numeric probe returned an invalid progress flag".into())
         };
         let guest_numeric_i64 = |report: &str| -> Result<i64, String> {
-            let json: serde_json::Value = serde_json::from_str(report)
-                .map_err(|error| error.to_string())?;
-            let outer = json["stack"].as_array().and_then(|stack| stack.last())
+            let json: serde_json::Value =
+                serde_json::from_str(report).map_err(|error| error.to_string())?;
+            let outer = json["stack"]
+                .as_array()
+                .and_then(|stack| stack.last())
                 .ok_or("guest numeric comparison returned no checked outcome")?;
             let (ready, payload) = carrier_variant(outer)?;
             if !ready {
@@ -1212,14 +1324,18 @@ impl Session {
             if value["type"] != "I64" {
                 return Err("guest numeric comparison returned a non-I64 selector".into());
             }
-            value["value"].as_str()
+            value["value"]
+                .as_str()
                 .ok_or("guest numeric comparison returned an invalid selector")?
-                .parse::<i64>().map_err(|error| error.to_string())
+                .parse::<i64>()
+                .map_err(|error| error.to_string())
         };
         let guest_power_square_done = |report: &str| -> Result<bool, String> {
-            let json: serde_json::Value = serde_json::from_str(report)
-                .map_err(|error| error.to_string())?;
-            let last = json["stack"].as_array().and_then(|stack| stack.last())
+            let json: serde_json::Value =
+                serde_json::from_str(report).map_err(|error| error.to_string())?;
+            let last = json["stack"]
+                .as_array()
+                .and_then(|stack| stack.last())
                 .ok_or("guest square route returned no checked continuation")?;
             let (ready, payload) = carrier_variant(last)?;
             if !ready {
@@ -1232,10 +1348,12 @@ impl Session {
         macro_rules! numeric_stage {
             ($name:literal) => {
                 concat!(
-                    "[ pair ] dip swap [ [ unpair num.", $name,
+                    "[ pair ] dip swap [ [ unpair num.",
+                    $name,
                     " pair result@1.Result.Ok ] [ result@1.Result.Err ] ",
                     "result@1.Result.match ] dip swap [ unpair ] dip",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
         // Unlike a literal's Span, Pending consumes the sole FrameHot when
@@ -1247,10 +1365,12 @@ impl Session {
         macro_rules! eval_stage {
             ($name:literal) => {
                 concat!(
-                    "swap [ [ unpair swap [ num.", $name,
+                    "swap [ [ unpair swap [ num.",
+                    $name,
                     " ] dip swap pair result@1.Result.Ok ] [ result@1.Result.Err ] ",
                     "result@1.Result.match ] dip swap",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
         // Binary operators keep their operator Span directly under the
@@ -1258,40 +1378,44 @@ impl Session {
         macro_rules! span_stage {
             ($name:literal) => {
                 concat!(
-                    "swap [ swap [ [ unpair swap [ num.", $name,
+                    "swap [ swap [ [ unpair swap [ num.",
+                    $name,
                     " ] dip swap pair result@1.Result.Ok ] [ result@1.Result.Err ] ",
                     "result@1.Result.match ] dip swap ] dip swap",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
-        const EVAL_DROP_BOOL: &[u8] =
-            b"swap [ [ unpair unpair drop pair result@1.Result.Ok ] \
+        const EVAL_DROP_BOOL: &[u8] = b"swap [ [ unpair unpair drop pair result@1.Result.Ok ] \
               [ result@1.Result.Err ] result@1.Result.match ] dip swap";
         // Schoolbook products and the exponent loop carry large private
         // cursors. A generic Result counts its payload twice in the
         // compiler's type-size bound, so these stages carry the same
         // Pending/cursor pair in a builtin Sum (left = ready, right = the
         // original Unit failure) and convert back once the payload is small.
-        const TO_SUM: &[u8] =
-            b"swap [ [ inl ] [ inr ] result@1.Result.match ] dip swap";
+        const TO_SUM: &[u8] = b"swap [ [ inl ] [ inr ] result@1.Result.match ] dip swap";
         const FROM_SUM: &[u8] =
             b"swap [ [ result@1.Result.Ok ] [ result@1.Result.Err ] case ] dip swap";
         macro_rules! sum_stage {
             ($name:literal) => {
                 concat!(
-                    "swap [ [ unpair swap [ num.", $name,
+                    "swap [ [ unpair swap [ num.",
+                    $name,
                     " ] dip swap pair inl ] [ inr ] case ] dip swap",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
         // Numeric's sealed schoolbook stages can reject a mismatched cursor.
         macro_rules! sum_checked_stage {
             ($name:literal) => {
                 concat!(
-                    "swap [ [ unpair swap [ num.", $name,
+                    "swap [ [ unpair swap [ num.",
+                    $name,
                     " ] dip swap [ pair inl ] [ drop drop unit inr ] ",
                     "result@1.Result.match ] [ inr ] case ] dip swap",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
         const SUM_DROP_BOOL: &[u8] =
@@ -1301,19 +1425,23 @@ impl Session {
         macro_rules! sum_power_stage {
             ($name:literal) => {
                 concat!(
-                    "swap [ [ unpair unpair [ swap [ num.", $name,
+                    "swap [ [ unpair unpair [ swap [ num.",
+                    $name,
                     " ] dip swap ] dip pair pair inl ] [ inr ] case ] dip swap",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
         macro_rules! sum_power_checked_stage {
             ($name:literal) => {
                 concat!(
-                    "swap [ [ unpair unpair [ swap [ num.", $name,
+                    "swap [ [ unpair unpair [ swap [ num.",
+                    $name,
                     " ] dip swap ] dip swap [ swap pair pair inl ] ",
                     "[ drop drop drop unit inr ] result@1.Result.match ] ",
                     "[ inr ] case ] dip swap",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
         // A cursor probe leaves its guest Bool beside, not inside, the
@@ -1323,15 +1451,16 @@ impl Session {
         macro_rules! sum_power_probe {
             ($name:literal) => {
                 concat!(
-                    "swap [ [ unpair unpair [ swap [ num.", $name,
+                    "swap [ [ unpair unpair [ swap [ num.",
+                    $name,
                     " ] dip swap ] dip [ unpair ] dip swap [ pair pair inl ] dip ] ",
                     "[ inr false ] case ] dip",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
         const SUM_PROBE_DONE: &[u8] = b"[ drop ] dip swap";
-        const EVAL_BOOL_ACCEPT: &[u8] =
-            b"swap [ [ unpair unpair \
+        const EVAL_BOOL_ACCEPT: &[u8] = b"swap [ [ unpair unpair \
               [ drop drop unit result@1.Result.Err ] \
               [ pair result@1.Result.Ok ] if ] \
               [ result@1.Result.Err ] result@1.Result.match ] dip swap";
@@ -1339,14 +1468,16 @@ impl Session {
             ($name:literal) => {
                 concat!(
                     "swap [ [ unpair unpair ",
-                    "[ drop unit num.", $name, " pair result@1.Result.Ok ] ",
+                    "[ drop unit num.",
+                    $name,
+                    " pair result@1.Result.Ok ] ",
                     "[ drop drop unit result@1.Result.Err ] if ] ",
                     "[ result@1.Result.Err ] result@1.Result.match ] dip swap",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
-        const GCD_REMAINDER_DONE: &[u8] =
-            b"[ pair ] dip swap [ [ unpair \
+        const GCD_REMAINDER_DONE: &[u8] = b"[ pair ] dip swap [ [ unpair \
               [ drop drop unit result@1.Result.Err ] \
               [ pair result@1.Result.Ok ] \
               num.GcdRemainderProgress.match ] \
@@ -1356,9 +1487,11 @@ impl Session {
             ($name:literal) => {
                 concat!(
                     "swap [ [ unpair unpair [ unpair ] dip num.",
-                    $name, " pair result@1.Result.Ok ] ",
+                    $name,
+                    " pair result@1.Result.Ok ] ",
                     "[ result@1.Result.Err ] result@1.Result.match ] dip swap",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
         const EVAL_ROUTE_ACCEPT: &[u8] =
@@ -1370,33 +1503,40 @@ impl Session {
                 concat!(
                     "swap [ [ unpair unpair ",
                     "[ drop drop drop unit result@1.Result.Err ] ",
-                    "[ swap drop num.", $name, " pair result@1.Result.Ok ] ",
+                    "[ swap drop num.",
+                    $name,
+                    " pair result@1.Result.Ok ] ",
                     "result@1.Result.match ] [ result@1.Result.Err ] ",
                     "result@1.Result.match ] dip swap",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
         macro_rules! power_route_gate {
             ($deny:literal, $label:literal) => {{
                 let admitted = guest_eval_route_left(&report.json)?;
-                report = self.execute(if admitted {
-                    EVAL_ROUTE_ACCEPT
-                } else {
-                    eval_numeric_deny!($deny)
-                }, &[], None)?;
+                report = self.execute(
+                    if admitted {
+                        EVAL_ROUTE_ACCEPT
+                    } else {
+                        eval_numeric_deny!($deny)
+                    },
+                    &[],
+                    None,
+                )?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
                 }
                 if !admitted {
                     report = self.execute(
                         b"swap [ expr.arithmetic_numeric_denial_guest ] dip swap",
-                        &[], None,
+                        &[],
+                        None,
                     )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
-                    let diagnostic = checked_error(&report.json)?
-                        .ok_or($label)?;
+                    let diagnostic = checked_error(&report.json)?.ok_or($label)?;
                     return Ok(Outcome::Diagnostic(diagnostic));
                 }
                 if !checked_ready(&report.json)? {
@@ -1407,24 +1547,28 @@ impl Session {
         macro_rules! power_bool_gate {
             ($deny:literal, $label:literal) => {{
                 let denied = guest_numeric_bool(&report.json)?;
-                report = self.execute(if denied {
-                    eval_bool_deny!($deny)
-                } else {
-                    EVAL_BOOL_ACCEPT
-                }, &[], None)?;
+                report = self.execute(
+                    if denied {
+                        eval_bool_deny!($deny)
+                    } else {
+                        EVAL_BOOL_ACCEPT
+                    },
+                    &[],
+                    None,
+                )?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
                 }
                 if denied {
                     report = self.execute(
                         b"swap [ expr.arithmetic_numeric_denial_guest ] dip swap",
-                        &[], None,
+                        &[],
+                        None,
                     )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
-                    let diagnostic = checked_error(&report.json)?
-                        .ok_or($label)?;
+                    let diagnostic = checked_error(&report.json)?.ok_or($label)?;
                     return Ok(Outcome::Diagnostic(diagnostic));
                 }
                 if !checked_ready(&report.json)? {
@@ -1432,8 +1576,7 @@ impl Session {
                 }
             }};
         }
-        const PENDING_BOOL_ACCEPT: &[u8] =
-            b"[ pair ] dip swap [ [ unpair unpair \
+        const PENDING_BOOL_ACCEPT: &[u8] = b"[ pair ] dip swap [ [ unpair unpair \
               [ drop drop unit result@1.Result.Err ] \
               [ pair result@1.Result.Ok ] if ] \
               [ result@1.Result.Err ] result@1.Result.match ] dip swap [ unpair ] dip";
@@ -1441,11 +1584,14 @@ impl Session {
             ($name:literal) => {
                 concat!(
                     "[ pair ] dip swap [ [ unpair unpair ",
-                    "[ drop unit num.", $name, " pair result@1.Result.Ok ] ",
+                    "[ drop unit num.",
+                    $name,
+                    " pair result@1.Result.Ok ] ",
                     "[ drop drop unit result@1.Result.Err ] if ] ",
                     "[ result@1.Result.Err ] result@1.Result.match ] ",
                     "dip swap [ unpair ] dip",
-                ).as_bytes()
+                )
+                .as_bytes()
             };
         }
         const DECIMAL_STATUS_TRUE: &[u8] =
@@ -1462,26 +1608,26 @@ impl Session {
               [ result@1.Result.Err ] result@1.Result.match ] dip swap ] dip swap";
         // Preserve the guest's original span and NumericError while the
         // source-bound diagnostic conversion runs; Rust never decodes either.
-        let literal_numeric_denial = |session: &mut Self|
-            -> Result<crate::core::output::Report, String> {
-            let report = session.execute(SPAN_INNER_ERR, &[], None)?;
-            if report.outcome != "normal" {
-                return Ok(report);
-            }
-            session.execute(
-                b"swap [ expr.literal_numeric_denial_finish_guest ] dip swap",
-                &[],
-                None,
-            )
-        };
-        let literal_direct_denial = |session: &mut Self|
-            -> Result<crate::core::output::Report, String> {
-            session.execute(
-                b"swap [ expr.literal_numeric_denial_finish_guest ] dip swap",
-                &[],
-                None,
-            )
-        };
+        let literal_numeric_denial =
+            |session: &mut Self| -> Result<crate::core::output::Report, String> {
+                let report = session.execute(SPAN_INNER_ERR, &[], None)?;
+                if report.outcome != "normal" {
+                    return Ok(report);
+                }
+                session.execute(
+                    b"swap [ expr.literal_numeric_denial_finish_guest ] dip swap",
+                    &[],
+                    None,
+                )
+            };
+        let literal_direct_denial =
+            |session: &mut Self| -> Result<crate::core::output::Report, String> {
+                session.execute(
+                    b"swap [ expr.literal_numeric_denial_finish_guest ] dip swap",
+                    &[],
+                    None,
+                )
+            };
         // Carrier: Sum<Pair<Pending,OpFirst*>,Unit> (see TO_SUM).
         let signed_product = |session: &mut Self,
                               _entry: crate::core::output::Report,
@@ -1508,13 +1654,10 @@ impl Session {
                     return Ok(current);
                 }
                 if done {
-                    return session.execute(
-                        sum_checked_stage!("op_first_stage_finish"), &[], None,
-                    );
+                    return session.execute(sum_checked_stage!("op_first_stage_finish"), &[], None);
                 }
-                current = session.execute(
-                    sum_checked_stage!("op_first_stage_add_probe"), &[], None,
-                )?;
+                current =
+                    session.execute(sum_checked_stage!("op_first_stage_add_probe"), &[], None)?;
                 if current.outcome != "normal" || !checked_carrier_ready(&current.json)? {
                     return Ok(current);
                 }
@@ -1525,18 +1668,21 @@ impl Session {
                 }
                 if needs_add {
                     current = session.execute(
-                        sum_checked_stage!("op_first_stage_add_begin"), &[], None,
+                        sum_checked_stage!("op_first_stage_add_begin"),
+                        &[],
+                        None,
                     )?;
                     if current.outcome != "normal" || !checked_carrier_ready(&current.json)? {
-                    return Ok(current);
-                }
+                        return Ok(current);
+                    }
                     loop {
                         for source in [
                             sum_checked_stage!("op_first_stage_add_digit"),
                             sum_checked_stage!("op_first_stage_add_more"),
                         ] {
                             current = session.execute(source, &[], None)?;
-                            if current.outcome != "normal" || !checked_carrier_ready(&current.json)? {
+                            if current.outcome != "normal" || !checked_carrier_ready(&current.json)?
+                            {
                                 return Ok(current);
                             }
                         }
@@ -1549,29 +1695,36 @@ impl Session {
                             break;
                         }
                         if *remaining == 0 {
-                            return Err("guest signed schoolbook addition exceeded its progress bound".into());
+                            return Err(
+                                "guest signed schoolbook addition exceeded its progress bound"
+                                    .into(),
+                            );
                         }
                         *remaining -= 1;
                     }
                     current = session.execute(
-                        sum_checked_stage!("op_first_stage_add_finish"), &[], None,
+                        sum_checked_stage!("op_first_stage_add_finish"),
+                        &[],
+                        None,
                     )?;
                 } else {
                     current = session.execute(
-                        sum_checked_stage!("op_first_stage_add_keep"), &[], None,
+                        sum_checked_stage!("op_first_stage_add_keep"),
+                        &[],
+                        None,
                     )?;
                 }
                 if current.outcome != "normal" || !checked_carrier_ready(&current.json)? {
                     return Ok(current);
                 }
-                current = session.execute(
-                    sum_checked_stage!("op_first_stage_shift"), &[], None,
-                )?;
+                current = session.execute(sum_checked_stage!("op_first_stage_shift"), &[], None)?;
                 if current.outcome != "normal" || !checked_carrier_ready(&current.json)? {
                     return Ok(current);
                 }
                 if *remaining == 0 {
-                    return Err("guest signed schoolbook multiplication exceeded its progress bound".into());
+                    return Err(
+                        "guest signed schoolbook multiplication exceeded its progress bound".into(),
+                    );
                 }
                 *remaining -= 1;
             }
@@ -1600,11 +1753,15 @@ impl Session {
                 }
                 if !more {
                     return session.execute(
-                        sum_power_checked_stage!("pow_mul_select_done"), &[], None,
+                        sum_power_checked_stage!("pow_mul_select_done"),
+                        &[],
+                        None,
                     );
                 }
                 current = session.execute(
-                    sum_power_checked_stage!("pow_mul_select_active"), &[], None,
+                    sum_power_checked_stage!("pow_mul_select_active"),
+                    &[],
+                    None,
                 )?;
                 if current.outcome != "normal" || !checked_carrier_ready(&current.json)? {
                     return Ok(current);
@@ -1621,14 +1778,16 @@ impl Session {
                 if needs_add {
                     current = session.execute(sum_power_stage!("pow_mul_add_begin"), &[], None)?;
                     if current.outcome != "normal" || !checked_carrier_ready(&current.json)? {
-                    return Ok(current);
-                }
+                        return Ok(current);
+                    }
                     loop {
-                        current = session.execute(sum_power_stage!("pow_mul_add_digit"), &[], None)?;
+                        current =
+                            session.execute(sum_power_stage!("pow_mul_add_digit"), &[], None)?;
                         if current.outcome != "normal" || !checked_carrier_ready(&current.json)? {
                             return Ok(current);
                         }
-                        current = session.execute(sum_power_probe!("pow_mul_add_more"), &[], None)?;
+                        current =
+                            session.execute(sum_power_probe!("pow_mul_add_more"), &[], None)?;
                         if current.outcome != "normal" {
                             return Ok(current);
                         }
@@ -1641,7 +1800,10 @@ impl Session {
                             break;
                         }
                         if *remaining == 0 {
-                            return Err("guest exponent schoolbook addition exceeded its progress bound".into());
+                            return Err(
+                                "guest exponent schoolbook addition exceeded its progress bound"
+                                    .into(),
+                            );
                         }
                         *remaining -= 1;
                     }
@@ -1657,7 +1819,10 @@ impl Session {
                     return Ok(current);
                 }
                 if *remaining == 0 {
-                    return Err("guest exponent schoolbook multiplication exceeded its progress bound".into());
+                    return Err(
+                        "guest exponent schoolbook multiplication exceeded its progress bound"
+                            .into(),
+                    );
                 }
                 *remaining -= 1;
             }
@@ -1705,11 +1870,9 @@ impl Session {
         // A let's hidden cell K = Pair<Pair<State,Bool>,Result<Name,Unit>> is
         // reshaped to Pair<State,Pair<Bool,Sum<Name,Unit>>> around each call
         // phase, so every call stage types over Pair<State,X> either way.
-        const CALL_LET_ENTER: &[u8] =
-            b"[ [ unpair [ inl ] [ inr ] result@1.Result.match \
+        const CALL_LET_ENTER: &[u8] = b"[ [ unpair [ inl ] [ inr ] result@1.Result.match \
               swap unpair calc_bits@1.rot pair pair ] dip ] dip";
-        const CALL_LET_EXIT: &[u8] =
-            b"[ unpair unpair [ pair ] dip \
+        const CALL_LET_EXIT: &[u8] = b"[ unpair unpair [ pair ] dip \
               [ result@1.Result.Ok ] [ result@1.Result.Err ] case pair ] dip";
         const CALL_STATUS: &[u8] =
             b"swap [ expr.call_status_guest ] dip calc_bits@1.rot calc_bits@1.rot";
@@ -1719,15 +1882,18 @@ impl Session {
             if report.outcome != "normal" {
                 return Ok(Outcome::NativeFailure(report.json));
             }
-            let json: serde_json::Value = serde_json::from_str(&report.json)
-                .map_err(|error| error.to_string())?;
-            let probe = json["stack"].as_array().and_then(|stack| stack.last())
+            let json: serde_json::Value =
+                serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+            let probe = json["stack"]
+                .as_array()
+                .and_then(|stack| stack.last())
                 .ok_or("guest hot frame returned no checked failure flag")?;
             let (_, failed) = pair(probe)?;
             if failed["type"] != "Bool" {
                 return Err("guest hot frame returned a non-Bool failure flag".into());
             }
-            let failed = failed["value"].as_bool()
+            let failed = failed["value"]
+                .as_bool()
                 .ok_or("guest hot frame returned an invalid failure flag")?;
             self.defer_consume(b"unpair drop");
             if failed {
@@ -1827,7 +1993,8 @@ impl Session {
                     b"pair expr.frame_name_begin".as_slice(),
                     if is_let {
                         b"[ dup unpair drop unpair drop calc_env@1.state_variables ] dip unpair \
-                          [ swap ] dip [ [ pair ] dip ] dip calc_bits@1.rot".as_slice()
+                          [ swap ] dip [ [ pair ] dip ] dip calc_bits@1.rot"
+                            .as_slice()
                     } else {
                         b"[ dup unpair drop calc_env@1.state_variables ] dip unpair \
                           [ swap ] dip [ [ pair ] dip ] dip calc_bits@1.rot"
@@ -1853,7 +2020,9 @@ impl Session {
                         break;
                     }
                     if remaining == 0 {
-                        return Err("guest variable lookup exceeded its declared progress bound".into());
+                        return Err(
+                            "guest variable lookup exceeded its declared progress bound".into()
+                        );
                     }
                     remaining -= 1;
                 }
@@ -1894,11 +2063,15 @@ impl Session {
                 if !checked_guest_bool(&report.json)? {
                     return Err("guest name resolution rejected its checked result".into());
                 }
-                report = self.execute(if status == 0 {
-                    b"drop".as_slice()
-                } else {
-                    b"drop calc_bits@1.rot swap [ pair ] dip"
-                }, &[], None)?;
+                report = self.execute(
+                    if status == 0 {
+                        b"drop".as_slice()
+                    } else {
+                        b"drop calc_bits@1.rot swap [ pair ] dip"
+                    },
+                    &[],
+                    None,
+                )?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
                 }
@@ -1923,7 +2096,8 @@ impl Session {
                     report = self.execute(
                         b"pair swap [ expr.frame_call_name_begin ] dip swap unpair \
                           calc_bits@1.rot calc_bits@1.rot pair swap",
-                        &[], None,
+                        &[],
+                        None,
                     )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
@@ -1934,7 +2108,8 @@ impl Session {
                     report = self.execute(
                         b"[ unpair ] dip calc_bits@1.rot [ expr.call_args_pop_guest ] dip \
                           swap [ swap pair ] dip",
-                        &[], None,
+                        &[],
+                        None,
                     )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
@@ -1946,7 +2121,8 @@ impl Session {
                     report = self.execute(
                         b"swap dup unpair drop unpair drop calc_env@1.state_functions swap \
                           [ swap expr.call_lookup_open_guest ] dip swap",
-                        &[], None,
+                        &[],
+                        None,
                     )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
@@ -1990,7 +2166,8 @@ impl Session {
                     report = self.execute(
                         b"[ dup unpair swap drop expr.call_frame_budget ] dip calc_bits@1.rot \
                           [ expr.call_depth_guest ] dip calc_bits@1.rot calc_bits@1.rot",
-                        &[], None,
+                        &[],
+                        None,
                     )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
@@ -2021,7 +2198,8 @@ impl Session {
                     loop {
                         report = self.execute(
                             b"swap [ expr.call_scan_peek ] dip calc_bits@1.rot calc_bits@1.rot",
-                            &[], None,
+                            &[],
+                            None,
                         )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
@@ -2044,18 +2222,23 @@ impl Session {
                                 }
                                 report = self.execute(
                                     b"unpair swap [ expr.call_scan_bind_guest ] dip",
-                                    &[], None,
+                                    &[],
+                                    None,
                                 )?;
                             }
                             1 => break,
                             2 => report = self.execute(b"unpair drop", &[], None)?,
-                            _ => return Err("guest function body scan lost its lexical scope".into()),
+                            _ => {
+                                return Err("guest function body scan lost its lexical scope".into())
+                            }
                         }
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if remaining == 0 {
-                            return Err("guest function body scan exceeded its progress bound".into());
+                            return Err(
+                                "guest function body scan exceeded its progress bound".into()
+                            );
                         }
                         remaining -= 1;
                     }
@@ -2099,7 +2282,10 @@ impl Session {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
                     if !checked_ready(&report.json)? {
-                        return Err("guest calculator checked arithmetic pending projection rejected".into());
+                        return Err(
+                            "guest calculator checked arithmetic pending projection rejected"
+                                .into(),
+                        );
                     }
                     if (1..=4).contains(&kind) {
                         // Park the small operator Span beneath the State/display
@@ -2129,17 +2315,22 @@ impl Session {
                         return Err("guest calculator first value projection rejected".into());
                     }
                     let right_ready = checked_numeric_phase(&report.json)?;
-                    report = self.execute(if right_ready {
-                        b"expr.binary_operand_right_ready"
-                    } else {
-                        b"expr.binary_operand_right_error"
-                    }, &[], None)?;
+                    report = self.execute(
+                        if right_ready {
+                            b"expr.binary_operand_right_ready"
+                        } else {
+                            b"expr.binary_operand_right_error"
+                        },
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
                     if !right_ready {
-                        let diagnostic = checked_error(&report.json)?
-                            .ok_or("guest first operand failure lacked a typed syntax diagnostic")?;
+                        let diagnostic = checked_error(&report.json)?.ok_or(
+                            "guest first operand failure lacked a typed syntax diagnostic",
+                        )?;
                         return Ok(Outcome::Diagnostic(diagnostic));
                     }
                     if !checked_ready(&report.json)? {
@@ -2147,34 +2338,47 @@ impl Session {
                     }
                     // A let's hidden cell carries its Name; these two words type
                     // the whole stack, so the span and cell are lifted away.
-                    report = self.execute(if is_let {
-                        b"swap [ swap [ expr.binary_second_begin_guest ] dip swap ] dip swap".as_slice()
-                    } else {
-                        b"expr.binary_second_begin_guest"
-                    }, &[], None)?;
+                    report = self.execute(
+                        if is_let {
+                            b"swap [ swap [ expr.binary_second_begin_guest ] dip swap ] dip swap"
+                                .as_slice()
+                        } else {
+                            b"expr.binary_second_begin_guest"
+                        },
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
                     if !checked_ready(&report.json)? {
                         return Err("guest second operand lost its original pending frame".into());
                     }
-                    report = self.execute(if is_let {
-                        b"swap [ swap [ expr.binary_second_route_guest ] dip swap ] dip swap".as_slice()
-                    } else {
-                        b"expr.binary_second_route_guest"
-                    }, &[], None)?;
+                    report = self.execute(
+                        if is_let {
+                            b"swap [ swap [ expr.binary_second_route_guest ] dip swap ] dip swap"
+                                .as_slice()
+                        } else {
+                            b"expr.binary_second_route_guest"
+                        },
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
-                    let json: serde_json::Value = serde_json::from_str(&report.json)
-                        .map_err(|error| error.to_string())?;
-                    let routed = json["stack"].as_array().and_then(|stack| stack.last())
+                    let json: serde_json::Value =
+                        serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+                    let routed = json["stack"]
+                        .as_array()
+                        .and_then(|stack| stack.last())
                         .ok_or("guest second operand returned no checked route")?;
                     let (_, ready) = pair(routed)?;
                     if ready["type"] != "Bool" {
                         return Err("guest second operand returned a non-Bool route".into());
                     }
-                    let second_ready = ready["value"].as_bool()
+                    let second_ready = ready["value"]
+                        .as_bool()
                         .ok_or("guest second operand returned an invalid route")?;
                     self.defer_consume(b"unpair drop");
                     if !second_ready {
@@ -2203,155 +2407,180 @@ impl Session {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_ready(&report.json)? {
-                            return Err("guest arithmetic operands lost their original candidate".into());
+                            return Err(
+                                "guest arithmetic operands lost their original candidate".into()
+                            );
                         }
                     }
                     if kind != 5 {
-                    if kind == 4 {
+                        if kind == 4 {
+                            for source in [
+                                span_stage!("op_divisor_probe"),
+                                span_stage!("op_divisor_route"),
+                            ] {
+                                report = self.execute(source, &[], None)?;
+                                if report.outcome != "normal" {
+                                    return Ok(Outcome::NativeFailure(report.json));
+                                }
+                                if !checked_ready(&report.json)? {
+                                    return Err("guest division operand was not certified".into());
+                                }
+                            }
+                            let admitted = guest_eval_route_left(&report.json)?;
+                            report = self.execute(
+                                if admitted {
+                                    EVAL_ROUTE_ACCEPT
+                                } else {
+                                    eval_numeric_deny!("op_divisor_deny")
+                                },
+                                &[],
+                                None,
+                            )?;
+                            if report.outcome != "normal" {
+                                return Ok(Outcome::NativeFailure(report.json));
+                            }
+                            if !admitted {
+                                report = self.execute(
+                                    b"swap [ expr.arithmetic_numeric_denial_guest ] dip swap",
+                                    &[],
+                                    None,
+                                )?;
+                                if report.outcome != "normal" {
+                                    return Ok(Outcome::NativeFailure(report.json));
+                                }
+                                let diagnostic = checked_error(&report.json)?
+                                .ok_or("guest division by zero lacked its original operator diagnostic")?;
+                                return Ok(Outcome::Diagnostic(diagnostic));
+                            }
+                            report = self.execute(span_stage!("op_divisor_admit"), &[], None)?;
+                        } else {
+                            report = self.execute(
+                                match kind {
+                                    1 => eval_binary_begin!("op_begin_add"),
+                                    2 => eval_binary_begin!("op_begin_sub"),
+                                    3 => eval_binary_begin!("op_begin_mul"),
+                                    _ => unreachable!("binary operator is 1 through 4"),
+                                },
+                                &[],
+                                None,
+                            )?;
+                        }
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
+                        }
+                        if !checked_ready(&report.json)? {
+                            return Err("guest binary operation input was not certified".into());
+                        }
                         for source in [
-                            span_stage!("op_divisor_probe"),
-                            span_stage!("op_divisor_route"),
+                            span_stage!("op_bits_measure_left"),
+                            span_stage!("op_bits_measure_right"),
+                            span_stage!("op_bits_limit"),
+                            span_stage!("op_bits_probe"),
+                            span_stage!("op_bits_route"),
                         ] {
                             report = self.execute(source, &[], None)?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_ready(&report.json)? {
-                                return Err("guest division operand was not certified".into());
+                                return Err("guest binary width quota was not certified".into());
                             }
                         }
                         let admitted = guest_eval_route_left(&report.json)?;
-                        report = self.execute(if admitted {
-                            EVAL_ROUTE_ACCEPT
-                        } else {
-                            eval_numeric_deny!("op_divisor_deny")
-                        }, &[], None)?;
+                        report = self.execute(
+                            if admitted {
+                                EVAL_ROUTE_ACCEPT
+                            } else {
+                                eval_numeric_deny!("op_bits_deny")
+                            },
+                            &[],
+                            None,
+                        )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !admitted {
                             report = self.execute(
                                 b"swap [ expr.arithmetic_numeric_denial_guest ] dip swap",
-                                &[], None,
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             let diagnostic = checked_error(&report.json)?
-                                .ok_or("guest division by zero lacked its original operator diagnostic")?;
+                                .ok_or("guest binary width denial lacked an operator diagnostic")?;
                             return Ok(Outcome::Diagnostic(diagnostic));
                         }
-                        report = self.execute(span_stage!("op_divisor_admit"), &[], None)?;
-                    } else {
-                        report = self.execute(match kind {
-                            1 => eval_binary_begin!("op_begin_add"),
-                            2 => eval_binary_begin!("op_begin_sub"),
-                            3 => eval_binary_begin!("op_begin_mul"),
-                            _ => unreachable!("binary operator is 1 through 4"),
-                        }, &[], None)?;
-                    }
-                    if report.outcome != "normal" {
-                        return Ok(Outcome::NativeFailure(report.json));
-                    }
-                    if !checked_ready(&report.json)? {
-                        return Err("guest binary operation input was not certified".into());
-                    }
-                    for source in [
-                        span_stage!("op_bits_measure_left"),
-                        span_stage!("op_bits_measure_right"),
-                        span_stage!("op_bits_limit"),
-                        span_stage!("op_bits_probe"),
-                        span_stage!("op_bits_route"),
-                    ] {
-                        report = self.execute(source, &[], None)?;
-                        if report.outcome != "normal" {
-                            return Ok(Outcome::NativeFailure(report.json));
+                        for source in [
+                            span_stage!("op_bits_admit"),
+                            span_stage!("op_work_limit"),
+                            span_stage!("op_work_probe"),
+                            span_stage!("op_work_route"),
+                        ] {
+                            report = self.execute(source, &[], None)?;
+                            if report.outcome != "normal" {
+                                return Ok(Outcome::NativeFailure(report.json));
+                            }
+                            if !checked_ready(&report.json)? {
+                                return Err("guest binary work quota was not certified".into());
+                            }
                         }
-                        if !checked_ready(&report.json)? {
-                            return Err("guest binary width quota was not certified".into());
-                        }
-                    }
-                    let admitted = guest_eval_route_left(&report.json)?;
-                    report = self.execute(if admitted {
-                        EVAL_ROUTE_ACCEPT
-                    } else {
-                        eval_numeric_deny!("op_bits_deny")
-                    }, &[], None)?;
-                    if report.outcome != "normal" {
-                        return Ok(Outcome::NativeFailure(report.json));
-                    }
-                    if !admitted {
+                        let admitted = guest_eval_route_left(&report.json)?;
                         report = self.execute(
-                            b"swap [ expr.arithmetic_numeric_denial_guest ] dip swap",
-                            &[], None,
+                            if admitted {
+                                EVAL_ROUTE_ACCEPT
+                            } else {
+                                eval_numeric_deny!("op_work_deny")
+                            },
+                            &[],
+                            None,
                         )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
-                        let diagnostic = checked_error(&report.json)?
-                            .ok_or("guest binary width denial lacked an operator diagnostic")?;
-                        return Ok(Outcome::Diagnostic(diagnostic));
-                    }
-                    for source in [
-                        span_stage!("op_bits_admit"),
-                        span_stage!("op_work_limit"),
-                        span_stage!("op_work_probe"),
-                        span_stage!("op_work_route"),
-                    ] {
-                        report = self.execute(source, &[], None)?;
-                        if report.outcome != "normal" {
-                            return Ok(Outcome::NativeFailure(report.json));
+                        if !admitted {
+                            report = self.execute(
+                                b"swap [ expr.arithmetic_numeric_denial_guest ] dip swap",
+                                &[],
+                                None,
+                            )?;
+                            if report.outcome != "normal" {
+                                return Ok(Outcome::NativeFailure(report.json));
+                            }
+                            let diagnostic = checked_error(&report.json)?
+                                .ok_or("guest binary work denial lacked an operator diagnostic")?;
+                            return Ok(Outcome::Diagnostic(diagnostic));
                         }
-                        if !checked_ready(&report.json)? {
-                            return Err("guest binary work quota was not certified".into());
+                        for source in [span_stage!("op_work_admit"), span_stage!("op_work_commit")]
+                        {
+                            report = self.execute(source, &[], None)?;
+                            if report.outcome != "normal" {
+                                return Ok(Outcome::NativeFailure(report.json));
+                            }
+                            if !checked_ready(&report.json)? {
+                                return Err(
+                                    "guest binary admission did not retain its original candidate"
+                                        .into(),
+                                );
+                            }
                         }
-                    }
-                    let admitted = guest_eval_route_left(&report.json)?;
-                    report = self.execute(if admitted {
-                        EVAL_ROUTE_ACCEPT
-                    } else {
-                        eval_numeric_deny!("op_work_deny")
-                    }, &[], None)?;
-                    if report.outcome != "normal" {
-                        return Ok(Outcome::NativeFailure(report.json));
-                    }
-                    if !admitted {
-                        report = self.execute(
-                            b"swap [ expr.arithmetic_numeric_denial_guest ] dip swap",
-                            &[], None,
-                        )?;
-                        if report.outcome != "normal" {
-                            return Ok(Outcome::NativeFailure(report.json));
-                        }
-                        let diagnostic = checked_error(&report.json)?
-                            .ok_or("guest binary work denial lacked an operator diagnostic")?;
-                        return Ok(Outcome::Diagnostic(diagnostic));
-                    }
-                    for source in [
-                        span_stage!("op_work_admit"),
-                        span_stage!("op_work_commit"),
-                    ] {
-                        report = self.execute(source, &[], None)?;
-                        if report.outcome != "normal" {
-                            return Ok(Outcome::NativeFailure(report.json));
-                        }
-                        if !checked_ready(&report.json)? {
-                            return Err("guest binary admission did not retain its original candidate".into());
-                        }
-                    }
                     }
                 }
                 if (1..=4).contains(&kind) {
                     report = self.execute(
                         b"swap [ [ unpair expr.arithmetic_binary_opcode_guest ] \
                           [ result@1.Result.Err ] result@1.Result.match ] dip swap",
-                        &[], None,
+                        &[],
+                        None,
                     )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
                     if !checked_ready(&report.json)? {
-                        return Err("guest signed opcode did not match its original operator".into());
+                        return Err(
+                            "guest signed opcode did not match its original operator".into()
+                        );
                     }
                     report = self.execute(TO_SUM, &[], None)?;
                     if report.outcome != "normal" {
@@ -2360,16 +2589,22 @@ impl Session {
                     if !checked_carrier_ready(&report.json)? {
                         return Err("guest signed opcode lost its original operator".into());
                     }
-                    report = self.execute(if kind == 3 {
-                        sum_checked_stage!("op_first_stage_seed_mul")
-                    } else {
-                        sum_checked_stage!("op_first_stage_seed_cross")
-                    }, &[], None)?;
+                    report = self.execute(
+                        if kind == 3 {
+                            sum_checked_stage!("op_first_stage_seed_mul")
+                        } else {
+                            sum_checked_stage!("op_first_stage_seed_cross")
+                        },
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
                     if !checked_carrier_ready(&report.json)? {
-                        return Err("guest signed product seed rejected its admitted operand".into());
+                        return Err(
+                            "guest signed product seed rejected its admitted operand".into()
+                        );
                     }
                     report = signed_product(self, report, &mut remaining)?;
                     if report.outcome != "normal" {
@@ -2378,11 +2613,15 @@ impl Session {
                     if !checked_carrier_ready(&report.json)? {
                         return Err("guest first signed product lost its schoolbook cursor".into());
                     }
-                    report = self.execute(if kind == 3 {
-                        sum_checked_stage!("op_first_stage_second_mul")
-                    } else {
-                        sum_checked_stage!("op_first_stage_second_cross")
-                    }, &[], None)?;
+                    report = self.execute(
+                        if kind == 3 {
+                            sum_checked_stage!("op_first_stage_second_mul")
+                        } else {
+                            sum_checked_stage!("op_first_stage_second_cross")
+                        },
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
@@ -2411,7 +2650,9 @@ impl Session {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_carrier_ready(&report.json)? {
-                                return Err("guest signed sum rejected its original products".into());
+                                return Err(
+                                    "guest signed sum rejected its original products".into()
+                                );
                             }
                         }
                         // The guest's own BigAddRoute selects the finish; a
@@ -2431,7 +2672,9 @@ impl Session {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_carrier_ready(&report.json)? {
-                                return Err("guest signed sum rejected its original products".into());
+                                return Err(
+                                    "guest signed sum rejected its original products".into()
+                                );
                             }
                         }
                         report = signed_product(self, report, &mut remaining)?;
@@ -2439,15 +2682,22 @@ impl Session {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_carrier_ready(&report.json)? {
-                            return Err("guest signed denominator product lost its schoolbook cursor".into());
+                            return Err(
+                                "guest signed denominator product lost its schoolbook cursor"
+                                    .into(),
+                            );
                         }
                     }
-                    report = self.execute(match kind {
-                        1 | 2 => sum_checked_stage!("op_first_stage_sum_raw"),
-                        3 => sum_checked_stage!("op_first_stage_mul_raw"),
-                        4 => sum_checked_stage!("op_first_stage_div_raw"),
-                        _ => unreachable!("signed operator kind is 1 through 4"),
-                    }, &[], None)?;
+                    report = self.execute(
+                        match kind {
+                            1 | 2 => sum_checked_stage!("op_first_stage_sum_raw"),
+                            3 => sum_checked_stage!("op_first_stage_mul_raw"),
+                            4 => sum_checked_stage!("op_first_stage_div_raw"),
+                            _ => unreachable!("signed operator kind is 1 through 4"),
+                        },
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
@@ -2470,7 +2720,8 @@ impl Session {
                     // (raw_rat_push_guest) consumes.
                     report = self.execute(
                         b"swap [ expr.arithmetic_raw_from_span_guest ] dip swap",
-                        &[], None,
+                        &[],
+                        None,
                     )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
@@ -2482,7 +2733,8 @@ impl Session {
                 if kind == 5 {
                     for source in [
                         b"swap [ [ expr.arithmetic_power_opcode_guest ] \
-                          [ result@1.Result.Err ] result@1.Result.match ] dip swap".as_slice(),
+                          [ result@1.Result.Err ] result@1.Result.match ] dip swap"
+                            .as_slice(),
                         b"swap [ [ unpair unpair [ unpair ] dip num.pow_input \
                           pair result@1.Result.Ok ] [ result@1.Result.Err ] \
                           result@1.Result.match ] dip swap",
@@ -2497,7 +2749,10 @@ impl Session {
                             return Err("guest power operand lost its original operator".into());
                         }
                     }
-                    power_route_gate!("pow_integral_reject", "guest nonintegral exponent lacked its operator diagnostic");
+                    power_route_gate!(
+                        "pow_integral_reject",
+                        "guest nonintegral exponent lacked its operator diagnostic"
+                    );
                     for source in [
                         eval_stage!("pow_integral_admit"),
                         eval_stage!("pow_zero_sign"),
@@ -2509,10 +2764,16 @@ impl Session {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_ready(&report.json)? {
-                            return Err("guest zero-negative power domain lost its original operands".into());
+                            return Err(
+                                "guest zero-negative power domain lost its original operands"
+                                    .into(),
+                            );
                         }
                     }
-                    power_route_gate!("pow_zero_reject", "guest zero-negative exponent lacked its operator diagnostic");
+                    power_route_gate!(
+                        "pow_zero_reject",
+                        "guest zero-negative exponent lacked its operator diagnostic"
+                    );
                     for source in [
                         eval_stage!("pow_zero_admit"),
                         eval_stage!("pow_base_num"),
@@ -2528,7 +2789,9 @@ impl Session {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_ready(&report.json)? {
-                            return Err("guest exponent width bound lost its sealed operands".into());
+                            return Err(
+                                "guest exponent width bound lost its sealed operands".into()
+                            );
                         }
                     }
                     match guest_numeric_i64(&report.json)? {
@@ -2548,7 +2811,10 @@ impl Session {
                                     return Ok(Outcome::NativeFailure(report.json));
                                 }
                                 if !checked_ready(&report.json)? {
-                                    return Err("guest equal-length exponent comparison was not certified".into());
+                                    return Err(
+                                        "guest equal-length exponent comparison was not certified"
+                                            .into(),
+                                    );
                                 }
                             }
                         }
@@ -2559,7 +2825,8 @@ impl Session {
                                 b"swap [ [ unpair unpair 1 = pair pair \
                                   result@1.Result.Ok ] [ result@1.Result.Err ] \
                                   result@1.Result.match ] dip swap",
-                                &[], None,
+                                &[],
+                                None,
                             )?;
                         }
                         _ => return Err("guest exponent length comparison was not ordered".into()),
@@ -2574,7 +2841,10 @@ impl Session {
                     if !checked_ready(&report.json)? {
                         return Err("guest exponent limit route was not certified".into());
                     }
-                    power_route_gate!("pow_exponent_deny", "guest exponent limit denial lacked its operator diagnostic");
+                    power_route_gate!(
+                        "pow_exponent_deny",
+                        "guest exponent limit denial lacked its operator diagnostic"
+                    );
                     for source in [
                         eval_stage!("pow_exponent_admit"),
                         eval_stage!("pow_width_exponent"),
@@ -2588,10 +2858,15 @@ impl Session {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_ready(&report.json)? {
-                            return Err("guest power Bits allowance was not source-certified".into());
+                            return Err(
+                                "guest power Bits allowance was not source-certified".into()
+                            );
                         }
                     }
-                    power_route_gate!("pow_bits_deny", "guest power Bits denial lacked its operator diagnostic");
+                    power_route_gate!(
+                        "pow_bits_deny",
+                        "guest power Bits denial lacked its operator diagnostic"
+                    );
                     for source in [
                         eval_stage!("pow_bits_measure_debit"),
                         eval_stage!("pow_bits_commit_debit"),
@@ -2603,10 +2878,15 @@ impl Session {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_ready(&report.json)? {
-                            return Err("guest power Work quotient allowance was not certified".into());
+                            return Err(
+                                "guest power Work quotient allowance was not certified".into()
+                            );
                         }
                     }
-                    power_bool_gate!("pow_work_deny", "guest power Work limit lacked its operator diagnostic");
+                    power_bool_gate!(
+                        "pow_work_deny",
+                        "guest power Work limit lacked its operator diagnostic"
+                    );
                     report = self.execute(eval_stage!("pow_work_square_probe"), &[], None)?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
@@ -2614,7 +2894,10 @@ impl Session {
                     if !checked_ready(&report.json)? {
                         return Err("guest power quadratic Work allowance was not certified".into());
                     }
-                    power_bool_gate!("pow_work_deny", "guest power quadratic Work denial lacked its operator diagnostic");
+                    power_bool_gate!(
+                        "pow_work_deny",
+                        "guest power quadratic Work denial lacked its operator diagnostic"
+                    );
                     for source in [
                         eval_stage!("pow_work_admit"),
                         eval_stage!("pow_work_commit"),
@@ -2625,7 +2908,9 @@ impl Session {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_ready(&report.json)? {
-                            return Err("guest power Budget reservation lost its original operands".into());
+                            return Err(
+                                "guest power Budget reservation lost its original operands".into(),
+                            );
                         }
                     }
                     // The exponent loop carries Sum<Pair<Pending,Pair<PowState,Budget>>,Unit>.
@@ -2634,12 +2919,15 @@ impl Session {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
                     if !checked_carrier_ready(&report.json)? {
-                        return Err("guest power Budget reservation lost its original operands".into());
+                        return Err(
+                            "guest power Budget reservation lost its original operands".into()
+                        );
                     }
                     loop {
                         for source in [
                             b"swap [ [ unpair swap [ unpair num.pow_bit_route ] dip swap \
-                              pair inl ] [ inr ] case ] dip swap".as_slice(),
+                              pair inl ] [ inr ] case ] dip swap"
+                                .as_slice(),
                             sum_stage!("pow_route_kind"),
                         ] {
                             report = self.execute(source, &[], None)?;
@@ -2647,7 +2935,9 @@ impl Session {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_carrier_ready(&report.json)? {
-                                return Err("guest exponent bit route lost its sealed PowState".into());
+                                return Err(
+                                    "guest exponent bit route lost its sealed PowState".into()
+                                );
                             }
                         }
                         let route = guest_numeric_i64(&report.json)?;
@@ -2660,16 +2950,17 @@ impl Session {
                         }
                         match route {
                             0 => {
-                                for source in [
-                                    sum_checked_stage!("pow_route_select_done"),
-                                    FROM_SUM,
-                                ] {
+                                for source in
+                                    [sum_checked_stage!("pow_route_select_done"), FROM_SUM]
+                                {
                                     report = self.execute(source, &[], None)?;
                                     if report.outcome != "normal" {
-                                    return Ok(Outcome::NativeFailure(report.json));
-                                }
+                                        return Ok(Outcome::NativeFailure(report.json));
+                                    }
                                     if !checked_carrier_ready(&report.json)? {
-                                        return Err("guest exponent terminal Rat was not certified".into());
+                                        return Err(
+                                            "guest exponent terminal Rat was not certified".into(),
+                                        );
                                     }
                                 }
                                 for source in [
@@ -2678,42 +2969,56 @@ impl Session {
                                 ] {
                                     report = self.execute(source, &[], None)?;
                                     if report.outcome != "normal" {
-                                    return Ok(Outcome::NativeFailure(report.json));
-                                }
+                                        return Ok(Outcome::NativeFailure(report.json));
+                                    }
                                 }
                                 break;
                             }
                             1 | 2 => {
-                                report = self.execute(if route == 1 {
-                                    sum_checked_stage!("pow_route_select_acc")
-                                } else {
-                                    sum_checked_stage!("pow_route_select_square")
-                                }, &[], None)?;
+                                report = self.execute(
+                                    if route == 1 {
+                                        sum_checked_stage!("pow_route_select_acc")
+                                    } else {
+                                        sum_checked_stage!("pow_route_select_square")
+                                    },
+                                    &[],
+                                    None,
+                                )?;
                                 if report.outcome != "normal" {
                                     return Ok(Outcome::NativeFailure(report.json));
                                 }
                                 if !checked_carrier_ready(&report.json)? {
-                                    return Err("guest exponent branch selector rejected its actual bit".into());
+                                    return Err(
+                                        "guest exponent branch selector rejected its actual bit"
+                                            .into(),
+                                    );
                                 }
                             }
-                            _ => return Err("guest exponent returned an unknown bit-route arm".into()),
+                            _ => {
+                                return Err(
+                                    "guest exponent returned an unknown bit-route arm".into()
+                                )
+                            }
                         }
                         if route == 1 {
-                            report = self.execute(
-                                sum_power_stage!("pow_acc_num_begin"), &[], None,
-                            )?;
+                            report =
+                                self.execute(sum_power_stage!("pow_acc_num_begin"), &[], None)?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_carrier_ready(&report.json)? {
-                                return Err("guest accumulator numerator cursor was not certified".into());
+                                return Err(
+                                    "guest accumulator numerator cursor was not certified".into()
+                                );
                             }
                             report = power_acc_product(self, report, &mut remaining)?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_carrier_ready(&report.json)? {
-                                return Err("guest accumulator denominator cursor was not certified".into());
+                                return Err(
+                                    "guest accumulator denominator cursor was not certified".into(),
+                                );
                             }
                         }
                         report = self.execute(sum_power_stage!("pow_square_route"), &[], None)?;
@@ -2730,64 +3035,83 @@ impl Session {
                                 b"swap [ [ unpair unpair swap \
                                   [ swap pair pair inl ] [ drop drop drop unit inr ] \
                                   result@1.Result.match ] [ inr ] case ] dip swap",
-                                &[], None,
+                                &[],
+                                None,
                             )?;
                         } else {
                             report = self.execute(
                                 b"swap [ [ unpair unpair swap \
                                   [ drop drop drop unit inr ] [ swap pair pair inl ] \
                                   result@1.Result.match ] [ inr ] case ] dip swap",
-                                &[], None,
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_carrier_ready(&report.json)? {
-                                return Err("guest pending square lost its original PowSquareInput".into());
+                                return Err(
+                                    "guest pending square lost its original PowSquareInput".into(),
+                                );
                             }
                             report = self.execute(
-                                sum_power_checked_stage!("pow_square_begin"), &[], None,
+                                sum_power_checked_stage!("pow_square_begin"),
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_carrier_ready(&report.json)? {
-                                return Err("guest square was not admitted from remaining exponent bits".into());
+                                return Err(
+                                    "guest square was not admitted from remaining exponent bits"
+                                        .into(),
+                                );
                             }
                             report = self.execute(
                                 b"swap [ [ unpair swap [ unpair [ unpair ] dip [ swap ] dip \
                                   [ [ num.pow_acc_num_begin ] dip ] dip pair pair ] dip swap \
                                   pair inl ] [ inr ] case ] dip swap",
-                                &[], None,
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_carrier_ready(&report.json)? {
-                                return Err("guest square numerator cursor lost its accumulator".into());
+                                return Err(
+                                    "guest square numerator cursor lost its accumulator".into()
+                                );
                             }
                             report = power_acc_product(self, report, &mut remaining)?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_carrier_ready(&report.json)? {
-                                return Err("guest squared base lost its original accumulator".into());
+                                return Err(
+                                    "guest squared base lost its original accumulator".into()
+                                );
                             }
                             report = self.execute(
                                 b"swap [ [ unpair swap [ unpair unpair \
                                   [ swap pair num.pow_square_finish ] dip pair ] dip swap \
                                   pair inl ] [ inr ] case ] dip swap",
-                                &[], None,
+                                &[],
+                                None,
                             )?;
                         }
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_carrier_ready(&report.json)? {
-                            return Err("guest exponent square did not preserve its original Budget".into());
+                            return Err(
+                                "guest exponent square did not preserve its original Budget".into(),
+                            );
                         }
                         if remaining == 0 {
-                            return Err("guest exponentiation exceeded its declared progress bound".into());
+                            return Err(
+                                "guest exponentiation exceeded its declared progress bound".into(),
+                            );
                         }
                         remaining -= 1;
                     }
@@ -2806,17 +3130,22 @@ impl Session {
                         }
                     }
                     let ready = checked_numeric_phase(&report.json)?;
-                    report = self.execute(if ready {
-                        b"expr.binary_operand_right_ready"
-                    } else {
-                        b"expr.binary_operand_right_error"
-                    }, &[], None)?;
+                    report = self.execute(
+                        if ready {
+                            b"expr.binary_operand_right_ready"
+                        } else {
+                            b"expr.binary_operand_right_error"
+                        },
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
                     if !ready {
-                        let diagnostic = checked_error(&report.json)?
-                            .ok_or("guest missing unary operand lacked an original syntax diagnostic")?;
+                        let diagnostic = checked_error(&report.json)?.ok_or(
+                            "guest missing unary operand lacked an original syntax diagnostic",
+                        )?;
                         return Ok(Outcome::Diagnostic(diagnostic));
                     }
                     for source in [
@@ -2847,24 +3176,30 @@ impl Session {
                             }
                         }
                         let denied = guest_numeric_bool(&report.json)?;
-                        report = self.execute(if denied {
-                            eval_bool_deny!("gcd_work_deny")
-                        } else {
-                            EVAL_BOOL_ACCEPT
-                        }, &[], None)?;
+                        report = self.execute(
+                            if denied {
+                                eval_bool_deny!("gcd_work_deny")
+                            } else {
+                                EVAL_BOOL_ACCEPT
+                            },
+                            &[],
+                            None,
+                        )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if denied {
                             report = self.execute(
                                 b"swap [ expr.arithmetic_numeric_denial_guest ] dip swap",
-                                &[], None,
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
-                            let diagnostic = checked_error(&report.json)?
-                                .ok_or("guest unary plus Work denial lacked an operator diagnostic")?;
+                            let diagnostic = checked_error(&report.json)?.ok_or(
+                                "guest unary plus Work denial lacked an operator diagnostic",
+                            )?;
                             return Ok(Outcome::Diagnostic(diagnostic));
                         }
                         for source in [
@@ -2884,7 +3219,8 @@ impl Session {
                         for source in [
                             b"swap [ [ unpair unpair num.neg_measure_num \
                               pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                              result@1.Result.match ] dip swap".as_slice(),
+                              result@1.Result.match ] dip swap"
+                                .as_slice(),
                             eval_stage!("neg_measure_den"),
                             eval_stage!("neg_bits_probe"),
                         ] {
@@ -2897,57 +3233,69 @@ impl Session {
                             }
                         }
                         let denied = guest_numeric_bool(&report.json)?;
-                        report = self.execute(if denied {
-                            eval_bool_deny!("gcd_bits_deny")
-                        } else {
-                            EVAL_BOOL_ACCEPT
-                        }, &[], None)?;
+                        report = self.execute(
+                            if denied {
+                                eval_bool_deny!("gcd_bits_deny")
+                            } else {
+                                EVAL_BOOL_ACCEPT
+                            },
+                            &[],
+                            None,
+                        )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if denied {
                             report = self.execute(
                                 b"swap [ expr.arithmetic_numeric_denial_guest ] dip swap",
-                                &[], None,
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
-                            let diagnostic = checked_error(&report.json)?
-                                .ok_or("guest unary negation width denial lacked an operator diagnostic")?;
+                            let diagnostic = checked_error(&report.json)?.ok_or(
+                                "guest unary negation width denial lacked an operator diagnostic",
+                            )?;
                             return Ok(Outcome::Diagnostic(diagnostic));
                         }
-                        for source in [
-                            eval_stage!("neg_work_limit"),
-                            eval_stage!("neg_work_probe"),
-                        ] {
+                        for source in [eval_stage!("neg_work_limit"), eval_stage!("neg_work_probe")]
+                        {
                             report = self.execute(source, &[], None)?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_ready(&report.json)? {
-                                return Err("guest unary negation Work quota was not certified".into());
+                                return Err(
+                                    "guest unary negation Work quota was not certified".into()
+                                );
                             }
                         }
                         let denied = guest_numeric_bool(&report.json)?;
-                        report = self.execute(if denied {
-                            eval_bool_deny!("gcd_work_deny")
-                        } else {
-                            EVAL_BOOL_ACCEPT
-                        }, &[], None)?;
+                        report = self.execute(
+                            if denied {
+                                eval_bool_deny!("gcd_work_deny")
+                            } else {
+                                EVAL_BOOL_ACCEPT
+                            },
+                            &[],
+                            None,
+                        )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if denied {
                             report = self.execute(
                                 b"swap [ expr.arithmetic_numeric_denial_guest ] dip swap",
-                                &[], None,
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
-                            let diagnostic = checked_error(&report.json)?
-                                .ok_or("guest unary negation Work denial lacked an operator diagnostic")?;
+                            let diagnostic = checked_error(&report.json)?.ok_or(
+                                "guest unary negation Work denial lacked an operator diagnostic",
+                            )?;
                             return Ok(Outcome::Diagnostic(diagnostic));
                         }
                         for source in [
@@ -2976,9 +3324,8 @@ impl Session {
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
-                    report = self.execute(
-                        b"swap [ expr.literal_span_pair_guest ] dip swap", &[], None,
-                    )?;
+                    report =
+                        self.execute(b"swap [ expr.literal_span_pair_guest ] dip swap", &[], None)?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
@@ -2997,14 +3344,18 @@ impl Session {
                     }
                     loop {
                         report = self.execute(
-                            b"swap [ expr.literal_count_probe_guest ] dip swap", &[], None,
+                            b"swap [ expr.literal_count_probe_guest ] dip swap",
+                            &[],
+                            None,
                         )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         let json: serde_json::Value = serde_json::from_str(&report.json)
                             .map_err(|error| error.to_string())?;
-                        let probe = json["stack"].as_array().and_then(|stack| stack.last())
+                        let probe = json["stack"]
+                            .as_array()
+                            .and_then(|stack| stack.last())
                             .ok_or("guest literal count returned no checked cursor")?;
                         let (ready, payload) = variant(probe)?;
                         if !ready {
@@ -3012,14 +3363,18 @@ impl Session {
                         }
                         let (_, done) = pair(payload)?;
                         if done["type"] != "Bool" {
-                            return Err("guest literal count returned a non-Bool progress flag".into());
+                            return Err(
+                                "guest literal count returned a non-Bool progress flag".into()
+                            );
                         }
-                        let done = done["value"].as_bool()
+                        let done = done["value"]
+                            .as_bool()
                             .ok_or("guest literal count returned an invalid progress flag")?;
                         report = self.execute(
                             b"swap [ [ num.parse_count_route result@1.Result.Ok ] \
                               [ result@1.Result.Err ] result@1.Result.match ] dip swap",
-                            &[], None,
+                            &[],
+                            None,
                         )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
@@ -3032,18 +3387,23 @@ impl Session {
                                 b"swap [ [ [ result@1.Result.Ok ] \
                                   [ drop unit result@1.Result.Err ] result@1.Result.match ] \
                                   [ result@1.Result.Err ] result@1.Result.match ] dip swap",
-                                &[], None,
+                                &[],
+                                None,
                             )?;
                             break;
                         }
                         if remaining == 0 {
-                            return Err("guest literal count exceeded its source-byte progress bound".into());
+                            return Err(
+                                "guest literal count exceeded its source-byte progress bound"
+                                    .into(),
+                            );
                         }
                         remaining -= 1;
                         for source in [
                             b"swap [ [ [ drop unit result@1.Result.Err ] \
                               [ result@1.Result.Ok ] result@1.Result.match ] \
-                              [ result@1.Result.Err ] result@1.Result.match ] dip swap".as_slice(),
+                              [ result@1.Result.Err ] result@1.Result.match ] dip swap"
+                                .as_slice(),
                             b"swap [ expr.literal_count_byte_guest ] dip swap",
                             b"swap [ expr.literal_count_classify_guest ] dip swap",
                             b"swap [ expr.literal_count_advance_guest ] dip swap",
@@ -3066,7 +3426,9 @@ impl Session {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_ready(&report.json)? {
-                            return Err("guest numeric digit admission input was not certified".into());
+                            return Err(
+                                "guest numeric digit admission input was not certified".into()
+                            );
                         }
                     }
                     // Keep the source span in the guest while the measured
@@ -3103,7 +3465,11 @@ impl Session {
                             .ok_or("guest numeric digit denial lacked a typed diagnostic")?;
                         return Ok(Outcome::Diagnostic(diagnostic));
                     }
-                    report = self.execute(b"swap [ expr.literal_digit_commit_guest ] dip swap", &[], None)?;
+                    report = self.execute(
+                        b"swap [ expr.literal_digit_commit_guest ] dip swap",
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
@@ -3157,7 +3523,8 @@ impl Session {
                         for source in [
                             b"swap [ [ unpair [ pair result@1.Result.Ok ] \
                               [ drop drop unit result@1.Result.Err ] result@1.Result.match ] \
-                              [ result@1.Result.Err ] result@1.Result.match ] dip swap".as_slice(),
+                              [ result@1.Result.Err ] result@1.Result.match ] dip swap"
+                                .as_slice(),
                             b"swap [ [ unpair num.parse_work_commit pair result@1.Result.Ok ] \
                               [ result@1.Result.Err ] result@1.Result.match ] dip swap",
                         ] {
@@ -3166,7 +3533,9 @@ impl Session {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_ready(&report.json)? {
-                                return Err("guest numeric Work commitment was not certified".into());
+                                return Err(
+                                    "guest numeric Work commitment was not certified".into()
+                                );
                             }
                         }
                     } else {
@@ -3174,14 +3543,16 @@ impl Session {
                             b"swap [ [ unpair [ drop drop unit result@1.Result.Err ] \
                               [ pair result@1.Result.Ok ] result@1.Result.match ] \
                               [ result@1.Result.Err ] result@1.Result.match ] dip swap",
-                            &[], None,
+                            &[],
+                            None,
                         )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         report = self.execute(
                             b"swap [ expr.literal_numeric_denial_finish_guest ] dip swap",
-                            &[], None,
+                            &[],
+                            None,
                         )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
@@ -3190,7 +3561,11 @@ impl Session {
                             .ok_or("guest numeric Work denial lacked a typed diagnostic")?;
                         return Ok(Outcome::Diagnostic(diagnostic));
                     }
-                    report = self.execute(b"swap [ expr.literal_decimal_begin_guest ] dip swap", &[], None)?;
+                    report = self.execute(
+                        b"swap [ expr.literal_decimal_begin_guest ] dip swap",
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
@@ -3212,33 +3587,42 @@ impl Session {
                                     return Ok(Outcome::NativeFailure(report.json));
                                 }
                                 if !checked_ready(&report.json)? {
-                                    return Err("guest exact decimal materialization was not certified".into());
+                                    return Err(
+                                        "guest exact decimal materialization was not certified"
+                                            .into(),
+                                    );
                                 }
                             }
                             break;
                         }
                         if remaining == 0 {
-                            return Err("guest decimal cursor exceeded its source-byte progress bound".into());
+                            return Err(
+                                "guest decimal cursor exceeded its source-byte progress bound"
+                                    .into(),
+                            );
                         }
                         remaining -= 1;
-                        for source in [
-                            SPAN_INNER_ERR,
-                            numeric_stage!("parse_decimal_classify"),
-                        ] {
+                        for source in [SPAN_INNER_ERR, numeric_stage!("parse_decimal_classify")] {
                             report = self.execute(source, &[], None)?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_ready(&report.json)? {
-                                return Err("guest decimal cursor classification was not certified".into());
+                                return Err(
+                                    "guest decimal cursor classification was not certified".into(),
+                                );
                             }
                         }
                         let dot = guest_span_route_left(&report.json)?;
-                        report = self.execute(if dot {
-                            LITERAL_NUMERIC_ACCEPT
-                        } else {
-                            SPAN_INNER_ERR
-                        }, &[], None)?;
+                        report = self.execute(
+                            if dot {
+                                LITERAL_NUMERIC_ACCEPT
+                            } else {
+                                SPAN_INNER_ERR
+                            },
+                            &[],
+                            None,
+                        )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
@@ -3248,7 +3632,8 @@ impl Session {
                         if dot {
                             continue;
                         }
-                        report = self.execute(numeric_stage!("parse_decimal_digit_begin"), &[], None)?;
+                        report =
+                            self.execute(numeric_stage!("parse_decimal_digit_begin"), &[], None)?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
@@ -3261,69 +3646,96 @@ impl Session {
                                 numeric_stage!("parse_decimal_digit_seal"),
                                 b"swap [ [ unpair [ pair result@1.Result.Ok ] \
                                   [ drop drop unit result@1.Result.Err ] result@1.Result.match ] \
-                                  [ result@1.Result.Err ] result@1.Result.match ] dip swap".as_slice(),
+                                  [ result@1.Result.Err ] result@1.Result.match ] dip swap"
+                                    .as_slice(),
                             ] {
                                 report = self.execute(source, &[], None)?;
                                 if report.outcome != "normal" {
                                     return Ok(Outcome::NativeFailure(report.json));
                                 }
                                 if !checked_ready(&report.json)? {
-                                    return Err("guest decimal digit did not seal its finite bits".into());
+                                    return Err(
+                                        "guest decimal digit did not seal its finite bits".into()
+                                    );
                                 }
                             }
                             report = self.execute(
-                                numeric_stage!("parse_decimal_digit_finish_probe"), &[], None,
+                                numeric_stage!("parse_decimal_digit_finish_probe"),
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             let denominator_pass = guest_numeric_bool(&report.json)?;
                             report = self.execute(
-                                numeric_stage!("parse_decimal_digit_finish_route"), &[], None,
+                                numeric_stage!("parse_decimal_digit_finish_route"),
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             for source in if denominator_pass {
-                                [DECIMAL_STATUS_TRUE, numeric_stage!("parse_decimal_digit_finish_true")]
+                                [
+                                    DECIMAL_STATUS_TRUE,
+                                    numeric_stage!("parse_decimal_digit_finish_true"),
+                                ]
                             } else {
-                                [DECIMAL_STATUS_FALSE, numeric_stage!("parse_decimal_digit_finish_false_begin")]
+                                [
+                                    DECIMAL_STATUS_FALSE,
+                                    numeric_stage!("parse_decimal_digit_finish_false_begin"),
+                                ]
                             } {
                                 report = self.execute(source, &[], None)?;
                                 if report.outcome != "normal" {
                                     return Ok(Outcome::NativeFailure(report.json));
                                 }
                                 if !checked_ready(&report.json)? {
-                                    return Err("guest decimal digit completion was not certified".into());
+                                    return Err(
+                                        "guest decimal digit completion was not certified".into()
+                                    );
                                 }
                             }
                             if denominator_pass {
                                 break;
                             }
                             report = self.execute(
-                                numeric_stage!("parse_decimal_digit_finish_false_probe"), &[], None,
+                                numeric_stage!("parse_decimal_digit_finish_false_probe"),
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             let needs_denominator = guest_numeric_bool(&report.json)?;
                             report = self.execute(
-                                numeric_stage!("parse_decimal_digit_finish_false_route"), &[], None,
+                                numeric_stage!("parse_decimal_digit_finish_false_route"),
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             for source in if needs_denominator {
-                                [DECIMAL_STATUS_TRUE, numeric_stage!("parse_decimal_digit_finish_false_den")]
+                                [
+                                    DECIMAL_STATUS_TRUE,
+                                    numeric_stage!("parse_decimal_digit_finish_false_den"),
+                                ]
                             } else {
-                                [DECIMAL_STATUS_FALSE, numeric_stage!("parse_decimal_digit_finish_false_ready")]
+                                [
+                                    DECIMAL_STATUS_FALSE,
+                                    numeric_stage!("parse_decimal_digit_finish_false_ready"),
+                                ]
                             } {
                                 report = self.execute(source, &[], None)?;
                                 if report.outcome != "normal" {
                                     return Ok(Outcome::NativeFailure(report.json));
                                 }
                                 if !checked_ready(&report.json)? {
-                                    return Err("guest fractional denominator was not certified".into());
+                                    return Err(
+                                        "guest fractional denominator was not certified".into()
+                                    );
                                 }
                             }
                             if !needs_denominator {
@@ -3347,11 +3759,15 @@ impl Session {
                         }
                     }
                     let denied = guest_numeric_bool(&report.json)?;
-                    report = self.execute(if denied {
-                        pending_bool_deny!("gcd_bits_deny")
-                    } else {
-                        PENDING_BOOL_ACCEPT
-                    }, &[], None)?;
+                    report = self.execute(
+                        if denied {
+                            pending_bool_deny!("gcd_bits_deny")
+                        } else {
+                            PENDING_BOOL_ACCEPT
+                        },
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
@@ -3384,11 +3800,15 @@ impl Session {
                         }
                     }
                     let denied = guest_numeric_bool(&report.json)?;
-                    report = self.execute(if denied {
-                        pending_bool_deny!("gcd_work_deny")
-                    } else {
-                        PENDING_BOOL_ACCEPT
-                    }, &[], None)?;
+                    report = self.execute(
+                        if denied {
+                            pending_bool_deny!("gcd_work_deny")
+                        } else {
+                            PENDING_BOOL_ACCEPT
+                        },
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
@@ -3408,7 +3828,11 @@ impl Session {
                     if !checked_ready(&report.json)? {
                         return Err("guest GCD Work admission lost its original source".into());
                     }
-                    report = self.execute(b"swap [ expr.raw_gcd_commit_work_guest ] dip swap", &[], None)?;
+                    report = self.execute(
+                        b"swap [ expr.raw_gcd_commit_work_guest ] dip swap",
+                        &[],
+                        None,
+                    )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
@@ -3424,9 +3848,11 @@ impl Session {
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
-                    let json: serde_json::Value = serde_json::from_str(&report.json)
-                        .map_err(|error| error.to_string())?;
-                    let probe = json["stack"].as_array().and_then(|stack| stack.last())
+                    let json: serde_json::Value =
+                        serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+                    let probe = json["stack"]
+                        .as_array()
+                        .and_then(|stack| stack.last())
                         .ok_or("guest GCD one probe returned no checked outcome")?;
                     let (ready, payload) = variant(probe)?;
                     if !ready {
@@ -3437,13 +3863,15 @@ impl Session {
                     if one["type"] != "Bool" {
                         return Err("guest GCD one probe returned a non-Bool progress flag".into());
                     }
-                    let one = one["value"].as_bool()
+                    let one = one["value"]
+                        .as_bool()
                         .ok_or("guest GCD one probe returned an invalid progress flag")?;
                     // The route re-certifies the unit GCD inside the guest; hide
                     // the hot frame too so its quotations type without it.
                     report = self.execute(
                         b"swap [ swap [ expr.raw_gcd_one_route_guest ] dip swap ] dip swap",
-                        &[], None,
+                        &[],
+                        None,
                     )?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
@@ -3452,7 +3880,11 @@ impl Session {
                         return Err("guest GCD one route was not certified".into());
                     }
                     if !one {
-                        report = self.execute(b"swap [ expr.raw_gcd_iterate_guest ] dip swap", &[], None)?;
+                        report = self.execute(
+                            b"swap [ expr.raw_gcd_iterate_guest ] dip swap",
+                            &[],
+                            None,
+                        )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
@@ -3461,11 +3893,16 @@ impl Session {
                         }
                         loop {
                             if remaining == 0 {
-                                return Err("guest GCD remainder exceeded its charged progress bound".into());
+                                return Err(
+                                    "guest GCD remainder exceeded its charged progress bound"
+                                        .into(),
+                                );
                             }
                             remaining -= 1;
                             report = self.execute(
-                                b"swap [ expr.raw_gcd_remainder_start_guest ] dip swap", &[], None,
+                                b"swap [ expr.raw_gcd_remainder_start_guest ] dip swap",
+                                &[],
+                                None,
                             )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
@@ -3486,17 +3923,27 @@ impl Session {
                                     return Ok(Outcome::NativeFailure(report.json));
                                 }
                                 if !checked_ready(&report.json)? {
-                                    return Err("guest GCD remainder batch was not certified".into());
+                                    return Err(
+                                        "guest GCD remainder batch was not certified".into()
+                                    );
                                 }
                             }
-                            report = self.execute(b"swap [ expr.raw_gcd_cursor_check_guest ] dip swap", &[], None)?;
+                            report = self.execute(
+                                b"swap [ expr.raw_gcd_cursor_check_guest ] dip swap",
+                                &[],
+                                None,
+                            )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if guest_span_route_left(&report.json)? {
                                 break;
                             }
-                            report = self.execute(b"swap [ expr.raw_gcd_iterate_guest ] dip swap", &[], None)?;
+                            report = self.execute(
+                                b"swap [ expr.raw_gcd_iterate_guest ] dip swap",
+                                &[],
+                                None,
+                            )?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
@@ -3505,89 +3952,102 @@ impl Session {
                             }
                         }
                     }
-                    report = self.execute(b"swap [ expr.raw_gcd_done_guest ] dip swap", &[], None)?;
+                    report =
+                        self.execute(b"swap [ expr.raw_gcd_done_guest ] dip swap", &[], None)?;
                     if report.outcome != "normal" {
                         return Ok(Outcome::NativeFailure(report.json));
                     }
                     if !checked_ready(&report.json)? {
                         return Err("guest canonical GCD result was not certified".into());
                     }
-                        for source in [
-                            b"swap [ expr.raw_num_measure_guest ] dip swap".as_slice(),
-                            b"swap [ expr.raw_num_bits_limit_guest ] dip swap",
-                            numeric_stage!("finish_num_bits_probe"),
-                        ] {
-                            report = self.execute(source, &[], None)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            if !checked_ready(&report.json)? {
-                                return Err("guest numerator width input was not certified".into());
-                            }
+                    for source in [
+                        b"swap [ expr.raw_num_measure_guest ] dip swap".as_slice(),
+                        b"swap [ expr.raw_num_bits_limit_guest ] dip swap",
+                        numeric_stage!("finish_num_bits_probe"),
+                    ] {
+                        report = self.execute(source, &[], None)?;
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
                         }
-                        let denied = guest_numeric_bool(&report.json)?;
-                        report = self.execute(if denied {
+                        if !checked_ready(&report.json)? {
+                            return Err("guest numerator width input was not certified".into());
+                        }
+                    }
+                    let denied = guest_numeric_bool(&report.json)?;
+                    report = self.execute(
+                        if denied {
                             pending_bool_deny!("finish_num_bits_deny")
                         } else {
                             PENDING_BOOL_ACCEPT
-                        }, &[], None)?;
+                        },
+                        &[],
+                        None,
+                    )?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if denied {
+                        report = literal_direct_denial(self)?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
-                        if denied {
-                            report = literal_direct_denial(self)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            let diagnostic = checked_error(&report.json)?
-                                .ok_or("guest numerator width denial lacked a typed diagnostic")?;
-                            return Ok(Outcome::Diagnostic(diagnostic));
-                        }
-                        report = self.execute(numeric_stage!("finish_num_bits_admit"), &[], None)?;
+                        let diagnostic = checked_error(&report.json)?
+                            .ok_or("guest numerator width denial lacked a typed diagnostic")?;
+                        return Ok(Outcome::Diagnostic(diagnostic));
+                    }
+                    report = self.execute(numeric_stage!("finish_num_bits_admit"), &[], None)?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if !checked_ready(&report.json)? {
+                        return Err(
+                            "guest numerator width admission lost its original source".into()
+                        );
+                    }
+                    for source in [
+                        b"swap [ expr.raw_num_work_limit_guest ] dip swap".as_slice(),
+                        numeric_stage!("finish_num_work_probe"),
+                    ] {
+                        report = self.execute(source, &[], None)?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_ready(&report.json)? {
-                            return Err("guest numerator width admission lost its original source".into());
+                            return Err("guest numerator work input was not certified".into());
                         }
-                        for source in [
-                            b"swap [ expr.raw_num_work_limit_guest ] dip swap".as_slice(),
-                            numeric_stage!("finish_num_work_probe"),
-                        ] {
-                            report = self.execute(source, &[], None)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            if !checked_ready(&report.json)? {
-                                return Err("guest numerator work input was not certified".into());
-                            }
-                        }
-                        let denied = guest_numeric_bool(&report.json)?;
-                        report = self.execute(if denied {
+                    }
+                    let denied = guest_numeric_bool(&report.json)?;
+                    report = self.execute(
+                        if denied {
                             pending_bool_deny!("finish_num_work_deny")
                         } else {
                             PENDING_BOOL_ACCEPT
-                        }, &[], None)?;
+                        },
+                        &[],
+                        None,
+                    )?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if denied {
+                        report = literal_direct_denial(self)?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
-                        if denied {
-                            report = literal_direct_denial(self)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            let diagnostic = checked_error(&report.json)?
-                                .ok_or("guest numerator work denial lacked a typed diagnostic")?;
-                            return Ok(Outcome::Diagnostic(diagnostic));
-                        }
-                        report = self.execute(numeric_stage!("finish_num_work_admit"), &[], None)?;
-                        if report.outcome != "normal" {
-                            return Ok(Outcome::NativeFailure(report.json));
-                        }
-                        if !checked_ready(&report.json)? {
-                            return Err("guest numerator Work admission lost its original source".into());
-                        }
-                        for source in [
+                        let diagnostic = checked_error(&report.json)?
+                            .ok_or("guest numerator work denial lacked a typed diagnostic")?;
+                        return Ok(Outcome::Diagnostic(diagnostic));
+                    }
+                    report = self.execute(numeric_stage!("finish_num_work_admit"), &[], None)?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if !checked_ready(&report.json)? {
+                        return Err(
+                            "guest numerator Work admission lost its original source".into()
+                        );
+                    }
+                    for source in [
                             b"swap [ expr.raw_num_commit_work_guest ] dip swap".as_slice(),
                             b"swap [ swap [ [ unpair num.finish_num_one_probe pair result@1.Result.Ok ] \
                               [ result@1.Result.Err ] result@1.Result.match ] dip swap ] dip swap",
@@ -3600,267 +4060,324 @@ impl Session {
                                 return Err("guest numerator quotient route was not certified".into());
                             }
                         }
-                        let json: serde_json::Value = serde_json::from_str(&report.json)
-                            .map_err(|error| error.to_string())?;
-                        let probe = json["stack"].as_array().and_then(|stack| stack.last())
-                            .ok_or("guest numerator one probe returned no checked outcome")?;
-                        let (ready, payload) = variant(probe)?;
-                        if !ready {
-                            return Err("guest numerator one probe was not certified".into());
+                    let json: serde_json::Value =
+                        serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+                    let probe = json["stack"]
+                        .as_array()
+                        .and_then(|stack| stack.last())
+                        .ok_or("guest numerator one probe returned no checked outcome")?;
+                    let (ready, payload) = variant(probe)?;
+                    if !ready {
+                        return Err("guest numerator one probe was not certified".into());
+                    }
+                    let (_, progress) = pair(payload)?;
+                    let (_, num_one) = pair(progress)?;
+                    if num_one["type"] != "Bool" {
+                        return Err(
+                            "guest numerator one probe returned a non-Bool progress flag".into(),
+                        );
+                    }
+                    let num_one = num_one["value"]
+                        .as_bool()
+                        .ok_or("guest numerator one probe returned an invalid progress flag")?;
+                    // A second operand's literal runs as [ Ctx FH cursor ];
+                    // hide both cells so the route types over its cursor only.
+                    report = self.execute(
+                        b"swap [ swap [ expr.raw_num_one_route_guest ] dip swap ] dip swap",
+                        &[],
+                        None,
+                    )?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if !checked_ready(&report.json)? {
+                        return Err("guest numerator quotient route was not certified".into());
+                    }
+                    if num_one {
+                        report =
+                            self.execute(b"swap [ expr.raw_num_ready_guest ] dip swap", &[], None)?;
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
                         }
-                        let (_, progress) = pair(payload)?;
-                        let (_, num_one) = pair(progress)?;
-                        if num_one["type"] != "Bool" {
-                            return Err("guest numerator one probe returned a non-Bool progress flag".into());
+                        if !checked_ready(&report.json)? {
+                            return Err(
+                                "guest unit-GCD numerator quotient was not certified".into()
+                            );
                         }
-                        let num_one = num_one["value"].as_bool()
-                            .ok_or("guest numerator one probe returned an invalid progress flag")?;
-                        // A second operand's literal runs as [ Ctx FH cursor ];
-                        // hide both cells so the route types over its cursor only.
+                    } else {
                         report = self.execute(
-                            b"swap [ swap [ expr.raw_num_one_route_guest ] dip swap ] dip swap",
-                            &[], None,
+                            b"swap [ expr.raw_num_divide_guest ] dip swap",
+                            &[],
+                            None,
                         )?;
                         if report.outcome != "normal" {
                             return Ok(Outcome::NativeFailure(report.json));
                         }
                         if !checked_ready(&report.json)? {
-                            return Err("guest numerator quotient route was not certified".into());
+                            return Err("guest numerator divide cursor was not certified".into());
                         }
-                        if num_one {
-                            report = self.execute(b"swap [ expr.raw_num_ready_guest ] dip swap", &[], None)?;
+                        if remaining == 0 {
+                            return Err(
+                                "guest numerator divide exceeded its charged progress bound".into(),
+                            );
+                        }
+                        remaining -= 1;
+                        for source in [
+                            b"[ pair ] dip swap [ [ unpair num.finish_num_bit_batch_begin \
+                                  pair result@1.Result.Ok ] [ result@1.Result.Err ] \
+                                  result@1.Result.match ] dip swap [ unpair ] dip"
+                                .as_slice(),
+                            b"[ pair ] dip swap [ [ unpair num.finish_num_bit_batch_step \
+                                  pair result@1.Result.Ok ] [ result@1.Result.Err ] \
+                                  result@1.Result.match ] dip swap [ unpair ] dip",
+                            b"[ pair ] dip swap [ [ unpair num.finish_num_bit_batch_done_direct \
+                                  pair result@1.Result.Ok ] [ result@1.Result.Err ] \
+                                  result@1.Result.match ] dip swap [ unpair ] dip",
+                            b"[ pair ] dip swap [ [ unpair num.finish_num_divide_bits \
+                                  pair result@1.Result.Ok ] [ result@1.Result.Err ] \
+                                  result@1.Result.match ] dip swap [ unpair ] dip",
+                            b"[ pair ] dip swap [ [ unpair num.finish_num_divide_materialize \
+                                  pair result@1.Result.Ok ] [ result@1.Result.Err ] \
+                                  result@1.Result.match ] dip swap [ unpair ] dip",
+                            b"swap [ expr.raw_num_divide_finish_guest ] dip swap",
+                        ] {
+                            report = self.execute(source, &[], None)?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_ready(&report.json)? {
-                                return Err("guest unit-GCD numerator quotient was not certified".into());
+                                return Err(
+                                    "guest numerator quotient completion was not certified".into(),
+                                );
                             }
+                        }
+                    }
+                    for source in [
+                        b"swap [ expr.raw_den_measure_guest ] dip swap".as_slice(),
+                        b"swap [ expr.raw_den_bits_limit_guest ] dip swap",
+                        numeric_stage!("finish_den_bits_probe"),
+                    ] {
+                        report = self.execute(source, &[], None)?;
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
+                        }
+                        if !checked_ready(&report.json)? {
+                            return Err("guest denominator width input was not certified".into());
+                        }
+                    }
+                    let denied = guest_numeric_bool(&report.json)?;
+                    report = self.execute(
+                        if denied {
+                            pending_bool_deny!("finish_den_bits_deny")
                         } else {
-                            report = self.execute(b"swap [ expr.raw_num_divide_guest ] dip swap", &[], None)?;
+                            PENDING_BOOL_ACCEPT
+                        },
+                        &[],
+                        None,
+                    )?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if denied {
+                        report = literal_direct_denial(self)?;
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
+                        }
+                        let diagnostic = checked_error(&report.json)?
+                            .ok_or("guest denominator width denial lacked a typed diagnostic")?;
+                        return Ok(Outcome::Diagnostic(diagnostic));
+                    }
+                    report = self.execute(numeric_stage!("finish_den_bits_admit"), &[], None)?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if !checked_ready(&report.json)? {
+                        return Err(
+                            "guest denominator width admission lost its original source".into()
+                        );
+                    }
+                    for source in [
+                        b"swap [ expr.raw_den_work_limit_guest ] dip swap".as_slice(),
+                        numeric_stage!("finish_den_work_probe"),
+                    ] {
+                        report = self.execute(source, &[], None)?;
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
+                        }
+                        if !checked_ready(&report.json)? {
+                            return Err("guest denominator work input was not certified".into());
+                        }
+                    }
+                    let denied = guest_numeric_bool(&report.json)?;
+                    report = self.execute(
+                        if denied {
+                            pending_bool_deny!("finish_den_work_deny")
+                        } else {
+                            PENDING_BOOL_ACCEPT
+                        },
+                        &[],
+                        None,
+                    )?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if denied {
+                        report = literal_direct_denial(self)?;
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
+                        }
+                        let diagnostic = checked_error(&report.json)?
+                            .ok_or("guest denominator work denial lacked a typed diagnostic")?;
+                        return Ok(Outcome::Diagnostic(diagnostic));
+                    }
+                    report = self.execute(numeric_stage!("finish_den_work_admit"), &[], None)?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if !checked_ready(&report.json)? {
+                        return Err(
+                            "guest denominator Work admission lost its original source".into()
+                        );
+                    }
+                    for source in [
+                        b"swap [ expr.raw_den_commit_work_guest ] dip swap".as_slice(),
+                        b"swap [ expr.raw_den_one_probe_guest ] dip swap",
+                    ] {
+                        report = self.execute(source, &[], None)?;
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
+                        }
+                        if !checked_ready(&report.json)? {
+                            return Err("guest denominator quotient route was not certified".into());
+                        }
+                    }
+                    let json: serde_json::Value =
+                        serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+                    let probe = json["stack"]
+                        .as_array()
+                        .and_then(|stack| stack.last())
+                        .ok_or("guest denominator one probe returned no checked outcome")?;
+                    let (ready, payload) = variant(probe)?;
+                    if !ready {
+                        return Err("guest denominator one probe was not certified".into());
+                    }
+                    let (_, progress) = pair(payload)?;
+                    let (_, den_one) = pair(progress)?;
+                    if den_one["type"] != "Bool" {
+                        return Err(
+                            "guest denominator one probe returned a non-Bool progress flag".into(),
+                        );
+                    }
+                    let den_one = den_one["value"]
+                        .as_bool()
+                        .ok_or("guest denominator one probe returned an invalid progress flag")?;
+                    report =
+                        self.execute(b"swap [ expr.raw_den_one_route_guest ] dip swap", &[], None)?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if !checked_ready(&report.json)? {
+                        return Err("guest denominator quotient route was not certified".into());
+                    }
+                    if den_one {
+                        report =
+                            self.execute(b"swap [ expr.raw_den_ready_guest ] dip swap", &[], None)?;
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
+                        }
+                        if !checked_ready(&report.json)? {
+                            return Err(
+                                "guest unit-GCD denominator quotient was not certified".into()
+                            );
+                        }
+                    } else {
+                        report = self.execute(
+                            b"swap [ expr.raw_den_divide_guest ] dip swap",
+                            &[],
+                            None,
+                        )?;
+                        if report.outcome != "normal" {
+                            return Ok(Outcome::NativeFailure(report.json));
+                        }
+                        if !checked_ready(&report.json)? {
+                            return Err("guest denominator divide cursor was not certified".into());
+                        }
+                        if remaining == 0 {
+                            return Err(
+                                "guest denominator divide exceeded its charged progress bound"
+                                    .into(),
+                            );
+                        }
+                        remaining -= 1;
+                        for source in [
+                            b"[ pair ] dip swap [ [ unpair num.finish_den_bit_batch_begin \
+                                      pair result@1.Result.Ok ] [ result@1.Result.Err ] \
+                                      result@1.Result.match ] dip swap [ unpair ] dip"
+                                .as_slice(),
+                            b"[ pair ] dip swap [ [ unpair num.finish_den_bit_batch_step \
+                                      pair result@1.Result.Ok ] [ result@1.Result.Err ] \
+                                      result@1.Result.match ] dip swap [ unpair ] dip",
+                            b"[ pair ] dip swap [ [ unpair num.finish_den_bit_batch_done_direct \
+                                      pair result@1.Result.Ok ] [ result@1.Result.Err ] \
+                                      result@1.Result.match ] dip swap [ unpair ] dip",
+                            b"[ pair ] dip swap [ [ unpair num.finish_den_divide_bits \
+                                      pair result@1.Result.Ok ] [ result@1.Result.Err ] \
+                                      result@1.Result.match ] dip swap [ unpair ] dip",
+                            b"[ pair ] dip swap [ [ unpair num.finish_den_divide_materialize \
+                                      pair result@1.Result.Ok ] [ result@1.Result.Err ] \
+                                      result@1.Result.match ] dip swap [ unpair ] dip",
+                            b"swap [ expr.raw_den_divide_finish_guest ] dip swap",
+                        ] {
+                            report = self.execute(source, &[], None)?;
                             if report.outcome != "normal" {
                                 return Ok(Outcome::NativeFailure(report.json));
                             }
                             if !checked_ready(&report.json)? {
-                                return Err("guest numerator divide cursor was not certified".into());
-                            }
-                            if remaining == 0 {
-                                return Err("guest numerator divide exceeded its charged progress bound".into());
-                            }
-                            remaining -= 1;
-                            for source in [
-                                b"[ pair ] dip swap [ [ unpair num.finish_num_bit_batch_begin \
-                                  pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                                  result@1.Result.match ] dip swap [ unpair ] dip".as_slice(),
-                                b"[ pair ] dip swap [ [ unpair num.finish_num_bit_batch_step \
-                                  pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                                  result@1.Result.match ] dip swap [ unpair ] dip",
-                                b"[ pair ] dip swap [ [ unpair num.finish_num_bit_batch_done_direct \
-                                  pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                                  result@1.Result.match ] dip swap [ unpair ] dip",
-                                b"[ pair ] dip swap [ [ unpair num.finish_num_divide_bits \
-                                  pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                                  result@1.Result.match ] dip swap [ unpair ] dip",
-                                b"[ pair ] dip swap [ [ unpair num.finish_num_divide_materialize \
-                                  pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                                  result@1.Result.match ] dip swap [ unpair ] dip",
-                                b"swap [ expr.raw_num_divide_finish_guest ] dip swap",
-                            ] {
-                                report = self.execute(source, &[], None)?;
-                                if report.outcome != "normal" {
-                                    return Ok(Outcome::NativeFailure(report.json));
-                                }
-                                if !checked_ready(&report.json)? {
-                                    return Err("guest numerator quotient completion was not certified".into());
-                                }
+                                return Err(
+                                    "guest denominator quotient completion was not certified"
+                                        .into(),
+                                );
                             }
                         }
-                            for source in [
-                                b"swap [ expr.raw_den_measure_guest ] dip swap".as_slice(),
-                                b"swap [ expr.raw_den_bits_limit_guest ] dip swap",
-                                numeric_stage!("finish_den_bits_probe"),
-                            ] {
-                                report = self.execute(source, &[], None)?;
-                                if report.outcome != "normal" {
-                                    return Ok(Outcome::NativeFailure(report.json));
-                                }
-                                if !checked_ready(&report.json)? {
-                                    return Err("guest denominator width input was not certified".into());
-                                }
-                            }
-                            let denied = guest_numeric_bool(&report.json)?;
-                            report = self.execute(if denied {
-                                pending_bool_deny!("finish_den_bits_deny")
-                            } else {
-                                PENDING_BOOL_ACCEPT
-                            }, &[], None)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            if denied {
-                                report = literal_direct_denial(self)?;
-                                if report.outcome != "normal" {
-                                    return Ok(Outcome::NativeFailure(report.json));
-                                }
-                                let diagnostic = checked_error(&report.json)?
-                                    .ok_or("guest denominator width denial lacked a typed diagnostic")?;
-                                return Ok(Outcome::Diagnostic(diagnostic));
-                            }
-                            report = self.execute(numeric_stage!("finish_den_bits_admit"), &[], None)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            if !checked_ready(&report.json)? {
-                                return Err("guest denominator width admission lost its original source".into());
-                            }
-                            for source in [
-                                b"swap [ expr.raw_den_work_limit_guest ] dip swap".as_slice(),
-                                numeric_stage!("finish_den_work_probe"),
-                            ] {
-                                report = self.execute(source, &[], None)?;
-                                if report.outcome != "normal" {
-                                    return Ok(Outcome::NativeFailure(report.json));
-                                }
-                                if !checked_ready(&report.json)? {
-                                    return Err("guest denominator work input was not certified".into());
-                                }
-                            }
-                            let denied = guest_numeric_bool(&report.json)?;
-                            report = self.execute(if denied {
-                                pending_bool_deny!("finish_den_work_deny")
-                            } else {
-                                PENDING_BOOL_ACCEPT
-                            }, &[], None)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            if denied {
-                                report = literal_direct_denial(self)?;
-                                if report.outcome != "normal" {
-                                    return Ok(Outcome::NativeFailure(report.json));
-                                }
-                                let diagnostic = checked_error(&report.json)?
-                                    .ok_or("guest denominator work denial lacked a typed diagnostic")?;
-                                return Ok(Outcome::Diagnostic(diagnostic));
-                            }
-                            report = self.execute(numeric_stage!("finish_den_work_admit"), &[], None)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            if !checked_ready(&report.json)? {
-                                return Err("guest denominator Work admission lost its original source".into());
-                            }
-                            for source in [
-                                b"swap [ expr.raw_den_commit_work_guest ] dip swap".as_slice(),
-                                b"swap [ expr.raw_den_one_probe_guest ] dip swap",
-                            ] {
-                                report = self.execute(source, &[], None)?;
-                                if report.outcome != "normal" {
-                                    return Ok(Outcome::NativeFailure(report.json));
-                                }
-                                if !checked_ready(&report.json)? {
-                                    return Err("guest denominator quotient route was not certified".into());
-                                }
-                            }
-                            let json: serde_json::Value = serde_json::from_str(&report.json)
-                                .map_err(|error| error.to_string())?;
-                            let probe = json["stack"].as_array().and_then(|stack| stack.last())
-                                .ok_or("guest denominator one probe returned no checked outcome")?;
-                            let (ready, payload) = variant(probe)?;
-                            if !ready {
-                                return Err("guest denominator one probe was not certified".into());
-                            }
-                            let (_, progress) = pair(payload)?;
-                            let (_, den_one) = pair(progress)?;
-                            if den_one["type"] != "Bool" {
-                                return Err("guest denominator one probe returned a non-Bool progress flag".into());
-                            }
-                            let den_one = den_one["value"].as_bool()
-                                .ok_or("guest denominator one probe returned an invalid progress flag")?;
-                            report = self.execute(b"swap [ expr.raw_den_one_route_guest ] dip swap", &[], None)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            if !checked_ready(&report.json)? {
-                                return Err("guest denominator quotient route was not certified".into());
-                            }
-                            if den_one {
-                                report = self.execute(b"swap [ expr.raw_den_ready_guest ] dip swap", &[], None)?;
-                                if report.outcome != "normal" {
-                                    return Ok(Outcome::NativeFailure(report.json));
-                                }
-                                if !checked_ready(&report.json)? {
-                                    return Err("guest unit-GCD denominator quotient was not certified".into());
-                                }
-                            } else {
-                                report = self.execute(b"swap [ expr.raw_den_divide_guest ] dip swap", &[], None)?;
-                                if report.outcome != "normal" {
-                                    return Ok(Outcome::NativeFailure(report.json));
-                                }
-                                if !checked_ready(&report.json)? {
-                                    return Err("guest denominator divide cursor was not certified".into());
-                                }
-                                if remaining == 0 {
-                                    return Err("guest denominator divide exceeded its charged progress bound".into());
-                                }
-                                remaining -= 1;
-                                for source in [
-                                    b"[ pair ] dip swap [ [ unpair num.finish_den_bit_batch_begin \
-                                      pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                                      result@1.Result.match ] dip swap [ unpair ] dip".as_slice(),
-                                    b"[ pair ] dip swap [ [ unpair num.finish_den_bit_batch_step \
-                                      pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                                      result@1.Result.match ] dip swap [ unpair ] dip",
-                                    b"[ pair ] dip swap [ [ unpair num.finish_den_bit_batch_done_direct \
-                                      pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                                      result@1.Result.match ] dip swap [ unpair ] dip",
-                                    b"[ pair ] dip swap [ [ unpair num.finish_den_divide_bits \
-                                      pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                                      result@1.Result.match ] dip swap [ unpair ] dip",
-                                    b"[ pair ] dip swap [ [ unpair num.finish_den_divide_materialize \
-                                      pair result@1.Result.Ok ] [ result@1.Result.Err ] \
-                                      result@1.Result.match ] dip swap [ unpair ] dip",
-                                    b"swap [ expr.raw_den_divide_finish_guest ] dip swap",
-                                ] {
-                                    report = self.execute(source, &[], None)?;
-                                    if report.outcome != "normal" {
-                                        return Ok(Outcome::NativeFailure(report.json));
-                                    }
-                                    if !checked_ready(&report.json)? {
-                                        return Err("guest denominator quotient completion was not certified".into());
-                                    }
-                                }
-                            }
-                            report = self.execute(b"swap [ expr.raw_rat_finish_guest ] dip swap", &[], None)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            if !checked_ready(&report.json)? {
-                                return Err("guest canonical rational was not certified".into());
-                            }
-                            report = self.execute(if is_let {
+                    }
+                    report =
+                        self.execute(b"swap [ expr.raw_rat_finish_guest ] dip swap", &[], None)?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    if !checked_ready(&report.json)? {
+                        return Err("guest canonical rational was not certified".into());
+                    }
+                    report = self.execute(if is_let {
                                 b"[ unpair calc_bits@1.rot calc_bits@1.rot ] dip expr.raw_rat_push_guest".as_slice()
                             } else {
                                 b"expr.raw_rat_push_guest"
                             }, &[], None)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
-                            let json: serde_json::Value = serde_json::from_str(&report.json)
-                                .map_err(|error| error.to_string())?;
-                            let pushed = json["stack"].as_array().and_then(|stack| stack.last())
-                                .ok_or("guest final rational push returned no checked outcome")?;
-                            let (_, ready) = pair(pushed)?;
-                            if ready["type"] != "Bool" || ready["value"].as_bool() != Some(true) {
-                                return Err("guest final rational push was not certified".into());
-                            }
-                            report = self.execute(if is_let {
-                                b"unpair drop [ swap pair ] dip".as_slice()
-                            } else {
-                                b"unpair drop"
-                            }, &[], None)?;
-                            if report.outcome != "normal" {
-                                return Ok(Outcome::NativeFailure(report.json));
-                            }
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
+                    let json: serde_json::Value =
+                        serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+                    let pushed = json["stack"]
+                        .as_array()
+                        .and_then(|stack| stack.last())
+                        .ok_or("guest final rational push returned no checked outcome")?;
+                    let (_, ready) = pair(pushed)?;
+                    if ready["type"] != "Bool" || ready["value"].as_bool() != Some(true) {
+                        return Err("guest final rational push was not certified".into());
+                    }
+                    report = self.execute(
+                        if is_let {
+                            b"unpair drop [ swap pair ] dip".as_slice()
+                        } else {
+                            b"unpair drop"
+                        },
+                        &[],
+                        None,
+                    )?;
+                    if report.outcome != "normal" {
+                        return Ok(Outcome::NativeFailure(report.json));
+                    }
                 }
             }
             if report.outcome != "normal" {
@@ -3870,9 +4387,11 @@ impl Session {
         if report.outcome != "normal" {
             return Ok(Outcome::NativeFailure(report.json));
         }
-        let json: serde_json::Value = serde_json::from_str(&report.json)
-            .map_err(|error| error.to_string())?;
-        let finished = json["stack"].as_array().and_then(|stack| stack.last())
+        let json: serde_json::Value =
+            serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+        let finished = json["stack"]
+            .as_array()
+            .and_then(|stack| stack.last())
             .ok_or("guest finish returned no checked final value")?;
         let (valid, final_run) = variant(finished)?;
         if !valid {
@@ -3884,7 +4403,8 @@ impl Session {
             }
             report = self.execute(
                 b"[ drop unit result@1.Result.Err ] [ result@1.Result.Ok ] result@1.Result.match",
-                &[], None,
+                &[],
+                None,
             )?;
             if report.outcome != "normal" {
                 return Ok(Outcome::NativeFailure(report.json));
@@ -3929,7 +4449,8 @@ impl Session {
                 b"swap [ swap ] dip [ unpair [ swap ] dip \
                   [ [ unpair calc_env@1.bind_variable ] [ drop ] result@1.Result.match ] dip \
                   pair ] dip",
-                &[], None,
+                &[],
+                None,
             )?;
             if report.outcome != "normal" {
                 return Ok(Outcome::NativeFailure(report.json));
@@ -3963,8 +4484,11 @@ impl Session {
         if let Some(diagnostic) = checked_error(&report.json)? {
             return Ok(Outcome::Diagnostic(diagnostic));
         }
-        for word in [b"expr.format_factor_two".as_slice(),
-                     b"expr.format_five_seed", b"expr.format_five_begin"] {
+        for word in [
+            b"expr.format_factor_two".as_slice(),
+            b"expr.format_five_seed",
+            b"expr.format_five_begin",
+        ] {
             report = self.execute(word, &[], None)?;
             if report.outcome != "normal" {
                 return Ok(Outcome::NativeFailure(report.json));
@@ -3976,7 +4500,9 @@ impl Session {
         let factor_more = |report: &str| -> Result<bool, String> {
             let json: serde_json::Value =
                 serde_json::from_str(report).map_err(|error| error.to_string())?;
-            let current = json["stack"].as_array().and_then(|stack| stack.last())
+            let current = json["stack"]
+                .as_array()
+                .and_then(|stack| stack.last())
                 .ok_or("guest factor cursor returned no checked progress")?;
             let (ready, span) = variant(current)?;
             if !ready {
@@ -3988,7 +4514,8 @@ impl Session {
             if progress["type"] != "Bool" {
                 return Err("guest factor cursor returned a non-Bool progress flag".into());
             }
-            progress["value"].as_bool()
+            progress["value"]
+                .as_bool()
                 .ok_or_else(|| "guest factor cursor returned invalid progress".into())
         };
         let mut factor_steps = budget[5] as u64;
@@ -4060,7 +4587,10 @@ impl Session {
             loop {
                 while checked_guest_bool(&report.json)? {
                     if count_steps == 0 {
-                        return Err("guest decimal-count cursor exceeded its declared progress bound".into());
+                        return Err(
+                            "guest decimal-count cursor exceeded its declared progress bound"
+                                .into(),
+                        );
                     }
                     count_steps -= 1;
                     report = self.execute(b"expr.format_count_tick", &[], None)?;
@@ -4095,7 +4625,9 @@ impl Session {
                     break;
                 }
                 if count_steps == 0 {
-                    return Err("guest decimal-count cursor exceeded its declared progress bound".into());
+                    return Err(
+                        "guest decimal-count cursor exceeded its declared progress bound".into(),
+                    );
                 }
                 count_steps -= 1;
             }
@@ -4187,7 +4719,9 @@ impl Session {
                     break;
                 }
                 if ascii_steps == 0 {
-                    return Err("guest ASCII fraction cursor exceeded its declared progress bound".into());
+                    return Err(
+                        "guest ASCII fraction cursor exceeded its declared progress bound".into(),
+                    );
                 }
                 ascii_steps -= 1;
                 guest!(b"calc_display@1.ascii_fraction_multiply_with_state");
@@ -4208,17 +4742,24 @@ impl Session {
                 let mut quotient_steps = (budget[2] as u64).saturating_add(1).saturating_mul(20);
                 while active {
                     if quotient_steps == 0 {
-                        return Err("guest fractional quotient exceeded its certified bit-scan bound".into());
+                        return Err(
+                            "guest fractional quotient exceeded its certified bit-scan bound"
+                                .into(),
+                        );
                     }
                     quotient_steps -= 1;
                     guest!(b"[ calc_display@1.ascii_fraction_scan_bit_stage ] dip");
-                    report = guest!(b"[ calc_display@1.ascii_fraction_scan_terminal_stage unpair ] dip swap");
+                    report = guest!(
+                        b"[ calc_display@1.ascii_fraction_scan_terminal_stage unpair ] dip swap"
+                    );
                     let scanning = checked_guest_bool(&report.json)?;
                     self.defer_consume(b"drop");
                     if !scanning {
                         break;
                     }
-                    report = guest!(b"[ calc_display@1.ascii_fraction_scan_subtract_stage unpair ] dip swap");
+                    report = guest!(
+                        b"[ calc_display@1.ascii_fraction_scan_subtract_stage unpair ] dip swap"
+                    );
                     active = checked_guest_bool(&report.json)?;
                     self.defer_consume(b"drop");
                     if !active {
@@ -4288,8 +4829,7 @@ impl Session {
     /// sealed BeginSession over the original State, header metadata and parsed
     /// Plan/Budget; the host only schedules guest checks from guest-reported
     /// token kinds and cursors, and installs exactly the guest's sealed result.
-    fn install_function(&mut self, source_len: usize, work: i64)
-        -> Result<Outcome, String> {
+    fn install_function(&mut self, source_len: usize, work: i64) -> Result<Outcome, String> {
         match self.admit_function_body(source_len, work) {
             Ok(()) => Ok(Outcome::Defined),
             Err(Halt::Outcome(outcome)) => Ok(outcome),
@@ -4310,13 +4850,18 @@ impl Session {
         self.guest_step(b"calc_defs@1.begin_session_start")?;
         // Every scheduled step is one guest module; a body token costs a few
         // steps per candidate byte, bounded by the public work quota.
-        let mut remaining = u64::try_from(work).unwrap_or(0)
+        let mut remaining = u64::try_from(work)
+            .unwrap_or(0)
             .saturating_add((source_len as u64).saturating_mul(16).saturating_add(64));
         loop {
             let report = self.guest_step(b"calc_defs@1.begin_session_peek")?;
             let present = checked_guest_bool(&report)?;
             let report = self.guest_step(b"drop")?;
-            let token = if present { Some(checked_body_token(&report)?) } else { None };
+            let token = if present {
+                Some(checked_body_token(&report)?)
+            } else {
+                None
+            };
             self.defer_consume(b"drop");
             let Some((kind, width)) = token else { break };
             // Each arm leaves [ BeginSession Bool ], Bool = token checked.
@@ -4333,16 +4878,21 @@ impl Session {
             }
             let report = self.guest_step(b"calc_defs@1.begin_session_advance_checked")?;
             if !checked_guest_bool(&report)? {
-                return Err(Halt::Error("guest function body token did not advance after its check".into()));
+                return Err(Halt::Error(
+                    "guest function body token did not advance after its check".into(),
+                ));
             }
             self.defer_consume(b"drop");
-            remaining = remaining.checked_sub(1)
+            remaining = remaining
+                .checked_sub(1)
                 .ok_or("guest function body exceeded its scheduling bound")?;
         }
         self.guest_step(b"calc_defs@1.begin_session_finish_outcome")?;
         let report = self.guest_step(b"calc_defs@1.finished_session_commit_checked")?;
         if !checked_ready(&report)? {
-            return Err(Halt::Error("guest function admission did not issue its install capability".into()));
+            return Err(Halt::Error(
+                "guest function admission did not issue its install capability".into(),
+            ));
         }
         // Only the Ready arm runs: the guest's installed State replaces the
         // original, and the parser Budget is released.
@@ -4355,17 +4905,20 @@ impl Session {
     /// guest-reported token width only schedules the completion check; the
     /// guest itself certifies every byte and the final size.
     fn check_body_name(&mut self, width: i64, remaining: &mut u64) -> Result<String, Halt> {
-        for word in [b"calc_defs@1.begin_session_name_begin".as_slice(),
-                     b"calc_defs@1.begin_name_extract",
-                     b"calc_defs@1.begin_name_params",
-                     b"calc_defs@1.begin_name_guard"] {
+        for word in [
+            b"calc_defs@1.begin_session_name_begin".as_slice(),
+            b"calc_defs@1.begin_name_extract",
+            b"calc_defs@1.begin_name_params",
+            b"calc_defs@1.begin_name_guard",
+        ] {
             self.guest_step(word)?;
         }
         // A positive cursor is the next byte offset. Completion is tested once
         // the last byte is committed; every other positive cursor compares.
         let mut committed = false;
         let global = loop {
-            *remaining = remaining.checked_sub(1)
+            *remaining = remaining
+                .checked_sub(1)
                 .ok_or("guest body name search exceeded its scheduling bound")?;
             let cursor = self.body_cursor(b"calc_defs@1.begin_name_cursor")?;
             let step = match cursor {
@@ -4399,7 +4952,8 @@ impl Session {
         self.guest_step(b"calc_defs@1.begin_name_global")?;
         committed = false;
         loop {
-            *remaining = remaining.checked_sub(1)
+            *remaining = remaining
+                .checked_sub(1)
                 .ok_or("guest body global search exceeded its scheduling bound")?;
             let cursor = self.body_cursor(b"calc_defs@1.begin_global_cursor")?;
             let step = match cursor {
@@ -4436,10 +4990,13 @@ impl Session {
     /// [ BeginSession Bool ]. As for names, the guest-reported width only
     /// schedules steps; the guest certifies every byte, size and arity.
     fn check_body_call(&mut self, width: i64, remaining: &mut u64) -> Result<String, Halt> {
-        let steps = u64::try_from(width).ok().and_then(|width| width.checked_mul(2))
+        let steps = u64::try_from(width)
+            .ok()
+            .and_then(|width| width.checked_mul(2))
             .and_then(|steps| steps.checked_add(2))
             .ok_or("guest body call reported an invalid name width")?;
-        *remaining = remaining.checked_sub(steps)
+        *remaining = remaining
+            .checked_sub(steps)
             .ok_or("guest body call self check exceeded its scheduling bound")?;
         // Self check against the defined name: the size, then each byte
         // compared and committed, then completion. Every guest transition
@@ -4462,7 +5019,8 @@ impl Session {
         // protocol; -2 found schedules the arity check, -3 is admitted.
         let mut committed = false;
         loop {
-            *remaining = remaining.checked_sub(1)
+            *remaining = remaining
+                .checked_sub(1)
                 .ok_or("guest body call search exceeded its scheduling bound")?;
             let cursor = self.body_cursor(b"calc_defs@1.begin_call_scan_cursor")?;
             let step = match cursor {
@@ -4540,8 +5098,12 @@ impl Session {
         }
     }
 
-    fn execute(&mut self, source: &[u8], injected: &[Ty], frame: Option<&str>)
-        -> Result<crate::core::output::Report, String> {
+    fn execute(
+        &mut self,
+        source: &[u8],
+        injected: &[Ty],
+        frame: Option<&str>,
+    ) -> Result<crate::core::output::Report, String> {
         let merged;
         let source = match self.deferred {
             Some(consumer) if injected.is_empty() => {
@@ -4557,7 +5119,10 @@ impl Session {
             }
             None => source,
         };
-        self.serial = self.serial.checked_add(1).ok_or("calculator module counter exhausted")?;
+        self.serial = self
+            .serial
+            .checked_add(1)
+            .ok_or("calculator module counter exhausted")?;
         let augmented;
         let stack = if injected.is_empty() {
             self.stack.as_slice()
@@ -4565,23 +5130,42 @@ impl Session {
             augmented = [self.stack.as_slice(), injected].concat();
             augmented.as_slice()
         };
-        let prepared = self.modules.as_ref().ok_or("calculator namespace unavailable")?
+        let prepared = self
+            .modules
+            .as_ref()
+            .ok_or("calculator namespace unavailable")?
             .prepare(source, stack, LIMITS)
-            .map_err(|error| format!("{}: {}", String::from_utf8_lossy(source), source_error(error)))?;
+            .map_err(|error| {
+                format!(
+                    "{}: {}",
+                    String::from_utf8_lossy(source),
+                    source_error(error)
+                )
+            })?;
         if prepared.kind() != ModuleKind::Expression {
             return Err("calculator command did not check as guest expression".into());
         }
         let output = prepared.output().to_vec();
-        let submission = prepared.submission().ok_or("checked expression has no guest program")?;
+        let submission = prepared
+            .submission()
+            .ok_or("checked expression has no guest program")?;
         let compiled = if self.program_free {
             self.compiler.prepare_program_free(submission)
         } else if self.quiescent {
             self.compiler.prepare_quiescent(submission)
         } else {
             self.compiler.prepare(submission)
-        }.map_err(|error| format!("{}: {}", String::from_utf8_lossy(source),
-            backend_error(error)))?;
-        let ready = self.worker.prepare(compiled.wat(), source, self.serial)
+        }
+        .map_err(|error| {
+            format!(
+                "{}: {}",
+                String::from_utf8_lossy(source),
+                backend_error(error)
+            )
+        })?;
+        let ready = self
+            .worker
+            .prepare(compiled.wat(), source, self.serial)
             .map_err(|error| error.message)?;
         if ready.outcome != "ready" {
             return Err(format!("calculator Wasm assembly refused: {}", ready.json));
@@ -4589,12 +5173,16 @@ impl Session {
         let report = match frame {
             Some(frame) => self.worker.execute_inputs(frame),
             None => self.worker.execute(),
-        }.map_err(|error| error.message)?;
+        }
+        .map_err(|error| error.message)?;
         if report.outcome == "normal" {
             let (compiled_reachable, programs_reachable) = boundary_reachability(&report.json)?;
             self.compiler.commit(compiled).map_err(backend_error)?;
-            let (next, committed) = self.modules.take()
-                .ok_or("calculator namespace unavailable")?.commit(prepared);
+            let (next, committed) = self
+                .modules
+                .take()
+                .ok_or("calculator namespace unavailable")?
+                .commit(prepared);
             self.modules = Some(next);
             committed.map_err(source_error)?;
             self.stack = output;
@@ -4609,10 +5197,13 @@ impl Session {
 /// runs compiled code, and whether any Program, Syntax or recipe cell is
 /// reachable at all. The second implies the first.
 fn boundary_reachability(report: &str) -> Result<(bool, bool), String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let compiled = json["compiled_programs_reachable"].as_bool()
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let compiled = json["compiled_programs_reachable"]
+        .as_bool()
         .ok_or("calculator report lacks its compiled Program reachability")?;
-    let programs = json["programs_reachable"].as_bool()
+    let programs = json["programs_reachable"]
+        .as_bool()
         .ok_or("calculator report lacks its Program reachability")?;
     if compiled && !programs {
         return Err("calculator report has inconsistent Program reachability".into());
@@ -4627,13 +5218,21 @@ fn backend_error(error: noble_wasm::Diagnostic) -> String {
 
 fn source_error(error: noble_contracts::source::Error) -> String {
     let span = error.diagnostic().span;
-    format!("{:?} [{},{}): {}", error.stage(), span.start, span.end,
-        error.diagnostic().message)
+    format!(
+        "{:?} [{},{}): {}",
+        error.stage(),
+        span.start,
+        span.end,
+        error.diagnostic().message
+    )
 }
 
 fn decode_result(report: &str) -> Result<Outcome, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("calculator guest returned no result")?;
     let (complete, result) = variant(result)?;
     if !complete {
@@ -4644,16 +5243,23 @@ fn decode_result(report: &str) -> Result<Outcome, String> {
         if payload["type"] != "Text" {
             return Err("calculator guest returned a non-Text exact result".into());
         }
-        Ok(Outcome::Value(payload["value"].as_str()
-            .ok_or("calculator guest returned invalid exact Text")?.to_owned()))
+        Ok(Outcome::Value(
+            payload["value"]
+                .as_str()
+                .ok_or("calculator guest returned invalid exact Text")?
+                .to_owned(),
+        ))
     } else {
         Ok(Outcome::Diagnostic(diagnostic(payload)?))
     }
 }
 
 fn checked_ascii_error(report: &str) -> Result<Option<String>, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("guest ASCII fraction returned no checked result")?;
     let (complete, result) = variant(result)?;
     if !complete {
@@ -4674,11 +5280,15 @@ enum Halt {
 }
 
 impl From<String> for Halt {
-    fn from(message: String) -> Self { Halt::Error(message) }
+    fn from(message: String) -> Self {
+        Halt::Error(message)
+    }
 }
 
 impl From<&str> for Halt {
-    fn from(message: &str) -> Self { Halt::Error(message.into()) }
+    fn from(message: &str) -> Self {
+        Halt::Error(message.into())
+    }
 }
 
 /// The guest's Result<Unit, Diagnostic> for a rejected body token. Ok marks an
@@ -4692,8 +5302,11 @@ fn body_diagnostic(report: &str) -> Result<Halt, String> {
 
 /// Kind and byte width of a peeked body token: Result<Pair<kind, span>, Unit>.
 fn checked_body_token(report: &str) -> Result<(i64, i64), String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("guest body peek returned no token")?;
     let (present, token) = variant(result)?;
     if !present {
@@ -4705,8 +5318,11 @@ fn checked_body_token(report: &str) -> Result<(i64, i64), String> {
         if cell["type"] != "I64" {
             return Err("guest body token returned a non-I64 field".into());
         }
-        cell["value"].as_str().ok_or("guest body token returned an invalid field")?
-            .parse::<i64>().map_err(|error| error.to_string())
+        cell["value"]
+            .as_str()
+            .ok_or("guest body token returned an invalid field")?
+            .parse::<i64>()
+            .map_err(|error| error.to_string())
     });
     let (start, end) = (start?, end?);
     if end < start {
@@ -4716,8 +5332,11 @@ fn checked_body_token(report: &str) -> Result<(i64, i64), String> {
 }
 
 fn checked_error(report: &str) -> Result<Option<String>, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("calculator guest returned no checked result")?;
     let (ok, payload) = variant(result)?;
     if ok {
@@ -4728,24 +5347,32 @@ fn checked_error(report: &str) -> Result<Option<String>, String> {
 }
 
 fn checked_sum_error(report: &str) -> Result<Option<String>, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("guest parser returned no terminal error")?;
     if result["type"] != "Sum" {
         return Err("guest parser returned a non-sum terminal error".into());
     }
     match result["variant"].as_str() {
         Some("left") => Ok(None),
-        Some("right") => Ok(Some(diagnostic(
-            result.get("value").ok_or("guest parser terminal error omitted its diagnostic")?
-        )?)),
+        Some("right") => {
+            Ok(Some(diagnostic(result.get("value").ok_or(
+                "guest parser terminal error omitted its diagnostic",
+            )?)?))
+        }
         _ => Err("guest parser returned an invalid terminal error arm".into()),
     }
 }
 
 fn checked_lexical_error(report: &str) -> Result<String, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("guest lexical error returned no source-bound result")?;
     let (ready, payload) = variant(result)?;
     if !ready {
@@ -4755,8 +5382,11 @@ fn checked_lexical_error(report: &str) -> Result<String, String> {
 }
 
 fn checked_hot_terminal(report: &str) -> Result<String, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("guest hot frame returned no terminal diagnostic result")?;
     let (valid, payload) = variant(result)?;
     if !valid {
@@ -4766,13 +5396,16 @@ fn checked_hot_terminal(report: &str) -> Result<String, String> {
 }
 
 fn checked_frame_error(report: &str) -> Result<Option<String>, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let stack = json["stack"].as_array()
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let stack = json["stack"]
+        .as_array()
         .ok_or("calculator guest returned no typed stack")?;
     // The authentic FrameRun is the final typed stack cell. A checked let
     // Name may itself be a Result variant below it and must never be decoded
     // as the evaluator frame.
-    let frame = stack.last()
+    let frame = stack
+        .last()
         .ok_or("calculator guest returned no evaluator frame")?;
     let (active, payload) = variant(frame)?;
     if active {
@@ -4783,8 +5416,11 @@ fn checked_frame_error(report: &str) -> Result<Option<String>, String> {
 }
 
 fn checked_ready(report: &str) -> Result<bool, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("calculator guest returned no checked state")?;
     variant(result).map(|(ready, _)| ready)
 }
@@ -4792,8 +5428,11 @@ fn checked_ready(report: &str) -> Result<bool, String> {
 /// Readiness of an evaluator carrier: a guest Result or the builtin Sum
 /// that the schoolbook and exponent stages use (left = ready).
 fn checked_carrier_ready(report: &str) -> Result<bool, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("calculator guest returned no checked carrier")?;
     carrier_variant(result).map(|(ready, _)| ready)
 }
@@ -4801,8 +5440,10 @@ fn checked_carrier_ready(report: &str) -> Result<bool, String> {
 /// A Sum cursor probe leaves `[ carrier Bool Ctx ]`. The flag is only
 /// meaningful when the carrier itself is ready.
 fn checked_probe_flag(report: &str) -> Result<bool, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let stack = json["stack"].as_array()
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let stack = json["stack"]
+        .as_array()
         .ok_or("guest cursor probe returned no typed stack")?;
     let [.., carrier, flag, _] = stack.as_slice() else {
         return Err("guest cursor probe returned a short stack".into());
@@ -4813,13 +5454,18 @@ fn checked_probe_flag(report: &str) -> Result<bool, String> {
     if flag["type"] != "Bool" {
         return Err("guest cursor probe returned a non-Bool flag".into());
     }
-    flag["value"].as_bool().ok_or_else(|| "guest cursor probe returned an invalid flag".into())
+    flag["value"]
+        .as_bool()
+        .ok_or_else(|| "guest cursor probe returned an invalid flag".into())
 }
 
 /// Register-on-top probe: the guest scalar sits directly under the register.
 fn register_probe(report: &str) -> Result<serde_json::Value, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let stack = json["stack"].as_array().ok_or("guest probe returned no typed stack")?;
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let stack = json["stack"]
+        .as_array()
+        .ok_or("guest probe returned no typed stack")?;
     let [.., probe, _] = stack.as_slice() else {
         return Err("guest probe returned a short stack".into());
     };
@@ -4831,7 +5477,9 @@ fn checked_register_probe_bool(report: &str) -> Result<bool, String> {
     if probe["type"] != "Bool" {
         return Err("guest probe returned a non-Bool flag".into());
     }
-    probe["value"].as_bool().ok_or_else(|| "guest probe returned an invalid flag".into())
+    probe["value"]
+        .as_bool()
+        .ok_or_else(|| "guest probe returned an invalid flag".into())
 }
 
 fn checked_register_probe_opcode(report: &str) -> Result<i64, String> {
@@ -4839,15 +5487,20 @@ fn checked_register_probe_opcode(report: &str) -> Result<i64, String> {
     if probe["type"] != "I64" {
         return Err("guest probe returned a non-I64 selector".into());
     }
-    probe["value"].as_str().ok_or("guest probe returned an invalid selector")?
-        .parse::<i64>().map_err(|error| error.to_string())
+    probe["value"]
+        .as_str()
+        .ok_or("guest probe returned an invalid selector")?
+        .parse::<i64>()
+        .map_err(|error| error.to_string())
 }
 
 fn carrier_variant(value: &serde_json::Value) -> Result<(bool, &serde_json::Value), String> {
     if value["type"] != "Sum" {
         return variant(value);
     }
-    let payload = value.get("value").ok_or("guest carrier omitted its payload")?;
+    let payload = value
+        .get("value")
+        .ok_or("guest carrier omitted its payload")?;
     match value["variant"].as_str() {
         Some("left") => Ok((true, payload)),
         Some("right") => Ok((false, payload)),
@@ -4856,18 +5509,26 @@ fn carrier_variant(value: &serde_json::Value) -> Result<(bool, &serde_json::Valu
 }
 
 fn checked_guest_bool(report: &str) -> Result<bool, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("calculator guest returned no checked progress flag")?;
     if result["type"] != "Bool" {
         return Err("calculator guest returned a non-Bool progress flag".into());
     }
-    result["value"].as_bool().ok_or("calculator guest returned an invalid progress flag".into())
+    result["value"]
+        .as_bool()
+        .ok_or("calculator guest returned an invalid progress flag".into())
 }
 
 fn checked_parser_route_bool(report: &str) -> Result<bool, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("guest parser returned no checked route")?;
     let (ready, payload) = variant(result)?;
     if !ready {
@@ -4877,24 +5538,34 @@ fn checked_parser_route_bool(report: &str) -> Result<bool, String> {
     if selector["type"] != "Bool" {
         return Err("guest parser route returned a non-Bool selector".into());
     }
-    selector["value"].as_bool()
+    selector["value"]
+        .as_bool()
         .ok_or_else(|| "guest parser route returned an invalid selector".into())
 }
 
 fn checked_guest_opcode(report: &str) -> Result<i64, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("guest lexer returned no checked opcode")?;
     if result["type"] != "I64" {
         return Err("guest lexer returned a non-I64 opcode".into());
     }
-    result["value"].as_str().ok_or("guest lexer returned an invalid opcode")?
-        .parse::<i64>().map_err(|error| error.to_string())
+    result["value"]
+        .as_str()
+        .ok_or("guest lexer returned an invalid opcode")?
+        .parse::<i64>()
+        .map_err(|error| error.to_string())
 }
 
 fn checked_numeric_phase(report: &str) -> Result<bool, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("guest numeric phase returned no checked result")?;
     let (ready, payload) = variant(result)?;
     if !ready {
@@ -4905,8 +5576,11 @@ fn checked_numeric_phase(report: &str) -> Result<bool, String> {
 }
 
 fn checked_kind(report: &str) -> Result<Result<i64, String>, String> {
-    let json: serde_json::Value = serde_json::from_str(report).map_err(|error| error.to_string())?;
-    let result = json["stack"].as_array().and_then(|stack| stack.last())
+    let json: serde_json::Value =
+        serde_json::from_str(report).map_err(|error| error.to_string())?;
+    let result = json["stack"]
+        .as_array()
+        .and_then(|stack| stack.last())
         .ok_or("calculator guest returned no checked action result")?;
     let (ok, payload) = variant(result)?;
     if !ok {
@@ -4919,8 +5593,11 @@ fn checked_kind(report: &str) -> Result<Result<i64, String>, String> {
     if kind["type"] != "I64" {
         return Err("guest parser returned a non-I64 action kind".into());
     }
-    Ok(Ok(kind["value"].as_str().ok_or("guest parser returned invalid action kind")?
-        .parse::<i64>().map_err(|error| error.to_string())?))
+    Ok(Ok(kind["value"]
+        .as_str()
+        .ok_or("guest parser returned invalid action kind")?
+        .parse::<i64>()
+        .map_err(|error| error.to_string())?))
 }
 
 fn variant(value: &serde_json::Value) -> Result<(bool, &serde_json::Value), String> {
@@ -4932,7 +5609,9 @@ fn variant(value: &serde_json::Value) -> Result<(bool, &serde_json::Value), Stri
         Some("right") => false,
         _ => return Err("calculator guest returned an invalid diagnostic arm".into()),
     };
-    let payload = value.get("value").ok_or("calculator guest omitted diagnostic payload")?;
+    let payload = value
+        .get("value")
+        .ok_or("calculator guest omitted diagnostic payload")?;
     Ok((arm, payload))
 }
 
@@ -4940,7 +5619,9 @@ fn pair(value: &serde_json::Value) -> Result<(&serde_json::Value, &serde_json::V
     if value["type"] != "Pair" {
         return Err("calculator guest returned invalid diagnostic span".into());
     }
-    let values = value["value"].as_array().filter(|values| values.len() == 2)
+    let values = value["value"]
+        .as_array()
+        .filter(|values| values.len() == 2)
         .ok_or("calculator guest returned incomplete diagnostic span")?;
     Ok((&values[0], &values[1]))
 }
@@ -4949,17 +5630,36 @@ fn diagnostic(value: &serde_json::Value) -> Result<String, String> {
     let (parse, inner) = variant(value)?;
     let (category, span) = if parse {
         let (syntax, span) = variant(inner)?;
-        (if syntax { "SyntaxError" } else { "TrailingInput" }.to_owned(), span)
+        (
+            if syntax {
+                "SyntaxError"
+            } else {
+                "TrailingInput"
+            }
+            .to_owned(),
+            span,
+        )
     } else {
         let (scope, inner) = variant(inner)?;
         if scope {
             let (name, inner) = variant(inner)?;
             if name {
                 let (unknown, span) = variant(inner)?;
-                (if unknown { "UnknownName" } else { "WrongArity" }.to_owned(), span)
+                (
+                    if unknown { "UnknownName" } else { "WrongArity" }.to_owned(),
+                    span,
+                )
             } else {
                 let (invalid, span) = variant(inner)?;
-                (if invalid { "DefinitionError" } else { "InvalidCall" }.to_owned(), span)
+                (
+                    if invalid {
+                        "DefinitionError"
+                    } else {
+                        "InvalidCall"
+                    }
+                    .to_owned(),
+                    span,
+                )
             }
         } else {
             let (numeric, inner) = variant(inner)?;
@@ -4972,10 +5672,16 @@ fn diagnostic(value: &serde_json::Value) -> Result<String, String> {
         }
     };
     let (start, end) = pair(span)?;
-    let start = start["value"].as_str().ok_or("invalid diagnostic byte start")?
-        .parse::<usize>().map_err(|error| error.to_string())?;
-    let end = end["value"].as_str().ok_or("invalid diagnostic byte end")?
-        .parse::<usize>().map_err(|error| error.to_string())?;
+    let start = start["value"]
+        .as_str()
+        .ok_or("invalid diagnostic byte start")?
+        .parse::<usize>()
+        .map_err(|error| error.to_string())?;
+    let end = end["value"]
+        .as_str()
+        .ok_or("invalid diagnostic byte end")?
+        .parse::<usize>()
+        .map_err(|error| error.to_string())?;
     if start > end || end > usize::try_from(INPUT_LIMIT).map_err(|error| error.to_string())? {
         return Err("guest diagnostic span exceeds calculator input bound".into());
     }
@@ -4990,7 +5696,11 @@ fn numeric_category(value: &serde_json::Value) -> Result<String, String> {
             let (io, inner) = variant(inner)?;
             let (first, _) = variant(inner)?;
             if io {
-                if first { "InputBytes" } else { "OutputSize" }
+                if first {
+                    "InputBytes"
+                } else {
+                    "OutputSize"
+                }
             } else if first {
                 "NumericDigits"
             } else {
@@ -5002,7 +5712,11 @@ fn numeric_category(value: &serde_json::Value) -> Result<String, String> {
                 "EvaluationWork"
             } else {
                 let (syntax, _) = variant(inner)?;
-                if syntax { "SyntaxDepth" } else { "CallDepth" }
+                if syntax {
+                    "SyntaxDepth"
+                } else {
+                    "CallDepth"
+                }
             }
         };
         Ok(format!("ResourceLimit {limit}"))
@@ -5010,14 +5724,24 @@ fn numeric_category(value: &serde_json::Value) -> Result<String, String> {
         let (conversion, inner) = variant(inner)?;
         if conversion {
             let (non_integral, _) = variant(inner)?;
-            Ok(if non_integral { "NonIntegral" } else { "OutOfRange" }.into())
+            Ok(if non_integral {
+                "NonIntegral"
+            } else {
+                "OutOfRange"
+            }
+            .into())
         } else {
             let (non_integer, inner) = variant(inner)?;
             if non_integer {
                 Ok("NonIntegerExponent".into())
             } else {
                 let (zero_denominator, _) = variant(inner)?;
-                Ok(if zero_denominator { "ZeroDenominator" } else { "DivisionByZero" }.into())
+                Ok(if zero_denominator {
+                    "ZeroDenominator"
+                } else {
+                    "DivisionByZero"
+                }
+                .into())
             }
         }
     }

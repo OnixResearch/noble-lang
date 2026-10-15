@@ -389,8 +389,8 @@ fn generation_inspection_preserves_typed_program_and_tracks_only_publication(
 }
 
 #[test]
-fn unsupported_live_subcommand_refuses_before_publication(
-) -> Result<(), Box<dyn std::error::Error>> {
+fn unsupported_live_subcommand_refuses_before_publication() -> Result<(), Box<dyn std::error::Error>>
+{
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let output = Command::new(env!("CARGO_BIN_EXE_noble"))
         .args(["live", "watch"])
@@ -399,7 +399,9 @@ fn unsupported_live_subcommand_refuses_before_publication(
         .output()?;
     assert_eq!(output.status.code(), Some(2));
     let reports = String::from_utf8(output.stdout)?;
-    let [refused] = reports.lines().map(serde_json::from_str::<Value>)
+    let [refused] = reports
+        .lines()
+        .map(serde_json::from_str::<Value>)
         .collect::<Result<Vec<_>, _>>()?
         .try_into()
         .map_err(|_| "expected one unsupported-command refusal")?;
@@ -411,8 +413,8 @@ fn unsupported_live_subcommand_refuses_before_publication(
 }
 
 #[test]
-fn malformed_reload_preserves_the_prior_namespace_and_typed_stack()
--> Result<(), Box<dyn std::error::Error>> {
+fn malformed_reload_preserves_the_prior_namespace_and_typed_stack(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
@@ -427,8 +429,8 @@ fn malformed_reload_preserves_the_prior_namespace_and_typed_stack()
 }
 
 #[test]
-fn wrong_type_reload_reports_candidate_origin_and_keeps_old_definition()
--> Result<(), Box<dyn std::error::Error>> {
+fn wrong_type_reload_reports_candidate_origin_and_keeps_old_definition(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
@@ -440,8 +442,14 @@ fn wrong_type_reload_reports_candidate_origin_and_keeps_old_definition()
     let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
     assert_eq!(refused_reload(&refused, &["7"]), generation);
     assert_eq!(refused["stack"], prior["stack"]);
-    assert_eq!(refused["source_span_basis"], "refused-candidate-file-byte-offsets");
-    assert_eq!(refused["source_span"], serde_json::json!({"start": 18, "end": 19}));
+    assert_eq!(
+        refused["source_span_basis"],
+        "refused-candidate-file-byte-offsets"
+    );
+    assert_eq!(
+        refused["source_span"],
+        serde_json::json!({"start": 18, "end": 19})
+    );
     assert_eq!(refused["word_or_join"], "+");
     assert_eq!(refused["required_stack"], "?stack I64 I64");
     assert_eq!(refused["actual_stack"], "?stack Bool");
@@ -456,8 +464,8 @@ fn wrong_type_reload_reports_candidate_origin_and_keeps_old_definition()
 }
 
 #[test]
-fn symlink_selected_leaf_refuses_without_changing_the_session()
--> Result<(), Box<dyn std::error::Error>> {
+fn symlink_selected_leaf_refuses_without_changing_the_session(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
@@ -478,8 +486,8 @@ fn symlink_selected_leaf_refuses_without_changing_the_session()
 }
 
 #[test]
-fn reload_preserves_text_and_old_program_while_new_calls_use_new_definition()
--> Result<(), Box<dyn std::error::Error>> {
+fn reload_preserves_text_and_old_program_while_new_calls_use_new_definition(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     let (before, _) = live_ack(&live.report()?, &[]);
@@ -543,23 +551,23 @@ fn rejected_replacement_keeps_old_addone(
 }
 
 #[test]
-fn incompatible_definition_interface_refuses_without_changing_session()
--> Result<(), Box<dyn std::error::Error>> {
+fn incompatible_definition_interface_refuses_without_changing_session(
+) -> Result<(), Box<dyn std::error::Error>> {
     let refused = rejected_replacement_keeps_old_addone("def addone [ dup ]")?;
     assert_no_candidate_span(&refused);
     Ok(())
 }
 
 #[test]
-fn effectful_definition_without_host_grant_refuses_without_guest_effects()
--> Result<(), Box<dyn std::error::Error>> {
+fn effectful_definition_without_host_grant_refuses_without_guest_effects(
+) -> Result<(), Box<dyn std::error::Error>> {
     rejected_replacement_keeps_old_addone("def addone [ \"x\" test.emit 2 + ]")?;
     Ok(())
 }
 
 #[test]
-fn direct_effectful_submission_without_binding_never_enters_guest()
--> Result<(), Box<dyn std::error::Error>> {
+fn direct_effectful_submission_without_binding_never_enters_guest(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
@@ -585,14 +593,23 @@ fn direct_effectful_submission_without_binding_never_enters_guest()
 }
 
 #[test]
-fn dependent_rebuild_is_transitive_and_preserves_saved_old_program()
--> Result<(), Box<dyn std::error::Error>> {
+fn dependent_rebuild_is_transitive_and_preserves_saved_old_program(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
-    assert_eq!(text_field(&live.submit("def twice [ addone addone ]")?, "outcome"), "defined");
-    assert_eq!(text_field(&live.submit("def four [ twice twice ]")?, "outcome"), "defined");
-    assert_eq!(text_field(&live.submit("def unrelated [ 10 + ]")?, "outcome"), "defined");
+    assert_eq!(
+        text_field(&live.submit("def twice [ addone addone ]")?, "outcome"),
+        "defined"
+    );
+    assert_eq!(
+        text_field(&live.submit("def four [ twice twice ]")?, "outcome"),
+        "defined"
+    );
+    assert_eq!(
+        text_field(&live.submit("def unrelated [ 10 + ]")?, "outcome"),
+        "defined"
+    );
     let saved = live.submit("[ addone ]")?;
     assert_eq!(saved["stack"][0]["type"], "Program");
     let other = fixture.directory.join("unselected.noble");
@@ -614,22 +631,27 @@ fn dependent_rebuild_is_transitive_and_preserves_saved_old_program()
 }
 
 #[test]
-fn dependent_inside_nested_quotation_resolves_new_identity()
--> Result<(), Box<dyn std::error::Error>> {
+fn dependent_inside_nested_quotation_resolves_new_identity(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
-    assert_eq!(text_field(&live.submit("def wrapped [ [ addone ] ]")?, "outcome"), "defined");
+    assert_eq!(
+        text_field(&live.submit("def wrapped [ [ addone ] ]")?, "outcome"),
+        "defined"
+    );
     normal(&live.submit("20 wrapped run")?, &["21"]);
     fixture.replace("def addone [ 2 + ]")?;
-    live_ack(&live.submit(&format!(":reload {}", fixture.source.display()))?, &["21"]);
+    live_ack(
+        &live.submit(&format!(":reload {}", fixture.source.display()))?,
+        &["21"],
+    );
     normal(&live.submit("20 wrapped run")?, &["21", "22"]);
     live.finish()
 }
 
 #[test]
-fn queued_reload_ack_follows_prior_wasm_invocation()
--> Result<(), Box<dyn std::error::Error>> {
+fn queued_reload_ack_follows_prior_wasm_invocation() -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
@@ -644,12 +666,15 @@ fn queued_reload_ack_follows_prior_wasm_invocation()
 }
 
 #[test]
-fn incompatible_replacement_with_dependents_never_acknowledges()
--> Result<(), Box<dyn std::error::Error>> {
+fn incompatible_replacement_with_dependents_never_acknowledges(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
-    assert_eq!(text_field(&live.submit("def twice [ addone addone ]")?, "outcome"), "defined");
+    assert_eq!(
+        text_field(&live.submit("def twice [ addone addone ]")?, "outcome"),
+        "defined"
+    );
     normal(&live.submit("20 twice")?, &["22"]);
     let generation = current_generation(&mut live, &fixture, &["22"])?;
     fixture.replace("def addone [ dup ]")?;
@@ -661,13 +686,19 @@ fn incompatible_replacement_with_dependents_never_acknowledges()
 }
 
 #[test]
-fn indirect_self_rebind_via_existing_dependents_never_acknowledges()
--> Result<(), Box<dyn std::error::Error>> {
+fn indirect_self_rebind_via_existing_dependents_never_acknowledges(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def f [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
-    assert_eq!(text_field(&live.submit("def g [ f ]")?, "outcome"), "defined");
-    assert_eq!(text_field(&live.submit("def h [ g ]")?, "outcome"), "defined");
+    assert_eq!(
+        text_field(&live.submit("def g [ f ]")?, "outcome"),
+        "defined"
+    );
+    assert_eq!(
+        text_field(&live.submit("def h [ g ]")?, "outcome"),
+        "defined"
+    );
     normal(&live.submit("20 h")?, &["21"]);
     let generation = current_generation(&mut live, &fixture, &["21"])?;
     fixture.replace("def f [ h ]")?;
@@ -683,18 +714,27 @@ fn indirect_self_rebind_via_existing_dependents_never_acknowledges()
 }
 
 #[test]
-fn old_program_keeps_shadowed_target_across_dependent_rebuilds()
--> Result<(), Box<dyn std::error::Error>> {
+fn old_program_keeps_shadowed_target_across_dependent_rebuilds(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def f [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
-    assert_eq!(text_field(&live.submit("def offset [ 10 + ]")?, "outcome"), "defined");
-    assert_eq!(text_field(&live.submit("def use [ f offset ]")?, "outcome"), "defined");
+    assert_eq!(
+        text_field(&live.submit("def offset [ 10 + ]")?, "outcome"),
+        "defined"
+    );
+    assert_eq!(
+        text_field(&live.submit("def use [ f offset ]")?, "outcome"),
+        "defined"
+    );
     // Capture before the explicit direct redefinition. That transaction
     // rebuilds the current `use` while keeping this older Program immutable.
     let saved = live.submit("[ use ]")?;
     assert_eq!(saved["stack"][0]["type"], "Program");
-    assert_eq!(text_field(&live.submit("def offset [ 100 + ]")?, "outcome"), "defined");
+    assert_eq!(
+        text_field(&live.submit("def offset [ 100 + ]")?, "outcome"),
+        "defined"
+    );
     fixture.replace("def f [ 2 + ]")?;
     let ack = live.submit(&format!(":reload {}", fixture.source.display()))?;
     assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
@@ -705,12 +745,15 @@ fn old_program_keeps_shadowed_target_across_dependent_rebuilds()
 }
 
 #[test]
-fn dependent_rebuild_exceeding_retained_source_budget_refuses_atomically()
--> Result<(), Box<dyn std::error::Error>> {
+fn dependent_rebuild_exceeding_retained_source_budget_refuses_atomically(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
-    let dependent = format!("def twice [ addone addone \"{}\" drop ]", "x".repeat(33_000));
+    let dependent = format!(
+        "def twice [ addone addone \"{}\" drop ]",
+        "x".repeat(33_000)
+    );
     assert_eq!(text_field(&live.submit(&dependent)?, "outcome"), "defined");
     normal(&live.submit("20 twice")?, &["22"]);
     let generation = current_generation(&mut live, &fixture, &["22"])?;
@@ -762,8 +805,8 @@ fn assert_grant(live: &LiveChild, generation: u64) -> Result<(), Box<dyn std::er
 }
 
 #[test]
-fn named_guest_captures_i64_then_publishes_pure_self_replacement()
--> Result<(), Box<dyn std::error::Error>> {
+fn named_guest_captures_i64_then_publishes_pure_self_replacement(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new(EVOLVE)?;
     let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
     let (initial_generation, file_hash) = live_ack(&live.report()?, &[]);
@@ -802,11 +845,9 @@ fn named_guest_captures_i64_then_publishes_pure_self_replacement()
     assert_eq!(pending["postreturn_snapshot_verified"], true);
     assert_eq!(text_field(&pending, "candidate_snapshot_sha256").len(), 64);
     assert_eq!(text_field(&pending, "proposal_recipe_sha256").len(), 64);
-    assert!(
-        pending["candidate_recipe_events"]
-            .as_array()
-            .is_some_and(|events| events.len() >= 4)
-    );
+    assert!(pending["candidate_recipe_events"]
+        .as_array()
+        .is_some_and(|events| events.len() >= 4));
     assert_eq!(text_field(&pending, "invocation_source_sha256").len(), 64);
     assert_eq!(text_field(&pending, "invocation_wasm_sha256").len(), 64);
     assert_eq!(pending["source_freshness"], "not-file-backed");
@@ -849,8 +890,8 @@ fn named_guest_captures_i64_then_publishes_pure_self_replacement()
 }
 
 #[test]
-fn named_guest_selects_a_different_captured_i64_from_runtime_input()
--> Result<(), Box<dyn std::error::Error>> {
+fn named_guest_selects_a_different_captured_i64_from_runtime_input(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new(EVOLVE)?;
     let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
     live_ack(&live.report()?, &[]);
@@ -869,8 +910,8 @@ fn named_guest_selects_a_different_captured_i64_from_runtime_input()
 }
 
 #[test]
-fn postreturn_guest_dependent_refusal_retains_stack_and_grant()
--> Result<(), Box<dyn std::error::Error>> {
+fn postreturn_guest_dependent_refusal_retains_stack_and_grant(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new(EVOLVE)?;
     let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
     let (generation, _) = live_ack(&live.report()?, &[]);
@@ -889,7 +930,11 @@ fn postreturn_guest_dependent_refusal_retains_stack_and_grant()
         normal(&live.submit(&format!("{input} evolve"))?, stack);
         assert_eq!(text_field(&live.report()?, "outcome"), "proposal-pending");
         let refused = live.report()?;
-        assert_eq!(text_field(&refused, "outcome"), "proposal-refused", "{refused}");
+        assert_eq!(
+            text_field(&refused, "outcome"),
+            "proposal-refused",
+            "{refused}"
+        );
         assert_eq!(number_field(&refused, "generation"), 2);
         assert_stack(&refused, stack);
         assert!(number_field(&refused, "guest_requests") >= 2);
@@ -904,8 +949,8 @@ fn postreturn_guest_dependent_refusal_retains_stack_and_grant()
 }
 
 #[test]
-fn unsupported_identity_program_refuses_after_guest_without_rolling_back_stack_or_grant()
--> Result<(), Box<dyn std::error::Error>> {
+fn unsupported_identity_program_refuses_after_guest_without_rolling_back_stack_or_grant(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def evolve [ [ ] self.generation swap self.propose drop 1 + ]")?;
     let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
     live_ack(&live.report()?, &[]);
@@ -927,19 +972,17 @@ fn unsupported_identity_program_refuses_after_guest_without_rolling_back_stack_o
         assert_stack(&refused, stack);
         assert_eq!(number_field(&refused, "generation"), 1);
         assert!(number_field(&refused, "guest_requests") >= 2);
-        assert!(
-            !refused["request_trace"]
-                .as_array()
-                .ok_or("missing trace")?
-                .is_empty()
-        );
+        assert!(!refused["request_trace"]
+            .as_array()
+            .ok_or("missing trace")?
+            .is_empty());
     }
     live.finish()
 }
 
 #[test]
-fn old_saved_program_is_denied_after_rearming_new_checked_owner()
--> Result<(), Box<dyn std::error::Error>> {
+fn old_saved_program_is_denied_after_rearming_new_checked_owner(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new(EVOLVE)?;
     let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
     live_ack(&live.report()?, &[]);
@@ -996,8 +1039,8 @@ fn new_checked_owner_can_self_edit_after_explicit_rearm() -> Result<(), Box<dyn 
 }
 
 #[test]
-fn stale_expected_source_generation_denies_without_staging_candidate()
--> Result<(), Box<dyn std::error::Error>> {
+fn stale_expected_source_generation_denies_without_staging_candidate(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new(&EVOLVE.replace("self.generation", "0"))?;
     let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
     live_ack(&live.report()?, &[]);
@@ -1018,8 +1061,8 @@ fn stale_expected_source_generation_denies_without_staging_candidate()
 }
 
 #[test]
-fn no_host_selected_grant_rejects_guest_edit_definition_before_execution()
--> Result<(), Box<dyn std::error::Error>> {
+fn no_host_selected_grant_rejects_guest_edit_definition_before_execution(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new(EVOLVE)?;
     let child = Command::new(env!("CARGO_BIN_EXE_noble"))
         .args(["live", "repl", "--source"])
@@ -1051,8 +1094,8 @@ fn no_host_selected_grant_rejects_guest_edit_definition_before_execution()
 }
 
 #[test]
-fn wrong_program_interface_and_effectful_proposal_refuse_before_guest()
--> Result<(), Box<dyn std::error::Error>> {
+fn wrong_program_interface_and_effectful_proposal_refuse_before_guest(
+) -> Result<(), Box<dyn std::error::Error>> {
     for source in [
         "def evolve [ [ true ] self.generation swap self.propose drop 1 + ]",
         "def evolve [ [ \"x\" test.emit ] self.generation swap self.propose drop 1 + ]",
@@ -1088,8 +1131,8 @@ fn wrong_program_interface_and_effectful_proposal_refuse_before_guest()
 }
 
 #[test]
-fn grant_for_other_name_cannot_acquire_selected_definition()
--> Result<(), Box<dyn std::error::Error>> {
+fn grant_for_other_name_cannot_acquire_selected_definition(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def evolve [ 1 + ]")?;
     let output = Command::new(env!("CARGO_BIN_EXE_noble"))
         .args(["live", "repl", "--source"])
@@ -1151,8 +1194,8 @@ fn ordinary_run_and_session_leave_self_propose_unbound() -> Result<(), Box<dyn s
 }
 
 #[test]
-fn interpreter_choice_refuses_at_startup_without_v8_fallback()
--> Result<(), Box<dyn std::error::Error>> {
+fn interpreter_choice_refuses_at_startup_without_v8_fallback(
+) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     let mut child = Command::new(env!("CARGO_BIN_EXE_noble"))
         .args(["live", "repl", "--source"])

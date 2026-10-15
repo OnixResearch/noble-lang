@@ -218,12 +218,15 @@ pub(in crate::source) fn count(
             break;
         }
         nodes += 1;
-        weighted = attempt!(weighted.checked_add(path.len() as u64 + 1)
+        weighted = attempt!(weighted
+            .checked_add(path.len() as u64 + 1)
             .ok_or(crate::Diagnostic::Exhausted));
         let current = attempt!(type_at(root, &path));
-        if matches!(current, noble_kernel::types::Ty::Nominal(_, _)
-            | noble_kernel::types::Ty::GenericNominal(_, _, _))
-        {
+        if matches!(
+            current,
+            noble_kernel::types::Ty::Nominal(_, _)
+                | noble_kernel::types::Ty::GenericNominal(_, _, _)
+        ) {
             lookups = attempt!(lookups.checked_add(1).ok_or(crate::Diagnostic::Exhausted));
         }
         match type_step(root, &mut path, work) {

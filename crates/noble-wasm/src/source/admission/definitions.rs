@@ -12,7 +12,14 @@ pub(super) fn bounds(
     let mut index = 0usize;
     let mut failure = None;
     while index < submission.definitions.len() {
-        match definition_bounds(submission, index, environment_work, calculator, totals, work) {
+        match definition_bounds(
+            submission,
+            index,
+            environment_work,
+            calculator,
+            totals,
+            work,
+        ) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);

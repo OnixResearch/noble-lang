@@ -190,7 +190,11 @@ impl World {
     }
     /// Select the partial, checked u64↔I64 boundary explicitly. WIT values
     /// outside the signed range trap before becoming Noble values or results.
-    pub fn parse_checked_u64(wit: &[u8], world: &str, limits: crate::Limits) -> Result<Self, Error> {
+    pub fn parse_checked_u64(
+        wit: &[u8],
+        world: &str,
+        limits: crate::Limits,
+    ) -> Result<Self, Error> {
         parser::parse(wit, world, limits, true)
     }
     pub const fn checked_u64(&self) -> bool {

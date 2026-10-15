@@ -6,8 +6,8 @@ impl super::super::Env {
         let mut valid = true;
         while index < self.generic_variants.len() && valid {
             let decl = &self.generic_variants[index];
-            valid = matches!(decl.payload_params, [0, 1] | [1, 0])
-                && self.nominal(decl.id).is_none();
+            valid =
+                matches!(decl.payload_params, [0, 1] | [1, 0]) && self.nominal(decl.id).is_none();
             let mut prior = 0;
             while prior < index && valid {
                 valid = self.generic_variants[prior].id != decl.id;
@@ -22,8 +22,7 @@ impl super::super::Env {
         if self.kinds.len() != self.defs.len() || self.bound_adapters.len() > self.defs.len() {
             return false;
         }
-        if self.live_test_hosts
-            && (!self.live_slots || !self.declared_modules || self.text_cursor)
+        if self.live_test_hosts && (!self.live_slots || !self.declared_modules || self.text_cursor)
         {
             return false;
         }
@@ -132,7 +131,10 @@ fn bootstrap_matches(env: &super::super::Env) -> bool {
     if !env.declared_modules {
         return true;
     }
-    let has_clock = env.kinds.iter().any(|kind| matches!(kind, super::super::Behavior::BoundClock(_)));
+    let has_clock = env
+        .kinds
+        .iter()
+        .any(|kind| matches!(kind, super::super::Behavior::BoundClock(_)));
     env.resource_kinds.len() == 1 + env.live_resource_nominals.len()
         && env.resource_kinds[0].0 == super::super::FIXTURE_RESOURCE.0
         && env.effects.len() == 1 + usize::from(has_clock) + usize::from(env.live_slots)
@@ -296,12 +298,7 @@ fn declared_definition_matches(
     super::schemes::same_scheme(&env.defs[index], &scheme)
 }
 
-fn bound_definition_matches(
-    env: &super::super::Env,
-    index: usize,
-    slot: u32,
-    clock: bool,
-) -> bool {
+fn bound_definition_matches(env: &super::super::Env, index: usize, slot: u32, clock: bool) -> bool {
     if !(if clock {
         super::schemes::valid_clock_scheme(&env.defs[index])
     } else {
@@ -312,9 +309,11 @@ fn bound_definition_matches(
     let Ok(def) = u32::try_from(index) else {
         return false;
     };
-    let Some(row) = env.bound_adapters.iter().find(|row| {
-        row.definition == super::super::Definition(def) && row.adapter_slot == slot
-    }) else {
+    let Some(row) = env
+        .bound_adapters
+        .iter()
+        .find(|row| row.definition == super::super::Definition(def) && row.adapter_slot == slot)
+    else {
         return false;
     };
     if clock != (row.effects.as_slice() == [super::super::TEST_CLOCK]) {

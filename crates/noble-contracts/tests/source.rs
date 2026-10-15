@@ -224,8 +224,8 @@ fn conditional_branch_joins_reject_incompatible_outputs_with_located_shapes() ->
 
 #[test]
 fn typed_source_resource_input_rejects_dup_with_exact_eligibility() -> Result<(), String> {
-    let session = noble_contracts::source::ModuleSession::new(&[])
-        .map_err(|error| format!("{error:?}"))?;
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     let resource = noble_kernel::types::Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE);
     let error = session
         .prepare(b"dup", core::slice::from_ref(&resource), limits())

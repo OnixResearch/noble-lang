@@ -112,7 +112,9 @@ fn async_imports_preserve_direct_style_types_effects_and_owned_results() -> Resu
     let identity = identity.submission().ok_or("missing owner-transfer body")?;
     assert_eq!(
         identity.request.expected.stack_out,
-        vec![noble_contracts::component::Type::FutureS64.noble().ok_or("missing future mapping")?]
+        vec![noble_contracts::component::Type::FutureS64
+            .noble()
+            .ok_or("missing future mapping")?]
     );
     let owned = world
         .prepare_export("run", b"service.open service.close", LIMITS)
@@ -297,23 +299,44 @@ fn unsigned_wit_requires_a_selected_checked_boundary() -> Result<(), String> {
     let implicit = noble_contracts::component::World::parse(WIT, "main", LIMITS)
         .expect_err("implicit unsigned-to-signed binding must refuse");
     assert_eq!(implicit.stage, noble_contracts::component::Stage::Binding);
-    assert_eq!(implicit.diagnostic.kind, noble_contracts::DiagnosticKind::Invalid);
+    assert_eq!(
+        implicit.diagnostic.kind,
+        noble_contracts::DiagnosticKind::Invalid
+    );
     assert_eq!(noble_contracts::component::Type::CheckedU64.noble(), None);
 
     let selected = noble_contracts::component::World::parse_checked_u64(WIT, "main", LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert_ne!(
         selected.build_context(),
-        world(b"package test:unsigned@1.0.0; world main { export echo: func(value: s64) -> s64; }", "main")?
-            .build_context()
+        world(
+            b"package test:unsigned@1.0.0; world main { export echo: func(value: s64) -> s64; }",
+            "main"
+        )?
+        .build_context()
     );
-    let operation = selected.exports().first().ok_or("missing unsigned export")?;
-    assert_eq!(operation.parameters, [noble_contracts::component::Type::CheckedU64]);
-    assert_eq!(operation.input_types(&selected), Some(vec![noble_kernel::types::Ty::I64]));
-    let accepted = selected.prepare_export("echo", b"", LIMITS)
+    let operation = selected
+        .exports()
+        .first()
+        .ok_or("missing unsigned export")?;
+    assert_eq!(
+        operation.parameters,
+        [noble_contracts::component::Type::CheckedU64]
+    );
+    assert_eq!(
+        operation.input_types(&selected),
+        Some(vec![noble_kernel::types::Ty::I64])
+    );
+    let accepted = selected
+        .prepare_export("echo", b"", LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(
-        accepted.submission().ok_or("missing unsigned body")?.request.expected.stack_out,
+        accepted
+            .submission()
+            .ok_or("missing unsigned body")?
+            .request
+            .expected
+            .stack_out,
         vec![noble_kernel::types::Ty::I64]
     );
     Ok(())

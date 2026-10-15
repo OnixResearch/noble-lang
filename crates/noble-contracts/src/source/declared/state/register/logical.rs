@@ -33,66 +33,117 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
             contract_name: contract.name.clone(),
             contract_span: contract.span,
             subject,
-            inputs: contract.inputs.iter().map(|binding| (binding.name.clone(), binding.ty.clone())).collect(),
-            outputs: contract.outputs.iter().map(|binding| (binding.name.clone(), binding.ty.clone())).collect(),
+            inputs: contract
+                .inputs
+                .iter()
+                .map(|binding| (binding.name.clone(), binding.ty.clone()))
+                .collect(),
+            outputs: contract
+                .outputs
+                .iter()
+                .map(|binding| (binding.name.clone(), binding.ty.clone()))
+                .collect(),
             requires: contract.requires.clone(),
             ensures: contract.ensures.clone(),
         };
         let prepared = match contract.revision {
             1 => crate::intrinsic::prepare_contract(&goal, request.limits).map(|_| ()),
             2 => crate::intrinsic::prepare_named_contract(&goal, request.limits).map(|_| ()),
-            _ => return Err(at(crate::source::Stage::Check, contract.span,
-                "unsupported contract revision")),
+            _ => {
+                return Err(at(
+                    crate::source::Stage::Check,
+                    contract.span,
+                    "unsupported contract revision",
+                ))
+            }
         };
-        attempt!(prepared
-            .map_err(|problem| crate::source::declared::diagnostic(crate::source::Stage::Check, problem)));
+        attempt!(
+            prepared.map_err(|problem| crate::source::declared::diagnostic(
+                crate::source::Stage::Check,
+                problem
+            ))
+        );
         contracts.push(crate::source::declared::LogicalContract {
             name: contract.name.clone(),
             goal,
             exported: request.collected.exports.contains(&contract.name),
         });
     }
-    let proof_exports = request.collected.proofs.iter()
+    let proof_exports = request
+        .collected
+        .proofs
+        .iter()
         .filter(|proof| request.collected.exports.contains(&proof.name))
-        .map(|proof| proof.name.clone()).collect();
+        .map(|proof| proof.name.clone())
+        .collect();
     if request.collected.proofs.is_empty() {
-        return Ok(Staged { contracts, proof_exports, pending: None });
+        return Ok(Staged {
+            contracts,
+            proof_exports,
+            pending: None,
+        });
     }
     let mut dependencies = alloc::vec::Vec::new();
     let mut obligations = alloc::vec::Vec::with_capacity(request.collected.proofs.len());
     for proof in &request.collected.proofs {
         let goal = match &proof.claim {
-            crate::source::declared::parsing::ProofClaim::Pure(proposition) =>
-                crate::intrinsic::PendingGoal::Pure { proposition: proposition.clone() },
+            crate::source::declared::parsing::ProofClaim::Pure(proposition) => {
+                crate::intrinsic::PendingGoal::Pure {
+                    proposition: proposition.clone(),
+                }
+            }
             crate::source::declared::parsing::ProofClaim::For(reference, span) => {
                 let contract = attempt!(resolve_contract(&request, &contracts, reference, *span));
                 if proof.revision != contract.revision {
-                    return Err(at(crate::source::Stage::Check, *span,
-                        "proof and contract revisions differ"));
+                    return Err(at(
+                        crate::source::Stage::Check,
+                        *span,
+                        "proof and contract revisions differ",
+                    ));
                 }
-                crate::intrinsic::PendingGoal::Contract { contract: alloc::boxed::Box::new(contract) }
+                crate::intrinsic::PendingGoal::Contract {
+                    contract: alloc::boxed::Box::new(contract),
+                }
             }
         };
-        let (term, resolved) =
-            attempt!(resolve_uses(&request, proof.term.clone(), &obligations, dependencies));
+        let (term, resolved) = attempt!(resolve_uses(
+            &request,
+            proof.term.clone(),
+            &obligations,
+            dependencies
+        ));
         dependencies = resolved;
         obligations.push(crate::intrinsic::ProofObligation {
-            revision: proof.revision, name: proof.name.clone(), goal, term, span: proof.span,
+            revision: proof.revision,
+            name: proof.name.clone(),
+            goal,
+            term,
+            span: proof.span,
         });
     }
-    let limit = usize::try_from(request.limits.bytes).map_err(|_| crate::source::declared::error(
-        crate::source::Stage::Check, "proof dependency byte limit exceeds address space",
-    ))?;
+    let limit = usize::try_from(request.limits.bytes).map_err(|_| {
+        crate::source::declared::error(
+            crate::source::Stage::Check,
+            "proof dependency byte limit exceeds address space",
+        )
+    })?;
     let mut copied = 0usize;
     for dependency in &dependencies {
         let bytes = attempt!(dependency_bytes(dependency, limit));
-        copied = copied.checked_add(bytes).ok_or_else(|| crate::source::declared::error(
-            crate::source::Stage::Check, "proof dependency byte count overflow",
-        ))?;
+        copied = copied.checked_add(bytes).ok_or_else(|| {
+            crate::source::declared::error(
+                crate::source::Stage::Check,
+                "proof dependency byte count overflow",
+            )
+        })?;
     }
-    if copied.checked_mul(obligations.len()).is_none_or(|total| total > limit) {
+    if copied
+        .checked_mul(obligations.len())
+        .is_none_or(|total| total > limit)
+    {
         return Err(crate::source::declared::error(
-            crate::source::Stage::Check, "proof dependency snapshot byte budget exhausted",
+            crate::source::Stage::Check,
+            "proof dependency snapshot byte budget exhausted",
         ));
     }
     Ok(Staged {
@@ -116,12 +167,16 @@ fn dependency_bytes(
     let mut pending = alloc::vec![dependency];
     let mut total = 0usize;
     while let Some(next) = pending.pop() {
-        total = total.checked_add(next.source.len()).ok_or_else(|| crate::source::declared::error(
-            crate::source::Stage::Check, "proof dependency byte count overflow",
-        ))?;
+        total = total.checked_add(next.source.len()).ok_or_else(|| {
+            crate::source::declared::error(
+                crate::source::Stage::Check,
+                "proof dependency byte count overflow",
+            )
+        })?;
         if total > limit {
             return Err(crate::source::declared::error(
-                crate::source::Stage::Check, "proof dependency snapshot byte budget exhausted",
+                crate::source::Stage::Check,
+                "proof dependency snapshot byte budget exhausted",
             ));
         }
         pending.extend(next.dependencies.iter());
@@ -158,9 +213,15 @@ fn pure_type(ty: &noble_kernel::types::Ty) -> bool {
             // Right is stored first so left is visited first, as with `&&`.
             Ty::Pair(left, right) | Ty::Sum(left, right) => [Some(&**right), Some(&**left)],
             Ty::List(item) => [Some(&**item), None],
-            Ty::Syntax | Ty::Contract | Ty::Evidence | Ty::Certified | Ty::Program(..)
+            Ty::Syntax
+            | Ty::Contract
+            | Ty::Evidence
+            | Ty::Certified
+            | Ty::Program(..)
             | Ty::LiveRef(..)
-            | Ty::Resource(..) | Ty::Nominal(..) | Ty::GenericNominal(..) => return false,
+            | Ty::Resource(..)
+            | Ty::Nominal(..)
+            | Ty::GenericNominal(..) => return false,
         };
         for child in children.into_iter().flatten() {
             // The bound above means this check never refuses a parsed type.
@@ -184,11 +245,22 @@ fn types(
     let mut result = alloc::vec::Vec::with_capacity(bindings.len());
     for binding in bindings {
         let parsed = attempt!(crate::source::declared::types::parse_with_families(
-            &binding.ty, &[], &[], Some(environment), binding.span,
-        ).map_err(|problem| crate::source::declared::diagnostic(crate::source::Stage::Check, problem)));
+            &binding.ty,
+            &[],
+            &[],
+            Some(environment),
+            binding.span,
+        )
+        .map_err(|problem| crate::source::declared::diagnostic(
+            crate::source::Stage::Check,
+            problem
+        )));
         if !pure_type(&parsed.ty) {
-            return Err(at(crate::source::Stage::Check, binding.span,
-                "contract stack contains a non-Type0 value"));
+            return Err(at(
+                crate::source::Stage::Check,
+                binding.span,
+                "contract stack contains a non-Type0 value",
+            ));
         }
         result.push(parsed.ty);
     }
@@ -209,54 +281,93 @@ fn source_origin<'a>(
     definition: &crate::source::Named,
     reference_span: crate::Span,
 ) -> Result<SourceOrigin<'a>, crate::source::Error> {
-    let owner = definition.owner.ok_or_else(|| at(
-        crate::source::Stage::Resolve, reference_span,
-        "contract subject has no immutable module owner",
-    ))?;
+    let owner = definition.owner.ok_or_else(|| {
+        at(
+            crate::source::Stage::Resolve,
+            reference_span,
+            "contract subject has no immutable module owner",
+        )
+    })?;
     let (module_name, version, module_source, spans) = if owner == request.identity {
-        (request.name, request.version, request.source, &request.collected.definition_spans)
+        (
+            request.name,
+            request.version,
+            request.source,
+            &request.collected.definition_spans,
+        )
     } else {
-        let Some(module) = request.session.modules.iter().find(|module| module.identity == owner) else {
+        let Some(module) = request
+            .session
+            .modules
+            .iter()
+            .find(|module| module.identity == owner)
+        else {
             return Err(crate::source::declared::error(
-                crate::source::Stage::Resolve, "unknown contract subject module",
+                crate::source::Stage::Resolve,
+                "unknown contract subject module",
             ));
         };
-        (module.name.as_str(), module.version, module.source.as_slice(), &module.definition_spans)
+        (
+            module.name.as_str(),
+            module.version,
+            module.source.as_slice(),
+            &module.definition_spans,
+        )
     };
     let mut found = None;
     for (position, source) in spans.iter().enumerate() {
         if source.name == definition.name {
             if found.is_some() {
                 return Err(crate::source::declared::error(
-                    crate::source::Stage::Check, "ambiguous original subject definition",
+                    crate::source::Stage::Check,
+                    "ambiguous original subject definition",
                 ));
             }
-            let ordinal = u32::try_from(position).map_err(|_| crate::source::declared::error(
-                crate::source::Stage::Check, "subject definition ordinal exceeds address space",
-            ))?;
+            let ordinal = u32::try_from(position).map_err(|_| {
+                crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "subject definition ordinal exceeds address space",
+                )
+            })?;
             found = Some((source, ordinal));
         }
     }
     let Some((source, ordinal)) = found else {
         return Err(crate::source::declared::error(
-            crate::source::Stage::Check, "missing original subject source span",
+            crate::source::Stage::Check,
+            "missing original subject source span",
         ));
     };
-    Ok(SourceOrigin { module_name, version, module_source,
-        definition: source, ordinal, owner })
+    Ok(SourceOrigin {
+        module_name,
+        version,
+        module_source,
+        definition: source,
+        ordinal,
+        owner,
+    })
 }
 
 impl SourceOrigin<'_> {
     fn definition_source(&self) -> Result<&[u8], crate::source::Error> {
         let start = usize::try_from(self.definition.span.start).map_err(|_| {
-            crate::source::declared::error(crate::source::Stage::Check, "subject span exceeds address space")
+            crate::source::declared::error(
+                crate::source::Stage::Check,
+                "subject span exceeds address space",
+            )
         })?;
         let end = usize::try_from(self.definition.span.end).map_err(|_| {
-            crate::source::declared::error(crate::source::Stage::Check, "subject span exceeds address space")
+            crate::source::declared::error(
+                crate::source::Stage::Check,
+                "subject span exceeds address space",
+            )
         })?;
-        self.module_source.get(start..end).ok_or_else(|| crate::source::declared::error(
-            crate::source::Stage::Check, "subject span is outside retained module source",
-        ))
+        self.module_source.get(start..end).ok_or_else(|| {
+            crate::source::declared::error(
+                crate::source::Stage::Check,
+                "subject span is outside retained module source",
+            )
+        })
     }
 }
 
@@ -265,53 +376,91 @@ fn bind_subject(
     contract: &crate::source::declared::parsing::Contract,
 ) -> Result<crate::intrinsic::SubjectBinding, crate::source::Error> {
     let Some(context) = request.session.source.declared.as_ref() else {
-        return Err(crate::source::declared::error(crate::source::Stage::Check, "missing declared source environment"));
+        return Err(crate::source::declared::error(
+            crate::source::Stage::Check,
+            "missing declared source environment",
+        ));
     };
     let lookup = if let Some((scope, local)) = contract.subject.split_once('.') {
-        if is_current(request, scope) { local } else { contract.subject.as_str() }
+        if is_current(request, scope) {
+            local
+        } else {
+            contract.subject.as_str()
+        }
     } else {
         contract.subject.as_str()
     };
     let found = context.words.iter().find(|(name, _)| name == lookup);
     let Some((_, crate::source::Target::Named(index))) = found else {
-        return Err(at(crate::source::Stage::Resolve, contract.subject_span,
-            "contract subject is not an accepted source definition"));
+        return Err(at(
+            crate::source::Stage::Resolve,
+            contract.subject_span,
+            "contract subject is not an accepted source definition",
+        ));
     };
-    let Some(definition) = usize::try_from(*index).ok()
-        .and_then(|index| request.session.source.definitions.get(index)) else {
-        return Err(crate::source::declared::error(crate::source::Stage::Check, "missing resolved contract subject"));
+    let Some(definition) = usize::try_from(*index)
+        .ok()
+        .and_then(|index| request.session.source.definitions.get(index))
+    else {
+        return Err(crate::source::declared::error(
+            crate::source::Stage::Check,
+            "missing resolved contract subject",
+        ));
     };
     let original = attempt!(source_origin(request, definition, contract.subject_span));
     let definition_source = attempt!(original.definition_source());
     let inputs = attempt!(types(&contract.inputs, &context.environment));
     let outputs = attempt!(types(&contract.outputs, &context.environment));
-    let mut prepared = attempt!(request.session.source.prepare(lookup.as_bytes(), &inputs, request.limits));
+    let mut prepared =
+        attempt!(request
+            .session
+            .source
+            .prepare(lookup.as_bytes(), &inputs, request.limits));
     if prepared.output() != outputs.as_slice() || prepared.submission().is_none() {
-        return Err(at(crate::source::Stage::Check, contract.subject_span,
-            "contract subject does not have the full ordered stack interface"));
+        return Err(at(
+            crate::source::Stage::Check,
+            contract.subject_span,
+            "contract subject does not have the full ordered stack interface",
+        ));
     }
     let Some(submission) = prepared.submission.take() else {
         return Err(crate::source::declared::error(
-            crate::source::Stage::Check, "missing accepted contract subject submission",
+            crate::source::Stage::Check,
+            "missing accepted contract subject submission",
         ));
     };
     let effects = submission.request.expected.allowed_effects.clone();
     if effects != noble_kernel::types::EffSet::empty() {
-        return Err(at(crate::source::Stage::Check, contract.subject_span,
-            "contract subject is not a pure definition"));
+        return Err(at(
+            crate::source::Stage::Check,
+            contract.subject_span,
+            "contract subject is not a pure definition",
+        ));
     }
     let mut source_dependencies = alloc::vec::Vec::new();
     for body in &submission.definitions {
-        let index = usize::try_from(body.definition.0).map_err(|_| crate::source::declared::error(
-            crate::source::Stage::Check, "subject dependency identity exceeds address space",
-        ))?;
-        let dependency_owner = submission.environment.definition_owners.get(index)
-            .copied().flatten().ok_or_else(|| crate::source::declared::error(
-                crate::source::Stage::Check, "subject dependency has no immutable module owner",
-            ))?;
-        if source_dependencies.iter().any(|known: &crate::intrinsic::ResolvedSourceModule| {
-            known.owner == dependency_owner
-        }) {
+        let index = usize::try_from(body.definition.0).map_err(|_| {
+            crate::source::declared::error(
+                crate::source::Stage::Check,
+                "subject dependency identity exceeds address space",
+            )
+        })?;
+        let dependency_owner = submission
+            .environment
+            .definition_owners
+            .get(index)
+            .copied()
+            .flatten()
+            .ok_or_else(|| {
+                crate::source::declared::error(
+                    crate::source::Stage::Check,
+                    "subject dependency has no immutable module owner",
+                )
+            })?;
+        if source_dependencies
+            .iter()
+            .any(|known: &crate::intrinsic::ResolvedSourceModule| known.owner == dependency_owner)
+        {
             continue;
         }
         let dependency = if dependency_owner == request.identity {
@@ -322,9 +471,15 @@ fn bind_subject(
                 full_source: request.source.to_vec(),
             }
         } else {
-            let Some(module) = request.session.modules.iter().find(|module| module.identity == dependency_owner) else {
+            let Some(module) = request
+                .session
+                .modules
+                .iter()
+                .find(|module| module.identity == dependency_owner)
+            else {
                 return Err(crate::source::declared::error(
-                    crate::source::Stage::Resolve, "subject dependency module is absent",
+                    crate::source::Stage::Resolve,
+                    "subject dependency module is absent",
                 ));
             };
             crate::intrinsic::ResolvedSourceModule {
@@ -337,18 +492,28 @@ fn bind_subject(
         // At most one retained module per accepted definition.
         if source_dependencies.len() >= submission.definitions.len() {
             return Err(crate::source::declared::error(
-                crate::source::Stage::Check, "subject dependency modules exceed accepted definitions",
+                crate::source::Stage::Check,
+                "subject dependency modules exceed accepted definitions",
             ));
         }
         source_dependencies.push(dependency);
     }
     let named_uses = if contract.revision == 2 {
-        attempt!(origin::trace(request, *index, &submission, &source_dependencies))
+        attempt!(origin::trace(
+            request,
+            *index,
+            &submission,
+            &source_dependencies
+        ))
     } else {
         alloc::vec::Vec::new()
     };
     let named_imports = if contract.revision == 2 {
-        attempt!(origin::imports(request, original.owner, &source_dependencies))
+        attempt!(origin::imports(
+            request,
+            original.owner,
+            &source_dependencies
+        ))
     } else {
         alloc::vec::Vec::new()
     };
@@ -379,24 +544,50 @@ fn resolve_contract(
     span: crate::Span,
 ) -> Result<crate::intrinsic::ContractGoal, crate::source::Error> {
     let Some((scope, name)) = reference.split_once('.') else {
-        return staged.iter().find(|contract| contract.name == reference)
+        return staged
+            .iter()
+            .find(|contract| contract.name == reference)
             .map(|contract| contract.goal.clone())
-            .ok_or_else(|| at(crate::source::Stage::Resolve, span, "unknown local proof contract"));
+            .ok_or_else(|| {
+                at(
+                    crate::source::Stage::Resolve,
+                    span,
+                    "unknown local proof contract",
+                )
+            });
     };
     if is_current(request, scope) {
-        return staged.iter().find(|contract| contract.name == name)
+        return staged
+            .iter()
+            .find(|contract| contract.name == name)
             .map(|contract| contract.goal.clone())
-            .ok_or_else(|| at(crate::source::Stage::Resolve, span, "unknown local proof contract"));
+            .ok_or_else(|| {
+                at(
+                    crate::source::Stage::Resolve,
+                    span,
+                    "unknown local proof contract",
+                )
+            });
     }
     let module = attempt!(imported_module(request.session, scope, span));
-    module.contracts.iter().find(|contract| contract.name == name && contract.exported)
+    module
+        .contracts
+        .iter()
+        .find(|contract| contract.name == name && contract.exported)
         .map(|contract| contract.goal.clone())
-        .ok_or_else(|| at(crate::source::Stage::Resolve, span, "unknown or private imported contract"))
+        .ok_or_else(|| {
+            at(
+                crate::source::Stage::Resolve,
+                span,
+                "unknown or private imported contract",
+            )
+        })
 }
 
 fn is_current(request: &Request<'_>, scope: &str) -> bool {
-    scope.split_once('@').is_some_and(|(name, version)|
-        name == request.name && version.parse::<u32>().ok() == Some(request.version))
+    scope.split_once('@').is_some_and(|(name, version)| {
+        name == request.name && version.parse::<u32>().ok() == Some(request.version)
+    })
 }
 
 fn imported_module<'a>(
@@ -406,13 +597,25 @@ fn imported_module<'a>(
 ) -> Result<&'a crate::source::declared::Module, crate::source::Error> {
     let module = if let Some((name, version)) = scope.split_once('@') {
         let version = version.parse::<u32>().ok();
-        session.modules.iter().find(|module| module.name == name && Some(module.version) == version)
+        session
+            .modules
+            .iter()
+            .find(|module| module.name == name && Some(module.version) == version)
     } else {
-        session.aliases.iter().rev().find(|alias| alias.spelling == scope)
+        session
+            .aliases
+            .iter()
+            .rev()
+            .find(|alias| alias.spelling == scope)
             .and_then(|alias| session.modules.get(alias.module))
     };
-    module.ok_or_else(|| at(crate::source::Stage::Resolve, span,
-        "missing imported proof module version"))
+    module.ok_or_else(|| {
+        at(
+            crate::source::Stage::Resolve,
+            span,
+            "missing imported proof module version",
+        )
+    })
 }
 
 /// Logical bodies nest at most 64 lists deep (`lexer::next_logical_body`);
@@ -428,7 +631,10 @@ fn resolve_uses(
     prior: &[crate::intrinsic::ProofObligation],
     mut dependencies: alloc::vec::Vec<crate::intrinsic::ProofDependency>,
 ) -> Result<
-    (crate::intrinsic::Form, alloc::vec::Vec<crate::intrinsic::ProofDependency>),
+    (
+        crate::intrinsic::Form,
+        alloc::vec::Vec<crate::intrinsic::ProofDependency>,
+    ),
     crate::source::Error,
 > {
     use crate::intrinsic::{Form, FormKind};
@@ -440,7 +646,10 @@ fn resolve_uses(
         frames[0] = Some(core::slice::from_mut(&mut term).iter_mut());
         let mut open = 1usize;
         while let Some(top) = open.checked_sub(1) {
-            let next = frames.get_mut(top).and_then(Option::as_mut).and_then(|items| items.next());
+            let next = frames
+                .get_mut(top)
+                .and_then(Option::as_mut)
+                .and_then(|items| items.next());
             let Some(Form { kind, span }) = next else {
                 open = top;
                 continue;
@@ -452,38 +661,59 @@ fn resolve_uses(
                 Some(FormKind::Atom(name)) if name == "use");
             if !is_use {
                 let Some(slot) = frames.get_mut(open) else {
-                    return Err(at(crate::source::Stage::Resolve, *span,
-                        "logical nesting exceeds supported depth"));
+                    return Err(at(
+                        crate::source::Stage::Resolve,
+                        *span,
+                        "logical nesting exceeds supported depth",
+                    ));
                 };
                 *slot = Some(items.iter_mut());
-                open = attempt!(open.checked_add(1).ok_or_else(|| at(crate::source::Stage::Resolve,
-                    *span, "logical nesting exceeds supported depth")));
+                open = attempt!(open.checked_add(1).ok_or_else(|| at(
+                    crate::source::Stage::Resolve,
+                    *span,
+                    "logical nesting exceeds supported depth"
+                )));
                 continue;
             }
             if items.len() != 2 {
-                return Err(at(crate::source::Stage::Resolve, *span,
-                    "use requires one resolved proof name"));
+                return Err(at(
+                    crate::source::Stage::Resolve,
+                    *span,
+                    "use requires one resolved proof name",
+                ));
             }
             let reference_span = items[1].span;
             let FormKind::Atom(reference) = &mut items[1].kind else {
-                return Err(at(crate::source::Stage::Resolve, reference_span,
-                    "use requires a proof identifier"));
+                return Err(at(
+                    crate::source::Stage::Resolve,
+                    reference_span,
+                    "use requires a proof identifier",
+                ));
             };
             if let Some((scope, name)) = reference.split_once('.') {
                 if is_current(request, scope) {
                     if !prior.iter().any(|proof| proof.name == name) {
-                        return Err(at(crate::source::Stage::Resolve, reference_span,
-                            "forward or cyclic local proof use"));
+                        return Err(at(
+                            crate::source::Stage::Resolve,
+                            reference_span,
+                            "forward or cyclic local proof use",
+                        ));
                     }
                     // Keep only the local name, in place, as the recursive form did.
                     let qualifier = scope.len();
                     reference.replace_range(..=qualifier, "");
                 } else {
                     let module = attempt!(imported_module(request.session, scope, reference_span));
-                    let Some(published) = module.proofs.iter()
-                        .find(|proof| proof.reference.name == name && proof.reference.exported) else {
-                        return Err(at(crate::source::Stage::Resolve, reference_span,
-                            "unknown or private imported proof"));
+                    let Some(published) = module
+                        .proofs
+                        .iter()
+                        .find(|proof| proof.reference.name == name && proof.reference.exported)
+                    else {
+                        return Err(at(
+                            crate::source::Stage::Resolve,
+                            reference_span,
+                            "unknown or private imported proof",
+                        ));
                     };
                     if !dependencies.iter().any(|proof| proof.name == *reference) {
                         let mut dependency = published.reference.clone();
@@ -492,8 +722,11 @@ fn resolve_uses(
                     }
                 }
             } else if !prior.iter().any(|proof| proof.name == *reference) {
-                return Err(at(crate::source::Stage::Resolve, reference_span,
-                    "unknown, forward or cyclic proof use"));
+                return Err(at(
+                    crate::source::Stage::Resolve,
+                    reference_span,
+                    "unknown, forward or cyclic proof use",
+                ));
             }
         }
     }

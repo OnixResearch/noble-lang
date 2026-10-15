@@ -175,9 +175,7 @@ impl Registry {
             noble_kernel::types::Ty::Contract => Shape::Contract,
             noble_kernel::types::Ty::Evidence => Shape::Evidence,
             noble_kernel::types::Ty::Certified => Shape::Certified,
-            noble_kernel::types::Ty::Resource(kind) if compiler.live_slots => {
-                Shape::Resource(kind)
-            }
+            noble_kernel::types::Ty::Resource(kind) if compiler.live_slots => Shape::Resource(kind),
             noble_kernel::types::Ty::Resource(_) => {
                 return Err(crate::Diagnostic::Unsupported);
             }

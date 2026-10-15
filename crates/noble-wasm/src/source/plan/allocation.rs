@@ -109,7 +109,13 @@ pub(super) fn bytes(
         Some(value) => value,
         None => return Err(crate::Diagnostic::Exhausted),
     };
-    if end_bytes > if calculator { 983_040 } else { super::super::MEMORY_BYTES } {
+    if end_bytes
+        > if calculator {
+            983_040
+        } else {
+            super::super::MEMORY_BYTES
+        }
+    {
         return Err(crate::Diagnostic::Exhausted);
     }
     *text_end = end_bytes;
@@ -179,7 +185,11 @@ pub(super) fn finish(
     let mut index = 0usize;
     let mut failure = None;
     while index < layout.programs.len() {
-        match entry(&mut layout.programs[index], &mut function, compiler.calculator) {
+        match entry(
+            &mut layout.programs[index],
+            &mut function,
+            compiler.calculator,
+        ) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -195,16 +205,19 @@ pub(super) fn finish(
         let mut value_inputs = alloc::vec::Vec::new();
         for (position, ty) in checked.interface.stack_in.iter().enumerate() {
             if matches!(ty, noble_kernel::types::Ty::LiveRef(_, _, _)) {
-                layout.borrowed_input_positions.push(attempt!(super::number(position)));
+                layout
+                    .borrowed_input_positions
+                    .push(attempt!(super::number(position)));
             } else {
                 value_inputs.push(ty.clone());
             }
         }
         layout.input_types = attempt!(layout.types.stack(&value_inputs, compiler, work));
     } else {
-        layout.input_types = attempt!(layout
-            .types
-            .stack(&checked.interface.stack_in, compiler, work));
+        layout.input_types =
+            attempt!(layout
+                .types
+                .stack(&checked.interface.stack_in, compiler, work));
     }
     layout.output_types =
         attempt!(layout

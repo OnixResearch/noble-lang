@@ -171,7 +171,8 @@ fn binding_index(
     debug_assert!(version != 0);
     let (_, input, operation) = requirement;
     if !((input == "Text" && operation == "test.emit")
-        || (input.is_empty() && operation == "test.clock")) {
+        || (input.is_empty() && operation == "test.clock"))
+    {
         return Err(crate::source::declared::error(
             crate::source::Stage::Link,
             "unsupported or mismatched required operation contract",
@@ -231,13 +232,12 @@ fn install_registration(
         Registration::Emit(binding) => environment.declare_bound_emit(binding),
         Registration::Clock(binding) => environment.declare_bound_clock(binding),
     };
-    let (environment, target) =
-        attempt!(result.map_err(|_| {
-            crate::source::declared::error(
-                crate::source::Stage::Link,
-                "bound adapter input, output or effect differs from required operation",
-            )
-        }));
+    let (environment, target) = attempt!(result.map_err(|_| {
+        crate::source::declared::error(
+            crate::source::Stage::Link,
+            "bound adapter input, output or effect differs from required operation",
+        )
+    }));
     context.environment = environment;
     Ok((session, target))
 }

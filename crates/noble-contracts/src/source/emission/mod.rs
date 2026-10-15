@@ -104,8 +104,10 @@ pub(super) fn emit(
     };
     if environment.calculator {
         if environment.defs.len() > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT {
-            return Err(super::Error::at(crate::source::Stage::Check,
-                super::exhausted(state.span, "calculator environment row limit exceeded")));
+            return Err(super::Error::at(
+                crate::source::Stage::Check,
+                super::exhausted(state.span, "calculator environment row limit exceeded"),
+            ));
         }
         // Interfaces have now materialized every selected specialization.
         // Each body below independently clones this exact environment with
@@ -113,26 +115,53 @@ pub(super) fn emit(
         // first checked body can own an Env.
         let budget = match environment.calculator_clone_budget() {
             Some(budget) => budget,
-            None => return Err(super::Error::at(crate::source::Stage::Check,
-                super::exhausted(state.span, "calculator selected environment clone bound exceeded"))),
+            None => {
+                return Err(super::Error::at(
+                    crate::source::Stage::Check,
+                    super::exhausted(
+                        state.span,
+                        "calculator selected environment clone bound exceeded",
+                    ),
+                ))
+            }
         };
         let copies = match u64::try_from(state.bodies.len()) {
             Ok(copies) => copies,
-            Err(_) => return Err(super::Error::at(crate::source::Stage::Check,
-                super::exhausted(state.span, "calculator selected clone count overflow"))),
+            Err(_) => {
+                return Err(super::Error::at(
+                    crate::source::Stage::Check,
+                    super::exhausted(state.span, "calculator selected clone count overflow"),
+                ))
+            }
         };
-        if budget.reserved_bytes.checked_mul(copies).is_none_or(|total|
-            total > noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
+        if budget
+            .reserved_bytes
+            .checked_mul(copies)
+            .is_none_or(|total| total > noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
         {
-            return Err(super::Error::at(crate::source::Stage::Check,
-                super::exhausted(state.span, "calculator selected environment clone fanout exceeded")));
+            return Err(super::Error::at(
+                crate::source::Stage::Check,
+                super::exhausted(
+                    state.span,
+                    "calculator selected environment clone fanout exceeded",
+                ),
+            ));
         }
-        let work = match budget.bytes.checked_mul(copies)
+        let work = match budget
+            .bytes
+            .checked_mul(copies)
             .and_then(|bytes| u32::try_from(bytes).ok())
         {
             Some(work) => work,
-            None => return Err(super::Error::at(crate::source::Stage::Check,
-                super::exhausted(state.span, "calculator selected environment clone work exceeded"))),
+            None => {
+                return Err(super::Error::at(
+                    crate::source::Stage::Check,
+                    super::exhausted(
+                        state.span,
+                        "calculator selected environment clone work exceeded",
+                    ),
+                ))
+            }
         };
         if let Err(error) = meter.charge(work, state.span) {
             return Err(super::Error::at(crate::source::Stage::Check, error));
@@ -281,12 +310,11 @@ fn checked(
     }
     let mut caller_environment = admission.environment.clone();
     caller_environment.caller_module = draft_owner;
-    let checked = match crate::program::check(
-        &caller_environment, &body.candidate, &request, &spans, span,
-    ) {
-        Ok(checked) => checked,
-        Err(error) => return Err(super::Error::at(crate::source::Stage::Acceptance, error)),
-    };
+    let checked =
+        match crate::program::check(&caller_environment, &body.candidate, &request, &spans, span) {
+            Ok(checked) => checked,
+            Err(error) => return Err(super::Error::at(crate::source::Stage::Acceptance, error)),
+        };
     Ok(CheckedBody {
         body,
         request,
