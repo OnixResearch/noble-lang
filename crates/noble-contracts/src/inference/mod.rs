@@ -194,6 +194,14 @@ impl Arena {
 
 pub(crate) const STACK_CAP: u32 = 256;
 
+/// Owned `Ty` nodes in one materialized value, counted separately from the
+/// logical `TYPE_CAP`. A generic instance owns both its ordered arguments and
+/// a descriptor copy of its payloads, so this physical count can double per
+/// nesting level while the logical size grows by a constant. Every inferred
+/// value is refused above this bound before its descriptor copies are cloned,
+/// which also bounds the later clone, equality and size walks over it.
+pub(crate) const TYPE_NODE_CAP: u32 = 4096;
+
 pub(crate) fn variable_at(
     variables: &[Variable],
     id: u32,

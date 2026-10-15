@@ -8,8 +8,33 @@ enum Step {
 
 #[octet::sealed_enum]
 pub(super) enum Material {
-    Value(noble_kernel::types::Ty, u32),
-    Stack(alloc::vec::Vec<noble_kernel::types::Ty>, u32),
+    Value(noble_kernel::types::Ty, Extent),
+    Stack(alloc::vec::Vec<noble_kernel::types::Ty>, Extent),
+}
+
+/// Two independent measures of one materialized value or stack.
+///
+/// `constructors` is the logical language type size checked against
+/// `TYPE_CAP`. `nodes` counts every owned `Ty` node of the Rust
+/// representation, including each generic instance's retained arguments
+/// *and* its separately owned canonical descriptor. Nested generic instances
+/// therefore grow exponentially in `nodes` while `constructors` grows
+/// linearly, so the two are checked against separate caps.
+#[derive(Clone, Copy)]
+pub(super) struct Extent {
+    pub(super) constructors: u32,
+    pub(super) nodes: u32,
+}
+
+impl Extent {
+    const LEAF: Self = Self {
+        constructors: 1,
+        nodes: 1,
+    };
+    const EMPTY: Self = Self {
+        constructors: 0,
+        nodes: 0,
+    };
 }
 
 pub(super) struct State {
@@ -185,7 +210,7 @@ impl super::Arena {
         match step {
             Step::Visit(id) => self.visit(id, state, span, meter),
             Step::Finish(term, effects) => {
-                state.finish(term, effects, &self.generic_nominals, span)
+                state.finish(term, effects, &self.generic_nominals, span, meter)
             }
         }
     }
@@ -213,16 +238,22 @@ impl super::Arena {
                 ));
             }
             super::Term::Link(_) => return Err(crate::internal(span)),
-            super::Term::Unit => Material::Value(noble_kernel::types::Ty::Unit, 1),
-            super::Term::Bool => Material::Value(noble_kernel::types::Ty::Bool, 1),
-            super::Term::I64 => Material::Value(noble_kernel::types::Ty::I64, 1),
-            super::Term::Text => Material::Value(noble_kernel::types::Ty::Text, 1),
-            super::Term::Syntax => Material::Value(noble_kernel::types::Ty::Syntax, 1),
-            super::Term::Contract => Material::Value(noble_kernel::types::Ty::Contract, 1),
-            super::Term::Evidence => Material::Value(noble_kernel::types::Ty::Evidence, 1),
-            super::Term::Certified => Material::Value(noble_kernel::types::Ty::Certified, 1),
+            super::Term::Unit => Material::Value(noble_kernel::types::Ty::Unit, Extent::LEAF),
+            super::Term::Bool => Material::Value(noble_kernel::types::Ty::Bool, Extent::LEAF),
+            super::Term::I64 => Material::Value(noble_kernel::types::Ty::I64, Extent::LEAF),
+            super::Term::Text => Material::Value(noble_kernel::types::Ty::Text, Extent::LEAF),
+            super::Term::Syntax => Material::Value(noble_kernel::types::Ty::Syntax, Extent::LEAF),
+            super::Term::Contract => {
+                Material::Value(noble_kernel::types::Ty::Contract, Extent::LEAF)
+            }
+            super::Term::Evidence => {
+                Material::Value(noble_kernel::types::Ty::Evidence, Extent::LEAF)
+            }
+            super::Term::Certified => {
+                Material::Value(noble_kernel::types::Ty::Certified, Extent::LEAF)
+            }
             super::Term::Resource(kind) => {
-                Material::Value(noble_kernel::types::Ty::Resource(kind), 1)
+                Material::Value(noble_kernel::types::Ty::Resource(kind), Extent::LEAF)
             }
             super::Term::Nominal(id) => {
                 let mut shape = None;
@@ -230,7 +261,7 @@ impl super::Arena {
                 while at < self.nominals.len() {
                     let (known, candidate) = &self.nominals[at];
                     if *known == id {
-                        shape = Some(candidate.clone());
+                        shape = Some(candidate);
                         break;
                     }
                     at += 1;
@@ -239,12 +270,18 @@ impl super::Arena {
                     Some(shape) => shape,
                     None => return Err(crate::internal(span)),
                 };
+                // The registered descriptor is copied into every occurrence;
+                // reserve its owned nodes before cloning it.
+                let descriptor = attempt!(super::finish::reserve_descriptor(shape, span, meter));
                 Material::Value(
-                    noble_kernel::types::Ty::Nominal(id, alloc::boxed::Box::new(shape)),
-                    1,
+                    noble_kernel::types::Ty::Nominal(id, alloc::boxed::Box::new(shape.clone())),
+                    Extent {
+                        constructors: 1,
+                        nodes: attempt!(super::finish::type_nodes(descriptor, 1, span)),
+                    },
                 )
             }
-            super::Term::Empty => Material::Stack(alloc::vec::Vec::new(), 0),
+            super::Term::Empty => Material::Stack(alloc::vec::Vec::new(), Extent::EMPTY),
             super::Term::Pair(a, b)
             | super::Term::Sum(a, b)
             | super::Term::Program(a, b)
