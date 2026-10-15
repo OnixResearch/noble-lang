@@ -3,3 +3,5 @@ import NobleFoundation.Literal
 import NobleFoundation.Instr
 import NobleFoundation.Sequence
 import NobleFoundation.Regressions
+import NobleFoundation.Helper
+import NobleFoundation.Slice

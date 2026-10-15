@@ -1,0 +1,23 @@
+{
+  "schema": "noble-foundation-helper-transcription/v1",
+  "model": "proofs/foundation/NobleFoundation/Helper.lean",
+  "note": "SHA-256 of the exact text of each transcribed WAT function (from \"(func $name\" to the next top-level \"(func\"). A mismatch means the Lean helper model must be re-reviewed.",
+  "files": {
+    "crates/noble-wasm/runtime/operations.wat": {
+      "$op_add": "eb5745f7a90309a29d6edd91a0b24c9d5f406aa4fca10e1d802bb942e00ece8f",
+      "$op_sub": "b6bb3a271ed57d2618efa82712566802fe2f78aa1fb26acc4ab697f5ce2dbb30",
+      "$op_mul": "2a9198afb21f81d42b16488ada5c9b38be6d0e2ae640828904bdccb56d91bc39"
+    },
+    "crates/noble-wasm/runtime/stack.wat": {
+      "$need": "f6fb7adebeebd2f734894b237419abebaa19692ded46f4764393d481c2c49fc5",
+      "$slot_kind": "74bfc81f3919ad0166c02245e5a7ac23aac94f7a61a744df5dd4c0b6df686908",
+      "$push_tag": "3509802fc41c3ffbda398ef8e9179b9dfc457048c589a81447ea8281533b734f",
+      "$push_i64": "3b0c6a0b80a4a4919b4e816ad346fb1ebcf74d986950068aae4f6d7d706e90be",
+      "$take": "f7005c417c0c9cccb63c82d13ac6e20829f74726420900b55665dd4c9a8fb6a7",
+      "$pop_kind": "44ee057fd622bb74dd7d498aadda2c02e39528e5e2f3ff87ce628956fa3dfeec"
+    },
+    "crates/noble-wasm/runtime/accounting.wat": {
+      "$fail": "6dd7fff77abe6a0f85000b3e84ddec9ff50029ac21aeea084603b1511cb1622a"
+    }
+  }
+}

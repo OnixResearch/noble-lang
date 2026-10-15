@@ -7,7 +7,7 @@
     "Classical.choice",
     "Quot.sound"
   ],
-  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator). No implementation theorem.",
+  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and transcribed runtime helpers). No implementation theorem.",
   "theorems": [
     {
       "name": "NobleFoundation.toZ_ofZ",
@@ -446,6 +446,72 @@
       "phase": 1,
       "role": "regression",
       "claim": "wrap (3 - 8) /= wrap (8 - 3)"
+    },
+    {
+      "name": "NobleFoundation.SlotsRel.length_eq",
+      "phase": 3,
+      "role": "helper-model",
+      "claim": "slot layout relation preserves stack length"
+    },
+    {
+      "name": "NobleFoundation.helper_refines_step",
+      "phase": 3,
+      "role": "helper-model",
+      "claim": "transcribed $op_add/$op_sub/$op_mul refine MC1 Step: unique successor, untouched remainder, left = deeper operand"
+    },
+    {
+      "name": "NobleFoundation.helper_fails_when_stuck",
+      "phase": 3,
+      "role": "helper-model",
+      "claim": "non-I64 operand: MC1 has no step and the transcribed helper records failure 4"
+    },
+    {
+      "name": "NobleFoundation.swapped_helper_refuted",
+      "phase": 3,
+      "role": "helper-model",
+      "claim": "a helper popping left first computes 5 instead of -5 on 3 8 -"
+    },
+    {
+      "name": "NobleFoundation.slice_body_exec",
+      "phase": 3,
+      "role": "slice",
+      "claim": "[ quote [ 1 + ] compose run ] body: any prefix, unique result n + 1"
+    },
+    {
+      "name": "NobleFoundation.slice_body_signed",
+      "phase": 3,
+      "role": "slice",
+      "claim": "slice body against the oracle: i64v x |-> i64v (wrap (x + 1))"
+    },
+    {
+      "name": "NobleFoundation.slice_root_inert",
+      "phase": 3,
+      "role": "slice",
+      "claim": "the subject root only pushes its program"
+    },
+    {
+      "name": "NobleFoundation.slice_driver",
+      "phase": 3,
+      "role": "slice",
+      "claim": "x [ ... ] run |-> wrap (x + 1) with any preserved prefix"
+    },
+    {
+      "name": "NobleFoundation.slice_body_typed",
+      "phase": 3,
+      "role": "slice",
+      "claim": "slice body is CodeTyped base ++ [I64] -> base ++ [I64]"
+    },
+    {
+      "name": "NobleFoundation.slice_exported_claim",
+      "phase": 3,
+      "role": "slice",
+      "claim": "MC1 exportedClaim for the slice body (MC2 contract form)"
+    },
+    {
+      "name": "NobleFoundation.slice_examples",
+      "phase": 3,
+      "role": "slice",
+      "claim": "41 |-> 42 and max |-> min through the driver"
     }
   ]
 }
