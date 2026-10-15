@@ -6,9 +6,25 @@ change the state or evidence of any canonical case; CALC-12 stays
 
 The lanes are documented separately: the [oracle](oracle/README.md), the
 [seeded faults](seeded-faults/README.md) and the
-[invalid-evidence controls](evidence-controls/README.md). Receipts are kept
-outside the repository under `/home/brittonr/.cache/noble-issues/receipts/`;
-the directory names are given below. Each comparison report records the
+[invalid-evidence controls](evidence-controls/README.md). The full receipts were written outside the repository under
+`/home/brittonr/.cache/noble-issues/receipts/`; the directory names are given
+below. Compact durable copies are committed in
+[`calc-12-receipts/`](calc-12-receipts/):
+
+- [`comparisons/`](calc-12-receipts/comparisons/): every oracle comparison
+  report cited here, the harness-level model reports, and the two vector files;
+- [`runs/`](calc-12-receipts/runs/): each of this lane's #19-runner runs as
+  `receipt.json` and `progress.jsonl`;
+- [`raw-io.tar.gz`](calc-12-receipts/raw-io.tar.gz): the raw stdin, stdout,
+  stderr and supervisor files of those runs and the unrelated-Wasm artifacts
+  (reproducible: sorted names, mtime 0, `gzip -n`);
+- [`evidence-controls/`](calc-12-receipts/evidence-controls/): the refusal
+  receipt and every generated claim;
+- [`mutants/`](calc-12-receipts/mutants/): mutant build records and startup
+  checks;
+- [`index.json`](calc-12-receipts/index.json): the SHA-256 of every committed
+  file and every file in the tarball, plus the hashes of the #19 and
+  integration runs' raw I/O that this lane compared. Each comparison report records the
 SHA-256 of the five oracle files and the Node version used (24.13.0, the
 pinned `NOBLE_NODE`).
 
@@ -28,10 +44,10 @@ and argv. Spans are judged only where the CALC-02 examples fix them.
 
 | Input set | Binary | Receipt (#19 runner output) | Result |
 |---|---|---|---|
-| The cases file's hand-written expectations (no CLI involved) | none | `calc12-comparisons-20261015T205424Z/cases.json` | 38/38 agree |
-| CALC-01 (15), CALC-02 (5), CALC-03 (4), CALC-06 session (1), CALC-07 CLI variants (5), CALC-09 (4) | 44329dc release | `calc-44329dc-release-20261015T172022Z` (#19 runner at `1e16953`) | **34/34 agree** |
-| The same 34 vectors | eccbc02 integrated | `calc-integration-eccbc02-release-20261015T202105Z` (receipt on branch `verification/calc-integration-eccbc02`, commit `ee5eef7`) | **34/34 agree** |
-| Seed 2112: 12 generated expressions and 2 generated sessions | 44329dc release | `calc12-gen2112-44329dc-release-20261015T170140Z` | 13 agree, 1 `budget-divergence` |
+| The cases file's hand-written expectations (no CLI involved) | none | [`comparisons/cases.json`](calc-12-receipts/comparisons/cases.json) | 38/38 agree |
+| CALC-01 (15), CALC-02 (5), CALC-03 (4), CALC-06 session (1), CALC-07 CLI variants (5), CALC-09 (4) | 44329dc release | `calc-44329dc-release-20261015T172022Z` (#19 runner at `1e16953`); report [`comparisons/sweep-44329dc.json`](calc-12-receipts/comparisons/sweep-44329dc.json) | **34/34 agree** |
+| The same 34 vectors | eccbc02 integrated | `calc-integration-eccbc02-release-20261015T202105Z` (receipt on branch `verification/calc-integration-eccbc02`, commit `ee5eef7`); report [`comparisons/integration-eccbc02.json`](calc-12-receipts/comparisons/integration-eccbc02.json) | **34/34 agree** |
+| Seed 2112: 12 generated expressions and 2 generated sessions | 44329dc release | [`calc12-gen2112-44329dc-release-20261015T170140Z`](calc-12-receipts/runs/calc12-gen2112-44329dc-release-20261015T170140Z/receipt.json); report [`comparisons/gen2112-44329dc.json`](calc-12-receipts/comparisons/gen2112-44329dc.json) | 13 agree, 1 `budget-divergence` |
 | #19 runner negative controls | both | as above | wrong-expected agrees with the oracle (the runner's wrong expectation is not used); forced timeout is `not-comparable` |
 
 Notes:
@@ -65,19 +81,19 @@ check (all eleven modules type-check; empty input, exit 0).
 
 | Fault | Mechanism | Probe | Oracle | Mutant output | Verdict / attribution | Receipt |
 |---|---|---|---|---|---|---|
-| reversed-subtraction | guest `op_begin_sub` operand swap | `10 - 3` | `7` | `-7` | disagree / `[reversed-subtraction]` | `calc12-fault-reversed-subtraction-20261015T172118Z` |
-| left-associated-power | guest `should_pop` pops at equal `^` precedence | `2^3^2` | `512` | `64` | disagree / `[left-associated-power]` | `calc12-fault-left-associated-power-20261015T182129Z` |
-| non-normalized-rational | guest `gcd_unit_bits_p` always true | `2 / 4` | `1/2` | `2/4` | disagree / `[non-normalized-rational]` | `calc12-fault-non-normalized-rational-20261015T173239Z` |
-| failure-mutates-session | host `Session::submit` clears accepted history on failure | `let x = 20` / `let x = 1 / 0` / `x` | `20`, `DivisionByZero`, `20` | `20`, `DivisionByZero`, `UnknownName [0,1)` | disagree / `[failure-mutates-session]` | `calc12-fault-failure-mutates-session-20261015T180239Z` |
-| integer-division | guest `op_divisor_admit`, truncating I64 quotient for integer operands | `7 / 2` | `7/2` | none: `InfrastructureFailure … calculator selected environment clone fanout exceeded` | **not comparable** (backend refused the phase) | `calc12-fault-integer-division-20261015T210028Z` |
-| I64-wrapping | guest `op_begin_add/sub/mul`, Core wrapping I64 words for integer operands | `9223372036854775807 + 1` | `9223372036854775808` | none: `InfrastructureFailure … calculator selected environment clone fanout exceeded` | **not comparable** (backend refused the phase) | `calc12-fault-I64-wrapping-20261015T210028Z` |
-| binary-float-decimal-parser | guest `parse_decimal_finish`, 2^-55 rounding with I64 words | `0.1` | `1/10` | none: `InfrastructureFailure … independent source compilation refused (exhausted)` | **not comparable** (backend refused the phase) | `calc12-fault-binary-float-decimal-parser-20261015T210028Z` |
-| control (unpatched) | none | all seven probes | as above | equal to the oracle | **7/7 agree** | `calc12-fault-control-20261015T184937Z` |
+| reversed-subtraction | guest `op_begin_sub` operand swap | `10 - 3` | `7` | `-7` | disagree / `[reversed-subtraction]` | [`calc12-fault-reversed-subtraction-20261015T172118Z`](calc-12-receipts/runs/calc12-fault-reversed-subtraction-20261015T172118Z/receipt.json) |
+| left-associated-power | guest `should_pop` pops at equal `^` precedence | `2^3^2` | `512` | `64` | disagree / `[left-associated-power]` | [`calc12-fault-left-associated-power-20261015T182129Z`](calc-12-receipts/runs/calc12-fault-left-associated-power-20261015T182129Z/receipt.json) |
+| non-normalized-rational | guest `gcd_unit_bits_p` always true | `2 / 4` | `1/2` | `2/4` | disagree / `[non-normalized-rational]` | [`calc12-fault-non-normalized-rational-20261015T173239Z`](calc-12-receipts/runs/calc12-fault-non-normalized-rational-20261015T173239Z/receipt.json) |
+| failure-mutates-session | host `Session::submit` clears accepted history on failure | `let x = 20` / `let x = 1 / 0` / `x` | `20`, `DivisionByZero`, `20` | `20`, `DivisionByZero`, `UnknownName [0,1)` | disagree / `[failure-mutates-session]` | [`calc12-fault-failure-mutates-session-20261015T180239Z`](calc-12-receipts/runs/calc12-fault-failure-mutates-session-20261015T180239Z/receipt.json) |
+| integer-division | guest `op_divisor_admit`, truncating I64 quotient for integer operands | `7 / 2` | `7/2` | none: `InfrastructureFailure … calculator selected environment clone fanout exceeded` | **not comparable** (backend refused the phase) | [`calc12-fault-integer-division-20261015T210028Z`](calc-12-receipts/runs/calc12-fault-integer-division-20261015T210028Z/receipt.json) |
+| I64-wrapping | guest `op_begin_add/sub/mul`, Core wrapping I64 words for integer operands | `9223372036854775807 + 1` | `9223372036854775808` | none: `InfrastructureFailure … calculator selected environment clone fanout exceeded` | **not comparable** (backend refused the phase) | [`calc12-fault-I64-wrapping-20261015T210028Z`](calc-12-receipts/runs/calc12-fault-I64-wrapping-20261015T210028Z/receipt.json) |
+| binary-float-decimal-parser | guest `parse_decimal_finish`, 2^-55 rounding with I64 words | `0.1` | `1/10` | none: `InfrastructureFailure … independent source compilation refused (exhausted)` | **not comparable** (backend refused the phase) | [`calc12-fault-binary-float-decimal-parser-20261015T210028Z`](calc-12-receipts/runs/calc12-fault-binary-float-decimal-parser-20261015T210028Z/receipt.json) |
+| control (unpatched) | none | all seven probes | as above | equal to the oracle | **7/7 agree** | [`calc12-fault-control-20261015T184937Z`](calc-12-receipts/runs/calc12-fault-control-20261015T184937Z/receipt.json) |
 
 **Bounded shrinking against a real binary.** One shrink round ran on the
 reversed-subtraction mutant: the input `5 / 4 - 6 / 2` plus at most three
 candidates (receipt
-`calc12-shrink-reversed-subtraction-20261015T181002Z`). The input and the
+[`calc12-shrink-reversed-subtraction-20261015T181002Z`](calc-12-receipts/runs/calc12-shrink-reversed-subtraction-20261015T181002Z/receipt.json)). The input and the
 candidate `4 - 6 / 2` still disagree (`7/4` vs `-7/4`, `-1` vs `1`), and both
 are attributed to `[reversed-subtraction]`. The subtraction-free candidates
 `5 / 4` and `6 / 2` agree. The smallest disagreeing input of that round is
@@ -104,16 +120,18 @@ defect on the real binary.
 
 | Fault | Attempt | Placement | Startup check | Observed on the probe | Receipt |
 |---|---|---|---|---|---|
-| integer-division | 1 | BigInt long division inlined into `op_first_stage_div_raw` | exit 0 | `independent source compilation refused (exhausted)` | `calc12-fault-integer-division-20261015T174124Z` |
-| integer-division | 2 (committed patch) | truncating I64 quotient in `op_divisor_admit` | exit 0 | `calculator selected environment clone fanout exceeded` | `calc12-fault-integer-division-20261015T210028Z` |
-| I64-wrapping | 1 | two's-complement wrap from bit-list division in `big_add_finish_add/_sub` | exit 0 | `independent source compilation refused (exhausted)` | `calc12-fault-I64-wrapping-20261015T183523Z` |
-| I64-wrapping | 2 (committed patch) | Core wrapping `+ - *` in `op_begin_add/sub/mul` | exit 0 | `calculator selected environment clone fanout exceeded` | `calc12-fault-I64-wrapping-20261015T210028Z` |
-| binary-float-decimal-parser | 1 | BigInt multiply/add/divide rounding in `parse_decimal_finish` | exit 0 | `calculator environment row limit exceeded` | `calc12-fault-binary-float-decimal-parser-20261015T180744Z` |
-| binary-float-decimal-parser | 2 (committed patch) | the same rounding with I64 words in `parse_decimal_finish` | exit 0 | `independent source compilation refused (exhausted)` | `calc12-fault-binary-float-decimal-parser-20261015T210028Z` |
-| binary-float-decimal-parser | 3 | a new `num@1.float_round_raw` definition run as a separate host phase | **exit 2**: `num@1: Check [0,0): module schema/definition count exceeded` | not run | `calc12-fault-binary-float-decimal-parser-20261015T210449Z` |
+| integer-division | 1 | BigInt long division inlined into `op_first_stage_div_raw` | exit 0 | `independent source compilation refused (exhausted)` | [`calc12-fault-integer-division-20261015T174124Z`](calc-12-receipts/runs/calc12-fault-integer-division-20261015T174124Z/receipt.json) |
+| integer-division | 2 (committed patch) | truncating I64 quotient in `op_divisor_admit` | exit 0 | `calculator selected environment clone fanout exceeded` | [`calc12-fault-integer-division-20261015T210028Z`](calc-12-receipts/runs/calc12-fault-integer-division-20261015T210028Z/receipt.json) |
+| I64-wrapping | 1 | two's-complement wrap from bit-list division in `big_add_finish_add/_sub` | exit 0 | `independent source compilation refused (exhausted)` | [`calc12-fault-I64-wrapping-20261015T183523Z`](calc-12-receipts/runs/calc12-fault-I64-wrapping-20261015T183523Z/receipt.json) |
+| I64-wrapping | 2 (committed patch) | Core wrapping `+ - *` in `op_begin_add/sub/mul` | exit 0 | `calculator selected environment clone fanout exceeded` | [`calc12-fault-I64-wrapping-20261015T210028Z`](calc-12-receipts/runs/calc12-fault-I64-wrapping-20261015T210028Z/receipt.json) |
+| binary-float-decimal-parser | 1 | BigInt multiply/add/divide rounding in `parse_decimal_finish` | exit 0 | `calculator environment row limit exceeded` | [`calc12-fault-binary-float-decimal-parser-20261015T180744Z`](calc-12-receipts/runs/calc12-fault-binary-float-decimal-parser-20261015T180744Z/receipt.json) |
+| binary-float-decimal-parser | 2 (committed patch) | the same rounding with I64 words in `parse_decimal_finish` | exit 0 | `independent source compilation refused (exhausted)` | [`calc12-fault-binary-float-decimal-parser-20261015T210028Z`](calc-12-receipts/runs/calc12-fault-binary-float-decimal-parser-20261015T210028Z/receipt.json) |
+| binary-float-decimal-parser | 3 | a new `num@1.float_round_raw` definition run as a separate host phase | **exit 2**: `num@1: Check [0,0): module schema/definition count exceeded` | not run | [`calc12-fault-binary-float-decimal-parser-20261015T210449Z`](calc-12-receipts/runs/calc12-fault-binary-float-decimal-parser-20261015T210449Z/receipt.json) |
 
-The startup checks and the attempt-2/3 comparisons are retained in
-`calc12-comparisons-attempt2-20261015T210525Z`. That directory's
+The startup checks are retained in
+[`mutants/attempt2-20261015T210525Z/`](calc-12-receipts/mutants/attempt2-20261015T210525Z/startup.txt),
+and the comparisons as `comparisons/fault-FAULT-attemptN.json` in
+[`calc-12-receipts/comparisons/`](calc-12-receipts/comparisons/). That directory's
 `startup.txt` lists the attempt-3 binary-float mutant; the attempt-2
 binary-float mutant (`d3d8c611…f4dc`) was checked separately and exits 0.
 
@@ -128,7 +146,7 @@ fault.
 [`oracle/faults.mjs`](oracle/faults.mjs) ran as the implementation on the
 same seed-2112 vectors and on the seven fault probes (reports
 `harness-FAULT-gen2112.json` and `harness-FAULT-fault-probes.json` in
-`calc12-comparisons-20261015T205424Z`). Every disagreement below is
+[`calc-12-receipts/comparisons/`](calc-12-receipts/comparisons/)). Every disagreement below is
 attributed only to the fault itself, and bounded shrinking reduces it:
 
 | Fault model | Disagreeing input | Model output | Oracle | Shrunk to |
@@ -146,7 +164,8 @@ mutant binary for these three faults remains open.
 
 ## Invalid-evidence controls
 
-Receipt: `calc12-evidence-controls-20261015T205438Z/receipt.json`.
+Receipt: `calc12-evidence-controls-20261015T205438Z/receipt.json`, committed as
+[`calc-12-receipts/evidence-controls/receipt.json`](calc-12-receipts/evidence-controls/receipt.json).
 
 - **Subject.** The 44329dc release binary plus the eleven embedded fixtures.
 - **Unrelated Wasm.** A real Core-Bootstrap `1 2 +` module that the same

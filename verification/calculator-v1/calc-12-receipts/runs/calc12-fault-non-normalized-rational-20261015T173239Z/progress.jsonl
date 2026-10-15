@@ -1,0 +1,1 @@
+{"at":"2026-10-15T17:41:24.300Z","id":"CALC-12/fault/non-normalized-rational","classification":"fail","wall_ms":523988.334479,"reasons":["stdout [\"2/4\"], expected [\"1/2\"]"]}

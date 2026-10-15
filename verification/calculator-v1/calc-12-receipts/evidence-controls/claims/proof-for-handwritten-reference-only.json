@@ -1,0 +1,22 @@
+{
+  "schema": "noble-calculator-evidence-claim/v1",
+  "kind": "proof",
+  "statement": "Normalization and addition are correct, proved about the hand-written CALC-12 reference rationals.",
+  "subject": {
+    "kind": "reference-model",
+    "path": "verification/calculator-v1/oracle/rational.mjs",
+    "sha256": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65"
+  },
+  "model": "exact-rational",
+  "covers": [
+    "normalization",
+    "addition"
+  ],
+  "artifacts": [
+    {
+      "path": "/home/brittonr/.cache/noble-issues/wt/issue-21/verification/calculator-v1/oracle/rational.mjs",
+      "sha256": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+      "role": "proof-subject"
+    }
+  ]
+}

@@ -1,0 +1,270 @@
+{
+  "schema": "noble-calculator-oracle-comparison/v1",
+  "lane": "CALC-12 independent oracle (distinct from #19 acceptance and from proofs)",
+  "run_dir": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z",
+  "run_receipt": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-control-20261015T184937Z/receipt.json",
+  "run_binary": {
+    "path": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+    "realpath": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+    "sha256": "97774049ad60747b283a254ee6d586db4515e39b1e9fe699baa48220dcb7aae6",
+    "bytes": 28281808,
+    "build_profile": "release",
+    "source_identity": "ffcce53 + seeded-faults/patches/control.patch (issue-21 mutant; control = unpatched)"
+  },
+  "run_result": "completed",
+  "provenance": {
+    "oracle_files": {
+      "rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+      "calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+      "generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+      "faults.mjs": "1199a4f0c7aec7cc700b2d20dc84f3486631003696f5c2c6a4e350269130e413",
+      "compare.mjs": "53fced6b32db8af05f134848cdaa6f2a7d27ebf249a42f0787a9a3b08143c29b"
+    },
+    "node": "v24.13.0",
+    "node_path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node"
+  },
+  "summary": {
+    "agree": 7
+  },
+  "results": [
+    {
+      "id": "CALC-12/fault/I64-wrapping",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+      "stdin_sha256": "a1de396186c1a8fb137a975b4e94fd4c2d3e569de8e8ff9d1aa554f1dba58a96",
+      "wall_ms": 590107.676681,
+      "lines": [
+        "9223372036854775807 + 1"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "9223372036854775808"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "9223372036854775808"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/fault/binary-float-decimal-parser",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+      "stdin_sha256": "a6311009c6c322ca8ac2e620cff5204f0c3af23115d403293a0cb5be36796688",
+      "wall_ms": 126122.1447,
+      "lines": [
+        "0.1"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "1/10"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "1/10"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/fault/failure-mutates-session",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+      "stdin_sha256": "280ade843d6ee2ee22398953052a3a88193ba1a3e3bb6f11740b6f87edca4887",
+      "wall_ms": 1031739.703213,
+      "lines": [
+        "let x = 20",
+        "let x = 1 / 0",
+        "x"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "20",
+          "20"
+        ],
+        "stderr": [
+          "DivisionByZero [10,11) provenance=unavailable"
+        ],
+        "status": 1,
+        "notes": [
+          "unspecified:numeric-error-span"
+        ]
+      },
+      "observed": {
+        "stdout": [
+          "20",
+          "20"
+        ],
+        "stderr": [
+          "DivisionByZero [10,11) provenance=unavailable"
+        ],
+        "status": 1
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [
+        {
+          "index": 0,
+          "observed": [
+            10,
+            11
+          ],
+          "oracle": [
+            10,
+            11
+          ],
+          "basis": "operator"
+        }
+      ],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/fault/integer-division",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+      "stdin_sha256": "640d730e6142ba1f432aaa4dbb176fa104c6b8f6b5421bc1107df40783d0a339",
+      "wall_ms": 281679.944313,
+      "lines": [
+        "7 / 2"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "7/2"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "7/2"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/fault/left-associated-power",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+      "stdin_sha256": "f09c3b1882aa759a742c1010398ee872e49908dea59c2e9ce0c08284d885ffb6",
+      "wall_ms": 536927.559964,
+      "lines": [
+        "2^3^2"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "512"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "512"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/fault/non-normalized-rational",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+      "stdin_sha256": "b11f0b74ef91c88de981ee18836780047d032fac1932d464d154183c30671980",
+      "wall_ms": 251097.053628,
+      "lines": [
+        "2 / 4"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "1/2"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "1/2"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/fault/reversed-subtraction",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-control",
+      "stdin_sha256": "0ae0e51aee07bfd04300fbdbbaaa26cbfc1c2f1846eee7f4df7941d45fc96a2c",
+      "wall_ms": 258062.233159,
+      "lines": [
+        "10 - 3"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "7"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "7"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    }
+  ],
+  "non_claims": [
+    "Agreement on finitely many inputs does not establish parser correctness or any universal arithmetic theorem.",
+    "The oracle is a test reference, not a proof; no CALC-EVIDENCE-02 proof claim is made.",
+    "No canonical case state or evidence is changed by this report.",
+    "The oracle has no model of the seven guest budgets; a ResourceLimit is reported as a divergence, never as agreement."
+  ]
+}

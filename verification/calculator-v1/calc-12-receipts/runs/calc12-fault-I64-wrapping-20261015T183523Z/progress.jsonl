@@ -1,0 +1,1 @@
+{"at":"2026-10-15T18:49:37.327Z","id":"CALC-12/fault/I64-wrapping","classification":"native-failure","wall_ms":853120.109242,"reasons":["exit 1","InfrastructureFailure: swap [ [ unpair swap [ num.op_first_stage_sum_finish_add ] dip swap [ pair inl ] [ drop drop unit inr ] result@1.Result.match ] [ inr ] case ] dip swap: independent source compilation refused (exhausted)"]}

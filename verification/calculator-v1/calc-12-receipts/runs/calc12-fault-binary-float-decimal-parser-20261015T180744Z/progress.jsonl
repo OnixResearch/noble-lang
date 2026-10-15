@@ -1,0 +1,1 @@
+{"at":"2026-10-15T18:09:56.603Z","id":"CALC-12/fault/binary-float-decimal-parser","classification":"native-failure","wall_ms":131409.094343,"reasons":["exit 1","InfrastructureFailure: swap [ expr.literal_decimal_finish_guest ] dip swap: Check [0,51): calculator environment row limit exceeded"]}

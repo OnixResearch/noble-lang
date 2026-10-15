@@ -1,0 +1,71 @@
+{
+  "schema": "noble-calculator-oracle-comparison/v1",
+  "lane": "CALC-12 independent oracle (distinct from #19 acceptance and from proofs)",
+  "run_dir": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-reversed-subtraction-20261015T172118Z",
+  "run_receipt": "/home/brittonr/.cache/noble-issues/receipts/calc12-fault-reversed-subtraction-20261015T172118Z/receipt.json",
+  "run_binary": {
+    "path": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+    "realpath": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+    "sha256": "22f2b54727af9bc658df162b5588719de8468ca2a2bbec2ca33ece584d2ca6e9",
+    "bytes": 28281696,
+    "build_profile": "release",
+    "source_identity": "ffcce53 + seeded-faults/patches/reversed-subtraction.patch (issue-21 mutant; control = unpatched)"
+  },
+  "run_result": "completed",
+  "provenance": {
+    "oracle_files": {
+      "rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+      "calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+      "generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+      "faults.mjs": "1199a4f0c7aec7cc700b2d20dc84f3486631003696f5c2c6a4e350269130e413",
+      "compare.mjs": "53fced6b32db8af05f134848cdaa6f2a7d27ebf249a42f0787a9a3b08143c29b"
+    },
+    "node": "v24.13.0",
+    "node_path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node"
+  },
+  "summary": {
+    "disagree": 1
+  },
+  "results": [
+    {
+      "id": "CALC-12/fault/reversed-subtraction",
+      "binary": "/home/brittonr/.cache/noble-issues/work/issue-21/mutants/noble-reversed-subtraction",
+      "stdin_sha256": "0ae0e51aee07bfd04300fbdbbaaa26cbfc1c2f1846eee7f4df7941d45fc96a2c",
+      "wall_ms": 520755.331136,
+      "lines": [
+        "10 - 3"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "7"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "-7"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "disagree",
+      "reasons": [
+        "stdout [\"-7\"] != oracle [\"7\"]"
+      ],
+      "spansNotJudged": [],
+      "matches_fault_models": [
+        "reversed-subtraction"
+      ]
+    }
+  ],
+  "non_claims": [
+    "Agreement on finitely many inputs does not establish parser correctness or any universal arithmetic theorem.",
+    "The oracle is a test reference, not a proof; no CALC-EVIDENCE-02 proof claim is made.",
+    "No canonical case state or evidence is changed by this report.",
+    "The oracle has no model of the seven guest budgets; a ResourceLimit is reported as a divergence, never as agreement."
+  ]
+}

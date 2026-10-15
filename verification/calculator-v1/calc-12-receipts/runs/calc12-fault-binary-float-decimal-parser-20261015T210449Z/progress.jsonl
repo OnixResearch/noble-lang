@@ -1,0 +1,1 @@
+{"at":"2026-10-15T21:04:49.983Z","id":"CALC-12/fault/binary-float-decimal-parser","classification":"native-failure","wall_ms":50.593538,"reasons":["exit 2","noble calculator: num@1: Check [0,0): module schema/definition count exceeded"]}

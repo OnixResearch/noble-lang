@@ -1,0 +1,603 @@
+{
+  "schema": "noble-calculator-oracle-harness/v1",
+  "implementation": "fault:integer-division",
+  "vectors_file": "/home/brittonr/.cache/noble-issues/receipts/calc12-comparisons-20261015T205424Z/vectors-gen2112.json",
+  "vectors_sha256": "2409dd82e8048882b6b053479f29c83d6f0b1f3dd9d59b22412dd2d6fb594095",
+  "provenance": {
+    "oracle_files": {
+      "rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+      "calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+      "generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+      "faults.mjs": "1199a4f0c7aec7cc700b2d20dc84f3486631003696f5c2c6a4e350269130e413",
+      "compare.mjs": "5bbed0a22349858efbc43b1b7acd6a8139767824253a80e069c1d6a4bcdafa87"
+    },
+    "node": "v24.13.0",
+    "node_path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node"
+  },
+  "summary": {
+    "disagree": 3,
+    "agree": 11
+  },
+  "results": [
+    {
+      "id": "CALC-12/gen-2112/01",
+      "lines": [
+        "11 / (2 + 8.68)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "275/267"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "1"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "disagree",
+      "reasons": [
+        "stdout [\"1\"] != oracle [\"275/267\"]"
+      ],
+      "spansNotJudged": [],
+      "matches_fault_models": [
+        "integer-division"
+      ],
+      "shrunk": {
+        "input": "1 / 2",
+        "rounds_used": 3,
+        "trail": [
+          "11 / (2)",
+          "11 / 2",
+          "1 / 2"
+        ],
+        "verdict": {
+          "lines": [
+            "1 / 2"
+          ],
+          "flags": [],
+          "mode": "default",
+          "oracle": {
+            "stdout": [
+              "1/2"
+            ],
+            "stderr": [],
+            "status": 0,
+            "notes": []
+          },
+          "observed": {
+            "stdout": [
+              "0"
+            ],
+            "stderr": [],
+            "status": 0
+          },
+          "verdict": "disagree",
+          "reasons": [
+            "stdout [\"0\"] != oracle [\"1/2\"]"
+          ],
+          "spansNotJudged": [],
+          "matches_fault_models": [
+            "integer-division"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CALC-12/gen-2112/02",
+      "lines": [
+        "1^-3 - 4"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "-3"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "-3"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/03",
+      "lines": [
+        "5 / 4 - 6 / 2"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "-7/4"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "-2"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "disagree",
+      "reasons": [
+        "stdout [\"-2\"] != oracle [\"-7/4\"]"
+      ],
+      "spansNotJudged": [],
+      "matches_fault_models": [
+        "integer-division"
+      ],
+      "shrunk": {
+        "input": "1 / 2",
+        "rounds_used": 3,
+        "trail": [
+          "5 / 4",
+          "1 / 4",
+          "1 / 2"
+        ],
+        "verdict": {
+          "lines": [
+            "1 / 2"
+          ],
+          "flags": [],
+          "mode": "default",
+          "oracle": {
+            "stdout": [
+              "1/2"
+            ],
+            "stderr": [],
+            "status": 0,
+            "notes": []
+          },
+          "observed": {
+            "stdout": [
+              "0"
+            ],
+            "stderr": [],
+            "status": 0
+          },
+          "verdict": "disagree",
+          "reasons": [
+            "stdout [\"0\"] != oracle [\"1/2\"]"
+          ],
+          "spansNotJudged": [],
+          "matches_fault_models": [
+            "integer-division"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CALC-12/gen-2112/04",
+      "lines": [
+        "2.3 - (0.5 + 2)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "-1/5"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "-1/5"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/05",
+      "lines": [
+        "3 / (4 - 4)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [],
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ],
+        "status": 1,
+        "notes": [
+          "unspecified:numeric-error-span"
+        ]
+      },
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ],
+        "status": 1
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [
+        {
+          "index": 0,
+          "observed": [
+            2,
+            3
+          ],
+          "oracle": [
+            2,
+            3
+          ],
+          "basis": "operator"
+        }
+      ],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/06",
+      "lines": [
+        "((4))^0 + )"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [],
+        "stderr": [
+          "SyntaxError [10,11) provenance=unavailable"
+        ],
+        "status": 1,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "SyntaxError [10,11) provenance=unavailable"
+        ],
+        "status": 1
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/07",
+      "lines": [
+        "2^64 + 1"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "18446744073709551617"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "18446744073709551617"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/08",
+      "lines": [
+        "1^3^-2"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [],
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ],
+        "status": 1,
+        "notes": [
+          "unspecified:numeric-error-span"
+        ]
+      },
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ],
+        "status": 1
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [
+        {
+          "index": 0,
+          "observed": [
+            1,
+            2
+          ],
+          "oracle": [
+            1,
+            2
+          ],
+          "basis": "operator"
+        }
+      ],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/09",
+      "lines": [
+        "5 * (9)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "45"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "45"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/10",
+      "lines": [
+        "10 - (10)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "0"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "0"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/11",
+      "lines": [
+        "3^-1 - 4"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "-11/3"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "-11/3"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/12",
+      "lines": [
+        "4 / 8 - 2 / 6"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "1/6"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "0"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "disagree",
+      "reasons": [
+        "stdout [\"0\"] != oracle [\"1/6\"]"
+      ],
+      "spansNotJudged": [],
+      "matches_fault_models": [
+        "integer-division"
+      ],
+      "shrunk": {
+        "input": "1 / 3",
+        "rounds_used": 3,
+        "trail": [
+          "2 / 6",
+          "1 / 6",
+          "1 / 3"
+        ],
+        "verdict": {
+          "lines": [
+            "1 / 3"
+          ],
+          "flags": [],
+          "mode": "default",
+          "oracle": {
+            "stdout": [
+              "1/3"
+            ],
+            "stderr": [],
+            "status": 0,
+            "notes": []
+          },
+          "observed": {
+            "stdout": [
+              "0"
+            ],
+            "stderr": [],
+            "status": 0
+          },
+          "verdict": "disagree",
+          "reasons": [
+            "stdout [\"0\"] != oracle [\"1/3\"]"
+          ],
+          "spansNotJudged": [],
+          "matches_fault_models": [
+            "integer-division"
+          ]
+        }
+      }
+    },
+    {
+      "id": "CALC-12/gen-2112/session-1",
+      "lines": [
+        "let x = 5",
+        "fn f(y)=x * y",
+        "let x = 8",
+        "f(2)",
+        "let x = 3 / 0",
+        "x"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "5",
+          "8",
+          "10",
+          "8"
+        ],
+        "stderr": [
+          "DivisionByZero [10,11) provenance=unavailable"
+        ],
+        "status": 1,
+        "notes": [
+          "unspecified:numeric-error-span"
+        ]
+      },
+      "observed": {
+        "stdout": [
+          "5",
+          "8",
+          "10",
+          "8"
+        ],
+        "stderr": [
+          "DivisionByZero [10,11) provenance=unavailable"
+        ],
+        "status": 1
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [
+        {
+          "index": 0,
+          "observed": [
+            10,
+            11
+          ],
+          "oracle": [
+            10,
+            11
+          ],
+          "basis": "operator"
+        }
+      ],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/session-2",
+      "lines": [
+        "let x = 1",
+        "fn f(y)=x * y",
+        "let x = 8",
+        "f(1)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "1",
+          "8",
+          "1"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "1",
+          "8",
+          "1"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    }
+  ],
+  "non_claims": [
+    "Agreement on finitely many inputs does not establish parser correctness or any universal arithmetic theorem.",
+    "The oracle is a test reference, not a proof; no CALC-EVIDENCE-02 proof claim is made.",
+    "No canonical case state or evidence is changed by this report.",
+    "The oracle has no model of the seven guest budgets; a ResourceLimit is reported as a divergence, never as agreement."
+  ]
+}

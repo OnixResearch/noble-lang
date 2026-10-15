@@ -1,0 +1,1 @@
+{"at":"2026-10-15T18:21:29.133Z","id":"CALC-12/fault/failure-mutates-session","classification":"fail","wall_ms":1129066.149509,"reasons":["stdout [\"20\"], expected [\"20\",\"20\"]","2 diagnostic lines, expected 1"]}

@@ -1,0 +1,14 @@
+{"at":"2026-10-15T18:36:12.256Z","id":"CALC-12/gen-2112/session-1","classification":"fail","wall_ms":5671407.706705,"reasons":["stdout [\"5\",\"8\",\"10\",\"8\"], expected [\"10\",\"8\"]"]}
+{"at":"2026-10-15T19:14:17.013Z","id":"CALC-12/gen-2112/session-2","classification":"fail","wall_ms":2284677.870872,"reasons":["stdout [\"1\",\"8\",\"1\"], expected [\"1\"]"]}
+{"at":"2026-10-15T19:27:16.768Z","id":"CALC-12/gen-2112/01","classification":"pass","wall_ms":779686.965156,"reasons":[]}
+{"at":"2026-10-15T19:34:07.115Z","id":"CALC-12/gen-2112/02","classification":"pass","wall_ms":410264.251277,"reasons":[]}
+{"at":"2026-10-15T19:43:31.856Z","id":"CALC-12/gen-2112/03","classification":"pass","wall_ms":564684.844313,"reasons":[]}
+{"at":"2026-10-15T19:52:02.252Z","id":"CALC-12/gen-2112/04","classification":"pass","wall_ms":510336.02834,"reasons":[]}
+{"at":"2026-10-15T19:57:27.166Z","id":"CALC-12/gen-2112/05","classification":"pass","wall_ms":324853.280744,"reasons":[]}
+{"at":"2026-10-15T19:59:26.241Z","id":"CALC-12/gen-2112/06","classification":"pass","wall_ms":119000.114117,"reasons":[]}
+{"at":"2026-10-15T20:21:01.012Z","id":"CALC-12/gen-2112/07","classification":"fail","wall_ms":1294700.280846,"reasons":["exit 1, expected 0","stdout [], expected [\"18446744073709551617\"]","1 diagnostic lines, expected 0"]}
+{"at":"2026-10-15T20:26:40.441Z","id":"CALC-12/gen-2112/08","classification":"pass","wall_ms":339373.664379,"reasons":[]}
+{"at":"2026-10-15T20:31:14.975Z","id":"CALC-12/gen-2112/09","classification":"pass","wall_ms":274481.120106,"reasons":[]}
+{"at":"2026-10-15T20:36:13.201Z","id":"CALC-12/gen-2112/10","classification":"pass","wall_ms":298170.443694,"reasons":[]}
+{"at":"2026-10-15T20:43:58.440Z","id":"CALC-12/gen-2112/11","classification":"pass","wall_ms":465179.442651,"reasons":[]}
+{"at":"2026-10-15T20:54:05.618Z","id":"CALC-12/gen-2112/12","classification":"pass","wall_ms":607123.680011,"reasons":[]}

@@ -1,0 +1,1 @@
+{"at":"2026-10-15T18:35:23.802Z","id":"CALC-12/fault/left-associated-power","classification":"fail","wall_ms":834137.991111,"reasons":["stdout [\"64\"], expected [\"512\"]"]}

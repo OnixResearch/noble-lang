@@ -1,0 +1,526 @@
+{
+  "schema": "noble-calculator-oracle-comparison/v1",
+  "lane": "CALC-12 independent oracle (distinct from #19 acceptance and from proofs)",
+  "run_dir": "/home/brittonr/.cache/noble-issues/receipts/calc12-gen2112-44329dc-release-20261015T170140Z",
+  "run_receipt": "/home/brittonr/.cache/noble-issues/receipts/calc12-gen2112-44329dc-release-20261015T170140Z/receipt.json",
+  "run_binary": {
+    "path": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "realpath": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+    "sha256": "e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127",
+    "bytes": 28221672,
+    "build_profile": "release",
+    "source_identity": "44329dc (origin/main WIP calculator), prebuilt noble-44329dc-release"
+  },
+  "run_result": "completed",
+  "provenance": {
+    "oracle_files": {
+      "rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+      "calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+      "generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+      "faults.mjs": "1199a4f0c7aec7cc700b2d20dc84f3486631003696f5c2c6a4e350269130e413",
+      "compare.mjs": "5bbed0a22349858efbc43b1b7acd6a8139767824253a80e069c1d6a4bcdafa87"
+    },
+    "node": "v24.13.0",
+    "node_path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node"
+  },
+  "summary": {
+    "agree": 13,
+    "budget-divergence": 1
+  },
+  "results": [
+    {
+      "id": "CALC-12/gen-2112/01",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "dc04a95573acb03d391ecdbd06c9a2d545549acdd599c37bb4a23e0c0e4d2528",
+      "wall_ms": 779686.965156,
+      "lines": [
+        "11 / (2 + 8.68)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "275/267"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "275/267"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/02",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "e6ec09cb057879ffaffeb5554ab2942d5c20bd0c5d4fc96e26660f67941fb8cf",
+      "wall_ms": 410264.251277,
+      "lines": [
+        "1^-3 - 4"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "-3"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "-3"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/03",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "1c7bcbb45eb1fa86c59f4b9d2b0b7fbbc63b2adad30e3d39fbca06a8c5e9a276",
+      "wall_ms": 564684.844313,
+      "lines": [
+        "5 / 4 - 6 / 2"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "-7/4"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "-7/4"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/04",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "fff9c5b5e8a56710ad4044f9ab813a32c193fd0df7689642b3b66ab50d7f5ddc",
+      "wall_ms": 510336.02834,
+      "lines": [
+        "2.3 - (0.5 + 2)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "-1/5"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "-1/5"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/05",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "1095fd4327d2beec37ebf2ed403d778d582448c18e249450a3d3b0245c02efe5",
+      "wall_ms": 324853.280744,
+      "lines": [
+        "3 / (4 - 4)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [],
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ],
+        "status": 1,
+        "notes": [
+          "unspecified:numeric-error-span"
+        ]
+      },
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ],
+        "status": 1
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [
+        {
+          "index": 0,
+          "observed": [
+            2,
+            3
+          ],
+          "oracle": [
+            2,
+            3
+          ],
+          "basis": "operator"
+        }
+      ],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/06",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "b17c3ae03de7c0dd11a3ce94b17efb4fcc6950812200606a4654b86a2107e8a6",
+      "wall_ms": 119000.114117,
+      "lines": [
+        "((4))^0 + )"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [],
+        "stderr": [
+          "SyntaxError [10,11) provenance=unavailable"
+        ],
+        "status": 1,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "SyntaxError [10,11) provenance=unavailable"
+        ],
+        "status": 1
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/07",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "83bb4061dac25a798117884f4002a22b5a9e73a21399bdcab34fb4d9eab3966b",
+      "wall_ms": 1294700.280846,
+      "lines": [
+        "2^64 + 1"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "18446744073709551617"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "ResourceLimit EvaluationWork [5,6) provenance=unavailable"
+        ],
+        "status": 1
+      },
+      "verdict": "budget-divergence",
+      "reasons": [
+        "observed ResourceLimit; the oracle has no budget model"
+      ],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/08",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "24dc95ed77f6bf7919811cc0cdfc0ec887183ccf9f0b43ab9a9d845c57e02a04",
+      "wall_ms": 339373.664379,
+      "lines": [
+        "1^3^-2"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [],
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ],
+        "status": 1,
+        "notes": [
+          "unspecified:numeric-error-span"
+        ]
+      },
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ],
+        "status": 1
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [
+        {
+          "index": 0,
+          "observed": [
+            1,
+            2
+          ],
+          "oracle": [
+            1,
+            2
+          ],
+          "basis": "operator"
+        }
+      ],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/09",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "1de8e13f9b9d29096d9a4010f4a980941bd44fa18d7e3048464cbb4870116d56",
+      "wall_ms": 274481.120106,
+      "lines": [
+        "5 * (9)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "45"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "45"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/10",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "663e049a3502983da7b09d8bdebb4d8209a78ffe63793273a04b8c6c96454a24",
+      "wall_ms": 298170.443694,
+      "lines": [
+        "10 - (10)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "0"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "0"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/11",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "003f9636343fe5b3afe2fa892ae06b6095607e21c98320194a6c644f69b728b7",
+      "wall_ms": 465179.442651,
+      "lines": [
+        "3^-1 - 4"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "-11/3"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "-11/3"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/12",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "530ca14e6e46f81eebcb787e15d5ee391faf918c7ac705c0bab721d01bf81cac",
+      "wall_ms": 607123.680011,
+      "lines": [
+        "4 / 8 - 2 / 6"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "1/6"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "1/6"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/session-1",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "e4c77032dba76837c0d1b3cb692832c1f95171c9af59dd95a0643fcb6a71a1e6",
+      "wall_ms": 5671407.706705,
+      "lines": [
+        "let x = 5",
+        "fn f(y)=x * y",
+        "let x = 8",
+        "f(2)",
+        "let x = 3 / 0",
+        "x"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "5",
+          "8",
+          "10",
+          "8"
+        ],
+        "stderr": [
+          "DivisionByZero [10,11) provenance=unavailable"
+        ],
+        "status": 1,
+        "notes": [
+          "unspecified:numeric-error-span"
+        ]
+      },
+      "observed": {
+        "stdout": [
+          "5",
+          "8",
+          "10",
+          "8"
+        ],
+        "stderr": [
+          "DivisionByZero [10,11) provenance=unavailable"
+        ],
+        "status": 1
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [
+        {
+          "index": 0,
+          "observed": [
+            10,
+            11
+          ],
+          "oracle": [
+            10,
+            11
+          ],
+          "basis": "operator"
+        }
+      ],
+      "matches_fault_models": []
+    },
+    {
+      "id": "CALC-12/gen-2112/session-2",
+      "binary": "/home/brittonr/.cache/noble-issues/bin/noble-44329dc-release",
+      "stdin_sha256": "9c38efa32e693e95ec519e39a8dd5c316e0f5b6416006ada0a105d64a0c68892",
+      "wall_ms": 2284677.870872,
+      "lines": [
+        "let x = 1",
+        "fn f(y)=x * y",
+        "let x = 8",
+        "f(1)"
+      ],
+      "flags": [],
+      "mode": "default",
+      "oracle": {
+        "stdout": [
+          "1",
+          "8",
+          "1"
+        ],
+        "stderr": [],
+        "status": 0,
+        "notes": []
+      },
+      "observed": {
+        "stdout": [
+          "1",
+          "8",
+          "1"
+        ],
+        "stderr": [],
+        "status": 0
+      },
+      "verdict": "agree",
+      "reasons": [],
+      "spansNotJudged": [],
+      "matches_fault_models": []
+    }
+  ],
+  "non_claims": [
+    "Agreement on finitely many inputs does not establish parser correctness or any universal arithmetic theorem.",
+    "The oracle is a test reference, not a proof; no CALC-EVIDENCE-02 proof claim is made.",
+    "No canonical case state or evidence is changed by this report.",
+    "The oracle has no model of the seven guest budgets; a ResourceLimit is reported as a divergence, never as agreement."
+  ]
+}
