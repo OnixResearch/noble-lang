@@ -22,7 +22,7 @@ const SELECTION: &str = include_str!("runtime/config.json");
 const ABI: &str = include_str!("runtime/abi.json");
 const DECLARED_ABI: &str = include_str!("runtime/declared-abi.json");
 
-pub(super) struct Engine {
+pub(crate) struct Engine {
     child: std::process::Child,
     replies: std::sync::mpsc::Receiver<Result<super::output::Report, super::output::Failure>>,
     reader: Option<std::thread::JoinHandle<()>>,
@@ -80,7 +80,7 @@ impl Engine {
         self.reply()
     }
 
-    pub fn start(options: &super::arguments::Options) -> Result<Self, super::output::Failure> {
+    pub(super) fn start(options: &super::arguments::Options) -> Result<Self, super::output::Failure> {
         let config = attempt!(configuration::build(options));
         Self::start_with_config(&config)
     }
@@ -91,6 +91,32 @@ impl Engine {
 
     pub fn start_slot() -> Result<Self, super::output::Failure> {
         Self::start_with_host(&configuration::slot(), SLOT_HOST, true)
+    }
+
+    pub fn start_calculator(optimized: bool) -> Result<Self, super::output::Failure> {
+        let config = attempt!(configuration::calculator(optimized));
+        let (send, replies) = std::sync::mpsc::sync_channel(1);
+        let mut engine = Self {
+            child: attempt!(launch_calculator(&config)),
+            replies,
+            reader: None,
+            control: None,
+            has_failed: false,
+        };
+        let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
+        engine.reader = Some(attempt!(std::thread::Builder::new()
+            .name("noble-calculator-wasm-output".into())
+            .spawn(move || protocol::receive(stream, send))
+            .map_err(super::framing::io_error)));
+        let ready = attempt!(engine.reply());
+        if ready.outcome != "ready" {
+            engine.has_failed = true;
+            return Err(super::output::Failure::new(
+                super::output::ErrorContext { stage: "wasm", outcome: "unsupported" },
+                ready.json,
+            ));
+        }
+        Ok(engine)
     }
 
     /// A separately framed, private host-operator datagram channel. Only the
@@ -448,6 +474,21 @@ fn launch(
     host: &str,
     child_control: Option<std::os::unix::net::UnixDatagram>,
 ) -> Result<std::process::Child, super::output::Failure> {
+    launch_with_temp(config, host, child_control, None)
+}
+
+fn launch_calculator(config: &str) -> Result<std::process::Child, super::output::Failure> {
+    let temp = attempt!(std::fs::canonicalize(std::env::temp_dir())
+        .map_err(super::framing::io_error));
+    launch_with_temp(config, HOST, None, Some(&temp))
+}
+
+fn launch_with_temp(
+    config: &str,
+    host: &str,
+    child_control: Option<std::os::unix::net::UnixDatagram>,
+    temp: Option<&std::path::Path>,
+) -> Result<std::process::Child, super::output::Failure> {
     // Linux caps each individual exec argument below its total ARG_MAX. Keep
     // the selected, embedded slot worker off the -e argument as it grows;
     // bounded chunks remain private to the freshly spawned, env-cleared Node
@@ -462,7 +503,11 @@ delete process.env.NOBLE_SLOT_SOURCE_PARTS;
 await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString('base64'));"#;
     let mut command = std::process::Command::new(NODE);
     let slot = child_control.is_some();
-    command.env_clear()
+    command.env_clear();
+    if let Some(temp) = temp {
+        command.env("TMPDIR", temp);
+    }
+    command
         .args([
             "--no-liftoff",
             "--no-wasm-lazy-compilation",

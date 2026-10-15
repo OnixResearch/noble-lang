@@ -1,0 +1,1488 @@
+module calc_display@1 [
+    opaque DisplayPending Pair<num@1.Rat,Bool> private
+    export DisplayPending
+    opaque FormatMeasured Pair<DisplayPending,Pair<num@1.Budget,I64>> private
+    export FormatMeasured
+    opaque FormatBitsAdmitted Pair<DisplayPending,Pair<num@1.Budget,I64>> private
+    export FormatBitsAdmitted
+    # The fraction branch is a guest-issued selection marker. Its payload
+    # needs only the Rat, not the original finite-mode request flag.
+    opaque FractionPending num@1.Rat private
+    export FractionPending
+    opaque FinitePending Pair<num@1.Rat,I64> private
+    export FinitePending
+    variant FactorTwoRoute Fraction FractionPending private Pending Pair<num@1.Rat,Pair<List<Bool>,I64>> private
+    export FactorTwoRoute
+    # One checked guest bit fold per host scheduling tick.  The host sees only
+    # the Bool supplied by these words; Rat, divisor, quotient and remainder
+    # remain typed guest-owned state throughout the scan.
+    opaque FiveCursor Pair<Pair<num@1.Rat,I64>,Pair<Pair<List<Bool>,Pair<I64,List<Bool>>>,Pair<I64,Bool>>> private
+    export FiveCursor
+    opaque FiveSeed Pair<num@1.Rat,Pair<List<Bool>,Pair<I64,Bool>>> private
+    export FiveSeed
+    variant FactorFiveSeed Fraction FractionPending public Pending FiveSeed public
+    export FactorFiveSeed
+    export FactorFiveSeed.Fraction
+    export FactorFiveSeed.Pending
+    export FactorFiveSeed.match
+    variant FactorFiveRoute Fraction FractionPending public Pending FiveCursor public
+    export FactorFiveRoute
+    export FactorFiveRoute.Fraction
+    export FactorFiveRoute.Pending
+    export FactorFiveRoute.match
+    variant FactorFiveRound Done FactorFiveRoute public Exact FiveCursor public
+    export FactorFiveRound
+    export FactorFiveRound.Done
+    export FactorFiveRound.Exact
+    export FactorFiveRound.match
+    opaque FiveRoundMeasured Pair<Pair<num@1.Rat,I64>,Pair<List<Bool>,I64>> private
+    export FiveRoundMeasured
+    variant FactorFiveMeasured Done FactorFiveRoute public Exact FiveRoundMeasured public
+    export FactorFiveMeasured
+    export FactorFiveMeasured.Done
+    export FactorFiveMeasured.Exact
+    export FactorFiveMeasured.match
+    opaque FiveRoundReady Pair<Pair<num@1.Rat,I64>,Pair<List<Bool>,Pair<I64,Bool>>> private
+    export FiveRoundReady
+    variant FactorFiveReady Done FactorFiveRoute public Exact FiveRoundReady public
+    export FactorFiveReady
+    export FactorFiveReady.Done
+    export FactorFiveReady.Exact
+    export FactorFiveReady.match
+    variant ModeMeasured Fraction FractionPending public Candidate Pair<num@1.Rat,Pair<Bool,I64>> public
+    export ModeMeasured
+    export ModeMeasured.Fraction
+    export ModeMeasured.Candidate
+    export ModeMeasured.match
+
+    variant DisplayChoice Fraction FractionPending public Finite FinitePending public
+    export DisplayChoice
+    export DisplayChoice.Fraction
+    export DisplayChoice.Finite
+    export DisplayChoice.match
+    opaque CountedFraction Pair<FractionPending,num@1.Budget> private
+    export CountedFraction
+    opaque CountedFinite Pair<FinitePending,num@1.Budget> private
+    export CountedFinite
+    variant CountedChoice Fraction CountedFraction public Finite CountedFinite public
+    export CountedChoice
+    export CountedChoice.Fraction
+    export CountedChoice.Finite
+    export CountedChoice.match
+    # Separate checked stages retain the unchosen finite branch as a typed
+    # continuation; no host arithmetic or branch selection is required.
+    variant CountProgress Ready CountedFraction public Denied calc_errors@1.NumericError public
+    export CountProgress
+    export CountProgress.Ready
+    export CountProgress.Denied
+    export CountProgress.match
+    opaque FractionNumeratorCount Pair<FractionPending,I64> private
+    export FractionNumeratorCount
+    variant CountDenominatorRoute Finite Pair<FinitePending,num@1.Budget> public Fraction Pair<FractionNumeratorCount,num@1.Budget> public
+    export CountDenominatorRoute
+    export CountDenominatorRoute.Finite
+    export CountDenominatorRoute.Fraction
+    export CountDenominatorRoute.match
+    opaque FractionTotalCount Pair<FractionPending,I64> private
+    export FractionTotalCount
+    variant CountChargeRoute Finite Pair<FinitePending,num@1.Budget> public Fraction Pair<FractionTotalCount,num@1.Budget> public
+    export CountChargeRoute
+    export CountChargeRoute.Finite
+    export CountChargeRoute.Fraction
+    export CountChargeRoute.match
+    variant CountContinuation Finite Pair<FinitePending,num@1.Budget> public Progress CountProgress public
+    export CountContinuation
+    export CountContinuation.Finite
+    export CountContinuation.Progress
+    export CountContinuation.match
+    opaque FiniteTotalCount Pair<FinitePending,I64> private
+    export FiniteTotalCount
+    variant CountFiniteContinuation Finite Pair<FiniteTotalCount,num@1.Budget> public Progress CountProgress public
+    export CountFiniteContinuation
+    export CountFiniteContinuation.Finite
+    export CountFiniteContinuation.Progress
+    export CountFiniteContinuation.match
+    # Guest-only handoff between OutputSize charging and branch resolution.
+    # A finite payload cannot be exposed as CountedFinite until its charge
+    # returned Ok; the original fraction progress was charged upstream.
+    variant CountFiniteChargeResult Ready CountedFinite public Denied calc_errors@1.NumericError public
+    export CountFiniteChargeResult
+    export CountFiniteChargeResult.Ready
+    export CountFiniteChargeResult.Denied
+    export CountFiniteChargeResult.match
+    variant CountFiniteCharged Finite CountFiniteChargeResult public Fraction CountProgress public
+    export CountFiniteCharged
+    export CountFiniteCharged.Finite
+    export CountFiniteCharged.Fraction
+    export CountFiniteCharged.match
+    # One source bit per tick of the exact quotient-by-ten fold. The caller
+    # sees only the guest Bool indicating whether more bits remain.
+    opaque FiniteCountCursor Pair<Pair<Pair<FinitePending,num@1.Budget>,Pair<List<Bool>,I64>>,Pair<List<Bool>,Pair<I64,List<Bool>>>> private
+    export FiniteCountCursor
+    variant CountFiniteReady Progress CountProgress public Active FiniteCountCursor public
+    export CountFiniteReady
+    export CountFiniteReady.Progress
+    export CountFiniteReady.Active
+    export CountFiniteReady.match
+    variant CountFiniteRoute Failed Unit public Ready Pair<I64,CountFiniteReady> public
+    export CountFiniteRoute
+    export CountFiniteRoute.Failed
+    export CountFiniteRoute.Ready
+    export CountFiniteRoute.match
+    variant CountFiniteOutcome Failed Unit public Ready Pair<I64,CountFiniteContinuation> public
+    export CountFiniteOutcome
+    export CountFiniteOutcome.Failed
+    export CountFiniteOutcome.Ready
+    export CountFiniteOutcome.match
+    opaque DisplayAscii List<I64> private
+    export DisplayAscii
+    variant AsciiContinuation Finite CountedFinite public Ready Pair<DisplayAscii,num@1.Budget> public
+    export AsciiContinuation
+    export AsciiContinuation.Finite
+    export AsciiContinuation.Ready
+    export AsciiContinuation.match
+    # ASCII phases can unwrap a counted token only after output-size admission.
+    # Their private successor retains exact binary division state, never a
+    # fresh uncharged value or a host-decided decimal rendering.
+    opaque FiniteAsciiParts Pair<Bool,Pair<List<Bool>,Pair<List<Bool>,List<Bool>>>> private
+    opaque CountedFiniteAscii Pair<FiniteAsciiParts,num@1.Budget> private
+    export CountedFiniteAscii
+    variant FractionWidth Pending Unit public Ready I64 public
+    export FractionWidth
+    variant FractionBuild Running Pair<Pair<List<Bool>,List<Bool>>,Pair<List<I64>,Pair<num@1.Budget,FractionWidth>>> public Denied calc_errors@1.NumericError public
+    opaque FractionAdmitCarry Pair<Pair<List<Bool>,List<Bool>>,List<I64>> private
+    export FractionAdmitCarry
+    variant FractionAdmitDecision Allowed num@1.Budget public Denied calc_errors@1.NumericError public
+    opaque FractionAdmitChecked Pair<FractionAdmitCarry,num@1.Budget> private
+    opaque FractionAdmitProduct Pair<FractionAdmitCarry,num@1.Budget> private
+    export FractionAdmitProduct
+    variant FractionAdmitChoice Running FractionBuild public Checked FractionAdmitChecked public
+    variant AsciiQuotientContinuation Finite CountedFiniteAscii public Ready Pair<DisplayAscii,num@1.Budget> public
+    export AsciiQuotientContinuation
+    export AsciiQuotientContinuation.Finite
+    export AsciiQuotientContinuation.Ready
+    export AsciiQuotientContinuation.match
+    opaque FiniteAsciiMeasured Pair<Bool,Pair<List<I64>,Pair<List<Bool>,Pair<List<Bool>,num@1.Budget>>>> private
+    export FiniteAsciiMeasured
+    variant AsciiMeasuredContinuation Finite FiniteAsciiMeasured public Ready Pair<DisplayAscii,num@1.Budget> public
+    export AsciiMeasuredContinuation
+    export AsciiMeasuredContinuation.Finite
+    export AsciiMeasuredContinuation.Ready
+    export AsciiMeasuredContinuation.match
+    variant FractionAsciiActive Running Pair<Pair<Bool,List<I64>>,FractionBuild> public Checked Pair<Pair<Bool,List<I64>>,FractionAdmitChecked> public
+    variant FractionAsciiState Complete Pair<DisplayAscii,num@1.Budget> public Pending FractionAsciiActive public
+    opaque FractionAsciiCursor Pair<I64,FractionAsciiState> private
+    export FractionAsciiCursor
+    variant AsciiFractionRoute Failed Unit public Ready FractionAsciiCursor public
+    export AsciiFractionRoute
+    export AsciiFractionRoute.Failed
+    export AsciiFractionRoute.Ready
+    export AsciiFractionRoute.match
+    variant FractionProductRoute Unchanged AsciiFractionRoute public Product Pair<I64,Pair<Pair<Bool,List<I64>>,FractionAdmitProduct>> public
+    export FractionProductRoute
+    opaque FractionDigitCursor Pair<Pair<I64,Pair<Bool,List<I64>>>,Pair<Pair<List<I64>,num@1.Budget>,Pair<List<Bool>,Pair<List<Bool>,I64>>>> private
+    export FractionDigitCursor
+    opaque FractionCompareCursor Pair<Pair<List<Bool>,List<Bool>>,I64> private
+    export FractionCompareCursor
+    opaque FractionSubtractCursor Pair<Pair<List<Bool>,List<Bool>>,Pair<Bool,List<Bool>>> private
+    export FractionSubtractCursor
+    variant FractionDigitScan Comparing FractionCompareCursor public Subtracting FractionSubtractCursor public
+    export FractionDigitScan
+    opaque ActiveDigit Pair<FractionDigitCursor,FractionDigitScan> private
+    export ActiveDigit
+    variant FractionAsciiOutcome Ready Pair<I64,Pair<DisplayAscii,num@1.Budget>> public Denied Pair<I64,calc_errors@1.NumericError> public
+    export FractionAsciiOutcome
+    export FractionAsciiOutcome.Ready
+    export FractionAsciiOutcome.Denied
+    export FractionAsciiOutcome.match
+    variant FractionAsciiFinal Complete FractionAsciiOutcome public Unfinished AsciiFractionRoute public
+    export FractionAsciiFinal
+    export FractionAsciiFinal.Complete
+    export FractionAsciiFinal.Unfinished
+    export FractionAsciiFinal.match
+    variant FractionAsciiCompleted Ready Pair<DisplayAscii,num@1.Budget> public Denied calc_errors@1.NumericError public
+    variant FractionAsciiRunning Completed FractionAsciiCompleted public Unfinished Pair<Pair<Bool,List<I64>>,FractionBuild> public
+    variant FractionAsciiResolved Completed FractionAsciiCompleted public Unfinished FractionAsciiState public
+
+    signature decimal_digit_step forall<S:stack>
+        [ S Pair<List<Bool>,List<I64>>
+          -- S Pair<List<Bool>,List<I64>> Bool ! pure ]
+    def decimal_digit_step [
+        unpair swap dup calc_bits@1.bits_empty
+        [ swap pair false ]
+        [ divide_ten_bits unpair 48 +
+          calc_bits@1.rot cons pair true ] if
+    ]
+
+    signature decimal_digit_bytes forall<S:stack>
+        [ S List<Bool> -- S List<I64> ! pure ]
+    def decimal_digit_bytes [
+        dup calc_bits@1.bits_empty
+        [ drop 48 nil cons ]
+        [ nil pair [ decimal_digit_step ] iterate
+          unpair swap drop ] if
+    ]
+
+    signature big_decimal_bytes forall<S:stack>
+        [ S calc_big@1.BigInt -- S List<I64> ! pure ]
+    def big_decimal_bytes [
+        dup calc_big@1.big_sign swap calc_big@1.big_bits swap
+        [ decimal_digit_bytes ] dip
+        [ 45 swap cons ] [ ] if
+    ]
+
+    signature append_ascii forall<S:stack>
+        [ S List<I64> List<I64> -- S List<I64> ! pure ]
+    def append_ascii [
+        [ calc_bits@1.reverse_i64 ] dip pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap [ swap ] dip swap cons pair true ] list.case
+        ] iterate
+        unpair swap drop
+    ]
+
+    signature rat_decimal_bytes forall<S:stack>
+        [ S num@1.Rat -- S List<I64> ! pure ]
+    def rat_decimal_bytes [
+        num@1.rat_parts unpair dup calc_big@1.big_mag_one_p
+        [ drop nil cons ]
+        [ swap nil cons cons ] if
+        # Every call site is compiled as its own definition, so both parts go
+        # through one big_decimal_bytes site: the denominator (if any) first,
+        # then the numerator, prefixed onto "/" and the denominator bytes.
+        nil pair [ decimal_bytes_step ] iterate
+        unpair swap drop
+    ]
+    signature factor_two_step forall<S:stack>
+        [ S List<Bool> -- S List<Bool> Bool ! pure ]
+    def factor_two_step [
+        # Little-endian normalized bits divide by two by dropping one zero
+        # low bit; an odd bit keeps the original denominator.
+        dup
+        [ false ]
+        [ swap [ drop false ] [ swap drop true ] if ]
+        list.case
+    ]
+
+    signature five_digit forall<S:stack>
+        [ S Pair<I64,List<Bool>> Bool -- S Pair<I64,List<Bool>> ! pure ]
+    def five_digit [
+        [ unpair ] dip [ swap ] dip
+        [ 1 ] [ 0 ] if
+        [ 2 * ] dip +
+        dup 5 i64.cmp -1 =
+        [ swap false swap cons pair ]
+        [ 5 - swap true swap cons pair ] if
+    ]
+
+    signature divide_five_step forall<S:stack>
+        [ S Pair<List<Bool>,Pair<I64,List<Bool>>>
+          -- S Pair<List<Bool>,Pair<I64,List<Bool>>> Bool ! pure ]
+    def divide_five_step [
+        unpair swap
+        [ nil swap pair false ]
+        [ [ five_digit ] dip swap pair true ] list.case
+    ]
+
+    signature ten_digit forall<S:stack>
+        [ S Pair<I64,List<Bool>> Bool -- S Pair<I64,List<Bool>> ! pure ]
+    def ten_digit [
+        [ unpair ] dip [ swap ] dip
+        [ 1 ] [ 0 ] if
+        [ 2 * ] dip +
+        dup 10 i64.cmp -1 =
+        [ swap false swap cons pair ]
+        [ 10 - swap true swap cons pair ] if
+    ]
+
+    signature divide_ten_step forall<S:stack>
+        [ S Pair<List<Bool>,Pair<I64,List<Bool>>>
+          -- S Pair<List<Bool>,Pair<I64,List<Bool>>> Bool ! pure ]
+    def divide_ten_step [
+        unpair swap
+        [ nil swap pair false ]
+        [ [ ten_digit ] dip swap pair true ] list.case
+    ]
+
+    # Divide magnitude by ten with a bounded 0..9 remainder, never
+    # materializing a variable-divisor quotient or widened power of ten.
+    signature divide_ten_bits forall<S:stack>
+        [ S List<Bool> -- S Pair<List<Bool>,I64> ! pure ]
+    def divide_ten_bits [
+        calc_bits@1.reverse_bits
+        0 nil pair pair [ divide_ten_step ] iterate
+        unpair swap drop unpair swap
+        [ calc_bits@1.trim_bits ] dip pair
+    ]
+
+    # For a k-bit remainder, 10*r has either k+3 or k+4 bits.  The boundary
+    # between them is (4/5)*2^k, whose first k binary digits are 1100 repeated.
+    # Compare those digits from low to high: a more significant difference
+    # replaces an earlier one.  This scans the original bits without allocating
+    # a widened intermediate merely to decide whether that intermediate fits.
+    signature pattern_bit_compare forall<S:stack>
+        [ S Bool Bool -- S I64 ! pure ]
+    def pattern_bit_compare [
+        pair dup unpair calc_bits@1.bool_equal
+        [ drop 0 ]
+        [ unpair
+          [ drop -1 ] [ drop 1 ] if ] if
+    ]
+
+    signature pattern_phase_compare forall<S:stack>
+        [ S I64 Bool -- S Pair<I64,I64> ! pure ]
+    def pattern_phase_compare [
+        [ dup ] dip swap 2 i64.cmp -1 =
+        [ true ] [ false ] if
+        pattern_bit_compare
+        [ dup 0 = [ drop 3 ] [ 1 - ] if ] dip pair
+    ]
+
+    signature pattern_update forall<S:stack>
+        [ S Pair<I64,I64> Bool -- S Pair<I64,I64> ! pure ]
+    def pattern_update [
+        [ unpair ] dip [ swap ] dip
+        pattern_phase_compare unpair
+        calc_bits@1.rot swap
+        dup 0 =
+        [ drop pair ]
+        [ swap drop pair ] if
+    ]
+
+    signature pattern_step forall<S:stack>
+        [ S Pair<List<Bool>,Pair<I64,I64>>
+          -- S Pair<List<Bool>,Pair<I64,I64>> Bool ! pure ]
+    def pattern_step [
+        unpair swap
+        [ nil swap pair false ]
+        [ [ pattern_update ] dip swap pair true ] list.case
+    ]
+
+    signature ten_product_width forall<S:stack>
+        [ S List<Bool> -- S I64 ! pure ]
+    def ten_product_width [
+        dup calc_bits@1.bit_count
+        dup 1 - 4 i64.div-rem drop swap drop
+        0 pair
+        calc_bits@1.rot swap pair
+        [ pattern_step ] iterate
+        unpair swap drop unpair swap drop
+        0 i64.cmp 1 =
+        [ 4 + ] [ 3 + ] if
+    ]
+
+    # Measure only a nonzero remainder's exact next width, before its separate
+    # checked admission and only then the multiplication by ten.
+    signature fraction_measure_width forall<S:stack>
+        [ S FractionBuild -- S Pair<FractionBuild,Bool> ! pure ]
+    def fraction_measure_width [
+        [ dup unpair drop unpair drop calc_bits@1.bits_empty
+          [ FractionBuild.Running false pair ]
+          [ dup unpair drop unpair drop ten_product_width
+            [ unpair [ unpair ] dip unpair unpair ] dip
+            [ drop ] dip FractionWidth.Ready
+            pair pair [ pair ] dip pair
+            FractionBuild.Running true pair ] if ]
+        [ FractionBuild.Denied false pair ]
+        FractionBuild.match
+    ]
+
+    signature fraction_admit_unpack forall<S:stack>
+        [ S FractionAdmitCarry num@1.Budget -- S FractionAdmitChecked ! pure ]
+    def fraction_admit_unpack [
+        pair FractionAdmitChecked.new
+    ]
+
+    signature fraction_admit_ready forall<S:stack>
+        [ S List<Bool> List<Bool> List<I64> num@1.Budget I64
+          -- S Pair<FractionAdmitChoice,Bool> ! pure ]
+    def fraction_admit_ready [
+        [ [ [ pair ] dip pair FractionAdmitCarry.new ] dip ] dip
+        calc_bits@1.rot [ num@1.admit_bits ] dip
+        [ [ FractionAdmitDecision.Allowed ]
+          [ FractionAdmitDecision.Denied ]
+          result@1.Result.match ] dip
+        swap
+        [ fraction_admit_unpack FractionAdmitChoice.Checked true pair ]
+        [ swap drop FractionBuild.Denied
+          FractionAdmitChoice.Running false pair ]
+        FractionAdmitDecision.match
+    ]
+
+    signature fraction_admit_issue forall<S:stack>
+        [ S FractionBuild -- S Pair<FractionAdmitChoice,Bool> ! pure ]
+    def fraction_admit_issue [
+        [ dup unpair drop unpair drop calc_bits@1.bits_empty
+          [ FractionBuild.Running FractionAdmitChoice.Running false pair ]
+          [ unpair [ unpair ] dip unpair
+            unpair
+            [ drop
+              unit FractionWidth.Pending pair
+              pair [ pair ] dip pair FractionBuild.Running
+              FractionAdmitChoice.Running false pair ]
+            [ fraction_admit_ready ]
+            FractionWidth.match ] if ]
+        [ FractionBuild.Denied FractionAdmitChoice.Running false pair ]
+        FractionBuild.match
+    ]
+
+    signature fraction_admit_multiply forall<S:stack>
+        [ S FractionAdmitChecked -- S FractionAdmitProduct ! pure ]
+    def fraction_admit_multiply [
+        FractionAdmitChecked.into unpair
+        [ FractionAdmitCarry.into unpair [ unpair ] dip ] dip
+        [ [ [ calc_bits@1.multiply_ten_bits ] dip ] dip ] dip
+        [ [ pair ] dip pair FractionAdmitCarry.new ] dip
+        pair FractionAdmitProduct.new
+    ]
+
+    signature fraction_digit_collect forall<S:stack>
+        [ S Pair<List<I64>,num@1.Budget>
+            Pair<List<Bool>,Pair<List<Bool>,I64>>
+          -- S Pair<FractionBuild,Bool> ! pure ]
+    def fraction_digit_collect [
+        swap
+        [ unpair unpair swap [ pair ] dip swap ] dip
+        unpair
+        [ [ unpair ] dip ] dip
+        [ swap 48 + swap cons ] dip
+        [ [ swap ] dip ] dip
+        unit FractionWidth.Pending pair
+        pair [ pair ] dip pair FractionBuild.Running true pair
+    ]
+
+    signature output_limit forall<S:stack>
+        [ S -- S result@1.Result<Pair<Text,num@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    def output_limit [
+        unit calc_errors@1.LimitIO.OutputSize
+        calc_errors@1.LimitPrimary.IO
+        calc_errors@1.LimitCategory.Primary
+        calc_errors@1.NumericError.ResourceLimit result@1.Result.Err
+    ]
+
+    signature format_measure forall<S:stack>
+        [ S num@1.Rat Bool num@1.Budget -- S FormatMeasured ! pure ]
+    export format_measure
+    def format_measure [
+        [ pair DisplayPending.new ] dip
+        [ dup DisplayPending.into unpair drop
+          num@1.rat_total_width 2 + ] dip
+        swap pair pair FormatMeasured.new
+    ]
+
+    signature format_admit_bits forall<S:stack>
+        [ S FormatMeasured
+          -- S result@1.Result<FormatBitsAdmitted,calc_errors@1.NumericError> ! pure ]
+    export format_admit_bits
+    def format_admit_bits [
+        FormatMeasured.into unpair unpair dup
+        [ num@1.admit_bits ] dip swap
+        [ swap pair pair FormatBitsAdmitted.new result@1.Result.Ok ]
+        [ [ drop ] dip swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature format_charge_work forall<S:stack>
+        [ S FormatBitsAdmitted
+          -- S result@1.Result<Pair<DisplayPending,num@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export format_charge_work
+    def format_charge_work [
+        FormatBitsAdmitted.into unpair unpair
+        dup * 100 * calc_bits@1.rot [ num@1.charge_work ] dip swap
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+
+    # Avoid factoring an unrequested finite mode, and retain the powers of 2
+    # for the next checked phase instead of factoring this denominator twice.
+    signature factor_two_phase forall<S:stack>
+        [ S DisplayPending -- S FactorTwoRoute ! pure ]
+    export factor_two_phase
+    def factor_two_phase [
+        DisplayPending.into unpair
+        [ dup num@1.rat_parts unpair swap drop calc_big@1.big_bits
+          0 pair [ factor_two_count_step ] iterate
+          pair FactorTwoRoute.Pending ]
+        [ FractionPending.new FactorTwoRoute.Fraction ] if
+    ]
+
+    signature five_cursor_one forall<S:stack>
+        [ S FiveCursor -- S Bool ! pure ]
+    def five_cursor_one [
+        FiveCursor.into unpair swap drop unpair swap drop unpair swap drop
+    ]
+
+    signature bits_one forall<S:stack>
+        [ S List<Bool> -- S Bool ! pure ]
+    def bits_one [
+        [ false ]
+        [ calc_bits@1.bits_empty swap
+          [ ] [ drop false ] if ] list.case
+    ]
+
+    signature factor_five_seed forall<S:stack>
+        [ S FactorTwoRoute -- S FactorFiveSeed ! pure ]
+    export factor_five_seed
+    def factor_five_seed [
+        [ FactorFiveSeed.Fraction ]
+        [ unpair unpair
+          [ dup bits_one ] dip
+          [ swap ] dip calc_bits@1.rot
+          pair pair pair FiveSeed.new FactorFiveSeed.Pending ]
+        FactorTwoRoute.match
+    ]
+
+    signature factor_five_begin forall<S:stack>
+        [ S FactorFiveSeed -- S Pair<FactorFiveRoute,Bool> ! pure ]
+    export factor_five_begin
+    def factor_five_begin [
+        [ FactorFiveRoute.Fraction false pair ]
+        [ FiveSeed.into unpair unpair unpair
+          [ swap ] dip
+          [ calc_bits@1.reverse_bits ] dip
+          [ [ pair ] dip ] dip
+          [ 0 nil pair pair ] dip
+          0 swap pair pair pair FiveCursor.new
+          dup five_cursor_one calc_bits@1.bool_not
+          [ FactorFiveRoute.Pending ] dip pair ]
+        FactorFiveSeed.match
+    ]
+
+    # The quotient bit fold has no nested iterate.  The returned Bool means
+    # that a source bit was consumed and the caller should tick again.
+    signature factor_five_tick forall<S:stack>
+        [ S FactorFiveRoute -- S Pair<FactorFiveRoute,Bool> ! pure ]
+    export factor_five_tick
+    def factor_five_tick [
+        [ FactorFiveRoute.Fraction false pair ]
+        [ FiveCursor.into unpair unpair
+          [ divide_five_step ] dip swap
+          [ pair ] dip
+          [ pair FiveCursor.new FactorFiveRoute.Pending ] dip pair ]
+        FactorFiveRoute.match
+    ]
+
+    signature five_cursor_remainder_zero forall<S:stack>
+        [ S FiveCursor -- S Bool ! pure ]
+    def five_cursor_remainder_zero [
+        FiveCursor.into unpair unpair
+        calc_bits@1.rot drop drop
+        unpair swap drop unpair drop 0 =
+    ]
+
+    signature factor_five_round_check forall<S:stack>
+        [ S FactorFiveRoute -- S FactorFiveRound ! pure ]
+    export factor_five_round_check
+    def factor_five_round_check [
+        [ FactorFiveRoute.Fraction FactorFiveRound.Done ]
+        [ dup five_cursor_remainder_zero
+          [ FactorFiveRound.Exact ]
+          [ FactorFiveRoute.Pending FactorFiveRound.Done ] if ]
+        FactorFiveRoute.match
+    ]
+
+    signature factor_five_round_trim forall<S:stack>
+        [ S FactorFiveRound -- S FactorFiveMeasured ! pure ]
+    export factor_five_round_trim
+    def factor_five_round_trim [
+        [ FactorFiveMeasured.Done ]
+        [ FiveCursor.into unpair unpair
+          [ unpair swap drop unpair swap drop ] dip
+          unpair drop
+          [ calc_bits@1.trim_bits ] dip
+          pair pair FiveRoundMeasured.new FactorFiveMeasured.Exact ]
+        FactorFiveRound.match
+    ]
+
+    signature factor_five_round_compare forall<S:stack>
+        [ S FactorFiveMeasured -- S FactorFiveReady ! pure ]
+    export factor_five_round_compare
+    def factor_five_round_compare [
+        [ FactorFiveReady.Done ]
+        [ FiveRoundMeasured.into unpair unpair
+          [ dup bits_one ] dip
+          [ swap ] dip calc_bits@1.rot
+          pair pair pair FiveRoundReady.new FactorFiveReady.Exact ]
+        FactorFiveMeasured.match
+    ]
+
+    # The Bool schedules another bit scan only when the exact quotient is not
+    # yet one.  The quotient, count and certificate remain in the guest cursor.
+    signature factor_five_round_advance forall<S:stack>
+        [ S FactorFiveReady -- S Pair<FactorFiveRoute,Bool> ! pure ]
+    export factor_five_round_advance
+    def factor_five_round_advance [
+        [ false pair ]
+        [ FiveRoundReady.into unpair unpair unpair
+          [ swap ] dip
+          [ [ 1 + ] dip ] dip
+          [ calc_bits@1.reverse_bits ] dip
+          [ 0 nil pair pair ] dip
+          [ swap ] dip
+          dup calc_bits@1.bool_not
+          [ pair pair pair FiveCursor.new
+            FactorFiveRoute.Pending ] dip pair ]
+        FactorFiveReady.match
+    ]
+
+    signature factor_five_finish forall<S:stack>
+        [ S FactorFiveRoute -- S ModeMeasured ! pure ]
+    export factor_five_finish
+    def factor_five_finish [
+        [ ModeMeasured.Fraction ]
+        [ FiveCursor.into unpair unpair
+          swap drop unpair
+          [ swap ] dip [ unpair ] dip
+          [ calc_bits@1.rot ] dip
+          [ max_i64 ] dip swap
+          pair pair ModeMeasured.Candidate ]
+        FactorFiveRoute.match
+    ]
+
+    # The guest alone decides whether the requested finite rendering actually
+    # terminates; the selected pending token carries the exact decimal places.
+    signature selected_finish forall<S:stack>
+        [ S ModeMeasured -- S DisplayChoice ! pure ]
+    export selected_finish
+    def selected_finish [
+        [ DisplayChoice.Fraction ]
+        [ unpair unpair swap
+          [ pair FinitePending.new DisplayChoice.Finite ]
+          [ drop FractionPending.new DisplayChoice.Fraction ] if ]
+        ModeMeasured.match
+    ]
+
+    signature decimal_digit_count forall<S:stack>
+        [ S List<Bool> -- S I64 ! pure ]
+    def decimal_digit_count [
+        dup calc_bits@1.bits_empty
+        [ drop 1 ]
+        [ 0 pair
+          [ unpair swap dup calc_bits@1.bits_empty
+            [ swap pair false ]
+            [ divide_ten_bits unpair drop
+              swap 1 + pair true ] if
+          ] iterate
+          unpair swap drop ] if
+    ]
+
+    signature fraction_numerator_size forall<S:stack>
+        [ S FractionPending -- S I64 ! pure ]
+    def fraction_numerator_size [
+        FractionPending.into
+        num@1.rat_parts unpair drop
+        dup calc_big@1.big_sign swap calc_big@1.big_bits
+        decimal_digit_count swap [ 1 + ] [ ] if
+    ]
+
+    signature fraction_denominator_size forall<S:stack>
+        [ S FractionPending -- S I64 ! pure ]
+    def fraction_denominator_size [
+        FractionPending.into
+        num@1.rat_parts unpair swap drop
+        dup [ calc_big@1.big_mag_one_p ] dip swap
+        [ drop 0 ]
+        [ calc_big@1.big_bits decimal_digit_count 1 + ] if
+    ]
+
+    signature factor_two_count_step forall<S:stack>
+        [ S Pair<List<Bool>,I64> -- S Pair<List<Bool>,I64> Bool ! pure ]
+    def factor_two_count_step [
+        unpair [ factor_two_step ] dip swap
+        [ 1 + pair true ] [ pair false ] if
+    ]
+
+    signature max_i64 forall<S:stack> [ S I64 I64 -- S I64 ! pure ]
+    def max_i64 [
+        pair dup unpair i64.cmp 0 i64.cmp -1 =
+        [ unpair swap drop ] [ unpair drop ] if
+    ]
+
+    signature count_fraction_numerator forall<S:stack>
+        [ S Pair<FractionPending,num@1.Budget>
+          -- S Pair<FractionNumeratorCount,num@1.Budget> ! pure ]
+    def count_fraction_numerator [
+        # Size the lower copy while the kept copy is parked above it.
+        unpair [ dup [ fraction_numerator_size ] dip swap
+                 pair FractionNumeratorCount.new ] dip pair
+    ]
+
+    signature count_fraction_denominator forall<S:stack>
+        [ S Pair<FractionNumeratorCount,num@1.Budget>
+          -- S Pair<FractionTotalCount,num@1.Budget> ! pure ]
+    def count_fraction_denominator [
+        unpair
+        [ FractionNumeratorCount.into unpair
+          [ dup [ fraction_denominator_size ] dip swap ] dip
+          + pair FractionTotalCount.new ] dip pair
+    ]
+
+    signature count_fraction_charge forall<S:stack>
+        [ S Pair<FractionTotalCount,num@1.Budget>
+          -- S result@1.Result<CountedFraction,calc_errors@1.NumericError> ! pure ]
+    def count_fraction_charge [
+        unpair
+        [ FractionTotalCount.into unpair ] dip
+        calc_bits@1.rot [ swap num@1.charge_output_size ] dip swap
+        [ pair CountedFraction.new result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature finite_count_source_bits forall<S:stack>
+        [ S FinitePending -- S List<Bool> ! pure ]
+    def finite_count_source_bits [
+        FinitePending.into unpair drop
+        num@1.rat_parts unpair drop
+        calc_big@1.big_bits calc_bits@1.reverse_bits
+    ]
+
+    signature finite_count_den_bits forall<S:stack>
+        [ S FinitePending -- S List<Bool> ! pure ]
+    def finite_count_den_bits [
+        FinitePending.into unpair drop
+        num@1.rat_parts unpair swap drop calc_big@1.big_bits
+    ]
+
+    signature finite_count_quotient forall<S:stack>
+        [ S FiniteCountCursor -- S List<Bool> ! pure ]
+    def finite_count_quotient [
+        FiniteCountCursor.into unpair swap drop
+        unpair swap drop unpair swap drop
+        calc_bits@1.trim_bits
+    ]
+
+    signature finite_count_denominator forall<S:stack>
+        [ S FiniteCountCursor -- S List<Bool> ! pure ]
+    def finite_count_denominator [
+        FiniteCountCursor.into unpair drop
+        unpair swap drop unpair drop
+    ]
+
+    signature finite_count_suffix forall<S:stack>
+        [ S FinitePending -- S I64 ! pure ]
+    def finite_count_suffix [
+        FinitePending.into unpair
+        dup 0 = [ drop 0 ] [ 1 + ] if
+        [ num@1.rat_parts unpair drop calc_big@1.big_sign ] dip
+        swap [ 1 + ] [ ] if
+    ]
+
+    signature count_finite_begin forall<S:stack>
+        [ S Pair<I64,CountContinuation> -- S Pair<CountFiniteRoute,Bool> ! pure ]
+    export count_finite_begin
+    def count_finite_begin [
+        unpair
+        [ dup unpair drop finite_count_source_bits
+          [ dup unpair drop finite_count_den_bits ] dip
+          [ 1 pair ] dip [ pair ] dip
+          0 nil pair pair
+          pair FiniteCountCursor.new CountFiniteReady.Active
+          pair CountFiniteRoute.Ready
+          true pair ]
+        [ CountFiniteReady.Progress pair CountFiniteRoute.Ready
+          false pair ]
+        CountContinuation.match
+    ]
+
+    signature finite_count_tick_step forall<S:stack>
+        [ S FiniteCountCursor -- S Pair<FiniteCountCursor,Bool> ! pure ]
+    def finite_count_tick_step [
+        FiniteCountCursor.into unpair
+        swap [ divide_ten_step ] dip swap
+        [ swap pair FiniteCountCursor.new ] dip pair
+    ]
+
+    signature count_finite_tick forall<S:stack>
+        [ S CountFiniteRoute -- S Pair<CountFiniteRoute,Bool> ! pure ]
+    export count_finite_tick
+    def count_finite_tick [
+        [ CountFiniteRoute.Failed false pair ]
+        [ unpair swap
+          [ [ CountFiniteReady.Progress false pair ]
+            [ finite_count_tick_step
+              unpair [ CountFiniteReady.Active ] dip pair ]
+            CountFiniteReady.match ] dip
+          swap unpair [ pair CountFiniteRoute.Ready ] dip pair ]
+        CountFiniteRoute.match
+    ]
+
+    signature finite_count_round_step forall<S:stack>
+        [ S FiniteCountCursor -- S Pair<FiniteCountCursor,Bool> ! pure ]
+    def finite_count_round_step [
+        # Compare quotient and denominator with the cursor and quotient parked
+        # in one Pair above them, so compare_bits compiles with nothing beneath.
+        dup finite_count_quotient dup
+        [ pair ] dip swap
+        dup unpair drop finite_count_denominator swap
+        [ calc_bits@1.compare_bits -1 = ] dip
+        unpair calc_bits@1.rot
+        [ drop false pair ]
+        [ [ FiniteCountCursor.into unpair drop
+            unpair unpair 1 + pair pair ] dip
+          calc_bits@1.reverse_bits
+          0 nil pair pair
+          pair FiniteCountCursor.new
+          true pair ] if
+    ]
+
+    signature count_finite_round forall<S:stack>
+        [ S CountFiniteRoute -- S Pair<CountFiniteRoute,Bool> ! pure ]
+    export count_finite_round
+    def count_finite_round [
+        [ CountFiniteRoute.Failed false pair ]
+        [ unpair swap
+          [ [ CountFiniteReady.Progress false pair ]
+            [ finite_count_round_step
+              unpair [ CountFiniteReady.Active ] dip pair ]
+            CountFiniteReady.match ] dip
+          swap unpair [ pair CountFiniteRoute.Ready ] dip pair ]
+        CountFiniteRoute.match
+    ]
+
+    signature count_finite_finish forall<S:stack>
+        [ S CountFiniteRoute -- S CountFiniteOutcome ! pure ]
+    export count_finite_finish
+    def count_finite_finish [
+        [ CountFiniteOutcome.Failed ]
+        [ unpair swap
+          [ [ CountFiniteContinuation.Progress ]
+            [ FiniteCountCursor.into unpair drop
+              unpair unpair swap drop
+              [ dup unpair drop finite_count_suffix ] dip
+              swap +
+              [ unpair ] dip swap
+              [ pair FiniteTotalCount.new ] dip
+              pair CountFiniteContinuation.Finite ]
+            CountFiniteReady.match ] dip
+          swap pair CountFiniteOutcome.Ready ]
+        CountFiniteRoute.match
+    ]
+
+    signature count_finite_charge forall<S:stack>
+        [ S Pair<FiniteTotalCount,num@1.Budget>
+          -- S result@1.Result<CountedFinite,calc_errors@1.NumericError> ! pure ]
+    def count_finite_charge [
+        unpair
+        [ FiniteTotalCount.into unpair ] dip
+        calc_bits@1.rot [ swap num@1.charge_output_size ] dip swap
+        [ pair CountedFinite.new result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature count_fraction_numerator_stage forall<S:stack>
+        [ S DisplayChoice num@1.Budget
+          -- S CountDenominatorRoute ! pure ]
+    export count_fraction_numerator_stage
+    def count_fraction_numerator_stage [
+        swap
+        [ swap pair count_fraction_numerator CountDenominatorRoute.Fraction ]
+        [ swap pair CountDenominatorRoute.Finite ]
+        DisplayChoice.match
+    ]
+
+    signature count_fraction_denominator_stage forall<S:stack>
+        [ S CountDenominatorRoute -- S CountChargeRoute ! pure ]
+    export count_fraction_denominator_stage
+    def count_fraction_denominator_stage [
+        [ CountChargeRoute.Finite ]
+        [ count_fraction_denominator CountChargeRoute.Fraction ]
+        CountDenominatorRoute.match
+    ]
+
+    signature count_fraction_charge_stage forall<S:stack>
+        [ S CountChargeRoute -- S CountContinuation ! pure ]
+    export count_fraction_charge_stage
+    def count_fraction_charge_stage [
+        [ CountContinuation.Finite ]
+        [ count_fraction_charge
+          [ CountProgress.Ready ]
+          [ CountProgress.Denied ] result@1.Result.match
+          CountContinuation.Progress ]
+        CountChargeRoute.match
+    ]
+
+    signature count_finite_charge_stage forall<S:stack>
+        [ S CountFiniteContinuation -- S CountFiniteCharged ! pure ]
+    export count_finite_charge_stage
+    def count_finite_charge_stage [
+        [ count_finite_charge
+          [ CountFiniteChargeResult.Ready ]
+          [ CountFiniteChargeResult.Denied ] result@1.Result.match
+          CountFiniteCharged.Finite ]
+        [ CountFiniteCharged.Fraction ]
+        CountFiniteContinuation.match
+    ]
+
+    signature count_finite_resolve_stage forall<S:stack>
+        [ S CountFiniteCharged
+          -- S result@1.Result<CountedChoice,calc_errors@1.NumericError> ! pure ]
+    export count_finite_resolve_stage
+    def count_finite_resolve_stage [
+        [ [ CountedChoice.Finite result@1.Result.Ok ]
+          [ result@1.Result.Err ] CountFiniteChargeResult.match ]
+        [ [ CountedChoice.Fraction result@1.Result.Ok ]
+          [ result@1.Result.Err ] CountProgress.match ]
+        CountFiniteCharged.match
+    ]
+
+    signature ascii_fraction forall<S:stack>
+        [ S CountedFraction -- S Pair<DisplayAscii,num@1.Budget> ! pure ]
+    export ascii_fraction
+    def ascii_fraction [
+        CountedFraction.into unpair
+        [ FractionPending.into
+          rat_decimal_bytes DisplayAscii.new ] dip
+        pair
+    ]
+
+    signature ascii_finite_quotient forall<S:stack>
+        [ S CountedFinite -- S CountedFiniteAscii ! pure ]
+    def ascii_finite_quotient [
+        CountedFinite.into unpair
+        [ FinitePending.into unpair drop
+          num@1.rat_parts unpair
+          [ dup calc_big@1.big_sign swap calc_big@1.big_bits ] dip
+          calc_big@1.big_bits
+          dup [ calc_bits@1.divide_bits ] dip
+          swap unpair calc_bits@1.rot
+          pair pair pair FiniteAsciiParts.new ] dip
+        pair CountedFiniteAscii.new
+    ]
+
+    signature ascii_finite_measure forall<S:stack>
+        [ S CountedFiniteAscii -- S FiniteAsciiMeasured ! pure ]
+    def ascii_finite_measure [
+        CountedFiniteAscii.into unpair
+        [ FiniteAsciiParts.into unpair unpair unpair
+          [ [ decimal_digit_bytes ] dip ] dip
+          ] dip
+        pair pair pair pair FiniteAsciiMeasured.new
+    ]
+
+    signature ascii_fraction_stage forall<S:stack>
+        [ S CountedChoice -- S AsciiContinuation ! pure ]
+    export ascii_fraction_stage
+    def ascii_fraction_stage [
+        [ ascii_fraction AsciiContinuation.Ready ]
+        [ AsciiContinuation.Finite ] CountedChoice.match
+    ]
+
+    signature ascii_finite_quotient_stage forall<S:stack>
+        [ S AsciiContinuation
+          -- S AsciiQuotientContinuation ! pure ]
+    export ascii_finite_quotient_stage
+    def ascii_finite_quotient_stage [
+        [ ascii_finite_quotient AsciiQuotientContinuation.Finite ]
+        [ AsciiQuotientContinuation.Ready ] AsciiContinuation.match
+    ]
+
+    signature ascii_finite_measure_stage forall<S:stack>
+        [ S AsciiQuotientContinuation -- S AsciiMeasuredContinuation ! pure ]
+    export ascii_finite_measure_stage
+    def ascii_finite_measure_stage [
+        [ ascii_finite_measure AsciiMeasuredContinuation.Finite ]
+        [ AsciiMeasuredContinuation.Ready ]
+        AsciiQuotientContinuation.match
+    ]
+
+    signature ascii_fraction_begin_stage forall<S:stack>
+        [ S AsciiMeasuredContinuation -- S Pair<FractionAsciiState,Bool> ! pure ]
+    def ascii_fraction_begin_stage [
+        [ FiniteAsciiMeasured.into unpair unpair unpair unpair
+          unit FractionWidth.Pending pair
+          [ nil ] dip pair [ pair ] dip pair FractionBuild.Running
+          [ pair ] dip pair FractionAsciiActive.Running
+          FractionAsciiState.Pending true pair ]
+        [ FractionAsciiState.Complete false pair ]
+        AsciiMeasuredContinuation.match
+    ]
+
+    signature ascii_fraction_start_stage forall<S:stack>
+        [ S Pair<I64,AsciiMeasuredContinuation> -- S Pair<AsciiFractionRoute,Bool> ! pure ]
+    export ascii_fraction_start_stage
+    def ascii_fraction_start_stage [
+        unpair ascii_fraction_begin_stage unpair
+        [ pair FractionAsciiCursor.new AsciiFractionRoute.Ready ] dip pair
+    ]
+
+    signature fraction_ascii_width_step forall<S:stack>
+        [ S FractionAsciiState -- S Pair<FractionAsciiState,Bool> ! pure ]
+    def fraction_ascii_width_step [
+        [ FractionAsciiState.Complete false pair ]
+        [ [ unpair fraction_measure_width unpair
+            [ pair FractionAsciiActive.Running
+              FractionAsciiState.Pending ] dip pair ]
+          [ FractionAsciiActive.Checked FractionAsciiState.Pending false pair ]
+          FractionAsciiActive.match ]
+        FractionAsciiState.match
+    ]
+
+    signature ascii_fraction_width_stage forall<S:stack>
+        [ S AsciiFractionRoute -- S Pair<AsciiFractionRoute,Bool> ! pure ]
+    export ascii_fraction_width_stage
+    def ascii_fraction_width_stage [
+        [ AsciiFractionRoute.Failed false pair ]
+        [ FractionAsciiCursor.into unpair fraction_ascii_width_step unpair
+          [ pair FractionAsciiCursor.new AsciiFractionRoute.Ready ] dip pair ]
+        AsciiFractionRoute.match
+    ]
+
+    signature fraction_ascii_admit_step forall<S:stack>
+        [ S FractionAsciiState -- S Pair<FractionAsciiState,Bool> ! pure ]
+    def fraction_ascii_admit_step [
+        [ FractionAsciiState.Complete false pair ]
+        [ [ unpair fraction_admit_issue unpair
+            [ [ pair FractionAsciiActive.Running ]
+              [ pair FractionAsciiActive.Checked ]
+              FractionAdmitChoice.match FractionAsciiState.Pending ] dip
+            pair ]
+          [ FractionAsciiActive.Checked FractionAsciiState.Pending false pair ]
+          FractionAsciiActive.match ]
+        FractionAsciiState.match
+    ]
+
+    signature ascii_fraction_admit_stage forall<S:stack>
+        [ S AsciiFractionRoute -- S Pair<AsciiFractionRoute,Bool> ! pure ]
+    export ascii_fraction_admit_stage
+    def ascii_fraction_admit_stage [
+        [ AsciiFractionRoute.Failed false pair ]
+        [ FractionAsciiCursor.into unpair fraction_ascii_admit_step unpair
+          [ pair FractionAsciiCursor.new AsciiFractionRoute.Ready ] dip pair ]
+        AsciiFractionRoute.match
+    ]
+
+    signature fraction_ascii_multiply_step forall<S:stack>
+        [ S I64 FractionAsciiState -- S FractionProductRoute ! pure ]
+    def fraction_ascii_multiply_step [
+        [ FractionAsciiState.Complete pair FractionAsciiCursor.new
+          AsciiFractionRoute.Ready FractionProductRoute.Unchanged ]
+        [ [ FractionAsciiActive.Running FractionAsciiState.Pending
+            pair FractionAsciiCursor.new AsciiFractionRoute.Ready
+            FractionProductRoute.Unchanged ]
+          [ unpair fraction_admit_multiply pair pair
+            FractionProductRoute.Product ]
+          FractionAsciiActive.match ]
+        FractionAsciiState.match
+    ]
+
+    signature ascii_fraction_multiply_stage forall<S:stack>
+        [ S AsciiFractionRoute -- S FractionProductRoute ! pure ]
+    export ascii_fraction_multiply_stage
+    def ascii_fraction_multiply_stage [
+        [ AsciiFractionRoute.Failed FractionProductRoute.Unchanged ]
+        [ FractionAsciiCursor.into unpair fraction_ascii_multiply_step ]
+        AsciiFractionRoute.match
+    ]
+
+    # A certified product is below ten denominators: at most nine subtraction
+    # scans can succeed before a comparison ends this digit.
+    signature fraction_compare_start forall<S:stack>
+        [ S FractionDigitCursor
+          -- S Pair<FractionDigitCursor,FractionCompareCursor> ! pure ]
+    def fraction_compare_start [
+        dup FractionDigitCursor.into unpair swap drop
+        unpair swap drop unpair unpair drop
+        pair 0 pair FractionCompareCursor.new pair
+    ]
+
+    signature fraction_digit_seed forall<S:stack>
+        [ S Pair<I64,Pair<Pair<Bool,List<I64>>,FractionAdmitProduct>>
+          -- S FractionDigitCursor ! pure ]
+    def fraction_digit_seed [
+        unpair unpair
+        FractionAdmitProduct.into unpair
+        [ FractionAdmitCarry.into unpair
+          swap unpair 0 pair pair ] dip
+        swap [ pair ] dip
+        pair [ pair ] dip pair FractionDigitCursor.new
+    ]
+
+
+    # Only the product arm can seed a digit; a mismatched unchanged arm
+    # carries no digit cursor and becomes the same internal Err Unit used
+    # by the remaining scan stages.
+    signature ascii_fraction_scan_begin_stage forall<S:stack>
+        [ S FractionProductRoute
+          -- S Pair<result@1.Result<ActiveDigit,Unit>,Bool> ! pure ]
+    export ascii_fraction_scan_begin_stage
+    def ascii_fraction_scan_begin_stage [
+        [ drop unit result@1.Result.Err false pair ]
+        [ fraction_digit_seed fraction_compare_start
+          unpair FractionDigitScan.Comparing pair
+          ActiveDigit.new result@1.Result.Ok true pair ]
+        FractionProductRoute.match
+    ]
+
+    signature ascii_fraction_product_signal forall<S:stack>
+        [ S FractionProductRoute -- S Pair<FractionProductRoute,Bool> ! pure ]
+    export ascii_fraction_product_signal
+    def ascii_fraction_product_signal [
+        [ FractionProductRoute.Unchanged false pair ]
+        [ FractionProductRoute.Product true pair ]
+        FractionProductRoute.match
+    ]
+    signature ascii_fraction_product_signal_with_state forall<S:stack>
+        [ S Pair<calc_env@1.State,FractionProductRoute>
+          -- S Pair<calc_env@1.State,Pair<FractionProductRoute,Bool>> ! pure ]
+    export ascii_fraction_product_signal_with_state
+    def ascii_fraction_product_signal_with_state [
+        unpair swap [ ascii_fraction_product_signal ] dip swap pair
+    ]
+
+    signature ascii_fraction_product_unchanged forall<S:stack>
+        [ S FractionProductRoute
+          -- S result@1.Result<AsciiFractionRoute,Unit> ! pure ]
+    export ascii_fraction_product_unchanged
+    def ascii_fraction_product_unchanged [
+        [ result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ]
+        FractionProductRoute.match
+    ]
+    signature ascii_fraction_product_unchanged_with_state forall<S:stack>
+        [ S Pair<calc_env@1.State,FractionProductRoute>
+          -- S Pair<calc_env@1.State,result@1.Result<AsciiFractionRoute,Unit>> ! pure ]
+    export ascii_fraction_product_unchanged_with_state
+    def ascii_fraction_product_unchanged_with_state [
+        unpair swap [ ascii_fraction_product_unchanged ] dip swap pair
+    ]
+
+    signature ascii_fraction_scan_begin_with_state forall<S:stack>
+        [ S Pair<calc_env@1.State,FractionProductRoute>
+          -- S calc_env@1.State Pair<result@1.Result<ActiveDigit,Unit>,Bool> ! pure ]
+    export ascii_fraction_scan_begin_with_state
+    def ascii_fraction_scan_begin_with_state [
+        unpair swap [ ascii_fraction_scan_begin_stage ] dip swap
+    ]
+
+    signature fraction_compare_bit forall<S:stack>
+        [ S Pair<FractionDigitCursor,FractionCompareCursor>
+          -- S Pair<Pair<FractionDigitCursor,FractionCompareCursor>,Bool> ! pure ]
+    export fraction_compare_bit
+    def fraction_compare_bit [
+        # The digit cursor is only re-paired at the end: park it above the
+        # compare cursor so the bit scan compiles with nothing beneath it.
+        unpair swap
+        [ FractionCompareCursor.into
+          unpair [ calc_bits@1.pop_two ] dip [ unpair ] dip
+          [ swap ] dip swap unpair
+          [ 1 ] [ 0 ] if swap [ 1 ] [ 0 ] if swap i64.cmp
+          dup 0 = [ drop ] [ swap drop ] if
+          [ dup false calc_bits@1.should_continue_bits ] dip swap
+          [ pair FractionCompareCursor.new ] dip ] dip
+        calc_bits@1.rot pair swap pair
+    ]
+
+    signature ascii_fraction_scan_bit_stage forall<S:stack>
+        [ S result@1.Result<ActiveDigit,Unit>
+          -- S Pair<result@1.Result<ActiveDigit,Unit>,Bool> ! pure ]
+    export ascii_fraction_scan_bit_stage
+    def ascii_fraction_scan_bit_stage [
+        [ ActiveDigit.into unpair
+          [ pair fraction_compare_bit unpair
+            [ unpair FractionDigitScan.Comparing pair
+              ActiveDigit.new result@1.Result.Ok ] dip pair ]
+          [ FractionDigitScan.Subtracting pair
+            ActiveDigit.new result@1.Result.Ok true pair ]
+          FractionDigitScan.match ]
+        [ result@1.Result.Err false pair ]
+        result@1.Result.match
+    ]
+
+    signature fraction_active_comparing forall<S:stack>
+        [ S Pair<FractionDigitCursor,FractionCompareCursor> Bool
+          -- S Pair<result@1.Result<ActiveDigit,Unit>,Bool> ! pure ]
+    def fraction_active_comparing [
+        [ unpair FractionDigitScan.Comparing pair
+          ActiveDigit.new result@1.Result.Ok ] dip pair
+    ]
+
+    signature fraction_active_subtracting forall<S:stack>
+        [ S Pair<FractionDigitCursor,FractionSubtractCursor> Bool
+          -- S Pair<result@1.Result<ActiveDigit,Unit>,Bool> ! pure ]
+    def fraction_active_subtracting [
+        [ unpair FractionDigitScan.Subtracting pair
+          ActiveDigit.new result@1.Result.Ok ] dip pair
+    ]
+
+    signature ascii_fraction_scan_terminal_stage forall<S:stack>
+        [ S Pair<result@1.Result<ActiveDigit,Unit>,Bool>
+          -- S Pair<result@1.Result<ActiveDigit,Unit>,Bool> ! pure ]
+    export ascii_fraction_scan_terminal_stage
+    # Match the Result first: no quotation carries Result<ActiveDigit,Unit>
+    # on both sides beside the retained State, and an Err arm stays Err Unit
+    # with a false signal whatever the incoming Bool was.
+    def ascii_fraction_scan_terminal_stage [
+        unpair swap
+        [ swap
+          [ result@1.Result.Ok true pair ]
+          [ ActiveDigit.into unpair
+            [ pair
+              dup unpair swap drop FractionCompareCursor.into
+              unpair swap drop 0 i64.cmp -1 =
+              [ false fraction_active_comparing ]
+              [ unpair drop
+                dup FractionDigitCursor.into unpair swap drop
+                unpair swap drop unpair unpair drop
+                pair false nil pair pair FractionSubtractCursor.new
+                pair true fraction_active_subtracting ] if ]
+            [ pair true fraction_active_subtracting ]
+            FractionDigitScan.match ]
+          if ]
+        [ swap drop result@1.Result.Err false pair ]
+        result@1.Result.match
+    ]
+
+    signature ascii_fraction_scan_subtract_stage forall<S:stack>
+        [ S result@1.Result<ActiveDigit,Unit>
+          -- S Pair<result@1.Result<ActiveDigit,Unit>,Bool> ! pure ]
+    export ascii_fraction_scan_subtract_stage
+    # One subtraction bit only; the separate check root issues the guest Bool
+    # that selects another bit or the separate finish root.
+    def ascii_fraction_scan_subtract_stage [
+        [ ActiveDigit.into unpair
+          [ pair true fraction_active_comparing ]
+          [ pair fraction_subtract_bit true fraction_active_subtracting ]
+          FractionDigitScan.match ]
+        [ result@1.Result.Err false pair ]
+        result@1.Result.match
+    ]
+
+    # False on a Subtracting digit means its bits are exhausted.
+    signature ascii_fraction_scan_subtract_check_stage forall<S:stack>
+        [ S result@1.Result<ActiveDigit,Unit>
+          -- S Pair<result@1.Result<ActiveDigit,Unit>,Bool> ! pure ]
+    export ascii_fraction_scan_subtract_check_stage
+    def ascii_fraction_scan_subtract_check_stage [
+        [ ActiveDigit.into unpair
+          [ pair true fraction_active_comparing ]
+          [ pair dup unpair swap drop FractionSubtractCursor.into
+            unpair drop false calc_bits@1.should_continue_bits
+            fraction_active_subtracting ]
+          FractionDigitScan.match ]
+        [ result@1.Result.Err false pair ]
+        result@1.Result.match
+    ]
+
+    signature ascii_fraction_scan_subtract_finish_stage forall<S:stack>
+        [ S result@1.Result<ActiveDigit,Unit>
+          -- S Pair<result@1.Result<ActiveDigit,Unit>,Bool> ! pure ]
+    export ascii_fraction_scan_subtract_finish_stage
+    def ascii_fraction_scan_subtract_finish_stage [
+        [ ActiveDigit.into unpair
+          [ pair true fraction_active_comparing ]
+          [ pair fraction_subtract_finish true fraction_active_comparing ]
+          FractionDigitScan.match ]
+        [ result@1.Result.Err false pair ]
+        result@1.Result.match
+    ]
+
+    signature ascii_fraction_scan_finish_stage forall<S:stack>
+        [ S result@1.Result<ActiveDigit,Unit>
+          -- S result@1.Result<Pair<AsciiFractionRoute,Bool>,Unit> ! pure ]
+    export ascii_fraction_scan_finish_stage
+    def ascii_fraction_scan_finish_stage [
+        [ ActiveDigit.into unpair
+          [ pair
+            dup unpair swap drop FractionCompareCursor.into
+            unpair drop false calc_bits@1.should_continue_bits
+            [ drop unit result@1.Result.Err ]
+            [ dup unpair swap drop FractionCompareCursor.into
+              unpair swap drop 0 i64.cmp -1 =
+              [ unpair drop
+                FractionDigitCursor.into unpair
+                unpair fraction_digit_collect unpair
+                [ [ unpair ] dip
+                  pair FractionAsciiActive.Running FractionAsciiState.Pending
+                  pair FractionAsciiCursor.new AsciiFractionRoute.Ready ] dip
+                pair result@1.Result.Ok ]
+              [ drop unit result@1.Result.Err ] if ] if ]
+          [ drop drop unit result@1.Result.Err ]
+          FractionDigitScan.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # Dip the retained State aside so the finish specialization and its
+    # quotations never carry State on both sides of a Program type.
+    signature ascii_fraction_scan_finish_with_state forall<S:stack>
+        [ S calc_env@1.State result@1.Result<ActiveDigit,Unit>
+          -- S Pair<calc_env@1.State,result@1.Result<Pair<AsciiFractionRoute,Bool>,Unit>> ! pure ]
+    export ascii_fraction_scan_finish_with_state
+    def ascii_fraction_scan_finish_with_state [
+        swap [ ascii_fraction_scan_finish_stage ] dip swap pair
+    ]
+
+    signature ascii_fraction_scan_done_signal forall<S:stack>
+        [ S result@1.Result<Pair<AsciiFractionRoute,Bool>,Unit>
+          -- S Pair<result@1.Result<AsciiFractionRoute,Unit>,Bool> ! pure ]
+    export ascii_fraction_scan_done_signal
+    def ascii_fraction_scan_done_signal [
+        [ unpair [ result@1.Result.Ok ] dip pair ]
+        [ result@1.Result.Err false pair ]
+        result@1.Result.match
+    ]
+    signature ascii_fraction_scan_done_with_state forall<S:stack>
+        [ S Pair<calc_env@1.State,result@1.Result<Pair<AsciiFractionRoute,Bool>,Unit>>
+          -- S Pair<calc_env@1.State,Pair<result@1.Result<AsciiFractionRoute,Unit>,Bool>> ! pure ]
+    export ascii_fraction_scan_done_with_state
+    def ascii_fraction_scan_done_with_state [
+        unpair swap [ ascii_fraction_scan_done_signal ] dip swap pair
+    ]
+
+    # The guest Bool reports whether the Result was Ok. On Err the route is
+    # the guest Failed route with false; the host then refuses as an internal
+    # failure and never formats it, so no cursor is ever invented.
+    signature ascii_fraction_result_route_with_state forall<S:stack>
+        [ S Pair<calc_env@1.State,result@1.Result<AsciiFractionRoute,Unit>>
+          -- S Pair<calc_env@1.State,Pair<AsciiFractionRoute,Bool>> ! pure ]
+    export ascii_fraction_result_route_with_state
+    def ascii_fraction_result_route_with_state [
+        unpair swap
+        [ [ true pair ] [ AsciiFractionRoute.Failed false pair ] result@1.Result.match ] dip
+        swap pair
+    ]
+
+    # Plain-route digit roots keep the retained State dipped aside.
+    signature ascii_fraction_width_with_state forall<S:stack>
+        [ S Pair<calc_env@1.State,AsciiFractionRoute>
+          -- S Pair<calc_env@1.State,Pair<AsciiFractionRoute,Bool>> ! pure ]
+    export ascii_fraction_width_with_state
+    def ascii_fraction_width_with_state [
+        unpair swap [ ascii_fraction_width_stage ] dip swap pair
+    ]
+
+    signature ascii_fraction_admit_with_state forall<S:stack>
+        [ S Pair<calc_env@1.State,AsciiFractionRoute>
+          -- S Pair<calc_env@1.State,Pair<AsciiFractionRoute,Bool>> ! pure ]
+    export ascii_fraction_admit_with_state
+    def ascii_fraction_admit_with_state [
+        unpair swap [ ascii_fraction_admit_stage ] dip swap pair
+    ]
+
+    signature ascii_fraction_multiply_with_state forall<S:stack>
+        [ S Pair<calc_env@1.State,AsciiFractionRoute>
+          -- S Pair<calc_env@1.State,FractionProductRoute> ! pure ]
+    export ascii_fraction_multiply_with_state
+    def ascii_fraction_multiply_with_state [
+        unpair swap [ ascii_fraction_multiply_stage ] dip swap pair
+    ]
+
+
+    signature fraction_subtract_bit forall<S:stack>
+        [ S Pair<FractionDigitCursor,FractionSubtractCursor>
+          -- S Pair<FractionDigitCursor,FractionSubtractCursor> ! pure ]
+    export fraction_subtract_bit
+    def fraction_subtract_bit [
+        unpair FractionSubtractCursor.into
+        unpair [ calc_bits@1.pop_two ] dip [ unpair ] dip
+        [ swap ] dip swap unpair
+        [ swap ] dip swap unpair
+        [ [ 1 ] [ 0 ] if swap [ 1 ] [ 0 ] if
+          [ swap ] dip swap [ 1 ] [ 0 ] if
+          swap [ swap ] dip swap
+          [ - ] dip -
+          dup 0 i64.cmp -1 =
+          [ 2 + true ] [ false ] if
+          [ 1 = ] dip ] dip
+        [ swap ] dip swap swap cons pair
+        pair FractionSubtractCursor.new pair
+    ]
+
+    signature fraction_subtract_finish forall<S:stack>
+        [ S Pair<FractionDigitCursor,FractionSubtractCursor>
+          -- S Pair<FractionDigitCursor,FractionCompareCursor> ! pure ]
+    def fraction_subtract_finish [
+        # Normalize the remainder bits with the digit cursor parked above them.
+        unpair swap
+        [ FractionSubtractCursor.into
+          unpair swap drop unpair swap drop
+          calc_bits@1.reverse_bits calc_bits@1.trim_bits ] dip
+        swap
+        [ FractionDigitCursor.into unpair ] dip
+        [ unpair ] dip swap unpair swap drop
+        unpair 1 + pair pair pair pair FractionDigitCursor.new
+        fraction_compare_start
+    ]
+
+
+    signature fraction_ascii_complete forall<S:stack>
+        [ S Pair<Pair<Bool,List<I64>>,FractionBuild>
+          -- S FractionAsciiRunning ! pure ]
+    def fraction_ascii_complete [
+        unpair
+        [ dup unpair drop unpair drop calc_bits@1.bits_empty
+          [ unpair [ unpair ] dip unpair unpair drop
+            [ [ drop ] dip ] dip [ [ drop ] dip ] dip
+            [ dup [ true ] [ drop drop false ] list.case ] dip swap
+            [ [ drop ] dip ]
+            [ [ calc_bits@1.reverse_i64 ] dip
+              [ [ unpair ] dip ] dip
+              [ 46 swap cons append_ascii ] dip
+              [ pair ] dip ] if
+            [ unpair
+              swap [ 45 swap cons ] [ ] if
+              DisplayAscii.new ] dip
+            pair FractionAsciiCompleted.Ready FractionAsciiRunning.Completed ]
+          [ FractionBuild.Running pair FractionAsciiRunning.Unfinished ] if ]
+        [ swap drop FractionAsciiCompleted.Denied FractionAsciiRunning.Completed ]
+        FractionBuild.match
+    ]
+
+    signature fraction_ascii_finish_state forall<S:stack>
+        [ S FractionAsciiState -- S FractionAsciiResolved ! pure ]
+    def fraction_ascii_finish_state [
+        [ FractionAsciiCompleted.Ready FractionAsciiResolved.Completed ]
+        [ [ fraction_ascii_complete
+            [ FractionAsciiResolved.Completed ]
+            [ FractionAsciiActive.Running FractionAsciiState.Pending
+              FractionAsciiResolved.Unfinished ]
+            FractionAsciiRunning.match ]
+          [ FractionAsciiActive.Checked FractionAsciiState.Pending
+            FractionAsciiResolved.Unfinished ]
+          FractionAsciiActive.match ]
+        FractionAsciiState.match
+    ]
+
+    signature ascii_fraction_finish_stage forall<S:stack>
+        [ S AsciiFractionRoute -- S FractionAsciiFinal ! pure ]
+    export ascii_fraction_finish_stage
+    def ascii_fraction_finish_stage [
+        [ AsciiFractionRoute.Failed FractionAsciiFinal.Unfinished ]
+        [ FractionAsciiCursor.into unpair fraction_ascii_finish_state
+          [ [ pair FractionAsciiOutcome.Ready ]
+            [ pair FractionAsciiOutcome.Denied ]
+            FractionAsciiCompleted.match FractionAsciiFinal.Complete ]
+          [ pair FractionAsciiCursor.new AsciiFractionRoute.Ready
+            FractionAsciiFinal.Unfinished ]
+          FractionAsciiResolved.match ]
+        AsciiFractionRoute.match
+    ]
+
+    signature finish_text forall<S:stack>
+        [ S DisplayAscii num@1.Budget
+          -- S result@1.Result<Pair<Text,num@1.Budget>,calc_errors@1.NumericError> ! pure ]
+    export finish_text
+    def finish_text [
+        [ DisplayAscii.into text.from-ascii ] dip swap
+        [ pair result@1.Result.Ok ]
+        [ drop drop output_limit ] if
+    ]
+
+
+    signature decimal_bytes_step forall<S:stack>
+        [ S Pair<List<calc_big@1.BigInt>,List<I64>>
+          -- S Pair<List<calc_big@1.BigInt>,List<I64>> Bool ! pure ]
+    def decimal_bytes_step [
+        unpair swap
+        [ nil swap pair false ]
+        [ [ big_decimal_bytes swap
+            [ ] [ cons 47 swap cons append_ascii ] list.case ] dip
+          swap pair true ]
+        list.case
+    ]
+]

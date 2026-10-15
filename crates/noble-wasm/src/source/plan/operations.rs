@@ -122,7 +122,8 @@ fn lower_node(
             let (address, length) = attempt!(super::allocation::bytes(
                 &mut compiler.text_end,
                 &mut layout.data,
-                attempt!(super::super::admission::text(input.body, id))
+                attempt!(super::super::admission::text(input.body, id)),
+                compiler.calculator,
             ));
             super::Action::Text(address, length)
         }
@@ -182,11 +183,22 @@ fn lower_node(
             super::Action::SlotInvoke(ordinal, site.ref_ordinal)
         }
     };
+    // Literal and quotation-push atoms never store an operation interface:
+    // the root/child Program already records its complete typed signatures,
+    // and executable invocation atoms still retain both exact stack keys.
+    let (input, output) = if !compiler.calculator || action.records_interface() {
+        (
+            attempt!(compiler.signature(&interface.stack_in, work)),
+            attempt!(compiler.signature(&interface.stack_out, work)),
+        )
+    } else {
+        (0, 0)
+    };
     Ok(super::Operation {
         node: id,
         action,
-        input: attempt!(compiler.signature(&interface.stack_in, work)),
-        output: attempt!(compiler.signature(&interface.stack_out, work)),
+        input,
+        output,
         effects: attempt!(super::effect_mask(&interface.effects)),
     })
 }
@@ -204,7 +216,8 @@ impl Input<'_> {
         if def.0 == 8 {
             return quotation::lower(output.interface, output.compiler, output.work);
         }
-        if self.submission.environment.text_cursor {
+        // Standalone cursor and calculator reserve 22..25 and share text.byte.
+        if self.submission.environment.text_cursor || self.submission.environment.calculator {
             if (22..=25).contains(&def.0) {
                 return Err(crate::Diagnostic::Invalid);
             }
@@ -216,6 +229,16 @@ impl Input<'_> {
                 } else {
                     Err(crate::Diagnostic::Invalid)
                 };
+            }
+        }
+        if self.submission.environment.calculator {
+            match def.0 {
+                27 => return Ok(super::Action::CalculatorIterate),
+                28 => return Ok(super::Action::CalculatorCompare),
+                29 => return Ok(super::Action::CalculatorDivRem),
+                30 => return Ok(super::Action::CalculatorTextFromAscii),
+                31 => return Ok(super::Action::CalculatorTextLength),
+                _ => {}
             }
         }
         if def.0 == 24 && super::super::builtin_count(&self.submission.environment) == 26 {
@@ -293,6 +316,11 @@ impl Input<'_> {
                 | noble_kernel::contracts::Behavior::TestEmit
                 | noble_kernel::contracts::Behavior::Reserved
                 | noble_kernel::contracts::Behavior::TextByte
+                | noble_kernel::contracts::Behavior::CalculatorIterate
+                | noble_kernel::contracts::Behavior::CalculatorCompare
+                | noble_kernel::contracts::Behavior::CalculatorDivRem
+                | noble_kernel::contracts::Behavior::CalculatorTextFromAscii
+                | noble_kernel::contracts::Behavior::CalculatorTextLength
                 | noble_kernel::contracts::Behavior::Named => Err(crate::Diagnostic::Invalid),
             },
             None => Err(crate::Diagnostic::Invalid),

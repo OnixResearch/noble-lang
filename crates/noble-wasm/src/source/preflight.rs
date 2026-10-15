@@ -10,8 +10,9 @@ const STACK_LIMIT: usize = 128;
 const TYPE_LIMIT: u32 = 512;
 const PATH_LIMIT: usize = 64;
 
-mod concrete;
+pub(in crate::source) mod concrete;
 mod schemes;
+mod variables;
 
 #[expect(
     tigerstyle::assertion_density,
@@ -149,35 +150,72 @@ fn definition(
 )]
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
+    calculator: bool,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
-    if submission.environment.defs.len() > super::DEFINITION_LIMIT.saturating_add(26)
-        || submission.definitions.len() > super::DEFINITION_LIMIT
+    // Profile selection is the compiler's own flag, never an untrusted Env
+    // marker: only the calculator has a 32-row fixed prefix.
+    let fixed = if calculator { 32 } else { 26 };
+    let definitions = if calculator {
+        super::CALCULATOR_DEFINITION_LIMIT
+    } else {
+        super::DEFINITION_LIMIT
+    };
+    let maximum_rows = if calculator {
+        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+    } else {
+        definitions.saturating_add(fixed)
+    };
+    if submission.environment.defs.len() > maximum_rows
+        || submission.definitions.len() > definitions
     {
         return Err(crate::Diagnostic::Exhausted);
     }
+    if calculator {
+        let budget = attempt!(submission.environment.calculator_clone_budget()
+            .ok_or(crate::Diagnostic::Exhausted));
+        let count = attempt!(submission.definitions.len().checked_add(1)
+            .ok_or(crate::Diagnostic::Exhausted));
+        let copies = attempt!(u64::try_from(count)
+            .map_err(|_| crate::Diagnostic::Exhausted));
+        attempt!(budget.reserved_bytes.checked_mul(copies)
+            .filter(|total| *total <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
+            .ok_or(crate::Diagnostic::Exhausted));
+        attempt!(work.charge(attempt!(budget.bytes.checked_mul(copies)
+            .ok_or(crate::Diagnostic::Exhausted))));
+    }
     let mut index = 0usize;
     let mut failure = None;
-    while index < submission.environment.defs.len() {
-        match schemes::check(&submission.environment.defs[index], work) {
-            Ok(()) => index += 1,
-            Err(problem) => {
-                failure = Some(problem);
-                break;
+    // The selected clone-budget walk has already inspected every scheme
+    // constructor, embedded nominal descriptor and depth/arity bound.
+    // Do not repeat the old borrowed tree walk before independent admission.
+    if !calculator {
+        while index < submission.environment.defs.len() {
+            match schemes::check(&submission.environment.defs[index], work) {
+                Ok(()) => index += 1,
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
             }
         }
     }
     if let Some(problem) = failure {
         return Err(problem);
     }
-    index = 0;
-    while index < submission.environment.nominals.len() {
-        let shape = &submission.environment.nominals[index].shape;
-        match nominal_shape(shape, work) {
-            Ok(()) => index += 1,
-            Err(problem) => {
-                failure = Some(problem);
-                break;
+    if calculator {
+        attempt!(variables::schemes(submission, work));
+    }
+    if !calculator {
+        index = 0;
+        while index < submission.environment.nominals.len() {
+            let shape = &submission.environment.nominals[index].shape;
+            match nominal_shape(shape, work) {
+                Ok(()) => index += 1,
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
             }
         }
     }
@@ -206,6 +244,7 @@ pub(super) fn check(
     }
     match failure {
         Some(problem) => Err(problem),
+        None if calculator => variables::check(submission, work),
         None => Ok(()),
     }
 }

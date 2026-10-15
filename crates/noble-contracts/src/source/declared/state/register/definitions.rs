@@ -20,7 +20,7 @@ pub(super) struct Work<'a> {
 
 pub(super) fn install(
     session: crate::source::declared::ModuleSession,
-    work: Work<'_>,
+    mut work: Work<'_>,
 ) -> Result<
     (
         crate::source::declared::ModuleSession,
@@ -31,12 +31,21 @@ pub(super) fn install(
     let count = attempt!(u32::try_from(work.definitions.len()).map_err(|_| {
         crate::source::declared::error(crate::source::Stage::Check, "definition count overflow")
     }));
-    let definition_limits = attempt!(definition_limits(count, work.limits).ok_or_else(|| {
-        crate::source::declared::error(
-            crate::source::Stage::Check,
-            "invalid definition resource budget",
-        )
-    }));
+    let definition_limits = if session.source.calculator {
+        // Temporary length prefixes are replaced with the original source unit.
+        // Calculator modules share the already-metered registration budget
+        // instead of dividing it equally: a large but valid definition can use
+        // the slack of smaller ones.
+        work.meter.limits.bytes = work.limits.bytes.saturating_add(count.saturating_mul(4));
+        None
+    } else {
+        Some(attempt!(definition_limits(count, work.limits).ok_or_else(|| {
+            crate::source::declared::error(
+                crate::source::Stage::Check,
+                "invalid definition resource budget",
+            )
+        })))
+    };
     let history_start = session.source.history.len();
     let graph = attempt!(graph::Schedule::setup(session, work, definition_limits));
     let (session, work) = attempt!(graph.run());
@@ -161,7 +170,9 @@ struct DefinitionInput<'a> {
     name: alloc::string::String,
     signature: Option<noble_kernel::words::Scheme>,
     source: alloc::vec::Vec<u8>,
-    limits: crate::Limits,
+    /// Ordinary declared modules split the registration budget equally per
+    /// definition; `None` selects the calculator's shared registration meter.
+    limits: Option<crate::Limits>,
     exports: &'a [alloc::string::String],
 }
 
@@ -169,6 +180,7 @@ fn install_one(
     session: crate::source::declared::ModuleSession,
     input: DefinitionInput<'_>,
     mut local_exports: alloc::vec::Vec<crate::source::declared::Export>,
+    meter: &mut crate::Meter,
 ) -> Result<
     (
         crate::source::declared::ModuleSession,
@@ -181,6 +193,7 @@ fn install_one(
         &input.source,
         input.signature.as_ref(),
         input.limits,
+        meter,
     ));
     let Some(context) = session.source.declared.as_mut() else {
         return Err(crate::source::declared::error(
@@ -211,7 +224,8 @@ fn commit_definition(
     mut session: crate::source::declared::ModuleSession,
     definition_bytes: &[u8],
     signature: Option<&noble_kernel::words::Scheme>,
-    limits: crate::Limits,
+    limits: Option<crate::Limits>,
+    meter: &mut crate::Meter,
 ) -> Result<
     (
         crate::source::declared::ModuleSession,
@@ -219,10 +233,22 @@ fn commit_definition(
     ),
     crate::source::Error,
 > {
-    let prepared =
-        attempt!(session
-            .source
-            .prepare_signed(definition_bytes, &[], signature, limits));
+    let prepared = if let Some(limits) = limits {
+        session.source.prepare_signed(definition_bytes, &[], signature, limits)
+    } else {
+        // Each calculator definition is a separate source-checking body. Its
+        // nodes are bounded independently; rechecking a retained dependency
+        // must not consume every later body's node allowance. Validation
+        // work, unlike nodes, remains shared across the whole registration.
+        let mut body_meter = crate::Meter::new(meter.limits);
+        body_meter.work = meter.work;
+        let prepared = session.source.prepare_signed_metered(
+            definition_bytes, &[], signature, &mut body_meter,
+        );
+        meter.work = body_meter.work;
+        prepared
+    };
+    let prepared = attempt!(prepared);
     if !prepared.is_definition() || prepared.submission().is_some() {
         return Err(crate::source::declared::error(
             crate::source::Stage::Check,

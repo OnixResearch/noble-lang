@@ -1,3 +1,30 @@
+// Calculator-only type-observation certificates live in free scratch, not
+// guest cells. Ordinary and experimental WAT never includes these helpers.
+// Successful validation is reusable only until the next source submit,
+// which resets the table after the host's last input write.
+pub(super) fn certificates(out: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
+    out.append(
+        b";; [57344,61440) is outside reflection events and source cell arenas.\n\
+(func $type_certificate_reset\n\
+ (memory.fill (i32.const 57344) (i32.const 0) (i32.const 4096)))\n\
+(func $type_certificate_address (param $type i32) (param $handle i32) (result i32)\n\
+ (i32.add (i32.const 57344)\n\
+  (i32.shl (i32.and (i32.xor (local.get $handle)\n\
+    (i32.mul (local.get $type) (i32.const 2654435761))) (i32.const 511))\n\
+   (i32.const 3))))\n\
+(func $type_certificate_has (param $type i32) (param $handle i32) (result i32)\n\
+ (local $address i32)\n\
+ (local.set $address (call $type_certificate_address (local.get $type) (local.get $handle)))\n\
+ (i32.and (i32.eq (i32.load (local.get $address)) (i32.add (local.get $type) (i32.const 1)))\n\
+  (i32.eq (i32.load offset=4 (local.get $address)) (local.get $handle))))\n\
+(func $type_certificate_put (param $type i32) (param $handle i32)\n\
+ (local $address i32)\n\
+ (local.set $address (call $type_certificate_address (local.get $type) (local.get $handle)))\n\
+ (i32.store offset=4 (local.get $address) (local.get $handle))\n\
+ (i32.store (local.get $address) (i32.add (local.get $type) (i32.const 1))))\n",
+    )
+}
+
 #[expect(
     tigerstyle::assertion_density,
     tigerstyle::fragile_exhaustive_enum_match,
@@ -7,14 +34,37 @@ pub(super) fn shape(
     out: &mut crate::output::Buffer,
     index: usize,
     shape: super::Shape,
+    calculator: bool,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func $t"));
     attempt!(out.index(index));
-    attempt!(out.append(b" (param $tag i32) (param $value i64) (result i32) (local $h i32)\n"));
-    if let super::Shape::Resource(_) = shape {
-        attempt!(out.append(b"(local $resource_ordinal i64) (local $resource_valid i32)\n"));
+    let cache = calculator && matches!(
+        shape,
+        super::Shape::Pair(..)
+            | super::Shape::Sum(..)
+            | super::Shape::NominalOpaque(..)
+            | super::Shape::NominalVariant(..)
+            | super::Shape::List(..)
+    );
+    if cache {
+        // Calculator source submissions have no host imports. Only validated,
+        // append-only cells in this one synchronous submit can be certified.
+        attempt!(out.append(b" (param $tag i32) (param $value i64) (result i32) (local $h i32) (local $valid i32)\n(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n(if (i32.and (i32.ge_u (local.get $tag) (i32.const 4)) (i64.le_u (local.get $value) (i64.const 4294967295))) (then\n(local.set $h (i32.wrap_i64 (local.get $value)))\n(if (call $is_live (local.get $h)) (then\n(if (i32.eq (call $kind (local.get $h)) (local.get $tag)) (then\n(if (call $type_certificate_has (i32.const "));
+        attempt!(out.index(index));
+        attempt!(out.append(b") (local.get $h)) (then (return (i32.const 1))))))))))\n(local.set $valid (call $t"));
+        attempt!(out.index(index));
+        attempt!(out.append(b"_body (local.get $tag) (local.get $value)))\n(if (i32.and (local.get $valid) (local.get $h)) (then (call $type_certificate_put (i32.const "));
+        attempt!(out.index(index));
+        attempt!(out.append(b") (local.get $h))))\n(local.get $valid))\n(func $t"));
+        attempt!(out.index(index));
+        attempt!(out.append(b"_body (param $tag i32) (param $value i64) (result i32) (local $h i32)\n"));
+    } else {
+        attempt!(out.append(b" (param $tag i32) (param $value i64) (result i32) (local $h i32)\n"));
+        if let super::Shape::Resource(_) = shape {
+            attempt!(out.append(b"(local $resource_ordinal i64) (local $resource_valid i32)\n"));
+        }
+        attempt!(out.append(b"(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n"));
     }
-    attempt!(out.append(b"(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n"));
     match shape {
         super::Shape::Scalar(tag) => attempt!(scalar(out, tag)),
         super::Shape::Resource(kind) => {

@@ -7,7 +7,31 @@ function readText(engine, offset, count) {
 
 function readSignature(engine, runtime, identity) {
     integer(identity, 16384, 'signature identity');
+    // Calculator-v1 IDs resolve through the engine-retained table recorded
+    // from each executed module's published delta. Ordinary profiles keep
+    // their original stable static signature descriptors.
+    if (engine.profile === 'Calculator-v1')
+      return engine.signatures[integer(identity, engine.signatures.length - 1, 'signature identity')];
     return readText(engine, runtime.signature_address(identity), runtime.signature_length(identity));
+  }
+
+  // A Calculator-v1 module publishes only IDs [signature_first, signature_end)
+  // interned since its compiler's committed base, which is never above the
+  // IDs this engine already holds. Keep the shared prefix and replace every
+  // later ID, so keys from an uncommitted predecessor can never be observed.
+  // Each key is materialized in raw ingress scratch [983040,1048576) and must
+  // be copied before the next signature or push_text overwrites it.
+function recordSignatures(engine, runtime) {
+    const first = integer(runtime.signature_first(), engine.signatures.length, 'signature base');
+    const end = integer(runtime.signature_end(), 8192, 'signature end');
+    if (end < first) fail('invalid published signature range');
+    const table = engine.signatures.slice(0, first);
+    for (let identity = first; identity < end; identity += 1) {
+      const address = runtime.signature_address(identity);
+      if (address !== 983040) fail('published signature is unavailable');
+      table.push(readText(engine, address, runtime.signature_length(identity)));
+    }
+    return table;
   }
 
 function readStack(engine, runtime) {
@@ -75,10 +99,17 @@ function readValue(engine, runtime, kind, value, depth) {
       const marker = runtime.cell_w(handle);
       if (marker === 0) return { type: 'Sum', variant: kind === 12 ? 'left' : 'right',
         value: readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1) };
-      if (engine.profile !== 'Declared-Modules-v1') fail('nominal value is outside Core-Bootstrap');
+      if (engine.profile !== 'Declared-Modules-v1' && engine.profile !== 'Calculator-v1')
+        fail('nominal value is outside a declared module profile');
       if (marker !== 1 && marker !== 2) fail('invalid nominal representation marker');
       if (marker === 1 && kind !== 12) fail('opaque wrapper uses an invalid sum tag');
       const module = (BigInt(runtime.cell_y(handle) >>> 0) << 32n) | BigInt(runtime.cell_x(handle) >>> 0);
+      // The calculator observes only guest-certified tags, spans, and final
+      // Text. Never traverse its opaque parser, evaluator, numeric, or session
+      // payloads into the host report; their live handles stay in the worker.
+      if (engine.calculatorShellState && marker === 1)
+        return { type: 'Nominal', module: String(module), ordinal: runtime.cell_z(handle),
+          shape: 'opaque', variant: null, value: { type: 'Opaque' } };
       return { type: 'Nominal', module: String(module), ordinal: runtime.cell_z(handle),
         shape: marker === 1 ? 'opaque' : 'variant', variant: marker === 1 ? null : kind === 12 ? 'left' : 'right',
         value: readBoxed(engine, runtime, runtime.cell_a(handle), depth + 1) };
@@ -130,8 +161,13 @@ function readRecipe(engine, runtime, root, depth) {
       else if (atom === 4) result.push({ literal: { type: 'Bool', value: value !== 0n } });
       else if (atom === 5) result.push({ literal: { type: 'Unit', value: null } });
       else if (atom === 2) {
-        const id = integer(Number(value), 25, 'builtin identity');
-        result.push({ invoke: `${id < 22 ? 'builtin' : id < 24 ? 'host' : 'live'}:${names[id]}` });
+        const maximum = engine.profile === 'Calculator-v1' ? 31
+          : engine.profile === 'Text-Byte-Cursor-v1' ? 26 : 25;
+        const id = integer(Number(value), maximum, 'builtin identity');
+        if ((engine.profile === 'Calculator-v1' || engine.profile === 'Text-Byte-Cursor-v1')
+          && id >= 22 && id <= 25)
+          fail('reserved builtin in observable recipe');
+        result.push({ invoke: `${id < 22 || id >= 26 ? 'builtin' : id < 24 ? 'host' : 'live'}:${names[id]}` });
       } else if (atom === 15) result.push({ invoke: `definition:${BigInt.asUintN(64, value)}` });
       else if (atom === 3) {
         const program = readBoxed(engine, runtime, child, depth + 1);

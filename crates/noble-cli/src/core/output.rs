@@ -1,14 +1,14 @@
 mod declared;
 
 #[derive(Clone, Copy)]
-pub(super) struct ErrorContext {
-    pub stage: &'static str,
-    pub outcome: &'static str,
+pub(crate) struct ErrorContext {
+    pub(crate) stage: &'static str,
+    pub(crate) outcome: &'static str,
 }
 
-pub(super) struct Failure {
-    pub context: ErrorContext,
-    pub message: std::string::String,
+pub(crate) struct Failure {
+    pub(crate) context: ErrorContext,
+    pub(crate) message: std::string::String,
 }
 
 impl Failure {
@@ -50,9 +50,9 @@ impl Failure {
     }
 }
 
-pub(super) struct Report {
-    pub outcome: std::string::String,
-    pub json: std::string::String,
+pub(crate) struct Report {
+    pub(crate) outcome: std::string::String,
+    pub(crate) json: std::string::String,
 }
 
 impl Report {

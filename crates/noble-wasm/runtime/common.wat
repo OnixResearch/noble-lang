@@ -2,6 +2,7 @@
 (type $entry (func (param i32)))
 (memory (export "memory") 1 4)
 (global $source_reflection i32 (i32.const 0))
+(global $cell_limit i32 (i32.const 4096))
 (global $failure (mut i32) (i32.const 0))
 (global $quota_reason (mut i32) (i32.const 0))
 (global $phase (mut i32) (i32.const 0))

@@ -34,10 +34,21 @@ fn visible_behavior(
         kind,
         crate::contracts::Behavior::BoundEmit(_) | crate::contracts::Behavior::BoundClock(_)
     ) {
-        return bound_emit_visible(env, def);
+        return !env.calculator && bound_emit_visible(env, def);
     }
     if kind == crate::contracts::Behavior::TextByte {
-        return env.text_cursor && !env.declared_modules && def.0 == 26;
+        return ((env.text_cursor && !env.declared_modules) || env.calculator)
+            && def.0 == 26;
+    }
+    if env.calculator {
+        match kind {
+            crate::contracts::Behavior::CalculatorIterate => return def.0 == 27,
+            crate::contracts::Behavior::CalculatorCompare => return def.0 == 28,
+            crate::contracts::Behavior::CalculatorDivRem => return def.0 == 29,
+            crate::contracts::Behavior::CalculatorTextFromAscii => return def.0 == 30,
+            crate::contracts::Behavior::CalculatorTextLength => return def.0 == 31,
+            _ => {}
+        }
     }
     if let crate::contracts::Behavior::TestEmit = kind {
         return env.ambient_test_emit_visible();

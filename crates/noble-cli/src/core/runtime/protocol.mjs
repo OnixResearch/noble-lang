@@ -26,7 +26,8 @@ async function protocol(config) {
     ? { ...slotReply('internal-failure'), diagnostic: `${error.name}: ${error.message}`,
       request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
       session_state: 'terminated-after-internal-failure' }
-    : ({ schema: 'noble-core-report/v1', profile: 'Core-Bootstrap',
+    : ({ schema: 'noble-core-report/v1',
+    profile: config.calculator === true ? 'Calculator-v1' : 'Core-Bootstrap',
     backend: 'managed-linear-memory', stage: 'wasm', outcome: 'internal-failure',
     diagnostic: `${error.name}: ${error.message}`,
     request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],

@@ -1,0 +1,752 @@
+module calc_bits@1 [
+    opaque DivideCursor Pair<List<Bool>,Pair<List<Bool>,Pair<List<Bool>,List<Bool>>>> private
+    export DivideCursor
+    opaque DivideDone Pair<List<Bool>,List<Bool>> private
+    export DivideDone
+    variant DivideProgress More DivideCursor public Done DivideDone public
+    export DivideProgress
+    export DivideProgress.More
+    export DivideProgress.Done
+    export DivideProgress.match
+    opaque DivideActive Pair<Pair<List<Bool>,Pair<List<Bool>,List<Bool>>>,Pair<Bool,List<Bool>>> private
+    export DivideActive
+    variant DivideRoute Done DivideDone public More DivideActive public
+    export DivideRoute
+    export DivideRoute.Done
+    export DivideRoute.More
+    export DivideRoute.match
+    opaque DivideShifted Pair<List<Bool>,Pair<List<Bool>,Pair<List<Bool>,List<Bool>>>> private
+    export DivideShifted
+    opaque DivideCompared Pair<DivideShifted,Bool> private
+    export DivideCompared
+    opaque RemainderCursor Pair<List<Bool>,Pair<List<Bool>,List<Bool>>> private
+    export RemainderCursor
+    opaque RemainderDone List<Bool> private
+    export RemainderDone
+    opaque RemainderActive Pair<Pair<List<Bool>,List<Bool>>,Pair<Bool,List<Bool>>> private
+    export RemainderActive
+    opaque RemainderShifted Pair<List<Bool>,Pair<List<Bool>,List<Bool>>> private
+    export RemainderShifted
+    opaque RemainderCompared Pair<RemainderShifted,Bool> private
+    export RemainderCompared
+    variant RemainderRoute Done RemainderDone public More RemainderActive public
+    export RemainderRoute
+    export RemainderRoute.Done
+    export RemainderRoute.More
+    export RemainderRoute.match
+    opaque AddCursor Pair<Pair<List<Bool>,List<Bool>>,Pair<Bool,List<Bool>>> private
+    export AddCursor
+    opaque MultiplyAddCursor Pair<Pair<List<Bool>,List<Bool>>,AddCursor> private
+    export MultiplyAddCursor
+    opaque MultiplyCursor Pair<List<Bool>,Pair<List<Bool>,List<Bool>>> private
+    export MultiplyCursor
+    opaque MultiplyActive Pair<Pair<List<Bool>,List<Bool>>,Pair<Bool,List<Bool>>> private
+    export MultiplyActive
+    opaque MultiplyAdded Pair<Pair<List<Bool>,List<Bool>>,List<Bool>> private
+    export MultiplyAdded
+    opaque MultiplyDone List<Bool> private
+    export MultiplyDone
+    variant MultiplyRoute Done MultiplyDone public More MultiplyActive public
+    export MultiplyRoute
+    export MultiplyRoute.Done
+    export MultiplyRoute.More
+    export MultiplyRoute.match
+
+    signature rot forall<S:stack,A:value,B:value,C:value>
+        [ S A B C -- S B C A ! pure ]
+    export rot
+    def rot [ [ swap ] dip swap ]
+
+    signature unrot forall<S:stack,A:value,B:value,C:value>
+        [ S A B C -- S C A B ! pure ]
+    export unrot
+    def unrot [ swap [ swap ] dip ]
+
+    signature reverse_i64 forall<S:stack> [ S List<I64> -- S List<I64> ! pure ]
+    export reverse_i64
+    def reverse_i64 [
+        nil pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap [ swap ] dip swap cons pair true ] list.case
+        ] iterate
+        unpair swap drop
+    ]
+
+    signature bits_empty forall<S:stack> [ S List<Bool> -- S Bool ! pure ]
+    export bits_empty
+    def bits_empty [ [ true ] [ drop drop false ] list.case ]
+
+    signature reverse_bits forall<S:stack> [ S List<Bool> -- S List<Bool> ! pure ]
+    export reverse_bits
+    def reverse_bits [
+        nil pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap [ swap ] dip swap cons pair true ] list.case
+        ] iterate
+        unpair swap drop
+    ]
+
+    signature trim_msb_bits forall<S:stack>
+        [ S List<Bool> -- S List<Bool> ! pure ]
+    def trim_msb_bits [
+        [ dup
+          [ false ]
+          [ swap [ drop false ] [ swap drop true ] if ]
+          list.case ] iterate
+    ]
+
+    signature trim_bits forall<S:stack> [ S List<Bool> -- S List<Bool> ! pure ]
+    export trim_bits
+    def trim_bits [
+        reverse_bits trim_msb_bits reverse_bits
+    ]
+
+    signature bit_count forall<S:stack> [ S List<Bool> -- S I64 ! pure ]
+    export bit_count
+    def bit_count [
+        0 pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap [ swap ] dip drop 1 + pair true ] list.case
+        ] iterate
+        unpair swap drop
+    ]
+
+    signature pop_bit_values forall<S:stack>
+        [ S List<Bool> -- S Bool List<Bool> ! pure ]
+    def pop_bit_values [ [ false nil ] [ ] list.case ]
+
+    signature pop_two forall<S:stack>
+        [ S Pair<List<Bool>,List<Bool>>
+          -- S Pair<Pair<Bool,Bool>,Pair<List<Bool>,List<Bool>>> ! pure ]
+    export pop_two
+    def pop_two [
+        unpair [ pop_bit_values ] dip pop_bit_values
+        [ swap ] dip
+        [ [ pair ] dip ] dip pair pair
+    ]
+
+    signature bit_i64 forall<S:stack> [ S Bool -- S I64 ! pure ]
+    def bit_i64 [ [ 1 ] [ 0 ] if ]
+
+    signature add_three_bits forall<S:stack>
+        [ S Bool Bool Bool -- S Bool Bool ! pure ]
+    export add_three_bits
+    def add_three_bits [
+        bit_i64 swap bit_i64 + swap bit_i64 +
+        2 i64.div-rem drop swap 1 = swap 1 = swap
+    ]
+
+    signature bool_or forall<S:stack> [ S Bool Bool -- S Bool ! pure ]
+    def bool_or [ [ drop true ] [ ] if ]
+
+    signature bool_and forall<S:stack> [ S Bool Bool -- S Bool ! pure ]
+    export bool_and
+    def bool_and [ [ ] [ drop false ] if ]
+
+    signature bool_not forall<S:stack> [ S Bool -- S Bool ! pure ]
+    export bool_not
+    def bool_not [ [ false ] [ true ] if ]
+
+    signature bool_equal forall<S:stack> [ S Bool Bool -- S Bool ! pure ]
+    export bool_equal
+    def bool_equal [ [ ] [ bool_not ] if ]
+
+    signature should_continue_bits forall<S:stack>
+        [ S Pair<List<Bool>,List<Bool>> Bool -- S Bool ! pure ]
+    export should_continue_bits
+    def should_continue_bits [
+        [ unpair ] dip rot bits_empty rot bits_empty
+        bool_and bool_not bool_or
+    ]
+
+    signature add_begin forall<S:stack>
+        [ S List<Bool> List<Bool> -- S AddCursor ! pure ]
+    export add_begin
+    def add_begin [ pair false nil pair pair AddCursor.new ]
+
+    signature add_digit forall<S:stack>
+        [ S AddCursor -- S AddCursor ! pure ]
+    export add_digit
+    def add_digit [
+        AddCursor.into unpair [ pop_two ] dip [ unpair ] dip
+        rot unpair rot unpair
+        [ add_three_bits ] dip
+        rot swap cons pair
+        pair AddCursor.new
+    ]
+
+    signature add_more forall<S:stack>
+        [ S AddCursor -- S Pair<AddCursor,Bool> ! pure ]
+    export add_more
+    def add_more [
+        dup AddCursor.into unpair unpair drop
+        should_continue_bits pair
+    ]
+
+    signature add_finish forall<S:stack>
+        [ S AddCursor -- S List<Bool> ! pure ]
+    export add_finish
+    def add_finish [
+        AddCursor.into unpair swap drop unpair swap drop
+        trim_msb_bits reverse_bits
+    ]
+
+    signature add_bits forall<S:stack>
+        [ S List<Bool> List<Bool> -- S List<Bool> ! pure ]
+    export add_bits
+    def add_bits [
+        pair false nil pair pair
+        [ unpair [ pop_two ] dip [ unpair ] dip
+          rot unpair rot unpair
+          [ add_three_bits ] dip
+          rot swap cons pair
+          pair dup unpair unpair drop
+          should_continue_bits
+        ] iterate
+        unpair swap drop unpair swap drop
+        trim_msb_bits reverse_bits
+    ]
+
+    signature compare_bits forall<S:stack>
+        [ S List<Bool> List<Bool> -- S I64 ! pure ]
+    export compare_bits
+    def compare_bits [
+        pair 0 pair
+        [ unpair
+          [ unpair
+            [ [ false nil ] [ ] list.case ] dip
+            [ false nil ] [ ] list.case
+            [ swap ] dip
+            [ [ pair ] dip ] dip pair pair ] dip
+          [ unpair ] dip
+          [ swap ] dip swap unpair
+          [ 1 ] [ 0 ] if swap [ 1 ] [ 0 ] if swap i64.cmp
+          dup 0 = [ drop ] [ swap drop ] if
+          pair
+          dup unpair drop false
+          [ unpair ] dip [ swap ] dip swap
+          [ true ] [ drop drop false ] list.case
+          [ swap ] dip swap
+          [ true ] [ drop drop false ] list.case
+          [ ] [ drop false ] if
+          [ false ] [ true ] if
+          [ drop true ] [ ] if
+        ] iterate
+        unpair swap drop
+    ]
+
+    signature subtract_three_bits forall<S:stack>
+        [ S Bool Bool Bool -- S Bool Bool ! pure ]
+    export subtract_three_bits
+    def subtract_three_bits [
+        bit_i64 swap bit_i64 rot bit_i64 unrot swap
+        [ - ] dip -
+        dup 0 i64.cmp -1 =
+        [ 2 + true ] [ false ] if
+        [ 1 = ] dip
+    ]
+
+    signature subtract_bits forall<S:stack>
+        [ S List<Bool> List<Bool> -- S List<Bool> ! pure ]
+    export subtract_bits
+    def subtract_bits [
+        pair false nil pair pair
+        [ unpair
+          [ unpair
+            [ [ false nil ] [ ] list.case ] dip
+            [ false nil ] [ ] list.case
+            [ swap ] dip
+            [ [ pair ] dip ] dip pair pair ] dip
+          [ unpair ] dip
+          [ swap ] dip swap unpair [ swap ] dip swap unpair
+          [ [ 1 ] [ 0 ] if
+            swap [ 1 ] [ 0 ] if
+            [ swap ] dip swap [ 1 ] [ 0 ] if
+            swap [ swap ] dip swap
+            [ - ] dip -
+            dup 0 i64.cmp -1 =
+            [ 2 + true ] [ false ] if
+            [ 1 = ] dip ] dip
+          [ swap ] dip swap swap cons pair
+          pair dup unpair unpair drop
+          [ unpair ] dip [ swap ] dip swap
+          [ true ] [ drop drop false ] list.case
+          [ swap ] dip swap
+          [ true ] [ drop drop false ] list.case
+          [ ] [ drop false ] if
+          [ false ] [ true ] if
+          [ drop true ] [ ] if
+        ] iterate
+        unpair swap drop unpair swap drop
+        [ dup
+          [ false ]
+          [ swap [ drop false ] [ swap drop true ] if ]
+          list.case ] iterate
+        nil pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap [ swap ] dip swap cons pair true ] list.case
+        ] iterate
+        unpair swap drop
+    ]
+
+    signature shift_once forall<S:stack>
+        [ S List<Bool> -- S List<Bool> ! pure ]
+    export shift_once
+    def shift_once [
+        dup bits_empty [ drop nil ] [ false swap cons ] if
+    ]
+
+    signature multiply_step forall<S:stack>
+        [ S Pair<List<Bool>,List<Bool>> Bool
+          -- S Pair<List<Bool>,List<Bool>> ! pure ]
+    def multiply_step [
+        [ dup unpair add_bits
+          swap unpair drop shift_once swap pair ]
+        [ unpair [ shift_once ] dip pair ] if
+    ]
+
+    signature multiply_bits forall<S:stack>
+        [ S List<Bool> List<Bool> -- S List<Bool> ! pure ]
+    export multiply_bits
+    def multiply_bits [
+        swap nil pair pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ [ multiply_step ] dip swap pair true ] list.case
+        ] iterate
+        unpair swap drop unpair swap drop
+    ]
+
+    # The same schoolbook state as multiply_bits, but one certified
+    # multiplier bit per selected guest submission. Only an empty remaining
+    # multiplier can issue the sealed complete product.
+    signature multiply_start forall<S:stack>
+        [ S List<Bool> List<Bool> -- S MultiplyCursor ! pure ]
+    export multiply_start
+    def multiply_start [ swap nil pair pair MultiplyCursor.new ]
+
+    signature multiply_route forall<S:stack>
+        [ S MultiplyCursor -- S MultiplyRoute ! pure ]
+    export multiply_route
+    def multiply_route [
+        MultiplyCursor.into unpair swap
+        [ unpair swap drop MultiplyDone.new MultiplyRoute.Done ]
+        [ pair pair MultiplyActive.new MultiplyRoute.More ] list.case
+    ]
+
+    signature multiply_next forall<S:stack>
+        [ S MultiplyActive -- S MultiplyCursor ! pure ]
+    export multiply_next
+    def multiply_next [
+        MultiplyActive.into unpair unpair
+        [ multiply_step ] dip
+        swap pair MultiplyCursor.new
+    ]
+
+    signature multiply_add_probe forall<S:stack>
+        [ S MultiplyActive -- S Pair<MultiplyActive,Bool> ! pure ]
+    export multiply_add_probe
+    def multiply_add_probe [
+        dup MultiplyActive.into unpair swap drop unpair drop pair
+    ]
+
+    signature multiply_add_keep forall<S:stack>
+        [ S MultiplyActive -- S MultiplyAdded ! pure ]
+    export multiply_add_keep
+    def multiply_add_keep [
+        MultiplyActive.into unpair unpair swap drop
+        pair MultiplyAdded.new
+    ]
+
+    signature multiply_add_begin forall<S:stack>
+        [ S MultiplyActive -- S MultiplyAddCursor ! pure ]
+    export multiply_add_begin
+    def multiply_add_begin [
+        MultiplyActive.into unpair unpair swap drop
+        swap unpair
+        [ dup ] dip add_begin
+        [ pair ] dip pair MultiplyAddCursor.new
+    ]
+
+    signature multiply_add_digit forall<S:stack>
+        [ S MultiplyAddCursor -- S MultiplyAddCursor ! pure ]
+    export multiply_add_digit
+    def multiply_add_digit [
+        MultiplyAddCursor.into unpair add_digit
+        pair MultiplyAddCursor.new
+    ]
+
+    signature multiply_add_more forall<S:stack>
+        [ S MultiplyAddCursor -- S Pair<MultiplyAddCursor,Bool> ! pure ]
+    export multiply_add_more
+    def multiply_add_more [
+        MultiplyAddCursor.into unpair add_more unpair
+        [ pair MultiplyAddCursor.new ] dip pair
+    ]
+
+    signature multiply_add_finish forall<S:stack>
+        [ S MultiplyAddCursor -- S MultiplyAdded ! pure ]
+    export multiply_add_finish
+    def multiply_add_finish [
+        MultiplyAddCursor.into unpair add_finish
+        [ unpair ] dip rot [ pair ] dip
+        pair MultiplyAdded.new
+    ]
+
+    # Keep the next multiplier bit and the partial product sealed while a
+    # selected guest call performs only the conditional accumulation.
+    signature multiply_accumulate forall<S:stack>
+        [ S MultiplyActive -- S MultiplyAdded ! pure ]
+    export multiply_accumulate
+    def multiply_accumulate [
+        MultiplyActive.into unpair unpair
+        [ [ dup unpair add_bits swap unpair drop swap pair ] [ ] if ] dip
+        pair MultiplyAdded.new
+    ]
+
+    signature multiply_shift forall<S:stack>
+        [ S MultiplyAdded -- S MultiplyCursor ! pure ]
+    export multiply_shift
+    def multiply_shift [
+        MultiplyAdded.into unpair
+        [ unpair [ shift_once ] dip pair ] dip
+        swap pair MultiplyCursor.new
+    ]
+
+    signature multiply_finish forall<S:stack>
+        [ S MultiplyDone -- S List<Bool> ! pure ]
+    export multiply_finish
+    def multiply_finish [ MultiplyDone.into ]
+
+    signature bool_xor forall<S:stack> [ S Bool Bool -- S Bool ! pure ]
+    export bool_xor
+    def bool_xor [ [ bool_not ] [ ] if ]
+
+    signature shift_in_bit forall<S:stack>
+        [ S List<Bool> Bool -- S List<Bool> ! pure ]
+    def shift_in_bit [
+        swap dup bits_empty
+        [ drop [ true nil cons ] [ nil ] if ]
+        [ cons ] if
+    ]
+
+    signature over forall<S:stack,A:value,B:value>
+        [ S A B -- S A B A ! pure ]
+    def over [ [ dup ] dip swap ]
+
+    # Shared long-division digit: preserve the divisor, update only the
+    # remainder, and return the quotient bit without allocating a quotient
+    # cell when a caller needs only the remainder.
+    signature division_digit forall<S:stack>
+        [ S List<Bool> List<Bool> Bool
+          -- S List<Bool> List<Bool> Bool ! pure ]
+    def division_digit [
+        rot [ shift_in_bit ] dip
+        over over compare_bits
+        0 i64.cmp -1 =
+        [ swap false ]
+        [ over over subtract_bits rot drop true ] if
+    ]
+
+    signature division_step forall<S:stack>
+        [ S Pair<List<Bool>,Pair<List<Bool>,List<Bool>>> Bool
+          -- S Pair<List<Bool>,Pair<List<Bool>,List<Bool>>> ! pure ]
+    def division_step [
+        [ unpair ] dip [ unpair ] dip [ swap ] dip
+        [ swap ] dip swap [ division_digit ] dip
+        cons
+        rot [ pair ] dip swap pair
+    ]
+
+    # A Done token is created only when no dividend bits remain. Neither
+    # quotient nor remainder may be extracted early from a live cursor.
+    signature divide_start forall<S:stack>
+        [ S List<Bool> List<Bool> -- S DivideCursor ! pure ]
+    export divide_start
+    def divide_start [
+        [ reverse_bits ] dip
+        nil nil pair pair pair DivideCursor.new
+    ]
+
+    signature divide_next forall<S:stack>
+        [ S DivideCursor -- S DivideProgress ! pure ]
+    export divide_next
+    def divide_next [
+        DivideCursor.into unpair swap
+        [ unpair swap drop DivideDone.new DivideProgress.Done ]
+        [ [ division_step ] dip
+          swap pair DivideCursor.new DivideProgress.More ] list.case
+    ]
+
+    # This authenticated cursor consumes the finite dividend inside one
+    # guest invocation. No selected submission is spent per quotient bit.
+    signature divide_run forall<S:stack>
+        [ S DivideCursor -- S DivideDone ! pure ]
+    export divide_run
+    def divide_run [
+        DivideCursor.into unpair swap pair
+        [ unpair
+          [ nil pair false ]
+          [ [ [ unpair ] dip [ unpair ] dip [ swap ] dip
+              [ swap ] dip swap
+              [ [ swap ] dip swap
+                [ swap dup
+                  [ true ] [ drop drop false ] list.case
+                  [ drop [ true nil cons ] [ nil ] if ]
+                  [ cons ] if ] dip
+                [ dup ] dip swap [ dup ] dip swap compare_bits
+                0 i64.cmp -1 =
+                [ swap false ]
+                [ [ dup ] dip swap [ dup ] dip swap subtract_bits
+                  [ swap ] dip swap drop true ] if
+              ] dip
+              cons
+              [ swap ] dip swap [ pair ] dip swap pair
+            ] dip
+            pair true ] list.case
+        ] iterate
+        unpair drop unpair swap drop DivideDone.new
+    ]
+
+    # Keep divisor, shifted remainder, quotient and remaining dividend sealed
+    # across selected submissions. A comparison token is the only input to
+    # subtraction; only an empty dividend can issue DivideDone.
+    signature divide_route forall<S:stack>
+        [ S DivideCursor -- S DivideRoute ! pure ]
+    export divide_route
+    def divide_route [
+        DivideCursor.into unpair swap
+        [ unpair swap drop DivideDone.new DivideRoute.Done ]
+        [ pair pair DivideActive.new DivideRoute.More ] list.case
+    ]
+
+    signature divide_shift_state forall<S:stack>
+        [ S Pair<List<Bool>,Pair<List<Bool>,List<Bool>>> Bool
+          -- S Pair<List<Bool>,Pair<List<Bool>,List<Bool>>> ! pure ]
+    def divide_shift_state [
+        [ unpair ] dip [ unpair ] dip
+        swap [ shift_in_bit ] dip
+        pair pair
+    ]
+
+    signature divide_shift forall<S:stack>
+        [ S DivideActive -- S DivideShifted ! pure ]
+    export divide_shift
+    def divide_shift [
+        DivideActive.into unpair unpair
+        [ divide_shift_state ] dip
+        swap pair DivideShifted.new
+    ]
+
+    signature divide_compare forall<S:stack>
+        [ S DivideShifted -- S DivideCompared ! pure ]
+    export divide_compare
+    def divide_compare [
+        dup DivideShifted.into unpair swap drop
+        unpair unpair drop swap compare_bits
+        0 i64.cmp -1 = pair DivideCompared.new
+    ]
+
+    signature divide_complete_state forall<S:stack>
+        [ S Pair<List<Bool>,Pair<List<Bool>,List<Bool>>> Bool
+          -- S Pair<List<Bool>,Pair<List<Bool>,List<Bool>>> ! pure ]
+    def divide_complete_state [
+        [ unpair ] dip [ unpair ] dip
+        [ false swap cons pair pair ]
+        [ [ over subtract_bits ] dip true swap cons pair pair ] if
+    ]
+
+    signature divide_commit forall<S:stack>
+        [ S DivideCompared -- S DivideCursor ! pure ]
+    export divide_commit
+    def divide_commit [
+        DivideCompared.into unpair
+        [ DivideShifted.into unpair ] dip
+        rot [ divide_complete_state ] dip
+        swap pair DivideCursor.new
+    ]
+
+    signature divide_finish forall<S:stack>
+        [ S DivideDone -- S Pair<List<Bool>,List<Bool>> ! pure ]
+    export divide_finish
+    def divide_finish [
+        DivideDone.into unpair swap [ trim_bits ] dip pair
+    ]
+
+    # GCD needs only the remainder; do not allocate discarded quotient bits.
+    signature remainder_start forall<S:stack>
+        [ S List<Bool> List<Bool> -- S RemainderCursor ! pure ]
+    export remainder_start
+    def remainder_start [
+        [ reverse_bits ] dip
+        nil pair pair RemainderCursor.new
+    ]
+
+    signature remainder_route forall<S:stack>
+        [ S RemainderCursor -- S RemainderRoute ! pure ]
+    export remainder_route
+    def remainder_route [
+        RemainderCursor.into unpair swap
+        [ unpair swap drop RemainderDone.new RemainderRoute.Done ]
+        [ pair pair RemainderActive.new RemainderRoute.More ] list.case
+    ]
+
+    signature remainder_shift forall<S:stack>
+        [ S RemainderActive -- S RemainderShifted ! pure ]
+    export remainder_shift
+    def remainder_shift [
+        RemainderActive.into unpair unpair swap
+        [ swap unpair ] dip
+        shift_in_bit pair pair RemainderShifted.new
+    ]
+
+    signature remainder_compare forall<S:stack>
+        [ S RemainderShifted -- S RemainderCompared ! pure ]
+    export remainder_compare
+    def remainder_compare [
+        dup RemainderShifted.into unpair swap drop
+        unpair swap compare_bits
+        0 i64.cmp -1 = pair RemainderCompared.new
+    ]
+
+    signature remainder_commit forall<S:stack>
+        [ S RemainderCompared -- S RemainderCursor ! pure ]
+    export remainder_commit
+    def remainder_commit [
+        RemainderCompared.into unpair
+        [ RemainderShifted.into unpair unpair ] dip
+        [ ] [ over subtract_bits ] if
+        pair pair RemainderCursor.new
+    ]
+
+    # Consume the finite MSB-first dividend directly. Keep the running
+    # remainder canonical and never construct discarded quotient bits or
+    # descend through four separately named cursor states per source bit.
+    signature remainder_run forall<S:stack>
+        [ S RemainderCursor -- S RemainderDone ! pure ]
+    export remainder_run
+    def remainder_run [
+        RemainderCursor.into unpair unpair
+        pair swap pair
+        [ unpair
+          [ nil pair false ]
+          [ [ swap unpair [ swap ] dip swap
+              [ swap ] dip swap
+              [ swap dup
+                [ true ] [ drop drop false ] list.case
+                [ drop [ true nil cons ] [ nil ] if ]
+                [ cons ] if ] dip
+              [ dup ] dip swap [ dup ] dip swap compare_bits
+              0 i64.cmp -1 =
+              [ swap ]
+              [ [ dup ] dip swap [ dup ] dip swap subtract_bits
+                [ swap ] dip swap drop ] if
+              pair ] dip
+            pair true ] list.case
+        ] iterate
+        unpair drop unpair swap drop RemainderDone.new
+    ]
+
+    signature remainder_finish forall<S:stack>
+        [ S RemainderDone -- S List<Bool> ! pure ]
+    export remainder_finish
+    def remainder_finish [ RemainderDone.into ]
+
+    signature divide_bits_raw forall<S:stack>
+        [ S List<Bool> List<Bool>
+          -- S Pair<List<Bool>,List<Bool>> ! pure ]
+    def divide_bits_raw [
+        [ reverse_bits ] dip
+        nil nil pair pair pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ [ division_step ] dip swap pair true ] list.case
+        ] iterate
+        unpair swap drop unpair swap drop unpair swap pair
+    ]
+
+    signature divide_bits forall<S:stack>
+        [ S List<Bool> List<Bool>
+          -- S Pair<List<Bool>,List<Bool>> ! pure ]
+    export divide_bits
+    def divide_bits [ divide_bits_raw unpair [ trim_bits ] dip pair ]
+
+    signature remainder_bits forall<S:stack>
+        [ S List<Bool> List<Bool> -- S List<Bool> ! pure ]
+    def remainder_bits [ divide_bits_raw unpair swap drop ]
+
+    signature gcd_bits forall<S:stack>
+        [ S List<Bool> List<Bool> -- S List<Bool> ! pure ]
+    export gcd_bits
+    def gcd_bits [
+        pair
+        [ dup unpair bits_empty
+          [ drop false ]
+          [ drop unpair dup [ remainder_bits ] dip
+            swap pair true ] if
+        ] iterate
+        unpair drop
+    ]
+
+    signature bits_from_i64_nonnegative forall<S:stack>
+        [ S I64 -- S List<Bool> ! pure ]
+    export bits_from_i64_nonnegative
+    def bits_from_i64_nonnegative [
+        nil pair
+        [ unpair swap dup 0 =
+          [ swap pair false ]
+          [ 2 i64.div-rem drop 1 = rot cons pair true ] if
+        ] iterate
+        unpair swap drop reverse_bits
+    ]
+
+    signature bits_to_i64_positive forall<S:stack>
+        [ S List<Bool> -- S I64 ! pure ]
+    export bits_to_i64_positive
+    def bits_to_i64_positive [
+        reverse_bits 0 pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ [ bit_i64 ] dip rot 2 * rot + pair true ] list.case
+        ] iterate
+        unpair swap drop
+    ]
+
+    signature count_one_bits forall<S:stack>
+        [ S List<Bool> -- S I64 ! pure ]
+    export count_one_bits
+    def count_one_bits [
+        0 pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ [ bit_i64 ] dip [ + ] dip swap pair true ] list.case
+        ] iterate
+        unpair swap drop
+    ]
+
+    signature ten_bits forall<S:stack> [ S -- S List<Bool> ! pure ]
+    export ten_bits
+    def ten_bits [
+        true nil cons false swap cons true swap cons false swap cons
+    ]
+
+    signature multiply_ten_bits forall<S:stack>
+        [ S List<Bool> -- S List<Bool> ! pure ]
+    export multiply_ten_bits
+    def multiply_ten_bits [
+        dup shift_once swap
+        shift_once shift_once shift_once add_bits
+    ]
+
+    signature add_decimal_digit forall<S:stack>
+        [ S List<Bool> I64 -- S List<Bool> ! pure ]
+    export add_decimal_digit
+    def add_decimal_digit [
+        [ multiply_ten_bits ] dip
+        bits_from_i64_nonnegative add_bits
+    ]
+]

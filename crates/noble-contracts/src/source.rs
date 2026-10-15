@@ -181,6 +181,7 @@ pub struct Prepared {
     live_selected: Option<alloc::string::String>,
     live_slots: bool,
     limits: crate::Limits,
+    calculator: bool,
     boundary: Option<alloc::vec::Vec<u8>>,
     definition: Option<Named>,
     selected_root: Option<u32>,
@@ -225,6 +226,7 @@ pub struct Session {
     text_cursor: bool,
     live_selected: Option<alloc::string::String>,
     live_slots: Option<LiveSlots>,
+    calculator: bool,
     bindings: Option<crate::component::Bindings>,
     declared: Option<declared::Context>,
 }
@@ -251,6 +253,7 @@ impl Session {
             text_cursor: false,
             live_selected: None,
             live_slots: None,
+            calculator: false,
             bindings: None,
             declared: None,
         }
@@ -264,6 +267,7 @@ impl Session {
             text_cursor: false,
             live_selected: None,
             live_slots: None,
+            calculator: false,
             bindings: None,
             declared: None,
         }
@@ -393,6 +397,13 @@ impl Session {
             text, &profile.resources, &[], Some(&profile.environment), span,
         ).map(|parsed| parsed.ty).map_err(|error| Error::at(Stage::Check, error))
     }
+    /// Opt-in pure calculator profile; nominal modules use ModuleSession.
+    pub fn new_calculator() -> Self {
+        Self {
+            calculator: true,
+            ..Self::without_test_hosts()
+        }
+    }
     pub const fn generation(&self) -> u64 {
         self.generation
     }
@@ -490,6 +501,7 @@ impl Session {
             text_cursor: self.text_cursor,
             live_selected: self.live_selected.clone(),
             live_slots: None,
+            calculator: self.calculator,
             bindings: None,
             declared: None,
         };
@@ -718,6 +730,7 @@ impl Session {
             || prepared.text_cursor != self.text_cursor
             || prepared.live_selected != self.live_selected
             || prepared.live_slots != self.live_slots.is_some()
+            || prepared.calculator != self.calculator
             || prepared.history != self.history
         {
             return false;

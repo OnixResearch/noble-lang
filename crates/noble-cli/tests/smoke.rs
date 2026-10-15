@@ -153,3 +153,28 @@ fn shell_rejects_non_utf8_budget() -> Result<(), std::io::Error> {
     assert!(output.stdout.is_empty());
     Ok(())
 }
+
+#[test]
+fn calculator_retains_state_after_exact_tiny_decimal() -> Result<(), Box<dyn std::error::Error>> {
+    let mut child = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
+        .args([
+            "calculator",
+            "--intermediate-bits", "512",
+            "--evaluation-work", "100000000",
+            "--output-size", "64",
+        ])
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()?;
+    std::io::Write::write_all(
+        child.stdin.as_mut().ok_or("missing calculator stdin")?,
+        b"0.00000000000000000001\n1\n",
+    )?;
+    drop(child.stdin.take());
+    let output = child.wait_with_output()?;
+    assert_eq!(output.status.code(), Some(0), "{}", String::from_utf8_lossy(&output.stderr));
+    assert_eq!(output.stdout, b"1/100000000000000000000\n1\n");
+    assert!(output.stderr.is_empty());
+    Ok(())
+}

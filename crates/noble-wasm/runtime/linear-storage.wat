@@ -1,12 +1,3 @@
-;; Cells occupy [65536, 262144): 4096 immutable records of exactly 48 bytes.
-;; Check the unsigned handle range before subtraction/multiplication can address memory.
-(func $linear_address (param $h i32) (result i32)
-  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))
-    (then unreachable))
-  (i32.add
-    (i32.const 65536)
-    (i32.mul (i32.sub (local.get $h) (i32.const 1)) (i32.const 48))))
-
 ;; A current cell has both its expected id and a live kind, never a zero object.
 (func $linear_live_address (param $h i32) (result i32)
   (local $p i32)
@@ -54,15 +45,21 @@
 (func $storage_ensure (param $h i32) (result i32)
   (local $needed i32)
   (local $current i32)
-  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1)) (i32.const 4095))
+  (if (i32.gt_u (i32.sub (local.get $h) (i32.const 1))
+                 (i32.sub (global.get $cell_limit) (i32.const 1)))
     (then (return (i32.const 0))))
-  ;; ceil((65536 + h * 48) / 65536) is at most four, without i32 overflow.
+  ;; Physical address, not logical handle, selects the required page.
+  ;; Calculator's third disjoint region grows beyond the first MiB;
+  ;; the first two regions and all Text/ingress addresses stay unchanged.
   (local.set $needed
     (i32.add
       (i32.const 1)
       (i32.shr_u
-        (i32.add (i32.mul (local.get $h) (i32.const 48)) (i32.const 65535))
+        (i32.add (call $linear_address (local.get $h)) (i32.const 47))
         (i32.const 16))))
+  (if (i32.and (i32.gt_u (local.get $h) (i32.const 4096))
+               (i32.le_u (local.get $h) (i32.const 6826)))
+    (then (local.set $needed (i32.const 8))))
   (local.set $current (memory.size))
   (if (i32.ge_u (local.get $current) (local.get $needed))
     (then (return (i32.const 1))))

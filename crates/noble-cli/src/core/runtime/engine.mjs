@@ -195,16 +195,33 @@ function checkLiveBytes(bytes, abi) {
 export class CoreEngine {
   constructor(selection, abi, { optimized = false, artifacts = null, bindings = [],
     declared_modules = false, declared_extension = null, in_process_live = false,
-    text_byte_cursor = false } = {}) {
+    text_byte_cursor = false, calculator = false, calculator_shell_state = false,
+    calculator_assembler = null } = {}) {
     this.selection = selection;
-    this.abi = abi;
+    // This larger bounded cell arena belongs only to Calculator-v1. Do not
+    // mutate the parsed ABI shared with the ordinary and cursor profiles.
+    this.abi = calculator
+      ? { ...abi, memory: { ...abi.memory, maximum: 64 },
+        limits_maximum: { ...abi.limits_maximum,
+          allocation_bytes: 1376208, session_cells: 72362, session_literal_bytes: 589824 },
+        cells: { ...abi.cells,
+          layout: '48 immutable bytes: kind:i32,id:i32,payload:i64,a:i32,b:i32,c:i32,x:i32,y:i32,z:i32,w:i32,n:i32. Calculator-v1 handles 1..4096 address 65536+(handle-1)*48, handles 4097..6826 address 393216+(handle-4097)*48, and handles 6827..72362 address 1048576+(handle-6827)*48. Dynamic Text [262144,393216), static Text [524288,983040), raw ingress [983040,1048576); extra cells [1048576,4194304) grow selected imported memory at most 64 pages. a/b/c are nullable backward cell edges; inspect only live handles obtained from checked output. Before each Calculator-v1 begin, the runtime collect export compacts the cells reachable from the operand stack and their dynamic Text in handle order and zeroes the vacated tail, so a handle is valid only until the next execute.' } }
+      : abi;
     this.inProcessLive = in_process_live === true;
-    configureDeclaredAbi(this, abi, declared_modules, declared_extension, bindings, text_byte_cursor);
+    configureDeclaredAbi(this, this.abi, declared_modules, declared_extension, bindings,
+      text_byte_cursor, calculator);
+    if (!calculator && calculator_assembler !== null) fail('calculator assembler cannot enter another profile');
+    if (calculator_shell_state && !calculator) fail('opaque calculator state requires the calculator profile');
+    this.calculatorShellState = calculator_shell_state;
+    this.calculatorAssembler = calculator_assembler;
     this.optimized = optimized;
     initializeHostState(this, bindings);
     this.pending = null;
     this.parked = null;
     this.poisoned = false;
+    // Calculator-v1 signature ID -> canonical key, as published by the
+    // latest executed module and its predecessors (see recordSignatures).
+    this.signatures = [];
     this.compilations = 0;
     this.lastTraceStart = 0;
     this.staged = null;
@@ -219,11 +236,11 @@ export class CoreEngine {
     this.owned = artifacts === null;
     this.directory = this.owned ? fs.mkdtempSync(path.join(os.tmpdir(), 'noble-core-')) : path.join(artifacts, 'engine');
     if (!this.owned) fs.mkdirSync(this.directory);
-    this.memory = new WebAssembly.Memory(abi.memory);
-    this.table = new WebAssembly.Table(abi.table);
+    this.memory = new WebAssembly.Memory(this.abi.memory);
+    this.table = new WebAssembly.Table(this.abi.table);
     this.shared = Object.create(null);
-    installSharedGlobals(this, abi);
-    installTestHosts(this, declared_modules);
+    installSharedGlobals(this, this.abi);
+    installTestHosts(this, declared_modules || calculator);
     if (this.inProcessLive) {
       this.shared.live_propose = (owner, expected, program) => this.livePropose(owner, expected, program);
       this.shared.live_generation = () => this.liveGeneration();
@@ -248,6 +265,20 @@ export class CoreEngine {
     }
     const tools = { node: { ...selected.node, sha256: sha256(fs.readFileSync(process.execPath)) } };
     if (this.inProcessLive) return tools;
+    if (this.profile === 'Calculator-v1') {
+      if (this.optimized || typeof this.calculatorAssembler !== 'string'
+        || !path.isAbsolute(this.calculatorAssembler)
+        || fs.realpathSync(this.calculatorAssembler) !== this.calculatorAssembler)
+        fail('invalid calculator-only assembler selection');
+      const version = spawnSync(this.calculatorAssembler, ['--internal-calculator-wat-version'],
+        { encoding: 'utf8', env: {}, timeout: 10000, maxBuffer: 65536 });
+      if (version.error || version.status !== 0
+        || version.stdout !== 'noble-calculator-wat 1.243.0\n')
+        fail('incompatible calculator-only WAT assembler');
+      tools.calculator_wat = { path: this.calculatorAssembler,
+        version: version.stdout.trim(), sha256: sha256(fs.readFileSync(this.calculatorAssembler)) };
+      return tools;
+    }
     for (const [name, executable, expected] of [
       ['wasm_tools', selected.wasm_tools.path, `wasm-tools ${selected.wasm_tools.version}`],
       ['wasm_opt', selected.wasm_opt.path, `wasm-opt version ${selected.wasm_opt.version}`],
@@ -281,25 +312,51 @@ export class CoreEngine {
     if (this.pending || this.poisoned) fail('session is pending or poisoned');
     if (wat.length > MAX_FRAME || source.length > 65536) fail('preparation byte limit exceeded');
     const stem = `module-${submission}`;
-    this.save(`${stem}.wat`, wat);
+    const persistCompiledAssets = this.profile !== 'Calculator-v1' || !this.owned;
+    if (persistCompiledAssets) this.save(`${stem}.wat`, wat);
     this.save(`${stem}.noble`, source);
-    const watPath = path.join(this.directory, `${stem}.wat`);
-    let wasmPath = path.join(this.directory, `${stem}.wasm`);
-    this.tool('wasm_tools', ['parse', watPath, '-o', wasmPath], `${stem}-assemble`);
-    this.tool('wasm_tools', ['validate', wasmPath], `${stem}-validate`);
+    let wasmPath = null;
+    let bytes;
+    if (this.profile === 'Calculator-v1') {
+      if (sha256(fs.readFileSync(this.calculatorAssembler)) !== this.tools.calculator_wat.sha256)
+        fail('calculator assembler changed after selection');
+      const result = spawnSync(this.calculatorAssembler, ['--internal-calculator-wat-assemble'],
+        { input: wat, env: {}, timeout: 60000, maxBuffer: MAX_FRAME });
+      this.save(`${stem}-calculator-assemble.json`, { toolchain: 'calculator-experimental-wat-v1',
+        assembler_sha256: this.tools.calculator_wat.sha256, wat_sha256: sha256(wat),
+        status: result.status, signal: result.signal,
+        stderr: result.stderr.toString(), error: result.error ? String(result.error) : null });
+      if (result.error || result.status !== 0 || !result.stdout.length || result.stdout.length > MAX_FRAME)
+        fail(`calculator-only WAT assembly refused: ${result.error ?? result.stderr.toString()}`);
+      if (persistCompiledAssets) {
+        wasmPath = path.join(this.directory, `${stem}.wasm`);
+        fs.writeFileSync(wasmPath, result.stdout, { flag: 'wx' });
+      } else {
+        bytes = result.stdout;
+      }
+    } else {
+      const watPath = path.join(this.directory, `${stem}.wat`);
+      wasmPath = path.join(this.directory, `${stem}.wasm`);
+      this.tool('wasm_tools', ['parse', watPath, '-o', wasmPath], `${stem}-assemble`);
+      this.tool('wasm_tools', ['validate', wasmPath], `${stem}-validate`);
+    }
     if (this.optimized) {
       const optimized = path.join(this.directory, `${stem}-optimized.wasm`);
       this.tool('wasm_opt', [wasmPath, ...this.selection.optimizer_flags, '-o', optimized], `${stem}-optimize`);
       wasmPath = optimized;
       this.tool('wasm_tools', ['validate', wasmPath], `${stem}-validate-optimized`);
     }
-    if (fs.statSync(wasmPath).size > MAX_FRAME) fail('module byte limit exceeded');
-    const bytes = fs.readFileSync(wasmPath);
+    if (wasmPath !== null) {
+      if (fs.statSync(wasmPath).size > MAX_FRAME) fail('module byte limit exceeded');
+      bytes = fs.readFileSync(wasmPath);
+    }
     rejectStartSection(bytes);
     const module = new WebAssembly.Module(bytes);
     this.compilations += 1;
     return this.install(module, { submission, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
-      wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations, stem },
+      wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations, stem,
+      ...(this.profile === 'Calculator-v1' ? { assembly_toolchain: 'calculator-experimental-wat-v1',
+        assembler_sha256: this.tools.calculator_wat.sha256 } : {}) },
     installationCapability);
   }
 
@@ -739,11 +796,17 @@ export class CoreEngine {
   // source and allowed effects; neither can be inherited from the manifest.
   admit(bytes, wat, source, claimedEffects, allowedEffects, sourceSelected) {
     const refusal = (outcome, diagnostic, actualImports = []) => ({
-      schema: 'noble-artifact-admission/v1', profile: 'Wasm-Draft',
+      schema: 'noble-artifact-admission/v1',
+      profile: this.profile === 'Calculator-v1' ? 'Calculator-v1' : 'Wasm-Draft',
       stage: 'admission', outcome, diagnostic, actual_imports: actualImports,
       claimed_effects: claimedEffects, allowed_effects: allowedEffects,
       guest_requests: 0, protected_operations: 0,
     });
+    // Calculator-v1 selects only its own checked WAT assembler. The generic
+    // artifact path requires wasm-tools, which this worker never validates.
+    if (this.profile === 'Calculator-v1') {
+      return refusal('unsupported', 'Calculator-v1 does not admit generic artifacts');
+    }
     if (this.inProcessLive || this.pending || this.compilations || this.poisoned) {
       return refusal('stale-session-reject', 'artifact admission requires a fresh engine');
     }
@@ -888,14 +951,43 @@ export class CoreEngine {
     this.lastTraceStart = traceStart;
     this.pending = null;
     const runtime = instance.exports;
+    // Adopt this module's published signatures before it becomes the latest
+    // inspected instance. A refused range poisons the session fail-closed.
+    if (this.profile === 'Calculator-v1') {
+      this.poisoned = true;
+      this.signatures = recordSignatures(this, runtime);
+      this.poisoned = false;
+    }
     // Retain exactly one executed instance so post-execution inspection reads
     // the same session state. The shared table already owns its callables.
     this.last = instance;
     const defaults = this.abi.limits_maximum;
     const keys = ['allocation_bytes', 'recipe_leaves', 'program_depth', 'operand_bytes', 'continuation_bytes', 'steps'];
     if (Object.keys(limits).some(key => !keys.includes(key))) fail('unknown runtime limit');
-    let status = runtime.begin(...keys.map(key => integer(limits[key] ?? defaults[key], defaults[key], key)));
+    const selectedLimits = keys.map(key => integer(limits[key] ?? defaults[key], defaults[key], key));
     let nativeTrap = null;
+    let status = 0;
+    // Calculator-v1 compacts its arena at the submission boundary, before
+    // begin fixes the per-submission baseline. A refusal poisons the session.
+    let collection = null;
+    if (this.profile === 'Calculator-v1') {
+      const before = this.shared.heap_cursor.value;
+      try {
+        status = runtime.collect();
+      } catch (error) {
+        nativeTrap = `${error.name}: ${error.message}`;
+        status = 6;
+      }
+      collection = { cells_before: before, cells_after: this.shared.heap_cursor.value };
+    }
+    // After a normal Calculator-v1 submission, the runtime reports whether a
+    // Program reachable from the operand stack runs compiled code. Only when
+    // none does may the next module reuse the committed compiled table slots.
+    let compiledProgramsReachable = null;
+    // A stricter boundary answer: no Program, Syntax or recipe cell (the only
+    // holders of signature IDs) is reachable, so signature IDs may restart.
+    let programsReachable = null;
+    if (status === 0) status = runtime.begin(...selectedLimits);
     try {
       for (const input of inputs) {
         if (status) break;
@@ -907,6 +999,10 @@ export class CoreEngine {
         try { status = runtime.submit(); }
         finally { this.liveExecuting = false; }
         if (status === 0 && this.liveProposalDenied) status = 5;
+      }
+      if (status === 0 && this.profile === 'Calculator-v1') {
+        compiledProgramsReachable = runtime.compiled_programs_reachable() !== 0;
+        programsReachable = compiledProgramsReachable || runtime.programs_reachable() !== 0;
       }
     } catch (error) {
       nativeTrap = `${error.name}: ${error.message}`;
@@ -972,7 +1068,11 @@ export class CoreEngine {
       protected_operations: this.protectedOperations - protectedStart,
       candidate_prepare_requests: 0, runtime_prover_calls: 0, native_trap: nativeTrap,
       session_state: this.poisoned ? 'terminated-after-runtime-failure' : 'retained',
-      metrics, module: record };
+      metrics, ...(collection ? { collection } : {}),
+      ...(compiledProgramsReachable === null ? {}
+        : { compiled_programs_reachable: compiledProgramsReachable,
+            programs_reachable: programsReachable }),
+      module: record };
     if (record.stem) this.save(`${record.stem}-execution.json`, report);
     return report;
   }
@@ -998,6 +1098,8 @@ export class CoreEngine {
   // This engine owns the snapshot; no caller-supplied bytes become values.
   // Cells are immutable and session handles stay live while the frame is parked.
   park() {
+    // Compaction renames handles, so Calculator-v1 never keeps them outside Wasm.
+    if (this.profile === 'Calculator-v1') fail('calculator does not park operand frames');
     if (this.poisoned || this.parked !== null || this.shared.cp.value !== 0) fail('cannot park this session');
     const layout = this.abi.operand_slots;
     const count = integer(this.shared.sp.value, layout.maximum, 'operand count');
@@ -1020,6 +1122,19 @@ export class CoreEngine {
   }
 
   inject(runtime, input) {
+    if (input.type === 'Text') {
+      if (this.profile !== 'Calculator-v1' || typeof runtime.push_text !== 'function'
+        || !Array.isArray(input.bytes) || input.bytes.length > 65536
+        || input.bytes.some(byte => !Number.isInteger(byte) || byte < 0 || byte > 255))
+        fail('invalid calculator Text input');
+      // Keep host ingress away from the calculator's extra private cells.
+      const offset = 983040;
+      if (this.memory.buffer.byteLength < offset + input.bytes.length)
+        fail('calculator Text scratch exceeds runtime memory');
+      const memory = new Uint8Array(this.memory.buffer, offset, input.bytes.length);
+      for (let index = 0; index < input.bytes.length; index++) memory[index] = input.bytes[index];
+      return runtime.push_text(offset, input.bytes.length);
+    }
     if (input.type === 'I64') {
       const value = BigInt(input.value);
       if (BigInt.asIntN(64, value) !== value) fail('input is outside signed I64');
@@ -1029,6 +1144,10 @@ export class CoreEngine {
       if (typeof input.value !== 'boolean') fail('invalid Bool input');
       return runtime.push_bool(input.value ? 1 : 0);
     }
+    // Calculator phase cells (Plan, EvalFrame, RawRat and successors) move
+    // only through the retained checked guest stack. No host-supplied handle
+    // or capability can stand in for a nominal produced by a prior phase.
+    if (this.profile === 'Calculator-v1') fail('calculator only accepts Text, I64 and Bool input');
     if (input.type === 'Unit') return runtime.push_unit();
     if (input.type === 'Program') return runtime.push_program(integer(input.handle, 4096, 'program handle'));
     if (input.type === 'Contract') return runtime.push_contract(
@@ -1057,6 +1176,7 @@ export class CoreEngine {
 
   // Explicit projection of a Certified cell to its live subject Program handle.
   project(handle) {
+    if (this.profile === 'Calculator-v1') fail('calculator does not project host-supplied handles');
     const runtime = this.runtime();
     const subject = runtime.certified_subject(integer(handle, this.abi.limits_maximum.session_cells, 'cell handle'));
     return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',

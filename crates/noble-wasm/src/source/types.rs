@@ -224,11 +224,18 @@ impl Registry {
         Ok(shape)
     }
 
-    pub(super) fn emit(&self, out: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
+    pub(super) fn emit(
+        &self,
+        out: &mut crate::output::Buffer,
+        calculator: bool,
+    ) -> Result<(), crate::Diagnostic> {
+        if calculator {
+            attempt!(emission::certificates(out));
+        }
         let mut index = 0usize;
         let mut failure = None;
         while index < self.shapes.len() {
-            match emission::shape(out, index, self.shapes[index]) {
+            match emission::shape(out, index, self.shapes[index], calculator) {
                 Ok(()) => index += 1,
                 Err(problem) => {
                     failure = Some(problem);

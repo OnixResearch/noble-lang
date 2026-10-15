@@ -45,6 +45,81 @@ fn commit(
     Ok(session)
 }
 
+#[test]
+fn calculator_retains_ten_individually_bounded_module_sources() -> Result<(), String> {
+    let limits = noble_contracts::Limits { bytes: 262_144, ..LIMITS };
+    let mut calculator = noble_contracts::source::ModuleSession::new_calculator()
+        .map_err(|error| format!("{error:?}"))?;
+    let mut ordinary = noble_contracts::source::ModuleSession::new(&[])
+        .map_err(|error| format!("{error:?}"))?;
+    let mut aggregate = 0usize;
+    for index in 0..10 {
+        let source = format!(
+            "module calc{index}@1 [ export value def value [ {index} ] ] #{}",
+            "x".repeat(26_700)
+        );
+        aggregate += source.len();
+        assert!(source.len() < usize::try_from(limits.bytes).map_err(|e| e.to_string())?);
+        let prepared = calculator
+            .prepare(source.as_bytes(), &[], limits)
+            .map_err(|error| format!("{error:?}"))?;
+        let (next, outcome) = calculator.commit(prepared);
+        outcome.map_err(|error| format!("{error:?}"))?;
+        calculator = next;
+        if index < 9 {
+            let prepared = ordinary
+                .prepare(source.as_bytes(), &[], limits)
+                .map_err(|error| format!("{error:?}"))?;
+            let (next, outcome) = ordinary.commit(prepared);
+            outcome.map_err(|error| format!("{error:?}"))?;
+            ordinary = next;
+        } else {
+            assert!(matches!(
+                ordinary.prepare(source.as_bytes(), &[], limits),
+                Err(error) if error.stage() == noble_contracts::source::Stage::Check
+            ));
+        }
+    }
+    assert!(aggregate > 262_144 && aggregate < 524_288);
+    assert_eq!(calculator.generation(), 10);
+    assert_eq!(ordinary.generation(), 9);
+    Ok(())
+}
+
+#[test]
+fn calculator_aggregate_preflight_preserves_candidate_byte_cap() -> Result<(), String> {
+    let limits = noble_contracts::Limits { bytes: 262_144, ..LIMITS };
+    let mut session = noble_contracts::source::ModuleSession::new_calculator()
+        .map_err(|error| format!("{error:?}"))?;
+    for index in 0..2 {
+        let source = format!(
+            "module retained{index}@1 [ export value def value [ {index} ] ] #{}",
+            "x".repeat(220_000)
+        );
+        let prepared = session
+            .prepare(source.as_bytes(), &[], limits)
+            .map_err(|error| format!("{error:?}"))?;
+        let (next, outcome) = session.commit(prepared);
+        outcome.map_err(|error| format!("{error:?}"))?;
+        session = next;
+    }
+    let generation = session.generation();
+    // The missing closing bracket would fail parsing; the aggregate must refuse
+    // this module before parsing or cloning the retained sources.
+    let unparseable = format!("module too_large@1 [ #{}", "x".repeat(100_000));
+    assert!(unparseable.len() < 262_144);
+    assert!(matches!(
+        session.prepare(unparseable.as_bytes(), &[], limits),
+        Err(error) if error.stage() == noble_contracts::source::Stage::Check
+    ));
+    assert!(matches!(
+        session.prepare(&vec![b'x'; 262_145], &[], limits),
+        Err(error) if error.stage() == noble_contracts::source::Stage::Parse
+    ));
+    assert_eq!(session.generation(), generation);
+    Ok(())
+}
+
 fn assert_pure_candidate(session: &noble_contracts::source::ModuleSession) -> Result<(), String> {
     let prepared = session
         .prepare(b"1", &[], LIMITS)

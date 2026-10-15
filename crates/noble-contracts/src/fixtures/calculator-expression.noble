@@ -1,0 +1,3071 @@
+module expr@1 [
+    variant ParseFailure SyntaxError Pair<I64,I64> public TrailingInput Pair<I64,I64> public
+    export ParseFailure
+    export ParseFailure.SyntaxError
+    export ParseFailure.TrailingInput
+    export ParseFailure.match
+
+    variant NameFailure UnknownName Pair<I64,I64> public WrongArity Pair<I64,I64> public
+    export NameFailure
+    export NameFailure.UnknownName
+    export NameFailure.WrongArity
+    export NameFailure.match
+
+    variant DefinitionFailure InvalidDefinition Pair<I64,I64> public InvalidCall Pair<I64,I64> public
+    export DefinitionFailure
+    export DefinitionFailure.InvalidDefinition
+    export DefinitionFailure.InvalidCall
+    export DefinitionFailure.match
+
+    variant ScopeFailure Name NameFailure public Definition DefinitionFailure public
+    export ScopeFailure
+    export ScopeFailure.Name
+    export ScopeFailure.Definition
+    export ScopeFailure.match
+
+    variant RuntimeFailure Numeric Pair<calc_errors@1.NumericError,Pair<I64,I64>> public Unsupported Pair<I64,I64> public
+    export RuntimeFailure
+    export RuntimeFailure.Numeric
+    export RuntimeFailure.Unsupported
+    export RuntimeFailure.match
+
+    variant OtherFailure Scope ScopeFailure public Runtime RuntimeFailure public
+    export OtherFailure
+    export OtherFailure.Scope
+    export OtherFailure.Runtime
+    export OtherFailure.match
+
+    variant Diagnostic Parse ParseFailure public Other OtherFailure public
+    export Diagnostic
+    export Diagnostic.Parse
+    export Diagnostic.Other
+    export Diagnostic.match
+
+    # A checked plan keeps the original guest Text beside its source-spanned
+    # RPN; no host substring, numeric value, or guessed identifier enters it.
+    opaque Plan Pair<Text,List<Pair<I64,Pair<I64,I64>>>> private
+    export Plan
+    variant ParseFinish Ready Pair<Plan,num@1.Budget> public Failed ParseFault public
+    export ParseFinish
+    signature checked_body forall<S:stack>
+        [ S Plan -- S Pair<Text,List<Pair<I64,Pair<I64,I64>>>> ! pure ]
+    export checked_body
+    def checked_body [ Plan.into ]
+
+    signature syntax forall<S:stack> [ S I64 I64 -- S Diagnostic ! pure ]
+    def syntax [ pair ParseFailure.SyntaxError Diagnostic.Parse ]
+
+    signature parse_fault_diagnostic forall<S:stack>
+        [ S ParseFault -- S Diagnostic ! pure ]
+    def parse_fault_diagnostic [
+        [ Diagnostic.Parse ]
+        [ unpair unpair numeric ]
+        ParseFault.match
+    ]
+
+    # Keep the parser's own syntax/numeric failures compact inside its state
+    # machine; reconstruct the public Diagnostic only at an error boundary.
+    signature parse_fault_rehydrate forall<S:stack,A:value>
+        [ S result@1.Result<A,ParseFault>
+          -- S result@1.Result<A,Diagnostic> ! pure ]
+    export parse_fault_rehydrate
+    def parse_fault_rehydrate [
+        [ result@1.Result.Ok ]
+        [ parse_fault_diagnostic result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # This terminal adapter is invoked only on an observed Failed arm. The
+    # built-in nongeneric sum keeps its original fault's rich diagnostic
+    # small enough to cross the retained source worker's typed stack.
+    signature parse_state_rehydrate forall<S:stack>
+        [ S ParseState -- S Sum<Unit,Diagnostic> ! pure ]
+    export parse_state_rehydrate
+    def parse_state_rehydrate [
+        [ drop unit inl ]
+        [ parse_fault_diagnostic inr ]
+        ParseState.match
+    ]
+
+    signature env_name_failure forall<S:stack>
+        [ S calc_env@1.NameFailure -- S NameFailure ! pure ]
+    def env_name_failure [
+        [ NameFailure.UnknownName ]
+        [ NameFailure.WrongArity ]
+        calc_env@1.NameFailure.match
+    ]
+
+    signature env_failure_diagnostic forall<S:stack>
+        [ S calc_env@1.Failure -- S Diagnostic ! pure ]
+    export env_failure_diagnostic
+    def env_failure_diagnostic [
+        [ env_name_failure ScopeFailure.Name ]
+        [ DefinitionFailure.InvalidDefinition ScopeFailure.Definition ]
+        calc_env@1.Failure.match OtherFailure.Scope Diagnostic.Other
+    ]
+
+    signature numeric forall<S:stack>
+        [ S calc_errors@1.NumericError I64 I64 -- S Diagnostic ! pure ]
+    def numeric [ pair pair RuntimeFailure.Numeric OtherFailure.Runtime Diagnostic.Other ]
+
+    signature rot forall<S:stack,A:value,B:value,C:value>
+        [ S A B C -- S B C A ! pure ]
+    def rot [ [ swap ] dip swap ]
+
+    signature reverse_tokens forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+          -- S List<Pair<I64,Pair<I64,I64>>> ! pure ]
+    def reverse_tokens [
+        nil pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap [ swap ] dip swap cons pair true ] list.case
+        ] iterate
+        unpair swap drop
+    ]
+
+    # RPN call tokens use kind=100+arity and retain the identifier's byte
+    # span. Prefix signs use kinds 12 and 13. Neither kind comes from lexer.
+    signature retag forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>> I64
+          -- S Pair<I64,Pair<I64,I64>> ! pure ]
+    def retag [ swap calc_lex@1.token_span pair ]
+
+    signature precedence forall<S:stack> [ S I64 -- S I64 ! pure ]
+    def precedence [
+        dup 1 = [ drop 1 ]
+        [ dup 2 = [ drop 1 ]
+          [ dup 3 = [ drop 2 ]
+            [ dup 4 = [ drop 2 ]
+              [ dup 12 = [ drop 3 ]
+                [ dup 13 = [ drop 3 ]
+                  [ 5 = [ 4 ] [ 0 ] if ] if ] if ] if ] if ] if ] if
+    ]
+
+    # Parser is a first-class bounded state machine, not host-generated
+    # source. Operator stack and output queue contain source-spanned tokens;
+    # the latter is reversed while built and reversed once after admission.
+    opaque ParseFrame Pair<List<Pair<I64,Pair<I64,I64>>>,Pair<List<Pair<I64,Pair<I64,I64>>>,Pair<Bool,Pair<I64,Pair<num@1.Budget,List<Pair<I64,Pair<I64,I64>>>>>>>> private
+    variant ParseFault Parse ParseFailure public Numeric Pair<calc_errors@1.NumericError,Pair<I64,I64>> public
+    export ParseFault
+    variant ParseRun Active ParseFrame public Failed ParseFault public
+    opaque ParseSession Pair<Text,ParseFrame> private
+    export ParseSession
+    opaque ParsePending Pair<Text,Pair<ParseFrame,Pair<I64,Pair<I64,I64>>>> private
+    export ParsePending
+    variant ParseState Active ParsePending public Failed ParseFault public
+    export ParseState
+    variant ParseRoute Ready Pair<ParsePending,Bool> public Failed ParseFault public
+    export ParseRoute
+    opaque OpenMeasure Pair<ParsePending,Pair<I64,I64>> private
+    export OpenMeasure
+
+    signature parse_frame forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+            List<Pair<I64,Pair<I64,I64>>>
+            Bool I64 num@1.Budget List<Pair<I64,Pair<I64,I64>>>
+          -- S ParseFrame ! pure ]
+    def parse_frame [ pair pair pair pair pair ParseFrame.new ]
+
+    signature parse_frame_start forall<S:stack>
+        [ S num@1.Budget List<Pair<I64,Pair<I64,I64>>> -- S ParseFrame ! pure ]
+    def parse_frame_start [
+        swap [ nil true 0 ] dip nil parse_frame
+    ]
+
+    signature parse_unpack forall<S:stack>
+        [ S ParseFrame
+          -- S List<Pair<I64,Pair<I64,I64>>>
+             List<Pair<I64,Pair<I64,I64>>>
+             Bool I64 num@1.Budget List<Pair<I64,Pair<I64,I64>>> ! pure ]
+    def parse_unpack [ ParseFrame.into unpair unpair unpair unpair unpair ]
+
+    signature parse_trailing forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+            List<Pair<I64,Pair<I64,I64>>>
+            Bool I64 num@1.Budget Pair<I64,Pair<I64,I64>>
+            List<Pair<I64,Pair<I64,I64>>> -- S ParseRun ! pure ]
+    def parse_trailing [
+        drop [ drop drop drop drop drop ] dip
+        calc_lex@1.token_span ParseFailure.TrailingInput ParseFault.Parse ParseRun.Failed
+    ]
+
+    signature parse_syntax forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+            List<Pair<I64,Pair<I64,I64>>>
+            Bool I64 num@1.Budget Pair<I64,Pair<I64,I64>>
+            List<Pair<I64,Pair<I64,I64>>> -- S ParseRun ! pure ]
+    def parse_syntax [
+        drop [ drop drop drop drop drop ] dip
+        calc_lex@1.token_span ParseFailure.SyntaxError ParseFault.Parse ParseRun.Failed
+    ]
+
+    signature parse_operand forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+            List<Pair<I64,Pair<I64,I64>>>
+            Bool I64 num@1.Budget Pair<I64,Pair<I64,I64>>
+            List<Pair<I64,Pair<I64,I64>>> -- S ParseRun ! pure ]
+    def parse_operand [
+        cons [ pair swap drop false swap unpair ] dip
+        parse_frame ParseRun.Active
+    ]
+
+    signature parse_push forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+            List<Pair<I64,Pair<I64,I64>>>
+            Bool I64 num@1.Budget Pair<I64,Pair<I64,I64>>
+            List<Pair<I64,Pair<I64,I64>>> -- S ParseRun ! pure ]
+    def parse_push [
+        [ [ pair pair ] dip swap [ swap cons ] dip
+          unpair swap drop true swap unpair ] dip
+        parse_frame ParseRun.Active
+    ]
+
+    signature parse_prefix forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+            List<Pair<I64,Pair<I64,I64>>>
+            Bool I64 num@1.Budget Pair<I64,Pair<I64,I64>>
+            List<Pair<I64,Pair<I64,I64>>> -- S ParseRun ! pure ]
+    def parse_prefix [
+        [ dup calc_lex@1.token_kind 1 =
+          [ 12 retag ] [ 13 retag ] if ] dip
+        parse_push
+    ]
+
+    signature reduce_step forall<S:stack>
+        [ S Pair<List<Pair<I64,Pair<I64,I64>>>,List<Pair<I64,Pair<I64,I64>>>>
+          -- S Pair<List<Pair<I64,Pair<I64,I64>>>,List<Pair<I64,Pair<I64,I64>>>> Bool ! pure ]
+    def reduce_step [
+        unpair swap
+        [ nil swap pair false ]
+        [ [ dup unpair drop 6 = ] dip swap
+          [ swap drop swap pair false ]
+          [ [ swap ] dip [ cons ] dip swap pair true ] if ]
+        list.case
+    ]
+
+    signature reduce_until_open forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+            List<Pair<I64,Pair<I64,I64>>>
+          -- S Pair<List<Pair<I64,Pair<I64,I64>>>,List<Pair<I64,Pair<I64,I64>>>> ! pure ]
+    def reduce_until_open [
+        pair [ reduce_step ] iterate
+    ]
+
+    # A call marker carries its source name span. Commas count completed
+    # arguments; the closing parenthesis counts the final argument once and
+    # moves the retagged marker from the operator stack to the output queue.
+    signature finish_call forall<S:stack>
+        [ S Pair<List<Pair<I64,Pair<I64,I64>>>,List<Pair<I64,Pair<I64,I64>>>>
+            Bool
+          -- S Pair<List<Pair<I64,Pair<I64,I64>>>,List<Pair<I64,Pair<I64,I64>>>> ! pure ]
+    def finish_call [
+        swap unpair swap
+        [ swap drop nil swap pair ]
+        [ [ dup calc_lex@1.token_kind 100 i64.cmp -1 = ] dip swap
+          [ [ rot ] dip [ drop ] dip cons swap pair ]
+          [ [ [ [ [ 1 ] [ 0 ] if ] dip ] dip ] dip
+            [ rot ] dip
+            [ [ dup calc_lex@1.token_kind ] dip ] dip
+            [ + ] dip [ retag ] dip
+            rot swap [ cons ] dip swap pair ] if ]
+        list.case
+    ]
+
+    signature comma_update forall<S:stack>
+        [ S Pair<List<Pair<I64,Pair<I64,I64>>>,List<Pair<I64,Pair<I64,I64>>>>
+            Pair<I64,Pair<I64,I64>>
+          -- S result@1.Result<Pair<List<Pair<I64,Pair<I64,I64>>>,List<Pair<I64,Pair<I64,I64>>>>,ParseFault> ! pure ]
+    def comma_update [
+        [ unpair ] dip rot
+        [ swap drop calc_lex@1.token_span
+          ParseFailure.SyntaxError ParseFault.Parse result@1.Result.Err ]
+        [ [ dup calc_lex@1.token_kind 1 + retag ] dip
+          rot [ cons ] dip swap cons swap pair result@1.Result.Ok ]
+        list.case
+    ]
+
+    signature should_pop forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>> I64 -- S Bool ! pure ]
+    def should_pop [
+        swap unpair drop precedence
+        [ dup precedence ] dip swap i64.cmp
+        dup 1 = [ drop drop true ]
+        [ dup 0 = [ drop 5 = [ false ] [ true ] if ]
+          [ drop drop false ] if ] if
+    ]
+
+    signature parse_expecting forall<S:stack> [ S ParseFrame -- S Bool ! pure ]
+    def parse_expecting [
+        parse_unpack drop drop drop [ drop drop ] dip
+    ]
+
+    signature parse_depth forall<S:stack> [ S ParseFrame -- S I64 ! pure ]
+    def parse_depth [
+        parse_unpack drop drop [ drop drop drop ] dip
+    ]
+
+    signature parse_context forall<S:stack>
+        [ S ParseFrame Pair<I64,Pair<I64,I64>>
+          -- S ParseFrame Pair<I64,Pair<I64,I64>> Bool ! pure ]
+    def parse_context [ [ dup parse_expecting ] dip swap ]
+
+    signature parse_operand_or_trailing forall<S:stack>
+        [ S ParseFrame Pair<I64,Pair<I64,I64>> -- S ParseRun ! pure ]
+    def parse_operand_or_trailing [
+        parse_context
+        [ [ parse_unpack ] dip swap parse_operand ]
+        [ [ parse_unpack ] dip swap parse_trailing ] if
+    ]
+
+    signature parse_call_context forall<S:stack> [ S ParseFrame -- S Bool ! pure ]
+    def parse_call_context [
+        ParseFrame.into unpair swap drop unpair drop
+        nil reduce_until_open unpair drop
+        [ false ]
+        [ drop calc_lex@1.token_kind 100 i64.cmp -1 =
+          [ false ] [ true ] if ] list.case
+    ]
+
+    signature parse_comma forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+            List<Pair<I64,Pair<I64,I64>>>
+            Bool I64 num@1.Budget Pair<I64,Pair<I64,I64>>
+            List<Pair<I64,Pair<I64,I64>>> -- S ParseRun ! pure ]
+    def parse_comma [
+        [ 6 retag ] dip
+        [ [ pair pair ] dip ] dip
+        swap rot
+        [ [ reduce_until_open ] dip ] dip
+        [ comma_update ] dip swap
+        [ swap unpair swap drop true swap unpair
+          [ [ [ unpair ] dip ] dip ] dip
+          rot [ rot ] dip swap [ swap [ swap ] dip ] dip
+          parse_frame ParseRun.Active ]
+        [ [ drop ] dip swap drop ParseRun.Failed ]
+        result@1.Result.match
+    ]
+
+    signature reduce_all forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+            List<Pair<I64,Pair<I64,I64>>>
+          -- S List<Pair<I64,Pair<I64,I64>>> ! pure ]
+    def reduce_all [
+        pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ [ swap ] dip [ cons ] dip swap pair true ]
+          list.case ] iterate
+        unpair swap drop
+    ]
+
+    signature parse_done forall<S:stack>
+        [ S Text ParseFrame
+          -- S Text result@1.Result<Pair<List<Pair<I64,Pair<I64,I64>>>,num@1.Budget>,ParseFault> ! pure ]
+    def parse_done [
+        dup parse_expecting
+        [ drop text.length dup pair
+          ParseFailure.SyntaxError ParseFault.Parse result@1.Result.Err ]
+        [ dup parse_depth 0 =
+          [ parse_unpack
+            [ [ drop drop ] dip ] dip
+            [ [ [ drop ] dip ] dip ] dip
+            [ swap ] dip
+            reduce_all reverse_tokens
+            swap pair result@1.Result.Ok ]
+          [ drop text.length dup pair
+            ParseFailure.SyntaxError ParseFault.Parse result@1.Result.Err ] if ] if
+    ]
+
+    signature lexical_error forall<S:stack>
+        [ S result@1.Result<Pair<I64,I64>,Unit>
+          -- S result@1.Result<Diagnostic,Unit> ! pure ]
+    export lexical_error
+    def lexical_error [
+        [ unpair syntax result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse_kind forall<S:stack>
+        [ S result@1.Result<ParseSession,ParseFault>
+          -- S result@1.Result<Pair<ParseSession,I64>,ParseFault> ! pure ]
+    export parse_kind
+    def parse_kind [
+        [ dup ParseSession.into unpair swap drop
+          ParseFrame.into unpair drop
+          [ 0 ] [ drop calc_lex@1.token_kind ] list.case
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse_take forall<S:stack>
+        [ S result@1.Result<Pair<ParseSession,I64>,ParseFault>
+          -- S ParseState ! pure ]
+    export parse_take
+    def parse_take [
+        [ unpair drop ParseSession.into unpair
+          ParseFrame.into unpair swap
+          [ drop text.length swap drop dup pair
+            ParseFailure.SyntaxError ParseFault.Parse ParseState.Failed ]
+          [ rot pair ParseFrame.new swap pair pair
+            ParsePending.new ParseState.Active ] list.case ]
+        [ ParseState.Failed ]
+        result@1.Result.match
+    ]
+
+    signature parse_apply_operand forall<S:stack>
+        [ S ParseState
+          -- S result@1.Result<ParseSession,ParseFault> ! pure ]
+    export parse_apply_operand
+    def parse_apply_operand [
+        [ ParsePending.into unpair unpair parse_operand_or_trailing
+          [ pair ParseSession.new result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] ParseRun.match ]
+        [ result@1.Result.Err ] ParseState.match
+    ]
+
+    signature parse_identifier_condition forall<S:stack>
+        [ S ParsePending -- S ParsePending Bool ! pure ]
+    def parse_identifier_condition [
+        dup ParsePending.into unpair swap drop unpair drop
+        dup parse_expecting
+        [ ParseFrame.into unpair drop
+          [ 0 ] [ drop calc_lex@1.token_kind ] list.case 6 = ]
+        [ drop false ] if
+    ]
+
+    signature parse_identifier_route forall<S:stack>
+        [ S ParseState -- S ParseRoute ! pure ]
+    export parse_identifier_route
+    def parse_identifier_route [
+        [ parse_identifier_condition pair ParseRoute.Ready ]
+        [ ParseRoute.Failed ]
+        ParseState.match
+    ]
+
+    signature parse_route_take forall<S:stack>
+        [ S ParseRoute -- S ParseState ! pure ]
+    export parse_route_take
+    def parse_route_take [
+        [ unpair drop ParseState.Active ]
+        [ ParseState.Failed ]
+        ParseRoute.match
+    ]
+
+    signature parse_apply_identifier_call forall<S:stack>
+        [ S ParseState
+          -- S result@1.Result<ParseSession,ParseFault> ! pure ]
+    export parse_apply_identifier_call
+    def parse_apply_identifier_call [
+        [ ParsePending.into unpair unpair
+          [ parse_unpack ] dip swap [ 100 retag ] dip parse_push
+          [ pair ParseSession.new result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] ParseRun.match ]
+        [ result@1.Result.Err ] ParseState.match
+    ]
+
+    signature parse_apply_prefix forall<S:stack>
+        [ S ParseState
+          -- S result@1.Result<ParseSession,ParseFault> ! pure ]
+    export parse_apply_prefix
+    def parse_apply_prefix [
+        [ ParsePending.into unpair unpair
+          [ parse_unpack ] dip swap parse_prefix
+          [ pair ParseSession.new result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] ParseRun.match ]
+        [ result@1.Result.Err ] ParseState.match
+    ]
+
+    # The pending source-spanned operator remains on the one original parser
+    # frame. Guest precedence chooses whether to reduce its current top;
+    # a separate guest operation then moves exactly that operator to output.
+    signature parse_binary_route forall<S:stack>
+        [ S ParseState -- S ParseRoute ! pure ]
+    export parse_binary_route
+    def parse_binary_route [
+        [ dup ParsePending.into unpair unpair
+          unpair drop swap ParseFrame.into unpair swap drop unpair drop
+          rot drop
+          [ drop false ]
+          [ drop swap should_pop ] list.case
+          pair ParseRoute.Ready ]
+        [ ParseRoute.Failed ]
+        ParseState.match
+    ]
+
+    signature parse_binary_pop forall<S:stack>
+        [ S ParseState -- S ParseState ! pure ]
+    export parse_binary_pop
+    def parse_binary_pop [
+        [ ParsePending.into unpair unpair
+          [ parse_unpack ] dip
+          [ [ pair pair ] dip ] dip
+          [ swap [ pair reduce_step ] dip ] dip
+          calc_bits@1.rot
+          [ [ swap unpair [ swap ] dip swap unpair unpair
+              [ calc_bits@1.rot ] dip swap parse_frame ] dip ] dip
+          [ pair pair ParsePending.new ] dip
+          drop ParseState.Active ]
+        [ ParseState.Failed ]
+        ParseState.match
+    ]
+
+    signature parse_expecting_route forall<S:stack>
+        [ S ParseState -- S ParseRoute ! pure ]
+    export parse_expecting_route
+    def parse_expecting_route [
+        [ dup ParsePending.into unpair swap drop unpair drop
+          parse_expecting pair ParseRoute.Ready ]
+        [ ParseRoute.Failed ]
+        ParseState.match
+    ]
+
+    # Cache only the genuine syntax allowance and next depth alongside the
+    # source-bound pending frame. Admission then compares two scalar values:
+    # it never specializes a whole sealed Budget beneath the checked Result.
+    signature parse_open_measure forall<S:stack>
+        [ S ParseState
+          -- S result@1.Result<OpenMeasure,ParseFault> ! pure ]
+    export parse_open_measure
+    def parse_open_measure [
+        [ dup ParsePending.into unpair unpair drop
+          parse_unpack drop
+          [ [ drop drop drop ] dip ] dip swap
+          [ [ drop ] dip ] dip 1 +
+          [ num@1.syntax_limit ] dip
+          pair pair OpenMeasure.new result@1.Result.Ok ]
+        [ result@1.Result.Err ] ParseState.match
+    ]
+
+    # Admission reads only the exact scalar depth bound and measured next
+    # depth. The existing guest parser route projects its Bool while retaining
+    # the authentic pending token for either admitted or denied processing.
+    signature parse_open_admit forall<S:stack>
+        [ S result@1.Result<OpenMeasure,ParseFault>
+          -- S ParseRoute ! pure ]
+    export parse_open_admit
+    def parse_open_admit [
+        [ OpenMeasure.into unpair unpair num@1.syntax_allows
+          pair ParseRoute.Ready ]
+        [ ParseRoute.Failed ] result@1.Result.match
+    ]
+
+    # Only genuinely admitted depth can advance the parser's depth frame.
+    signature parse_open_admitted forall<S:stack>
+        [ S ParseState -- S ParseState ! pure ]
+    export parse_open_admitted
+    def parse_open_admitted [
+        [ ParsePending.into unpair unpair
+          [ parse_unpack ] dip swap
+          [ [ swap 1 + swap ] dip ] dip
+          swap [ parse_frame ] dip
+          pair pair ParsePending.new ParseState.Active ]
+        [ ParseState.Failed ] ParseState.match
+    ]
+
+    # A genuine denial is bound to the original pending token's source span.
+    signature parse_open_denied forall<S:stack>
+        [ S ParseState -- S ParseState ! pure ]
+    export parse_open_denied
+    def parse_open_denied [
+        [ unit calc_errors@1.LimitDepth.SyntaxDepth
+          calc_errors@1.LimitRemaining.NestedDepth
+          calc_errors@1.LimitCategory.Remaining
+          calc_errors@1.NumericError.ResourceLimit
+          [ dup ParsePending.into unpair unpair
+            [ drop drop ] dip calc_lex@1.token_span unpair ] dip
+          calc_bits@1.unrot pair pair ParseFault.Numeric swap drop
+          ParseState.Failed ]
+        [ ParseState.Failed ] ParseState.match
+    ]
+
+    signature parse_apply_open_checked forall<S:stack>
+        [ S ParseState
+          -- S result@1.Result<ParseSession,ParseFault> ! pure ]
+    export parse_apply_open_checked
+    def parse_apply_open_checked [
+        [ ParsePending.into unpair unpair
+          [ parse_unpack ] dip swap parse_push
+          [ pair ParseSession.new result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] ParseRun.match ]
+        [ result@1.Result.Err ] ParseState.match
+    ]
+
+    signature parse_close_condition forall<S:stack>
+        [ S ParsePending -- S ParsePending Bool ! pure ]
+    def parse_close_condition [
+        dup ParsePending.into unpair swap drop unpair drop
+        dup parse_depth 0 =
+        [ drop false ]
+        [ dup parse_expecting
+          [ ParseFrame.into unpair swap drop unpair drop
+            [ false ]
+            [ [ dup calc_lex@1.token_kind 6 = ] dip swap
+              [ swap drop
+                [ false ]
+                [ drop calc_lex@1.token_kind 100 = ] list.case ]
+              [ drop drop false ] if ]
+            list.case ]
+          [ drop true ] if ] if
+    ]
+
+    signature parse_close_route forall<S:stack>
+        [ S ParseState -- S ParseRoute ! pure ]
+    export parse_close_route
+    def parse_close_route [
+        [ parse_close_condition pair ParseRoute.Ready ]
+        [ ParseRoute.Failed ]
+        ParseState.match
+    ]
+
+    # The pending closing token stays source-bound while each reduction updates
+    # the original frame's operator and output lists.
+    signature parse_close_step forall<S:stack>
+        [ S ParseState -- S ParseState Bool ! pure ]
+    export parse_close_step
+    def parse_close_step [
+        [ ParsePending.into unpair unpair
+          [ parse_unpack ] dip
+          [ [ pair pair ] dip ] dip
+          [ swap [ pair reduce_step ] dip ] dip
+          calc_bits@1.rot
+          [ [ swap unpair [ swap ] dip swap unpair unpair
+              [ calc_bits@1.rot ] dip swap parse_frame ] dip ] dip
+          [ pair pair ParsePending.new ParseState.Active ] dip ]
+        [ ParseState.Failed false ]
+        ParseState.match
+    ]
+
+    signature parse_close_finish forall<S:stack>
+        [ S ParseState
+          -- S result@1.Result<ParseSession,ParseFault> ! pure ]
+    export parse_close_finish
+    def parse_close_finish [
+        [ ParsePending.into unpair unpair drop parse_unpack
+          [ [ 1 - ] dip ] dip
+          [ pair ] dip swap
+          [ swap [ pair ] dip [ false ] [ true ] if finish_call ] dip
+          unpair
+          [ [ unpair false swap ] dip ] dip rot
+          parse_frame pair ParseSession.new result@1.Result.Ok ]
+        [ result@1.Result.Err ] ParseState.match
+    ]
+
+    signature parse_comma_condition forall<S:stack>
+        [ S ParsePending -- S ParsePending Bool ! pure ]
+    def parse_comma_condition [
+        dup ParsePending.into unpair swap drop unpair drop
+        dup parse_expecting
+        [ drop false ]
+        [ parse_call_context ] if
+    ]
+
+    signature parse_comma_route forall<S:stack>
+        [ S ParseState -- S ParseRoute ! pure ]
+    export parse_comma_route
+    def parse_comma_route [
+        [ parse_comma_condition pair ParseRoute.Ready ]
+        [ ParseRoute.Failed ]
+        ParseState.match
+    ]
+
+    signature parse_apply_comma_valid forall<S:stack>
+        [ S ParseState
+          -- S result@1.Result<ParseSession,ParseFault> ! pure ]
+    export parse_apply_comma_valid
+    def parse_apply_comma_valid [
+        [ ParsePending.into unpair unpair
+          [ parse_unpack ] dip swap parse_comma
+          [ pair ParseSession.new result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] ParseRun.match ]
+        [ result@1.Result.Err ] ParseState.match
+    ]
+
+    signature parse_apply_syntax forall<S:stack>
+        [ S ParseState
+          -- S result@1.Result<ParseSession,ParseFault> ! pure ]
+    export parse_apply_syntax
+    def parse_apply_syntax [
+        [ ParsePending.into unpair unpair
+          [ parse_unpack ] dip swap parse_syntax
+          [ pair ParseSession.new result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] ParseRun.match ]
+        [ result@1.Result.Err ] ParseState.match
+    ]
+
+    signature parse_begin_tokens forall<S:stack>
+        [ S result@1.Result<Pair<Text,num@1.Budget>,ParseFault>
+            List<Pair<I64,Pair<I64,I64>>>
+          -- S result@1.Result<Pair<Text,Pair<num@1.Budget,List<Pair<I64,Pair<I64,I64>>>>>,ParseFault> ! pure ]
+    export parse_begin_tokens
+    def parse_begin_tokens [
+        swap
+        [ unpair rot pair pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse_begin_session forall<S:stack>
+        [ S result@1.Result<Pair<Text,Pair<num@1.Budget,List<Pair<I64,Pair<I64,I64>>>>>,ParseFault>
+          -- S result@1.Result<ParseSession,ParseFault> ! pure ]
+    export parse_begin_session
+    def parse_begin_session [
+        [ unpair unpair parse_frame_start pair ParseSession.new
+          result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preparse_quota_fault forall<S:stack>
+        [ S Text result@1.Result<num@1.Budget,calc_errors@1.NumericError>
+          -- S result@1.Result<Pair<Text,num@1.Budget>,ParseFault> ! pure ]
+    export preparse_quota_fault
+    def preparse_quota_fault [
+        [ pair result@1.Result.Ok ]
+        [ swap text.length swap drop 0 swap
+          pair pair ParseFault.Numeric result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preparse_input_measure forall<S:stack>
+        [ S Text result@1.Result<num@1.Budget,calc_errors@1.NumericError>
+          -- S Text result@1.Result<num@1.InputChargeMeasured,calc_errors@1.NumericError> ! pure ]
+    export preparse_input_measure
+    def preparse_input_measure [
+        [ [ text.length ] dip swap num@1.input_charge_limit
+          result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preparse_input_check forall<S:stack>
+        [ S result@1.Result<num@1.InputChargeMeasured,calc_errors@1.NumericError>
+          -- S result@1.Result<num@1.InputChargeChecked,calc_errors@1.NumericError> ! pure ]
+    export preparse_input_check
+    def preparse_input_check [
+        [ num@1.input_charge_check ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preparse_input_commit forall<S:stack>
+        [ S result@1.Result<num@1.InputChargeChecked,calc_errors@1.NumericError>
+          -- S result@1.Result<num@1.Budget,calc_errors@1.NumericError> ! pure ]
+    export preparse_input_commit
+    def preparse_input_commit [
+        [ num@1.input_charge_commit result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preparse_work_measure forall<S:stack>
+        [ S Text result@1.Result<num@1.Budget,calc_errors@1.NumericError>
+          -- S Text result@1.Result<num@1.WorkChargeMeasured,calc_errors@1.NumericError> ! pure ]
+    export preparse_work_measure
+    def preparse_work_measure [
+        [ [ text.length ] dip swap num@1.work_charge_limit
+          result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preparse_work_check forall<S:stack>
+        [ S result@1.Result<num@1.WorkChargeMeasured,calc_errors@1.NumericError>
+          -- S result@1.Result<num@1.WorkChargeChecked,calc_errors@1.NumericError> ! pure ]
+    export preparse_work_check
+    def preparse_work_check [
+        [ num@1.work_charge_check ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature preparse_work_commit forall<S:stack>
+        [ S result@1.Result<num@1.WorkChargeChecked,calc_errors@1.NumericError>
+          -- S result@1.Result<num@1.Budget,calc_errors@1.NumericError> ! pure ]
+    export preparse_work_commit
+    def preparse_work_commit [
+        [ num@1.work_charge_commit result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature parse_finish forall<S:stack>
+        [ S result@1.Result<Pair<ParseSession,I64>,ParseFault>
+          -- S ParseFinish ! pure ]
+    export parse_finish
+    def parse_finish [
+        [ unpair drop ParseSession.into unpair parse_done
+          [ unpair [ pair Plan.new ] dip pair ParseFinish.Ready ]
+          [ [ drop ] dip ParseFinish.Failed ]
+          result@1.Result.match ]
+        [ ParseFinish.Failed ]
+        result@1.Result.match
+    ]
+
+    # A function body is checked and stored, not evaluated at definition
+    # time. Preserve a failed parse's real diagnostic; a checked plan keeps
+    # its parse budget for the sealed admission session.
+    signature parse_function_plan forall<S:stack>
+        [ S ParseFinish
+          -- S result@1.Result<Pair<Plan,num@1.Budget>,Diagnostic> ! pure ]
+    export parse_function_plan
+    def parse_function_plan [
+        [ result@1.Result.Ok ]
+        [ parse_fault_diagnostic result@1.Result.Err ]
+        ParseFinish.match
+    ]
+
+
+    # State stays as a separate, guest-owned stack prefix throughout evaluation.
+    # A frame carries only the current expression's tokens, text, values, and quota.
+    opaque EvalFrame Pair<List<Pair<I64,Pair<I64,I64>>>,Pair<Text,Pair<List<num@1.Rat>,num@1.Budget>>> private
+    export EvalFrame
+    variant FrameRun Active EvalFrame public Failed Diagnostic public
+    export FrameRun
+    # Only the checked guest codec constructs issue tags. The hot evaluator
+    # retains the exact failure category and byte span without carrying the
+    # large nested public Diagnostic through every arithmetic phase.
+    opaque IssueTag I64 private
+    opaque CompactDiagnostic Pair<IssueTag,Pair<I64,I64>> private
+    export CompactDiagnostic
+    opaque IssueBody Pair<I64,Pair<I64,I64>> private
+    export IssueBody
+    variant FrameHot Active EvalFrame public Failed CompactDiagnostic public
+    export FrameHot
+    variant TokenTake Ready Pair<I64,Pair<I64,I64>> public Done Unit public
+    export TokenTake
+
+    variant FinishPending Ready EvalFrame public Failed CompactDiagnostic public
+    export FinishPending
+    variant FinishPrepared Ready Pair<I64,Pair<List<num@1.Rat>,num@1.Budget>> public Failed CompactDiagnostic public
+    export FinishPrepared
+    variant FirstRun One Pair<I64,Pair<num@1.Budget,Pair<num@1.Rat,List<num@1.Rat>>>> public Empty Pair<I64,I64> public
+    export FirstRun
+    variant LastRun One Pair<I64,Pair<num@1.Rat,num@1.Budget>> public Invalid Pair<I64,I64> public
+    export LastRun
+    variant FinalRun Ready Pair<I64,Pair<num@1.Rat,num@1.Budget>> public Failed Diagnostic public
+    export FinalRun
+    variant FinalReady Ready Pair<I64,Pair<num@1.Rat,num@1.Budget>> public Failed Unit public
+    export FinalReady
+    export FinalReady.Ready
+    export FinalReady.Failed
+    export FinalReady.match
+    variant FormatPending Ready Pair<I64,Pair<calc_display@1.DisplayPending,num@1.Budget>> public Failed Diagnostic public
+    export FormatPending
+
+
+    variant FormatCharge Ready Pair<I64,calc_display@1.CountChargeRoute> public Failed Unit public
+    export FormatCharge
+    variant FormatContinue Ready Pair<I64,calc_display@1.CountContinuation> public Failed Unit public
+    export FormatContinue
+    variant FormatFiniteSize Ready Pair<I64,calc_display@1.CountFiniteContinuation> public Failed Unit public
+    export FormatFiniteSize
+    variant FormatCounted Ready Pair<I64,calc_display@1.CountedChoice> public Failed Diagnostic public
+    export FormatCounted
+    variant FormatFiniteCharged Ready Pair<I64,calc_display@1.CountFiniteCharged> public Failed Diagnostic public
+    export FormatFiniteCharged
+    variant FormatAsciiContinue Ready Pair<I64,calc_display@1.AsciiContinuation> public Failed Unit public
+    export FormatAsciiContinue
+    variant FormatAsciiQuotient Ready Pair<I64,calc_display@1.AsciiQuotientContinuation> public Failed Unit public
+    export FormatAsciiQuotient
+    variant FormatAscii Ready Pair<I64,Pair<calc_display@1.DisplayAscii,num@1.Budget>> public Failed Diagnostic public
+    export FormatAscii
+    variant FinalText Ready Text public Failed Diagnostic public
+    export FinalText
+    variant TokenRun Ready Pair<EvalFrame,Pair<I64,Pair<I64,I64>>> public Failed Unit public
+    export TokenRun
+    variant PopOne Ready Pair<EvalFrame,num@1.Rat> public Failed Pair<I64,I64> public
+    export PopOne
+    opaque Pending Pair<EvalFrame,Pair<I64,Pair<I64,I64>>> private
+    export Pending
+    variant PendingRun Ready Pending public Failed Unit public
+    export PendingRun
+    variant BinaryInputRun Ready Pair<EvalFrame,Pair<I64,Pair<I64,I64>>> public Failed Unit public
+    export BinaryInputRun
+    variant BinaryFirstPop Ready Pair<Pair<I64,Pair<I64,I64>>,PopOne> public Failed Unit public
+    export BinaryFirstPop
+    variant BinaryRightRun Ready Pair<Pending,num@1.Rat> public Failed Unit public
+    export BinaryRightRun
+    variant BinarySecondPopped Ready Pair<Pair<Pair<I64,Pair<I64,I64>>,num@1.Rat>,PopOne> public Failed Unit public
+    export BinarySecondPopped
+    variant BinarySecondFailure Invalid Pair<I64,I64> public Missing Unit public
+    export BinarySecondFailure
+    variant BinarySecondRoute Ready Pair<Pending,Pair<num@1.Rat,num@1.Rat>> public Failed BinarySecondFailure public
+    export BinarySecondRoute
+    variant FinishedRatRun Ready Pair<Pending,Pair<num@1.Rat,num@1.Budget>> public Failed Unit public
+    export FinishedRatRun
+    variant PendingRatRun Ready Pair<Pending,Pair<num@1.Rat,num@1.Budget>> public Failed Diagnostic public
+    export PendingRatRun
+
+    signature eval_frame forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>> Text
+            List<num@1.Rat> num@1.Budget
+          -- S EvalFrame ! pure ]
+    def eval_frame [ pair pair pair EvalFrame.new ]
+
+    # Parsing is complete before a frame exists. Ready carries the original
+    # Plan and Budget; Failed converts its source-bound ParseFault here.
+    signature frame_from_parse forall<S:stack>
+        [ S ParseFinish
+          -- S FrameRun ! pure ]
+    export frame_from_parse
+    def frame_from_parse [
+        [ unpair [ Plan.into unpair swap ] dip
+          [ nil ] dip eval_frame FrameRun.Active ]
+        [ parse_fault_diagnostic FrameRun.Failed ]
+        ParseFinish.match
+    ]
+
+
+    signature eval_unpack forall<S:stack>
+        [ S EvalFrame
+          -- S List<Pair<I64,Pair<I64,I64>>> Text
+             List<num@1.Rat> num@1.Budget ! pure ]
+    def eval_unpack [ EvalFrame.into unpair unpair unpair ]
+
+    # Consume the next program token directly from the one active frame.
+    # Its payload leaves on a separate shallow carrier; no alternate copy of
+    # EvalFrame is wrapped inside the pending token or on the host.
+    signature frame_token_take forall<S:stack>
+        [ S FrameHot -- S FrameHot TokenTake ! pure ]
+    export frame_token_take
+    def frame_token_take [
+        [ EvalFrame.into unpair swap
+          [ nil swap pair EvalFrame.new FrameHot.Active
+            unit TokenTake.Done ]
+          [ swap [ swap pair EvalFrame.new FrameHot.Active ] dip
+            TokenTake.Ready ]
+          list.case ]
+        [ FrameHot.Failed unit TokenTake.Done ]
+        FrameHot.match
+    ]
+
+    # Arithmetic consumes the one active frame and its original token together.
+    # The literal path retains FrameHot instead; no second evaluator frame is
+    # constructed or retained while an arithmetic Pending owns this one.
+    signature frame_token_pending_guest forall<S:stack>
+        [ S FrameHot TokenTake -- S TokenRun ! pure ]
+    export frame_token_pending_guest
+    def frame_token_pending_guest [
+        [ swap
+          [ swap pair TokenRun.Ready ]
+          [ drop drop unit TokenRun.Failed ]
+          FrameHot.match ]
+        [ drop drop unit TokenRun.Failed ]
+        TokenTake.match
+    ]
+
+    # Save only the checked original operator's source span, not a duplicate
+    # evaluator frame. The Done arm is unreachable after frame_token_take's
+    # host-checked readiness; its fallback is still the actual expression
+    # Text extent, never a manufactured numeric operand or result.
+    signature frame_operator_span_fallback_guest forall<S:stack>
+        [ S FrameHot -- S FrameHot Pair<I64,I64> ! pure ]
+    def frame_operator_span_fallback_guest [
+        [ dup eval_text text.length swap drop 0 swap pair
+          swap FrameHot.Active swap ]
+        [ dup CompactDiagnostic.into unpair swap drop
+          swap FrameHot.Failed swap ]
+        FrameHot.match
+    ]
+
+    signature frame_operator_span_done_guest forall<S:stack>
+        [ S FrameHot TokenTake Unit
+          -- S FrameHot TokenTake Pair<I64,I64> ! pure ]
+    def frame_operator_span_done_guest [
+        drop swap frame_operator_span_fallback_guest rot swap
+    ]
+
+    signature frame_operator_span_guest forall<S:stack>
+        [ S FrameHot TokenTake
+          -- S Pair<I64,I64> FrameHot TokenTake ! pure ]
+    export frame_operator_span_guest
+    def frame_operator_span_guest [
+        dup
+        [ calc_lex@1.token_span ]
+        [ frame_operator_span_done_guest ]
+        TokenTake.match
+        rot rot
+    ]
+
+    # Peek the next RPN action without exporting a second evaluator frame in
+    # the opcode carrier; only the one-token list head is inspected.
+    signature frame_peek_kind forall<S:stack>
+        [ S FrameHot -- S FrameHot I64 ! pure ]
+    export frame_peek_kind
+    def frame_peek_kind [
+        [ EvalFrame.into unpair swap
+          dup
+          [ 0 ] [ drop calc_lex@1.token_kind ] list.case
+          [ swap pair EvalFrame.new FrameHot.Active ] dip ]
+        [ FrameHot.Failed 0 ]
+        FrameHot.match
+    ]
+
+    signature frame_hot_source_budget forall<S:stack>
+        [ S FrameHot
+          -- S FrameHot result@1.Result<Pair<Text,num@1.Budget>,Unit> ! pure ]
+    export frame_hot_source_budget
+    def frame_hot_source_budget [
+        [ dup eval_unpack
+          [ drop ] dip
+          [ swap drop ] dip
+          pair result@1.Result.Ok
+          swap FrameHot.Active swap ]
+        [ FrameHot.Failed unit result@1.Result.Err ]
+        FrameHot.match
+    ]
+
+    signature compact_diagnostic forall<S:stack>
+        [ S Diagnostic -- S CompactDiagnostic ! pure ]
+    export compact_diagnostic
+    def compact_diagnostic [
+        [ [ 0 swap pair ] [ 1 swap pair ] ParseFailure.match ]
+          [ [ [ [ 2 swap pair ] [ 3 swap pair ] NameFailure.match ]
+              [ [ 4 swap pair ] [ 5 swap pair ] DefinitionFailure.match ]
+              ScopeFailure.match ]
+            [ [ unpair [ calc_errors@1.numeric_code ] dip pair ]
+              [ 6 swap pair ]
+              RuntimeFailure.match ]
+            OtherFailure.match ]
+          Diagnostic.match
+        unpair [ IssueTag.new ] dip pair CompactDiagnostic.new
+    ]
+
+    signature frame_hot_begin forall<S:stack>
+        [ S FrameRun -- S FrameHot ! pure ]
+    export frame_hot_begin
+    def frame_hot_begin [
+        [ FrameHot.Active ]
+        [ compact_diagnostic FrameHot.Failed ]
+        FrameRun.match
+    ]
+
+    signature frame_hot_failed forall<S:stack>
+        [ S FrameHot -- S Pair<FrameHot,Bool> ! pure ]
+    export frame_hot_failed
+    def frame_hot_failed [
+        dup
+        [ drop false ]
+        [ drop true ]
+        FrameHot.match
+        pair
+    ]
+
+    signature frame_hot_error forall<S:stack>
+        [ S FrameHot
+          -- S result@1.Result<CompactDiagnostic,Unit> ! pure ]
+    export frame_hot_error
+    def frame_hot_error [
+        [ drop unit result@1.Result.Err ]
+        [ result@1.Result.Ok ]
+        FrameHot.match
+    ]
+
+    signature frame_hot_parts forall<S:stack>
+        [ S result@1.Result<CompactDiagnostic,Unit>
+          -- S result@1.Result<IssueBody,Unit> ! pure ]
+    export frame_hot_parts
+    def frame_hot_parts [
+        [ CompactDiagnostic.into unpair
+          [ IssueTag.into ] dip
+          pair IssueBody.new result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature frame_hot_category forall<S:stack>
+        [ S result@1.Result<IssueBody,Unit>
+          -- S Pair<result@1.Result<IssueBody,Unit>,I64> ! pure ]
+    export frame_hot_category
+    def frame_hot_category [
+        dup
+        [ IssueBody.into unpair drop
+          dup 7 i64.cmp -1 =
+          [ drop 0 ]
+          [ dup 14 i64.cmp -1 =
+            [ drop 1 ]
+            [ 19 i64.cmp -1 = [ 2 ] [ 3 ] if ] if ] if ]
+        [ drop 3 ]
+        result@1.Result.match
+        pair
+    ]
+
+    signature frame_hot_simple forall<S:stack>
+        [ S result@1.Result<IssueBody,Unit>
+          -- S result@1.Result<Diagnostic,Unit> ! pure ]
+    export frame_hot_simple
+    def frame_hot_simple [
+        [ IssueBody.into unpair swap
+          dup 0 =
+          [ drop ParseFailure.SyntaxError Diagnostic.Parse result@1.Result.Ok ]
+          [ dup 1 =
+            [ drop ParseFailure.TrailingInput Diagnostic.Parse result@1.Result.Ok ]
+            [ dup 2 =
+              [ drop NameFailure.UnknownName ScopeFailure.Name
+                OtherFailure.Scope Diagnostic.Other result@1.Result.Ok ]
+              [ dup 3 =
+                [ drop NameFailure.WrongArity ScopeFailure.Name
+                  OtherFailure.Scope Diagnostic.Other result@1.Result.Ok ]
+                [ dup 4 =
+                  [ drop DefinitionFailure.InvalidDefinition ScopeFailure.Definition
+                    OtherFailure.Scope Diagnostic.Other result@1.Result.Ok ]
+                  [ dup 5 =
+                    [ drop DefinitionFailure.InvalidCall ScopeFailure.Definition
+                      OtherFailure.Scope Diagnostic.Other result@1.Result.Ok ]
+                    [ dup 6 =
+                      [ drop RuntimeFailure.Unsupported
+                        OtherFailure.Runtime Diagnostic.Other result@1.Result.Ok ]
+                      [ drop drop unit result@1.Result.Err ]
+                      if ] if ] if ] if ] if ] if ] if ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature frame_hot_terminal forall<S:stack>
+        [ S result@1.Result<IssueBody,Unit>
+          -- S result@1.Result<Diagnostic,Unit> ! pure ]
+    export frame_hot_terminal
+    def frame_hot_terminal [
+        [ IssueBody.into unpair
+          [ calc_errors@1.numeric_code_checked ] dip
+          swap
+          [ swap unpair numeric result@1.Result.Ok ]
+          [ drop drop unit result@1.Result.Err ]
+          result@1.Result.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature eval_text forall<S:stack> [ S EvalFrame -- S Text ! pure ]
+    def eval_text [ EvalFrame.into unpair swap drop unpair drop ]
+
+    signature eval_budget forall<S:stack> [ S EvalFrame -- S num@1.Budget ! pure ]
+    def eval_budget [ eval_unpack [ drop drop drop ] dip ]
+
+    signature eval_values forall<S:stack>
+        [ S EvalFrame -- S List<num@1.Rat> ! pure ]
+    def eval_values [
+        eval_unpack drop [ drop drop ] dip
+    ]
+
+    signature eval_replace_values forall<S:stack>
+        [ S EvalFrame List<num@1.Rat> -- S EvalFrame ! pure ]
+    def eval_replace_values [
+        [ eval_unpack ] dip rot drop swap eval_frame
+    ]
+
+    signature eval_pop_one forall<S:stack>
+        [ S EvalFrame Pair<I64,Pair<I64,I64>>
+          -- S PopOne ! pure ]
+    def eval_pop_one [
+        [ dup eval_values ] dip swap
+        [ [ drop ] dip calc_lex@1.token_span
+          PopOne.Failed ]
+        [ rot rot [ [ eval_replace_values ] dip ] dip
+          swap drop pair PopOne.Ready ]
+        list.case
+    ]
+
+    signature frame_literal_seed forall<S:stack>
+        [ S FrameHot TokenTake
+          -- S FrameHot
+             Pair<TokenTake,result@1.Result<Pair<Text,num@1.Budget>,Unit>> ! pure ]
+    export frame_literal_seed
+    def frame_literal_seed [
+        swap frame_hot_source_budget rot swap pair
+    ]
+
+    signature literal_span_pair_guest forall<S:stack>
+        [ S Pair<TokenTake,result@1.Result<Pair<Text,num@1.Budget>,Unit>>
+          -- S Pair<result@1.Result<Pair<Text,num@1.Budget>,Unit>,result@1.Result<Pair<I64,I64>,Unit>> ! pure ]
+    export literal_span_pair_guest
+    def literal_span_pair_guest [
+        unpair swap
+        [ calc_lex@1.token_span result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        TokenTake.match
+        pair
+    ]
+
+    signature literal_input_guest forall<S:stack>
+        [ S Pair<result@1.Result<Pair<Text,num@1.Budget>,Unit>,result@1.Result<Pair<I64,I64>,Unit>>
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<Text,num@1.Budget>>,Unit> ! pure ]
+    export literal_input_guest
+    def literal_input_guest [
+        unpair
+        swap
+        [ swap
+          [ swap pair result@1.Result.Ok ]
+          [ drop drop unit result@1.Result.Err ]
+          result@1.Result.match ]
+        [ drop drop unit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature literal_count_parts_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,Pair<Text,num@1.Budget>>,Unit>
+          -- S result@1.Result<Pair<Text,Pair<I64,Pair<I64,num@1.Budget>>>,Unit> ! pure ]
+    export literal_count_parts_guest
+    def literal_count_parts_guest [
+        [ unpair unpair
+          [ swap ] dip [ unpair ] dip
+          pair pair pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature literal_count_begin_guest forall<S:stack>
+        [ S result@1.Result<Pair<Text,Pair<I64,Pair<I64,num@1.Budget>>>,Unit>
+          -- S result@1.Result<num@1.ParseCountCursor,Unit> ! pure ]
+    export literal_count_begin_guest
+    def literal_count_begin_guest [
+        [ unpair unpair unpair
+          num@1.parse_count_begin result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature literal_count_probe_guest forall<S:stack>
+        [ S result@1.Result<num@1.ParseCountCursor,Unit>
+          -- S result@1.Result<Pair<num@1.ParseCountCursor,Bool>,Unit> ! pure ]
+    export literal_count_probe_guest
+    def literal_count_probe_guest [
+        [ num@1.parse_count_probe result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature literal_count_byte_guest forall<S:stack>
+        [ S result@1.Result<num@1.ParseCountActive,Unit>
+          -- S result@1.Result<Pair<num@1.ParseCountActive,I64>,Unit> ! pure ]
+    export literal_count_byte_guest
+    def literal_count_byte_guest [
+        [ num@1.parse_count_byte result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature literal_count_classify_guest forall<S:stack>
+        [ S result@1.Result<Pair<num@1.ParseCountActive,I64>,Unit>
+          -- S result@1.Result<num@1.ParseCountClassified,Unit> ! pure ]
+    export literal_count_classify_guest
+    def literal_count_classify_guest [
+        [ num@1.parse_count_classify result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature literal_count_advance_guest forall<S:stack>
+        [ S result@1.Result<num@1.ParseCountClassified,Unit>
+          -- S result@1.Result<num@1.ParseCountCursor,Unit> ! pure ]
+    export literal_count_advance_guest
+    def literal_count_advance_guest [
+        [ num@1.parse_count_advance_classified result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature literal_count_span_guest forall<S:stack>
+        [ S result@1.Result<num@1.ParseUncharged,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.ParseUncharged>,Unit> ! pure ]
+    export literal_count_span_guest
+    def literal_count_span_guest [
+        [ num@1.parse_uncharged_span
+          unpair swap pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+
+    signature literal_digit_measure_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.ParseUncharged>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.ParseDigitMeasured>,Unit> ! pure ]
+    export literal_digit_measure_guest
+    def literal_digit_measure_guest [
+        [ unpair num@1.parse_digit_measure pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature literal_digit_check_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.ParseDigitMeasured>,Unit>
+          -- S Pair<result@1.Result<Pair<I64,I64>,Unit>,result@1.Result<num@1.ParseDigitMeasured,Unit>> ! pure ]
+    export literal_digit_check_guest
+    def literal_digit_check_guest [
+        [ unpair
+          [ result@1.Result.Ok ] dip
+          result@1.Result.Ok pair ]
+        [ drop unit result@1.Result.Err
+          unit result@1.Result.Err pair ]
+        result@1.Result.match
+    ]
+
+    signature literal_digit_commit_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.ParseDigitChecked>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.ParseCharged>,Unit> ! pure ]
+    export literal_digit_commit_guest
+    def literal_digit_commit_guest [
+        [ unpair num@1.parse_digit_commit pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature literal_numeric_denial_finish_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,calc_errors@1.NumericError>,Unit>
+          -- S result@1.Result<Unit,Diagnostic> ! pure ]
+    export literal_numeric_denial_finish_guest
+    def literal_numeric_denial_finish_guest [
+        [ unpair swap unpair numeric result@1.Result.Err ]
+        [ drop unit result@1.Result.Ok ]
+        result@1.Result.match
+    ]
+
+    signature literal_decimal_begin_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.ParseReserved>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.ParseDecimalCursor>,Unit> ! pure ]
+    export literal_decimal_begin_guest
+    def literal_decimal_begin_guest [
+        [ unpair num@1.parse_decimal_begin pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature literal_decimal_finish_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.ParseDecimalDone>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.RawRat,num@1.Budget>>,Unit> ! pure ]
+    export literal_decimal_finish_guest
+    def literal_decimal_finish_guest [
+        [ unpair num@1.parse_decimal_finish pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_gcd_measure_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.RawRat,num@1.Budget>>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdMeasured>,Unit> ! pure ]
+    export raw_gcd_measure_guest
+    def raw_gcd_measure_guest [
+        [ unpair unpair num@1.gcd_measure pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_gcd_bits_limit_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdMeasured>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdBitsMeasured>,Unit> ! pure ]
+    export raw_gcd_bits_limit_guest
+    def raw_gcd_bits_limit_guest [
+        [ unpair num@1.gcd_bits_limit pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_gcd_work_limit_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdBitsAdmitted>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdWorkMeasured>,Unit> ! pure ]
+    export raw_gcd_work_limit_guest
+    def raw_gcd_work_limit_guest [
+        [ unpair num@1.gcd_work_limit pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_gcd_commit_work_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdWorkChecked>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdReserved>,Unit> ! pure ]
+    export raw_gcd_commit_work_guest
+    def raw_gcd_commit_work_guest [
+        [ unpair num@1.gcd_commit_work pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_gcd_one_probe_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdReserved>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.GcdReserved,Bool>>,Unit> ! pure ]
+    export raw_gcd_one_probe_guest
+    def raw_gcd_one_probe_guest [
+        [ unpair num@1.gcd_one_probe pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_gcd_one_route_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.GcdReserved,Bool>>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdRoute>,Unit> ! pure ]
+    export raw_gcd_one_route_guest
+    def raw_gcd_one_route_guest [
+        [ unpair num@1.gcd_one_route pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_gcd_done_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdRoute>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.ReducingRat,num@1.Budget>>,Unit> ! pure ]
+    export raw_gcd_done_guest
+    def raw_gcd_done_guest [
+        [ unpair
+          [ pair result@1.Result.Ok ]
+          [ drop drop unit result@1.Result.Err ]
+          num@1.GcdRoute.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_gcd_iterate_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdRoute>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdCursor>,Unit> ! pure ]
+    export raw_gcd_iterate_guest
+    def raw_gcd_iterate_guest [
+        [ unpair
+          [ drop drop unit result@1.Result.Err ]
+          [ pair result@1.Result.Ok ]
+          num@1.GcdRoute.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_gcd_remainder_start_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdCursor>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdRemainder>,Unit> ! pure ]
+    export raw_gcd_remainder_start_guest
+    def raw_gcd_remainder_start_guest [
+        [ unpair num@1.gcd_remainder_start pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_gcd_cursor_check_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdCursor>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.GcdRoute>,Unit> ! pure ]
+    export raw_gcd_cursor_check_guest
+    def raw_gcd_cursor_check_guest [
+        [ unpair num@1.gcd_cursor_check pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_num_measure_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.ReducingRat,num@1.Budget>>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumMeasured>,Unit> ! pure ]
+    export raw_num_measure_guest
+    def raw_num_measure_guest [
+        [ unpair unpair num@1.finish_num_measure
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_num_bits_limit_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumMeasured>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumBitsMeasured>,Unit> ! pure ]
+    export raw_num_bits_limit_guest
+    def raw_num_bits_limit_guest [
+        [ unpair num@1.finish_num_bits_limit pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_num_work_limit_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumBitsAdmitted>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumWorkMeasured>,Unit> ! pure ]
+    export raw_num_work_limit_guest
+    def raw_num_work_limit_guest [
+        [ unpair num@1.finish_num_work_limit pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_num_commit_work_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumWorkChecked>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumReserved>,Unit> ! pure ]
+    export raw_num_commit_work_guest
+    def raw_num_commit_work_guest [
+        [ unpair num@1.finish_num_commit_work pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_num_one_route_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.FinishNumReserved,Bool>>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumRoute>,Unit> ! pure ]
+    export raw_num_one_route_guest
+    def raw_num_one_route_guest [
+        [ unpair num@1.finish_num_route pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_num_ready_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumRoute>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.PartlyReducedRat,num@1.Budget>>,Unit> ! pure ]
+    export raw_num_ready_guest
+    def raw_num_ready_guest [
+        [ unpair
+          [ pair result@1.Result.Ok ]
+          [ drop drop unit result@1.Result.Err ]
+          num@1.FinishNumRoute.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_num_divide_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumRoute>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumDivide>,Unit> ! pure ]
+    export raw_num_divide_guest
+    def raw_num_divide_guest [
+        [ unpair
+          [ drop drop unit result@1.Result.Err ]
+          [ pair result@1.Result.Ok ]
+          num@1.FinishNumRoute.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_num_divide_finish_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishNumQuotient>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.PartlyReducedRat,num@1.Budget>>,Unit> ! pure ]
+    export raw_num_divide_finish_guest
+    def raw_num_divide_finish_guest [
+        [ unpair num@1.finish_num_divide_finish pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_den_measure_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.PartlyReducedRat,num@1.Budget>>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenMeasured>,Unit> ! pure ]
+    export raw_den_measure_guest
+    def raw_den_measure_guest [
+        [ unpair unpair num@1.finish_den_measure
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_den_bits_limit_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenMeasured>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenBitsMeasured>,Unit> ! pure ]
+    export raw_den_bits_limit_guest
+    def raw_den_bits_limit_guest [
+        [ unpair num@1.finish_den_bits_limit pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_den_work_limit_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenBitsAdmitted>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenWorkMeasured>,Unit> ! pure ]
+    export raw_den_work_limit_guest
+    def raw_den_work_limit_guest [
+        [ unpair num@1.finish_den_work_limit pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_den_commit_work_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenWorkChecked>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenReserved>,Unit> ! pure ]
+    export raw_den_commit_work_guest
+    def raw_den_commit_work_guest [
+        [ unpair num@1.finish_den_commit_work pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_den_one_probe_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenReserved>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.FinishDenReserved,Bool>>,Unit> ! pure ]
+    export raw_den_one_probe_guest
+    def raw_den_one_probe_guest [
+        [ unpair num@1.finish_den_one_probe pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_den_one_route_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.FinishDenReserved,Bool>>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenRoute>,Unit> ! pure ]
+    export raw_den_one_route_guest
+    def raw_den_one_route_guest [
+        [ unpair num@1.finish_den_route pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_den_ready_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenRoute>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.FullyReducedRat,num@1.Budget>>,Unit> ! pure ]
+    export raw_den_ready_guest
+    def raw_den_ready_guest [
+        [ unpair
+          [ pair result@1.Result.Ok ]
+          [ drop drop unit result@1.Result.Err ]
+          num@1.FinishDenRoute.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_den_divide_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenRoute>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenDivide>,Unit> ! pure ]
+    export raw_den_divide_guest
+    def raw_den_divide_guest [
+        [ unpair
+          [ drop drop unit result@1.Result.Err ]
+          [ pair result@1.Result.Ok ]
+          num@1.FinishDenRoute.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_den_divide_finish_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,num@1.FinishDenQuotient>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.FullyReducedRat,num@1.Budget>>,Unit> ! pure ]
+    export raw_den_divide_finish_guest
+    def raw_den_divide_finish_guest [
+        [ unpair num@1.finish_den_divide_finish pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_rat_finish_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.FullyReducedRat,num@1.Budget>>,Unit>
+          -- S result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.Rat,num@1.Budget>>,Unit> ! pure ]
+    export raw_rat_finish_guest
+    def raw_rat_finish_guest [
+        [ unpair unpair num@1.finish_materialize
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature raw_rat_push_guest forall<S:stack>
+        [ S FrameHot Pair<calc_env@1.State,Bool>
+          result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.Rat,num@1.Budget>>,Unit>
+          -- S Pair<calc_env@1.State,Bool> Pair<FrameHot,Bool> ! pure ]
+    export raw_rat_push_guest
+    def raw_rat_push_guest [
+        [ swap ] dip
+        [ unpair swap drop frame_push_result true pair ]
+        [ drop false pair ]
+        result@1.Result.match
+    ]
+
+
+    signature pending_token forall<S:stack>
+        [ S Pending -- S Pair<I64,Pair<I64,I64>> ! pure ]
+    def pending_token [ Pending.into unpair swap drop ]
+
+    signature pending_frame forall<S:stack>
+        [ S Pending -- S EvalFrame ! pure ]
+    def pending_frame [ Pending.into unpair drop ]
+
+    signature pending_budget forall<S:stack>
+        [ S Pending -- S num@1.Budget ! pure ]
+    def pending_budget [ pending_frame eval_budget ]
+
+    signature pending_numeric forall<S:stack>
+        [ S Pending calc_errors@1.NumericError -- S Diagnostic ! pure ]
+    def pending_numeric [
+        [ pending_token calc_lex@1.token_span unpair ] dip
+        rot rot numeric
+    ]
+
+    signature eval_push_result forall<S:stack>
+        [ S EvalFrame Pair<num@1.Rat,num@1.Budget> -- S FrameHot ! pure ]
+    def eval_push_result [
+        [ eval_unpack ] dip swap [ unpair ] dip drop
+        rot rot swap cons swap eval_frame FrameHot.Active
+    ]
+
+    signature frame_push_result forall<S:stack>
+        [ S FrameHot Pair<num@1.Rat,num@1.Budget>
+          -- S FrameHot ! pure ]
+    export frame_push_result
+    def frame_push_result [
+        swap
+        [ swap eval_push_result ]
+        [ [ drop ] dip FrameHot.Failed ]
+        FrameHot.match
+    ]
+
+    signature eval_name forall<S:stack>
+        [ S FrameHot result@1.Result<num@1.Rat,Unit>
+          -- S Pair<FrameHot,Bool> ! pure ]
+    export eval_name
+    def eval_name [
+        [ swap
+          [ swap [ dup eval_budget ] dip
+            swap pair eval_push_result ]
+          [ [ drop ] dip FrameHot.Failed ]
+          FrameHot.match
+          true pair ]
+        [ drop false pair ]
+        result@1.Result.match
+    ]
+
+    # A failed environment lookup is a typed source-spanned diagnostic, not
+    # a silently unchanged evaluation frame.
+    signature frame_name_result_guest forall<S:stack>
+        [ S FrameHot result@1.Result<num@1.Rat,calc_env@1.Failure>
+          -- S FrameHot ! pure ]
+    export frame_name_result_guest
+    def frame_name_result_guest [
+        [ swap
+          [ swap [ dup eval_budget ] dip
+            swap pair eval_push_result ]
+          [ [ drop ] dip FrameHot.Failed ]
+          FrameHot.match ]
+        [ [ drop ] dip
+          env_failure_diagnostic compact_diagnostic FrameHot.Failed ]
+        result@1.Result.match
+    ]
+
+    signature frame_name_begin forall<S:stack>
+        [ S Pair<FrameHot,TokenTake>
+          -- S Pair<FrameHot,result@1.Result<calc_env@1.Name,Unit>> ! pure ]
+    export frame_name_begin
+    def frame_name_begin [
+        unpair
+        [ swap
+          [ swap dup calc_lex@1.token_kind 10 =
+            [ [ dup eval_text ] dip
+              calc_env@1.name_from_token result@1.Result.Ok
+              [ FrameHot.Active ] dip pair ]
+            [ drop FrameHot.Active unit result@1.Result.Err pair ] if ]
+          [ [ drop ] dip FrameHot.Failed
+            unit result@1.Result.Err pair ]
+          FrameHot.match ]
+        [ drop unit result@1.Result.Err pair ]
+        TokenTake.match
+    ]
+
+    # Begin a bounded guest environment lookup without inlining the whole
+    # name comparison into a selected root retaining State and FrameHot.
+    # Those two originals stay on separate stack cells while the guest
+    # advances its source-bound VariableSearch through its finite stages.
+    signature frame_name_lookup_begin_guest forall<S:stack>
+        [ S calc_env@1.State
+            Pair<FrameHot,result@1.Result<calc_env@1.Name,Unit>>
+          -- S calc_env@1.State FrameHot
+               result@1.Result<calc_env@1.VariableSearch,Unit> ! pure ]
+    export frame_name_lookup_begin_guest
+    def frame_name_lookup_begin_guest [
+        unpair
+        rot dup calc_env@1.state_variables rot
+        calc_env@1.variable_lookup_begin
+        rot swap
+    ]
+
+    # A genuinely missing name carries its source span through the guest
+    # environment; a failed projection remains an infrastructure failure.
+    signature frame_name_missing_guest forall<S:stack>
+        [ S calc_env@1.State FrameHot
+            result@1.Result<calc_env@1.Failure,Unit>
+          -- S calc_env@1.State FrameHot Bool ! pure ]
+    export frame_name_missing_guest
+    def frame_name_missing_guest [
+        [ swap drop env_failure_diagnostic
+          compact_diagnostic FrameHot.Failed true ]
+        [ drop false ]
+        result@1.Result.match
+    ]
+
+    # A call token contains its parser-checked source name and arity. This
+    # projection rejects bare identifiers and all arithmetic token kinds.
+    signature frame_call_name_begin forall<S:stack>
+        [ S Pair<FrameHot,TokenTake>
+          -- S Pair<FrameHot,result@1.Result<Pair<calc_env@1.Name,I64>,Unit>> ! pure ]
+    export frame_call_name_begin
+    def frame_call_name_begin [
+        unpair
+        [ swap
+          [ swap dup calc_lex@1.token_kind 100 i64.cmp -1 =
+            [ drop FrameHot.Active unit result@1.Result.Err pair ]
+            [ dup calc_lex@1.token_kind 100 -
+              [ [ dup eval_text ] dip
+                calc_env@1.name_from_token ] dip
+              pair result@1.Result.Ok
+              [ FrameHot.Active ] dip pair ] if ]
+          [ [ drop ] dip FrameHot.Failed
+            unit result@1.Result.Err pair ]
+          FrameHot.match ]
+        [ drop unit result@1.Result.Err pair ]
+        TokenTake.match
+    ]
+
+    signature make_pending forall<S:stack>
+        [ S TokenRun -- S PendingRun ! pure ]
+    export make_pending
+    def make_pending [
+        [ unpair pair Pending.new PendingRun.Ready ]
+        [ drop unit PendingRun.Failed ]
+        TokenRun.match
+    ]
+
+    signature pending_unavailable forall<S:stack>
+        [ S Unit -- S Diagnostic ! pure ]
+    def pending_unavailable [
+        drop 0 0 pair RuntimeFailure.Unsupported
+        OtherFailure.Runtime Diagnostic.Other
+    ]
+
+    signature pending_binary_args forall<S:stack>
+        [ S Pair<Pending,Pair<num@1.Rat,num@1.Rat>>
+          -- S Pending num@1.Rat num@1.Rat num@1.Budget ! pure ]
+    def pending_binary_args [
+        unpair unpair [ [ dup pending_budget ] dip ] dip rot
+    ]
+
+    signature binary_operand_first forall<S:stack>
+        [ S PendingRun -- S BinaryInputRun ! pure ]
+    export binary_operand_first
+    def binary_operand_first [
+        [ Pending.into BinaryInputRun.Ready ]
+        [ BinaryInputRun.Failed ]
+        PendingRun.match
+    ]
+
+    signature raw_first_pop forall<S:stack>
+        [ S Pair<EvalFrame,Pair<I64,Pair<I64,I64>>>
+          -- S Pair<Pair<I64,Pair<I64,I64>>,PopOne> ! pure ]
+    def raw_first_pop [ unpair dup [ eval_pop_one ] dip swap pair ]
+
+    signature binary_operand_right forall<S:stack>
+        [ S BinaryInputRun -- S BinaryFirstPop ! pure ]
+    export binary_operand_right
+    def binary_operand_right [
+        [ raw_first_pop BinaryFirstPop.Ready ]
+        [ BinaryFirstPop.Failed ]
+        BinaryInputRun.match
+    ]
+
+    signature binary_operand_right_ready forall<S:stack>
+        [ S BinaryFirstPop -- S BinaryRightRun ! pure ]
+    export binary_operand_right_ready
+    def binary_operand_right_ready [
+        [ unpair
+          [ unpair rot swap [ pair Pending.new ] dip
+            pair BinaryRightRun.Ready ]
+          [ drop drop unit BinaryRightRun.Failed ]
+          PopOne.match ]
+        [ BinaryRightRun.Failed ]
+        BinaryFirstPop.match
+    ]
+
+    signature binary_operand_right_error forall<S:stack>
+        [ S BinaryFirstPop
+          -- S result@1.Result<Unit,Diagnostic> ! pure ]
+    export binary_operand_right_error
+    def binary_operand_right_error [
+        [ unpair
+          [ drop drop unit result@1.Result.Ok ]
+          [ [ drop ] dip unpair syntax result@1.Result.Err ]
+          PopOne.match ]
+        [ drop unit result@1.Result.Ok ]
+        BinaryFirstPop.match
+    ]
+
+    # The first pop supplies the right operand. Copy its token, not the frame,
+    # while the second pop supplies the left operand for the final Rat pair.
+    signature binary_second_begin_guest forall<S:stack>
+        [ S BinaryRightRun -- S BinarySecondPopped ! pure ]
+    export binary_second_begin_guest
+    def binary_second_begin_guest [
+        [ unpair
+          [ Pending.into unpair dup ] dip
+          [ [ eval_pop_one ] dip ] dip
+          rot [ pair ] dip pair
+          BinarySecondPopped.Ready ]
+        [ BinarySecondPopped.Failed ]
+        BinaryRightRun.match
+    ]
+
+    signature binary_second_route_guest forall<S:stack>
+        [ S BinarySecondPopped -- S Pair<BinarySecondRoute,Bool> ! pure ]
+    export binary_second_route_guest
+    def binary_second_route_guest [
+        [ unpair [ unpair ] dip
+          [ unpair rot pair swap rot pair Pending.new
+            swap pair BinarySecondRoute.Ready true pair ]
+          [ [ drop drop ] dip BinarySecondFailure.Invalid BinarySecondRoute.Failed false pair ]
+          PopOne.match ]
+        [ BinarySecondFailure.Missing BinarySecondRoute.Failed false pair ]
+        BinarySecondPopped.match
+    ]
+
+    signature binary_second_error_phase_guest forall<S:stack>
+        [ S BinarySecondRoute
+          -- S result@1.Result<BinarySecondFailure,Unit> ! pure ]
+    export binary_second_error_phase_guest
+    def binary_second_error_phase_guest [
+        [ drop unit result@1.Result.Err ]
+        [ result@1.Result.Ok ]
+        BinarySecondRoute.match
+    ]
+
+    signature binary_second_failure_guest forall<S:stack>
+        [ S BinarySecondFailure -- S Diagnostic ! pure ]
+    export binary_second_failure_guest
+    def binary_second_failure_guest [
+        [ unpair syntax ]
+        [ pending_unavailable ]
+        BinarySecondFailure.match
+    ]
+
+    signature binary_second_assemble_guest forall<S:stack>
+        [ S BinarySecondRoute
+          -- S result@1.Result<Pair<Pending,Pair<num@1.Rat,num@1.Rat>>,Unit> ! pure ]
+    export binary_second_assemble_guest
+    def binary_second_assemble_guest [
+        [ result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ]
+        BinarySecondRoute.match
+    ]
+
+    signature arithmetic_operand_input_guest forall<S:stack>
+        [ S Pair<Pending,Pair<num@1.Rat,num@1.Rat>>
+          -- S Pair<Pending,Pair<Pair<num@1.Rat,num@1.Rat>,num@1.Budget>> ! pure ]
+    export arithmetic_operand_input_guest
+    def arithmetic_operand_input_guest [
+        pending_binary_args
+        [ pair ] dip pair pair
+    ]
+
+    # Host selection never determines which signed operation is admitted:
+    # the numeric carrier and the original RPN operator must agree in guest.
+    signature arithmetic_binary_input_opcode_guest forall<S:stack>
+        [ S Pending num@1.OpInput
+          -- S result@1.Result<Pair<Pending,num@1.OpInput>,Unit> ! pure ]
+    export arithmetic_binary_input_opcode_guest
+    def arithmetic_binary_input_opcode_guest [
+        pair dup unpair
+        [ pending_token calc_lex@1.token_kind 1 - ] dip
+        num@1.op_input_kind =
+        [ result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    signature arithmetic_binary_opcode_guest forall<S:stack>
+        [ S Pending num@1.OpReady
+          -- S result@1.Result<Pair<Pending,num@1.OpReady>,Unit> ! pure ]
+    export arithmetic_binary_opcode_guest
+    def arithmetic_binary_opcode_guest [
+        pair dup unpair
+        [ pending_token calc_lex@1.token_kind 1 - ] dip
+        num@1.op_ready_kind =
+        [ result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    signature arithmetic_power_opcode_guest forall<S:stack>
+        [ S Pair<Pending,Pair<Pair<num@1.Rat,num@1.Rat>,num@1.Budget>>
+          -- S result@1.Result<Pair<Pending,Pair<Pair<num@1.Rat,num@1.Rat>,num@1.Budget>>,Unit> ! pure ]
+    export arithmetic_power_opcode_guest
+    def arithmetic_power_opcode_guest [
+        dup unpair drop pending_token calc_lex@1.token_kind 5 =
+        [ result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    # A terminal square route is source-certified by the actual consumed
+    # exponent bits. The alternate arm never invents a PowState or Rat.
+    signature arithmetic_power_square_done_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pending,Pair<result@1.Result<num@1.PowState,num@1.PowSquareInput>,num@1.Budget>>,Unit>
+          -- S result@1.Result<Pair<Pending,Pair<num@1.PowState,num@1.Budget>>,Unit> ! pure ]
+    export arithmetic_power_square_done_guest
+    def arithmetic_power_square_done_guest [
+        [ unpair unpair swap
+          [ swap pair pair result@1.Result.Ok ]
+          [ drop drop drop unit result@1.Result.Err ]
+          result@1.Result.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature arithmetic_power_square_more_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pending,Pair<result@1.Result<num@1.PowState,num@1.PowSquareInput>,num@1.Budget>>,Unit>
+          -- S result@1.Result<Pair<Pending,Pair<num@1.PowSquareInput,num@1.Budget>>,Unit> ! pure ]
+    export arithmetic_power_square_more_guest
+    def arithmetic_power_square_more_guest [
+        [ unpair unpair swap
+          [ drop drop drop unit result@1.Result.Err ]
+          [ swap pair pair result@1.Result.Ok ]
+          result@1.Result.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature arithmetic_unary_ready_guest forall<S:stack>
+        [ S BinaryRightRun
+          -- S result@1.Result<Pair<Pending,num@1.Rat>,Unit> ! pure ]
+    export arithmetic_unary_ready_guest
+    def arithmetic_unary_ready_guest [
+        [ result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        BinaryRightRun.match
+    ]
+
+    signature arithmetic_unary_input_guest forall<S:stack>
+        [ S Pair<Pending,num@1.Rat>
+          -- S Pair<Pending,Pair<num@1.Rat,num@1.Budget>> ! pure ]
+    export arithmetic_unary_input_guest
+    def arithmetic_unary_input_guest [
+        unpair [ dup pending_budget ] dip swap
+        pair pair
+    ]
+
+    signature arithmetic_numeric_denial_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pending,calc_errors@1.NumericError>,Unit>
+          -- S result@1.Result<Unit,Diagnostic> ! pure ]
+    export arithmetic_numeric_denial_guest
+    def arithmetic_numeric_denial_guest [
+        [ unpair pending_numeric result@1.Result.Err ]
+        [ drop unit result@1.Result.Ok ]
+        result@1.Result.match
+    ]
+
+    # Transfer the one Pending-owned evaluator frame to the existing
+    # source-spanned RawRat/GCD pipeline. The original token supplies the
+    # operator span; neither a second FrameHot nor a host-made Rat appears.
+    signature arithmetic_raw_begin_guest forall<S:stack>
+        [ S Pending result@1.Result<Pair<num@1.RawRat,num@1.Budget>,Unit>
+          -- S FrameHot
+               result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.RawRat,num@1.Budget>>,Unit> ! pure ]
+    export arithmetic_raw_begin_guest
+    def arithmetic_raw_begin_guest [
+        [ Pending.into unpair ] dip
+        [ calc_lex@1.token_span ] dip
+        [ pair result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+        [ FrameHot.Active ] dip
+    ]
+
+    # The staged numeric carrier keeps Pending inside its checked Ready arm.
+    # That arm transfers the sole original evaluator frame to the existing
+    # GCD path. A failed internal stage has no Pending; the separately
+    # source-derived operator span makes that branch explicitly Unsupported.
+    signature arithmetic_raw_from_span_guest forall<S:stack>
+        [ S Pair<I64,I64>
+            result@1.Result<Pair<Pending,Pair<num@1.RawRat,num@1.Budget>>,Unit>
+          -- S FrameHot
+               result@1.Result<Pair<Pair<I64,I64>,Pair<num@1.RawRat,num@1.Budget>>,Unit> ! pure ]
+    export arithmetic_raw_from_span_guest
+    def arithmetic_raw_from_span_guest [
+        [ swap drop unpair
+          result@1.Result.Ok arithmetic_raw_begin_guest ]
+        [ drop RuntimeFailure.Unsupported OtherFailure.Runtime
+          Diagnostic.Other compact_diagnostic FrameHot.Failed
+          unit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature arithmetic_finished_rat_guest forall<S:stack>
+        [ S result@1.Result<Pair<Pending,Pair<num@1.Rat,num@1.Budget>>,Unit>
+          -- S FinishedRatRun ! pure ]
+    export arithmetic_finished_rat_guest
+    def arithmetic_finished_rat_guest [
+        [ FinishedRatRun.Ready ]
+        [ FinishedRatRun.Failed ]
+        result@1.Result.match
+    ]
+
+    signature resume_finished_rat forall<S:stack>
+        [ S FinishedRatRun -- S FrameHot ! pure ]
+    export resume_finished_rat
+    def resume_finished_rat [
+        [ unpair [ pending_frame ] dip eval_push_result ]
+        [ pending_unavailable compact_diagnostic FrameHot.Failed ]
+        FinishedRatRun.match
+    ]
+
+    signature resume_rat forall<S:stack>
+        [ S PendingRatRun -- S FrameHot ! pure ]
+    export resume_rat
+    def resume_rat [
+        [ unpair [ pending_frame ] dip
+          eval_push_result ]
+        [ compact_diagnostic FrameHot.Failed ]
+        PendingRatRun.match
+    ]
+
+    signature finish_parts forall<S:stack>
+        [ S EvalFrame -- S Pair<I64,Pair<List<num@1.Rat>,num@1.Budget>> ! pure ]
+    def finish_parts [
+        eval_unpack
+        [ [ text.length swap drop ] dip ] dip
+        [ [ [ drop ] dip ] dip ] dip
+        pair pair
+    ]
+
+    signature frame_finish_begin forall<S:stack>
+        [ S FrameHot -- S FinishPending ! pure ]
+    export frame_finish_begin
+    def frame_finish_begin [
+        [ FinishPending.Ready ]
+        [ FinishPending.Failed ]
+        FrameHot.match
+    ]
+
+    signature finish_extract forall<S:stack>
+        [ S FinishPending -- S FinishPrepared ! pure ]
+    export finish_extract
+    def finish_extract [
+        [ finish_parts FinishPrepared.Ready ]
+        [ FinishPrepared.Failed ]
+        FinishPending.match
+    ]
+
+    signature finish_first forall<S:stack>
+        [ S FinishPrepared
+          -- S result@1.Result<FirstRun,CompactDiagnostic> ! pure ]
+    export finish_first
+    def finish_first [
+        [ unpair unpair swap
+          [ drop dup pair FirstRun.Empty result@1.Result.Ok ]
+          [ pair pair pair FirstRun.One result@1.Result.Ok ]
+          list.case ]
+        [ result@1.Result.Err ]
+        FinishPrepared.match
+    ]
+
+    signature finish_rest forall<S:stack>
+        [ S result@1.Result<FirstRun,CompactDiagnostic>
+          -- S result@1.Result<LastRun,CompactDiagnostic> ! pure ]
+    export finish_rest
+    def finish_rest [
+        [ [ unpair unpair unpair
+            [ swap pair pair LastRun.One result@1.Result.Ok ]
+            [ drop drop drop drop dup pair LastRun.Invalid result@1.Result.Ok ]
+            list.case ]
+          [ LastRun.Invalid result@1.Result.Ok ]
+          FirstRun.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature finish_values forall<S:stack>
+        [ S result@1.Result<LastRun,CompactDiagnostic>
+          -- S result@1.Result<FinalRun,CompactDiagnostic> ! pure ]
+    export finish_values
+    def finish_values [
+        [ [ FinalRun.Ready result@1.Result.Ok ]
+          [ unpair syntax FinalRun.Failed result@1.Result.Ok ]
+          LastRun.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature final_ready forall<S:stack>
+        [ S result@1.Result<FinalRun,CompactDiagnostic>
+          -- S FinalReady ! pure ]
+    export final_ready
+    def final_ready [
+        [ [ FinalReady.Ready ]
+          [ drop unit FinalReady.Failed ]
+          FinalRun.match ]
+        [ drop unit FinalReady.Failed ]
+        result@1.Result.match
+    ]
+
+    signature format_start forall<S:stack>
+        [ S Pair<calc_env@1.State,Bool> FinalReady
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<num@1.Rat,num@1.Budget>>,Unit> ! pure ]
+    export format_start
+    def format_start [
+        swap unpair rot
+        [ result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        FinalReady.match
+    ]
+
+    signature format_measure forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<num@1.Rat,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,calc_display@1.FormatMeasured>,Unit> ! pure ]
+    export format_measure
+    def format_measure [
+        rot
+        [ [ dup ] dip
+          [ unpair unpair
+            [ rot ] dip calc_display@1.format_measure
+            pair result@1.Result.Ok ]
+          [ [ drop ] dip result@1.Result.Err ]
+          result@1.Result.match ] dip
+        swap [ swap ] dip
+    ]
+
+    signature format_admit forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,calc_display@1.FormatMeasured>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,result@1.Result<calc_display@1.FormatBitsAdmitted,calc_errors@1.NumericError>>,Unit> ! pure ]
+    export format_admit
+    def format_admit [
+        [ unpair calc_display@1.format_admit_bits
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature format_charge forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,result@1.Result<calc_display@1.FormatBitsAdmitted,calc_errors@1.NumericError>>,Unit>
+          -- S calc_env@1.State Bool FormatPending ! pure ]
+    export format_charge
+    def format_charge [
+        [ unpair
+          [ calc_display@1.format_charge_work
+            [ pair FormatPending.Ready ]
+            [ swap dup numeric FormatPending.Failed ]
+            result@1.Result.match ]
+          [ swap dup numeric FormatPending.Failed ]
+          result@1.Result.match ]
+        [ pending_unavailable FormatPending.Failed ]
+        result@1.Result.match
+    ]
+
+    # Keep the original width admission and source span, but convert a denial
+    # before exporting this stage so its selected type has only one Result.
+    signature format_admit_checked forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,calc_display@1.FormatMeasured>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,calc_display@1.FormatBitsAdmitted>,Diagnostic> ! pure ]
+    export format_admit_checked
+    def format_admit_checked [
+        swap [ swap
+          [ [ unpair calc_display@1.format_admit_bits
+              [ pair result@1.Result.Ok ]
+              [ swap dup numeric result@1.Result.Err ]
+              result@1.Result.match ]
+            [ pending_unavailable result@1.Result.Err ]
+            result@1.Result.match ] dip
+          swap ] dip swap
+    ]
+
+    # Park State outside the checked Work charge's quotation. A prior width
+    # diagnosis is retained verbatim, and only Display debits the Budget.
+    signature format_charge_checked forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,calc_display@1.FormatBitsAdmitted>,Diagnostic>
+          -- S calc_env@1.State Bool FormatPending ! pure ]
+    export format_charge_checked
+    def format_charge_checked [
+        [ pair ] dip swap
+        [ [ unpair calc_display@1.format_charge_work
+            [ pair FormatPending.Ready ]
+            [ swap dup numeric FormatPending.Failed ]
+            result@1.Result.match ]
+          [ FormatPending.Failed ]
+          result@1.Result.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_factor_two forall<S:stack>
+        [ S calc_env@1.State Bool FormatPending
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.FactorTwoRoute,num@1.Budget>>,Unit> ! pure ]
+    export format_factor_two
+    def format_factor_two [
+        [ unpair unpair
+          [ calc_display@1.factor_two_phase ] dip
+          pair pair result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ]
+        FormatPending.match
+    ]
+
+    signature format_five_seed forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.FactorTwoRoute,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.FactorFiveSeed,num@1.Budget>>,Unit> ! pure ]
+    export format_five_seed
+    def format_five_seed [
+        [ unpair unpair
+          [ calc_display@1.factor_five_seed ] dip
+          pair pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature format_five_begin forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.FactorFiveSeed,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<Pair<calc_display@1.FactorFiveRoute,Bool>,num@1.Budget>>,Unit> ! pure ]
+    export format_five_begin
+    def format_five_begin [
+        [ unpair unpair
+          [ calc_display@1.factor_five_begin ] dip
+          pair pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature format_five_tick forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<Pair<calc_display@1.FactorFiveRoute,Bool>,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<Pair<calc_display@1.FactorFiveRoute,Bool>,num@1.Budget>>,Unit> ! pure ]
+    export format_five_tick
+    def format_five_tick [
+        # Park State and Bool as one Pair above the cursor so neither sits
+        # beneath the Result.match quotations (backend TypeSize per binding).
+        [ pair ] dip swap
+        [ [ unpair unpair
+            [ unpair drop calc_display@1.factor_five_tick ] dip
+            pair pair result@1.Result.Ok ]
+          [ result@1.Result.Err ]
+          result@1.Result.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    # Park State outside the Result match so its concrete nominal shape is not
+    # repeatedly captured in the round-check quotation's stack witness.
+    signature format_five_round_check forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<Pair<calc_display@1.FactorFiveRoute,Bool>,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.FactorFiveRound,num@1.Budget>>,Unit> ! pure ]
+    export format_five_round_check
+    def format_five_round_check [
+        [ pair ] dip swap
+        [ [ unpair unpair
+            [ unpair drop calc_display@1.factor_five_round_check ] dip
+            pair pair result@1.Result.Ok ]
+          [ result@1.Result.Err ]
+          result@1.Result.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    # Keep State out of the next three Result-match quotations as the cursor
+    # moves through trim, compare, and advance; each retains the same ABI.
+    signature format_five_round_trim forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.FactorFiveRound,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.FactorFiveMeasured,num@1.Budget>>,Unit> ! pure ]
+    export format_five_round_trim
+    def format_five_round_trim [
+        [ pair ] dip swap
+        [ [ unpair unpair
+            [ calc_display@1.factor_five_round_trim ] dip
+            pair pair result@1.Result.Ok ]
+          [ result@1.Result.Err ]
+          result@1.Result.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_five_round_compare forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.FactorFiveMeasured,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.FactorFiveReady,num@1.Budget>>,Unit> ! pure ]
+    export format_five_round_compare
+    def format_five_round_compare [
+        [ pair ] dip swap
+        [ [ unpair unpair
+            [ calc_display@1.factor_five_round_compare ] dip
+            pair pair result@1.Result.Ok ]
+          [ result@1.Result.Err ]
+          result@1.Result.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_five_round_advance forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.FactorFiveReady,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<Pair<calc_display@1.FactorFiveRoute,Bool>,num@1.Budget>>,Unit> ! pure ]
+    export format_five_round_advance
+    def format_five_round_advance [
+        [ pair ] dip swap
+        [ [ unpair unpair
+            [ calc_display@1.factor_five_round_advance ] dip
+            pair pair result@1.Result.Ok ]
+          [ result@1.Result.Err ]
+          result@1.Result.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_five_finish forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<Pair<calc_display@1.FactorFiveRoute,Bool>,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.ModeMeasured,num@1.Budget>>,Unit> ! pure ]
+    export format_five_finish
+    def format_five_finish [
+        [ unpair unpair
+          [ unpair drop calc_display@1.factor_five_finish ] dip
+          pair pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature format_select forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.ModeMeasured,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.DisplayChoice,num@1.Budget>>,Unit> ! pure ]
+    export format_select
+    def format_select [
+        [ unpair unpair
+          [ calc_display@1.selected_finish ] dip
+          pair pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # Counting's fraction route expands deep named bodies; park State outside
+    # their matches rather than repeatedly cloning it into each quotation.
+    signature format_count_numerator forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,Pair<calc_display@1.DisplayChoice,num@1.Budget>>,Unit>
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,calc_display@1.CountDenominatorRoute>,Unit> ! pure ]
+    export format_count_numerator
+    def format_count_numerator [
+        [ pair ] dip swap
+        [ [ unpair unpair
+            calc_display@1.count_fraction_numerator_stage
+            pair result@1.Result.Ok ]
+          [ result@1.Result.Err ]
+          result@1.Result.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_count_denominator forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,calc_display@1.CountDenominatorRoute>,Unit>
+          -- S calc_env@1.State Bool FormatCharge ! pure ]
+    export format_count_denominator
+    def format_count_denominator [
+        [ pair ] dip swap
+        [ [ unpair calc_display@1.count_fraction_denominator_stage
+            pair FormatCharge.Ready ]
+          [ FormatCharge.Failed ]
+          result@1.Result.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_count_charge forall<S:stack>
+        [ S calc_env@1.State Bool FormatCharge -- S calc_env@1.State Bool FormatContinue ! pure ]
+    export format_count_charge
+    def format_count_charge [
+        calc_bits@1.rot
+        [ swap
+          [ [ unpair calc_display@1.count_fraction_charge_stage
+              pair FormatContinue.Ready ]
+            [ FormatContinue.Failed ]
+            FormatCharge.match ] dip
+          swap ] dip
+        calc_bits@1.unrot
+    ]
+
+    signature format_count_begin forall<S:stack>
+        [ S calc_env@1.State Bool FormatContinue
+          -- S calc_env@1.State Bool Pair<calc_display@1.CountFiniteRoute,Bool> ! pure ]
+    export format_count_begin
+    def format_count_begin [
+        [ pair ] dip swap
+        [ [ calc_display@1.count_finite_begin ]
+          [ calc_display@1.CountFiniteRoute.Failed false pair ]
+          FormatContinue.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_count_signal forall<S:stack>
+        [ S calc_env@1.State Bool Pair<calc_display@1.CountFiniteRoute,Bool>
+          -- S calc_env@1.State Bool calc_display@1.CountFiniteRoute Bool ! pure ]
+    export format_count_signal
+    def format_count_signal [ unpair ]
+
+    signature format_count_tick forall<S:stack>
+        [ S calc_env@1.State Bool calc_display@1.CountFiniteRoute Bool
+          -- S calc_env@1.State Bool Pair<calc_display@1.CountFiniteRoute,Bool> ! pure ]
+    export format_count_tick
+    def format_count_tick [
+        drop
+        rot [ calc_display@1.count_finite_tick ] dip
+        swap [ swap ] dip
+    ]
+
+    signature format_count_round forall<S:stack>
+        [ S calc_env@1.State Bool calc_display@1.CountFiniteRoute Bool
+          -- S calc_env@1.State Bool Pair<calc_display@1.CountFiniteRoute,Bool> ! pure ]
+    export format_count_round
+    def format_count_round [
+        drop
+        rot [ calc_display@1.count_finite_round ] dip
+        swap [ swap ] dip
+    ]
+
+    signature format_count_finite_size forall<S:stack>
+        [ S calc_env@1.State Bool calc_display@1.CountFiniteRoute Bool
+          -- S calc_env@1.State Bool FormatFiniteSize ! pure ]
+    export format_count_finite_size
+    def format_count_finite_size [
+        drop
+        rot
+        [ calc_display@1.count_finite_finish
+          [ FormatFiniteSize.Failed ]
+          [ FormatFiniteSize.Ready ]
+          calc_display@1.CountFiniteOutcome.match ] dip
+        swap [ swap ] dip
+    ]
+
+    signature format_count_finite_charge forall<S:stack>
+        [ S calc_env@1.State Bool FormatFiniteSize -- S calc_env@1.State Bool FormatFiniteCharged ! pure ]
+    export format_count_finite_charge
+    def format_count_finite_charge [
+        [ pair ] dip swap
+        [ [ unpair calc_display@1.count_finite_charge_stage
+            pair FormatFiniteCharged.Ready ]
+          [ pending_unavailable FormatFiniteCharged.Failed ]
+          FormatFiniteSize.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_count_finite_resolve forall<S:stack>
+        [ S calc_env@1.State Bool FormatFiniteCharged -- S calc_env@1.State Bool FormatCounted ! pure ]
+    export format_count_finite_resolve
+    def format_count_finite_resolve [
+        [ pair ] dip swap
+        [ [ unpair calc_display@1.count_finite_resolve_stage
+            [ pair FormatCounted.Ready ]
+            [ swap dup numeric FormatCounted.Failed ]
+            result@1.Result.match ]
+          [ FormatCounted.Failed ]
+          FormatFiniteCharged.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_ascii_fraction forall<S:stack>
+        [ S calc_env@1.State Bool FormatCounted -- S calc_env@1.State Bool FormatAsciiContinue ! pure ]
+    export format_ascii_fraction
+    def format_ascii_fraction [
+        [ pair ] dip swap
+        [ [ unpair calc_display@1.ascii_fraction_stage
+            pair FormatAsciiContinue.Ready ]
+          [ drop unit FormatAsciiContinue.Failed ]
+          FormatCounted.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_ascii_quotient forall<S:stack>
+        [ S calc_env@1.State Bool FormatAsciiContinue -- S calc_env@1.State Bool FormatAsciiQuotient ! pure ]
+    export format_ascii_quotient
+    def format_ascii_quotient [
+        [ pair ] dip swap
+        [ [ unpair calc_display@1.ascii_finite_quotient_stage
+            pair FormatAsciiQuotient.Ready ]
+          [ FormatAsciiQuotient.Failed ]
+          FormatAsciiContinue.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_ascii_measure forall<S:stack>
+        [ S calc_env@1.State Bool FormatAsciiQuotient
+          -- S calc_env@1.State Bool result@1.Result<Pair<I64,calc_display@1.AsciiMeasuredContinuation>,Unit> ! pure ]
+    export format_ascii_measure
+    def format_ascii_measure [
+        [ pair ] dip swap
+        [ [ unpair calc_display@1.ascii_finite_measure_stage
+            pair result@1.Result.Ok ]
+          [ result@1.Result.Err ]
+          FormatAsciiQuotient.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_ascii_begin forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<Pair<I64,calc_display@1.AsciiMeasuredContinuation>,Unit>
+          -- S calc_env@1.State Bool Pair<calc_display@1.AsciiFractionRoute,Bool> ! pure ]
+    export format_ascii_begin
+    def format_ascii_begin [
+        [ pair ] dip swap
+        [ [ calc_display@1.ascii_fraction_start_stage ]
+          [ calc_display@1.AsciiFractionRoute.Failed false pair ]
+          result@1.Result.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_ascii_width forall<S:stack>
+        [ S calc_env@1.State Bool calc_display@1.AsciiFractionRoute Bool
+          -- S calc_env@1.State Bool Pair<calc_display@1.AsciiFractionRoute,Bool> ! pure ]
+    export format_ascii_width
+    def format_ascii_width [
+        pair rot
+        [ unpair drop calc_display@1.ascii_fraction_width_stage ] dip
+        swap [ swap ] dip
+    ]
+
+    signature format_ascii_admit forall<S:stack>
+        [ S calc_env@1.State Bool calc_display@1.AsciiFractionRoute Bool
+          -- S calc_env@1.State Bool Pair<calc_display@1.AsciiFractionRoute,Bool> ! pure ]
+    export format_ascii_admit
+    def format_ascii_admit [
+        pair rot
+        [ unpair drop calc_display@1.ascii_fraction_admit_stage ] dip
+        swap [ swap ] dip
+    ]
+
+    signature format_ascii_multiply forall<S:stack>
+        [ S calc_env@1.State Bool calc_display@1.AsciiFractionRoute Bool
+          -- S calc_env@1.State Bool calc_display@1.FractionProductRoute ! pure ]
+    export format_ascii_multiply
+    def format_ascii_multiply [
+        drop [ pair ] dip swap
+        [ calc_display@1.ascii_fraction_multiply_stage ] dip
+        swap [ unpair ] dip
+    ]
+
+
+    # Terminal-only formatting: an actually unfinished guest cursor is an
+    # internal Err Unit, never a numeric diagnostic or a successful Text.
+    signature format_ascii_finite forall<S:stack>
+        [ S calc_env@1.State Bool calc_display@1.AsciiFractionRoute
+          -- S calc_env@1.State Bool result@1.Result<FormatAscii,Unit> ! pure ]
+    export format_ascii_finite
+    def format_ascii_finite [
+        [ pair ] dip swap
+        [ calc_display@1.ascii_fraction_finish_stage
+          [ [ FormatAscii.Ready result@1.Result.Ok ]
+            [ unpair swap dup numeric FormatAscii.Failed result@1.Result.Ok ]
+            calc_display@1.FractionAsciiOutcome.match ]
+          [ [ pending_unavailable FormatAscii.Failed result@1.Result.Ok ]
+            [ drop unit result@1.Result.Err ]
+            calc_display@1.AsciiFractionRoute.match ]
+          calc_display@1.FractionAsciiFinal.match ] dip
+        swap [ unpair ] dip
+    ]
+
+    signature format_text_ready forall<S:stack>
+        [ S Bool Pair<I64,Pair<calc_display@1.DisplayAscii,num@1.Budget>>
+          -- S Bool FinalText ! pure ]
+    def format_text_ready [
+        unpair unpair calc_display@1.finish_text
+        [ unpair drop [ drop ] dip FinalText.Ready ]
+        [ swap dup numeric FinalText.Failed ]
+        result@1.Result.match
+    ]
+
+    signature format_text forall<S:stack>
+        [ S calc_env@1.State Bool result@1.Result<FormatAscii,Unit>
+          -- S calc_env@1.State Bool result@1.Result<FinalText,Unit> ! pure ]
+    export format_text
+    def format_text [
+        rot
+        [ [ [ format_text_ready ]
+            [ FinalText.Failed ]
+            FormatAscii.match result@1.Result.Ok ]
+          [ result@1.Result.Err ]
+          result@1.Result.match ] dip
+        swap [ swap ] dip
+    ]
+
+    # Calls never park a caller frame on the typed stack: during a callee
+    # the evaluator stack stays exactly [ Ctx FrameHot ]. Entry conses one
+    # stash Function onto the caller State with calc_env@1.bind_function.
+    # Its Name spans (1,0), a negative size that no source identifier can
+    # have, so no lookup ever matches it. Its Plan keeps the caller Text
+    # and remaining tokens behind a header token
+    # ( depth , ( captured function rank , caller value count ) ), and its
+    # ranks are the caller State's history sizes, so lexical_scope restores
+    # the caller State exactly on return. Every body identifier is bound in
+    # front of the caller's variables with its value in the function's
+    # lexical scope (parameters over captured variables); the caller's
+    # values stay beneath the callee's values in the one frame.
+    signature call_list_count forall<S:stack,A:value>
+        [ S List<A> -- S I64 ! pure ]
+    def call_list_count [
+        0 pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap drop swap 1 + pair true ] list.case ]
+        iterate
+        unpair swap drop
+    ]
+
+    signature call_skip_step forall<S:stack,A:value>
+        [ S Pair<List<A>,I64> -- S Pair<List<A>,I64> Bool ! pure ]
+    def call_skip_step [
+        unpair dup 0 i64.cmp 1 =
+        [ 1 - swap
+          [ nil swap pair false ]
+          [ swap drop swap pair true ]
+          list.case ]
+        [ pair false ]
+        if
+    ]
+
+    # Move up to the counted heads of the first list onto the second; a
+    # short first list leaves the count at -1.
+    signature call_move_step forall<S:stack,A:value>
+        [ S Pair<Pair<List<A>,List<A>>,I64> -- S Pair<Pair<List<A>,List<A>>,I64> Bool ! pure ]
+    def call_move_step [
+        unpair dup 0 =
+        [ pair false ]
+        [ 1 - swap unpair swap
+          [ nil swap pair swap drop -1 pair false ]
+          [ [ swap cons ] dip swap pair swap pair true ]
+          list.case ]
+        if
+    ]
+
+    # Only a function with a negative-size Name and a header token is a
+    # stash; a source function or an empty history is inr.
+    signature call_stash_peek forall<S:stack>
+        [ S List<calc_env@1.Function>
+          -- S Sum<Pair<calc_env@1.Function,Pair<I64,Pair<I64,I64>>>,Unit> ! pure ]
+    def call_stash_peek [
+        [ unit inr ]
+        [ drop dup calc_env@1.function_name calc_env@1.name_size 0 i64.cmp -1 =
+          [ dup calc_env@1.function_body unpair swap drop
+            [ drop unit inr ]
+            [ drop pair inl ]
+            list.case ]
+          [ drop unit inr ]
+          if ]
+        list.case
+    ]
+
+    signature call_depth forall<S:stack>
+        [ S List<calc_env@1.Function> -- S I64 ! pure ]
+    def call_depth [
+        call_stash_peek
+        [ unpair swap drop unpair drop 1 + ]
+        [ drop 1 ]
+        case
+    ]
+
+    # Inside a callee a call searches only the callee's captured function
+    # history: the suffix of the recorded captured rank.
+    signature call_scope_functions forall<S:stack>
+        [ S List<calc_env@1.Function> -- S List<calc_env@1.Function> ! pure ]
+    def call_scope_functions [
+        dup call_stash_peek
+        [ unpair [ calc_env@1.function_ranks unpair swap drop 1 + ] dip
+          unpair swap drop unpair drop - ]
+        [ drop 0 ]
+        case
+        pair [ call_skip_step ] iterate unpair drop
+    ]
+
+    # Pop exactly the checked arity from the frame's values: RPN pops
+    # last-to-first and each Rat is consed, so the arguments end in source
+    # order. A missing argument fails the caller frame with the syntax
+    # diagnostic at the call Name's span.
+    signature call_args_pop_guest forall<S:stack>
+        [ S FrameHot result@1.Result<Pair<calc_env@1.Name,I64>,Unit>
+          -- S FrameHot Sum<Pair<calc_env@1.Name,Pair<I64,List<num@1.Rat>>>,Unit> ! pure ]
+    export call_args_pop_guest
+    def call_args_pop_guest [
+        [ swap
+          [ dup eval_values swap
+            [ [ dup unpair swap drop ] dip nil pair swap pair
+              [ call_move_step ] iterate unpair ] dip
+            swap 0 =
+            [ swap unpair [ eval_replace_values FrameHot.Active ] dip
+              rot unpair rot pair pair inl ]
+            [ drop drop unpair drop calc_env@1.name_span unpair syntax
+              compact_diagnostic FrameHot.Failed unit inr ]
+            if ]
+          [ swap drop FrameHot.Failed unit inr ]
+          FrameHot.match ]
+        [ drop unit inr ]
+        result@1.Result.match
+    ]
+
+    signature call_lookup_open_guest forall<S:stack>
+        [ S List<calc_env@1.Function>
+            Sum<Pair<calc_env@1.Name,Pair<I64,List<num@1.Rat>>>,Unit>
+          -- S Sum<Pair<calc_env@1.CallLookupCursor,I64>,Unit> ! pure ]
+    export call_lookup_open_guest
+    def call_lookup_open_guest [
+        [ [ dup call_depth swap call_scope_functions ] dip
+          unpair unpair calc_env@1.call_lookup_begin
+          swap pair inl ]
+        [ swap drop inr ]
+        case
+    ]
+
+    signature call_lookup_tick_guest forall<S:stack>
+        [ S Sum<Pair<calc_env@1.CallLookupCursor,I64>,Unit>
+          -- S Pair<Sum<Pair<calc_env@1.CallLookupCursor,I64>,Unit>,Bool> ! pure ]
+    export call_lookup_tick_guest
+    def call_lookup_tick_guest [
+        [ unpair swap calc_env@1.call_lookup_step unpair
+          [ swap pair inl ] dip pair ]
+        [ inr false pair ]
+        case
+    ]
+
+    # A found function with the checked arity is the sole ready arm; an
+    # absent name or wrong arity is the compact diagnostic at the call span.
+    signature call_lookup_resolve_guest forall<S:stack>
+        [ S Sum<Pair<calc_env@1.CallLookupCursor,I64>,Unit>
+          -- S Sum<Pair<Pair<calc_env@1.Function,Pair<calc_env@1.Name,List<num@1.Rat>>>,I64>,Sum<CompactDiagnostic,Unit>> ! pure ]
+    export call_lookup_resolve_guest
+    def call_lookup_resolve_guest [
+        [ unpair swap calc_env@1.call_lookup_finish calc_env@1.call_lookup_arity
+          [ swap pair inl ]
+          [ env_failure_diagnostic compact_diagnostic inl inr swap drop ]
+          result@1.Result.match ]
+        [ inr inr ]
+        case
+    ]
+
+    # 0 ready, 1 source failure, 2 infrastructure.
+    signature call_status_guest forall<S:stack,A:value>
+        [ S Sum<A,Sum<CompactDiagnostic,Unit>>
+          -- S Sum<A,Sum<CompactDiagnostic,Unit>> I64 ! pure ]
+    export call_status_guest
+    def call_status_guest [
+        dup [ drop 0 ] [ [ drop 1 ] [ drop 2 ] case ] case
+    ]
+
+    signature call_fail_guest forall<S:stack,A:value>
+        [ S FrameHot Sum<A,Sum<CompactDiagnostic,Unit>> -- S FrameHot ! pure ]
+    export call_fail_guest
+    def call_fail_guest [
+        [ drop ] [ [ swap drop FrameHot.Failed ] [ drop ] case ] case
+    ]
+
+    signature call_frame_budget forall<S:stack>
+        [ S FrameHot -- S Sum<num@1.Budget,Unit> ! pure ]
+    export call_frame_budget
+    def call_frame_budget [ [ eval_budget inl ] [ drop unit inr ] FrameHot.match ]
+
+    # Each active call level plus this one is charged on a copy of the
+    # caller's actual Budget; the frame keeps its Budget, so a return needs
+    # no depth restoration and the other quotas continue in the callee.
+    signature call_depth_step forall<S:stack>
+        [ S Pair<Sum<num@1.Budget,Unit>,I64> -- S Pair<Sum<num@1.Budget,Unit>,I64> Bool ! pure ]
+    def call_depth_step [
+        unpair dup 0 =
+        [ pair false ]
+        [ 1 - swap
+          [ num@1.call_enter
+            [ inl swap pair true ]
+            [ drop unit inr swap pair false ]
+            result@1.Result.match ]
+          [ inr swap pair false ]
+          case ]
+        if
+    ]
+
+    # 0 admitted, 1 call depth exceeded, 2 infrastructure.
+    signature call_depth_guest forall<S:stack>
+        [ S Sum<num@1.Budget,Unit> Sum<Pair<Pair<calc_env@1.Function,Pair<calc_env@1.Name,List<num@1.Rat>>>,I64>,Sum<CompactDiagnostic,Unit>>
+          -- S Sum<Pair<Pair<calc_env@1.Function,Pair<calc_env@1.Name,List<num@1.Rat>>>,I64>,Sum<CompactDiagnostic,Unit>> I64 ! pure ]
+    export call_depth_guest
+    def call_depth_guest [
+        [ dup unpair swap drop swap
+          [ swap
+            [ swap [ inl ] dip pair [ call_depth_step ] iterate unpair drop
+              [ drop 0 ] [ drop 1 ] case ]
+            [ drop drop 2 ]
+            case ] dip
+          inl swap ]
+        [ swap drop inr 2 ]
+        case
+    ]
+
+    # The depth refusal is the CallDepth resource limit at the call span.
+    signature call_depth_fail_guest forall<S:stack>
+        [ S FrameHot Sum<Pair<Pair<calc_env@1.Function,Pair<calc_env@1.Name,List<num@1.Rat>>>,I64>,Sum<CompactDiagnostic,Unit>>
+          -- S FrameHot ! pure ]
+    export call_depth_fail_guest
+    def call_depth_fail_guest [
+        [ unpair drop unpair swap drop unpair drop
+          calc_env@1.name_span unpair
+          [ [ unit calc_errors@1.LimitDepth.CallDepth
+              calc_errors@1.LimitRemaining.NestedDepth
+              calc_errors@1.LimitCategory.Remaining
+              calc_errors@1.NumericError.ResourceLimit ] dip ] dip
+          numeric compact_diagnostic swap drop FrameHot.Failed ]
+        [ drop ]
+        case
+    ]
+
+    # The frame keeps its values and Budget and runs the callee body; the
+    # caller Text and remaining tokens leave with the caller value count.
+    signature call_frame_swap forall<S:stack>
+        [ S EvalFrame Pair<Text,List<Pair<I64,Pair<I64,I64>>>>
+          -- S EvalFrame Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,I64> ! pure ]
+    def call_frame_swap [
+        swap eval_unpack
+        [ [ swap pair ] dip ] dip
+        [ dup call_list_count ] dip
+        swap [ rot ] dip pair
+        [ [ [ unpair swap ] dip ] dip ] dip
+        [ eval_frame ] dip
+    ]
+
+    signature call_enter_frame_guest forall<S:stack>
+        [ S FrameHot Sum<Pair<Pair<calc_env@1.Function,Pair<calc_env@1.Name,List<num@1.Rat>>>,I64>,Sum<CompactDiagnostic,Unit>>
+          -- S FrameHot Sum<Pair<Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,Pair<I64,I64>>,Pair<calc_env@1.Function,Pair<calc_env@1.Name,List<num@1.Rat>>>>,Sum<CompactDiagnostic,Unit>> ! pure ]
+    export call_enter_frame_guest
+    def call_enter_frame_guest [
+        [ swap
+          [ [ dup unpair drop unpair drop calc_env@1.function_body ] dip
+            swap rot [ call_frame_swap ] dip
+            rot FrameHot.Active rot rot
+            unpair rot unpair rot pair pair swap pair inl ]
+          [ FrameHot.Failed swap drop unit inr inr ]
+          FrameHot.match ]
+        [ inr ]
+        case
+    ]
+
+    signature call_stash_push forall<S:stack>
+        [ S calc_env@1.State Pair<Text,List<Pair<I64,Pair<I64,I64>>>> Pair<I64,Pair<I64,I64>>
+          -- S calc_env@1.State ! pure ]
+    def call_stash_push [
+        swap unpair rot swap cons
+        [ dup 0 1 0 pair pair calc_env@1.name_from_token ] dip
+        [ swap ] dip nil calc_env@1.bind_function
+    ]
+
+    signature call_stash_prep forall<S:stack>
+        [ S Pair<Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,Pair<I64,I64>>,Pair<calc_env@1.Function,Pair<calc_env@1.Name,List<num@1.Rat>>>>
+          -- S Pair<Text,List<Pair<I64,Pair<I64,I64>>>> Pair<I64,Pair<I64,I64>> Pair<calc_env@1.Function,List<num@1.Rat>> ! pure ]
+    def call_stash_prep [
+        dup unpair swap drop unpair drop calc_env@1.function_ranks unpair swap drop
+        swap unpair [ unpair unpair ] dip
+        unpair unpair swap drop pair
+        [ [ [ swap ] dip ] dip rot rot pair pair ] dip
+    ]
+
+    signature call_enter_stash_guest forall<S:stack>
+        [ S calc_env@1.State Sum<Pair<Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,Pair<I64,I64>>,Pair<calc_env@1.Function,Pair<calc_env@1.Name,List<num@1.Rat>>>>,Sum<CompactDiagnostic,Unit>>
+          -- S calc_env@1.State Sum<Pair<calc_env@1.Function,List<num@1.Rat>>,Unit> ! pure ]
+    export call_enter_stash_guest
+    def call_enter_stash_guest [
+        [ swap [ call_stash_prep ] dip swap [ rot rot call_stash_push ] dip inl ]
+        [ drop unit inr ]
+        case
+    ]
+
+    signature call_bind_step forall<S:stack>
+        [ S Pair<calc_env@1.State,Pair<List<calc_env@1.Name>,List<num@1.Rat>>>
+          -- S Pair<calc_env@1.State,Pair<List<calc_env@1.Name>,List<num@1.Rat>>> Bool ! pure ]
+    def call_bind_step [
+        unpair unpair swap
+        [ nil swap pair pair false ]
+        [ rot
+          [ swap drop nil pair pair false ]
+          [ rot swap pair [ calc_env@1.bind_variable ] dip pair true ]
+          list.case ]
+        list.case
+    ]
+
+    # The function's lexical State (its captured history) with the called
+    # function and its arguments.
+    signature call_enter_scope_guest forall<S:stack>
+        [ S calc_env@1.State Sum<Pair<calc_env@1.Function,List<num@1.Rat>>,Unit>
+          -- S Sum<Pair<calc_env@1.State,Pair<calc_env@1.Function,List<num@1.Rat>>>,Unit> ! pure ]
+    export call_enter_scope_guest
+    def call_enter_scope_guest [
+        [ unpair [ dup [ calc_env@1.lexical_scope ] dip ] dip pair pair inl ]
+        [ swap drop inr ]
+        case
+    ]
+
+    # Parameters over the captured variables, and the body tokens, open the
+    # identifier scan.
+    signature call_enter_bind_guest forall<S:stack>
+        [ S Sum<Pair<calc_env@1.State,Pair<calc_env@1.Function,List<num@1.Rat>>>,Unit>
+          -- S Sum<Pair<Pair<Text,List<calc_env@1.Variable>>,List<Pair<I64,Pair<I64,I64>>>>,Unit> ! pure ]
+    export call_enter_bind_guest
+    def call_enter_bind_guest [
+        [ unpair unpair
+          swap dup calc_env@1.function_body swap calc_env@1.function_parameters swap
+          [ swap pair pair [ call_bind_step ] iterate unpair drop calc_env@1.state_variables ] dip
+          unpair [ swap pair ] dip pair inl ]
+        [ inr ]
+        case
+    ]
+
+    # One body token: 0 an identifier Name to resolve, 1 complete, 2 any
+    # other token, 3 infrastructure.
+    signature call_scan_peek forall<S:stack>
+        [ S Sum<Pair<Pair<Text,List<calc_env@1.Variable>>,List<Pair<I64,Pair<I64,I64>>>>,Unit>
+          -- S Pair<Sum<Pair<Pair<Text,List<calc_env@1.Variable>>,List<Pair<I64,Pair<I64,I64>>>>,Unit>,Sum<calc_env@1.Name,Unit>> I64 ! pure ]
+    export call_scan_peek
+    def call_scan_peek [
+        [ unpair
+          [ nil pair inl unit inr pair 1 ]
+          [ swap dup calc_lex@1.token_kind 10 =
+            [ rot dup unpair drop rot calc_env@1.name_from_token
+              [ swap pair inl ] dip inl pair 0 ]
+            [ drop pair inl unit inr pair 2 ]
+            if ]
+          list.case ]
+        [ inr unit inr pair 3 ]
+        case
+    ]
+
+    # A checked body never names a variable outside its lexical scope, so
+    # a failed lookup is infrastructure (3), never a fabricated value.
+    signature call_scan_resolve_guest forall<S:stack>
+        [ S Pair<Sum<Pair<Pair<Text,List<calc_env@1.Variable>>,List<Pair<I64,Pair<I64,I64>>>>,Unit>,Sum<calc_env@1.Name,Unit>>
+          -- S Pair<Sum<Pair<Pair<Text,List<calc_env@1.Variable>>,List<Pair<I64,Pair<I64,I64>>>>,Unit>,Sum<Pair<calc_env@1.Name,num@1.Rat>,Unit>> I64 ! pure ]
+    export call_scan_resolve_guest
+    def call_scan_resolve_guest [
+        unpair
+        [ [ dup [ unpair drop unpair swap drop ] [ drop nil ] case ] dip rot
+          [ dup [ calc_env@1.lookup_variable ] dip swap
+            [ pair inl 0 ] [ drop drop unit inr 3 ] result@1.Result.match ] dip
+          rot pair swap ]
+        [ drop unit inr pair 3 ]
+        case
+    ]
+
+    signature call_scan_bind_guest forall<S:stack,B:value>
+        [ S Pair<Pair<calc_env@1.State,B>,FrameHot> Sum<Pair<calc_env@1.Name,num@1.Rat>,Unit>
+          -- S Pair<Pair<calc_env@1.State,B>,FrameHot> ! pure ]
+    export call_scan_bind_guest
+    def call_scan_bind_guest [
+        [ swap unpair [ unpair ] dip
+          [ [ swap unpair calc_env@1.bind_variable ] dip ] dip
+          [ pair ] dip pair ]
+        [ drop ]
+        case
+    ]
+
+    # A completed callee body: the head stash restores the exact caller
+    # State and yields the caller Text, tokens and value count.
+    signature call_body_finish_guest forall<S:stack>
+        [ S calc_env@1.State
+          -- S calc_env@1.State Sum<Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,I64>,Unit> ! pure ]
+    export call_body_finish_guest
+    def call_body_finish_guest [
+        dup calc_env@1.state_functions swap [ call_stash_peek ] dip swap
+        [ swap
+          [ unpair
+            [ dup calc_env@1.function_body unpair [ nil ] [ swap drop ] list.case pair ] dip
+            unpair swap drop unpair swap drop pair inl ] dip
+          rot calc_env@1.lexical_scope swap ]
+        [ inr ]
+        case
+    ]
+
+    # The caller resumes with its own Text and tokens over exactly one
+    # result value pushed above its values; anything else is refused.
+    signature call_return_resume_guest forall<S:stack>
+        [ S FrameHot Sum<Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,I64>,Unit>
+          -- S FrameHot Bool ! pure ]
+    export call_return_resume_guest
+    def call_return_resume_guest [
+        [ swap
+          [ dup eval_values call_list_count
+            rot dup unpair swap drop rot swap 1 + =
+            [ unpair drop swap eval_unpack
+              [ [ drop drop ] dip ] dip
+              pair swap unpair swap rot unpair eval_frame
+              FrameHot.Active true ]
+            [ drop FrameHot.Active false ]
+            if ]
+          [ FrameHot.Failed swap drop false ]
+          FrameHot.match ]
+        [ drop false ]
+        case
+    ]
+
+
+    # Resolve a finished ASCII route without State or Bool on the stack. The
+    # host runs calc_display@1.ascii_fraction_finish_stage and this word as
+    # separate compiles under its parked Pair<State,Bool>; the result equals
+    # format_ascii_finite's.
+    signature format_ascii_final forall<S:stack>
+        [ S calc_display@1.FractionAsciiFinal -- S result@1.Result<FormatAscii,Unit> ! pure ]
+    export format_ascii_final
+    def format_ascii_final [
+        [ [ FormatAscii.Ready result@1.Result.Ok ]
+          [ unpair swap dup numeric FormatAscii.Failed result@1.Result.Ok ]
+          calc_display@1.FractionAsciiOutcome.match ]
+        [ [ pending_unavailable FormatAscii.Failed result@1.Result.Ok ]
+          [ drop unit result@1.Result.Err ]
+          calc_display@1.AsciiFractionRoute.match ]
+        calc_display@1.FractionAsciiFinal.match
+    ]
+]

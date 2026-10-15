@@ -21,7 +21,7 @@ pub(super) fn read_file(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; read_submission validates the frame header and byte budget before allocation and reports short reads through Failure. Invalid framing, oversized input and I/O errors must not panic."
 )]
-pub(super) fn read_submission(
+pub(crate) fn read_submission(
     reader: &mut impl std::io::BufRead,
     framed: bool,
     limit_bytes: u32,

@@ -112,6 +112,11 @@ fn lookup(
             return Ok(target);
         }
     }
+    if session.calculator {
+        if let Some(target) = calculator_word(word) {
+            return Ok(target);
+        }
+    }
     if word == b"text.byte" && session.text_cursor {
         return Ok(super::Target::Builtin(26));
     }
@@ -189,6 +194,11 @@ fn declared_lookup(
     if let Some(target) = found {
         return Ok(target);
     }
+    if context.environment.calculator {
+        if let Some(target) = calculator_word(word) {
+            return Ok(target);
+        }
+    }
     if let Some(definition) = crate::program::bootstrap_word(word) {
         if definition.0 < 22 {
             return Ok(super::Target::Builtin(definition.0));
@@ -198,6 +208,19 @@ fn declared_lookup(
         return Err(crate::invalid(span, "unbound or recursive module word"));
     }
     Err(crate::invalid(span, "unbound or unexported module word"))
+}
+
+fn calculator_word(word: &[u8]) -> Option<super::Target> {
+    let identity = match word {
+        b"text.byte" => 26,
+        b"iterate" => 27,
+        b"i64.cmp" => 28,
+        b"i64.div-rem" => 29,
+        b"text.from-ascii" => 30,
+        b"text.length" => 31,
+        _ => return None,
+    };
+    Some(super::Target::Builtin(identity))
 }
 
 #[expect(

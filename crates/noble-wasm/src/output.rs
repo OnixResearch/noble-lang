@@ -2,6 +2,7 @@
 /// Only fixed syntax and checked scalar encodings reach the output.
 pub(crate) struct Buffer {
     bytes: alloc::vec::Vec<u8>,
+    limit_bytes: usize,
 }
 
 #[expect(
@@ -10,8 +11,13 @@ pub(crate) struct Buffer {
 )]
 impl Buffer {
     pub(crate) fn new(capacity_bytes: usize) -> Self {
+        Self::with_limit(capacity_bytes, crate::OUTPUT_BYTE_LIMIT)
+    }
+
+    pub(crate) fn with_limit(capacity_bytes: usize, limit_bytes: usize) -> Self {
         Self {
             bytes: alloc::vec::Vec::with_capacity(capacity_bytes),
+            limit_bytes,
         }
     }
 
@@ -20,7 +26,7 @@ impl Buffer {
             Some(length_bytes) => length_bytes,
             None => return Err(crate::Diagnostic::Exhausted),
         };
-        if length_bytes > crate::OUTPUT_BYTE_LIMIT {
+        if length_bytes > self.limit_bytes {
             return Err(crate::Diagnostic::Exhausted);
         }
         self.bytes.extend_from_slice(bytes);

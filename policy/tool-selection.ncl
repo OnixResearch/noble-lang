@@ -100,6 +100,7 @@ let Pin = { rev | String, narHash | String } in
       "crates/noble-wasm/runtime/data.wat",
       "crates/noble-wasm/runtime/experiment.wat",
       "crates/noble-wasm/runtime/gc-storage.wat",
+      "crates/noble-wasm/runtime/linear-address.wat",
       "crates/noble-wasm/runtime/linear-storage.wat",
       "crates/noble-wasm/runtime/operations.wat",
       "crates/noble-wasm/runtime/programs.wat",

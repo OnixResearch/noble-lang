@@ -5,13 +5,14 @@
 pub(super) fn bounds(
     submission: &noble_kernel::execution::Submission,
     environment_work: u64,
+    calculator: bool,
     totals: &mut super::metadata::Totals,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
     let mut failure = None;
     while index < submission.definitions.len() {
-        match definition_bounds(submission, index, environment_work, totals, work) {
+        match definition_bounds(submission, index, environment_work, calculator, totals, work) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -34,12 +35,24 @@ fn definition_bounds(
     submission: &noble_kernel::execution::Submission,
     index: usize,
     environment_work: u64,
+    calculator: bool,
     totals: &mut super::metadata::Totals,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let definition = &submission.definitions[index];
     attempt!(check_identity(submission, index, work));
-    attempt!(work.charge(environment_work));
+    // The calculator prices this definition's own scheme; other profiles keep
+    // charging one complete environment scan per definition.
+    let contract_work = if calculator {
+        attempt!(super::environment::contract_work(
+            &submission.environment,
+            definition.definition,
+            work,
+        ))
+    } else {
+        environment_work
+    };
+    attempt!(work.charge(contract_work));
     attempt!(super::environment::exact_contract(
         &submission.environment,
         definition.definition,

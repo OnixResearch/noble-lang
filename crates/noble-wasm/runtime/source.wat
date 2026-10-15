@@ -13,7 +13,7 @@
  (param $operands i32) (param $continuations i32) (param $step_count i32) (result i32)
  (if (global.get $failure) (then (return (global.get $failure))))
  (if (global.get $cp) (then (call $fail (i32.const 4)) (return (global.get $failure))))
- (if (i32.or (i32.or (i32.gt_u (local.get $allocation) (i32.const 196608))
+ (if (i32.or (i32.or (i32.gt_u (local.get $allocation) (global.get $allocation_ceiling))
                      (i32.gt_u (local.get $recipes) (i32.const 256)))
               (i32.or (i32.gt_u (local.get $depth) (i32.const 256))
                (i32.or (i32.gt_u (local.get $operands) (i32.const 2048))

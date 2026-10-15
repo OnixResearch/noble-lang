@@ -25,15 +25,74 @@ impl super::ModuleSession {
                 "source byte limit exceeded",
             ));
         }
+        // Only modules retain the candidate source. If the aggregate would overflow,
+        // classify the first lexical token before parsing or cloning prior sources.
+        if let Err(error) = self.check_retained_module_bytes(input_bytes.len(), limits) {
+            let mut meter = crate::Meter::new(limits);
+            let mut scanner = attempt!(crate::source::lexer::Scanner::new_declared(
+                input_bytes,
+                &mut meter,
+            ).map_err(|problem| crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)));
+            let first = attempt!(scanner.next(&mut meter).map_err(|problem| {
+                crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
+            }));
+            if matches!(first, Some(crate::source::lexer::Token {
+                kind: crate::source::lexer::TokenKind::Word(ref spelling),
+                ..
+            }) if spelling == b"module") {
+                return Err(error);
+            }
+        }
         let unit = attempt!(
             crate::source::declared::parsing::parse(input_bytes, limits).map_err(|problem| {
                 crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
             })
         );
+        if self.source.calculator {
+            let environment = attempt!(self.source.declared.as_ref()
+                .ok_or_else(|| crate::source::declared::diagnostic(
+                    crate::source::Stage::Check,
+                    crate::source::exhausted(super::super::SPAN,
+                        "calculator source environment missing"))));
+            if environment.environment.defs.len()
+                > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+            {
+                return Err(crate::source::declared::diagnostic(
+                    crate::source::Stage::Check,
+                    crate::source::exhausted(super::super::SPAN,
+                        "calculator environment row limit exceeded")));
+            }
+            let budget = attempt!(environment.environment.calculator_clone_budget()
+                .ok_or_else(|| crate::source::declared::diagnostic(
+                    crate::source::Stage::Check,
+                    crate::source::exhausted(super::super::SPAN,
+                        "calculator environment clone bound exceeded"))));
+            let copies = attempt!(budget.reserved_bytes.checked_mul(2)
+                .filter(|total| *total <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
+                .ok_or_else(|| crate::source::declared::diagnostic(
+                    crate::source::Stage::Check,
+                    crate::source::exhausted(super::super::SPAN,
+                        "calculator environment clone fanout exceeded"))));
+            if copies > u64::from(limits.work) {
+                return Err(crate::source::declared::diagnostic(
+                    crate::source::Stage::Check,
+                    crate::source::exhausted(super::super::SPAN,
+                        "calculator environment clone work exceeded")));
+            }
+        }
         let StagedUnit { session: staged, kind, submission, output, pending } =
             attempt!(self
                 .snapshot()
                 .stage_unit(unit, input_bytes, inputs, limits));
+        if staged.source.calculator && staged.source.declared.as_ref()
+            .is_none_or(|context| context.environment.defs.len()
+                > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT)
+        {
+            return Err(crate::source::declared::diagnostic(
+                crate::source::Stage::Check,
+                crate::source::exhausted(super::super::SPAN,
+                    "calculator environment row limit exceeded")));
+        }
         attempt!(staged.retained(limits));
         Ok(super::ModulePrepared {
             kind,
@@ -150,6 +209,7 @@ impl super::ModuleSession {
 
     fn current_snapshot(&self, prepared: &super::ModulePrepared) -> bool {
         self.generation == prepared.generation
+            && self.source.calculator == prepared.staged.source.calculator
             && self.bindings == prepared.staged.bindings
             && self.modules == prepared.previous_modules
             && self.aliases == prepared.previous_aliases
@@ -467,4 +527,69 @@ fn uses(form: &crate::intrinsic::Form, name: &str) -> bool {
         return true;
     }
     items.iter().any(|item| uses(item, name))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::ModuleSession;
+    use noble_kernel::contracts::Behavior;
+    use noble_kernel::{shapes::Pattern, words::Scheme};
+
+    #[test]
+    fn calculator_source_refuses_897_lightweight_rows_before_namespace_snapshot_clone() {
+        let mut session = ModuleSession::new_calculator()
+            .unwrap_or_else(|_| panic!("calculator environment unavailable"));
+        let environment = &mut session.source.declared.as_mut()
+            .unwrap_or_else(|| panic!("calculator declaration context unavailable")).environment;
+        while environment.defs.len() < 897 {
+            environment.defs.push(Scheme {
+                var_kinds: alloc::vec::Vec::new(),
+                stack_in: alloc::vec::Vec::new(),
+                stack_out: alloc::vec![Pattern::Unit],
+                effects: alloc::vec::Vec::new(),
+            });
+            environment.kinds.push(Behavior::Named);
+            environment.deps.push(alloc::vec::Vec::new());
+            environment.definition_owners.push(None);
+        }
+        assert!(environment.calculator_clone_budget().is_some(),
+            "lightweight row 897 must not be confused with clone-byte exhaustion");
+        let limits = crate::Limits {
+            bytes: 262_144, nodes: 524_288, depth: 64, work: 512_000_000,
+        };
+        let refused = session.prepare(b"1", &[], limits)
+            .err().unwrap_or_else(|| panic!("oversized environment reached snapshot cloning"));
+        assert_eq!(refused.stage(), crate::source::Stage::Check);
+        assert_eq!(refused.diagnostic().kind, crate::DiagnosticKind::Exhausted);
+    }
+
+    #[test]
+    fn calculator_source_refuses_deep_environment_before_namespace_snapshot_clone() {
+        let mut session = ModuleSession::new_calculator()
+            .unwrap_or_else(|_| panic!("calculator environment unavailable"));
+        let environment = &mut session.source.declared.as_mut()
+            .unwrap_or_else(|| panic!("calculator declaration context unavailable")).environment;
+        let program = Pattern::program(
+            alloc::vec![Pattern::Unit; 128],
+            alloc::vec![Pattern::Unit; 128],
+            alloc::vec::Vec::new(),
+        );
+        for _ in 0..8 {
+            environment.defs.push(Scheme {
+                var_kinds: alloc::vec::Vec::new(),
+                stack_in: alloc::vec::Vec::new(),
+                stack_out: alloc::vec![program.clone(); 128],
+                effects: alloc::vec::Vec::new(),
+            });
+        }
+        assert!(environment.calculator_clone_budget().is_none(),
+            "nested program stacks must contribute every retained node to the clone bound");
+        let limits = crate::Limits {
+            bytes: 262_144, nodes: 524_288, depth: 64, work: 512_000_000,
+        };
+        let refused = session.prepare(b"1", &[], limits)
+            .err().unwrap_or_else(|| panic!("oversized environment reached snapshot cloning"));
+        assert_eq!(refused.stage(), crate::source::Stage::Check);
+        assert_eq!(refused.diagnostic().kind, crate::DiagnosticKind::Exhausted);
+    }
 }

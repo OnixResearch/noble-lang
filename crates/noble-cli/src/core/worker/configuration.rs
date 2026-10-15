@@ -49,6 +49,29 @@ pub(super) fn slot() -> std::string::String {
     .encode()
 }
 
+/// Calculator expressions receive only explicitly injected data, never test host bindings.
+pub(super) fn calculator(optimized: bool) -> Result<std::string::String, super::super::output::Failure> {
+    let executable = attempt!(std::env::current_exe().map_err(super::super::framing::io_error));
+    let executable = attempt!(std::fs::canonicalize(executable).map_err(super::super::framing::io_error));
+    let executable = attempt!(executable.to_str().ok_or_else(|| super::super::output::Failure::new(
+        super::super::output::ErrorContext { stage: "wasm", outcome: "unsupported" },
+        "calculator WAT assembler executable path is not UTF-8",
+    )));
+    Ok(crate::workflow::encoding::object([
+        ("selection", crate::workflow::encoding::string(super::SELECTION)),
+        ("abi", crate::workflow::encoding::string(super::ABI)),
+        ("optimized", crate::workflow::encoding::Json::Bool(optimized)),
+        ("artifacts", crate::workflow::encoding::Json::Null),
+        ("declared_modules", crate::workflow::encoding::Json::Bool(false)),
+        ("text_byte_cursor", crate::workflow::encoding::Json::Bool(false)),
+        ("calculator", crate::workflow::encoding::Json::Bool(true)),
+        ("calculator_shell_state", crate::workflow::encoding::Json::Bool(true)),
+        ("calculator_assembler", crate::workflow::encoding::string(executable)),
+        ("bindings", crate::workflow::encoding::Json::Array(std::vec::Vec::new())),
+        ("declared_extension", crate::workflow::encoding::Json::Null),
+    ]).encode())
+}
+
 /// The worker receives a canonical artifact path; its creation precedes launch.
 #[expect(
     tigerstyle::missing_const_fn,

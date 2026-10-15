@@ -125,6 +125,82 @@ fn signed_constructor_produces_concrete_result_for_checked_program() -> Result<(
 }
 
 #[test]
+fn local_concrete_nominal_signature_preserves_identity_at_calls() -> Result<(), String> {
+    let mut session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    session = super::commit(
+        session,
+        b"module calc@1 [ opaque Cursor I64 public export Cursor export Cursor.new export Cursor.into signature advance forall<S:stack> [ S Cursor -- S Cursor ! pure ] export advance def advance [ Cursor.into 1 + Cursor.new ] ]",
+    )?;
+    let accepted = session
+        .prepare(
+            b"41 calc@1.Cursor.new calc@1.advance calc@1.Cursor.into",
+            &[],
+            super::LIMITS,
+        )
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(accepted.output(), &[noble_kernel::types::Ty::I64]);
+    assert!(accepted.submission().is_some());
+
+    session = super::commit(
+        session,
+        b"module other@1 [ opaque Cursor I64 public export Cursor export Cursor.new ]",
+    )?;
+    assert!(matches!(
+        session.prepare(
+            b"41 other@1.Cursor.new calc@1.advance",
+            &[],
+            super::LIMITS
+        ),
+        Err(error) if error.stage() == noble_contracts::source::Stage::Check
+    ));
+    assert!(matches!(
+        session.prepare(
+            b"module private_calc@1 [ opaque Cursor I64 private signature expose forall<S:stack> [ S Cursor -- S Cursor ! pure ] export expose def expose [ ] ]",
+            &[],
+            super::LIMITS
+        ),
+        Err(error) if error.stage() == noble_contracts::source::Stage::Link
+    ));
+    Ok(())
+}
+
+#[test]
+fn exported_concrete_nominal_signature_preserves_source_module_identity() -> Result<(), String> {
+    let mut session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    session = super::commit(
+        session,
+        b"module numbers@1 [ opaque Exact I64 public export Exact export Exact.new export Exact.into ]",
+    )?;
+    session = super::commit(
+        session,
+        b"module consumers@1 [ signature retain forall<S:stack> [ S numbers@1.Exact -- S numbers@1.Exact ! pure ] export retain def retain [ ] ]",
+    )?;
+    let accepted = session
+        .prepare(
+            b"42 numbers@1.Exact.new consumers@1.retain numbers@1.Exact.into",
+            &[],
+            super::LIMITS,
+        )
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(accepted.output(), &[noble_kernel::types::Ty::I64]);
+    session = super::commit(
+        session,
+        b"module other_numbers@1 [ opaque Exact I64 public export Exact export Exact.new ]",
+    )?;
+    assert!(matches!(
+        session.prepare(
+            b"42 other_numbers@1.Exact.new consumers@1.retain",
+            &[],
+            super::LIMITS,
+        ),
+        Err(error) if error.stage() == noble_contracts::source::Stage::Check
+    ));
+    Ok(())
+}
+
+#[test]
 fn first_class_program_is_a_checked_result_payload() -> Result<(), String> {
     let mut session =
         noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;

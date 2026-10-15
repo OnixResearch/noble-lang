@@ -31,6 +31,9 @@ pub struct ModuleSession {
     pub(super) source: crate::source::Session,
 }
 
+// The calculator profile is selected by new_calculator, never by caller-supplied Limits.
+const CALCULATOR_RETAINED_SOURCE_BYTES: usize = 512 * 1024;
+
 #[derive(Debug)]
 pub struct ModulePrepared {
     kind: ModuleKind,
@@ -190,8 +193,36 @@ impl ModulePrepared {
 }
 
 impl ModuleSession {
+    pub(super) fn retained_source_limit(
+        &self,
+        limits: crate::Limits,
+    ) -> Result<usize, crate::source::Error> {
+        if self.source.calculator {
+            Ok(CALCULATOR_RETAINED_SOURCE_BYTES)
+        } else {
+            usize::try_from(limits.bytes).map_err(|_| {
+                super::error(
+                    crate::source::Stage::Check,
+                    "retained byte limit exceeds the host address space",
+                )
+            })
+        }
+    }
+
     /// Host-owned bindings are exact, immutable adapter declarations, not authorizations.
     pub fn new(bindings: &[super::BoundOperation]) -> Result<Self, crate::source::Error> {
+        Self::with_profile(bindings, false)
+    }
+
+    /// Calculator modules are separately selected and never receive adapters.
+    pub fn new_calculator() -> Result<Self, crate::source::Error> {
+        Self::with_profile(&[], true)
+    }
+
+    fn with_profile(
+        bindings: &[super::BoundOperation],
+        calculator: bool,
+    ) -> Result<Self, crate::source::Error> {
         if bindings.len() > super::MODULE_CAP {
             return Err(super::error(
                 crate::source::Stage::Check,
@@ -224,10 +255,15 @@ impl ModuleSession {
                 "invalid, duplicate or mismatched adapter binding",
             ));
         }
-        let mut environment = attempt!(noble_kernel::contracts::environment()
-            .map_err(|_| super::error(crate::source::Stage::Check, "invalid kernel environment")));
+        let mut environment = attempt!(if calculator {
+            noble_kernel::contracts::calculator_environment()
+        } else {
+            noble_kernel::contracts::environment()
+        }
+        .map_err(|_| super::error(crate::source::Stage::Check, "invalid kernel environment")));
         environment.declared_modules = true;
         let mut source_session = crate::source::Session::without_test_hosts();
+        source_session.calculator = calculator;
         source_session.declared = Some(super::Context {
             environment,
             words: alloc::vec::Vec::new(),
@@ -256,6 +292,7 @@ impl ModuleSession {
                 text_cursor: false,
                 live_selected: None,
                 live_slots: None,
+                calculator: self.source.calculator,
                 bindings: None,
                 declared: self.source.declared.clone(),
             },

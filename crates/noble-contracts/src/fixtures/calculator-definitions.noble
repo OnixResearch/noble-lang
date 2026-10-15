@@ -1,0 +1,2633 @@
+module calc_defs@1 [
+    # Admission never evaluates a function body. Expr supplies its fully parsed
+    # source-spanned RPN; every lexical reference is checked before bind.
+    opaque Admission Pair<calc_env@1.Name,Pair<List<calc_env@1.Name>,Pair<Pair<Text,List<Pair<I64,Pair<I64,I64>>>>,List<Pair<I64,Pair<I64,I64>>>>>> private
+    export Admission
+    variant BodyFault Malformed Pair<I64,I64> public Environment calc_env@1.Failure public
+    export BodyFault
+    variant BodyBeginFailure Parse expr@1.CompactDiagnostic public Metadata Unit public
+    export BodyBeginFailure
+
+    opaque Cursor Pair<Text,List<Pair<I64,Pair<I64,I64>>>> private
+    export Cursor
+    variant Definition Let Pair<calc_env@1.Name,List<Pair<I64,Pair<I64,I64>>>> public Function Pair<calc_env@1.Name,Pair<List<calc_env@1.Name>,List<Pair<I64,Pair<I64,I64>>>>> public
+    export Definition
+    export Definition.Let
+    export Definition.Function
+    export Definition.match
+    variant Command Expression List<Pair<I64,Pair<I64,I64>>> public Defined Definition public
+    export Command
+    export Command.Expression
+    export Command.Defined
+    export Command.match
+    variant HeaderFailure Malformed Pair<I64,I64> public InvalidDefinition Pair<I64,I64> public
+    export HeaderFailure
+    export HeaderFailure.Malformed
+    export HeaderFailure.InvalidDefinition
+    export HeaderFailure.match
+    opaque ParamFrame Pair<Cursor,Pair<calc_env@1.Name,Pair<List<calc_env@1.Name>,Bool>>> private
+    export ParamFrame
+    variant ParamFinal Ready ParamFrame public Failed HeaderFailure public
+    variant ParamRun Pending ParamFrame public Final ParamFinal public
+    export ParamRun
+
+    opaque ValidationSession Pair<calc_env@1.State,Pair<Admission,Pair<num@1.Budget,Bool>>> private
+    export ValidationSession
+    opaque ValidatedAdmission Pair<calc_env@1.State,Pair<Admission,num@1.Budget>> private
+    export ValidatedAdmission
+    variant BeginSession Ready ValidationSession private Failed BodyBeginFailure private
+    export BeginSession
+    variant FinishedSession Ready ValidatedAdmission private Failed BodyBeginFailure private
+    export FinishedSession
+    opaque NameReference Pair<ValidationSession,Pair<Sum<Pair<calc_env@1.Name,List<calc_env@1.Name>>,List<Pair<I64,Pair<I64,I64>>>>,I64>> private
+    export NameReference
+    variant BeginName Ready NameReference private Failed BodyBeginFailure private
+    export BeginName
+    opaque NameGlobalSlim Pair<ValidationSession,Pair<List<calc_env@1.Variable>,I64>> private
+    export NameGlobalSlim
+
+    opaque CallSelf Pair<ValidationSession,Pair<Pair<calc_env@1.Name,calc_env@1.Name>,I64>> private
+    export CallSelf
+    variant BeginCallSelf Ready CallSelf private Failed BodyBeginFailure private
+    export BeginCallSelf
+    opaque CallHistory Pair<ValidationSession,I64> private
+    export CallHistory
+    variant BeginCallHistory Ready CallHistory private Failed BodyBeginFailure private
+    export BeginCallHistory
+    # Neither the session nor the historical function list is ever accepted
+    # separately from the sealed call's self-validation phase.
+    opaque CallScan Pair<ValidationSession,Pair<List<Pair<calc_env@1.Name,I64>>,I64>> private
+    export CallScan
+    opaque CallArity Pair<ValidationSession,Pair<List<Pair<calc_env@1.Name,I64>>,I64>> private
+    export CallArity
+    variant BeginCallScan Ready CallScan private Failed BodyBeginFailure private
+    export BeginCallScan
+
+    signature rot forall<S:stack,A:value,B:value,C:value>
+        [ S A B C -- S B C A ! pure ]
+    def rot [ [ swap ] dip swap ]
+
+    signature fail_syntax forall<S:stack>
+        [ S Pair<I64,I64> -- S expr@1.Diagnostic ! pure ]
+    def fail_syntax [ expr@1.ParseFailure.SyntaxError expr@1.Diagnostic.Parse ]
+
+    signature body_fault_diagnostic forall<S:stack>
+        [ S BodyFault -- S expr@1.Diagnostic ! pure ]
+    export body_fault_diagnostic
+    def body_fault_diagnostic [
+        [ fail_syntax ]
+        [ expr@1.env_failure_diagnostic ]
+        BodyFault.match
+    ]
+
+    signature header_failure_diagnostic forall<S:stack>
+        [ S HeaderFailure -- S expr@1.Diagnostic ! pure ]
+    def header_failure_diagnostic [
+        [ fail_syntax ]
+        [ expr@1.DefinitionFailure.InvalidDefinition
+          expr@1.ScopeFailure.Definition expr@1.OtherFailure.Scope
+          expr@1.Diagnostic.Other ]
+        HeaderFailure.match
+    ]
+
+    # A finalization-only name projection re-reads the immutable guest source,
+    # never host-provided substrings or a synthetic name on a failed frame.
+    signature name_cursor_index forall<S:stack>
+        [ S Pair<Text,I64> -- S I64 ! pure ]
+    def name_cursor_index [ unpair swap drop ]
+
+    signature name_cursor_size forall<S:stack>
+        [ S Pair<Text,I64> -- S I64 ! pure ]
+    def name_cursor_size [ unpair drop text.length swap drop ]
+
+    signature name_cursor_valid forall<S:stack>
+        [ S Pair<Text,I64> -- S Pair<Text,I64> Bool ! pure ]
+    def name_cursor_valid [
+        dup dup name_cursor_index swap name_cursor_size i64.cmp -1 =
+    ]
+
+    signature name_cursor_byte forall<S:stack>
+        [ S Pair<Text,I64> -- S Pair<Text,I64> I64 ! pure ]
+    def name_cursor_byte [ dup unpair calc_lex@1.byte_at ]
+
+    signature name_cursor_advance forall<S:stack>
+        [ S Pair<Text,I64> -- S Pair<Text,I64> ! pure ]
+    def name_cursor_advance [ unpair 1 + pair ]
+
+    signature name_cursor_failure forall<S:stack>
+        [ S Pair<Text,I64> -- S HeaderFailure ! pure ]
+    def name_cursor_failure [
+        name_cursor_index dup pair HeaderFailure.Malformed
+    ]
+
+    signature header_space forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def header_space [
+        dup 32 = [ drop true ]
+        [ dup 9 = [ drop true ]
+          [ dup 10 = [ drop true ] [ 13 = ] if ] if ] if
+    ]
+
+    signature header_alpha forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def header_alpha [
+        dup 95 = [ drop true ]
+        [ dup 65 i64.cmp -1 = [ drop false ]
+          [ dup 90 i64.cmp 1 =
+            [ dup 97 i64.cmp -1 = [ drop false ]
+              [ 122 i64.cmp 1 = [ false ] [ true ] if ] if ]
+            [ drop true ] if ] if ] if
+    ]
+
+    signature header_ident forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def header_ident [
+        dup header_alpha [ drop true ]
+        [ dup 48 i64.cmp -1 = [ drop false ]
+          [ 57 i64.cmp 1 = [ false ] [ true ] if ] if ] if
+    ]
+
+    signature name_space_step forall<S:stack>
+        [ S Pair<Text,I64> -- S Pair<Text,I64> Bool ! pure ]
+    def name_space_step [
+        name_cursor_valid
+        [ name_cursor_byte header_space
+          [ name_cursor_advance true ]
+          [ false ] if ]
+        [ false ] if
+    ]
+
+    signature name_skip_spaces forall<S:stack>
+        [ S Pair<Text,I64> -- S Pair<Text,I64> ! pure ]
+    def name_skip_spaces [ [ name_space_step ] iterate ]
+
+    signature name_expected forall<S:stack>
+        [ S Pair<Text,I64> I64
+          -- S result@1.Result<Pair<Text,I64>,HeaderFailure> ! pure ]
+    def name_expected [
+        [ name_cursor_valid ] dip swap
+        [ [ name_cursor_byte ] dip =
+          [ name_cursor_advance result@1.Result.Ok ]
+          [ name_cursor_failure result@1.Result.Err ] if ]
+        [ drop name_cursor_failure result@1.Result.Err ] if
+    ]
+
+    signature name_ident_step forall<S:stack>
+        [ S Pair<Pair<Text,I64>,I64>
+          -- S Pair<Pair<Text,I64>,I64> Bool ! pure ]
+    def name_ident_step [
+        dup unpair drop name_cursor_valid
+        [ name_cursor_byte header_ident
+          [ name_cursor_advance swap unpair [ drop ] dip pair true ]
+          [ drop false ] if ]
+        [ drop false ] if
+    ]
+
+    signature name_finished forall<S:stack>
+        [ S Pair<Pair<Text,I64>,I64> -- S calc_env@1.Name ! pure ]
+    def name_finished [
+        unpair swap unpair [ swap ] dip pair
+        calc_env@1.name_from_span
+    ]
+
+    signature name_equals forall<S:stack>
+        [ S calc_env@1.Name -- S result@1.Result<calc_env@1.Name,HeaderFailure> ! pure ]
+    def name_equals [
+        dup calc_env@1.name_span unpair swap drop
+        [ dup calc_env@1.name_source ] dip
+        pair name_skip_spaces 61 name_expected
+        [ drop result@1.Result.Ok ]
+        [ swap drop result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature name_identifier forall<S:stack>
+        [ S Pair<Text,I64> -- S result@1.Result<calc_env@1.Name,HeaderFailure> ! pure ]
+    def name_identifier [
+        name_skip_spaces name_cursor_valid
+        [ name_cursor_byte header_alpha
+          [ dup name_cursor_index pair
+            [ name_ident_step ] iterate
+            name_finished name_equals ]
+          [ name_cursor_failure result@1.Result.Err ] if ]
+        [ name_cursor_failure result@1.Result.Err ] if
+    ]
+
+    signature name_after_keyword forall<S:stack>
+        [ S Pair<Text,I64> -- S result@1.Result<calc_env@1.Name,HeaderFailure> ! pure ]
+    def name_after_keyword [
+        name_cursor_valid
+        [ name_cursor_byte header_space
+          [ name_identifier ]
+          [ name_cursor_failure result@1.Result.Err ] if ]
+        [ name_cursor_failure result@1.Result.Err ] if
+    ]
+
+    signature let_name_finish forall<S:stack>
+        [ S result@1.Result<Pair<Text,I64>,HeaderFailure>
+          -- S result@1.Result<calc_env@1.Name,HeaderFailure> ! pure ]
+    def let_name_finish [
+        [ name_after_keyword ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # Failed evaluator frames must never manufacture a lexical name.
+    signature let_frame_source forall<S:stack>
+        [ S expr@1.FrameHot
+          -- S expr@1.FrameHot result@1.Result<Text,Unit> ! pure ]
+    export let_frame_source
+    def let_frame_source [
+        expr@1.frame_hot_source_budget
+        [ unpair drop result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature let_source_begin forall<S:stack>
+        [ S result@1.Result<Text,Unit>
+          -- S result@1.Result<Pair<Text,I64>,Unit> ! pure ]
+    export let_source_begin
+    def let_source_begin [
+        [ 0 pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature let_source_spaces forall<S:stack>
+        [ S result@1.Result<Pair<Text,I64>,Unit>
+          -- S result@1.Result<Pair<Text,I64>,Unit> ! pure ]
+    export let_source_spaces
+    def let_source_spaces [
+        [ name_skip_spaces result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature let_source_l forall<S:stack>
+        [ S result@1.Result<Pair<Text,I64>,Unit>
+          -- S result@1.Result<result@1.Result<Pair<Text,I64>,HeaderFailure>,Unit> ! pure ]
+    export let_source_l
+    def let_source_l [
+        [ 108 name_expected result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature let_source_e forall<S:stack>
+        [ S result@1.Result<result@1.Result<Pair<Text,I64>,HeaderFailure>,Unit>
+          -- S result@1.Result<result@1.Result<Pair<Text,I64>,HeaderFailure>,Unit> ! pure ]
+    export let_source_e
+    def let_source_e [
+        [ [ 101 name_expected ]
+          [ result@1.Result.Err ] result@1.Result.match
+          result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature let_source_t forall<S:stack>
+        [ S result@1.Result<result@1.Result<Pair<Text,I64>,HeaderFailure>,Unit>
+          -- S result@1.Result<result@1.Result<Pair<Text,I64>,HeaderFailure>,Unit> ! pure ]
+    export let_source_t
+    def let_source_t [
+        [ [ 116 name_expected ]
+          [ result@1.Result.Err ] result@1.Result.match
+          result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature let_source_finish forall<S:stack>
+        [ S result@1.Result<result@1.Result<Pair<Text,I64>,HeaderFailure>,Unit>
+          -- S result@1.Result<result@1.Result<calc_env@1.Name,HeaderFailure>,Unit> ! pure ]
+    export let_source_finish
+    def let_source_finish [
+        [ let_name_finish result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+
+    signature bind_let_ready forall<S:stack>
+        [ S calc_env@1.Name Pair<calc_env@1.State,Bool>
+            Pair<I64,Pair<num@1.Rat,num@1.Budget>>
+          -- S Pair<calc_env@1.State,Bool> expr@1.FinalReady ! pure ]
+    def bind_let_ready [
+        dup
+        [ unpair swap drop unpair drop
+          [ unpair ] dip [ swap ] dip [ rot ] dip
+          calc_env@1.bind_variable swap pair ] dip
+        expr@1.FinalReady.Ready
+    ]
+
+    signature bind_let_checked forall<S:stack>
+        [ S result@1.Result<calc_env@1.Name,HeaderFailure>
+            Pair<calc_env@1.State,Bool> expr@1.FinalReady
+          -- S Pair<calc_env@1.State,Bool> expr@1.FinalReady
+               result@1.Result<Unit,expr@1.Diagnostic> ! pure ]
+    export bind_let_checked
+    def bind_let_checked [
+        rot
+        [ rot rot
+          [ bind_let_ready unit result@1.Result.Ok ]
+          [ drop [ drop ] dip unit expr@1.FinalReady.Failed
+            unit result@1.Result.Ok ]
+          expr@1.FinalReady.match ]
+        [ header_failure_diagnostic result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    # The outer failure is an evaluator-frame failure, not a lexical failure;
+    # leave the context and ready value untouched rather than inventing a name.
+    signature bind_let_capture_checked forall<S:stack>
+        [ S result@1.Result<result@1.Result<calc_env@1.Name,HeaderFailure>,Unit>
+            Pair<calc_env@1.State,Bool> expr@1.FinalReady
+          -- S Pair<calc_env@1.State,Bool> expr@1.FinalReady
+             result@1.Result<result@1.Result<Unit,expr@1.Diagnostic>,Unit> ! pure ]
+    export bind_let_capture_checked
+    def bind_let_capture_checked [
+        rot
+        [ rot rot bind_let_checked result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature header_from_env forall<S:stack>
+        [ S calc_env@1.Failure -- S HeaderFailure ! pure ]
+    def header_from_env [
+        [ [ HeaderFailure.InvalidDefinition ]
+          [ HeaderFailure.InvalidDefinition ]
+          calc_env@1.NameFailure.match ]
+        [ HeaderFailure.InvalidDefinition ]
+        calc_env@1.Failure.match
+    ]
+
+    signature cursor_text forall<S:stack> [ S Cursor -- S Text ! pure ]
+    def cursor_text [ Cursor.into unpair drop ]
+
+    signature cursor_tokens forall<S:stack>
+        [ S Cursor -- S List<Pair<I64,Pair<I64,I64>>> ! pure ]
+    def cursor_tokens [ Cursor.into unpair swap drop ]
+
+    signature cursor_peek forall<S:stack>
+        [ S Cursor -- S Cursor Pair<I64,Pair<I64,I64>> ! pure ]
+    def cursor_peek [
+        dup cursor_tokens
+        [ dup cursor_text text.length swap drop dup pair 0 swap pair ]
+        [ drop ] list.case
+    ]
+
+    signature cursor_advance forall<S:stack> [ S Cursor -- S Cursor ! pure ]
+    def cursor_advance [
+        Cursor.into unpair
+        [ nil ] [ swap drop ] list.case
+        pair Cursor.new
+    ]
+
+    signature cursor_syntax forall<S:stack>
+        [ S Cursor -- S HeaderFailure ! pure ]
+    def cursor_syntax [ cursor_peek calc_lex@1.token_span HeaderFailure.Malformed swap drop ]
+
+    signature cursor_kind forall<S:stack> [ S Cursor -- S Cursor I64 ! pure ]
+    def cursor_kind [ cursor_peek calc_lex@1.token_kind ]
+
+    # A non-identifier cannot start a let/fn declaration. The guest lexer
+    # certifies this route before the shell schedules keyword comparisons.
+    signature header_identifier_route forall<S:stack>
+        [ S Cursor -- S Cursor Bool ! pure ]
+    export header_identifier_route
+    def header_identifier_route [
+        dup Cursor.into unpair swap drop
+        [ false ]
+        [ drop calc_lex@1.token_kind 10 = ]
+        list.case
+    ]
+
+    signature cursor_name forall<S:stack>
+        [ S Cursor Pair<I64,Pair<I64,I64>>
+          -- S Cursor calc_env@1.Name ! pure ]
+    def cursor_name [
+        [ dup cursor_text ] dip calc_env@1.name_from_token
+    ]
+
+    signature header_word forall<S:stack>
+        [ S Cursor -- S Cursor result@1.Result<calc_env@1.Name,Unit> ! pure ]
+    export header_word
+    def header_word [
+        cursor_peek dup calc_lex@1.token_kind 10 =
+        [ cursor_name result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ] if
+    ]
+
+    signature header_let_pair forall<S:stack>
+        [ S result@1.Result<calc_env@1.Name,Unit>
+          -- S result@1.Result<calc_env@1.Name,Unit>
+            result@1.Result<Pair<calc_env@1.Name,calc_env@1.Name>,Unit> ! pure ]
+    export header_let_pair
+    def header_let_pair [
+        dup
+        [ "let" 0 3 pair calc_env@1.name_from_span
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature header_pair_size forall<S:stack>
+        [ S result@1.Result<Pair<calc_env@1.Name,calc_env@1.Name>,Unit>
+          -- S result@1.Result<Pair<calc_env@1.Name,calc_env@1.Name>,Unit>
+            Bool ! pure ]
+    export header_pair_size
+    def header_pair_size [
+        dup
+        [ unpair [ calc_env@1.name_size ] dip
+          calc_env@1.name_size = ]
+        [ drop false ]
+        result@1.Result.match
+    ]
+
+    signature header_pair_byte forall<S:stack>
+        [ S result@1.Result<Pair<calc_env@1.Name,calc_env@1.Name>,Unit> I64
+          -- S result@1.Result<Pair<calc_env@1.Name,calc_env@1.Name>,Unit>
+            Bool ! pure ]
+    def header_pair_byte [
+        swap dup
+        [ rot calc_env@1.name_pair_byte_eq ]
+        [ drop swap drop false ]
+        result@1.Result.match
+    ]
+
+    signature header_pair_byte_if forall<S:stack>
+        [ S result@1.Result<Pair<calc_env@1.Name,calc_env@1.Name>,Unit>
+            Bool I64
+          -- S result@1.Result<Pair<calc_env@1.Name,calc_env@1.Name>,Unit>
+             Bool ! pure ]
+    export header_pair_byte_if
+    def header_pair_byte_if [
+        swap
+        [ header_pair_byte ]
+        [ drop false ]
+        if
+    ]
+
+    signature header_pair_finish forall<S:stack>
+        [ S result@1.Result<Pair<calc_env@1.Name,calc_env@1.Name>,Unit>
+            Bool -- S Bool ! pure ]
+    export header_pair_finish
+    def header_pair_finish [ swap drop ]
+
+    signature header_fn_pair forall<S:stack>
+        [ S result@1.Result<calc_env@1.Name,Unit>
+          -- S result@1.Result<Pair<calc_env@1.Name,calc_env@1.Name>,Unit> ! pure ]
+    export header_fn_pair
+    def header_fn_pair [
+        [ "fn" 0 2 pair calc_env@1.name_from_span
+          pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature header_opcode_flags forall<S:stack>
+        [ S Bool Bool -- S I64 ! pure ]
+    export header_opcode_flags
+    def header_opcode_flags [
+        swap
+        [ drop 1 ]
+        [ [ 2 ] [ 0 ] if ]
+        if
+    ]
+
+    signature pop_kind forall<S:stack>
+        [ S Cursor I64 -- S result@1.Result<Cursor,HeaderFailure> ! pure ]
+    def pop_kind [
+        [ cursor_kind ] dip =
+        [ cursor_advance result@1.Result.Ok ]
+        [ cursor_syntax result@1.Result.Err ] if
+    ]
+
+    signature pop_name forall<S:stack>
+        [ S Cursor
+          -- S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure> ! pure ]
+    def pop_name [
+        cursor_peek dup calc_lex@1.token_kind 10 =
+        [ cursor_name [ cursor_advance ] dip pair result@1.Result.Ok ]
+        [ drop cursor_syntax result@1.Result.Err ] if
+    ]
+
+    signature reverse_names forall<S:stack>
+        [ S List<calc_env@1.Name> -- S List<calc_env@1.Name> ! pure ]
+    def reverse_names [
+        nil pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ swap [ swap ] dip swap cons pair true ] list.case
+        ] iterate
+        unpair swap drop
+    ]
+
+    signature finish_let forall<S:stack>
+        [ S calc_env@1.Name Cursor
+          -- S result@1.Result<Command,HeaderFailure> ! pure ]
+    def finish_let [
+        cursor_kind 0 =
+        [ swap drop cursor_syntax result@1.Result.Err ]
+        [ swap [ cursor_tokens ] dip swap pair
+          Definition.Let Command.Defined result@1.Result.Ok ] if
+    ]
+
+    signature parse_let_name forall<S:stack>
+        [ S Pair<Cursor,calc_env@1.Name>
+          -- S result@1.Result<Command,HeaderFailure> ! pure ]
+    def parse_let_name [
+        unpair [ 14 pop_kind ] dip swap
+        [ finish_let ]
+        [ swap drop result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature let_begin forall<S:stack>
+        [ S Cursor -- S Cursor ! pure ]
+    export let_begin
+    def let_begin [ cursor_advance ]
+
+    signature let_name forall<S:stack>
+        [ S Cursor -- S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure> ! pure ]
+    export let_name
+    def let_name [ pop_name ]
+
+    signature let_end forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure>
+          -- S result@1.Result<Command,HeaderFailure> ! pure ]
+    export let_end
+    def let_end [
+        [ parse_let_name ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature param_pack forall<S:stack>
+        [ S Cursor calc_env@1.Name List<calc_env@1.Name> Bool -- S ParamFrame ! pure ]
+    def param_pack [ pair pair pair ParamFrame.new ]
+
+    signature param_unpack forall<S:stack>
+        [ S ParamFrame -- S Cursor calc_env@1.Name List<calc_env@1.Name> Bool ! pure ]
+    def param_unpack [ ParamFrame.into unpair unpair unpair ]
+
+    signature param_cursor forall<S:stack>
+        [ S ParamFrame -- S Cursor ! pure ]
+    def param_cursor [ ParamFrame.into unpair drop ]
+
+    signature param_names forall<S:stack>
+        [ S ParamFrame -- S List<calc_env@1.Name> ! pure ]
+    def param_names [ ParamFrame.into unpair swap drop unpair swap drop unpair drop ]
+
+    signature param_expecting forall<S:stack>
+        [ S ParamFrame -- S Bool ! pure ]
+    def param_expecting [ param_unpack [ drop drop drop ] dip ]
+
+    signature param_error forall<S:stack>
+        [ S ParamFrame -- S ParamRun ! pure ]
+    def param_error [
+        param_cursor cursor_syntax ParamFinal.Failed ParamRun.Final
+    ]
+
+    signature param_complete forall<S:stack>
+        [ S ParamFrame -- S ParamRun ! pure ]
+    def param_complete [
+        param_unpack [ [ [ cursor_advance ] dip ] dip ] dip param_pack
+        ParamFinal.Ready ParamRun.Final
+    ]
+
+    signature param_kind forall<S:stack>
+        [ S ParamFrame -- S ParamFrame I64 ! pure ]
+    def param_kind [ dup param_cursor cursor_kind swap drop ]
+
+    signature param_append_checked forall<S:stack>
+        [ S ParamFrame Pair<Cursor,calc_env@1.Name> -- S ParamFrame ! pure ]
+    def param_append_checked [
+        [ param_unpack ] dip
+        [ drop ] dip
+        unpair rot cons
+        [ [ [ drop ] dip ] dip ] dip
+        [ swap ] dip false param_pack
+    ]
+
+    signature param_append forall<S:stack>
+        [ S ParamFrame -- S ParamRun ! pure ]
+    def param_append [
+        dup param_cursor pop_name
+        [ param_append_checked ParamRun.Pending ]
+        [ swap drop ParamFinal.Failed ParamRun.Final ]
+        result@1.Result.match
+    ]
+
+    signature param_separator forall<S:stack>
+        [ S ParamFrame -- S ParamRun ! pure ]
+    def param_separator [
+        param_unpack [ [ [ cursor_advance ] dip ] dip ] dip
+        drop true param_pack ParamRun.Pending
+    ]
+
+    signature fn_param_expected forall<S:stack>
+        [ S ParamRun -- S ParamRun Bool ! pure ]
+    export fn_param_expected
+    def fn_param_expected [
+        dup
+        [ param_expecting ]
+        [ drop false ]
+        ParamRun.match
+    ]
+
+    signature param_name_action forall<S:stack>
+        [ S ParamFrame -- S I64 ! pure ]
+    def param_name_action [
+        param_kind
+        dup 10 = [ drop drop 1 ]
+        [ 7 =
+          [ param_names [ 0 ] [ drop drop 3 ] list.case ]
+          [ drop 3 ] if ] if
+    ]
+
+    signature param_delimiter_action forall<S:stack>
+        [ S ParamFrame -- S I64 ! pure ]
+    def param_delimiter_action [
+        param_kind
+        dup 8 = [ drop drop 2 ]
+        [ 7 = [ drop 0 ] [ drop 3 ] if ] if
+    ]
+
+    # Guest-selected opcodes: 0 complete, 1 append, 2 comma, 3 malformed,
+    # 4 already terminal. The host never inspects syntax tokens.
+    signature fn_param_route_name forall<S:stack>
+        [ S ParamRun -- S ParamRun I64 ! pure ]
+    export fn_param_route_name
+    def fn_param_route_name [
+        dup [ param_name_action ] [ drop 4 ] ParamRun.match
+    ]
+
+    signature fn_param_route_delimiter forall<S:stack>
+        [ S ParamRun -- S ParamRun I64 ! pure ]
+    export fn_param_route_delimiter
+    def fn_param_route_delimiter [
+        dup [ param_delimiter_action ] [ drop 4 ] ParamRun.match
+    ]
+
+    signature fn_param_append forall<S:stack>
+        [ S ParamRun -- S ParamRun ! pure ]
+    export fn_param_append
+    def fn_param_append [
+        [ param_append ] [ ParamRun.Final ] ParamRun.match
+    ]
+
+    signature fn_param_separator forall<S:stack>
+        [ S ParamRun -- S ParamRun ! pure ]
+    export fn_param_separator
+    def fn_param_separator [
+        [ param_separator ] [ ParamRun.Final ] ParamRun.match
+    ]
+
+    signature fn_param_complete forall<S:stack>
+        [ S ParamRun -- S ParamRun ! pure ]
+    export fn_param_complete
+    def fn_param_complete [
+        [ param_complete ] [ ParamRun.Final ] ParamRun.match
+    ]
+
+    signature fn_param_error forall<S:stack>
+        [ S ParamRun -- S ParamRun ! pure ]
+    export fn_param_error
+    def fn_param_error [
+        [ param_error ] [ ParamRun.Final ] ParamRun.match
+    ]
+
+    signature fn_body_from_equals forall<S:stack>
+        [ S calc_env@1.Name List<calc_env@1.Name> Cursor
+          -- S result@1.Result<Command,HeaderFailure> ! pure ]
+    def fn_body_from_equals [
+        cursor_kind 0 =
+        [ [ drop ] dip [ drop ] dip cursor_syntax result@1.Result.Err ]
+        [ cursor_tokens pair pair Definition.Function
+          Command.Defined result@1.Result.Ok ] if
+    ]
+
+    signature header_cursor forall<S:stack>
+        [ S Text List<Pair<I64,Pair<I64,I64>>> -- S Text Cursor ! pure ]
+    export header_cursor
+    def header_cursor [ [ dup ] dip pair Cursor.new ]
+
+    signature header_expression_cursor forall<S:stack>
+        [ S Cursor -- S result@1.Result<Command,HeaderFailure> ! pure ]
+    export header_expression_cursor
+    def header_expression_cursor [
+        cursor_tokens Command.Expression result@1.Result.Ok
+    ]
+
+    signature header_body forall<S:stack>
+        [ S Command -- S List<Pair<I64,Pair<I64,I64>>> ! pure ]
+    def header_body [
+        [ ]
+        [ [ unpair swap drop ]
+          [ unpair swap drop unpair swap drop ]
+          Definition.match ]
+        Command.match
+    ]
+
+    # Call on a guest `dup` of the command; retain the other copy for body route.
+    signature header_function_metadata forall<S:stack>
+        [ S result@1.Result<Command,HeaderFailure>
+          -- S result@1.Result<Pair<calc_env@1.Name,List<calc_env@1.Name>>,Unit> ! pure ]
+    export header_function_metadata
+    def header_function_metadata [
+        [ [ drop unit result@1.Result.Err ]
+          [ [ drop unit result@1.Result.Err ]
+            [ unpair unpair drop pair result@1.Result.Ok ]
+            Definition.match ]
+          Command.match ]
+        [ drop unit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature header_body_route forall<S:stack>
+        [ S List<Pair<I64,Pair<I64,I64>>>
+            result@1.Result<Command,HeaderFailure>
+          -- S List<Pair<I64,Pair<I64,I64>>>
+               result@1.Result<Unit,HeaderFailure> ! pure ]
+    export header_body_route
+    def header_body_route [
+        [ swap drop header_body unit result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature header_result_checked forall<S:stack>
+        [ S result@1.Result<Unit,HeaderFailure>
+          -- S result@1.Result<Unit,expr@1.Diagnostic> ! pure ]
+    export header_result_checked
+    def header_result_checked [
+        [ result@1.Result.Ok ]
+        [ header_failure_diagnostic result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_keyword forall<S:stack>
+        [ S Cursor -- S Cursor ! pure ]
+    export fn_keyword
+    def fn_keyword [ cursor_advance ]
+
+    signature fn_name forall<S:stack>
+        [ S Cursor -- S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure> ! pure ]
+    export fn_name
+    def fn_name [ pop_name ]
+
+    signature fn_lparen forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure>
+          -- S result@1.Result<ParamFrame,HeaderFailure> ! pure ]
+    export fn_lparen
+    def fn_lparen [
+        [ unpair [ 6 pop_kind ] dip swap
+          [ swap nil true param_pack result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ] result@1.Result.match ]
+        [ result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature fn_params_begin forall<S:stack>
+        [ S result@1.Result<ParamFrame,HeaderFailure> -- S ParamRun ! pure ]
+    export fn_params_begin
+    def fn_params_begin [
+        [ ParamRun.Pending ]
+        [ ParamFinal.Failed ParamRun.Final ]
+        result@1.Result.match
+    ]
+
+    signature fn_params_end forall<S:stack>
+        [ S ParamRun -- S ParamFinal ! pure ]
+    export ParamFinal
+    export fn_params_end
+    def fn_params_end [
+        [ param_cursor cursor_syntax ParamFinal.Failed ]
+        [ ] ParamRun.match
+    ]
+
+    signature fn_end_unpack forall<S:stack>
+        [ S ParamFinal
+          -- S result@1.Result<Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>,HeaderFailure> ! pure ]
+    export fn_end_unpack
+    def fn_end_unpack [
+        [ param_unpack drop reverse_names pair pair result@1.Result.Ok ]
+        [ result@1.Result.Err ] ParamFinal.match
+    ]
+
+    signature fn_metadata_params forall<S:stack>
+        [ S Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>
+          -- S List<calc_env@1.Name> ! pure ]
+    def fn_metadata_params [ unpair swap drop unpair swap drop ]
+
+    signature fn_end_params forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>,HeaderFailure>
+          -- S result@1.Result<Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>,HeaderFailure>
+            result@1.Result<List<calc_env@1.Name>,Unit> ! pure ]
+    export fn_end_params
+    def fn_end_params [
+        dup
+        [ fn_metadata_params result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_end_validation_begin forall<S:stack>
+        [ S result@1.Result<List<calc_env@1.Name>,Unit>
+          -- S result@1.Result<calc_env@1.Validation,Unit> ! pure ]
+    export fn_end_validation_begin
+    def fn_end_validation_begin [
+        [ calc_env@1.validation_begin result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_end_validation_tick forall<S:stack>
+        [ S result@1.Result<calc_env@1.Validation,Unit>
+          -- S result@1.Result<calc_env@1.Validation,Unit> Bool ! pure ]
+    export fn_end_validation_tick
+    def fn_end_validation_tick [
+        [ calc_env@1.validation_tick [ result@1.Result.Ok ] dip ]
+        [ result@1.Result.Err false ]
+        result@1.Result.match
+    ]
+
+    signature fn_end_validation_end forall<S:stack>
+        [ S result@1.Result<calc_env@1.Validation,Unit>
+          -- S result@1.Result<result@1.Result<Unit,calc_env@1.Failure>,Unit> ! pure ]
+    export fn_end_validation_end
+    def fn_end_validation_end [
+        [ calc_env@1.validation_end result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_end_validated forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>,HeaderFailure>
+            result@1.Result<result@1.Result<Unit,calc_env@1.Failure>,Unit>
+          -- S result@1.Result<Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>,HeaderFailure> ! pure ]
+    export fn_end_validated
+    def fn_end_validated [
+        [ [ drop ]
+          [ [ drop ] dip header_from_env result@1.Result.Err ]
+          result@1.Result.match ]
+        [ drop ]
+        result@1.Result.match
+    ]
+
+    signature fn_end_equals forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>,HeaderFailure>
+          -- S result@1.Result<Pair<calc_env@1.Name,Pair<List<calc_env@1.Name>,Cursor>>,HeaderFailure> ! pure ]
+    export fn_end_equals
+    def fn_end_equals [
+        [ unpair unpair rot 14 pop_kind
+          [ pair pair result@1.Result.Ok ]
+          [ [ drop ] dip [ drop ] dip result@1.Result.Err ]
+          result@1.Result.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_end_command forall<S:stack>
+        [ S result@1.Result<Pair<calc_env@1.Name,Pair<List<calc_env@1.Name>,Cursor>>,HeaderFailure>
+          -- S result@1.Result<Command,HeaderFailure> ! pure ]
+    export fn_end_command
+    def fn_end_command [
+        [ unpair unpair fn_body_from_equals ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature admission_new forall<S:stack>
+        [ S calc_env@1.Name List<calc_env@1.Name>
+          Pair<Text,List<Pair<I64,Pair<I64,I64>>>> -- S Admission ! pure ]
+    def admission_new [
+        dup unpair swap drop pair pair pair Admission.new
+    ]
+
+    signature admission_params forall<S:stack>
+        [ S Admission -- S List<calc_env@1.Name> ! pure ]
+    def admission_params [ Admission.into unpair swap drop unpair drop ]
+
+    signature admission_source forall<S:stack>
+        [ S Admission -- S Text ! pure ]
+    def admission_source [
+        Admission.into unpair swap drop unpair swap drop
+        unpair drop unpair drop
+    ]
+
+    signature admission_pending forall<S:stack>
+        [ S Admission -- S List<Pair<I64,Pair<I64,I64>>> ! pure ]
+    def admission_pending [
+        Admission.into unpair swap drop unpair swap drop
+        unpair swap drop
+    ]
+
+    signature admission_remaining forall<S:stack>
+        [ S Admission List<Pair<I64,Pair<I64,I64>>> -- S Admission ! pure ]
+    def admission_remaining [
+        [ Admission.into unpair unpair unpair drop ] dip
+        pair pair pair Admission.new
+    ]
+
+    signature body_variable_probe forall<S:stack>
+        [ S Admission Pair<I64,Pair<I64,I64>>
+          -- S Admission calc_env@1.Name result@1.Result<I64,calc_env@1.Failure> ! pure ]
+    export body_variable_probe
+    def body_variable_probe [
+        [ dup admission_source ] dip calc_env@1.name_from_token
+        [ dup admission_params ] dip dup [ calc_env@1.find_parameter ] dip swap
+    ]
+
+    signature body_variable_found forall<S:stack>
+        [ S result@1.Result<I64,calc_env@1.Failure> -- S Bool ! pure ]
+    export body_variable_found
+    def body_variable_found [
+        [ drop true ] [ drop false ] result@1.Result.match
+    ]
+
+    signature body_variable_local forall<S:stack>
+        [ S calc_env@1.State calc_env@1.Name
+          -- S calc_env@1.State result@1.Result<Unit,BodyFault> ! pure ]
+    export body_variable_local
+    def body_variable_local [ drop unit result@1.Result.Ok ]
+
+    signature body_variable_global forall<S:stack>
+        [ S calc_env@1.State calc_env@1.Name
+          -- S calc_env@1.State result@1.Result<Unit,BodyFault> ! pure ]
+    export body_variable_global
+    def body_variable_global [
+        [ dup calc_env@1.state_variables ] dip
+        calc_env@1.lookup_variable
+        [ drop unit result@1.Result.Ok ]
+        [ BodyFault.Environment result@1.Result.Err ] result@1.Result.match
+    ]
+
+    signature body_variable_global_checked forall<S:stack>
+        [ S calc_env@1.State Admission calc_env@1.Name
+          -- S calc_env@1.State Admission result@1.Result<Unit,BodyFault> ! pure ]
+    export body_variable_global_checked
+    def body_variable_global_checked [
+        swap [ body_variable_global ] dip swap
+    ]
+
+    signature ordinary_kind forall<S:stack> [ S I64 -- S Bool ! pure ]
+    def ordinary_kind [
+        dup 9 = [ drop true ]
+        [ dup 12 = [ drop true ]
+          [ dup 13 = [ drop true ]
+            [ dup 1 i64.cmp -1 =
+              [ drop false ]
+              [ 5 i64.cmp 1 = [ false ] [ true ] if ] if ] if ] if ] if
+    ]
+
+    signature check_ordinary forall<S:stack>
+        [ S Pair<I64,Pair<I64,I64>>
+          -- S result@1.Result<Unit,BodyFault> ! pure ]
+    def check_ordinary [
+        dup calc_lex@1.token_kind ordinary_kind
+        [ drop unit result@1.Result.Ok ]
+        [ calc_lex@1.token_span BodyFault.Malformed
+          result@1.Result.Err ] if
+    ]
+    signature body_take forall<S:stack>
+        [ S Admission
+          -- S Admission result@1.Result<Pair<I64,Pair<I64,I64>>,Unit> Bool ! pure ]
+    export body_take
+    def body_take [
+        dup admission_pending
+        [ unit result@1.Result.Err false ]
+        [ swap [ admission_remaining ] dip
+          result@1.Result.Ok true ]
+        list.case
+    ]
+
+    signature body_check_ordinary_checked forall<S:stack>
+        [ S result@1.Result<Pair<I64,Pair<I64,I64>>,Unit>
+          -- S result@1.Result<result@1.Result<Unit,BodyFault>,Unit> ! pure ]
+    export body_check_ordinary_checked
+    def body_check_ordinary_checked [
+        [ check_ordinary result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature install_validated forall<S:stack>
+        [ S calc_env@1.State Admission -- S calc_env@1.State ! pure ]
+    def install_validated [
+        Admission.into unpair unpair unpair
+        drop unpair rot calc_env@1.bind_function
+    ]
+
+    signature body_begin forall<S:stack>
+        [ S calc_env@1.State calc_env@1.Name List<calc_env@1.Name>
+            expr@1.Plan
+          -- S calc_env@1.State Admission ! pure ]
+    export body_begin
+    def body_begin [ expr@1.checked_body admission_new ]
+
+    signature body_plan_compact forall<S:stack>
+        [ S result@1.Result<expr@1.Plan,expr@1.Diagnostic>
+          -- S result@1.Result<expr@1.Plan,expr@1.CompactDiagnostic> ! pure ]
+    export body_plan_compact
+    def body_plan_compact [
+        [ result@1.Result.Ok ]
+        [ expr@1.compact_diagnostic result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature body_begin_checked forall<S:stack>
+        [ S calc_env@1.State
+            result@1.Result<Pair<calc_env@1.Name,List<calc_env@1.Name>>,Unit>
+            result@1.Result<expr@1.Plan,expr@1.CompactDiagnostic>
+          -- S calc_env@1.State result@1.Result<Admission,BodyBeginFailure> ! pure ]
+    export body_begin_checked
+    def body_begin_checked [
+        [ swap
+          [ swap [ unpair ] dip body_begin result@1.Result.Ok ]
+          [ drop drop unit BodyBeginFailure.Metadata result@1.Result.Err ]
+          result@1.Result.match ]
+        [ [ drop ] dip BodyBeginFailure.Parse result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature body_begin_issue forall<S:stack>
+        [ S result@1.Result<Admission,BodyBeginFailure>
+          -- S result@1.Result<Admission,BodyBeginFailure> I64 ! pure ]
+    export body_begin_issue
+    def body_begin_issue [
+        dup
+        [ drop 0 ]
+        [ drop 1 ]
+        result@1.Result.match
+    ]
+
+    signature body_begin_diagnostic forall<S:stack>
+        [ S BodyBeginFailure -- S result@1.Result<expr@1.CompactDiagnostic,Unit> ! pure ]
+    export body_begin_diagnostic
+    def body_begin_diagnostic [
+        [ result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        BodyBeginFailure.match
+    ]
+
+    signature body_begin_error forall<S:stack>
+        [ S result@1.Result<Admission,BodyBeginFailure>
+          -- S result@1.Result<expr@1.CompactDiagnostic,Unit> ! pure ]
+    export body_begin_error
+    def body_begin_error [
+        [ drop unit result@1.Result.Err ]
+        [ body_begin_diagnostic ]
+        result@1.Result.match
+    ]
+
+    signature body_take_checked forall<S:stack>
+        [ S result@1.Result<Admission,BodyBeginFailure>
+          -- S result@1.Result<Admission,BodyBeginFailure>
+             result@1.Result<Pair<I64,Pair<I64,I64>>,Unit> Bool ! pure ]
+    export body_take_checked
+    def body_take_checked [
+        [ body_take [ [ result@1.Result.Ok ] dip ] dip ]
+        [ dup result@1.Result.Err swap drop
+          unit result@1.Result.Err false ]
+        result@1.Result.match
+    ]
+
+    signature body_end forall<S:stack>
+        [ S calc_env@1.State Admission result@1.Result<Unit,BodyFault>
+          -- S calc_env@1.State result@1.Result<Unit,expr@1.Diagnostic> ! pure ]
+    export body_end
+    def body_end [
+        [ drop install_validated unit result@1.Result.Ok ]
+        [ [ drop ] dip body_fault_diagnostic result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature body_end_checked forall<S:stack>
+        [ S calc_env@1.State result@1.Result<Admission,BodyBeginFailure>
+            result@1.Result<Unit,BodyFault>
+          -- S calc_env@1.State
+             result@1.Result<result@1.Result<Unit,expr@1.Diagnostic>,BodyBeginFailure> ! pure ]
+    export body_end_checked
+    def body_end_checked [
+        swap
+        [ swap body_end result@1.Result.Ok ]
+        [ [ drop ] dip result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature admission_name forall<S:stack>
+        [ S Admission -- S calc_env@1.Name ! pure ]
+    def admission_name [ Admission.into unpair drop ]
+
+    signature validation_advance forall<S:stack>
+        [ S ValidationSession -- S ValidationSession ! pure ]
+    def validation_advance [
+        ValidationSession.into unpair unpair unpair drop
+        [ body_take ] dip swap drop [ drop ] dip
+        false pair pair pair ValidationSession.new
+    ]
+
+    signature validation_mark_checked forall<S:stack>
+        [ S ValidationSession -- S ValidationSession ! pure ]
+    def validation_mark_checked [
+        ValidationSession.into unpair unpair unpair drop
+        true pair pair pair ValidationSession.new
+    ]
+
+    signature validation_clear_checked forall<S:stack>
+        [ S ValidationSession -- S ValidationSession ! pure ]
+    def validation_clear_checked [
+        ValidationSession.into unpair unpair unpair drop
+        false pair pair pair ValidationSession.new
+    ]
+
+    # Operators and literals are admitted only if the current source RPN
+    # token is one of the parser's ordinary kinds. Reference/call tokens
+    # cannot be marked through this route.
+
+    signature validation_check_ordinary forall<S:stack>
+        [ S ValidationSession
+          -- S ValidationSession Bool ! pure ]
+    export validation_check_ordinary
+    def validation_check_ordinary [
+        dup ValidationSession.into unpair swap drop unpair drop
+        admission_pending
+        [ false ]
+        [ swap [ drop ] dip calc_lex@1.token_kind ordinary_kind
+          [ validation_mark_checked true ]
+          [ false ] if ]
+        list.case
+    ]
+
+    signature name_reference_pack forall<S:stack>
+        [ S ValidationSession
+            Sum<Pair<calc_env@1.Name,List<calc_env@1.Name>>,List<Pair<I64,Pair<I64,I64>>>> I64
+          -- S NameReference ! pure ]
+    def name_reference_pack [ pair pair NameReference.new ]
+
+    signature name_reference_unpack forall<S:stack>
+        [ S NameReference -- S ValidationSession
+            Sum<Pair<calc_env@1.Name,List<calc_env@1.Name>>,List<Pair<I64,Pair<I64,I64>>>> I64 ! pure ]
+    def name_reference_unpack [ NameReference.into unpair unpair ]
+
+    signature validation_name_begin forall<S:stack>
+        [ S ValidationSession -- S NameReference ! pure ]
+    def validation_name_begin [
+        dup ValidationSession.into unpair swap drop unpair drop
+        admission_pending inr -3 name_reference_pack
+    ]
+
+    # Name comes exclusively from the admitted token span and original Text.
+    # Subsequent phases recheck the RPN kind before any successful marking.
+
+    signature validation_name_extract forall<S:stack>
+        [ S NameReference -- S NameReference ! pure ]
+    def validation_name_extract [
+        NameReference.into unpair unpair drop
+        [ inl ]
+        [ [ nil inr ]
+          [ swap [ drop ] dip
+            [ dup ValidationSession.into unpair swap drop unpair drop
+              Admission.into unpair swap drop unpair swap drop
+              unpair drop unpair drop ] dip
+            calc_env@1.name_from_token nil pair inl ]
+          list.case ]
+        case
+        -2 pair pair NameReference.new
+    ]
+
+    signature validation_name_params forall<S:stack>
+        [ S NameReference -- S NameReference ! pure ]
+    def validation_name_params [
+        name_reference_unpack dup -2 =
+        [ drop
+          [ unpair drop
+            [ dup ValidationSession.into unpair swap drop unpair drop
+              Admission.into unpair swap drop unpair drop ] dip
+            swap pair inl -1 ]
+          [ inr -2 ]
+          case ]
+        [ ] if
+        name_reference_pack
+    ]
+
+    signature validation_name_guard forall<S:stack>
+        [ S NameReference -- S NameReference ! pure ]
+    def validation_name_guard [
+        name_reference_unpack dup -1 =
+        [ drop
+          [ [ dup ValidationSession.into unpair swap drop unpair drop
+                Admission.into unpair swap drop unpair swap drop
+                unpair swap drop ] dip swap
+              [ drop nil inr -3 ]
+              [ swap [ drop ] dip dup calc_lex@1.token_kind 10 =
+                [ drop inl 0 ]
+                [ drop drop nil inr -3 ] if ]
+              list.case ]
+          [ inr -3 ]
+          case ]
+        [ ] if
+        name_reference_pack
+    ]
+
+    # Size certification starts the one-byte comparison for each parameter.
+    # A byte tick cannot run at zero, so skipping this is never success.
+
+    signature validation_name_param_length forall<S:stack>
+        [ S NameReference -- S NameReference ! pure ]
+    def validation_name_param_length [
+        name_reference_unpack dup 0 =
+        [ drop
+          [ unpair
+            [ nil pair inl -5 ]
+            [ [ pair ] dip
+              [ dup unpair [ calc_env@1.name_size ] dip
+                calc_env@1.name_size = ] dip
+              swap
+              [ [ unpair ] dip cons pair inl 1 ]
+              [ [ unpair drop ] dip pair inl 0 ] if ]
+            list.case ]
+          [ inr 0 ]
+          case ]
+        [ ] if
+        name_reference_pack
+    ]
+
+    signature name_reference_byte_complete forall<S:stack>
+        [ S I64 Pair<calc_env@1.Name,calc_env@1.Name>
+          -- S I64 Pair<calc_env@1.Name,calc_env@1.Name> Bool ! pure ]
+    def name_reference_byte_complete [
+        [ dup ] dip swap
+        [ dup unpair drop calc_env@1.name_size ] dip
+        1 - rot [ = ] dip swap
+    ]
+
+    signature name_reference_byte_equal forall<S:stack>
+        [ S I64 Pair<calc_env@1.Name,calc_env@1.Name>
+          -- S I64 Pair<calc_env@1.Name,calc_env@1.Name> Bool ! pure ]
+    def name_reference_byte_equal [
+        [ dup ] dip dup rot 1 - calc_env@1.name_pair_byte_eq
+    ]
+
+    signature name_reference_keep_candidate forall<S:stack>
+        [ S I64 Pair<calc_env@1.Name,calc_env@1.Name> List<calc_env@1.Name>
+          -- S Sum<Pair<calc_env@1.Name,List<calc_env@1.Name>>,List<Pair<I64,Pair<I64,I64>>>> I64 ! pure ]
+    def name_reference_keep_candidate [
+        rot [ [ unpair ] dip cons pair inl ] dip
+    ]
+
+    signature name_reference_next_candidate forall<S:stack>
+        [ S I64 Pair<calc_env@1.Name,calc_env@1.Name> List<calc_env@1.Name>
+          -- S Sum<Pair<calc_env@1.Name,List<calc_env@1.Name>>,List<Pair<I64,Pair<I64,I64>>>> I64 ! pure ]
+    def name_reference_next_candidate [
+        rot drop [ unpair drop ] dip pair inl 0
+    ]
+
+    # A successful byte comparison records -(offset + 1000000). Only a
+    # separate guest transition can turn that checked byte into the next
+    # positive cursor. The fixed negative phases -1..-5 cannot be confused
+    # with a checked byte (source Text is limited to 262144 bytes).
+
+    signature validation_name_param_compare forall<S:stack>
+        [ S NameReference -- S NameReference ! pure ]
+    def validation_name_param_compare [
+        name_reference_unpack dup 0 i64.cmp 1 =
+        [ swap dup rot swap
+          [ unpair
+            [ drop drop -5 ]
+            [ drop pair [ dup ] dip swap 1 - calc_env@1.name_pair_byte_eq
+              [ 0 swap - 1000000 - ] [ drop -7 ] if ]
+            list.case ]
+          [ drop ]
+          case ]
+        [ ] if
+        name_reference_pack
+    ]
+
+    # A byte mismatch (-7) is a separate guest step: drop this candidate and
+    # restart the size check on the next parameter.
+
+    signature validation_name_param_next forall<S:stack>
+        [ S NameReference -- S NameReference ! pure ]
+    def validation_name_param_next [
+        name_reference_unpack dup -7 =
+        [ drop
+          [ unpair [ nil ] [ swap drop ] list.case pair inl ]
+          [ inr ]
+          case 0 ]
+        [ ] if
+        name_reference_pack
+    ]
+
+    signature validation_name_param_commit_byte forall<S:stack>
+        [ S NameReference -- S NameReference ! pure ]
+    def validation_name_param_commit_byte [
+        name_reference_unpack
+        dup -1000000 i64.cmp -1 =
+        [ 0 swap - 999999 - ] [ ] if
+        name_reference_pack
+    ]
+
+    # Exactly the known-length, byte-by-byte certified candidate can match.
+
+    signature validation_name_param_complete forall<S:stack>
+        [ S NameReference -- S NameReference ! pure ]
+    def validation_name_param_complete [
+        name_reference_unpack dup 0 i64.cmp 1 =
+        [ swap
+          [ unpair
+            [ swap drop nil pair inl -5 ]
+            [ [ pair ] dip
+              [ name_reference_byte_complete ] dip swap
+              [ name_reference_keep_candidate drop -4 ]
+              [ name_reference_next_candidate ] if ]
+            list.case ]
+          [ inr swap ]
+          case ]
+        [ ] if
+        name_reference_pack
+    ]
+
+    signature validation_advance_checked forall<S:stack>
+        [ S ValidationSession
+          -- S ValidationSession Bool ! pure ]
+    export validation_advance_checked
+    def validation_advance_checked [
+        dup ValidationSession.into unpair swap drop
+        unpair swap drop unpair swap drop
+        [ validation_advance true ]
+        [ false ] if
+    ]
+
+    # Only an exhausted source RPN can issue the private install capability.
+    # Consume the session exactly once, testing the same admitted plan that
+    # will be installed rather than a second caller-provided cursor.
+
+    signature validation_finish_outcome forall<S:stack>
+        [ S ValidationSession -- S FinishedSession ! pure ]
+    export validation_finish_outcome
+    def validation_finish_outcome [
+        ValidationSession.into unpair unpair unpair drop
+        [ dup admission_pending ] dip swap
+        [ pair pair ValidatedAdmission.new FinishedSession.Ready ]
+        [ drop drop drop drop drop
+          unit BodyBeginFailure.Metadata FinishedSession.Failed ]
+        list.case
+    ]
+
+    signature validation_pending_fault forall<S:stack>
+        [ S ValidationSession -- S BodyFault ! pure ]
+    export validation_pending_fault
+    def validation_pending_fault [
+        ValidationSession.into unpair swap drop unpair drop
+        dup admission_pending
+        [ admission_name calc_env@1.name_span BodyFault.Malformed ]
+        [ swap [ drop ] dip swap drop
+          calc_lex@1.token_span BodyFault.Malformed ]
+        list.case
+    ]
+
+    signature validation_from_parts forall<S:stack>
+        [ S calc_env@1.State calc_env@1.Name List<calc_env@1.Name>
+            Pair<expr@1.Plan,num@1.Budget>
+          -- S ValidationSession ! pure ]
+    def validation_from_parts [
+        unpair [ expr@1.checked_body admission_new ] dip
+        false pair pair pair ValidationSession.new
+    ]
+
+    # Construct only from the original State, header outcome and checked
+    # parser Plan/Budget in one guest branch. No detached Admission/Budget
+    # exists at any exported boundary before this sealed capability is made.
+
+    signature begin_session_start forall<S:stack>
+        [ S calc_env@1.State
+            result@1.Result<Pair<calc_env@1.Name,List<calc_env@1.Name>>,Unit>
+            result@1.Result<Pair<expr@1.Plan,num@1.Budget>,expr@1.Diagnostic>
+          -- S BeginSession ! pure ]
+    export begin_session_start
+    def begin_session_start [
+        [ swap
+          [ swap [ unpair ] dip validation_from_parts
+            BeginSession.Ready ]
+          [ drop drop drop unit BodyBeginFailure.Metadata BeginSession.Failed ]
+          result@1.Result.match ]
+        [ [ drop ] dip swap drop
+          expr@1.compact_diagnostic
+          BodyBeginFailure.Parse BeginSession.Failed ]
+        result@1.Result.match
+    ]
+
+    # Only the sealed owner may start a Name route. Failed construction
+    # preserves its original failure instead of creating a session.
+
+    signature begin_session_name_begin forall<S:stack>
+        [ S BeginSession -- S BeginName ! pure ]
+    export begin_session_name_begin
+    def begin_session_name_begin [
+        [ validation_name_begin BeginName.Ready ]
+        [ BeginName.Failed ]
+        BeginSession.match
+    ]
+
+    signature begin_name_extract forall<S:stack>
+        [ S BeginName -- S BeginName ! pure ]
+    export begin_name_extract
+    def begin_name_extract [
+        [ validation_name_extract BeginName.Ready ]
+        [ BeginName.Failed ] BeginName.match
+    ]
+
+    signature begin_name_params forall<S:stack>
+        [ S BeginName -- S BeginName ! pure ]
+    export begin_name_params
+    def begin_name_params [
+        [ validation_name_params BeginName.Ready ]
+        [ BeginName.Failed ] BeginName.match
+    ]
+
+    signature begin_name_guard forall<S:stack>
+        [ S BeginName -- S BeginName ! pure ]
+    export begin_name_guard
+    def begin_name_guard [
+        [ validation_name_guard BeginName.Ready ]
+        [ BeginName.Failed ] BeginName.match
+    ]
+
+    signature begin_name_param_length forall<S:stack>
+        [ S BeginName -- S BeginName ! pure ]
+    export begin_name_param_length
+    def begin_name_param_length [
+        [ validation_name_param_length BeginName.Ready ]
+        [ BeginName.Failed ] BeginName.match
+    ]
+
+    signature begin_name_param_next forall<S:stack>
+        [ S BeginName -- S BeginName ! pure ]
+    export begin_name_param_next
+    def begin_name_param_next [
+        [ validation_name_param_next BeginName.Ready ]
+        [ BeginName.Failed ] BeginName.match
+    ]
+
+    signature begin_name_param_compare forall<S:stack>
+        [ S BeginName -- S BeginName ! pure ]
+    export begin_name_param_compare
+    def begin_name_param_compare [
+        [ validation_name_param_compare BeginName.Ready ]
+        [ BeginName.Failed ] BeginName.match
+    ]
+
+    signature begin_name_param_commit_byte forall<S:stack>
+        [ S BeginName -- S BeginName ! pure ]
+    export begin_name_param_commit_byte
+    def begin_name_param_commit_byte [
+        [ validation_name_param_commit_byte BeginName.Ready ]
+        [ BeginName.Failed ] BeginName.match
+    ]
+
+    signature begin_name_param_complete forall<S:stack>
+        [ S BeginName -- S BeginName ! pure ]
+    export begin_name_param_complete
+    def begin_name_param_complete [
+        [ validation_name_param_complete BeginName.Ready ]
+        [ BeginName.Failed ] BeginName.match
+    ]
+
+    signature begin_name_finish_parameter forall<S:stack>
+        [ S BeginName -- S BeginSession Bool ! pure ]
+    export begin_name_finish_parameter
+    def begin_name_finish_parameter [
+        [ name_reference_unpack dup -4 =
+          [ drop drop validation_mark_checked BeginSession.Ready true ]
+          [ drop drop BeginSession.Ready false ] if ]
+        [ BeginSession.Failed false ]
+        BeginName.match
+    ]
+
+    signature begin_name_cursor forall<S:stack>
+        [ S BeginName -- S BeginName I64 ! pure ]
+    export begin_name_cursor
+    def begin_name_cursor [
+        [ NameReference.into unpair unpair
+          dup [ pair pair NameReference.new BeginName.Ready ] dip ]
+        [ BeginName.Failed -3 ]
+        BeginName.match
+    ]
+
+    signature begin_name_global forall<S:stack>
+        [ S BeginName -- S Sum<NameGlobalSlim,BodyBeginFailure> ! pure ]
+    export begin_name_global
+    def begin_name_global [
+        [ validation_name_global_slim_begin inl ]
+        [ inr ] BeginName.match
+    ]
+
+    signature validation_name_finish_parameter forall<S:stack>
+        [ S NameReference -- S ValidationSession Bool ! pure ]
+    export validation_name_finish_parameter
+    def validation_name_finish_parameter [
+        name_reference_unpack dup -4 =
+        [ drop drop validation_mark_checked true ]
+        [ drop drop false ] if
+    ]
+
+    # Scheduling metadata is observed, never accepted back as an authority.
+    # -3 is invalid, -2/-1 are projection phases, 0 is size, positive is a
+    # source byte/complete decision, encoded negatives await byte commit,
+    # -4 is parameter success, and -5 is captured-global fallback.
+
+    signature validation_name_cursor forall<S:stack>
+        [ S NameReference -- S NameReference I64 ! pure ]
+    export validation_name_cursor
+    def validation_name_cursor [
+        NameReference.into unpair unpair
+        dup [ pair pair NameReference.new ] dip
+    ]
+
+    signature begin_session_check_ordinary forall<S:stack>
+        [ S BeginSession -- S BeginSession Bool ! pure ]
+    export begin_session_check_ordinary
+    def begin_session_check_ordinary [
+        [ validation_check_ordinary
+          [ BeginSession.Ready ] dip ]
+        [ BeginSession.Failed false ]
+        BeginSession.match
+    ]
+
+    signature begin_session_peek forall<S:stack>
+        [ S BeginSession
+          -- S BeginSession
+               result@1.Result<Pair<I64,Pair<I64,I64>>,Unit> Bool ! pure ]
+    export begin_session_peek
+    def begin_session_peek [
+        [ validation_peek
+          [ [ BeginSession.Ready ] dip ] dip ]
+        [ BeginSession.Failed unit result@1.Result.Err false ]
+        BeginSession.match
+    ]
+
+    signature begin_session_advance_checked forall<S:stack>
+        [ S BeginSession -- S BeginSession Bool ! pure ]
+    export begin_session_advance_checked
+    def begin_session_advance_checked [
+        [ validation_advance_checked
+          [ BeginSession.Ready ] dip ]
+        [ BeginSession.Failed false ]
+        BeginSession.match
+    ]
+
+    # Consume the same unforgeable session the caller traversed. Preserve a
+    # failed parser/header admission instead of treating it as an empty body.
+
+    signature begin_session_finish_outcome forall<S:stack>
+        [ S BeginSession
+          -- S FinishedSession ! pure ]
+    export begin_session_finish_outcome
+    def begin_session_finish_outcome [
+        [ validation_finish_outcome ]
+        [ FinishedSession.Failed ]
+        BeginSession.match
+    ]
+
+    # Expose a failed original parser/header result for its source span without
+    # unwrapping a ready EOF capability into a forgeable generic value.
+
+    signature finished_session_begin_failure forall<S:stack>
+        [ S FinishedSession
+          -- S result@1.Result<BodyBeginFailure,Unit> ! pure ]
+    export finished_session_begin_failure
+    def finished_session_begin_failure [
+        [ drop unit result@1.Result.Err ]
+        [ result@1.Result.Ok ]
+        FinishedSession.match
+    ]
+
+    # A peek never advances the private cursor. Callers may schedule the
+    # matching validator, but they cannot mark this token as checked.
+
+    signature validation_peek forall<S:stack>
+        [ S ValidationSession
+          -- S ValidationSession
+               result@1.Result<Pair<I64,Pair<I64,I64>>,Unit> Bool ! pure ]
+    export validation_peek
+    def validation_peek [
+        dup ValidationSession.into unpair swap drop unpair drop
+        admission_pending
+        [ unit result@1.Result.Err false ]
+        [ swap [ drop ] dip result@1.Result.Ok true ]
+        list.case
+    ]
+
+    signature body_missing_diagnostic forall<S:stack>
+        [ S result@1.Result<calc_env@1.Failure,Unit>
+          -- S result@1.Result<expr@1.Diagnostic,Unit> ! pure ]
+    export body_missing_diagnostic
+    def body_missing_diagnostic [
+        [ expr@1.env_failure_diagnostic result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature body_commit_checked forall<S:stack>
+        [ S ValidatedAdmission -- S Pair<calc_env@1.State,num@1.Budget> ! pure ]
+    export body_commit_checked
+    def body_commit_checked [
+        ValidatedAdmission.into unpair unpair
+        [ install_validated ] dip pair
+    ]
+
+    signature finished_session_commit_checked forall<S:stack>
+        [ S FinishedSession
+          -- S result@1.Result<Pair<calc_env@1.State,num@1.Budget>,Unit> ! pure ]
+    export finished_session_commit_checked
+    def finished_session_commit_checked [
+        [ body_commit_checked result@1.Result.Ok ]
+        [ drop unit result@1.Result.Err ]
+        FinishedSession.match
+    ]
+
+    # A caller cannot unwrap an opaque seal from a JSON readiness check.
+    # Only the real exhausted-RPN success arm owns an install capability;
+    # the failed arm preserves failure without an invented State or Name.
+
+    # The State and Budget remain inside the unmodified sealed session;
+    # only the original variable-list cursor and a guest phase are cached.
+    # Source Name is reconstructed from admitted Text and pending RPN token.
+
+    signature validation_name_global_slim_begin forall<S:stack>
+        [ S NameReference -- S NameGlobalSlim ! pure ]
+    export validation_name_global_slim_begin
+    def validation_name_global_slim_begin [
+        name_reference_unpack dup -5 =
+        [ drop
+          [ drop dup ValidationSession.into unpair drop
+            calc_env@1.state_variables 0 ]
+          [ drop nil -4 ]
+          case ]
+        [ drop drop nil -4 ] if
+        pair pair NameGlobalSlim.new
+    ]
+
+    signature validation_name_global_slim_unpack forall<S:stack>
+        [ S NameGlobalSlim
+          -- S ValidationSession List<calc_env@1.Variable> I64 ! pure ]
+    def validation_name_global_slim_unpack [
+        NameGlobalSlim.into unpair unpair
+    ]
+
+    signature validation_name_global_slim_pack forall<S:stack>
+        [ S ValidationSession List<calc_env@1.Variable> I64
+          -- S NameGlobalSlim ! pure ]
+    def validation_name_global_slim_pack [ pair pair NameGlobalSlim.new ]
+
+    signature validation_name_global_slim_cursor forall<S:stack>
+        [ S NameGlobalSlim -- S NameGlobalSlim I64 ! pure ]
+    export validation_name_global_slim_cursor
+    def validation_name_global_slim_cursor [
+        validation_name_global_slim_unpack
+        dup [ validation_name_global_slim_pack ] dip
+    ]
+
+    signature validation_name_global_source_size forall<S:stack>
+        [ S ValidationSession -- S I64 ! pure ]
+    export validation_name_global_source_size
+    def validation_name_global_source_size [
+        ValidationSession.into unpair swap drop unpair drop
+        admission_pending
+        [ -1 ]
+        [ drop calc_lex@1.token_span unpair swap - ]
+        list.case
+    ]
+
+
+    signature global_slim_candidate_length forall<S:stack>
+        [ S I64 calc_env@1.Variable List<calc_env@1.Variable>
+          -- S List<calc_env@1.Variable> I64 ! pure ]
+    def global_slim_candidate_length [
+        [ dup calc_env@1.variable_name calc_env@1.name_size ] dip
+        swap [ cons ] dip
+        rot =
+        [ 1 ]
+        [ [ nil -5 ] [ swap drop 0 ] list.case ] if
+    ]
+
+    signature global_slim_length_step forall<S:stack>
+        [ S List<calc_env@1.Variable> I64 I64
+          -- S List<calc_env@1.Variable> I64 ! pure ]
+    def global_slim_length_step [
+        swap dup 0 =
+        [ drop swap
+          [ drop nil -5 ]
+          [ global_slim_candidate_length ]
+          list.case ]
+        [ swap drop ] if
+    ]
+
+    signature validation_name_global_slim_length forall<S:stack>
+        [ S NameGlobalSlim -- S NameGlobalSlim ! pure ]
+    export validation_name_global_slim_length
+    def validation_name_global_slim_length [
+        validation_name_global_slim_unpack pair
+        [ dup validation_name_global_source_size ] dip
+        swap pair swap
+        [ unpair [ unpair ] dip
+          global_slim_length_step pair ] dip
+        swap unpair validation_name_global_slim_pack
+    ]
+
+    # A matched byte keeps the candidate at the head of the cursor list, so
+    # every later byte and the completion compare the same variable; a
+    # mismatch drops only that candidate.
+    signature validation_name_global_slim_compare forall<S:stack>
+        [ S NameGlobalSlim -- S NameGlobalSlim ! pure ]
+    export validation_name_global_slim_compare
+    def validation_name_global_slim_compare [
+        NameGlobalSlim.into unpair unpair pair
+        [ dup ValidationSession.into unpair swap drop unpair drop
+          dup Admission.into unpair swap drop unpair swap drop
+          unpair drop unpair drop
+          swap Admission.into unpair swap drop unpair swap drop
+          unpair swap drop
+          [ drop nil ]
+          [ drop calc_env@1.name_from_token nil cons ]
+          list.case ] dip
+        swap pair swap
+        [ unpair [ unpair ] dip
+          [ dup 0 i64.cmp 1 = ] dip swap
+          [ [ drop drop nil -4 ]
+            [ drop rot
+              [ drop drop nil -5 ]
+              [ [ dup calc_env@1.variable_name ] dip
+                [ swap ] dip cons
+                [ pair ] dip
+                [ [ dup ] dip dup rot 1 - calc_env@1.name_pair_byte_eq ] dip
+                swap
+                [ [ drop ] dip swap 0 swap - 1000000 - ]
+                [ [ drop ] dip swap drop [ nil ] [ swap drop ] list.case 0 ]
+                if ]
+              list.case ]
+            list.case ]
+          [ drop ] if
+          pair ] dip
+        swap unpair pair pair NameGlobalSlim.new
+    ]
+
+    signature global_slim_commit_step forall<S:stack>
+        [ S List<calc_env@1.Variable> I64
+          -- S List<calc_env@1.Variable> I64 ! pure ]
+    def global_slim_commit_step [
+        dup -1000000 i64.cmp -1 =
+        [ 0 swap - 999999 - ] [ ] if
+    ]
+
+    signature validation_name_global_slim_commit_byte forall<S:stack>
+        [ S NameGlobalSlim -- S NameGlobalSlim ! pure ]
+    export validation_name_global_slim_commit_byte
+    def validation_name_global_slim_commit_byte [
+        validation_name_global_slim_unpack pair swap
+        [ unpair global_slim_commit_step pair ] dip
+        swap unpair validation_name_global_slim_pack
+    ]
+
+    signature global_slim_complete_step forall<S:stack>
+        [ S List<calc_env@1.Variable> I64 I64
+          -- S List<calc_env@1.Variable> I64 ! pure ]
+    def global_slim_complete_step [
+        swap dup 0 i64.cmp 1 =
+        [ dup 1 - rot =
+          [ drop -2 ] [ ] if ]
+        [ swap drop ] if
+    ]
+
+    signature validation_name_global_slim_complete forall<S:stack>
+        [ S NameGlobalSlim -- S NameGlobalSlim ! pure ]
+    export validation_name_global_slim_complete
+    def validation_name_global_slim_complete [
+        validation_name_global_slim_unpack pair
+        [ dup validation_name_global_source_size ] dip
+        swap pair swap
+        [ unpair [ unpair ] dip
+          global_slim_complete_step pair ] dip
+        swap unpair validation_name_global_slim_pack
+    ]
+
+    signature validation_name_global_slim_finish forall<S:stack>
+        [ S NameGlobalSlim -- S ValidationSession Bool ! pure ]
+    export validation_name_global_slim_finish
+    def validation_name_global_slim_finish [
+        validation_name_global_slim_unpack dup -2 =
+        [ drop drop validation_mark_checked true ]
+        [ drop drop false ] if
+    ]
+
+    signature validation_name_global_unknown forall<S:stack>
+        [ S ValidationSession -- S BodyFault ! pure ]
+    def validation_name_global_unknown [
+        dup ValidationSession.into unpair swap drop unpair drop
+        admission_pending
+        [ validation_pending_fault ]
+        [ drop calc_lex@1.token_span
+          calc_env@1.NameFailure.UnknownName calc_env@1.Failure.Name
+          BodyFault.Environment
+          [ drop ] dip ]
+        list.case
+    ]
+
+    signature validation_name_global_slim_fault forall<S:stack>
+        [ S NameGlobalSlim -- S BodyFault ! pure ]
+    export validation_name_global_slim_fault
+    def validation_name_global_slim_fault [
+        validation_name_global_slim_unpack
+        drop drop validation_name_global_unknown
+    ]
+
+    # Only the sealed owner may start a Name route. Failed construction
+    # preserves its original failure instead of creating a session.
+    signature begin_session_call_begin forall<S:stack>
+        [ S BeginSession -- S BeginCallSelf ! pure ]
+    export begin_session_call_begin
+    def begin_session_call_begin [
+        [ dup ValidationSession.into unpair swap drop unpair drop
+          admission_pending
+          [ dup ValidationSession.into unpair swap drop unpair drop
+            admission_name ]
+          [ drop
+            [ dup ValidationSession.into unpair swap drop unpair drop
+              admission_source ] dip
+            calc_env@1.name_from_token ] list.case
+          [ dup ValidationSession.into unpair swap drop unpair drop
+            admission_name ] dip pair
+          [ dup ValidationSession.into unpair swap drop unpair drop
+            admission_pending [ -1 ] [ drop calc_lex@1.token_kind ] list.case
+            100 i64.cmp -1 = [ -6 ] [ 1 ] if ] dip
+          swap pair pair CallSelf.new BeginCallSelf.Ready ]
+        [ BeginCallSelf.Failed ]
+        BeginSession.match
+    ]
+
+    signature call_self_name_pair forall<S:stack>
+        [ S CallSelf
+          -- S CallSelf Pair<calc_env@1.Name,calc_env@1.Name> ! pure ]
+    def call_self_name_pair [
+        dup CallSelf.into unpair swap drop unpair drop
+    ]
+
+    signature call_self_set_stage forall<S:stack>
+        [ S CallSelf I64 -- S CallSelf ! pure ]
+    def call_self_set_stage [
+        swap CallSelf.into unpair unpair drop
+        rot pair pair CallSelf.new
+    ]
+
+    signature call_self_stage forall<S:stack>
+        [ S CallSelf -- S I64 ! pure ]
+    def call_self_stage [
+        CallSelf.into unpair swap drop unpair swap drop
+    ]
+
+    signature call_self_length forall<S:stack>
+        [ S CallSelf -- S CallSelf Bool ! pure ]
+    def call_self_length [
+        call_self_name_pair unpair
+        calc_env@1.name_size swap calc_env@1.name_size =
+    ]
+
+    # Unequal self lengths pass to earlier historical functions; they never
+    # validate a call to this function itself.
+
+    signature begin_call_self_length forall<S:stack>
+        [ S BeginCallSelf -- S BeginCallSelf ! pure ]
+    export begin_call_self_length
+    def begin_call_self_length [
+        [ dup call_self_stage 1 =
+          [ call_self_length
+            [ 2 ] [ 0 ] if call_self_set_stage ]
+          [ ] if BeginCallSelf.Ready ]
+        [ BeginCallSelf.Failed ]
+        BeginCallSelf.match
+    ]
+
+    # A byte-match commits to a negative, protected intermediate stage. The
+    # next guest transition alone advances the source-derived byte index.
+
+    signature begin_call_self_compare forall<S:stack>
+        [ S BeginCallSelf -- S BeginCallSelf ! pure ]
+    export begin_call_self_compare
+    def begin_call_self_compare [
+        [ dup call_self_stage 1 i64.cmp 1 =
+          [ dup CallSelf.into unpair swap drop unpair
+            2 - calc_env@1.name_pair_byte_eq
+            [ dup call_self_stage 0 swap - 1000000 -
+              call_self_set_stage ]
+            [ 0 call_self_set_stage ] if ]
+          [ ] if BeginCallSelf.Ready ]
+        [ BeginCallSelf.Failed ]
+        BeginCallSelf.match
+    ]
+
+    signature begin_call_self_commit_byte forall<S:stack>
+        [ S BeginCallSelf -- S BeginCallSelf ! pure ]
+    export begin_call_self_commit_byte
+    def begin_call_self_commit_byte [
+        [ dup call_self_stage -1000000 i64.cmp -1 =
+          [ dup call_self_stage 0 swap - 999999 -
+            call_self_set_stage ]
+          [ ] if BeginCallSelf.Ready ]
+        [ BeginCallSelf.Failed ]
+        BeginCallSelf.match
+    ]
+
+    signature call_self_byte_complete forall<S:stack>
+        [ S CallSelf -- S CallSelf Bool ! pure ]
+    def call_self_byte_complete [
+        call_self_name_pair unpair drop calc_env@1.name_size
+        [ dup call_self_stage 2 - ] dip
+        =
+    ]
+
+    # Every source byte was compared and committed; self-recursion is an
+    # InvalidDefinition regardless of the supplied argument count.
+
+    signature begin_call_self_complete forall<S:stack>
+        [ S BeginCallSelf -- S BeginCallSelf ! pure ]
+    export begin_call_self_complete
+    def begin_call_self_complete [
+        [ dup call_self_stage 1 i64.cmp 1 =
+          [ call_self_byte_complete
+            [ -4 call_self_set_stage ]
+            [ ] if ]
+          [ ] if BeginCallSelf.Ready ]
+        [ BeginCallSelf.Failed ]
+        BeginCallSelf.match
+    ]
+
+
+    signature call_history_from_self forall<S:stack>
+        [ S CallSelf -- S CallHistory ! pure ]
+    def call_history_from_self [
+        CallSelf.into unpair unpair
+        [ drop ] dip
+        pair CallHistory.new
+    ]
+
+    # Self-validation phase remains private after capture. Only stage zero
+    # can enter the historical search; a recursive call stays stage -4.
+    signature begin_call_history forall<S:stack>
+        [ S BeginCallSelf -- S BeginCallHistory ! pure ]
+    export begin_call_history
+    def begin_call_history [
+        [ call_history_from_self BeginCallHistory.Ready ]
+        [ BeginCallHistory.Failed ]
+        BeginCallSelf.match
+    ]
+
+    # Each function's Name and stored formal count, in the same newest-first
+    # order: one pass collects them reversed, the second restores the order.
+    signature call_candidates forall<S:stack>
+        [ S List<calc_env@1.Function> -- S List<Pair<calc_env@1.Name,I64>> ! pure ]
+    def call_candidates [
+        nil pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ [ dup calc_env@1.function_name swap calc_env@1.function_arity pair
+              swap cons ] dip
+            swap pair true ]
+          list.case ] iterate
+        unpair swap drop
+        nil pair
+        [ unpair swap
+          [ nil swap pair false ]
+          [ [ swap cons ] dip swap pair true ]
+          list.case ] iterate
+        unpair swap drop
+    ]
+
+    # Only stage zero (another function) searches the history; a recursive
+    # call stays -4 and an incomplete self check becomes -6. The search reads
+    # each function's Name and stored formal count, newest first.
+    signature call_scan_begin forall<S:stack>
+        [ S CallHistory -- S CallScan ! pure ]
+    export call_scan_begin
+    def call_scan_begin [
+        CallHistory.into unpair swap
+        dup ValidationSession.into unpair drop calc_env@1.state_functions
+        swap [ call_candidates ] dip
+        rot [ swap ] dip
+        dup 0 = [ drop 0 ] [ -4 = [ -4 ] [ -6 ] if ] if
+        pair swap validation_clear_checked swap pair CallScan.new
+    ]
+
+    signature call_scan_unpack forall<S:stack>
+        [ S CallScan -- S ValidationSession List<Pair<calc_env@1.Name,I64>> I64 ! pure ]
+    def call_scan_unpack [ CallScan.into unpair unpair ]
+
+    signature call_scan_pack forall<S:stack>
+        [ S ValidationSession List<Pair<calc_env@1.Name,I64>> I64 -- S CallScan ! pure ]
+    def call_scan_pack [ pair pair CallScan.new ]
+
+    signature call_scan_candidate_length forall<S:stack>
+        [ S I64 Pair<calc_env@1.Name,I64> List<Pair<calc_env@1.Name,I64>>
+          -- S List<Pair<calc_env@1.Name,I64>> I64 ! pure ]
+    def call_scan_candidate_length [
+        [ dup unpair drop calc_env@1.name_size ] dip
+        swap [ cons ] dip
+        rot =
+        [ 1 ]
+        [ [ nil -5 ] [ swap drop 0 ] list.case ] if
+    ]
+
+    signature call_scan_length_step forall<S:stack>
+        [ S List<Pair<calc_env@1.Name,I64>> I64 I64
+          -- S List<Pair<calc_env@1.Name,I64>> I64 ! pure ]
+    def call_scan_length_step [
+        swap dup 0 =
+        [ drop swap
+          [ drop nil -5 ]
+          [ call_scan_candidate_length ]
+          list.case ]
+        [ swap drop ] if
+    ]
+
+    signature call_scan_length forall<S:stack>
+        [ S CallScan -- S CallScan ! pure ]
+    export call_scan_length
+    def call_scan_length [
+        call_scan_unpack pair
+        [ dup validation_name_global_source_size ] dip
+        swap pair swap
+        [ unpair [ unpair ] dip
+          call_scan_length_step pair ] dip
+        swap unpair call_scan_pack
+    ]
+
+    # As for captured globals, a matched byte keeps the candidate function at
+    # the head, so the completion and arity check read that same function.
+    signature call_scan_compare forall<S:stack>
+        [ S CallScan -- S CallScan ! pure ]
+    export call_scan_compare
+    def call_scan_compare [
+        CallScan.into unpair unpair pair
+        [ dup ValidationSession.into unpair swap drop unpair drop
+          dup Admission.into unpair swap drop unpair swap drop
+          unpair drop unpair drop
+          swap Admission.into unpair swap drop unpair swap drop
+          unpair swap drop
+          [ drop nil ]
+          [ drop calc_env@1.name_from_token nil cons ]
+          list.case ] dip
+        swap pair swap
+        [ unpair [ unpair ] dip
+          [ dup 0 i64.cmp 1 = ] dip swap
+          [ [ drop drop nil -4 ]
+            [ drop rot
+              [ drop drop nil -5 ]
+              [ [ dup unpair drop ] dip
+                [ swap ] dip cons
+                [ pair ] dip
+                [ [ dup ] dip dup rot 1 - calc_env@1.name_pair_byte_eq ] dip
+                swap
+                [ [ drop ] dip swap 0 swap - 1000000 - ]
+                [ [ drop ] dip swap drop [ nil ] [ swap drop ] list.case 0 ]
+                if ]
+              list.case ]
+            list.case ]
+          [ drop ] if
+          pair ] dip
+        swap unpair pair pair CallScan.new
+    ]
+
+
+    signature call_scan_commit_step forall<S:stack>
+        [ S List<Pair<calc_env@1.Name,I64>> I64
+          -- S List<Pair<calc_env@1.Name,I64>> I64 ! pure ]
+    def call_scan_commit_step [
+        dup -1000000 i64.cmp -1 =
+        [ 0 swap - 999999 - ] [ ] if
+    ]
+
+    signature call_scan_commit_byte forall<S:stack>
+        [ S CallScan -- S CallScan ! pure ]
+    export call_scan_commit_byte
+    def call_scan_commit_byte [
+        call_scan_unpack pair swap
+        [ unpair call_scan_commit_step pair ] dip
+        swap unpair call_scan_pack
+    ]
+
+    signature call_scan_complete_step forall<S:stack>
+        [ S List<Pair<calc_env@1.Name,I64>> I64 I64
+          -- S List<Pair<calc_env@1.Name,I64>> I64 ! pure ]
+    def call_scan_complete_step [
+        swap dup 0 i64.cmp 1 =
+        [ dup 1 - rot =
+          [ drop -2 ] [ ] if ]
+        [ swap drop ] if
+    ]
+
+    signature call_scan_complete forall<S:stack>
+        [ S CallScan -- S CallScan ! pure ]
+    export call_scan_complete
+    def call_scan_complete [
+        call_scan_unpack pair
+        [ dup validation_name_global_source_size ] dip
+        swap pair swap
+        [ unpair [ unpair ] dip
+          call_scan_complete_step pair ] dip
+        swap unpair call_scan_pack
+    ]
+
+    signature validation_call_self_fault forall<S:stack>
+        [ S ValidationSession -- S BodyFault ! pure ]
+    def validation_call_self_fault [
+        dup ValidationSession.into unpair swap drop unpair drop
+        admission_pending
+        [ validation_pending_fault ]
+        [ drop calc_lex@1.token_span
+          calc_env@1.Failure.InvalidDefinition
+          BodyFault.Environment
+          [ drop ] dip ]
+        list.case
+    ]
+
+    signature call_scan_arity_step forall<S:stack>
+        [ S List<Pair<calc_env@1.Name,I64>> I64
+          -- S List<Pair<calc_env@1.Name,I64>> I64 ! pure ]
+    def call_scan_arity_step [
+        dup -2 =
+        [ drop
+          dup
+          [ -6 ]
+          [ [ unpair swap drop ] dip
+            drop 0 swap - 2000000 - ]
+          list.case ]
+        [ drop -6 ] if
+    ]
+
+    signature call_scan_function_arity forall<S:stack>
+        [ S CallScan -- S CallArity ! pure ]
+    export call_scan_function_arity
+    def call_scan_function_arity [
+        call_scan_unpack pair swap
+        [ unpair call_scan_arity_step pair ] dip
+        swap unpair pair pair CallArity.new
+    ]
+
+    signature validation_call_pending_arity forall<S:stack>
+        [ S ValidationSession -- S I64 ! pure ]
+    def validation_call_pending_arity [
+        ValidationSession.into unpair swap drop unpair drop
+        admission_pending
+        [ -1 ]
+        [ drop calc_lex@1.token_kind 100 - ]
+        list.case
+    ]
+
+    signature call_scan_arity_compare_step forall<S:stack>
+        [ S List<Pair<calc_env@1.Name,I64>> I64 I64
+          -- S List<Pair<calc_env@1.Name,I64>> I64 ! pure ]
+    def call_scan_arity_compare_step [
+        swap dup -1999999 i64.cmp -1 =
+        [ 0 swap - 2000000 - =
+          [ -3 ] [ -7 ] if ]
+        [ swap drop ] if
+    ]
+
+    signature call_scan_check_arity forall<S:stack>
+        [ S CallArity -- S CallArity ! pure ]
+    export call_scan_check_arity
+    def call_scan_check_arity [
+        CallArity.into unpair unpair pair
+        [ dup validation_call_pending_arity ] dip
+        swap pair swap
+        [ unpair [ unpair ] dip
+          call_scan_arity_compare_step pair ] dip
+        swap unpair pair pair CallArity.new
+    ]
+
+    # An unchecked session may be returned but cannot pass the original
+    # checked advancement gate or install its body; only the arity-bound
+    # private stage can write the actual checked bit.
+    signature validation_call_wrong_arity_fault forall<S:stack>
+        [ S ValidationSession -- S BodyFault ! pure ]
+    def validation_call_wrong_arity_fault [
+        dup ValidationSession.into unpair swap drop unpair drop
+        admission_pending
+        [ validation_pending_fault ]
+        [ drop calc_lex@1.token_span
+          calc_env@1.NameFailure.WrongArity calc_env@1.Failure.Name
+          BodyFault.Environment
+          [ drop ] dip ]
+        list.case
+    ]
+
+    signature call_scan_fault forall<S:stack>
+        [ S CallScan -- S BodyFault ! pure ]
+    export call_scan_fault
+    def call_scan_fault [
+        call_scan_unpack swap drop
+        dup -4 =
+        [ drop validation_call_self_fault ]
+        [ dup -5 =
+          [ drop validation_name_global_unknown ]
+          [ drop validation_pending_fault ] if ] if
+    ]
+
+    signature call_arity_fault forall<S:stack>
+        [ S CallArity -- S BodyFault ! pure ]
+    export call_arity_fault
+    def call_arity_fault [
+        CallArity.into unpair unpair swap drop
+        dup -7 =
+        [ drop validation_call_wrong_arity_fault ]
+        [ drop validation_pending_fault ] if
+    ]
+
+    # A failed begin keeps its original failure instead of opening a search.
+    signature begin_call_scan forall<S:stack>
+        [ S BeginCallHistory -- S BeginCallScan ! pure ]
+    export begin_call_scan
+    def begin_call_scan [
+        [ call_scan_begin BeginCallScan.Ready ]
+        [ BeginCallScan.Failed ]
+        BeginCallHistory.match
+    ]
+
+    signature begin_call_scan_cursor forall<S:stack>
+        [ S BeginCallScan -- S BeginCallScan I64 ! pure ]
+    export begin_call_scan_cursor
+    def begin_call_scan_cursor [
+        [ CallScan.into unpair unpair dup [ pair pair CallScan.new BeginCallScan.Ready ] dip ]
+        [ BeginCallScan.Failed -100 ]
+        BeginCallScan.match
+    ]
+
+    # Host-scheduled search transitions. Each checks its own guest stage, so a
+    # mis-scheduled one leaves the search unchanged; only a found function
+    # (-2) reaches the arity check, and only an equal arity reaches -3.
+    signature begin_call_scan_length forall<S:stack>
+        [ S BeginCallScan -- S BeginCallScan ! pure ]
+    export begin_call_scan_length
+    def begin_call_scan_length [
+        [ call_scan_length BeginCallScan.Ready ]
+        [ BeginCallScan.Failed ]
+        BeginCallScan.match
+    ]
+
+    signature begin_call_scan_compare forall<S:stack>
+        [ S BeginCallScan -- S BeginCallScan ! pure ]
+    export begin_call_scan_compare
+    def begin_call_scan_compare [
+        [ call_scan_compare BeginCallScan.Ready ]
+        [ BeginCallScan.Failed ]
+        BeginCallScan.match
+    ]
+
+    signature begin_call_scan_commit_byte forall<S:stack>
+        [ S BeginCallScan -- S BeginCallScan ! pure ]
+    export begin_call_scan_commit_byte
+    def begin_call_scan_commit_byte [
+        [ call_scan_commit_byte BeginCallScan.Ready ]
+        [ BeginCallScan.Failed ]
+        BeginCallScan.match
+    ]
+
+    signature begin_call_scan_complete forall<S:stack>
+        [ S BeginCallScan -- S BeginCallScan ! pure ]
+    export begin_call_scan_complete
+    def begin_call_scan_complete [
+        [ call_scan_complete BeginCallScan.Ready ]
+        [ BeginCallScan.Failed ]
+        BeginCallScan.match
+    ]
+
+    signature begin_call_scan_arity forall<S:stack>
+        [ S BeginCallScan -- S BeginCallScan ! pure ]
+    export begin_call_scan_arity
+    def begin_call_scan_arity [
+        [ call_scan_function_arity call_scan_check_arity CallArity.into CallScan.new BeginCallScan.Ready ]
+        [ BeginCallScan.Failed ]
+        BeginCallScan.match
+    ]
+
+    # Only the arity-bound -3 stage marks the call token checked; any other
+    # search returns the session unchecked.
+    signature begin_call_scan_finish forall<S:stack>
+        [ S BeginCallScan -- S BeginSession Bool ! pure ]
+    export begin_call_scan_finish
+    def begin_call_scan_finish [
+        [ CallScan.into unpair unpair -3 =
+          [ drop validation_mark_checked BeginSession.Ready true ]
+          [ drop BeginSession.Ready false ] if ]
+        [ BeginSession.Failed false ]
+        BeginCallScan.match
+    ]
+
+    # Self-recursion or an unknown function at the call span; Ok carries no
+    # value and marks an original begin failure.
+    signature begin_call_scan_diagnostic forall<S:stack>
+        [ S BeginCallScan -- S result@1.Result<Unit,expr@1.Diagnostic> ! pure ]
+    export begin_call_scan_diagnostic
+    def begin_call_scan_diagnostic [
+        [ call_scan_fault body_fault_diagnostic result@1.Result.Err ]
+        [ drop unit result@1.Result.Ok ]
+        BeginCallScan.match
+    ]
+
+    # A found function whose stored formal count differs: WrongArity at the
+    # call span.
+    signature begin_call_arity_diagnostic forall<S:stack>
+        [ S BeginCallScan -- S result@1.Result<Unit,expr@1.Diagnostic> ! pure ]
+    export begin_call_arity_diagnostic
+    def begin_call_arity_diagnostic [
+        [ CallScan.into CallArity.new call_arity_fault body_fault_diagnostic
+          result@1.Result.Err ]
+        [ drop unit result@1.Result.Ok ]
+        BeginCallScan.match
+    ]
+
+
+    signature fn_param_route_name_compact forall<S:stack>
+        [ S ParamRun -- S ParamRun I64 ! pure ]
+    export fn_param_route_name_compact
+    def fn_param_route_name_compact [
+        dup
+        [ dup ParamFrame.into unpair drop cursor_kind swap drop
+          dup 10 = [ drop drop 1 ]
+          [ 7 =
+            [ ParamFrame.into unpair swap drop unpair swap drop unpair drop
+              [ 0 ] [ drop drop 3 ] list.case ]
+            [ drop 3 ] if ] if ]
+        [ drop 4 ]
+        ParamRun.match
+    ]
+
+    signature fn_param_route_delimiter_compact forall<S:stack>
+        [ S ParamRun -- S ParamRun I64 ! pure ]
+    export fn_param_route_delimiter_compact
+    def fn_param_route_delimiter_compact [
+        dup
+        [ dup ParamFrame.into unpair drop cursor_kind swap drop
+          dup 8 = [ drop drop 2 ]
+          [ 7 = [ drop 0 ] [ drop 3 ] if ] if ]
+        [ drop 4 ]
+        ParamRun.match
+    ]
+
+    signature fn_param_append_compact forall<S:stack>
+        [ S ParamRun -- S ParamRun ! pure ]
+    export fn_param_append_compact
+    def fn_param_append_compact [
+        [ dup ParamFrame.into unpair drop
+          cursor_peek dup calc_lex@1.token_kind 10 =
+          [ [ dup Cursor.into unpair drop ] dip
+            calc_env@1.name_from_token
+            [ Cursor.into unpair
+              [ nil ] [ swap drop ] list.case
+              pair Cursor.new ] dip
+            pair result@1.Result.Ok ]
+          [ drop cursor_syntax result@1.Result.Err ] if
+          [ [ ParamFrame.into unpair unpair unpair ] dip
+            [ drop ] dip
+            unpair rot cons
+            [ [ [ drop ] dip ] dip ] dip
+            [ swap ] dip false
+            pair pair pair ParamFrame.new ParamRun.Pending ]
+          [ swap drop ParamFinal.Failed ParamRun.Final ]
+          result@1.Result.match ]
+        [ ParamRun.Final ] ParamRun.match
+    ]
+
+    signature fn_end_validation_commit_compact forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>,HeaderFailure>
+            result@1.Result<calc_env@1.Validation,Unit>
+          -- S result@1.Result<Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>,HeaderFailure> ! pure ]
+    export fn_end_validation_commit_compact
+    def fn_end_validation_commit_compact [
+        [ calc_env@1.validation_end
+          [ drop ]
+          [ [ drop ] dip header_from_env result@1.Result.Err ]
+          result@1.Result.match ]
+        [ drop ]
+        result@1.Result.match
+    ]
+
+    # Appended Stage 2: the sealed let header path (abi-safe-trimmed e90d8684).
+    signature definition_name_finish forall<S:stack>
+        [ S Cursor result@1.Result<calc_env@1.Name,Unit>
+          -- S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure> ! pure ]
+    export definition_name_finish
+    def definition_name_finish [
+        [ [ cursor_advance ] dip pair result@1.Result.Ok ]
+        [ drop cursor_syntax result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature header_let_metadata forall<S:stack>
+        [ S result@1.Result<Command,HeaderFailure>
+          -- S result@1.Result<calc_env@1.Name,Unit> ! pure ]
+    export header_let_metadata
+    def header_let_metadata [
+        [ [ drop unit result@1.Result.Err ]
+          [ [ unpair drop result@1.Result.Ok ]
+            [ drop unit result@1.Result.Err ]
+            Definition.match ]
+          Command.match ]
+        [ drop unit result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature let_equals_checked forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure>
+          -- S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure> ! pure ]
+    export let_equals_checked
+    def let_equals_checked [
+        [ unpair [ 14 pop_kind ] dip swap
+          [ swap pair result@1.Result.Ok ]
+          [ swap drop result@1.Result.Err ]
+          result@1.Result.match ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature let_body_valid forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure>
+          -- S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure> ! pure ]
+    export let_body_valid
+    def let_body_valid [
+        [ unpair [ cursor_kind 0 = ] dip swap
+          [ drop cursor_syntax result@1.Result.Err ]
+          [ pair result@1.Result.Ok ]
+          if ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature let_body_finish forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,calc_env@1.Name>,HeaderFailure>
+          -- S result@1.Result<Command,HeaderFailure> ! pure ]
+    export let_body_finish
+    def let_body_finish [
+        [ unpair [ cursor_tokens ] dip swap pair
+          Definition.Let Command.Defined result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_param_append_cursor forall<S:stack>
+        [ S ParamRun -- S ParamRun result@1.Result<Cursor,ParamFinal> ! pure ]
+    export fn_param_append_cursor
+    def fn_param_append_cursor [
+        dup
+        [ param_cursor result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        ParamRun.match
+    ]
+
+    signature fn_param_append_word_peek forall<S:stack>
+        [ S result@1.Result<Cursor,ParamFinal>
+          -- S result@1.Result<Pair<Cursor,Pair<I64,Pair<I64,I64>>>,ParamFinal> ! pure ]
+    export fn_param_append_word_peek
+    def fn_param_append_word_peek [
+        [ cursor_peek pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_param_append_word_text forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,Pair<I64,Pair<I64,I64>>>,ParamFinal>
+          -- S result@1.Result<Pair<Cursor,Pair<Text,Pair<I64,Pair<I64,I64>>>>,ParamFinal> ! pure ]
+    export fn_param_append_word_text
+    def fn_param_append_word_text [
+        [ unpair [ dup cursor_text ] dip pair pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_param_append_word_span forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,Pair<Text,Pair<I64,Pair<I64,I64>>>>,ParamFinal>
+          -- S result@1.Result<Pair<Cursor,Pair<Text,Pair<I64,I64>>>,ParamFinal> ! pure ]
+    export fn_param_append_word_span
+    def fn_param_append_word_span [
+        [ unpair unpair calc_lex@1.token_span pair pair result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_param_append_word_name_only forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,Pair<Text,Pair<I64,I64>>>,ParamFinal>
+          -- S result@1.Result<calc_env@1.Name,ParamFinal> ! pure ]
+    export fn_param_append_word_name_only
+    def fn_param_append_word_name_only [
+        [ unpair swap drop unpair calc_env@1.name_from_span
+          result@1.Result.Ok ]
+        [ result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_param_append_name_finish forall<S:stack>
+        [ S ParamRun result@1.Result<calc_env@1.Name,ParamFinal>
+          -- S ParamRun ! pure ]
+    export fn_param_append_name_finish
+    def fn_param_append_name_finish [
+        [ swap
+          [ dup param_cursor cursor_advance rot pair
+            param_append_checked ParamRun.Pending ]
+          [ swap drop ParamRun.Final ]
+          ParamRun.match ]
+        [ swap drop ParamRun.Final ]
+        result@1.Result.match
+    ]
+
+    signature fn_param_checked_name forall<S:stack>
+        [ S ParamRun -- S ParamRun result@1.Result<calc_env@1.Name,ParamFinal> ! pure ]
+    export fn_param_checked_name
+    def fn_param_checked_name [
+        fn_param_append_cursor
+        fn_param_append_word_peek
+        fn_param_append_word_text
+        fn_param_append_word_span
+        fn_param_append_word_name_only
+    ]
+
+    signature fn_end_validated_result forall<S:stack>
+        [ S result@1.Result<Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>,HeaderFailure>
+            result@1.Result<Unit,calc_env@1.Failure>
+          -- S result@1.Result<Pair<Cursor,Pair<calc_env@1.Name,List<calc_env@1.Name>>>,HeaderFailure> ! pure ]
+    export fn_end_validated_result
+    def fn_end_validated_result [
+        [ drop ]
+        [ swap drop header_from_env result@1.Result.Err ]
+        result@1.Result.match
+    ]
+
+    signature fn_end_validation_result forall<S:stack>
+        [ S result@1.Result<calc_env@1.Validation,Unit>
+          -- S result@1.Result<Unit,calc_env@1.Failure> ! pure ]
+    export fn_end_validation_result
+    def fn_end_validation_result [
+        [ calc_env@1.validation_end ]
+        [ drop unit result@1.Result.Ok ]
+        result@1.Result.match
+    ]
+
+    # Host-scheduled captured-global route. Each step stays inside the sealed
+    # NameGlobalSlim arm; a failed begin keeps its original failure.
+
+    signature begin_global_cursor forall<S:stack>
+        [ S Sum<NameGlobalSlim,BodyBeginFailure> -- S Sum<NameGlobalSlim,BodyBeginFailure> I64 ! pure ]
+    export begin_global_cursor
+    def begin_global_cursor [
+        [ validation_name_global_slim_cursor [ inl ] dip ] [ inr -3 ] case
+    ]
+
+    signature begin_global_length forall<S:stack>
+        [ S Sum<NameGlobalSlim,BodyBeginFailure> -- S Sum<NameGlobalSlim,BodyBeginFailure> ! pure ]
+    export begin_global_length
+    def begin_global_length [ [ validation_name_global_slim_length inl ] [ inr ] case ]
+
+    signature begin_global_compare forall<S:stack>
+        [ S Sum<NameGlobalSlim,BodyBeginFailure> -- S Sum<NameGlobalSlim,BodyBeginFailure> ! pure ]
+    export begin_global_compare
+    def begin_global_compare [ [ validation_name_global_slim_compare inl ] [ inr ] case ]
+
+    signature begin_global_commit_byte forall<S:stack>
+        [ S Sum<NameGlobalSlim,BodyBeginFailure> -- S Sum<NameGlobalSlim,BodyBeginFailure> ! pure ]
+    export begin_global_commit_byte
+    def begin_global_commit_byte [ [ validation_name_global_slim_commit_byte inl ] [ inr ] case ]
+
+    signature begin_global_complete forall<S:stack>
+        [ S Sum<NameGlobalSlim,BodyBeginFailure> -- S Sum<NameGlobalSlim,BodyBeginFailure> ! pure ]
+    export begin_global_complete
+    def begin_global_complete [ [ validation_name_global_slim_complete inl ] [ inr ] case ]
+
+    signature begin_global_finish forall<S:stack>
+        [ S Sum<NameGlobalSlim,BodyBeginFailure> -- S BeginSession Bool ! pure ]
+    export begin_global_finish
+    def begin_global_finish [
+        [ validation_name_global_slim_finish [ BeginSession.Ready ] dip ]
+        [ BeginSession.Failed false ]
+        case
+    ]
+
+    # Failure diagnostics for an unchecked body token. Ok carries no value:
+    # it marks an original begin failure that earlier checks already reported.
+
+    signature begin_global_diagnostic forall<S:stack>
+        [ S Sum<NameGlobalSlim,BodyBeginFailure> -- S result@1.Result<Unit,expr@1.Diagnostic> ! pure ]
+    export begin_global_diagnostic
+    def begin_global_diagnostic [
+        [ validation_name_global_slim_fault body_fault_diagnostic result@1.Result.Err ]
+        [ drop unit result@1.Result.Ok ]
+        case
+    ]
+
+    signature begin_session_diagnostic forall<S:stack>
+        [ S BeginSession -- S result@1.Result<Unit,expr@1.Diagnostic> ! pure ]
+    export begin_session_diagnostic
+    def begin_session_diagnostic [
+        [ validation_pending_fault body_fault_diagnostic result@1.Result.Err ]
+        [ drop unit result@1.Result.Ok ]
+        BeginSession.match
+    ]
+
+
+]

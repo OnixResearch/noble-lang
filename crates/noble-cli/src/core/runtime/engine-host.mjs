@@ -1,10 +1,15 @@
 // Host-owned ABI, immutable adapter dispatch and effect accounting.
-function configureDeclaredAbi(engine, abi, declared_modules, declared_extension, bindings, text_byte_cursor) {
+function configureDeclaredAbi(engine, abi, declared_modules, declared_extension, bindings, text_byte_cursor,
+  calculator) {
     if (typeof text_byte_cursor !== 'boolean'
       || text_byte_cursor && (declared_modules || engine.inProcessLive)) {
       fail('text byte cursor requires an ordinary session or compile');
     }
-    engine.profile = declared_modules ? 'Declared-Modules-v1'
+    if (typeof calculator !== 'boolean'
+      || calculator && (declared_modules || text_byte_cursor || engine.inProcessLive)) {
+      fail('selected runtime profiles are disjoint');
+    }
+    engine.profile = calculator ? 'Calculator-v1' : declared_modules ? 'Declared-Modules-v1'
       : text_byte_cursor ? 'Text-Byte-Cursor-v1' : 'Core-Bootstrap';
     if (declared_modules) {
       if (typeof declared_extension !== 'string') fail('missing declared module ABI extension');
@@ -35,7 +40,7 @@ function configureDeclaredAbi(engine, abi, declared_modules, declared_extension,
         || fn.result !== ['i32', 'i64'][index]))) {
       fail('invalid live host ABI');
     }
-    engine.hostFunctions = declared_modules
+    engine.hostFunctions = calculator ? [] : declared_modules
       ? [...abi.host_functions.filter(fn => fn.name !== 'test_emit'), ...engine.declaredExtension.host_functions]
       : engine.inProcessLive ? [...abi.host_functions, ...abi.live_host_functions] : abi.host_functions;
 

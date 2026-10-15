@@ -120,7 +120,7 @@ rebuild or formally recheck every Mathlib source file.
 
 This is a finite backend comparison, **not** a universal compiler/Wasm proof.
 The exact BigInt/Rat calculator and its error/state behavior are not
-implemented or verified by this check; CALC-EVIDENCE-01/02 remain open,
+verified by this check; CALC-EVIDENCE-01/02 remain open,
 CALC-01 and related scenario statuses remain unchanged, and the separate
 VC-NUM-01 contract obligation does not inherit a calculator proof.
 
@@ -167,9 +167,55 @@ definition of `n`; the later direct call uses the second.
 A static rejection preserves the previous stack and namespace. A runtime trap
 or exhausted execution quota ends the session, retaining any host requests
 already observed. Sessions use a bounded arena that does not reclaim individual
-cells. Use `noble session --framed` for framed multiline input and
+cells (only the separate Calculator-v1 profile compacts, at submission
+boundaries). Use `noble session --framed` for framed multiline input and
 `--emit NEW_DIR` to retain reports and emitted artifacts. Run `noble --help`
 for available CLI flags.
+
+### Experimental calculator (opt-in; acceptance not established)
+
+`noble calculator` reads stdin, one submission per line (`--framed` selects
+byte-count framing instead). Each line is an infix expression over exact
+rationals with `+ - * / ^`, unary minus, parentheses and exact decimals
+(`0.1 + 0.2` prints `3/10`), a definition `let NAME = EXPR` or
+`fn NAME(P, ...)=EXPR`, or an expression calling a defined function
+(`fn f(y)=y*2` then `f(3)` prints `6`). Results print on stdout as `n/d`, or
+`n` when the denominator is 1. `--finite-decimal` prints terminating values as
+decimals (`3/10` prints `0.3`, `1/3` stays `1/3`). Errors print on stderr as
+`Category [start,end)` byte spans, and the exit status is 1 if any line
+failed. Guest budgets are set with `--input-bytes`, `--numeric-digits`,
+`--intermediate-bits`, `--syntax-depth`, `--call-depth`, `--evaluation-work`
+and `--output-size`. Parsing, name resolution, exact arithmetic and display
+run in checked Noble guest modules
+(`crates/noble-contracts/src/fixtures/calculator-*.noble`); the host shell
+orchestrates the checked guest phases and supplies bounded bytes and budgets.
+
+It is very slow: in a local CALC-01/02/03/09 sweep (four processes at a time)
+each line that printed a value took about 3–31 minutes (most 8–18), numeric
+errors 4.5–9 minutes and syntax/name errors under 3. Every line also replays
+each earlier `let`/`fn` first, adding roughly 6–8 minutes per definition.
+
+The `Calculator-v1` source/worker profile is separate from Core-Bootstrap,
+Declared-Modules-v1, Text-Byte-Cursor-v1 and live profiles. Its compiler has a
+4 MiB emitted WAT ceiling rather than the ordinary 1 MiB ceiling recorded in
+the unchanged [Core ABI](crates/noble-cli/src/core/runtime/abi.json). Its
+imported Wasm memory starts at 16 pages and can grow to at most 64 pages; the
+other profiles remain fixed at 16 pages. Its worker selects ceilings of 72,362
+session cells / 1,376,208 allocation bytes rather than 4,096 / 196,608; raw
+Text ingress accepts at most 65,536 bytes. Source preparation separately
+bounds 512 reachable named bodies and 896 environment rows, including derived
+nominal operations, and the calculator source compiler bounds distinct
+signature keys at 8,192. Before each submission the runtime compacts the cells
+reachable from the operand stack in handle order and zeroes the vacated tail;
+calculator handles are valid only until the next submission, so the worker
+refuses `park` and `project`. When no reachable Program runs compiled code,
+the next module reuses dead function-table slots and restarts the
+definition-identity ledger; when no Program, Syntax or recipe cell is
+reachable, it also restarts the signature pool. Declared source signatures can
+now name concrete nominal schemas of the same module or an exact exported
+`module@N.Type`. These experimental limits are not a completed calculator or
+acceptance evidence; see the
+[calculator-v1 change](.cairn/changes/calculator-v1/proposal.md).
 
 ### Experimental checked live slots (opt-in; acceptance not established)
 
@@ -490,8 +536,9 @@ features use separate entry points. Recursive definitions, local bindings,
 general libraries and capability modules, portable package identities, and
 general distributed services remain open.
 
-The [exact calculator](.cairn/specs/calculator/spec.md) is a planned reference
-application. Its [numeric error schema prerequisite](verification/calculator-errors/README.md)
+The [exact calculator](.cairn/specs/calculator/spec.md) is the planned reference
+application; an [experimental guest-backed `noble calculator`](#experimental-calculator-opt-in-acceptance-not-established)
+exists, but its acceptance criteria remain open. Its [numeric error schema prerequisite](verification/calculator-errors/README.md)
 has a finite 18-case compiled-guest observation on a rebuilt binary, explicitly
 **not source-bound**; the opt-in byte cursor does not establish MA1 or CALC
 acceptance. The [typed-worker design](specs/WORKER-CONFORMANCE.md) describes

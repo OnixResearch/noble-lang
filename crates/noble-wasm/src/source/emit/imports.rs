@@ -10,6 +10,8 @@ pub(super) fn write(
     attempt!(out.append(b"(module\n(type $entry (func (param i32)))\n"));
     if plan.live_slots {
         attempt!(out.append(b"(import \"noble\" \"memory\" (memory 20 20))\n"));
+    } else if plan.calculator {
+        attempt!(out.append(b"(import \"noble\" \"memory\" (memory 16 64))\n"));
     } else {
         attempt!(out.append(b"(import \"noble\" \"memory\" (memory 16 16))\n"));
     }
@@ -52,7 +54,12 @@ pub(super) fn write(
         attempt!(global_import(out, b"live_frame", b"i32"));
         attempt!(out.append(b"(global $live_module_installed (mut i32) (i32.const 0))\n"));
     }
-    out.append(b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n")
+    attempt!(out.append(b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n"));
+    if plan.calculator {
+        out.append(b"(global $cell_limit i32 (i32.const 72362))\n(global $allocation_ceiling i32 (i32.const 1376208))\n")
+    } else {
+        out.append(b"(global $cell_limit i32 (i32.const 4096))\n(global $allocation_ceiling i32 (i32.const 196608))\n")
+    }
 }
 
 #[expect(
@@ -133,6 +140,15 @@ pub(super) fn runtime(
                 "/runtime/accounting.wat"
             ))
         ));
+        if plan.calculator {
+            attempt!(fragment(out, include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"), "/runtime/calculator-linear-address.wat"
+            ))));
+        } else {
+            attempt!(fragment(out, include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"), "/runtime/linear-address.wat"
+            ))));
+        }
         attempt!(fragment(
             out,
             include_str!(concat!(
@@ -156,6 +172,15 @@ pub(super) fn runtime(
             "/runtime/operations.wat"
         ))
     ));
+    if plan.calculator {
+        attempt!(fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/calculator.wat"
+            ))
+        ));
+    }
     attempt!(fragment(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat"))

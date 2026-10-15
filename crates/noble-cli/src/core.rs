@@ -6,10 +6,10 @@ pub(crate) mod companions;
 mod declared;
 pub(crate) mod editor;
 pub(crate) mod entry;
-mod framing;
+pub(crate) mod framing;
 pub(crate) mod live;
 pub(crate) mod live_slot;
-mod output;
+pub(crate) mod output;
 mod report;
 pub(crate) mod worker;
 

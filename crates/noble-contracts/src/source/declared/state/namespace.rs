@@ -152,12 +152,7 @@ impl super::ModuleSession {
                 crate::source::Stage::Check,
                 "retained namespace byte count overflow"
             )));
-        let limit_bytes = attempt!(usize::try_from(limits.bytes).map_err(|_| {
-            super::super::error(
-                crate::source::Stage::Check,
-                "retained byte limit exceeds the host address space",
-            )
-        }));
+        let limit_bytes = attempt!(self.retained_source_limit(limits));
         if total > limit_bytes {
             return Err(super::super::error(
                 crate::source::Stage::Check,

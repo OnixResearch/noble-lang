@@ -5,17 +5,23 @@ use alloc::vec::Vec;
 use noble_kernel::shapes::{EffectSlot, Pattern};
 use noble_kernel::words::{Scheme, Variable, VariableKind};
 
-type Families = Vec<(String, noble_kernel::types::NominalTypeId, [u8; 2])>;
+pub(super) struct Families<'a> {
+    generic: Vec<(String, noble_kernel::types::NominalTypeId, [u8; 2])>,
+    modules: &'a [super::Module],
+    local: &'a [super::Schema],
+    identity: u64,
+    environment: Option<&'a noble_kernel::contracts::Env>,
+}
 
 fn invalid(reason: &str) -> crate::source::Error {
     super::error(crate::source::Stage::Check, reason)
 }
 
-pub(super) fn families(
-    session: &super::ModuleSession,
-    names: &[super::Schema],
+pub(super) fn families<'a>(
+    session: &'a super::ModuleSession,
+    names: &'a [super::Schema],
     identity: u64,
-) -> Families {
+) -> Families<'a> {
     let mut result = Vec::new();
     for (ordinal, schema) in names.iter().enumerate() {
         if let super::SchemaKind::Variant { parameters, .. } = &schema.kind {
@@ -57,13 +63,23 @@ pub(super) fn families(
             }
         }
     }
-    result
+    Families {
+        generic: result,
+        modules: &session.modules,
+        local: names,
+        identity,
+        environment: session
+            .source
+            .declared
+            .as_ref()
+            .map(|context| &context.environment),
+    }
 }
 
 pub(super) fn parse(
     binders: &str,
     words: &[String],
-    families: &Families,
+    families: &Families<'_>,
 ) -> Result<Scheme, crate::source::Error> {
     let Some(binders) = binders
         .strip_prefix("forall<")
@@ -180,7 +196,7 @@ pub(super) fn exported(signature: &Scheme, environment: &noble_kernel::contracts
 fn parse_stack(
     words: &[String],
     binders: &[(String, VariableKind)],
-    families: &Families,
+    families: &Families<'_>,
 ) -> Result<Vec<Pattern>, crate::source::Error> {
     words
         .iter()
@@ -218,7 +234,7 @@ fn parse_effect(
 fn pattern(
     word: &str,
     binders: &[(String, VariableKind)],
-    families: &Families,
+    families: &Families<'_>,
 ) -> Result<Pattern, crate::source::Error> {
     enum Step<'a> {
         Parse(&'a str, u32),
@@ -252,49 +268,52 @@ fn pattern(
                         "I64" => Some(Pattern::I64),
                         "Text" => Some(Pattern::Text),
                         "Syntax" => Some(Pattern::Syntax),
-                        _ => {
-                            let Some((constructor, inner)) = word.split_once('<') else {
-                                return Err(invalid("unknown signature value type"));
-                            };
-                            let Some(inner) = inner.strip_suffix('>') else {
-                                return Err(invalid("unclosed signature type arguments"));
-                            };
-                            let next = attempt!(depth.checked_add(1)
-                                .ok_or_else(|| invalid("signature type nesting limit exceeded")));
-                            if constructor == "Resource" {
-                                if inner != "test.counter" {
-                                    return Err(invalid("unknown signature resource kind"));
-                                }
-                                Some(Pattern::Resource(noble_kernel::contracts::FIXTURE_RESOURCE))
-                            } else if constructor == "List" {
-                                pending.push(Step::List);
-                                pending.push(Step::Parse(inner, next));
-                                None
-                            } else {
-                                let parts = attempt!(split_arguments(inner));
-                                if constructor == "Program" {
-                                    if parts.len() != 3 {
-                                        return Err(invalid("Program signature requires input, output and effects"));
+                        _ => match named_nominal(word, families) {
+                            Some(nominal) => Some(nominal),
+                            None => {
+                                let Some((constructor, inner)) = word.split_once('<') else {
+                                    return Err(invalid("unknown signature value type"));
+                                };
+                                let Some(inner) = inner.strip_suffix('>') else {
+                                    return Err(invalid("unclosed signature type arguments"));
+                                };
+                                let next = attempt!(depth.checked_add(1)
+                                    .ok_or_else(|| invalid("signature type nesting limit exceeded")));
+                                if constructor == "Resource" {
+                                    if inner != "test.counter" {
+                                        return Err(invalid("unknown signature resource kind"));
                                     }
-                                    let input = attempt!((parts[0] != "empty")
-                                        .then(|| split_delimited(parts[0], b'+')).transpose());
-                                    pending.push(Step::ProgramInput(
-                                        input.as_ref().map_or(0, Vec::len), parts[1], parts[2], next,
-                                    ));
-                                    for component in input.into_iter().flatten().rev() {
-                                        pending.push(Step::Parse(component, next));
-                                    }
+                                    Some(Pattern::Resource(noble_kernel::contracts::FIXTURE_RESOURCE))
+                                } else if constructor == "List" {
+                                    pending.push(Step::List);
+                                    pending.push(Step::Parse(inner, next));
+                                    None
                                 } else {
-                                    if parts.len() != 2 {
-                                        return Err(invalid("signature type requires two arguments"));
+                                    let parts = attempt!(split_arguments(inner));
+                                    if constructor == "Program" {
+                                        if parts.len() != 3 {
+                                            return Err(invalid("Program signature requires input, output and effects"));
+                                        }
+                                        let input = attempt!((parts[0] != "empty")
+                                            .then(|| split_delimited(parts[0], b'+')).transpose());
+                                        pending.push(Step::ProgramInput(
+                                            input.as_ref().map_or(0, Vec::len), parts[1], parts[2], next,
+                                        ));
+                                        for component in input.into_iter().flatten().rev() {
+                                            pending.push(Step::Parse(component, next));
+                                        }
+                                    } else {
+                                        if parts.len() != 2 {
+                                            return Err(invalid("signature type requires two arguments"));
+                                        }
+                                        pending.push(Step::Binary(constructor));
+                                        pending.push(Step::Parse(parts[1], next));
+                                        pending.push(Step::Parse(parts[0], next));
                                     }
-                                    pending.push(Step::Binary(constructor));
-                                    pending.push(Step::Parse(parts[1], next));
-                                    pending.push(Step::Parse(parts[0], next));
+                                    None
                                 }
-                                None
                             }
-                        }
+                        },
                     }
                 }
             }
@@ -313,7 +332,7 @@ fn pattern(
                     "Sum" => Pattern::Sum(alloc::boxed::Box::new(first), alloc::boxed::Box::new(second)),
                     _ => {
                         let Some((_, id, payload_params)) =
-                            families.iter().find(|(name, _, _)| name == constructor)
+                            families.generic.iter().find(|(name, _, _)| name == constructor)
                         else {
                             return Err(invalid("unknown or unexported generic signature family"));
                         };
@@ -357,6 +376,47 @@ fn pattern(
         Some(value) if values.is_empty() => Ok(value),
         _ => Err(invalid("invalid source signature scheme")),
     }
+}
+
+/// A bare local schema name or an exact exported `module@version.Name`
+/// resolves only to an already registered nominal declaration.
+fn named_nominal(word: &str, families: &Families<'_>) -> Option<Pattern> {
+    if let Some((ordinal, _)) = families
+        .local
+        .iter()
+        .enumerate()
+        .find(|(_, schema)| schema.name == word)
+    {
+        let id = noble_kernel::types::NominalTypeId {
+            module: families.identity,
+            ordinal: ordinal as u32,
+        };
+        if let Some(declaration) = families.environment.and_then(|env| env.nominal(id)) {
+            return Some(Pattern::Nominal(
+                id,
+                alloc::boxed::Box::new(declaration.shape.clone()),
+            ));
+        }
+    }
+    exported_nominal(word, families)
+}
+
+fn exported_nominal(word: &str, families: &Families<'_>) -> Option<Pattern> {
+    let (qualified_module, export_name) = word.rsplit_once('.')?;
+    let (module_name, version) = qualified_module.rsplit_once('@')?;
+    if version.as_bytes().first() == Some(&b'0') {
+        return None;
+    }
+    let version = version.parse::<u32>().ok()?;
+    let module = families.modules.iter()
+        .find(|module| module.name == module_name && module.version == version)?;
+    let ty = module.exports.iter().find(|export| export.name == export_name)?
+        .ty.as_ref()?;
+    let noble_kernel::types::Ty::Nominal(id, shape) = ty else {
+        return None;
+    };
+    families.environment?.nominal(*id).filter(|declaration| declaration.exported)?;
+    Some(Pattern::Nominal(*id, shape.clone()))
 }
 
 fn split_arguments(word: &str) -> Result<Vec<&str>, crate::source::Error> {
@@ -409,7 +469,13 @@ mod tests {
     #[test]
     fn program_children_parse_in_order_and_nesting_is_bounded() {
         let binders = Vec::new();
-        let families = Vec::new();
+        let families = Families {
+            generic: Vec::new(),
+            modules: &[],
+            local: &[],
+            identity: 0,
+            environment: None,
+        };
         let value = pattern("Program<Pair<I64,Bool>+List<Text>,Sum<Bool,I64>,pure>", &binders, &families)
             .expect("nested program signature");
         let Pattern::Program(input, output, _) = value else {

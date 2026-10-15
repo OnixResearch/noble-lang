@@ -16,6 +16,7 @@ macro_rules! attempt {
 
 mod backend;
 mod build;
+mod calculator;
 mod component;
 mod core;
 mod sandbox;
@@ -35,6 +36,15 @@ enum InputError {
 )]
 fn main() -> std::process::ExitCode {
     let arguments: std::vec::Vec<std::ffi::OsString> = read_arguments().skip(1).collect();
+    if arguments.first().is_some_and(|argument| argument == "--internal-calculator-wat-assemble") {
+        return calculator::assemble_wat(&arguments);
+    }
+    if arguments.first().is_some_and(|argument| argument == "--internal-calculator-wat-version") {
+        return calculator::assembler_version(&arguments);
+    }
+    if arguments.first().is_some_and(|argument| argument == "calculator") {
+        return calculator::run(&arguments);
+    }
     if arguments
         .first()
         .is_some_and(|argument| argument == "component")

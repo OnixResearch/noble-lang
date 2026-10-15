@@ -1,4 +1,5 @@
 mod replay;
+mod weight;
 
 #[expect(
     tigerstyle::missing_const_fn,
@@ -58,11 +59,21 @@ pub(super) fn check(
     live: bool,
     live_slots: bool,
     text_cursor: bool,
+    calculator: bool,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
-    let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(27);
+    let definition_limit = if calculator {
+        super::super::CALCULATOR_DEFINITION_LIMIT
+    } else {
+        super::super::DEFINITION_LIMIT
+    };
+    let maximum_rows = if calculator {
+        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+    } else {
+        definition_limit.saturating_add(27)
+    };
     if env.defs.len() > maximum_rows
-        || submission.definitions.len() > super::super::DEFINITION_LIMIT
+        || submission.definitions.len() > definition_limit
     {
         return Err(crate::Diagnostic::Exhausted);
     }
@@ -78,9 +89,9 @@ pub(super) fn check(
     if env.definition_owners.len() != env.defs.len() {
         return Err(crate::Diagnostic::Invalid);
     }
-    if env.nominals.len() > super::super::DEFINITION_LIMIT
-        || env.generic_variants.len() > super::super::DEFINITION_LIMIT
-        || env.bound_adapters.len() > super::super::DEFINITION_LIMIT
+    if env.nominals.len() > definition_limit
+        || env.generic_variants.len() > definition_limit
+        || env.bound_adapters.len() > definition_limit
         || env.live_resource_nominals.len() > super::super::DEFINITION_LIMIT
         || env.resource_kinds.len() > super::super::DEFINITION_LIMIT.saturating_add(1)
     {
@@ -91,6 +102,8 @@ pub(super) fn check(
         || (live_slots && (live || text_cursor || !env.declared_modules))
         || env.text_cursor != text_cursor
         || (text_cursor && (live || env.declared_modules))
+        || env.calculator != calculator
+        || (calculator && (!env.declared_modules || !env.bound_adapters.is_empty()))
         || (!live_slots && !env.live_resource_nominals.is_empty())
     {
         return Err(crate::Diagnostic::Invalid);
@@ -106,7 +119,7 @@ pub(super) fn check(
     if has_invalid_metadata || has_noncanonical_core_declarations {
         return Err(crate::Diagnostic::Invalid);
     }
-    let (fixed, count) = attempt!(canonical_prefix(env, live, live_slots, text_cursor));
+    let (fixed, count) = attempt!(canonical_prefix(env, live, live_slots, text_cursor, calculator));
     if !exact_effects(env, count, live_slots) {
         return Err(crate::Diagnostic::Invalid);
     }
@@ -159,7 +172,7 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
     }
     let mut effects = if count == 23 {
         alloc::vec![TEST_EMIT]
-    } else if count == 27 {
+    } else if count == 27 || count == 32 {
         alloc::vec![TEST_EMIT]
     } else {
         alloc::vec![TEST_EMIT, noble_kernel::types::EffId(1)]
@@ -179,7 +192,27 @@ fn canonical_prefix(
     live: bool,
     live_slots: bool,
     text_cursor: bool,
+    calculator: bool,
 ) -> Result<(noble_kernel::contracts::Env, usize), crate::Diagnostic> {
+    if calculator {
+        let fixed = attempt!(noble_kernel::contracts::calculator_environment()
+            .map_err(|_| crate::Diagnostic::Defective));
+        if env.defs.len() < 32 {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        let mut index = 0usize;
+        while index < 32 {
+            if !same_scheme(&env.defs[index], &fixed.defs[index])
+                || env.kinds[index] != fixed.kinds[index]
+                || !env.deps[index].is_empty()
+                || env.definition_owners[index].is_some()
+            {
+                return Err(crate::Diagnostic::Invalid);
+            }
+            index += 1;
+        }
+        return Ok((fixed, 32));
+    }
     if text_cursor {
         let fixed = attempt!(noble_kernel::contracts::text_cursor_environment()
             .map_err(|_| crate::Diagnostic::Defective));
@@ -332,26 +365,63 @@ pub(super) fn exact_contract(
     Ok(())
 }
 
+pub(super) fn contract_work(
+    env: &noble_kernel::contracts::Env,
+    def: noble_kernel::contracts::Definition,
+    work: &mut super::super::Work,
+) -> Result<u64, crate::Diagnostic> {
+    let scheme = attempt!(env.scheme(def).ok_or(crate::Diagnostic::Invalid));
+    weight::scheme(scheme, attempt!(lookup_rows(env)), work)
+}
+
+fn lookup_rows(env: &noble_kernel::contracts::Env) -> Result<usize, crate::Diagnostic> {
+    env.nominals.len().checked_add(env.generic_variants.len())
+        .ok_or(crate::Diagnostic::Exhausted)
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; explicit row and component bounds precede saturating work accounting; oversized environments and unrepresentable costs must exhaust the shared budget rather than panic."
 )]
-pub(super) fn work(environment: &noble_kernel::contracts::Env) -> Result<u64, crate::Diagnostic> {
-    let maximum_rows = super::super::DEFINITION_LIMIT.saturating_add(27);
+pub(super) fn work(
+    environment: &noble_kernel::contracts::Env,
+    calculator: bool,
+    meter: &mut super::super::Work,
+) -> Result<u64, crate::Diagnostic> {
+    let definition_limit = if calculator {
+        super::super::CALCULATOR_DEFINITION_LIMIT
+    } else {
+        super::super::DEFINITION_LIMIT
+    };
+    let maximum_rows = if calculator {
+        noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+    } else {
+        definition_limit.saturating_add(27)
+    };
     if environment.defs.len() > maximum_rows || environment.deps.len() > maximum_rows {
         return Err(crate::Diagnostic::Exhausted);
     }
-    if environment.nominals.len() > super::super::DEFINITION_LIMIT
-        || environment.generic_variants.len() > super::super::DEFINITION_LIMIT
-        || environment.bound_adapters.len() > super::super::DEFINITION_LIMIT
+    if environment.nominals.len() > definition_limit
+        || environment.generic_variants.len() > definition_limit
+        || environment.bound_adapters.len() > definition_limit
     {
         return Err(crate::Diagnostic::Exhausted);
     }
     let mut cost = 1u64;
+    let selected_lookup_rows = if calculator {
+        attempt!(lookup_rows(environment))
+    } else {
+        0
+    };
     let mut index = 0usize;
     let mut failure = None;
     while index < environment.defs.len() {
-        match scheme_work(&environment.defs[index]) {
+        let row = if calculator {
+            weight::scheme(&environment.defs[index], selected_lookup_rows, meter)
+        } else {
+            scheme_work(&environment.defs[index])
+        };
+        match row {
             Ok(amount) => {
                 cost = cost.saturating_add(amount);
                 index += 1;
