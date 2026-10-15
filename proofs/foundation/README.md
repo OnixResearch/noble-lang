@@ -259,6 +259,46 @@ runner then uses `bubblewrap-0.12.0` and records that path in the receipt.
 Unsupported modes: none. Both `off` and `on` are supported by
 `Core-Bootstrap`.
 
+### CI
+
+The CI recipe is [`verification/foundation/ci.sh`](../../verification/foundation/ci.sh)
+`NEW_DIR [--skip-slice]`, run on a clean checkout after `lake exe cache get`.
+It runs these stages:
+1. `check.mjs`;
+2. `slice.mjs`;
+3. `differential.mjs --seed 15 --count 80`;
+4. `--verify` on the fresh receipt;
+5. a stale-evidence control: the retained `receipts/ce2e5ce` receipt must be
+   refused.
+
+It writes `summary.txt` and exits nonzero if any stage fails.
+
+The recipe is **not** a `flake.nix` `checks` entry, for these reasons:
+- **Mathlib needs network or host-bound inputs.** The `.olean` files come
+  from `lake exe cache get`, which is networked. In this checkout they
+  occupy 2.1 GiB (8,176 files) under `.lake/packages/mathlib/.lake`.
+  - The repository's offline route, `nix/offline-inputs.nix` with
+    `nix/lean-backend.nix`, names host-captured `nix store add-path`
+    sources. On the checking host those store paths are absent, for example
+    `/nix/store/mfpq85q33s4hyqy7c5x4prinz45d0341-mathlib`, so a check built
+    on them cannot be realised or exercised here.
+  - That route also contains sources only. A sandbox check would have to
+    compile the imported part of Mathlib from source. The cost has not been
+    measured, and that build would replace the current trust in downloaded
+    `.olean` files with a rebuild.
+- **The slice needs host services.** Its Route B consumer requires a user
+  systemd manager, `XDG_RUNTIME_DIR` and bubblewrap, which are not
+  available inside a Nix build sandbox.
+- **There is no workflow file to extend.** The repository has no
+  `.github/workflows`; its CI surface is the flake `checks` set.
+  `flake.nix` and `nix/*` are policy-pinned files, so changing them
+  requires a re-pin.
+
+A sandbox check becomes feasible once reviewed offline Lean sources and
+either a rebuilt Mathlib `.olean` set or an authenticated cache are pinned
+as store inputs. The `check` and `differential` stages need only Lean,
+Cargo (offline) and Node, so they could move into the sandbox first.
+
 ## Phase 2: law/obligation matrix (pure MC1 model)
 
 Observation relations are kept separate:
@@ -296,7 +336,7 @@ stated, because those cover the whole language or the implementation.
 |---|---|---|
 | 1 | whitelist/representation/observation table; signed ZMod/BitVec/K-NUM-01 correspondence; universal add/sub/mul with preserved typed prefix and orientation; literal refusal vs wrapping (spec and transcription); lifting to sequences and quote/compose/run; regressions; inventory and axiom audit | Rust frontend ↔ transcription refinement; MC1 `CodeTyped` ↔ kernel acceptance |
 | 3 | one example from Lean spec to admitted bytes (opt off/on), helper model, ACORR-mapped refusals | E5 lowering, E7 assembler, E8 optimizer, E10 loader/engine, E12 PAA-1 envelope, ACORR-CASE-09, quote/compose/run helper models |
-| 4 | seeded differential comparator, Lean-checked expectations, opt off/on, shrinking, mutation controls, checker lanes, source-bound receipts, `--verify` | CI wiring (commands are reproducible but not added to a CI workflow); rebuilt Mathlib `.olean` files |
+| 4 | seeded differential comparator, Lean-checked expectations, opt off/on, shrinking, mutation controls, checker lanes, source-bound receipts, `--verify`, retained in-repo receipts, `ci.sh` recipe | Nix-sandbox CI check (see "CI": networked Mathlib cache, absent offline inputs, host services for the slice); rebuilt Mathlib `.olean` files |
 | 2 | MC1: preservation and primitive progress, pure laws and negative cases. Effects/resource layer: preservation, total progress, effect soundness for every prefix including denied/failed, ownership preservation with declared transitions, resource-free capture, resource negative cases | the whole language and implementation, abnormal cleanup, aggregates/borrowing, effectful equivalence laws, normalization |
 
 ### Effect and resource layer (`NobleFoundation/Effects.lean`)
