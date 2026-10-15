@@ -232,11 +232,22 @@ export class CoreEngine {
     this.liveProposalDenied = false;
     this.liveExecuting = false;
     this.proposalInspectionFailed = false;
+    // Artifact files in creation order, so an arena rollback can also remove
+    // the scratch files of the submissions it undoes.
+    this.savedFiles = [];
+    // The last committed Calculator-v1 arena (see calculatorCommit).
+    this.calculatorCommitted = null;
     this.tools = this.checkTools();
     this.owned = artifacts === null;
     this.directory = this.owned ? fs.mkdtempSync(path.join(os.tmpdir(), 'noble-core-')) : path.join(artifacts, 'engine');
     if (!this.owned) fs.mkdirSync(this.directory);
-    this.memory = new WebAssembly.Memory(this.abi.memory);
+    // Calculator-v1 modules import a 16..64-page memory. The engine supplies
+    // all 64 pages up front: Wasm memory cannot shrink, so a restore after a
+    // failed submission grew the arena could never match the committed size.
+    // At the maximum, runtime growth is a no-op and growth beyond 64 pages
+    // still fails exactly as before.
+    this.memory = new WebAssembly.Memory(this.profile === 'Calculator-v1'
+      ? { ...this.abi.memory, initial: this.abi.memory.maximum } : this.abi.memory);
     this.table = new WebAssembly.Table(this.abi.table);
     this.shared = Object.create(null);
     installSharedGlobals(this, this.abi);
@@ -294,6 +305,7 @@ export class CoreEngine {
   save(file, value) {
     const content = Buffer.isBuffer(value) || typeof value === 'string' ? value : JSON.stringify(value, null, 2) + '\n';
     fs.writeFileSync(path.join(this.directory, file), content, { flag: 'wx' });
+    this.savedFiles.push(file);
   }
 
   tool(name, args, label) {
@@ -600,14 +612,14 @@ export class CoreEngine {
     let runtime, saved;
     try {
       runtime = this.runtime();
-      saved = this.snapshotLive();
+      saved = this.snapshotArena();
     } catch (error) {
       this.poisoned = true;
       this.proposalInspectionFailed = true;
       fail(`cannot snapshot live proposal inspection: ${error.message}`);
     }
     const restore = () => {
-      try { this.rollbackLive(saved); }
+      try { this.rollbackArena(saved); }
       catch (error) {
         this.poisoned = true;
         this.proposalInspectionFailed = true;
@@ -690,12 +702,17 @@ export class CoreEngine {
     }
   }
 
-  snapshotLive() {
+  // Byte-exact engine arena snapshot: all of memory, every table entry, every
+  // ABI global, the Calculator-v1 signature table and the engine counters.
+  // It requires the arena at its fixed maximum, so no restore can meet a
+  // resized memory or table.
+  snapshotArena() {
     if (this.memory.buffer.byteLength !== this.abi.memory.maximum * 65536
-      || this.table.length !== this.abi.table.maximum) fail('live arena exceeds fixed limits');
-    return { memory: Uint8Array.from(new Uint8Array(this.memory.buffer)),
+      || this.table.length !== this.abi.table.maximum) fail('arena is not at its fixed maximum');
+    return { memory: new Uint8Array(this.memory.buffer).slice(),
       table: Array.from({ length: this.table.length }, (_, index) => this.table.get(index)),
       globals: this.abi.globals.map(global => this.shared[global.name].value),
+      signatures: this.signatures.slice(), files: this.savedFiles.length,
       trace: this.trace.slice(), boundRequests: this.boundRequests.slice(),
       hostRequestsTotal: this.hostRequestsTotal, boundRequestsTotal: this.boundRequestsTotal,
       protectedOperations: this.protectedOperations, ambientFallbackCalls: this.ambientFallbackCalls,
@@ -707,15 +724,19 @@ export class CoreEngine {
       observationWork: this.observationWork };
   }
 
-  rollbackLive(saved) {
+  rollbackArena(saved) {
     if (this.memory.buffer.byteLength !== saved.memory.length || this.table.length !== saved.table.length) {
-      fail('cannot restore grown live arena');
+      fail('cannot restore a resized arena');
     }
     new Uint8Array(this.memory.buffer).set(saved.memory);
     for (let index = 0; index < saved.table.length; index += 1) this.table.set(index, saved.table[index]);
     this.abi.globals.forEach((global, index) => { this.shared[global.name].value = saved.globals[index]; });
-    this.trace = saved.trace;
-    this.boundRequests = saved.boundRequests;
+    this.signatures = saved.signatures.slice();
+    for (const file of this.savedFiles.splice(saved.files)) {
+      fs.rmSync(path.join(this.directory, file), { force: true });
+    }
+    this.trace = saved.trace.slice();
+    this.boundRequests = saved.boundRequests.slice();
     this.hostRequestsTotal = saved.hostRequestsTotal;
     this.boundRequestsTotal = saved.boundRequestsTotal;
     this.protectedOperations = saved.protectedOperations;
@@ -736,9 +757,66 @@ export class CoreEngine {
     this.observationWork = saved.observationWork;
     if (!Buffer.from(this.memory.buffer).equals(Buffer.from(saved.memory))
       || this.abi.globals.some((global, index) => this.shared[global.name].value !== saved.globals[index])
-      || saved.table.some((entry, index) => this.table.get(index) !== entry)) {
-      fail('live rollback verification failed');
+      || saved.table.some((entry, index) => this.table.get(index) !== entry)
+      || this.signatures.length !== saved.signatures.length
+      || saved.signatures.some((key, index) => this.signatures[index] !== key)
+      || this.savedFiles.length !== saved.files) {
+      fail('arena rollback verification failed');
     }
+  }
+
+  // A committed Calculator-v1 session state. Only the trusted host issues
+  // this, after it has validated a submission's guest result and display.
+  calculatorCommit() {
+    if (this.profile !== 'Calculator-v1' || this.poisoned || this.pending || this.parked !== null) {
+      fail('calculator commit requires an idle, unpoisoned calculator engine');
+    }
+    this.calculatorCommitted = this.snapshotArena();
+    return { schema: 'noble-core-report/v1', profile: this.profile, stage: 'wasm',
+      outcome: 'committed', arena: this.calculatorArena(),
+      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
+  }
+
+  // Return to the last commit after any failed submission, including a
+  // native quota/trap that poisoned the instance. This is a trusted engine
+  // operation over bytes the guest itself produced and committed; no guest
+  // value selects it or what it restores. A failed verification is terminal.
+  calculatorRestore() {
+    const saved = this.calculatorCommitted;
+    if (this.profile !== 'Calculator-v1' || saved === null) fail('no committed calculator arena');
+    this.calculatorCommitted = null;
+    this.rollbackArena(saved);
+    this.calculatorCommitted = saved;
+    return { schema: 'noble-core-report/v1', profile: this.profile, stage: 'wasm',
+      outcome: 'restored', arena: this.calculatorArena(),
+      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
+  }
+
+  // A session-independent digest of the arena. Table entries are compared by
+  // Wasm function index and arity, since references from different engines
+  // are never identical.
+  calculatorArena() {
+    if (this.profile !== 'Calculator-v1') fail('calculator arena digest requires the calculator profile');
+    const table = crypto.createHash('sha256');
+    for (let index = 0; index < this.table.length; index += 1) {
+      const entry = this.table.get(index);
+      table.update(entry === null ? '-;' : `${entry.name}/${entry.length};`);
+    }
+    return { memory_bytes: this.memory.buffer.byteLength,
+      memory_sha256: sha256(new Uint8Array(this.memory.buffer)),
+      table_length: this.table.length, table_sha256: table.digest('hex'),
+      globals: Object.fromEntries(this.abi.globals.map(global =>
+        [global.name, String(this.shared[global.name].value)])),
+      signatures: this.signatures.length,
+      signatures_sha256: sha256(JSON.stringify(this.signatures)),
+      compilations: this.compilations, files: this.savedFiles.length,
+      poisoned: this.poisoned };
+  }
+
+  // After a commit, a failed submission leaves this engine awaiting restore
+  // instead of terminating the worker.
+  calculatorRestorable() {
+    return this.profile === 'Calculator-v1' && this.calculatorCommitted !== null;
   }
 
   publishBinary() {
@@ -749,7 +827,7 @@ export class CoreEngine {
     }
     const { module, record } = this.staged;
     const original = this.liveStackSnapshot(this.memory, this.shared);
-    const saved = this.snapshotLive();
+    const saved = this.snapshotArena();
     this.staged = null;
     this.liveInstalling = true;
     try {
@@ -783,7 +861,7 @@ export class CoreEngine {
     } catch (error) {
       // Even when byte-exact restoration succeeds, post-install failure is
       // terminal; callers must never mistake a corrupt arena for a refusal.
-      try { this.rollbackLive(saved); }
+      try { this.rollbackArena(saved); }
       catch (rollbackError) { this.poisoned = true; fail(`live rollback failed: ${rollbackError}`); }
       this.poisoned = true;
       fail(`live publication failed after rollback: ${error}`);
@@ -1067,7 +1145,8 @@ export class CoreEngine {
       } : {}),
       protected_operations: this.protectedOperations - protectedStart,
       candidate_prepare_requests: 0, runtime_prover_calls: 0, native_trap: nativeTrap,
-      session_state: this.poisoned ? 'terminated-after-runtime-failure' : 'retained',
+      session_state: !this.poisoned ? 'retained'
+        : this.calculatorRestorable() ? 'restore-required' : 'terminated-after-runtime-failure',
       metrics, ...(collection ? { collection } : {}),
       ...(compiledProgramsReachable === null ? {}
         : { compiled_programs_reachable: compiledProgramsReachable,
@@ -1080,6 +1159,7 @@ export class CoreEngine {
   // Standalone typed injection outside one submission. Values stay first-class
   // session state; each push fails closed on a missing or mistyped cell.
   push(inputs) {
+    if (this.poisoned) fail('cannot push into a poisoned session');
     if (!this.last && (inputs.length !== 0 || this.shared.sp.value !== 0)) fail('no initialized runtime for injection');
     const runtime = this.last ? this.runtime() : null;
     let status = 0;
@@ -1166,6 +1246,7 @@ export class CoreEngine {
   // Inspect one stack slot without executing candidate code. Only the bounded
   // observation walk runs, and it issues no guest host requests.
   observe(index) {
+    if (this.poisoned) fail('cannot observe a poisoned session');
     const runtime = this.runtime();
     const status = runtime.observe(integer(index, 128, 'stack index'));
     return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',

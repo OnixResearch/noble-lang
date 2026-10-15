@@ -14,10 +14,6 @@ const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     work: 512_000_000,
 };
 const INPUT_LIMIT: u32 = 65_536;
-const HISTORY_COMMANDS_LIMIT: usize = 64;
-const HISTORY_BYTES_LIMIT: usize = INPUT_LIMIT as usize;
-const REPLAY_STEP_WORK: u64 = 128;
-const HISTORY_WORK_LIMIT: u64 = 65_536;
 const DEFAULT_BUDGET: [i64; 7] = [1_024, 256, 4_096, 32, 16, 4_000_000, 4_096];
 const BUDGET_NAMES: [&str; 7] = [
     "--input-bytes",
@@ -130,10 +126,6 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
                 eprintln!("{diagnostic}");
                 failed = true;
             }
-            Ok(Outcome::HostLimit { category, span_end }) => {
-                eprintln!("HostLimit {category} [0,{span_end}) provenance=host-replay-preflight");
-                failed = true;
-            }
             Ok(Outcome::NativeFailure(message)) => {
                 eprintln!("NativeFailure: {message}");
                 failed = true;
@@ -202,14 +194,12 @@ enum Outcome {
     Value(String),
     Defined,
     Diagnostic(String),
-    HostLimit {
-        category: &'static str,
-        span_end: usize,
-    },
     NativeFailure(String),
     InfrastructureFailure(String),
 }
 
+/// One committed calculator session. Each line runs directly on it: success
+/// commits, every failure restores the last commit (see `transact`).
 struct Session {
     modules: Option<ModuleSession>,
     compiler: noble_wasm::source::Compiler,
@@ -223,17 +213,20 @@ struct Session {
     // It also reported that no Program, Syntax or recipe cell is reachable,
     // so the next module may restart the signature pool from ID 0.
     program_free: bool,
-    accepted: Vec<Accepted>,
-    state_changing_header: bool,
     // A quotation-free consumer of the last guest probe (`drop`, `unpair
     // drop`), run as the prefix of the next module instead of as its own.
     deferred: Option<&'static [u8]>,
 }
 
-struct Accepted {
-    source: Vec<u8>,
-    finite_decimal: bool,
-    budget: [i64; 7],
+/// The host half of the last commit; the worker holds the arena half.
+struct Committed {
+    modules: ModuleSession,
+    compiler: noble_wasm::source::Compiler,
+    stack: Vec<Ty>,
+    serial: u64,
+    quiescent: bool,
+    program_free: bool,
+    deferred: Option<&'static [u8]>,
 }
 
 impl Session {
@@ -298,6 +291,12 @@ impl Session {
     }
 
     fn new() -> Result<Self, String> {
+        Self::with_worker(
+            crate::core::worker::Engine::start_calculator(false).map_err(|error| error.message)?,
+        )
+    }
+
+    fn with_worker(worker: crate::core::worker::Engine) -> Result<Self, String> {
         let mut modules = ModuleSession::new_calculator().map_err(source_error)?;
         for (name, source) in [
             ("result@1", RESULT),
@@ -339,25 +338,26 @@ impl Session {
         let mut session = Self {
             modules: Some(modules),
             compiler: noble_wasm::source::Compiler::new_calculator(),
-            worker: crate::core::worker::Engine::start_calculator(false)
-                .map_err(|error| error.message)?,
+            worker,
             stack: Vec::new(),
             serial: 0,
             quiescent: false,
             program_free: false,
-            accepted: Vec::new(),
-            state_changing_header: false,
             deferred: None,
         };
         let report = session.execute(b"calc_env@1.initial", &[], None)?;
         if report.outcome != "normal" || session.stack.len() != 1 {
             return Err("guest calculator state initialization failed".into());
         }
+        session
+            .worker
+            .calculator_commit()
+            .map_err(|error| error.message)?;
         Ok(session)
     }
 
     // The guest leaves an authenticated Result<CompactDiagnostic,Unit> on
-    // top after the rejected candidate State is discarded. Its category
+    // top after the rejected line's State is discarded. Its category
     // selects only a guest decoder; no host code interprets issue payloads.
     fn decode_compact_diagnostic(&mut self) -> Result<Outcome, String> {
         let mut report = self.execute(b"expr.frame_hot_parts", &[], None)?;
@@ -402,91 +402,89 @@ impl Session {
         finite_decimal: bool,
         budget: [i64; 7],
     ) -> Result<Outcome, String> {
-        // Replay only admitted definitions: evaluating an expression leaves
-        // the guest State unchanged, even when its transient numeric cells
-        // fill the worker. These checks precede worker startup and replay.
-        let count = self
-            .accepted
-            .len()
-            .checked_add(1)
-            .ok_or("calculator replay count overflow")?;
-        let bytes = self
-            .accepted
-            .iter()
-            .try_fold(expression.len(), |total, command| {
-                total.checked_add(command.source.len())
-            })
-            .ok_or("calculator replay byte accounting overflow")?;
-        if count > HISTORY_COMMANDS_LIMIT {
-            return Ok(Outcome::HostLimit {
-                category: "HistoryCommands",
-                span_end: expression.len(),
-            });
-        }
-        if bytes > HISTORY_BYTES_LIMIT {
-            return Ok(Outcome::HostLimit {
-                category: "HistoryBytes",
-                span_end: expression.len(),
-            });
-        }
-        let replay_work = (bytes as u64)
-            .checked_add((count as u64) * REPLAY_STEP_WORK)
-            .ok_or("calculator replay work accounting overflow")?;
-        if replay_work > HISTORY_WORK_LIMIT {
-            return Ok(Outcome::HostLimit {
-                category: "ReplayWork",
-                span_end: expression.len(),
-            });
-        }
-        // A native quota/trap poisons its Wasm instance, including every old
-        // guest handle. Never run an unaccepted command against the retained
-        // worker. Reconstruct a *candidate* from source-checked accepted
-        // submissions, preserving the previous worker until this command's
-        // guest result and bounded display have both been validated.
-        let mut candidate = Self::new()?;
-        for accepted in &self.accepted {
-            match candidate.submit_uncommitted(
-                &accepted.source,
-                accepted.finite_decimal,
-                accepted.budget,
-            )? {
-                Outcome::Value(_) | Outcome::Defined => (),
-                Outcome::Diagnostic(_)
-                | Outcome::HostLimit { .. }
-                | Outcome::NativeFailure(_)
-                | Outcome::InfrastructureFailure(_) => {
-                    return Err("accepted calculator command did not replay".into());
+        self.transact(|session| {
+            let outcome = session.submit_uncommitted(expression, finite_decimal, budget)?;
+            if matches!(outcome, Outcome::Value(_) | Outcome::Defined) {
+                let state = session
+                    .modules
+                    .as_ref()
+                    .ok_or("calculator namespace unavailable")?
+                    .resolve_type("calc_env@1.State")
+                    .map_err(source_error)?;
+                if session.stack.as_slice() != [state] {
+                    return Ok(Outcome::InfrastructureFailure(
+                        "guest calculator did not retain its checked State after command completion"
+                            .into(),
+                    ));
+                }
+            }
+            Ok(outcome)
+        })
+    }
+
+    /// Run one submission directly on the committed session. A `Value` or
+    /// `Defined` outcome commits the worker arena. Every failure class —
+    /// guest diagnostic or ResourceLimit, native quota or trap (which poisons
+    /// the instance), host bound and infrastructure failure — instead
+    /// restores the worker byte for byte and the host state to the last
+    /// commit, so a failed line leaves the session exactly as if it had never
+    /// been submitted (CALC-STATE-02). Only a failed restore is terminal.
+    fn transact(
+        &mut self,
+        line: impl FnOnce(&mut Self) -> Result<Outcome, String>,
+    ) -> Result<Outcome, String> {
+        let committed = self.checkpoint()?;
+        let mut outcome = line(self).unwrap_or_else(Outcome::InfrastructureFailure);
+        if matches!(outcome, Outcome::Value(_) | Outcome::Defined) {
+            match self.worker.calculator_commit() {
+                Ok(_) => return Ok(outcome),
+                Err(error) => {
+                    outcome = Outcome::InfrastructureFailure(format!(
+                        "calculator commit failed: {}",
+                        error.message
+                    ));
                 }
             }
         }
-        let outcome = match candidate.submit_uncommitted(expression, finite_decimal, budget) {
-            Ok(outcome) => outcome,
-            Err(message) => return Ok(Outcome::InfrastructureFailure(message)),
-        };
-        if matches!(outcome, Outcome::Value(_) | Outcome::Defined) {
-            let state = candidate
+        self.restore(committed)?;
+        Ok(outcome)
+    }
+
+    /// Copy the host state of the last commit before a line runs: every
+    /// normal guest module of that line replaces `compiler`, `modules`,
+    /// `stack` and the boundary flags, and advances `serial`.
+    fn checkpoint(&self) -> Result<Committed, String> {
+        Ok(Committed {
+            modules: self
                 .modules
                 .as_ref()
-                .ok_or("calculator namespace unavailable")?
-                .resolve_type("calc_env@1.State")
-                .map_err(source_error)?;
-            if candidate.stack.as_slice() != [state] {
-                return Ok(Outcome::InfrastructureFailure(
-                    "guest calculator did not retain its checked State after command completion"
-                        .into(),
-                ));
-            }
-            candidate.accepted = std::mem::take(&mut self.accepted);
-            if candidate.state_changing_header {
-                candidate.accepted.push(Accepted {
-                    source: expression.to_vec(),
-                    finite_decimal,
-                    budget,
-                });
-            }
-            *self = candidate;
-        }
-        Ok(outcome)
+                .and_then(ModuleSession::checkpoint)
+                .ok_or("calculator namespace cannot be checkpointed")?,
+            compiler: self.compiler.clone(),
+            stack: self.stack.clone(),
+            serial: self.serial,
+            quiescent: self.quiescent,
+            program_free: self.program_free,
+            deferred: self.deferred,
+        })
+    }
+
+    /// Restore the worker first: if its byte-exact verification fails, the
+    /// session ends rather than pairing host state with an unknown arena. The
+    /// runtime `$generation` global and the compiler generation return
+    /// together, as do signature IDs and their published keys.
+    fn restore(&mut self, committed: Committed) -> Result<(), String> {
+        self.worker
+            .calculator_restore()
+            .map_err(|error| format!("calculator restore failed: {}", error.message))?;
+        self.modules = Some(committed.modules);
+        self.compiler = committed.compiler;
+        self.stack = committed.stack;
+        self.serial = committed.serial;
+        self.quiescent = committed.quiescent;
+        self.program_free = committed.program_free;
+        self.deferred = committed.deferred;
+        Ok(())
     }
 
     fn submit_uncommitted(
@@ -497,7 +495,7 @@ impl Session {
     ) -> Result<Outcome, String> {
         let outcome = self.submit_line(expression, finite_decimal, budget)?;
         // An accepted command never leaves a probe consumer pending; any
-        // other outcome discards this worker's candidate state anyway.
+        // other outcome restores the last commit anyway.
         if !matches!(outcome, Outcome::Value(_) | Outcome::Defined) {
             self.deferred = None;
             return Ok(outcome);
@@ -689,11 +687,10 @@ impl Session {
         } else {
             0
         };
-        let is_let = header_kind == 1;
-        let is_function = header_kind == 2;
         // This selector is emitted by the guest after scanning its original
         // tokens; Rust never classifies source bytes as a definition.
-        self.state_changing_header = is_let || is_function;
+        let is_let = header_kind == 1;
+        let is_function = header_kind == 2;
         let header_phases: &[&[u8]] = match header_kind {
             0 => &[b"calc_defs@1.header_expression_cursor"],
             1 => &[
@@ -1249,7 +1246,7 @@ impl Session {
         }
         // The shell never decodes a token or number. It only schedules the
         // guest-certified action kind and retains all opaque phase cells in
-        // this candidate worker's typed stack.
+        // this worker's typed stack.
         // RPN actions plus two source-byte passes (digit admission and exact
         // decimal materialization) each make independently checked progress.
         let mut remaining = (budget[5] as u64).saturating_add(
@@ -1901,8 +1898,9 @@ impl Session {
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
                 }
-                // Only this rejected candidate loses its guest State. The
-                // compact failure stays in the worker for typed rehydration.
+                // Only this rejected line loses its guest State; submit then
+                // restores the commit. The compact failure stays in the
+                // worker for typed rehydration.
                 report = self.execute(b"swap drop", &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -2045,7 +2043,7 @@ impl Session {
                         b"[ calc_env@1.variable_lookup_missing \
                           calc_env@1.variable_lookup_missing_failure ] dip unpair calc_bits@1.rot",
                         // A failed lookup ends evaluation; a let's Name is no
-                        // longer needed and is dropped with the candidate.
+                        // longer needed and is dropped with this line's State.
                         if is_let {
                             b"[ [ unpair drop unpair swap ] dip ] dip expr.frame_name_missing_guest"
                         } else {
@@ -4395,8 +4393,8 @@ impl Session {
             .ok_or("guest finish returned no checked final value")?;
         let (valid, final_run) = variant(finished)?;
         if !valid {
-            // The accepted session is untouched; discard this candidate's
-            // State before expanding the source-bound compact diagnosis.
+            // Submit restores the committed session afterwards; discard this
+            // line's State before expanding the source-bound compact diagnosis.
             report = self.execute(b"swap drop", &[], None)?;
             if report.outcome != "normal" {
                 return Ok(Outcome::NativeFailure(report.json));
@@ -4424,9 +4422,8 @@ impl Session {
         }
         if is_let {
             // The guest alone turns the original checked declaration Name
-            // and actual FinalReady into a proposed State. This candidate is
-            // still private: formatting must succeed before submit publishes
-            // the new State or records the accepted command.
+            // and actual FinalReady into a proposed State. It stays
+            // uncommitted: formatting must succeed before submit commits it.
             // calc_defs@1.bind_let_checked types its whole [ Name Ctx
             // FinalReady ] match beyond the backend's per-binding bound, so the
             // same guest steps run staged: copy the guest Rat out of a Ready
@@ -5743,6 +5740,270 @@ fn numeric_category(value: &serde_json::Value) -> Result<String, String> {
                 }
                 .into())
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Outcome, Session, DEFAULT_BUDGET};
+    use noble_kernel::types::Ty;
+
+    /// One calculator line run through `Session::transact`.
+    type Line = fn(&mut Session) -> Result<Outcome, String>;
+
+    // These tests drive real worker modules, so they need a `noble` binary as
+    // the calculator WAT assembler. `cargo test` builds it beside this unit
+    // test executable (target/<profile>/deps/..) for the integration tests.
+    fn assembler() -> std::path::PathBuf {
+        let executable = std::env::current_exe().unwrap();
+        let profile = executable.parent().unwrap().parent().unwrap();
+        let assembler = profile.join("noble");
+        assert!(
+            assembler.is_file(),
+            "build the noble binary first: {}",
+            assembler.display()
+        );
+        assembler
+    }
+
+    fn session() -> Session {
+        let worker = crate::core::worker::Engine::start_calculator_with(false, &assembler())
+            .map_err(|error| error.message)
+            .unwrap();
+        Session::with_worker(worker).unwrap()
+    }
+
+    /// Everything a later line can observe: the host's namespace, compiler,
+    /// typed stack and boundary flags, plus the worker's digest of all memory,
+    /// every table entry, every ABI global, the published signatures and the
+    /// engine counters.
+    fn fingerprint(session: &mut Session) -> String {
+        let arena = session
+            .worker
+            .calculator_arena()
+            .map_err(|error| error.message)
+            .unwrap();
+        let arena: serde_json::Value = serde_json::from_str(&arena.json).unwrap();
+        format!(
+            "{:?}\n{:?}\n{:?}\nserial={} quiescent={} program_free={} deferred={:?}\n{}",
+            session.modules,
+            session.compiler,
+            session.stack,
+            session.serial,
+            session.quiescent,
+            session.program_free,
+            session.deferred,
+            arena["arena"]
+        )
+    }
+
+    /// One accepted guest module as a committed transaction; returns its
+    /// checked output stack.
+    fn accept(session: &mut Session, source: &[u8]) -> serde_json::Value {
+        let mut stack = serde_json::Value::Null;
+        let outcome = session
+            .transact(|session| {
+                let report = session.execute(source, &[], None)?;
+                assert_eq!(report.outcome, "normal", "{}", report.json);
+                let report: serde_json::Value = serde_json::from_str(&report.json).unwrap();
+                stack = report["stack"].clone();
+                Ok(Outcome::Defined)
+            })
+            .unwrap();
+        match outcome {
+            Outcome::Defined => (),
+            Outcome::InfrastructureFailure(message) | Outcome::NativeFailure(message) => {
+                panic!("{}: {message}", String::from_utf8_lossy(source))
+            }
+            _ => panic!("{} was not accepted", String::from_utf8_lossy(source)),
+        }
+        stack
+    }
+
+    /// The debug/test cross-check: a session reconstructed by replaying only
+    /// the accepted history from scratch matches the restored session.
+    fn assert_matches_replay(restored: &mut Session, history: &[&[u8]]) {
+        let mut replayed = session();
+        for line in history {
+            accept(&mut replayed, line);
+        }
+        assert_eq!(fingerprint(restored), fingerprint(&mut replayed));
+    }
+
+    // A failed line of each class runs real guest modules that consume the
+    // committed State, rewrite cells beyond the first 16 pages, install
+    // table entries and publish signatures before it fails.
+    fn guest_diagnostic(session: &mut Session) -> Result<Outcome, String> {
+        session.execute(b"drop drop calc_env@1.initial [ 9 * ]", &[], None)?;
+        Ok(Outcome::Diagnostic("DivisionByZero [9,10)".into()))
+    }
+
+    fn guest_resource_limit(session: &mut Session) -> Result<Outcome, String> {
+        session.execute(b"nil [ 1 swap cons true ] 0 [ 1 + ] pair", &[], None)?;
+        Ok(Outcome::Diagnostic(
+            "ResourceLimit IntermediateBits [0,8)".into(),
+        ))
+    }
+
+    fn native_quota(session: &mut Session) -> Result<Outcome, String> {
+        let report = session.execute(b"nil [ 1 swap cons true ] iterate", &[], None)?;
+        assert_eq!(report.outcome, "runtime-exhausted", "{}", report.json);
+        Ok(Outcome::NativeFailure(report.json))
+    }
+
+    fn host_limit(session: &mut Session) -> Result<Outcome, String> {
+        session.execute(b"unit pair [ 3 + ]", &[], None)?;
+        Err("guest lexer exceeded its source-byte progress bound".into())
+    }
+
+    fn rust_infrastructure(session: &mut Session) -> Result<Outcome, String> {
+        session.execute(b"drop 5", &[], None)?;
+        session.execute(b"calc_missing@1.word", &[], None)?;
+        unreachable!("an unknown word must not check")
+    }
+
+    fn engine_infrastructure(session: &mut Session) -> Result<Outcome, String> {
+        session.execute(b"[ 4 + ] pair", &[], None)?;
+        // The worker fails a malformed input frame after the module installed,
+        // and survives only to be restored.
+        session.execute(b"drop", &[Ty::Text], Some("[ malformed"))?;
+        unreachable!("a malformed input frame must not execute")
+    }
+
+    #[test]
+    fn failed_lines_of_every_class_restore_the_committed_session() {
+        // The history drops the calculator State so the committed compiled
+        // Program can later run on a closed stack row.
+        let history: [&[u8]; 3] = [b"drop 7 35 +", b"[ 1 + ]", b"unit pair"];
+        let mut restored = session();
+        let mut reference = session();
+        // A real (cheap) calculator line whose guest lexer phases run on the
+        // committed session before it fails with a guest diagnostic.
+        match restored.submit(b"$", false, DEFAULT_BUDGET).unwrap() {
+            Outcome::Diagnostic(diagnostic) => {
+                assert_eq!(diagnostic, "SyntaxError [0,1) provenance=unavailable");
+            }
+            _ => panic!("an invalid byte must fail lexing"),
+        }
+        assert_eq!(fingerprint(&mut restored), fingerprint(&mut reference));
+        for line in history {
+            assert_eq!(accept(&mut restored, line), accept(&mut reference, line));
+        }
+        assert!(
+            !restored.quiescent,
+            "a reachable compiled Program keeps its table slots"
+        );
+        let committed = fingerprint(&mut reference);
+        assert_eq!(fingerprint(&mut restored), committed);
+        let failures: [(&str, Line); 6] = [
+            ("guest diagnostic", guest_diagnostic),
+            ("guest ResourceLimit", guest_resource_limit),
+            ("native quota", native_quota),
+            ("host limit", host_limit),
+            ("Rust infrastructure failure", rust_infrastructure),
+            ("engine infrastructure failure", engine_infrastructure),
+        ];
+        for (class, line) in failures {
+            let outcome = restored.transact(line).unwrap();
+            assert!(
+                !matches!(outcome, Outcome::Value(_) | Outcome::Defined),
+                "{class}"
+            );
+            assert_eq!(fingerprint(&mut restored), committed, "{class}");
+        }
+        // Later lines see only the committed session: identical outputs and
+        // identical arenas, including the reused table slots and signatures.
+        for line in [b"unpair drop swap 2 *".as_slice(), b"swap run"] {
+            assert_eq!(accept(&mut restored, line), accept(&mut reference, line));
+            assert_eq!(fingerprint(&mut restored), fingerprint(&mut reference));
+        }
+        assert_matches_replay(
+            &mut restored,
+            &[
+                b"drop 7 35 +",
+                b"[ 1 + ]",
+                b"unit pair",
+                b"unpair drop swap 2 *",
+                b"swap run",
+            ],
+        );
+    }
+
+    /// CALC-STATE-02 on real calculator lines. Each definition costs minutes
+    /// of guest modules, so this stays out of the default suite; run it with
+    /// `cargo test --release -p noble-cli --bin noble calc_state_02 -- --ignored`.
+    #[test]
+    #[ignore = "runs real calculator lines for about an hour"]
+    fn calc_state_02_failed_lines_leave_definitions_byte_identical() {
+        let definitions: [&[u8]; 3] = [b"let x = 10", b"fn f(y)=x + y", b"let x = 20"];
+        let reference = std::thread::spawn(move || {
+            let mut reference = session();
+            for line in definitions {
+                assert!(matches!(
+                    reference.submit(line, false, DEFAULT_BUDGET).unwrap(),
+                    Outcome::Value(_) | Outcome::Defined
+                ));
+            }
+            let committed = fingerprint(&mut reference);
+            let mut outputs = Vec::new();
+            for line in [b"f(1)".as_slice(), b"x"] {
+                outputs.push(value(
+                    reference.submit(line, false, DEFAULT_BUDGET).unwrap(),
+                ));
+                outputs.push(fingerprint(&mut reference));
+            }
+            (committed, outputs)
+        });
+        let mut restored = session();
+        for line in definitions {
+            assert!(matches!(
+                restored.submit(line, false, DEFAULT_BUDGET).unwrap(),
+                Outcome::Value(_) | Outcome::Defined
+            ));
+        }
+        let committed = fingerprint(&mut restored);
+        let mut diagnostics = Vec::new();
+        for line in [b"let x = 1 / 0".as_slice(), b"2 ^ 5000"] {
+            match restored.submit(line, false, DEFAULT_BUDGET).unwrap() {
+                Outcome::Diagnostic(diagnostic) => diagnostics.push(diagnostic),
+                _ => panic!("{} must fail", String::from_utf8_lossy(line)),
+            }
+            assert_eq!(fingerprint(&mut restored), committed);
+        }
+        let injected: [Line; 4] = [
+            native_quota,
+            host_limit,
+            rust_infrastructure,
+            engine_infrastructure,
+        ];
+        for line in injected {
+            assert!(!matches!(
+                restored.transact(line).unwrap(),
+                Outcome::Value(_) | Outcome::Defined
+            ));
+            assert_eq!(fingerprint(&mut restored), committed);
+        }
+        let mut outputs = Vec::new();
+        for line in [b"f(1)".as_slice(), b"x"] {
+            outputs.push(value(restored.submit(line, false, DEFAULT_BUDGET).unwrap()));
+            outputs.push(fingerprint(&mut restored));
+        }
+        let (reference_committed, reference_outputs) = reference.join().unwrap();
+        assert_eq!(committed, reference_committed);
+        assert_eq!(outputs, reference_outputs);
+        assert_eq!(outputs[0], "11");
+        assert_eq!(outputs[2], "20");
+        eprintln!(
+            "CALC-STATE-02 diagnostics: {diagnostics:?}; outputs: {:?}",
+            [&outputs[0], &outputs[2]]
+        );
+    }
+
+    fn value(outcome: Outcome) -> String {
+        match outcome {
+            Outcome::Value(value) => value,
+            _ => panic!("expected a value"),
         }
     }
 }
