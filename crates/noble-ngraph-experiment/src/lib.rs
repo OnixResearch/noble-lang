@@ -12,8 +12,10 @@
 pub mod check;
 pub mod diag;
 pub mod eval;
+pub mod extract;
 pub mod facts;
 pub mod ir;
+pub mod l1;
 pub mod sem;
 pub mod snapshot;
 

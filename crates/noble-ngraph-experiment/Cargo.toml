@@ -7,6 +7,9 @@ description = "Issue #14 Phase B/C: isolated NumericGraph-Design (ngraph-ir/0) e
 
 [dependencies]
 blake3 = { version = "=1.8.7", default-features = false, features = ["std", "pure"] }
+noble-kernel = { path = "../noble-kernel" }
+noble-contracts = { path = "../noble-contracts" }
+serde_json = "=1.0.151"
 
 [lints]
 workspace = true
