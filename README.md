@@ -215,6 +215,14 @@ snapshot of it instead of replaying earlier definitions, so a line's cost
 does not grow with the number of earlier `let`/`fn` lines. (With replay, the
 session `fn f(y)=y*2`, `fn g(x)=f(x)+1`, `g(2)` ran 2,193 modules in 866 s
 with reuse and 2,721 s without, in the window above.)
+On the committed session, the reuse also spans lines: a debug build of the
+merged tree `0b8c7f9` (load average 8–12, the two runs side by side) ran
+`1+2` twice in 308 s with reuse and 1,088 s with
+`NOBLE_CALCULATOR_MODULE_CACHE=off`. Each line ran 441 modules. With reuse
+the first line spent 303 s in them (219 reused) and the second 0.7 s (all
+441 reused); without, 547 s and 537 s.
+Both runs executed byte-identical WAT, Wasm, execution reports and issued
+Work for every module.
 The [calculator acceptance runner](verification/calculator-v1/README.md) runs
 the canonical CALC-01/02/03/06/07/09 CLI vectors against an exact prebuilt
 binary, one process per vector, and keeps raw I/O and a JSON receipt outside
