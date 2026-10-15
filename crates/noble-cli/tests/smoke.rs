@@ -186,3 +186,31 @@ fn calculator_retains_state_after_exact_tiny_decimal() -> Result<(), Box<dyn std
     assert!(output.stderr.is_empty());
     Ok(())
 }
+
+/// The calculator runtime's Node tests skip without an assembler. Run them
+/// with the selected Node and this build's CLI so they execute or fail here.
+#[test]
+fn calculator_runtime_node_tests_run_with_built_assembler() -> Result<(), std::io::Error> {
+    let runtime = concat!(env!("CARGO_MANIFEST_DIR"), "/src/core/runtime");
+    let output = std::process::Command::new(
+        "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    )
+    .args(["--test", "--test-reporter=tap"])
+    .arg(format!("{runtime}/engine-assets.test.mjs"))
+    .arg(format!("{runtime}/engine-calculator.test.mjs"))
+    .env("NOBLE_CALCULATOR_ASSEMBLER", env!("CARGO_BIN_EXE_noble"))
+    .output()?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "calculator runtime Node tests failed: stdout={stdout} stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    for summary in ["# tests 2", "# pass 2", "# fail 0", "# skipped 0"] {
+        assert!(
+            stdout.lines().any(|line| line == summary),
+            "missing `{summary}` in Node test summary: {stdout}"
+        );
+    }
+    Ok(())
+}
