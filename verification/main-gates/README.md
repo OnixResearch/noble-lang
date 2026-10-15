@@ -64,7 +64,7 @@ the commit that adds this note.
   - Node oracle and comparison scripts;
   - seeded-fault patches applied only to scratch mutant builds;
   - evidence controls;
-  - the CALC-12 receipts and the CALC-10â13 records.
+  - the CALC-12 receipts and the CALC-10–13 records.
 
   Its Node self-checks were run on the merged tree with the pinned Node 24.13.0:
   - `compare.mjs cases` agrees with all 38 cases-file expectations;
@@ -72,7 +72,7 @@ the commit that adds this note.
   - `compare.mjs harness` was run on those vectors once per fault model, and
     each of the 7 fault models disagreed on at least one vector;
   - `evidence-controls/controls.mjs` was run against the integrated release
-    binary (`f7f02dfbâ¦85ec`) and reported all 6 controls ok (`all_ok`).
+    binary (`f7f02dfb…85ec`) and reported all 6 controls ok (`all_ok`).
 - The commit that adds this entry fixes two directory links in #21's Markdown (`calc-12-results.md`,
   `seeded-faults/README.md`) that the `documents` local-link checker rejects. They
   are now inline code paths; no linked content changed.
@@ -163,7 +163,7 @@ The follow-ups are filed by root cause:
   `calculator_collect` and `calculator_profile` `noble-wasm` integration
   tests. At 56 units, the noble CLI bin and bin+test shards stopped at
   exactly 16,384 calls, and the bin shard also at 16,384 constructors. Those
-  shards were marked incomplete, and their truncated JSON was already 26â28
+  shards were marked incomplete, and their truncated JSON was already 26–28
   MB of the 32 MiB shard cap. The unit, call, constructor and byte caps were
   raised so that collection can complete; truncation yields no inventory at
   all. No finding, unknown, waiver or classification rule changed.
@@ -270,7 +270,7 @@ own pinned commands:
    repository's derive and comparator.
 5. `node tools/source-inventory-renew.mjs <inventory.json> <label> <report>`,
    then `export-policy.sh`: renew the inventory.
-6. `run-gates.sh <worktree> [checksâ¦]`: build each flake check for `HEAD` (or
+6. `run-gates.sh <worktree> [checks…]`: build each flake check for `HEAD` (or
    `REV`), writing one log per check.
 7. `bun tools/cairn.mjs gate {proposal,design,tasks} calculator-v1 --root .`,
    then `bun tools/cairn.mjs validate --root .`.
