@@ -222,6 +222,10 @@ the repository. Its results are observations; they do not promote cases.
 On the `44329dc` release snapshot all 34 runnable vectors passed
 ([receipt](verification/calculator-v1/receipt-44329dc-release.json)); a
 single-line vector took 51–2,051 s and the CALC-06 session 8,689 s.
+On the integrated `eccbc02` release build all 34 passed again
+([receipt](verification/calculator-v1/receipt-eccbc02-release.json)): a
+single-line vector took 15–177 s, the CALC-06 session 686 s and the whole
+sweep 13.5 minutes at six processes at a time.
 
 Setting `NOBLE_CALCULATOR_TRACE=<file>` appends one JSON line per executed
 guest module (source, stage identity, source-check / backend / worker times,
