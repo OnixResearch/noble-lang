@@ -206,7 +206,7 @@ fn calculator_runtime_node_tests_run_with_built_assembler() -> Result<(), std::i
         "calculator runtime Node tests failed: stdout={stdout} stderr={}",
         String::from_utf8_lossy(&output.stderr),
     );
-    for summary in ["# tests 2", "# pass 2", "# fail 0", "# skipped 0"] {
+    for summary in ["# tests 4", "# pass 4", "# fail 0", "# skipped 0"] {
         assert!(
             stdout.lines().any(|line| line == summary),
             "missing `{summary}` in Node test summary: {stdout}"
