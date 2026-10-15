@@ -24,7 +24,9 @@ import { determined, generateExpressions, generateSessions, shrinkCandidates } f
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../../..');
 const ORACLE_FILES = ['rational.mjs', 'calculator.mjs', 'generate.mjs', 'faults.mjs', 'compare.mjs'];
-const DIAGNOSTIC = /^([A-Za-z]+) \[(\d+),(\d+)\) provenance=(\S+)$/;
+// A guest diagnostic: `Category [s,e) provenance=P`; ResourceLimit adds its budget
+// category (`ResourceLimit EvaluationWork [s,e) ...`).
+const DIAGNOSTIC = /^([A-Za-z]+(?: [A-Za-z]+)?) \[(\d+),(\d+)\) provenance=(\S+)$/;
 const VECTOR_SCHEMA = 'noble-calculator-vectors/v1';
 const NON_CLAIMS = [
   'Agreement on finitely many inputs does not establish parser correctness or any universal arithmetic theorem.',
@@ -68,7 +70,7 @@ export const judge = (expected, observed) => {
     if (match === null) return { verdict: 'not-comparable', reasons: [`non-guest stderr line: ${line}`] };
     diagnostics.push({ category: match[1], span: [Number(match[2]), Number(match[3])], provenance: match[4] });
   }
-  if (diagnostics.some(d => d.category === 'ResourceLimit')) {
+  if (diagnostics.some(d => d.category.startsWith('ResourceLimit'))) {
     return { verdict: 'budget-divergence', reasons: ['observed ResourceLimit; the oracle has no budget model'] };
   }
   const undetermined = expected.outcomes.filter(o => !determined(o));

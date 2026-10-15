@@ -1,48 +1,46 @@
-diff --git a/crates/noble-contracts/src/fixtures/calculator-bigint.noble b/crates/noble-contracts/src/fixtures/calculator-bigint.noble
-index 9c13fa8..efb66c2 100644
---- a/crates/noble-contracts/src/fixtures/calculator-bigint.noble
-+++ b/crates/noble-contracts/src/fixtures/calculator-bigint.noble
-@@ -163,7 +163,20 @@ module calc_big@1 [
-     export big_add_finish_add
-     def big_add_finish_add [
-         [ BigAddOperands.into unpair unpair
--          calc_bits@1.add_bits big_canonical result@1.Result.Ok ]
-+          calc_bits@1.add_bits
-+          # SEEDED FAULT I64-wrapping (CALC-12): the signed sum wraps to 64 bits.
-+          4611686018427387904 calc_bits@1.bits_from_i64_nonnegative
-+          calc_bits@1.shift_once calc_bits@1.shift_once
-+          dup [ calc_bits@1.divide_bits unpair swap drop calc_bits@1.trim_bits ] dip
-+          calc_bits@1.rot
-+          [ swap dup calc_bits@1.bits_empty
-+            [ swap ] [ [ dup ] dip calc_bits@1.subtract_bits calc_bits@1.trim_bits swap ] if ]
-+          [ ] if
-+          swap dup 4611686018427387904 calc_bits@1.bits_from_i64_nonnegative
-+          calc_bits@1.shift_once calc_bits@1.compare_bits -1 =
-+          [ swap drop false swap ]
-+          [ calc_bits@1.subtract_bits calc_bits@1.trim_bits true swap ] if
-+          big_canonical result@1.Result.Ok ]
-         [ drop unit result@1.Result.Err ]
-         BigAddRoute.match
-     ]
-@@ -174,7 +187,20 @@ module calc_big@1 [
-     def big_add_finish_sub [
-         [ drop unit result@1.Result.Err ]
-         [ BigAddOperands.into unpair unpair
--          calc_bits@1.subtract_bits big_canonical result@1.Result.Ok ]
-+          calc_bits@1.subtract_bits
-+          # SEEDED FAULT I64-wrapping (CALC-12): the signed sum wraps to 64 bits.
-+          4611686018427387904 calc_bits@1.bits_from_i64_nonnegative
-+          calc_bits@1.shift_once calc_bits@1.shift_once
-+          dup [ calc_bits@1.divide_bits unpair swap drop calc_bits@1.trim_bits ] dip
-+          calc_bits@1.rot
-+          [ swap dup calc_bits@1.bits_empty
-+            [ swap ] [ [ dup ] dip calc_bits@1.subtract_bits calc_bits@1.trim_bits swap ] if ]
-+          [ ] if
-+          swap dup 4611686018427387904 calc_bits@1.bits_from_i64_nonnegative
-+          calc_bits@1.shift_once calc_bits@1.compare_bits -1 =
-+          [ swap drop false swap ]
-+          [ calc_bits@1.subtract_bits calc_bits@1.trim_bits true swap ] if
-+          big_canonical result@1.Result.Ok ]
-         BigAddRoute.match
-     ]
+diff --git a/crates/noble-contracts/src/fixtures/calculator-numeric.noble b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+index e492bbb..c407621 100644
+--- a/crates/noble-contracts/src/fixtures/calculator-numeric.noble
++++ b/crates/noble-contracts/src/fixtures/calculator-numeric.noble
+@@ -1156,17 +1156,38 @@ module num@1 [
+     signature op_begin_add forall<S:stack>
+         [ S Rat Rat Budget -- S OpInput ! pure ]
+     export op_begin_add
+-    def op_begin_add [ [ pair ] dip 0 op_input ]
++    # SEEDED FAULT I64-wrapping (CALC-12): integer operands are combined with
++    # Core's wrapping I64 word, so the result wraps modulo 2^64.
++    def op_begin_add [
++        [ pair dup unpair rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = swap rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = [ ] [ drop false ] if
++          [ unpair [ rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if ] dip rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if +
++            calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new 0 calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new pair ]
++          [ ] if ] dip 0 op_input
++    ]
  
+     signature op_begin_sub forall<S:stack>
+         [ S Rat Rat Budget -- S OpInput ! pure ]
+     export op_begin_sub
+-    def op_begin_sub [ [ pair ] dip 1 op_input ]
++    # SEEDED FAULT I64-wrapping (CALC-12): integer operands are combined with
++    # Core's wrapping I64 word, so the result wraps modulo 2^64.
++    def op_begin_sub [
++        [ pair dup unpair rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = swap rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = [ ] [ drop false ] if
++          [ unpair [ rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if ] dip rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if -
++            calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new 0 calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new pair ]
++          [ ] if ] dip 1 op_input
++    ]
+ 
+     signature op_begin_mul forall<S:stack>
+         [ S Rat Rat Budget -- S OpInput ! pure ]
+     export op_begin_mul
+-    def op_begin_mul [ [ pair ] dip 2 op_input ]
++    # SEEDED FAULT I64-wrapping (CALC-12): integer operands are combined with
++    # Core's wrapping I64 word, so the result wraps modulo 2^64.
++    def op_begin_mul [
++        [ pair dup unpair rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = swap rat_den calc_big@1.big_bits calc_bits@1.bits_to_i64_positive 1 = [ ] [ drop false ] if
++          [ unpair [ rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if ] dip rat_num dup calc_big@1.big_bits calc_bits@1.bits_to_i64_positive swap calc_big@1.big_sign [ 0 swap - ] [ ] if *
++            calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new 1 calc_big@1.big_from_i64_raw calc_big@1.big_one pair Rat.new pair ]
++          [ ] if ] dip 2 op_input
++    ]
+ 
+     signature op_begin_div forall<S:stack>
+         [ S Rat Rat Budget
