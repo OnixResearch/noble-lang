@@ -750,6 +750,30 @@ call definitions. This is the same open blocker recorded above for the
 parent source. The comparator result therefore does not
 establish a `source-coverage` pass, architecture approval or refinement.
 
+### Integration renewal (issue #22 integration branch, 2026-10-15)
+
+The integration branch merges the design, #13, #15 and calculator branches
+(#16, #17, #18, #19, #20, #23). Before the inventory was renewed, unit
+capacity rose from 56 to 58 for #17's `calculator_engine` and #20's
+`calculator_numeric_paths` test targets. A complete 58/58-unit collection of
+`1d074ea` observed 9,287 production item facts. The same renewal tool kept
+8,609 reviewed paths and removed 215 stale ones. Most stale paths are moved
+closure spans; the rest are the five replay-history items that #17's
+committed session replaced: `noble::calculator::{Accepted,
+HISTORY_BYTES_LIMIT, HISTORY_COMMANDS_LIMIT, HISTORY_WORK_LIMIT,
+REPLAY_STEP_WORK}`. The tool also added 454 new paths, including:
+
+- #16's `noble::calculator::cache` and `trace` modules and
+  `noble_wasm::source::reuse`;
+- #23's metrics, static-literal and stage-split code;
+- #13's inference changes.
+
+Every new authored body is an OPEN body. The renewed policy has 9,063 paths
+(4,538 OPEN bodies, 2,651 generated, 1,874 structural), 2,761
+test-only paths and 80 macro origins. The pure comparator over the same
+collection returns `valid=true`. The architecture-phase blocker described
+above still applies, so the flake `source-coverage` check remains open.
+
 ## Classification
 
 Each compiler-derived production subject is reviewed as one of three categories.
