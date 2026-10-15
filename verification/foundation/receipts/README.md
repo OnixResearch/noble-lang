@@ -5,12 +5,13 @@ source commit. The raw run directories (emitted `.noble`/`.wat`/`.wasm`,
 Lean audit files, sandbox outputs) stay outside the repository. `index.json`
 records their SHA-256.
 
-`ce2e5ce/` contains these files. Its source tree is `b20649ef1ed1`, and the
-runs used the commands in `proofs/foundation/README.md`.
+`898cfe1/` contains these files. Its source tree is `d11cd3c70621`, and it is the
+clean run of `verification/foundation/ci.sh`, which reported `overall=0`. This run
+supersedes the earlier `ce2e5ce` copy.
 
 | File | Content |
 |---|---|
-| `foundation-check.json` | verbatim `check.mjs` receipt: 111 theorems, printed statements and axioms |
+| `foundation-check.json` | verbatim `check.mjs` receipt: 142 theorems, printed statements and axioms |
 | `slice-receipt.json` | verbatim `slice.mjs` receipt for the Phase 3 chain and its refusal controls |
 | `differential-summary.json` | `differential.mjs` receipt with the 163 per-case rows removed. `compacted_from.sha256` names the raw file |
 | `index.json` | raw-file hashes and a result summary |

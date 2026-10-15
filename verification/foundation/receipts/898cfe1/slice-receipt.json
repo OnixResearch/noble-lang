@@ -5,11 +5,11 @@
   "route": "Route B (build --require-proof) + Route A (admit-artifact); PAA-1 envelope not implemented",
   "not_translation_validation": true,
   "universal_backend_proof": false,
-  "source_commit": "ce2e5ce8de5f1fd6f5c3d57a2a278326f7971d7c",
-  "source_tree": "b20649ef1ed196e0d6228d7bb32dc453f8f4c790",
+  "source_commit": "898cfe162bc3d72c4f51ea5aee6cabf79f4196e8",
+  "source_tree": "d11cd3c706212e2781d62fe73a5352ed7d07ba3d",
   "clean_source": true,
   "foundation": {
-    "receipt_sha256": "90ef0f142fcbd712f7ce15609a2e6fc8e36acc91a008d85e2ab9c04a6e71f8bc",
+    "receipt_sha256": "110cf9951f52c0dd201c4bcd65054a23a95af330b328fd0c98688e0798258265",
     "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
     "mathlib_commit": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
     "theorems": [

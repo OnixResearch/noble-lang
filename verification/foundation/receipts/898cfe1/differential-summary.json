@@ -9,8 +9,8 @@
     "on"
   ],
   "universal_backend_proof": false,
-  "source_commit": "ce2e5ce8de5f1fd6f5c3d57a2a278326f7971d7c",
-  "source_tree": "b20649ef1ed196e0d6228d7bb32dc453f8f4c790",
+  "source_commit": "898cfe162bc3d72c4f51ea5aee6cabf79f4196e8",
+  "source_tree": "d11cd3c706212e2781d62fe73a5352ed7d07ba3d",
   "clean_source": true,
   "theorems": [
     {
@@ -86,7 +86,7 @@
       ]
     }
   ],
-  "foundation_receipt_sha256": "90ef0f142fcbd712f7ce15609a2e6fc8e36acc91a008d85e2ab9c04a6e71f8bc",
+  "foundation_receipt_sha256": "110cf9951f52c0dd201c4bcd65054a23a95af330b328fd0c98688e0798258265",
   "toolchain": {
     "cli_sha256": "bad878784fc9a94be052493d8c459883ac071dbf0dc70626c1d9b3efffea23ef",
     "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -205,7 +205,7 @@
       "test oracle_table_covers_every_pool_word ... ok",
       "test malformed_candidates_never_panic_or_accept ... ok",
       "test generated_candidates_agree_with_independent_oracle ... ok",
-      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.64s"
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s"
     ],
     "generated_oracle_candidates": 1000,
     "malformed_candidates": 200,
@@ -510,7 +510,7 @@
   },
   "compacted_from": {
     "file": "differential.json",
-    "sha256": "c32347bca0f83c85a5c0756b071187b4dcceb4c0998662735e192f2567155fd0",
+    "sha256": "22e3654744b52a1b93e08215d1f64c690f4f18334b40e6ebe26a01dc294c1550",
     "bytes": 169954,
     "note": "per-case rows omitted; full raw receipt retained outside the repository"
   }

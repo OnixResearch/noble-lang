@@ -1,8 +1,8 @@
 {
   "schema": "noble-foundation-check/v1",
   "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and transcribed runtime helpers). No implementation theorem.",
-  "source_commit": "ce2e5ce8de5f1fd6f5c3d57a2a278326f7971d7c",
-  "source_tree": "b20649ef1ed196e0d6228d7bb32dc453f8f4c790",
+  "source_commit": "898cfe162bc3d72c4f51ea5aee6cabf79f4196e8",
+  "source_tree": "d11cd3c706212e2781d62fe73a5352ed7d07ba3d",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
@@ -53,7 +53,8 @@
   },
   "mathlib_oleans": "downloaded Lake cache (lake exe cache get), not rebuilt: separate trust assumption",
   "sources_sha256": {
-    "proofs/foundation/NobleFoundation.lean": "b57c8fae57ec5e86156723007741c20b9d6fe18bc65556dc44f67f6e8600e697",
+    "proofs/foundation/NobleFoundation.lean": "35cdfb2a5c232379dafcb3c097ab30082e2e040610448bb94eb8cffcbc9bb99a",
+    "proofs/foundation/NobleFoundation/Effects.lean": "578e91d18982be371e87994317b5e7cec5c5f5cf58727d24a5909bfa9d0939a0",
     "proofs/foundation/NobleFoundation/Helper.lean": "16d04590fea51c2984438090f85632fe554c1095a3295ad96cb72ab92a74cf76",
     "proofs/foundation/NobleFoundation/Instr.lean": "793416b20827d2c0ef5c8ecca6996fdade3447a51486363d58f4ae36eb3100e9",
     "proofs/foundation/NobleFoundation/Laws.lean": "fdaf9eafaea872645a7e744380b8346fb3fe7a0a82af83bf2ad2d4e42c20acc2",
@@ -63,7 +64,7 @@
     "proofs/foundation/NobleFoundation/Repr.lean": "b8fb9ab30fb80e75c4df5d51b56fe3b178eef1415e7f09ba85a3a2b1d08d93f8",
     "proofs/foundation/NobleFoundation/Sequence.lean": "4b2d84b438845b345b7a8a98232a82dedda79d19d1c05e12b0d8a2972c02d73e",
     "proofs/foundation/NobleFoundation/Slice.lean": "ba0408f65203afc6f6f527742aa435ea550cdc3f0ad466a29ed02ec1d5c8577c",
-    "proofs/foundation/inventory.json": "bae6f0f8a3d91795046455d9358180df7a73e1da0d425c5b4552be33c8c501fd",
+    "proofs/foundation/inventory.json": "8bbbba4990c475cef0aa07dace6cbc9471d7fa8edf69eb64760d59f57b3e5a30",
     "proofs/foundation/lakefile.toml": "dde8be0ee9b607e6f46d7dd80e6ad5b88ad5eddab4c589a897c3613ab3c086b9",
     "proofs/foundation/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
     "proofs/foundation/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
@@ -81,7 +82,7 @@
     "Classical.choice",
     "Quot.sound"
   ],
-  "theorem_count": 111,
+  "theorem_count": 142,
   "theorems": [
     {
       "name": "NobleFoundation.toZ_ofZ",
@@ -1446,8 +1447,351 @@
       "status": "proved",
       "statement": "NobleFoundation.program_duplicable : ∀ (p : List NobleContracts.Op) (i o s : List NobleContracts.Ty) (r : NobleContracts.Stack), NobleContracts.OpTyped (NobleContracts.Op.word 0) (s ++ [NobleContracts.Ty.program i o]) (s ++ [NobleContracts.Ty.program i o, NobleContracts.Ty.program i o]) ∧ NobleContracts.Step (NobleContracts.Op.word 0) (NobleContracts.Value.program p :: r) (NobleContracts.Value.program p :: NobleContracts.Value.program p :: r)",
       "axioms": []
+    },
+    {
+      "name": "NobleFoundation.Effects.OpT.weaken",
+      "phase": 2,
+      "role": "effects-structure",
+      "claim": "operation typing is monotone in the effect bound",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.OpT.weaken : ∀ {E E' : List NobleFoundation.Effects.Label} {op : NobleFoundation.Effects.EOp} {s t : List NobleFoundation.Effects.ETy}, NobleFoundation.Effects.OpT E op s t → E ⊆ E' → NobleFoundation.Effects.OpT E' op s t",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.CodeT.weaken",
+      "phase": 2,
+      "role": "effects-structure",
+      "claim": "code typing is monotone in the effect bound",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.CodeT.weaken : ∀ {E E' : List NobleFoundation.Effects.Label} {p : List NobleFoundation.Effects.EOp} {s t : List NobleFoundation.Effects.ETy}, NobleFoundation.Effects.CodeT E p s t → E ⊆ E' → NobleFoundation.Effects.CodeT E' p s t",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.CodeT.append",
+      "phase": 2,
+      "role": "effects-structure",
+      "claim": "typed code composes at the exact intermediate stack type",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.CodeT.append : ∀ {E : List NobleFoundation.Effects.Label} {p q : List NobleFoundation.Effects.EOp} {s m t : List NobleFoundation.Effects.ETy}, NobleFoundation.Effects.CodeT E p s m → NobleFoundation.Effects.CodeT E q m t → NobleFoundation.Effects.CodeT E (p ++ q) s t",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.preserve",
+      "phase": 2,
+      "role": "effects-preservation",
+      "claim": "every step (including halting host steps) preserves configuration typing",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.preserve : ∀ {H : ℕ → NobleFoundation.Effects.Response} {E : List NobleFoundation.Effects.Label} {c c' : NobleFoundation.Effects.Cfg}, NobleFoundation.Effects.WT E c → NobleFoundation.Effects.Step H c c' → NobleFoundation.Effects.WT E c'",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.preserve_reach",
+      "phase": 2,
+      "role": "effects-preservation",
+      "claim": "typing holds in every finite execution prefix",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.preserve_reach : ∀ {H : ℕ → NobleFoundation.Effects.Response} {E : List NobleFoundation.Effects.Label} {c c' : NobleFoundation.Effects.Cfg}, NobleFoundation.Effects.WT E c → NobleFoundation.Effects.Reach H c c' → NobleFoundation.Effects.WT E c'",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.progress",
+      "phase": 2,
+      "role": "effects-progress",
+      "claim": "typed running configuration with code always steps, for every host response (no forbidden stuck state; no termination claim)",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.progress : ∀ {H : ℕ → NobleFoundation.Effects.Response} {E : List NobleFoundation.Effects.Label} {c : NobleFoundation.Effects.Cfg}, NobleFoundation.Effects.WT E c → c.status = NobleFoundation.Effects.Status.running → c.code ≠ [] → ∃ c', NobleFoundation.Effects.Step H c c'",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.halted_no_step",
+      "phase": 2,
+      "role": "effects-progress",
+      "claim": "denied/failed configurations take no further step",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.halted_no_step : ∀ {H : ℕ → NobleFoundation.Effects.Response} {c c' : NobleFoundation.Effects.Cfg}, c.status ≠ NobleFoundation.Effects.Status.running → ¬NobleFoundation.Effects.Step H c c'",
+      "axioms": []
+    },
+    {
+      "name": "NobleFoundation.Effects.step_trace",
+      "phase": 2,
+      "role": "effect-soundness",
+      "claim": "a step appends at most one event, whose label is in the bound",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.step_trace : ∀ {H : ℕ → NobleFoundation.Effects.Response} {E : List NobleFoundation.Effects.Label} {c c' : NobleFoundation.Effects.Cfg}, NobleFoundation.Effects.WT E c → NobleFoundation.Effects.Step H c c' → c'.trace = c.trace ∨ ∃ ev, c'.trace = c.trace ++ [ev] ∧ ev.label ∈ E",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.effect_sound",
+      "phase": 2,
+      "role": "effect-soundness",
+      "claim": "every finite prefix: trace = old ++ new (order preserved, append-only) and every new label is in the bound, incl. denied/failed requests",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.effect_sound : ∀ {H : ℕ → NobleFoundation.Effects.Response} {E : List NobleFoundation.Effects.Label} {c c' : NobleFoundation.Effects.Cfg}, NobleFoundation.Effects.WT E c → NobleFoundation.Effects.Reach H c c' → ∃ new, c'.trace = c.trace ++ new ∧ ∀ ev ∈ new, ev.label ∈ E",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.init_wt",
+      "phase": 2,
+      "role": "effect-soundness",
+      "claim": "a typed program gives a typed initial configuration",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.init_wt : ∀ {E : List NobleFoundation.Effects.Label} {p : List NobleFoundation.Effects.EOp} {out : List NobleFoundation.Effects.ETy}, NobleFoundation.Effects.CodeT E p [] out → NobleFoundation.Effects.WT E (NobleFoundation.Effects.init p)",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.trace_within_bound",
+      "phase": 2,
+      "role": "effect-soundness",
+      "claim": "every event of every reachable configuration of a typed program is within the bound",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.trace_within_bound : ∀ {H : ℕ → NobleFoundation.Effects.Response} {E : List NobleFoundation.Effects.Label} {p : List NobleFoundation.Effects.EOp} {out : List NobleFoundation.Effects.ETy} {c : NobleFoundation.Effects.Cfg}, NobleFoundation.Effects.CodeT E p [] out → NobleFoundation.Effects.Reach H (NobleFoundation.Effects.init p) c → ∀ ev ∈ c.trace, ev.label ∈ E",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.bound_does_not_fix_order",
+      "phase": 2,
+      "role": "effect-negative",
+      "claim": "same bound, different ordered traces: the bound does not justify reordering",
+      "status": "proved",
+      "statement": "NobleFoundation.Effects.bound_does_not_fix_order : have p₁ := [NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.i64 1), NobleFoundation.Effects.EOp.emit, NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.i64 2), NobleFoundation.Effects.EOp.emit]; have p₂ := [NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.i64 2), NobleFoundation.Effects.EOp.emit, NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.i64 1), NobleFoundation.Effects.EOp.emit]; NobleFoundation.Effects.CodeT [NobleFoundation.Effects.Label.emit] p₁ [] [] ∧ NobleFoundation.Effects.CodeT [NobleFoundation.Effects.Label.emit] p₂ [] [] ∧ NobleFoundation.Effects.Reach (fun x => NobleFoundation.Effects.Response.permitted) (NobleFoundation.Effects.init p₁) { code := [], stack := [], live := [], next := 0, trace := [{ label := NobleFoundation.Effects.Label.emit, arg := 1, response := NobleFoundation.Effects.Response.permitted }, { label := NobleFoundation.Effects.Label.emit, arg := 2, response := NobleFoundation.Effects.Response.permitted }], status := NobleFoundation.Effects.Status.running } ∧ NobleFoundation.Effects.Reach (fun x => NobleFoundation.Effects.Response.permitted) (NobleFoundation.Effects.init p₂) { code := [], stack := [], live := [], next := 0, trace := [{ label := NobleFoundation.Effects.Label.emit, arg := 2, response := NobleFoundation.Effects.Response.permitted }, { label := NobleFoundation.Effects.Label.emit, arg := 1, response := NobleFoundation.Effects.Response.permitted }], status := NobleFoundation.Effects.Status.running } ∧ [{ label := NobleFoundation.Effects.Label.emit, arg := 1, response := NobleFoundation.Effects.Response.permitted }, { label := NobleFoundation.Effects.Label.emit, arg := 2, response := NobleFoundation.Effects.Response.permitted }] ≠ [{ label := NobleFoundation.Effects.Label.emit, arg := 2, response := NobleFoundation.Effects.Response.permitted }, { label := NobleFoundation.Effects.Label.emit, arg := 1, response := NobleFoundation.Effects.Response.permitted }]",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.denied_request_recorded_and_halts",
+      "phase": 2,
+      "role": "effect-negative",
+      "claim": "a denied request is recorded and halts; the later request is never performed",
+      "status": "proved",
+      "statement": "NobleFoundation.Effects.denied_request_recorded_and_halts : NobleFoundation.Effects.Reach (fun x => NobleFoundation.Effects.Response.denied) (NobleFoundation.Effects.init [NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.i64 7), NobleFoundation.Effects.EOp.emit, NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.i64 8), NobleFoundation.Effects.EOp.emit]) { code := [NobleFoundation.Effects.EOp.emit, NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.i64 8), NobleFoundation.Effects.EOp.emit], stack := [NobleFoundation.Effects.EVal.i64 7], live := [], next := 0, trace := [{ label := NobleFoundation.Effects.Label.emit, arg := 7, response := NobleFoundation.Effects.Response.denied }], status := NobleFoundation.Effects.Status.denied } ∧ ∀ (c' : NobleFoundation.Effects.Cfg), ¬NobleFoundation.Effects.Step (fun x => NobleFoundation.Effects.Response.denied) { code := [NobleFoundation.Effects.EOp.emit, NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.i64 8), NobleFoundation.Effects.EOp.emit], stack := [NobleFoundation.Effects.EVal.i64 7], live := [], next := 0, trace := [{ label := NobleFoundation.Effects.Label.emit, arg := 7, response := NobleFoundation.Effects.Response.denied }], status := NobleFoundation.Effects.Status.denied } c'",
+      "axioms": []
+    },
+    {
+      "name": "NobleFoundation.Effects.topIds_copy",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "copyable values hold no top-level resource",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.topIds_copy : ∀ {v : NobleFoundation.Effects.EVal} {t : NobleFoundation.Effects.ETy}, NobleFoundation.Effects.ValT v t → t.Copy → ∀ (s : List NobleFoundation.Effects.EVal), NobleFoundation.Effects.topIds (v :: s) = NobleFoundation.Effects.topIds s",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.own_preserve",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "on typed configurations every step preserves: stack resources ~ live set, no duplicates, freshness",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.own_preserve : ∀ {H : ℕ → NobleFoundation.Effects.Response} {E : List NobleFoundation.Effects.Label} {c c' : NobleFoundation.Effects.Cfg}, NobleFoundation.Effects.WT E c → NobleFoundation.Effects.Own c → NobleFoundation.Effects.Step H c c' → NobleFoundation.Effects.Own c'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.live_change",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "the live set changes only by a recorded permitted acquire (fresh id) or release (erase)",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.live_change : ∀ {H : ℕ → NobleFoundation.Effects.Response} {c c' : NobleFoundation.Effects.Cfg}, NobleFoundation.Effects.Step H c c' → c'.live = c.live ∨ ∃ ev, c'.trace = c.trace ++ [ev] ∧ ev.response = NobleFoundation.Effects.Response.permitted ∧ (ev.label = NobleFoundation.Effects.Label.acquire ∧ ev.arg = c.next ∧ c'.live = ev.arg :: c.live ∨ ev.label = NobleFoundation.Effects.Label.release ∧ c'.live = c.live.erase ev.arg)",
+      "axioms": []
+    },
+    {
+      "name": "NobleFoundation.Effects.ValT.rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "typed copyable values contain no resource anywhere (mutual)",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.ValT.rfree : ∀ {v : NobleFoundation.Effects.EVal} {t : NobleFoundation.Effects.ETy}, NobleFoundation.Effects.ValT v t → t.Copy → NobleFoundation.Effects.RFreeV v",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.OpT.rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "typed operations contain no resource anywhere (mutual)",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.OpT.rfree : ∀ {E : List NobleFoundation.Effects.Label} {op : NobleFoundation.Effects.EOp} {s t : List NobleFoundation.Effects.ETy}, NobleFoundation.Effects.OpT E op s t → NobleFoundation.Effects.RFreeO op",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.CodeT.rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "typed code contains no resource anywhere, including nested programs (mutual)",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.CodeT.rfree : ∀ {E : List NobleFoundation.Effects.Label} {p : List NobleFoundation.Effects.EOp} {s t : List NobleFoundation.Effects.ETy}, NobleFoundation.Effects.CodeT E p s t → NobleFoundation.Effects.RFreeC p",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.StackT.rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "every typed stack value is a top-level resource or resource-free",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.StackT.rfree : ∀ {vs : List NobleFoundation.Effects.EVal} {ts : List NobleFoundation.Effects.ETy}, NobleFoundation.Effects.StackT vs ts → ∀ v ∈ vs, (∃ n, v = NobleFoundation.Effects.EVal.res n) ∨ NobleFoundation.Effects.RFreeV v",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.typed_rfree",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "typed configurations: continuation and all stack programs are resource-free",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.typed_rfree : ∀ {E : List NobleFoundation.Effects.Label} {c : NobleFoundation.Effects.Cfg}, NobleFoundation.Effects.WT E c → NobleFoundation.Effects.RFreeC c.code ∧ ∀ v ∈ c.stack, (∃ n, v = NobleFoundation.Effects.EVal.res n) ∨ NobleFoundation.Effects.RFreeV v",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.reachable_sound",
+      "phase": 2,
+      "role": "effects-ownership",
+      "claim": "typed program: every finite prefix is typed, within bound, ownership-preserving and capture-free",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.reachable_sound : ∀ {H : ℕ → NobleFoundation.Effects.Response} {E : List NobleFoundation.Effects.Label} {p : List NobleFoundation.Effects.EOp} {out : List NobleFoundation.Effects.ETy} {c : NobleFoundation.Effects.Cfg}, NobleFoundation.Effects.CodeT E p [] out → NobleFoundation.Effects.Reach H (NobleFoundation.Effects.init p) c → NobleFoundation.Effects.WT E c ∧ (∀ ev ∈ c.trace, ev.label ∈ E) ∧ NobleFoundation.Effects.Own c ∧ NobleFoundation.Effects.RFreeC c.code ∧ ∀ v ∈ c.stack, (∃ n, v = NobleFoundation.Effects.EVal.res n) ∨ NobleFoundation.Effects.RFreeV v",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.dup_res_untypable",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "dup of a resource is untypable",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.dup_res_untypable : ∀ {E : List NobleFoundation.Effects.Label} {s out : List NobleFoundation.Effects.ETy}, ¬NobleFoundation.Effects.OpT E NobleFoundation.Effects.EOp.dup (NobleFoundation.Effects.ETy.res :: s) out",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.drop_res_untypable",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "drop (discard) of a resource is untypable",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.drop_res_untypable : ∀ {E : List NobleFoundation.Effects.Label} {s out : List NobleFoundation.Effects.ETy}, ¬NobleFoundation.Effects.OpT E NobleFoundation.Effects.EOp.drop (NobleFoundation.Effects.ETy.res :: s) out",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.quote_res_untypable",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "quote (capture) of a resource is untypable",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.quote_res_untypable : ∀ {E : List NobleFoundation.Effects.Label} {s out : List NobleFoundation.Effects.ETy}, ¬NobleFoundation.Effects.OpT E NobleFoundation.Effects.EOp.quote (NobleFoundation.Effects.ETy.res :: s) out",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.push_res_untypable",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "a resource literal is untypable",
+      "status": "proved",
+      "statement": "@NobleFoundation.Effects.push_res_untypable : ∀ {E : List NobleFoundation.Effects.Label} {n : ℕ} {s out : List NobleFoundation.Effects.ETy}, ¬NobleFoundation.Effects.OpT E (NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.res n)) s out",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.untyped_dup_breaks_ownership",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "untyped acquire dup reaches a state violating Own",
+      "status": "proved",
+      "statement": "NobleFoundation.Effects.untyped_dup_breaks_ownership : NobleFoundation.Effects.Reach NobleFoundation.Effects.perm✝ (NobleFoundation.Effects.init [NobleFoundation.Effects.EOp.acquire, NobleFoundation.Effects.EOp.dup]) { code := [], stack := [NobleFoundation.Effects.EVal.res 0, NobleFoundation.Effects.EVal.res 0], live := [0], next := 1, trace := [{ label := NobleFoundation.Effects.Label.acquire, arg := 0, response := NobleFoundation.Effects.Response.permitted }], status := NobleFoundation.Effects.Status.running } ∧ ¬NobleFoundation.Effects.Own { code := [], stack := [NobleFoundation.Effects.EVal.res 0, NobleFoundation.Effects.EVal.res 0], live := [0], next := 1, trace := [{ label := NobleFoundation.Effects.Label.acquire, arg := 0, response := NobleFoundation.Effects.Response.permitted }], status := NobleFoundation.Effects.Status.running }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.untyped_drop_breaks_ownership",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "untyped acquire drop leaks a live resource",
+      "status": "proved",
+      "statement": "NobleFoundation.Effects.untyped_drop_breaks_ownership : NobleFoundation.Effects.Reach NobleFoundation.Effects.perm✝ (NobleFoundation.Effects.init [NobleFoundation.Effects.EOp.acquire, NobleFoundation.Effects.EOp.drop]) { code := [], stack := [], live := [0], next := 1, trace := [{ label := NobleFoundation.Effects.Label.acquire, arg := 0, response := NobleFoundation.Effects.Response.permitted }], status := NobleFoundation.Effects.Status.running } ∧ ¬NobleFoundation.Effects.Own { code := [], stack := [], live := [0], next := 1, trace := [{ label := NobleFoundation.Effects.Label.acquire, arg := 0, response := NobleFoundation.Effects.Response.permitted }], status := NobleFoundation.Effects.Status.running }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.untyped_capture_breaks_ownership",
+      "phase": 2,
+      "role": "resource-negative",
+      "claim": "untyped acquire quote captures a live resource in a program",
+      "status": "proved",
+      "statement": "NobleFoundation.Effects.untyped_capture_breaks_ownership : NobleFoundation.Effects.Reach NobleFoundation.Effects.perm✝ (NobleFoundation.Effects.init [NobleFoundation.Effects.EOp.acquire, NobleFoundation.Effects.EOp.quote]) { code := [], stack := [NobleFoundation.Effects.EVal.prog [NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.res 0)]], live := [0], next := 1, trace := [{ label := NobleFoundation.Effects.Label.acquire, arg := 0, response := NobleFoundation.Effects.Response.permitted }], status := NobleFoundation.Effects.Status.running } ∧ ¬NobleFoundation.Effects.Own { code := [], stack := [NobleFoundation.Effects.EVal.prog [NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.res 0)]], live := [0], next := 1, trace := [{ label := NobleFoundation.Effects.Label.acquire, arg := 0, response := NobleFoundation.Effects.Response.permitted }], status := NobleFoundation.Effects.Status.running } ∧ ¬NobleFoundation.Effects.RFreeV (NobleFoundation.Effects.EVal.prog [NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.res 0)])",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.move_then_release",
+      "phase": 2,
+      "role": "ownership",
+      "claim": "typed move (swap) then release ends with no live resource",
+      "status": "proved",
+      "statement": "NobleFoundation.Effects.move_then_release : NobleFoundation.Effects.CodeT [NobleFoundation.Effects.Label.acquire, NobleFoundation.Effects.Label.release] [NobleFoundation.Effects.EOp.acquire, NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.i64 5), NobleFoundation.Effects.EOp.swap, NobleFoundation.Effects.EOp.release, NobleFoundation.Effects.EOp.drop] [] [] ∧ NobleFoundation.Effects.Reach NobleFoundation.Effects.perm✝ (NobleFoundation.Effects.init [NobleFoundation.Effects.EOp.acquire, NobleFoundation.Effects.EOp.push (NobleFoundation.Effects.EVal.i64 5), NobleFoundation.Effects.EOp.swap, NobleFoundation.Effects.EOp.release, NobleFoundation.Effects.EOp.drop]) { code := [], stack := [], live := [], next := 1, trace := [{ label := NobleFoundation.Effects.Label.acquire, arg := 0, response := NobleFoundation.Effects.Response.permitted }, { label := NobleFoundation.Effects.Label.release, arg := 0, response := NobleFoundation.Effects.Response.permitted }], status := NobleFoundation.Effects.Status.running }",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.Effects.program_expecting_resource_is_copyable",
+      "phase": 2,
+      "role": "eligibility",
+      "claim": "a program whose input expects a resource is still copyable data",
+      "status": "proved",
+      "statement": "NobleFoundation.Effects.program_expecting_resource_is_copyable : (NobleFoundation.Effects.ETy.prog [NobleFoundation.Effects.ETy.res] [] [NobleFoundation.Effects.Label.release]).Copy ∧ NobleFoundation.Effects.OpT [] NobleFoundation.Effects.EOp.dup [NobleFoundation.Effects.ETy.prog [NobleFoundation.Effects.ETy.res] [] [NobleFoundation.Effects.Label.release]] [NobleFoundation.Effects.ETy.prog [NobleFoundation.Effects.ETy.res] [] [NobleFoundation.Effects.Label.release], NobleFoundation.Effects.ETy.prog [NobleFoundation.Effects.ETy.res] [] [NobleFoundation.Effects.Label.release]]",
+      "axioms": [
+        "propext"
+      ]
     }
   ],
   "implementation_theorem": false,
-  "artifact_directory": "/home/brittonr/.cache/noble-issues/receipts/issue-15/final/check"
+  "artifact_directory": "/home/brittonr/.cache/noble-issues/receipts/issue-15/ci-898cfe1/check"
 }

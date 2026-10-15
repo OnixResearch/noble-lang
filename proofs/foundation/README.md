@@ -268,7 +268,7 @@ It runs these stages:
 2. `slice.mjs`;
 3. `differential.mjs --seed 15 --count 80`;
 4. `--verify` on the fresh receipt;
-5. a stale-evidence control: the retained `receipts/ce2e5ce` receipt must be
+5. a stale-evidence control: the retained `receipts/898cfe1` receipt must be
    refused.
 
 It writes `summary.txt` and exits nonzero if any stage fails.
