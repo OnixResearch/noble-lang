@@ -9,7 +9,7 @@
  "plan_sha256": "85bed3371d0e2e4933301d67268f67a366001383070564e263f3821ff050397b",
  "receipts": [
   {
-   "sha256": "828d456dfbce9df38b070575bcc125e53ed62e4a1d231beced2d9a62c284ea13",
+   "sha256": "d2821027b5703bdac802e9a7061405b04d9be253e920b54cbfdcf8029784c057",
    "plan_sha256": "083d057b38ac38e0666138949ead1a0028bc027b8ef2e1f4672b216579d3d658",
    "runner_sha256": "11324703e31fc22db1cfab08c1478c126bddb5336d961ed9a37e161847abf560",
    "node": "v24.13.0",
@@ -777,15 +777,130 @@
   },
   {
    "id": "control/history-bytes",
-   "observed": false
+   "category": "host-limit",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    {
+     "repeat": "1",
+     "count": 65530
+    },
+    "x"
+   ],
+   "stdin_sha256": "a6c21d94197118d94178df5c0d07352521b21fda7c6b15966b536e7e2a8337f8",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "HostLimit HistoryBytes [0,65531) provenance=host-replay-preflight"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "HostLimit HistoryBytes [0,65531) provenance=host-replay-preflight"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 564.5,
+   "max_rss_kib": 209700,
+   "resource_limit_lines": 0,
+   "matched_plan": true
   },
   {
    "id": "control/replay-work",
-   "observed": false
+   "category": "host-limit",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    {
+     "repeat": "1",
+     "count": 65400
+    },
+    "x"
+   ],
+   "stdin_sha256": "f33757cd6ce8dc30cfdcb526abf3c1e55e2e627b90c59c2e905735af32b6ded0",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "HostLimit ReplayWork [0,65401) provenance=host-replay-preflight"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "HostLimit ReplayWork [0,65401) provenance=host-replay-preflight"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 518.9,
+   "max_rss_kib": 215100,
+   "resource_limit_lines": 0,
+   "matched_plan": true
   },
   {
    "id": "control/worker-killed",
-   "observed": false
+   "category": "native-failure",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "1+2",
+    "x"
+   ],
+   "stdin_sha256": "1205ca3fc5c578f9e64ba845e8c9acb8fb77316232c8f0dee7e1417ff42eff23",
+   "expected": [
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "3",
+    "7"
+   ],
+   "stderr_lines": [
+    "noble: engine worker cleanup failed: Broken pipe (os error 32)"
+   ],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 995.4,
+   "max_rss_kib": 211764,
+   "resource_limit_lines": 0,
+   "matched_plan": false
   },
   {
    "id": "control/host-timeout",

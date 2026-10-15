@@ -69,9 +69,31 @@ Work charge.
   - a forced 20 s timeout ends in SIGKILL with no output;
   - a 48 MiB memory-capped scope ends in SIGTERM with no output.
 
-  None of them printed a `ResourceLimit` line. The `HostLimit
-  HistoryBytes`/`ReplayWork` and killed-worker controls are in `plan.json`;
-  `summary.json` marks them `observed: false` until their run finishes. The library harness
+  None of them printed a `ResourceLimit` line. Host replay preflight (on `44329dc`):
+  - A 65,531-byte line gives `HostLimit HistoryBytes [0,65531)
+    provenance=host-replay-preflight` (565 s).
+  - A 65,401-byte line gives `HostLimit ReplayWork [0,65401)` (519 s).
+  - In both cases the follow-up `x` still prints 7, and no `ResourceLimit`
+    line appears.
+- **Killed-worker control: did not match plan.** The plan predicted that
+  killing the retained Node worker after the first output would fail the next
+  line. On `44329dc` every line starts a fresh candidate worker and replays
+  the accepted history, so killing the old worker only made the host log
+  `noble: engine worker cleanup failed: Broken pipe (os error 32)` when it
+  dropped that worker. `1+2` still printed 3, `x` printed 7, and the exit
+  status was 0. That is neither a `ResourceLimit` nor a success caused by
+  the failure. It also does not show a `NativeFailure` label. The quota
+  test in the library harness covers the native-quota distinction.
+- **Specific to `44329dc`.** The `HostLimit HistoryBytes`/`ReplayWork`
+  controls exercise that tree's replay-preflight host limits. #17
+  (`feat/issue-17-calculator-snapshot`) replaces replay with one committed
+  session and a byte-exact restore, and removes those limits. Its design.md
+  section "Committed line and byte-exact restore" states that every non-commit
+  outcome restores the last commit, including host bounds and infrastructure
+  failures. A remaining host bound then surfaces as `InfrastructureFailure` and
+  a restore, never as `ResourceLimit`. A failed restore verification, or a
+  dead or timed-out worker, ends the session. None of these observations was
+  re-run on that branch. The library harness
   (`native_step_quota_is_not_a_guest_resource_limit`) shows that a lowered
   runtime step quota is a runtime status with quota reason 6, and produces no
   guest value.
