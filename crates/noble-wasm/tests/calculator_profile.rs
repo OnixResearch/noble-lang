@@ -1301,8 +1301,10 @@ fn calculator_compile_metrics_track_issued_work_types_and_session_state() -> Res
         assert_eq!(metrics.table_end, span.start + span.length);
         // Pair<Pair<I64,I64>,I64> is the largest admitted type: 5 nodes.
         assert_eq!(metrics.max_type_size, 5);
-        // Every literal occurrence allocates fresh static Text.
-        text_end += 4;
+        // Static literals are content-addressed: only the first "abcd" allocates.
+        if generation == 0 {
+            text_end += 4;
+        }
         assert_eq!(metrics.text_end, text_end);
         if generation == 0 {
             assert_eq!(metrics.signature_key_charge, 0);
@@ -1318,7 +1320,7 @@ fn calculator_compile_metrics_track_issued_work_types_and_session_state() -> Res
             .map_err(|error| format!("generation {generation} source commit: {error:?}"))?;
     }
     // A Program-free epoch restarts the key pool, so no retained key is
-    // charged, but static Text is never rewound.
+    // charged, but static Text is never rewound: a new literal still grows it.
     let checked = session
         .prepare(b"\"ab\" drop", &carried, limits())
         .map_err(|error| format!("program-free source: {error:?}"))?;

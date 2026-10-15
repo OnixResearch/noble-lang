@@ -859,3 +859,32 @@ fn calculator_any_reachable_program_blocks_the_signature_restart() -> Result<(),
     );
     Ok(())
 }
+
+#[test]
+fn calculator_static_literals_stay_content_addressed_across_a_long_session() -> Result<(), String>
+{
+    let mut arena = Arena::new(true)?;
+    arena.normal("\"let\"")?;
+    let live = arena.snapshot()?;
+    for _ in 0..200 {
+        arena.normal("\"let\" drop \"fn\" drop")?;
+    }
+    // Every module rewrote the same bytes at the same address, so the
+    // first module's live static Text still reads "let".
+    assert_eq!(arena.snapshot()?, live);
+    // Only distinct literal contents ever advance the static cursor.
+    let checked = arena
+        .session
+        .prepare(b"\"fn\" drop \"x\" drop", &arena.stack, limits())
+        .map_err(|error| format!("{error:?}"))?;
+    let metrics = arena
+        .compiler
+        .prepare(checked.submission().ok_or("no submission")?)
+        .map_err(|_| "calculator compiler refused")?
+        .metrics();
+    assert_eq!(
+        metrics.text_end,
+        noble_wasm::source::CALCULATOR_CAPS.text_start + 3 + 2 + 1
+    );
+    Ok(())
+}

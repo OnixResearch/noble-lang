@@ -199,6 +199,9 @@ pub struct Compiler {
     free_code: alloc::vec::Vec<FreeCode>,
     installed_code: alloc::vec::Vec<CodeSpan>,
     text_end: u32,
+    // Calculator only: each distinct static literal's first address. Like
+    // `text_end` it is never rewound, so a recorded address stays valid.
+    static_literals: alloc::collections::BTreeMap<alloc::vec::Vec<u8>, u32>,
     signatures: crate::signatures::Pool,
     descriptors: alloc::vec::Vec<(u32, u32)>,
     identities: alloc::vec::Vec<Identity>,
@@ -571,6 +574,7 @@ impl Compiler {
             free_code: alloc::vec::Vec::new(),
             installed_code: alloc::vec::Vec::new(),
             text_end: TEXT_START,
+            static_literals: alloc::collections::BTreeMap::new(),
             signatures: crate::signatures::Pool::source(),
             descriptors: alloc::vec::Vec::new(),
             identities: alloc::vec::Vec::new(),
@@ -723,6 +727,12 @@ impl Compiler {
         if let Some(problem) = failure {
             return Err(problem);
         }
+        // The literal table is copied into the prospective compiler.
+        attempt!(work.entries(
+            self.static_literals
+                .keys()
+                .fold(0usize, |total, key| total.saturating_add(key.len() + 1))
+        ));
         let mut next = Self {
             live: self.live,
             live_slots: self.live_slots,
@@ -737,6 +747,7 @@ impl Compiler {
             free_code: self.free_code.clone(),
             installed_code: self.installed_code.clone(),
             text_end: self.text_end,
+            static_literals: self.static_literals.clone(),
             signatures: match fresh_signatures {
                 Some(pool) => pool,
                 None => self.signatures.clone(),
