@@ -37,25 +37,44 @@ session matched its plan expectation.
 
 ## Observations
 
-Partial: a run on the release snapshot of `44329dc` (sha256
-`e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127`) was in
-progress when this was committed. `summary.json` is not committed yet. Observed
-so far:
+These are runs of the release snapshot of `44329dc` (sha256
+`e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127`). Each
+session ran under a 2 GiB memory cap. The peak RSS of the `noble` process
+tree was 195–225 MiB. Wall times are from a heavily loaded 32-core host.
 
-| Session | Budget | stdout | stderr | Wall |
-|---|---|---|---|---|
-| `output-size/N-1` | `--output-size 6` | `7`, `7` | `ResourceLimit OutputSize [14,14)` twice, then `UnknownName [0,1)` | 2,336 s |
-| `call-depth/N-1` | `--call-depth 1` | `2` | `ResourceLimit CallDepth [8,9)` | 3,310 s |
-| `input-bytes/N-2` | `--input-bytes 7` | — | `ResourceLimit InputBytes [0,8)`, `[0,9)`, then `UnknownName [0,1)` | 453 s |
+| Category | Budget N−1 / N | Probe line | N−1 stderr (stdout) | N stdout | Wall N−1 / N |
+|---|---|---|---|---|---|
+| InputBytes | 8 / 9 | `x+100000` (9 bytes with `\n`) | `ResourceLimit InputBytes [0,9)` (`7`, `7`) | `7`, `100007`, `7` | 1,193 s / 1,901 s |
+| NumericDigits | 2 / 3 | `x+123` | `ResourceLimit NumericDigits [2,5)` (`7`, `7`) | `7`, `130`, `7` | 1,157 s / 1,551 s |
+| IntermediateIntegerBits | 25 / 26 | `1234567` (w = ⌊(3322·7+999)/1000⌋+2 = 26) | `ResourceLimit IntermediateIntegerBits [0,7)` (`7`, `7`) | `7`, `1234567`, `7` | 1,096 s / 1,214 s |
+| SyntaxDepth | 2 / 3 | `(((x)))` | `ResourceLimit SyntaxDepth [2,3)` (`7`, `7`) | PENDING | 1,040 s / — |
+| CallDepth | 1 / 2 | `f(1)`, where `f` calls `g` | `ResourceLimit CallDepth [8,9)` (`2` from the follow-up `g(1)`) | `3`, `2` | 3,310 s / 3,873 s |
+| EvaluationWork | 38,052 / 38,053 | `77` (predicted 3 + 50·19² + (50+25+25)·10² + 100·10² = 38,053) | PENDING | PENDING | — |
+| OutputSize | 6 / 7 | `let x=1234567` (7 bytes of display) | `ResourceLimit OutputSize [14,14)` twice, then `UnknownName [0,1)` (`7`, `7`) | `7` and `1234567` ×4 | 2,336 s / 4,206 s |
 
-- **OutputSize state control.** The session ran `let x=7`, `let x=1234567`,
-  `x`, `let y=1234567` and `y`. Both refused definitions left the state
-  unchanged: `x` kept its earlier value 7, and `y` stayed unbound.
-- **Newline counting.** An unframed line counts its `\n`, both in InputBytes and
-  in the 1-per-byte preparse Work charge. The original predictions omitted
-  it, so `plan.json` now predicts N = 9 for `x+100000` and N = 38,053 for `77`.
-  With the newline, the accounting reproduces the earlier pre-port
-  measurement of 96,206 Work units for `2+3*4`.
+All the brackets except CallDepth run `let x=7`, then the probe, then `x`.
+Every N−1 refusal names its category, and the follow-up `x` (or `g(1)`)
+still sees the state from before the refusal.
+`input-bytes 7` (N−2) refuses even the 8-byte setup line. An unframed line
+counts its `\n`, both in InputBytes and in the one-unit-per-byte preparse
+Work charge.
+
+- **OutputSize state control.** `--output-size 6` ran `let x=7`,
+  `let x=1234567`, `x`, `let y=1234567`, `y`. Both definitions were refused
+  before commit: `x` kept 7, and `y` stayed unbound (`UnknownName`). With
+  `--output-size 7`, the same lines committed.
+- **Distinctness.** An earlier smoke run with the same binary checked three
+  controls:
+  - an oversized line gives `TransportLimit InputFrameBytes` and exit 2;
+  - a forced 20 s timeout ends in SIGKILL with no output;
+  - a 48 MiB memory-capped scope ends in SIGTERM with no output.
+
+  None of them printed a `ResourceLimit` line. The `HostLimit
+  HistoryBytes`/`ReplayWork` and killed-worker controls are in `plan.json`
+  and not yet observed. The library harness
+  (`native_step_quota_is_not_a_guest_resource_limit`) shows that a lowered
+  runtime step quota is a runtime status with quota reason 6, and produces no
+  guest value.
 
 ## Non-claims
 

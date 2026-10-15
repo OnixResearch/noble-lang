@@ -1,0 +1,717 @@
+{
+ "schema": "noble-calculator-budget-summary/v1",
+ "status": "implementation-observation-not-case-evidence",
+ "case": "CALC-08",
+ "binary": {
+  "sha256": "e1fb70bac358e7ffe1a064295f985448b89899c2289d8a3d514cf0cdfc708127",
+  "source_id": "origin/main 44329dc (release snapshot noble-44329dc-release)"
+ },
+ "plan_sha256": "85bed3371d0e2e4933301d67268f67a366001383070564e263f3821ff050397b",
+ "receipts": [
+  {
+   "sha256": "be297a5aa693ac6506040eb56733486b58ec6f29f55c2a74ea489497997c4f88",
+   "plan_sha256": "083d057b38ac38e0666138949ead1a0028bc027b8ef2e1f4672b216579d3d658",
+   "runner_sha256": "11324703e31fc22db1cfab08c1478c126bddb5336d961ed9a37e161847abf560",
+   "node": "v24.13.0",
+   "repository_head": "ffcce532e94965d90417ca0687c155b343d7ca8d",
+   "configuration": {
+    "concurrency": 4,
+    "memory_max": "2G",
+    "timeout_s": 7200
+   }
+  },
+  {
+   "sha256": "9743600e1bfb64221d345088d3fb62fe81ee6a9c606926405dc57af59498558f",
+   "plan_sha256": "85bed3371d0e2e4933301d67268f67a366001383070564e263f3821ff050397b",
+   "runner_sha256": "1e4dbdbf28c996b4f16d9004757d5a7d977c9fd56fa7ed3fe266ad374d605720",
+   "node": "v24.13.0",
+   "repository_head": "ffcce532e94965d90417ca0687c155b343d7ca8d",
+   "configuration": {
+    "concurrency": 1,
+    "memory_max": "2G",
+    "timeout_s": 7200
+   }
+  },
+  {
+   "sha256": "1673b422c9a68c46f43ab28af04ed0ec6aec255819c3f3466394b89975f14ce9",
+   "plan_sha256": "0ea647720cc1cc465420dbb605588685521f8bb9479f615b4c07d94c3e956d0a",
+   "runner_sha256": "74624a2ee879b046246a50c636f70b140ad1bd385b1c4581de9570622c4cef64",
+   "node": "v24.13.0",
+   "repository_head": "ffcce532e94965d90417ca0687c155b343d7ca8d",
+   "configuration": {
+    "concurrency": 3,
+    "memory_max": "2G",
+    "timeout_s": 7200
+   }
+  }
+ ],
+ "non_claims": [
+  "No canonical CALC case state, evidence or implementation status is changed.",
+  "Observations hold for the recorded binary only; the runner cannot prove which source built it.",
+  "A bracket shows one deterministic boundary per category, not that every charge site or every input is bounded.",
+  "Controls show distinct labels for a host timeout, a killed worker, a memory-capped scope and host replay/transport preflight; they do not enumerate every native failure.",
+  "No proof of the accounting, of exact arithmetic or of conversions is claimed."
+ ],
+ "sessions": [
+  {
+   "id": "output-size/N-1",
+   "category": "OutputSize",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--output-size",
+    "6"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "let x=1234567",
+    "x",
+    "let y=1234567",
+    "y"
+   ],
+   "stdin_sha256": "5d08599ff21c7abd127a0ca116ce5205c72d13c728fbba1ce526f644df9c06bb",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit OutputSize"
+    },
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit OutputSize"
+    },
+    {
+     "stderr": "UnknownName"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit OutputSize [14,14) provenance=unavailable",
+    "ResourceLimit OutputSize [14,14) provenance=unavailable",
+    "UnknownName [0,1) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 2336.2,
+   "max_rss_kib": 213828,
+   "resource_limit_lines": 2,
+   "matched_plan": true
+  },
+  {
+   "id": "output-size/N",
+   "category": "OutputSize",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--output-size",
+    "7"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "let x=1234567",
+    "x",
+    "let y=1234567",
+    "y"
+   ],
+   "stdin_sha256": "5d08599ff21c7abd127a0ca116ce5205c72d13c728fbba1ce526f644df9c06bb",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "1234567"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "1234567",
+    "1234567",
+    "1234567",
+    "1234567"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 4205.7,
+   "max_rss_kib": 207596,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "call-depth/N-1",
+   "category": "CallDepth",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--call-depth",
+    "1"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "fn g(y)=y+1",
+    "fn f(y)=g(y)+1",
+    "f(1)",
+    "g(1)"
+   ],
+   "stdin_sha256": "91b0098fbeaa0f8056d13ae8b6b56087bf69d01f44b9b7477d2903fc67347462",
+   "expected": [
+    {
+     "silent": true
+    },
+    {
+     "silent": true
+    },
+    {
+     "stderr": "ResourceLimit CallDepth"
+    },
+    {
+     "stdout": "2"
+    }
+   ],
+   "stdout_lines": [
+    "2"
+   ],
+   "stderr_lines": [
+    "ResourceLimit CallDepth [8,9) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 3310.5,
+   "max_rss_kib": 207784,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "call-depth/N",
+   "category": "CallDepth",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--call-depth",
+    "2"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "fn g(y)=y+1",
+    "fn f(y)=g(y)+1",
+    "f(1)",
+    "g(1)"
+   ],
+   "stdin_sha256": "91b0098fbeaa0f8056d13ae8b6b56087bf69d01f44b9b7477d2903fc67347462",
+   "expected": [
+    {
+     "silent": true
+    },
+    {
+     "silent": true
+    },
+    {
+     "stdout": "3"
+    },
+    {
+     "stdout": "2"
+    }
+   ],
+   "stdout_lines": [
+    "3",
+    "2"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 3873.1,
+   "max_rss_kib": 224796,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "input-bytes/N-2",
+   "category": "InputBytes",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--input-bytes",
+    "7"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "x+100000",
+    "x"
+   ],
+   "stdin_sha256": "5baeb4bf050f650bb5dfbcc54d70930b8b8878714aab5ed4fe8c5a84d44b26e9",
+   "expected": [
+    {
+     "stderr": "ResourceLimit InputBytes"
+    },
+    {
+     "stderr": "ResourceLimit InputBytes"
+    },
+    {
+     "stderr": "UnknownName"
+    }
+   ],
+   "stdout_lines": [],
+   "stderr_lines": [
+    "ResourceLimit InputBytes [0,8) provenance=unavailable",
+    "ResourceLimit InputBytes [0,9) provenance=unavailable",
+    "UnknownName [0,1) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 453.1,
+   "max_rss_kib": 195396,
+   "resource_limit_lines": 2,
+   "matched_plan": true
+  },
+  {
+   "id": "input-bytes/N-1",
+   "category": "InputBytes",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--input-bytes",
+    "8"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "x+100000",
+    "x"
+   ],
+   "stdin_sha256": "5baeb4bf050f650bb5dfbcc54d70930b8b8878714aab5ed4fe8c5a84d44b26e9",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit InputBytes"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit InputBytes [0,9) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 1192.7,
+   "max_rss_kib": 202796,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "input-bytes/N",
+   "category": "InputBytes",
+   "receipt": 1,
+   "argv": [
+    "noble",
+    "calculator",
+    "--input-bytes",
+    "9"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "x+100000",
+    "x"
+   ],
+   "stdin_sha256": "5baeb4bf050f650bb5dfbcc54d70930b8b8878714aab5ed4fe8c5a84d44b26e9",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "100007"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "100007",
+    "7"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 1900.9,
+   "max_rss_kib": 225164,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "numeric-digits/N-1",
+   "category": "NumericDigits",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--numeric-digits",
+    "2"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "x+123",
+    "x"
+   ],
+   "stdin_sha256": "81da6db63a29183811aaf76ebe674e6acf7dea1bdcddc1a33020323f09c860f3",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit NumericDigits"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit NumericDigits [2,5) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 1157.2,
+   "max_rss_kib": 212096,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "numeric-digits/N",
+   "category": "NumericDigits",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--numeric-digits",
+    "3"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "x+123",
+    "x"
+   ],
+   "stdin_sha256": "81da6db63a29183811aaf76ebe674e6acf7dea1bdcddc1a33020323f09c860f3",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "130"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "130",
+    "7"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 1551,
+   "max_rss_kib": 204556,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "intermediate-bits/N-1",
+   "category": "IntermediateIntegerBits",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--intermediate-bits",
+    "25"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "1234567",
+    "x"
+   ],
+   "stdin_sha256": "bc83c133ab583ba6c01322e163656d4e43812c0f53819ab299bfa9a2ee058cde",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit IntermediateIntegerBits"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit IntermediateIntegerBits [0,7) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 1095.8,
+   "max_rss_kib": 211572,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "intermediate-bits/N",
+   "category": "IntermediateIntegerBits",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--intermediate-bits",
+    "26"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "1234567",
+    "x"
+   ],
+   "stdin_sha256": "bc83c133ab583ba6c01322e163656d4e43812c0f53819ab299bfa9a2ee058cde",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "1234567",
+    "7"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 1213.7,
+   "max_rss_kib": 216964,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "syntax-depth/N-1",
+   "category": "SyntaxDepth",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--syntax-depth",
+    "2"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "(((x)))",
+    "x"
+   ],
+   "stdin_sha256": "4714c342b89068b65928f031d26d6aa97a6c888d4faa615c9c9bf46b5771cdd7",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit SyntaxDepth"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit SyntaxDepth [2,3) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 1040.1,
+   "max_rss_kib": 215936,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "syntax-depth/N",
+   "observed": false
+  },
+  {
+   "id": "evaluation-work/N-2",
+   "observed": false
+  },
+  {
+   "id": "evaluation-work/N-1",
+   "observed": false
+  },
+  {
+   "id": "evaluation-work/N",
+   "observed": false
+  },
+  {
+   "id": "control/history-bytes",
+   "observed": false
+  },
+  {
+   "id": "control/replay-work",
+   "observed": false
+  },
+  {
+   "id": "control/worker-killed",
+   "observed": false
+  },
+  {
+   "id": "control/host-timeout",
+   "category": "host-timeout",
+   "receipt": 2,
+   "argv": [
+    "noble",
+    "calculator"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 20,
+   "stdin_lines": [
+    "1+2"
+   ],
+   "stdin_sha256": "37f671841d9da909c96d5e754e2277fc4c0435b209972f21350ecc9281c6e63e",
+   "expected": [],
+   "stdout_lines": [],
+   "stderr_lines": [],
+   "status": null,
+   "signal": "SIGKILL",
+   "timed_out": true,
+   "wall_s": 20,
+   "max_rss_kib": null,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "control/transport-limit",
+   "category": "transport-limit",
+   "receipt": 2,
+   "argv": [
+    "noble",
+    "calculator"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    {
+     "repeat": "1",
+     "count": 65537
+    }
+   ],
+   "stdin_sha256": "9bd477dc2721a8fd0e48b0f75fab5b41e824686d8888cbc7ddccd2eed9e12556",
+   "expected": [
+    {
+     "stderr": "TransportLimit InputFrameBytes"
+    }
+   ],
+   "stdout_lines": [],
+   "stderr_lines": [
+    "TransportLimit InputFrameBytes: source byte limit exceeded"
+   ],
+   "status": 2,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 3,
+   "max_rss_kib": 104628,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "control/memory-cap",
+   "category": "host-memory-limit",
+   "receipt": 2,
+   "argv": [
+    "noble",
+    "calculator"
+   ],
+   "memory_max": "48M",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "1+2"
+   ],
+   "stdin_sha256": "37f671841d9da909c96d5e754e2277fc4c0435b209972f21350ecc9281c6e63e",
+   "expected": [],
+   "stdout_lines": [],
+   "stderr_lines": [],
+   "status": null,
+   "signal": "SIGTERM",
+   "timed_out": false,
+   "wall_s": 2.3,
+   "max_rss_kib": null,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  }
+ ]
+}
