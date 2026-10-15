@@ -1,0 +1,451 @@
+{
+  "schema": "noble-foundation-inventory/v1",
+  "project": "proofs/foundation",
+  "root_module": "NobleFoundation",
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator). No implementation theorem.",
+  "theorems": [
+    {
+      "name": "NobleFoundation.toZ_ofZ",
+      "phase": 1,
+      "role": "representation",
+      "claim": "ofZ then toZ is the identity on ZMod (2^64)"
+    },
+    {
+      "name": "NobleFoundation.ofZ_toZ",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ then ofZ is the identity on BitVec 64"
+    },
+    {
+      "name": "NobleFoundation.toZ_injective",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ is injective"
+    },
+    {
+      "name": "NobleFoundation.ofZ_injective",
+      "phase": 1,
+      "role": "representation",
+      "claim": "ofZ is injective"
+    },
+    {
+      "name": "NobleFoundation.toZ_ofInt",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ (BitVec.ofInt 64 n) = (n : ZMod (2^64))"
+    },
+    {
+      "name": "NobleFoundation.ofZ_intCast",
+      "phase": 1,
+      "role": "representation",
+      "claim": "ofZ (n : ZMod (2^64)) = BitVec.ofInt 64 n"
+    },
+    {
+      "name": "NobleFoundation.toZ_add",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ is additive"
+    },
+    {
+      "name": "NobleFoundation.toZ_mul",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ is multiplicative"
+    },
+    {
+      "name": "NobleFoundation.toZ_sub",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ preserves subtraction"
+    },
+    {
+      "name": "NobleFoundation.toZ_neg",
+      "phase": 1,
+      "role": "representation",
+      "claim": "toZ preserves negation"
+    },
+    {
+      "name": "NobleFoundation.wrap_eq_bmod",
+      "phase": 1,
+      "role": "signed-decoding",
+      "claim": "MathlibI64.wrap n = Int.bmod n (2^64)"
+    },
+    {
+      "name": "NobleFoundation.wrap_eq_toInt_ofInt",
+      "phase": 1,
+      "role": "signed-decoding",
+      "claim": "MathlibI64.wrap n = (BitVec.ofInt 64 n).toInt"
+    },
+    {
+      "name": "NobleFoundation.wrap_eq_knum01",
+      "phase": 1,
+      "role": "signed-decoding",
+      "claim": "MathlibI64.wrap z = ((z + 2^63) mod 2^64) - 2^63 (K-NUM-01 formula)"
+    },
+    {
+      "name": "NobleFoundation.signed_eq_toInt",
+      "phase": 1,
+      "role": "signed-decoding",
+      "claim": "MathlibI64.signed r = (ofZ r).toInt"
+    },
+    {
+      "name": "NobleFoundation.signed_toZ",
+      "phase": 1,
+      "role": "signed-decoding",
+      "claim": "MathlibI64.signed (toZ x) = x.toInt"
+    },
+    {
+      "name": "NobleFoundation.toInt_range",
+      "phase": 1,
+      "role": "range",
+      "claim": "every BitVec 64 decodes into [-2^63, 2^63)"
+    },
+    {
+      "name": "NobleFoundation.signed_range",
+      "phase": 1,
+      "role": "range",
+      "claim": "every residue decodes into [-2^63, 2^63)"
+    },
+    {
+      "name": "NobleFoundation.intCast_toInt",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "((x.toInt : ℤ) : ZMod (2^64)) = toZ x"
+    },
+    {
+      "name": "NobleFoundation.intCast_signed",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "residue -> signed integer -> residue is the identity"
+    },
+    {
+      "name": "NobleFoundation.toInt_ofInt_of_range",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "integer -> BitVec -> integer is the identity on the I64 range"
+    },
+    {
+      "name": "NobleFoundation.toInt_ofInt_eq_iff",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "(BitVec.ofInt 64 n).toInt = n iff n is in the I64 range"
+    },
+    {
+      "name": "NobleFoundation.signed_intCast_eq_iff",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "signed (n : ZMod (2^64)) = n iff n is in the I64 range"
+    },
+    {
+      "name": "NobleFoundation.ofInt_toInt",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "BitVec -> integer -> BitVec is the identity"
+    },
+    {
+      "name": "NobleFoundation.ofInt_wrap",
+      "phase": 1,
+      "role": "round-trip",
+      "claim": "BitVec.ofInt 64 (wrap n) = BitVec.ofInt 64 n"
+    },
+    {
+      "name": "NobleFoundation.ofInt_sub",
+      "phase": 1,
+      "role": "representation",
+      "claim": "BitVec.ofInt 64 (x - y) = ofInt x - ofInt y"
+    },
+    {
+      "name": "NobleFoundation.toInt_add",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "(a + b).toInt = wrap (a.toInt + b.toInt)"
+    },
+    {
+      "name": "NobleFoundation.toInt_sub",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "(a - b).toInt = wrap (a.toInt - b.toInt)"
+    },
+    {
+      "name": "NobleFoundation.toInt_mul",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "(a * b).toInt = wrap (a.toInt * b.toInt)"
+    },
+    {
+      "name": "NobleFoundation.oracle_add",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "wrap (x + y) = (ofInt x + ofInt y).toInt"
+    },
+    {
+      "name": "NobleFoundation.oracle_sub",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "wrap (x - y) = (ofInt x - ofInt y).toInt"
+    },
+    {
+      "name": "NobleFoundation.oracle_mul",
+      "phase": 1,
+      "role": "arithmetic",
+      "claim": "wrap (x * y) = (ofInt x * ofInt y).toInt"
+    },
+    {
+      "name": "NobleFoundation.accumulate_eq_acceptLiteral",
+      "phase": 1,
+      "role": "literal",
+      "claim": "the transcribed checked i64 digit accumulator accepts exactly the in-range literals, unchanged"
+    },
+    {
+      "name": "NobleFoundation.accepted_literal_exact",
+      "phase": 1,
+      "role": "literal",
+      "claim": "an accepted literal is in range and decodes without wrapping"
+    },
+    {
+      "name": "NobleFoundation.acceptLiteral_eq_none_iff",
+      "phase": 1,
+      "role": "literal",
+      "claim": "a literal is rejected iff its value is outside the I64 range"
+    },
+    {
+      "name": "NobleFoundation.ofInt_collapses_out_of_range",
+      "phase": 1,
+      "role": "literal",
+      "claim": "BitVec.ofInt identifies 2^63 with -2^63; only the latter is an accepted literal"
+    },
+    {
+      "name": "NobleFoundation.literal_range_iff_no_wrap",
+      "phase": 1,
+      "role": "literal",
+      "claim": "I64Range n iff BitVec.ofInt 64 n decodes to n"
+    },
+    {
+      "name": "NobleFoundation.literal_boundary_regressions",
+      "phase": 1,
+      "role": "regression",
+      "claim": "accumulator: 2^63 rejected; -2^63, 2^63-1, -(2^63-1), -0 accepted; -(2^63+1) rejected"
+    },
+    {
+      "name": "NobleFoundation.represents_iff",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "Represents v n iff v = .i64 x with x.toInt = n"
+    },
+    {
+      "name": "NobleFoundation.represents_functional",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "an I64 value represents at most one integer"
+    },
+    {
+      "name": "NobleFoundation.represents_of_hasType",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "every well-typed I64 value represents its toInt"
+    },
+    {
+      "name": "NobleFoundation.hasType_of_represents",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "represented values are typed I64"
+    },
+    {
+      "name": "NobleFoundation.represents_wrap",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "i64v (wrap z) represents wrap z"
+    },
+    {
+      "name": "NobleContracts.StackTyped.append",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "StackTyped is closed under public-orientation concatenation"
+    },
+    {
+      "name": "NobleFoundation.stackTyped_snoc_i64",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "pushing an I64 extends the typed public stack"
+    },
+    {
+      "name": "NobleFoundation.internal_of_public",
+      "phase": 1,
+      "role": "orientation",
+      "claim": "public pre ++ [a, b] is internal b :: a :: reverse pre"
+    },
+    {
+      "name": "NobleFoundation.exec_sub_is_internal_step",
+      "phase": 1,
+      "role": "orientation",
+      "claim": "public subtraction is internal Step.sub with the public top as subtrahend"
+    },
+    {
+      "name": "NobleFoundation.add_spec",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "ArithSpec 4 (+): typed, prefix preserved, unique normal result i64v (wrap (x + y))"
+    },
+    {
+      "name": "NobleFoundation.sub_spec",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "ArithSpec 5 (-): typed, prefix preserved, unique normal result i64v (wrap (x - y)), x deeper"
+    },
+    {
+      "name": "NobleFoundation.mul_spec",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "ArithSpec 6 (*): typed, prefix preserved, unique normal result i64v (wrap (x * y))"
+    },
+    {
+      "name": "NobleFoundation.exec_arith_toInt",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "for arbitrary BitVec operands the add/sub/mul result decodes to wrap of decoded operands"
+    },
+    {
+      "name": "NobleFoundation.add_needs_i64",
+      "phase": 1,
+      "role": "instruction",
+      "claim": "add has no normal transition when either operand is not I64"
+    },
+    {
+      "name": "NobleFoundation.refRun_append",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "reference machine sequencing"
+    },
+    {
+      "name": "NobleFoundation.depthRun_append",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "static depth sequencing"
+    },
+    {
+      "name": "NobleFoundation.run_lowerAll",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "internal-orientation simulation of lowered sequences by the reference machine"
+    },
+    {
+      "name": "NobleFoundation.exec_lowerAll",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "public lifting: any prefix, unique normal result pre ++ enc (reference result)"
+    },
+    {
+      "name": "NobleFoundation.refRun_range",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "reference stacks stay in the I64 range"
+    },
+    {
+      "name": "NobleFoundation.depthRun_of_refRun",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "reference success implies the static depth check"
+    },
+    {
+      "name": "NobleFoundation.codeTyped_lowerAll",
+      "phase": 1,
+      "role": "sequence",
+      "claim": "depth check implies CodeTyped from base ++ k*I64 to base ++ k'*I64"
+    },
+    {
+      "name": "NobleFoundation.PExpr.body_eq",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "composed body is the lowering of the flattened sequence"
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_code",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "construction pushes exactly one program value and executes nothing"
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_code_run",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "construct then run = execute the composed body"
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_code_reflect",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "reflect observes exactly the composed recipe"
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_run_ref",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "quote/block/compose/run equals the reference machine with any preserved prefix"
+    },
+    {
+      "name": "NobleFoundation.PExpr.codeTyped",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "construction code is CodeTyped on any stack type"
+    },
+    {
+      "name": "NobleFoundation.PExpr.codeTyped_run",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "construct-then-run is CodeTyped with the whole-stack input premise"
+    },
+    {
+      "name": "NobleFoundation.exec_quote_program_run_run",
+      "phase": 1,
+      "role": "program-fragment",
+      "claim": "nested quotation: quote a program, run twice = run it"
+    },
+    {
+      "name": "NobleFoundation.oracle_boundaries",
+      "phase": 1,
+      "role": "regression",
+      "claim": "signed min/max, zero and negative oracle boundaries"
+    },
+    {
+      "name": "NobleFoundation.sub_operand_order",
+      "phase": 1,
+      "role": "regression",
+      "claim": "3 8 - is -5, 8 3 - is 5, and they differ"
+    },
+    {
+      "name": "NobleFoundation.add_max_wraps_preserving_prefix",
+      "phase": 1,
+      "role": "regression",
+      "claim": "max + 1 wraps to min above a non-I64 prefix"
+    },
+    {
+      "name": "NobleFoundation.out_of_range_push_refused",
+      "phase": 1,
+      "role": "regression",
+      "claim": "reference refuses push 2^63 although MC1 lowering would alias it to -2^63"
+    },
+    {
+      "name": "NobleFoundation.quote_compose_run_examples",
+      "phase": 1,
+      "role": "regression",
+      "claim": "5 quote [1 +] compose run = 6; max quote [1 +] compose run = min"
+    },
+    {
+      "name": "NobleFoundation.compose_order_matters",
+      "phase": 1,
+      "role": "regression",
+      "claim": "[2 *][1 +] compose and reverse differ on 5"
+    },
+    {
+      "name": "NobleFoundation.wrap_sub_noncommutative",
+      "phase": 1,
+      "role": "regression",
+      "claim": "wrap (3 - 8) /= wrap (8 - 3)"
+    }
+  ]
+}

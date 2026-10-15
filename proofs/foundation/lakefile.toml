@@ -1,0 +1,22 @@
+name = "noble-foundation"
+defaultTargets = ["NobleFoundation"]
+
+# Same Lean/Mathlib pins as proofs/m3 and proofs/mc1: Mathlib4 arrives through
+# the pinned Aeneas backend (see lake-manifest.json). The MC1 model and the
+# independent comparator oracle are compiled from their existing sources, not
+# copied, so this project proves facts about exactly those definitions.
+[[require]]
+name = "aeneas"
+git = { url = "https://github.com/AeneasVerif/aeneas", subDir = "backends/lean" }
+rev = "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+
+[[lean_lib]]
+name = "NobleFoundation"
+
+[[lean_lib]]
+name = "NobleContracts"
+srcDir = "../mc1"
+
+[[lean_lib]]
+name = "MathlibI64"
+srcDir = "../m3"
