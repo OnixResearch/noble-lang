@@ -8,7 +8,7 @@ every setup, probe and follow-up line fits them. The units and charge sites
 behind each predicted N are in
 [design.md, Guest budget units](../../../.cairn/changes/calculator-v1/design.md).
 
-The receipt convention follows [calculator-errors](../calculator-errors/README.md):
+The receipt convention follows [calculator-errors](../../calculator-errors/README.md):
 
 - the owner supplies the binary's SHA-256 and source identity, and the runner
   refuses a mismatch;
