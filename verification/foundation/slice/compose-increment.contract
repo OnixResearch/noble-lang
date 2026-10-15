@@ -1,0 +1,6 @@
+(contract 1 compose-increment
+  (input (x I64))
+  (output (y I64))
+  (program [ quote (block (I64) (I64) [ 1 + ]) compose run ])
+  (requires true)
+  (ensures (eq (out y) (add (in x) 1))))

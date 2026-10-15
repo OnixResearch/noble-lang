@@ -11,8 +11,11 @@ mod emit;
 mod origin;
 mod plan;
 mod preflight;
+mod reuse;
 mod transaction;
 mod types;
+
+pub use reuse::{CanonicalEpoch, Reusable};
 
 const TABLE_LIMIT: u32 = 16_384;
 // Calculator table slots 0..=4 hold the generation-0 core entries; compiled
@@ -188,6 +191,9 @@ pub struct CompileMetrics {
 }
 
 /// Persistent semantic identities and disjoint compiled-code allocations.
+/// A clone is an independent copy of the committed state, so a calculator
+/// host can restore it after a failed submission.
+#[derive(Clone, Debug)]
 pub struct Compiler {
     live: bool,
     live_slots: bool,
@@ -397,13 +403,13 @@ pub struct ResourceCatalogEntry {
     pub kind: noble_kernel::types::ResourceKind,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct FreeCode {
     start: u32,
     length: u32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Identity {
     id: u64,
     recipe: alloc::vec::Vec<u8>,
@@ -425,6 +431,10 @@ pub struct Prepared {
     resource_catalog: alloc::vec::Vec<ResourceCatalogEntry>,
     wat: alloc::vec::Vec<u8>,
     metrics: CompileMetrics,
+    /// Set only for a calculator Program-free preparation made at a
+    /// canonical epoch; see `reuse`.
+    epoch: Option<CanonicalEpoch>,
+    work_issued: u64,
 }
 
 impl Prepared {
@@ -938,6 +948,12 @@ impl Compiler {
             resource_catalog,
             wat,
             metrics,
+            epoch: if program_free {
+                self.canonical_epoch()
+            } else {
+                None
+            },
+            work_issued: work.issued,
         })
     }
 

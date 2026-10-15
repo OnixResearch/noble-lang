@@ -1,0 +1,53 @@
+diff --git a/crates/noble-cli/src/calculator.rs b/crates/noble-cli/src/calculator.rs
+index 85cc9df..c59ceb2 100644
+--- a/crates/noble-cli/src/calculator.rs
++++ b/crates/noble-cli/src/calculator.rs
+@@ -14,6 +14,7 @@ const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
+     work: 512_000_000,
+ };
+ const INPUT_LIMIT: u32 = 65_536;
++static MEASURE_MODULES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+ const HISTORY_COMMANDS_LIMIT: usize = 64;
+ const HISTORY_BYTES_LIMIT: usize = INPUT_LIMIT as usize;
+ const REPLAY_STEP_WORK: u64 = 128;
+@@ -110,6 +111,8 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
+     let stdin = std::io::stdin();
+     let mut input = std::io::BufReader::new(stdin.lock());
+     let mut failed = false;
++    let measure_start = std::time::Instant::now();
++    let mut measure_line = 0u64;
+     loop {
+         let line = match crate::core::framing::read_submission(&mut input, framed, INPUT_LIMIT) {
+             Ok(Some(line)) => line,
+@@ -123,6 +126,9 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
+                 return std::process::ExitCode::from(2);
+             }
+         };
++        measure_line += 1;
++        let line_start = std::time::Instant::now();
++        let line_modules = MEASURE_MODULES.load(std::sync::atomic::Ordering::Relaxed);
+         match session.submit(&line, finite_decimal, budget) {
+             Ok(Outcome::Value(value)) => println!("{value}"),
+             Ok(Outcome::Defined) => (),
+@@ -147,6 +153,13 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
+                 return std::process::ExitCode::from(2);
+             }
+         }
++        eprintln!(
++            "noble-measure line={measure_line} modules={} ms={} total_modules={} total_ms={}",
++            MEASURE_MODULES.load(std::sync::atomic::Ordering::Relaxed) - line_modules,
++            line_start.elapsed().as_millis(),
++            MEASURE_MODULES.load(std::sync::atomic::Ordering::Relaxed),
++            measure_start.elapsed().as_millis()
++        );
+         if let Err(error) = std::io::stdout().flush() {
+             eprintln!("noble calculator: terminal output failed: {error}");
+             return std::process::ExitCode::from(2);
+@@ -5123,6 +5136,7 @@ impl Session {
+             .serial
+             .checked_add(1)
+             .ok_or("calculator module counter exhausted")?;
++        MEASURE_MODULES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+         let augmented;
+         let stack = if injected.is_empty() {
+             self.stack.as_slice()

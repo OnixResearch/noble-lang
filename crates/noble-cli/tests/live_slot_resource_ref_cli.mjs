@@ -50,7 +50,7 @@ export async function cli(binary, variant, authority) {
     kind: 'authority', path: authorityPath, authority,
     selected_binary: binary, selected_binary_sha256: selectedBinarySha256,
   }) + '\n', { mode: 0o600 });
-  const child = spawn('/bin/bash', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
+  const child = spawn('/bin/sh', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
     'sh', binary, authorityPath], { stdio: ['pipe', 'pipe', 'pipe'] });
   let buffer = '';
   let stderr = '';

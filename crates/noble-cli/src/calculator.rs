@@ -1,6 +1,8 @@
 //! Calculator shell: terminal framing and an opaque, source-checked guest session.
 //! Parsing, name resolution, arithmetic and display decisions live in the Noble modules.
 
+#[path = "calculator/cache.rs"]
+mod cache;
 #[path = "calculator/metrics.rs"]
 mod metrics;
 #[path = "calculator/trace.rs"]
@@ -19,10 +21,6 @@ const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     work: 512_000_000,
 };
 const INPUT_LIMIT: u32 = 65_536;
-const HISTORY_COMMANDS_LIMIT: usize = 64;
-const HISTORY_BYTES_LIMIT: usize = INPUT_LIMIT as usize;
-const REPLAY_STEP_WORK: u64 = 128;
-const HISTORY_WORK_LIMIT: u64 = 65_536;
 const DEFAULT_BUDGET: [i64; 7] = [1_024, 256, 4_096, 32, 16, 4_000_000, 4_096];
 const BUDGET_NAMES: [&str; 7] = [
     "--input-bytes",
@@ -51,6 +49,28 @@ const EXPRESSION: &[u8] =
     include_bytes!("../../noble-contracts/src/fixtures/calculator-expression.noble");
 const DEFINITIONS: &[u8] =
     include_bytes!("../../noble-contracts/src/fixtures/calculator-definitions.noble");
+/// The checked guest modules and then the imports every calculator session
+/// namespace is built from, in order; the namespace component of the
+/// module-reuse key.
+const NAMESPACE: cache::Namespace = &[
+    ("result@1", RESULT),
+    ("calc_errors@1", ERRORS),
+    ("calc_lex@1", LEXICAL),
+    ("calc_bits@1", BITS),
+    ("calc_big@1", BIGINT),
+    ("calc_decimal@1", DECIMAL),
+    ("num@1", NUMERIC),
+    ("calc_env@1", BINDINGS),
+    ("calc_display@1", DISPLAY),
+    ("expr@1", EXPRESSION),
+    ("calc_defs@1", DEFINITIONS),
+    ("expression", b"import expr@1 as expr"),
+    ("numeric", b"import num@1 as num"),
+];
+const NAMESPACE_MODULES: usize = 11;
+/// `NOBLE_CALCULATOR_MODULE_CACHE=off` disables exact module reuse in the
+/// host and the worker (a diagnostic control; outputs are identical).
+const MODULE_CACHE_VARIABLE: &str = "NOBLE_CALCULATOR_MODULE_CACHE";
 
 pub(crate) fn assembler_version(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     if arguments.len() != 1 {
@@ -109,7 +129,17 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         eprintln!("noble calculator: {message}");
         return std::process::ExitCode::from(2);
     }
-    let mut session = match Session::new(0) {
+    let cache = match std::env::var(MODULE_CACHE_VARIABLE).as_deref() {
+        Err(std::env::VarError::NotPresent) | Ok("on") => Some(std::rc::Rc::new(
+            std::cell::RefCell::new(cache::ModuleCache::new(NAMESPACE, cache::HOST_CACHE_BYTES)),
+        )),
+        Ok("off") => None,
+        _ => {
+            eprintln!("noble calculator: {MODULE_CACHE_VARIABLE} must be `on` or `off`");
+            return std::process::ExitCode::from(2);
+        }
+    };
+    let mut session = match Session::new(cache) {
         Ok(session) => session,
         Err(message) => {
             eprintln!("noble calculator: {message}");
@@ -137,10 +167,6 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             Ok(Outcome::Defined) => (),
             Ok(Outcome::Diagnostic(diagnostic)) => {
                 eprintln!("{diagnostic}");
-                failed = true;
-            }
-            Ok(Outcome::HostLimit { category, span_end }) => {
-                eprintln!("HostLimit {category} [0,{span_end}) provenance=host-replay-preflight");
                 failed = true;
             }
             Ok(Outcome::NativeFailure(message)) => {
@@ -211,14 +237,12 @@ enum Outcome {
     Value(String),
     Defined,
     Diagnostic(String),
-    HostLimit {
-        category: &'static str,
-        span_end: usize,
-    },
     NativeFailure(String),
     InfrastructureFailure(String),
 }
 
+/// One committed calculator session. Each line runs directly on it: success
+/// commits, every failure restores the last commit (see `transact`).
 struct Session {
     modules: Option<ModuleSession>,
     compiler: noble_wasm::source::Compiler,
@@ -232,22 +256,32 @@ struct Session {
     // It also reported that no Program, Syntax or recipe cell is reachable,
     // so the next module may restart the signature pool from ID 0.
     program_free: bool,
-    accepted: Vec<Accepted>,
-    state_changing_header: bool,
     // A quotation-free consumer of the last guest probe (`drop`, `unpair
     // drop`), run as the prefix of the next module instead of as its own.
     deferred: Option<&'static [u8]>,
-    // Identity of this candidate in the opt-in per-module trace; unused
-    // (and never observed by the guest) when tracing is off.
+    // Identity of this session and line in the opt-in per-module trace;
+    // unused (and never observed by the guest) when tracing is off.
     trace_session: u64,
     trace_line: u64,
     trace_phase: &'static str,
+    // Exact module reuse; None when disabled. Deliberately not part of
+    // `Committed`: see `cache` for why entries recorded by a failed, restored
+    // line stay exact.
+    cache: Option<std::rc::Rc<std::cell::RefCell<cache::ModuleCache>>>,
 }
 
-struct Accepted {
-    source: Vec<u8>,
-    finite_decimal: bool,
-    budget: [i64; 7],
+/// The host half of the last commit; the worker holds the arena half. Neither
+/// half includes the host module cache or the worker's exact-WAT module
+/// cache: both are memos of pure functions of their full keys, so restoring
+/// never needs them and they never need restoring.
+struct Committed {
+    modules: ModuleSession,
+    compiler: noble_wasm::source::Compiler,
+    stack: Vec<Ty>,
+    serial: u64,
+    quiescent: bool,
+    program_free: bool,
+    deferred: Option<&'static [u8]>,
 }
 
 impl Session {
@@ -311,22 +345,25 @@ impl Session {
         Ok(Some(Outcome::Diagnostic(diagnostic)))
     }
 
-    fn new(line: u64) -> Result<Self, String> {
+    fn new(
+        cache: Option<std::rc::Rc<std::cell::RefCell<cache::ModuleCache>>>,
+    ) -> Result<Self, String> {
+        let started = std::time::Instant::now();
+        let worker =
+            crate::core::worker::Engine::start_calculator(false, trace::enabled(), cache.is_some())
+                .map_err(|error| error.message)?;
+        Self::with_worker(worker, trace::micros(started), cache)
+    }
+
+    fn with_worker(
+        worker: crate::core::worker::Engine,
+        worker_start_us: u64,
+        cache: Option<std::rc::Rc<std::cell::RefCell<cache::ModuleCache>>>,
+    ) -> Result<Self, String> {
         let started = std::time::Instant::now();
         let mut modules = ModuleSession::new_calculator().map_err(source_error)?;
-        for (name, source) in [
-            ("result@1", RESULT),
-            ("calc_errors@1", ERRORS),
-            ("calc_lex@1", LEXICAL),
-            ("calc_bits@1", BITS),
-            ("calc_big@1", BIGINT),
-            ("calc_decimal@1", DECIMAL),
-            ("num@1", NUMERIC),
-            ("calc_env@1", BINDINGS),
-            ("calc_display@1", DISPLAY),
-            ("expr@1", EXPRESSION),
-            ("calc_defs@1", DEFINITIONS),
-        ] {
+        let (dependencies, imports) = NAMESPACE.split_at(NAMESPACE_MODULES);
+        for &(name, source) in dependencies {
             let prepared = modules
                 .prepare(source, &[], LIMITS)
                 .map_err(|error| format!("{name}: {}", source_error(error)))?;
@@ -339,10 +376,7 @@ impl Session {
             committed.map_err(|error| format!("{name}: {}", source_error(error)))?;
             modules = next;
         }
-        for (source, name) in [
-            (b"import expr@1 as expr".as_slice(), "expression"),
-            (b"import num@1 as num".as_slice(), "numeric"),
-        ] {
+        for &(name, source) in imports {
             let imported = modules.prepare(source, &[], LIMITS).map_err(source_error)?;
             if imported.kind() != ModuleKind::Import {
                 return Err(format!("calculator {name} module import refused"));
@@ -352,10 +386,6 @@ impl Session {
             modules = next;
         }
         let namespace_us = trace::micros(started);
-        let worker_started = std::time::Instant::now();
-        let worker = crate::core::worker::Engine::start_calculator(false, trace::enabled())
-            .map_err(|error| error.message)?;
-        let worker_start_us = trace::micros(worker_started);
         let mut session = Self {
             modules: Some(modules),
             compiler: noble_wasm::source::Compiler::new_calculator(),
@@ -364,18 +394,17 @@ impl Session {
             serial: 0,
             quiescent: false,
             program_free: false,
-            accepted: Vec::new(),
-            state_changing_header: false,
             deferred: None,
             trace_session: trace::next_session(),
-            trace_line: line,
+            trace_line: 0,
             trace_phase: "session-init",
+            cache,
         };
         if trace::enabled() {
             trace::write(serde_json::json!({
                 "record": "session",
                 "session": session.trace_session,
-                "line": line,
+                "line": 0,
                 "namespace_us": namespace_us,
                 "worker_start_us": worker_start_us,
             }))?;
@@ -384,11 +413,15 @@ impl Session {
         if report.outcome != "normal" || session.stack.len() != 1 {
             return Err("guest calculator state initialization failed".into());
         }
+        session
+            .worker
+            .calculator_commit()
+            .map_err(|error| error.message)?;
         Ok(session)
     }
 
     // The guest leaves an authenticated Result<CompactDiagnostic,Unit> on
-    // top after the rejected candidate State is discarded. Its category
+    // top after the rejected line's State is discarded. Its category
     // selects only a guest decoder; no host code interprets issue payloads.
     fn decode_compact_diagnostic(&mut self) -> Result<Outcome, String> {
         let mut report = self.execute(b"expr.frame_hot_parts", &[], None)?;
@@ -433,98 +466,93 @@ impl Session {
         finite_decimal: bool,
         budget: [i64; 7],
     ) -> Result<Outcome, String> {
-        // Replay only admitted definitions: evaluating an expression leaves
-        // the guest State unchanged, even when its transient numeric cells
-        // fill the worker. These checks precede worker startup and replay.
-        let count = self
-            .accepted
-            .len()
-            .checked_add(1)
-            .ok_or("calculator replay count overflow")?;
-        let bytes = self
-            .accepted
-            .iter()
-            .try_fold(expression.len(), |total, command| {
-                total.checked_add(command.source.len())
-            })
-            .ok_or("calculator replay byte accounting overflow")?;
-        if count > HISTORY_COMMANDS_LIMIT {
-            return Ok(Outcome::HostLimit {
-                category: "HistoryCommands",
-                span_end: expression.len(),
-            });
-        }
-        if bytes > HISTORY_BYTES_LIMIT {
-            return Ok(Outcome::HostLimit {
-                category: "HistoryBytes",
-                span_end: expression.len(),
-            });
-        }
-        let replay_work = (bytes as u64)
-            .checked_add((count as u64) * REPLAY_STEP_WORK)
-            .ok_or("calculator replay work accounting overflow")?;
-        if replay_work > HISTORY_WORK_LIMIT {
-            return Ok(Outcome::HostLimit {
-                category: "ReplayWork",
-                span_end: expression.len(),
-            });
-        }
-        // A native quota/trap poisons its Wasm instance, including every old
-        // guest handle. Never run an unaccepted command against the retained
-        // worker. Reconstruct a *candidate* from source-checked accepted
-        // submissions, preserving the previous worker until this command's
-        // guest result and bounded display have both been validated.
-        let line = self
-            .trace_line
-            .checked_add(1)
-            .ok_or("calculator line counter exhausted")?;
-        self.trace_line = line;
-        let mut candidate = Self::new(line)?;
-        candidate.trace_phase = "replay";
-        for accepted in &self.accepted {
-            match candidate.submit_uncommitted(
-                &accepted.source,
-                accepted.finite_decimal,
-                accepted.budget,
-            )? {
-                Outcome::Value(_) | Outcome::Defined => (),
-                Outcome::Diagnostic(_)
-                | Outcome::HostLimit { .. }
-                | Outcome::NativeFailure(_)
-                | Outcome::InfrastructureFailure(_) => {
-                    return Err("accepted calculator command did not replay".into());
+        // Trace bookkeeping only: neither committed nor restored, and never
+        // observed by the guest.
+        self.trace_line = self.trace_line.saturating_add(1);
+        self.trace_phase = "line";
+        self.transact(|session| {
+            let outcome = session.submit_uncommitted(expression, finite_decimal, budget)?;
+            if matches!(outcome, Outcome::Value(_) | Outcome::Defined) {
+                let state = session
+                    .modules
+                    .as_ref()
+                    .ok_or("calculator namespace unavailable")?
+                    .resolve_type("calc_env@1.State")
+                    .map_err(source_error)?;
+                if session.stack.as_slice() != [state] {
+                    return Ok(Outcome::InfrastructureFailure(
+                        "guest calculator did not retain its checked State after command completion"
+                            .into(),
+                    ));
+                }
+            }
+            Ok(outcome)
+        })
+    }
+
+    /// Run one submission directly on the committed session. A `Value` or
+    /// `Defined` outcome commits the worker arena. Every failure class —
+    /// guest diagnostic or ResourceLimit, native quota or trap (which poisons
+    /// the instance), host bound and infrastructure failure — instead
+    /// restores the worker byte for byte and the host state to the last
+    /// commit, so a failed line leaves the session exactly as if it had never
+    /// been submitted (CALC-STATE-02). Only a failed restore is terminal.
+    fn transact(
+        &mut self,
+        line: impl FnOnce(&mut Self) -> Result<Outcome, String>,
+    ) -> Result<Outcome, String> {
+        let committed = self.checkpoint()?;
+        let mut outcome = line(self).unwrap_or_else(Outcome::InfrastructureFailure);
+        if matches!(outcome, Outcome::Value(_) | Outcome::Defined) {
+            match self.worker.calculator_commit() {
+                Ok(_) => return Ok(outcome),
+                Err(error) => {
+                    outcome = Outcome::InfrastructureFailure(format!(
+                        "calculator commit failed: {}",
+                        error.message
+                    ));
                 }
             }
         }
-        candidate.trace_phase = "line";
-        let outcome = match candidate.submit_uncommitted(expression, finite_decimal, budget) {
-            Ok(outcome) => outcome,
-            Err(message) => return Ok(Outcome::InfrastructureFailure(message)),
-        };
-        if matches!(outcome, Outcome::Value(_) | Outcome::Defined) {
-            let state = candidate
+        self.restore(committed)?;
+        Ok(outcome)
+    }
+
+    /// Copy the host state of the last commit before a line runs: every
+    /// normal guest module of that line replaces `compiler`, `modules`,
+    /// `stack` and the boundary flags, and advances `serial`.
+    fn checkpoint(&self) -> Result<Committed, String> {
+        Ok(Committed {
+            modules: self
                 .modules
                 .as_ref()
-                .ok_or("calculator namespace unavailable")?
-                .resolve_type("calc_env@1.State")
-                .map_err(source_error)?;
-            if candidate.stack.as_slice() != [state] {
-                return Ok(Outcome::InfrastructureFailure(
-                    "guest calculator did not retain its checked State after command completion"
-                        .into(),
-                ));
-            }
-            candidate.accepted = std::mem::take(&mut self.accepted);
-            if candidate.state_changing_header {
-                candidate.accepted.push(Accepted {
-                    source: expression.to_vec(),
-                    finite_decimal,
-                    budget,
-                });
-            }
-            *self = candidate;
-        }
-        Ok(outcome)
+                .and_then(ModuleSession::checkpoint)
+                .ok_or("calculator namespace cannot be checkpointed")?,
+            compiler: self.compiler.clone(),
+            stack: self.stack.clone(),
+            serial: self.serial,
+            quiescent: self.quiescent,
+            program_free: self.program_free,
+            deferred: self.deferred,
+        })
+    }
+
+    /// Restore the worker first: if its byte-exact verification fails, the
+    /// session ends rather than pairing host state with an unknown arena. The
+    /// runtime `$generation` global and the compiler generation return
+    /// together, as do signature IDs and their published keys.
+    fn restore(&mut self, committed: Committed) -> Result<(), String> {
+        self.worker
+            .calculator_restore()
+            .map_err(|error| format!("calculator restore failed: {}", error.message))?;
+        self.modules = Some(committed.modules);
+        self.compiler = committed.compiler;
+        self.stack = committed.stack;
+        self.serial = committed.serial;
+        self.quiescent = committed.quiescent;
+        self.program_free = committed.program_free;
+        self.deferred = committed.deferred;
+        Ok(())
     }
 
     fn submit_uncommitted(
@@ -535,7 +563,7 @@ impl Session {
     ) -> Result<Outcome, String> {
         let outcome = self.submit_line(expression, finite_decimal, budget)?;
         // An accepted command never leaves a probe consumer pending; any
-        // other outcome discards this worker's candidate state anyway.
+        // other outcome restores the last commit anyway.
         if !matches!(outcome, Outcome::Value(_) | Outcome::Defined) {
             self.deferred = None;
             return Ok(outcome);
@@ -727,11 +755,10 @@ impl Session {
         } else {
             0
         };
-        let is_let = header_kind == 1;
-        let is_function = header_kind == 2;
         // This selector is emitted by the guest after scanning its original
         // tokens; Rust never classifies source bytes as a definition.
-        self.state_changing_header = is_let || is_function;
+        let is_let = header_kind == 1;
+        let is_function = header_kind == 2;
         let header_phases: &[&[u8]] = match header_kind {
             0 => &[b"calc_defs@1.header_expression_cursor"],
             1 => &[
@@ -1287,7 +1314,7 @@ impl Session {
         }
         // The shell never decodes a token or number. It only schedules the
         // guest-certified action kind and retains all opaque phase cells in
-        // this candidate worker's typed stack.
+        // this worker's typed stack.
         // RPN actions plus two source-byte passes (digit admission and exact
         // decimal materialization) each make independently checked progress.
         let mut remaining = (budget[5] as u64).saturating_add(
@@ -1939,8 +1966,9 @@ impl Session {
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
                 }
-                // Only this rejected candidate loses its guest State. The
-                // compact failure stays in the worker for typed rehydration.
+                // Only this rejected line loses its guest State; submit then
+                // restores the commit. The compact failure stays in the
+                // worker for typed rehydration.
                 report = self.execute(b"swap drop", &[], None)?;
                 if report.outcome != "normal" {
                     return Ok(Outcome::NativeFailure(report.json));
@@ -2083,7 +2111,7 @@ impl Session {
                         b"[ calc_env@1.variable_lookup_missing \
                           calc_env@1.variable_lookup_missing_failure ] dip unpair calc_bits@1.rot",
                         // A failed lookup ends evaluation; a let's Name is no
-                        // longer needed and is dropped with the candidate.
+                        // longer needed and is dropped with this line's State.
                         if is_let {
                             b"[ [ unpair drop unpair swap ] dip ] dip expr.frame_name_missing_guest"
                         } else {
@@ -4457,8 +4485,8 @@ impl Session {
             .ok_or("guest finish returned no checked final value")?;
         let (valid, final_run) = variant(finished)?;
         if !valid {
-            // The accepted session is untouched; discard this candidate's
-            // State before expanding the source-bound compact diagnosis.
+            // Submit restores the committed session afterwards; discard this
+            // line's State before expanding the source-bound compact diagnosis.
             report = self.execute(b"swap drop", &[], None)?;
             if report.outcome != "normal" {
                 return Ok(Outcome::NativeFailure(report.json));
@@ -4486,9 +4514,8 @@ impl Session {
         }
         if is_let {
             // The guest alone turns the original checked declaration Name
-            // and actual FinalReady into a proposed State. This candidate is
-            // still private: formatting must succeed before submit publishes
-            // the new State or records the accepted command.
+            // and actual FinalReady into a proposed State. It stays
+            // uncommitted: formatting must succeed before submit commits it.
             // calc_defs@1.bind_let_checked types its whole [ Name Ctx
             // FinalReady ] match beyond the backend's per-binding bound, so the
             // same guest steps run staged: copy the guest Rat out of a Ready
@@ -5195,27 +5222,10 @@ impl Session {
         };
         let input_types = stack.len();
         let checking = std::time::Instant::now();
-        let prepared = self
+        let namespace = self
             .modules
             .as_ref()
-            .ok_or("calculator namespace unavailable")?
-            .prepare(source, stack, LIMITS)
-            .map_err(|error| {
-                format!(
-                    "{}: {}",
-                    String::from_utf8_lossy(source),
-                    source_error(error)
-                )
-            })?;
-        if prepared.kind() != ModuleKind::Expression {
-            return Err("calculator command did not check as guest expression".into());
-        }
-        let check_us = trace::micros(checking);
-        let output = prepared.output().to_vec();
-        let output_types = output.len();
-        let submission = prepared
-            .submission()
-            .ok_or("checked expression has no guest program")?;
+            .ok_or("calculator namespace unavailable")?;
         let epoch = if self.program_free {
             "program_free"
         } else if self.quiescent {
@@ -5223,28 +5233,102 @@ impl Session {
         } else {
             "normal"
         };
-        let compiling = std::time::Instant::now();
-        let compiled = if self.program_free {
-            self.compiler.prepare_program_free(submission)
-        } else if self.quiescent {
-            self.compiler.prepare_quiescent(submission)
+        // Exact reuse applies only at a Program-free boundary of a compiler
+        // in a canonical epoch; every other preparation runs in full.
+        let canonical = if self.program_free {
+            self.compiler.canonical_epoch()
         } else {
-            self.compiler.prepare(submission)
-        }
-        .map_err(|error| {
-            format!(
-                "{}: {}",
-                String::from_utf8_lossy(source),
-                backend_error(error)
-            )
-        })?;
-        let backend_us = trace::micros(compiling);
+            None
+        };
+        let reusing = std::time::Instant::now();
+        let reused = match (&self.cache, &canonical) {
+            (Some(cache), Some(canonical)) => cache
+                .borrow_mut()
+                .get(NAMESPACE, source, stack, canonical)
+                .map(|hit| {
+                    (
+                        hit.output.to_vec(),
+                        self.compiler.reuse_program_free(hit.artifact),
+                    )
+                }),
+            _ => None,
+        };
+        let cache_state = match (&self.cache, &canonical, &reused) {
+            (None, _, _) => "off",
+            (Some(_), None, _) => "bypass",
+            (Some(_), Some(_), None) => "miss",
+            (Some(_), Some(_), Some(_)) => "hit",
+        };
+        let check_us;
+        let backend_us;
+        let mut checked = None;
+        let (output, compiled) = match reused {
+            Some((output, compiled)) => {
+                check_us = 0;
+                let compiled = compiled.map_err(|error| {
+                    format!(
+                        "{}: {}",
+                        String::from_utf8_lossy(source),
+                        backend_error(error)
+                    )
+                })?;
+                backend_us = trace::micros(reusing);
+                (output, compiled)
+            }
+            None => {
+                let prepared = namespace.prepare(source, stack, LIMITS).map_err(|error| {
+                    format!(
+                        "{}: {}",
+                        String::from_utf8_lossy(source),
+                        source_error(error)
+                    )
+                })?;
+                if prepared.kind() != ModuleKind::Expression {
+                    return Err("calculator command did not check as guest expression".into());
+                }
+                check_us = trace::micros(checking);
+                let output = prepared.output().to_vec();
+                let submission = prepared
+                    .submission()
+                    .ok_or("checked expression has no guest program")?;
+                let compiling = std::time::Instant::now();
+                let compiled = if self.program_free {
+                    self.compiler.prepare_program_free(submission)
+                } else if self.quiescent {
+                    self.compiler.prepare_quiescent(submission)
+                } else {
+                    self.compiler.prepare(submission)
+                }
+                .map_err(|error| {
+                    format!(
+                        "{}: {}",
+                        String::from_utf8_lossy(source),
+                        backend_error(error)
+                    )
+                })?;
+                backend_us = trace::micros(compiling);
+                checked = Some(prepared);
+                (output, compiled)
+            }
+        };
+        let output_types = output.len();
+        let work_issued = compiled.work_issued();
         let compile_metrics = compiled.metrics();
+        // Retain a fresh Program-free preparation before commit consumes it.
+        let reusable = match (&self.cache, &checked) {
+            (Some(_), Some(_)) => compiled.reusable(),
+            _ => None,
+        };
         let wat_bytes = compiled.wat().len();
         let preparing = std::time::Instant::now();
         let ready = self
             .worker
-            .prepare(compiled.wat(), source, self.serial)
+            .prepare_calculator(
+                compiled.wat(),
+                source,
+                self.serial,
+                compiled.submit_generation(),
+            )
             .map_err(|error| error.message)?;
         if ready.outcome != "ready" {
             return Err(format!("calculator Wasm assembly refused: {}", ready.json));
@@ -5261,13 +5345,23 @@ impl Session {
         if report.outcome == "normal" {
             let (compiled_reachable, programs_reachable) = boundary_reachability(&report.json)?;
             self.compiler.commit(compiled).map_err(backend_error)?;
-            let (next, committed) = self
-                .modules
-                .take()
-                .ok_or("calculator namespace unavailable")?
-                .commit(prepared);
-            self.modules = Some(next);
-            committed.map_err(source_error)?;
+            // A reused module was not re-checked, so it has no namespace
+            // preparation to publish: an Expression commit changes only the
+            // namespace's staleness generations, never its content.
+            if let Some(prepared) = checked {
+                let (next, committed) = self
+                    .modules
+                    .take()
+                    .ok_or("calculator namespace unavailable")?
+                    .commit(prepared);
+                self.modules = Some(next);
+                committed.map_err(source_error)?;
+            }
+            if let (Some(cache), Some(reusable)) = (&self.cache, reusable) {
+                cache
+                    .borrow_mut()
+                    .insert(NAMESPACE, source, stack, &output, reusable);
+            }
             self.stack = output;
             self.quiescent = !compiled_reachable;
             self.program_free = !programs_reachable;
@@ -5291,7 +5385,7 @@ impl Session {
                 "output_types": output_types,
                 "epoch": epoch,
                 "first": self.serial == 1,
-                "cache": { "host": "off", "worker": timing["worker_cache"] },
+                "cache": { "host": cache_state, "worker": timing["worker_cache"] },
                 "check_us": check_us,
                 "backend_us": backend_us,
                 "prepare_us": prepare_us,
@@ -5304,6 +5398,8 @@ impl Session {
                 "total_us": trace::micros(started),
                 "wat_bytes": wat_bytes,
                 "wasm_bytes": timing["wasm_bytes"],
+                "work_issued": work_issued,
+                "host_cache_bytes": self.cache.as_ref().map(|cache| cache.borrow().bytes()),
                 "wat_sha256": module["wat_sha256"],
                 "wasm_sha256": module["wasm_sha256"],
                 "report_sha256": trace::sha256(report.json.as_bytes()),
@@ -5865,6 +5961,374 @@ fn numeric_category(value: &serde_json::Value) -> Result<String, String> {
                 }
                 .into())
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{cache, Outcome, Session, DEFAULT_BUDGET, NAMESPACE};
+    use noble_kernel::types::Ty;
+
+    /// One calculator line run through `Session::transact`.
+    type Line = fn(&mut Session) -> Result<Outcome, String>;
+
+    // These tests drive real worker modules, so they need a `noble` binary as
+    // the calculator WAT assembler. `cargo test` builds it beside this unit
+    // test executable (target/<profile>/deps/..) for the integration tests.
+    fn assembler() -> std::path::PathBuf {
+        let executable = std::env::current_exe().unwrap();
+        let profile = executable.parent().unwrap().parent().unwrap();
+        let assembler = profile.join("noble");
+        assert!(
+            assembler.is_file(),
+            "build the noble binary first: {}",
+            assembler.display()
+        );
+        assembler
+    }
+
+    fn session() -> Session {
+        session_with(None)
+    }
+
+    fn session_with(cache: Option<std::rc::Rc<std::cell::RefCell<cache::ModuleCache>>>) -> Session {
+        let worker = crate::core::worker::Engine::start_calculator_with(
+            false,
+            &assembler(),
+            false,
+            cache.is_some(),
+        )
+        .map_err(|error| error.message)
+        .unwrap();
+        Session::with_worker(worker, 0, cache).unwrap()
+    }
+
+    /// Everything a later line can observe: the host's namespace, compiler,
+    /// typed stack and boundary flags, plus the worker's digest of all memory,
+    /// every table entry, every ABI global, the published signatures and the
+    /// engine counters.
+    fn fingerprint(session: &mut Session) -> String {
+        let namespace = format!("{:?}", session.modules);
+        fingerprint_with(session, namespace)
+    }
+
+    /// `fingerprint` with the namespace's staleness generations masked. A
+    /// host module cache hit skips the namespace commit of its Expression
+    /// module, which advances only those generations, never namespace content.
+    fn fingerprint_content(session: &mut Session) -> String {
+        const GENERATION: &str = "generation: ";
+        let namespace = format!("{:?}", session.modules);
+        let mut masked = String::new();
+        let mut rest = namespace.as_str();
+        while let Some(at) = rest.find(GENERATION) {
+            let (head, tail) = rest.split_at(at + GENERATION.len());
+            masked.push_str(head);
+            masked.push('_');
+            rest = tail.trim_start_matches(|digit: char| digit.is_ascii_digit());
+        }
+        masked.push_str(rest);
+        fingerprint_with(session, masked)
+    }
+
+    fn fingerprint_with(session: &mut Session, namespace: String) -> String {
+        let arena = session
+            .worker
+            .calculator_arena()
+            .map_err(|error| error.message)
+            .unwrap();
+        let arena: serde_json::Value = serde_json::from_str(&arena.json).unwrap();
+        format!(
+            "{namespace}\n{:?}\n{:?}\nserial={} quiescent={} program_free={} deferred={:?}\n{}",
+            session.compiler,
+            session.stack,
+            session.serial,
+            session.quiescent,
+            session.program_free,
+            session.deferred,
+            arena["arena"]
+        )
+    }
+
+    /// One accepted guest module as a committed transaction; returns its
+    /// checked output stack.
+    fn accept(session: &mut Session, source: &[u8]) -> serde_json::Value {
+        let mut stack = serde_json::Value::Null;
+        let outcome = session
+            .transact(|session| {
+                let report = session.execute(source, &[], None)?;
+                assert_eq!(report.outcome, "normal", "{}", report.json);
+                let report: serde_json::Value = serde_json::from_str(&report.json).unwrap();
+                stack = report["stack"].clone();
+                Ok(Outcome::Defined)
+            })
+            .unwrap();
+        match outcome {
+            Outcome::Defined => (),
+            Outcome::InfrastructureFailure(message) | Outcome::NativeFailure(message) => {
+                panic!("{}: {message}", String::from_utf8_lossy(source))
+            }
+            _ => panic!("{} was not accepted", String::from_utf8_lossy(source)),
+        }
+        stack
+    }
+
+    /// The debug/test cross-check: a session reconstructed by replaying only
+    /// the accepted history from scratch matches the restored session.
+    fn assert_matches_replay(restored: &mut Session, history: &[&[u8]]) {
+        let mut replayed = session();
+        for line in history {
+            accept(&mut replayed, line);
+        }
+        assert_eq!(fingerprint(restored), fingerprint(&mut replayed));
+    }
+
+    // A failed line of each class runs real guest modules that consume the
+    // committed State, rewrite cells beyond the first 16 pages, install
+    // table entries and publish signatures before it fails.
+    fn guest_diagnostic(session: &mut Session) -> Result<Outcome, String> {
+        session.execute(b"drop drop calc_env@1.initial [ 9 * ]", &[], None)?;
+        Ok(Outcome::Diagnostic("DivisionByZero [9,10)".into()))
+    }
+
+    fn guest_resource_limit(session: &mut Session) -> Result<Outcome, String> {
+        session.execute(b"nil [ 1 swap cons true ] 0 [ 1 + ] pair", &[], None)?;
+        Ok(Outcome::Diagnostic(
+            "ResourceLimit IntermediateBits [0,8)".into(),
+        ))
+    }
+
+    fn native_quota(session: &mut Session) -> Result<Outcome, String> {
+        let report = session.execute(b"nil [ 1 swap cons true ] iterate", &[], None)?;
+        assert_eq!(report.outcome, "runtime-exhausted", "{}", report.json);
+        Ok(Outcome::NativeFailure(report.json))
+    }
+
+    fn host_limit(session: &mut Session) -> Result<Outcome, String> {
+        session.execute(b"unit pair [ 3 + ]", &[], None)?;
+        Err("guest lexer exceeded its source-byte progress bound".into())
+    }
+
+    fn rust_infrastructure(session: &mut Session) -> Result<Outcome, String> {
+        session.execute(b"drop 5", &[], None)?;
+        session.execute(b"calc_missing@1.word", &[], None)?;
+        unreachable!("an unknown word must not check")
+    }
+
+    fn engine_infrastructure(session: &mut Session) -> Result<Outcome, String> {
+        session.execute(b"[ 4 + ] pair", &[], None)?;
+        // The worker fails a malformed input frame after the module installed,
+        // and survives only to be restored.
+        session.execute(b"drop", &[Ty::Text], Some("[ malformed"))?;
+        unreachable!("a malformed input frame must not execute")
+    }
+
+    #[test]
+    fn failed_lines_of_every_class_restore_the_committed_session() {
+        // The history drops the calculator State so the committed compiled
+        // Program can later run on a closed stack row.
+        let history: [&[u8]; 3] = [b"drop 7 35 +", b"[ 1 + ]", b"unit pair"];
+        let mut restored = session();
+        let mut reference = session();
+        // A real (cheap) calculator line whose guest lexer phases run on the
+        // committed session before it fails with a guest diagnostic.
+        match restored.submit(b"$", false, DEFAULT_BUDGET).unwrap() {
+            Outcome::Diagnostic(diagnostic) => {
+                assert_eq!(diagnostic, "SyntaxError [0,1) provenance=unavailable");
+            }
+            _ => panic!("an invalid byte must fail lexing"),
+        }
+        assert_eq!(fingerprint(&mut restored), fingerprint(&mut reference));
+        for line in history {
+            assert_eq!(accept(&mut restored, line), accept(&mut reference, line));
+        }
+        assert!(
+            !restored.quiescent,
+            "a reachable compiled Program keeps its table slots"
+        );
+        let committed = fingerprint(&mut reference);
+        assert_eq!(fingerprint(&mut restored), committed);
+        let failures: [(&str, Line); 6] = [
+            ("guest diagnostic", guest_diagnostic),
+            ("guest ResourceLimit", guest_resource_limit),
+            ("native quota", native_quota),
+            ("host limit", host_limit),
+            ("Rust infrastructure failure", rust_infrastructure),
+            ("engine infrastructure failure", engine_infrastructure),
+        ];
+        for (class, line) in failures {
+            let outcome = restored.transact(line).unwrap();
+            assert!(
+                !matches!(outcome, Outcome::Value(_) | Outcome::Defined),
+                "{class}"
+            );
+            assert_eq!(fingerprint(&mut restored), committed, "{class}");
+        }
+        // Later lines see only the committed session: identical outputs and
+        // identical arenas, including the reused table slots and signatures.
+        for line in [b"unpair drop swap 2 *".as_slice(), b"swap run"] {
+            assert_eq!(accept(&mut restored, line), accept(&mut reference, line));
+            assert_eq!(fingerprint(&mut restored), fingerprint(&mut reference));
+        }
+        assert_matches_replay(
+            &mut restored,
+            &[
+                b"drop 7 35 +",
+                b"[ 1 + ]",
+                b"unit pair",
+                b"unpair drop swap 2 *",
+                b"swap run",
+            ],
+        );
+    }
+
+    /// Exact module reuse across a restore. A failed line records host and
+    /// worker cache entries before it is restored; neither cache is part of
+    /// the commit, so the entries survive. A later line reuses an entry only
+    /// at exactly its recorded canonical epoch, and ends exactly where a
+    /// session without the cache ends (the namespace differs only in the
+    /// staleness generations of the Expression commits a hit skips).
+    #[test]
+    fn failed_line_module_cache_entries_hit_only_at_their_exact_epoch() {
+        let cache = std::rc::Rc::new(std::cell::RefCell::new(cache::ModuleCache::new(
+            NAMESPACE,
+            cache::HOST_CACHE_BYTES,
+        )));
+        let mut cached = session_with(Some(cache.clone()));
+        let mut reference = session();
+        assert_eq!(
+            fingerprint_content(&mut cached),
+            fingerprint_content(&mut reference)
+        );
+        let committed = fingerprint(&mut cached);
+        let epoch = |session: &Session| {
+            assert!(session.program_free, "reuse needs a Program-free boundary");
+            session.compiler.canonical_epoch().unwrap()
+        };
+        let committed_epoch = epoch(&cached);
+        let recorded = cache.borrow().bytes();
+        // The failed line lowers a static literal, so its last module runs
+        // at an epoch past the committed one.
+        let line: [&[u8]; 3] = [b"drop 7 35 +", b"\"a\" drop 2 *", b"3 +"];
+        let outcome = cached
+            .transact(|session| {
+                for source in line {
+                    let report = session.execute(source, &[], None)?;
+                    assert_eq!(report.outcome, "normal", "{}", report.json);
+                }
+                assert!(epoch(session).text_end() > committed_epoch.text_end());
+                Ok(Outcome::Diagnostic("injected failure".into()))
+            })
+            .unwrap();
+        assert!(matches!(outcome, Outcome::Diagnostic(_)));
+        assert_eq!(fingerprint(&mut cached), committed);
+        assert_eq!(epoch(&cached), committed_epoch);
+        assert!(
+            cache.borrow().bytes() > recorded,
+            "the failed line recorded entries"
+        );
+        // `3 +` first runs at the committed epoch, where only the failed
+        // line's later-epoch entry exists, so it misses; after the literal
+        // advances `text_end` exactly as in the failed line, it hits.
+        let later: [(&[u8], bool); 4] = [
+            (b"drop 7 35 +", true),
+            (b"3 +", false),
+            (b"\"a\" drop 2 *", true),
+            (b"3 +", true),
+        ];
+        for (source, hit) in later {
+            let name = String::from_utf8_lossy(source);
+            let found = cache
+                .borrow_mut()
+                .get(NAMESPACE, source, &cached.stack, &epoch(&cached))
+                .is_some();
+            assert_eq!(found, hit, "{name}");
+            let bytes = cache.borrow().bytes();
+            assert_eq!(accept(&mut cached, source), accept(&mut reference, source));
+            // Only a miss records a new entry.
+            assert_eq!(cache.borrow().bytes() == bytes, hit, "{name}");
+            assert_eq!(
+                fingerprint_content(&mut cached),
+                fingerprint_content(&mut reference),
+                "{name}"
+            );
+        }
+    }
+
+    /// CALC-STATE-02 on real calculator lines. Each definition costs minutes
+    /// of guest modules, so this stays out of the default suite; run it with
+    /// `cargo test --release -p noble-cli --bin noble calc_state_02 -- --ignored`.
+    #[test]
+    #[ignore = "runs real calculator lines for about an hour"]
+    fn calc_state_02_failed_lines_leave_definitions_byte_identical() {
+        let definitions: [&[u8]; 3] = [b"let x = 10", b"fn f(y)=x + y", b"let x = 20"];
+        let reference = std::thread::spawn(move || {
+            let mut reference = session();
+            for line in definitions {
+                assert!(matches!(
+                    reference.submit(line, false, DEFAULT_BUDGET).unwrap(),
+                    Outcome::Value(_) | Outcome::Defined
+                ));
+            }
+            let committed = fingerprint(&mut reference);
+            let mut outputs = Vec::new();
+            for line in [b"f(1)".as_slice(), b"x"] {
+                outputs.push(value(
+                    reference.submit(line, false, DEFAULT_BUDGET).unwrap(),
+                ));
+                outputs.push(fingerprint(&mut reference));
+            }
+            (committed, outputs)
+        });
+        let mut restored = session();
+        for line in definitions {
+            assert!(matches!(
+                restored.submit(line, false, DEFAULT_BUDGET).unwrap(),
+                Outcome::Value(_) | Outcome::Defined
+            ));
+        }
+        let committed = fingerprint(&mut restored);
+        let mut diagnostics = Vec::new();
+        for line in [b"let x = 1 / 0".as_slice(), b"2 ^ 5000"] {
+            match restored.submit(line, false, DEFAULT_BUDGET).unwrap() {
+                Outcome::Diagnostic(diagnostic) => diagnostics.push(diagnostic),
+                _ => panic!("{} must fail", String::from_utf8_lossy(line)),
+            }
+            assert_eq!(fingerprint(&mut restored), committed);
+        }
+        let injected: [Line; 4] = [
+            native_quota,
+            host_limit,
+            rust_infrastructure,
+            engine_infrastructure,
+        ];
+        for line in injected {
+            assert!(!matches!(
+                restored.transact(line).unwrap(),
+                Outcome::Value(_) | Outcome::Defined
+            ));
+            assert_eq!(fingerprint(&mut restored), committed);
+        }
+        let mut outputs = Vec::new();
+        for line in [b"f(1)".as_slice(), b"x"] {
+            outputs.push(value(restored.submit(line, false, DEFAULT_BUDGET).unwrap()));
+            outputs.push(fingerprint(&mut restored));
+        }
+        let (reference_committed, reference_outputs) = reference.join().unwrap();
+        assert_eq!(committed, reference_committed);
+        assert_eq!(outputs, reference_outputs);
+        assert_eq!(outputs[0], "11");
+        assert_eq!(outputs[2], "20");
+        eprintln!(
+            "CALC-STATE-02 diagnostics: {diagnostics:?}; outputs: {:?}",
+            [&outputs[0], &outputs[2]]
+        );
+    }
+
+    fn value(outcome: Outcome) -> String {
+        match outcome {
+            Outcome::Value(value) => value,
+            _ => panic!("expected a value"),
         }
     }
 }

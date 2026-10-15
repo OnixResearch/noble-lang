@@ -1,6 +1,10 @@
 //! Frame completion: closing one body fold and returning its result upward.
 
 /// What completing one frame produced for the machine.
+#[expect(
+    clippy::large_enum_variant,
+    reason = "Owner: noble-maintainers; Step is produced for every nested body and Entry once per request, so the size gap is not wasted storage; boxing the joined Frame would add a heap allocation per frame completion and change the extracted noble-kernel subject."
+)]
 pub(super) enum Completion {
     /// The entry body completed; its derived effect bound is the result.
     Entry(crate::types::EffSet),

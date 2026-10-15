@@ -19,7 +19,7 @@ const CALCULATOR_EXPANDED_KEY_LIMIT: usize = 4 * crate::OUTPUT_BYTE_LIMIT;
 // The first key of each block is independent; decoding never follows more
 // than 31 predecessors. Hashes only skip unequal keys: a collision must
 // still compare every expanded byte before sharing an identity.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 struct PrefixKey {
     prefix: u32,
     length: u32,
@@ -46,7 +46,7 @@ const fn index_probe_cost(entries: usize) -> usize {
 /// The canonical grammar is injective and contains no caller-provided text.
 /// Calculator uses compact printable tokens so a long-lived selected session
 /// does not repeat verbose type names in every distinct structural key.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct Pool {
     pub(crate) keys: alloc::vec::Vec<alloc::vec::Vec<u8>>,
     prefix_keys: alloc::vec::Vec<PrefixKey>,
@@ -97,6 +97,27 @@ impl Pool {
 
     pub(crate) fn select_calculator(&mut self) {
         self.compact = true;
+    }
+
+    /// A conservative heap accounting of this pool for byte-bounded caches:
+    /// every stored byte plus a fixed per-record allowance for vector, map
+    /// and allocation overhead. It never under-counts the stored key bytes.
+    pub(crate) fn retained_bytes(&self) -> usize {
+        const RECORD: usize = 64;
+        let keys = self.keys.iter().fold(0usize, |total, key| {
+            total.saturating_add(key.len()).saturating_add(RECORD)
+        });
+        let prefixes = self.prefix_keys.iter().fold(0usize, |total, key| {
+            total
+                .saturating_add(key.suffix.len())
+                .saturating_add(RECORD)
+        });
+        let candidates = self.candidates.values().fold(0usize, |total, ids| {
+            total
+                .saturating_add(ids.len().saturating_mul(4))
+                .saturating_add(RECORD)
+        });
+        keys.saturating_add(prefixes).saturating_add(candidates)
     }
 
     pub(crate) const fn len(&self) -> usize {

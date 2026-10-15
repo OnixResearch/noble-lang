@@ -38,7 +38,7 @@ function session(name) {
   const requestFd = openSync(requests, 'wx', 0o600);
   const fd = openSync(path, 'wx', 0o600);
   // The selected host requires an anonymous pipe with one independent writer.
-  const child = spawn('/bin/bash', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
+  const child = spawn('/bin/sh', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
     'sh', binary, authority], { stdio: ['pipe', 'pipe', 'pipe'] });
   let buffer = '', stderr = '', waiter;
   const queue = [];

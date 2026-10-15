@@ -50,6 +50,10 @@ impl Base {
         }
     }
 
+    pub(super) const fn generation(&self) -> u32 {
+        self.generation
+    }
+
     #[expect(
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-maintainers; comparing the content-addressed calculator literal table size uses the non-const BTreeMap::len."

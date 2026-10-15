@@ -1314,8 +1314,9 @@ module num@1 [
         # Measure the right operand widths e=|n2|, f=|d2|. While b <= 384
         # every width is below 2^10: the count slot becomes
         # S*2^40 + a + c*2^10 + e*2^20 + f*2^30 with the cross-product
-        # count S = M(a,f) + M(c,e) (see op_work_route), computed over
-        # integers with the operand parked above it.
+        # count S = M(a,f) + M(max(c,e),min(c,e)) + c + e + 2 (see
+        # op_work_route), computed over integers with the operand parked
+        # above it.
         OpWorkLimit.into unpair unpair unpair pair pair
         swap dup OpBitsAdmitted.into unpair 384 i64.cmp 1 =
         [ drop 0 0 pair ]
@@ -1329,7 +1330,10 @@ module num@1 [
           pair [ pair ] dip pair
           dup unpair unpair [ swap ] dip swap unpair
           [ swap ] dip [ dup [ swap 4 * swap 2 * + 9 + ] dip * 2 + ] dip
-          [ swap ] dip swap dup [ swap 4 * swap 2 * + 9 + ] dip * 2 + + swap
+          [ swap ] dip swap
+          [ dup ] dip dup [ swap ] dip + 2 + swap [ swap ] dip
+          [ dup ] dip dup [ swap ] dip i64.cmp 1 = [ ] [ swap ] if
+          dup [ swap 4 * swap 2 * + 9 + ] dip * 2 + + + swap
           unpair unpair 1073741824 * swap 1048576 * +
           [ unpair 1024 * + ] dip +
           swap 1099511627776 * + ] dip
@@ -1349,9 +1353,11 @@ module num@1 [
         # width Q visits at most M(P,Q) = 4PQ + 2Q^2 + 9Q + 2 elements (per
         # multiplier bit: route, probe, shift, and an add over at most P+i+1
         # digit/continue/trim/reverse positions). x multiplies n1*n2 and
-        # d1*d2: M(a,e) + M(c,f). / multiplies n1*d2 and d1*n2: S. + and -
-        # multiply n1*d2, d1*n2 and d1*d2, then compare, add/subtract, trim
-        # and reverse over at most b bits: S + M(c,f) + 5b + 9. Both Bits
+        # d1*d2: M(a,e) + M(c,f). / multiplies n1*d2 and d1*n2: S, where
+        # op_first_stage_second_cross counts both d1 and n2 (c + e + 2) and
+        # takes the narrower as multiplier, d1 on a tie. + and - multiply
+        # n1*d2, d1*n2 and d1*d2, then compare, add/subtract, trim and
+        # reverse over at most b bits: S + M(c,f) + 5b + 9. Both Bits
         # measurements and the two width stages visit the four widths
         # (2b + 4). Above 384 Bits the widths are not packed and
         # C = 8b^2 + 25b + 19 bounds every kind. Admit iff 150*C <= remaining,
@@ -1822,7 +1828,10 @@ module num@1 [
                   [ swap drop op_first_stage_exact_three ]
               list.case ] dip
             drop
-            [ unpair unpair drop calc_big@1.big_mul_input inl
+            [ unpair unpair drop
+              dup calc_big@1.big_width [ swap dup calc_big@1.big_width ] dip
+              i64.cmp 1 = [ swap ] [ ] if
+              calc_big@1.big_mul_input inl
               pair pair OpFirstA.new result@1.Result.Ok ]
             [ drop drop drop unit result@1.Result.Err ]
             result@1.Result.match ]

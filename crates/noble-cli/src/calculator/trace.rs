@@ -7,20 +7,26 @@
 //! (`"record": "module"`) carry:
 //!
 //! - `schema`: `"noble-calculator-trace/1"`.
-//! - `session`: process-local candidate session number (each session owns one
-//!   worker process); `line`: 1-based submitted line (0 = the startup session);
-//!   `phase`: `"session-init"` (the State initialization module of a new
-//!   session), `"replay"` (an accepted definition replayed into a candidate)
-//!   or `"line"` (the submitted line itself); `module`: session serial.
+//! - `session`: process-local session number (the calculator runs one
+//!   committed session with one worker process); `line`: 1-based submitted
+//!   line (0 = session startup); `phase`: `"session-init"` (the State
+//!   initialization module) or `"line"` (a module of a submitted line, which
+//!   runs directly on the committed session); `module`: session serial. A
+//!   failed line is restored, so its serials are issued again by the next
+//!   line: `(line, module)` is unique, `module` alone is not.
 //! - `source`, `source_sha256`, `source_bytes`: the exact guest module source
 //!   (a host-composed stage; a merged probe consumer is part of it).
 //! - `input_types`, `output_types`: operand stack heights before and after.
 //! - `epoch`: compiler preparation boundary, `"normal"`, `"quiescent"` or
 //!   `"program_free"`; `first`: the generation-0 module of its worker.
-//! - `cache`: module reuse state `{"host": ..., "worker": ...}`; without
-//!   module reuse every record has `{"host": "off", "worker": "miss"}`.
+//! - `cache`: exact module reuse `{"host": h, "worker": w}`. `h` is `"off"`
+//!   (`NOBLE_CALCULATOR_MODULE_CACHE=off`), `"bypass"` (not a canonical
+//!   Program-free preparation), `"miss"` or `"hit"` (source check and backend
+//!   preparation replaced by an exact recorded artifact); `w` is `"miss"` or
+//!   `"hit"` (assembly and V8 compilation replaced by the worker's exact-WAT
+//!   module).
 //! - Times in integer microseconds: `check_us` (namespace source check),
-//!   `backend_us` (compiler preparation),
+//!   `backend_us` (compiler preparation, or reuse validation on a host hit),
 //!   `prepare_us` (worker round trip for assembly, V8 compilation and
 //!   instantiation), worker-measured `rehash_us` (assembler identity re-hash),
 //!   `assemble_us` (assembler process), `compile_us` (`new WebAssembly.Module`),
@@ -28,6 +34,10 @@
 //!   collect, begin, injection, submit and report), `commit_us`, `total_us`.
 //! - `wat_bytes`, `wasm_bytes`, `wat_sha256`, `wasm_sha256`; `report_sha256`
 //!   (the worker's execution report bytes); `outcome` (worker outcome).
+//! - `work_issued`: cumulative backend Work issued by the preparation (on a
+//!   host hit, by the recorded preparation).
+//! - `host_cache_bytes`: accounted bytes retained by the host module cache
+//!   after this module (null when it is off).
 //!
 //! Session records (`"record": "session"`) carry `session`, `line`,
 //! `namespace_us` (namespace module registration) and `worker_start_us`.

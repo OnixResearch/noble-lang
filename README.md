@@ -124,6 +124,14 @@ verified by this check; CALC-EVIDENCE-01/02 remain open,
 CALC-01 and related scenario statuses remain unchanged, and the separate
 VC-NUM-01 contract obligation does not inherit a calculator proof.
 
+[`proofs/foundation`](proofs/foundation/README.md) (issue #15) proves that
+this oracle agrees with the MC1 `BitVec 64` model, which gives universal
+instruction, sequence and quote/compose/run statements over that model.
+Its seeded sibling `verification/foundation/differential.mjs` runs
+generated programs with opt off and on, and Lean kernel-checks every
+expected value. Both remain model theorems plus finite tests. The README
+there lists every unproved edge to the executed Wasm.
+
 To retain the source, reports, WAT, Wasm, and tool observations:
 
 ```sh
@@ -190,10 +198,30 @@ run in checked Noble guest modules
 (`crates/noble-contracts/src/fixtures/calculator-*.noble`); the host shell
 orchestrates the checked guest phases and supplies bounded bytes and budgets.
 
-It is very slow: in a local CALC-01/02/03/09 sweep (four processes at a time)
-each line that printed a value took about 3–31 minutes (most 8–18), numeric
-errors 4.5–9 minutes and syntax/name errors under 3. Every line also replays
-each earlier `let`/`fn` first, adding roughly 6–8 minutes per definition.
+It is slow: each line runs about 300–450 separately checked guest modules.
+Measured on a release build of `7bae596` (with module reuse, below, and
+before lines ran on one committed session), on a 32-thread host at 1-minute
+load average 48–60 with four calculator processes at a time, a fresh `1+2`
+took 267 s, `2*3` 296 s, `12.34` 240 s and `0.3` with `--finite-decimal`
+292 s; without reuse the same lines took 464, 538, 349 and 569 s in the same
+window. A module seen for the first time costs about 1.1–1.5 s there (source
+check and backend preparation about 0.45–0.65 s each, worker assembly and V8
+compilation about 0.1 s, commit 0.06–0.07 s); a reused one about 4 ms. A debug
+build is slower still: `0.3 --finite-decimal` without reuse took 1,141 s
+against 471 s for a release build run alongside it (load about 30).
+
+Lines run on one committed session: a failed line restores a byte-exact
+snapshot of it instead of replaying earlier definitions, so a line's cost
+does not grow with the number of earlier `let`/`fn` lines. (With replay, the
+session `fn f(y)=y*2`, `fn g(x)=f(x)+1`, `g(2)` ran 2,193 modules in 866 s
+with reuse and 2,721 s without, in the window above.)
+The [calculator acceptance runner](verification/calculator-v1/README.md) runs
+the canonical CALC-01/02/03/06/07/09 CLI vectors against an exact prebuilt
+binary, one process per vector, and keeps raw I/O and a JSON receipt outside
+the repository. Its results are observations; they do not promote cases.
+On the `44329dc` release snapshot all 34 runnable vectors passed
+([receipt](verification/calculator-v1/receipt-44329dc-release.json)); a
+single-line vector took 51–2,051 s and the CALC-06 session 8,689 s.
 
 Setting `NOBLE_CALCULATOR_TRACE=<file>` appends one JSON line per executed
 guest module (source, stage identity, source-check / backend / worker times,
@@ -201,12 +229,25 @@ WAT and Wasm sizes and digests) to that file; the record schema is documented
 in `crates/noble-cli/src/calculator/trace.rs`. Tracing is off by default and
 does not change any output.
 
+Most guest modules of a line repeat earlier ones exactly (same source, same
+stack types, same compiler epoch). The calculator reuses such a module's
+already checked artifact instead of re-running the source check and backend
+preparation, and each worker reuses the assembled Wasm and compiled V8 module
+of byte-identical WAT; every module still runs in the guest. Reuse is exact
+(full source, type and WAT comparison, never a digest alone), keeps every
+cap, and is bounded to 96 MiB of host and 64 MiB of per-worker retained
+bytes. Neither cache is part of the committed session: a module reused after
+a failed line's restore is reused only at exactly its recorded compiler
+epoch. `NOBLE_CALCULATOR_MODULE_CACHE=off` disables it; outputs are identical
+either way.
+
 The `Calculator-v1` source/worker profile is separate from Core-Bootstrap,
 Declared-Modules-v1, Text-Byte-Cursor-v1 and live profiles. Its compiler has a
 4 MiB emitted WAT ceiling rather than the ordinary 1 MiB ceiling recorded in
 the unchanged [Core ABI](crates/noble-cli/src/core/runtime/abi.json). Its
-imported Wasm memory starts at 16 pages and can grow to at most 64 pages; the
-other profiles remain fixed at 16 pages. Its worker selects ceilings of 72,362
+modules import a Wasm memory of 16 to at most 64 pages, which the worker
+allocates at 64 pages so that restores never meet a resized arena; the other
+profiles remain fixed at 16 pages. Its worker selects ceilings of 72,362
 session cells / 1,376,208 allocation bytes rather than 4,096 / 196,608; raw
 Text ingress accepts at most 65,536 bytes. Source preparation separately
 bounds 512 reachable named bodies and 896 environment rows, including derived

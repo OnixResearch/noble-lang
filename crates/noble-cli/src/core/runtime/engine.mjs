@@ -2,6 +2,10 @@
 // compiler path and the byte-exact artifact path may cross into install().
 const installationCapability = Symbol('compiler-validated module');
 
+// Upper bound on the WAT plus Wasm bytes a Calculator-v1 worker retains for
+// exact module reuse (compiled V8 code for those modules is owned by V8).
+const CALCULATOR_MODULE_CACHE_BYTES = 64 * 1024 * 1024;
+
 const artifactEffects = new Map([
   ['test_emit', 'test.emit'],
   ['test_abort', 'test.abort'],
@@ -196,7 +200,7 @@ export class CoreEngine {
   constructor(selection, abi, { optimized = false, artifacts = null, bindings = [],
     declared_modules = false, declared_extension = null, in_process_live = false,
     text_byte_cursor = false, calculator = false, calculator_shell_state = false,
-    calculator_assembler = null, calculator_trace = false } = {}) {
+    calculator_assembler = null, calculator_trace = false, calculator_module_cache = false } = {}) {
     this.selection = selection;
     // This larger bounded cell arena belongs only to Calculator-v1. Do not
     // mutate the parsed ABI shared with the ordinary and cursor profiles.
@@ -214,6 +218,8 @@ export class CoreEngine {
     if (calculator_shell_state && !calculator) fail('opaque calculator state requires the calculator profile');
     if (calculator_trace !== false && (calculator_trace !== true || !calculator))
       fail('calculator timings require the calculator profile');
+    if (calculator_module_cache !== false && (calculator_module_cache !== true || !calculator))
+      fail('module reuse requires the calculator profile');
     this.calculatorShellState = calculator_shell_state;
     this.calculatorAssembler = calculator_assembler;
     // Observation only: ready reports gain a `timing` object, nothing else.
@@ -226,6 +232,10 @@ export class CoreEngine {
     // Calculator-v1 signature ID -> canonical key, as published by the
     // latest executed module and its predecessors (see recordSignatures).
     this.signatures = [];
+    // Exact-WAT module reuse within this worker (Calculator-v1 only).
+    this.calculatorModuleCache = calculator_module_cache;
+    this.calculatorModules = new Map();
+    this.calculatorModuleBytes = 0;
     this.compilations = 0;
     this.lastTraceStart = 0;
     this.staged = null;
@@ -236,11 +246,22 @@ export class CoreEngine {
     this.liveProposalDenied = false;
     this.liveExecuting = false;
     this.proposalInspectionFailed = false;
+    // Artifact files in creation order, so an arena rollback can also remove
+    // the scratch files of the submissions it undoes.
+    this.savedFiles = [];
+    // The last committed Calculator-v1 arena (see calculatorCommit).
+    this.calculatorCommitted = null;
     this.tools = this.checkTools();
     this.owned = artifacts === null;
     this.directory = this.owned ? fs.mkdtempSync(path.join(os.tmpdir(), 'noble-core-')) : path.join(artifacts, 'engine');
     if (!this.owned) fs.mkdirSync(this.directory);
-    this.memory = new WebAssembly.Memory(this.abi.memory);
+    // Calculator-v1 modules import a 16..64-page memory. The engine supplies
+    // all 64 pages up front: Wasm memory cannot shrink, so a restore after a
+    // failed submission grew the arena could never match the committed size.
+    // At the maximum, runtime growth is a no-op and growth beyond 64 pages
+    // still fails exactly as before.
+    this.memory = new WebAssembly.Memory(this.profile === 'Calculator-v1'
+      ? { ...this.abi.memory, initial: this.abi.memory.maximum } : this.abi.memory);
     this.table = new WebAssembly.Table(this.abi.table);
     this.shared = Object.create(null);
     installSharedGlobals(this, this.abi);
@@ -298,6 +319,7 @@ export class CoreEngine {
   save(file, value) {
     const content = Buffer.isBuffer(value) || typeof value === 'string' ? value : JSON.stringify(value, null, 2) + '\n';
     fs.writeFileSync(path.join(this.directory, file), content, { flag: 'wx' });
+    this.savedFiles.push(file);
   }
 
   tool(name, args, label) {
@@ -311,20 +333,45 @@ export class CoreEngine {
     if (result.error || result.status !== 0) fail(`${label} failed: ${result.error ?? result.stderr}`);
   }
 
-  prepare(wat, source = Buffer.alloc(0), submission = this.compilations + 1) {
+  prepare(wat, source = Buffer.alloc(0), submission = this.compilations + 1, generation = null) {
     if (this.inProcessLive) fail('live mode requires binary preparation');
     if (this.pending || this.poisoned) fail('session is pending or poisoned');
     if (wat.length > MAX_FRAME || source.length > 65536) fail('preparation byte limit exceeded');
+    // Only a calculator module imports the compiler generation its host
+    // validated it against; every other profile bakes its own guard.
+    if ((this.profile === 'Calculator-v1') !== (generation !== null)) fail('invalid submit generation');
+    if (generation !== null) integer(generation, 0x7fffffff, 'submit generation');
     const stem = `module-${submission}`;
     const persistCompiledAssets = this.profile !== 'Calculator-v1' || !this.owned;
     if (persistCompiledAssets) this.save(`${stem}.wat`, wat);
     this.save(`${stem}.noble`, source);
     let wasmPath = null;
     let bytes;
+    let reused = null;
     const clock = () => process.hrtime.bigint();
     const micros = (start, end) => Number((end - start) / 1000n);
     const timing = this.calculatorTrace ? { worker_cache: 'miss' } : null;
-    if (this.profile === 'Calculator-v1') {
+    const watDigest = sha256(wat);
+    if (this.calculatorModuleCache) {
+      const cached = this.calculatorModules.get(watDigest);
+      if (cached && cached.wat.equals(wat)) reused = cached;
+    }
+    if (reused) {
+      // The exact WAT bytes were already assembled by the selected assembler
+      // in this worker and compiled by this V8; reuse that Wasm and Module.
+      this.calculatorModules.delete(watDigest);
+      this.calculatorModules.set(watDigest, reused);
+      if (timing) timing.worker_cache = 'hit';
+      if (timing) Object.assign(timing, { rehash_us: 0, assemble_us: 0 });
+      // Content-addressed provenance, not the earlier stem: a calculator
+      // restore removes the files of the submissions it undoes and later
+      // reissues their stems to different modules.
+      this.save(`${stem}-calculator-assemble.json`, { toolchain: 'calculator-experimental-wat-v1',
+        assembler_sha256: this.tools.calculator_wat.sha256, wat_sha256: watDigest,
+        reused_assembly: true });
+      if (persistCompiledAssets) this.save(`${stem}.wasm`, reused.bytes);
+      bytes = reused.bytes;
+    } else if (this.profile === 'Calculator-v1') {
       const rehashing = clock();
       if (sha256(fs.readFileSync(this.calculatorAssembler)) !== this.tools.calculator_wat.sha256)
         fail('calculator assembler changed after selection');
@@ -337,14 +384,15 @@ export class CoreEngine {
         timing.assemble_us = micros(assembling, assembled);
       }
       this.save(`${stem}-calculator-assemble.json`, { toolchain: 'calculator-experimental-wat-v1',
-        assembler_sha256: this.tools.calculator_wat.sha256, wat_sha256: sha256(wat),
+        assembler_sha256: this.tools.calculator_wat.sha256, wat_sha256: watDigest,
         status: result.status, signal: result.signal,
         stderr: result.stderr.toString(), error: result.error ? String(result.error) : null });
       if (result.error || result.status !== 0 || !result.stdout.length || result.stdout.length > MAX_FRAME)
         fail(`calculator-only WAT assembly refused: ${result.error ?? result.stderr.toString()}`);
       if (persistCompiledAssets) {
         wasmPath = path.join(this.directory, `${stem}.wasm`);
-        fs.writeFileSync(wasmPath, result.stdout, { flag: 'wx' });
+        // Tracked like every saved file, so an arena rollback removes it.
+        this.save(`${stem}.wasm`, result.stdout);
       } else {
         bytes = result.stdout;
       }
@@ -366,15 +414,16 @@ export class CoreEngine {
     }
     rejectStartSection(bytes);
     const compiling = clock();
-    const module = new WebAssembly.Module(bytes);
+    const module = reused ? reused.module : new WebAssembly.Module(bytes);
     const compiled = clock();
+    if (this.calculatorModuleCache && !reused) this.retainCalculatorModule(watDigest, wat, bytes, module);
     this.compilations += 1;
     const record = { submission, wasm_sha256: sha256(bytes), source_sha256: sha256(source),
-      wat_sha256: sha256(wat), optimized: this.optimized, compilations: this.compilations, stem,
+      wat_sha256: watDigest, optimized: this.optimized, compilations: this.compilations, stem,
       ...(this.profile === 'Calculator-v1' ? { assembly_toolchain: 'calculator-experimental-wat-v1',
         assembler_sha256: this.tools.calculator_wat.sha256 } : {}) };
     const instantiating = clock();
-    const ready = this.install(module, record, installationCapability);
+    const ready = this.install(module, record, installationCapability, generation);
     if (timing) {
       timing.compile_us = micros(compiling, compiled);
       timing.instantiate_us = micros(instantiating, clock());
@@ -382,6 +431,31 @@ export class CoreEngine {
       ready.timing = timing;
     }
     return ready;
+  }
+
+  // Calculator-v1 module reuse: exact WAT bytes -> the Wasm the selected
+  // assembler produced for them and its compiled V8 Module, never keyed or
+  // matched by digest alone. Instances are not retained. Retained WAT and
+  // Wasm bytes are bounded; the least recently used entries are evicted.
+  // The cache is not part of a calculator commit and a restore never reads
+  // it: a compiled Module is immutable code without instance state, so one
+  // compiled during a failed, restored submission stays exact.
+  retainCalculatorModule(digest, wat, bytes, module) {
+    const size = wat.length + bytes.length;
+    if (size > CALCULATOR_MODULE_CACHE_BYTES) return;
+    // A digest collision with different bytes replaces the older entry.
+    const previous = this.calculatorModules.get(digest);
+    if (previous) {
+      this.calculatorModules.delete(digest);
+      this.calculatorModuleBytes -= previous.size;
+    }
+    this.calculatorModules.set(digest, { wat: Buffer.from(wat), bytes: Buffer.from(bytes), module, size });
+    this.calculatorModuleBytes += size;
+    for (const [key, entry] of this.calculatorModules) {
+      if (this.calculatorModuleBytes <= CALCULATOR_MODULE_CACHE_BYTES) break;
+      this.calculatorModules.delete(key);
+      this.calculatorModuleBytes -= entry.size;
+    }
   }
 
   liveModule(bytes, source, submission) {
@@ -624,14 +698,14 @@ export class CoreEngine {
     let runtime, saved;
     try {
       runtime = this.runtime();
-      saved = this.snapshotLive();
+      saved = this.snapshotArena();
     } catch (error) {
       this.poisoned = true;
       this.proposalInspectionFailed = true;
       fail(`cannot snapshot live proposal inspection: ${error.message}`);
     }
     const restore = () => {
-      try { this.rollbackLive(saved); }
+      try { this.rollbackArena(saved); }
       catch (error) {
         this.poisoned = true;
         this.proposalInspectionFailed = true;
@@ -714,12 +788,17 @@ export class CoreEngine {
     }
   }
 
-  snapshotLive() {
+  // Byte-exact engine arena snapshot: all of memory, every table entry, every
+  // ABI global, the Calculator-v1 signature table and the engine counters.
+  // It requires the arena at its fixed maximum, so no restore can meet a
+  // resized memory or table.
+  snapshotArena() {
     if (this.memory.buffer.byteLength !== this.abi.memory.maximum * 65536
-      || this.table.length !== this.abi.table.maximum) fail('live arena exceeds fixed limits');
-    return { memory: Uint8Array.from(new Uint8Array(this.memory.buffer)),
+      || this.table.length !== this.abi.table.maximum) fail('arena is not at its fixed maximum');
+    return { memory: new Uint8Array(this.memory.buffer).slice(),
       table: Array.from({ length: this.table.length }, (_, index) => this.table.get(index)),
       globals: this.abi.globals.map(global => this.shared[global.name].value),
+      signatures: this.signatures.slice(), files: this.savedFiles.length,
       trace: this.trace.slice(), boundRequests: this.boundRequests.slice(),
       hostRequestsTotal: this.hostRequestsTotal, boundRequestsTotal: this.boundRequestsTotal,
       protectedOperations: this.protectedOperations, ambientFallbackCalls: this.ambientFallbackCalls,
@@ -731,15 +810,19 @@ export class CoreEngine {
       observationWork: this.observationWork };
   }
 
-  rollbackLive(saved) {
+  rollbackArena(saved) {
     if (this.memory.buffer.byteLength !== saved.memory.length || this.table.length !== saved.table.length) {
-      fail('cannot restore grown live arena');
+      fail('cannot restore a resized arena');
     }
     new Uint8Array(this.memory.buffer).set(saved.memory);
     for (let index = 0; index < saved.table.length; index += 1) this.table.set(index, saved.table[index]);
     this.abi.globals.forEach((global, index) => { this.shared[global.name].value = saved.globals[index]; });
-    this.trace = saved.trace;
-    this.boundRequests = saved.boundRequests;
+    this.signatures = saved.signatures.slice();
+    for (const file of this.savedFiles.splice(saved.files)) {
+      fs.rmSync(path.join(this.directory, file), { force: true });
+    }
+    this.trace = saved.trace.slice();
+    this.boundRequests = saved.boundRequests.slice();
     this.hostRequestsTotal = saved.hostRequestsTotal;
     this.boundRequestsTotal = saved.boundRequestsTotal;
     this.protectedOperations = saved.protectedOperations;
@@ -760,9 +843,66 @@ export class CoreEngine {
     this.observationWork = saved.observationWork;
     if (!Buffer.from(this.memory.buffer).equals(Buffer.from(saved.memory))
       || this.abi.globals.some((global, index) => this.shared[global.name].value !== saved.globals[index])
-      || saved.table.some((entry, index) => this.table.get(index) !== entry)) {
-      fail('live rollback verification failed');
+      || saved.table.some((entry, index) => this.table.get(index) !== entry)
+      || this.signatures.length !== saved.signatures.length
+      || saved.signatures.some((key, index) => this.signatures[index] !== key)
+      || this.savedFiles.length !== saved.files) {
+      fail('arena rollback verification failed');
     }
+  }
+
+  // A committed Calculator-v1 session state. Only the trusted host issues
+  // this, after it has validated a submission's guest result and display.
+  calculatorCommit() {
+    if (this.profile !== 'Calculator-v1' || this.poisoned || this.pending || this.parked !== null) {
+      fail('calculator commit requires an idle, unpoisoned calculator engine');
+    }
+    this.calculatorCommitted = this.snapshotArena();
+    return { schema: 'noble-core-report/v1', profile: this.profile, stage: 'wasm',
+      outcome: 'committed', arena: this.calculatorArena(),
+      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
+  }
+
+  // Return to the last commit after any failed submission, including a
+  // native quota/trap that poisoned the instance. This is a trusted engine
+  // operation over bytes the guest itself produced and committed; no guest
+  // value selects it or what it restores. A failed verification is terminal.
+  calculatorRestore() {
+    const saved = this.calculatorCommitted;
+    if (this.profile !== 'Calculator-v1' || saved === null) fail('no committed calculator arena');
+    this.calculatorCommitted = null;
+    this.rollbackArena(saved);
+    this.calculatorCommitted = saved;
+    return { schema: 'noble-core-report/v1', profile: this.profile, stage: 'wasm',
+      outcome: 'restored', arena: this.calculatorArena(),
+      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
+  }
+
+  // A session-independent digest of the arena. Table entries are compared by
+  // Wasm function index and arity, since references from different engines
+  // are never identical.
+  calculatorArena() {
+    if (this.profile !== 'Calculator-v1') fail('calculator arena digest requires the calculator profile');
+    const table = crypto.createHash('sha256');
+    for (let index = 0; index < this.table.length; index += 1) {
+      const entry = this.table.get(index);
+      table.update(entry === null ? '-;' : `${entry.name}/${entry.length};`);
+    }
+    return { memory_bytes: this.memory.buffer.byteLength,
+      memory_sha256: sha256(new Uint8Array(this.memory.buffer)),
+      table_length: this.table.length, table_sha256: table.digest('hex'),
+      globals: Object.fromEntries(this.abi.globals.map(global =>
+        [global.name, String(this.shared[global.name].value)])),
+      signatures: this.signatures.length,
+      signatures_sha256: sha256(JSON.stringify(this.signatures)),
+      compilations: this.compilations, files: this.savedFiles.length,
+      poisoned: this.poisoned };
+  }
+
+  // After a commit, a failed submission leaves this engine awaiting restore
+  // instead of terminating the worker.
+  calculatorRestorable() {
+    return this.profile === 'Calculator-v1' && this.calculatorCommitted !== null;
   }
 
   publishBinary() {
@@ -773,7 +913,7 @@ export class CoreEngine {
     }
     const { module, record } = this.staged;
     const original = this.liveStackSnapshot(this.memory, this.shared);
-    const saved = this.snapshotLive();
+    const saved = this.snapshotArena();
     this.staged = null;
     this.liveInstalling = true;
     try {
@@ -807,7 +947,7 @@ export class CoreEngine {
     } catch (error) {
       // Even when byte-exact restoration succeeds, post-install failure is
       // terminal; callers must never mistake a corrupt arena for a refusal.
-      try { this.rollbackLive(saved); }
+      try { this.rollbackArena(saved); }
       catch (rollbackError) { this.poisoned = true; fail(`live rollback failed: ${rollbackError}`); }
       this.poisoned = true;
       fail(`live publication failed after rollback: ${error}`);
@@ -922,11 +1062,14 @@ export class CoreEngine {
     } };
   }
 
-  install(module, record = {}, capability) {
+  install(module, record = {}, capability, generation = null) {
     if (capability !== installationCapability) fail('raw module installation is not artifact admission');
     if (this.pending || this.poisoned) fail('session is pending or poisoned');
+    if ((this.profile === 'Calculator-v1') !== (generation !== null)) fail('invalid submit generation');
     const imports = WebAssembly.Module.imports(module);
     const globals = new Set(this.abi.globals.map(global => global.name));
+    // The calculator's immutable per-instance generation binding.
+    if (generation !== null) globals.add('submit_generation');
     const functions = new Set(this.hostFunctions.map(fn => fn.name));
     for (const entry of imports) {
       const allowed = entry.module === this.abi.module && (
@@ -943,7 +1086,9 @@ export class CoreEngine {
     const ambientFallbackCalls = this.ambientFallbackCalls;
     const protectedOperations = this.protectedOperations;
     const sp = this.shared.sp.value;
-    const instance = new WebAssembly.Instance(module, { [this.abi.module]: this.shared });
+    const bound = generation === null ? this.shared : Object.assign(Object.create(null), this.shared,
+      { submit_generation: new WebAssembly.Global({ value: 'i32', mutable: false }, generation) });
+    const instance = new WebAssembly.Instance(module, { [this.abi.module]: bound });
     if (requests !== this.trace.length || boundRequests !== this.boundRequests.length
       || hostRequestsTotal !== this.hostRequestsTotal || boundRequestsTotal !== this.boundRequestsTotal
       || ambientFallbackCalls !== this.ambientFallbackCalls
@@ -1091,7 +1236,8 @@ export class CoreEngine {
       } : {}),
       protected_operations: this.protectedOperations - protectedStart,
       candidate_prepare_requests: 0, runtime_prover_calls: 0, native_trap: nativeTrap,
-      session_state: this.poisoned ? 'terminated-after-runtime-failure' : 'retained',
+      session_state: !this.poisoned ? 'retained'
+        : this.calculatorRestorable() ? 'restore-required' : 'terminated-after-runtime-failure',
       metrics, ...(collection ? { collection } : {}),
       ...(compiledProgramsReachable === null ? {}
         : { compiled_programs_reachable: compiledProgramsReachable,
@@ -1104,6 +1250,7 @@ export class CoreEngine {
   // Standalone typed injection outside one submission. Values stay first-class
   // session state; each push fails closed on a missing or mistyped cell.
   push(inputs) {
+    if (this.poisoned) fail('cannot push into a poisoned session');
     if (!this.last && (inputs.length !== 0 || this.shared.sp.value !== 0)) fail('no initialized runtime for injection');
     const runtime = this.last ? this.runtime() : null;
     let status = 0;
@@ -1190,6 +1337,7 @@ export class CoreEngine {
   // Inspect one stack slot without executing candidate code. Only the bounded
   // observation walk runs, and it issues no guest host requests.
   observe(index) {
+    if (this.poisoned) fail('cannot observe a poisoned session');
     const runtime = this.runtime();
     const status = runtime.observe(integer(index, 128, 'stack index'));
     return { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',

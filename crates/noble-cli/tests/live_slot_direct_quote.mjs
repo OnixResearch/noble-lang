@@ -26,7 +26,7 @@ fs.writeFileSync(authority, JSON.stringify({
 record({ kind: 'authority', bytes: fs.readFileSync(authority, 'utf8'),
   binary_sha256: digest(fs.readFileSync(binary)) });
 // The CLI accepts operator control only from an anonymous pipe.
-const child = spawn('/bin/bash', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
+const child = spawn('/bin/sh', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
   'sh', binary, authority], { stdio: ['pipe', 'pipe', 'pipe'] });
 let pending = '', stderr = '', rows = [], receive;
 child.stderr.on('data', bytes => { stderr += bytes.toString(); record({ kind: 'stderr', text: bytes.toString() }); });

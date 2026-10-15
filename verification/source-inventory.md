@@ -711,6 +711,45 @@ verification-only workspaces. Owned JS/WAT/runtime assets, the canonical ABI,
 host provenance, native release and external tools require separately bound
 evidence and trust accounting, not Rust extraction coverage.
 
+## Calculator-v1 renewal (issue #22, 2026-10-15)
+
+A complete 56/56-unit collection of the issue #22 branch (Calculator-v1 plus
+formatting, clippy and harness commits) with the pinned patched Octet
+observed 9,031 production item facts / 8,824 distinct paths, 2,565 test-only
+paths, 79 macro origins and the 14 reviewed dependency edges. The capacity
+renewal in `policy/architecture.ncl` reflects source, not a waiver: the two
+new units are Calculator-v1's `noble-wasm` `calculator_collect` and
+`calculator_profile` integration tests, and the noble CLI bin and bin+test
+shards had hit the 16,384 call (and bin constructor) caps, leaving them
+incomplete until those caps and the byte caps were doubled.
+
+[`tools/source-inventory-renew.mjs`](../tools/source-inventory-renew.mjs)
+renewed the reviewed policy from that derived inventory. The 5,964 still
+observed reviewed paths keep their category, dispositions and notes, and
+278 stale paths were removed (most of them closure byte spans moved by
+formatting). The 2,860 new paths were classified from compiler facts only:
+`generated` only when every observing fact is macro-expanded, `structural`
+for declaration, implementation-block, import and local macro-definition
+facts, and otherwise `body` with OPEN extraction and refinement. Test-only
+paths and macro origins are the exact observed sets. They are accounting,
+not the individual definition reviews recorded for the 2026-10-07 entries
+below. The new calculator and live surfaces are all OPEN bodies:
+`noble_wasm::source::Compiler::{new_calculator, prepare_quiescent,
+prepare_program_free, new_live, prepare_checked_selected, retire_code}`,
+`noble_contracts::source::Session::{new_calculator, new_live,
+new_live_slots}`, and 218 `calculator.rs` paths (192 bodies, 26
+structural). The pure comparator over the same collection returns
+`valid=true` with 4,407 OPEN bodies, 2,589 generated and 1,828 structural
+paths.
+
+The flake `source-coverage`, `native-assurance` and `octet` checks still fail
+before any comparator: the selected Octet's architecture phase blocks with
+2,649 `required-compiler-unknown` findings. 2,524 are compiler desugarings
+such as `?` that have no resolved macro definition, and 125 are unresolved
+call definitions. This is the same open blocker recorded above for the
+parent source. The comparator result therefore does not
+establish a `source-coverage` pass, architecture approval or refinement.
+
 ## Classification
 
 Each compiler-derived production subject is reviewed as one of three categories.

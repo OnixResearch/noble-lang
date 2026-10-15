@@ -35,6 +35,19 @@ async function protocol(config) {
     protected_operations: 0, candidate_prepare_requests: 0,
     session_state: engine?.proposalInspectionFailed
       ? 'terminated-after-proposal-inspection-failure' : 'terminated-after-internal-failure' });
+  // A committed Calculator-v1 engine survives a failed command: it is
+  // poisoned until the host restores the last commit, and refuses every
+  // other guest operation meanwhile. Any other engine terminates. Returns
+  // whether the protocol loop must stop.
+  const failed = error => {
+    if (engine?.calculatorRestorable()) {
+      engine.poisoned = true;
+      emit('internal-failure', { ...reportError(error), session_state: 'restore-required' });
+      return false;
+    }
+    emit('internal-failure', reportError(error));
+    return true;
+  };
   try {
     engine = config.slot_mode === true
       ? new SlotEngine(JSON.parse(config.selection), JSON.parse(config.abi), config)
@@ -64,6 +77,25 @@ async function protocol(config) {
               json: integer(Number(slot[1]), MAX_FRAME, 'slot request'),
               binary: integer(Number(slot[2]), MAX_FRAME, 'checked slot binary') };
             if (command.json === 0) fail('empty slot command');
+            continue;
+          }
+          if (header === 'calculator-commit' || header === 'calculator-arena') {
+            try {
+              const report = header === 'calculator-commit'
+                ? engine.calculatorCommit() : { outcome: 'arena', arena: engine.calculatorArena() };
+              emit(report.outcome, report);
+            } catch (error) { if (failed(error)) return; }
+            continue;
+          }
+          if (header === 'calculator-restore') {
+            try {
+              const report = engine.calculatorRestore();
+              emit(report.outcome, report);
+            } catch (error) {
+              emit('internal-failure', { ...reportError(error),
+                session_state: 'terminated-after-restore-failure' });
+              return;
+            }
             continue;
           }
           if (engine.staged && header !== 'publish-bin' && header !== 'discard-bin') {
@@ -122,12 +154,15 @@ async function protocol(config) {
                 claims: integer(Number(admission[4]), 1024, 'claim frame'),
                 allowed: integer(Number(admission[5]), 1024, 'host-policy frame') };
             } else {
-              const match = /^(compile|compile-bin|stage-bin) ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
+              const match = /^(compile|compile-bin|stage-bin) ([0-9]+) ([0-9]+) ([0-9]+)(?: ([0-9]+))?$/.exec(header);
               if (!match) fail('invalid engine command');
+              if (match[5] !== undefined && match[1] !== 'compile') fail('invalid engine command');
               command = { kind: match[1],
                 bytes: integer(Number(match[2]), MAX_FRAME, 'module frame'),
                 source: integer(Number(match[3]), 65536, 'source frame'),
-                submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission') };
+                submission: integer(Number(match[4]), Number.MAX_SAFE_INTEGER, 'submission'),
+                generation: match[5] === undefined ? null
+                  : integer(Number(match[5]), 0x7fffffff, 'submit generation') };
               if (command.kind !== 'compile' && command.bytes < 8) fail('invalid Wasm frame size');
             }
           }
@@ -159,16 +194,12 @@ async function protocol(config) {
           const bytes = pending.subarray(0, command.inputs);
           pending = pending.subarray(command.inputs);
           command = null;
-          let inputs = [];
-          if (bytes.length) {
-            try { inputs = JSON.parse(utf8.decode(bytes)); }
-            catch (error) { emit('internal-failure', reportError(error)); return; }
-          }
           try {
+            const inputs = bytes.length ? JSON.parse(utf8.decode(bytes)) : [];
             const report = engine.execute({ inputs });
             emit(report.outcome, report);
-          } catch (error) { emit('internal-failure', reportError(error)); return; }
-          if (engine.poisoned) return;
+          } catch (error) { if (failed(error)) return; }
+          if (engine.poisoned && !engine.calculatorRestorable()) return;
           continue;
         }
         if (command.kind === 'push') {
@@ -207,12 +238,13 @@ async function protocol(config) {
         const source = pending.subarray(command.bytes, command.bytes + command.source);
         pending = pending.subarray(command.bytes + command.source);
         try {
-          const report = command.kind === 'compile' ? engine.prepare(bytes, source, command.submission)
+          const report = command.kind === 'compile'
+            ? engine.prepare(bytes, source, command.submission, command.generation)
             : command.kind === 'compile-bin' ? engine.compileBinary(bytes, source, command.submission)
               : engine.stageBinary(bytes, source, command.submission);
           emit(report.outcome, report);
         }
-        catch (error) { emit('internal-failure', reportError(error)); return; }
+        catch (error) { if (failed(error)) return; }
         command = null;
       }
     }

@@ -283,6 +283,22 @@ impl ModuleSession {
         self.generation
     }
 
+    /// An independent copy of a committed calculator namespace, so the
+    /// calculator host can restore it after a failed submission. The private
+    /// snapshot omits test hosts, the text cursor, live selections and
+    /// component bindings, which a calculator session never has; any other
+    /// session is refused rather than copied incompletely.
+    pub fn checkpoint(&self) -> Option<Self> {
+        let source = &self.source;
+        let is_exact = source.calculator
+            && !source.hosts
+            && !source.text_cursor
+            && source.live_selected.is_none()
+            && source.live_slots.is_none()
+            && source.bindings.is_none();
+        is_exact.then(|| self.snapshot())
+    }
+
     fn snapshot(&self) -> Self {
         Self {
             source: crate::source::Session {

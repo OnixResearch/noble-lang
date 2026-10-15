@@ -1,0 +1,57 @@
+{
+  "schema": "noble-foundation-receipt-index/v1",
+  "source_commit": "898cfe162bc3d72c4f51ea5aee6cabf79f4196e8",
+  "source_tree": "d11cd3c706212e2781d62fe73a5352ed7d07ba3d",
+  "run": "verification/foundation/ci.sh (summary: check=0 slice=0 differential=0 verify=0 stale-receipt-refused=1 overall=0)",
+  "raw_location": "/home/brittonr/.cache/noble-issues/receipts/issue-15/ci-898cfe1 (host-local, not attested by this file)",
+  "raw_sha256": {
+    "check/foundation-check.json": "110cf9951f52c0dd201c4bcd65054a23a95af330b328fd0c98688e0798258265",
+    "slice/slice-receipt.json": "5a04990f91e90012c04401ed3e734c52e539772f15e936b4b6fe92f674e89d1c",
+    "differential/differential.json": "22e3654744b52a1b93e08215d1f64c690f4f18334b40e6ebe26a01dc294c1550",
+    "summary.txt": "ea36a9ad674fa409168208fb6100f5c314c6ed5688f09b2d2474d6faf9ad5310"
+  },
+  "in_repo": {
+    "foundation-check.json": "verbatim",
+    "slice-receipt.json": "verbatim",
+    "differential-summary.json": "compacted (per-case rows removed)"
+  },
+  "results": {
+    "foundation": {
+      "theorem_count": 142,
+      "axiom_sets": {
+        "propext,Quot.sound": 43,
+        "propext,Classical.choice,Quot.sound": 57,
+        "propext": 36,
+        "(none)": 6
+      },
+      "clean_source": true
+    },
+    "slice": {
+      "route_b": "proved",
+      "route_b_subject_identity": "8bac593ca0325cd7",
+      "route_a": {
+        "off": "byte-exact ad113a79d22f95e88976805b12df9b5ebcaab57df7d83d09e362ef6536de56a2",
+        "on": "byte-exact fe24beea66781e540634f1c299f453a1e2172d8a8ce88fd73c148789734d14f4"
+      },
+      "executions": 8,
+      "controls_refused": 8,
+      "controls_not_executed": [
+        "post-check-replacement (ACORR-CASE-09)"
+      ],
+      "consumer_deviation": "reviewed bubblewrap 0.11.2 absent; used /nix/store/y0ra9qr3rz81d9wl7dfrldv3j25dc98q-bubblewrap-0.12.0/bin/bwrap"
+    },
+    "differential": {
+      "seed": "15",
+      "executions": 163,
+      "all_matched": true,
+      "opt_on_off_same_stack": true,
+      "mutation_controls_detected": 7,
+      "checker_lanes": [
+        "test oracle_table_covers_every_pool_word ... ok",
+        "test malformed_candidates_never_panic_or_accept ... ok",
+        "test generated_candidates_agree_with_independent_oracle ... ok",
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s"
+      ]
+    }
+  }
+}

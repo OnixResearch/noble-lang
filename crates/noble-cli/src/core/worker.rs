@@ -28,6 +28,9 @@ pub(crate) struct Engine {
     reader: Option<std::thread::JoinHandle<()>>,
     control: Option<std::os::unix::net::UnixDatagram>,
     has_failed: bool,
+    // A committed Calculator-v1 worker survives a failed command until the
+    // host restores its last commit (see calculator_restore).
+    restorable: bool,
 }
 
 impl Engine {
@@ -42,6 +45,7 @@ impl Engine {
             reader: None,
             control: None,
             has_failed: false,
+            restorable: false,
         };
         let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
         engine.reader = Some(attempt!(std::thread::Builder::new()
@@ -104,8 +108,29 @@ impl Engine {
 
     /// `trace` asks the worker for per-module preparation timings in its
     /// ready reports (the opt-in calculator trace); it changes nothing else.
-    pub fn start_calculator(optimized: bool, trace: bool) -> Result<Self, super::output::Failure> {
-        let config = attempt!(configuration::calculator(optimized, trace));
+    /// `module_cache` enables the worker's exact-WAT module reuse.
+    pub fn start_calculator(
+        optimized: bool,
+        trace: bool,
+        module_cache: bool,
+    ) -> Result<Self, super::output::Failure> {
+        let executable = attempt!(std::env::current_exe().map_err(super::framing::io_error));
+        Self::start_calculator_with(optimized, &executable, trace, module_cache)
+    }
+
+    /// A calculator worker whose WAT assembler is the given `noble` binary.
+    pub fn start_calculator_with(
+        optimized: bool,
+        assembler: &std::path::Path,
+        trace: bool,
+        module_cache: bool,
+    ) -> Result<Self, super::output::Failure> {
+        let config = attempt!(configuration::calculator(
+            optimized,
+            assembler,
+            trace,
+            module_cache
+        ));
         let (send, replies) = std::sync::mpsc::sync_channel(1);
         let mut engine = Self {
             child: attempt!(launch_calculator(&config)),
@@ -113,6 +138,7 @@ impl Engine {
             reader: None,
             control: None,
             has_failed: false,
+            restorable: false,
         };
         let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
         engine.reader = Some(attempt!(std::thread::Builder::new()
@@ -187,6 +213,7 @@ impl Engine {
             reader: None,
             control,
             has_failed: false,
+            restorable: false,
         };
         let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
         engine.reader = Some(attempt!(std::thread::Builder::new()
@@ -214,6 +241,28 @@ impl Engine {
         submission: u64,
     ) -> Result<super::output::Report, super::output::Failure> {
         let header = std::format!("compile {} {} {submission}\n", wat.len(), source.len());
+        attempt!(self.write(header.as_bytes()));
+        attempt!(self.write(wat));
+        attempt!(self.write(source));
+        self.reply()
+    }
+
+    /// Prepare one calculator module. `generation` is the exact compiler
+    /// generation the host validated the module against; the engine binds it
+    /// as the instance's immutable `submit_generation` import, which the
+    /// module's `submit` guard compares with the arena's `generation` global.
+    pub fn prepare_calculator(
+        &mut self,
+        wat: &[u8],
+        source: &[u8],
+        submission: u64,
+        generation: u32,
+    ) -> Result<super::output::Report, super::output::Failure> {
+        let header = std::format!(
+            "compile {} {} {submission} {generation}\n",
+            wat.len(),
+            source.len()
+        );
         attempt!(self.write(header.as_bytes()));
         attempt!(self.write(wat));
         attempt!(self.write(source));
@@ -378,6 +427,43 @@ impl Engine {
         self.reply()
     }
 
+    /// Record the calculator arena as committed. From then on a failed
+    /// command leaves the worker awaiting `calculator_restore`.
+    pub fn calculator_commit(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"calculator-commit\n"));
+        let report = attempt!(self.expect("committed"));
+        self.restorable = true;
+        Ok(report)
+    }
+
+    /// Restore and verify the last committed calculator arena byte for byte,
+    /// including after a native quota or trap. A failure is terminal.
+    pub fn calculator_restore(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        // A worker that died, timed out or desynchronized has no trustworthy
+        // committed arena left to restore.
+        if self.has_failed || !self.restorable {
+            return Err(protocol::error());
+        }
+        attempt!(self.write(b"calculator-restore\n"));
+        self.expect("restored")
+    }
+
+    /// A session-independent digest of the current calculator arena.
+    #[cfg(test)]
+    pub fn calculator_arena(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"calculator-arena\n"));
+        self.expect("arena")
+    }
+
+    fn expect(&mut self, outcome: &str) -> Result<super::output::Report, super::output::Failure> {
+        let report = attempt!(self.reply());
+        if report.outcome != outcome {
+            self.has_failed = true;
+            return Err(protocol::error());
+        }
+        Ok(report)
+    }
+
     fn write(&mut self, bytes: &[u8]) -> Result<(), super::output::Failure> {
         let result = self
             .child
@@ -426,10 +512,21 @@ impl Engine {
             other => other,
         };
         self.has_failed = match &result {
-            Ok(report) => report.is_terminal(),
-            Err(_) => true,
+            Ok(report) => report.is_terminal() && !self.awaits_restore(&report.json),
+            Err(failure) => {
+                failure.context.outcome != "internal-failure"
+                    || !self.awaits_restore(&failure.message)
+            }
         };
         result
+    }
+
+    /// Whether a committed calculator worker reported that it is alive and
+    /// awaiting restore, rather than terminated.
+    fn awaits_restore(&self, json: &str) -> bool {
+        self.restorable
+            && serde_json::from_str::<serde_json::Value>(json)
+                .is_ok_and(|report| report["session_state"] == "restore-required")
     }
 
     #[expect(

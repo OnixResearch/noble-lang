@@ -702,7 +702,7 @@ impl Session {
         while let Some(tree) = pending.pop() {
             for node in &tree.nodes {
                 match &node.kind {
-                    Kind::Call(Target::Builtin(index)) => {
+                    Kind::Call(Target::Builtin(index))
                         if environment.defs.get(*index as usize).is_none_or(|scheme| {
                             scheme.effects.iter().any(|effect| {
                                 !matches!(effect,
@@ -711,9 +711,9 @@ impl Session {
                                     ) | noble_kernel::shapes::EffectSlot::Var(_)
                                         if self.live_selected.is_some())
                             })
-                        }) {
-                            return true;
-                        }
+                        }) =>
+                    {
+                        return true;
                     }
                     Kind::Call(Target::Named(index)) => {
                         let Some(prior) = self.definitions.get(*index as usize) else {
@@ -1064,7 +1064,7 @@ mod tests {
                 .prepare(b"slot.invoke", &[Ty::I64], live_limits())
                 .is_err());
             assert!(core
-                .prepare(b"1", &[reference.clone()], live_limits())
+                .prepare(b"1", core::slice::from_ref(&reference), live_limits())
                 .is_err());
         }
         let escaping = borrowed(alloc::vec![Ty::I64], alloc::vec![reference.clone()], &[]);
