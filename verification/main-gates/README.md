@@ -76,6 +76,19 @@ the commit that adds this note.
 - The commit that adds this entry fixes two directory links in #21's Markdown (`calc-12-results.md`,
   `seeded-faults/README.md`) that the `documents` local-link checker rejects. They
   are now inline code paths; no linked content changed.
+  That commit is `6323c1d`.
+- `64df5e9`: adds the #21 merge to this list.
+- `05a50b0`: links the follow-ups #25, #26 and #27. This commit was pushed to
+  `main`.
+- Post-push accuracy fixes:
+  - `f15a2d5`: the calculator-v1 `design.md` and `proposal.md` replay wording
+    now describes #17's committed session.
+  - `49a3fc3`: the #18 record cites the integrated CALC-01 15/15 receipt.
+  - `d738935`: the Node engine test count in this README is corrected.
+  - `3394e25`: commits #16's latency record (`verification/calculator-v1/latency/`).
+  - `d4874ee`: records #20's slow numeric-path tier, which passed 3/3 on
+    `05a50b0` in 528.8 s.
+  - The commit that adds these entries.
 
 Integration also renews the collection capacity to 58 units (`1d074ea`), with
 collector evidence in `receipt.json`, and renews the source inventory
