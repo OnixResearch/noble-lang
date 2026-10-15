@@ -245,7 +245,7 @@ async function run(options) {
     all.push(...records);
     vectors.push({
       name: outcome.name, lines: outcome.lines, args: outcome.args, ok,
-      status: outcome.status, stdout: outcome.stdout, stderr: outcome.stderr,
+      exit_status: outcome.status, stdout: outcome.stdout, stderr: outcome.stderr,
       seconds: outcome.seconds,
       ...evaluate(records, options.margins),
       sessions: sessions(records),
@@ -263,7 +263,7 @@ async function run(options) {
   };
   fs.writeFileSync(path.join(options.out, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
   for (const vector of vectors) {
-    process.stdout.write(`== ${vector.name} ${JSON.stringify(vector.lines)} exit ${vector.status}`
+    process.stdout.write(`== ${vector.name} ${JSON.stringify(vector.lines)} exit ${vector.exit_status}`
       + ` ${vector.ok ? 'ok' : 'UNEXPECTED OUTPUT'} ${vector.seconds}s\n${summarize(vector)}\n`);
   }
   process.stdout.write(`== overall\n${summarize(overall)}\n`);
