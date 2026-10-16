@@ -399,15 +399,30 @@ impl Compiled {
                 };
             }
             evaluated += width;
+            // Select once per layer: the ordinary specialization contains no
+            // per-instruction observation work. Both execute the same stream.
             let f = match &self.code {
-                Code::F32 { ins, coef, src } => self.run_f32(
+                Code::F32 { ins, coef, src } if control.evaluated_nodes.is_some() => self
+                    .run_f32::<true>(
+                        &ins[start as usize..end as usize],
+                        coef,
+                        src,
+                        w,
+                        &mut control.evaluated_nodes,
+                    ),
+                Code::F32 { ins, coef, src } => self.run_f32::<false>(
                     &ins[start as usize..end as usize],
                     coef,
                     src,
                     w,
                     &mut control.evaluated_nodes,
                 ),
-                Code::I64 { ins } => self.run_i64(
+                Code::I64 { ins } if control.evaluated_nodes.is_some() => self.run_i64::<true>(
+                    &ins[start as usize..end as usize],
+                    w,
+                    &mut control.evaluated_nodes,
+                ),
+                Code::I64 { ins } => self.run_i64::<false>(
                     &ins[start as usize..end as usize],
                     w,
                     &mut control.evaluated_nodes,
@@ -447,7 +462,7 @@ impl Compiled {
     }
 
     /// Runs one layer; returns the earliest (canonical) failure in it.
-    fn run_f32(
+    fn run_f32<const OBSERVED: bool>(
         &self,
         ins: &[F],
         coef: &[f32],
@@ -463,8 +478,10 @@ impl Compiled {
         };
         let rf = &mut w.f;
         for x in ins {
-            if let Some(counter) = evaluated_nodes.as_deref_mut() {
-                *counter += 1;
+            if OBSERVED {
+                if let Some(counter) = evaluated_nodes.as_deref_mut() {
+                    *counter += 1;
+                }
             }
             match *x {
                 F::Add(d, a, b) => rf[d as usize] = sem::add(rf[a as usize], rf[b as usize]),
@@ -523,7 +540,7 @@ impl Compiled {
         fail
     }
 
-    fn run_i64(
+    fn run_i64<const OBSERVED: bool>(
         &self,
         ins: &[I],
         w: &mut Workspace,
@@ -532,8 +549,10 @@ impl Compiled {
         let mut fail: Option<(u32, Fact)> = None;
         let ri = &mut w.i;
         for x in ins {
-            if let Some(counter) = evaluated_nodes.as_deref_mut() {
-                *counter += 1;
+            if OBSERVED {
+                if let Some(counter) = evaluated_nodes.as_deref_mut() {
+                    *counter += 1;
+                }
             }
             match *x {
                 I::Add(d, a, b) => ri[d as usize] = sem::i64_add(ri[a as usize], ri[b as usize]),
