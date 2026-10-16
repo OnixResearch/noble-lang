@@ -1,6 +1,8 @@
 //! D6 stage-scoped diagnostics. Every refusal carries a stable code; none
 //! executes any graph node.
 
+#[allow(unused_imports)]
+use crate::prelude::*;
 use crate::ir::{Fact, NodeId, SourceRef};
 
 /// D5 budget kinds (`E-BUDGET-<kind>`).
@@ -303,8 +305,8 @@ impl Diagnostic {
     }
 }
 
-impl std::fmt::Display for Diagnostic {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Diagnostic {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             "{} at {:?}: {}",
@@ -315,4 +317,4 @@ impl std::fmt::Display for Diagnostic {
     }
 }
 
-impl std::error::Error for Diagnostic {}
+impl core::error::Error for Diagnostic {}

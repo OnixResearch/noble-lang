@@ -20,7 +20,9 @@
 //! inexact decimal literals `E-LITERAL-INEXACT`; `nan`/`inf` literals
 //! `E-LITERAL-NONFINITE` (non-finite bit patterns are refused by the checker).
 
-use std::fmt::Write as _;
+#[allow(unused_imports)]
+use crate::prelude::*;
+use core::fmt::Write as _;
 
 use crate::diag::{Code, Diagnostic, Malformed, Site};
 use crate::ir::{

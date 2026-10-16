@@ -2,7 +2,9 @@
 //! replayable provenance. The training loop, PRNG and optimizer arithmetic
 //! are host-side (D4); the graph is never modified.
 
-use std::sync::Arc;
+#[allow(unused_imports)]
+use crate::prelude::*;
+use alloc::rc::Rc;
 
 use crate::check::CheckedGraph;
 use crate::diag::{BudgetKind, Code, Diagnostic, Site};
@@ -189,7 +191,7 @@ pub struct Trained {
     /// Last published snapshot.
     pub snapshot: ParamSnapshot,
     /// Last published optimizer state.
-    pub state: Arc<AdamState>,
+    pub state: Rc<AdamState>,
     /// Loss before each step, then the final loss (binary64 mean).
     pub losses: Vec<f64>,
     /// Provenance of `snapshot`.
@@ -365,7 +367,7 @@ pub fn train(
             .map_err(|d| stop(d, None, 0))?,
     };
     let mut current = s0.clone();
-    let mut state = Arc::new(AdamState::new(c.params.len()));
+    let mut state = Rc::new(AdamState::new(c.params.len()));
     let mut losses = Vec::with_capacity(steps as usize + 1);
     for t in 1..=steps {
         if control.cancel_before_step.is_some_and(|f| f(t)) {
@@ -408,7 +410,7 @@ pub fn train(
         };
         drop(lease);
         current = next;
-        state = Arc::new(ns);
+        state = Rc::new(ns);
     }
     let (final_loss, _, _) = loss_and_grad(c, &current.values());
     losses.push(final_loss);

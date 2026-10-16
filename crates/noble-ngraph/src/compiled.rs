@@ -9,10 +9,13 @@
 //! earliest observed failure in canonical order. Agreement is tested, not
 //! proved (NG-PO-C stays open).
 
+#[allow(unused_imports)]
+use crate::prelude::*;
 use crate::check::CheckedGraph;
 use crate::diag::BudgetKind;
 use crate::eval::{self, Control, Obs, Report, ScratchLease};
 use crate::facts;
+use crate::identity::IdentityScheme;
 use crate::ir::{AffineOperand, Canon, Digest, Fact, NodeId, Op, OutOfRange, SubProfile};
 use crate::sem::{self, Value};
 use crate::snapshot::ParamSnapshot;
@@ -107,7 +110,7 @@ impl Compiled {
     /// Compiles a checked graph.
     #[must_use]
     #[allow(clippy::too_many_lines)]
-    pub fn new(checked: &CheckedGraph) -> Self {
+    pub fn new(ids: &dyn IdentityScheme, checked: &CheckedGraph) -> Self {
         let g = checked.graph();
         let n = g.nodes.len();
         // Packed order: (layer, canonical index); guards keep their layer.
@@ -230,7 +233,7 @@ impl Compiled {
         for l in (0..layers.len()).rev() {
             fail_suffix_min[l] = fail_suffix_min[l + 1].min(fail_min_at_layer[l]);
         }
-        let mut c = Canon::new("noble.ngraph.packed-layout.v0");
+        let mut c = Canon::new(ids, "noble.ngraph.packed-layout.v0");
         c.bytes(&checked.id());
         c.str(COMPILER_REVISION);
         c.str("order=(layer,canonical);regs=dense;one-reg=last");
@@ -269,9 +272,9 @@ impl Compiled {
     pub fn retained_bytes(&self) -> u64 {
         let code = match &self.code {
             Code::F32 { ins, coef, src } => {
-                ins.len() * std::mem::size_of::<F>() + coef.len() * 4 + src.len() * 4
+                ins.len() * core::mem::size_of::<F>() + coef.len() * 4 + src.len() * 4
             }
-            Code::I64 { ins } => ins.len() * std::mem::size_of::<I>(),
+            Code::I64 { ins } => ins.len() * core::mem::size_of::<I>(),
         };
         (code
             + self.layers.len() * 8

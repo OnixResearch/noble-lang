@@ -37,6 +37,8 @@
 //! [`Submission`]: noble_kernel::execution::Submission
 //! [`Diagnostic`]: crate::diag::Diagnostic
 
+#[allow(unused_imports)]
+use crate::prelude::*;
 mod admission;
 pub mod controls;
 pub mod source;

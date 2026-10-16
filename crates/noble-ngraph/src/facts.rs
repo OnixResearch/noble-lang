@@ -9,6 +9,8 @@
 //! rounded bound `< 2^24` in magnitude yields `integral`. These are the
 //! checker's rules; NG-PO-E (fact-transfer soundness) remains open.
 
+#[allow(unused_imports)]
+use crate::prelude::*;
 use crate::ir::{Fact, Literal, NodeId, ScalarType};
 use crate::sem::{self, Value};
 

@@ -7,6 +7,8 @@
 //! [`Submission`] is untrusted producer data; [`super::admit`] re-runs the
 //! kernel on it.
 
+#[allow(unused_imports)]
+use crate::prelude::*;
 use noble_kernel::execution::Submission;
 use noble_kernel::types::Ty;
 

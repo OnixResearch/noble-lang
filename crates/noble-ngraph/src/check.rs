@@ -9,10 +9,14 @@
 //!
 //! The checker is ordinary Rust; its soundness is the open obligation NG-PO-B.
 
-use std::collections::BTreeMap;
-use std::sync::Arc;
+#[allow(unused_imports)]
+use crate::prelude::*;
+use alloc::collections::BTreeMap;
+use alloc::rc::Rc;
 
 use crate::diag::{BudgetKind, Code, Diagnostic, Malformed, Site};
+use crate::identity::IdentityScheme;
+use crate::ir::{Canon, FACT_RULE_REVISION};
 use crate::facts::{Abs, AbsF32, AbsI64, Requirement};
 use crate::ir::{
     AffineOperand, Digest, Fact, Graph, NodeId, Op, OutOfRange, Provenance, ScalarType, SlotKind,
@@ -154,7 +158,7 @@ pub struct InputFact {
 /// A graph accepted by the checker, with re-derived types, layers and facts.
 #[derive(Clone, Debug)]
 pub struct CheckedGraph {
-    graph: Arc<Graph>,
+    graph: Rc<Graph>,
     id: Digest,
     types: Vec<Option<ScalarType>>,
     layer: Vec<u32>,
@@ -164,6 +168,7 @@ pub struct CheckedGraph {
     slot_nodes: Vec<NodeId>,
     param_slots: Vec<u32>,
     param_layout: Digest,
+    fact_bindings: Digest,
 }
 
 impl CheckedGraph {
@@ -175,8 +180,8 @@ impl CheckedGraph {
 
     /// Shared owner of the checked graph (retained, immutable; D12).
     #[must_use]
-    pub fn graph_arc(&self) -> Arc<Graph> {
-        Arc::clone(&self.graph)
+    pub fn graph_rc(&self) -> Rc<Graph> {
+        Rc::clone(&self.graph)
     }
 
     /// `GraphLogicalId`.
@@ -233,6 +238,14 @@ impl CheckedGraph {
         self.param_layout
     }
 
+    /// Fact-binding digest: `H(noble.ngraph.fact-bindings.v0 ‖ GraphLogicalId ‖
+    /// fact-rule revision ‖ fact records)`. Fact records are not part of
+    /// `GraphLogicalId`, so snapshot binding also compares this (design D6).
+    #[must_use]
+    pub const fn fact_bindings(&self) -> Digest {
+        self.fact_bindings
+    }
+
     /// Live node count.
     #[must_use]
     pub fn node_count(&self) -> usize {
@@ -243,11 +256,11 @@ impl CheckedGraph {
 /// Estimated retained bytes of a graph (charged against `graph_bytes`).
 #[must_use]
 pub fn retained_bytes(g: &Graph) -> u64 {
-    let mut b = std::mem::size_of::<Graph>() as u64;
-    b += (g.slots.len() * std::mem::size_of::<crate::ir::Slot>()) as u64;
+    let mut b = core::mem::size_of::<Graph>() as u64;
+    b += (g.slots.len() * core::mem::size_of::<crate::ir::Slot>()) as u64;
     b += (g.outputs.len() * 4) as u64;
     for n in &g.nodes {
-        b += std::mem::size_of::<crate::ir::Node>() as u64;
+        b += core::mem::size_of::<crate::ir::Node>() as u64;
         b += match &n.op {
             Op::F32Affine { terms, .. } => (terms.len() * 12) as u64,
             Op::F32Index { table, .. } => (table.len() * 4) as u64,
@@ -258,7 +271,7 @@ pub fn retained_bytes(g: &Graph) -> u64 {
             _ => 0,
         };
     }
-    b += (g.facts.len() * std::mem::size_of::<crate::ir::FactRecord>()) as u64;
+    b += (g.facts.len() * core::mem::size_of::<crate::ir::FactRecord>()) as u64;
     b
 }
 
@@ -274,8 +287,8 @@ fn op_profile(op: &Op) -> Option<SubProfile> {
 ///
 /// # Errors
 /// The first D6 refusal in stage order.
-pub fn check(graph: Graph) -> Result<CheckedGraph, Diagnostic> {
-    check_with(graph, &Budgets::default())
+pub fn check(ids: &dyn IdentityScheme, graph: Graph) -> Result<CheckedGraph, Diagnostic> {
+    check_with(ids, graph, &Budgets::default())
 }
 
 /// Checks `graph` under `budgets`. Stage order: policy, interface/size
@@ -285,7 +298,11 @@ pub fn check(graph: Graph) -> Result<CheckedGraph, Diagnostic> {
 /// # Errors
 /// The first D6 refusal in stage order.
 #[allow(clippy::too_many_lines)]
-pub fn check_with(graph: Graph, budgets: &Budgets) -> Result<CheckedGraph, Diagnostic> {
+pub fn check_with(
+    ids: &dyn IdentityScheme,
+    graph: Graph,
+    budgets: &Budgets,
+) -> Result<CheckedGraph, Diagnostic> {
     budgets.validate_policy()?;
     let n = graph.nodes.len();
     budget(BudgetKind::LiveNodes, budgets.live_nodes, n as u64)?;
@@ -335,11 +352,12 @@ pub fn check_with(graph: Graph, budgets: &Budgets) -> Result<CheckedGraph, Diagn
     let (abs, input_facts) = check_facts(&graph, &types)?;
     let (layer, layers) = layering(&graph);
     budget(BudgetKind::Layers, budgets.layers, u64::from(layers))?;
-    let id = graph.logical_id();
+    let id = graph.logical_id(ids);
     let param_slots = graph.param_slots();
-    let param_layout = crate::snapshot::layout_key(&graph);
+    let param_layout = crate::snapshot::layout_key(ids, &graph);
+    let fact_bindings = fact_bindings_digest(ids, &id, &graph);
     Ok(CheckedGraph {
-        graph: Arc::new(graph),
+        graph: Rc::new(graph),
         id,
         types,
         layer,
@@ -349,7 +367,27 @@ pub fn check_with(graph: Graph, budgets: &Budgets) -> Result<CheckedGraph, Diagn
         slot_nodes,
         param_slots,
         param_layout,
+        fact_bindings,
     })
+}
+
+fn fact_bindings_digest(ids: &dyn IdentityScheme, id: &Digest, g: &Graph) -> Digest {
+    let mut c = Canon::new(ids, "noble.ngraph.fact-bindings.v0");
+    c.bytes(id);
+    c.str(FACT_RULE_REVISION);
+    c.u64(g.facts.len() as u64);
+    for f in &g.facts {
+        c.u32(f.node.0);
+        c.fact(&f.fact);
+        c.str(match &f.provenance {
+            Provenance::Derived(_) => "derived",
+            Provenance::InputValidated => "input-validated",
+            Provenance::Evidence(_) => "evidence",
+            Provenance::Guard(_) => "guard",
+            Provenance::Asserted => "asserted",
+        });
+    }
+    c.finish()
 }
 
 fn check_topology(g: &Graph) -> Result<(), Diagnostic> {
@@ -671,7 +709,7 @@ fn check_dangling(g: &Graph) -> Result<(), Diagnostic> {
         }
     }
     while let Some(v) = work.pop() {
-        if std::mem::replace(&mut live[v.index()], true) {
+        if core::mem::replace(&mut live[v.index()], true) {
             continue;
         }
         work.extend(g.nodes[v.index()].op.operands());

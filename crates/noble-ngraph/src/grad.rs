@@ -14,7 +14,9 @@
 //!   `backward-difference`, `select` gate straight-through) are opt-ins and are
 //!   labelled as surrogates; they are never described as exact derivatives.
 
-use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use crate::prelude::*;
+use alloc::collections::BTreeMap;
 
 use crate::check::CheckedGraph;
 use crate::diag::{Code, Diagnostic, Site};
@@ -193,7 +195,7 @@ pub fn admit(model: &CheckedGraph, params: &[u32], opts: &DerivOptions) -> Resul
 }
 
 /// Scalar arithmetic used by reverse mode (binary32 or binary64, RNE).
-pub trait Real: Copy + PartialOrd + std::fmt::Debug {
+pub trait Real: Copy + PartialOrd + core::fmt::Debug {
     /// `+0`.
     const ZERO: Self;
     /// From binary32 (exact).

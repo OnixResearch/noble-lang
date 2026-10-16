@@ -1,6 +1,8 @@
 //! `splitmix64/0`: the host-side PRNG named by D11 (initialization, data and
 //! random-graph generation). Never used inside a graph.
 
+#[allow(unused_imports)]
+use crate::prelude::*;
 /// PRNG revision recorded in provenance.
 pub const PRNG: &str = "splitmix64/0";
 

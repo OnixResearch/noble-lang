@@ -1,7 +1,9 @@
 //! D7 stages 2–5: symbolic stack execution, pruning and the independent
 //! graph check.
 
-use std::rc::Rc;
+#[allow(unused_imports)]
+use crate::prelude::*;
+use alloc::rc::Rc;
 
 use noble_kernel::contracts::{Behavior, Definition};
 use noble_kernel::types::Ty;
@@ -592,7 +594,7 @@ impl<'a, 's> Machine<'a, 's> {
         let mut work: Vec<u32> = outputs.to_vec();
         while let Some(v) = work.pop() {
             let v = v as usize;
-            if std::mem::replace(&mut live[v], true) {
+            if core::mem::replace(&mut live[v], true) {
                 continue;
             }
             work.extend(self.nodes[v].op.operands().into_iter().map(|o| o.0));

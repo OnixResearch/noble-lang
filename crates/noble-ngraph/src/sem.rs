@@ -5,6 +5,8 @@
 //! independent `rustc_apfloat` leg in [`crate::oracle`] checks this per
 //! operation; it is not assumed.
 
+#[allow(unused_imports)]
+use crate::prelude::*;
 use crate::ir::{Literal, OutOfRange, ScalarType};
 
 /// A graph value at the ABI (D3).

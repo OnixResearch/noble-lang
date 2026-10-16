@@ -1,8 +1,9 @@
 //! D8 forward observations, evaluation preflight, scratch accounting (D12)
 //! and the normative CPU reference interpreter (leg L3).
 
-use std::cell::Cell;
-use std::sync::atomic::{AtomicU64, Ordering};
+#[allow(unused_imports)]
+use crate::prelude::*;
+use core::cell::Cell;
 
 use crate::check::CheckedGraph;
 use crate::diag::{BudgetKind, Code, Diagnostic, Site};
@@ -61,16 +62,18 @@ impl Obs {
 
 /// Instrumented scratch counters (B6). Every evaluation acquires its scratch
 /// through a [`ScratchLease`] whose drop releases it exactly once.
+/// Single-threaded instrumentation (`Cell`): the library holds no atomics
+/// or shared mutable globals (design D2).
 #[derive(Debug, Default)]
 pub struct ScratchCounters {
     /// Leases acquired.
-    pub acquired: AtomicU64,
+    pub acquired: Cell<u64>,
     /// Leases released.
-    pub released: AtomicU64,
+    pub released: Cell<u64>,
     /// Bytes currently leased.
-    pub live_bytes: AtomicU64,
+    pub live_bytes: Cell<u64>,
     /// Peak leased bytes.
-    pub peak_bytes: AtomicU64,
+    pub peak_bytes: Cell<u64>,
 }
 
 impl ScratchCounters {
@@ -78,9 +81,9 @@ impl ScratchCounters {
     #[must_use]
     pub fn snapshot(&self) -> (u64, u64, u64) {
         (
-            self.acquired.load(Ordering::SeqCst),
-            self.released.load(Ordering::SeqCst),
-            self.live_bytes.load(Ordering::SeqCst),
+            self.acquired.get(),
+            self.released.get(),
+            self.live_bytes.get(),
         )
     }
 }
@@ -97,9 +100,10 @@ impl<'a> ScratchLease<'a> {
     #[must_use]
     pub fn acquire(counters: Option<&'a ScratchCounters>, bytes: u64) -> Self {
         if let Some(c) = counters {
-            c.acquired.fetch_add(1, Ordering::SeqCst);
-            let live = c.live_bytes.fetch_add(bytes, Ordering::SeqCst) + bytes;
-            c.peak_bytes.fetch_max(live, Ordering::SeqCst);
+            c.acquired.set(c.acquired.get() + 1);
+            let live = c.live_bytes.get() + bytes;
+            c.live_bytes.set(live);
+            c.peak_bytes.set(c.peak_bytes.get().max(live));
         }
         Self { counters, bytes }
     }
@@ -108,8 +112,8 @@ impl<'a> ScratchLease<'a> {
 impl Drop for ScratchLease<'_> {
     fn drop(&mut self) {
         if let Some(c) = self.counters {
-            c.released.fetch_add(1, Ordering::SeqCst);
-            c.live_bytes.fetch_sub(self.bytes, Ordering::SeqCst);
+            c.released.set(c.released.get() + 1);
+            c.live_bytes.set(c.live_bytes.get() - self.bytes);
         }
     }
 }
@@ -237,7 +241,7 @@ pub fn preflight(
 /// Bytes of reference-interpreter scratch for `checked`.
 #[must_use]
 pub fn reference_scratch_bytes(checked: &CheckedGraph) -> u64 {
-    (checked.node_count() * std::mem::size_of::<Value>()) as u64
+    (checked.node_count() * core::mem::size_of::<Value>()) as u64
 }
 
 pub(crate) fn scratch_preflight(bytes: u64, control: &Control<'_>) -> Result<(), Diagnostic> {

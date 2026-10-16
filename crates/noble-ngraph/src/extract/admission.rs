@@ -1,5 +1,7 @@
 //! D7 stage 1: admission of an exact, independently kernel-accepted subject.
 
+#[allow(unused_imports)]
+use crate::prelude::*;
 use noble_kernel::contracts::Behavior;
 use noble_kernel::execution::Submission;
 use noble_kernel::types::Ty;

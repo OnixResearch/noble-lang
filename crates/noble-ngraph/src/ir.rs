@@ -8,6 +8,9 @@
 //! API stability: after the `IR_READY` milestone this module only changes
 //! additively (new variants/fields are added with defaults; nothing is renamed).
 
+use crate::identity::{IdentityHasher, IdentityScheme};
+use crate::prelude::*;
+
 /// IR version tag (D2).
 pub const IR_VERSION: &str = "ngraph-ir/0";
 /// Semantic revision of the D3 binary32 contract and the K-NUM-01 `I64` reading.
@@ -477,10 +480,15 @@ pub struct Subject {
 }
 
 impl Subject {
-    /// A subject identity derived from domain-separated parts.
+    /// A subject identity derived from domain-separated parts under `ids`.
     #[must_use]
-    pub fn derive(kind: SubjectKind, parts: &[&[u8]], closure: Vec<u64>) -> Self {
-        let mut h = blake3::Hasher::new();
+    pub fn derive(
+        ids: &dyn IdentityScheme,
+        kind: SubjectKind,
+        parts: &[&[u8]],
+        closure: Vec<u64>,
+    ) -> Self {
+        let mut h = ids.start();
         h.update(b"noble.ngraph.subject.v0");
         h.update(kind.name().as_bytes());
         for part in parts {
@@ -489,15 +497,15 @@ impl Subject {
         }
         Self {
             kind,
-            identity: *h.finalize().as_bytes(),
+            identity: h.finish(),
             closure,
         }
     }
 
     /// Subject of a directly authored graph identified by its author name/text.
     #[must_use]
-    pub fn authored(name: &str) -> Self {
-        Self::derive(SubjectKind::Authored, &[name.as_bytes()], Vec::new())
+    pub fn authored(ids: &dyn IdentityScheme, name: &str) -> Self {
+        Self::derive(ids, SubjectKind::Authored, &[name.as_bytes()], Vec::new())
     }
 }
 
@@ -680,7 +688,7 @@ pub type Digest = [u8; 32];
 /// Lowercase hex of a digest.
 #[must_use]
 pub fn hex(d: &[u8]) -> String {
-    use std::fmt::Write as _;
+    use core::fmt::Write as _;
     let mut s = String::with_capacity(d.len() * 2);
     for b in d {
         let _ = write!(s, "{b:02x}");
@@ -688,21 +696,21 @@ pub fn hex(d: &[u8]) -> String {
     s
 }
 
-/// Canonical byte encoder used for identities (length-prefixed, little-endian).
-#[derive(Default)]
-pub(crate) struct Canon {
-    h: Option<blake3::Hasher>,
+/// Canonical byte encoder used for identities (length-prefixed, little-endian),
+/// streamed into the injected [`IdentityScheme`].
+pub(crate) struct Canon<'s> {
+    h: Box<dyn IdentityHasher + 's>,
 }
 
-impl Canon {
-    pub(crate) fn new(domain: &str) -> Self {
-        let mut h = blake3::Hasher::new();
+impl<'s> Canon<'s> {
+    pub(crate) fn new(ids: &'s dyn IdentityScheme, domain: &str) -> Self {
+        let mut h = ids.start();
         h.update(domain.as_bytes());
         h.update(&[0]);
-        Self { h: Some(h) }
+        Self { h }
     }
-    fn hasher(&mut self) -> &mut blake3::Hasher {
-        self.h.get_or_insert_with(blake3::Hasher::new)
+    fn hasher(&mut self) -> &mut (dyn IdentityHasher + 's) {
+        &mut *self.h
     }
     pub(crate) fn bytes(&mut self, b: &[u8]) {
         let len = (b.len() as u64).to_le_bytes();
@@ -724,8 +732,8 @@ impl Canon {
     pub(crate) fn i64(&mut self, v: i64) {
         self.hasher().update(&v.to_le_bytes());
     }
-    pub(crate) fn finish(mut self) -> Digest {
-        *self.hasher().finalize().as_bytes()
+    pub(crate) fn finish(self) -> Digest {
+        self.h.finish()
     }
 
     fn literal(&mut self, l: Literal) {
@@ -830,7 +838,7 @@ impl Canon {
     }
 
     fn shapes(&mut self, s: Option<&Vec<ShapeTree>>) {
-        fn tree(c: &mut Canon, t: &ShapeTree) {
+        fn tree(c: &mut Canon<'_>, t: &ShapeTree) {
             match t {
                 ShapeTree::Scalar => c.u8(0),
                 ShapeTree::Unit => c.u8(1),
@@ -860,8 +868,8 @@ impl Graph {
     /// ‖ closure. Node origins and fact records are excluded. Meaningful only for
     /// a graph that passed the checker; the checker computes it.
     #[must_use]
-    pub fn logical_id(&self) -> Digest {
-        let mut c = Canon::new("noble.ngraph.graph.v0");
+    pub fn logical_id(&self, ids: &dyn IdentityScheme) -> Digest {
+        let mut c = Canon::new(ids, "noble.ngraph.graph.v0");
         c.str(IR_VERSION);
         c.str(self.profile.name());
         c.str(SEMANTIC_REVISION);

@@ -4,19 +4,27 @@
 //! param layout ‖ exact LE bytes)`. A hash identifies bytes; it does not prove
 //! correctness. Snapshots are retained owners (D12): immutable and shareable.
 
-use std::sync::Arc;
+#[allow(unused_imports)]
+use crate::prelude::*;
+use alloc::rc::Rc;
 
 use crate::check::CheckedGraph;
 use crate::diag::{BudgetKind, Code, Diagnostic, Site};
+use crate::identity::IdentityScheme;
 use crate::ir::{Canon, Digest, Graph, ScalarType};
 
 /// Ordered parameter layout key of a graph: the ordered param slot indices.
 #[must_use]
-pub fn layout_key(graph: &Graph) -> Digest {
-    let mut c = Canon::new("noble.ngraph.param-layout.v0");
-    let params = graph.param_slots();
+pub fn layout_key(ids: &dyn IdentityScheme, graph: &Graph) -> Digest {
+    layout_key_of(ids, &graph.param_slots())
+}
+
+/// Param layout key of an ordered param slot list.
+#[must_use]
+pub fn layout_key_of(ids: &dyn IdentityScheme, params: &[u32]) -> Digest {
+    let mut c = Canon::new(ids, "noble.ngraph.param-layout.v0");
     c.u64(params.len() as u64);
-    for k in params {
+    for &k in params {
         c.u32(k);
         c.str(ScalarType::F32.name());
     }
@@ -28,13 +36,13 @@ pub fn layout_key(graph: &Graph) -> Digest {
 pub struct ParamSnapshot {
     graph: Digest,
     layout: Digest,
-    slots: Arc<[u32]>,
-    bytes: Arc<[u8]>,
+    slots: Rc<[u32]>,
+    bytes: Rc<[u8]>,
     id: Digest,
 }
 
-fn snapshot_id(graph: &Digest, slots: &[u32], bytes: &[u8]) -> Digest {
-    let mut c = Canon::new("noble.ngraph.params.v0");
+fn snapshot_id(ids: &dyn IdentityScheme, graph: &Digest, slots: &[u32], bytes: &[u8]) -> Digest {
+    let mut c = Canon::new(ids, "noble.ngraph.params.v0");
     c.bytes(graph);
     c.u64(slots.len() as u64);
     for k in slots {
@@ -50,8 +58,13 @@ impl ParamSnapshot {
     /// # Errors
     /// `E-SNAPSHOT-LAYOUT` on a count mismatch, `E-NONFINITE-UPDATE` on a
     /// non-finite value, `E-BUDGET-SNAPSHOT-BYTES` over the `/0` budget.
-    pub fn new(checked: &CheckedGraph, values: &[f32]) -> Result<Self, Diagnostic> {
+    pub fn new(
+        ids: &dyn IdentityScheme,
+        checked: &CheckedGraph,
+        values: &[f32],
+    ) -> Result<Self, Diagnostic> {
         Self::with_budget(
+            ids,
             checked,
             values,
             crate::check::Budgets::default().snapshot_bytes,
@@ -63,6 +76,7 @@ impl ParamSnapshot {
     /// # Errors
     /// See [`Self::new`].
     pub fn with_budget(
+        ids: &dyn IdentityScheme,
         checked: &CheckedGraph,
         values: &[f32],
         snapshot_bytes: u64,
@@ -95,14 +109,20 @@ impl ParamSnapshot {
         for v in values {
             bytes.extend_from_slice(&v.to_bits().to_le_bytes());
         }
-        Ok(Self::from_parts(checked.id(), layout_key(g), slots, bytes))
+        Ok(Self::from_parts(ids, checked.id(), checked.param_layout(), slots, bytes))
     }
 
     /// Raw constructor (identity recomputed from the parts). Used to model
     /// foreign/stale snapshots in tests and by the trainer.
     #[must_use]
-    pub fn from_parts(graph: Digest, layout: Digest, slots: Vec<u32>, bytes: Vec<u8>) -> Self {
-        let id = snapshot_id(&graph, &slots, &bytes);
+    pub fn from_parts(
+        ids: &dyn IdentityScheme,
+        graph: Digest,
+        layout: Digest,
+        slots: Vec<u32>,
+        bytes: Vec<u8>,
+    ) -> Self {
+        let id = snapshot_id(ids, &graph, &slots, &bytes);
         Self {
             graph,
             layout,
@@ -144,8 +164,8 @@ impl ParamSnapshot {
 
     /// Shared owner of the bytes (for retained-owner accounting).
     #[must_use]
-    pub fn bytes_arc(&self) -> Arc<[u8]> {
-        Arc::clone(&self.bytes)
+    pub fn bytes_rc(&self) -> Rc<[u8]> {
+        Rc::clone(&self.bytes)
     }
 
     /// Param values in slot order.
