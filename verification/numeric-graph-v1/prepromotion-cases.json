@@ -1,0 +1,955 @@
+{
+  "schema": "noble-ngraph-prepromotion-case-records/v1",
+  "case_file": ".cairn/changes/numeric-graph-v1/cases/numeric-graph-cases.json",
+  "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+  "record_encoding": {
+    "algorithm": "Recursively sort object keys using ECMAScript Array.prototype.sort() (UTF-16 code-unit order); preserve array order and JSON values; JSON.stringify each entire case record with no replacer or indentation; encode as UTF-8 with no BOM and no trailing newline. SHA-256 hashes those bytes.",
+    "scope": "Entire normalized unpromoted case record, including id/profile/kind/requirements/input/expected/state/evidence. Not the case-file document.",
+    "future_evidence_field": "evidence.configuration.prepromotion_case_sha256 is the corresponding per-record digest below; use prepromotion_case_file_sha256 for the whole-file digest."
+  },
+  "cases": [
+    {
+      "case_id": "NGRAPH-CASE-01",
+      "prepromotion_case_sha256": "f86cd5db69af6e58fca6c921e12b884e7f2f8076e50e0054a0a6607ed4092bca",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "frontend_syntax_added": false,
+          "k_num_01_changed": false,
+          "kernel_f32_type_or_word": false,
+          "ngraph_reachable_only_through": [
+            "noble ngraph",
+            "noble-ngraph library"
+          ],
+          "ordinary_reports_byte_identical": true,
+          "outcome": "ordinary-identities-unchanged",
+          "stage": "review"
+        },
+        "id": "NGRAPH-CASE-01",
+        "input": {
+          "entry_points": [
+            "run",
+            "session",
+            "compile",
+            "live",
+            "calculator",
+            "build",
+            "component",
+            "verify"
+          ],
+          "harness": "ngraph-selection-review",
+          "kernel_types_reviewed": [
+            "I64",
+            "Bool"
+          ],
+          "ordinary_vectors": "the CORE cases already recorded as executed, rerun on the same binary before and after the change",
+          "selected_entry": "noble ngraph"
+        },
+        "kind": "review",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-SCOPE-01",
+          "NGRAPH-CLI-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-02",
+      "prepromotion_case_sha256": "49da3a4b6a5e9a0b28991b5850a2e5cd262402cf2911b883cc546a8449e7d5d9",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "forbidden_capability_uses": 0,
+          "guest_requests": 0,
+          "identity_hash_injected": true,
+          "no_std": true,
+          "normal_dependencies": [
+            "noble-contracts",
+            "noble-kernel"
+          ],
+          "outcome": "pure-domain-core-library",
+          "protected_operations": 0,
+          "stage": "check",
+          "third_party_dependencies": []
+        },
+        "id": "NGRAPH-CASE-02",
+        "input": {
+          "checks": [
+            "crate attribute no_std",
+            "normal dependencies",
+            "capability facts filesystem/process/environment/time/concurrency/observability/unsafe-code",
+            "identity hashing entry points"
+          ],
+          "harness": "ngraph-library-boundary",
+          "package": "noble-ngraph"
+        },
+        "kind": "static",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-CLI-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-03",
+      "prepromotion_case_sha256": "619e485394b5e9c4a3c7fcbf26ab78ad76aa7fd18589a1ca5723b866ad63f524",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "F1": {
+            "graph": "6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661",
+            "params": 22
+          },
+          "I1": {
+            "graph": "equals the graph field reported by extract",
+            "inputs": [
+              "i64",
+              "i64"
+            ],
+            "layers": 4,
+            "live_nodes": 8,
+            "outputs": [
+              "i64"
+            ]
+          },
+          "exit": 0,
+          "guest_requests": 0,
+          "outcome": "normal",
+          "protected_operations": 0,
+          "schema": "noble-ngraph-report/v1",
+          "stage": "check"
+        },
+        "id": "NGRAPH-CASE-03",
+        "input": {
+          "graphs": [
+            {
+              "name": "F1 printed by format::graph::print",
+              "subject": "the F1 fixture subject"
+            },
+            {
+              "name": "I1 written by noble ngraph extract"
+            }
+          ],
+          "harness": "ngraph-cli-check"
+        },
+        "kind": "admission",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-CLI-01",
+          "NGRAPH-FORMAT-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-04",
+      "prepromotion_case_sha256": "b00a420c67bfddd5e536cd394a83e6cffcaaa6ff9a9b33f67dc942a3ae52f2b0",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "--budget-live-nodes 262145": {
+            "code": "E-PROFILE",
+            "exit": 2
+          },
+          "--budget-live-nodes 4 on F1": {
+            "code": "E-BUDGET-LIVE-NODES",
+            "exit": 5
+          },
+          "caller-asserted range fact": {
+            "code": "E-FACT-UNCHECKED",
+            "exit": 2
+          },
+          "const f32 0.1": {
+            "code": "E-LITERAL-INEXACT",
+            "exit": 2
+          },
+          "evaluated_nodes": 0,
+          "graph file of 64 MiB + 1 byte": {
+            "code": null,
+            "exit": 2,
+            "outcome": "reject"
+          },
+          "guest_requests": 0,
+          "missing file": {
+            "code": null,
+            "exit": 2,
+            "outcome": "reject"
+          },
+          "missing schema line": {
+            "code": "E-GRAPH-MALFORMED",
+            "exit": 2
+          },
+          "missing subject line": {
+            "code": "E-GRAPH-MALFORMED",
+            "exit": 2
+          },
+          "odd-length evidence hex": {
+            "code": "E-GRAPH-MALFORMED",
+            "exit": 2
+          },
+          "outcome": "each-refusal-matches",
+          "protected_operations": 0,
+          "stage": "check",
+          "unknown flag": {
+            "exit": 2,
+            "usage_on_stderr": true
+          },
+          "unknown op": {
+            "code": "E-GRAPH-MALFORMED",
+            "exit": 2
+          }
+        },
+        "id": "NGRAPH-CASE-04",
+        "input": {
+          "harness": "ngraph-cli-check-refusals",
+          "variants": [
+            "missing schema line",
+            "unknown op",
+            "missing subject line",
+            "odd-length evidence hex",
+            "const f32 0.1",
+            "caller-asserted range fact",
+            "--budget-live-nodes 4 on F1",
+            "--budget-live-nodes 262145",
+            "graph file of 64 MiB + 1 byte",
+            "missing file",
+            "unknown flag"
+          ]
+        },
+        "kind": "admission",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-CLI-01",
+          "NGRAPH-FORMAT-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-05",
+      "prepromotion_case_sha256": "3661393bbcd095a653fc6872445833d41abee9a6ef671d90ad1df33b7e31312b",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "I1..I4": {
+            "check_of_written_file_reports_same_graph": true,
+            "exit": 0,
+            "outcome": "normal"
+          },
+          "existing out": {
+            "existing_bytes_unchanged": true,
+            "exit": 2
+          },
+          "expansion": {
+            "code": "E-BUDGET-EXPANSION",
+            "exit": 5
+          },
+          "f32 profile": {
+            "code": "E-PROFILE",
+            "exit": 2
+          },
+          "frontend refusal": {
+            "code": "E-SUBJECT",
+            "exit": 2
+          },
+          "guest_requests": 0,
+          "if": {
+            "code": "E-CONTROL",
+            "exit": 4
+          },
+          "outcome": "each-extraction-or-refusal-matches",
+          "program output": {
+            "code": "E-PROGRAM-OUTPUT",
+            "exit": 4
+          },
+          "protected_operations": 0,
+          "refusals_write_no_file": true,
+          "run of a Program input": "not reachable from the CLI (--inputs cannot spell a Program type); E-DYNAMIC-RUN is covered by the library-level B3 source controls",
+          "stage": "extraction",
+          "test.emit": {
+            "code": "E-EFFECT",
+            "exit": 4
+          }
+        },
+        "id": "NGRAPH-CASE-05",
+        "input": {
+          "harness": "ngraph-cli-extract",
+          "refusals": {
+            "existing out": "--out naming an existing file",
+            "expansion": "I3 with --budget-expansion 2",
+            "f32 profile": "--profile ngraph-f32/0",
+            "frontend refusal": "an unbound word",
+            "if": "true [ 1 + ] [ 2 + ] if with --inputs i64",
+            "program output": "drop [ 1 + ] with --inputs i64",
+            "test.emit": "\"hi\" test.emit 1 + with --inputs i64"
+          },
+          "sources": {
+            "I1": {
+              "inputs": "i64,i64",
+              "submissions": [
+                "dup * swap 3 * + 7 -"
+              ]
+            },
+            "I2": {
+              "inputs": "i64",
+              "submissions": [
+                "2 quote [ + ] compose dup compose run"
+              ]
+            },
+            "I3": {
+              "inputs": "i64,i64",
+              "submissions": [
+                "def sq [ dup * ]",
+                "sq swap sq +"
+              ]
+            },
+            "I4": {
+              "inputs": "i64,i64,i64",
+              "submissions": [
+                "swap [ * ] dip + dup"
+              ]
+            }
+          }
+        },
+        "kind": "admission",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-CLI-01",
+          "NGRAPH-EXTRACT-01",
+          "NGRAPH-SCOPE-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-06",
+      "prepromotion_case_sha256": "fd3c552f26458d11b3cf4d06cab2144ecb51bb877acd9810a2680f0ff02c00be",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "checker_outcome_equal": true,
+          "comments_and_whitespace_identity_bearing": false,
+          "evidence_fact_admitted": false,
+          "evidence_hex_symmetric": true,
+          "fact_binding_digest_equal": true,
+          "graph_logical_id_equal": true,
+          "outcome": "each-roundtrip-matches",
+          "parse_print_structurally_equal_with_origins_cleared": true,
+          "stage": "check"
+        },
+        "id": "NGRAPH-CASE-06",
+        "input": {
+          "graphs": [
+            "F1",
+            "F2",
+            "F3 under all nine below/above rule pairs",
+            "MSE loss",
+            "W3-S",
+            "W3-M",
+            "W3-L",
+            "W4",
+            "seeded random F32 graphs 1-8 (48 ops)",
+            "extracted I1-I4"
+          ],
+          "harness": "ngraph-format-roundtrip",
+          "variants": [
+            "canonical print",
+            "same text with comments and extra spaces",
+            "subject authored-name sugar",
+            "evidence provenance hex"
+          ]
+        },
+        "kind": "identity",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-FORMAT-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-07",
+      "prepromotion_case_sha256": "967565884bf8c6eb25218fdd9d8824d5d7d96b563e13e5ff41f92ae172e24b70",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "2^-126 * 0.5": [
+            "f32:0x00400000"
+          ],
+          "2^127 * 2": [
+            "f32:0x7f800000"
+          ],
+          "FMA probe": [
+            "f32:0x00000000"
+          ],
+          "I1": [
+            "i64:24"
+          ],
+          "default_and_reference_stdout_byte_identical": true,
+          "exit": 0,
+          "lone -0 term": [
+            "f32:0x80000000"
+          ],
+          "outcome": "each-vector-matches",
+          "reassociation": [
+            "f32:0x4b800000"
+          ],
+          "reglu(-1, 0)": [
+            "f32:0x80000000"
+          ],
+          "reglu(inf, 0)": [
+            "f32:nan"
+          ],
+          "relu(-0)": [
+            "f32:0x00000000"
+          ],
+          "stage": "evaluation"
+        },
+        "id": "NGRAPH-CASE-07",
+        "input": {
+          "evaluators": [
+            "default (compiled)",
+            "--reference"
+          ],
+          "harness": "ngraph-cli-eval",
+          "vectors": [
+            {
+              "graph": "I1",
+              "values": [
+                "5",
+                "4"
+              ]
+            },
+            {
+              "graph": "reassociation affine(-0; 2^24, 1, 1)"
+            },
+            {
+              "graph": "FMA probe a=b=1+2^-12, c=-(1+2^-11)"
+            },
+            {
+              "graph": "lone -0 term"
+            },
+            {
+              "graph": "relu(-0)"
+            },
+            {
+              "graph": "reglu(-1, 0)"
+            },
+            {
+              "graph": "2^127 * 2"
+            },
+            {
+              "graph": "reglu(inf, 0)"
+            },
+            {
+              "graph": "2^-126 * 0.5"
+            }
+          ]
+        },
+        "kind": "runtime",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-CLI-01",
+          "NGRAPH-F32-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-08",
+      "prepromotion_case_sha256": "da2efa5c990728aa3528cb9af3898132754c8ec433d1af14a37f680984930e5e",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "--fuel 1 on F1": {
+            "code": "E-BUDGET-FUEL",
+            "exit": 5,
+            "outcome": "exhausted"
+          },
+          "0.5 held in a guarded bit": {
+            "code": "G-FACT-FALSE",
+            "exit": 1,
+            "outcome": "trap"
+          },
+          "graph with param slots and no --snapshot": {
+            "code": "E-SNAPSHOT-LAYOUT",
+            "exit": 2,
+            "vector_lines": 0
+          },
+          "input violating an input-validated range fact": {
+            "code": "E-FACT-INPUT",
+            "exit": 2,
+            "outcome": "reject"
+          },
+          "mixed file": {
+            "exit": 1,
+            "lines": [
+              "normal",
+              "trap",
+              "reject"
+            ]
+          },
+          "outcome": "each-outcome-matches",
+          "refused_vectors_evaluated_nodes": 0,
+          "stage": "evaluation",
+          "types line i64 for an f32 graph": {
+            "code": "E-INTERFACE",
+            "exit": 2,
+            "vector_lines": 0
+          }
+        },
+        "id": "NGRAPH-CASE-08",
+        "input": {
+          "harness": "ngraph-cli-eval-outcomes",
+          "vectors": [
+            "0.5 held in a guarded bit",
+            "input violating an input-validated range fact",
+            "types line i64 for an f32 graph",
+            "graph with param slots and no --snapshot",
+            "--fuel 1 on F1",
+            "a normal vector followed by a guard failure and an E-FACT-INPUT vector"
+          ]
+        },
+        "kind": "runtime",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-CLI-01",
+          "NGRAPH-FACT-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-09",
+      "prepromotion_case_sha256": "4f6cdc77fdddd9e84071fceb88d24869318fd655cda0fbca7223d4c90d546709",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "data file types line without ';'": "E-FORMAT",
+          "f32 value -0": "accepted as 0x80000000",
+          "f32 value 0.1": "E-LITERAL-INEXACT",
+          "f32 value 0x7fc00001": "accepted as that encoding",
+          "guest_requests": 0,
+          "i64 value 9223372036854775808": "E-FORMAT",
+          "missing schema line": "E-FORMAT",
+          "noble-ngraph-vectors/1 schema line": "E-FORMAT",
+          "outcome": "each-format-result-matches",
+          "protected_operations": 0,
+          "row with one value too few": "E-FORMAT",
+          "stage": "input"
+        },
+        "id": "NGRAPH-CASE-09",
+        "input": {
+          "files": [
+            "noble-ngraph-vectors/1 schema line",
+            "missing schema line",
+            "f32 value 0.1",
+            "f32 value 0x7fc00001",
+            "f32 value -0",
+            "i64 value 9223372036854775808",
+            "row with one value too few",
+            "data file types line without ';'"
+          ],
+          "harness": "ngraph-format-values"
+        },
+        "kind": "static",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-FORMAT-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-10",
+      "prepromotion_case_sha256": "4e87ba722f41e2fdb04e758a94d3a092ad050119ac19744cbdf0b1f3e1946175",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "data_digest": "7c40293c13b0089020b0a66ffbccf2d523be6171887ede799f38ee4d728f0692",
+          "existing_path": {
+            "bytes_unchanged": true,
+            "exit": 2
+          },
+          "exit": 0,
+          "first_snapshot_eval_unchanged": true,
+          "graph": "6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661",
+          "graph_file_bytes_unchanged": true,
+          "outcome": "normal",
+          "parent_file_bytes_unchanged": true,
+          "second_run_file_byte_identical": true,
+          "snapshot": "075f58cadc9a3abc91161b4224fd48bf9426af0ed8660851670e0ff0536f7f9d",
+          "stage": "training"
+        },
+        "id": "NGRAPH-CASE-10",
+        "input": {
+          "data": "the B5 64-point set (data seed 0x1414da7a) as a noble-ngraph-data/0 file",
+          "follow_up": [
+            "train again to a second path",
+            "train --from the first snapshot for 10 steps",
+            "train to the first snapshot's path",
+            "eval F1 with the first snapshot before and after the follow-ups"
+          ],
+          "harness": "ngraph-cli-train",
+          "loss": "MSE point loss",
+          "model": "F1",
+          "optimizer": "adam/0 defaults",
+          "policy": "ngraph-deriv-real/0",
+          "seed": "0x14140005",
+          "steps": 500
+        },
+        "kind": "runtime",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-SNAP-01",
+          "NGRAPH-SNAP-02",
+          "NGRAPH-CLI-01",
+          "NGRAPH-OWN-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-11",
+      "prepromotion_case_sha256": "64c6753c54abfeb66d5b131f5e97b91d8042c951858814e25a22b9d5c233a5e7",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "foreign parent": {
+            "code": "E-SNAPSHOT-STALE",
+            "exit": 2
+          },
+          "guard-failing point": {
+            "code": "G-FACT-FALSE",
+            "exit": 1
+          },
+          "guest_requests": 0,
+          "i64 model": {
+            "code": "E-DERIV-I64",
+            "exit": 4
+          },
+          "infinite target": {
+            "code": "E-NONFINITE-UPDATE",
+            "exit": 1
+          },
+          "loss arity": {
+            "code": "E-INTERFACE",
+            "exit": 2
+          },
+          "missing --policy": {
+            "exit": 2,
+            "usage_on_stderr": true
+          },
+          "no opt-in": {
+            "code": "E-DERIV-BOOLEAN",
+            "exit": 4
+          },
+          "outcome": "each-training-result-matches",
+          "protected_operations": 0,
+          "refusals_create_no_output_or_partial_file": true,
+          "stage": "training",
+          "steps": {
+            "code": "E-BUDGET-STEPS",
+            "exit": 5
+          },
+          "with opt-in": {
+            "exit": 0,
+            "opt_in_recorded_in_snapshot": true
+          }
+        },
+        "id": "NGRAPH-CASE-11",
+        "input": {
+          "harness": "ngraph-cli-train-refusals",
+          "variants": [
+            "param reaching a step node without --opt-in",
+            "the same with --opt-in %N:boolean=straight-through",
+            "an ngraph-i64/0 model",
+            "a data point with an infinite target",
+            "--steps 1000001",
+            "--from a snapshot of another graph",
+            "a data point failing a guard under the initial params",
+            "a loss graph with one input too few",
+            "missing --policy"
+          ]
+        },
+        "kind": "admission",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-DERIV-01",
+          "NGRAPH-SNAP-02",
+          "NGRAPH-CLI-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-12",
+      "prepromotion_case_sha256": "b8d4bf450f79c4a0631b9457a5a9a873229b3f0e7426225b061be8c72fba5e0e",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "changed facts": "E-SNAPSHOT-STALE",
+          "evaluated_nodes": 0,
+          "exit": 2,
+          "guest_requests": 0,
+          "layout": "E-SNAPSHOT-LAYOUT",
+          "other graph": "E-SNAPSHOT-STALE",
+          "outcome": "each-binding-refusal-matches",
+          "param byte": "E-SNAPSHOT-INTEGRITY",
+          "pinned id": "E-SNAPSHOT-ID",
+          "protected_operations": 0,
+          "provenance field": "E-SNAPSHOT-INTEGRITY",
+          "schema": "E-FORMAT",
+          "stage": "binding"
+        },
+        "id": "NGRAPH-CASE-12",
+        "input": {
+          "commands": [
+            "eval",
+            "verify"
+          ],
+          "harness": "ngraph-cli-snapshot-binding",
+          "variants": [
+            "one param byte flipped",
+            "one provenance field changed",
+            "snapshot of F2 used with F1",
+            "two param lines swapped with recomputed ids",
+            "F1 with one input-validated fact removed",
+            "--snapshot-id of another snapshot",
+            "unknown snapshot schema line"
+          ]
+        },
+        "kind": "admission",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-SNAP-02",
+          "NGRAPH-SNAP-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-13",
+      "prepromotion_case_sha256": "c584ab39a3535df49d77f7e57541d787f14316c284b231fce7f0a22fc2589cc9",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "changed data": {
+            "code": "E-SNAPSHOT-STALE",
+            "exit": 2
+          },
+          "forged": {
+            "code": "E-SNAPSHOT-REPLAY",
+            "exit": 2
+          },
+          "outcome": "each-replay-result-matches",
+          "parent replay": {
+            "exit": 0,
+            "replayed": true
+          },
+          "platform_scope": "same pinned platform only",
+          "seed replay": {
+            "exit": 0,
+            "replayed": true
+          },
+          "stage": "replay",
+          "wrong parent": {
+            "code": "E-SNAPSHOT-STALE",
+            "exit": 2
+          }
+        },
+        "id": "NGRAPH-CASE-13",
+        "input": {
+          "harness": "ngraph-cli-replay",
+          "variants": [
+            "verify --replay of the NGRAPH-CASE-10 snapshot",
+            "verify --replay --from of the 10-step child",
+            "replay with one data point changed",
+            "replay with the wrong parent",
+            "a library-forged file with altered params and recomputed snapshot and provenance digests"
+          ]
+        },
+        "kind": "identity",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-SNAP-02",
+          "NGRAPH-SNAP-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-14",
+      "prepromotion_case_sha256": "3946eb184eb25c4fab83754a957d3bd7950da2f15e651f0f268280ec5a3ec85c",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "adam_state_digest_equal_record": true,
+          "b5_final": "075f58cadc9a3abc91161b4224fd48bf9426af0ed8660851670e0ff0536f7f9d",
+          "b5_s0": "a912b177c248ed35d5d7b5943e08e2efec7466623dffc385c6a8ab77f8998046",
+          "fact_binding_digests_equal_record": true,
+          "graph_ids_equal_record": true,
+          "loss_bits_equal_record": true,
+          "nan_results_compared_as_class": true,
+          "outcome": "byte-identical",
+          "soft_float_equals_std_bitwise": true,
+          "stage": "review"
+        },
+        "id": "NGRAPH-CASE-14",
+        "input": {
+          "graphs": [
+            "F1",
+            "F2",
+            "F3 x9",
+            "MSE",
+            "W3-S",
+            "W3-M",
+            "W3-L",
+            "W4",
+            "random 1-8",
+            "extracted I1-I4"
+          ],
+          "harness": "ngraph-identity-agreement",
+          "record": "crates/noble-ngraph-experiment/tests/fixtures/identities-66eb7cd.txt written by the pre-cutover experiment at 66eb7cd",
+          "soft_float": {
+            "inputs": "all specials (signed zeros, subnormal extremes, infinities, NaNs, powers of two, halfway cases) plus 10^7 splitmix64/0 bit patterns",
+            "routines": [
+              "sqrt_f64",
+              "trunc_f64",
+              "floor_f64",
+              "ceil_f64",
+              "round_f64",
+              "pow2_f64"
+            ]
+          },
+          "training": "B5 (seed 0x14140005, data seed 0x1414da7a, 500 steps)"
+        },
+        "kind": "identity",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-SNAP-01",
+          "NGRAPH-F32-01",
+          "NGRAPH-DERIV-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    },
+    {
+      "case_id": "NGRAPH-CASE-15",
+      "prepromotion_case_sha256": "400d791f5a505b2f891af5665dd6e7e27e20466ff71bb67dc19a4e94255bd9ae",
+      "record": {
+        "evidence": [],
+        "expected": {
+          "agreement_labeled_finite_differential": true,
+          "exit_code_table_documented": true,
+          "gpu_or_backend_selection_claim": false,
+          "help_lists": [
+            "ngraph",
+            "calculator"
+          ],
+          "ng_po_discharged": [],
+          "outcome": "no-overclaim",
+          "performance_or_speedup_claim": false,
+          "stage": "review",
+          "stdout_byte_identical_across_runs": true
+        },
+        "id": "NGRAPH-CASE-15",
+        "input": {
+          "artifacts": [
+            "README.md ngraph section",
+            "noble --help",
+            "every noble-ngraph-report/v1 field name",
+            "verification/ngraph/README.md"
+          ],
+          "determinism": "every subcommand of NGRAPH-CASE-03..13 run twice with identical arguments and inputs",
+          "harness": "ngraph-claims-review"
+        },
+        "kind": "review",
+        "profile": "Numeric-Graph-v1",
+        "requirements": [
+          "NGRAPH-CLI-01",
+          "NGRAPH-PROOF-01",
+          "NGRAPH-BENCH-01"
+        ],
+        "state": {
+          "execution": "not-run",
+          "implementation": "absent",
+          "proof": "open",
+          "trust": "unassessed"
+        }
+      }
+    }
+  ]
+}

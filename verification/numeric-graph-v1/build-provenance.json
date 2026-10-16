@@ -1,0 +1,1830 @@
+{
+  "schema": "noble-numeric-graph-v1-build-provenance/v1",
+  "recorded_at": "2026-10-16T20:46:16.500Z",
+  "published_source_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+  "actual_release_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+  "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+  "base_revision": "66eb7cdbf86059a4e475178cb6ef03c74cd11e8b",
+  "worktrees": {
+    "acceptance": "/home/brittonr/.cache/noble-issues/wt/ngraph-acceptance",
+    "base": "/home/brittonr/.cache/noble-issues/wt/ngraph-acceptance-base"
+  },
+  "source_equivalence": {
+    "scope": [
+      "crates",
+      "Cargo.toml",
+      "Cargo.lock",
+      "policy",
+      "nix",
+      "flake.nix",
+      "flake.lock",
+      "dylint.toml"
+    ],
+    "git_tree_manifest_sha256": "6815c5afcc6404761946ff120ee883ad75470b4720932b0887a8aeb8e1dd0640",
+    "files": 707,
+    "manifests_byte_identical": true,
+    "diff_stat": "",
+    "runner_built_sources": 74,
+    "runner_built_sources_equal_tested_commit": true,
+    "meaning": "Release binary was freshly built at published revision, not literally at tested gate revision. These selected complete source/build/policy trees and runner-projected built files have identical Git blobs. Historical gate logs retain their original tested revision; acceptance tools.noble.built_from denotes the equivalent tested built-source projection, not a new gate run."
+  },
+  "builds": {
+    "current": {
+      "file": "/home/brittonr/.cache/noble-issues/targets/ngraph-acceptance-20261016/release/noble",
+      "sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+      "bytes": 29168432,
+      "actual_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+      "source_tree": "bbf657fc2d1f5d80fa147c551fd9c77125388750",
+      "log": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/release-build.log",
+      "log_sha256": "daa81c6fd949d3205dac7cef07e3725abdd6e8e6e72a3d48fa95036fe9437eaf",
+      "exit": 0
+    },
+    "base": {
+      "file": "/home/brittonr/.cache/noble-issues/targets/ngraph-acceptance-base-20261016/release/noble",
+      "sha256": "ad1935e8b4f90ae9b7da053fd9b062ad3490d840d3126cc08cdc6144c2ee3536",
+      "bytes": 28378480,
+      "actual_revision": "66eb7cdbf86059a4e475178cb6ef03c74cd11e8b",
+      "source_tree": "40085b30f721a1de5ade1afeabb9f3c782cd1ebb",
+      "log": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/base-release-build.log",
+      "log_sha256": "5df1bb8dca11bb108b87ea604fbed99a6804889cd765fe5f037834bbeb6396ab",
+      "exit": 0
+    }
+  },
+  "environment": {
+    "env_script": "/home/brittonr/.cache/noble-issues/env.sh",
+    "env_script_sha256": "3ec6de1c7930b1bda98430dab18115b02d0c2b9edd59c0aa0df37fe5730ad401",
+    "nx_flake": "/home/brittonr/.cache/noble-issues/wt/nxflake",
+    "nx_flake_revision": "ffcce532e94965d90417ca0687c155b343d7ca8d",
+    "target": "x86_64-unknown-linux-gnu",
+    "cargo_profile": "release",
+    "jobs": 4,
+    "rustc_wrapper": "",
+    "nix_local": "1",
+    "tmpdir": "/home/brittonr/.cache/noble-issues/tmp",
+    "tool_versions": "Exact rustc -vV and cargo -V output retained in each build/soft-float log."
+  },
+  "soft_float": {
+    "log": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/soft-float-1e7.log",
+    "sha256": "20807d4ac5b164a0c8225640924c1be14cbbe9faca7292d44c9317f37f64c921",
+    "exit": 0,
+    "actual_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+    "equivalent_tested_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+    "test": "ten_million_bit_patterns_match_std",
+    "passed": 1,
+    "failed": 0
+  },
+  "schema_completion": {
+    "record": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/schema-completion.json",
+    "record_sha256": "e80104ee4c3f5ba584883c55bd60bd679e114c7ec8a2aea78e5f74754b613f3a",
+    "original": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/cases-original.json",
+    "original_sha256": "fd355163961051270705ff721045250834f5091c489b9c2ca3f8799760f78c81",
+    "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+    "prepromotion_case_records": "verification/numeric-graph-v1/prepromotion-cases.json",
+    "prepromotion_case_records_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+    "historical_record_note": "The immutable external schema-completion.json field prepromotion_case_sha256 denotes the entire case-file digest, not a case-record digest. Use the explicit file/record fields here for future evidence.",
+    "existing_semantic_fields_unchanged": true,
+    "state_and_evidence_unchanged": true
+  },
+  "acceptance": {
+    "receipt": "verification/numeric-graph-v1/acceptance.json",
+    "receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+    "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+    "source_frozen": true,
+    "failures": [],
+    "integrity_failures": [],
+    "summary": {
+      "cases": {
+        "NGRAPH-CASE-01": "passed",
+        "NGRAPH-CASE-02": "not-run",
+        "NGRAPH-CASE-03": "passed",
+        "NGRAPH-CASE-04": "passed",
+        "NGRAPH-CASE-05": "passed",
+        "NGRAPH-CASE-06": "passed",
+        "NGRAPH-CASE-07": "passed",
+        "NGRAPH-CASE-08": "passed",
+        "NGRAPH-CASE-09": "passed",
+        "NGRAPH-CASE-10": "passed",
+        "NGRAPH-CASE-11": "passed",
+        "NGRAPH-CASE-12": "passed",
+        "NGRAPH-CASE-13": "passed",
+        "NGRAPH-CASE-14": "passed",
+        "NGRAPH-CASE-15": "passed"
+      },
+      "commands": 264,
+      "scenario_commands_per_repetition": 100,
+      "core_rows": 31,
+      "library_tests": {
+        "total": 36,
+        "passed": 36,
+        "failed": []
+      },
+      "failures": 0,
+      "integrity_failures": 0
+    },
+    "raw": {
+      "directory": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+      "manifest": "manifest.json",
+      "manifest_sha256": "3373a8e944fbd8b0bca59ea29439aa022489402332d38d99211f2b6fb9588dd7",
+      "files": 1245,
+      "bytes": 195510703,
+      "receipt_copy": "acceptance.json"
+    },
+    "plan_command": {
+      "log": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance-plan.log",
+      "sha256": "92cea0da42f1a9d6d3bc49209e0c02404ea6e65f9baed89c9c53f8d5fb6ffd67",
+      "exit": 0
+    },
+    "run_command": {
+      "log": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance-run.log",
+      "sha256": "5e99e77f3ad6e108b94febf744e6b16efb4a58993e7840a6162e05e1393216ed",
+      "exit": 0
+    },
+    "run_argv": [
+      "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "verification/numeric-graph-v1/acceptance.mjs",
+      "run",
+      "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+      "--binary",
+      "/home/brittonr/.cache/noble-issues/targets/ngraph-acceptance-20261016/release/noble",
+      "--base-binary",
+      "/home/brittonr/.cache/noble-issues/targets/ngraph-acceptance-base-20261016/release/noble",
+      "--base-commit",
+      "66eb7cdbf86059a4e475178cb6ef03c74cd11e8b",
+      "--tested-commit",
+      "bc10df848ed81d53e849c440c1f639979e40d38d",
+      "--gate-receipt",
+      "verification/main-gates/receipt.json",
+      "--soft-float-log",
+      "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/soft-float-1e7.log",
+      "--binary-sha256",
+      "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+      "--base-binary-sha256",
+      "ad1935e8b4f90ae9b7da053fd9b062ad3490d840d3126cc08cdc6144c2ee3536"
+    ]
+  },
+  "gate_binding": {
+    "gate_receipt": {
+      "file": "verification/main-gates/receipt.json",
+      "sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d"
+    },
+    "rust_tests": {
+      "section": "tested_commit",
+      "commit": "bc10df848ed81d53e849c440c1f639979e40d38d",
+      "result": "pass",
+      "exit": 0,
+      "log": "/home/brittonr/.cache/noble-issues/logs/gates/bc10df848ed81d53e849c440c1f639979e40d38d/rust-tests.log",
+      "log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+      "observed_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071"
+    },
+    "tests": [
+      {
+        "name": "a_leading_plus_sign_is_not_a_number",
+        "file": "crates/noble-ngraph/tests/format_values.rs",
+        "cases": [
+          "NGRAPH-CASE-09"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+        "file": "crates/noble-ngraph/tests/format_graph.rs",
+        "cases": [
+          "NGRAPH-CASE-06"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "b2_vector_observations_and_b3_codes_match_the_record",
+        "file": "crates/noble-ngraph-experiment/tests/identity_agreement.rs",
+        "cases": [
+          "NGRAPH-CASE-05",
+          "NGRAPH-CASE-14"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "b5_training_identities_match_the_record_and_the_receipt",
+        "file": "crates/noble-ngraph-experiment/tests/identity_agreement.rs",
+        "cases": [
+          "NGRAPH-CASE-14"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "b5_training_through_the_cli_reproduces_the_recorded_identities",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-10",
+          "NGRAPH-CASE-13"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "check_budgets_and_usage",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-04"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "check_refusal_classes",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-04"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "check_reports_every_d7_field",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-03"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph",
+        "file": "crates/noble-ngraph-experiment/tests/format_roundtrip.rs",
+        "cases": [
+          "NGRAPH-CASE-06"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "data_files_split_inputs_and_targets_at_one_separator",
+        "file": "crates/noble-ngraph/tests/format_values.rs",
+        "cases": [
+          "NGRAPH-CASE-09"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "decimal_exactness_is_decided_inside_the_binary32_window",
+        "file": "crates/noble-ngraph/tests/format_values.rs",
+        "cases": [
+          "NGRAPH-CASE-09"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "eligibility::core_15_resource_matrix",
+        "file": "crates/noble-cli/tests/core/eligibility.rs",
+        "cases": [
+          "NGRAPH-CASE-01"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "eval_outcome_classes_and_first_failure_exit",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-08"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "eval_probes_are_bitwise_in_both_evaluators",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-07"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "eval_refuses_inputs_before_evaluation",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-08",
+          "NGRAPH-CASE-09"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "every_corpus_graph_round_trips_with_its_identity",
+        "file": "crates/noble-ngraph-experiment/tests/format_roundtrip.rs",
+        "cases": [
+          "NGRAPH-CASE-06"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "every_source_control_is_refused_with_its_d6_code",
+        "file": "crates/noble-ngraph-experiment/tests/extract_b3.rs",
+        "cases": [
+          "NGRAPH-CASE-05"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "evidence_and_range_literals_are_symmetric",
+        "file": "crates/noble-ngraph/tests/format_graph.rs",
+        "cases": [
+          "NGRAPH-CASE-06"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "extract_i1_to_i4_round_trip_through_check_and_eval",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-03",
+          "NGRAPH-CASE-05",
+          "NGRAPH-CASE-07"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "extract_publication_never_replaces_existing_paths",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-05"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "extract_refusals_publish_nothing",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-05"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "f32_tokens_are_exact_encodings_or_exact_decimals",
+        "file": "crates/noble-ngraph/tests/format_values.rs",
+        "cases": [
+          "NGRAPH-CASE-09"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "graph_identities_and_fact_bindings_match_the_record",
+        "file": "crates/noble-ngraph-experiment/tests/identity_agreement.rs",
+        "cases": [
+          "NGRAPH-CASE-14"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "mutations::core_16_candidate_mutation_matrix",
+        "file": "crates/noble-cli/tests/core/mutations.rs",
+        "cases": [
+          "NGRAPH-CASE-01"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "powers_of_two_are_exact",
+        "file": "crates/noble-ngraph/tests/soft_float.rs",
+        "cases": [
+          "NGRAPH-CASE-14"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "provenance_consistent_forgeries_are_refused_by_layout_or_replay",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-12",
+          "NGRAPH-CASE-13"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "refusals_before_evaluation_evaluate_no_node",
+        "file": "crates/noble-ngraph/tests/ir_check.rs",
+        "cases": [
+          "NGRAPH-CASE-04",
+          "NGRAPH-CASE-08",
+          "NGRAPH-CASE-12"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "seeded_bit_patterns_match_std",
+        "file": "crates/noble-ngraph/tests/soft_float.rs",
+        "cases": [
+          "NGRAPH-CASE-14"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "seeded_campaigns_match_the_record",
+        "file": "crates/noble-ngraph-experiment/tests/identity_agreement.rs",
+        "cases": [
+          "NGRAPH-CASE-14"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "snapshot_integrity_and_binding_refusals",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-12"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "special_values_match_std",
+        "file": "crates/noble-ngraph/tests/soft_float.rs",
+        "cases": [
+          "NGRAPH-CASE-14"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "train_contract_refusals_publish_nothing",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-11"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "train_publishes_immutable_snapshots",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-10"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "vector_files_are_typed_and_refused_as_a_whole",
+        "file": "crates/noble-ngraph/tests/format_values.rs",
+        "cases": [
+          "NGRAPH-CASE-09"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "verify_binds_and_replays_provenance",
+        "file": "crates/noble-cli/tests/ngraph.rs",
+        "cases": [
+          "NGRAPH-CASE-13"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      },
+      {
+        "name": "wrong_graph_layout_and_stale_snapshots_are_refused",
+        "file": "crates/noble-ngraph-experiment/tests/b5_training.rs",
+        "cases": [
+          "NGRAPH-CASE-12"
+        ],
+        "ok_lines": 1,
+        "other_lines": [],
+        "definitions_at_tested_commit": 1,
+        "result": "passed"
+      }
+    ],
+    "result": "passed"
+  },
+  "global_gates": {
+    "tested_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+    "passed": 10,
+    "known_failed": [
+      "boundary-controls (#26/#27)",
+      "octet (#26)",
+      "source-coverage (#25)",
+      "native-assurance (#25)"
+    ],
+    "rerun": false,
+    "globally_green": false
+  },
+  "case_coverage": [
+    {
+      "case_id": "NGRAPH-CASE-01",
+      "runner_result": "passed",
+      "review_required": true,
+      "command_ids": [],
+      "observed_field_rows": 6,
+      "accounted_fields": [
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "eligibility::core_15_resource_matrix",
+        "mutations::core_16_candidate_mutation_matrix"
+      ],
+      "gaps": [
+        "Separate independent review required. Runner has 31 finite CORE rows; CORE03/05/09 compile-only, CORE15/16 cargo-name-bound. Audit worker owns additional reachable runtime inputs. Not universal ordinary-entry-point coverage."
+      ],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-02",
+      "runner_result": "not-run",
+      "review_required": false,
+      "command_ids": [],
+      "observed_field_rows": 0,
+      "accounted_fields": [
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "not_run",
+          "reason": "forbidden_capability_uses needs Octet/native-assurance capability facts for noble-ngraph; outside this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "no_std"
+          ],
+          "kind": "not_run",
+          "reason": "forbidden_capability_uses needs Octet/native-assurance capability facts for noble-ngraph; outside this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "normal_dependencies"
+          ],
+          "kind": "not_run",
+          "reason": "forbidden_capability_uses needs Octet/native-assurance capability facts for noble-ngraph; outside this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "third_party_dependencies"
+          ],
+          "kind": "not_run",
+          "reason": "forbidden_capability_uses needs Octet/native-assurance capability facts for noble-ngraph; outside this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "forbidden_capability_uses"
+          ],
+          "kind": "not_run",
+          "reason": "forbidden_capability_uses needs Octet/native-assurance capability facts for noble-ngraph; outside this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "identity_hash_injected"
+          ],
+          "kind": "not_run",
+          "reason": "forbidden_capability_uses needs Octet/native-assurance capability facts for noble-ngraph; outside this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "guest_requests"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "protected_operations"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [],
+      "gaps": [
+        "Not-run: collected forbidden-capability zero-use facts unavailable; policy/no_std not a substitute."
+      ],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-03",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [
+        1,
+        2,
+        3,
+        101,
+        102,
+        103
+      ],
+      "observed_field_rows": 16,
+      "accounted_fields": [
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "guest_requests"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "protected_operations"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "check_reports_every_d7_field",
+        "extract_i1_to_i4_round_trip_through_check_and_eval"
+      ],
+      "gaps": [],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-04",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114
+      ],
+      "observed_field_rows": 24,
+      "accounted_fields": [
+        {
+          "path": [
+            "evaluated_nodes"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "check evaluates no node and its report carries no node counter",
+          "covered_by": [
+            "refusals_before_evaluation_evaluate_no_node"
+          ]
+        },
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "classification",
+          "reason": "case-level outcome; each variant outcome, code and exit is compared individually",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "guest_requests"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "protected_operations"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "check_refusal_classes",
+        "check_budgets_and_usage",
+        "refusals_before_evaluation_evaluate_no_node"
+      ],
+      "gaps": [
+        "evaluated_nodes=0 is structural check-path accounting, not a measured CLI counter. NO_NODE is an eval refusal test, not a direct check-node measurement."
+      ],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-05",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129
+      ],
+      "observed_field_rows": 33,
+      "accounted_fields": [
+        {
+          "path": [
+            "run of a Program input"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "not reachable from the CLI (--inputs cannot spell a Program type); E-DYNAMIC-RUN is covered by the library-level B3 source controls",
+          "covered_by": [
+            "every_source_control_is_refused_with_its_d6_code",
+            "b2_vector_observations_and_b3_codes_match_the_record"
+          ]
+        },
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "classification",
+          "reason": "case-level outcome; each variant outcome, code and exit is compared individually",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "guest_requests"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "protected_operations"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "extract_i1_to_i4_round_trip_through_check_and_eval",
+        "extract_refusals_publish_nothing",
+        "extract_publication_never_replaces_existing_paths",
+        "every_source_control_is_refused_with_its_d6_code",
+        "b2_vector_observations_and_b3_codes_match_the_record"
+      ],
+      "gaps": [
+        "E-DYNAMIC-RUN is library-only: CLI inputs cannot spell Program."
+      ],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-06",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [],
+      "observed_field_rows": 0,
+      "accounted_fields": [
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "every_corpus_graph_round_trips_with_its_identity",
+            "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+            "evidence_and_range_literals_are_symmetric",
+            "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph"
+          ]
+        },
+        {
+          "path": [
+            "parse_print_structurally_equal_with_origins_cleared"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "every_corpus_graph_round_trips_with_its_identity",
+            "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+            "evidence_and_range_literals_are_symmetric",
+            "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph"
+          ]
+        },
+        {
+          "path": [
+            "graph_logical_id_equal"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "every_corpus_graph_round_trips_with_its_identity",
+            "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+            "evidence_and_range_literals_are_symmetric",
+            "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph"
+          ]
+        },
+        {
+          "path": [
+            "fact_binding_digest_equal"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "every_corpus_graph_round_trips_with_its_identity",
+            "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+            "evidence_and_range_literals_are_symmetric",
+            "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph"
+          ]
+        },
+        {
+          "path": [
+            "checker_outcome_equal"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "every_corpus_graph_round_trips_with_its_identity",
+            "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+            "evidence_and_range_literals_are_symmetric",
+            "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph"
+          ]
+        },
+        {
+          "path": [
+            "comments_and_whitespace_identity_bearing"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "every_corpus_graph_round_trips_with_its_identity",
+            "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+            "evidence_and_range_literals_are_symmetric",
+            "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph"
+          ]
+        },
+        {
+          "path": [
+            "evidence_hex_symmetric"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "every_corpus_graph_round_trips_with_its_identity",
+            "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+            "evidence_and_range_literals_are_symmetric",
+            "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph"
+          ]
+        },
+        {
+          "path": [
+            "evidence_fact_admitted"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "every_corpus_graph_round_trips_with_its_identity",
+            "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+            "evidence_and_range_literals_are_symmetric",
+            "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph"
+          ]
+        },
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "every_corpus_graph_round_trips_with_its_identity",
+        "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+        "evidence_and_range_literals_are_symmetric",
+        "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph"
+      ],
+      "gaps": [],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-07",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148
+      ],
+      "observed_field_rows": 46,
+      "accounted_fields": [
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "eval_probes_are_bitwise_in_both_evaluators",
+        "extract_i1_to_i4_round_trip_through_check_and_eval"
+      ],
+      "gaps": [],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-08",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161
+      ],
+      "observed_field_rows": 34,
+      "accounted_fields": [
+        {
+          "path": [
+            "refused_vectors_evaluated_nodes"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "eval reports carry no node counter; refused vectors print no outputs and input refusals print no vector line (recorded per variant)",
+          "covered_by": [
+            "refusals_before_evaluation_evaluate_no_node"
+          ]
+        },
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "classification",
+          "reason": "case-level outcome; each variant outcome, code and exit is compared individually",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "eval_outcome_classes_and_first_failure_exit",
+        "eval_refuses_inputs_before_evaluation",
+        "refusals_before_evaluation_evaluate_no_node"
+      ],
+      "gaps": [
+        "Refused evaluated-node zero is library-bound; CLI carries no evaluated-node counter."
+      ],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-09",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [],
+      "observed_field_rows": 0,
+      "accounted_fields": [
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "f32_tokens_are_exact_encodings_or_exact_decimals",
+            "vector_files_are_typed_and_refused_as_a_whole",
+            "data_files_split_inputs_and_targets_at_one_separator",
+            "decimal_exactness_is_decided_inside_the_binary32_window",
+            "a_leading_plus_sign_is_not_a_number",
+            "eval_refuses_inputs_before_evaluation"
+          ]
+        },
+        {
+          "path": [
+            "noble-ngraph-vectors/1 schema line"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "f32_tokens_are_exact_encodings_or_exact_decimals",
+            "vector_files_are_typed_and_refused_as_a_whole",
+            "data_files_split_inputs_and_targets_at_one_separator",
+            "decimal_exactness_is_decided_inside_the_binary32_window",
+            "a_leading_plus_sign_is_not_a_number",
+            "eval_refuses_inputs_before_evaluation"
+          ]
+        },
+        {
+          "path": [
+            "missing schema line"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "f32_tokens_are_exact_encodings_or_exact_decimals",
+            "vector_files_are_typed_and_refused_as_a_whole",
+            "data_files_split_inputs_and_targets_at_one_separator",
+            "decimal_exactness_is_decided_inside_the_binary32_window",
+            "a_leading_plus_sign_is_not_a_number",
+            "eval_refuses_inputs_before_evaluation"
+          ]
+        },
+        {
+          "path": [
+            "f32 value 0.1"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "f32_tokens_are_exact_encodings_or_exact_decimals",
+            "vector_files_are_typed_and_refused_as_a_whole",
+            "data_files_split_inputs_and_targets_at_one_separator",
+            "decimal_exactness_is_decided_inside_the_binary32_window",
+            "a_leading_plus_sign_is_not_a_number",
+            "eval_refuses_inputs_before_evaluation"
+          ]
+        },
+        {
+          "path": [
+            "f32 value 0x7fc00001"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "f32_tokens_are_exact_encodings_or_exact_decimals",
+            "vector_files_are_typed_and_refused_as_a_whole",
+            "data_files_split_inputs_and_targets_at_one_separator",
+            "decimal_exactness_is_decided_inside_the_binary32_window",
+            "a_leading_plus_sign_is_not_a_number",
+            "eval_refuses_inputs_before_evaluation"
+          ]
+        },
+        {
+          "path": [
+            "f32 value -0"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "f32_tokens_are_exact_encodings_or_exact_decimals",
+            "vector_files_are_typed_and_refused_as_a_whole",
+            "data_files_split_inputs_and_targets_at_one_separator",
+            "decimal_exactness_is_decided_inside_the_binary32_window",
+            "a_leading_plus_sign_is_not_a_number",
+            "eval_refuses_inputs_before_evaluation"
+          ]
+        },
+        {
+          "path": [
+            "i64 value 9223372036854775808"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "f32_tokens_are_exact_encodings_or_exact_decimals",
+            "vector_files_are_typed_and_refused_as_a_whole",
+            "data_files_split_inputs_and_targets_at_one_separator",
+            "decimal_exactness_is_decided_inside_the_binary32_window",
+            "a_leading_plus_sign_is_not_a_number",
+            "eval_refuses_inputs_before_evaluation"
+          ]
+        },
+        {
+          "path": [
+            "row with one value too few"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "f32_tokens_are_exact_encodings_or_exact_decimals",
+            "vector_files_are_typed_and_refused_as_a_whole",
+            "data_files_split_inputs_and_targets_at_one_separator",
+            "decimal_exactness_is_decided_inside_the_binary32_window",
+            "a_leading_plus_sign_is_not_a_number",
+            "eval_refuses_inputs_before_evaluation"
+          ]
+        },
+        {
+          "path": [
+            "data file types line without ';'"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "f32_tokens_are_exact_encodings_or_exact_decimals",
+            "vector_files_are_typed_and_refused_as_a_whole",
+            "data_files_split_inputs_and_targets_at_one_separator",
+            "decimal_exactness_is_decided_inside_the_binary32_window",
+            "a_leading_plus_sign_is_not_a_number",
+            "eval_refuses_inputs_before_evaluation"
+          ]
+        },
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "guest_requests"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "protected_operations"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "f32_tokens_are_exact_encodings_or_exact_decimals",
+        "vector_files_are_typed_and_refused_as_a_whole",
+        "data_files_split_inputs_and_targets_at_one_separator",
+        "decimal_exactness_is_decided_inside_the_binary32_window",
+        "a_leading_plus_sign_is_not_a_number",
+        "eval_refuses_inputs_before_evaluation"
+      ],
+      "gaps": [],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-10",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167
+      ],
+      "observed_field_rows": 11,
+      "accounted_fields": [
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "b5_training_through_the_cli_reproduces_the_recorded_identities",
+        "train_publishes_immutable_snapshots"
+      ],
+      "gaps": [],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-11",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200
+      ],
+      "observed_field_rows": 26,
+      "accounted_fields": [
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "classification",
+          "reason": "case-level outcome; each variant outcome, code and exit is compared individually",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "guest_requests"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "protected_operations"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "train_contract_refusals_publish_nothing"
+      ],
+      "gaps": [],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-12",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        175,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190
+      ],
+      "observed_field_rows": 28,
+      "accounted_fields": [
+        {
+          "path": [
+            "evaluated_nodes"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "eval and verify reports carry no node counter; each refused eval printed one refusal line and no vector line (recorded per variant)",
+          "covered_by": [
+            "refusals_before_evaluation_evaluate_no_node",
+            "wrong_graph_layout_and_stale_snapshots_are_refused"
+          ]
+        },
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "classification",
+          "reason": "case-level outcome; each variant outcome, code and exit is compared individually",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "guest_requests"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "protected_operations"
+          ],
+          "kind": "not_observable_in_cli",
+          "reason": "noble-ngraph-report/v1 lines carry no guest-request or protected-operation counter; noble ngraph starts no guest, Node, Wasm or subprocess (crates/noble-cli/src/ngraph.rs module contract)",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "snapshot_integrity_and_binding_refusals",
+        "provenance_consistent_forgeries_are_refused_by_layout_or_replay",
+        "refusals_before_evaluation_evaluate_no_node",
+        "wrong_graph_layout_and_stale_snapshots_are_refused"
+      ],
+      "gaps": [
+        "Zero evaluated nodes is library/structural binding accounting; CLI reports stage/refusal, not node counts."
+      ],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-13",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174
+      ],
+      "observed_field_rows": 10,
+      "accounted_fields": [
+        {
+          "path": [
+            "platform_scope"
+          ],
+          "kind": "assumption",
+          "reason": "every replay ran on one pinned x86_64 Linux toolchain; no other platform was run",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "classification",
+          "reason": "case-level outcome; each variant outcome, code and exit is compared individually",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "verify_binds_and_replays_provenance",
+        "provenance_consistent_forgeries_are_refused_by_layout_or_replay",
+        "b5_training_through_the_cli_reproduces_the_recorded_identities"
+      ],
+      "gaps": [
+        "Only one pinned x86_64 Linux platform; no cross-platform reproducibility claim."
+      ],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-14",
+      "runner_result": "passed",
+      "review_required": false,
+      "command_ids": [],
+      "observed_field_rows": 3,
+      "accounted_fields": [
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "graph_identities_and_fact_bindings_match_the_record",
+            "b2_vector_observations_and_b3_codes_match_the_record",
+            "b5_training_identities_match_the_record_and_the_receipt",
+            "seeded_campaigns_match_the_record"
+          ]
+        },
+        {
+          "path": [
+            "graph_ids_equal_record"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "graph_identities_and_fact_bindings_match_the_record",
+            "b2_vector_observations_and_b3_codes_match_the_record",
+            "b5_training_identities_match_the_record_and_the_receipt",
+            "seeded_campaigns_match_the_record"
+          ]
+        },
+        {
+          "path": [
+            "fact_binding_digests_equal_record"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "graph_identities_and_fact_bindings_match_the_record",
+            "b2_vector_observations_and_b3_codes_match_the_record",
+            "b5_training_identities_match_the_record_and_the_receipt",
+            "seeded_campaigns_match_the_record"
+          ]
+        },
+        {
+          "path": [
+            "adam_state_digest_equal_record"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "graph_identities_and_fact_bindings_match_the_record",
+            "b2_vector_observations_and_b3_codes_match_the_record",
+            "b5_training_identities_match_the_record_and_the_receipt",
+            "seeded_campaigns_match_the_record"
+          ]
+        },
+        {
+          "path": [
+            "loss_bits_equal_record"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "graph_identities_and_fact_bindings_match_the_record",
+            "b2_vector_observations_and_b3_codes_match_the_record",
+            "b5_training_identities_match_the_record_and_the_receipt",
+            "seeded_campaigns_match_the_record"
+          ]
+        },
+        {
+          "path": [
+            "soft_float_equals_std_bitwise"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "special_values_match_std",
+            "powers_of_two_are_exact",
+            "seeded_bit_patterns_match_std",
+            "ten_million_bit_patterns_match_std (--soft-float-log)"
+          ]
+        },
+        {
+          "path": [
+            "nan_results_compared_as_class"
+          ],
+          "kind": "library",
+          "reason": null,
+          "covered_by": [
+            "special_values_match_std",
+            "powers_of_two_are_exact",
+            "seeded_bit_patterns_match_std",
+            "ten_million_bit_patterns_match_std (--soft-float-log)"
+          ]
+        },
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [
+        "graph_identities_and_fact_bindings_match_the_record",
+        "b2_vector_observations_and_b3_codes_match_the_record",
+        "b5_training_identities_match_the_record_and_the_receipt",
+        "seeded_campaigns_match_the_record",
+        "special_values_match_std",
+        "powers_of_two_are_exact",
+        "seeded_bit_patterns_match_std"
+      ],
+      "gaps": [],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    },
+    {
+      "case_id": "NGRAPH-CASE-15",
+      "runner_result": "passed",
+      "review_required": true,
+      "command_ids": [
+        263,
+        264
+      ],
+      "observed_field_rows": 2,
+      "accounted_fields": [
+        {
+          "path": [
+            "outcome"
+          ],
+          "kind": "review",
+          "reason": "claims review, recorded separately (verification/numeric-graph-v1/review.json); not produced by this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "performance_or_speedup_claim"
+          ],
+          "kind": "review",
+          "reason": "claims review, recorded separately (verification/numeric-graph-v1/review.json); not produced by this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "gpu_or_backend_selection_claim"
+          ],
+          "kind": "review",
+          "reason": "claims review, recorded separately (verification/numeric-graph-v1/review.json); not produced by this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "ng_po_discharged"
+          ],
+          "kind": "review",
+          "reason": "claims review, recorded separately (verification/numeric-graph-v1/review.json); not produced by this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "agreement_labeled_finite_differential"
+          ],
+          "kind": "review",
+          "reason": "claims review, recorded separately (verification/numeric-graph-v1/review.json); not produced by this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "exit_code_table_documented"
+          ],
+          "kind": "review",
+          "reason": "claims review, recorded separately (verification/numeric-graph-v1/review.json); not produced by this runner",
+          "covered_by": []
+        },
+        {
+          "path": [
+            "stage"
+          ],
+          "kind": "classification",
+          "reason": "case-level D8 stage; the stage of every command report is recorded with its field rows",
+          "covered_by": []
+        }
+      ],
+      "library_tests": [],
+      "gaps": [
+        "Separate claims review required; runner observes determinism/help only, not the no-overclaim review."
+      ],
+      "case_state": "unchanged absent/not-run/open/unassessed; evidence=[]"
+    }
+  ],
+  "lifecycle": {
+    "promotion_started": false,
+    "sync_started": false,
+    "archive_authorized": false,
+    "published": false,
+    "review_receipt_created_by_this_worker": false,
+    "claims": "No proofs, performance, GPU, backend-selection or cross-platform claim. NG-PO-A..H remain open; Phase C W3-L 0.131x STOP stands; CALC unchanged."
+  }
+}
