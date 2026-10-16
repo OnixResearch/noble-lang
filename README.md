@@ -410,8 +410,8 @@ digits (any encoding, including NaN, infinities and subnormals) or an exactly
 representable decimal (`nan` and `inf` words are `E-LITERAL-NONFINITE`; give
 those values as bits); an `i64` value is digits in range, optionally after `-`;
 a `bool` value is `true` or `false`. A decimal is
-`[-]digits[.digits][e[+|-]digits]` (either side of the `.` may be empty, not
-both). Exactness is decided in time linear in the token: a binary32 value
+`[-]digits[.digits][(e|E)[+|-]digits]` (either side of the `.` may be empty,
+not both). Exactness is decided in time linear in the token: a binary32 value
 written exactly has at most 112 significant digits, the last at `10^-149` to
 `10^38`, so any other decimal is `E-LITERAL-INEXACT` without further
 arithmetic:
@@ -518,9 +518,12 @@ hard-links it to `<out>` (which fails if `<out>` exists) and removes
 `<out>.partial`. No path is ever truncated, renamed over or modified, and a
 `--from` parent is only read. An existing `<out>` or `<out>.partial` is a host
 refusal (exit 2) that leaves both untouched, and a refused or stopped command
-creates neither file. Once the hard link exists the output is published: if
-removing `<out>.partial` then fails, the command still reports success and
-warns on stderr about the leftover, a second name for the same bytes.
+publishes nothing at `<out>`. If writing or syncing `<out>.partial` or the link
+fails, the CLI removes `<out>.partial`; if that removal fails too, the file is
+left behind and the refusal says so. Once the hard link exists the output is
+published: if removing `<out>.partial` then fails, the command still reports
+success and warns on stderr about the leftover, a second name for the same
+bytes.
 `verify --replay` rebuilds the training contract from the model, loss and data
 files, the recorded seed, policy, opt-ins, optimizer and step count, and the
 parent given with `--from`. The supplied model, loss, data and parent must
@@ -583,7 +586,7 @@ contract. The outcome decides the exit status:
 |---|---|---|
 | `normal` | 0 | — |
 | `trap` | 1 | `G-FACT-FALSE` (a guard failure or a refusing `f32.index` read), `E-NONFINITE-UPDATE`, `C-CANCELLED` (listed for completeness; the CLI has no cancellation source) |
-| `reject` | 2 | `E-GRAPH-MALFORMED`, `E-FORMAT`, `E-LITERAL-INEXACT`, `E-LITERAL-NONFINITE`, `E-TYPE-MIX`, `E-INTERFACE`, `E-SUBJECT` (including a Core frontend refusal of the extraction source), `E-CLOSURE`, `E-PROFILE` (an unknown sub-profile or a raised budget), `E-FACT-UNCHECKED`, `E-FACT-INPUT`, `E-PARAM-UNDECLARED`, `E-SNAPSHOT-STALE`, `E-SNAPSHOT-LAYOUT`, `E-SNAPSHOT-ID`, `E-SNAPSHOT-INTEGRITY`, `E-SNAPSHOT-REPLAY`; host conditions with `code: null`: an I/O failure, an exceeded input bound, an existing output |
+| `reject` | 2 | `E-GRAPH-MALFORMED`, `E-FORMAT`, `E-LITERAL-INEXACT`, `E-LITERAL-NONFINITE`, `E-TYPE-MIX`, `E-INTERFACE`, `E-SUBJECT` (including a Core frontend refusal of the extraction source), `E-CLOSURE`, `E-PROFILE` (an unknown sub-profile or one the command does not accept, a raised budget, a `--policy` or `--optimizer` other than `ngraph-deriv-real/0` or `adam/0`, or `adam/0` hyperparameters outside its domain), `E-FACT-UNCHECKED`, `E-FACT-INPUT`, `E-PARAM-UNDECLARED`, `E-SNAPSHOT-STALE`, `E-SNAPSHOT-LAYOUT`, `E-SNAPSHOT-ID`, `E-SNAPSHOT-INTEGRITY`, `E-SNAPSHOT-REPLAY`; host conditions with `code: null`: an I/O failure, an exceeded input bound, an existing output |
 | `unsupported` | 4 | `E-EFFECT`, `E-RESOURCE`, `E-DYNAMIC-RUN`, `E-LIVE-SLOT`, `E-RECURSION`, `E-CONTROL`, `E-AGGREGATE`, `E-REFLECT`, `E-PROGRAM-OUTPUT`, `E-DERIV-BOOLEAN`, `E-DERIV-INDEX`, `E-DERIV-I64` |
 | `exhausted` | 5 | `E-BUDGET-<kind>`, including `E-BUDGET-FUEL` (runtime) and `E-BUDGET-STEPS` |
 
