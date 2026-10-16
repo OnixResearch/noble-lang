@@ -803,6 +803,51 @@ The crate adds 842 of the architecture phase's 3,545
 `required-compiler-unknown` findings, so the flake `source-coverage` check
 remains open on the same blocker.
 
+### Numeric-Graph-v1 renewal (2026-10-16)
+
+Numeric-Graph-v1 moves the graph IR, checker, evaluators, trainer, extractor
+and file codecs out of `noble-ngraph-experiment` into the new domain-core,
+`no_std` library `noble-ngraph`, and adds the opt-in `noble ngraph` CLI
+module (`crates/noble-cli/src/ngraph.rs` and `ngraph/`). `e5decb9` adds the
+package and its four new internal dependency edges here:
+`noble-cli -> noble-ngraph`, `noble-ngraph-experiment -> noble-ngraph`, and
+`noble-ngraph -> noble-contracts` and `noble-kernel`, all `normal`. Unit
+capacity rises from 78 to 88: the library's lib, lib test and seven
+integration tests, and `noble-cli` `tests/ngraph.rs`. The experiment's unit
+count is unchanged.
+
+A complete 88/88-unit collection of `5406170` observed 12,484 production
+item facts. The same renewal tool kept 9,716 reviewed paths, removed 1,779
+stale ones and added 2,481 new ones. No retained classification changed.
+
+- `noble-ngraph` adds 1,850 paths: 599 OPEN bodies, 688 generated and 563
+  structural.
+- `noble-ngraph-experiment` loses the 1,661 paths of the moved modules (675
+  bodies, 612 generated, 374 structural) and adds 317 paths for its
+  re-wired harness, scheme and controls (258 OPEN bodies, 14 generated, 45
+  structural).
+- `noble-cli` adds 195 `ngraph` paths (138 OPEN bodies, 13 generated, 44
+  structural), plus `noble::calculator::USAGE`. Another 118 added and 118
+  removed paths are `calculator.rs` and `main.rs` closure byte spans that
+  moved with the help and dispatch edits.
+
+Test-only paths are the exact observed set: 800 were added and 70 removed.
+Every added path comes from an integration test of `noble-ngraph`,
+`noble-ngraph-experiment` or `noble-cli` `tests/ngraph.rs`. All 70 removed
+paths are closure byte spans in the experiment's integration tests,
+including the moved `ir_check` and `extract_b1`. The macro
+origins gain `core::cmp::Ord`, `core::cmp::PartialOrd`,
+`core::format_args_nl` and `core::writeln` and lose `std::cmp::Ord`,
+`std::cmp::PartialOrd` and `std::hash::Hash`, because the moved derives now
+expand in a `no_std` crate.
+
+The renewed policy has 12,197 paths (5,756 OPEN bodies, 3,533 generated,
+2,908 structural), 3,857 test-only paths, 86 macro origins and 23 dependency
+edges. The pure comparator over the same collection returns `valid=true`.
+The architecture phase now reports 3,745 `required-compiler-unknown`
+findings, 637 of them in `noble-ngraph`, so the flake `source-coverage`
+check remains open on the same blocker.
+
 ## Classification
 
 Each compiler-derived production subject is reviewed as one of three categories.

@@ -119,6 +119,23 @@ comparison does **not** turn the Octet exit 1 into a collection application
 pass, discharge external/native safety assumptions, accept the separately
 rejecting source classification, or pass the full gate.
 
+### Numeric-Graph-v1 scope (2026-10-16)
+
+The reviewed scope is now seven crates: `noble-ngraph`, the `no_std`
+domain-core graph library, joins the required packages with its own safety
+argument, and the `noble-ngraph-experiment` argument now names it as an
+inward dependency. The library has no third-party dependency, so no
+production dependency record is added. A complete 88/88-unit collection of
+`5406170` derives 88 native inventory units (78 at `20067cb`), 17,225 item
+facts across production and test units (15,673), zero owned foreign items,
+zero function-safety facts, zero owned unsafe sites and the same 10 direct
+external normal edges: seven from `noble-cli` and three from
+`noble-ngraph-experiment`. The pure native comparator over that collection
+returns `valid = true` with 7 safety arguments. As above, the function-safety
+and unsafe-site zeros are vacuous, and the flake `native-assurance` check
+still fails on the blocked Octet architecture phase before any comparator
+runs.
+
 ## Empty owned-unsafe scope
 
 Each condition below is a separate comparator diagnostic, but they are not equal evidence:
