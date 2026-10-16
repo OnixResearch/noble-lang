@@ -21,6 +21,6 @@ Prerequisites P1–P6 are recorded in design "Phase B approval and decisions": B
 
 ## Phase C: measured continuation decision (approved on 2026-10-15; starts after Phase B evidence is complete)
 
-- [ ] [serial] C1: Measure W1–W4 against the ordinary Wasm/V8 and host-native baselines, with every NGRAPH-BENCH-01 metric. r[NGRAPH-BENCH-01]
+- [x] [serial] C1: Measure W1–W4 against the ordinary Wasm/V8 and host-native baselines, with every NGRAPH-BENCH-01 metric. Evidence: `verification/ngraph/phase-c-core-run1.json` (W3 three sizes and W4 against host-native; run2/run3 repeats) and `verification/ngraph/phase-c-l1.json` (W1/W2 extracted from source: extraction time and L1 `--opt off`/`on` against host-native). W3/W4 have no ordinary-path baseline because the ordinary path has no `F32` (B0(b)). r[NGRAPH-BENCH-01]
 - [x] [serial] C2: Pin source, tool, profile, oracle and hardware revisions. Report reference agreement, finite coverage, NG-PO-A..H theorem status and trusted boundaries separately. Evidence: `verification/ngraph/phase-c-core-run1.json` fields `run` and `c2`. r[NGRAPH-PROOF-01]
 - [x] [serial] C3: Recommend stopping, CPU specialization or a separately scoped #2 GPU experiment under the stated (owner-adjustable) thresholds. Evidence: `verification/ngraph/phase-c-core-run1.json` field `c3` (stop; compiled W3-L at 0.13× host-native; GPU blocked) and `verification/ngraph/README.md`. r[NGRAPH-BENCH-01]
