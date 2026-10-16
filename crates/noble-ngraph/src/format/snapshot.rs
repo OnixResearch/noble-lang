@@ -21,7 +21,7 @@
 //! optimizer adam/0 lr 0x<16 hex> beta1 0x<16 hex> beta2 0x<16 hex> eps 0x<16 hex>
 //! steps <n>
 //! tools <tool revisions>
-//! provenance <64 hex>          # Provenance::digest over every field above
+//! provenance <64 hex>          # SnapshotFile::provenance_digest over every record above
 //! ```
 //!
 //! Loading recomputes the layout key, the snapshot identity and the
@@ -38,7 +38,7 @@ use crate::check::CheckedGraph;
 use crate::diag::{BudgetKind, Code, Diagnostic, Site};
 use crate::grad::{BooleanPolicy, DerivOptions, IndexPolicy, DERIV_POLICY};
 use crate::identity::IdentityScheme;
-use crate::ir::{hex, Digest, NodeId, SubProfile, Subject, SubjectKind, SEMANTIC_REVISION};
+use crate::ir::{hex, Canon, Digest, NodeId, SubProfile, Subject, SubjectKind, SEMANTIC_REVISION};
 use crate::prng::PRNG;
 use crate::snapshot::{layout_key_of, ParamSnapshot};
 use crate::train::{Adam, Provenance, ADAM};
@@ -61,10 +61,66 @@ fn integrity(why: impl Into<String>) -> Diagnostic {
 }
 
 impl SnapshotFile {
-    /// The provenance digest recorded in the file.
+    /// The provenance digest recorded in the file: the identity encoding of
+    /// every record in file order except the schema and `provenance` lines
+    /// (design D6). With `bytes(x) = u64le(len x) ‖ x` and
+    /// `str(s) = bytes(utf8 s)`, it is `H("noble.ngraph.provenance.v0" ‖ 0x00 ‖
+    /// bytes(snapshot) ‖ bytes(graph) ‖ bytes(layout) ‖ u64le(#params) ‖
+    /// (u32le(slot) ‖ u32le(bits))* ‖ bytes(optimizer-state) ‖ bytes(parent) ‖
+    /// str(subject kind) ‖ bytes(subject identity) ‖ u64le(#closure) ‖
+    /// u64le(id)* ‖ str(sub-profile) ‖ str(semantic revision) ‖ bytes(facts) ‖
+    /// bytes(loss) ‖ bytes(data) ‖ str(policy) ‖ u64le(#opt-ins) ‖
+    /// (u32le(node) ‖ str(kind) ‖ str(rule) ‖ [u32le(width bits)])* ‖
+    /// u64le(seed) ‖ str(prng) ‖ str(optimizer) ‖ u64le(lr) ‖ u64le(beta1) ‖
+    /// u64le(beta2) ‖ u64le(eps) ‖ u64le(steps) ‖ str(tools))`, where the
+    /// width is present only for `clamped-linear`.
     #[must_use]
     pub fn provenance_digest(&self, ids: &dyn IdentityScheme) -> Digest {
-        self.provenance.digest(ids, &self.snapshot.layout())
+        let s = &self.snapshot;
+        let p = &self.provenance;
+        let mut c = Canon::new(ids, "noble.ngraph.provenance.v0");
+        c.bytes(&s.id());
+        c.bytes(&s.graph());
+        c.bytes(&s.layout());
+        c.u64(s.slots().len() as u64);
+        for (pos, k) in s.slots().iter().enumerate() {
+            c.u32(*k);
+            c.u32(s.bits_at(pos).unwrap_or(0));
+        }
+        c.bytes(&p.optimizer_state);
+        c.bytes(&p.parent);
+        c.str(p.subject.kind.name());
+        c.bytes(&p.subject.identity);
+        c.u64(p.subject.closure.len() as u64);
+        for d in &p.subject.closure {
+            c.u64(*d);
+        }
+        c.str(p.profile.name());
+        c.str(SEMANTIC_REVISION);
+        c.bytes(&p.facts);
+        c.bytes(&p.loss);
+        c.bytes(&p.data);
+        c.str(DERIV_POLICY);
+        let opts = opt_ins(&p.deriv);
+        c.u64(opts.len() as u64);
+        for o in &opts {
+            c.u32(o.node);
+            c.str(o.kind);
+            c.str(o.rule);
+            if let Some(w) = o.width {
+                c.u32(w);
+            }
+        }
+        c.u64(p.seed);
+        c.str(PRNG);
+        c.str(ADAM);
+        c.u64(p.optimizer.lr.to_bits());
+        c.u64(p.optimizer.beta1.to_bits());
+        c.u64(p.optimizer.beta2.to_bits());
+        c.u64(p.optimizer.eps.to_bits());
+        c.u64(p.steps);
+        c.str(&p.tools);
+        c.finish()
     }
 
     /// Prints the file in canonical form.
@@ -88,8 +144,11 @@ impl SnapshotFile {
         let _ = writeln!(out, "loss {}", hex(&p.loss));
         let _ = writeln!(out, "data {}", hex(&p.data));
         let _ = writeln!(out, "policy {DERIV_POLICY}");
-        for line in opt_in_lines(&p.deriv) {
-            let _ = writeln!(out, "{line}");
+        for o in opt_ins(&p.deriv) {
+            let _ = match o.width {
+                Some(w) => writeln!(out, "opt-in %{} {} {} 0x{w:08x}", o.node, o.kind, o.rule),
+                None => writeln!(out, "opt-in %{} {} {}", o.node, o.kind, o.rule),
+            };
         }
         let _ = writeln!(out, "seed 0x{:016x}", p.seed);
         let _ = writeln!(out, "prng {PRNG}");
@@ -184,8 +243,16 @@ impl SnapshotFile {
             return Err(format_diag(n, "expected `policy ngraph-deriv-real/0`"));
         }
         let mut deriv = DerivOptions::default();
+        let mut previous: Option<(u32, u8)> = None;
         while let Some(l) = c.take_if("opt-in") {
-            opt_in(&l.tokens[1..], l.number, &mut deriv)?;
+            let key = opt_in(&l.tokens[1..], l.number, &mut deriv)?;
+            if previous.is_some_and(|p| p >= key) {
+                return Err(format_diag(
+                    l.number,
+                    "opt-in lines must be strictly ordered by node and then kind",
+                ));
+            }
+            previous = Some(key);
         }
         let (t, n) = c.field("seed")?;
         let seed = match t.as_slice() {
@@ -404,7 +471,8 @@ fn subject(t: &[&str], n: usize) -> Result<Subject, Diagnostic> {
     })
 }
 
-fn opt_in(t: &[&str], n: usize, deriv: &mut DerivOptions) -> Result<(), Diagnostic> {
+/// Parses one `opt-in` line into `deriv`; returns its `(node, kind)` key.
+fn opt_in(t: &[&str], n: usize, deriv: &mut DerivOptions) -> Result<(u32, u8), Diagnostic> {
     let bad = || format_diag(n, "bad opt-in line");
     let node = t
         .first()
@@ -412,7 +480,6 @@ fn opt_in(t: &[&str], n: usize, deriv: &mut DerivOptions) -> Result<(), Diagnost
         .and_then(|s| s.parse::<u32>().ok())
         .map(NodeId)
         .ok_or_else(bad)?;
-    let duplicate = || format_diag(n, format!("duplicate opt-in for %{}", node.0));
     match &t[1..] {
         ["boolean", rest @ ..] => {
             let p = match rest {
@@ -423,9 +490,8 @@ fn opt_in(t: &[&str], n: usize, deriv: &mut DerivOptions) -> Result<(), Diagnost
                 }
                 _ => return Err(bad()),
             };
-            if deriv.boolean.insert(node, p).is_some() {
-                return Err(duplicate());
-            }
+            deriv.boolean.insert(node, p);
+            Ok((node.0, 0))
         }
         ["index", rest @ ..] => {
             let p = match rest {
@@ -434,36 +500,57 @@ fn opt_in(t: &[&str], n: usize, deriv: &mut DerivOptions) -> Result<(), Diagnost
                 ["backward-difference"] => IndexPolicy::BackwardDifference,
                 _ => return Err(bad()),
             };
-            if deriv.index.insert(node, p).is_some() {
-                return Err(duplicate());
-            }
+            deriv.index.insert(node, p);
+            Ok((node.0, 1))
         }
-        _ => return Err(bad()),
+        _ => Err(bad()),
     }
-    Ok(())
 }
 
-/// The `opt-in` lines of `deriv`, sorted by node and then policy kind.
-fn opt_in_lines(deriv: &DerivOptions) -> Vec<String> {
-    let mut lines: Vec<(u32, u8, String)> = Vec::new();
+/// One derivative opt-in record.
+struct OptIn {
+    node: u32,
+    kind: &'static str,
+    rule: &'static str,
+    width: Option<u32>,
+}
+
+/// The opt-in records of `deriv`, ordered by node and then kind
+/// (`boolean` before `index`).
+fn opt_ins(deriv: &DerivOptions) -> Vec<OptIn> {
+    let mut out: Vec<(u8, OptIn)> = Vec::new();
     for (n, p) in &deriv.boolean {
-        let body = match p {
-            BooleanPolicy::Refuse => "boolean refuse".to_owned(),
-            BooleanPolicy::StraightThrough => "boolean straight-through".to_owned(),
-            BooleanPolicy::ClampedLinear(w) => {
-                format!("boolean clamped-linear 0x{:08x}", w.to_bits())
-            }
+        let (rule, width) = match p {
+            BooleanPolicy::Refuse => ("refuse", None),
+            BooleanPolicy::StraightThrough => ("straight-through", None),
+            BooleanPolicy::ClampedLinear(w) => ("clamped-linear", Some(w.to_bits())),
         };
-        lines.push((n.0, 0, format!("opt-in %{} {body}", n.0)));
+        out.push((
+            0,
+            OptIn {
+                node: n.0,
+                kind: "boolean",
+                rule,
+                width,
+            },
+        ));
     }
     for (n, p) in &deriv.index {
-        let body = match p {
-            IndexPolicy::Refuse => "index refuse",
-            IndexPolicy::Zero => "index zero",
-            IndexPolicy::BackwardDifference => "index backward-difference",
+        let rule = match p {
+            IndexPolicy::Refuse => "refuse",
+            IndexPolicy::Zero => "zero",
+            IndexPolicy::BackwardDifference => "backward-difference",
         };
-        lines.push((n.0, 1, format!("opt-in %{} {body}", n.0)));
+        out.push((
+            1,
+            OptIn {
+                node: n.0,
+                kind: "index",
+                rule,
+                width: None,
+            },
+        ));
     }
-    lines.sort_by_key(|(n, k, _)| (*n, *k));
-    lines.into_iter().map(|(_, _, l)| l).collect()
+    out.sort_by_key(|(k, o)| (o.node, *k));
+    out.into_iter().map(|(_, o)| o).collect()
 }

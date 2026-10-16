@@ -200,3 +200,56 @@ pub fn b5_contract(seed: u64, data_seed: u64) -> noble_ngraph::train::Contract {
         data: b5_data(data_seed),
     }
 }
+
+/// The design D3 identity corpus, by the names of the pre-cutover record
+/// (`tests/fixtures/identities-66eb7cd.txt`): F1, F2, the MSE and identity
+/// losses, F3 under all nine out-of-range rule pairs, W3-S/M/L, W4, the
+/// hand-built W1/W2, the seeded random graphs 1–8 (48 operations) and
+/// `I1`–`I4` extracted from Core source (with producer origins).
+///
+/// # Panics
+/// If the Core frontend or D7 extraction refuses one of `I1`–`I4`.
+#[must_use]
+pub fn identity_corpus() -> Vec<(String, noble_ngraph::Graph)> {
+    use noble_ngraph::ir::OutOfRange;
+    let rule = |r: OutOfRange| r.name();
+    let mut out: Vec<(String, noble_ngraph::Graph)> = vec![
+        ("F1".into(), fixtures::f1()),
+        ("F2".into(), fixtures::f2()),
+        ("MSE".into(), fixtures::mse_loss()),
+        ("identity-loss".into(), fixtures::identity_loss()),
+    ];
+    for below in fixtures::RULES {
+        for above in fixtures::RULES {
+            out.push((
+                format!("F3-{}-{}", rule(below), rule(above)),
+                fixtures::f3(below, above),
+            ));
+        }
+    }
+    for (name, net) in crate::workloads::W3_SIZES {
+        out.push((name.to_owned(), net.graph(name)));
+    }
+    out.push(("W4".into(), crate::workloads::w4_graph()));
+    out.push(("W1".into(), crate::workloads::w1_graph()));
+    out.push(("W2".into(), crate::workloads::w2_graph()));
+    for seed in 1..=8u64 {
+        out.push((
+            format!("random-{seed}"),
+            crate::random::graph(seed, 48).graph,
+        ));
+    }
+    let sources: [(&str, &[&str], &str, usize); 4] = [
+        ("I1", &[], "dup * swap 3 * + 7 -", 2),
+        ("I2", &[], "2 quote [ + ] compose dup compose run", 1),
+        ("I3", &["def sq [ dup * ]"], "sq swap sq +", 2),
+        ("I4", &[], "swap [ * ] dip + dup", 3),
+    ];
+    for (name, defs, root, inputs) in sources {
+        let defs: Vec<String> = defs.iter().map(|d| (*d).to_owned()).collect();
+        let lowered = crate::b2i64::Lowered::new(&defs, root, inputs)
+            .unwrap_or_else(|e| panic!("{name} extracts: {e}"));
+        out.push((name.to_owned(), lowered.extraction.checked.graph().clone()));
+    }
+    out
+}

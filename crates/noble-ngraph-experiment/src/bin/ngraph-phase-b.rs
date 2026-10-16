@@ -877,7 +877,7 @@ fn main() {
     let doc = Json::obj([
         ("schema", Json::s("noble-ngraph-phase-b-core-evidence/v1")),
         ("issue", Json::s("OnixResearch/noble-lang#14")),
-        ("change", Json::s(".cairn/changes/numeric-graph-profile")),
+        ("change", Json::s(".cairn/archive/2026-10-16-numeric-graph-profile")),
         ("scope", Json::s("Phase B core legs: authored F32 IR (B0(b)), graph checker, L2/B2-ORACLE/L3/L4, B3 core controls, B4, B5, B6. I64 extraction, L1 Wasm/V8 and the BigInt oracle are the extraction leg's evidence.")),
         ("non_claims", Json::A(vec![
             Json::s("Finite tests and evaluator agreement do not prove the compiler, the graph checker (NG-PO-B) or the evaluators (NG-PO-C) correct."),

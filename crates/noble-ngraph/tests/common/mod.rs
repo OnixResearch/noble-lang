@@ -51,3 +51,71 @@ impl IdentityScheme for TestScheme {
         Box::new(Streams(hs))
     }
 }
+
+use noble_ngraph::ir::{GraphBuilder, Literal, Op, Provenance, ScalarType, SubProfile, Subject};
+use noble_ngraph::train::{Adam, Contract, Point};
+use noble_ngraph::{check, CheckedGraph, Graph};
+
+/// `y = rn(rn(w·x) + b)`: input `x` (slot 0), params `w` (slot 1) and `b`
+/// (slot 2). With `guarded`, a guard root requires `x ∈ [0, 4]`; with
+/// `input_fact`, an input-validated fact requires the same.
+pub fn linear(guarded: bool, input_fact: bool) -> Graph {
+    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored(&IDS, "tests/linear"));
+    let x = b.input(ScalarType::F32);
+    let w = b.param();
+    let bias = b.param();
+    let wx = b.op(Op::F32Mul(w, x));
+    let y = b.op(Op::F32Add(wx, bias));
+    let range = noble_ngraph::ir::Fact::Range {
+        lo: Literal::f32(0.0),
+        hi: Literal::f32(4.0),
+    };
+    if guarded {
+        b.guard(range.clone(), x);
+    }
+    if input_fact {
+        b.fact(x, range, Provenance::InputValidated);
+    }
+    b.output(y);
+    b.finish()
+}
+
+/// `(y, t) → rn(d·d)`, `d = rn(y − t)`.
+pub fn mse() -> Graph {
+    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored(&IDS, "tests/mse"));
+    let y = b.input(ScalarType::F32);
+    let t = b.input(ScalarType::F32);
+    let d = b.op(Op::F32Sub(y, t));
+    let l = b.op(Op::F32Mul(d, d));
+    b.output(l);
+    b.finish()
+}
+
+/// Points of `t = 2x + 0.5` (all exact in binary32).
+pub fn points() -> Vec<Point> {
+    [0.25f32, 0.5, 1.0, 2.0, 3.0]
+        .iter()
+        .map(|x| Point {
+            inputs: vec![*x],
+            targets: vec![2.0 * x + 0.5],
+        })
+        .collect()
+}
+
+/// Checks `g` under the test scheme.
+pub fn checked(g: Graph) -> CheckedGraph {
+    check(&IDS, g).expect("checks")
+}
+
+/// The training contract of `model` against `mse()` on `data`.
+pub fn contract(model: CheckedGraph, data: Vec<Point>) -> Contract {
+    Contract {
+        params: model.param_slots().to_vec(),
+        model,
+        loss: checked(mse()),
+        deriv: noble_ngraph::grad::DerivOptions::default(),
+        adam: Adam::default(),
+        seed: 0x5eed,
+        data,
+    }
+}

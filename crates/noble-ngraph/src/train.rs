@@ -20,7 +20,7 @@ use crate::identity::IdentityScheme;
 use crate::ir::{
     Canon, Digest, SubProfile, Subject, FACT_RULE_REVISION, IR_VERSION, SEMANTIC_REVISION,
 };
-use crate::prng::{SplitMix64, PRNG};
+use crate::prng::SplitMix64;
 use crate::sem::{self, Value};
 use crate::snapshot::ParamSnapshot;
 
@@ -187,7 +187,7 @@ pub struct Provenance {
     pub data: Digest,
     /// Derivative opt-ins (policy [`DERIV_POLICY`]).
     pub deriv: DerivOptions,
-    /// Seed (PRNG [`PRNG`]).
+    /// Seed (PRNG [`crate::prng::PRNG`]).
     pub seed: u64,
     /// Optimizer hyperparameters (optimizer [`ADAM`]).
     pub optimizer: Adam,
@@ -199,45 +199,6 @@ pub struct Provenance {
     pub result: Digest,
     /// Resulting optimizer-state digest.
     pub optimizer_state: Digest,
-}
-
-impl Provenance {
-    /// `H(noble.ngraph.provenance.v0 ‖ result ‖ graph ‖ layout ‖
-    /// optimizer-state ‖ parent ‖ subject ‖ profile ‖ facts ‖ loss ‖ data ‖
-    /// policy and opt-ins ‖ seed ‖ PRNG ‖ optimizer bits ‖ steps ‖ tools)`:
-    /// every snapshot-file field except the digest itself. The parameter
-    /// bytes are bound through `result`, which is recomputed from them.
-    #[must_use]
-    pub fn digest(&self, ids: &dyn IdentityScheme, layout: &Digest) -> Digest {
-        let mut c = Canon::new(ids, "noble.ngraph.provenance.v0");
-        c.bytes(&self.result);
-        c.bytes(&self.graph);
-        c.bytes(layout);
-        c.bytes(&self.optimizer_state);
-        c.bytes(&self.parent);
-        c.str(self.subject.kind.name());
-        c.bytes(&self.subject.identity);
-        c.u64(self.subject.closure.len() as u64);
-        for d in &self.subject.closure {
-            c.u64(*d);
-        }
-        c.str(self.profile.name());
-        c.str(SEMANTIC_REVISION);
-        c.bytes(&self.facts);
-        c.bytes(&self.loss);
-        c.bytes(&self.data);
-        c.str(&self.deriv.describe());
-        c.u64(self.seed);
-        c.str(PRNG);
-        c.str(ADAM);
-        c.u64(self.optimizer.lr.to_bits());
-        c.u64(self.optimizer.beta1.to_bits());
-        c.u64(self.optimizer.beta2.to_bits());
-        c.u64(self.optimizer.eps.to_bits());
-        c.u64(self.steps);
-        c.str(&self.tools);
-        c.finish()
-    }
 }
 
 /// The result of a training call: the last published snapshot pair and its

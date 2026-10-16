@@ -338,7 +338,7 @@ fn run() -> Result<bool, String> {
     let doc = json!({
         "schema": "noble-ngraph-phase-b-extract-evidence/v1",
         "issue": "OnixResearch/noble-lang#14",
-        "change": ".cairn/changes/numeric-graph-profile",
+        "change": ".cairn/archive/2026-10-16-numeric-graph-profile",
         "scope": "Phase B I64 extraction leg: D7 admission/extraction from Core source (B0(b): I64 only), B1 I1-I4, B2 L1/L2/L3/L4 for I64, B3 source-level controls",
         "non_claims": [
             "Finite differential agreement does not prove extraction (NG-PO-A), the checker (NG-PO-B) or the evaluators (NG-PO-C).",

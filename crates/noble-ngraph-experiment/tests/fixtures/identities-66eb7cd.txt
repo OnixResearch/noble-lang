@@ -1,4 +1,25 @@
-# noble-ngraph identity record, written by the pre-cutover noble-ngraph-experiment at 66eb7cd (design D3)
+# noble-ngraph identity record (numeric-graph-v1 design D3). Written once by the
+# pre-cutover noble-ngraph-experiment at 66eb7cd; only these comment lines were
+# added afterwards. Reproduce in a detached worktree at 66eb7cd:
+#   1. make `fn facts_digest` in crates/noble-ngraph-experiment/src/train.rs `pub`;
+#   2. add a test that writes the lines below to $RECORD_OUT, then run
+#      RECORD_OUT=<file> cargo test --release -p noble-ngraph-experiment --test <name>
+# Line kinds (APIs at 66eb7cd; identities are lowercase hex):
+#   graph NAME ID FACTS: check(G) -> hex(id()) and hex(train::facts_digest(&c)) for
+#     F1/F2/MSE/identity-loss = fixtures::{f1, f2, mse_loss, identity_loss}(),
+#     F3-B-A = fixtures::f3(B, A) over refuse/clamp/zero, W3-S/M/L = W3_SIZES
+#     net.graph(name), W4/W1/W2 = workloads::{w4,w1,w2}_graph(), random-N =
+#     random::graph(N, 48).graph, and I1-I4 = b2i64::Lowered::new(defs, root, n)
+#     .extraction.checked for the four design sources (I3 defines def sq [ dup * ]).
+#   vector NAME => OBS: eval::reference over fixtures::b2_vectors(), rendered
+#     Normal[f32:0x..|i64:..|bool:..], Refused(CODE), GuardFailed(%N,KIND), Exhausted(K).
+#   rejection NAME => CODE: rejections::run_all(), observed codes.
+#   campaign SEED ID vectors= normal= guard_failed= refused= disagreements=:
+#     differential::campaign(SEED, 48, 2000).
+#   b5 data|s0|final|adam-state|facts: suites::b5_contract(B5_SEED, B5_DATA_SEED)
+#     trained 500 steps from the seed: data digest, initial and final snapshot ids,
+#     adam/0 state digest and provenance.facts.
+#   b5 losses H count first last: H = BLAKE3 over every loss (binary64 LE bits).
 graph F1 6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661 a4847a4429bf0da5a2076517ea2877b0d76d97ee12be45a45e1ee89f1c8ec7ce
 graph F2 66784231cce52b3e97027e221d3e2aad4d91f9d8871169700e1c3f5a896d5b51 ccc3bccd03da8ff7963543c2cdf70fa7cbccc809b7862f21aa6bd26238a49774
 graph MSE 50f67078a67012ca5914d95c1615946a8230bb591be056b6fb10a0c1c9ad69c0 29560e3a637956c979f465327784ed4dd4af410dd9235ec175f76dc1d011386e
