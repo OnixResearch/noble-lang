@@ -1,5 +1,47 @@
 # Main gate restoration (issue #22)
 
+## Checking change log — 2026-10-16 (#27 roster only)
+
+The [source-bound roster renewal receipt](boundary-roster-20261016.json)
+renews `policy/boundary-controls.ncl` and its Nickel JSON export from **37 to
+88 exact reviewed units** at published source
+`cd76c608721f25ce7f7bc896dfc7cdeb54e9b004`: all 37 historical rows remain,
+51 are added, and no targets are removed. Reuse of the complete `5406170`
+collection is justified by **698 byte-identical source/manifest/Nix/tool
+context files**, independent Cargo discovery of **77 targets / 88 units**,
+reviewed source-role and configuration agreement, **88 complete shards**,
+and successful pinned `cargo-octet artifact verify` replay. This is base-source
+evidence, not evidence for later changed manifests or all-features code.
+
+The actual Nix comparator rejected `compiler-unit-roster` before renewal and
+no longer reports that diagnostic afterwards. Missing/duplicate units and
+wrong kind/role still reject; wrong target/features/default-features still
+reject. All **52 comparator controls and 20 fixture controls** evaluated,
+and the real `checks.x86_64-linux.boundary-controls.drvPath` instantiated
+successfully. The positive-input probe retains every real unit and only the
+item facts/ownership queried by that path; the original bundle was replayed
+separately and the full architecture receipt remains unchanged. In
+particular, the warning-only scratch input still rejects
+`required-deny-all-result` and `expected-boundary-observation`, with all
+**3,745 architecture findings** retained. No clean deny-all result is invented.
+
+**Limits and remaining failures are unchanged.** Actual Nix fixture rendering
+and Cargo metadata show that `acyclic-shell` retains all 88 workspace units
+and adds the CLI library and library-test units: **90 selected units against
+`max_units=88`**; a complete per-unit collection would also need 90 shards
+against `max_shards=88`. The library is the normal-dependency endpoint used
+by the reverse-dependency control. Removing it breaks that control; pruning
+other targets reduces existing coverage. No coverage-preserving correction
+within the unchanged limits has been established. This capacity condition
+is measured from target discovery, not a newly executed compiler refusal.
+
+No comparator, configuration check, deny-all rule, fixture, cap, or selected
+tool pin changed. The known-red aggregate checks were **not rerun**; #25
+architecture unknowns and #26 deny-all failures remain independent. The
+historical **10 PASS / 4 known FAIL** receipt below is unchanged. A later
+integrated manifest/source change (including `safety-observe`) requires a
+fresh collection or a new relevant-context identity proof.
+
 Publication `0eb5c0478ebf3419de6f94b8144c2ac7520356ca` is the **historical
 prior pending stage**: it published the Numeric-Graph-v1 runner, inputs, docs
 and evidence while final source-bound acceptance and independent claims

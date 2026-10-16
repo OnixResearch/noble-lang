@@ -1,0 +1,231 @@
+{
+  "schema": "noble-boundary-roster-renewal/v1",
+  "date": "2026-10-16",
+  "source_anchor": "cd76c608721f25ce7f7bc896dfc7cdeb54e9b004",
+  "collection_anchor": "54061703a94afde68ad78b24905de613c5c345f4",
+  "change": {
+    "previous_units": 37,
+    "reviewed_units": 88,
+    "retained_units": 37,
+    "added_units": 51,
+    "omitted_units": 0,
+    "policy": "policy/boundary-controls.ncl",
+    "export": "policy/boundary-controls.json",
+    "non_roster_policy_values": "identical to source anchor",
+    "comparison": "unchanged exact sorted roster equality and compiler configuration checks",
+    "limits": "all unchanged, including max_units=88 and max_shards=88",
+    "selected_tool_pins": "unchanged"
+  },
+  "reuse_proof": {
+    "context_files": 698,
+    "context": "all tracked crates files, all nix files, root Cargo/lock/toolchain/dylint/flake files and architecture/tool-selection policy inputs match the stored source bytes exactly",
+    "manifest_targets": 77,
+    "compiler_units": 88,
+    "complete_shards": 88,
+    "package_units": [
+      {
+        "package": "noble-kernel",
+        "targets": 13,
+        "units": 14
+      },
+      {
+        "package": "noble-contracts",
+        "targets": 10,
+        "units": 11
+      },
+      {
+        "package": "noble-wasm",
+        "targets": 10,
+        "units": 11
+      },
+      {
+        "package": "noble-cli",
+        "targets": 18,
+        "units": 19
+      },
+      {
+        "package": "noble-ngraph",
+        "targets": 8,
+        "units": 9
+      },
+      {
+        "package": "noble-syndicate",
+        "targets": 3,
+        "units": 4
+      },
+      {
+        "package": "noble-ngraph-experiment",
+        "targets": 15,
+        "units": 20
+      }
+    ],
+    "role_check": "every source role matches the reviewed architecture source scope; every target/features/default_features value matches selection",
+    "coverage": "complete; expected=observed=88, no missing/unexpected/duplicate units or invalid shards",
+    "tsv": "both retained scratch1/scratch2 unit TSVs match compiler rows exactly; scratch2 shard TSV covers the same 88 unit identities, every row complete",
+    "inventory": "inventory/5406170/post/collector IR bytes equal original raw IR",
+    "artifact_replay": {
+      "status": "valid",
+      "diagnostics": [],
+      "exit": 0
+    }
+  },
+  "exercise": {
+    "before": {
+      "diagnostics": [
+        "required-deny-all-result",
+        "compiler-unit-roster",
+        "expected-boundary-observation"
+      ],
+      "valid": false
+    },
+    "after": {
+      "diagnostics": [
+        "required-deny-all-result",
+        "expected-boundary-observation"
+      ],
+      "valid": false
+    },
+    "hostile_roster_rejections": [
+      "missing",
+      "duplicate",
+      "wrongKind",
+      "wrongRole"
+    ],
+    "hostile_configuration_rejections": [
+      "wrongTarget",
+      "wrongFeatures",
+      "wrongDefaultFeatures"
+    ],
+    "observation_comparator_self_tests": 52,
+    "fixture_self_tests": 20,
+    "real_check_evaluation": {
+      "exit": 0,
+      "derivation": "/nix/store/acjp2cxg135s495hzkds5nd1nb0biaiq-noble-boundary-controls.drv",
+      "built": false
+    },
+    "method": "Actual unchanged Nix comparator over all 88 real units. To avoid quadratic scanning of irrelevant raw facts, positive-only IR projection retains every unit and exactly the consume_budget item facts and memberships queried by this case. Unmodified raw deny/observation status and all 3745 architecture findings remain visible. The full original bundle was separately replayed. No fabricated clean deny result.",
+    "initial_full_ir_attempt": "Timed out after 180 seconds before any policy write; superseded by the explicitly bounded positive-input projection."
+  },
+  "remaining": {
+    "acyclic_shell": {
+      "workspace_units": 88,
+      "fixture_units": 90,
+      "added": [
+        "noble-cli:lib+test:crates/noble-cli/src/lib.rs",
+        "noble-cli:lib:crates/noble-cli/src/lib.rs"
+      ],
+      "omitted": [],
+      "max_units": 88,
+      "max_shards": 88,
+      "measured": "Actual Nix fixture rendering plus Cargo metadata, not a new compiler/gate failure run",
+      "condition": "90 selected units exceed the unchanged 88-unit limit by 2; a completed per-unit collection would also require 90 shards. No limit-88 compiler diagnostic was newly executed.",
+      "correction": "The added CLI library is the real normal-dependency endpoint for the reverse-dependency control; removing it invalidates that control. Removing other targets would reduce existing coverage. No coverage-preserving no-limit-change correction is established."
+    },
+    "deny_all": "#26 remains independent. Replayed warning-only scratch input still fails required-deny-all-result; it is not evidence of a clean production gate.",
+    "architecture": "#25 remains independent: raw scratch receipt still has 3745 findings; no findings waived or omitted from the compared receipt.",
+    "historical_gate_status": "Known 10 pass / 4 fail historical gate receipt unchanged; no full gate or known failing check rerun.",
+    "integration": "Proof binds cd76c608 only. Any later source/manifest/tool/configuration change, including safety-observe feature/all-features code changes, needs fresh collection or a new exact relevant-context proof."
+  },
+  "receipts": [
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/identity.json",
+      "sha256": "39c5018d262ab496b86aab9649144667f4ff798f95490e0345304eae9b813def",
+      "bytes": 134093
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/cargo-metadata.json",
+      "sha256": "cd589a07c9a644fd2f6644247cf1e500a9065f32cdd9de63f735c730adad5db4",
+      "bytes": 49449
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/replay.json",
+      "sha256": "d1d2b3e4cbe3197cd57db3c8ada0657cd7df14ff1f551995169c11ced8444779",
+      "bytes": 432
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/before.json",
+      "sha256": "0817188054fba660d8e7afda3d6ce9fb8884c8a46f0f0ad4d65b0dd7f3722588",
+      "bytes": 2784
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/after.json",
+      "sha256": "2f547960a486f238246d4f0185542a39f24ed46b28d83ae0773263a20be6ae25",
+      "bytes": 2692
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/fixture.json",
+      "sha256": "12742ff9de5ab520678c176e390ac60df6d9a964cc12a644e022bd6ef6a1f3af",
+      "bytes": 2072
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/acyclic-cargo-metadata.json",
+      "sha256": "34b68069ef04af969aae2dae8ff7d2465785069c09e5ccb195924a713fddc2fc",
+      "bytes": 51640
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/flake-eval.json",
+      "sha256": "43d7a961de3e6f66c739f22f3ecd49727fbbabc94cc761b289eb26c0cfe24e22",
+      "bytes": 670
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/positive-ir-projection.json",
+      "sha256": "9af65d831558d8a2a5ae52877f4a9a35edd088b5ba7b44e51550c86e102c8927",
+      "bytes": 805173
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/identity.mjs",
+      "sha256": "4df03495506380dff44827edab45f6dbe5fa0a8db262a8154255650548b37336",
+      "bytes": 5896
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/fixture.mjs",
+      "sha256": "b005717f6df0cca58a27fac3189dd1f99563a74da6d82a836d6683ea19b053c8",
+      "bytes": 3963
+    },
+    {
+      "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-checking-20261016/smoke.nix",
+      "sha256": "b54d812f3f65d2321821ebfa70718eea7c6366ca09c59d2e14947804dab0f9e0",
+      "bytes": 2305
+    }
+  ],
+  "raw": [
+    {
+      "path": "/var/tmp/ngraph-v1-5406170/out/compiler-architecture-ir.json",
+      "sha256": "04b6913f3d44df22b29c416421d8503c7b2315ffb16991368ac69a31460c0f32",
+      "bytes": 177843955
+    },
+    {
+      "path": "/var/tmp/ngraph-v1-5406170/out/compiler-architecture-coverage.json",
+      "sha256": "6178869c78b99dac0f032d445b652795bdfa2c08590a2dfce3d7cd11bb15978f",
+      "bytes": 13015
+    },
+    {
+      "path": "/var/tmp/ngraph-v1-5406170/out/compiler-architecture-receipt.json",
+      "sha256": "2b79a1ad4cd1ff4e944e301be637abcd57982299df6abdba9ed447f90a6d20db",
+      "bytes": 624
+    },
+    {
+      "path": "/var/tmp/ngraph-v1-5406170/out/project-architecture-receipt.json",
+      "sha256": "b1b979029784fa29b1c8541385938b16427d393fbc790a52ead8bc0d83e0c9fe",
+      "bytes": 10035761
+    },
+    {
+      "path": "/var/tmp/ngraph-v1-5406170/out/status.json",
+      "sha256": "3cb100db0087298a8ed248a7bcdc0976131c778ec4aade31e176eeaff8a9556b",
+      "bytes": 286377
+    },
+    {
+      "path": "/var/tmp/ngraph-v1-5406170/out/command.txt",
+      "sha256": "8da95a4fd621992cdf802b93242f15760de66b5fce9ff61b163e9119c598bd3d",
+      "bytes": 195
+    }
+  ],
+  "non_claims": [
+    "not-whole-boundary-gate-pass",
+    "not-deny-all-acceptance",
+    "not-source-coverage-or-native-assurance-acceptance",
+    "not-new-compiler-collection",
+    "not-acyclic-limit-refusal-execution",
+    "not-integrated-safety-source-evidence"
+  ]
+}
