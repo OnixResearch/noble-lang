@@ -1,7 +1,7 @@
 ## Phase 0: design (this change)
 
 - [x] [serial] Archive `numeric-graph-profile` after the owner's adoption decision (sync and archive, `CAIRN_ARCHIVE_DATE=2026-10-16`). Record the selected `Numeric-Graph-v1` boundary, crate split, formats, CLI, outcome mapping, test plan, integration impacts and open questions in `design.md`, with the MODIFIED NGRAPH-SCOPE-01 and ADDED NGRAPH-CLI-01, NGRAPH-FORMAT-01 and NGRAPH-SNAP-02 deltas and the draft cases `cases/numeric-graph-cases.json`. Evidence: Cairn proposal, design and tasks gates and `validate` only. These are document checks, not implementation, execution or proof evidence. r[NGRAPH-SCOPE-01] r[NGRAPH-CLI-01] r[NGRAPH-FORMAT-01] r[NGRAPH-SNAP-02]
-- [ ] [serial] Owner review of design D1–D13 and answers to Q1–Q7, before any Rust change. Evidence: not run yet. r[NGRAPH-SCOPE-01]
+- [x] [serial] Review of design D1–D13 and answers to Q1–Q8, before any Rust change. Evidence: the director reviewed the design on 2026-10-16 under the owner’s 2026-10-16 adoption instruction (design “Review”; the owner may amend). Q1 yes; Q2–Q7 as recommended; Q8 accepted. r[NGRAPH-SCOPE-01]
 
 ## Phase 1: identity record and library crate
 
@@ -31,7 +31,7 @@
 
 ## Phase 6: integration (separate integrator)
 
-- [ ] [serial] Workspace member, `Cargo.lock`, vendor re-pin and tool-selection hashes. Policy: the package, source and test roles for `noble-ngraph` with no rule or provider change, and the filesystem and observability rationales. Native-assurance and source-inventory renewal; Octet unit, shard and call capacity from a complete collection; `core_no_std` and `nix/octet-controls.nix` only if Q1 is approved. Evidence: not run yet. r[NGRAPH-CLI-01]
+- [ ] [serial] Workspace member, `Cargo.lock`, vendor re-pin and tool-selection hashes. Policy: the package, source and test roles for `noble-ngraph` with no rule or provider change, and the filesystem and observability rationales. Native-assurance and source-inventory renewal; Octet unit, shard and call capacity from a complete collection; Q1 (approved): add `noble-ngraph` to `core_no_std` and to `nix/octet-controls.nix` `requiredCorePackages`, `requiredPackages` and `requiredScopes` as a tightening. Evidence: not run yet. r[NGRAPH-CLI-01]
 
 ## Phase 7: lifecycle
 

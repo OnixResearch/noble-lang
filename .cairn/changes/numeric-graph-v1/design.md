@@ -351,7 +351,7 @@ The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_
   - the provider comment loses blake3, serde_json and rustc_apfloat as library callers (they stay experiment and CLI callers);
   - the filesystem and observability rationales gain the CLI's ngraph file reads, create-new and hard-link publication, `.partial` removal and report output;
   - no change to rules, provider roles or capability handling.
-  - `core_no_std` and `nix/octet-controls.nix` `requiredCorePackages` change only if Q1 is approved.
+  - Q1 (approved): `core_no_std` and `nix/octet-controls.nix` `requiredCorePackages`, `requiredPackages` and `requiredScopes` add `noble-ngraph`.
 - **Native assurance.** `policy/native-assurance.ncl`/`.json`: `required_packages` and the scope note go from six to seven crates. The experiment's provider rows stay, and there is no new row (the library has no external dependency).
 - **Source inventory.** Renew `policy/source-inventory.ncl`/`.json` with `tools/source-inventory-renew.mjs` from a complete collection: new `noble-ngraph` paths, removed experiment paths and new `noble-cli` ngraph paths. Update `verification/source-inventory.md` and `verification/native-assurance.md` counts.
 - **Octet capacity.**
@@ -368,6 +368,14 @@ The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_
 - **Q5** Keep the last published snapshot when training stops? **Recommend no.** Report `published_steps` in the report line and publish nothing.
 - **Q6** Bind fact records into `GraphLogicalId`? **Recommend no.** It would change NGRAPH-SNAP-01 identities and every Phase B id. Binding uses the fact-binding digest instead (D6).
 - **Q7** Is the `eval` exit the first non-normal vector or the most severe? **Recommend the first, in file order.** It is deterministic and matches "the first failure", and every outcome is in the report.
+
+## Review
+
+The director reviewed this design (proposal, tasks, D1–D13) on 2026-10-16 under the owner's 2026-10-16 adoption instruction and approved it for implementation; the owner may amend any decision. Answers:
+
+- **Q1:** yes. The integrator adds `noble-ngraph` to `core_no_std` and to `nix/octet-controls.nix` `requiredCorePackages`, `requiredPackages` and `requiredScopes` as a tightening.
+- **Q2–Q7:** as recommended above.
+- **Q8:** the `NGRAPH` evidence-route row in `tools/check-specs.mjs` (added while promoting `numeric-graph-profile`) is accepted, following the `CB` precedent (commit `9a2e409`).
 
 ## Risks / Trade-offs
 
