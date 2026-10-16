@@ -418,6 +418,17 @@ The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_
 
 ## Integration impacts (for the integrator)
 
+**Measured integration result.** The complete local run at
+`bc10df848ed81d53e849c440c1f639979e40d38d` is retained in
+`verification/main-gates/receipt.json`: 10/14 checks pass, with boundary-controls
+(#26/#27), octet (#26), source-coverage and native-assurance (#25) failing.
+`rust-tests` reports 529 passed, 0 failed, 6 ignored in 77 binaries. Publication
+adds the acceptance runner, inputs, docs and receipt without changing the
+tested Rust/Cargo/policy/Nix implementation. Phase 7 source-bound acceptance,
+CASE-02 capability facts and independent claims review remain open; all draft
+case states remain unchanged. Sync is approved for the later lifecycle step,
+but no sync or archive is part of this publication. NG-PO-A..H stay OPEN.
+
 - **Workspace and lock.** `Cargo.toml` members add `crates/noble-ngraph`, and `Cargo.lock` changes. There are no new third-party crates: vendoring is unchanged except for the path-crate entries, so re-pin the vendor hash if the lock hash changes.
 - **Tool selection.** `nix/tool-selection-files.nix` and `policy/tool-selection-files.ncl`/`.json` gain `crates/noble-ngraph/Cargo.toml` and new hashes for `crates/noble-cli/Cargo.toml` and `crates/noble-ngraph-experiment/Cargo.toml` (repin script).
 - **Architecture policy** (`policy/architecture.ncl` and `policy/architecture.json`):

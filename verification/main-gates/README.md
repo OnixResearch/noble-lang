@@ -1,12 +1,36 @@
 # Main gate restoration (issue #22)
 
-This receipt records one run of every pinned flake check on `f2b398d`
+The current [`receipt.json`](receipt.json) records the complete local run of
+all 14 pinned flake checks on Numeric-Graph-v1 integration commit
+`bc10df848ed81d53e849c440c1f639979e40d38d`: **10 pass, 4 fail**.
+Passing: tool-selection, tool-versions, tool-overrides, format, rust-tests,
+clippy, documents, cairn, policy and source-inventory-controls.
+Failing: boundary-controls ([#26](https://github.com/OnixResearch/noble-lang/issues/26),
+[#27](https://github.com/OnixResearch/noble-lang/issues/27)), octet (#26),
+source-coverage and native-assurance
+([#25](https://github.com/OnixResearch/noble-lang/issues/25)).
+`rust-tests` reports 529 passed, 0 failed, 6 ignored in 77 test binaries;
+its retained log SHA-256 is
+`095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071`.
+Every row binds its original external log; recovery does not rerun or
+reinterpret a failing check. This is not global gate acceptance.
+
+The publication merges the acceptance runner and its inputs plus docs and
+evidence only after that tested commit; Rust, Cargo, policy and Nix inputs
+remain byte-identical to `bc10df8`. Final source-bound acceptance and the
+independent claims review remain pending. No case is promoted, no Cairn
+sync or archive is performed, and CASE-02 capability facts stay OPEN.
+NG-PO-A..H remain OPEN; no performance, GPU or cross-platform claim is added.
+
+## Historical baseline
+
+The preserved [`receipt-f2b398d.json`](receipt-f2b398d.json) records one run of every pinned flake check on `f2b398d`
 (`integration/issue-14-ngraph`). That branch merges issue #14's numeric
 graph Phase B/C crate onto `main` `407dfd6`. The receipt also keeps the
 earlier runs on integration commit `2edb977` (`integration/issues-20261015`)
 and on issue #22 branch commit `8df6c43`. That branch starts at
 Calculator-v1 `44329dc`.
-[`receipt.json`](receipt.json) holds the tested commit, each check's result,
+That historical receipt holds the tested commit, each check's result,
 log path, log SHA-256 and duration, plus the selected tool paths. The logs
 stay outside the repository; their hashes bind them.
 
