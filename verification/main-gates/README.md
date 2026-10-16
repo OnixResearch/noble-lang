@@ -98,7 +98,10 @@ source. Three integration commits follow:
   joins production as a `composition-root`, like `noble-cli` and
   `noble-syndicate`. It is a std harness that depends inward on
   `noble-kernel` and `noble-contracts` and runs host effects: files,
-  subprocesses, clocks and threads. The commits add:
+  subprocesses, clocks and threads. The owner kept this classification:
+  the approved P3 placement is a workspace crate, and composition-root keeps
+  it under every gate without inventing an exclusion concept; moving it out
+  of the workspace remains an owner option. The commits add:
   - package, `src` and `tests` roles;
   - a pure-value `rustc_apfloat` provider classification, also added to
     the reviewed provider list in `nix/octet-controls.nix`;
