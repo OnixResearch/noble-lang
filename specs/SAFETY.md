@@ -518,3 +518,7 @@ The host MUST account independently for current registry reachability, each old 
 - GIVEN independent publication, dispatch and actual-effect revocations in LSLOT-07
 - WHEN an old pinned root reaches the nested request
 - THEN revoked authority denies protected work despite a ref, slot ID or prior permission
+
+**NGRAPH-OWN-01.**
+
+Per-evaluation activation, gradient and workspace scratch MUST be owned separately from retained graph code, parameter snapshots, optimizer state and captures. Evaluation results MUST be returned as fresh immutable values, never as views of reused scratch. On normal return, failure, guard failure, budget exhaustion and cancellation, scratch MUST be released or reset exactly once without publishing a partial snapshot or modifying a retained owner. Scratch reset MUST NOT invalidate a saved Program, a graph or a trained snapshot. Duplicate owners of an immutable snapshot or graph MUST be releasable in any order. Any device buffer or queue MUST be an explicitly managed host resource. It MUST NOT be graph data, a `Data` value or a capture.

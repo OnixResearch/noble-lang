@@ -3030,6 +3030,114 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "NGRAPH-BENCH-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-DERIV-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-EXTRACT-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-F32-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-FACT-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-OWN-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-PROOF-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-SCOPE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-SNAP-01",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
       "id": "P-AUTH-01",
       "document": "../.cairn/specs/language/spec.md",
       "document_id": "SPEC-0001",

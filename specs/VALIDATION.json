@@ -2,7 +2,7 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "2976cfd7dea1bf917a21a682b68215ac14b7c2dbc0f97d64a274bc30acb1514a",
+    "sha256": "e61cea67a768d60fa15e3c76e70f5f0acbf48d9195b19929dcbd62fdd09f2440",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
       "sha256": "5a75c586f7ab4d3065a71c1259ea1d835d896b663173a8c83300c6c47f7feeea"
@@ -15,10 +15,10 @@
     "node_api": "24.3.0"
   },
   "documents": 13,
-  "requirements": 531,
+  "requirements": 540,
   "scenarios": 198,
   "scenarios_executed": 116,
-  "open_test_design": 193,
+  "open_test_design": 202,
   "proof_obligations": 30,
   "completed_proofs": 3,
   "self_tests": [
@@ -1383,6 +1383,102 @@
       "sha256": "a5f4d62f221e7d41a25bd55dafb20c25306cc3f8409cf07166861f72360aec50"
     },
     {
+      "file": ".cairn/archive/2026-10-16-numeric-graph-profile/design.md",
+      "sha256": "0da1f38903c3be3d28f9605cb9ef553aaed9b8554bab7e78b33614b380226125"
+    },
+    {
+      "file": ".cairn/archive/2026-10-16-numeric-graph-profile/proposal.md",
+      "sha256": "4c1ea38be3ec655b8dfa32885eecbd5a5b280655bdade301c89b4c836a5fb430"
+    },
+    {
+      "file": ".cairn/archive/2026-10-16-numeric-graph-profile/specs/backend-experiments/spec.md",
+      "sha256": "07a2e5f9067390b85eb1deb3370014903ca52e4a8fdcd151a0273b65ca2f2ef5"
+    },
+    {
+      "file": ".cairn/archive/2026-10-16-numeric-graph-profile/specs/evidence/spec.md",
+      "sha256": "b23edde879ebc020e71623e0b86098c85e0bacc0b73441216b40b62d9c5808d1"
+    },
+    {
+      "file": ".cairn/archive/2026-10-16-numeric-graph-profile/specs/language/spec.md",
+      "sha256": "9079dfaca656ec12aa7622d80c5fb9febeb2a60769a1a5a64f5fcce8dea5f727"
+    },
+    {
+      "file": ".cairn/archive/2026-10-16-numeric-graph-profile/specs/safety/spec.md",
+      "sha256": "cc370c25aa5f4a48a21dcf0c241cdd6f9ed4ea68dd318713308f28f5b6c90a80"
+    },
+    {
+      "file": ".cairn/archive/2026-10-16-numeric-graph-profile/specs/verification/spec.md",
+      "sha256": "d1212e28ccd53b180668db6a844125b8a1560ae9c0d3bcc74686885b742e92d1"
+    },
+    {
+      "file": ".cairn/archive/2026-10-16-numeric-graph-profile/tasks.md",
+      "sha256": "c64bb3273c95f6a5817b4c60651b504699a1ce30f9f5537d143993586e95a9ad"
+    },
+    {
+      "file": ".cairn/changes/allocation-strategy-contract/design.md",
+      "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
+    },
+    {
+      "file": ".cairn/changes/allocation-strategy-contract/proposal.md",
+      "sha256": "c569cf3d689faf77f7adfa468231b041d31678b9a7a0d293bc863e3b9b9a4bf7"
+    },
+    {
+      "file": ".cairn/changes/allocation-strategy-contract/specs/backend-experiments/spec.md",
+      "sha256": "cbf780836c464688bfbaeda4ce7aaecccc0086078a358d3706679848b4790577"
+    },
+    {
+      "file": ".cairn/changes/allocation-strategy-contract/specs/evidence/spec.md",
+      "sha256": "982713441673e1fb0b9db1f6e5ed573667a224a09eea7a2541685fde6ea9e5bf"
+    },
+    {
+      "file": ".cairn/changes/allocation-strategy-contract/specs/safety/spec.md",
+      "sha256": "d87670a8cead881cf544829c626da123b8eeaeb56b88fc272837a2c134179bca"
+    },
+    {
+      "file": ".cairn/changes/allocation-strategy-contract/tasks.md",
+      "sha256": "fe040cb945a0179b50c0a333badc7e719d8ee68c2cd969b662454c5b30363b20"
+    },
+    {
+      "file": ".cairn/changes/artifact-correspondence-extension/design.md",
+      "sha256": "b1326cd7f6a91e104702c4f850b814683bc84f8105ec9c46372dc2221070cd9e"
+    },
+    {
+      "file": ".cairn/changes/artifact-correspondence-extension/proposal.md",
+      "sha256": "287ed3ab25c2dd76bf81a2409261c3c0bd81a1fcc01be7f25facacd057a4584e"
+    },
+    {
+      "file": ".cairn/changes/artifact-correspondence-extension/specs/program-contracts/spec.md",
+      "sha256": "3d9df5ee8e5219ce6455e42d7a9677204b6a0d9cd8d876ebd7537496ef324740"
+    },
+    {
+      "file": ".cairn/changes/artifact-correspondence-extension/specs/verification/spec.md",
+      "sha256": "6fc11f74bacfb1af6f720fbc2228867735e1d10214e463b50848f6c18f6ba2fd"
+    },
+    {
+      "file": ".cairn/changes/artifact-correspondence-extension/tasks.md",
+      "sha256": "e70bc32978280eba922148e07b1365fbdbb53af05363e0df0de55bcd0e8ccd1d"
+    },
+    {
+      "file": ".cairn/changes/behavioral-effect-protocol/design.md",
+      "sha256": "306dc0081538d30ba799ace06d06bbc7e795f429a4651371dc1fe48f5a0cbdf1"
+    },
+    {
+      "file": ".cairn/changes/behavioral-effect-protocol/proposal.md",
+      "sha256": "0a1656da1ebcb29b5ad27f5f61c44b0b980323b453b89d3dd99cc7dc72674c9c"
+    },
+    {
+      "file": ".cairn/changes/behavioral-effect-protocol/specs/program-contracts/spec.md",
+      "sha256": "2ae000cf3abc52aa84a2829bd1bf870e78c9a6e6120d6113e07835576fdd81aa"
+    },
+    {
+      "file": ".cairn/changes/behavioral-effect-protocol/specs/resource-adapters/spec.md",
+      "sha256": "4823770af7b376fa5caeeeda24c231b0a5bba965b7bba160df801db186446930"
+    },
+    {
+      "file": ".cairn/changes/behavioral-effect-protocol/tasks.md",
+      "sha256": "32c1e2eca90958df4f1b28f6babcf1d48cebc4c1dc352435b16b8b5e7fda55fb"
+    },
+    {
       "file": ".cairn/changes/bend-qcue-scoped-adaptations/design.md",
       "sha256": "050792bfe19d46148bc15d1b3b77f8910edbd23506fd3a17f249728736f1ca8b"
     },
@@ -1407,6 +1503,22 @@
       "sha256": "e5f3eccbda5f3298998d74e5360827ef1470ee88449985fad7544cf26d55d381"
     },
     {
+      "file": ".cairn/changes/bounded-applicability-guards/design.md",
+      "sha256": "dbc86449c0db894016e133a82a711a40621929546c1c8f730e5e371319549959"
+    },
+    {
+      "file": ".cairn/changes/bounded-applicability-guards/proposal.md",
+      "sha256": "f42c23ec515b5f5f3f9ce3aad7692cc2b82af2be393643b7edac40e7efa2cb4f"
+    },
+    {
+      "file": ".cairn/changes/bounded-applicability-guards/specs/program-contracts/spec.md",
+      "sha256": "c72c01fe0daa2cc7965667cbe91aa1629aa788a7881a393b24c79770c57c2336"
+    },
+    {
+      "file": ".cairn/changes/bounded-applicability-guards/tasks.md",
+      "sha256": "6955707ff40beb999ff123859fe8c5a1ae76c230df6b31e973ed0c64e91d4a31"
+    },
+    {
       "file": ".cairn/changes/c-backend/design.md",
       "sha256": "6bb5850a37150a195c457209a71a5764a36d5949c689a4c655b5ae8438413a30"
     },
@@ -1421,6 +1533,38 @@
     {
       "file": ".cairn/changes/c-backend/tasks.md",
       "sha256": "eb9dd821960f374b20a53f2cdd03ad05b26aeb1e5660b2e4d4815bab9ba9b44c"
+    },
+    {
+      "file": ".cairn/changes/calculator-v1/design.md",
+      "sha256": "bd0fff22284e7ef8528d209f50a2df5156309c4aef4b302af6af004dcc7d5fd0"
+    },
+    {
+      "file": ".cairn/changes/calculator-v1/proposal.md",
+      "sha256": "fb675273755741f204e5afa521b81b1dccee01922eea002c5243b9207afe5375"
+    },
+    {
+      "file": ".cairn/changes/calculator-v1/specs/calculator/spec.md",
+      "sha256": "6255336ed1033377035a5ab111bdb0252f29e8492637d200a3e040fd181d4736"
+    },
+    {
+      "file": ".cairn/changes/calculator-v1/tasks.md",
+      "sha256": "29a81f836010f8d7ed13fbfee10cd9d17efb8ebfd5b4fc99af5f6b9724568603"
+    },
+    {
+      "file": ".cairn/changes/cranelift-backend-evaluation/design.md",
+      "sha256": "8bded1cc52cb4e9b6865328cf80be36d10bf0b70ad145083aec480f970a1e034"
+    },
+    {
+      "file": ".cairn/changes/cranelift-backend-evaluation/proposal.md",
+      "sha256": "3482763fb45c80d5191008dd801b3329534e86fefc7a9bd638f4dacdabb6cb31"
+    },
+    {
+      "file": ".cairn/changes/cranelift-backend-evaluation/specs/backend-experiments/spec.md",
+      "sha256": "ea0d80b93aa85fe8799522cc1e9411794ec2c878db284fc9b65b25a5a5f4f297"
+    },
+    {
+      "file": ".cairn/changes/cranelift-backend-evaluation/tasks.md",
+      "sha256": "52451860331a19cb131450a8b53164ec27379479fb3b5a57fa49d564372bc7e4"
     },
     {
       "file": ".cairn/changes/editor-hole-transport/design.md",
@@ -1475,6 +1619,42 @@
       "sha256": "e8dc11b9ba308242eb7e6f861e8732ed2b69bb81dc2a7366072c1c5a8646c290"
     },
     {
+      "file": ".cairn/changes/gpu-offload-research/design.md",
+      "sha256": "a7aecdebd4eeab3be672166f0dcf03c0b2c1c6c5460b016e1a3f9c874f04ca69"
+    },
+    {
+      "file": ".cairn/changes/gpu-offload-research/proposal.md",
+      "sha256": "b0f50b873637fdcedae0a1382af0213955a3a0f6e4e9051a460f7a7d085d4b0d"
+    },
+    {
+      "file": ".cairn/changes/gpu-offload-research/specs/backend-experiments/spec.md",
+      "sha256": "23a56a7d6db55b692fae0c8470ceb41c9e8c20b5abb01b9a7b37db17785dcc72"
+    },
+    {
+      "file": ".cairn/changes/gpu-offload-research/tasks.md",
+      "sha256": "a188cd3b7d83485622e4ad7115f6bc07fc35703b7ed3dc8e9493f305509de97d"
+    },
+    {
+      "file": ".cairn/changes/implicit-proof-arguments/design.md",
+      "sha256": "ac71fbbedba6e9798729c8793025bb466533840062e4d521b042df60e29eabd9"
+    },
+    {
+      "file": ".cairn/changes/implicit-proof-arguments/proposal.md",
+      "sha256": "96a20faa6a1722f197a15219473e22ca8a2e8a10b87ceae0c69becbaf0929946"
+    },
+    {
+      "file": ".cairn/changes/implicit-proof-arguments/specs/developer-experience/spec.md",
+      "sha256": "894b61ca29f2dd9f8759204eec39c93e4e7c37de109a040fa5c79f0b3c71f83f"
+    },
+    {
+      "file": ".cairn/changes/implicit-proof-arguments/specs/program-contracts/spec.md",
+      "sha256": "d8d1429fa2c1923f9b881a4325151f68f7c66e63b4dc469f6b6005729c468330"
+    },
+    {
+      "file": ".cairn/changes/implicit-proof-arguments/tasks.md",
+      "sha256": "d71d9d405cd71b89cbaf44852d2c0a7d317e05022dedfa0c4aa9bd4491d1d3df"
+    },
+    {
       "file": ".cairn/changes/intrinsic-noble-proofs/design.md",
       "sha256": "79a9a93e101c3c60ac40fb3da61e43747293c4ae8bbe8e469e59973deaa2ab10"
     },
@@ -1501,6 +1681,30 @@
     {
       "file": ".cairn/changes/intrinsic-noble-proofs/tasks.md",
       "sha256": "dda4524c7277b81c86c3c6bbe086835a80fa4cc6ba059c1e07b79038652545fe"
+    },
+    {
+      "file": ".cairn/changes/live-reference-lifetimes/design.md",
+      "sha256": "8d14310600bc71df02b8716fc5f64a2ee3e26f3abf00903343f957df4c3e8b15"
+    },
+    {
+      "file": ".cairn/changes/live-reference-lifetimes/proposal.md",
+      "sha256": "13d093325ec1bdbb0fc232af32da7a33a5fb41184d4f10d4a86afba8c447114f"
+    },
+    {
+      "file": ".cairn/changes/live-reference-lifetimes/specs/evidence/spec.md",
+      "sha256": "1fe19ed96e4160bf68e2ae629434cffebf486e0700e3e7e7b27418606fbdc757"
+    },
+    {
+      "file": ".cairn/changes/live-reference-lifetimes/specs/language/spec.md",
+      "sha256": "1227edd44b1771548b3001135f434dd2605fb23aea75f02213c7738547185ebe"
+    },
+    {
+      "file": ".cairn/changes/live-reference-lifetimes/specs/safety/spec.md",
+      "sha256": "d969604bf306822baf6cab3ea17e551fda408045e758bce0f88c8a18dafc0610"
+    },
+    {
+      "file": ".cairn/changes/live-reference-lifetimes/tasks.md",
+      "sha256": "e56e2b8a97fb289bb421f2f09586eaa22d5d715355f3fcbf3bb315a3cc90f6b8"
     },
     {
       "file": ".cairn/changes/live-wasm-reload/design.md",
@@ -1541,6 +1745,122 @@
     {
       "file": ".cairn/changes/live-wasm-reload/tasks.md",
       "sha256": "fdde2d45feb8a466b51b47879d58b961e142909a43a4a1629f1ea74d93c1c0b5"
+    },
+    {
+      "file": ".cairn/changes/numeric-graph-v1/design.md",
+      "sha256": "2a20411ca0d835634d50abb8e7673e4673bed53c17ef8a4216146ba863e076c7"
+    },
+    {
+      "file": ".cairn/changes/numeric-graph-v1/proposal.md",
+      "sha256": "7c31ca842d184abe57caac7807b79e00382ac5806de97e6ac8f7387ada62ba30"
+    },
+    {
+      "file": ".cairn/changes/numeric-graph-v1/specs/developer-experience/spec.md",
+      "sha256": "af2efd931ce96ac3701dddac54a7cd560207faafb3c4746864e4db8c8238c9ad"
+    },
+    {
+      "file": ".cairn/changes/numeric-graph-v1/specs/evidence/spec.md",
+      "sha256": "5c324db3f34d596dbd08394110a6deeee3e18b57fe15179c0fa47293a8ef9dfa"
+    },
+    {
+      "file": ".cairn/changes/numeric-graph-v1/specs/language/spec.md",
+      "sha256": "75b51ed28fd8c75f41eab73b30e8844762cdb6327f2d623a9d26b75b169c99de"
+    },
+    {
+      "file": ".cairn/changes/numeric-graph-v1/tasks.md",
+      "sha256": "ca922ddc2f1c31fecc4c76809c1970c10ba2e70466eae6fd00c4ec03a7fc9761"
+    },
+    {
+      "file": ".cairn/changes/ownership-lifetime-contract/design.md",
+      "sha256": "7f889a3cfd1a19ddfd85267bffa4a0266d1303690ce04cf569f706a5509e2efb"
+    },
+    {
+      "file": ".cairn/changes/ownership-lifetime-contract/proposal.md",
+      "sha256": "d662f2a49bbf014d53026dcd44ca8ecb8b0e38b537eca59db1f1c6fe4c9ad227"
+    },
+    {
+      "file": ".cairn/changes/ownership-lifetime-contract/specs/evidence/spec.md",
+      "sha256": "cc7acce263659ce2d6fc65761a22828218a1507aa0aeced78f8eb2de158a7c5f"
+    },
+    {
+      "file": ".cairn/changes/ownership-lifetime-contract/specs/language/spec.md",
+      "sha256": "abc1302516291500437d7dc228c73ed5c1d1a82fdd2934fbb5dc1271de7b0114"
+    },
+    {
+      "file": ".cairn/changes/ownership-lifetime-contract/specs/safety/spec.md",
+      "sha256": "875fa3f28b52b7e216b9acea9e919cb31087d509294d41c2418f48c47d2a8936"
+    },
+    {
+      "file": ".cairn/changes/ownership-lifetime-contract/tasks.md",
+      "sha256": "b5cda9ec07d06664be68e4682bf7456e13d43baad152ca60ffd3ffeeeac971e5"
+    },
+    {
+      "file": ".cairn/changes/proof-automation-diagnostics/design.md",
+      "sha256": "f9f712146af8e429087218e787b585b7a9f6bd464129052509625ea1a0016e4f"
+    },
+    {
+      "file": ".cairn/changes/proof-automation-diagnostics/proposal.md",
+      "sha256": "1c91b050c5524f44777097de740ba8daa3c098bec06feec933bdc1e51da74f83"
+    },
+    {
+      "file": ".cairn/changes/proof-automation-diagnostics/specs/developer-experience/spec.md",
+      "sha256": "d567f5a9b6ea80e1c51bfe865dbccc6e639b0a5f15dcaabc64742969f7c7466c"
+    },
+    {
+      "file": ".cairn/changes/proof-automation-diagnostics/specs/program-contracts/spec.md",
+      "sha256": "2561762c6e1fa84063d53ce4020720b09804f050c3ea73d1384c23f0abc7b36e"
+    },
+    {
+      "file": ".cairn/changes/proof-automation-diagnostics/tasks.md",
+      "sha256": "cb4a4c06f388d4a794f25a25a1781bc459a3cf992e76f1e6c746ada79dc7b832"
+    },
+    {
+      "file": ".cairn/changes/resource-safe-wiring-laws/design.md",
+      "sha256": "f2b09b11b93b4afbbaf9be92158a2e71f4a793f7153d01b040e7901b877e18e5"
+    },
+    {
+      "file": ".cairn/changes/resource-safe-wiring-laws/proposal.md",
+      "sha256": "45951a45be960b20d120ea2522e69a976bfe82410e1144e9b3c9da2d7340aae0"
+    },
+    {
+      "file": ".cairn/changes/resource-safe-wiring-laws/specs/developer-experience/spec.md",
+      "sha256": "b82558279a122163f286c9808ea78b1c3dc535215340b1d1a1eb0e4ebb588292"
+    },
+    {
+      "file": ".cairn/changes/resource-safe-wiring-laws/specs/program-contracts/spec.md",
+      "sha256": "af0e7f6e8ff31990d21ca4001644d488a783b79e36856f88c3295f1eca5620de"
+    },
+    {
+      "file": ".cairn/changes/resource-safe-wiring-laws/specs/verification/spec.md",
+      "sha256": "e29383afdaa08f30a700f5eba12e1b2016f3d97c2a9dc3d2e170e062030d54e7"
+    },
+    {
+      "file": ".cairn/changes/resource-safe-wiring-laws/tasks.md",
+      "sha256": "544cc407efa0ef846406ec7dafdd3ce9399fb2f94793318e3d25cc7fdd57d2dd"
+    },
+    {
+      "file": ".cairn/changes/reusable-contract-calls/design.md",
+      "sha256": "38978ea892d06ba798671717f2199ced724aa3e948b3f25b90035dcc7f6071a4"
+    },
+    {
+      "file": ".cairn/changes/reusable-contract-calls/proposal.md",
+      "sha256": "8c0fae7a838a2de3c686df92fd7cdb2726d810acb4b3cb47eac4570b4508286b"
+    },
+    {
+      "file": ".cairn/changes/reusable-contract-calls/specs/language/spec.md",
+      "sha256": "402ef5b6d14adabe8d26ddbd3dcaa35c7645e10957a336e7fac7322c269423a1"
+    },
+    {
+      "file": ".cairn/changes/reusable-contract-calls/specs/program-contracts/spec.md",
+      "sha256": "483302097754748ec32baafe7d8011cd905686e5cdb3868829cbf175869a1d92"
+    },
+    {
+      "file": ".cairn/changes/reusable-contract-calls/specs/verification/spec.md",
+      "sha256": "6ca206e113659a9c081ebc26ddbae086c0dd45553691a6b43ddcecf9aa3871b3"
+    },
+    {
+      "file": ".cairn/changes/reusable-contract-calls/tasks.md",
+      "sha256": "248d35e22ba9ee40fa5adfde30d6ce273aae9a935b23da0293e6231fb4c34560"
     },
     {
       "file": ".cairn/changes/runtime-program-template-identity/design.md",
@@ -1728,7 +2048,7 @@
     },
     {
       "file": ".cairn/specs/backend-experiments/spec.md",
-      "sha256": "15d8bfe0242014ea85d8f9afd893d131ed04983e3d7bde0e296894ee159ea109"
+      "sha256": "dacd639249346b51331eeb6a47ef947014c61936bc70eff1d82f62e7099e6762"
     },
     {
       "file": ".cairn/specs/c-backend/spec.md",
@@ -1748,11 +2068,11 @@
     },
     {
       "file": ".cairn/specs/evidence/spec.md",
-      "sha256": "7484b598e7c9e861d8d99a52b48cd219c3ac931a486ac996a306b2099ab4ac62"
+      "sha256": "2c94026f293555c845bdea44e0f4d4aa6825766ea8b80df331b35a56111a4a42"
     },
     {
       "file": ".cairn/specs/language/spec.md",
-      "sha256": "423e41155f659712aed97a94336444ffc1e9ac93695655137a409b46718abfa8"
+      "sha256": "330225a0bfc005d6869bd8341bba1d720e5152e4f81103e72c4a504c4d5d21ce"
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
@@ -1764,7 +2084,7 @@
     },
     {
       "file": ".cairn/specs/safety/spec.md",
-      "sha256": "9a4dcad492850c8dca10493016e16ed51044a5dea9c31bc92b16551bcb5a8c4d"
+      "sha256": "2714339cb9e75011117f3f11f3be52229abc7d6a16df53d6d90f939adb75e827"
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
@@ -1772,7 +2092,7 @@
     },
     {
       "file": ".cairn/specs/verification/spec.md",
-      "sha256": "cf65604375177cb056adf0ad78b3ac994c7c7796e715df112b4455d058042368"
+      "sha256": "28fb63ff3b1f05a3af16b4d01cfd2e374907df333637620e8f8d2fac5f897b64"
     },
     {
       "file": ".cairn/specs/wit-wasi/spec.md",
@@ -1803,16 +2123,20 @@
       "sha256": "d171a294ef66da3dbb7507fc5b4ea575927a2cf1b76739a546e090012dddf8ed"
     },
     {
+      "file": "proofs/foundation/README.md",
+      "sha256": "302b117affa06953a8f746df7058d06041771f4c04b0bbb41124c8da6762b08d"
+    },
+    {
       "file": "proofs/m1/README.md",
       "sha256": "71339f530754314e1943b65da3412a3d426b48b19e06e695a7f0608ed135ac74"
     },
     {
       "file": "README.md",
-      "sha256": "0750b4353ebe77c42f93309e0bd084d1bb79bf5d04fdcab0653229e20911d300"
+      "sha256": "62c23f3615f0449210a44cf85d29c4c41223dad2a4c7ed9556c3a4045f2f784f"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
-      "sha256": "b4d47882404a3b835d9ebf18e5befcecb1f7ad77a379be51939c3524ed5138ee"
+      "sha256": "7e9e129aa1454b4c0a77fac115c76e82de98bc7419964816819c90f401e4eb9a"
     },
     {
       "file": "specs/C-BACKEND.md",
@@ -1904,7 +2228,7 @@
     },
     {
       "file": "specs/EVIDENCE.md",
-      "sha256": "3841c8a3fdd90a969d2cdd795af37c91ee353ed8b3c226ac6f2af1c137a0e829"
+      "sha256": "6d8f3bafc0566bb1502440984bdb9f5fb33913d717ddcee7939314a603ededf5"
     },
     {
       "file": "specs/OCTET-ADOPTION.md",
@@ -1920,7 +2244,7 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "62a84774cf58e8a5affda64656cbf813455f6dec754afe8b85789081c24489b6"
+      "sha256": "7c5710705217cfcf9de8a30ae5d83871e3c4f20725af6663e5f4d264b1b7151d"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1940,7 +2264,7 @@
     },
     {
       "file": "specs/SAFETY.md",
-      "sha256": "d82dc5380d6886c857c4487b43cf19fc7baf2cc97a99a3ebd358fddbfdc0f028"
+      "sha256": "3d932666fc25dda09ed6c1fce113f9f11c85d92aceb867a77850f064dcafe275"
     },
     {
       "file": "specs/SOURCES.md",
@@ -1948,7 +2272,7 @@
     },
     {
       "file": "specs/SPEC-0001.md",
-      "sha256": "5244e46f49abf309269bdcc27617bbb660ce353247abbd7989a15f6b5c080d93"
+      "sha256": "bc9bc963b6e3bae855c38f076596919f8dc2b30ba1001515eafc45c78f1897cf"
     },
     {
       "file": "specs/spec-family.json",
@@ -1964,7 +2288,7 @@
     },
     {
       "file": "specs/VERIFICATION.md",
-      "sha256": "b308c1a9bca06a6de65c3201c4bf7b1b19283b1a73409c9753f5c26243feea54"
+      "sha256": "aaed6c60159726f75cc10aeed926722f0b29d5ad3b14d256fe9152cdcd85ff02"
     },
     {
       "file": "specs/verification/obligations.json",
@@ -1991,12 +2315,68 @@
       "sha256": "0898507cc3c84d2036cc4c66145d96df0d848acd8f431e1575f5891c5a3deeda"
     },
     {
+      "file": "verification/calculator-v1/budgets/README.md",
+      "sha256": "a3050a8a3994487da107116a55822f818e1d20b20c0f1c2a56aa167aa4fae5e6"
+    },
+    {
+      "file": "verification/calculator-v1/calc-10-11-design.md",
+      "sha256": "eadd25b68052fb5c879ff19be7622788cff0b59bbdf1ff11028b150fbfa0ebb6"
+    },
+    {
+      "file": "verification/calculator-v1/calc-12-results.md",
+      "sha256": "b552bfd504fcb94dad6bef83a1841678fcd427d250cf2ba738c1ed2c8565f0f4"
+    },
+    {
+      "file": "verification/calculator-v1/calc-13-review.md",
+      "sha256": "cf07fe0dab2282954fe24c942738694f4c853c88e4588a4bfc8fc45bfda4cdfc"
+    },
+    {
+      "file": "verification/calculator-v1/committed-session/README.md",
+      "sha256": "c9a6fd65ebc017adc6d2fa0807879b8f200b466546133b548e1b8d221623a25d"
+    },
+    {
+      "file": "verification/calculator-v1/evidence-controls/README.md",
+      "sha256": "6647aee90004fb6d670379e5fdc7da7b8218cabf500f26ec650934d4bb84b234"
+    },
+    {
+      "file": "verification/calculator-v1/latency/README.md",
+      "sha256": "fa3c4061596eb0fd936fa7f1d614871fa0f242ddbbea819f54b4453143726fbc"
+    },
+    {
+      "file": "verification/calculator-v1/oracle/README.md",
+      "sha256": "6ce3806d878349b29f1190c3ede15dccb3013f5802193eb8f83a0ddb2345198b"
+    },
+    {
+      "file": "verification/calculator-v1/pm-operand-order/README.md",
+      "sha256": "dcfd7874d610e9a67c743f1b7ee4c5c0e1af9b69df7bc7cdbf101fb21f550639"
+    },
+    {
+      "file": "verification/calculator-v1/README.md",
+      "sha256": "3b6514392881d398f37e6c039c0faad7cd153a21bf3c883339d38bc6b39a47fa"
+    },
+    {
+      "file": "verification/calculator-v1/seeded-faults/README.md",
+      "sha256": "de4434634b629cace1aca425fda2c2afd06b585fa9d75998ca953004507bb21d"
+    },
+    {
+      "file": "verification/calculator-v1/wolfram/README.md",
+      "sha256": "71d1814eb0582a869b0ec124faf4dcb279ea1827a0407662e5f2c0c5455d28dc"
+    },
+    {
+      "file": "verification/calculator-v1/wolfram/results.md",
+      "sha256": "87304abbf1d8cce9a3bc8551da831d77a7dc25cfed26195142e25b279614a68b"
+    },
+    {
       "file": "verification/component-review.md",
       "sha256": "d75b5da7c965d7c88b4b0265588990c803fbfdbd3dc2fa671ef5533adff206fe"
     },
     {
       "file": "verification/extraction.md",
       "sha256": "865b5692b8494510cc8b6d4a2e6e7f022694d84c7d2ac681f4d4c4a5dc06544e"
+    },
+    {
+      "file": "verification/foundation/receipts/README.md",
+      "sha256": "0a8d0f3dfcfcb254b9d02817a88e569cae2b111fc8f9ee74a9db3432116436f2"
     },
     {
       "file": "verification/m1-controls.md",
@@ -2063,16 +2443,24 @@
       "sha256": "08063222dee141028b4e4d35260283ac7b4c923b1206c0bb24a404a093101cb8"
     },
     {
+      "file": "verification/main-gates/README.md",
+      "sha256": "a636a38fe907851710f0ee4159a5a1fa070e04822da90aa2cef8841e39c856d4"
+    },
+    {
       "file": "verification/native-assurance.md",
       "sha256": "baef33fcb5083a248694e7ce078b8dbb876f698ef919cf7ead82211f7ef91f27"
     },
     {
+      "file": "verification/ngraph/README.md",
+      "sha256": "f1da19177220819b0db9e484c720c44665cdd6ac926142662a365da6be0aac2e"
+    },
+    {
       "file": "verification/source-inventory.md",
-      "sha256": "16e634d54103f61df72b89dd0484c55fec1dec68f9f5fa76c18d03fc511644fe"
+      "sha256": "d4eae6789c68aef9db6c3ade1bef96aa2fc8982bd8079128a03dedd002694997"
     },
     {
       "file": "verification/tool-selection.md",
-      "sha256": "a06e0dc65440f877fcb8a5601a07d4fd4e8c624b989e7f7e13137faef6fa67a5"
+      "sha256": "0b8c31158718fd6d20204519e8c6e59327c851d6fe04b845f4b830d0891e8d65"
     },
     {
       "file": "verification/wi03/README.md",

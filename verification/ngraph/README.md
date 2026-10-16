@@ -1,6 +1,6 @@
 # Numeric graph profile (#14) Phase B receipts
 
-Phase B of [numeric-graph-profile](../../.cairn/changes/numeric-graph-profile/design.md) (approved on #14 on 2026-10-15; decisions P1–P6 are in the design section "Phase B approval and decisions"). The experiment lives in the isolated crate [noble-ngraph-experiment](../../crates/noble-ngraph-experiment/Cargo.toml). It changes no noble-kernel, noble-contracts, noble-wasm or noble-cli source.
+Phase B of [numeric-graph-profile](../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md) (approved on #14 on 2026-10-15; decisions P1–P6 are in the design section "Phase B approval and decisions"). The experiment lives in the isolated crate [noble-ngraph-experiment](../../crates/noble-ngraph-experiment/Cargo.toml). It changes no noble-kernel, noble-contracts, noble-wasm or noble-cli source.
 
 ## Files
 
