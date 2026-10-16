@@ -2578,3 +2578,305 @@ fn verify_binds_and_replays_provenance() -> TestResult {
     }
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// Identity forgeries and the recorded B5 identities (added at integration).
+// ---------------------------------------------------------------------------
+
+// The D4/D6 identity encoding, written out independently of the CLI:
+// `H(domain ‖ 0x00 ‖ fields)` over BLAKE3, with `bytes(x) = u64le(len) ‖ x`
+// and `str(s) = bytes(utf8 s)`.
+struct Identity {
+    bytes: Vec<u8>,
+}
+
+impl Identity {
+    fn new(domain: &str) -> Self {
+        let mut bytes = domain.as_bytes().to_vec();
+        bytes.push(0);
+        Self { bytes }
+    }
+    fn raw(&mut self, b: &[u8]) -> &mut Self {
+        self.bytes.extend_from_slice(b);
+        self
+    }
+    fn bytes(&mut self, b: &[u8]) -> &mut Self {
+        self.raw(&(b.len() as u64).to_le_bytes()).raw(b)
+    }
+    fn str(&mut self, s: &str) -> &mut Self {
+        self.bytes(s.as_bytes())
+    }
+    fn hex(&self) -> String {
+        blake3::hash(&self.bytes).to_hex().to_string()
+    }
+}
+
+fn unhex(s: &str) -> Vec<u8> {
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap_or(0))
+        .collect()
+}
+
+fn hex_u64(s: &str) -> u64 {
+    u64::from_str_radix(s.trim_start_matches("0x"), 16).unwrap_or(0)
+}
+
+// Rewrites a snapshot file's param records with `edit` and recomputes the
+// layout key, the `ParamSnapshotId` and the provenance digest (D6) so that
+// the forgery is internally consistent.
+fn forge(
+    text: &str,
+    edit: impl FnOnce(&mut Vec<(u32, u32)>),
+) -> Result<String, Box<dyn std::error::Error>> {
+    let lines: Vec<&str> = text.lines().collect();
+    let mut params: Vec<(u32, u32)> = Vec::new();
+    for line in &lines {
+        if let Some(rest) = line.strip_prefix("param ") {
+            let (slot, bits) = rest.split_once(' ').ok_or("param record")?;
+            params.push((
+                slot.parse()?,
+                u32::from_str_radix(bits.trim_start_matches("0x"), 16)?,
+            ));
+        }
+    }
+    edit(&mut params);
+    let record = |key: &str| -> Result<Vec<&str>, Box<dyn std::error::Error>> {
+        let line = lines
+            .iter()
+            .find(|l| l.split(' ').next() == Some(key))
+            .ok_or_else(|| format!("{key} record"))?;
+        Ok(line.split(' ').skip(1).collect())
+    };
+    let graph = record("graph")?[0].to_owned();
+    let mut layout = Identity::new("noble.ngraph.param-layout.v0");
+    layout.raw(&(params.len() as u64).to_le_bytes());
+    for (slot, _) in &params {
+        layout.raw(&slot.to_le_bytes()).str("f32");
+    }
+    let layout = layout.hex();
+    let mut snapshot = Identity::new("noble.ngraph.params.v0");
+    snapshot.bytes(&unhex(&graph));
+    snapshot.raw(&(params.len() as u64).to_le_bytes());
+    for (slot, _) in &params {
+        snapshot.raw(&slot.to_le_bytes());
+    }
+    let param_bytes: Vec<u8> = params.iter().flat_map(|(_, b)| b.to_le_bytes()).collect();
+    snapshot.bytes(&param_bytes);
+    let snapshot = snapshot.hex();
+
+    let mut p = Identity::new("noble.ngraph.provenance.v0");
+    p.bytes(&unhex(&snapshot))
+        .bytes(&unhex(&graph))
+        .bytes(&unhex(&layout));
+    p.raw(&(params.len() as u64).to_le_bytes());
+    for (slot, bits) in &params {
+        p.raw(&slot.to_le_bytes()).raw(&bits.to_le_bytes());
+    }
+    p.bytes(&unhex(record("optimizer-state")?[0]));
+    p.bytes(&unhex(record("parent")?[0]));
+    let subject = record("subject")?;
+    p.str(subject[0]).bytes(&unhex(subject[1]));
+    let closure: Vec<u64> = if subject[3] == "-" {
+        Vec::new()
+    } else {
+        subject[3]
+            .split(',')
+            .map(str::parse)
+            .collect::<Result<_, _>>()?
+    };
+    p.raw(&(closure.len() as u64).to_le_bytes());
+    for d in closure {
+        p.raw(&d.to_le_bytes());
+    }
+    let profile = record("profile")?;
+    p.str(profile[0]).str(profile[1]);
+    p.bytes(&unhex(record("facts")?[0]));
+    p.bytes(&unhex(record("loss")?[0]));
+    p.bytes(&unhex(record("data")?[0]));
+    p.str(record("policy")?[0]);
+    let opt_ins: Vec<Vec<&str>> = lines
+        .iter()
+        .filter_map(|l| l.strip_prefix("opt-in "))
+        .map(|l| l.split(' ').collect())
+        .collect();
+    p.raw(&(opt_ins.len() as u64).to_le_bytes());
+    for o in &opt_ins {
+        p.raw(&o[0].trim_start_matches('%').parse::<u32>()?.to_le_bytes());
+        p.str(o[1]).str(o[2]);
+        if let Some(width) = o.get(3) {
+            p.raw(&u32::from_str_radix(width.trim_start_matches("0x"), 16)?.to_le_bytes());
+        }
+    }
+    p.raw(&hex_u64(record("seed")?[0]).to_le_bytes());
+    p.str(record("prng")?[0]);
+    let optimizer = record("optimizer")?;
+    p.str(optimizer[0]);
+    for k in [2, 4, 6, 8] {
+        p.raw(&hex_u64(optimizer[k]).to_le_bytes());
+    }
+    p.raw(&record("steps")?[0].parse::<u64>()?.to_le_bytes());
+    p.str(&record("tools")?.join(" "));
+    let provenance = p.hex();
+
+    let mut out = String::new();
+    let mut params_written = false;
+    for line in &lines {
+        let key = line.split(' ').next().unwrap_or("");
+        match key {
+            "snapshot" => out.push_str(&format!("snapshot {snapshot}\n")),
+            "layout" => out.push_str(&format!("layout {layout}\n")),
+            "param" if !params_written => {
+                params_written = true;
+                for (slot, bits) in &params {
+                    out.push_str(&format!("param {slot} 0x{bits:08x}\n"));
+                }
+            }
+            "param" => {}
+            "provenance" => out.push_str(&format!("provenance {provenance}\n")),
+            _ => {
+                out.push_str(line);
+                out.push('\n');
+            }
+        }
+    }
+    Ok(out)
+}
+
+#[test]
+fn provenance_consistent_forgeries_are_refused_by_layout_or_replay() -> TestResult {
+    // NGRAPH-CASE-12 (two param lines swapped with recomputed identities:
+    // E-SNAPSHOT-LAYOUT) and NGRAPH-CASE-13 (altered params with recomputed
+    // snapshot and provenance digests: integrity holds and the snapshot
+    // binds, but `verify --replay` is E-SNAPSHOT-REPLAY). The identities are
+    // recomputed from the D6 encoding above, independently of the CLI.
+    let scratch = Scratch::new("forgeries")?;
+    let files = TrainFiles::new(&scratch)?;
+    let sn = scratch.path("s4.snapshot");
+    let rn = expect_normal(&scratch.run(&files.train(4, &sn))?, "train")?;
+    let text = std::fs::read_to_string(&sn)?;
+    assert_eq!(
+        forge(&text, |_| {})?,
+        text,
+        "the independent D6 encoding reproduces every published identity"
+    );
+    let vectors = scratch.write("forgery.vectors", &vector_file("f32", &["v 0.5"]))?;
+
+    let forged = scratch.write("forged.snapshot", &forge(&text, |p| p[0].1 ^= 1)?)?;
+    let bound = expect_normal(
+        &scratch.run(&Ngraph::new("verify").arg(&files.model).arg(&forged))?,
+        "verify",
+    )?;
+    assert_ne!(bound["snapshot"], rn["snapshot"]);
+    assert_eq!(bound["bound"], true);
+    let (header, lines) = eval_lines(
+        &scratch.run(
+            &Ngraph::new("eval")
+                .arg(&files.model)
+                .arg(&vectors)
+                .arg("--snapshot")
+                .arg(&forged),
+        )?,
+    )?;
+    assert_eq!(header["snapshot"], bound["snapshot"]);
+    assert_eq!(lines[0]["outcome"], "normal");
+    let refused = expect_code(
+        &scratch.run(&files.replay(&forged))?,
+        "verify",
+        "E-SNAPSHOT-REPLAY",
+    )?;
+    assert_eq!(refused["outcome"], "reject");
+
+    let swapped = scratch.write("swapped.snapshot", &forge(&text, |p| p.swap(0, 1))?)?;
+    assert!(std::fs::read_to_string(&swapped)?.contains("param 2 "));
+    let refusal = eval_refusal(
+        &scratch.run(
+            &Ngraph::new("eval")
+                .arg(&files.model)
+                .arg(&vectors)
+                .arg("--snapshot")
+                .arg(&swapped),
+        )?,
+        "E-SNAPSHOT-LAYOUT",
+        true,
+    )?;
+    assert_eq!(refusal["outcome"], "reject");
+    expect_code(
+        &scratch.run(&Ngraph::new("verify").arg(&files.model).arg(&swapped))?,
+        "verify",
+        "E-SNAPSHOT-LAYOUT",
+    )?;
+    assert_eq!(std::fs::read_to_string(&sn)?, text);
+    Ok(())
+}
+
+// The recorded Phase B B5 identities (phase-b-core.json and the 66eb7cd
+// identity record).
+const B5_FINAL: &str = "075f58cadc9a3abc91161b4224fd48bf9426af0ed8660851670e0ff0536f7f9d";
+const B5_S0: &str = "a912b177c248ed35d5d7b5943e08e2efec7466623dffc385c6a8ab77f8998046";
+const B5_DATA: &str = "7c40293c13b0089020b0a66ffbccf2d523be6171887ede799f38ee4d728f0692";
+const MSE_GRAPH: &str = "50f67078a67012ca5914d95c1615946a8230bb591be056b6fb10a0c1c9ad69c0";
+
+// The Phase B MSE point loss under its fixture subject (a name with spaces,
+// spelled with the `authored-name` sugar).
+const B5_MSE: &str = "\
+ngraph-ir/0 ngraph-f32/0
+subject authored-name issue14/MSE point loss
+slot input f32
+slot input f32
+%0 = input 0
+%1 = input 1
+%2 = f32.sub %0 %1
+%3 = f32.mul %2 %2
+out %3
+";
+
+#[test]
+fn b5_training_through_the_cli_reproduces_the_recorded_identities() -> TestResult {
+    // NGRAPH-CASE-10: F1, the MSE loss and the 64-point B5 set with seed
+    // 0x14140005 for 500 steps publish the recorded final snapshot from the
+    // recorded S0, bind the recorded data digest, and replay.
+    let scratch = Scratch::new("b5")?;
+    let f1 = scratch.write("f1.ngraph", &f1_text())?;
+    let mse = scratch.write("mse.ngraph", B5_MSE)?;
+    let data = scratch.write("b5.points", include_str!("ngraph/b5.points"))?;
+    let loss = expect_normal(&scratch.run(&Ngraph::new("check").arg(&mse))?, "check")?;
+    assert_eq!(loss["graph"], MSE_GRAPH);
+    let out = scratch.path("b5.snapshot");
+    let command = with_flags(
+        Ngraph::new("train").arg(&f1),
+        &[
+            ("--loss", OsString::from(&mse)),
+            ("--data", OsString::from(&data)),
+            ("--policy", OsString::from(POLICY)),
+            ("--optimizer", OsString::from(OPTIMIZER)),
+            ("--seed", OsString::from("0x14140005")),
+            ("--steps", OsString::from("500")),
+            ("--out", OsString::from(&out)),
+        ],
+    );
+    let line = expect_normal(&scratch.run(&command)?, "train")?;
+    assert_eq!(line["snapshot"], B5_FINAL);
+    assert_eq!(line["parent"], B5_S0);
+    assert_eq!(line["graph"], F1_GRAPH);
+    let snapshot = Snapshot::read(&out)?;
+    assert_eq!(snapshot.one("data"), B5_DATA);
+    assert_eq!(snapshot.one("loss"), MSE_GRAPH);
+    assert_eq!(snapshot.all("param").len(), 22);
+    let replay = expect_normal(
+        &scratch.run(
+            &Ngraph::new("verify")
+                .arg(&f1)
+                .arg(&out)
+                .arg("--replay")
+                .arg("--loss")
+                .arg(&mse)
+                .arg("--data")
+                .arg(&data),
+        )?,
+        "verify",
+    )?;
+    assert_eq!(replay["replayed"], true);
+    assert_eq!(replay["snapshot"], B5_FINAL);
+    Ok(())
+}
