@@ -36,6 +36,7 @@
 //! [`Diagnostic`]: crate::diag::Diagnostic
 
 mod admission;
+pub mod controls;
 pub mod source;
 mod symbolic;
 

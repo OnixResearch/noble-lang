@@ -9,6 +9,7 @@
 //! compiler, the checker (NG-PO-B), the evaluators (NG-PO-C) or the binary32
 //! model (NG-PO-D) correct. NG-PO-A..H stay open.
 
+pub mod b2i64;
 pub mod check;
 pub mod compiled;
 pub mod diag;

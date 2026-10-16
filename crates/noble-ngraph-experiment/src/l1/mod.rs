@@ -292,6 +292,52 @@ fn push_line(drops: usize, values: &[Value]) -> String {
     format!("{}{}", "drop ".repeat(drops), literals(values))
 }
 
+/// Runs `noble live slot --engine v8 --authority AUTHORITY` over JSONL
+/// `requests` and returns every report line. The CLI refuses file-backed
+/// stdin, so (as its own tests do) `cat` holds the only writer of an
+/// anonymous pipe.
+///
+/// # Errors
+/// Spawn/IO failure or an unparsable report line.
+pub fn live_slot(
+    bin: &std::path::Path,
+    authority: &std::path::Path,
+    requests: &[String],
+) -> Result<Vec<serde_json::Value>, Error> {
+    let mut child = Command::new("/bin/sh")
+        .args([
+            "-c",
+            "cat | exec \"$1\" live slot --engine v8 --authority \"$2\"",
+            "sh",
+        ])
+        .arg(bin)
+        .arg(authority)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()?;
+    let mut input = String::new();
+    for r in requests {
+        input.push_str(r);
+        input.push('\n');
+    }
+    let mut stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| Error::Protocol("no stdin".into()))?;
+    let writer = std::thread::spawn(move || {
+        let _ = stdin.write_all(input.as_bytes());
+    });
+    let out = child.wait_with_output()?;
+    writer
+        .join()
+        .map_err(|_| Error::Protocol("stdin writer panicked".into()))?;
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .map(|l| serde_json::from_str(l).map_err(|e| Error::Protocol(format!("{e}: {l}"))))
+        .collect()
+}
+
 /// Parses one report line.
 ///
 /// # Errors
