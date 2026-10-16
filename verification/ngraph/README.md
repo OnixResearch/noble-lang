@@ -1,6 +1,8 @@
 # Numeric graph profile (#14) Phase B receipts
 
-Phase B of [numeric-graph-profile](../../.cairn/changes/numeric-graph-profile/design.md) (approved on #14 on 2026-10-15; decisions P1–P6 are in the design section "Phase B approval and decisions"). The experiment lives in the isolated crate [noble-ngraph-experiment](../../crates/noble-ngraph-experiment/Cargo.toml). It changes no noble-kernel, noble-contracts, noble-wasm or noble-cli source.
+Phase B of [numeric-graph-profile](../../.cairn/archive/2026-10-16-numeric-graph-profile/design.md) (approved on #14 on 2026-10-15; decisions P1–P6 are in the design section "Phase B approval and decisions"). The experiment lives in the isolated crate [noble-ngraph-experiment](../../crates/noble-ngraph-experiment/Cargo.toml). It changes no noble-kernel, noble-contracts, noble-wasm or noble-cli source.
+
+Since the `numeric-graph-v1` change, the graph library is the `no_std` crate [noble-ngraph](../../crates/noble-ngraph/Cargo.toml) and `noble-ngraph-experiment` is its evidence harness (bins, L1, oracles, workloads, fixtures), with the BLAKE3 identity scheme injected. The receipts below were produced before that split, at the source revisions they record. After the split, `tests/identity_agreement.rs` reproduces every identity of the pre-split record `crates/noble-ngraph-experiment/tests/fixtures/identities-66eb7cd.txt` (including B5), and `ngraph-phase-b --out <tmp>` at `bc34ed0` reported `result: passed` (8/8 records) with the B5 identities below; that run is a check of the cutover, not a new receipt.
 
 ## Files
 
@@ -8,7 +10,7 @@ Phase B of [numeric-graph-profile](../../.cairn/changes/numeric-graph-profile/de
 |---|---|
 | [phase-b-core.json](phase-b-core.json) | Core receipt (schema `noble-ngraph-phase-b-core-evidence/v1`): BE-CONFIG-01 run fields and one EV-STATE-01 record per item, each with `implementation`, `execution`, `proof`, `trust`, open obligations, trusted boundaries and its result. |
 | [phase-b-extract.json](phase-b-extract.json) | `I64` extraction-leg receipt (schema `noble-ngraph-phase-b-extract-evidence/v1`): BE-CONFIG-01 run fields (including the pinned CLI and Node with their SHA-256) and the EV-STATE-01 records `B1-I64-lowering`, `B2-I64-differential` and `B3-I64-source-controls`. |
-| [test-log.txt](test-log.txt) | `cargo test -p noble-ngraph-experiment` output (default suite, debug) at the receipt's source revision. |
+| [test-log.txt](test-log.txt) | `cargo test -p noble-ngraph-experiment` output (default suite, debug) at the receipt's source revision. Historical: it predates the `numeric-graph-v1` split. |
 
 The `I64` extraction leg covers `I1`–`I4` extracted from Core source by D7, L1 (the ordinary Noble Wasm/V8 path through the real CLI), the L2 BigInt oracle and the source-level B3 controls. The core receipt covers the `F32` legs and the authored-IR controls.
 
@@ -17,7 +19,7 @@ The `I64` extraction leg covers `I1`–`I4` extracted from Core source by D7, L1
 From the repository root, inside the pinned devShell (`rust-toolchain.toml`, nightly-2026-03-21):
 
 ```text
-cargo test -p noble-ngraph-experiment
+cargo test -p noble-ngraph -p noble-ngraph-experiment
 cargo run --release -p noble-ngraph-experiment --bin ngraph-phase-b -- \
   --out verification/ngraph/phase-b-core.json \
   --source-rev "$(git rev-parse HEAD)" --toolchain "$(rustc -V)"

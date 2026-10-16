@@ -3,12 +3,13 @@ name = "noble-ngraph-experiment"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
-description = "Issue #14 Phase B/C: isolated NumericGraph-Design (ngraph-ir/0) experiment. Not part of the ordinary compiler path."
+description = "Issue #14 Phase B/C evidence harness for NumericGraph-Design (bins, L1 harness, oracles, workloads, benches). The graph library is noble-ngraph."
 
 [dependencies]
 blake3 = { version = "=1.8.7", default-features = false, features = ["std", "pure"] }
 noble-kernel = { path = "../noble-kernel" }
 noble-contracts = { path = "../noble-contracts" }
+noble-ngraph = { path = "../noble-ngraph" }
 serde_json = "=1.0.151"
 rustc_apfloat = "=0.2.3"
 

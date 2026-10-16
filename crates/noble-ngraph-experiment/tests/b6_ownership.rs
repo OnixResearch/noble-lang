@@ -6,22 +6,24 @@
 //! Instrumentation is the crate's scratch-lease counters (a counting global
 //! allocator would need `unsafe`, which the workspace forbids).
 
-use std::sync::Arc;
+use noble_ngraph_experiment::scheme::BLAKE3;
+use std::rc::Rc;
 
-use noble_ngraph_experiment::compiled::Compiled;
-use noble_ngraph_experiment::eval::{f32_inputs, reference, Control, ScratchCounters};
+use noble_ngraph::compiled::Compiled;
+use noble_ngraph::eval::{f32_inputs, reference, Control, ScratchCounters};
+use noble_ngraph::snapshot::ParamSnapshot;
+use noble_ngraph::train::{self, TrainControl};
+use noble_ngraph::{check, BudgetKind, CheckedGraph, Code, Obs};
 use noble_ngraph_experiment::fixtures::{self, F1_FIXED};
-use noble_ngraph_experiment::snapshot::ParamSnapshot;
 use noble_ngraph_experiment::suites::{b5_contract, B5_DATA_SEED, B5_SEED};
-use noble_ngraph_experiment::train::{self, TrainControl};
-use noble_ngraph_experiment::{check, BudgetKind, CheckedGraph, Code, Obs};
 
 fn f1() -> CheckedGraph {
-    check(fixtures::f1()).expect("F1")
+    check(&BLAKE3, fixtures::f1()).expect("F1")
 }
 
 fn recomputed_id(s: &ParamSnapshot) -> [u8; 32] {
     ParamSnapshot::from_parts(
+        &BLAKE3,
         s.graph(),
         s.layout(),
         s.slots().to_vec(),
@@ -34,7 +36,7 @@ fn recomputed_id(s: &ParamSnapshot) -> [u8; 32] {
 fn retained_snapshot_is_used_after_the_invocation_exits() {
     fn invocation() -> (CheckedGraph, ParamSnapshot) {
         let c = b5_contract(B5_SEED, B5_DATA_SEED);
-        let t = train::train(&c, None, 3, &TrainControl::default()).expect("trains");
+        let t = train::train(&BLAKE3, &c, None, 3, &TrainControl::default()).expect("trains");
         (c.model.clone(), t.snapshot)
     }
     let (g, s) = invocation();
@@ -53,9 +55,9 @@ fn retained_snapshot_is_used_after_the_invocation_exits() {
 fn duplicate_owners_release_in_both_orders() {
     let g = f1();
     for order in [[0usize, 1], [1, 0]] {
-        let s = ParamSnapshot::new(&g, &F1_FIXED).expect("snapshot");
+        let s = ParamSnapshot::new(&BLAKE3, &g, &F1_FIXED).expect("snapshot");
         let id = s.id();
-        let weak = Arc::downgrade(&s.bytes_arc());
+        let weak = Rc::downgrade(&s.bytes_rc());
         let mut owners = [Some(s.clone()), Some(s)];
         owners[order[0]] = None;
         let survivor = owners[order[1]].as_ref().expect("survivor");
@@ -80,8 +82,8 @@ fn duplicate_owners_release_in_both_orders() {
     // Graph owners: a checked graph and a compiled evaluator share the graph.
     for first_checked in [true, false] {
         let c = f1();
-        let weak = Arc::downgrade(&c.graph_arc());
-        let comp = Compiled::new(&c);
+        let weak = Rc::downgrade(&c.graph_rc());
+        let comp = Compiled::new(&BLAKE3, &c);
         if first_checked {
             drop(c);
             assert!(weak.upgrade().is_some());
@@ -98,9 +100,9 @@ fn duplicate_owners_release_in_both_orders() {
 #[test]
 fn scratch_is_released_exactly_once_on_every_exit() {
     let g = f1();
-    let s = ParamSnapshot::new(&g, &F1_FIXED).expect("snapshot");
+    let s = ParamSnapshot::new(&BLAKE3, &g, &F1_FIXED).expect("snapshot");
     let (gid, sid) = (g.id(), s.id());
-    let comp = Compiled::new(&g);
+    let comp = Compiled::new(&BLAKE3, &g);
     let x = f32_inputs(&[0.5, 1.5]);
     let layers = g.layer_count();
     assert!(layers > 3);
@@ -145,15 +147,15 @@ fn scratch_is_released_exactly_once_on_every_exit() {
         assert_eq!(counters.snapshot(), (1, 1, 0));
     }
     // Guard failure and preflight refusal (no scratch acquired at all).
-    let guarded = check(
-        noble_ngraph_experiment::text::parse(
-            "ngraph-ir/0 ngraph-f32/0\nslot input f32\n%0 = input 0\n%1 = f32.add %0 %0\n%2 = guard %1 bit\n%3 = f32.select %1 %0 %1\nout %3\n",
-            "b6 guard",
+    let guarded = check(&BLAKE3,
+        noble_ngraph::format::graph::parse(
+            &BLAKE3,
+            "ngraph-ir/0 ngraph-f32/0\nsubject authored-name b6 guard\nslot input f32\n%0 = input 0\n%1 = f32.add %0 %0\n%2 = guard %1 bit\n%3 = f32.select %1 %0 %1\nout %3\n",
         )
         .expect("parses"),
     )
     .expect("checks");
-    let gc = Compiled::new(&guarded);
+    let gc = Compiled::new(&BLAKE3, &guarded);
     for use_compiled in [false, true] {
         let counters = ScratchCounters::default();
         let control = Control {
@@ -188,8 +190,8 @@ fn scratch_is_released_exactly_once_on_every_exit() {
 #[test]
 fn reused_workspace_returns_fresh_results() {
     let g = f1();
-    let s = ParamSnapshot::new(&g, &F1_FIXED).expect("snapshot");
-    let comp = Compiled::new(&g);
+    let s = ParamSnapshot::new(&BLAKE3, &g, &F1_FIXED).expect("snapshot");
+    let comp = Compiled::new(&BLAKE3, &g);
     let mut w = comp.workspace();
     let a = comp.evaluate_in(
         &mut w,
@@ -214,17 +216,19 @@ fn reused_workspace_returns_fresh_results() {
 #[test]
 fn cancelled_or_failed_training_publishes_no_partial_snapshot() {
     let c = b5_contract(B5_SEED, B5_DATA_SEED);
-    let full = train::train(&c, None, 4, &TrainControl::default()).expect("trains");
-    let three = train::train(&c, None, 3, &TrainControl::default()).expect("trains");
+    let full = train::train(&BLAKE3, &c, None, 4, &TrainControl::default()).expect("trains");
+    let three = train::train(&BLAKE3, &c, None, 3, &TrainControl::default()).expect("trains");
     let counters = ScratchCounters::default();
     let cancel = |t: u64| t == 4;
     let e = train::train(
+        &BLAKE3,
         &c,
         None,
         10,
         &TrainControl {
             cancel_before_step: Some(&cancel),
             scratch: Some(&counters),
+            ..TrainControl::default()
         },
     )
     .unwrap_err();

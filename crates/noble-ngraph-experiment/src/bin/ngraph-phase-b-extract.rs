@@ -13,19 +13,20 @@
 //!
 //! `--out` must not exist. Exit status 1 if any record failed.
 
+use noble_ngraph_experiment::scheme::BLAKE3;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::Instant;
 
 use serde_json::{json, Value as J};
 
+use noble_ngraph::compiled::COMPILER_REVISION;
+use noble_ngraph::extract::Budget;
+use noble_ngraph::ir::{hex, Op, IR_VERSION, SEMANTIC_REVISION};
+use noble_ngraph::prng::PRNG;
+use noble_ngraph::sem::Value;
 use noble_ngraph_experiment::b2i64::{self, Config, Lowered};
 use noble_ngraph_experiment::bench::{cpu_model, read, sha256};
-use noble_ngraph_experiment::compiled::COMPILER_REVISION;
-use noble_ngraph_experiment::extract::Budget;
-use noble_ngraph_experiment::ir::{hex, Op, IR_VERSION, SEMANTIC_REVISION};
-use noble_ngraph_experiment::prng::PRNG;
-use noble_ngraph_experiment::sem::Value;
 
 const TRUSTED: [&str; 7] = [
     "noble_kernel::acceptance::check as the independent subject checker (PO-09/10/11 accepted for bootstrap fragment v1 only)",
@@ -153,7 +154,7 @@ fn b1(cfg: &J) -> Result<(J, bool), String> {
                     "definitions": x.definitions,
                     "root": x.root,
                     "input_types": vec!["I64"; x.inputs],
-                    "graph_logical_id": hex(&g.logical_id()),
+                    "graph_logical_id": hex(&g.logical_id(&BLAKE3)),
                     "subject_closure": g.subject.closure,
                     "live_nodes": g.nodes.len(),
                     "expanded_nodes": x.extraction.stats.expanded_nodes,
@@ -195,7 +196,7 @@ fn b1(cfg: &J) -> Result<(J, bool), String> {
     // I4: 1,000 host steps of (s, i, k) → (s·k+i, s·k+i) on L3 and L4.
     let mut s = 1i64;
     let mut i4_ok = true;
-    let mut rng = noble_ngraph_experiment::prng::SplitMix64::new(0x1404_b104);
+    let mut rng = noble_ngraph::prng::SplitMix64::new(0x1404_b104);
     for _ in 0..1000 {
         let (i, k) = (
             b2i64::random::value(&mut rng),
@@ -337,7 +338,7 @@ fn run() -> Result<bool, String> {
     let doc = json!({
         "schema": "noble-ngraph-phase-b-extract-evidence/v1",
         "issue": "OnixResearch/noble-lang#14",
-        "change": ".cairn/changes/numeric-graph-profile",
+        "change": ".cairn/archive/2026-10-16-numeric-graph-profile",
         "scope": "Phase B I64 extraction leg: D7 admission/extraction from Core source (B0(b): I64 only), B1 I1-I4, B2 L1/L2/L3/L4 for I64, B3 source-level controls",
         "non_claims": [
             "Finite differential agreement does not prove extraction (NG-PO-A), the checker (NG-PO-B) or the evaluators (NG-PO-C).",

@@ -12,24 +12,23 @@
 //! N ≥ 1,000 samples times a calibrated batch of evaluations (≥ 20 µs) and
 //! divides by the batch size.
 
+use noble_ngraph_experiment::scheme::BLAKE3;
 use std::hint::black_box;
 use std::time::{Duration, Instant};
 
+use noble_ngraph::check::retained_bytes;
+use noble_ngraph::compiled::{Compiled, COMPILER_REVISION};
+use noble_ngraph::eval::{f32_inputs, i64_inputs, reference, reference_scratch_bytes, Control};
+use noble_ngraph::ir::{hex, FACT_RULE_REVISION, IR_VERSION, SEMANTIC_REVISION};
+use noble_ngraph::prng::{SplitMix64, PRNG};
+use noble_ngraph::snapshot::ParamSnapshot;
+use noble_ngraph::train::{self, init_params, Adam, Point, TrainControl};
+use noble_ngraph::{check, CheckedGraph, Graph, Obs, Value};
 use noble_ngraph_experiment::bench::{cpu_model, ns, read, stats, warm};
-use noble_ngraph_experiment::check::retained_bytes;
-use noble_ngraph_experiment::compiled::{Compiled, COMPILER_REVISION};
-use noble_ngraph_experiment::eval::{
-    f32_inputs, i64_inputs, reference, reference_scratch_bytes, Control,
-};
-use noble_ngraph_experiment::ir::{hex, FACT_RULE_REVISION, IR_VERSION, SEMANTIC_REVISION};
 use noble_ngraph_experiment::json::Json;
 use noble_ngraph_experiment::oracle::APFLOAT_ORACLE;
-use noble_ngraph_experiment::prng::{SplitMix64, PRNG};
 use noble_ngraph_experiment::random::random_f32;
-use noble_ngraph_experiment::snapshot::ParamSnapshot;
-use noble_ngraph_experiment::train::{self, init_params, Adam, Point, TrainControl};
 use noble_ngraph_experiment::workloads::{self, NativeTrainer, ReGluNet, W3_SIZES, W4_TABLE};
-use noble_ngraph_experiment::{check, CheckedGraph, Graph, Obs, Value};
 
 struct Args {
     out: Option<String>,
@@ -89,9 +88,9 @@ fn cold(reps: usize, g: &Graph, first: impl Fn(&CheckedGraph, &Compiled) -> Obs)
     for _ in 0..reps {
         let gg = g.clone();
         let t0 = Instant::now();
-        let c = check(gg).expect("admitted");
+        let c = check(&BLAKE3, gg).expect("admitted");
         let t1 = Instant::now();
-        let comp = Compiled::new(&c);
+        let comp = Compiled::new(&BLAKE3, &c);
         let t2 = Instant::now();
         black_box(first(&c, &comp));
         let t3 = Instant::now();
@@ -152,10 +151,10 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
     let t = Instant::now();
     let g = net.graph(name);
     let authoring_ns = ns(t.elapsed());
-    let c = check(g.clone()).expect("admitted");
-    let comp = Compiled::new(&c);
+    let c = check(&BLAKE3, g.clone()).expect("admitted");
+    let comp = Compiled::new(&BLAKE3, &c);
     let p = init_params(0x00c3_0003, net.params());
-    let s = ParamSnapshot::new(&c, &p).expect("snapshot");
+    let s = ParamSnapshot::new(&BLAKE3, &c, &p).expect("snapshot");
     let mut rng = SplitMix64::new(0x00c1_0003);
     #[allow(clippy::cast_possible_truncation)]
     let x: Vec<f32> = (0..net.inputs())
@@ -180,7 +179,7 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
         agree &= l3.obs_eq(&native) && l4.obs_eq(&native);
     }
     let (cold, cold_adm_ns) = cold(a.cold_reps, &g, |c, comp| {
-        let s = ParamSnapshot::new(c, &p).expect("snapshot");
+        let s = ParamSnapshot::new(&BLAKE3, c, &p).expect("snapshot");
         comp.evaluate(&xi, Some(&s), &Control::default()).obs
     });
     let mut ws = comp.workspace();
@@ -207,7 +206,7 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
         black_box(&out);
     });
     // Training step cost: 15 points per step.
-    let loss = check(workloads::sse_loss(net.batch)).expect("loss");
+    let loss = check(&BLAKE3, workloads::sse_loss(net.batch)).expect("loss");
     let points: Vec<(Vec<f32>, Vec<f32>)> = (0..15 / net.batch)
         .map(|_| {
             #[allow(clippy::cast_possible_truncation)]
@@ -225,7 +224,7 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
         model: c.clone(),
         loss,
         params: c.graph().param_slots(),
-        deriv: noble_ngraph_experiment::grad::DerivOptions::default(),
+        deriv: noble_ngraph::grad::DerivOptions::default(),
         adam: Adam::default(),
         seed: 0x00c3_0003,
         data: points
@@ -241,7 +240,8 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
     let mut loss_ratio = 0.0;
     for _ in 0..5 {
         let t = Instant::now();
-        let r = train::train(&contract, None, steps, &TrainControl::default()).expect("trains");
+        let r = train::train(&BLAKE3, &contract, None, steps, &TrainControl::default())
+            .expect("trains");
         #[allow(clippy::cast_precision_loss)]
         ours.push(ns(t.elapsed()) / steps as f64);
         loss_ratio = r.losses[r.losses.len() - 1] / r.losses[0];
@@ -295,8 +295,8 @@ fn w4(a: &Args) -> (Json, f64) {
     let t = Instant::now();
     let g = workloads::w4_graph();
     let authoring_ns = ns(t.elapsed());
-    let c = check(g.clone()).expect("admitted");
-    let comp = Compiled::new(&c);
+    let c = check(&BLAKE3, g.clone()).expect("admitted");
+    let comp = Compiled::new(&BLAKE3, &c);
     let table: Vec<f32> = (0..W4_TABLE).map(workloads::w4_entry).collect();
     let mut rng = SplitMix64::new(0x00c1_0004);
     #[allow(clippy::cast_precision_loss)]
@@ -371,8 +371,8 @@ fn w4(a: &Args) -> (Json, f64) {
 #[allow(clippy::too_many_lines)]
 fn w12(a: &Args) -> Json {
     let g1 = workloads::w1_graph();
-    let c1 = check(g1.clone()).expect("W1");
-    let comp1 = Compiled::new(&c1);
+    let c1 = check(&BLAKE3, g1.clone()).expect("W1");
+    let comp1 = Compiled::new(&BLAKE3, &c1);
     let x1 = i64_inputs(&[5, 4]);
     let ctl = Control::default();
     let mut ws1 = comp1.workspace();
@@ -401,12 +401,12 @@ fn w12(a: &Args) -> Json {
         ("training_step", Json::s("not applicable (E-DERIV-I64)")),
     ]);
     let g2 = workloads::w2_graph();
-    let c2 = check(g2.clone()).expect("W2");
-    let comp2 = Compiled::new(&c2);
+    let c2 = check(&BLAKE3, g2.clone()).expect("W2");
+    let comp2 = Compiled::new(&BLAKE3, &c2);
     let (s0, i, k) = (11i64, 3i64, -7i64);
     let steps = 100_000u64;
     let mut ws2 = comp2.workspace();
-    let run_l = |l4: bool, ws: &mut noble_ngraph_experiment::compiled::Workspace| {
+    let run_l = |l4: bool, ws: &mut noble_ngraph::compiled::Workspace| {
         let mut s = s0;
         for _ in 0..steps {
             let r = if l4 {

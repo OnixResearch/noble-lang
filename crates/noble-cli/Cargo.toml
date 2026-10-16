@@ -13,6 +13,7 @@ path = "src/main.rs"
 noble-kernel = { path = "../noble-kernel" }
 noble-contracts = { path = "../noble-contracts" }
 noble-wasm = { path = "../noble-wasm" }
+noble-ngraph = { path = "../noble-ngraph" }
 anyhow = "=1.0.100"
 libc = "=0.2.189"
 serde_json = "=1.0.151"

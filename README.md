@@ -278,6 +278,359 @@ now name concrete nominal schemas of the same module or an exact exported
 acceptance evidence; see the
 [calculator-v1 change](.cairn/changes/calculator-v1/proposal.md).
 
+### Experimental numeric graphs (opt-in; no performance claim)
+
+`noble ngraph` selects the opt-in **Numeric-Graph-v1** profile: fixed, typed
+numeric graphs in the text format `ngraph-ir/0`, admitted by an independent
+graph checker and evaluated on the CPU. Only `noble ngraph` and the
+`noble-ngraph` library select it. `run`, `session`, `compile`, `live`,
+`calculator`, `build`, `component` and `verify` are unchanged, and the profile
+adds no kernel type, word, source syntax or runtime asset. A graph belongs to
+one of two disjoint sub-profiles, with no shared value and no implicit
+conversion: exact `ngraph-i64/0` (wrapping `I64`, as in K-NUM-01) and
+experimental `ngraph-f32/0` (IEEE binary32, round to nearest even, no FMA, no
+flush to zero). `F32` graphs are authored directly in `ngraph-ir/0` and
+admitted only by the graph checker (decision B0(b)); there is no kernel `F32`.
+Extraction from Core source produces `ngraph-i64/0` graphs only. Facts with
+`evidence` provenance are refused (`E-FACT-UNCHECKED`) until issue #8 supplies
+witness binding. The subcommands run no Node, Wasm, `wasm-opt` or other
+process, so they need none of the pinned runtime tools. The contract is the
+[numeric-graph-v1 design](.cairn/changes/numeric-graph-v1/design.md), which
+builds on the archived
+[numeric-graph-profile design](.cairn/archive/2026-10-16-numeric-graph-profile/design.md).
+
+Each subcommand prints JSON report lines with the schema
+`noble-ngraph-report/v1`:
+
+| Command | Arguments and main options | Report |
+|---|---|---|
+| `noble ngraph check GRAPH` | Checker budgets. | One line: `graph` (the `GraphLogicalId`), `profile`, `subject`, `closure`, `inputs` and `outputs` (types), `params` (count), `live_nodes`, `layers`, `facts`, `param_layout`. |
+| `noble ngraph extract SOURCE --inputs T[,T…] --out GRAPH` | `SOURCE` holds newline-separated submissions as in `noble session`, definitions first and the root last (`--framed` selects session framing). Every submission before the root must be a definition. `--inputs` lists the root's input types (`i64` or `bool`), bottom of the stack first. `--profile ngraph-i64/0` is the only accepted profile. Extraction and checker budgets. | One line: the `check` fields plus `work_units`, `expanded_nodes`, `pruned_nodes`, `inline_depth`. |
+| `noble ngraph eval GRAPH VECTORS` | `--reference` (the compiled evaluator is the default), `--snapshot FILE`, `--snapshot-id HEX`, `--fuel N`, checker budgets, `--budget-forward-scratch N`. | A header line (`graph`, `snapshot` or null), then one line per vector: `vector`, `outcome`, and `outputs` or `code` and `site`. |
+| `noble ngraph train MODEL --loss LOSS --data DATA --policy ngraph-deriv-real/0 --optimizer adam/0 --seed U64 --steps N --out SNAPSHOT` | `--from PARENT`, repeated `--opt-in`, `--adam-lr`, `--adam-beta1`, `--adam-beta2`, `--adam-eps`, checker budgets, `--budget-backward-scratch`, `--budget-snapshot-bytes`, `--budget-steps`. | One line: `snapshot`, `graph`, `parent`, `steps`, `loss_initial`, `loss_final` (binary64 bits). |
+| `noble ngraph verify GRAPH SNAPSHOT` | `--snapshot-id HEX`; `--replay --loss LOSS --data DATA [--from PARENT]`. | One line: `snapshot`, `graph`, `bound: true`, `replayed: true` or `false`. |
+
+Report values are typed strings. An `F32` value is its exact binary32 encoding,
+`"f32:0x%08x"`, except that every NaN encoding renders as the single class
+`"f32:nan"`; `I64` and `Bool` values render as `"i64:<decimal>"` and
+`"bool:true"` or `"bool:false"`. An unknown, duplicated, missing or
+inapplicable flag is a usage error. Run `noble --help` for the complete usage.
+For example, to extract `x·x + y·y` from Core source and evaluate it:
+
+```sh
+printf '%s\n' 'def sq [ dup * ]' 'sq swap sq +' > squares.noble
+./result/bin/noble ngraph extract squares.noble --inputs i64,i64 \
+  --out squares.ngraph
+./result/bin/noble ngraph check squares.ngraph
+printf '%s\n' noble-ngraph-vectors/0 'types i64 i64' 'v 3 4' > squares.vectors
+./result/bin/noble ngraph eval squares.ngraph squares.vectors
+```
+
+`extract` publishes `squares.ngraph` and prints (all three commands exit 0):
+
+```text
+{"schema":"noble-ngraph-report/v1","command":"extract","stage":"extraction","outcome":"normal","code":null,"site":null,"graph":"179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304","profile":"ngraph-i64/0","subject":"extracted 4a6f0f48eef6c936b33e1c5cbf1f12d2dd21dbcc230d9f01abac87168a79c357 closure 1","closure":[1],"inputs":["i64","i64"],"params":0,"outputs":["i64"],"live_nodes":5,"layers":3,"facts":0,"param_layout":"8cfa89c77cf14c664ffde4385e05ffe779538cacd3583d91e36c57a702330a3c","work_units":8,"expanded_nodes":5,"pruned_nodes":0,"inline_depth":1}
+```
+
+`check` prints the same fields without the four extraction counters, and
+`eval` prints a header and one line per vector:
+
+```text
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"graph":"179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304","snapshot":null}
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"vector":0,"outputs":["i64:25"]}
+```
+
+The written graph file is:
+
+```text
+ngraph-ir/0 ngraph-i64/0
+subject extracted 4a6f0f48eef6c936b33e1c5cbf1f12d2dd21dbcc230d9f01abac87168a79c357 closure 1
+slot input i64
+slot input i64
+%0 = input 0
+%1 = input 1
+%2 = i64.mul %1 %1
+%3 = i64.mul %0 %0
+%4 = i64.add %2 %3
+out %4
+```
+
+**Graph files.** A graph file is UTF-8 text. This `ngraph-f32/0` model
+computes `y = rn(rn(w·x) + b)`, with `w` and `b` in `param` slots and the input
+`x` validated to `[-1, 1]`:
+
+```text
+ngraph-ir/0 ngraph-f32/0
+subject authored-name cli-train-model
+slot input f32
+slot param f32
+slot param f32
+%0 = input 0
+%1 = param 1
+%2 = param 2
+%3 = f32.mul %1 %0
+%4 = f32.add %3 %2
+fact %0 range 0xbf800000 0x3f800000 input-validated
+out %4
+```
+
+The first non-comment line names the schema and the sub-profile. `#` starts a
+comment, and blank lines, comments and runs of spaces carry no meaning. The
+line `subject <authored|extracted|captured> <64 hex> closure <ids|->` is
+required; `subject authored-name NAME` is authoring sugar for the authored
+subject named by the rest of the line (its tokens joined by single spaces),
+and printed graphs always use the hex form. Optional
+`shape input` and `shape output` lines record stack shapes as trees `s`, `u`
+and `(p A B)`. Then come the slots (`input`, or `param` in `ngraph-f32/0`),
+the nodes `%k = OP …` in order, the `fact` records and the `out` records. The
+operations are `input`, `param`, `const`, `i64.add`, `i64.sub`, `i64.mul`,
+`i64.eq`, `f32.add`, `f32.sub`, `f32.mul`, `f32.affine` (a bias, then
+coefficient and operand terms folded in stored order), `f32.relu`,
+`f32.reglu`, `f32.step`, `f32.select`, `f32.index` (with a `refuse`, `clamp` or
+`zero` rule for each side out of range) and `guard`. An `F32` literal is a
+`0x` bit pattern or an exactly representable decimal: `0.1` is
+`E-LITERAL-INEXACT`. Each fact has one provenance: `input-validated` (checked
+on the actual input or param before evaluation), `derived RULE` (re-derived by
+the checker), `guard %k`, `asserted` (always refused) or `evidence HEX`
+(refused, see above). The `GraphLogicalId` covers the sub-profile with its
+semantic and fact-rule revisions, the nodes in order, the slots, both shapes,
+the outputs, and the subject kind, identity and closure. Comments, whitespace,
+file names and paths never contribute, and neither do fact records, which
+snapshots bind separately. An extracted graph's subject identity is a digest
+of the kernel's rendering of the accepted subject, so it is stable only within
+one kernel revision.
+
+**Vector and data files.** A vector file (for `eval`) and a training-data file
+(for `train`) declare the graph's `input` slot types on a `types` line; a data
+file adds `;` and the loss graph's target types. Parameters never come from
+these files, only from snapshots. An `f32` value is `0x` plus one to eight hex
+digits (any encoding, including NaN, infinities and subnormals) or an exactly
+representable decimal (`nan` and `inf` words are `E-LITERAL-NONFINITE`; give
+those values as bits); an `i64` value is a signed decimal in range; a `bool`
+value is `true` or `false`:
+
+```text
+noble-ngraph-vectors/0
+types f32 f32
+v 0x3fc00000 -0.5
+v 0x7fc00000 0x80000000
+```
+
+```text
+noble-ngraph-data/0
+types f32 ; f32
+point 0 ; 1
+point 0.5 ; 2
+point -0.5 ; 0
+point 1 ; 3
+```
+
+A `types` line that differs from the graph is `E-INTERFACE`. An unknown or
+missing schema line, a row with the wrong number of values and any other
+syntax error are `E-FORMAT`, and an inexact decimal is `E-LITERAL-INEXACT`;
+each is refused before any evaluation: one bad row refuses the whole file.
+Input-fact validation (`E-FACT-INPUT`) stays per vector. Row order is
+preserved, and the training-data digest binds it.
+
+**Training.** `train` changes only the model's `param` slots. The contract is
+explicit: `--policy`, `--optimizer`, `--seed` and `--steps` have no defaults.
+`--steps 0` publishes the seed-initialized snapshot S₀, the only way to create
+an untrained snapshot, and `--from PARENT` starts from a published snapshot of
+the same graph instead of the seed. The loss graph must be `ngraph-f32/0`, with
+no `param` slot, with input slots equal to the model's outputs followed by the
+data's target types, and with exactly one `F32` output; otherwise
+`E-INTERFACE`. `ngraph-deriv-real/0` is the derivative of the intended
+real-valued arithmetic, ignoring binary32 rounding. A param that reaches the
+loss through `f32.step` or an `f32.select` gate is refused (`E-DERIV-BOOLEAN`)
+unless that node `%N` is opted in with `--opt-in %N:boolean=straight-through`
+or `--opt-in %N:boolean=clamped-linear:0xBITS`. A param that reaches an
+`f32.index` operand is refused (`E-DERIV-INDEX`) unless opted in with
+`--opt-in %N:index=zero` or `--opt-in %N:index=backward-difference`. Every
+opt-in is recorded in the snapshot, and the surrogates are never described as
+exact derivatives. An `ngraph-i64/0` model is refused with `E-DERIV-I64`. In
+each step, every data point is first checked in point order as `eval` checks
+a vector. A failing input fact (`E-FACT-INPUT`) or guard (`G-FACT-FALSE`), or
+a non-finite gradient or update (`E-NONFINITE-UPDATE`), stops training and
+publishes nothing. `--adam-lr`, `--adam-beta1`, `--adam-beta2` and `--adam-eps`
+take binary64 bits (`0x…`) or a decimal rounded to nearest even. The defaults
+are the `adam/0` values 0.02, 0.9, 0.999 and 1e-8, and the exact bits are
+recorded.
+
+**Snapshot files.** A snapshot file records the parameters, their identities
+and the complete training provenance, one field per line:
+
+```text
+noble-ngraph-snapshot/0
+snapshot <64 hex>            # ParamSnapshotId = H(noble.ngraph.params.v0 ‖ graph ‖ slots ‖ LE bytes)
+graph <64 hex>               # GraphLogicalId
+layout <64 hex>              # param layout key
+param <slot> 0x<8 hex>       # one line per param slot: interface slot index and bits
+optimizer-state <64 hex>
+parent <64 hex>
+subject <kind> <64 hex> closure <ids|->
+profile ngraph-f32/0 ngraph-sem/0
+facts <64 hex>               # fact-binding digest of the model graph
+loss <64 hex>
+data <64 hex>
+policy ngraph-deriv-real/0
+opt-in %<node> boolean refuse|straight-through|clamped-linear 0x<8 hex> | index refuse|zero|backward-difference
+seed 0x<16 hex>
+prng splitmix64/0
+optimizer adam/0 lr 0x<16 hex> beta1 0x<16 hex> beta2 0x<16 hex> eps 0x<16 hex>
+steps <n>
+tools noble-ngraph/0; ngraph-ir/0; ngraph-sem/0; ngraph-facts/0; ngraph-layered/0
+provenance <64 hex>          # H(noble.ngraph.provenance.v0 ‖ every record above, in file order)
+```
+
+Records appear in this order (hex is lowercase). For a snapshot trained from
+the seed, `parent` is the id of the seed-initialized snapshot S₀. The
+provenance digest uses the same identity encoding as every other identity
+(length-prefixed byte strings and fixed-width little-endian integers); its
+exact field list is in design D6 of the
+[numeric-graph-v1 change](.cairn/changes/numeric-graph-v1/design.md).
+
+Loading a snapshot recomputes its layout key, its `ParamSnapshotId` and its
+provenance digest; any mismatch is `E-SNAPSHOT-INTEGRITY`. Binding it to a
+graph then refuses a different `GraphLogicalId` or a different fact-binding
+digest (`E-SNAPSHOT-STALE`, so a graph whose fact records changed does not
+accept parameters trained under other facts), a different param layout
+(`E-SNAPSHOT-LAYOUT`) and a snapshot other than the one pinned with
+`--snapshot-id` (`E-SNAPSHOT-ID`). A graph with `param` slots and no
+`--snapshot` is `E-SNAPSHOT-LAYOUT`. All of these refusals happen before any
+graph node is evaluated.
+
+**Immutable publication and replay.** `train --out` and `extract --out` publish
+only new files. The CLI writes `<out>.partial` with create-new, syncs it,
+hard-links it to `<out>` (which fails if `<out>` exists) and removes
+`<out>.partial`. No path is ever truncated, renamed over or modified, and a
+`--from` parent is only read. An existing `<out>` or `<out>.partial` is a host
+refusal (exit 2) that leaves both untouched, and a refused or stopped command
+creates neither file. `verify --replay` rebuilds the training contract from
+the model, loss and data files, the recorded seed, policy, opt-ins, optimizer
+and step count, and the parent given with `--from`. The supplied model, loss,
+data and parent must match the recorded `graph`, `loss`, `data` and `parent`
+identities (otherwise `E-SNAPSHOT-STALE`). Replay then trains again and
+requires byte-identical parameters, optimizer-state digest and snapshot
+identity (otherwise `E-SNAPSHOT-REPLAY`). To train the model above, save it as
+`model.ngraph`, the data file above as `data.points`, and this MSE point loss
+as `loss.ngraph`:
+
+```text
+ngraph-ir/0 ngraph-f32/0
+subject authored-name cli-train-mse
+slot input f32
+slot input f32
+%0 = input 0
+%1 = input 1
+%2 = f32.sub %0 %1
+%3 = f32.mul %2 %2
+out %3
+```
+
+```sh
+./result/bin/noble ngraph train model.ngraph --loss loss.ngraph \
+  --data data.points --policy ngraph-deriv-real/0 --optimizer adam/0 \
+  --seed 7 --steps 0 --out s0.snapshot
+./result/bin/noble ngraph train model.ngraph --loss loss.ngraph \
+  --data data.points --policy ngraph-deriv-real/0 --optimizer adam/0 \
+  --seed 7 --steps 25 --out s25.snapshot
+printf '%s\n' noble-ngraph-vectors/0 'types f32' 'v 0.5' 'v -1' > inputs.vectors
+./result/bin/noble ngraph eval model.ngraph inputs.vectors --snapshot s25.snapshot
+./result/bin/noble ngraph verify model.ngraph s25.snapshot \
+  --replay --loss loss.ngraph --data data.points
+```
+
+Each command exits 0. The two `train` runs print:
+
+```text
+{"schema":"noble-ngraph-report/v1","command":"train","stage":"training","outcome":"normal","code":null,"site":null,"snapshot":"b877b38358afd078fdf3d0ad1152f1e474b8897d25f285b30cf27a4da4e8eb60","graph":"3ef6d14e9a0b429e9446b166b3db175b0fe308174eca8d622400a273f15540f7","parent":"b877b38358afd078fdf3d0ad1152f1e474b8897d25f285b30cf27a4da4e8eb60","steps":0,"loss_initial":"0x4015bd11d3800000","loss_final":"0x4015bd11d3800000"}
+{"schema":"noble-ngraph-report/v1","command":"train","stage":"training","outcome":"normal","code":null,"site":null,"snapshot":"693184119553c5456c2319a3090ae14e4eb1b7cc51ce443a6d2c0b2491791b72","graph":"3ef6d14e9a0b429e9446b166b3db175b0fe308174eca8d622400a273f15540f7","parent":"b877b38358afd078fdf3d0ad1152f1e474b8897d25f285b30cf27a4da4e8eb60","steps":25,"loss_initial":"0x4015bd11d3800000","loss_final":"0x40064a1dbfc00000"}
+```
+
+`eval` and `verify --replay` print:
+
+```text
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"graph":"3ef6d14e9a0b429e9446b166b3db175b0fe308174eca8d622400a273f15540f7","snapshot":"693184119553c5456c2319a3090ae14e4eb1b7cc51ce443a6d2c0b2491791b72"}
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"vector":0,"outputs":["f32:0x3e459c1c"]}
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"vector":1,"outputs":["f32:0xbec00d06"]}
+{"schema":"noble-ngraph-report/v1","command":"verify","stage":"replay","outcome":"normal","code":null,"site":null,"snapshot":"693184119553c5456c2319a3090ae14e4eb1b7cc51ce443a6d2c0b2491791b72","graph":"3ef6d14e9a0b429e9446b166b3db175b0fe308174eca8d622400a273f15540f7","bound":true,"replayed":true}
+```
+
+**Outcomes and exit codes.** Every report line has `schema`, `command`,
+`stage`, `outcome`, `code` (a string or null) and `site` (a string or null). An
+optional `detail` string is informative only and is not part of the stable
+contract. The outcome decides the exit status:
+
+| Outcome | Exit | Codes |
+|---|---|---|
+| `normal` | 0 | — |
+| `trap` | 1 | `G-FACT-FALSE` (a guard failure or a refusing `f32.index` read), `E-NONFINITE-UPDATE`, `C-CANCELLED` (listed for completeness; the CLI has no cancellation source) |
+| `reject` | 2 | `E-GRAPH-MALFORMED`, `E-FORMAT`, `E-LITERAL-INEXACT`, `E-LITERAL-NONFINITE`, `E-TYPE-MIX`, `E-INTERFACE`, `E-SUBJECT` (including a Core frontend refusal of the extraction source), `E-CLOSURE`, `E-PROFILE` (an unknown sub-profile or a raised budget), `E-FACT-UNCHECKED`, `E-FACT-INPUT`, `E-PARAM-UNDECLARED`, `E-SNAPSHOT-STALE`, `E-SNAPSHOT-LAYOUT`, `E-SNAPSHOT-ID`, `E-SNAPSHOT-INTEGRITY`, `E-SNAPSHOT-REPLAY`; host conditions with `code: null`: an I/O failure, an exceeded input bound, an existing output |
+| `unsupported` | 4 | `E-EFFECT`, `E-RESOURCE`, `E-DYNAMIC-RUN`, `E-LIVE-SLOT`, `E-RECURSION`, `E-CONTROL`, `E-AGGREGATE`, `E-REFLECT`, `E-PROGRAM-OUTPUT`, `E-DERIV-BOOLEAN`, `E-DERIV-INDEX`, `E-DERIV-I64` |
+| `exhausted` | 5 | `E-BUDGET-<kind>`, including `E-BUDGET-FUEL` (runtime) and `E-BUDGET-STEPS` |
+
+`eval` exits with the status of the first non-`normal` vector in file order,
+or 0. A refusal of the whole graph, by the checker or by snapshot binding,
+prints one report line and no vector lines. Usage errors print nothing on stdout and the usage on stderr
+and exit 2.
+
+**Budgets and input bounds.** Every `/0` budget has a flag `--budget-<kind> N`,
+and each subcommand accepts only the kinds it charges. A flag may only lower
+a budget: a value above the `/0` default is `E-PROFILE`, because raising one
+needs a new profile revision, and a value that is not a `u64` is a usage
+error.
+
+| Kind | `/0` default | Charged on |
+|---|---|---|
+| `work` | 4,194,304 | Extraction steps, including repeated expansions |
+| `expansion` | 262,144 | Nodes created before pruning |
+| `inline-depth` | 64 | Named call, `run` and `dip` nesting |
+| `live-nodes` | 262,144 | Nodes after normalization |
+| `layers` | 16,384 | The critical path |
+| `inputs`, `outputs` | 65,536 each | Input and param slots; outputs |
+| `affine-terms` | 4,096 | Terms of one `f32.affine` |
+| `table-length`, `table-entries` | 65,536; 1,048,576 | One `f32.index` table; all tables of a graph |
+| `facts` | 262,144 | Fact records |
+| `graph-bytes`, `snapshot-bytes` | 32 MiB; 4 MiB (1,048,576 `F32`) | The retained graph; a snapshot |
+| `forward-scratch`, `backward-scratch` | 64 MiB; 128 MiB | One evaluation |
+| `steps` | 1,000,000 | Optimizer steps of one `train` call |
+
+`--fuel N` bounds node evaluations. It is host policy with no default limit,
+and running out is `E-BUDGET-FUEL`. The host input bounds are fixed limits,
+not profile budgets: graph, vector and data files 64 MiB each, snapshot files
+32 MiB, and extraction sources 1 MiB, with each submission at most 65,536
+bytes. Each bound is checked before parsing, and a larger file is a host
+refusal (`code: null`, exit 2).
+
+**Determinism.** For identical arguments and input bytes, stdout is
+byte-identical across runs: reports have a fixed key order and carry no
+timing and no file path. The default compiled evaluator and `--reference`
+print identical bytes for every `normal`, `reject` and `trap` line. Under
+`--fuel`, the point at which an `exhausted` evaluation stops is
+evaluator-specific, so those lines may differ. Two `train` runs with the same
+inputs write byte-identical snapshot files.
+
+**Non-claims.** Selecting this profile is not a performance, speedup, GPU or
+backend-selection result. Phase C of the archived design recommended
+**stop**. On warm W3-L, the compiled CPU graph took 9.71 µs per evaluation
+against 1.27 µs for straightforward host-native Rust, which is 0.131× its
+speed. W3-S, W3-M and W4 reached 0.068×, 0.061× and 0.182×. Continuing
+required at least twice the speed of both baselines, and GPU work (issue #2)
+stays blocked. The owner adopted the profile anyway as an opt-in feature, with
+no performance or GPU claim. The proof obligations NG-PO-A..H (extraction,
+graph checker, compiled evaluator, binary32 model, fact transfer, derivative
+policy, snapshot binding and executed bytes) remain open and are not in the
+obligation ledger. Agreement between the evaluators, matching identities and a
+successful replay are finite differential evidence: a snapshot identity
+identifies bytes, and neither it nor a replay shows that the trained
+parameters, the optimizer or the evaluators are correct. Replay is defined on
+one pinned platform, and there is no cross-platform bit-reproducibility claim.
+The Phase B and Phase C receipts and their reproduction commands are in
+[verification/ngraph/README.md](verification/ngraph/README.md). These limits
+and reports are not acceptance evidence; the draft
+[NGRAPH cases](.cairn/changes/numeric-graph-v1/cases/numeric-graph-cases.json)
+record their status.
+
 ### Experimental checked live slots (opt-in; acceptance not established)
 
 `noble live slot --engine v8 --authority ABS_PATH` selects a separate resident
@@ -591,6 +944,7 @@ does not make every other feature available in that runtime.
 | [Synchronous components](specs/WIT-WASI.md) | Selected WIT bindings, component compilation, host resources, ownership transfer, and authorization checks. |
 | [Native async components](specs/WIT-WASI.md#selected-native-async-boundary-and-compatibility) | A separate bounded component profile with native async execution and cancellation controls. General guest async syntax remains open. |
 | [Local services](specs/ROADMAP.md#m7-selected-local-synchronous-service-bounded-acceptance-complete) and [choreography](specs/ROADMAP.md#m8-selected-choreography-projection-bounded-acceptance-complete) | A bounded local synchronous publisher/subscriber service and finite one- or two-round protocols over that service. |
+| [Numeric graphs](#experimental-numeric-graphs-opt-in-no-performance-claim) | Opt-in `Numeric-Graph-v1`, only through `noble ngraph`: checked `ngraph-ir/0` graph files, exact `I64` graphs extracted from Core source, directly authored `F32` graphs (no kernel `F32`), reference and compiled CPU evaluators, `adam/0` training into immutable snapshot files, and provenance replay. Phase C measured 0.06–0.18× the speed of host-native Rust, so there is no performance or GPU claim; NG-PO-A..H remain open. |
 
 Ordinary `run` and `session` use the **resource-free Core-Bootstrap** profile.
 Their host words are `test.emit` and `test.abort`. Resources and component

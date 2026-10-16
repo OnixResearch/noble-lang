@@ -7,10 +7,11 @@
 //! be checked again (#8, #10). This is a Phase B applicability check on run
 //! records, not #8 witness binding (evidence *facts* are excluded by P5).
 
-use crate::check::CheckedGraph;
-use crate::diag::Diagnostic;
-use crate::ir::{Digest, Graph, Literal, Op, Provenance, SlotKind, Subject, SubjectKind};
-use crate::snapshot::ParamSnapshot;
+use crate::scheme::BLAKE3;
+use noble_ngraph::check::CheckedGraph;
+use noble_ngraph::diag::Diagnostic;
+use noble_ngraph::ir::{Digest, Graph, Literal, Op, Provenance, SlotKind, Subject, SubjectKind};
+use noble_ngraph::snapshot::ParamSnapshot;
 
 /// Captures `s` into `model`: a new graph whose params are constants.
 ///
@@ -45,6 +46,7 @@ pub fn capture(model: &CheckedGraph, s: &ParamSnapshot) -> Result<Graph, Diagnos
         .cloned()
         .collect();
     let subject = Subject::derive(
+        &BLAKE3,
         SubjectKind::Captured,
         &[&g.subject.identity, &s.id()],
         g.subject.closure.clone(),

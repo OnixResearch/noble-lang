@@ -1,10 +1,31 @@
 //! Seeded B4 gradient campaigns (G1 binary64 reverse vs binary64 central
 //! differences; G2 FP32 reference backward vs G1) on F1 with the MSE loss.
 
-use crate::check::{check, CheckedGraph};
 use crate::fixtures;
-use crate::grad::{self, DerivOptions};
-use crate::prng::SplitMix64;
+use crate::scheme::BLAKE3;
+use noble_ngraph::check::{check, CheckedGraph};
+use noble_ngraph::grad::{self, DerivOptions};
+use noble_ngraph::ir::Op;
+use noble_ngraph::prng::SplitMix64;
+
+/// Whether the binary64 forward values at `slots` are farther than `margin`
+/// from every ReLU/ReGLU corner, `step` threshold and integer index
+/// boundary (B4 sampling; harness-only, so it uses the `std` float functions
+/// the `no_std` library does not have).
+#[must_use]
+pub fn away_from_corners(model: &CheckedGraph, slots: &[f64], margin: f64) -> bool {
+    let v: Vec<f64> = grad::forward(model, slots);
+    model.graph().nodes.iter().all(|n| match &n.op {
+        Op::F32Relu(x) => v[x.index()].abs() > margin,
+        Op::F32Reglu { gate, .. } => v[gate.index()].abs() > margin,
+        Op::F32Step(s) => (v[s.index()] - 0.5).abs() > margin,
+        Op::F32Index { index, .. } => {
+            let x = v[index.index()];
+            (x - x.round()).abs() < f64::EPSILON || (x - x.floor()).min(x.ceil() - x) > margin
+        }
+        _ => true,
+    })
+}
 
 /// Result of a gradient campaign.
 #[derive(Clone, Debug, Default)]
@@ -50,8 +71,8 @@ pub fn g1_tolerance(d: f64) -> f64 {
 }
 
 fn models() -> (CheckedGraph, CheckedGraph) {
-    let m = check(fixtures::f1()).unwrap_or_else(|d| panic!("F1: {d}"));
-    let l = check(fixtures::mse_loss()).unwrap_or_else(|d| panic!("MSE: {d}"));
+    let m = check(&BLAKE3, fixtures::f1()).unwrap_or_else(|d| panic!("F1: {d}"));
+    let l = check(&BLAKE3, fixtures::mse_loss()).unwrap_or_else(|d| panic!("MSE: {d}"));
     (m, l)
 }
 
@@ -86,7 +107,7 @@ pub fn gradient_campaign(seed: u64, samples: u64) -> GradStats {
         let t64 = [f64::from(t32[0])];
         let pmax = s64.iter().fold(1.0f64, |a, v| a.max(v.abs()));
         let margin = 64.0 * 4.0 * step_size(pmax);
-        if !grad::away_from_corners(&model, &s64, margin) {
+        if !away_from_corners(&model, &s64, margin) {
             st.skipped_near_corner += 1;
             continue;
         }
@@ -134,9 +155,9 @@ pub const B5_STEPS: u64 = 500;
 /// (named RNE conversion to binary32), targets from F1 with [`fixtures::F1_FIXED`]
 /// evaluated by the L3 reference.
 #[must_use]
-pub fn b5_data(data_seed: u64) -> Vec<crate::train::Point> {
+pub fn b5_data(data_seed: u64) -> Vec<noble_ngraph::train::Point> {
     let (model, _) = models();
-    let teacher = crate::snapshot::ParamSnapshot::new(&model, &fixtures::F1_FIXED)
+    let teacher = noble_ngraph::snapshot::ParamSnapshot::new(&BLAKE3, &model, &fixtures::F1_FIXED)
         .unwrap_or_else(|d| panic!("teacher: {d}"));
     let mut rng = SplitMix64::new(data_seed);
     (0..64)
@@ -146,17 +167,17 @@ pub fn b5_data(data_seed: u64) -> Vec<crate::train::Point> {
                 (rng.next_f64() * 2.0 - 1.0) as f32,
                 (rng.next_f64() * 2.0 - 1.0) as f32,
             ];
-            let r = crate::eval::reference(
+            let r = noble_ngraph::eval::reference(
                 &model,
-                &crate::eval::f32_inputs(&x),
+                &noble_ngraph::eval::f32_inputs(&x),
                 Some(&teacher),
-                &crate::eval::Control::default(),
+                &noble_ngraph::eval::Control::default(),
             );
             let t = match r.obs.outputs() {
-                Some([crate::sem::Value::F32(b)]) => f32::from_bits(*b),
+                Some([noble_ngraph::sem::Value::F32(b)]) => f32::from_bits(*b),
                 _ => panic!("teacher evaluation: {:?}", r.obs),
             };
-            crate::train::Point {
+            noble_ngraph::train::Point {
                 inputs: x.to_vec(),
                 targets: vec![t],
             }
@@ -166,16 +187,69 @@ pub fn b5_data(data_seed: u64) -> Vec<crate::train::Point> {
 
 /// The B5 training contract (F1, MSE, `adam/0`, default policy, recorded seeds).
 #[must_use]
-pub fn b5_contract(seed: u64, data_seed: u64) -> crate::train::Contract {
+pub fn b5_contract(seed: u64, data_seed: u64) -> noble_ngraph::train::Contract {
     let (model, loss) = models();
     let params = model.graph().param_slots();
-    crate::train::Contract {
+    noble_ngraph::train::Contract {
         model,
         loss,
         params,
         deriv: DerivOptions::default(),
-        adam: crate::train::Adam::default(),
+        adam: noble_ngraph::train::Adam::default(),
         seed,
         data: b5_data(data_seed),
     }
+}
+
+/// The design D3 identity corpus, by the names of the pre-cutover record
+/// (`tests/fixtures/identities-66eb7cd.txt`): F1, F2, the MSE and identity
+/// losses, F3 under all nine out-of-range rule pairs, W3-S/M/L, W4, the
+/// hand-built W1/W2, the seeded random graphs 1–8 (48 operations) and
+/// `I1`–`I4` extracted from Core source (with producer origins).
+///
+/// # Panics
+/// If the Core frontend or D7 extraction refuses one of `I1`–`I4`.
+#[must_use]
+pub fn identity_corpus() -> Vec<(String, noble_ngraph::Graph)> {
+    use noble_ngraph::ir::OutOfRange;
+    let rule = |r: OutOfRange| r.name();
+    let mut out: Vec<(String, noble_ngraph::Graph)> = vec![
+        ("F1".into(), fixtures::f1()),
+        ("F2".into(), fixtures::f2()),
+        ("MSE".into(), fixtures::mse_loss()),
+        ("identity-loss".into(), fixtures::identity_loss()),
+    ];
+    for below in fixtures::RULES {
+        for above in fixtures::RULES {
+            out.push((
+                format!("F3-{}-{}", rule(below), rule(above)),
+                fixtures::f3(below, above),
+            ));
+        }
+    }
+    for (name, net) in crate::workloads::W3_SIZES {
+        out.push((name.to_owned(), net.graph(name)));
+    }
+    out.push(("W4".into(), crate::workloads::w4_graph()));
+    out.push(("W1".into(), crate::workloads::w1_graph()));
+    out.push(("W2".into(), crate::workloads::w2_graph()));
+    for seed in 1..=8u64 {
+        out.push((
+            format!("random-{seed}"),
+            crate::random::graph(seed, 48).graph,
+        ));
+    }
+    let sources: [(&str, &[&str], &str, usize); 4] = [
+        ("I1", &[], "dup * swap 3 * + 7 -", 2),
+        ("I2", &[], "2 quote [ + ] compose dup compose run", 1),
+        ("I3", &["def sq [ dup * ]"], "sq swap sq +", 2),
+        ("I4", &[], "swap [ * ] dip + dup", 3),
+    ];
+    for (name, defs, root, inputs) in sources {
+        let defs: Vec<String> = defs.iter().map(|d| (*d).to_owned()).collect();
+        let lowered = crate::b2i64::Lowered::new(&defs, root, inputs)
+            .unwrap_or_else(|e| panic!("{name} extracts: {e}"));
+        out.push((name.to_owned(), lowered.extraction.checked.graph().clone()));
+    }
+    out
 }

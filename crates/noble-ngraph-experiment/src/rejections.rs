@@ -6,11 +6,12 @@
 //! Every case records the D6 code observed and the number of graph nodes
 //! evaluated before the refusal (0 for every static or preflight refusal).
 
-use crate::check::{check_with, Budgets};
-use crate::compiled::Compiled;
-use crate::diag::Diagnostic;
-use crate::eval::{self, Control, Obs};
-use crate::text;
+use crate::scheme::BLAKE3;
+use noble_ngraph::check::{check_with, Budgets};
+use noble_ngraph::compiled::Compiled;
+use noble_ngraph::diag::Diagnostic;
+use noble_ngraph::eval::{self, Control, Obs};
+use noble_ngraph::format::graph;
 
 /// One rejection control.
 #[derive(Clone, Debug)]
@@ -45,6 +46,16 @@ impl Rejection {
 
 const F32H: &str = "ngraph-ir/0 ngraph-f32/0\n";
 
+/// Parses an authored control, adding the `subject authored-name` record
+/// that the graph file form requires (each control's subject is its name).
+fn parse(src: &str, name: &str) -> Result<noble_ngraph::Graph, Diagnostic> {
+    let (head, rest) = src.split_once('\n').unwrap_or((src, ""));
+    graph::parse(
+        &BLAKE3,
+        &format!("{head}\nsubject authored-name {name}\n{rest}"),
+    )
+}
+
 fn static_case(
     name: &'static str,
     group: &'static str,
@@ -52,7 +63,7 @@ fn static_case(
     src: &str,
     budgets: &Budgets,
 ) -> Rejection {
-    let r = text::parse(src, name).and_then(|g| check_with(g, budgets));
+    let r = parse(src, name).and_then(|g| check_with(&BLAKE3, g, budgets));
     let (observed, stage, detail) = match r {
         Ok(_) => ("ACCEPTED".to_owned(), "none", String::new()),
         Err(d) => (d.code_string(), stage_of(&d), d.detail),
@@ -72,7 +83,7 @@ fn static_case(
 
 const fn stage_of(d: &Diagnostic) -> &'static str {
     match d.site {
-        crate::diag::Site::Line(_) => "parse",
+        noble_ngraph::diag::Site::Line(_) => "parse",
         _ => "graph-check",
     }
 }
@@ -85,7 +96,7 @@ fn eval_case(
     inputs: &[f32],
     control_scratch: Option<u64>,
 ) -> Rejection {
-    let g = match text::parse(src, name).and_then(crate::check::check) {
+    let g = match parse(src, name).and_then(|g| noble_ngraph::check::check(&BLAKE3, g)) {
         Ok(g) => g,
         Err(d) => {
             return Rejection {
@@ -107,7 +118,7 @@ fn eval_case(
     };
     let ins = eval::f32_inputs(inputs);
     let l3 = eval::reference(&g, &ins, None, &control);
-    let l4 = Compiled::new(&g).evaluate(&ins, None, &control);
+    let l4 = Compiled::new(&BLAKE3, &g).evaluate(&ins, None, &control);
     let (observed, stage, detail) = match &l3.obs {
         Obs::Refused(d) => (d.code_string(), "preflight", d.detail.clone()),
         Obs::GuardFailed { node, fact } => (

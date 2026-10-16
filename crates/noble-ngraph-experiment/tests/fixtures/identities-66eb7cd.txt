@@ -1,0 +1,116 @@
+# noble-ngraph identity record (numeric-graph-v1 design D3). Written once by the
+# pre-cutover noble-ngraph-experiment at 66eb7cd; only these comment lines were
+# added afterwards. Reproduce in a detached worktree at 66eb7cd:
+#   1. make `fn facts_digest` in crates/noble-ngraph-experiment/src/train.rs `pub`;
+#   2. add a test that writes the lines below to $RECORD_OUT, then run
+#      RECORD_OUT=<file> cargo test --release -p noble-ngraph-experiment --test <name>
+# Line kinds (APIs at 66eb7cd; identities are lowercase hex):
+#   graph NAME ID FACTS: check(G) -> hex(id()) and hex(train::facts_digest(&c)) for
+#     F1/F2/MSE/identity-loss = fixtures::{f1, f2, mse_loss, identity_loss}(),
+#     F3-B-A = fixtures::f3(B, A) over refuse/clamp/zero, W3-S/M/L = W3_SIZES
+#     net.graph(name), W4/W1/W2 = workloads::{w4,w1,w2}_graph(), random-N =
+#     random::graph(N, 48).graph, and I1-I4 = b2i64::Lowered::new(defs, root, n)
+#     .extraction.checked for the four design sources (I3 defines def sq [ dup * ]).
+#   vector NAME => OBS: eval::reference over fixtures::b2_vectors(), rendered
+#     Normal[f32:0x..|i64:..|bool:..], Refused(CODE), GuardFailed(%N,KIND), Exhausted(K).
+#   rejection NAME => CODE: rejections::run_all(), observed codes.
+#   campaign SEED ID vectors= normal= guard_failed= refused= disagreements=:
+#     differential::campaign(SEED, 48, 2000).
+#   b5 data|s0|final|adam-state|facts: suites::b5_contract(B5_SEED, B5_DATA_SEED)
+#     trained 500 steps from the seed: data digest, initial and final snapshot ids,
+#     adam/0 state digest and provenance.facts.
+#   b5 losses H count first last: H = BLAKE3 over every loss (binary64 LE bits).
+graph F1 6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661 a4847a4429bf0da5a2076517ea2877b0d76d97ee12be45a45e1ee89f1c8ec7ce
+graph F2 66784231cce52b3e97027e221d3e2aad4d91f9d8871169700e1c3f5a896d5b51 ccc3bccd03da8ff7963543c2cdf70fa7cbccc809b7862f21aa6bd26238a49774
+graph MSE 50f67078a67012ca5914d95c1615946a8230bb591be056b6fb10a0c1c9ad69c0 29560e3a637956c979f465327784ed4dd4af410dd9235ec175f76dc1d011386e
+graph identity-loss d0c772b6a3b40ca7f9d392b0c88872dcc38f8cdf17b52859a3c0c2c4ebd24f0f f6adb6b270176d2db65ca56de5f48355b264b229f5eefe30669dc36e33bd5e77
+graph F3-refuse-refuse 67fe8f48508e7141ba148ed43b3c0ee2aa8a0a017bd25ce817e438f6aaefbf56 21ecf261fd99538a9ffc22c0826605dbdca205934f1bfb8dc2cf9d2ecc02a60b
+graph F3-refuse-clamp ea9371b8f92ffafd8cf1a2668638f263f838e7e1207ab4e9a00247274675380e ef58ed981b5bc253b8622584925ef7c79904a709bdda45af124e2cd0a2214db4
+graph F3-refuse-zero ecb15f0418ed89aeeca7b2d327f29d7bc4302f747a38d067dd66f6d2859a7c80 ff967f76a87e93b882e3f069284679c627b8ebbe1bea2e3d6e949ca12c54faf7
+graph F3-clamp-refuse b52254c4ba908cea2d409accd3f8d4cd7852952a3163e87c1e1772b6d16c3964 30cf2180f7a55afa99d7ae69dbfc036b827a3094ce67d1bc47ce75f799db5b00
+graph F3-clamp-clamp dec53f40c7e1ae740b97d399518956c4140e76ec234391be40d7c5a5b1cc0754 25c6ab44872476e8ddd5e0cbde83bf3d473bd7a2bf11a7664d772e531429ed54
+graph F3-clamp-zero 7e62de06cbc7ea6cac5433bea29d5566914376ed193b8159633078c3694ce87f 99be78a58e179f5d877b81100f35afd355e5a4526227d08623ef2f9d098028e7
+graph F3-zero-refuse 1a91d6cedcc900138406775c1922e8c94114cb80bc97e92ffed5edd245ca2a48 08ead0297dfe879a25e5b3b066d850b97daabd49ed209917da2917a21b582528
+graph F3-zero-clamp 88bd9f934e41829408a6bb2e5515a3a6142f3979cca68305e10b6bb411620803 eb606ccae9ba4bbe49dc91630788d7e0f3180af9d0992ab124884ee5176bf842
+graph F3-zero-zero 9d2eb989b3a7a885f42867c842758eefadbfcb944cfd2b639b9bf54e2956b197 6758f03229a368fb047d38ed97aa32fd12df269b2d92d98719be050c1f2e7874
+graph W3-S 3bd9bf935af8978891bc81de69dc25edb255c30ecb292fedd67706038c6446ba 0aea0b5187d445d6ad875c7c4102e1f7d5fb2de3171d686c3598574d831dbecc
+graph W3-M 53cc1784dc7666b4a2386af3ec6c88f44e30685232bc20be19a16de5f9e07603 680dfba7d7944da754b7aa90f90f9c09a67ab2475c647f278415c48457e50b3a
+graph W3-L 2e6fa1f3ddfbd6880f482f8c5547c75080d4662336d80d588816c93e14fd4207 913cbaefe8703c5a0ecd73fd3e4b4c225f7229606ea2796ff89e80b51e121cfd
+graph W4 58d8a04d401fad0469c1fef5819fbfe79ea6597ad3f5f4b3f42bb5f04a539f58 9bf93aff9fe3eef8ce2586e02cb6c5a97dc0376997b3c5c89b23d5c3c5d79022
+graph W1 7f6904378ef10464965a4a7b7479d62ebeeed6e069e660444856e62b9cc29c32 0e7c1fe2ed871c244f3a827e5a38cdb73434f6c6abd5fd7a07dcff682b685b04
+graph W2 e2cea982e906e11b5681a7b08cc3e7e88ccfa6efcb8ba535e5cc7d40da666863 4d93bddd17355f7932bc00b8d92e4c1ba5d11705df5348121cc883b3ff8ac888
+graph random-1 934a9b860da1c88e4a929e41825556ee2fdd075284efad877d41f79be2b9d5c2 ce1fdafd8b7f0cac26e50d92f20c7c61f79e755df516eb59a80bd79e7a042a5e
+graph random-2 bf9707d0905ec9f9897bf526fa370a1dceeb2d2026dbddf7377666b14ff906ce 8de9f918860bc69fdb67a2b1e82cf78c47a0f425b5a735e9101002a8205745f9
+graph random-3 cc3009ae40f65cb5134c89a8ba603d3c1cbb55b678d9682e9d2787beb184c08d 6cb080636b18dd10415b0d70b92d2e7c48c63adde7bfee3d63d81fcd8782c597
+graph random-4 946c472aaa65172ca80291cc5aa21f4d577c779bcb61f44c23d9519fc07a4889 8fea025a2e66df6dbd09cfb7257dfa39a4231871b0d96b90f90f09f8f6d3a76c
+graph random-5 f314b55eb24eaa138051860be922715949825e9075030f966145f2cf93c95a17 e6e901453975c9d5a91a4638638e7db1b1e03744c2505364dd224f36f7d981e0
+graph random-6 a7649d2302cecb77d060f9c7dffc64d918a0eec2479f2a1d6221b3651bafde2a c3df50f8831ee7b10de3736e918e53245c3c8f02049fe3b986a6ba8e41bb65d2
+graph random-7 1f4ac5351b920fe8a883ca8da56c001d753b661e58a868fb9de55c7dd1340ed8 4126982b64b699ba5804c4cb99f9c86ffd5fe135de5339e14e5323ae97d72637
+graph random-8 8d25353558279d55b2f0462228f0fab363de0ff40761d5df7f46ae52f6e0725c 50146ce326366b789e481e3d57d39ac394a81a48bd05c47f74d00d46d148febf
+graph I1 75b70f84b6d265c4c1e016f5bf7ab88c2280456f15390bdb539e39cd24e6a1d9 a0ba42f9a385fde4fe9970a3db1940030659184361a889d90ab12ebdc9429868
+graph I2 ce1e156093d799d06933b01f7d6d00edca94ac7475d5553796357f08e820e452 b8363d8e6e8487857b1d1360dda90e68753c7eca6ac69651efa08aa192343c3c
+graph I3 179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304 1fbcaa17860e5437d3f4448eb1bfa24d96d8d4bf60fa95eb2acaa4d57ccb813d
+graph I4 ede73e27b1b5b2d25f1a0bfaac85d3b4471f2d9c98613caad673da1656f28333 6bb36775c1b24c118d30c35b2a775c590083d955e6abd1b9738c2855ea5b5592
+vector reassociation: affine(-0; 2^24·x, 1·y, 1·z) = 2^24 (not 2^24+2) => Normal[f32:0x4b800000]
+vector reassociation (constant-one operands): affine(-0; 2^24·1, 1·1, 1·1) = 2^24 => Normal[f32:0x4b800000]
+vector FMA detection: rn(rn(a·b)+c) = +0 with a=b=1+2^-12, c=-(1+2^-11) (fused: 2^-24) => Normal[f32:0x00000000]
+vector FMA detection in affine: affine(c; a·b) = +0 => Normal[f32:0x00000000]
+vector signed zero: lone -0 term in a bias-free sum stays -0 => Normal[f32:0x80000000]
+vector signed zero: relu(-0) = +0 => Normal[f32:0x00000000]
+vector signed zero: reglu(-1, 0) = -0 => Normal[f32:0x80000000]
+vector signed zero: select returns a -0 operand bitwise => Normal[f32:0x80000000]
+vector nonfinite: 2^127·2 = +inf => Normal[f32:0x7f800000]
+vector nonfinite: reglu(inf, 0) = NaN (class) => Normal[f32:0xffc00000]
+vector nonfinite: a NaN candidate passes through index => Normal[f32:0x7fc00000]
+vector subnormal: 2^-126 · 0.5 = 2^-127 (no flush to zero) => Normal[f32:0x00400000]
+vector subnormal: 2^-149 + 2^-149 = 2^-148 => Normal[f32:0x00000002]
+vector repeated reads: index(1,[a,a,b]) + index(0,[a,a,b]) = 2a => Normal[f32:0x40400000]
+rejection caller-asserted range => E-FACT-UNCHECKED
+rejection caller-asserted grid => E-FACT-UNCHECKED
+rejection caller-asserted bit => E-FACT-UNCHECKED
+rejection caller-asserted one-hot => E-FACT-UNCHECKED
+rejection step without any range fact => E-FACT-UNCHECKED
+rejection derived claim the checker cannot derive (x+x in [0,1]) => E-FACT-UNCHECKED
+rejection evidence fact (excluded from Phase B by P5) => E-FACT-UNCHECKED
+rejection violating input with an input-validated range => E-FACT-INPUT
+rejection violating intermediate under a guard: 0.5 held in a bit => G-FACT-FALSE
+rejection fractional index 2.5 under an input-validated integral fact => E-FACT-INPUT
+rejection index without an integral fact => E-FACT-UNCHECKED
+rejection index range fact reaching 2^24 => E-FACT-UNCHECKED
+rejection out-of-range index 3 under refuse => G-FACT-FALSE
+rejection NaN index under a guard => G-FACT-FALSE
+rejection cycle => E-GRAPH-MALFORMED
+rejection forward reference => E-GRAPH-MALFORMED
+rejection type mix (i64 op in an f32 graph) => E-TYPE-MIX
+rejection type mix (i64 constant in an f32 graph) => E-TYPE-MIX
+rejection dangling node => E-GRAPH-MALFORMED
+rejection unknown node => E-GRAPH-MALFORMED
+rejection unknown operation => E-GRAPH-MALFORMED
+rejection inexact decimal constant 0.1 => E-LITERAL-INEXACT
+rejection NaN constant (bits) => E-LITERAL-NONFINITE
+rejection NaN constant (word) => E-LITERAL-NONFINITE
+rejection infinite affine coefficient => E-LITERAL-NONFINITE
+rejection duplicate slot => E-GRAPH-MALFORMED
+rejection param slot in ngraph-i64/0 => E-GRAPH-MALFORMED
+rejection unknown sub-profile => E-PROFILE
+rejection live nodes over a lowered budget => E-BUDGET-LIVE-NODES
+rejection layers over a lowered budget => E-BUDGET-LAYERS
+rejection layers over the /0 default (16,384) => E-BUDGET-LAYERS
+rejection affine terms over the /0 default (4,096) => E-BUDGET-AFFINE-TERMS
+rejection index table over the /0 default (65,536) => E-BUDGET-TABLE-LENGTH
+rejection raising a budget above /0 => E-PROFILE
+rejection forward scratch over a lowered host budget => E-BUDGET-FORWARD-SCRATCH
+campaign 1 934a9b860da1c88e4a929e41825556ee2fdd075284efad877d41f79be2b9d5c2 vectors=2000 normal=467 guard_failed=1060 refused=473 disagreements=0
+campaign 2 bf9707d0905ec9f9897bf526fa370a1dceeb2d2026dbddf7377666b14ff906ce vectors=2000 normal=946 guard_failed=594 refused=460 disagreements=0
+campaign 3 cc3009ae40f65cb5134c89a8ba603d3c1cbb55b678d9682e9d2787beb184c08d vectors=2000 normal=114 guard_failed=1436 refused=450 disagreements=0
+campaign 4 946c472aaa65172ca80291cc5aa21f4d577c779bcb61f44c23d9519fc07a4889 vectors=2000 normal=172 guard_failed=1371 refused=457 disagreements=0
+campaign 5 f314b55eb24eaa138051860be922715949825e9075030f966145f2cf93c95a17 vectors=2000 normal=522 guard_failed=1002 refused=476 disagreements=0
+campaign 6 a7649d2302cecb77d060f9c7dffc64d918a0eec2479f2a1d6221b3651bafde2a vectors=2000 normal=195 guard_failed=1340 refused=465 disagreements=0
+campaign 7 1f4ac5351b920fe8a883ca8da56c001d753b661e58a868fb9de55c7dd1340ed8 vectors=2000 normal=352 guard_failed=1186 refused=462 disagreements=0
+campaign 8 8d25353558279d55b2f0462228f0fab363de0ff40761d5df7f46ae52f6e0725c vectors=2000 normal=1329 guard_failed=212 refused=459 disagreements=0
+b5 data 7c40293c13b0089020b0a66ffbccf2d523be6171887ede799f38ee4d728f0692
+b5 s0 a912b177c248ed35d5d7b5943e08e2efec7466623dffc385c6a8ab77f8998046
+b5 final 075f58cadc9a3abc91161b4224fd48bf9426af0ed8660851670e0ff0536f7f9d
+b5 adam-state 4a84153598df346b8d873e6349afa206c355164df0542b7909b48a2638b92a75
+b5 facts a4847a4429bf0da5a2076517ea2877b0d76d97ee12be45a45e1ee89f1c8ec7ce
+b5 losses 6a652a1b09143c3f35fe91abf4a37086dd192b062c583dc142b296d02a7038f1 count=501 first=0x3fd3948f73768000 last=0x3f411e50aea37600

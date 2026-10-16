@@ -9,26 +9,27 @@
 //!   --toolchain "$(rustc -V)"
 //! ```
 
-use std::sync::Arc;
+use noble_ngraph_experiment::scheme::BLAKE3;
+use std::rc::Rc;
 use std::time::Instant;
 
-use noble_ngraph_experiment::compiled::{Compiled, COMPILER_REVISION};
+use noble_ngraph::compiled::{Compiled, COMPILER_REVISION};
+use noble_ngraph::eval::{f32_inputs, reference, Control, ScratchCounters};
+use noble_ngraph::ir::{hex, FACT_RULE_REVISION, IR_VERSION, SEMANTIC_REVISION};
+use noble_ngraph::prng::{SplitMix64, PRNG};
+use noble_ngraph::snapshot::{layout_key, ParamSnapshot};
+use noble_ngraph::train::{self, data_digest, TrainControl};
+use noble_ngraph::{check, BudgetKind, Budgets, CheckedGraph, Code, Obs, Value};
 use noble_ngraph_experiment::differential::{campaign, run_legs};
-use noble_ngraph_experiment::eval::{f32_inputs, reference, Control, ScratchCounters};
 use noble_ngraph_experiment::evidence::{capture, EvidenceRecord, NotApplicable};
 use noble_ngraph_experiment::fixtures::{self, F1_FIXED, RULES};
-use noble_ngraph_experiment::ir::{hex, FACT_RULE_REVISION, IR_VERSION, SEMANTIC_REVISION};
 use noble_ngraph_experiment::json::Json;
 use noble_ngraph_experiment::oracle::{ap_add, ap_mul, ap_sub, f64_op, APFLOAT_ORACLE};
-use noble_ngraph_experiment::prng::{SplitMix64, PRNG};
 use noble_ngraph_experiment::random::random_f32;
 use noble_ngraph_experiment::rejections;
-use noble_ngraph_experiment::snapshot::{layout_key, ParamSnapshot};
 use noble_ngraph_experiment::suites::{
     b5_contract, g1_tolerance, gradient_campaign, step_size, B5_DATA_SEED, B5_SEED, B5_STEPS,
 };
-use noble_ngraph_experiment::train::{self, data_digest, TrainControl};
-use noble_ngraph_experiment::{check, BudgetKind, Budgets, CheckedGraph, Code, Obs, Value};
 
 struct Args {
     out: Option<String>,
@@ -173,12 +174,12 @@ fn cfg_get(cfg: &Json, k: &str) -> Json {
     }
 }
 
-fn checked(g: noble_ngraph_experiment::Graph) -> CheckedGraph {
-    check(g).unwrap_or_else(|d| panic!("fixture refused: {d}"))
+fn checked(g: noble_ngraph::Graph) -> CheckedGraph {
+    check(&BLAKE3, g).unwrap_or_else(|d| panic!("fixture refused: {d}"))
 }
 
 fn graph_summary(name: &str, g: &CheckedGraph) -> Json {
-    let text = noble_ngraph_experiment::text::print(g.graph());
+    let text = noble_ngraph::format::graph::print(g.graph());
     Json::obj([
         ("name", Json::s(name)),
         ("graph_logical_id", Json::s(hex(&g.id()))),
@@ -193,13 +194,13 @@ fn graph_summary(name: &str, g: &CheckedGraph) -> Json {
 
 fn b1(cfg: &Json) -> (Json, bool) {
     let f1 = checked(fixtures::f1());
-    let s1 = ParamSnapshot::new(&f1, &F1_FIXED).expect("snapshot");
-    let c1 = Compiled::new(&f1);
+    let s1 = ParamSnapshot::new(&BLAKE3, &f1, &F1_FIXED).expect("snapshot");
+    let c1 = Compiled::new(&BLAKE3, &f1);
     let f1_out = run_legs(&c1, &f32_inputs(&[0.5, -0.25]), Some(&s1));
     let f2 = checked(fixtures::f2());
     let m = [0.5f32, -1.25, 3.0, 0.75];
-    let s2 = ParamSnapshot::new(&f2, &m).expect("snapshot");
-    let c2 = Compiled::new(&f2);
+    let s2 = ParamSnapshot::new(&BLAKE3, &f2, &m).expect("snapshot");
+    let c2 = Compiled::new(&BLAKE3, &f2);
     let mut state = [1.0f32, -2.0];
     let mut agree = f1_out.agree();
     for _ in 0..1000 {
@@ -213,7 +214,7 @@ fn b1(cfg: &Json) -> (Json, bool) {
     for below in RULES {
         for above in RULES {
             let g = checked(fixtures::f3(below, above));
-            let c = Compiled::new(&g);
+            let c = Compiled::new(&BLAKE3, &g);
             let mut row = Vec::new();
             for i in [-1.0f32, 0.0, 1.0, 2.0, 3.0, 4.0] {
                 let legs = run_legs(&c, &f32_inputs(&[i, 2.5, -7.0]), None);
@@ -267,7 +268,7 @@ fn b2(cfg: &Json, a: &Args) -> (Vec<Json>, bool) {
     let mut ok = true;
     for v in fixtures::b2_vectors() {
         let c = checked(v.graph.clone());
-        let legs = run_legs(&Compiled::new(&c), &f32_inputs(&v.inputs), None);
+        let legs = run_legs(&Compiled::new(&BLAKE3, &c), &f32_inputs(&v.inputs), None);
         let expected = Obs::Normal(v.expected.iter().map(|b| Value::F32(*b)).collect());
         let pass = legs.agree() && legs.l3_reference.obs_eq(&expected);
         ok &= pass;
@@ -290,7 +291,7 @@ fn b2(cfg: &Json, a: &Args) -> (Vec<Json>, bool) {
     for below in RULES {
         for above in RULES {
             let g = checked(fixtures::f3(below, above));
-            let c = Compiled::new(&g);
+            let c = Compiled::new(&BLAKE3, &g);
             for i in [-lim, -1.0, 0.0, 3.0, 4.0, lim] {
                 let legs = run_legs(&c, &f32_inputs(&[i, 2.5, -7.0]), None);
                 ok &= legs.agree();
@@ -493,9 +494,9 @@ fn b4(cfg: &Json, a: &Args) -> (Json, bool) {
 fn b5(cfg: &Json) -> (Json, bool) {
     let c = b5_contract(B5_SEED, B5_DATA_SEED);
     let id_before = c.model.id();
-    let text_before = noble_ngraph_experiment::text::print(c.model.graph());
+    let text_before = noble_ngraph::format::graph::print(c.model.graph());
     let start = Instant::now();
-    let t = train::train(&c, None, B5_STEPS, &TrainControl::default()).expect("training");
+    let t = train::train(&BLAKE3, &c, None, B5_STEPS, &TrainControl::default()).expect("training");
     let secs = start.elapsed().as_secs_f64();
     let (first, last) = (t.losses[0], *t.losses.last().expect("loss"));
     let ratio = last / first;
@@ -513,7 +514,9 @@ fn b5(cfg: &Json) -> (Json, bool) {
             .obs
         })
         .collect();
-    let replay = train::replay(&c, &t.provenance).expect("replay");
+    let replay = train::replay(&BLAKE3, &c, &t.provenance, None, &TrainControl::default())
+        .expect("replay")
+        .snapshot;
     let s0_after: Vec<Obs> = c
         .data
         .iter()
@@ -533,28 +536,31 @@ fn b5(cfg: &Json) -> (Json, bool) {
             o => obs_text(&o),
         };
     let f2 = checked(fixtures::f2());
-    let wrong_graph = refused(&ParamSnapshot::new(&f2, &[1.0, 2.0, 3.0, 4.0]).expect("s2"));
+    let wrong_graph =
+        refused(&ParamSnapshot::new(&BLAKE3, &f2, &[1.0, 2.0, 3.0, 4.0]).expect("s2"));
     let mut slots = t.snapshot.slots().to_vec();
     slots.swap(0, 1);
     let wrong_layout = refused(&ParamSnapshot::from_parts(
+        &BLAKE3,
         t.snapshot.graph(),
-        layout_key(c.model.graph()),
+        layout_key(&BLAKE3, c.model.graph()),
         slots,
         t.snapshot.bytes().to_vec(),
     ));
     let mut g_old = fixtures::f1();
-    g_old.subject = noble_ngraph_experiment::ir::Subject::authored("issue14/F1 previous revision");
+    g_old.subject = noble_ngraph::ir::Subject::authored(&BLAKE3, "issue14/F1 previous revision");
     let old = checked(g_old);
-    let stale = refused(&ParamSnapshot::new(&old, &F1_FIXED).expect("old"));
+    let stale = refused(&ParamSnapshot::new(&BLAKE3, &old, &F1_FIXED).expect("old"));
     let ev = EvidenceRecord::new("B5 final snapshot agreement", &c.model, Some(&t.snapshot));
     let captured = checked(capture(&c.model, &t.snapshot).expect("capture"));
     let ev_new = ev.applies(&captured, None);
     let mut bad = b5_contract(B5_SEED, B5_DATA_SEED);
     bad.data[3].targets[0] = f32::INFINITY;
-    let nonfinite = train::train(&bad, None, 5, &TrainControl::default()).expect_err("nonfinite");
+    let nonfinite =
+        train::train(&BLAKE3, &bad, None, 5, &TrainControl::default()).expect_err("nonfinite");
     let ok = ratio <= 0.1
         && c.model.id() == id_before
-        && noble_ngraph_experiment::text::print(c.model.graph()) == text_before
+        && noble_ngraph::format::graph::print(c.model.graph()) == text_before
         && s0_out_before == s0_after
         && replay.bytes() == t.snapshot.bytes()
         && wrong_graph == "E-SNAPSHOT-STALE"
@@ -577,7 +583,7 @@ fn b5(cfg: &Json) -> (Json, bool) {
                 ("data_seed", Json::U(B5_DATA_SEED)),
                 ("prng", Json::s(PRNG)),
                 ("data_points", Json::U(c.data.len() as u64)),
-                ("data_digest", Json::s(hex(&data_digest(&c.data)))),
+                ("data_digest", Json::s(hex(&data_digest(&BLAKE3, &c.data)))),
                 ("steps", Json::U(B5_STEPS)),
                 ("initial_loss", Json::F(first)),
                 ("final_loss", Json::F(last)),
@@ -587,7 +593,7 @@ fn b5(cfg: &Json) -> (Json, bool) {
                 ("s0_snapshot_id", Json::s(hex(&t.initial.id()))),
                 ("final_snapshot_id", Json::s(hex(&t.snapshot.id()))),
                 ("replayed_snapshot_id", Json::s(hex(&replay.id()))),
-                ("optimizer_state_digest", Json::s(p.optimizer_state.clone())),
+                ("optimizer_state_digest", Json::s(hex(&p.optimizer_state))),
                 ("s0_outputs_unchanged_on_64_points", Json::Bool(s0_out_before == s0_after)),
                 ("wrong_graph", Json::s(wrong_graph)),
                 ("wrong_layout", Json::s(wrong_layout)),
@@ -599,20 +605,20 @@ fn b5(cfg: &Json) -> (Json, bool) {
                 (
                     "provenance",
                     Json::obj([
-                        ("parent", Json::s(p.parent.clone())),
-                        ("subject", Json::s(p.subject.clone())),
-                        ("graph", Json::s(p.graph.clone())),
-                        ("profile", Json::s(p.profile.clone())),
-                        ("deriv", Json::s(p.deriv.clone())),
-                        ("facts", Json::s(p.facts.clone())),
-                        ("loss", Json::s(p.loss.clone())),
-                        ("data", Json::s(p.data.clone())),
+                        ("parent", Json::s(hex(&p.parent))),
+                        ("subject", Json::s(hex(&p.subject.identity))),
+                        ("graph", Json::s(hex(&p.graph))),
+                        ("profile", Json::s(format!("{} {SEMANTIC_REVISION}", p.profile.name()))),
+                        ("deriv", Json::s(p.deriv.describe())),
+                        ("facts", Json::s(hex(&p.facts))),
+                        ("loss", Json::s(hex(&p.loss))),
+                        ("data", Json::s(hex(&p.data))),
                         ("seed", Json::U(p.seed)),
-                        ("prng", Json::s(p.prng.clone())),
-                        ("optimizer", Json::s(p.optimizer.clone())),
+                        ("prng", Json::s(PRNG)),
+                        ("optimizer", Json::s(p.optimizer.describe())),
                         ("steps", Json::U(p.steps)),
                         ("tools", Json::s(p.tools.clone())),
-                        ("result", Json::s(p.result.clone())),
+                        ("result", Json::s(hex(&p.result))),
                     ]),
                 ),
             ]),
@@ -625,9 +631,9 @@ fn b5(cfg: &Json) -> (Json, bool) {
 #[allow(clippy::too_many_lines)]
 fn b6(cfg: &Json) -> (Json, bool) {
     let g = checked(fixtures::f1());
-    let s = ParamSnapshot::new(&g, &F1_FIXED).expect("snapshot");
+    let s = ParamSnapshot::new(&BLAKE3, &g, &F1_FIXED).expect("snapshot");
     let (gid, sid) = (g.id(), s.id());
-    let comp = Compiled::new(&g);
+    let comp = Compiled::new(&BLAKE3, &g);
     let x = f32_inputs(&[0.5, 1.5]);
     let mut ok = true;
     let mut rows = Vec::new();
@@ -693,13 +699,13 @@ fn b6(cfg: &Json) -> (Json, bool) {
         );
     }
     let guarded = checked(
-        noble_ngraph_experiment::text::parse(
-            "ngraph-ir/0 ngraph-f32/0\nslot input f32\n%0 = input 0\n%1 = f32.add %0 %0\n%2 = guard %1 bit\n%3 = f32.select %1 %0 %1\nout %3\n",
-            "b6 guard",
+        noble_ngraph::format::graph::parse(
+            &BLAKE3,
+            "ngraph-ir/0 ngraph-f32/0\nsubject authored-name b6 guard\nslot input f32\n%0 = input 0\n%1 = f32.add %0 %0\n%2 = guard %1 bit\n%3 = f32.select %1 %0 %1\nout %3\n",
         )
         .expect("parses"),
     );
-    let gc = Compiled::new(&guarded);
+    let gc = Compiled::new(&BLAKE3, &guarded);
     for compiled in [false, true] {
         let tag = if compiled { "L4" } else { "L3" };
         run(
@@ -726,7 +732,7 @@ fn b6(cfg: &Json) -> (Json, bool) {
                     ..Control::default()
                 };
                 let other = checked(fixtures::f2());
-                let s2 = ParamSnapshot::new(&other, &[1.0, 2.0, 3.0, 4.0]).expect("s2");
+                let s2 = ParamSnapshot::new(&BLAKE3, &other, &[1.0, 2.0, 3.0, 4.0]).expect("s2");
                 if compiled {
                     comp.evaluate(&x, Some(&s2), &control).obs
                 } else {
@@ -754,8 +760,8 @@ fn b6(cfg: &Json) -> (Json, bool) {
     // Owners released in both orders.
     let mut owners_ok = true;
     for order in [[0usize, 1], [1, 0]] {
-        let snap = ParamSnapshot::new(&g, &F1_FIXED).expect("snapshot");
-        let weak = Arc::downgrade(&snap.bytes_arc());
+        let snap = ParamSnapshot::new(&BLAKE3, &g, &F1_FIXED).expect("snapshot");
+        let weak = Rc::downgrade(&snap.bytes_rc());
         let mut owners = [Some(snap.clone()), Some(snap)];
         owners[order[0]] = None;
         owners_ok &= weak.upgrade().is_some();
@@ -764,16 +770,18 @@ fn b6(cfg: &Json) -> (Json, bool) {
     }
     // Training cancelled before step 4: last published = after step 3.
     let c = b5_contract(B5_SEED, B5_DATA_SEED);
-    let three = train::train(&c, None, 3, &TrainControl::default()).expect("3 steps");
+    let three = train::train(&BLAKE3, &c, None, 3, &TrainControl::default()).expect("3 steps");
     let counters = ScratchCounters::default();
     let cancel = |t: u64| t == 4;
     let e = train::train(
+        &BLAKE3,
         &c,
         None,
         10,
         &TrainControl {
             cancel_before_step: Some(&cancel),
             scratch: Some(&counters),
+            ..TrainControl::default()
         },
     )
     .expect_err("cancelled");
@@ -783,6 +791,7 @@ fn b6(cfg: &Json) -> (Json, bool) {
     let tc = counters.snapshot();
     let retained = g.id() == gid
         && ParamSnapshot::from_parts(
+            &BLAKE3,
             s.graph(),
             s.layout(),
             s.slots().to_vec(),
@@ -868,7 +877,7 @@ fn main() {
     let doc = Json::obj([
         ("schema", Json::s("noble-ngraph-phase-b-core-evidence/v1")),
         ("issue", Json::s("OnixResearch/noble-lang#14")),
-        ("change", Json::s(".cairn/changes/numeric-graph-profile")),
+        ("change", Json::s(".cairn/archive/2026-10-16-numeric-graph-profile")),
         ("scope", Json::s("Phase B core legs: authored F32 IR (B0(b)), graph checker, L2/B2-ORACLE/L3/L4, B3 core controls, B4, B5, B6. I64 extraction, L1 Wasm/V8 and the BigInt oracle are the extraction leg's evidence.")),
         ("non_claims", Json::A(vec![
             Json::s("Finite tests and evaluator agreement do not prove the compiler, the graph checker (NG-PO-B) or the evaluators (NG-PO-C) correct."),

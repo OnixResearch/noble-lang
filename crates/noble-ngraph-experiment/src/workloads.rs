@@ -11,10 +11,11 @@
 //! * W4 = 32 reads of one 10,000-entry index table.
 
 use crate::fixtures::range;
-use crate::ir::{
+use crate::scheme::BLAKE3;
+use noble_ngraph::ir::{
     Fact, GraphBuilder, NodeId, Op, OutOfRange, Provenance, ScalarType, SubProfile, Subject,
 };
-use crate::Graph;
+use noble_ngraph::Graph;
 
 /// A W3 ReGLU network shape.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -81,7 +82,7 @@ impl ReGluNet {
     pub fn graph(self, name: &str) -> Graph {
         let mut b = GraphBuilder::new(
             SubProfile::F32,
-            Subject::authored(&format!("issue14/{name} {self:?}")),
+            Subject::authored(&BLAKE3, &format!("issue14/{name} {self:?}")),
         );
         let x: Vec<NodeId> = (0..self.inputs())
             .map(|_| b.input(ScalarType::F32))
@@ -133,7 +134,7 @@ impl ReGluNet {
                 for k in 0..self.d_in {
                     gate += q[self.d_in + 1 + k] * xs[k];
                 }
-                let h = crate::sem::reglu(left, gate);
+                let h = noble_ngraph::sem::reglu(left, gate);
                 acc += o[j] * h;
             }
             *y = acc;
@@ -146,7 +147,7 @@ impl ReGluNet {
 pub fn sse_loss(n: usize) -> Graph {
     let mut b = GraphBuilder::new(
         SubProfile::F32,
-        Subject::authored(&format!("issue14/SSE loss n={n}")),
+        Subject::authored(&BLAKE3, &format!("issue14/SSE loss n={n}")),
     );
     let y: Vec<NodeId> = (0..n).map(|_| b.input(ScalarType::F32)).collect();
     let t: Vec<NodeId> = (0..n).map(|_| b.input(ScalarType::F32)).collect();
@@ -198,7 +199,7 @@ impl NativeTrainer {
 
     /// One step on `points` (each `d_in` inputs) with targets: SSE loss,
     /// manual FP32 backward, `adam/0` hyperparameters. Returns the loss.
-    pub fn step(&mut self, x: &[f32], t: &[f32], a: &crate::train::Adam) -> f32 {
+    pub fn step(&mut self, x: &[f32], t: &[f32], a: &noble_ngraph::train::Adam) -> f32 {
         let net = self.net;
         let unit = 2 * (net.d_in + 1);
         let g = &mut self.grad;
@@ -282,7 +283,7 @@ pub fn w4_entry(k: usize) -> f32 {
 pub fn w4_graph() -> Graph {
     let mut b = GraphBuilder::new(
         SubProfile::F32,
-        Subject::authored("issue14/W4 10000-entry index table"),
+        Subject::authored(&BLAKE3, "issue14/W4 10000-entry index table"),
     );
     #[allow(clippy::cast_precision_loss)]
     let hi = (W4_TABLE - 1) as f32;
@@ -306,9 +307,9 @@ pub fn w4_graph() -> Graph {
             })
         })
         .collect();
-    let terms: Vec<(f32, crate::ir::AffineOperand)> = reads
+    let terms: Vec<(f32, noble_ngraph::ir::AffineOperand)> = reads
         .iter()
-        .map(|r| (1.0, crate::ir::AffineOperand::Node(*r)))
+        .map(|r| (1.0, noble_ngraph::ir::AffineOperand::Node(*r)))
         .collect();
     let s = b.affine(-0.0, &terms);
     b.output(s);
@@ -335,7 +336,7 @@ pub fn w4_native(table: &[f32], idx: &[f32]) -> Option<f32> {
 pub fn w1_graph() -> Graph {
     let mut b = GraphBuilder::new(
         SubProfile::I64,
-        Subject::authored("issue14/W1 I1 hand-built"),
+        Subject::authored(&BLAKE3, "issue14/W1 I1 hand-built"),
     );
     let x = b.input(ScalarType::I64);
     let y = b.input(ScalarType::I64);
@@ -362,7 +363,7 @@ pub const fn w1_native(x: i64, y: i64) -> i64 {
 pub fn w2_graph() -> Graph {
     let mut b = GraphBuilder::new(
         SubProfile::I64,
-        Subject::authored("issue14/W2 I4 hand-built"),
+        Subject::authored(&BLAKE3, "issue14/W2 I4 hand-built"),
     );
     let s = b.input(ScalarType::I64);
     let i = b.input(ScalarType::I64);

@@ -1,11 +1,12 @@
 //! Seeded random `F32` graphs and input vectors for the B2 differential legs
 //! (seed recorded; `splitmix64/0`).
 
-use crate::ir::{
+use crate::scheme::BLAKE3;
+use noble_ngraph::ir::{
     AffineOperand, Fact, GraphBuilder, NodeId, Op, Provenance, ScalarType, SubProfile, Subject,
 };
-use crate::prng::SplitMix64;
-use crate::Graph;
+use noble_ngraph::prng::SplitMix64;
+use noble_ngraph::Graph;
 
 /// Shape of a generated graph's inputs.
 #[derive(Clone, Debug)]
@@ -86,7 +87,7 @@ pub fn graph(seed: u64, ops: usize) -> RandomGraph {
     let mut rng = SplitMix64::new(seed);
     let mut b = GraphBuilder::new(
         SubProfile::F32,
-        Subject::authored(&format!("issue14/random seed={seed} ops={ops}")),
+        Subject::authored(&BLAKE3, &format!("issue14/random seed={seed} ops={ops}")),
     );
     let plain = 3 + rng.below(3) as usize;
     let mut pool: Vec<NodeId> = (0..plain).map(|_| b.input(ScalarType::F32)).collect();

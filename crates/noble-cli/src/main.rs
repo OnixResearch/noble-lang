@@ -19,6 +19,7 @@ mod build;
 mod calculator;
 mod component;
 mod core;
+mod ngraph;
 mod sandbox;
 mod workflow;
 
@@ -59,6 +60,12 @@ fn main() -> std::process::ExitCode {
         .is_some_and(|argument| argument == "component")
     {
         return component::run(&arguments);
+    }
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "ngraph")
+    {
+        return ngraph::run(&arguments);
     }
     if arguments.first().is_some_and(|argument| argument == "live")
         && arguments.get(1).is_some_and(|argument| argument == "slot")
@@ -121,13 +128,15 @@ fn main() -> std::process::ExitCode {
         .is_some_and(|argument| argument == "--help")
     {
         println!(
-            "{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}",
+            "{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}",
             core::USAGE,
             workflow::USAGE,
             build::USAGE,
             core::companions::USAGE,
             backend::USAGE,
-            component::USAGE
+            component::USAGE,
+            calculator::USAGE,
+            ngraph::USAGE
         );
         return std::process::ExitCode::SUCCESS;
     }
