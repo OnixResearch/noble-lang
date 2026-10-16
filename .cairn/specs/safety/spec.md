@@ -1432,5 +1432,12 @@ Per-evaluation activation, gradient and workspace scratch MUST be owned separate
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: NGRAPH-CASE-10 for NGRAPH-OWN-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-10](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `runtime` procedure for case `NGRAPH-CASE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->

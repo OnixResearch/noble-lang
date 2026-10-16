@@ -144,3 +144,57 @@ Every LSLOT scenario MUST remain `implementation: absent`, `execution: not-run`,
 **NGRAPH-SNAP-01.**
 
 An optimizer step MUST produce a new immutable parameter snapshot and MUST NOT modify a parent snapshot, graph, Program or capture. Snapshot identity MUST be domain-separated and MUST bind the graph logical identity, the ordered parameter layout and the exact little-endian parameter bytes. Training provenance MUST bind the parent snapshot, the source subject and closure identities, the profile semantic revision, the derivative policy and its per-node options, the fact bindings, the loss graph, the exact ordered training data digest, the seed and PRNG revision, the optimizer revision with exact hyperparameter bits, the step count and the tool revisions. Evaluating with a snapshot whose graph or layout identity does not match MUST be refused before evaluation. A hash identifies bytes; it MUST NOT be reported as a correctness claim. Capturing a snapshot into a new Program MUST create a new subject whose evidence is checked for applicability anew; proofs MUST NOT transfer automatically.
+
+**NGRAPH-SNAP-02.**
+
+**Contents.** A snapshot file MUST begin with `noble-ngraph-snapshot/0`. It MUST record, as structured fields:
+
+- the `ParamSnapshotId`, the `GraphLogicalId` and the ordered parameter layout;
+- every parameter's exact binary32 encoding, in param-slot order;
+- the optimizer-state digest;
+- the complete NGRAPH-SNAP-01 training provenance, including the fact-binding digest of the model graph;
+- a domain-separated digest of that provenance record.
+
+**Loading.** Loading a snapshot file MUST recompute the layout, the snapshot identity and the provenance digest from the recorded fields, and MUST refuse any mismatch with `E-SNAPSHOT-INTEGRITY` before use. The provenance digest MUST be the domain-separated identity encoding (a domain tag, then length-prefixed byte strings and fixed-width little-endian integers) of every record in file order except the schema line and the digest itself, so that any reader can recompute it. Records that training can never publish, a non-finite parameter or optimizer hyperparameters outside the optimizer's domain, MUST also be refused with `E-SNAPSHOT-INTEGRITY`, however consistent their digests.
+
+**Binding.** Binding a snapshot to a graph MUST refuse:
+
+- a different `GraphLogicalId`, or a different fact-binding digest, with `E-SNAPSHOT-STALE`;
+- a different layout with `E-SNAPSHOT-LAYOUT`;
+- a snapshot other than a caller-pinned snapshot identity with `E-SNAPSHOT-ID`.
+
+Every binding refusal MUST occur before any graph node is evaluated.
+
+**Publication.** Training MUST publish its result only as a new file at a path that did not exist. The write MUST never truncate, replace or modify an existing file, including the parent snapshot. A training call that stops MUST NOT leave a snapshot or partial file at the requested path. Once the new file exists with its complete bytes, the call MUST report the publication as done, even if cleaning up a staging name fails.
+
+**Replay.**
+
+- Replaying a snapshot's provenance MUST first require that the supplied model, loss graph, training data and parent match the recorded identities; otherwise `E-SNAPSHOT-STALE`.
+- Replay MUST admit the recorded training contract exactly as training admits a new one, so a recorded derivative opt-in that training would refuse MUST be refused with the code training gives it.
+- On the same pinned platform, replay MUST then reproduce the parameter bytes, the optimizer-state digest and the snapshot identity exactly; otherwise `E-SNAPSHOT-REPLAY`.
+
+**Non-claim.** A snapshot file identifies bytes. A matching identity or a successful replay MUST NOT be reported as evidence that the trained parameters, the optimizer or the evaluators are correct.
+
+#### Scenario: NGRAPH-CASE-10 immutable training publication
+
+- GIVEN the `Numeric-Graph-v1` profile and the model, loss, data, seed and follow-up runs specified by `NGRAPH-CASE-10`
+- WHEN `noble ngraph train` publishes snapshots, retrains to a second path, trains from the first snapshot and targets an existing path
+- THEN the recorded identities MUST match, repeated training MUST be byte-identical, and the parent, the graph and existing paths MUST stay byte-unchanged
+
+#### Scenario: NGRAPH-CASE-12 snapshot integrity and binding refusals
+
+- GIVEN every tampered, foreign, permuted, changed-fact, pinned-identity and schema variant specified by `NGRAPH-CASE-12`
+- WHEN `noble ngraph eval` and `noble ngraph verify` load and bind each snapshot
+- THEN each MUST be refused with its recorded code before any graph node is evaluated
+
+#### Scenario: NGRAPH-CASE-13 provenance replay
+
+- GIVEN the seed, parent, changed-input and forged replay variants specified by `NGRAPH-CASE-13`
+- WHEN `noble ngraph verify --replay` rebuilds and reruns each training contract
+- THEN matching inputs MUST reproduce the snapshot exactly and every other variant MUST be refused with its recorded code
+
+#### Scenario: NGRAPH-CASE-11 training contract refusals
+
+- GIVEN every derivative, sub-profile, non-finite, budget, parent, guard, loss-interface and usage variant specified by `NGRAPH-CASE-11`
+- WHEN `noble ngraph train` runs each variant
+- THEN each MUST report its recorded code and exit status and MUST NOT create an output or partial file, except the recorded opt-in success

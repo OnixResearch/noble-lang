@@ -378,10 +378,10 @@ r[NGRAPH-SCOPE-01]
 
 ## Test plan
 
-The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_BIN_EXE_noble")`, and no ngraph path spawns Node or Wasm. The tests below ran; their results are recorded in [tasks.md](tasks.md). The draft cases in [the case file](cases/numeric-graph-cases.json) stay `absent / not-run / open / unassessed` with `evidence: []` until they are registered and recorded (Phase 7): a passing test is not a recorded case execution.
+The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_BIN_EXE_noble")`, and no ngraph path spawns Node or Wasm. The tests below ran; their results are recorded in [tasks.md](tasks.md). The registered [case file](../../../specs/conformance/numeric-graph-cases.json) records eight passed and seven not-run contracts under the receipt-linked lifecycle record below. Passing tests alone are not complete case acceptance.
 
 - **`crates/noble-ngraph/tests`:**
-  - `ir_check.rs` and `extract_b1.rs` (moved); `ir_check.rs` also shows that every refusal before evaluation (input fact, interface, missing or stale snapshot) leaves both evaluators at zero evaluated nodes (`refusals_before_evaluation_evaluate_no_node`; NGRAPH-CASE-04/08/12 `evaluated_nodes`, which no CLI report carries);
+  - `ir_check.rs` and `extract_b1.rs` (moved); `refusals_before_evaluation_evaluate_no_node` directly observes input-fact, interface and missing/stale-snapshot eval refusals at zero evaluated nodes in both library evaluators. The approved NGRAPH-CASE-08 mapping uses the exact three named refusal classes, not CLI counters or CLI guard/F1 bytes. This test does not measure NGRAPH-CASE-04 `check`, guest/protected-operation counters or every NGRAPH-CASE-12 parse/integrity path;
   - `format_graph.rs`: round trip on inline authored graphs and the extracted `I1`–`I4`; `authored-name` sugar; evidence hex symmetry; malformed subject and shape lines; the 127-pair shape bound in the parser and in `ShapeTree::pair`, including the 40,000-deep repro; number tokens without `+` and with at most eight hex digits;
   - `format_values.rs`: vectors and data, with schema, `types`, inexact-decimal, NaN-bits and row-count controls; the decimal window's boundaries (the expansions of `2^-149`, `(2^24 − 1) × 2^-149` and the largest finite value, one more digit, a 100,001-digit token, saturated exponents); no leading `+`;
   - `snapshot_file.rs`: round trip; an independent implementation of the D6 provenance-digest encoding; tampered param, layout and provenance; opt-in order; stale graph or facts; pinned id; swapped params with recomputed identities; re-signed optimizers outside the `adam/0` domain; `+` in records;
@@ -422,12 +422,14 @@ The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_
 `bc10df848ed81d53e849c440c1f639979e40d38d` is retained in
 `verification/main-gates/receipt.json`: 10/14 checks pass, with boundary-controls
 (#26/#27), octet (#26), source-coverage and native-assurance (#25) failing.
-`rust-tests` reports 529 passed, 0 failed, 6 ignored in 77 binaries. Publication
-adds the acceptance runner, inputs, docs and receipt without changing the
-tested Rust/Cargo/policy/Nix implementation. Phase 7 source-bound acceptance,
-CASE-02 capability facts and independent claims review remain open; all draft
-case states remain unchanged. Sync is approved for the later lifecycle step,
-but no sync or archive is part of this publication. NG-PO-A..H stay OPEN.
+`rust-tests` reports 529 passed, 0 failed, 6 ignored in 77 binaries. Historical
+publication `0eb5c0478ebf3419de6f94b8144c2ac7520356ca` added the acceptance
+runner, inputs and docs without changing the tested Rust/Cargo/policy/Nix
+implementation; final acceptance and claims review were then pending.
+The later immutable acceptance and independent review support only the
+eight recorded cases in the lifecycle section below. They do not rerun or
+relabel the historical gate logs. CASE-02 capability closure remains open,
+and NG-PO-A..H stay OPEN. The change stays active and is not archived.
 
 - **Workspace and lock.** `Cargo.toml` members add `crates/noble-ngraph`, and `Cargo.lock` changes. There are no new third-party crates: vendoring is unchanged except for the path-crate entries, so re-pin the vendor hash if the lock hash changes.
 - **Tool selection.** `nix/tool-selection-files.nix` and `policy/tool-selection-files.ncl`/`.json` gain `crates/noble-ngraph/Cargo.toml` and new hashes for `crates/noble-cli/Cargo.toml` and `crates/noble-ngraph-experiment/Cargo.toml` (repin script).
@@ -464,6 +466,44 @@ The director reviewed this design (proposal, tasks, D1–D13) on 2026-10-16 unde
 - **Q1:** yes. The integrator adds `noble-ngraph` to `core_no_std` and to `nix/octet-controls.nix` `requiredCorePackages`, `requiredPackages` and `requiredScopes` as a tightening.
 - **Q2–Q7:** as recommended above.
 - **Q8:** the `NGRAPH` evidence-route row in `tools/check-specs.mjs` (added while promoting `numeric-graph-profile`) is accepted, following the `CB` precedent (commit `9a2e409`).
+
+## Lifecycle record
+
+The registered [NGRAPH-CASE-01..15](../../../specs/conformance/numeric-graph-cases.json)
+and [profile status](../../../specs/STATUS.json) record **8 passed, 7 not-run**.
+Cases 01/06/07/08/10/13/14/15 are `implemented/passed/open/explicit` with
+the immutable [acceptance receipt](../../../verification/numeric-graph-v1/acceptance.json)
+and [independent review receipt](../../../verification/numeric-graph-v1/review-receipt.json).
+The accepted source revision is
+`sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f`;
+the [build provenance](../../../verification/numeric-graph-v1/build-provenance.json)
+binds the 707 build/policy inputs that are byte-identical at published
+`0eb5c04` and tested `bc10df8`. The original prepromotion records, source
+receipts and external raw outputs remain immutable.
+
+Cases 02/03/04/05/09/11/12 remain `absent/not-run/open/unassessed` with
+`evidence: []`. All seven lack directly observed guest/protected-operation
+counters; CASE-04 additionally lacks measured check-node zero, and CASE-02
+lacks a complete zero-use capability closure (637 relevant unknowns).
+CASE-12's reviewed parsing paths and library binding measurements are not
+a complete directly measured node counter for every variant. No input,
+expected field, case kind, profile or requirement is weakened to change this
+disposition.
+
+The [independent claims review](../../../verification/numeric-graph-v1/review.json)
+and [lifecycle evidence record](../../../verification/numeric-graph-v1/README.md)
+retain the original supplemental runtime packet path and hash: CASE-01
+adds 12 actual CORE-03/05/09 runtime inputs per binary to the 31 CORE rows;
+CORE-15/16 remain name-bound cargo controls. CASE-08's node-zero evidence is
+the approved direct library mapping, not a CLI measurement. CASE-06's
+text variants and CASE-14's software-float comparisons have the finite mapped
+scope stated in those records. No proof, performance, GPU, backend-selection
+or cross-platform claim follows.
+
+Canonical selection and registration do not close the feature. The seven
+incomplete contracts and historical four global gate failures (#25/#26/#27)
+leave archive unauthorized, and [tasks.md](tasks.md) keeps archive open.
+CALC records and `obligations.json` remain unchanged.
 
 ## Risks / Trade-offs
 

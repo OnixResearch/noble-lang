@@ -647,10 +647,21 @@ identifies bytes, and neither it nor a replay shows that the trained
 parameters, the optimizer or the evaluators are correct. Replay is defined on
 one pinned platform, and there is no cross-platform bit-reproducibility claim.
 The Phase B and Phase C receipts and their reproduction commands are in
-[verification/ngraph/README.md](verification/ngraph/README.md). These limits
-and reports are not acceptance evidence; the draft
-[NGRAPH cases](.cairn/changes/numeric-graph-v1/cases/numeric-graph-cases.json)
-record their status.
+[verification/ngraph/README.md](verification/ngraph/README.md). The registered
+[NGRAPH cases](specs/conformance/numeric-graph-cases.json) and
+[profile status](specs/STATUS.json) record **8 passed, 7 not-run**. Cases
+01/06/07/08/10/13/14/15 are `implemented/passed/open/explicit`, bound to the
+immutable [acceptance receipt](verification/numeric-graph-v1/acceptance.json)
+and [independent review](verification/numeric-graph-v1/review-receipt.json).
+Cases 02/03/04/05/09/11/12 remain
+`absent/not-run/open/unassessed` with `evidence: []`: their guest/protected
+counters are structural, not directly observed; CASE-04 additionally lacks
+a measured check-node zero, and CASE-02 lacks complete zero-use capability
+closure (637 relevant unknowns). The
+[lifecycle evidence record](verification/numeric-graph-v1/README.md) gives the
+exact library mappings and supplemental runtime bounds. This is bounded
+case acceptance, not whole-feature or global-gate acceptance. The
+[change](.cairn/changes/numeric-graph-v1/design.md) stays active and is not archived.
 
 ### Experimental checked live slots (opt-in; acceptance not established)
 
@@ -965,7 +976,7 @@ does not make every other feature available in that runtime.
 | [Synchronous components](specs/WIT-WASI.md) | Selected WIT bindings, component compilation, host resources, ownership transfer, and authorization checks. |
 | [Native async components](specs/WIT-WASI.md#selected-native-async-boundary-and-compatibility) | A separate bounded component profile with native async execution and cancellation controls. General guest async syntax remains open. |
 | [Local services](specs/ROADMAP.md#m7-selected-local-synchronous-service-bounded-acceptance-complete) and [choreography](specs/ROADMAP.md#m8-selected-choreography-projection-bounded-acceptance-complete) | A bounded local synchronous publisher/subscriber service and finite one- or two-round protocols over that service. |
-| [Numeric graphs](#experimental-numeric-graphs-opt-in-no-performance-claim) | Opt-in `Numeric-Graph-v1`, only through `noble ngraph`: checked `ngraph-ir/0` graph files, exact `I64` graphs extracted from Core source, directly authored `F32` graphs (no kernel `F32`), reference and compiled CPU evaluators, `adam/0` training into immutable snapshot files, and provenance replay. Phase C measured 0.06–0.18× the speed of host-native Rust, so there is no performance or GPU claim; NG-PO-A..H remain open. |
+| [Numeric graphs](#experimental-numeric-graphs-opt-in-no-performance-claim) | Opt-in `Numeric-Graph-v1`, only through `noble ngraph`: checked `ngraph-ir/0` graph files, exact `I64` graphs extracted from Core source, directly authored `F32` graphs (no kernel `F32`), reference and compiled CPU evaluators, `adam/0` training into immutable snapshot files, and provenance replay. [Recorded cases](specs/conformance/numeric-graph-cases.json): 8 passed, 7 not-run; implementation partial, change active, not archived. Phase C measured 0.06–0.18× the speed of host-native Rust, so there is no performance or GPU claim; NG-PO-A..H remain open. |
 
 Ordinary `run` and `session` use the **resource-free Core-Bootstrap** profile.
 Their host words are `test.emit` and `test.abort`. Resources and component

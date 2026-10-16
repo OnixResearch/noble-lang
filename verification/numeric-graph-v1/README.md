@@ -1,11 +1,18 @@
-# Numeric-Graph-v1 acceptance runner
+# Numeric-Graph-v1 lifecycle evidence
 
-`acceptance.mjs` records the executed scenario cases of
-`numeric-graph-v1` (`NGRAPH-CASE-01..15`). It never edits case state or
-evidence; it writes one receipt, `acceptance.json`, and keeps every raw
-output in an external directory bound by sha256.
+The registered [NGRAPH cases](../../specs/conformance/numeric-graph-cases.json)
+and [profile status](../../specs/STATUS.json) record **8 passed, 7 not-run**,
+with proof open for every case. The immutable [acceptance receipt](acceptance.json)
+and [independent review receipt](review-receipt.json) bind the finite execution
+and review evidence. The [implementation change](../../.cairn/changes/numeric-graph-v1/design.md)
+stays active and is not archived; this is not whole-feature or global-gate acceptance.
 
-## Run
+`acceptance.mjs` records observations for `NGRAPH-CASE-01..15`. It never edits
+case state or evidence; it writes one receipt, `acceptance.json`, and keeps
+every raw output in an external directory bound by sha256. A runner result
+is not by itself acceptance of every case contract.
+
+## Historical acceptance runner interface
 
 Use the policy-selected Node (`policy/tool-selection.json`
 `tool_paths.node.output` + `/bin/node`) with no Node flags.
@@ -53,11 +60,15 @@ NODE=$(jq -r .tool_paths.node.output policy/tool-selection.json)/bin/node
   the gate `rust-tests` log of `--tested-commit` and is defined once in its file
   at that commit. Case 14 also needs `ten_million_bit_patterns_match_std` in
   `--soft-float-log`.
-- Not run: case 02 (it needs Octet/native-assurance capability facts).
+- The runner omits case 02 (it needs Octet/native-assurance capability facts).
+  The final disposition below also keeps six other incomplete static/admission
+  contracts not-run despite their observed variant outputs.
 
-Every `expected` field is either observed or accounted for: `evaluated_nodes`
-and the guest counters are not in `noble-ngraph-report/v1` lines, so they are
-recorded as not observable with the covering library test.
+The report schema has no evaluated-node or guest/protected-operation counters.
+Structural field accounting is not a direct zero observation. Only the
+specific approved library counter mapping described below supplies CASE-08's
+otherwise unreported node-zero field; it does not supply counters for the
+seven held cases.
 
 ## Inputs
 
@@ -69,7 +80,7 @@ B2 graphs are `noble_ngraph::format::graph::print` of the
 `f1-fact.ngraph` are single edits of `f1.ngraph`, checked at plan time. The
 training refusal fixtures are those of `crates/noble-cli/tests/ngraph.rs`.
 
-## Final execution packet (2026-10-16; promotion held)
+## Immutable prepromotion execution packet (2026-10-16)
 
 The immutable [acceptance receipt](acceptance.json) has SHA-256
 `cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2`.
@@ -113,29 +124,71 @@ retain all fifteen normalized, unpromoted records and their individual
 `prepromotion_case_sha256` values. Each hashes UTF-8 `JSON.stringify` of the
 entire record after recursively sorting object keys in ECMAScript UTF-16
 code-unit order, preserving array order, with no whitespace, BOM or trailing
-newline. Future `evidence.configuration.prepromotion_case_sha256` must use
-the corresponding record digest, never the whole-file digest.
+newline. Each `evidence.configuration.prepromotion_case_sha256` uses the
+corresponding record digest, never the whole-file digest.
 
-**Runner passage is not lifecycle promotion or a completed claims review.**
-CASE-01 and CASE-15 require the separate independent review. The 31 CORE
-rows are finite coverage: CORE-03/05/09 are compile-only in this runner and
-CORE-15/16 are name-bound cargo controls. CASE-04's zero evaluated nodes is
-structural accounting of `check`, not an observed CLI counter; its cited
-`refusals_before_evaluation_evaluate_no_node` test exercises eval refusals,
-not a direct check-node measurement. Guest/protected-operation counters are
-also structural accounting, not measured report fields. CASE-02 remains
-not-run without collected zero-use capability facts. No case state has been
-promoted, no sync/archive performed and no CALC state changed.
+### Independent review and supplemental runtime
 
-### Director disposition: direct observations only
+The immutable [claims review](review.json), SHA-256
+`3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563`,
+and [review receipt](review-receipt.json) record `result: passed`, no failures,
+and the exact eight-case acceptance/seven-case hold. The review receipt
+checks 1,245 acceptance raw files and 246 supplemental runtime artifact files.
+Its original external output is
+`/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound`.
+The supplemental runtime packet is bound directly by the `runtime` entries
+of both review files:
+`/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-core/runtime.json`,
+SHA-256 `9a9308c4ebf372e3cf8a3b2a4a2e6745b76e6e89419fbf420523190e775921fc`.
 
-The runner's variant results are executable evidence, not complete case
-acceptance. The director holds all seven static/admission cases at
-`absent/not-run/open/unassessed` with `evidence: []`:
+CASE-01 combines the acceptance runner's 31 byte-identical CORE rows with
+12 additional actual CORE-03/05/09 runtime observations per binary (6/4/2),
+using the m4 driver and pinned Node host. The acceptance runner's own
+CORE-03/05/09 rows remain compile-only; its immutable receipt is not
+rewritten to include the supplemental observations. CORE-15/16 remain
+name-bound cargo controls and source review, not invented CLI runtime rows.
+This is a finite ordinary-entry-point review, not universal semantic equivalence.
+CASE-15 combines the independent review of the README, actual help, report
+field names and historical experiment documentation with 100 command pairs
+whose stdout, stderr, exit status and published bytes match.
+
+CASE-08 passes its exact CLI variant codes, outcomes, exits and line counts
+plus the reviewed library mapping in `review.json` `case08.node_zero`.
+`refusals_before_evaluation_evaluate_no_node` directly measures both
+evaluators on `common::linear(false, true)`: `x=5.0` with a valid snapshot
+gives `FactInput`; `Value::I64(1)` for the F32 interface gives `Interface`;
+`x=1.0` without a snapshot gives `SnapshotLayout`. Each reports
+`evaluated_nodes == 0`. These are the three exact named refusal classes,
+not measurements on the CLI's guard/F1 file bytes, and **not CLI counters**.
+Guard traps, fuel exhaustion and mixed normal/guard-failing rows are not
+asserted to evaluate zero nodes. This mapping does not measure CASE-04
+`check` or any guest/protected-operation counter.
+
+CASE-06 is finite mapped library coverage: canonical/noisy text over the
+full identity corpus, with authored-name/evidence parser variants on the
+applicable zoo subjects using the test SipHash scheme, not a Cartesian
+product over every corpus graph. CASE-14 includes the retained ignored
+10⁷ bit-pattern tier for bit-input routines, NaNs compared as one class,
+and exhaustive integer exponents −1100..1100 for `pow2_f64`; it is not
+a universal float-correctness proof.
+
+The historical `review.mjs` verifier deliberately binds prepromotion docs
+and the old active case path. Do not rerun it against the recorded-state
+documents or moved case file; preserve its original review receipt and raw
+outputs unchanged.
+
+## Registered disposition: 8 passed, 7 not-run
+
+Cases **01/06/07/08/10/13/14/15** are
+`implemented/passed/open/explicit` with receipt-linked evidence at source
+`sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f`.
+All seven static/admission cases below remain
+`absent/not-run/open/unassessed` with `evidence: []`; passing variant outputs
+do not satisfy their unobserved fields:
 
 | Case | Unobserved acceptance field or additional gap |
 |---|---|
-| 02 | Guest/protected counters are structural; collected zero forbidden-capability facts are also missing. |
+| 02 | Guest/protected counters are structural, not directly observed; complete zero-use capability closure is missing, with 637 relevant unknowns ([retained gate deltas](gate-deltas.json)). |
 | 03 | Guest/protected counters are structural, not directly observed. |
 | 04 | Guest/protected counters and check-node zero are not directly measured. |
 | 05 | Guest/protected counters are structural, not directly observed. |
@@ -143,17 +196,59 @@ acceptance. The director holds all seven static/admission cases at
 | 11 | Guest/protected counters are structural, not directly observed. |
 | 12 | Guest/protected counters are structural, not directly observed. |
 
-Only 01/06/07/08/10/13/14/15 are candidate promotions, subject to final
-independent audit and director release. The director reports that the audit
-has supplementary actual CORE-03/05/09 runtime observations for CASE-01;
-these are separate from this runner's compile-only rows. CASE-08 still
-requires the audit's exact library node-zero coverage verdict. No telemetry,
-tautological test, semantic expectation or case-kind change was added to
-manufacture case acceptance. Registration and promotion remain unstarted.
-This disposition does not claim full feature acceptance or archive readiness.
+CASE-04's zero evaluated nodes is structural accounting of `check`, not an
+observed counter: the cited library test measures eval refusals, not check.
+CASE-12's parse/integrity paths likewise have no complete directly measured
+node count. No telemetry, semantic expectation, case kind, input, profile or
+requirement was changed to manufacture acceptance. The original immutable
+acceptance, review, provenance, normalized prepromotion cases and raw outputs
+retain their historical prepromotion wording and bytes. CALC records and the
+proof ledger are unchanged. Seven incomplete contracts and the retained
+global failures keep archive and whole-feature completion open.
 
 The original main gates remain **10 passed, four known failed**:
 boundary-controls (#26/#27), Octet (#26), source-coverage and native-assurance
 (#25). They were not rerun here. NG-PO-A..H remain open; the Phase C W3-L
 0.131× host-native STOP remains unchanged. This packet makes no proof,
 performance, GPU, backend-selection or cross-platform claim.
+
+## Bounded postpromotion verification
+
+`postpromotion.mjs` verifies the staged lifecycle documents against the exact
+independently audited anchor `16fd5369a6625d1d166a25190bbb02532832432a`.
+Use the policy-selected Node with no execution overrides, the original
+external receipts (not their repository copies), and a new external output
+directory whose parent already exists:
+
+```sh
+NODE=$(jq -r .tool_paths.node.output policy/tool-selection.json)/bin/node
+"$NODE" verification/numeric-graph-v1/postpromotion.mjs plan \
+  --anchor 16fd5369a6625d1d166a25190bbb02532832432a \
+  --acceptance /home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance/acceptance.json \
+  --review /home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound/review-receipt.json \
+  --out "$OUT"
+# Require ready:true and prerequisites:[] before executing the same arguments:
+"$NODE" verification/numeric-graph-v1/postpromotion.mjs run \
+  --anchor 16fd5369a6625d1d166a25190bbb02532832432a \
+  --acceptance /home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance/acceptance.json \
+  --review /home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound/review-receipt.json \
+  --out "$OUT"
+```
+
+`plan` is read-only and creates no directory. `run` writes only its new
+external directory: a terminal `receipt.json`, `source-snapshot.json`, the
+complete 707-file build manifest, immutable packet copies and before/after
+snapshots for changed reviewed documents. A passing receipt requires empty
+`failures` and `integrity_failures`, the exact eight passed/seven held case
+records, renderer-derived views and ledger, unchanged proof/CALC records,
+and terminally frozen index/worktree and original external evidence.
+All thirteen canonical specs and compatibility views must match the pinned
+renderer exactly. In addition to the three approved normative delta files,
+case registration regenerates only scenario regions in the existing safety,
+verification and backend-experiments specs; their normative bytes remain
+identical to the audit anchor. No other canonical file gains a change exemption.
+The verifier rehashes the 1,245 acceptance raw files and 246 supplemental
+runtime artifacts; it does not rerun the historical review against changed
+documents, re-execute acceptance, rebuild, run global gates, sync, archive,
+commit or publish. Its receipt is bounded lifecycle verification, not a
+replacement for the immutable acceptance/review or a globally green gate.

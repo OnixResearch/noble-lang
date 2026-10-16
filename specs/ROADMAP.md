@@ -101,6 +101,36 @@ M1 through M4 do not depend on this application. Bootstrap arithmetic and compos
 
 Optional calculator proof claims additionally require applicable MC1/MC2 support and exact subject/model correspondence. Ordinary calculator acceptance does not require application proofs. No theorem about wrapping `I64` automatically applies to the exact numeric library.
 
+## Numeric-Graph-v1 (bounded active opt-in profile)
+
+The selected [Numeric-Graph-v1 change](../.cairn/changes/numeric-graph-v1/design.md)
+is active, not archived. Only explicit `noble ngraph` and the `noble-ngraph`
+library select it: exact `ngraph-i64/0` extraction and directly authored
+`ngraph-f32/0` graphs, checked CPU evaluation, immutable training snapshots
+and same-platform replay. Ordinary entry points, K-NUM-01 and the kernel
+type universe are unchanged; there is no kernel `F32` or milestone dependency
+added by this opt-in profile.
+
+The [registered cases](conformance/numeric-graph-cases.json) and
+[status](STATUS.json) record **8 passed, 7 not-run**, with implementation
+partial: 01/06/07/08/10/13/14/15 have finite receipt-linked acceptance under
+the immutable [execution packet](../verification/numeric-graph-v1/acceptance.json)
+and [independent review](../verification/numeric-graph-v1/review-receipt.json).
+02/03/04/05/09/11/12 remain `absent/not-run/open/unassessed` with empty
+evidence. All seven lack directly observed guest/protected-operation
+counters; CASE-04 also lacks measured check-node zero, and CASE-02 lacks
+complete zero-use capability closure (637 relevant unknowns). The
+[lifecycle evidence record](../verification/numeric-graph-v1/README.md)
+binds the supplemental CORE runtime packet and exact CASE-08 library
+node-zero mapping without claiming a CLI counter.
+
+NG-PO-A..H and full-feature acceptance remain open. One pinned x86_64 Linux
+platform supplies finite differential evidence, not proof or cross-platform
+bit reproducibility. Phase C's host-native W3-L **0.131× STOP** is unchanged;
+there is no performance, speedup, GPU or backend-selection claim. The seven
+incomplete case contracts and four retained global gate failures block
+archive; CALC states and proof obligations do not change.
+
 ## Platform increments
 
 | Milestone | Depends on | Exit criterion |

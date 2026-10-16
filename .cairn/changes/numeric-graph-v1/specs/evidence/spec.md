@@ -35,24 +35,24 @@ Every binding refusal MUST occur before any graph node is evaluated.
 
 #### Scenario: NGRAPH-CASE-10 immutable training publication
 
-- GIVEN the `Numeric-Graph-v1` profile and the `NGRAPH-CASE-10` model, loss, data, seed and follow-up runs in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN the `Numeric-Graph-v1` profile and the model, loss, data, seed and follow-up runs specified by `NGRAPH-CASE-10`
 - WHEN `noble ngraph train` publishes snapshots, retrains to a second path, trains from the first snapshot and targets an existing path
-- THEN the recorded identities MUST match, repeated training MUST be byte-identical, and the parent, the graph and existing paths MUST stay byte-unchanged; this active delta does not change that case's `state` or `evidence`
+- THEN the recorded identities MUST match, repeated training MUST be byte-identical, and the parent, the graph and existing paths MUST stay byte-unchanged
 
 #### Scenario: NGRAPH-CASE-12 snapshot integrity and binding refusals
 
-- GIVEN every `NGRAPH-CASE-12` tampered, foreign, permuted, changed-fact, pinned-identity and schema variant in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN every tampered, foreign, permuted, changed-fact, pinned-identity and schema variant specified by `NGRAPH-CASE-12`
 - WHEN `noble ngraph eval` and `noble ngraph verify` load and bind each snapshot
-- THEN each MUST be refused with its recorded code before any graph node is evaluated; this active delta does not change that case's `state` or `evidence`
+- THEN each MUST be refused with its recorded code before any graph node is evaluated
 
 #### Scenario: NGRAPH-CASE-13 provenance replay
 
-- GIVEN the `NGRAPH-CASE-13` seed, parent, changed-input and forged replay variants in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN the seed, parent, changed-input and forged replay variants specified by `NGRAPH-CASE-13`
 - WHEN `noble ngraph verify --replay` rebuilds and reruns each training contract
-- THEN matching inputs MUST reproduce the snapshot exactly and every other variant MUST be refused with its recorded code; this active delta does not change that case's `state` or `evidence`
+- THEN matching inputs MUST reproduce the snapshot exactly and every other variant MUST be refused with its recorded code
 
 #### Scenario: NGRAPH-CASE-11 training contract refusals
 
-- GIVEN every `NGRAPH-CASE-11` derivative, sub-profile, non-finite, budget, parent, guard, loss-interface and usage variant in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN every derivative, sub-profile, non-finite, budget, parent, guard, loss-interface and usage variant specified by `NGRAPH-CASE-11`
 - WHEN `noble ngraph train` runs each variant
-- THEN each MUST report its recorded code and exit status and MUST NOT create an output or partial file, except the recorded opt-in success; this active delta does not change that case's `state` or `evidence`
+- THEN each MUST report its recorded code and exit status and MUST NOT create an output or partial file, except the recorded opt-in success

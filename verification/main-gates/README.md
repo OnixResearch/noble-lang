@@ -1,5 +1,21 @@
 # Main gate restoration (issue #22)
 
+Publication `0eb5c0478ebf3419de6f94b8144c2ac7520356ca` is the **historical
+prior pending stage**: it published the Numeric-Graph-v1 runner, inputs, docs
+and evidence while final source-bound acceptance and independent claims
+review were still pending, with no case recording, Cairn sync or archive.
+That describes the earlier publication, not the current lifecycle state.
+
+The later immutable [acceptance receipt](../numeric-graph-v1/acceptance.json),
+[independent review](../numeric-graph-v1/review.json) and
+[review receipt](../numeric-graph-v1/review-receipt.json) support the bounded
+[registered state](../../specs/STATUS.json): **8 passed, 7 not-run**
+(01/06/07/08/10/13/14/15 passed; 02/03/04/05/09/11/12 held at
+`absent/not-run/open/unassessed` with empty evidence). The
+[lifecycle record](../numeric-graph-v1/README.md) preserves the supplemental
+runtime binding and every remaining per-case gap. The change stays active;
+there is no archive or whole-feature acceptance.
+
 The current [`receipt.json`](receipt.json) records the complete local run of
 all 14 pinned flake checks on Numeric-Graph-v1 integration commit
 `bc10df848ed81d53e849c440c1f639979e40d38d`: **10 pass, 4 fail**.
@@ -15,12 +31,15 @@ its retained log SHA-256 is
 Every row binds its original external log; recovery does not rerun or
 reinterpret a failing check. This is not global gate acceptance.
 
-The publication merges the acceptance runner and its inputs plus docs and
-evidence only after that tested commit; Rust, Cargo, policy and Nix inputs
-remain byte-identical to `bc10df8`. Final source-bound acceptance and the
-independent claims review remain pending. No case is promoted, no Cairn
-sync or archive is performed, and CASE-02 capability facts stay OPEN.
-NG-PO-A..H remain OPEN; no performance, GPU or cross-platform claim is added.
+The accepted 707-file build/policy projection is byte-identical between the
+published `0eb5c04` source and tested `bc10df8`; the immutable
+[build provenance](../numeric-graph-v1/build-provenance.json) records that
+equivalence without relabeling the old logs as a new gate run. CASE-02's
+capability closure remains incomplete (637 relevant unknowns), and the
+guest/protected counters for all seven held cases are structural rather than
+direct observations. NG-PO-A..H remain OPEN; no performance, GPU,
+backend-selection or cross-platform claim is added. Lifecycle recording does
+not change the historical **10 PASS / 4 known FAIL** gate disposition.
 
 ## Historical baseline
 

@@ -40,39 +40,39 @@ For `eval`, the exit status MUST be that of the first non-normal vector in file 
 
 #### Scenario: NGRAPH-CASE-03 graph admission report
 
-- GIVEN the `Numeric-Graph-v1` profile and the `NGRAPH-CASE-03` graphs in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN the `Numeric-Graph-v1` profile and the graphs specified by `NGRAPH-CASE-03`
 - WHEN `noble ngraph check` admits each graph file
-- THEN the report MUST match every recorded `expected` field, including the recorded `GraphLogicalId` and exit 0; this active delta does not change that case's `state` or `evidence`
+- THEN the report MUST match every recorded `expected` field, including the recorded `GraphLogicalId` and exit 0
 
 #### Scenario: NGRAPH-CASE-04 check refusal classes
 
-- GIVEN every `NGRAPH-CASE-04` malformed, inexact, unchecked-fact, budget, oversized, missing and usage variant in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN every malformed, inexact, unchecked-fact, budget, oversized, missing and usage variant specified by `NGRAPH-CASE-04`
 - WHEN `noble ngraph check` runs each variant
-- THEN each MUST report its recorded code and exit status with zero evaluated nodes; this active delta does not change that case's `state` or `evidence`
+- THEN each MUST report its recorded code and exit status with zero evaluated nodes
 
 #### Scenario: NGRAPH-CASE-07 bitwise evaluation in both evaluators
 
-- GIVEN the `NGRAPH-CASE-07` graphs and vectors in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN the graphs and vectors specified by `NGRAPH-CASE-07`
 - WHEN `noble ngraph eval` runs them with the default evaluator and with `--reference`
-- THEN every output MUST match its recorded encoding and both runs MUST produce byte-identical standard output; this active delta does not change that case's `state` or `evidence`
+- THEN every output MUST match its recorded encoding and both runs MUST produce byte-identical standard output
 
 #### Scenario: NGRAPH-CASE-08 evaluation outcome classes
 
-- GIVEN the `NGRAPH-CASE-08` guard, input-fact, interface, missing-snapshot, fuel and mixed-file inputs in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN the guard, input-fact, interface, missing-snapshot, fuel and mixed-file inputs specified by `NGRAPH-CASE-08`
 - WHEN `noble ngraph eval` runs each input
-- THEN each vector line, code and process exit status MUST match the recorded `expected` fields; this active delta does not change that case's `state` or `evidence`
+- THEN each vector line, code and process exit status MUST match the recorded `expected` fields
 
 #### Scenario: NGRAPH-CASE-02 effect-free library boundary
 
-- GIVEN the `NGRAPH-CASE-02` package checks in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN the package checks specified by `NGRAPH-CASE-02`
 - WHEN the `noble-ngraph` crate attributes, dependencies and collected capability facts are inspected
-- THEN the library MUST be `no_std`, depend only on `noble-kernel` and `noble-contracts`, use no forbidden capability and take identity hashing as an injected scheme; this active delta does not change that case's `state` or `evidence`
+- THEN the library MUST be `no_std`, depend only on `noble-kernel` and `noble-contracts`, use no forbidden capability and take identity hashing as an injected scheme
 
 #### Scenario: NGRAPH-CASE-15 claims, determinism and documented exits
 
-- GIVEN the `NGRAPH-CASE-15` artifacts and repeated runs in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN the artifacts and repeated runs specified by `NGRAPH-CASE-15`
 - WHEN the user documentation, help text and reports are reviewed and every command is run twice
-- THEN no performance, GPU, backend-selection or proof claim MAY appear, the exit-code table MUST be documented and repeated runs MUST be byte-identical; this active delta does not change that case's `state` or `evidence`
+- THEN no performance, GPU, backend-selection or proof claim MAY appear, the exit-code table MUST be documented and repeated runs MUST be byte-identical
 
 ### Requirement: NGRAPH-FORMAT-01
 r[NGRAPH-FORMAT-01]
@@ -98,12 +98,12 @@ Graph, vector and training-data files MUST each begin with a schema identifier l
 
 #### Scenario: NGRAPH-CASE-06 identity-preserving graph round trip
 
-- GIVEN every `NGRAPH-CASE-06` authored, workload, random and extracted graph and text variant in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN every authored, workload, random and extracted graph and text variant specified by `NGRAPH-CASE-06`
 - WHEN each graph is printed, parsed and checked again
-- THEN the parsed graph MUST equal the original apart from origins, with the same `GraphLogicalId`, fact-binding digest and checker outcome; this active delta does not change that case's `state` or `evidence`
+- THEN the parsed graph MUST equal the original apart from origins, with the same `GraphLogicalId`, fact-binding digest and checker outcome
 
 #### Scenario: NGRAPH-CASE-09 vector and data value encodings
 
-- GIVEN every `NGRAPH-CASE-09` schema, value and row variant in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN every schema, value and row variant specified by `NGRAPH-CASE-09`
 - WHEN the vector and data parsers read each file
-- THEN each MUST be accepted as the recorded encoding or refused with the recorded code; this active delta does not change that case's `state` or `evidence`
+- THEN each MUST be accepted as the recorded encoding or refused with the recorded code

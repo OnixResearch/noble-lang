@@ -3038,8 +3038,33 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "NGRAPH-CASE-15"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-CLI-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-CASE-01",
+        "NGRAPH-CASE-02",
+        "NGRAPH-CASE-03",
+        "NGRAPH-CASE-04",
+        "NGRAPH-CASE-05",
+        "NGRAPH-CASE-07",
+        "NGRAPH-CASE-08",
+        "NGRAPH-CASE-10",
+        "NGRAPH-CASE-11",
+        "NGRAPH-CASE-15"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "NGRAPH-DERIV-01",
@@ -3050,8 +3075,11 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "NGRAPH-CASE-11",
+        "NGRAPH-CASE-14"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "NGRAPH-EXTRACT-01",
@@ -3062,8 +3090,10 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "NGRAPH-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "NGRAPH-F32-01",
@@ -3074,8 +3104,11 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "NGRAPH-CASE-07",
+        "NGRAPH-CASE-14"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "NGRAPH-FACT-01",
@@ -3086,8 +3119,27 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "NGRAPH-CASE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-FORMAT-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-CASE-03",
+        "NGRAPH-CASE-04",
+        "NGRAPH-CASE-06",
+        "NGRAPH-CASE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "NGRAPH-OWN-01",
@@ -3098,8 +3150,10 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "NGRAPH-CASE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "NGRAPH-PROOF-01",
@@ -3110,8 +3164,10 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "NGRAPH-CASE-15"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "NGRAPH-SCOPE-01",
@@ -3122,8 +3178,11 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "NGRAPH-CASE-01",
+        "NGRAPH-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "NGRAPH-SNAP-01",
@@ -3134,8 +3193,30 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "NGRAPH-CASE-10",
+        "NGRAPH-CASE-12",
+        "NGRAPH-CASE-13",
+        "NGRAPH-CASE-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-SNAP-02",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-CASE-10",
+        "NGRAPH-CASE-11",
+        "NGRAPH-CASE-12",
+        "NGRAPH-CASE-13"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "P-AUTH-01",

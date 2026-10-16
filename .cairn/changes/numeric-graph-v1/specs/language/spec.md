@@ -13,12 +13,12 @@ The selected implementation is the opt-in `Numeric-Graph-v1` profile. It MUST be
 
 #### Scenario: NGRAPH-CASE-01 selected entry leaves ordinary identities unchanged
 
-- GIVEN the `Numeric-Graph-v1` profile and every `NGRAPH-CASE-01` entry-point and ordinary-vector input in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN the `Numeric-Graph-v1` profile and every entry-point and ordinary-vector input specified by `NGRAPH-CASE-01`
 - WHEN the ordinary entry points are compared before and after the profile is added and the kernel type universe is reviewed
-- THEN ordinary reports MUST be byte-identical, no kernel `F32` type or word MUST exist and the profile MUST be reachable only through `noble ngraph`; this active delta does not change that case's `state` or `evidence`
+- THEN ordinary reports MUST be byte-identical, no kernel `F32` type or word MUST exist and the profile MUST be reachable only through `noble ngraph`
 
 #### Scenario: NGRAPH-CASE-05 extraction is I64-only and refusal leaves the source unchanged
 
-- GIVEN the `NGRAPH-CASE-05` sources, refusals and `--profile ngraph-f32/0` request in [the unexecuted case design](../../cases/numeric-graph-cases.json)
+- GIVEN the sources, refusals and `--profile ngraph-f32/0` request specified by `NGRAPH-CASE-05`
 - WHEN `noble ngraph extract` runs each input
-- THEN the I64 sources MUST extract and every refusal MUST report its recorded code and exit status without writing a file; this active delta does not change that case's `state` or `evidence`
+- THEN the I64 sources MUST extract and every refusal MUST report its recorded code and exit status without writing a file

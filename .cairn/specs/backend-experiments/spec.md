@@ -394,5 +394,12 @@ A numeric graph continuation decision MUST be based on a pinned CPU measurement.
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: NGRAPH-CASE-15 for NGRAPH-BENCH-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-15](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `review` procedure for case `NGRAPH-CASE-15` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-15`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->

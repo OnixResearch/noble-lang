@@ -3576,12 +3576,41 @@ r[NGRAPH-SCOPE-01]
 
 **NGRAPH-SCOPE-01.**
 
-`NumericGraph-Design` MUST be a distinct, nonselected, opt-in profile that lowers an already independently accepted pure Program to a fixed typed numeric graph. Its two sub-profiles, exact `ngraph-i64/0` and experimental `ngraph-f32/0`, MUST NOT share a value edge or an implicit conversion. An existing `I64` Program MUST NOT be reinterpreted as `F32`, and no real-valued derivative MAY be claimed for an `ngraph-i64/0` graph. Requesting the profile MUST NOT change ordinary Program checking, execution, identity, `run`, captures, live publication or K-NUM-01. A Program that the profile refuses MUST remain executable unchanged on its existing path. No proposed syntax, kernel type or diagnostic of this profile is implemented by this requirement.
+`NumericGraph-Design` MUST be a distinct, opt-in profile that lowers an already independently accepted pure Program to a fixed typed numeric graph. Its two sub-profiles, exact `ngraph-i64/0` and experimental `ngraph-f32/0`, MUST NOT share a value edge or an implicit conversion. An existing `I64` Program MUST NOT be reinterpreted as `F32`, and no real-valued derivative MAY be claimed for an `ngraph-i64/0` graph. Requesting the profile MUST NOT change ordinary Program checking, execution, identity, `run`, captures, live publication or K-NUM-01. A Program that the profile refuses MUST remain executable unchanged on its existing path. No source syntax or kernel type of this profile is implemented by this requirement.
+
+The selected implementation is the opt-in `Numeric-Graph-v1` profile. It MUST be reachable only through the explicit `noble ngraph` entry point and the `noble-ngraph` library, and no existing entry point, including `run`, `session`, `compile`, `live` and `calculator`, MAY select it. Under `Numeric-Graph-v1`, `ngraph-f32/0` graphs MUST be authored directly in `ngraph-ir/0` and admitted only by the independent graph checker. Source extraction MUST be limited to `ngraph-i64/0`. No kernel `F32` type, kernel word or frontend syntax MAY be introduced. Selecting `Numeric-Graph-v1` MUST NOT be reported as a performance, speedup, GPU or backend-selection result, MUST NOT discharge any numeric graph proof obligation, and MUST report agreement between evaluators only as finite differential evidence.
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: NGRAPH-CASE-01 for NGRAPH-SCOPE-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-01](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `review` procedure for case `NGRAPH-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: NGRAPH-CASE-05 for NGRAPH-SCOPE-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-05](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `admission` procedure for case `NGRAPH-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
+
+#### Scenario: NGRAPH-CASE-01 selected entry leaves ordinary identities unchanged
+
+- GIVEN the `Numeric-Graph-v1` profile and every entry-point and ordinary-vector input specified by `NGRAPH-CASE-01`
+- WHEN the ordinary entry points are compared before and after the profile is added and the kernel type universe is reviewed
+- THEN ordinary reports MUST be byte-identical, no kernel `F32` type or word MUST exist and the profile MUST be reachable only through `noble ngraph`
+
+#### Scenario: NGRAPH-CASE-05 extraction is I64-only and refusal leaves the source unchanged
+
+- GIVEN the sources, refusals and `--profile ngraph-f32/0` request specified by `NGRAPH-CASE-05`
+- WHEN `noble ngraph extract` runs each input
+- THEN the I64 sources MUST extract and every refusal MUST report its recorded code and exit status without writing a file
 
 ### Requirement: NGRAPH-F32-01
 r[NGRAPH-F32-01]
@@ -3592,7 +3621,22 @@ r[NGRAPH-F32-01]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: NGRAPH-CASE-07 for NGRAPH-F32-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-07](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `runtime` procedure for case `NGRAPH-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: NGRAPH-CASE-14 for NGRAPH-F32-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-14](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `identity` procedure for case `NGRAPH-CASE-14` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-14`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: NGRAPH-EXTRACT-01
@@ -3604,7 +3648,14 @@ Graph admission MUST take the accepted root subject, its exact resolved dependen
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: NGRAPH-CASE-05 for NGRAPH-EXTRACT-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-05](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `admission` procedure for case `NGRAPH-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: NGRAPH-FACT-01
@@ -3616,5 +3667,12 @@ Range, grid, exact-bit, one-hot, finiteness, shape and index-integrality facts u
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: NGRAPH-CASE-08 for NGRAPH-FACT-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-08](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `runtime` procedure for case `NGRAPH-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->

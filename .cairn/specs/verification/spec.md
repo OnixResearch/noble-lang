@@ -765,7 +765,22 @@ A numeric graph training contract MUST name a versioned derivative policy that i
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: NGRAPH-CASE-11 for NGRAPH-DERIV-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-11](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `admission` procedure for case `NGRAPH-CASE-11` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-11`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: NGRAPH-CASE-14 for NGRAPH-DERIV-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-14](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `identity` procedure for case `NGRAPH-CASE-14` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-14`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: NGRAPH-PROOF-01
@@ -777,5 +792,12 @@ Numeric graph assurance claims MUST separately state reference agreement, finite
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: NGRAPH-CASE-15 for NGRAPH-PROOF-01
+
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-15](../../../specs/conformance/numeric-graph-cases.json)
+- WHEN the `review` procedure for case `NGRAPH-CASE-15` runs against those inputs
+- THEN the observations match every field of `expected` in case `NGRAPH-CASE-15`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->

@@ -1,0 +1,1406 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "numeric-graph-v1",
+  "cases": [
+    {
+      "id": "NGRAPH-CASE-01",
+      "profile": "Numeric-Graph-v1",
+      "kind": "review",
+      "requirements": [
+        "NGRAPH-SCOPE-01",
+        "NGRAPH-CLI-01"
+      ],
+      "input": {
+        "harness": "ngraph-selection-review",
+        "entry_points": [
+          "run",
+          "session",
+          "compile",
+          "live",
+          "calculator",
+          "build",
+          "component",
+          "verify"
+        ],
+        "ordinary_vectors": "the CORE cases already recorded as executed, rerun on the same binary before and after the change",
+        "kernel_types_reviewed": [
+          "I64",
+          "Bool"
+        ],
+        "selected_entry": "noble ngraph"
+      },
+      "expected": {
+        "stage": "review",
+        "outcome": "ordinary-identities-unchanged",
+        "ordinary_reports_byte_identical": true,
+        "kernel_f32_type_or_word": false,
+        "frontend_syntax_added": false,
+        "ngraph_reachable_only_through": [
+          "noble ngraph",
+          "noble-ngraph library"
+        ],
+        "k_num_01_changed": false
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "claim": "Finite CORE ordinary-identity observations:31 paired CLI rows plus12 supplementary CORE03/05/09 runtime observations per binary, with unchanged ordinary source and independent selection review.",
+          "subject": "NGRAPH-CASE-01",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-01",
+            "receipt": "../../verification/numeric-graph-v1/acceptance.json",
+            "receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+            "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+            "gate_receipt": "../../verification/main-gates/receipt.json",
+            "gate_receipt_sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+            "rust_tests_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+            "tests": [
+              "eligibility::core_15_resource_matrix",
+              "mutations::core_16_candidate_mutation_matrix"
+            ],
+            "variants": [],
+            "external_raw_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+            "prepromotion_case_sha256": "f86cd5db69af6e58fca6c921e12b884e7f2f8076e50e0054a0a6607ed4092bca",
+            "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "build_provenance": "../../verification/numeric-graph-v1/build-provenance.json",
+            "build_provenance_sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+            "published_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+            "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+            "review_receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "review_receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "review": "../../verification/numeric-graph-v1/review.json",
+            "review_sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563",
+            "review_external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound",
+            "supplemental_runtime": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-core/runtime.json",
+            "supplemental_runtime_sha256": "9a9308c4ebf372e3cf8a3b2a4a2e6745b76e6e89419fbf420523190e775921fc",
+            "supplemental_runtime_inputs_per_binary": 12
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility claim.",
+            "Finite differential/evaluator/identity/replay observations and separately recorded review, not proofs; NG-PO-A..H remain open.",
+            "Trusted rustc, cargo, selected Node and Git; build provenance binds a fresh published-revision build whose full707 implementation/policy blobs equal the historical tested gate revision.",
+            "Library evidence is gate-log-name-bound: each selected test appears once as ok and has one definition at the tested commit; CLI reports do not expose evaluated-node or guest/protected counters."
+          ]
+        },
+        {
+          "claim": "Independent source-and-execution claims review passes this bounded review case; no universal semantic or proof conclusion.",
+          "subject": "NGRAPH-CASE-01",
+          "revision": "0.1.0-draft.5",
+          "kind": "review",
+          "result": "passed",
+          "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-01",
+            "receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+            "gate_receipt": "../../verification/main-gates/receipt.json",
+            "gate_receipt_sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+            "rust_tests_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+            "tests": [
+              "eligibility::core_15_resource_matrix",
+              "mutations::core_16_candidate_mutation_matrix"
+            ],
+            "variants": [],
+            "external_raw_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+            "prepromotion_case_sha256": "f86cd5db69af6e58fca6c921e12b884e7f2f8076e50e0054a0a6607ed4092bca",
+            "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "build_provenance": "../../verification/numeric-graph-v1/build-provenance.json",
+            "build_provenance_sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+            "published_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+            "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+            "review_receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "review_receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "review": "../../verification/numeric-graph-v1/review.json",
+            "review_sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563",
+            "review_external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound",
+            "supplemental_runtime": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-core/runtime.json",
+            "supplemental_runtime_sha256": "9a9308c4ebf372e3cf8a3b2a4a2e6745b76e6e89419fbf420523190e775921fc",
+            "supplemental_runtime_inputs_per_binary": 12,
+            "acceptance_receipt": "../../verification/numeric-graph-v1/acceptance.json",
+            "acceptance_receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2"
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility claim.",
+            "Finite differential/evaluator/identity/replay observations and separately recorded review, not proofs; NG-PO-A..H remain open.",
+            "Trusted rustc, cargo, selected Node and Git; build provenance binds a fresh published-revision build whose full707 implementation/policy blobs equal the historical tested gate revision.",
+            "Library evidence is gate-log-name-bound: each selected test appears once as ok and has one definition at the tested commit; CLI reports do not expose evaluated-node or guest/protected counters."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NGRAPH-CASE-02",
+      "profile": "Numeric-Graph-v1",
+      "kind": "static",
+      "requirements": [
+        "NGRAPH-CLI-01"
+      ],
+      "input": {
+        "harness": "ngraph-library-boundary",
+        "package": "noble-ngraph",
+        "checks": [
+          "crate attribute no_std",
+          "normal dependencies",
+          "capability facts filesystem/process/environment/time/concurrency/observability/unsafe-code",
+          "identity hashing entry points"
+        ]
+      },
+      "expected": {
+        "stage": "check",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "outcome": "pure-domain-core-library",
+        "no_std": true,
+        "normal_dependencies": [
+          "noble-contracts",
+          "noble-kernel"
+        ],
+        "third_party_dependencies": [],
+        "forbidden_capability_uses": 0,
+        "identity_hash_injected": true
+      },
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
+      "evidence": []
+    },
+    {
+      "id": "NGRAPH-CASE-03",
+      "profile": "Numeric-Graph-v1",
+      "kind": "admission",
+      "requirements": [
+        "NGRAPH-CLI-01",
+        "NGRAPH-FORMAT-01"
+      ],
+      "input": {
+        "harness": "ngraph-cli-check",
+        "graphs": [
+          {
+            "name": "F1 printed by format::graph::print",
+            "subject": "the F1 fixture subject"
+          },
+          {
+            "name": "I1 written by noble ngraph extract"
+          }
+        ]
+      },
+      "expected": {
+        "stage": "check",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "outcome": "normal",
+        "exit": 0,
+        "schema": "noble-ngraph-report/v1",
+        "F1": {
+          "graph": "6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661",
+          "params": 22
+        },
+        "I1": {
+          "graph": "equals the graph field reported by extract",
+          "inputs": [
+            "i64",
+            "i64"
+          ],
+          "outputs": [
+            "i64"
+          ],
+          "live_nodes": 8,
+          "layers": 4
+        }
+      },
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
+      "evidence": []
+    },
+    {
+      "id": "NGRAPH-CASE-04",
+      "profile": "Numeric-Graph-v1",
+      "kind": "admission",
+      "requirements": [
+        "NGRAPH-CLI-01",
+        "NGRAPH-FORMAT-01"
+      ],
+      "input": {
+        "harness": "ngraph-cli-check-refusals",
+        "variants": [
+          "missing schema line",
+          "unknown op",
+          "missing subject line",
+          "odd-length evidence hex",
+          "const f32 0.1",
+          "caller-asserted range fact",
+          "--budget-live-nodes 4 on F1",
+          "--budget-live-nodes 262145",
+          "graph file of 64 MiB + 1 byte",
+          "missing file",
+          "unknown flag"
+        ]
+      },
+      "expected": {
+        "stage": "check",
+        "outcome": "each-refusal-matches",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "missing schema line": {
+          "code": "E-GRAPH-MALFORMED",
+          "exit": 2
+        },
+        "unknown op": {
+          "code": "E-GRAPH-MALFORMED",
+          "exit": 2
+        },
+        "missing subject line": {
+          "code": "E-GRAPH-MALFORMED",
+          "exit": 2
+        },
+        "odd-length evidence hex": {
+          "code": "E-GRAPH-MALFORMED",
+          "exit": 2
+        },
+        "const f32 0.1": {
+          "code": "E-LITERAL-INEXACT",
+          "exit": 2
+        },
+        "caller-asserted range fact": {
+          "code": "E-FACT-UNCHECKED",
+          "exit": 2
+        },
+        "--budget-live-nodes 4 on F1": {
+          "code": "E-BUDGET-LIVE-NODES",
+          "exit": 5
+        },
+        "--budget-live-nodes 262145": {
+          "code": "E-PROFILE",
+          "exit": 2
+        },
+        "graph file of 64 MiB + 1 byte": {
+          "code": null,
+          "outcome": "reject",
+          "exit": 2
+        },
+        "missing file": {
+          "code": null,
+          "outcome": "reject",
+          "exit": 2
+        },
+        "unknown flag": {
+          "usage_on_stderr": true,
+          "exit": 2
+        },
+        "evaluated_nodes": 0
+      },
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
+      "evidence": []
+    },
+    {
+      "id": "NGRAPH-CASE-05",
+      "profile": "Numeric-Graph-v1",
+      "kind": "admission",
+      "requirements": [
+        "NGRAPH-CLI-01",
+        "NGRAPH-EXTRACT-01",
+        "NGRAPH-SCOPE-01"
+      ],
+      "input": {
+        "harness": "ngraph-cli-extract",
+        "sources": {
+          "I1": {
+            "submissions": [
+              "dup * swap 3 * + 7 -"
+            ],
+            "inputs": "i64,i64"
+          },
+          "I2": {
+            "submissions": [
+              "2 quote [ + ] compose dup compose run"
+            ],
+            "inputs": "i64"
+          },
+          "I3": {
+            "submissions": [
+              "def sq [ dup * ]",
+              "sq swap sq +"
+            ],
+            "inputs": "i64,i64"
+          },
+          "I4": {
+            "submissions": [
+              "swap [ * ] dip + dup"
+            ],
+            "inputs": "i64,i64,i64"
+          }
+        },
+        "refusals": {
+          "test.emit": "\"hi\" test.emit 1 + with --inputs i64",
+          "if": "true [ 1 + ] [ 2 + ] if with --inputs i64",
+          "program output": "drop [ 1 + ] with --inputs i64",
+          "frontend refusal": "an unbound word",
+          "f32 profile": "--profile ngraph-f32/0",
+          "expansion": "I3 with --budget-expansion 2",
+          "existing out": "--out naming an existing file"
+        }
+      },
+      "expected": {
+        "stage": "extraction",
+        "outcome": "each-extraction-or-refusal-matches",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "I1..I4": {
+          "outcome": "normal",
+          "exit": 0,
+          "check_of_written_file_reports_same_graph": true
+        },
+        "test.emit": {
+          "code": "E-EFFECT",
+          "exit": 4
+        },
+        "if": {
+          "code": "E-CONTROL",
+          "exit": 4
+        },
+        "program output": {
+          "code": "E-PROGRAM-OUTPUT",
+          "exit": 4
+        },
+        "run of a Program input": "not reachable from the CLI (--inputs cannot spell a Program type); E-DYNAMIC-RUN is covered by the library-level B3 source controls",
+        "frontend refusal": {
+          "code": "E-SUBJECT",
+          "exit": 2
+        },
+        "f32 profile": {
+          "code": "E-PROFILE",
+          "exit": 2
+        },
+        "expansion": {
+          "code": "E-BUDGET-EXPANSION",
+          "exit": 5
+        },
+        "existing out": {
+          "exit": 2,
+          "existing_bytes_unchanged": true
+        },
+        "refusals_write_no_file": true
+      },
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
+      "evidence": []
+    },
+    {
+      "id": "NGRAPH-CASE-06",
+      "profile": "Numeric-Graph-v1",
+      "kind": "identity",
+      "requirements": [
+        "NGRAPH-FORMAT-01"
+      ],
+      "input": {
+        "harness": "ngraph-format-roundtrip",
+        "graphs": [
+          "F1",
+          "F2",
+          "F3 under all nine below/above rule pairs",
+          "MSE loss",
+          "W3-S",
+          "W3-M",
+          "W3-L",
+          "W4",
+          "seeded random F32 graphs 1-8 (48 ops)",
+          "extracted I1-I4"
+        ],
+        "variants": [
+          "canonical print",
+          "same text with comments and extra spaces",
+          "subject authored-name sugar",
+          "evidence provenance hex"
+        ]
+      },
+      "expected": {
+        "stage": "check",
+        "outcome": "each-roundtrip-matches",
+        "parse_print_structurally_equal_with_origins_cleared": true,
+        "graph_logical_id_equal": true,
+        "fact_binding_digest_equal": true,
+        "checker_outcome_equal": true,
+        "comments_and_whitespace_identity_bearing": false,
+        "evidence_hex_symmetric": true,
+        "evidence_fact_admitted": false
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "claim": "The case expected fields pass under the immutable finite CLI/library evidence and independently reviewed mapping; no whole-feature acceptance or proof claim.",
+          "subject": "NGRAPH-CASE-06",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-06",
+            "receipt": "../../verification/numeric-graph-v1/acceptance.json",
+            "receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+            "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+            "gate_receipt": "../../verification/main-gates/receipt.json",
+            "gate_receipt_sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+            "rust_tests_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+            "tests": [
+              "every_corpus_graph_round_trips_with_its_identity",
+              "authored_name_sugar_comments_and_spacing_are_not_identity_bearing",
+              "evidence_and_range_literals_are_symmetric",
+              "comments_blank_lines_and_spacing_do_not_change_any_corpus_graph"
+            ],
+            "variants": [],
+            "external_raw_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+            "prepromotion_case_sha256": "fd3c552f26458d11b3cf4d06cab2144ecb51bb877acd9810a2680f0ff02c00be",
+            "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "build_provenance": "../../verification/numeric-graph-v1/build-provenance.json",
+            "build_provenance_sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+            "published_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+            "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+            "review_receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "review_receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "review": "../../verification/numeric-graph-v1/review.json",
+            "review_sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563",
+            "review_external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound"
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility claim.",
+            "Finite differential/evaluator/identity/replay observations and separately recorded review, not proofs; NG-PO-A..H remain open.",
+            "Trusted rustc, cargo, selected Node and Git; build provenance binds a fresh published-revision build whose full707 implementation/policy blobs equal the historical tested gate revision.",
+            "Library evidence is gate-log-name-bound: each selected test appears once as ok and has one definition at the tested commit; CLI reports do not expose evaluated-node or guest/protected counters.",
+            "Canonical/noisy text covers the full identity corpus; authored-name/evidence parser variants use applicable zoo subjects with a SipHash test identity scheme, not an every-graph Cartesian product."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NGRAPH-CASE-07",
+      "profile": "Numeric-Graph-v1",
+      "kind": "runtime",
+      "requirements": [
+        "NGRAPH-CLI-01",
+        "NGRAPH-F32-01"
+      ],
+      "input": {
+        "harness": "ngraph-cli-eval",
+        "evaluators": [
+          "default (compiled)",
+          "--reference"
+        ],
+        "vectors": [
+          {
+            "graph": "I1",
+            "values": [
+              "5",
+              "4"
+            ]
+          },
+          {
+            "graph": "reassociation affine(-0; 2^24, 1, 1)"
+          },
+          {
+            "graph": "FMA probe a=b=1+2^-12, c=-(1+2^-11)"
+          },
+          {
+            "graph": "lone -0 term"
+          },
+          {
+            "graph": "relu(-0)"
+          },
+          {
+            "graph": "reglu(-1, 0)"
+          },
+          {
+            "graph": "2^127 * 2"
+          },
+          {
+            "graph": "reglu(inf, 0)"
+          },
+          {
+            "graph": "2^-126 * 0.5"
+          }
+        ]
+      },
+      "expected": {
+        "stage": "evaluation",
+        "outcome": "each-vector-matches",
+        "exit": 0,
+        "I1": [
+          "i64:24"
+        ],
+        "reassociation": [
+          "f32:0x4b800000"
+        ],
+        "FMA probe": [
+          "f32:0x00000000"
+        ],
+        "lone -0 term": [
+          "f32:0x80000000"
+        ],
+        "relu(-0)": [
+          "f32:0x00000000"
+        ],
+        "reglu(-1, 0)": [
+          "f32:0x80000000"
+        ],
+        "2^127 * 2": [
+          "f32:0x7f800000"
+        ],
+        "reglu(inf, 0)": [
+          "f32:nan"
+        ],
+        "2^-126 * 0.5": [
+          "f32:0x00400000"
+        ],
+        "default_and_reference_stdout_byte_identical": true
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "claim": "The case expected fields pass under the immutable finite CLI/library evidence and independently reviewed mapping; no whole-feature acceptance or proof claim.",
+          "subject": "NGRAPH-CASE-07",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-07",
+            "receipt": "../../verification/numeric-graph-v1/acceptance.json",
+            "receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+            "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+            "gate_receipt": "../../verification/main-gates/receipt.json",
+            "gate_receipt_sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+            "rust_tests_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+            "tests": [
+              "eval_probes_are_bitwise_in_both_evaluators",
+              "extract_i1_to_i4_round_trip_through_check_and_eval"
+            ],
+            "variants": [
+              "I1",
+              "reassociation affine(-0; 2^24, 1, 1)",
+              "FMA probe a=b=1+2^-12, c=-(1+2^-11)",
+              "lone -0 term",
+              "relu(-0)",
+              "reglu(-1, 0)",
+              "2^127 * 2",
+              "reglu(inf, 0)",
+              "2^-126 * 0.5"
+            ],
+            "external_raw_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+            "prepromotion_case_sha256": "967565884bf8c6eb25218fdd9d8824d5d7d96b563e13e5ff41f92ae172e24b70",
+            "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "build_provenance": "../../verification/numeric-graph-v1/build-provenance.json",
+            "build_provenance_sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+            "published_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+            "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+            "review_receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "review_receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "review": "../../verification/numeric-graph-v1/review.json",
+            "review_sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563",
+            "review_external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound"
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility claim.",
+            "Finite differential/evaluator/identity/replay observations and separately recorded review, not proofs; NG-PO-A..H remain open.",
+            "Trusted rustc, cargo, selected Node and Git; build provenance binds a fresh published-revision build whose full707 implementation/policy blobs equal the historical tested gate revision.",
+            "Library evidence is gate-log-name-bound: each selected test appears once as ok and has one definition at the tested commit; CLI reports do not expose evaluated-node or guest/protected counters."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NGRAPH-CASE-08",
+      "profile": "Numeric-Graph-v1",
+      "kind": "runtime",
+      "requirements": [
+        "NGRAPH-CLI-01",
+        "NGRAPH-FACT-01"
+      ],
+      "input": {
+        "harness": "ngraph-cli-eval-outcomes",
+        "vectors": [
+          "0.5 held in a guarded bit",
+          "input violating an input-validated range fact",
+          "types line i64 for an f32 graph",
+          "graph with param slots and no --snapshot",
+          "--fuel 1 on F1",
+          "a normal vector followed by a guard failure and an E-FACT-INPUT vector"
+        ]
+      },
+      "expected": {
+        "stage": "evaluation",
+        "outcome": "each-outcome-matches",
+        "0.5 held in a guarded bit": {
+          "outcome": "trap",
+          "code": "G-FACT-FALSE",
+          "exit": 1
+        },
+        "input violating an input-validated range fact": {
+          "outcome": "reject",
+          "code": "E-FACT-INPUT",
+          "exit": 2
+        },
+        "types line i64 for an f32 graph": {
+          "code": "E-INTERFACE",
+          "exit": 2,
+          "vector_lines": 0
+        },
+        "graph with param slots and no --snapshot": {
+          "code": "E-SNAPSHOT-LAYOUT",
+          "exit": 2,
+          "vector_lines": 0
+        },
+        "--fuel 1 on F1": {
+          "outcome": "exhausted",
+          "code": "E-BUDGET-FUEL",
+          "exit": 5
+        },
+        "mixed file": {
+          "lines": [
+            "normal",
+            "trap",
+            "reject"
+          ],
+          "exit": 1
+        },
+        "refused_vectors_evaluated_nodes": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "claim": "Exact CLI outcome variants pass in both evaluators; named FactInput/Interface/SnapshotLayout refusal classes have directly observed zero evaluated nodes in both library evaluators under the independent review mapping.",
+          "subject": "NGRAPH-CASE-08",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-08",
+            "receipt": "../../verification/numeric-graph-v1/acceptance.json",
+            "receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+            "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+            "gate_receipt": "../../verification/main-gates/receipt.json",
+            "gate_receipt_sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+            "rust_tests_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+            "tests": [
+              "eval_outcome_classes_and_first_failure_exit",
+              "eval_refuses_inputs_before_evaluation",
+              "refusals_before_evaluation_evaluate_no_node"
+            ],
+            "variants": [
+              "--fuel 1 on F1",
+              "0.5 held in a guarded bit",
+              "input violating an input-validated range fact",
+              "types line i64 for an f32 graph",
+              "graph with param slots and no --snapshot",
+              "a normal vector followed by a guard failure and an E-FACT-INPUT vector"
+            ],
+            "external_raw_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+            "prepromotion_case_sha256": "da2efa5c990728aa3528cb9af3898132754c8ec433d1af14a37f680984930e5e",
+            "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "build_provenance": "../../verification/numeric-graph-v1/build-provenance.json",
+            "build_provenance_sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+            "published_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+            "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+            "review_receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "review_receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "review": "../../verification/numeric-graph-v1/review.json",
+            "review_sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563",
+            "review_external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound",
+            "node_zero_evidence": {
+              "expected": 0,
+              "evidence_kind": "direct library counter observations, not CLI counter",
+              "gate_test": "refusals_before_evaluation_evaluate_no_node",
+              "file": "crates/noble-ngraph/tests/ir_check.rs",
+              "fixture": "common::linear(false,true): input x,params w/b,output w*x+b,input-validated range[0,4],snapshot[2,0.5]",
+              "mapping": [
+                {
+                  "case_variant": "input violating an input-validated range fact",
+                  "measured": "input x=5.0,valid snapshot -> FactInput, evaluated_nodes=0 in reference and compiled"
+                },
+                {
+                  "case_variant": "types line i64 for an f32 graph",
+                  "measured": "input Value::I64(1) to F32 graph -> Interface,evaluated_nodes=0 in reference and compiled; CLI vector types-line metadata refusal independently observed with0vector lines"
+                },
+                {
+                  "case_variant": "graph with param slots and no --snapshot",
+                  "measured": "input x=1.0,no snapshot -> SnapshotLayout,evaluated_nodes=0 in reference and compiled"
+                }
+              ],
+              "scope": "Case08 names graph classes for these refusal variants, not concrete graph identities. This measurement uses those exact named classes; it is not a measurement on CLI guard.ngraph/F1 bytes. The approved A1 library mapping supplies the otherwise unreported node counter. guard trap and fuel exhaustion are not refused vectors; normal/guard-failing mixed rows are not asserted zero.",
+              "not_used_for": "Does not measure CASE04 check or normalized guest/protected counters."
+            }
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility claim.",
+            "Finite differential/evaluator/identity/replay observations and separately recorded review, not proofs; NG-PO-A..H remain open.",
+            "Trusted rustc, cargo, selected Node and Git; build provenance binds a fresh published-revision build whose full707 implementation/policy blobs equal the historical tested gate revision.",
+            "Library evidence is gate-log-name-bound: each selected test appears once as ok and has one definition at the tested commit; CLI reports do not expose evaluated-node or guest/protected counters.",
+            "Zero evaluated nodes is directly observed in the approved library refusal-class mapping; CLI variants separately observe their codes/outcomes/exits, not a CLI node counter."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NGRAPH-CASE-09",
+      "profile": "Numeric-Graph-v1",
+      "kind": "static",
+      "requirements": [
+        "NGRAPH-FORMAT-01"
+      ],
+      "input": {
+        "harness": "ngraph-format-values",
+        "files": [
+          "noble-ngraph-vectors/1 schema line",
+          "missing schema line",
+          "f32 value 0.1",
+          "f32 value 0x7fc00001",
+          "f32 value -0",
+          "i64 value 9223372036854775808",
+          "row with one value too few",
+          "data file types line without ';'"
+        ]
+      },
+      "expected": {
+        "stage": "input",
+        "outcome": "each-format-result-matches",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "noble-ngraph-vectors/1 schema line": "E-FORMAT",
+        "missing schema line": "E-FORMAT",
+        "f32 value 0.1": "E-LITERAL-INEXACT",
+        "f32 value 0x7fc00001": "accepted as that encoding",
+        "f32 value -0": "accepted as 0x80000000",
+        "i64 value 9223372036854775808": "E-FORMAT",
+        "row with one value too few": "E-FORMAT",
+        "data file types line without ';'": "E-FORMAT"
+      },
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
+      "evidence": []
+    },
+    {
+      "id": "NGRAPH-CASE-10",
+      "profile": "Numeric-Graph-v1",
+      "kind": "runtime",
+      "requirements": [
+        "NGRAPH-SNAP-01",
+        "NGRAPH-SNAP-02",
+        "NGRAPH-CLI-01",
+        "NGRAPH-OWN-01"
+      ],
+      "input": {
+        "harness": "ngraph-cli-train",
+        "model": "F1",
+        "loss": "MSE point loss",
+        "data": "the B5 64-point set (data seed 0x1414da7a) as a noble-ngraph-data/0 file",
+        "policy": "ngraph-deriv-real/0",
+        "optimizer": "adam/0 defaults",
+        "seed": "0x14140005",
+        "steps": 500,
+        "follow_up": [
+          "train again to a second path",
+          "train --from the first snapshot for 10 steps",
+          "train to the first snapshot's path",
+          "eval F1 with the first snapshot before and after the follow-ups"
+        ]
+      },
+      "expected": {
+        "stage": "training",
+        "outcome": "normal",
+        "exit": 0,
+        "snapshot": "075f58cadc9a3abc91161b4224fd48bf9426af0ed8660851670e0ff0536f7f9d",
+        "graph": "6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661",
+        "data_digest": "7c40293c13b0089020b0a66ffbccf2d523be6171887ede799f38ee4d728f0692",
+        "second_run_file_byte_identical": true,
+        "parent_file_bytes_unchanged": true,
+        "existing_path": {
+          "exit": 2,
+          "bytes_unchanged": true
+        },
+        "first_snapshot_eval_unchanged": true,
+        "graph_file_bytes_unchanged": true
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "claim": "The case expected fields pass under the immutable finite CLI/library evidence and independently reviewed mapping; no whole-feature acceptance or proof claim.",
+          "subject": "NGRAPH-CASE-10",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-10",
+            "receipt": "../../verification/numeric-graph-v1/acceptance.json",
+            "receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+            "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+            "gate_receipt": "../../verification/main-gates/receipt.json",
+            "gate_receipt_sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+            "rust_tests_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+            "tests": [
+              "b5_training_through_the_cli_reproduces_the_recorded_identities",
+              "train_publishes_immutable_snapshots"
+            ],
+            "variants": [
+              "B5 training of F1",
+              "eval F1 with the first snapshot before and after the follow-ups",
+              "train again to a second path",
+              "train --from the first snapshot for 10 steps",
+              "train to the first snapshot's path"
+            ],
+            "external_raw_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+            "prepromotion_case_sha256": "4e87ba722f41e2fdb04e758a94d3a092ad050119ac19744cbdf0b1f3e1946175",
+            "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "build_provenance": "../../verification/numeric-graph-v1/build-provenance.json",
+            "build_provenance_sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+            "published_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+            "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+            "review_receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "review_receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "review": "../../verification/numeric-graph-v1/review.json",
+            "review_sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563",
+            "review_external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound"
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility claim.",
+            "Finite differential/evaluator/identity/replay observations and separately recorded review, not proofs; NG-PO-A..H remain open.",
+            "Trusted rustc, cargo, selected Node and Git; build provenance binds a fresh published-revision build whose full707 implementation/policy blobs equal the historical tested gate revision.",
+            "Library evidence is gate-log-name-bound: each selected test appears once as ok and has one definition at the tested commit; CLI reports do not expose evaluated-node or guest/protected counters."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NGRAPH-CASE-11",
+      "profile": "Numeric-Graph-v1",
+      "kind": "admission",
+      "requirements": [
+        "NGRAPH-DERIV-01",
+        "NGRAPH-SNAP-02",
+        "NGRAPH-CLI-01"
+      ],
+      "input": {
+        "harness": "ngraph-cli-train-refusals",
+        "variants": [
+          "param reaching a step node without --opt-in",
+          "the same with --opt-in %N:boolean=straight-through",
+          "an ngraph-i64/0 model",
+          "a data point with an infinite target",
+          "--steps 1000001",
+          "--from a snapshot of another graph",
+          "a data point failing a guard under the initial params",
+          "a loss graph with one input too few",
+          "missing --policy"
+        ]
+      },
+      "expected": {
+        "stage": "training",
+        "outcome": "each-training-result-matches",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "no opt-in": {
+          "code": "E-DERIV-BOOLEAN",
+          "exit": 4
+        },
+        "with opt-in": {
+          "exit": 0,
+          "opt_in_recorded_in_snapshot": true
+        },
+        "i64 model": {
+          "code": "E-DERIV-I64",
+          "exit": 4
+        },
+        "infinite target": {
+          "code": "E-NONFINITE-UPDATE",
+          "exit": 1
+        },
+        "steps": {
+          "code": "E-BUDGET-STEPS",
+          "exit": 5
+        },
+        "foreign parent": {
+          "code": "E-SNAPSHOT-STALE",
+          "exit": 2
+        },
+        "guard-failing point": {
+          "code": "G-FACT-FALSE",
+          "exit": 1
+        },
+        "loss arity": {
+          "code": "E-INTERFACE",
+          "exit": 2
+        },
+        "missing --policy": {
+          "usage_on_stderr": true,
+          "exit": 2
+        },
+        "refusals_create_no_output_or_partial_file": true
+      },
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
+      "evidence": []
+    },
+    {
+      "id": "NGRAPH-CASE-12",
+      "profile": "Numeric-Graph-v1",
+      "kind": "admission",
+      "requirements": [
+        "NGRAPH-SNAP-02",
+        "NGRAPH-SNAP-01"
+      ],
+      "input": {
+        "harness": "ngraph-cli-snapshot-binding",
+        "commands": [
+          "eval",
+          "verify"
+        ],
+        "variants": [
+          "one param byte flipped",
+          "one provenance field changed",
+          "snapshot of F2 used with F1",
+          "two param lines swapped with recomputed ids",
+          "F1 with one input-validated fact removed",
+          "--snapshot-id of another snapshot",
+          "unknown snapshot schema line"
+        ]
+      },
+      "expected": {
+        "stage": "binding",
+        "outcome": "each-binding-refusal-matches",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "param byte": "E-SNAPSHOT-INTEGRITY",
+        "provenance field": "E-SNAPSHOT-INTEGRITY",
+        "other graph": "E-SNAPSHOT-STALE",
+        "layout": "E-SNAPSHOT-LAYOUT",
+        "changed facts": "E-SNAPSHOT-STALE",
+        "pinned id": "E-SNAPSHOT-ID",
+        "schema": "E-FORMAT",
+        "exit": 2,
+        "evaluated_nodes": 0
+      },
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
+      "evidence": []
+    },
+    {
+      "id": "NGRAPH-CASE-13",
+      "profile": "Numeric-Graph-v1",
+      "kind": "identity",
+      "requirements": [
+        "NGRAPH-SNAP-02",
+        "NGRAPH-SNAP-01"
+      ],
+      "input": {
+        "harness": "ngraph-cli-replay",
+        "variants": [
+          "verify --replay of the NGRAPH-CASE-10 snapshot",
+          "verify --replay --from of the 10-step child",
+          "replay with one data point changed",
+          "replay with the wrong parent",
+          "a library-forged file with altered params and recomputed snapshot and provenance digests"
+        ]
+      },
+      "expected": {
+        "stage": "replay",
+        "outcome": "each-replay-result-matches",
+        "seed replay": {
+          "exit": 0,
+          "replayed": true
+        },
+        "parent replay": {
+          "exit": 0,
+          "replayed": true
+        },
+        "changed data": {
+          "code": "E-SNAPSHOT-STALE",
+          "exit": 2
+        },
+        "wrong parent": {
+          "code": "E-SNAPSHOT-STALE",
+          "exit": 2
+        },
+        "forged": {
+          "code": "E-SNAPSHOT-REPLAY",
+          "exit": 2
+        },
+        "platform_scope": "same pinned platform only"
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "claim": "The case expected fields pass under the immutable finite CLI/library evidence and independently reviewed mapping; no whole-feature acceptance or proof claim.",
+          "subject": "NGRAPH-CASE-13",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-13",
+            "receipt": "../../verification/numeric-graph-v1/acceptance.json",
+            "receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+            "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+            "gate_receipt": "../../verification/main-gates/receipt.json",
+            "gate_receipt_sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+            "rust_tests_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+            "tests": [
+              "verify_binds_and_replays_provenance",
+              "provenance_consistent_forgeries_are_refused_by_layout_or_replay",
+              "b5_training_through_the_cli_reproduces_the_recorded_identities"
+            ],
+            "variants": [
+              "verify --replay of the NGRAPH-CASE-10 snapshot",
+              "verify --replay --from of the 10-step child",
+              "replay with one data point changed",
+              "replay with the wrong parent",
+              "a library-forged file with altered params and recomputed snapshot and provenance digests"
+            ],
+            "external_raw_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+            "prepromotion_case_sha256": "c584ab39a3535df49d77f7e57541d787f14316c284b231fce7f0a22fc2589cc9",
+            "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "build_provenance": "../../verification/numeric-graph-v1/build-provenance.json",
+            "build_provenance_sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+            "published_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+            "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+            "review_receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "review_receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "review": "../../verification/numeric-graph-v1/review.json",
+            "review_sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563",
+            "review_external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound"
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility claim.",
+            "Finite differential/evaluator/identity/replay observations and separately recorded review, not proofs; NG-PO-A..H remain open.",
+            "Trusted rustc, cargo, selected Node and Git; build provenance binds a fresh published-revision build whose full707 implementation/policy blobs equal the historical tested gate revision.",
+            "Library evidence is gate-log-name-bound: each selected test appears once as ok and has one definition at the tested commit; CLI reports do not expose evaluated-node or guest/protected counters."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NGRAPH-CASE-14",
+      "profile": "Numeric-Graph-v1",
+      "kind": "identity",
+      "requirements": [
+        "NGRAPH-SNAP-01",
+        "NGRAPH-F32-01",
+        "NGRAPH-DERIV-01"
+      ],
+      "input": {
+        "harness": "ngraph-identity-agreement",
+        "record": "crates/noble-ngraph-experiment/tests/fixtures/identities-66eb7cd.txt written by the pre-cutover experiment at 66eb7cd",
+        "graphs": [
+          "F1",
+          "F2",
+          "F3 x9",
+          "MSE",
+          "W3-S",
+          "W3-M",
+          "W3-L",
+          "W4",
+          "random 1-8",
+          "extracted I1-I4"
+        ],
+        "training": "B5 (seed 0x14140005, data seed 0x1414da7a, 500 steps)",
+        "soft_float": {
+          "routines": [
+            "sqrt_f64",
+            "trunc_f64",
+            "floor_f64",
+            "ceil_f64",
+            "round_f64",
+            "pow2_f64"
+          ],
+          "inputs": "all specials (signed zeros, subnormal extremes, infinities, NaNs, powers of two, halfway cases) plus 10^7 splitmix64/0 bit patterns"
+        }
+      },
+      "expected": {
+        "stage": "review",
+        "outcome": "byte-identical",
+        "graph_ids_equal_record": true,
+        "fact_binding_digests_equal_record": true,
+        "b5_s0": "a912b177c248ed35d5d7b5943e08e2efec7466623dffc385c6a8ab77f8998046",
+        "b5_final": "075f58cadc9a3abc91161b4224fd48bf9426af0ed8660851670e0ff0536f7f9d",
+        "adam_state_digest_equal_record": true,
+        "loss_bits_equal_record": true,
+        "soft_float_equals_std_bitwise": true,
+        "nan_results_compared_as_class": true
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "claim": "The case expected fields pass under the immutable finite CLI/library evidence and independently reviewed mapping; no whole-feature acceptance or proof claim.",
+          "subject": "NGRAPH-CASE-14",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-14",
+            "receipt": "../../verification/numeric-graph-v1/acceptance.json",
+            "receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+            "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+            "gate_receipt": "../../verification/main-gates/receipt.json",
+            "gate_receipt_sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+            "rust_tests_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+            "tests": [
+              "graph_identities_and_fact_bindings_match_the_record",
+              "b2_vector_observations_and_b3_codes_match_the_record",
+              "b5_training_identities_match_the_record_and_the_receipt",
+              "seeded_campaigns_match_the_record",
+              "special_values_match_std",
+              "powers_of_two_are_exact",
+              "seeded_bit_patterns_match_std"
+            ],
+            "variants": [],
+            "external_raw_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+            "prepromotion_case_sha256": "3946eb184eb25c4fab83754a957d3bd7950da2f15e651f0f268280ec5a3ec85c",
+            "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "build_provenance": "../../verification/numeric-graph-v1/build-provenance.json",
+            "build_provenance_sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+            "published_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+            "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+            "review_receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "review_receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "review": "../../verification/numeric-graph-v1/review.json",
+            "review_sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563",
+            "review_external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound",
+            "soft_float_log": {
+              "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/soft-float-1e7.log",
+              "sha256": "20807d4ac5b164a0c8225640924c1be14cbbe9faca7292d44c9317f37f64c921"
+            }
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility claim.",
+            "Finite differential/evaluator/identity/replay observations and separately recorded review, not proofs; NG-PO-A..H remain open.",
+            "Trusted rustc, cargo, selected Node and Git; build provenance binds a fresh published-revision build whose full707 implementation/policy blobs equal the historical tested gate revision.",
+            "Library evidence is gate-log-name-bound: each selected test appears once as ok and has one definition at the tested commit; CLI reports do not expose evaluated-node or guest/protected counters.",
+            "Soft-float evidence is finite: 10^7 bit patterns for bit-input routines; pow2_f64 covers integer exponents -1100..1100 exhaustively; NaN outputs compared as a class."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NGRAPH-CASE-15",
+      "profile": "Numeric-Graph-v1",
+      "kind": "review",
+      "requirements": [
+        "NGRAPH-CLI-01",
+        "NGRAPH-PROOF-01",
+        "NGRAPH-BENCH-01"
+      ],
+      "input": {
+        "harness": "ngraph-claims-review",
+        "artifacts": [
+          "README.md ngraph section",
+          "noble --help",
+          "every noble-ngraph-report/v1 field name",
+          "verification/ngraph/README.md"
+        ],
+        "determinism": "every subcommand of NGRAPH-CASE-03..13 run twice with identical arguments and inputs"
+      },
+      "expected": {
+        "stage": "review",
+        "outcome": "no-overclaim",
+        "performance_or_speedup_claim": false,
+        "gpu_or_backend_selection_claim": false,
+        "ng_po_discharged": [],
+        "agreement_labeled_finite_differential": true,
+        "exit_code_table_documented": true,
+        "stdout_byte_identical_across_runs": true,
+        "help_lists": [
+          "ngraph",
+          "calculator"
+        ]
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "claim": "Every100 planned scenario commands repeat byte-identically; help/report/doc fields independently reviewed with explicit finite scope and no proof/performance/GPU/backend-selection claim.",
+          "subject": "NGRAPH-CASE-15",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-15",
+            "receipt": "../../verification/numeric-graph-v1/acceptance.json",
+            "receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+            "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+            "gate_receipt": "../../verification/main-gates/receipt.json",
+            "gate_receipt_sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+            "rust_tests_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+            "tests": [],
+            "variants": [],
+            "external_raw_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+            "prepromotion_case_sha256": "400d791f5a505b2f891af5665dd6e7e27e20466ff71bb67dc19a4e94255bd9ae",
+            "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "build_provenance": "../../verification/numeric-graph-v1/build-provenance.json",
+            "build_provenance_sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+            "published_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+            "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+            "review_receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "review_receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "review": "../../verification/numeric-graph-v1/review.json",
+            "review_sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563",
+            "review_external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound",
+            "supplemental_runtime": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-core/runtime.json",
+            "supplemental_runtime_sha256": "9a9308c4ebf372e3cf8a3b2a4a2e6745b76e6e89419fbf420523190e775921fc",
+            "supplemental_runtime_inputs_per_binary": 12
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility claim.",
+            "Finite differential/evaluator/identity/replay observations and separately recorded review, not proofs; NG-PO-A..H remain open.",
+            "Trusted rustc, cargo, selected Node and Git; build provenance binds a fresh published-revision build whose full707 implementation/policy blobs equal the historical tested gate revision.",
+            "Library evidence is gate-log-name-bound: each selected test appears once as ok and has one definition at the tested commit; CLI reports do not expose evaluated-node or guest/protected counters."
+          ]
+        },
+        {
+          "claim": "Independent source-and-execution claims review passes this bounded review case; no universal semantic or proof conclusion.",
+          "subject": "NGRAPH-CASE-15",
+          "revision": "0.1.0-draft.5",
+          "kind": "review",
+          "result": "passed",
+          "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-15",
+            "receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+            "gate_receipt": "../../verification/main-gates/receipt.json",
+            "gate_receipt_sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+            "rust_tests_log_sha256": "095c328b3c1dc2538508705b95d1c59ace56cc446224f8c6b4894c161e235071",
+            "tests": [],
+            "variants": [],
+            "external_raw_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance",
+            "prepromotion_case_sha256": "400d791f5a505b2f891af5665dd6e7e27e20466ff71bb67dc19a4e94255bd9ae",
+            "prepromotion_case_file_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "build_provenance": "../../verification/numeric-graph-v1/build-provenance.json",
+            "build_provenance_sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+            "published_build_revision": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+            "tested_gate_revision": "bc10df848ed81d53e849c440c1f639979e40d38d",
+            "review_receipt": "../../verification/numeric-graph-v1/review-receipt.json",
+            "review_receipt_sha256": "1d6a67e11b5142d35b971ac9645e0328d2944eeee1fd28e87c5a63b6586c37b0",
+            "review": "../../verification/numeric-graph-v1/review.json",
+            "review_sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563",
+            "review_external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound",
+            "supplemental_runtime": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-core/runtime.json",
+            "supplemental_runtime_sha256": "9a9308c4ebf372e3cf8a3b2a4a2e6745b76e6e89419fbf420523190e775921fc",
+            "supplemental_runtime_inputs_per_binary": 12,
+            "acceptance_receipt": "../../verification/numeric-graph-v1/acceptance.json",
+            "acceptance_receipt_sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2"
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility claim.",
+            "Finite differential/evaluator/identity/replay observations and separately recorded review, not proofs; NG-PO-A..H remain open.",
+            "Trusted rustc, cargo, selected Node and Git; build provenance binds a fresh published-revision build whose full707 implementation/policy blobs equal the historical tested gate revision.",
+            "Library evidence is gate-log-name-bound: each selected test appears once as ok and has one definition at the tested commit; CLI reports do not expose evaluated-node or guest/protected counters."
+          ]
+        }
+      ]
+    }
+  ]
+}
