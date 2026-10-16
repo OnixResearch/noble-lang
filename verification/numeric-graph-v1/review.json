@@ -1,0 +1,520 @@
+{
+  "schema": "noble-numeric-graph-v1-claims-review/v1",
+  "selection": "independent-source-and-execution-claims-review",
+  "reviewed_publication": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+  "tested_commit": "bc10df848ed81d53e849c440c1f639979e40d38d",
+  "base_commit": "66eb7cdbf86059a4e475178cb6ef03c74cd11e8b",
+  "acceptance": {
+    "sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+    "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+    "binary_sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7",
+    "base_binary_sha256": "ad1935e8b4f90ae9b7da053fd9b062ad3490d840d3126cc08cdc6144c2ee3536",
+    "manifest_sha256": "3373a8e944fbd8b0bca59ea29439aa022489402332d38d99211f2b6fb9588dd7"
+  },
+  "runtime": {
+    "path": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-core/runtime.json",
+    "sha256": "9a9308c4ebf372e3cf8a3b2a4a2e6745b76e6e89419fbf420523190e775921fc",
+    "bytes": 218883
+  },
+  "reviewed_sources": {
+    "README.md": {
+      "sha256": "4120dfec74b5419cf365f6d85bac3f0f0406807aae1417fa081dbfce2c0734c0",
+      "bytes": 63931
+    },
+    "verification/ngraph/README.md": {
+      "sha256": "08d45370d0d24b20bf4785e799f7ba35b64fc6bc869c751a2e8f0122551dc217",
+      "bytes": 27310
+    },
+    ".cairn/changes/numeric-graph-v1/design.md": {
+      "sha256": "f410bde23bbc2a15d17d3edfc4e1e3d9933b2dfbba03e29d12d2e8616162a598",
+      "bytes": 64302
+    },
+    ".cairn/changes/numeric-graph-v1/cases/numeric-graph-cases.json": {
+      "sha256": "fd355163961051270705ff721045250834f5091c489b9c2ca3f8799760f78c81",
+      "schema_only_sha256": "57a785b1c9148bec0575ed1cf20f32ba22127b00bad5fd7cab66de006473e8eb",
+      "bytes": 16597
+    },
+    "crates/noble-cli/src/main.rs": {
+      "sha256": "b772781e84e195bf82ea143fcc8862d19fe9d77948b8e0647d4a2ac588a863d9",
+      "bytes": 5784
+    },
+    "crates/noble-cli/src/calculator.rs": {
+      "sha256": "2ee3eb7ba339032697533053cb6abafe4ca7307b1c312a1ba553f8a81fca8ba3",
+      "bytes": 297710
+    },
+    "crates/noble-cli/src/ngraph.rs": {
+      "sha256": "d4749961290538a370e5df1b3c74c59c676a760c8fbf94bf728695d22fd53b15",
+      "bytes": 31839
+    },
+    "crates/noble-cli/src/ngraph/report.rs": {
+      "sha256": "a24f074974afe161b3134086f84f153171c4a4247a9c193ef341968787f2460e",
+      "bytes": 5464
+    },
+    "crates/noble-cli/src/ngraph/arguments.rs": {
+      "sha256": "11d482d82136de6262e3bcce432df30e94ba7df615b8ad556bbc732027ac7576",
+      "bytes": 8822
+    },
+    "crates/noble-cli/src/ngraph/files.rs": {
+      "sha256": "39894bbaf176940cb82cbead65ed0b8941a12e11d51b1445406e351d8566505a",
+      "bytes": 5588
+    },
+    "specs/verification/obligations.json": {
+      "sha256": "faa80fb0f2657228043dbdc9f87a3ad0eae267b0dcdd8e3a012b8cd8469793f0",
+      "bytes": 20757
+    },
+    "verification/numeric-graph-v1/acceptance.mjs": {
+      "sha256": "da83007cb473bc909eb20257e9f7003f61aa9af96e3233ed8fdbd341e7752287",
+      "bytes": 116267
+    },
+    "verification/m4/gate.mjs": {
+      "sha256": "f65c516f592ae9e8885a4be9f75bf2924bc9da0f7183e83aeb99549a274b148b",
+      "bytes": 27989
+    },
+    "verification/m4/property.mjs": {
+      "sha256": "406faa4e99cbc9b02a122a476797428fb38b49f2506754bf428f0cb7e77ff02f",
+      "bytes": 36563
+    },
+    "crates/noble-cli/src/core/runtime/host.mjs": {
+      "sha256": "271d8add2c5ab940fec867d822cbb68fed9b0c57e98f9243ffed879065d59494",
+      "bytes": 507
+    },
+    "crates/noble-cli/src/core/runtime/config.json": {
+      "sha256": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db",
+      "bytes": 3606
+    },
+    "crates/noble-cli/src/core/runtime/abi.json": {
+      "sha256": "1284792be03cf5e544dc51b977e9d7c0ee7b38d743698c0420f14ef408249a44",
+      "bytes": 11526
+    },
+    "crates/noble-ngraph/tests/ir_check.rs": {
+      "sha256": "39a4609832e8f33e47aa87278a7e4f77e6a62949bc11adb0e08d09be7732ca32",
+      "bytes": 7244
+    },
+    "crates/noble-ngraph/tests/common/mod.rs": {
+      "sha256": "298ab65394ec591a05fcb5bf0825c570edb6c1b963a0371324da775031a28aa7",
+      "bytes": 3646
+    },
+    "crates/noble-ngraph/tests/format_graph.rs": {
+      "sha256": "56f7faa08b4e41e28159ca9c76bd51478f4c7ea9502aa6d9d2ead9f8d86e7192",
+      "bytes": 14634
+    },
+    "crates/noble-ngraph-experiment/tests/format_roundtrip.rs": {
+      "sha256": "a9b311266761aa34121fe31c39809f343cbbfb9dd94e4fecd5650538a244cd04",
+      "bytes": 2955
+    },
+    "crates/noble-ngraph/tests/soft_float.rs": {
+      "sha256": "d1defb525390900d01e6b8daa3886454ae895433a1812c834ff49cc39d1c8842",
+      "bytes": 4063
+    }
+  },
+  "case01": {
+    "verdict": "passed",
+    "scope": "Finite existing CORE01..18 workload:31 direct CLI rows, plus12 missing after-compilation CORE03/05/09 runtime observations per binary with m4 driver and pinned Node host. CORE15/16 are cargo matrices, name-bound on final gate and reviewed source-unchanged, not fabricated CLI runtime rows.",
+    "fields": [
+      {
+        "path": [
+          "ordinary_reports_byte_identical"
+        ],
+        "expected": true,
+        "verdict": "passed",
+        "evidence_kind": "observed-and-reviewed",
+        "reason": "31 acceptance CORE rows compare stdout/stderr/exit/emitted artifacts; additional CORE03(6),05(4),09(2) raw runtime reports per side are identical and match exact expected outcomes. Compiler stdout/stderr/exit and runtime WAT/Wasm artifacts match."
+      },
+      {
+        "path": [
+          "outcome"
+        ],
+        "expected": "ordinary-identities-unchanged",
+        "verdict": "passed",
+        "evidence_kind": "reviewed",
+        "reason": "Finite observations above plus unchanged ordinary source establish this bounded selection review; not a universal semantic equivalence theorem."
+      },
+      {
+        "path": [
+          "kernel_f32_type_or_word"
+        ],
+        "expected": false,
+        "verdict": "passed",
+        "evidence_kind": "reviewed",
+        "reason": "Exact unchanged noble-kernel/contracts/wasm source; type universe remains I64 and Bool; no F32 token/type/word introduced."
+      },
+      {
+        "path": [
+          "frontend_syntax_added"
+        ],
+        "expected": false,
+        "verdict": "passed",
+        "evidence_kind": "reviewed",
+        "reason": "Exact unchanged core/frontend source. New ngraph-ir parser is disjoint from ordinary source; main adds only explicit ngraph dispatch."
+      },
+      {
+        "path": [
+          "ngraph_reachable_only_through"
+        ],
+        "expected": [
+          "noble ngraph",
+          "noble-ngraph library"
+        ],
+        "verdict": "passed",
+        "evidence_kind": "reviewed",
+        "reason": "Reviewed main.rs single ngraph arm and all added CLI references confined to ngraph module/submodules. Ordinary entrypoint sources unchanged; calculator edit only factors identical usage text. Library dependency added solely at allowed CLI/experiment roots."
+      },
+      {
+        "path": [
+          "k_num_01_changed"
+        ],
+        "expected": false,
+        "verdict": "passed",
+        "evidence_kind": "reviewed",
+        "reason": "Exact canonical K-NUM-01 blocks in base and tested revisions are byte-identical, bound in acceptance.core_identity.k_num_01."
+      },
+      {
+        "path": [
+          "stage"
+        ],
+        "expected": "review",
+        "evidence_kind": "schema-classification",
+        "verdict": "passed",
+        "reason": "Schema-only completion; actual case kind remains review, not a runtime outcome assertion."
+      }
+    ],
+    "entrypoints": [
+      "run",
+      "session",
+      "compile",
+      "live",
+      "calculator",
+      "build",
+      "component",
+      "verify"
+    ],
+    "source_isolation": {
+      "paths": [
+        "crates/noble-kernel",
+        "crates/noble-contracts",
+        "crates/noble-wasm",
+        "crates/noble-cli/src/core",
+        "crates/noble-cli/src/live",
+        "crates/noble-cli/src/build",
+        "crates/noble-cli/src/component"
+      ],
+      "diff": "",
+      "all_cli_changed_files": [
+        "crates/noble-cli/src/calculator.rs",
+        "crates/noble-cli/src/main.rs",
+        "crates/noble-cli/src/ngraph.rs",
+        "crates/noble-cli/src/ngraph/arguments.rs",
+        "crates/noble-cli/src/ngraph/files.rs",
+        "crates/noble-cli/src/ngraph/report.rs"
+      ],
+      "dispatch_review": "main exact added ngraph arm and additive help; calculator exact usage factor produces same refusal bytes. Every other CLI source and all existing runtime assets unchanged."
+    }
+  },
+  "case15": {
+    "verdict": "passed",
+    "fields": [
+      {
+        "path": [
+          "outcome"
+        ],
+        "expected": "no-overclaim",
+        "evidence_kind": "reviewed",
+        "verdict": "passed",
+        "reason": "All four named surfaces reviewed: README ngraph section+what works row, real --help, all31 report field names, verification/ngraph README. Historical measurements remain negative and no proof authority inferred."
+      },
+      {
+        "path": [
+          "performance_or_speedup_claim"
+        ],
+        "expected": false,
+        "evidence_kind": "reviewed",
+        "verdict": "passed",
+        "reason": "README states no performance/speedup claim and retains0.131x native STOP; help/report names have no speed claim. Historical benchmark numbers are labeled and not reframed as adoption justification."
+      },
+      {
+        "path": [
+          "gpu_or_backend_selection_claim"
+        ],
+        "expected": false,
+        "evidence_kind": "reviewed",
+        "verdict": "passed",
+        "reason": "Opt-in CPU graph evaluator is implementation, not GPU/backend-selection result; GPU issue2 remains blocked."
+      },
+      {
+        "path": [
+          "ng_po_discharged"
+        ],
+        "expected": [],
+        "evidence_kind": "reviewed",
+        "verdict": "passed",
+        "reason": "README/design/verification README keep NG-PO-A..H OPEN; no NG-PO ledger entries added or discharged."
+      },
+      {
+        "path": [
+          "agreement_labeled_finite_differential"
+        ],
+        "expected": true,
+        "evidence_kind": "reviewed",
+        "verdict": "passed",
+        "reason": "README explicitly labels evaluator agreement, matching identities and replay finite differential evidence; verification README separates observations and theorem obligations."
+      },
+      {
+        "path": [
+          "exit_code_table_documented"
+        ],
+        "expected": true,
+        "evidence_kind": "reviewed-and-observed",
+        "verdict": "passed",
+        "reason": "README exit0 normal,1 trap,2 reject/usage/host,4 unsupported,5 exhausted; CLI help repeats it; acceptance exercises these classes."
+      },
+      {
+        "path": [
+          "stdout_byte_identical_across_runs"
+        ],
+        "expected": true,
+        "evidence_kind": "observed",
+        "verdict": "passed",
+        "reason": "Acceptance repeats all100 planned commands covering CASE03..13 subcommands; stdout/stderr/exit and published bytes compare; all mismatches empty. Library-only06/09 do not define additional CLI subcommands."
+      },
+      {
+        "path": [
+          "help_lists"
+        ],
+        "expected": [
+          "ngraph",
+          "calculator"
+        ],
+        "evidence_kind": "observed",
+        "verdict": "passed",
+        "reason": "Acceptance recorded real current/base help; review runner independently invokes same pinned current binary and compares exact help bytes."
+      },
+      {
+        "path": [
+          "stage"
+        ],
+        "expected": "review",
+        "evidence_kind": "schema-classification",
+        "verdict": "passed",
+        "reason": "Schema-only completion; case remains review."
+      }
+    ],
+    "determinism": {
+      "commands": 100,
+      "repetitions": 2,
+      "scope": "Exact planned inputs, existing-path state reproduced in fresh repetition directories; not proof for every possible input or I/O failure."
+    }
+  },
+  "report_field_review": {
+    "fields": [
+      "schema",
+      "command",
+      "stage",
+      "outcome",
+      "code",
+      "site",
+      "detail",
+      "graph",
+      "profile",
+      "subject",
+      "closure",
+      "inputs",
+      "params",
+      "outputs",
+      "live_nodes",
+      "layers",
+      "facts",
+      "param_layout",
+      "work_units",
+      "expanded_nodes",
+      "pruned_nodes",
+      "inline_depth",
+      "snapshot",
+      "vector",
+      "published_steps",
+      "parent",
+      "steps",
+      "loss_initial",
+      "loss_final",
+      "bound",
+      "replayed"
+    ],
+    "verdict": "passed",
+    "reason": "schema/command/stage/outcome/code/site/detail classify observations; graph/profile/subject/closure/param_layout/snapshot/parent are identities or metadata; inputs/outputs/vector are typed values; node/layer/fact/param/work/expanded/pruned/inline/step counts are resource or execution observations; loss_initial/final are binary64 bits; bound/replayed are binding/re-execution results, never correctness proofs. published_steps is partial-progress diagnostic, not proof. No timing/path/performance/GPU/proof-accepted field.",
+    "sources": [
+      "crates/noble-cli/src/ngraph.rs",
+      "crates/noble-cli/src/ngraph/report.rs"
+    ]
+  },
+  "field_accounting_corrections": [
+    {
+      "case": "NGRAPH-CASE-04",
+      "path": [
+        "evaluated_nodes"
+      ],
+      "classification": "reviewed structural invariant, NOT observed counter",
+      "reason": "check calls argument/policy/load_graph/check_fields only; no evaluator. NO_NODE test concerns eval, not check. Do not cite it as measurement of check."
+    },
+    {
+      "cases": [
+        "NGRAPH-CASE-02",
+        "NGRAPH-CASE-03",
+        "NGRAPH-CASE-04",
+        "NGRAPH-CASE-05",
+        "NGRAPH-CASE-09",
+        "NGRAPH-CASE-11",
+        "NGRAPH-CASE-12"
+      ],
+      "paths": [
+        [
+          "guest_requests"
+        ],
+        [
+          "protected_operations"
+        ]
+      ],
+      "classification": "reviewed structural no-guest invariant, NOT observed counter",
+      "reason": "ngraph invokes no guest runtime or protected host-operation dispatch; report schema has no counters. Not a dynamic observation of zero."
+    },
+    {
+      "case": "NGRAPH-CASE-08",
+      "path": [
+        "refused_vectors_evaluated_nodes"
+      ],
+      "classification": "library-observed plus CLI refusal observations",
+      "reason": "NO_NODE library test observes both evaluators refusing exact class before evaluation; CLI only shows no vector/output, not node count."
+    },
+    {
+      "case": "NGRAPH-CASE-12",
+      "path": [
+        "evaluated_nodes"
+      ],
+      "classification": "library-observed for evaluation binding refusals; parsing/integrity refusal paths reviewed",
+      "reason": "Corrupt parse cannot create snapshot/evaluator. No direct CLI node counter for every binding variant."
+    },
+    {
+      "case": "NGRAPH-CASE-06",
+      "classification": "mapped finite library coverage",
+      "reason": "canonical and noisy text on full identity corpus; authored-name/evidence variants on parser zoo graphs with SipHash test scheme, not every corpus graph cross-product."
+    },
+    {
+      "case": "NGRAPH-CASE-14",
+      "classification": "finite soft-float differential evidence",
+      "reason": "10^7 bit-pattern tier for bit-input routines; pow2_f64 exhaustive integer exponents -1100..1100, not random float-input patterns. NaNs compared as class."
+    }
+  ],
+  "promotion_recommendations": {
+    "10": "observed B5 inputs/followups supported",
+    "11": "hold/not-run under direct-observation rule:guest/protected counters structural only",
+    "12": "hold/not-run under direct-observation rule:guest/protected counters and some node counts structural only",
+    "13": "observed exact replay inputs supported on same platform",
+    "14": "passed finite identity/soft-float field mapping;pow2 integer exponent domain and NaN-class boundary explicitly recorded",
+    "15": "passed independent claims review + observed determinism",
+    "01": "passed review contract, finite scope above",
+    "02": "not-run:637 relevant unknowns, no complete forbidden-capability-use=0 evidence",
+    "03": "hold/not-run under approved direct-observation rule: normalized guest/protected counters structural only",
+    "04": "hold/not-run:check evaluated_nodes=0 structural only, plus guest/protected counters",
+    "05": "hold/not-run under direct-observation rule:guest/protected counters structural only",
+    "06": "passed finite mapped expected-field evidence per approved plan:canonical/noisy full corpus; authored-name/evidence parser variants on applicable zoo subjects, not a claimed every-graph Cartesian product",
+    "07": "observed exact probes supported",
+    "08": "passed exact CLI variants plus direct library counter0 observations for all3 named refusal classes, mapping in case08; no CLI node counter claimed",
+    "09": "hold/not-run under direct-observation rule:guest/protected counters structural only"
+  },
+  "trusted_assumptions": [
+    "One pinned x86_64 Linux platform and toolchain; no cross-platform bit-reproducibility is claimed (NGRAPH-CASE-13 platform_scope).",
+    "Evaluator agreement and replay are finite differential observations, not proofs; NG-PO-A..H stay open.",
+    "The binaries are trusted to be release builds of --tested-commit and --base-commit: sha256 binds bytes, not build provenance. The projected crate sources are checked against the --tested-commit blobs.",
+    "Library tests are bound through the gate rust-tests log by name only (the log does not name test binaries): each name must appear exactly once as ok and be defined once in its file at --tested-commit.",
+    "The soft-float log is bound by sha256; the log itself does not record its commit.",
+    "Forged snapshots come from this runner's independent D6/BLAKE3 encoding, which must first reproduce the unforged snapshot byte for byte.",
+    "CORE-03, CORE-05 and CORE-09 compare compiled Wasm text (their runtime inputs go through the in-repo Node host); CORE-15 and CORE-16 are cargo-test controls bound through the log.",
+    "Trusted tools: rustc and cargo (the builds), the selected Node (this runner) and git.",
+    "Fresh build logs and provenance are independent compiler-driver evidence, not cryptographic reproducible-build attestation. Binary hash identifies bytes, not correctness.",
+    "Acceptance source projection omits ordinary kernel/contracts/wasm source; this review supplements it with exact baseline-to-publication unchanged-source checks and actual runtime comparisons.",
+    "Gate library log matches names not binary IDs; exactly one ok line and one known definition are evidence under that log convention, not authenticated test identity.",
+    "Statement-level review is evidence permitted by review cases01/15, not a proof; nonreview cases with strict direct-observation requirements stay held where only structural inference exists."
+  ],
+  "ng_po_discharged": [],
+  "scope": {
+    "proof_acceptance": false,
+    "gpu_selection": false,
+    "performance_claim": false,
+    "cross_platform_claim": false,
+    "case_state_mutation": false,
+    "cairn_sync": false,
+    "cairn_archive": false,
+    "posting": false
+  },
+  "issue14": {
+    "state": "CLOSED",
+    "comments": 4,
+    "observed_url": "https://github.com/OnixResearch/noble-lang/issues/14",
+    "supported_feature_adoption_comment_present": false,
+    "owner_decision": "2026-10-16 design owner decision; not an existing GitHub comment",
+    "prior_stop_unchanged": true
+  },
+  "non_claims": [
+    "No global gate pass;10/14 pass and4fail remain.",
+    "No proof obligations discharged.",
+    "Reports and review bindings are not whole-program/compiler/evaluator correctness.",
+    "No promotion, sync/archive, push, issue mutation or posting performed."
+  ],
+  "build_provenance": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/ngraph-acceptance/verification/numeric-graph-v1/build-provenance.json",
+    "sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b",
+    "bytes": 59012
+  },
+  "prepromotion_cases": {
+    "path": "/home/brittonr/.cache/noble-issues/wt/ngraph-acceptance/verification/numeric-graph-v1/prepromotion-cases.json",
+    "sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+    "bytes": 29361
+  },
+  "final_recommendation": {
+    "passed": [
+      "NGRAPH-CASE-01",
+      "NGRAPH-CASE-06",
+      "NGRAPH-CASE-07",
+      "NGRAPH-CASE-08",
+      "NGRAPH-CASE-10",
+      "NGRAPH-CASE-13",
+      "NGRAPH-CASE-14",
+      "NGRAPH-CASE-15"
+    ],
+    "held": [
+      "NGRAPH-CASE-02",
+      "NGRAPH-CASE-03",
+      "NGRAPH-CASE-04",
+      "NGRAPH-CASE-05",
+      "NGRAPH-CASE-09",
+      "NGRAPH-CASE-11",
+      "NGRAPH-CASE-12"
+    ],
+    "rule": "Director retained approved strict direct-observation rule. Passing variant outputs are not case acceptance. Held cases keep absent/not-run/open/unassessed with evidence[]. No state changes in this worktree."
+  },
+  "case08": {
+    "verdict": "passed",
+    "cli_variant_fields": "All expected variant codes/outcomes/exits/line counts are directly observed in acceptance twice for both evaluators.",
+    "node_zero": {
+      "expected": 0,
+      "evidence_kind": "direct library counter observations, not CLI counter",
+      "gate_test": "refusals_before_evaluation_evaluate_no_node",
+      "file": "crates/noble-ngraph/tests/ir_check.rs",
+      "fixture": "common::linear(false,true): input x,params w/b,output w*x+b,input-validated range[0,4],snapshot[2,0.5]",
+      "mapping": [
+        {
+          "case_variant": "input violating an input-validated range fact",
+          "measured": "input x=5.0,valid snapshot -> FactInput, evaluated_nodes=0 in reference and compiled"
+        },
+        {
+          "case_variant": "types line i64 for an f32 graph",
+          "measured": "input Value::I64(1) to F32 graph -> Interface,evaluated_nodes=0 in reference and compiled; CLI vector types-line metadata refusal independently observed with0vector lines"
+        },
+        {
+          "case_variant": "graph with param slots and no --snapshot",
+          "measured": "input x=1.0,no snapshot -> SnapshotLayout,evaluated_nodes=0 in reference and compiled"
+        }
+      ],
+      "scope": "Case08 names graph classes for these refusal variants, not concrete graph identities. This measurement uses those exact named classes; it is not a measurement on CLI guard.ngraph/F1 bytes. The approved A1 library mapping supplies the otherwise unreported node counter. guard trap and fuel exhaustion are not refused vectors; normal/guard-failing mixed rows are not asserted zero.",
+      "not_used_for": "Does not measure CASE04 check or normalized guest/protected counters."
+    }
+  }
+}

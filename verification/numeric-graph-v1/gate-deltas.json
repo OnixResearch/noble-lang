@@ -1,0 +1,388 @@
+{
+  "schema": "noble-numeric-graph-v1-gate-deltas/v1",
+  "published_commit": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+  "tested_commit": "bc10df848ed81d53e849c440c1f639979e40d38d",
+  "baseline_commit": "f2b398df0bf610c1c2711df6784109a51e121156",
+  "method": [
+    "Read-only recovery; no gate, collector, or build rerun. Preserve current and historical main-gates receipt bytes.",
+    "Architecture and lint findings: strip exact noble-inventory-artifacts> prefix from each retained gate log, decode the first complete JSON object, count finding records without deduplication, group by package_name/file/lint. Both final architecture arrays agree exactly.",
+    "Warning counts include duplicate source observations in multiple Cargo units; these are finding records, not unique defects. Scratch collection capacity is independently labeled 5406170, not bc10df8.",
+    "Scratch source binding: all 648 tracked crates/Cargo/dylint/architecture files match Git blob identities at 54061703a94afde68ad78b24905de613c5c345f4."
+  ],
+  "raw": {
+    "gate_receipt": {
+      "path": "/home/brittonr/.cache/noble-issues/wt/ngraph-claims/verification/main-gates/receipt.json",
+      "sha256": "4e0b3536e285a8867dc0ca64993f75c872da2e1bee0ceae1e68bb577de19708d",
+      "bytes": 7842
+    },
+    "baseline_receipt": {
+      "path": "/home/brittonr/.cache/noble-issues/wt/ngraph-claims/verification/main-gates/receipt-f2b398d.json",
+      "sha256": "4951a6713f045fa8c61735ee7418d04ef47b73653528fb207482af91b6566177",
+      "bytes": 37477
+    },
+    "final_logs": {
+      "boundary-controls": {
+        "path": "/home/brittonr/.cache/noble-issues/logs/gates/bc10df848ed81d53e849c440c1f639979e40d38d/boundary-controls.log",
+        "sha256": "f9c55abf3abad6bdec0803e33f25f83f5a047cb36e5421b444d0470d92121420",
+        "bytes": 3646
+      },
+      "native-assurance": {
+        "path": "/home/brittonr/.cache/noble-issues/logs/gates/bc10df848ed81d53e849c440c1f639979e40d38d/native-assurance.log",
+        "sha256": "d6c45e615301529692b71b834c6f84c7fe2c197e3231cf69fd3e19c09bd66013",
+        "bytes": 13887896
+      },
+      "octet": {
+        "path": "/home/brittonr/.cache/noble-issues/logs/gates/bc10df848ed81d53e849c440c1f639979e40d38d/octet.log",
+        "sha256": "db44af2dd287ca1f2aafe5d53d69b81b9a67e7085eee5688ce57099ff1ca1dbd",
+        "bytes": 306120
+      },
+      "source-coverage": {
+        "path": "/home/brittonr/.cache/noble-issues/logs/gates/bc10df848ed81d53e849c440c1f639979e40d38d/source-coverage.log",
+        "sha256": "7bff753bddeb153829cfee171f4a9abdd1abb6e68ad55e9bb4b9995cc8e570c9",
+        "bytes": 13887902
+      }
+    },
+    "baseline_source": {
+      "path": "/home/brittonr/.cache/noble-issues/logs/integration-14/f2b398df0bf610c1c2711df6784109a51e121156/source-coverage.log",
+      "sha256": "90197aa1f09bfd0e4cb8d91f7cef60bdb4ba4e3cee4e4974d4d4ac68821bf622",
+      "bytes": 11947588
+    }
+  },
+  "architecture_findings": {
+    "total": 3745,
+    "baseline_total": 3545,
+    "delta": 200,
+    "code_counts": {
+      "required-compiler-unknown": 3745
+    },
+    "by_package": {
+      "noble-cli": 2034,
+      "noble-ngraph": 637,
+      "noble-contracts": 462,
+      "noble-ngraph-experiment": 381,
+      "noble-wasm": 139,
+      "noble-kernel": 92
+    },
+    "baseline_by_package": {
+      "noble-cli": 2010,
+      "noble-ngraph-experiment": 842,
+      "noble-contracts": 462,
+      "noble-wasm": 139,
+      "noble-kernel": 92
+    },
+    "package_deltas": {
+      "noble-cli": 24,
+      "noble-ngraph": 637,
+      "noble-contracts": 0,
+      "noble-ngraph-experiment": -461,
+      "noble-wasm": 0,
+      "noble-kernel": 0
+    },
+    "ngraph_by_cause": {
+      "required compiler fact remains unknown: UnsupportedExpansion: expanded source has no compiler-resolved macro definition: Desugaring(QuestionMark)": 256,
+      "required compiler fact remains unknown: UnresolvedDefinition: call expression has no compiler-resolved definition": 224,
+      "required compiler fact remains unknown: UnsupportedExpansion: expanded source has no compiler-resolved macro definition: Desugaring(ForLoop)": 134,
+      "required compiler fact remains unknown: MissingBody: required trait method has no body in this compilation unit": 11,
+      "required compiler fact remains unknown: DynamicDispatch: dynamic dispatch target is not statically unique": 8,
+      "required compiler fact remains unknown: UnsupportedExpansion: expanded source has no compiler-resolved macro definition: Desugaring(RangeExpr)": 4
+    },
+    "waivers": [],
+    "effect_closure": null
+  },
+  "tigerstyle_static_lint": {
+    "source": "actual bc10df8 source-coverage/native-assurance gate logs",
+    "phase": "warning-only",
+    "total": 5490,
+    "baseline_total": 4464,
+    "delta": 1026,
+    "scopes": {
+      "crates/noble-ngraph/src": {
+        "total": 1282,
+        "by_lint": {
+          "non_trait_imports": 614,
+          "platform_dependent_cast": 178,
+          "mutating_input_in_pure": 152,
+          "ignored_result": 62,
+          "unbounded_collection_growth": 50,
+          "path_segment_repetition": 38,
+          "usize_in_public_api": 30,
+          "excessive_file_length": 26,
+          "function_length": 24,
+          "bool_naming": 24,
+          "sentinel_fallback": 24,
+          "unchecked_narrowing": 20,
+          "no_recursion": 16,
+          "borrowed_argument_types": 8,
+          "catch_all_on_enum": 6,
+          "module_file_count": 2,
+          "renamed_imports": 2,
+          "nested_conditionals": 2,
+          "too_many_parameters": 2,
+          "unchecked_division": 2
+        }
+      },
+      "crates/noble-cli/src/ngraph": {
+        "total": 82,
+        "by_lint": {
+          "non_trait_imports": 34,
+          "explicit_defaults": 14,
+          "function_length": 8,
+          "unbounded_collection_growth": 6,
+          "ignored_result": 4,
+          "unfulfilled_lint_expectations": 4,
+          "fallible_int_fallback": 4,
+          "sentinel_fallback": 4,
+          "excessive_file_length": 2,
+          "bool_naming": 2
+        }
+      },
+      "crates/noble-ngraph-experiment": {
+        "total": 1496,
+        "by_lint": {
+          "non_trait_imports": 728,
+          "explicit_defaults": 175,
+          "no_unwrap": 136,
+          "bool_naming": 82,
+          "ambient_clock": 60,
+          "unbounded_collection_growth": 52,
+          "platform_dependent_cast": 47,
+          "function_length": 40,
+          "no_panic": 31,
+          "usize_in_public_api": 24,
+          "excessive_file_length": 20,
+          "ignored_result": 16,
+          "ambient_env": 13,
+          "too_many_parameters": 12,
+          "path_segment_repetition": 11,
+          "underscore_in_module_filename": 10,
+          "borrowed_argument_types": 6,
+          "fallible_int_fallback": 6,
+          "compound_assertion": 5,
+          "no_recursion": 4,
+          "sentinel_fallback": 4,
+          "unchecked_narrowing": 4,
+          "module_file_count": 2,
+          "renamed_imports": 2,
+          "negated_predicate": 2,
+          "unchecked_division": 2,
+          "catch_all_on_enum": 2
+        }
+      }
+    },
+    "experiment_delta": -697,
+    "ngraph_core_groups": {
+      "mutating_input_in_pure": 152,
+      "interior_mutability_in_core": 0,
+      "concrete_construction_in_core": 0
+    },
+    "deny_level_ngraph_count": null,
+    "prior_confirmation": {
+      "commit": "ff4e9ba9bc91b3ae228690a59bdd999abecf9098",
+      "scope": "prior warning-only scratch, NOT final gate",
+      "raw": {
+        "path": "/var/tmp/ngraph-v1-confirm-ff4e9ba/out/status.json",
+        "sha256": "21fbd4dc06b6c44a96600e49f6c9a9cb27e0e7bef5d9182581a371f0c19983f9",
+        "bytes": 283869
+      },
+      "raw_findings": {
+        "path": "/var/tmp/ngraph-v1-confirm-ff4e9ba/out/results.jsonl",
+        "sha256": "bd39d1a5f2dbe67728a9e4eb05de6ecac1a068302851a33ed10917621a9ff5a2",
+        "bytes": 8047962
+      },
+      "source_binding": {
+        "scope": "crates,Cargo.toml,Cargo.lock,dylint.toml,policy/architecture.ncl,policy/architecture.json",
+        "checked_files": 648,
+        "differing": []
+      },
+      "warnings": 5292,
+      "core_groups": {
+        "interior_mutability_in_core": 6,
+        "concrete_construction_in_core": 4
+      },
+      "note": "Counts are pre-fix history; not substituted for final counts."
+    }
+  },
+  "deny_all": {
+    "source": "actual bc10df8 octet log",
+    "findings": 236,
+    "errors": 232,
+    "baseline_findings": 236,
+    "baseline_errors": 232,
+    "cargo_stop": "noble-kernel lib and lib test; each 116 errors and 2 warnings",
+    "ngraph_reached": false
+  },
+  "boundary_controls": {
+    "source": "actual bc10df8 boundary-controls log",
+    "observed": "acyclic-shell artifact replay failed: deny artifact root missing; check fails",
+    "workspace_current_findings": null,
+    "workspace_current_errors": null,
+    "workspace_note": "workspace derivation started but the retained aggregate log has no findings; nix log for its exact derivation returned empty. Do not relabel historical 118/116 as current measurement.",
+    "baseline_workspace_findings": 118,
+    "baseline_workspace_errors": 116,
+    "reservation_status": "OPEN #27",
+    "capacity_diagnosis": "INFERRED: 88 collected workspace units fill max_units=88; acyclic fixture still adds 2 lib units. Exact limit-88 message is not in the retained final gate log."
+  },
+  "capacity_renewal": {
+    "collection_commit": "54061703a94afde68ad78b24905de613c5c345f4",
+    "scope": "prior complete warning-only scratch collection used for inventory renewal; NOT final gate execution",
+    "raw": {
+      "compiler-architecture-coverage.json": {
+        "path": "/var/tmp/ngraph-v1-5406170/out/compiler-architecture-coverage.json",
+        "sha256": "6178869c78b99dac0f032d445b652795bdfa2c08590a2dfce3d7cd11bb15978f",
+        "bytes": 13015
+      },
+      "compiler-architecture-ir.json": {
+        "path": "/var/tmp/ngraph-v1-5406170/out/compiler-architecture-ir.json",
+        "sha256": "04b6913f3d44df22b29c416421d8503c7b2315ffb16991368ac69a31460c0f32",
+        "bytes": 177843955
+      },
+      "status.json": {
+        "path": "/var/tmp/ngraph-v1-5406170/out/status.json",
+        "sha256": "3cb100db0087298a8ed248a7bcdc0976131c778ec4aade31e176eeaff8a9556b",
+        "bytes": 286377
+      },
+      "project-architecture-receipt.json": {
+        "path": "/var/tmp/ngraph-v1-5406170/out/project-architecture-receipt.json",
+        "sha256": "b1b979029784fa29b1c8541385938b16427d393fbc790a52ead8bc0d83e0c9fe",
+        "bytes": 10035761
+      },
+      "command.txt": {
+        "path": "/var/tmp/ngraph-v1-5406170/out/command.txt",
+        "sha256": "8da95a4fd621992cdf802b93242f15760de66b5fce9ff61b163e9119c598bd3d",
+        "bytes": 195
+      }
+    },
+    "source_binding": {
+      "checked_files": 648,
+      "differing": []
+    },
+    "units": 88,
+    "by_package": {
+      "noble-ngraph-experiment": 20,
+      "noble-cli": 19,
+      "noble-kernel": 14,
+      "noble-contracts": 11,
+      "noble-wasm": 11,
+      "noble-ngraph": 9,
+      "noble-syndicate": 4
+    },
+    "ngraph_units": [
+      {
+        "target": "extract_b1",
+        "kind": "test+test",
+        "path": "crates/noble-ngraph/tests/extract_b1.rs"
+      },
+      {
+        "target": "format_graph",
+        "kind": "test+test",
+        "path": "crates/noble-ngraph/tests/format_graph.rs"
+      },
+      {
+        "target": "noble_ngraph",
+        "kind": "lib+test",
+        "path": "crates/noble-ngraph/src/lib.rs"
+      },
+      {
+        "target": "ir_check",
+        "kind": "test+test",
+        "path": "crates/noble-ngraph/tests/ir_check.rs"
+      },
+      {
+        "target": "format_values",
+        "kind": "test+test",
+        "path": "crates/noble-ngraph/tests/format_values.rs"
+      },
+      {
+        "target": "noble_ngraph",
+        "kind": "lib",
+        "path": "crates/noble-ngraph/src/lib.rs"
+      },
+      {
+        "target": "train_admission",
+        "kind": "test+test",
+        "path": "crates/noble-ngraph/tests/train_admission.rs"
+      },
+      {
+        "target": "soft_float",
+        "kind": "test+test",
+        "path": "crates/noble-ngraph/tests/soft_float.rs"
+      },
+      {
+        "target": "snapshot_file",
+        "kind": "test+test",
+        "path": "crates/noble-ngraph/tests/snapshot_file.rs"
+      }
+    ],
+    "unit_delta_vs_78": 10,
+    "experiment_net_units": 0,
+    "cli_new_units": 1,
+    "max_units": 88,
+    "max_shards": 88,
+    "baseline_max_units": 78,
+    "largest_shard": {
+      "raw": {
+        "path": "/var/tmp/ngraph-v1-5406170/source/.octet/compiler-architecture/shards/77e33b6ab944ec4355bcb127c07993b13a986e876d4c09832ad30aa31fe574a9.json",
+        "sha256": "cb835cb95c1ba0083b8905515521b8370f88cf7199e4e33dbb6218985dbb72d5",
+        "bytes": 32741848
+      },
+      "package": "noble-cli",
+      "target_kind": "bin+test",
+      "calls": 21870,
+      "constructors": 19133,
+      "spans": 24049,
+      "bytes": 32741848
+    },
+    "ir_bytes": 177843955,
+    "limits": {
+      "max_artifact_bytes": 268435456,
+      "max_calls": 32768,
+      "max_configurations": 2048,
+      "max_constructors": 32768,
+      "max_effects": 4096,
+      "max_expansions": 8192,
+      "max_function_safety_facts": 4096,
+      "max_implementations": 1024,
+      "max_items": 4096,
+      "max_modules": 2048,
+      "max_shard_bytes": 67108864,
+      "max_shards": 88,
+      "max_signatures": 4096,
+      "max_span_bytes": 1048576,
+      "max_spans": 32768,
+      "max_traits": 512,
+      "max_type_shapes": 4096,
+      "max_types": 4096,
+      "max_units": 88,
+      "max_unknowns": 4096,
+      "max_value_flow_bodies": 4096,
+      "max_value_flow_rounds": 64,
+      "max_value_flow_steps": 65536,
+      "max_value_provenance_facts": 8192
+    },
+    "comparators": {
+      "source": {
+        "path": "/home/brittonr/.cache/noble-issues/inventory/5406170/post/coverage.json",
+        "sha256": "46756c99010b465c6de9da515ff5e15c929790c4609c580c07cfdd2a349d6d79",
+        "bytes": 582
+      },
+      "source_valid": true,
+      "native": {
+        "path": "/home/brittonr/.cache/noble-issues/inventory/5406170/native.json",
+        "sha256": "43d22b2f92d22e5f27f52194edecfebd738f49ab9fbd44186970128f7ae1e10d",
+        "bytes": 706
+      },
+      "native_valid": true
+    },
+    "closure_offsets_note": "Inventory renewal replaced source/offset-bound identities (2481 added,1779 removed). Earlier outbound-effect closure offset entries are historical, not an additional measured final failure. Pure comparator validity is not architecture acceptance."
+  },
+  "case02": {
+    "verdict": "not-run",
+    "forbidden_capability_uses": null,
+    "relevant_unknowns": 637,
+    "reason": "No accepted complete capability closure with forbidden uses=0 and no relevant unknown. Architecture blocked, effect_closure=null; no_std, dependency inspection and policy pass are not this evidence."
+  },
+  "non_claims": [
+    "Not global gate acceptance: 10 pass,4 fail.",
+    "No case promotion, sync, archive, proof discharge, performance, GPU or cross-platform claim."
+  ]
+}

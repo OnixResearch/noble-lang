@@ -1,0 +1,125 @@
+{
+  "schema": "noble-numeric-graph-v1-review-receipt/v1",
+  "result": "passed",
+  "selection": "independent-source-and-execution-claims-review",
+  "reviewed_publication": "0eb5c0478ebf3419de6f94b8144c2ac7520356ca",
+  "tested_commit": "bc10df848ed81d53e849c440c1f639979e40d38d",
+  "source_revision": "sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f",
+  "review": {
+    "file": "verification/numeric-graph-v1/review.json",
+    "sha256": "3596ce7ac2cc8bdda428bf4d30b8438ccd17b71976ef151ca9f40afdb590b563"
+  },
+  "runner": {
+    "file": "verification/numeric-graph-v1/review.mjs",
+    "sha256": "d4d6f5f11d81491cbabf354309d659bb5591987b1118213d187c5fa2bc54a73c"
+  },
+  "acceptance": {
+    "file": "/home/brittonr/.cache/noble-issues/wt/ngraph-acceptance/verification/numeric-graph-v1/acceptance.json",
+    "sha256": "cace59bc617e30b2a763b0298402e613115823eeec79aeae21d746571c5273a2",
+    "manifest_sha256": "3373a8e944fbd8b0bca59ea29439aa022489402332d38d99211f2b6fb9588dd7",
+    "checked_raw_files": 1245
+  },
+  "build_provenance": {
+    "file": "/home/brittonr/.cache/noble-issues/wt/ngraph-acceptance/verification/numeric-graph-v1/build-provenance.json",
+    "sha256": "b7d618b65fc84f57d2a8cee6779911b8d043b6e2d5127b7639dd6fad6cd76f7b"
+  },
+  "prepromotion_cases": {
+    "file": "/home/brittonr/.cache/noble-issues/wt/ngraph-acceptance/verification/numeric-graph-v1/prepromotion-cases.json",
+    "sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545"
+  },
+  "runtime": {
+    "file": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-core/runtime.json",
+    "sha256": "9a9308c4ebf372e3cf8a3b2a4a2e6745b76e6e89419fbf420523190e775921fc",
+    "checked_artifact_files": 246,
+    "extra_runtime_inputs_per_binary": 12
+  },
+  "gate_deltas": {
+    "file": "verification/numeric-graph-v1/gate-deltas.json",
+    "sha256": "7812550ca0d19f545a49ae33b53055c66a32ade16505cf39079d7fd98d738050",
+    "architecture_findings": 3745,
+    "warning_findings": 5490
+  },
+  "tools": {
+    "node": {
+      "path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b"
+    },
+    "binary": {
+      "file": "/home/brittonr/.cache/noble-issues/proof/ngraph-acceptance-20261016-final/acceptance/executables/noble",
+      "sha256": "77421199e20ec79fc7e6dcfe0a1f5682aa22747854e86da76e22bc4fc4fb93e7"
+    }
+  },
+  "observed": {
+    "help": {
+      "stdout_sha256": "b82f01289f46680de5a523958ff57dace3eecf5e2ffac6dd284903b905d42492",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit": 0
+    },
+    "repeated_command_pairs": 100,
+    "report_fields": [
+      "bound",
+      "closure",
+      "code",
+      "command",
+      "detail",
+      "expanded_nodes",
+      "facts",
+      "graph",
+      "inline_depth",
+      "inputs",
+      "layers",
+      "live_nodes",
+      "loss_final",
+      "loss_initial",
+      "outcome",
+      "outputs",
+      "param_layout",
+      "params",
+      "parent",
+      "profile",
+      "pruned_nodes",
+      "published_steps",
+      "replayed",
+      "schema",
+      "site",
+      "snapshot",
+      "stage",
+      "steps",
+      "subject",
+      "vector",
+      "work_units"
+    ]
+  },
+  "verdicts": {
+    "case01": "passed",
+    "case15": "passed",
+    "passed": [
+      "NGRAPH-CASE-01",
+      "NGRAPH-CASE-06",
+      "NGRAPH-CASE-07",
+      "NGRAPH-CASE-08",
+      "NGRAPH-CASE-10",
+      "NGRAPH-CASE-13",
+      "NGRAPH-CASE-14",
+      "NGRAPH-CASE-15"
+    ],
+    "held": [
+      "NGRAPH-CASE-02",
+      "NGRAPH-CASE-03",
+      "NGRAPH-CASE-04",
+      "NGRAPH-CASE-05",
+      "NGRAPH-CASE-09",
+      "NGRAPH-CASE-11",
+      "NGRAPH-CASE-12"
+    ]
+  },
+  "external_output": "/home/brittonr/.cache/noble-issues/proof/ngraph-independent-claims-20261016-bound",
+  "failures": [],
+  "ng_po_discharged": [],
+  "non_claims": [
+    "No global gate pass;10/14 pass and4fail remain.",
+    "No proof obligations discharged.",
+    "Reports and review bindings are not whole-program/compiler/evaluator correctness.",
+    "No promotion, sync/archive, push, issue mutation or posting performed."
+  ]
+}
