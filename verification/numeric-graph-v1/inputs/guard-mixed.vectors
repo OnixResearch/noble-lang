@@ -1,0 +1,5 @@
+noble-ngraph-vectors/0
+types f32 f32
+v 1 0.5
+v 0.5 0.5
+v 1 2

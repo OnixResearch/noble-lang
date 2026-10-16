@@ -245,7 +245,7 @@ provenance <64 hex>          # the provenance digest below
   - a caller-pinned `--snapshot-id` that differs is `E-SNAPSHOT-ID`.
 - **Publication.** The CLI writes `<out>.partial` with create-new, syncs it, `hard_link`s it to `<out>` (which fails if `<out>` exists) and removes `<out>.partial`.
   - The link decides the outcome. Once it exists, `<out>` holds the complete, immutable bytes, so the command reports its normal line (exit 0) even if removing `<out>.partial` then fails. That leftover is a second name for the same bytes; the CLI warns about it on stderr (`noble ngraph: the output was published, but its .partial file could not be removed: …`), and it matters only to a later publication to the same `--out` after `<out>` is removed, which refuses the existing `.partial` as usual. Reporting a refusal there would claim that nothing was published while `<out>` exists.
-  - If the link fails, the refusal also says when `<out>.partial` could not be removed.
+  - If writing or syncing `<out>.partial` or the link fails, the CLI removes `<out>.partial`; if that removal fails too, the file is left behind and the refusal says so.
   - No path is ever truncated, renamed over or modified, including the parent snapshot, which is only read.
   - An existing `<out>` or `<out>.partial` is a host refusal (exit 2) that leaves both untouched.
   - A training call that stops publishes nothing; no partial snapshot is kept (D11 of the archived design).
@@ -297,7 +297,7 @@ r[NGRAPH-CLI-01]
 |---|---|---|
 | `normal` | 0 | — |
 | `trap` | 1 | `G-FACT-FALSE` (guard failure or a refusing `index` read), `E-NONFINITE-UPDATE`, `C-CANCELLED` (no CLI cancellation source; listed for completeness) |
-| `reject` | 2 | `E-GRAPH-MALFORMED`, `E-FORMAT`, `E-LITERAL-INEXACT`, `E-LITERAL-NONFINITE`, `E-TYPE-MIX`, `E-INTERFACE`, `E-SUBJECT` (including a Core frontend refusal of the extraction source), `E-CLOSURE`, `E-PROFILE` (an unknown sub-profile or a raised budget), `E-FACT-UNCHECKED`, `E-FACT-INPUT`, `E-PARAM-UNDECLARED`, `E-SNAPSHOT-STALE`, `E-SNAPSHOT-LAYOUT`, `E-SNAPSHOT-ID`, `E-SNAPSHOT-INTEGRITY`, `E-SNAPSHOT-REPLAY`; host conditions (`code: null`): an I/O failure, an exceeded input bound, an existing output |
+| `reject` | 2 | `E-GRAPH-MALFORMED`, `E-FORMAT`, `E-LITERAL-INEXACT`, `E-LITERAL-NONFINITE`, `E-TYPE-MIX`, `E-INTERFACE`, `E-SUBJECT` (including a Core frontend refusal of the extraction source), `E-CLOSURE`, `E-PROFILE` (an unknown sub-profile or one the command does not accept, a raised budget, a `--policy` or `--optimizer` other than `ngraph-deriv-real/0` or `adam/0`, or `adam/0` hyperparameters outside its domain, D7), `E-FACT-UNCHECKED`, `E-FACT-INPUT`, `E-PARAM-UNDECLARED`, `E-SNAPSHOT-STALE`, `E-SNAPSHOT-LAYOUT`, `E-SNAPSHOT-ID`, `E-SNAPSHOT-INTEGRITY`, `E-SNAPSHOT-REPLAY`; host conditions (`code: null`): an I/O failure, an exceeded input bound, an existing output |
 | `unsupported` | 4 | `E-EFFECT`, `E-RESOURCE`, `E-DYNAMIC-RUN`, `E-LIVE-SLOT`, `E-RECURSION`, `E-CONTROL`, `E-AGGREGATE`, `E-REFLECT`, `E-PROGRAM-OUTPUT`, `E-DERIV-BOOLEAN`, `E-DERIV-INDEX`, `E-DERIV-I64` |
 | `exhausted` | 5 | `E-BUDGET-<kind>`, including `FUEL` (runtime) and `STEPS` |
 
@@ -307,7 +307,7 @@ r[NGRAPH-CLI-01]
 - A graph-level refusal (checker or snapshot binding) prints one report line and no vector lines.
 - The four new codes are feature-level and do not change any D6 meaning:
   - `E-FORMAT`: a vector, data or snapshot file with a bad schema, syntax or row count;
-  - `E-SNAPSHOT-INTEGRITY`: a recorded identity or provenance digest differs from its recomputation;
+  - `E-SNAPSHOT-INTEGRITY`: a recorded identity or provenance digest differs from its recomputation, or the file records what `train` never publishes: a non-finite parameter or `optimizer` hyperparameters outside the `adam/0` domain (D6 Loading);
   - `E-SNAPSHOT-ID`: the snapshot differs from a caller-pinned id;
   - `E-SNAPSHOT-REPLAY`: replayed bytes differ.
 

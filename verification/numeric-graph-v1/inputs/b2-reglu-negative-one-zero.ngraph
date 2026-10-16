@@ -1,0 +1,8 @@
+ngraph-ir/0 ngraph-f32/0
+subject authored 08cec2f056a2dd9c3266a1d274685eebaa942e13d7fb19c1437708163c5e0e96 closure -
+slot input f32
+slot input f32
+%0 = input 0
+%1 = input 1
+%2 = f32.reglu %0 %1
+out %2

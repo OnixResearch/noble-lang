@@ -1,0 +1,10 @@
+ngraph-ir/0 ngraph-f32/0
+subject authored db339c88e0a900e4b38d7373c5446d0c1193c061f551ecb7a1020388a1bae6b1 closure -
+slot input f32
+slot input f32
+slot input f32
+%0 = input 0
+%1 = input 1
+%2 = input 2
+%3 = f32.affine 0x80000000 0x3f800000 %0 0x3f800000 %1 0x3f800000 %2
+out %3

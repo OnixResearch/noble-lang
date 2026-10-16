@@ -1,0 +1,6 @@
+ngraph-ir/0 ngraph-f32/0
+subject authored f5263966c8b1d1944f3ac0dc83cb5f81bd617c188972d8775b9e91c9f103c619 closure -
+slot input f32
+%0 = input 0
+%1 = f32.relu %0
+out %1

@@ -1,0 +1,4 @@
+noble-ngraph-data/0
+types f32 ; f32
+point 0 ; 1
+point 0 ; 0.5
