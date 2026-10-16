@@ -311,6 +311,8 @@ The owner approved Phase B and Phase C on #14 on 2026-10-15. The decisions under
 
 **Execution status.** Receipts and commands are in [verification/ngraph/README.md](../../../verification/ngraph/README.md). B4–B6 are executed. The core legs of B1–B3 are executed (`F1`–`F3`, the `F32` legs L2, B2-ORACLE, L3 and L4, and the core rejection controls on authored IR); the `I64` extraction legs (`I1`–`I4`, L1, the BigInt oracle and the source-level controls) are recorded separately by the extraction leg. NG-PO-A..H stay open.
 
+**Phase C status.** Phase C was measured on the pinned, shared host; see the Phase C section of the [receipts README](../../../verification/ngraph/README.md). On warm W3 at learned-gallery scale (6,270 operations, 243 params), the compiled CPU graph runs at 0.13× the speed of a straightforward host-native Rust implementation. Admission takes 1.1 ms. Under the kept thresholds the recommendation is **stop**, and a #2 GPU experiment is blocked. Noble's ordinary Wasm/V8 path has no `F32` under B0(b), so for W3 the stop test is applied to the host-native baseline alone. The W1/W2 ordinary-path leg comes from the extraction leg's L1 harness.
+
 ## Phase B plan: CPU-only feasibility experiment (approved 2026-10-15)
 
 **Prerequisites:**
@@ -410,9 +412,9 @@ Every result becomes an evidence record whose implementation, execution, proof a
 | B4 Gradients versus analytic and finite differences; policies separately | Phase B B4 | **Executed** |
 | B5 Train a fixed-shape example; snapshots and identity | Phase B B5 | **Executed** |
 | B6 Retained snapshots, owner orders, failure/cancellation cleanup | Phase B B6 | **Executed** |
-| C1 Costs and baselines | [Phase C](#phase-c-plan-measured-continuation-decision-approved-2026-10-15) C1 | **Approved; not started** |
-| C2 Pin revisions; separate agreement, coverage, theorems, trust | Phase C C2 | **Approved; not started** |
-| C3 Stop / CPU specialization / scoped GPU recommendation | Phase C C3 | **Approved; not started** |
+| C1 Costs and baselines | [Phase C](#phase-c-plan-measured-continuation-decision-approved-2026-10-15) C1 | **Core executed** (W3 three sizes, W4, W1/W2 CPU legs vs host-native); W1/W2 ordinary Wasm/V8 leg pending |
+| C2 Pin revisions; separate agreement, coverage, theorems, trust | Phase C C2 | **Executed** (separate `c2` fields) |
+| C3 Stop / CPU specialization / scoped GPU recommendation | Phase C C3 | **Executed: stop** (compiled W3-L at 0.13× host-native; GPU blocked) |
 
 ## Risks / Trade-offs
 

@@ -61,3 +61,88 @@ Defaults: 8 random graphs × 20,000 input vectors (48 operations each), 10^6 ope
 - Finite tests and evaluator agreement do not prove the compiler, the graph checker (NG-PO-B), the compiled evaluator (NG-PO-C), the binary32 model (NG-PO-D), fact transfer (NG-PO-E), the derivative policy (NG-PO-F) or snapshot binding (NG-PO-G). NG-PO-A..H remain open and are not added to `obligations.json`.
 - B5's threshold is a smoke test, not a convergence claim. Replay is shown on this platform only.
 - No performance, GPU or backend-selection claim; that is Phase C.
+
+# Phase C (C1–C3) measurements
+
+The design's Phase C plan was approved on 2026-10-15 with the C3 thresholds kept.
+
+## Files
+
+| File | Content |
+|---|---|
+| [phase-c-core-run1.json](phase-c-core-run1.json) | Primary run (schema `noble-ngraph-phase-c-core-evidence/v1`). It records run pins, W3 (3 sizes), W4, the W1/W2 CPU legs, C2 claim separation and the C3 decision. |
+| [phase-c-core-run2.json](phase-c-core-run2.json), [phase-c-core-run3.json](phase-c-core-run3.json) | Back-to-back repeats with the same command. They show run-to-run stability; the key ratios are given below. |
+
+## Reproduce
+
+```text
+cargo build --release -p noble-ngraph-experiment --bin ngraph-phase-c
+taskset -c 2 target/release/ngraph-phase-c --out verification/ngraph/phase-c-core-run1.json \
+  --source-rev "$(git rev-parse HEAD)" --toolchain "$(rustc -V)" --pinned-cpu 2
+```
+
+The harness is a separate release binary and is not part of the default test suite. The workload shapes, and bitwise agreement between each native baseline and L3/L4, are default tests in [c1_workloads.rs](../../crates/noble-ngraph-experiment/tests/c1_workloads.rs). One run takes about 5 s.
+
+## Run conditions
+
+- Source `2358a74730d5fc14888c6a1c10085e6b0ed69575`; `rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)`; release profile (overflow checks on); x86-64 default target features, so no FMA instructions, and rustc does not contract.
+- AMD RYZEN AI MAX+ 395 (32 logical CPUs), with the process pinned to CPU 2 using `taskset`. Governor `performance`, driver `amd-pstate-epp`.
+- The host is **shared**. The load average was 6.3–8.0 on 32 CPUs across the three runs, which is the lowest observed during this session. Timings are wall-clock (`Instant`). Hardware counters, RSS, cache and energy are recorded as **unsupported**, not as zero. Byte figures are element-count estimates.
+- Warm latency: N = 2,000 samples, each a calibrated batch of at least 20 µs divided by the batch size, so the values are per-evaluation medians and IQRs. Cold latency is the median of 21 repetitions of check + compile + first evaluation. Throughput is a 0.3 s loop. Training is measured as 15 points per step.
+- Before any timing, the host-native baselines agree with L3 and L4 under `≡obs`: on 200 input vectors per W3 size, including random specials; on 200 W4 index vectors, including out-of-range refusals; on the W1 value; and on the W2 final state after 10^5 steps.
+
+## C1 results (run 1)
+
+Runs 2 and 3 match run 1 within ±10%. The exceptions are sub-0.05 ms cold figures (W3-S admission 0.036 ms in run 1 versus 0.025 ms in runs 2–3) and the W3-S native training step in run 2 (1.17 µs). Both vary by up to 30% on the shared host.
+
+| Workload | Live nodes / depth | Admission (check) | Build (compile) | Cold total | Warm L4 median [IQR] | Warm L3 | Warm native | L4 ÷ native speed |
+|---|---|---|---|---|---|---|---|---|
+| W3-S (4→4→1, 45 params, 76 ops) | 125 / 12 | 0.036 ms | 0.005 ms | 0.049 ms | 332 ns [6] | 843 ns | 22.7 ns | 0.068× |
+| W3-M (4→22→1, 243 params, 418 ops) | 665 / 30 | 0.121 ms | 0.014 ms | 0.160 ms | 1,468 ns [19] | 3,858 ns | 89.2 ns | 0.061× |
+| W3-L (W3-M × 15 points, 243 params, 6,270 ops) | 6,573 / 30 | 1.097 ms | 0.221 ms | 1.358 ms | 9,711 ns [70] | 34,604 ns | 1,271 ns | **0.131×** |
+| W4 (32 reads of a 10,000-entry table) | 10,065 / 3 | 9.80 ms | 1.54 ms | 11.35 ms | 706 ns [13] | 38,562 ns | 128 ns | 0.182× |
+| W1 = `I1` (hand-built IR) | 8 / 4 | — | — | 4.2 µs | 65 ns | 76 ns | 0.70 ns | 0.011× |
+| W2 = `I4`, 10^5 host steps (total) | 5 / 3 | — | — | — | 7.48 ms | 8.30 ms | 0.134 ms | 0.018× |
+
+- **Bytes** (params / L3 activations / L4 register file / retained graph / retained compiled code):
+  - W3-S: 180 / 2,000 / 504 / 12,318 / 2,864.
+  - W3-M: 972 / 10,640 / 2,664 / 64,554 / 15,032.
+  - W3-L: 972 / 105,168 / 26,296 / 631,890 / 179,560.
+  - W4: 0 / 161,040 / 40,264 / 2,252,028 / 2,721,604. L4 copies the table operand list into each of the 32 index instructions; this is a measured inefficiency of the current L4.
+- **Throughput** (evaluations/s, L4 / L3 / native):
+  - W3-S: 2.99 M / 1.19 M / 41.8 M.
+  - W3-M: 0.68 M / 0.25 M / 11.0 M.
+  - W3-L: 0.10 M / 0.028 M / 0.75 M.
+  - W4: 1.38 M / 0.025 M / 7.7 M.
+- **Training step, 15 points** (ours = FP32 reference backward + `adam/0` + immutable snapshot publication; native = hand-written FP32 backward + binary64 Adam, updated in place):
+
+  | Size | Ours | Native | Ours slower by |
+  |---|---|---|---|
+  | W3-S | 18.1 µs | 0.92 µs | 19.7× |
+  | W3-M | 80.5 µs | 4.87 µs | 16.5× |
+  | W3-L | 60.0 µs | 4.84 µs | 12.4× |
+
+  Backward scratch estimates: 1,032 / 5,352 / 53,176 B.
+- **Extraction time** does not apply to W3/W4: they are authored IR under B0(b), and graph authoring took 0.03–0.48 ms. For W1/W2 it comes from the extraction leg.
+- **Ordinary Noble Wasm/V8 baseline**: none exists for W3/W4, because Noble's ordinary path has no `F32` under B0(b). For W1/W2 it comes from the extraction leg's L1 harness and is **pending**. W1/W2 here use hand-built IR equal to the `I1`/`I4` lowering.
+- **Pinned handwired under pinned Bun** (optional, informational): not run.
+
+## C2 claim separation
+
+`phase-c-core-run1.json` → `c2` keeps the following as separate fields:
+
+- reference agreement (the per-workload agreement checks and Phase B's L2/B2-ORACLE/L3/L4);
+- finite coverage (finite only);
+- theorem obligations (NG-PO-A..H, each `open`);
+- trusted boundaries (codegen, host IEEE, oracle, BLAKE3, this crate and the native baselines, timer and shared host);
+- unsupported instrumentation.
+
+No hash match or agreement is reported as discharging an obligation.
+
+## C3 recommendation: **stop**
+
+- **Threshold test.** Warm W3-L: the compiled CPU graph (L4) is 0.131× the speed of the host-native baseline (0.131 / 0.131 / 0.131 across the three runs), about 7.6× **slower**. The kept threshold requires at least 2× faster, so the stop condition holds.
+- **Admission.** Admission at W3 scale is 1.1 ms, within the 100 ms threshold. Training value was demonstrated (B5). Neither changes the outcome, because the speed condition alone triggers stop.
+- **"Both baselines" for W3.** W3 is `ngraph-f32/0` authored IR (B0(b)), and Noble's ordinary Wasm/V8 path has no `F32`, so that baseline does not exist for W3. I applied the test to the one existing baseline, host-native Rust. A missing baseline cannot make the outcome more favourable: passing would have required beating host-native by 2× and also an ordinary-path comparison that cannot be made. W1/W2, where the ordinary path exists, are reported separately and do not stand in for W3.
+- **GPU (#2).** Blocked. No transfer or launch cost was measured or modelled, and with a stop recommendation there is no compiled-CPU specialization to compare a GPU against.
+- **Interpretation, not measured.** The compiled evaluator interprets one enum-dispatched instruction per node, about 1.5 ns per node on W3-L. A straightforward native loop is 7.6–16.5× faster on these shapes. Only a design change could plausibly reach the 2× threshold, such as batch-vectorized evaluation or native code generation. Doing so would be a new experiment and is not claimed here.

@@ -1,4 +1,4 @@
-# cargo test -p noble-ngraph-experiment (debug, default suite) at f5b9ce5180350796dc11474b3007b003b90c40de
+# cargo test -p noble-ngraph-experiment (debug, default suite) at 2358a74730d5fc14888c6a1c10085e6b0ed69575
      Running unittests src/lib.rs
 running 3 tests
 test prng::tests::reference_vector ... ok
@@ -8,16 +8,19 @@ test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running unittests src/bin/ngraph-phase-b.rs
 running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/bin/ngraph-phase-c.rs
+running 0 tests
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
      Running tests/b2_differential.rs
 running 7 tests
-test flush_to_zero_is_detected_by_the_subnormal_vector ... ok
 test fused_multiply_add_would_be_detected ... ok
+test flush_to_zero_is_detected_by_the_subnormal_vector ... ok
 test compiled_matches_first_guard_in_canonical_order ... ok
 test boundary_vectors_agree_on_every_leg_and_match_expected_bits ... ok
+test f1_f2_f3_agree_on_every_leg ... ok
 test per_operation_binary64_rounding_matches_apfloat_and_host ... ok
 test seeded_random_graphs_agree_small ... ok
-test f1_f2_f3_agree_on_every_leg ... ok
-test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
      Running tests/b3_rejections.rs
 running 2 tests
 test guard_failure_stops_before_the_dependent_node ... ok
@@ -25,13 +28,13 @@ test every_core_rejection_yields_its_code ... ok
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
      Running tests/b4_gradients.rs
 running 8 tests
-test analytic_examples ... ok
 test i64_and_undeclared_params_are_refused ... ok
-test index_operand_policies_reject_zero_backward_difference ... ok
+test analytic_examples ... ok
 test index_candidate_gradients_accumulate ... ok
+test index_operand_policies_reject_zero_backward_difference ... ok
 test boolean_path_is_refused_statically_and_surrogates_are_recorded ... ok
-test select_gate_path_is_refused_by_default ... ok
 test relu_corner_at_plus_and_minus_zero_gives_zero_gate_gradient ... ok
+test select_gate_path_is_refused_by_default ... ok
 test smooth_region_g1_and_g2_hold_on_f1_mse ... ok
 test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
      Running tests/b5_training.rs
@@ -44,11 +47,17 @@ test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests/b6_ownership.rs
 running 5 tests
 test reused_workspace_returns_fresh_results ... ok
-test duplicate_owners_release_in_both_orders ... ok
 test scratch_is_released_exactly_once_on_every_exit ... ok
+test duplicate_owners_release_in_both_orders ... ok
 test retained_snapshot_is_used_after_the_invocation_exits ... ok
 test cancelled_or_failed_training_publishes_no_partial_snapshot ... ok
 test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/c1_workloads.rs
+running 3 tests
+test w1_w2_native_agree ... ok
+test w3_sizes_reach_gallery_scale_and_native_agrees ... ok
+test w4_native_agrees ... ok
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
      Running tests/ir_check.rs
 running 5 tests
 test type_mix_is_refused ... ok
