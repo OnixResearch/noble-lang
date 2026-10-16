@@ -1,12 +1,124 @@
 # Main gate restoration (issue #22)
 
-This receipt records one run of every pinned flake check on the integration
-commit `2edb977` (`integration/issues-20261015`). It also keeps the earlier run on
-the issue #22 branch commit `8df6c43`. That branch starts at Calculator-v1
-`44329dc`.
+This receipt records one run of every pinned flake check on `f2b398d`
+(`integration/issue-14-ngraph`). That branch merges issue #14's numeric
+graph Phase B/C crate onto `main` `407dfd6`. The receipt also keeps the
+earlier runs on integration commit `2edb977` (`integration/issues-20261015`)
+and on issue #22 branch commit `8df6c43`. That branch starts at
+Calculator-v1 `44329dc`.
 [`receipt.json`](receipt.json) holds the tested commit, each check's result,
 log path, log SHA-256 and duration, plus the selected tool paths. The logs
 stay outside the repository; their hashes bind them.
+
+## Results at `f2b398d` (issue #14 numeric graph integration)
+
+| check | result | integration `2edb977` | change from `2edb977` | follow-up |
+|---|---|---|---|---|
+| `tool-selection` | pass | pass | 144 pinned file digests (was 143) |  |
+| `tool-versions` | pass | pass |  |  |
+| `tool-overrides` | pass | pass |  |  |
+| `format` | pass | pass | includes the crate |  |
+| `rust-tests` | pass | pass | 471 passed (+48 from the crate), 5 ignored (+1) |  |
+| `clippy` | pass | pass | includes the crate's lib, bins and tests |  |
+| `documents` | pass | pass |  |  |
+| `cairn` | pass | pass | `numeric-graph-profile` gates pass |  |
+| `policy` | pass | pass | new exports and provider controls |  |
+| `source-inventory-controls` | pass | pass |  |  |
+| `boundary-controls` | fail | fail | same first failure; refusal now names limit 78 | [#26](https://github.com/OnixResearch/noble-lang/issues/26), [#27](https://github.com/OnixResearch/noble-lang/issues/27) |
+| `octet` | fail | fail | none: same 236 findings (232 errors) | [#26](https://github.com/OnixResearch/noble-lang/issues/26) |
+| `source-coverage` | fail | fail | +842 architecture unknowns (3,545) | [#25](https://github.com/OnixResearch/noble-lang/issues/25) |
+| `native-assurance` | fail | fail | +842 architecture unknowns (3,545) | [#25](https://github.com/OnixResearch/noble-lang/issues/25) |
+
+All 14 checks were built locally (`--builders ""`). A first remote attempt
+stalled while copying Rust toolchains to the builder and was stopped; its
+partial logs are listed in `receipt.json` (`flake_note`).
+
+`rust-tests` ran 471 tests in 68 test binaries: 471 passed, 0 failed and 5
+ignored. The crate adds 15 binaries with 48 passing tests and 1 ignored
+test. The ignored test is `extract_b2`'s L2 BigInt oracle, which needs
+`NOBLE_NODE`. No default crate test needs Node or the CLI. The other 4
+ignored tests are the same ones as at `2edb977`.
+
+What the new crate changes in the failing checks:
+
+- **`source-coverage`, `native-assurance`.** The architecture phase now
+  reports 3,545 findings, up from 2,703. All 842 new findings are
+  `required-compiler-unknown` in `noble-ngraph-experiment`:
+  - 266 `?` desugarings;
+  - 220 `for` desugarings;
+  - 6 range desugarings;
+  - 343 unresolved calls;
+  - 7 `MissingBody` (a required trait method with no body in the unit).
+
+  The 2,703 findings outside the crate have the same code, package, path and
+  fact set as an unchanged-policy collection of the merged source. The
+  warning-only Tigerstyle phase in the same logs rises from 2,271 to 4,464
+  warnings. All 2,193 new warnings are in the crate, and they appear whether
+  or not the crate is a policy package.
+- **`octet`.** No change: 236 findings (232 errors). Cargo stops in
+  `noble-kernel` before it compiles the crate, so the crate's deny-level
+  findings are not reached.
+- **`boundary-controls`.** The first failing case is still `acyclic-shell`.
+  Its deny-all run refuses before collection with "selected compiler
+  architecture units exceed policy limit 78". At `2edb977` the same case
+  reported "limit 58". The fixture adds two `noble-cli` lib units to an
+  exact capacity, so this is #27's capacity reservation. The `2edb977` note
+  below attributes this failure to the deny-all abort; that is corrected
+  here. The `workspace` case, built separately at both commits, aborts in
+  `noble-kernel` with the same 118 findings (116 errors). None of them is
+  in the crate (#26).
+
+### What the merge needed
+
+`f531623` merges `feat/issue-14-ngraph-core` `3e471ea`. It adds the
+workspace member `crates/noble-ngraph-experiment`, receipts under
+`verification/ngraph/` and updates to `.cairn/changes/numeric-graph-profile/`.
+It changes no `noble-kernel`, `noble-contracts`, `noble-wasm` or `noble-cli`
+source. Three integration commits follow:
+
+- **Vendor re-pin** (`2d03e99`). The crate adds one registry package,
+  `rustc_apfloat` `0.2.3+llvm-462a31f5a5ab`; `blake3`, `serde_json`,
+  `bitflags` and `smallvec` were already locked. The eight-lock reviewed
+  vendor therefore has 238 archives, and the `nix/reviewed-vendor.nix` count
+  asserts move from 237 to 238. The vendor is now
+  `/nix/store/b0wvglmmv85jgi47rsf8j1nf4ygm7kbb-noble-reviewed-offline-vendor`,
+  with measured NAR `sha256-ykvOtE9J6E2pgRlkq0nUdb6xjF2iapE7lCMcT1bFrNk=`.
+  Until the re-pin, the `flake.nix` vendor assert stopped evaluation of
+  every output. The M5/M6 pins carry the new vendor. The crate manifest is
+  pinned alongside the other workspace manifests, so 144 file digests are
+  pinned. Changed hashes are re-pinned and `policy/tool-selection.json` is
+  re-exported.
+- **Architecture scope** (`20067cb`, `ba240bc`). Octet collects only the
+  policy's production packages. With the merge alone, a scratch collection
+  selected the same five packages and 58 units and reported the same 2,703
+  findings, so the crate was outside the architecture, source-inventory and
+  native-assurance gates. The policy has no non-production package role:
+  `test` and `generated` apply only to non-production scopes, and Octet's
+  closed schema has no exclusion or experiment concept. The crate therefore
+  joins production as a `composition-root`, like `noble-cli` and
+  `noble-syndicate`. It is a std harness that depends inward on
+  `noble-kernel` and `noble-contracts` and runs host effects: files,
+  subprocesses, clocks and threads. The commits add:
+  - package, `src` and `tests` roles;
+  - a pure-value `rustc_apfloat` provider classification, also added to
+    the reviewed provider list in `nix/octet-controls.nix`;
+  - native-assurance records for the package, its three external edges and
+    a safety argument;
+  - the crate's five source-inventory dependency edges.
+
+  No waiver, dependency rule or finding classification changed.
+- **Capacity** (`20067cb`). A scratch collection with that policy observed
+  exactly 78 complete units: the crate's lib and lib test, four bins, their
+  four test units and ten integration tests. Its largest shard (lib+test:
+  7,300 calls, 12,441,948 bytes) and the 163,306,150-byte IR fit the
+  existing caps, so only `max_units` and `max_shards` move from 58 to 78.
+- **Source inventory** (`f2b398d`). `tools/source-inventory-renew.mjs`
+  renewed the inventory from a complete 78/78-unit collection of `20067cb`.
+  It kept all 9,063 reviewed paths, removed none, and added 2,432 crate
+  paths: 897 OPEN bodies, 779 generated and 756 structural. See
+  [the inventory record](../source-inventory.md). The pure source and
+  native-assurance comparators over that collection both return
+  `valid=true`.
 
 ## Results at integration `2edb977`
 
@@ -265,12 +377,14 @@ own pinned commands:
 2. `export-policy.sh <worktree>`: run the `policy` check's Nickel and Octet
    standards exports, then re-pin.
 3. `collect-local.sh <worktree> <rev> /var/tmp/<dir>`: reproduce
-   `inventoryArtifacts`.
+   `inventoryArtifacts`. Set `CARGO_CONFIG_SRC` to a Cargo config whose
+   `reviewed-vendor` directory is the currently pinned vendor.
 4. `derive-inventory.sh <worktree> /var/tmp/<dir>/out <outdir>`: run the
    repository's derive and comparator.
 5. `node tools/source-inventory-renew.mjs <inventory.json> <label> <report>`,
    then `export-policy.sh`: renew the inventory.
 6. `run-gates.sh <worktree> [checks…]`: build each flake check for `HEAD` (or
    `REV`), writing one log per check.
-7. `bun tools/cairn.mjs gate {proposal,design,tasks} calculator-v1 --root .`,
-   then `bun tools/cairn.mjs validate --root .`.
+7. `bun tools/cairn.mjs gate {proposal,design,tasks} <change> --root .` for
+   `calculator-v1` and `numeric-graph-profile`, then
+   `bun tools/cairn.mjs validate --root .`.
