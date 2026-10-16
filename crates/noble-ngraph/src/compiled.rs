@@ -373,6 +373,9 @@ impl Compiled {
         }
         let _lease = ScratchLease::acquire(control.scratch.as_deref_mut(), bytes);
         for &(r, k) in &self.slot_regs {
+            if let Some(counter) = control.evaluated_nodes.as_deref_mut() {
+                *counter += 1;
+            }
             match slots[k as usize] {
                 Value::F32(b) => w.f[r as usize] = f32::from_bits(b),
                 Value::I64(v) => w.i[r as usize] = v,
@@ -398,9 +401,9 @@ impl Compiled {
             evaluated += width;
             let f = match &self.code {
                 Code::F32 { ins, coef, src } => {
-                    self.run_f32(&ins[start as usize..end as usize], coef, src, w)
+                    self.run_f32(&ins[start as usize..end as usize], coef, src, w, &mut control.evaluated_nodes)
                 }
-                Code::I64 { ins } => self.run_i64(&ins[start as usize..end as usize], w),
+                Code::I64 { ins } => self.run_i64(&ins[start as usize..end as usize], w, &mut control.evaluated_nodes),
             };
             if let Some((node, fact)) = f {
                 if fail.as_ref().is_none_or(|(m, _)| node < *m) {
@@ -442,6 +445,7 @@ impl Compiled {
         coef: &[f32],
         src: &[u32],
         w: &mut Workspace,
+        evaluated_nodes: &mut Option<&mut u64>,
     ) -> Option<(u32, Fact)> {
         let mut fail: Option<(u32, Fact)> = None;
         let mut note = |node: u32, fact: Fact| {
@@ -451,6 +455,9 @@ impl Compiled {
         };
         let rf = &mut w.f;
         for x in ins {
+            if let Some(counter) = evaluated_nodes.as_deref_mut() {
+                *counter += 1;
+            }
             match *x {
                 F::Add(d, a, b) => rf[d as usize] = sem::add(rf[a as usize], rf[b as usize]),
                 F::Sub(d, a, b) => rf[d as usize] = sem::sub(rf[a as usize], rf[b as usize]),
@@ -509,10 +516,13 @@ impl Compiled {
         fail
     }
 
-    fn run_i64(&self, ins: &[I], w: &mut Workspace) -> Option<(u32, Fact)> {
+    fn run_i64(&self, ins: &[I], w: &mut Workspace, evaluated_nodes: &mut Option<&mut u64>) -> Option<(u32, Fact)> {
         let mut fail: Option<(u32, Fact)> = None;
         let ri = &mut w.i;
         for x in ins {
+            if let Some(counter) = evaluated_nodes.as_deref_mut() {
+                *counter += 1;
+            }
             match *x {
                 I::Add(d, a, b) => ri[d as usize] = sem::i64_add(ri[a as usize], ri[b as usize]),
                 I::Sub(d, a, b) => ri[d as usize] = sem::i64_sub(ri[a as usize], ri[b as usize]),

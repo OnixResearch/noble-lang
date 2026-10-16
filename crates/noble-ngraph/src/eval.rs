@@ -429,9 +429,22 @@ pub fn reference(
 /// `G-FACT-FALSE` (design D10).
 #[must_use]
 pub fn first_failure(checked: &CheckedGraph, vals: &[f32]) -> Option<(NodeId, Fact)> {
+    first_failure_observed(checked, vals, &mut None)
+}
+
+pub(crate) fn first_failure_observed(
+    checked: &CheckedGraph,
+    vals: &[f32],
+    evaluated_nodes: &mut Option<&mut u64>,
+) -> Option<(NodeId, Fact)> {
     let get = |x: NodeId| Value::f32(vals[x.index()]);
     for (i, node) in checked.graph().nodes.iter().enumerate() {
         let id = NodeId(i as u32);
+        if matches!(node.op, Op::Guard { .. } | Op::F32Index { .. }) {
+            if let Some(counter) = evaluated_nodes.as_deref_mut() {
+                *counter += 1;
+            }
+        }
         match &node.op {
             Op::Guard { fact, value } if !guard_holds(checked, fact, *value, get) => {
                 return Some((id, fact.clone()));

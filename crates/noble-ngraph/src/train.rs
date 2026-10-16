@@ -364,18 +364,20 @@ fn values_f32(slots: &[Value]) -> Vec<f32> {
 fn loss_and_grad(
     c: &Contract,
     params: &ParamSnapshot,
+    evaluated_nodes: &mut Option<&mut u64>,
 ) -> Result<(f64, Vec<f64>, bool), Diagnostic> {
     let mut grad_sum = vec![0f64; c.params.len()];
     let mut loss_sum = 0f64;
     let mut finite = true;
     for p in &c.data {
         let model_slots = eval::preflight(&c.model, &eval::f32_inputs(&p.inputs), Some(params))?;
-        let (l, gs) = grad::objective_checked(
+        let (l, gs) = grad::objective_observed(
             &c.model,
             &c.loss,
             &values_f32(&model_slots),
             &p.targets,
             &c.deriv,
+            evaluated_nodes,
         )?;
         loss_sum += f64::from(l);
         for (acc, k) in grad_sum.iter_mut().zip(&c.params) {
@@ -418,6 +420,10 @@ pub struct TrainControl<'a> {
     pub cancel_before_step: Option<&'a dyn Fn(u64) -> bool>,
     /// Scratch instrumentation (one lease per step), lent for the call.
     pub scratch: Option<&'a mut ScratchCounters>,
+    /// Actual forward value operations and guard/index validation events.
+    /// This is not the evaluator's historical fuel/Report node accounting;
+    /// backward and optimizer work are not graph evaluation events.
+    pub evaluated_nodes: Option<&'a mut u64>,
     /// Budgets (D5): `optimizer_steps`, `backward_scratch` and
     /// `snapshot_bytes` are charged; a raised budget is `E-PROFILE`.
     pub budgets: Budgets,
@@ -491,7 +497,7 @@ pub fn train(
             ));
         }
         let lease = ScratchLease::acquire(control.scratch.as_deref_mut(), step_bytes);
-        let (l, g, finite) = match loss_and_grad(c, &current) {
+        let (l, g, finite) = match loss_and_grad(c, &current, &mut control.evaluated_nodes) {
             Ok(r) => r,
             Err(d) => {
                 drop(lease);
@@ -524,7 +530,7 @@ pub fn train(
         state = Rc::new(ns);
     }
     let (final_loss, _, _) =
-        loss_and_grad(c, &current).map_err(|d| stop(d, Some(current.clone()), steps))?;
+        loss_and_grad(c, &current, &mut control.evaluated_nodes).map_err(|d| stop(d, Some(current.clone()), steps))?;
     losses.push(final_loss);
     let g = c.model.graph();
     let provenance = Provenance {

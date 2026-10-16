@@ -324,9 +324,20 @@ fn position<R: Real>(
 /// reference bitwise on such points.
 #[must_use]
 pub fn forward<R: Real>(g: &CheckedGraph, slots: &[R]) -> Vec<R> {
+    forward_observed(g, slots, &mut None)
+}
+
+fn forward_observed<R: Real>(g: &CheckedGraph, slots: &[R], evaluated_nodes: &mut Option<&mut u64>) -> Vec<R> {
     let graph = g.graph();
     let mut v: Vec<R> = Vec::with_capacity(graph.nodes.len());
     for node in &graph.nodes {
+        // Guards are actually tested by first_failure_observed, not by this
+        // forward pass's zero placeholder. Count only real value operations.
+        if !node.op.is_guard() {
+            if let Some(counter) = evaluated_nodes.as_deref_mut() {
+                *counter += 1;
+            }
+        }
         let x = |n: &NodeId| v[n.index()];
         let r = match &node.op {
             Op::Input(k) | Op::Param(k) => slots[*k as usize],
@@ -551,8 +562,19 @@ pub fn objective_checked(
     targets: &[f32],
     opts: &DerivOptions,
 ) -> Result<(f32, Vec<f32>), Diagnostic> {
-    let mv = forward(model, model_slots);
-    if let Some((node, fact)) = crate::eval::first_failure(model, &mv) {
+    objective_observed(model, loss, model_slots, targets, opts, &mut None)
+}
+
+pub(crate) fn objective_observed(
+    model: &CheckedGraph,
+    loss: &CheckedGraph,
+    model_slots: &[f32],
+    targets: &[f32],
+    opts: &DerivOptions,
+    evaluated_nodes: &mut Option<&mut u64>,
+) -> Result<(f32, Vec<f32>), Diagnostic> {
+    let mv = forward_observed(model, model_slots, evaluated_nodes);
+    if let Some((node, fact)) = crate::eval::first_failure_observed(model, &mv, evaluated_nodes) {
         return Err(Diagnostic::new(
             Code::FactFalse,
             Site::Node(node),
@@ -569,8 +591,8 @@ pub fn objective_checked(
     let mut ls = ys.clone();
     ls.extend_from_slice(targets);
     crate::eval::preflight(loss, &crate::eval::f32_inputs(&ls), None)?;
-    let lv = forward(loss, &ls);
-    if let Some((node, fact)) = crate::eval::first_failure(loss, &lv) {
+    let lv = forward_observed(loss, &ls, evaluated_nodes);
+    if let Some((node, fact)) = crate::eval::first_failure_observed(loss, &lv, evaluated_nodes) {
         return Err(Diagnostic::new(
             Code::FactFalse,
             Site::Node(node),
