@@ -9,14 +9,14 @@
 //! earliest observed failure in canonical order. Agreement is tested, not
 //! proved (NG-PO-C stays open).
 
-#[allow(unused_imports)]
-use crate::prelude::*;
 use crate::check::CheckedGraph;
 use crate::diag::BudgetKind;
 use crate::eval::{self, Control, Obs, Report, ScratchLease};
 use crate::facts;
 use crate::identity::IdentityScheme;
 use crate::ir::{AffineOperand, Canon, Digest, Fact, NodeId, Op, OutOfRange, SubProfile};
+#[allow(unused_imports)]
+use crate::prelude::*;
 use crate::sem::{self, Value};
 use crate::snapshot::ParamSnapshot;
 

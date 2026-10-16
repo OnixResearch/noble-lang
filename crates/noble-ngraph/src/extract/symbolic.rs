@@ -9,8 +9,9 @@ use noble_kernel::contracts::{Behavior, Definition};
 use noble_kernel::types::Ty;
 use noble_kernel::untrusted::{Interface, Lit, Node, NodeId as SrcNode};
 
-use crate::check::{expansion_bound, CallGraphEntry, CheckedGraph};
+use crate::check::{expansion_bound, Budgets, CallGraphEntry, CheckedGraph};
 use crate::diag::{BudgetKind, Code, Diagnostic, Site};
+use crate::identity::IdentityScheme;
 use crate::ir::{
     GraphBuilder, Literal, NodeId, Op, Origin, ScalarType, ShapeTree, SourceRef, SubProfile,
 };
@@ -96,7 +97,11 @@ pub struct Extraction {
 /// `E-AGGREGATE`, `E-REFLECT`, `E-PROGRAM-OUTPUT`, `E-PROFILE`,
 /// `E-BUDGET-WORK`, `E-BUDGET-EXPANSION`, `E-BUDGET-INLINE-DEPTH`, or a
 /// graph-checker refusal). No graph exists on refusal, so none is evaluated.
-pub fn extract(admitted: &Admitted<'_>) -> Result<Extraction, Diagnostic> {
+pub fn extract(
+    ids: &dyn IdentityScheme,
+    admitted: &Admitted<'_>,
+    budgets: &Budgets,
+) -> Result<Extraction, Diagnostic> {
     let mut m = Machine::new(admitted);
     let (inputs, outputs) = admitted.root_interface();
     let mut input_shapes = Vec::with_capacity(inputs.len());
@@ -136,7 +141,7 @@ pub fn extract(admitted: &Admitted<'_>) -> Result<Extraction, Diagnostic> {
         static_expansion_bound: static_bound,
     };
     let graph = m.build(&out_ids, input_shapes, output_shapes, &mut stats);
-    let checked = crate::check::check(graph)?;
+    let checked = crate::check::check_with(ids, graph, budgets)?;
     Ok(Extraction { checked, stats })
 }
 

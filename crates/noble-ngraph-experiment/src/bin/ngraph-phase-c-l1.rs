@@ -18,21 +18,22 @@
 //! one root submission, not a call into an already instantiated module.
 //! `--out` must not exist. Exit status 1 on any disagreement.
 
+use noble_ngraph_experiment::scheme::BLAKE3;
 use std::hint::black_box;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::{Duration, Instant};
 
+use noble_ngraph::compiled::{Compiled, COMPILER_REVISION};
+use noble_ngraph::eval::{i64_inputs, reference, Control};
+use noble_ngraph::extract::{self, source, Budget, Extraction, Request};
+use noble_ngraph::ir::{hex, Graph, IR_VERSION, SEMANTIC_REVISION};
+use noble_ngraph::prng::{SplitMix64, PRNG};
+use noble_ngraph::Value;
 use noble_ngraph_experiment::bench::{cpu_model, ns, read, sha256, stats, warm};
-use noble_ngraph_experiment::compiled::{Compiled, COMPILER_REVISION};
-use noble_ngraph_experiment::eval::{i64_inputs, reference, Control};
-use noble_ngraph_experiment::extract::{self, source, Budget, Extraction, Request};
-use noble_ngraph_experiment::ir::{hex, Graph, IR_VERSION, SEMANTIC_REVISION};
 use noble_ngraph_experiment::json::Json;
 use noble_ngraph_experiment::l1::{self, Cli, Opt, Timing};
-use noble_ngraph_experiment::prng::{SplitMix64, PRNG};
 use noble_ngraph_experiment::workloads;
-use noble_ngraph_experiment::Value;
 
 const I1_ROOT: &str = "dup * swap 3 * + 7 -";
 const I4_ROOT: &str = "swap [ * ] dip + dup";
@@ -118,6 +119,7 @@ fn extraction(
         let p = source::prepare(&[], root, &source::i64s(inputs)).expect("Core frontend");
         let t1 = Instant::now();
         let admitted = extract::admit(
+            &BLAKE3,
             &p.submission,
             &Request {
                 profile: "ngraph-i64/0",
@@ -127,9 +129,10 @@ fn extraction(
         )
         .expect("admitted");
         let t2 = Instant::now();
-        let e = extract::extract(&admitted).expect("extracted");
+        let e = extract::extract(&BLAKE3, &admitted, &noble_ngraph::check::Budgets::default())
+            .expect("extracted");
         let t3 = Instant::now();
-        let comp = Compiled::new(&e.checked);
+        let comp = Compiled::new(&BLAKE3, &e.checked);
         let t4 = Instant::now();
         black_box(comp.evaluate(first, None, &Control::default()));
         let t5 = Instant::now();
@@ -460,7 +463,7 @@ fn main() -> ExitCode {
     let steps_u64 = a.w2_steps as u64;
     let want2 = workloads::w2_native(W2_S0, W2_I, W2_K, steps_u64);
     let mut ws2 = comp2.workspace();
-    let run_l = |l4: bool, ws: &mut noble_ngraph_experiment::compiled::Workspace| {
+    let run_l = |l4: bool, ws: &mut noble_ngraph::compiled::Workspace| {
         let mut s = W2_S0;
         for _ in 0..a.w2_steps {
             let r = if l4 {

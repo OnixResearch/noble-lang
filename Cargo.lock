@@ -461,12 +461,21 @@ name = "noble-kernel"
 version = "0.0.0"
 
 [[package]]
+name = "noble-ngraph"
+version = "0.0.0"
+dependencies = [
+ "noble-contracts",
+ "noble-kernel",
+]
+
+[[package]]
 name = "noble-ngraph-experiment"
 version = "0.0.0"
 dependencies = [
  "blake3",
  "noble-contracts",
  "noble-kernel",
+ "noble-ngraph",
  "rustc_apfloat",
  "serde_json",
 ]

@@ -420,6 +420,35 @@ pub fn reference(
     }
 }
 
+/// The first failure of the reference semantics over complete `F32`
+/// forward values (one per node, as [`crate::grad::forward`] computes them):
+/// the first failing guard or refusing `index` read in canonical order, with
+/// the failing fact. Values before that node are the reference
+/// interpreter's, so this is exactly where [`reference`] would report
+/// `G-FACT-FALSE` (design D10).
+#[must_use]
+pub fn first_failure(checked: &CheckedGraph, vals: &[f32]) -> Option<(NodeId, Fact)> {
+    let get = |x: NodeId| Value::f32(vals[x.index()]);
+    for (i, node) in checked.graph().nodes.iter().enumerate() {
+        let id = NodeId(i as u32);
+        match &node.op {
+            Op::Guard { fact, value } if !guard_holds(checked, fact, *value, get) => {
+                return Some((id, fact.clone()));
+            }
+            Op::F32Index {
+                index,
+                table,
+                below,
+                above,
+            } if sem::index_position(vals[index.index()], table.len(), *below, *above).is_err() => {
+                return Some((id, index_refusal_fact(table.len())));
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
 /// Helper: `F32` inputs from `f32` values.
 #[must_use]
 pub fn f32_inputs(values: &[f32]) -> Vec<Value> {

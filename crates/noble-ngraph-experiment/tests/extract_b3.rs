@@ -5,10 +5,11 @@
 //! sources is recorded by the `ngraph-phase-b-extract` harness in
 //! `verification/ngraph/phase-b-extract.json` (record `B3-I64-source-controls`).
 
-use noble_ngraph_experiment::diag::{BudgetKind, Code};
-use noble_ngraph_experiment::extract::controls::{self, chain, outcome};
-use noble_ngraph_experiment::extract::{self, source, Budget, Request};
-use noble_ngraph_experiment::ir::Op;
+use noble_ngraph::diag::{BudgetKind, Code};
+use noble_ngraph::extract::{self, source, Budget, Request};
+use noble_ngraph::ir::Op;
+use noble_ngraph_experiment::controls::{self, chain, outcome};
+use noble_ngraph_experiment::scheme::BLAKE3;
 
 #[test]
 fn every_source_control_is_refused_with_its_d6_code() {
@@ -35,6 +36,7 @@ fn unreached_effectful_quotation_is_not_refused() {
     // path emits nothing either).
     let p = source::prepare(&[], "[ \"hi\" test.emit ] drop 5", &[]).expect("source");
     let admitted = extract::admit(
+        &BLAKE3,
         &p.submission,
         &Request {
             profile: "ngraph-i64/0",
@@ -43,7 +45,8 @@ fn unreached_effectful_quotation_is_not_refused() {
         },
     )
     .expect("admitted");
-    let x = extract::extract(&admitted).expect("extracted");
+    let x = extract::extract(&BLAKE3, &admitted, &noble_ngraph::check::Budgets::default())
+        .expect("extracted");
     let ops: Vec<_> = x
         .checked
         .graph()
@@ -111,6 +114,7 @@ fn supplied_dependency_list_must_match_the_body() {
 fn chain_budgets_are_charged_before_pruning() {
     let (sub, closure) = chain(4);
     let admitted = extract::admit(
+        &BLAKE3,
         &sub,
         &Request {
             profile: "ngraph-i64/0",
@@ -119,7 +123,8 @@ fn chain_budgets_are_charged_before_pruning() {
         },
     )
     .expect("admitted");
-    let x = extract::extract(&admitted).expect("extracted");
+    let x = extract::extract(&BLAKE3, &admitted, &noble_ngraph::check::Budgets::default())
+        .expect("extracted");
     // const 0, 16 × (const 1, add), const 7: 34 created, 33 pruned.
     assert_eq!(x.stats.expanded_nodes, 34);
     assert_eq!(x.stats.pruned_nodes, 33);

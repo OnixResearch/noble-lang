@@ -1,9 +1,9 @@
 //! D6 stage-scoped diagnostics. Every refusal carries a stable code; none
 //! executes any graph node.
 
+use crate::ir::{Fact, NodeId, SourceRef};
 #[allow(unused_imports)]
 use crate::prelude::*;
-use crate::ir::{Fact, NodeId, SourceRef};
 
 /// D5 budget kinds (`E-BUDGET-<kind>`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -178,6 +178,16 @@ pub enum Code {
     NonfiniteUpdate,
     /// `C-CANCELLED`.
     Cancelled,
+    /// `E-FORMAT`: a vector, data or snapshot file with a bad schema line,
+    /// syntax or row count (`Numeric-Graph-v1`, design D8).
+    Format,
+    /// `E-SNAPSHOT-INTEGRITY`: a recorded snapshot identity or provenance
+    /// digest differs from its recomputation.
+    SnapshotIntegrity,
+    /// `E-SNAPSHOT-ID`: the snapshot differs from a caller-pinned identity.
+    SnapshotId,
+    /// `E-SNAPSHOT-REPLAY`: replayed bytes differ from the recorded snapshot.
+    SnapshotReplay,
 }
 
 impl Code {
@@ -223,6 +233,93 @@ impl Code {
             Self::ParamUndeclared => "E-PARAM-UNDECLARED",
             Self::NonfiniteUpdate => "E-NONFINITE-UPDATE",
             Self::Cancelled => "C-CANCELLED",
+            Self::Format => "E-FORMAT",
+            Self::SnapshotIntegrity => "E-SNAPSHOT-INTEGRITY",
+            Self::SnapshotId => "E-SNAPSHOT-ID",
+            Self::SnapshotReplay => "E-SNAPSHOT-REPLAY",
+        }
+    }
+
+    /// The outcome class of a refusal or observation with this code
+    /// (design D8 of `numeric-graph-v1`).
+    #[must_use]
+    pub const fn outcome(self) -> Outcome {
+        match self {
+            Self::FactFalse | Self::NonfiniteUpdate | Self::Cancelled => Outcome::Trap,
+            Self::Effect
+            | Self::Resource
+            | Self::DynamicRun
+            | Self::LiveSlot
+            | Self::Recursion
+            | Self::Control
+            | Self::Aggregate
+            | Self::Reflect
+            | Self::ProgramOutput
+            | Self::DerivBoolean
+            | Self::DerivIndex
+            | Self::DerivI64 => Outcome::Unsupported,
+            Self::Budget(_) => Outcome::Exhausted,
+            Self::Profile
+            | Self::Subject
+            | Self::Closure
+            | Self::Interface
+            | Self::TypeMix
+            | Self::LiteralInexact
+            | Self::LiteralNonfinite
+            | Self::FactUnchecked
+            | Self::FactInput
+            | Self::GraphMalformed(_)
+            | Self::SnapshotStale
+            | Self::SnapshotLayout
+            | Self::ParamUndeclared
+            | Self::Format
+            | Self::SnapshotIntegrity
+            | Self::SnapshotId
+            | Self::SnapshotReplay => Outcome::Reject,
+        }
+    }
+}
+
+/// Outcome classes of `Numeric-Graph-v1` reports, following the Noble core
+/// report convention (design D8).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Outcome {
+    /// Success.
+    Normal,
+    /// A run-time failure of an admitted computation (guard failure,
+    /// non-finite update, cancellation).
+    Trap,
+    /// A static refusal of malformed or inconsistent input, or a host
+    /// condition.
+    Reject,
+    /// An unsupported construct or default-refused derivative path.
+    Unsupported,
+    /// An exhausted budget.
+    Exhausted,
+}
+
+impl Outcome {
+    /// Stable outcome name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Normal => "normal",
+            Self::Trap => "trap",
+            Self::Reject => "reject",
+            Self::Unsupported => "unsupported",
+            Self::Exhausted => "exhausted",
+        }
+    }
+
+    /// Process exit status of the outcome class.
+    #[must_use]
+    pub const fn exit(self) -> u8 {
+        match self {
+            Self::Normal => 0,
+            Self::Trap => 1,
+            Self::Reject => 2,
+            Self::Unsupported => 4,
+            Self::Exhausted => 5,
         }
     }
 }
@@ -242,6 +339,25 @@ pub enum Site {
     Source(SourceRef),
     /// A text-form line (1-based).
     Line(usize),
+}
+
+impl Site {
+    /// Stable rendering: `graph`, `node %N`, `slot K`, `fact I`,
+    /// `source D:N` (`root:N` for the root body) or `line L`.
+    #[must_use]
+    pub fn render(&self) -> String {
+        match self {
+            Self::Graph => "graph".to_owned(),
+            Self::Node(n) => format!("node %{}", n.0),
+            Self::Slot(k) => format!("slot {k}"),
+            Self::Fact(i) => format!("fact {i}"),
+            Self::Source(s) => match s.definition {
+                Some(d) => format!("source {d}:{}", s.node),
+                None => format!("source root:{}", s.node),
+            },
+            Self::Line(l) => format!("line {l}"),
+        }
+    }
 }
 
 /// A refusal: stable code, site and human detail. Budget refusals carry the

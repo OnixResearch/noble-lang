@@ -9,9 +9,9 @@
 //! rounded bound `< 2^24` in magnitude yields `integral`. These are the
 //! checker's rules; NG-PO-E (fact-transfer soundness) remains open.
 
+use crate::ir::{Fact, Literal, NodeId, ScalarType};
 #[allow(unused_imports)]
 use crate::prelude::*;
-use crate::ir::{Fact, Literal, NodeId, ScalarType};
 use crate::sem::{self, Value};
 
 /// 2^24 as `f32`.
@@ -52,7 +52,7 @@ impl AbsF32 {
             lo: v,
             hi: v,
             nan: false,
-            integral: v.is_finite() && v.trunc() == v,
+            integral: v.is_finite() && crate::sem::soft::trunc_f32(v) == v,
             bit: sem::is_bit(v.to_bits()),
         }
     }
@@ -367,8 +367,8 @@ fn grid_holds_f32(v: f32, log2: i32) -> bool {
     if !(-300..=300).contains(&log2) {
         return v == 0.0;
     }
-    let scaled = f64::from(v) * 2f64.powi(-log2);
-    scaled.trunc() == scaled
+    let scaled = f64::from(v) * crate::sem::soft::pow2_f64(-log2);
+    crate::sem::soft::trunc_f64(scaled) == scaled
 }
 
 fn grid_holds_i64(v: i64, log2: i32) -> bool {
@@ -427,7 +427,7 @@ pub fn holds(fact: &Fact, v: Value, group: &[Value], shape: Option<u32>) -> bool
         (Fact::Finite, Value::F32(b)) => f32::from_bits(b).is_finite(),
         (Fact::Integral, Value::F32(b)) => {
             let x = f32::from_bits(b);
-            x.is_finite() && x.trunc() == x
+            x.is_finite() && crate::sem::soft::trunc_f32(x) == x
         }
         (Fact::OneHot { allow_zero, .. }, _) => {
             let mut ones = 0usize;

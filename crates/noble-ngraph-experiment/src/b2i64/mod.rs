@@ -5,8 +5,8 @@
 //!   off` and `--opt on`, on the exact root source;
 //! - L2 an independent BigInt modulo-2^64 oracle under a pinned Node
 //!   ([`Oracle`]);
-//! - L3 the reference interpreter ([`crate::eval::reference`]);
-//! - L4 the compiled layered evaluator ([`crate::compiled::Compiled`]).
+//! - L3 the reference interpreter ([`noble_ngraph::eval::reference`]);
+//! - L4 the compiled layered evaluator ([`noble_ngraph::compiled::Compiled`]).
 //!
 //! Agreement is `≡obs` (for `I64`/`Bool`: equality of every output). It is
 //! finite differential evidence; it proves neither extraction (NG-PO-A) nor
@@ -15,18 +15,19 @@
 mod l2;
 pub mod random;
 
+use crate::scheme::BLAKE3;
 use std::path::PathBuf;
 
 use serde_json::json;
 
 pub use l2::{cell, Oracle, ORACLE_JS};
 
-use crate::compiled::Compiled;
-use crate::eval::{self, Control, Obs};
-use crate::extract::{self, source, Budget, Extraction, Request};
 use crate::l1::{self, Cli, Opt};
-use crate::prng::SplitMix64;
-use crate::sem::{self, Value};
+use noble_ngraph::compiled::Compiled;
+use noble_ngraph::eval::{self, Control, Obs};
+use noble_ngraph::extract::{self, source, Budget, Extraction, Request};
+use noble_ngraph::prng::SplitMix64;
+use noble_ngraph::sem::{self, Value};
 
 /// One extracted subject with its compiled evaluator.
 #[derive(Debug)]
@@ -53,6 +54,7 @@ impl Lowered {
         let defs: Vec<&str> = definitions.iter().map(String::as_str).collect();
         let p = source::prepare(&defs, root, &source::i64s(inputs))?;
         let admitted = extract::admit(
+            &BLAKE3,
             &p.submission,
             &Request {
                 profile: "ngraph-i64/0",
@@ -61,8 +63,10 @@ impl Lowered {
             },
         )
         .map_err(|d| d.to_string())?;
-        let extraction = extract::extract(&admitted).map_err(|d| d.to_string())?;
-        let compiled = Compiled::new(&extraction.checked);
+        let extraction =
+            extract::extract(&BLAKE3, &admitted, &noble_ngraph::check::Budgets::default())
+                .map_err(|d| d.to_string())?;
+        let compiled = Compiled::new(&BLAKE3, &extraction.checked);
         Ok(Self {
             definitions: definitions.to_vec(),
             root: root.to_owned(),
@@ -334,7 +338,7 @@ fn legs(
         "definitions": lowered.definitions,
         "root": lowered.root,
         "inputs": lowered.inputs,
-        "graph_logical_id": crate::ir::hex(&lowered.extraction.checked.graph().logical_id()),
+        "graph_logical_id": noble_ngraph::ir::hex(&lowered.extraction.checked.graph().logical_id(&BLAKE3)),
         "live_nodes": g.nodes.len(),
         "outputs": g.outputs.len(),
         "expanded_nodes": lowered.extraction.stats.expanded_nodes,
@@ -546,7 +550,7 @@ fn transition(
         "initial_state": s0,
         "steps": steps.len(),
         "final_state": s3,
-        "graph_logical_id": crate::ir::hex(&lowered.extraction.checked.graph().logical_id()),
+        "graph_logical_id": noble_ngraph::ir::hex(&lowered.extraction.checked.graph().logical_id(&BLAKE3)),
         "l1": l1_record,
     }))
 }
@@ -556,7 +560,7 @@ fn transition(
 /// # Errors
 /// A CLI failure.
 pub fn b3_receipt(cli: Option<&PathBuf>) -> Result<serde_json::Value, String> {
-    use crate::extract::controls::{self, Ordinary};
+    use crate::controls::{self, Ordinary};
     let mut cases = Vec::new();
     for c in controls::run() {
         let ordinary = match (&c.ordinary, cli) {

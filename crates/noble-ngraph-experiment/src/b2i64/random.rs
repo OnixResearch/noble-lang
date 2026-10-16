@@ -8,7 +8,7 @@
 //! shared recipe expanded twice) and calls of generated unary/binary named
 //! definitions (which may call earlier ones).
 
-use crate::prng::SplitMix64;
+use noble_ngraph::prng::SplitMix64;
 
 /// One generated program.
 #[derive(Clone, Debug, PartialEq, Eq)]

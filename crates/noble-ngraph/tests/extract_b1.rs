@@ -7,15 +7,19 @@
 //! prepared with the block's input types (bottom-first) — exactly what
 //! `noble session` submits when those values are on its stack.
 
+mod common;
+
+use common::IDS;
 use noble_kernel::types::Ty;
-use noble_ngraph_experiment::eval::{self, Control, Obs};
-use noble_ngraph_experiment::extract::{self, source, Budget, Request};
-use noble_ngraph_experiment::ir::{Op, SubjectKind};
-use noble_ngraph_experiment::Value;
+use noble_ngraph::eval::{self, Control, Obs};
+use noble_ngraph::extract::{self, source, Budget, Request};
+use noble_ngraph::ir::{Op, SubjectKind};
+use noble_ngraph::Value;
 
 fn lower(defs: &[&str], root: &str, inputs: &[Ty]) -> extract::Extraction {
     let p = source::prepare(defs, root, inputs).expect("frontend accepts");
     let admitted = extract::admit(
+        &IDS,
         &p.submission,
         &Request {
             profile: "ngraph-i64/0",
@@ -24,7 +28,7 @@ fn lower(defs: &[&str], root: &str, inputs: &[Ty]) -> extract::Extraction {
         },
     )
     .expect("admitted");
-    extract::extract(&admitted).expect("extracted")
+    extract::extract(&IDS, &admitted, &noble_ngraph::check::Budgets::default()).expect("extracted")
 }
 
 fn run(x: &extract::Extraction, inputs: &[i64]) -> Vec<Value> {
@@ -75,7 +79,7 @@ fn i2_captures_composition_and_one_shared_capture() {
         .filter(|&i| matches!(o[i], Op::Const(_)))
         .collect();
     assert_eq!(consts.len(), 1);
-    let c = noble_ngraph_experiment::NodeId(consts[0] as u32);
+    let c = noble_ngraph::NodeId(consts[0] as u32);
     let uses = o
         .iter()
         .filter(|op| matches!(op, Op::I64Add(_, b) if *b == c))

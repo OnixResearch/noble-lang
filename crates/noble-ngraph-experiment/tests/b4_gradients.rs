@@ -1,16 +1,17 @@
 //! B4: smooth-region gradients (G1 vs central differences, G2 vs G1) and the
 //! corner, boolean and index policies tested separately.
 
-use noble_ngraph_experiment::fixtures::{identity_loss, range};
-use noble_ngraph_experiment::grad::{self, BooleanPolicy, DerivOptions, IndexPolicy};
-use noble_ngraph_experiment::ir::{
+use noble_ngraph::grad::{self, BooleanPolicy, DerivOptions, IndexPolicy};
+use noble_ngraph::ir::{
     Fact, GraphBuilder, NodeId, Op, OutOfRange, Provenance, ScalarType, SubProfile, Subject,
 };
+use noble_ngraph::{check, CheckedGraph, Code};
+use noble_ngraph_experiment::fixtures::{identity_loss, range};
+use noble_ngraph_experiment::scheme::BLAKE3;
 use noble_ngraph_experiment::suites::gradient_campaign;
-use noble_ngraph_experiment::{check, CheckedGraph, Code};
 
 fn id_loss() -> CheckedGraph {
-    check(identity_loss()).expect("identity loss")
+    check(&BLAKE3, identity_loss()).expect("identity loss")
 }
 
 /// d/dslot of the identity-loss objective, in binary64 and binary32.
@@ -32,7 +33,10 @@ fn smooth_region_g1_and_g2_hold_on_f1_mse() {
 
 /// `y = reglu(p0·x, p1·x)`: analytic `∂y/∂p0 = x·relu(p1·x)`, `∂y/∂p1 = p0·x·x` (gate > 0).
 fn reglu_model() -> CheckedGraph {
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("b4 reglu analytic"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "b4 reglu analytic"),
+    );
     let x = b.input(ScalarType::F32);
     let p0 = b.param();
     let p1 = b.param();
@@ -40,7 +44,7 @@ fn reglu_model() -> CheckedGraph {
     let g = b.op(Op::F32Mul(p1, x));
     let y = b.op(Op::F32Reglu { left: l, gate: g });
     b.output(y);
-    check(b.finish()).expect("checks")
+    check(&BLAKE3, b.finish()).expect("checks")
 }
 
 #[test]
@@ -61,11 +65,14 @@ fn relu_corner_at_plus_and_minus_zero_gives_zero_gate_gradient() {
         assert_eq!(g64[2], 0.0, "x={x}");
         assert_eq!(g32[2], 0.0, "x={x}");
     }
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("b4 relu corner"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "b4 relu corner"),
+    );
     let p = b.param();
     let y = b.op(Op::F32Relu(p));
     b.output(y);
-    let m = check(b.finish()).expect("checks");
+    let m = check(&BLAKE3, b.finish()).expect("checks");
     for p in [0.0f32, -0.0] {
         let (g64, g32) = grads(&m, &[p], &DerivOptions::default());
         assert_eq!((g64[0], g32[0]), (0.0, 0.0));
@@ -74,14 +81,14 @@ fn relu_corner_at_plus_and_minus_zero_gives_zero_gate_gradient() {
 
 /// `y = step(p·x)` with a guard `p·x ∈ [0,1]`.
 fn step_model() -> (CheckedGraph, NodeId) {
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("b4 step"));
+    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored(&BLAKE3, "b4 step"));
     let x = b.input(ScalarType::F32);
     let p = b.param();
     let s = b.op(Op::F32Mul(p, x));
     b.guard(range(0.0, 1.0), s);
     let y = b.op(Op::F32Step(s));
     b.output(y);
-    (check(b.finish()).expect("checks"), y)
+    (check(&BLAKE3, b.finish()).expect("checks"), y)
 }
 
 #[test]
@@ -111,7 +118,10 @@ fn boolean_path_is_refused_statically_and_surrogates_are_recorded() {
 
 #[test]
 fn select_gate_path_is_refused_by_default() {
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("b4 select gate"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "b4 select gate"),
+    );
     let off = b.input(ScalarType::F32);
     let on = b.input(ScalarType::F32);
     let p = b.param();
@@ -119,13 +129,16 @@ fn select_gate_path_is_refused_by_default() {
     let bit = b.op(Op::F32Step(p));
     let y = b.op(Op::F32Select { bit, off, on });
     b.output(y);
-    let m = check(b.finish()).expect("checks");
+    let m = check(&BLAKE3, b.finish()).expect("checks");
     let mut o = DerivOptions::default();
     o.boolean.insert(bit, BooleanPolicy::StraightThrough);
     let d = grad::admit(&m, &[2], &o).unwrap_err();
     assert_eq!(d.code, Code::DerivBoolean, "select gate still refused");
     // Candidate gradients through select need no opt-in.
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("b4 select candidates"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "b4 select candidates"),
+    );
     let bitin = b.input(ScalarType::F32);
     b.fact(bitin, Fact::Bit, Provenance::InputValidated);
     let p0 = b.param();
@@ -136,7 +149,7 @@ fn select_gate_path_is_refused_by_default() {
         on: p1,
     });
     b.output(y);
-    let m = check(b.finish()).expect("checks");
+    let m = check(&BLAKE3, b.finish()).expect("checks");
     grad::admit(&m, &[1, 2], &DerivOptions::default()).expect("candidates admitted");
     let (g64, g32) = grads(&m, &[1.0, 5.0, 7.0], &DerivOptions::default());
     assert_eq!(
@@ -148,7 +161,10 @@ fn select_gate_path_is_refused_by_default() {
 #[test]
 fn index_candidate_gradients_accumulate() {
     // y = index(0,[a,a,b]) + index(1,[a,a,b]) → ∂y/∂a = 2, ∂y/∂b = 0.
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("b4 index candidates"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "b4 index candidates"),
+    );
     let i0 = b.input(ScalarType::F32);
     let i1 = b.input(ScalarType::F32);
     for i in [i0, i1] {
@@ -169,7 +185,7 @@ fn index_candidate_gradients_accumulate() {
     let r1 = r(&mut b, i1);
     let y = b.op(Op::F32Add(r0, r1));
     b.output(y);
-    let m = check(b.finish()).expect("checks");
+    let m = check(&BLAKE3, b.finish()).expect("checks");
     grad::admit(&m, &[2, 3], &DerivOptions::default())
         .expect("candidate gradients allowed by default");
     let (g64, g32) = grads(&m, &[0.0, 1.0, 4.0, 9.0], &DerivOptions::default());
@@ -182,7 +198,10 @@ fn index_candidate_gradients_accumulate() {
 #[test]
 fn index_operand_policies_reject_zero_backward_difference() {
     // y = index(q, [c0, c1, c2]) with a param index q (guarded integral, range).
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("b4 index operand"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "b4 index operand"),
+    );
     let c: Vec<NodeId> = (0..3).map(|_| b.input(ScalarType::F32)).collect();
     let q = b.param();
     b.guard(Fact::Integral, q);
@@ -194,7 +213,7 @@ fn index_operand_policies_reject_zero_backward_difference() {
         above: OutOfRange::Clamp,
     });
     b.output(y);
-    let m = check(b.finish()).expect("checks");
+    let m = check(&BLAKE3, b.finish()).expect("checks");
     // reject (default)
     assert_eq!(
         grad::admit(&m, &[3], &DerivOptions::default())
@@ -220,11 +239,11 @@ fn index_operand_policies_reject_zero_backward_difference() {
 
 #[test]
 fn i64_and_undeclared_params_are_refused() {
-    let mut b = GraphBuilder::new(SubProfile::I64, Subject::authored("b4 i64"));
+    let mut b = GraphBuilder::new(SubProfile::I64, Subject::authored(&BLAKE3, "b4 i64"));
     let x = b.input(ScalarType::I64);
     let y = b.op(Op::I64Mul(x, x));
     b.output(y);
-    let m = check(b.finish()).expect("checks");
+    let m = check(&BLAKE3, b.finish()).expect("checks");
     assert_eq!(
         grad::admit(&m, &[], &DerivOptions::default())
             .unwrap_err()

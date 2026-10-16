@@ -1,21 +1,34 @@
 //! D11 training contract, `adam/0`, immutable snapshot publication and
 //! replayable provenance. The training loop, PRNG and optimizer arithmetic
 //! are host-side (D4); the graph is never modified.
+//!
+//! `Numeric-Graph-v1` (design D10) closes three gaps of the Phase B trainer:
+//! every data point is evaluated with the reference failure semantics (input
+//! facts, guards and refusing index reads stop the step), the loss graph's
+//! interface is admitted, and replay starts from the recorded parent.
 
 #[allow(unused_imports)]
 use crate::prelude::*;
 use alloc::rc::Rc;
 
-use crate::check::CheckedGraph;
+use crate::check::{Budgets, CheckedGraph};
+use crate::compiled::COMPILER_REVISION;
 use crate::diag::{BudgetKind, Code, Diagnostic, Site};
-use crate::eval::{ScratchCounters, ScratchLease};
-use crate::grad::{self, DerivOptions};
-use crate::ir::{hex, Canon, Digest, FACT_RULE_REVISION, IR_VERSION, SEMANTIC_REVISION};
+use crate::eval::{self, ScratchCounters, ScratchLease};
+use crate::grad::{self, DerivOptions, DERIV_POLICY};
+use crate::identity::IdentityScheme;
+use crate::ir::{
+    Canon, Digest, SubProfile, Subject, FACT_RULE_REVISION, IR_VERSION, SEMANTIC_REVISION,
+};
 use crate::prng::{SplitMix64, PRNG};
+use crate::sem::{self, Value};
 use crate::snapshot::ParamSnapshot;
 
 /// Optimizer revision.
 pub const ADAM: &str = "adam/0";
+
+/// Library tool revision recorded in training provenance.
+pub const TOOL_REVISION: &str = "noble-ngraph/0";
 
 /// `adam/0` hyperparameters (exact binary64 bits are recorded).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -53,6 +66,15 @@ impl Adam {
             self.eps.to_bits()
         )
     }
+
+    /// Whether every hyperparameter has the same binary64 encoding.
+    #[must_use]
+    pub fn same_bits(&self, other: &Self) -> bool {
+        self.lr.to_bits() == other.lr.to_bits()
+            && self.beta1.to_bits() == other.beta1.to_bits()
+            && self.beta2.to_bits() == other.beta2.to_bits()
+            && self.eps.to_bits() == other.eps.to_bits()
+    }
 }
 
 /// `adam/0` optimizer state (binary64), immutable once published.
@@ -85,8 +107,8 @@ impl AdamState {
 
     /// Digest of the exact state bytes.
     #[must_use]
-    pub fn digest(&self) -> Digest {
-        let mut c = Canon::new("noble.ngraph.adam-state.v0");
+    pub fn digest(&self, ids: &dyn IdentityScheme) -> Digest {
+        let mut c = Canon::new(ids, "noble.ngraph.adam-state.v0");
         c.u64(self.t);
         c.u64(self.b1t.to_bits());
         c.u64(self.b2t.to_bits());
@@ -110,8 +132,8 @@ pub struct Point {
 
 /// Ordered training-data digest.
 #[must_use]
-pub fn data_digest(points: &[Point]) -> Digest {
-    let mut c = Canon::new("noble.ngraph.training-data.v0");
+pub fn data_digest(ids: &dyn IdentityScheme, points: &[Point]) -> Digest {
+    let mut c = Canon::new(ids, "noble.ngraph.training-data.v0");
     c.u64(points.len() as u64);
     for p in points {
         c.u64(p.inputs.len() as u64);
@@ -145,48 +167,84 @@ pub struct Contract {
     pub data: Vec<Point>,
 }
 
-/// Training provenance (D11): everything needed to replay a snapshot.
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// Training provenance (D11): everything needed to replay a snapshot, as
+/// structured fields (design D6 of `numeric-graph-v1`).
+#[derive(Clone, Debug, PartialEq)]
 pub struct Provenance {
-    /// Parent snapshot id (hex).
-    pub parent: String,
-    /// Subject identity (hex) and closure.
-    pub subject: String,
-    /// Closure identities.
-    pub closure: Vec<u64>,
-    /// Model `GraphLogicalId` (hex).
-    pub graph: String,
-    /// Profile and semantic revisions.
-    pub profile: String,
-    /// Derivative policy and options.
-    pub deriv: String,
-    /// Fact bindings digest (hex): graph id ‖ fact-rule rev ‖ fact records.
-    pub facts: String,
-    /// Loss graph id (hex).
-    pub loss: String,
-    /// Data digest (hex).
-    pub data: String,
-    /// Seed and PRNG.
+    /// Parent snapshot id.
+    pub parent: Digest,
+    /// Model subject (kind, identity and closure).
+    pub subject: Subject,
+    /// Model `GraphLogicalId`.
+    pub graph: Digest,
+    /// Model sub-profile (with [`SEMANTIC_REVISION`]).
+    pub profile: SubProfile,
+    /// Fact-binding digest of the model.
+    pub facts: Digest,
+    /// Loss graph id.
+    pub loss: Digest,
+    /// Training-data digest.
+    pub data: Digest,
+    /// Derivative opt-ins (policy [`DERIV_POLICY`]).
+    pub deriv: DerivOptions,
+    /// Seed (PRNG [`PRNG`]).
     pub seed: u64,
-    /// PRNG revision.
-    pub prng: String,
-    /// Optimizer and bits.
-    pub optimizer: String,
+    /// Optimizer hyperparameters (optimizer [`ADAM`]).
+    pub optimizer: Adam,
     /// Steps.
     pub steps: u64,
     /// Tool revisions.
     pub tools: String,
-    /// Resulting snapshot id (hex).
-    pub result: String,
-    /// Resulting optimizer-state digest (hex).
-    pub optimizer_state: String,
+    /// Resulting snapshot id.
+    pub result: Digest,
+    /// Resulting optimizer-state digest.
+    pub optimizer_state: Digest,
+}
+
+impl Provenance {
+    /// `H(noble.ngraph.provenance.v0 ‖ result ‖ graph ‖ layout ‖
+    /// optimizer-state ‖ parent ‖ subject ‖ profile ‖ facts ‖ loss ‖ data ‖
+    /// policy and opt-ins ‖ seed ‖ PRNG ‖ optimizer bits ‖ steps ‖ tools)`:
+    /// every snapshot-file field except the digest itself. The parameter
+    /// bytes are bound through `result`, which is recomputed from them.
+    #[must_use]
+    pub fn digest(&self, ids: &dyn IdentityScheme, layout: &Digest) -> Digest {
+        let mut c = Canon::new(ids, "noble.ngraph.provenance.v0");
+        c.bytes(&self.result);
+        c.bytes(&self.graph);
+        c.bytes(layout);
+        c.bytes(&self.optimizer_state);
+        c.bytes(&self.parent);
+        c.str(self.subject.kind.name());
+        c.bytes(&self.subject.identity);
+        c.u64(self.subject.closure.len() as u64);
+        for d in &self.subject.closure {
+            c.u64(*d);
+        }
+        c.str(self.profile.name());
+        c.str(SEMANTIC_REVISION);
+        c.bytes(&self.facts);
+        c.bytes(&self.loss);
+        c.bytes(&self.data);
+        c.str(&self.deriv.describe());
+        c.u64(self.seed);
+        c.str(PRNG);
+        c.str(ADAM);
+        c.u64(self.optimizer.lr.to_bits());
+        c.u64(self.optimizer.beta1.to_bits());
+        c.u64(self.optimizer.beta2.to_bits());
+        c.u64(self.optimizer.eps.to_bits());
+        c.u64(self.steps);
+        c.str(&self.tools);
+        c.finish()
+    }
 }
 
 /// The result of a training call: the last published snapshot pair and its
 /// provenance, plus the per-step losses.
 #[derive(Clone, Debug)]
 pub struct Trained {
-    /// Initial snapshot `S₀`.
+    /// Initial snapshot `S₀` (the parent).
     pub initial: ParamSnapshot,
     /// Last published snapshot.
     pub snapshot: ParamSnapshot,
@@ -201,7 +259,8 @@ pub struct Trained {
 /// Why a training call stopped without completing all steps.
 #[derive(Clone, Debug)]
 pub struct Stopped {
-    /// The refusal (`E-NONFINITE-UPDATE`, `C-CANCELLED`, admission codes).
+    /// The refusal (`E-NONFINITE-UPDATE`, `C-CANCELLED`, `G-FACT-FALSE`,
+    /// `E-FACT-INPUT`, admission codes).
     pub diagnostic: Diagnostic,
     /// The last published snapshot (unchanged by the failed step), if any.
     pub last: Option<ParamSnapshot>,
@@ -218,54 +277,113 @@ pub fn init_params(seed: u64, n: usize) -> Vec<f32> {
     (0..n).map(|_| (r.next_f64() - 0.5) as f32).collect()
 }
 
-fn facts_digest(model: &CheckedGraph) -> Digest {
-    let mut c = Canon::new("noble.ngraph.fact-bindings.v0");
-    c.bytes(&model.id());
-    c.str(FACT_RULE_REVISION);
-    let g = model.graph();
-    c.u64(g.facts.len() as u64);
-    for f in &g.facts {
-        c.u32(f.node.0);
-        c.fact(&f.fact);
-        c.str(match &f.provenance {
-            crate::ir::Provenance::Derived(_) => "derived",
-            crate::ir::Provenance::InputValidated => "input-validated",
-            crate::ir::Provenance::Evidence(_) => "evidence",
-            crate::ir::Provenance::Guard(_) => "guard",
-            crate::ir::Provenance::Asserted => "asserted",
-        });
-    }
-    c.finish()
-}
-
 /// Tool revisions recorded in provenance.
 #[must_use]
 pub fn tools() -> String {
     format!(
-        "noble-ngraph-experiment {}; {IR_VERSION}; {SEMANTIC_REVISION}; {FACT_RULE_REVISION}; {}",
-        env!("CARGO_PKG_VERSION"),
-        crate::compiled::COMPILER_REVISION
+        "{TOOL_REVISION}; {IR_VERSION}; {SEMANTIC_REVISION}; {FACT_RULE_REVISION}; {COMPILER_REVISION}"
     )
 }
 
+/// Static training admission of a model, its trainable params, its
+/// derivative options and its loss graph (D10, D11).
+///
+/// # Errors
+/// `E-PARAM-UNDECLARED`, `E-DERIV-I64`, `E-DERIV-BOOLEAN`, `E-DERIV-INDEX`
+/// or `E-INTERFACE` (loss graph: not `ngraph-f32/0`, a `param` slot, fewer
+/// input slots than model outputs, or not exactly one output).
+pub fn admit(
+    model: &CheckedGraph,
+    loss: &CheckedGraph,
+    params: &[u32],
+    deriv: &DerivOptions,
+) -> Result<(), Diagnostic> {
+    if model.param_slots() != params {
+        let k = params.first().copied().unwrap_or(0);
+        return Err(Diagnostic::new(
+            Code::ParamUndeclared,
+            Site::Slot(k),
+            "params must be every param slot in order",
+        ));
+    }
+    grad::admit(model, params, deriv)?;
+    let lg = loss.graph();
+    let interface = |why: &str| Err(Diagnostic::new(Code::Interface, Site::Graph, why));
+    if lg.profile != SubProfile::F32 {
+        return interface("the loss graph must be ngraph-f32/0");
+    }
+    if !loss.param_slots().is_empty() {
+        return interface("the loss graph must have no param slot");
+    }
+    if lg.slots.len() < model.graph().outputs.len() {
+        return interface("the loss graph takes fewer inputs than the model has outputs");
+    }
+    if lg.outputs.len() != 1 {
+        return interface("the loss graph must have exactly one output");
+    }
+    Ok(())
+}
+
+/// Number of target values each training point must carry for `loss`.
+#[must_use]
+pub fn target_count(model: &CheckedGraph, loss: &CheckedGraph) -> usize {
+    loss.graph()
+        .slots
+        .len()
+        .saturating_sub(model.graph().outputs.len())
+}
+
+fn check_data(c: &Contract) -> Result<(), Diagnostic> {
+    let inputs = c.model.graph().input_slots().len();
+    let targets = target_count(&c.model, &c.loss);
+    for (i, p) in c.data.iter().enumerate() {
+        if p.inputs.len() != inputs || p.targets.len() != targets {
+            return Err(Diagnostic::new(
+                Code::Interface,
+                Site::Graph,
+                format!(
+                    "data point {i} has {} inputs and {} targets; the model takes {inputs} and the loss {targets}",
+                    p.inputs.len(),
+                    p.targets.len()
+                ),
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn values_f32(slots: &[Value]) -> Vec<f32> {
+    slots
+        .iter()
+        .map(|v| match v {
+            Value::F32(b) => f32::from_bits(*b),
+            Value::I64(_) | Value::Bool(_) => f32::NAN,
+        })
+        .collect()
+}
+
 /// Mean loss and binary64 mean gradient over the data, point order fixed.
-/// Per-point gradients come from the FP32 reference backward (G2).
-fn loss_and_grad(c: &Contract, params: &[f32]) -> (f64, Vec<f64>, bool) {
-    let g = c.model.graph();
-    let mut slots = vec![0f32; g.slots.len()];
+/// Per-point gradients come from the FP32 reference backward (G2). Each
+/// point is first admitted with the reference failure semantics (D10): the
+/// model's input facts (including param facts on `params`), then the first
+/// failing guard or refusing index read of the model and of the loss graph,
+/// in canonical order.
+fn loss_and_grad(
+    c: &Contract,
+    params: &ParamSnapshot,
+) -> Result<(f64, Vec<f64>, bool), Diagnostic> {
     let mut grad_sum = vec![0f64; c.params.len()];
     let mut loss_sum = 0f64;
     let mut finite = true;
     for p in &c.data {
-        let mut it = p.inputs.iter();
-        let mut pk = params.iter();
-        for (k, s) in g.slots.iter().enumerate() {
-            slots[k] = match s.kind {
-                crate::ir::SlotKind::Input => *it.next().unwrap_or(&0.0),
-                crate::ir::SlotKind::Param => *pk.next().unwrap_or(&0.0),
-            };
-        }
-        let (l, gs) = grad::objective::<f32>(&c.model, &c.loss, &slots, &p.targets, &c.deriv);
+        let model_slots = eval::preflight(&c.model, &eval::f32_inputs(&p.inputs), Some(params))?;
+        let (l, gs) = grad::objective_checked(
+            &c.model,
+            &c.loss,
+            &values_f32(&model_slots),
+            &p.targets,
+            &c.deriv,
+        )?;
         loss_sum += f64::from(l);
         for (acc, k) in grad_sum.iter_mut().zip(&c.params) {
             let gk = gs[*k as usize];
@@ -276,11 +394,11 @@ fn loss_and_grad(c: &Contract, params: &[f32]) -> (f64, Vec<f64>, bool) {
     #[allow(clippy::cast_precision_loss)]
     let n = c.data.len().max(1) as f64;
     let inv = 1.0 / n;
-    (
+    Ok((
         loss_sum * inv,
         grad_sum.iter().map(|g| g * inv).collect(),
         finite && loss_sum.is_finite(),
-    )
+    ))
 }
 
 /// One `adam/0` step into fresh vectors (the published state is untouched).
@@ -295,7 +413,7 @@ fn adam_step(a: &Adam, s: &AdamState, p: &[f32], g: &[f64]) -> (Vec<f32>, AdamSt
         n.v[k] = a.beta2 * s.v[k] + (1.0 - a.beta2) * (g[k] * g[k]);
         let mhat = n.m[k] / (1.0 - n.b1t);
         let vhat = n.v[k] / (1.0 - n.b2t);
-        let upd = a.lr * mhat / (vhat.sqrt() + a.eps);
+        let upd = a.lr * mhat / (sem::soft::sqrt_f64(vhat) + a.eps);
         #[allow(clippy::cast_possible_truncation)]
         out.push((f64::from(p[k]) - upd) as f32);
     }
@@ -309,6 +427,9 @@ pub struct TrainControl<'a> {
     pub cancel_before_step: Option<&'a dyn Fn(u64) -> bool>,
     /// Scratch instrumentation (one lease per step).
     pub scratch: Option<&'a ScratchCounters>,
+    /// Budgets (D5): `optimizer_steps`, `backward_scratch` and
+    /// `snapshot_bytes` are charged; a raised budget is `E-PROFILE`.
+    pub budgets: Budgets,
 }
 
 /// Runs `steps` `adam/0` steps from `init` (or from the seed). Each step
@@ -316,7 +437,9 @@ pub struct TrainControl<'a> {
 ///
 /// # Errors
 /// [`Stopped`] with the code and the last published snapshot.
+#[allow(clippy::too_many_lines)]
 pub fn train(
+    ids: &dyn IdentityScheme,
     c: &Contract,
     init: Option<&ParamSnapshot>,
     steps: u64,
@@ -329,46 +452,41 @@ pub fn train(
             published_steps: k,
         })
     };
-    if let Err(d) = c
-        .model
-        .graph()
-        .param_slots()
-        .iter()
-        .zip(&c.params)
-        .try_for_each(|(a, b)| {
-            if a == b {
-                Ok(())
-            } else {
-                Err(Diagnostic::new(
-                    Code::ParamUndeclared,
-                    Site::Slot(*b),
-                    "params must be every param slot in order",
-                ))
-            }
-        })
-    {
-        return Err(stop(d, None, 0));
-    }
-    grad::admit(&c.model, &c.params, &c.deriv).map_err(|d| stop(d, None, 0))?;
-    let limit = crate::check::Budgets::default().optimizer_steps;
-    if steps > limit {
+    let budgets = &control.budgets;
+    budgets.validate_policy().map_err(|d| stop(d, None, 0))?;
+    admit(&c.model, &c.loss, &c.params, &c.deriv).map_err(|d| stop(d, None, 0))?;
+    check_data(c).map_err(|d| stop(d, None, 0))?;
+    if steps > budgets.optimizer_steps {
         return Err(stop(
-            Diagnostic::budget(BudgetKind::Steps, limit, steps),
+            Diagnostic::budget(BudgetKind::Steps, budgets.optimizer_steps, steps),
             None,
             0,
         ));
     }
+    let step_bytes = (c.model.node_count() + c.loss.node_count()) as u64 * 16;
+    if step_bytes > budgets.backward_scratch {
+        return Err(stop(
+            Diagnostic::budget(
+                BudgetKind::BackwardScratch,
+                budgets.backward_scratch,
+                step_bytes,
+            ),
+            None,
+            0,
+        ));
+    }
+    let snapshot =
+        |values: &[f32]| ParamSnapshot::with_budget(ids, &c.model, values, budgets.snapshot_bytes);
     let s0 = match init {
         Some(s) => {
             s.check_use(&c.model).map_err(|d| stop(d, None, 0))?;
             s.clone()
         }
-        None => ParamSnapshot::new(&c.model, &init_params(c.seed, c.params.len()))
-            .map_err(|d| stop(d, None, 0))?,
+        None => snapshot(&init_params(c.seed, c.params.len())).map_err(|d| stop(d, None, 0))?,
     };
     let mut current = s0.clone();
     let mut state = Rc::new(AdamState::new(c.params.len()));
-    let mut losses = Vec::with_capacity(steps as usize + 1);
+    let mut losses = Vec::with_capacity(usize::try_from(steps).unwrap_or(0).saturating_add(1));
     for t in 1..=steps {
         if control.cancel_before_step.is_some_and(|f| f(t)) {
             return Err(stop(
@@ -381,12 +499,14 @@ pub fn train(
                 t - 1,
             ));
         }
-        let lease = ScratchLease::acquire(
-            control.scratch,
-            (c.model.node_count() + c.loss.node_count()) as u64 * 16,
-        );
-        let p = current.values();
-        let (l, g, finite) = loss_and_grad(c, &p);
+        let lease = ScratchLease::acquire(control.scratch, step_bytes);
+        let (l, g, finite) = match loss_and_grad(c, &current) {
+            Ok(r) => r,
+            Err(d) => {
+                drop(lease);
+                return Err(stop(d, Some(current), t - 1));
+            }
+        };
         losses.push(l);
         if !finite || g.iter().any(|x| !x.is_finite()) {
             drop(lease);
@@ -400,8 +520,8 @@ pub fn train(
                 t - 1,
             ));
         }
-        let (np, ns) = adam_step(&c.adam, &state, &p, &g);
-        let next = match ParamSnapshot::new(&c.model, &np) {
+        let (np, ns) = adam_step(&c.adam, &state, &current.values(), &g);
+        let next = match snapshot(&np) {
             Ok(s) => s,
             Err(d) => {
                 drop(lease);
@@ -412,26 +532,25 @@ pub fn train(
         current = next;
         state = Rc::new(ns);
     }
-    let (final_loss, _, _) = loss_and_grad(c, &current.values());
+    let (final_loss, _, _) =
+        loss_and_grad(c, &current).map_err(|d| stop(d, Some(current.clone()), steps))?;
     losses.push(final_loss);
     let g = c.model.graph();
     let provenance = Provenance {
-        parent: hex(&s0.id()),
-        subject: hex(&g.subject.identity),
-        closure: g.subject.closure.clone(),
-        graph: hex(&c.model.id()),
-        profile: format!("{} {SEMANTIC_REVISION}", g.profile.name()),
-        deriv: c.deriv.describe(),
-        facts: hex(&facts_digest(&c.model)),
-        loss: hex(&c.loss.id()),
-        data: hex(&data_digest(&c.data)),
+        parent: s0.id(),
+        subject: g.subject.clone(),
+        graph: c.model.id(),
+        profile: g.profile,
+        facts: c.model.fact_bindings(ids),
+        loss: c.loss.id(),
+        data: data_digest(ids, &c.data),
+        deriv: c.deriv.clone(),
         seed: c.seed,
-        prng: PRNG.to_owned(),
-        optimizer: c.adam.describe(),
+        optimizer: c.adam,
         steps,
         tools: tools(),
-        result: hex(&current.id()),
-        optimizer_state: hex(&state.digest()),
+        result: current.id(),
+        optimizer_state: state.digest(ids),
     };
     Ok(Trained {
         initial: s0,
@@ -443,37 +562,74 @@ pub fn train(
 }
 
 /// Replays a provenance record against `c` (which must bind the same
-/// identities) and returns the reproduced snapshot.
+/// identities) from `parent` (or, when `None`, from the seed) and returns the
+/// reproduced training result.
 ///
 /// # Errors
-/// [`Stopped`] if the contract does not match the provenance or training stops.
-pub fn replay(c: &Contract, p: &Provenance) -> Result<ParamSnapshot, Box<Stopped>> {
-    let mismatch = |what: &str| {
+/// [`Stopped`] with `E-SNAPSHOT-STALE` if the model, its fact bindings, the
+/// loss graph, the data, the seed, the optimizer bits, the derivative
+/// options or the parent differ from the record; `E-SNAPSHOT-REPLAY` if the
+/// reproduced snapshot or optimizer state differs; or the code that stopped
+/// training.
+pub fn replay(
+    ids: &dyn IdentityScheme,
+    c: &Contract,
+    p: &Provenance,
+    parent: Option<&ParamSnapshot>,
+    control: &TrainControl<'_>,
+) -> Result<Trained, Box<Stopped>> {
+    let refuse = |code: Code, what: &str| {
         Box::new(Stopped {
-            diagnostic: Diagnostic::new(
-                Code::SnapshotStale,
-                Site::Graph,
-                format!("provenance {what} differs"),
-            ),
+            diagnostic: Diagnostic::new(code, Site::Graph, format!("provenance {what} differs")),
             last: None,
             published_steps: 0,
         })
     };
-    if hex(&c.model.id()) != p.graph {
-        return Err(mismatch("graph"));
+    let stale = |what: &str| refuse(Code::SnapshotStale, what);
+    if c.model.id() != p.graph {
+        return Err(stale("graph"));
     }
-    if hex(&c.loss.id()) != p.loss {
-        return Err(mismatch("loss graph"));
+    if c.model.fact_bindings(ids) != p.facts {
+        return Err(stale("fact bindings"));
     }
-    if hex(&data_digest(&c.data)) != p.data {
-        return Err(mismatch("data"));
+    if c.loss.id() != p.loss {
+        return Err(stale("loss graph"));
     }
-    if c.seed != p.seed || c.adam.describe() != p.optimizer || c.deriv.describe() != p.deriv {
-        return Err(mismatch("seed/optimizer/policy"));
+    if data_digest(ids, &c.data) != p.data {
+        return Err(stale("data"));
     }
-    let t = train(c, None, p.steps, &TrainControl::default())?;
-    if hex(&t.initial.id()) != p.parent {
-        return Err(mismatch("parent"));
+    if c.seed != p.seed || !c.adam.same_bits(&p.optimizer) || c.deriv != p.deriv {
+        return Err(stale("seed/optimizer/policy"));
     }
-    Ok(t.snapshot)
+    let parent_id = match parent {
+        Some(s) => s.id(),
+        None => ParamSnapshot::with_budget(
+            ids,
+            &c.model,
+            &init_params(c.seed, c.params.len()),
+            control.budgets.snapshot_bytes,
+        )
+        .map_err(|d| {
+            Box::new(Stopped {
+                diagnostic: d,
+                last: None,
+                published_steps: 0,
+            })
+        })?
+        .id(),
+    };
+    if parent_id != p.parent {
+        return Err(stale("parent"));
+    }
+    let t = train(ids, c, parent, p.steps, control)?;
+    if t.snapshot.id() != p.result || t.provenance.optimizer_state != p.optimizer_state {
+        return Err(refuse(Code::SnapshotReplay, "replayed snapshot"));
+    }
+    Ok(t)
+}
+
+/// The derivative policy revision named by every training contract.
+#[must_use]
+pub const fn policy() -> &'static str {
+    DERIV_POLICY
 }

@@ -2,22 +2,23 @@
 //! `≡obs` on the boundary vectors, F1–F3 and seeded random graphs. The full
 //! ≥10,000-vector campaign runs in the `ngraph-phase-b` harness (release).
 
-use noble_ngraph_experiment::compiled::Compiled;
+use noble_ngraph::compiled::Compiled;
+use noble_ngraph::eval::{f32_inputs, Control};
+use noble_ngraph::ir::{Fact, NodeId};
+use noble_ngraph::prng::SplitMix64;
+use noble_ngraph::snapshot::ParamSnapshot;
+use noble_ngraph::{check, Obs, Value};
 use noble_ngraph_experiment::differential::{campaign, run_legs};
-use noble_ngraph_experiment::eval::{f32_inputs, Control};
 use noble_ngraph_experiment::fixtures::{self, F1_FIXED, RULES};
-use noble_ngraph_experiment::ir::{Fact, NodeId};
 use noble_ngraph_experiment::oracle::{ap_add, ap_mul, ap_sub, f64_op};
-use noble_ngraph_experiment::prng::SplitMix64;
 use noble_ngraph_experiment::random::random_f32;
-use noble_ngraph_experiment::snapshot::ParamSnapshot;
-use noble_ngraph_experiment::{check, Obs, Value};
+use noble_ngraph_experiment::scheme::BLAKE3;
 
 #[test]
 fn boundary_vectors_agree_on_every_leg_and_match_expected_bits() {
     for v in fixtures::b2_vectors() {
-        let c = check(v.graph.clone()).unwrap_or_else(|d| panic!("{}: {d}", v.name));
-        let comp = Compiled::new(&c);
+        let c = check(&BLAKE3, v.graph.clone()).unwrap_or_else(|d| panic!("{}: {d}", v.name));
+        let comp = Compiled::new(&BLAKE3, &c);
         let legs = run_legs(&comp, &f32_inputs(&v.inputs), None);
         assert!(legs.agree(), "{}: {legs:?}", v.name);
         let expected: Vec<Value> = v.expected.iter().map(|b| Value::F32(*b)).collect();
@@ -54,9 +55,9 @@ fn fused_multiply_add_would_be_detected() {
 
 #[test]
 fn f1_f2_f3_agree_on_every_leg() {
-    let f1 = check(fixtures::f1()).expect("F1 checks");
-    let s1 = ParamSnapshot::new(&f1, &F1_FIXED).expect("snapshot");
-    let c1 = Compiled::new(&f1);
+    let f1 = check(&BLAKE3, fixtures::f1()).expect("F1 checks");
+    let s1 = ParamSnapshot::new(&BLAKE3, &f1, &F1_FIXED).expect("snapshot");
+    let c1 = Compiled::new(&BLAKE3, &f1);
     let mut rng = SplitMix64::new(14);
     for _ in 0..500 {
         let x = [random_f32(&mut rng), random_f32(&mut rng)];
@@ -65,10 +66,10 @@ fn f1_f2_f3_agree_on_every_leg() {
     }
 
     let m = [0.5f32, -1.25, 3.0, 0.75];
-    let f2 = check(fixtures::f2()).expect("F2 checks");
-    let s2 = ParamSnapshot::new(&f2, &m).expect("snapshot");
-    let f2a = check(fixtures::f2_affine(m)).expect("F2 affine checks");
-    let (c2, c2a) = (Compiled::new(&f2), Compiled::new(&f2a));
+    let f2 = check(&BLAKE3, fixtures::f2()).expect("F2 checks");
+    let s2 = ParamSnapshot::new(&BLAKE3, &f2, &m).expect("snapshot");
+    let f2a = check(&BLAKE3, fixtures::f2_affine(m)).expect("F2 affine checks");
+    let (c2, c2a) = (Compiled::new(&BLAKE3, &f2), Compiled::new(&BLAKE3, &f2a));
     for _ in 0..500 {
         let x = f32_inputs(&[random_f32(&mut rng), random_f32(&mut rng)]);
         let legs = run_legs(&c2, &x, Some(&s2));
@@ -97,8 +98,8 @@ fn f1_f2_f3_agree_on_every_leg() {
     let lim = fixtures::INDEX_LIMIT;
     for below in RULES {
         for above in RULES {
-            let g = check(fixtures::f3(below, above)).expect("F3 checks");
-            let c = Compiled::new(&g);
+            let g = check(&BLAKE3, fixtures::f3(below, above)).expect("F3 checks");
+            let c = Compiled::new(&BLAKE3, &g);
             for i in [-lim, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, lim] {
                 let legs = run_legs(&c, &f32_inputs(&[i, a, b]), None);
                 assert!(legs.agree(), "F3 {below:?}/{above:?} i={i}: {legs:?}");
@@ -107,14 +108,14 @@ fn f1_f2_f3_agree_on_every_leg() {
                     2.0 => Some(b.to_bits()),
                     3.0 => Some(0x8000_0000),
                     x if x < 0.0 => match below {
-                        noble_ngraph_experiment::ir::OutOfRange::Refuse => None,
-                        noble_ngraph_experiment::ir::OutOfRange::Clamp => Some(a.to_bits()),
-                        noble_ngraph_experiment::ir::OutOfRange::Zero => Some(0),
+                        noble_ngraph::ir::OutOfRange::Refuse => None,
+                        noble_ngraph::ir::OutOfRange::Clamp => Some(a.to_bits()),
+                        noble_ngraph::ir::OutOfRange::Zero => Some(0),
                     },
                     _ => match above {
-                        noble_ngraph_experiment::ir::OutOfRange::Refuse => None,
-                        noble_ngraph_experiment::ir::OutOfRange::Clamp => Some(0x8000_0000),
-                        noble_ngraph_experiment::ir::OutOfRange::Zero => Some(0),
+                        noble_ngraph::ir::OutOfRange::Refuse => None,
+                        noble_ngraph::ir::OutOfRange::Clamp => Some(0x8000_0000),
+                        noble_ngraph::ir::OutOfRange::Zero => Some(0),
                     },
                 };
                 match want {
@@ -185,11 +186,9 @@ fn seeded_random_graphs_agree_small() {
 
 #[test]
 fn compiled_matches_first_guard_in_canonical_order() {
-    use noble_ngraph_experiment::ir::{
-        GraphBuilder, Op, Provenance, ScalarType, SubProfile, Subject,
-    };
+    use noble_ngraph::ir::{GraphBuilder, Op, Provenance, ScalarType, SubProfile, Subject};
     // g1 (canonical 3) is in a deeper layer than g2 (canonical 4); both fail.
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("guard order"));
+    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored(&BLAKE3, "guard order"));
     let x = b.input(ScalarType::F32);
     let y = b.op(Op::F32Add(x, x));
     let z = b.op(Op::F32Add(y, y));
@@ -197,9 +196,9 @@ fn compiled_matches_first_guard_in_canonical_order() {
     let g2 = b.guard(fixtures::range(0.0, 1.0), x);
     b.output(z);
     let _ = Provenance::InputValidated;
-    let c = check(b.finish()).expect("checks");
+    let c = check(&BLAKE3, b.finish()).expect("checks");
     assert!(c.layer(g1) > c.layer(g2));
-    let comp = Compiled::new(&c);
+    let comp = Compiled::new(&BLAKE3, &c);
     let legs = run_legs(&comp, &f32_inputs(&[f32::MAX]), None);
     assert!(legs.agree(), "{legs:?}");
     assert_eq!(

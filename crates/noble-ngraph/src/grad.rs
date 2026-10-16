@@ -502,6 +502,54 @@ pub fn objective<R: Real>(
     (l, slot_grads(model, &mg))
 }
 
+/// [`objective`] in binary32 with the reference failure semantics (design
+/// D10): the model's first failing guard or refusing index read in canonical
+/// order, then the loss graph's input facts and its first such failure, stop
+/// the point. On success the result equals `objective::<f32>` bitwise.
+///
+/// # Errors
+/// `G-FACT-FALSE` (model or loss graph) or `E-FACT-INPUT` (loss graph).
+pub fn objective_checked(
+    model: &CheckedGraph,
+    loss: &CheckedGraph,
+    model_slots: &[f32],
+    targets: &[f32],
+    opts: &DerivOptions,
+) -> Result<(f32, Vec<f32>), Diagnostic> {
+    let mv = forward(model, model_slots);
+    if let Some((node, fact)) = crate::eval::first_failure(model, &mv) {
+        return Err(Diagnostic::new(
+            Code::FactFalse,
+            Site::Node(node),
+            "model guard failed on a training point",
+        )
+        .with_fact(fact));
+    }
+    let ys: Vec<f32> = model
+        .graph()
+        .outputs
+        .iter()
+        .map(|o| mv[o.index()])
+        .collect();
+    let mut ls = ys.clone();
+    ls.extend_from_slice(targets);
+    crate::eval::preflight(loss, &crate::eval::f32_inputs(&ls), None)?;
+    let lv = forward(loss, &ls);
+    if let Some((node, fact)) = crate::eval::first_failure(loss, &lv) {
+        return Err(Diagnostic::new(
+            Code::FactFalse,
+            Site::Node(node),
+            "loss guard failed on a training point",
+        )
+        .with_fact(fact));
+    }
+    let l = lv[loss.graph().outputs[0].index()];
+    let lg = backward(loss, &lv, &[1.0], &DerivOptions::default());
+    let dy: Vec<f32> = slot_grads(loss, &lg)[..ys.len()].to_vec();
+    let mg = backward(model, &mv, &dy, opts);
+    Ok((l, slot_grads(model, &mg)))
+}
+
 /// Scale for the G2 rounding bound: the same reverse pass over absolute
 /// values of every local derivative and forward value (a running-error
 /// magnitude, ≥ |gradient|).
@@ -650,23 +698,6 @@ pub fn central_difference(
     let (lp, _) = objective(model, loss, &plus, targets, &opts);
     let (lm, _) = objective(model, loss, &minus, targets, &opts);
     (lp - lm) / (2.0 * h)
-}
-
-/// Whether the f64 forward values at `slots` are farther than `margin` from
-/// every ReLU/ReGLU corner, `step` threshold and integer index boundary.
-#[must_use]
-pub fn away_from_corners(model: &CheckedGraph, slots: &[f64], margin: f64) -> bool {
-    let v: Vec<f64> = forward(model, slots);
-    model.graph().nodes.iter().all(|n| match &n.op {
-        Op::F32Relu(x) => v[x.index()].abs() > margin,
-        Op::F32Reglu { gate, .. } => v[gate.index()].abs() > margin,
-        Op::F32Step(s) => (v[s.index()] - 0.5).abs() > margin,
-        Op::F32Index { index, .. } => {
-            let x = v[index.index()];
-            (x - x.round()).abs() < f64::EPSILON || (x - x.floor()).min(x.ceil() - x) > margin
-        }
-        _ => true,
-    })
 }
 
 /// Critical-path depth of the composed objective (model layers + loss layers).

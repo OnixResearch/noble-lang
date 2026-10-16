@@ -8,6 +8,7 @@ use noble_kernel::types::Ty;
 use noble_kernel::untrusted::{Candidate, Checked, Interface, Node, NodeId, Outcome};
 
 use crate::diag::{Code, Diagnostic, Site};
+use crate::identity::IdentityScheme;
 use crate::ir::{ScalarType, SourceRef, SubProfile, Subject, SubjectKind};
 
 use super::Budget;
@@ -103,6 +104,7 @@ fn at(code: Code, body: Option<u64>, node: NodeId, detail: impl Into<String>) ->
 /// `E-DYNAMIC-RUN`, `E-PROGRAM-OUTPUT`, `E-AGGREGATE` or `E-EFFECT`, in that
 /// stage order; nothing is extracted or evaluated.
 pub fn admit<'s>(
+    ids: &dyn IdentityScheme,
     submission: &'s Submission,
     request: &Request<'_>,
 ) -> Result<Admitted<'s>, Diagnostic> {
@@ -179,7 +181,7 @@ pub fn admit<'s>(
         ));
     }
 
-    let subject = subject_of(submission, &closure);
+    let subject = subject_of(ids, submission, &closure);
     let bodies = bodies
         .into_iter()
         .map(|(body, checked)| index_interfaces(body, &checked))
@@ -524,7 +526,7 @@ pub(super) const fn scalar(ty: &Ty) -> Option<ScalarType> {
 /// interface), encoded with the kernel's derived `Debug` rendering under a
 /// domain tag. The encoding is deterministic for one kernel revision; it is
 /// a producer digest, not independent validation.
-fn subject_of(submission: &Submission, closure: &[u64]) -> Subject {
+fn subject_of(ids: &dyn IdentityScheme, submission: &Submission, closure: &[u64]) -> Subject {
     let mut parts: Vec<Vec<u8>> = vec![
         b"noble.ngraph.subject.kernel-debug.v0".to_vec(),
         format!("{:?}", submission.request.expected).into_bytes(),
@@ -543,5 +545,5 @@ fn subject_of(submission: &Submission, closure: &[u64]) -> Subject {
         );
     }
     let refs: Vec<&[u8]> = parts.iter().map(Vec::as_slice).collect();
-    Subject::derive(SubjectKind::Extracted, &refs, closure.to_vec())
+    Subject::derive(ids, SubjectKind::Extracted, &refs, closure.to_vec())
 }

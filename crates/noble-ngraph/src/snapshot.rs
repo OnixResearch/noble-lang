@@ -109,7 +109,13 @@ impl ParamSnapshot {
         for v in values {
             bytes.extend_from_slice(&v.to_bits().to_le_bytes());
         }
-        Ok(Self::from_parts(ids, checked.id(), checked.param_layout(), slots, bytes))
+        Ok(Self::from_parts(
+            ids,
+            checked.id(),
+            checked.param_layout(),
+            slots,
+            bytes,
+        ))
     }
 
     /// Raw constructor (identity recomputed from the parts). Used to model

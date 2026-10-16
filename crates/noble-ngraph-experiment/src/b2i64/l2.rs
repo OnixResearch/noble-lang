@@ -4,8 +4,8 @@ use std::io::Write as _;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-use crate::ir::{Graph, Literal, Op};
-use crate::sem::Value;
+use noble_ngraph::ir::{Graph, Literal, Op};
+use noble_ngraph::sem::Value;
 
 /// The oracle source (no imports; run with `node -e`).
 pub const ORACLE_JS: &str = include_str!("oracle.mjs");

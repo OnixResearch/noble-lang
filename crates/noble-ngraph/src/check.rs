@@ -15,13 +15,13 @@ use alloc::collections::BTreeMap;
 use alloc::rc::Rc;
 
 use crate::diag::{BudgetKind, Code, Diagnostic, Malformed, Site};
-use crate::identity::IdentityScheme;
-use crate::ir::{Canon, FACT_RULE_REVISION};
 use crate::facts::{Abs, AbsF32, AbsI64, Requirement};
+use crate::identity::IdentityScheme;
 use crate::ir::{
     AffineOperand, Digest, Fact, Graph, NodeId, Op, OutOfRange, Provenance, ScalarType, SlotKind,
     SubProfile,
 };
+use crate::ir::{Canon, FACT_RULE_REVISION};
 
 /// D5 budgets with the `/0` policy defaults. A policy may lower a budget;
 /// raising one requires a new profile policy revision (refused, `E-PROFILE`).
@@ -168,7 +168,6 @@ pub struct CheckedGraph {
     slot_nodes: Vec<NodeId>,
     param_slots: Vec<u32>,
     param_layout: Digest,
-    fact_bindings: Digest,
 }
 
 impl CheckedGraph {
@@ -242,8 +241,23 @@ impl CheckedGraph {
     /// fact-rule revision ‖ fact records)`. Fact records are not part of
     /// `GraphLogicalId`, so snapshot binding also compares this (design D6).
     #[must_use]
-    pub const fn fact_bindings(&self) -> Digest {
-        self.fact_bindings
+    pub fn fact_bindings(&self, ids: &dyn IdentityScheme) -> Digest {
+        let mut c = Canon::new(ids, "noble.ngraph.fact-bindings.v0");
+        c.bytes(&self.id);
+        c.str(FACT_RULE_REVISION);
+        c.u64(self.graph.facts.len() as u64);
+        for f in &self.graph.facts {
+            c.u32(f.node.0);
+            c.fact(&f.fact);
+            c.str(match &f.provenance {
+                Provenance::Derived(_) => "derived",
+                Provenance::InputValidated => "input-validated",
+                Provenance::Evidence(_) => "evidence",
+                Provenance::Guard(_) => "guard",
+                Provenance::Asserted => "asserted",
+            });
+        }
+        c.finish()
     }
 
     /// Live node count.
@@ -355,7 +369,6 @@ pub fn check_with(
     let id = graph.logical_id(ids);
     let param_slots = graph.param_slots();
     let param_layout = crate::snapshot::layout_key(ids, &graph);
-    let fact_bindings = fact_bindings_digest(ids, &id, &graph);
     Ok(CheckedGraph {
         graph: Rc::new(graph),
         id,
@@ -367,27 +380,7 @@ pub fn check_with(
         slot_nodes,
         param_slots,
         param_layout,
-        fact_bindings,
     })
-}
-
-fn fact_bindings_digest(ids: &dyn IdentityScheme, id: &Digest, g: &Graph) -> Digest {
-    let mut c = Canon::new(ids, "noble.ngraph.fact-bindings.v0");
-    c.bytes(id);
-    c.str(FACT_RULE_REVISION);
-    c.u64(g.facts.len() as u64);
-    for f in &g.facts {
-        c.u32(f.node.0);
-        c.fact(&f.fact);
-        c.str(match &f.provenance {
-            Provenance::Derived(_) => "derived",
-            Provenance::InputValidated => "input-validated",
-            Provenance::Evidence(_) => "evidence",
-            Provenance::Guard(_) => "guard",
-            Provenance::Asserted => "asserted",
-        });
-    }
-    c.finish()
 }
 
 fn check_topology(g: &Graph) -> Result<(), Diagnostic> {

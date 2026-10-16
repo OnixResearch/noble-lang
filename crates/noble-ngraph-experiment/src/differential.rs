@@ -2,14 +2,15 @@
 //! binary64-per-operation leg, L3 reference interpreter, L4 compiled
 //! evaluator. (L1 and the `I64` BigInt oracle belong to the extraction leg.)
 
-use crate::check::CheckedGraph;
-use crate::compiled::Compiled;
-use crate::eval::{self, Control, Obs};
 use crate::oracle;
-use crate::prng::SplitMix64;
 use crate::random;
-use crate::sem::Value;
-use crate::snapshot::ParamSnapshot;
+use crate::scheme::BLAKE3;
+use noble_ngraph::check::CheckedGraph;
+use noble_ngraph::compiled::Compiled;
+use noble_ngraph::eval::{self, Control, Obs};
+use noble_ngraph::prng::SplitMix64;
+use noble_ngraph::sem::Value;
+use noble_ngraph::snapshot::ParamSnapshot;
 
 /// Observations of every `F32` leg for one input vector.
 #[derive(Clone, Debug)]
@@ -96,7 +97,7 @@ pub fn campaign(seed: u64, ops: usize, vectors: u64) -> Campaign {
         ops,
         ..Campaign::default()
     };
-    let checked = match crate::check::check(rg.graph.clone()) {
+    let checked = match noble_ngraph::check::check(&BLAKE3, rg.graph.clone()) {
         Ok(c) => c,
         Err(d) => {
             out.checker_refusal = Some(d.to_string());
@@ -105,8 +106,8 @@ pub fn campaign(seed: u64, ops: usize, vectors: u64) -> Campaign {
     };
     out.nodes = checked.node_count();
     out.layers = checked.layer_count();
-    out.graph_id = crate::ir::hex(&checked.id());
-    let compiled = Compiled::new(&checked);
+    out.graph_id = noble_ngraph::ir::hex(&checked.id());
+    let compiled = Compiled::new(&BLAKE3, &checked);
     let mut rng = SplitMix64::new(input_seed);
     for _ in 0..vectors {
         let inputs = eval::f32_inputs(&random::inputs(&rg, &mut rng));

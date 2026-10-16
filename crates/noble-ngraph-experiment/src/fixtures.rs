@@ -1,11 +1,12 @@
 //! Phase B `F32` fixtures, authored directly in `ngraph-ir/0` (approval P2,
 //! option B0(b)): F1–F3 of plan B1 and the B2 boundary vectors.
 
-use crate::ir::{
+use crate::scheme::BLAKE3;
+use noble_ngraph::ir::{
     AffineOperand, Fact, GraphBuilder, Literal, NodeId, Op, OutOfRange, Provenance, ScalarType,
     SubProfile, Subject,
 };
-use crate::Graph;
+use noble_ngraph::Graph;
 
 /// Number of F1 parameters (3 hidden units × (left 2+1, gate 2+1) + output 3+1).
 pub const F1_PARAMS: usize = 22;
@@ -42,7 +43,10 @@ fn affine_param(
 /// coefficients are constants by D2, so they cannot be trainable).
 #[must_use]
 pub fn f1() -> Graph {
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("issue14/F1 2-3-1 ReGLU"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "issue14/F1 2-3-1 ReGLU"),
+    );
     let x0 = b.input(ScalarType::F32);
     let x1 = b.input(ScalarType::F32);
     let p: Vec<NodeId> = (0..F1_PARAMS).map(|_| b.param()).collect();
@@ -64,10 +68,13 @@ pub fn f1() -> Graph {
 }
 
 /// MSE loss graph `(y, t) → rn(d × d)` with `d = rn(y − t)` per point; the
-/// host averages in binary64 in fixed point order (see [`crate::train`]).
+/// host averages in binary64 in fixed point order (see [`noble_ngraph::train`]).
 #[must_use]
 pub fn mse_loss() -> Graph {
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("issue14/MSE point loss"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "issue14/MSE point loss"),
+    );
     let y = b.input(ScalarType::F32);
     let t = b.input(ScalarType::F32);
     let d = b.op(Op::F32Sub(y, t));
@@ -80,7 +87,10 @@ pub fn mse_loss() -> Graph {
 /// with `m` as params.
 #[must_use]
 pub fn f2() -> Graph {
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("issue14/F2 transition"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "issue14/F2 transition"),
+    );
     let e = b.input(ScalarType::F32);
     let v = b.input(ScalarType::F32);
     let m: Vec<NodeId> = (0..4).map(|_| b.param()).collect();
@@ -99,7 +109,10 @@ pub fn f2() -> Graph {
 /// [`f2`] bitwise because `-0` is an exact additive identity.
 #[must_use]
 pub fn f2_affine(m: [f32; 4]) -> Graph {
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("issue14/F2 affine"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "issue14/F2 affine"),
+    );
     let e = b.input(ScalarType::F32);
     let v = b.input(ScalarType::F32);
     let o0 = b.affine(
@@ -139,11 +152,10 @@ pub const INDEX_LIMIT: f32 = 16_777_215.0;
 pub fn f3(below: OutOfRange, above: OutOfRange) -> Graph {
     let mut b = GraphBuilder::new(
         SubProfile::F32,
-        Subject::authored(&format!(
-            "issue14/F3 index {}/{}",
-            below.name(),
-            above.name()
-        )),
+        Subject::authored(
+            &BLAKE3,
+            &format!("issue14/F3 index {}/{}", below.name(), above.name()),
+        ),
     );
     let i = b.input(ScalarType::F32);
     let a = b.input(ScalarType::F32);
@@ -187,7 +199,7 @@ fn unary(
     inputs: Vec<f32>,
     expected: f32,
 ) -> Vector {
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored(name));
+    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored(&BLAKE3, name));
     let xs: Vec<NodeId> = inputs.iter().map(|_| b.input(ScalarType::F32)).collect();
     let r = build(&mut b, &xs);
     b.output(r);
@@ -375,7 +387,10 @@ pub fn ftz_mul(x: f32, y: f32) -> f32 {
 /// Identity "loss" `y → y`, for analytic gradient checks.
 #[must_use]
 pub fn identity_loss() -> Graph {
-    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("issue14/identity loss"));
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, "issue14/identity loss"),
+    );
     let y = b.input(ScalarType::F32);
     b.output(y);
     b.finish()

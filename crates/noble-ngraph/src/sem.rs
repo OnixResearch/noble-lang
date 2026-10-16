@@ -2,12 +2,15 @@
 //!
 //! Host binary32 arithmetic is IEEE 754 RNE on the pinned x86_64 target
 //! (SSE, no FTZ/DAZ, no contraction: rustc never contracts `a * b + c`). The
-//! independent `rustc_apfloat` leg in [`crate::oracle`] checks this per
-//! operation; it is not assumed.
+//! independent `rustc_apfloat` leg of the `noble-ngraph-experiment` harness
+//! checks this per operation; it is not assumed.
+//!
+//! The library is `no_std`: float functions that `core` does not provide are
+//! the correctly rounded software routines in [`soft`].
 
+use crate::ir::{Literal, OutOfRange, ScalarType};
 #[allow(unused_imports)]
 use crate::prelude::*;
-use crate::ir::{Literal, OutOfRange, ScalarType};
 
 /// A graph value at the ABI (D3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -154,7 +157,7 @@ pub fn index_position(
     below: OutOfRange,
     above: OutOfRange,
 ) -> Result<Option<usize>, ()> {
-    if i.is_nan() || i.is_infinite() || i.trunc() != i {
+    if i.is_nan() || i.is_infinite() || soft::trunc_f32(i) != i {
         return Err(());
     }
     if i < 0.0 {
@@ -351,6 +354,173 @@ impl Big {
             self.mul_small(base);
         }
         self.trim();
+    }
+}
+
+/// Software float routines for the `no_std` library (design D2): exact
+/// `trunc`/`floor`/`ceil`/`round` by exponent and mantissa masking, an
+/// exact power of two, and a correctly rounded (roundTiesToEven) binary64
+/// square root. Each agrees bitwise with the corresponding `std` method on
+/// every non-NaN input; NaN inputs give a NaN.
+pub mod soft {
+    const F64_SIGN: u64 = 1 << 63;
+    const F64_FRAC: u64 = (1 << 52) - 1;
+
+    /// `f64::trunc`: rounds toward zero, keeping the sign of zero.
+    #[must_use]
+    pub const fn trunc_f64(x: f64) -> f64 {
+        let bits = x.to_bits();
+        let biased = ((bits >> 52) & 0x7ff) as i32;
+        if biased == 0x7ff {
+            return x;
+        }
+        let e = biased - 1023;
+        if e < 0 {
+            return f64::from_bits(bits & F64_SIGN);
+        }
+        if e >= 52 {
+            return x;
+        }
+        let mask = (1u64 << (52 - e)) - 1;
+        f64::from_bits(bits & !mask)
+    }
+
+    /// `f32::trunc`: rounds toward zero, keeping the sign of zero.
+    #[must_use]
+    pub const fn trunc_f32(x: f32) -> f32 {
+        let bits = x.to_bits();
+        let biased = ((bits >> 23) & 0xff) as i32;
+        if biased == 0xff {
+            return x;
+        }
+        let e = biased - 127;
+        if e < 0 {
+            return f32::from_bits(bits & 0x8000_0000);
+        }
+        if e >= 23 {
+            return x;
+        }
+        let mask = (1u32 << (23 - e)) - 1;
+        f32::from_bits(bits & !mask)
+    }
+
+    /// `f64::floor`.
+    #[must_use]
+    pub fn floor_f64(x: f64) -> f64 {
+        let t = trunc_f64(x);
+        // `t == x` covers integers, zeros and infinities; NaN falls through
+        // to the comparison below and is returned unchanged.
+        if t == x || x.is_nan() {
+            return x;
+        }
+        // |t| < 2^52 here, so `t - 1` is exact.
+        if x < 0.0 {
+            t - 1.0
+        } else {
+            t
+        }
+    }
+
+    /// `f64::ceil`.
+    #[must_use]
+    pub fn ceil_f64(x: f64) -> f64 {
+        let t = trunc_f64(x);
+        if t == x || x.is_nan() {
+            return x;
+        }
+        if x > 0.0 {
+            t + 1.0
+        } else {
+            t
+        }
+    }
+
+    /// `f64::round`: half-way cases round away from zero.
+    #[must_use]
+    pub fn round_f64(x: f64) -> f64 {
+        let t = trunc_f64(x);
+        if t == x || x.is_nan() {
+            return x;
+        }
+        // `x - t` is the exact fractional part (representable), |·| < 1.
+        let frac = x - t;
+        if x > 0.0 {
+            if frac >= 0.5 {
+                t + 1.0
+            } else {
+                t
+            }
+        } else if frac <= -0.5 {
+            t - 1.0
+        } else {
+            t
+        }
+    }
+
+    /// The exact binary64 value `2^k`: subnormal below `-1022`, `+0`
+    /// below `-1074` and `+∞` above `1023`.
+    #[must_use]
+    pub const fn pow2_f64(k: i32) -> f64 {
+        if k > 1023 {
+            f64::INFINITY
+        } else if k >= -1022 {
+            f64::from_bits(((k + 1023) as u64) << 52)
+        } else if k >= -1074 {
+            f64::from_bits(1u64 << (k + 1074))
+        } else {
+            0.0
+        }
+    }
+
+    /// `f64::sqrt`, correctly rounded to nearest, ties to even.
+    ///
+    /// For finite `x > 0`, `x = M·2^E` with a normalized 53- or 54-bit
+    /// integer `M` and even `E`. Then `r = isqrt(M·2^58)` has 56 bits; its
+    /// top 53 bits are the truncated significand, bit 2 is the round bit and
+    /// the low two bits with the remainder `M·2^58 − r²` form the sticky
+    /// bit. An exact tie cannot occur (an odd 54-bit square root would need
+    /// a 107-bit square), but the rule handles one.
+    #[must_use]
+    pub fn sqrt_f64(x: f64) -> f64 {
+        let bits = x.to_bits();
+        if x.is_nan() || (bits & F64_SIGN != 0 && x != 0.0) {
+            return f64::NAN;
+        }
+        if x == 0.0 || x == f64::INFINITY {
+            return x;
+        }
+        let biased = ((bits >> 52) & 0x7ff) as i32;
+        let (mut m, mut e) = if biased == 0 {
+            (bits & F64_FRAC, -1074)
+        } else {
+            ((bits & F64_FRAC) | (1 << 52), biased - 1075)
+        };
+        // Normalize subnormals so that bit 52 is the leading bit.
+        let shift = m.leading_zeros() as i32 - 11;
+        m <<= shift;
+        e -= shift;
+        if e & 1 != 0 {
+            m <<= 1;
+            e -= 1;
+        }
+        let n = u128::from(m) << 58;
+        let r = n.isqrt();
+        let rem = n - r * r;
+        let round = (r >> 2) & 1 == 1;
+        let sticky = r & 0b11 != 0 || rem != 0;
+        #[allow(clippy::cast_possible_truncation)]
+        let mut sig = (r >> 3) as u64;
+        if round && (sticky || sig & 1 == 1) {
+            sig += 1;
+        }
+        let mut e_res = 3 + (e - 58) / 2;
+        if sig == 1 << 53 {
+            sig >>= 1;
+            e_res += 1;
+        }
+        #[allow(clippy::cast_sign_loss)]
+        let biased_res = (e_res + 1075) as u64;
+        f64::from_bits((biased_res << 52) | (sig & F64_FRAC))
     }
 }
 

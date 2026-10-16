@@ -1,13 +1,16 @@
 //! Checker and reference-interpreter behaviour on directly built IR.
 
-use noble_ngraph_experiment::eval::{i64_inputs, Control};
-use noble_ngraph_experiment::ir::{Fact, Literal, Op, Provenance, Subject};
-use noble_ngraph_experiment::{
+mod common;
+
+use common::IDS;
+use noble_ngraph::eval::{i64_inputs, Control};
+use noble_ngraph::ir::{Fact, Literal, Op, Provenance, Subject};
+use noble_ngraph::{
     check, reference, Code, GraphBuilder, Malformed, Obs, ScalarType, SubProfile, Value,
 };
 
 fn subject() -> Subject {
-    Subject::authored("ir_check")
+    Subject::authored(&IDS, "ir_check")
 }
 
 /// I1 by hand: `(x y) dup * swap 3 * + 7 -` = `y*y + 3x - 7`; `(5,4) → 24`.
@@ -23,7 +26,7 @@ fn i64_graph_operand_order_and_value() {
     let seven = b.i64_const(7);
     let r = b.op(Op::I64Sub(s, seven));
     b.output(r);
-    let c = check(b.finish()).expect("checks");
+    let c = check(&IDS, b.finish()).expect("checks");
     let rep = reference(&c, &i64_inputs(&[5, 4]), None, &Control::default());
     assert_eq!(rep.obs, Obs::Normal(vec![Value::I64(24)]));
     // `5 3 -` = 2 (a is the deeper operand).
@@ -32,7 +35,7 @@ fn i64_graph_operand_order_and_value() {
     let bb = b.i64_const(3);
     let d = b.op(Op::I64Sub(a, bb));
     b.output(d);
-    let c = check(b.finish()).expect("checks");
+    let c = check(&IDS, b.finish()).expect("checks");
     let rep = reference(&c, &[], None, &Control::default());
     assert_eq!(rep.obs, Obs::Normal(vec![Value::I64(2)]));
 }
@@ -47,7 +50,7 @@ fn i64_wraps_and_eq() {
     let e = b.op(Op::I64Eq(s, m));
     b.output(s);
     b.output(e);
-    let c = check(b.finish()).expect("checks");
+    let c = check(&IDS, b.finish()).expect("checks");
     let rep = reference(&c, &i64_inputs(&[i64::MAX]), None, &Control::default());
     assert_eq!(
         rep.obs,
@@ -62,24 +65,21 @@ fn type_mix_is_refused() {
     let f = b.f32_const(1.0);
     let s = b.op(Op::I64Add(x, f));
     b.output(s);
-    assert_eq!(check(b.finish()).unwrap_err().code, Code::TypeMix);
+    assert_eq!(check(&IDS, b.finish()).unwrap_err().code, Code::TypeMix);
 
     let mut b = GraphBuilder::new(SubProfile::F32, subject());
     let x = b.input(ScalarType::F32);
     let s = b.op(Op::I64Add(x, x));
     b.output(s);
-    assert_eq!(check(b.finish()).unwrap_err().code, Code::TypeMix);
+    assert_eq!(check(&IDS, b.finish()).unwrap_err().code, Code::TypeMix);
 }
 
 #[test]
 fn malformed_topology_is_refused() {
-    use noble_ngraph_experiment::ir::{Node, NodeId};
+    use noble_ngraph::ir::{Node, NodeId};
     let mk = |ops: Vec<Op>, outs: Vec<u32>| {
         let mut b = GraphBuilder::new(SubProfile::I64, subject());
-        b.declare_slot(
-            noble_ngraph_experiment::ir::SlotKind::Input,
-            ScalarType::I64,
-        );
+        b.declare_slot(noble_ngraph::ir::SlotKind::Input, ScalarType::I64);
         let mut g = b.finish();
         g.nodes = ops
             .into_iter()
@@ -133,7 +133,7 @@ fn malformed_topology_is_refused() {
         ),
     ];
     for (g, want) in cases {
-        let d = check(g).unwrap_err();
+        let d = check(&IDS, g).unwrap_err();
         assert_eq!(d.code, Code::GraphMalformed(want), "{d}");
     }
 }
@@ -143,7 +143,10 @@ fn nonfinite_constant_and_caller_assertion_are_refused() {
     let mut b = GraphBuilder::new(SubProfile::F32, subject());
     let x = b.constant(Literal::F32(0x7fc0_0000));
     b.output(x);
-    assert_eq!(check(b.finish()).unwrap_err().code, Code::LiteralNonfinite);
+    assert_eq!(
+        check(&IDS, b.finish()).unwrap_err().code,
+        Code::LiteralNonfinite
+    );
 
     let mut b = GraphBuilder::new(SubProfile::F32, subject());
     let x = b.input(ScalarType::F32);
@@ -157,5 +160,8 @@ fn nonfinite_constant_and_caller_assertion_are_refused() {
         },
         Provenance::Asserted,
     );
-    assert_eq!(check(b.finish()).unwrap_err().code, Code::FactUnchecked);
+    assert_eq!(
+        check(&IDS, b.finish()).unwrap_err().code,
+        Code::FactUnchecked
+    );
 }

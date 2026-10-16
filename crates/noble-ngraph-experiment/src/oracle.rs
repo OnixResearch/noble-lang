@@ -4,7 +4,7 @@
 //!   software binary32 implementation `rustc_apfloat =0.2.3+llvm-462a31f5a5ab`
 //!   (pure Rust port of LLVM APFloat, `#![forbid(unsafe_code)]`), never by host
 //!   floating point. Comparisons (`relu`, `step`, index bounds) use APFloat's
-//!   own ordering. Guard facts reuse [`crate::facts::holds`] (shared code).
+//!   own ordering. Guard facts reuse [`noble_ngraph::facts::holds`] (shared code).
 //! * [`f64_per_op`]: the B2-ORACLE leg. Each `+`, `−`, `×` (and each affine
 //!   product and partial sum) is computed in binary64 and rounded to binary32
 //!   once, the analogue of handwired's per-operation `Math.fround`. Agreement
@@ -13,12 +13,12 @@
 use rustc_apfloat::ieee::Single;
 use rustc_apfloat::{Float, Round};
 
-use crate::check::CheckedGraph;
-use crate::eval::{self, Obs};
-use crate::facts;
-use crate::ir::{AffineOperand, NodeId, Op, OutOfRange};
-use crate::sem::Value;
-use crate::snapshot::ParamSnapshot;
+use noble_ngraph::check::CheckedGraph;
+use noble_ngraph::eval::{self, Obs};
+use noble_ngraph::facts;
+use noble_ngraph::ir::{AffineOperand, NodeId, Op, OutOfRange};
+use noble_ngraph::sem::Value;
+use noble_ngraph::snapshot::ParamSnapshot;
 
 /// Oracle revision recorded in evidence.
 pub const APFLOAT_ORACLE: &str =
@@ -209,9 +209,9 @@ fn run(
             }
             // I64 graphs: the BigInt oracle belongs to the extraction leg.
             Op::I64Add(..) | Op::I64Sub(..) | Op::I64Mul(..) | Op::I64Eq(..) => {
-                return Obs::Refused(crate::diag::Diagnostic::new(
-                    crate::diag::Code::Profile,
-                    crate::diag::Site::Graph,
+                return Obs::Refused(noble_ngraph::diag::Diagnostic::new(
+                    noble_ngraph::diag::Code::Profile,
+                    noble_ngraph::diag::Site::Graph,
                     "the F32 oracle evaluates ngraph-f32/0 only",
                 ))
             }

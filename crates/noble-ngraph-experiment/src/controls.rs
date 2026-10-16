@@ -11,8 +11,11 @@ use noble_kernel::execution::Submission;
 use noble_kernel::types::{EffSet, Ty};
 use noble_kernel::untrusted::{Node, NodeId};
 
-use super::{admit, extract, source, Budget, Request};
-use crate::diag::Diagnostic;
+use noble_ngraph::check::Budgets;
+use noble_ngraph::diag::Diagnostic;
+use noble_ngraph::extract::{admit, extract, source, Budget, Request};
+
+use crate::scheme::BLAKE3;
 
 /// How the ordinary path is exercised for a control.
 #[derive(Clone, Debug)]
@@ -71,6 +74,7 @@ pub fn outcome(
     budget: Budget,
 ) -> Result<(), Diagnostic> {
     let admitted = admit(
+        &BLAKE3,
         sub,
         &Request {
             profile,
@@ -78,7 +82,7 @@ pub fn outcome(
             budget,
         },
     )?;
-    extract(&admitted).map(|_| ())
+    extract(&BLAKE3, &admitted, &Budgets::default()).map(|_| ())
 }
 
 fn default_outcome(sub: &Submission, claimed: &[u64]) -> Result<(), Diagnostic> {
@@ -100,8 +104,8 @@ fn from_source(
     let result = match source::prepare(defs, root, inputs) {
         Ok(p) => default_outcome(&p.submission, &p.claimed_closure),
         Err(e) => Err(Diagnostic::new(
-            crate::diag::Code::Subject,
-            crate::diag::Site::Graph,
+            noble_ngraph::diag::Code::Subject,
+            noble_ngraph::diag::Site::Graph,
             format!("frontend refused: {e}"),
         )),
     };
@@ -274,8 +278,8 @@ fn live_slot_requests(root: &str) -> Ordinary {
 
 fn frontend(e: &str) -> Diagnostic {
     Diagnostic::new(
-        crate::diag::Code::Subject,
-        crate::diag::Site::Graph,
+        noble_ngraph::diag::Code::Subject,
+        noble_ngraph::diag::Site::Graph,
         format!("frontend refused: {e}"),
     )
 }
