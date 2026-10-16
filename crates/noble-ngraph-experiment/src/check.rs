@@ -162,6 +162,8 @@ pub struct CheckedGraph {
     input_facts: Vec<InputFact>,
     abs: Vec<Abs>,
     slot_nodes: Vec<NodeId>,
+    param_slots: Vec<u32>,
+    param_layout: Digest,
 }
 
 impl CheckedGraph {
@@ -217,6 +219,18 @@ impl CheckedGraph {
     #[must_use]
     pub fn slot_node(&self, k: u32) -> NodeId {
         self.slot_nodes[k as usize]
+    }
+
+    /// Ordered param slots (computed once at check).
+    #[must_use]
+    pub fn param_slots(&self) -> &[u32] {
+        &self.param_slots
+    }
+
+    /// Param layout key (computed once at check).
+    #[must_use]
+    pub const fn param_layout(&self) -> Digest {
+        self.param_layout
     }
 
     /// Live node count.
@@ -322,6 +336,8 @@ pub fn check_with(graph: Graph, budgets: &Budgets) -> Result<CheckedGraph, Diagn
     let (layer, layers) = layering(&graph);
     budget(BudgetKind::Layers, budgets.layers, u64::from(layers))?;
     let id = graph.logical_id();
+    let param_slots = graph.param_slots();
+    let param_layout = crate::snapshot::layout_key(&graph);
     Ok(CheckedGraph {
         graph: Arc::new(graph),
         id,
@@ -331,6 +347,8 @@ pub fn check_with(graph: Graph, budgets: &Budgets) -> Result<CheckedGraph, Diagn
         input_facts,
         abs,
         slot_nodes,
+        param_slots,
+        param_layout,
     })
 }
 
@@ -420,7 +438,8 @@ fn find_cycle(g: &Graph) -> Option<NodeId> {
         }
         let mut stack = vec![(start, 0usize)];
         color[start] = 1;
-        while let Some(&mut (v, ref mut next)) = stack.last_mut() {
+        while let Some((v, next)) = stack.last_mut() {
+            let v = *v;
             if let Some(&w) = ops[v].get(*next) {
                 *next += 1;
                 match color[w.index()] {
@@ -936,7 +955,8 @@ pub fn expansion_bound(closure: &[CallGraphEntry], root: u64) -> Option<u64> {
     // Iterative post-order.
     let mut stack: Vec<(u64, usize)> = vec![(root, 0)];
     on_stack.insert(root, ());
-    while let Some(&mut (id, ref mut next)) = stack.last_mut() {
+    while let Some((id, next)) = stack.last_mut() {
+        let id = *id;
         let e = by_id.get(&id)?;
         if let Some(&c) = e.callees.get(*next) {
             *next += 1;

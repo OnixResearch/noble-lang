@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use crate::check::CheckedGraph;
 use crate::diag::{BudgetKind, Code, Diagnostic, Site};
-use crate::ir::{Canon, Digest, Graph, ScalarType, SlotKind};
+use crate::ir::{Canon, Digest, Graph, ScalarType};
 
 /// Ordered parameter layout key of a graph: the ordered param slot indices.
 #[must_use]
@@ -157,6 +157,13 @@ impl ParamSnapshot {
             .collect()
     }
 
+    /// Value bits at snapshot position `p` (param-slot order).
+    #[must_use]
+    pub fn bits_at(&self, p: usize) -> Option<u32> {
+        let c = self.bytes.get(p * 4..p * 4 + 4)?;
+        Some(u32::from_le_bytes([c[0], c[1], c[2], c[3]]))
+    }
+
     /// Value bits of param slot `k`.
     #[must_use]
     pub fn bits_of_slot(&self, k: u32) -> Option<u32> {
@@ -177,14 +184,10 @@ impl ParamSnapshot {
                 "snapshot belongs to another GraphLogicalId",
             ));
         }
-        let g = checked.graph();
-        let params = g.param_slots();
-        if self.layout != layout_key(g)
+        let params = checked.param_slots();
+        if self.layout != checked.param_layout()
             || *self.slots != *params
             || self.bytes.len() != params.len() * 4
-            || g.slots
-                .iter()
-                .any(|s| s.kind == SlotKind::Param && s.ty != ScalarType::F32)
         {
             return Err(Diagnostic::new(
                 Code::SnapshotLayout,

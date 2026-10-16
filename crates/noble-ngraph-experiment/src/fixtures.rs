@@ -371,3 +371,12 @@ pub fn ftz_mul(x: f32, y: f32) -> f32 {
         r
     }
 }
+
+/// Identity "loss" `y → y`, for analytic gradient checks.
+#[must_use]
+pub fn identity_loss() -> Graph {
+    let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored("issue14/identity loss"));
+    let y = b.input(ScalarType::F32);
+    b.output(y);
+    b.finish()
+}

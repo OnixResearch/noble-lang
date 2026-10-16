@@ -512,24 +512,53 @@ pub fn magnitude(
     opts: &DerivOptions,
 ) -> Vec<f64> {
     let mv: Vec<f64> = forward(model, model_slots);
-    let ys: Vec<f64> = model
-        .graph()
-        .outputs
-        .iter()
-        .map(|o| mv[o.index()])
-        .collect();
-    let mut ls = ys.clone();
+    let sa: Vec<f64> = model_slots.iter().map(|v| v.abs()).collect();
+    let ma = forward_abs(model, &mv, &sa);
+    let outs = &model.graph().outputs;
+    let mut ls: Vec<f64> = outs.iter().map(|o| mv[o.index()]).collect();
+    let mut la: Vec<f64> = outs.iter().map(|o| ma[o.index()]).collect();
     ls.extend_from_slice(targets);
-    let lv: Vec<f64> = forward(loss, &ls).iter().map(|v| v.abs()).collect();
-    let lg = backward_abs(loss, &lv, &[1.0], &DerivOptions::default());
-    let dy: Vec<f64> = slot_grads(loss, &lg)[..ys.len()].to_vec();
-    let mva: Vec<f64> = mv.iter().map(|v| v.abs()).collect();
-    let mg = backward_abs_with_signs(model, &mv, &mva, &dy, opts);
+    la.extend(targets.iter().map(|t| t.abs()));
+    let lv: Vec<f64> = forward(loss, &ls);
+    let lva = forward_abs(loss, &lv, &la);
+    let lg = backward_abs_with_signs(loss, &lv, &lva, &[1.0], &DerivOptions::default());
+    let dy: Vec<f64> = slot_grads(loss, &lg)[..outs.len()].to_vec();
+    let mg = backward_abs_with_signs(model, &mv, &ma, &dy, opts);
     slot_grads(model, &mg)
 }
 
-fn backward_abs(g: &CheckedGraph, absvals: &[f64], seeds: &[f64], opts: &DerivOptions) -> Vec<f64> {
-    backward_abs_with_signs(g, absvals, absvals, seeds, opts)
+/// Forward magnitudes: the computation over absolute values (`|a|+|b|` for
+/// `±`, `|a|·|b|` for `×`), with branches taken from the signed forward values.
+fn forward_abs(g: &CheckedGraph, signed: &[f64], slot_abs: &[f64]) -> Vec<f64> {
+    let graph = g.graph();
+    let mut v: Vec<f64> = Vec::with_capacity(graph.nodes.len());
+    for node in &graph.nodes {
+        let r = match &node.op {
+            Op::Input(k) | Op::Param(k) => slot_abs[*k as usize],
+            Op::Const(crate::ir::Literal::F32(b)) => f64::from(f32::from_bits(*b)).abs(),
+            Op::F32Add(a, b) | Op::F32Sub(a, b) => v[a.index()] + v[b.index()],
+            Op::F32Mul(a, b) => v[a.index()] * v[b.index()],
+            Op::F32Affine { bias, terms } => {
+                let mut acc = f64::from(f32::from_bits(*bias)).abs();
+                for t in terms {
+                    let x = match t.operand {
+                        AffineOperand::One => 1.0,
+                        AffineOperand::Node(n) => v[n.index()],
+                    };
+                    acc += f64::from(f32::from_bits(t.coefficient)).abs() * x;
+                }
+                acc
+            }
+            Op::F32Relu(x) if signed[x.index()] > 0.0 => v[x.index()],
+            Op::F32Reglu { left, gate } if signed[gate.index()] > 0.0 => {
+                v[left.index()] * v[gate.index()]
+            }
+            Op::F32Step(_) | Op::F32Select { .. } | Op::F32Index { .. } => signed[v.len()].abs(),
+            _ => 0.0,
+        };
+        v.push(r);
+    }
+    v
 }
 
 fn backward_abs_with_signs(
@@ -568,7 +597,7 @@ fn backward_abs_with_signs(
             Op::F32Relu(a) if vals[a.index()] > 0.0 => gr[a.index()] += gn,
             Op::F32Reglu { left, gate } => {
                 let vg = vals[gate.index()];
-                gr[left.index()] += gn * if vg > 0.0 { vg } else { 0.0 };
+                gr[left.index()] += gn * if vg > 0.0 { absvals[gate.index()] } else { 0.0 };
                 if vg > 0.0 {
                     gr[gate.index()] += gn * absvals[left.index()];
                 }
