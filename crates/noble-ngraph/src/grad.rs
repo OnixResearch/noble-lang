@@ -327,7 +327,11 @@ pub fn forward<R: Real>(g: &CheckedGraph, slots: &[R]) -> Vec<R> {
     forward_observed(g, slots, &mut None)
 }
 
-fn forward_observed<R: Real>(g: &CheckedGraph, slots: &[R], evaluated_nodes: &mut Option<&mut u64>) -> Vec<R> {
+fn forward_observed<R: Real>(
+    g: &CheckedGraph,
+    slots: &[R],
+    evaluated_nodes: &mut Option<&mut u64>,
+) -> Vec<R> {
     let graph = g.graph();
     let mut v: Vec<R> = Vec::with_capacity(graph.nodes.len());
     for node in &graph.nodes {

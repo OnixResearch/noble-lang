@@ -529,8 +529,8 @@ pub fn train(
         current = next;
         state = Rc::new(ns);
     }
-    let (final_loss, _, _) =
-        loss_and_grad(c, &current, &mut control.evaluated_nodes).map_err(|d| stop(d, Some(current.clone()), steps))?;
+    let (final_loss, _, _) = loss_and_grad(c, &current, &mut control.evaluated_nodes)
+        .map_err(|d| stop(d, Some(current.clone()), steps))?;
     losses.push(final_loss);
     let g = c.model.graph();
     let provenance = Provenance {

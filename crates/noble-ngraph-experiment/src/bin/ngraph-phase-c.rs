@@ -294,7 +294,15 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
             ("initial_snapshot", Json::s(hex(&r.initial.id()))),
             ("final_snapshot", Json::s(hex(&r.snapshot.id()))),
             ("optimizer_state", Json::s(hex(&r.state.digest(&BLAKE3)))),
-            ("loss_f64_bits", Json::A(r.losses.iter().map(|v| Json::s(format!("0x{:016x}", v.to_bits()))).collect())),
+            (
+                "loss_f64_bits",
+                Json::A(
+                    r.losses
+                        .iter()
+                        .map(|v| Json::s(format!("0x{:016x}", v.to_bits())))
+                        .collect(),
+                ),
+            ),
         ]);
     }
     let flat_x: Vec<f32> = points.iter().flat_map(|(xs, _)| xs.clone()).collect();
