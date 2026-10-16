@@ -27,12 +27,14 @@ let
         "noble-kernel"
         "noble-contracts"
         "noble-wasm"
+        "noble-ngraph"
         "noble-cli"
       ];
       source_scopes = [
         "crates/noble-kernel/src"
         "crates/noble-contracts/src"
         "crates/noble-wasm/src"
+        "crates/noble-ngraph/src"
         "crates/noble-cli/src"
       ];
       targets = [
@@ -61,6 +63,11 @@ let
       }
       {
         scope_kind = "package";
+        scope = "noble-ngraph";
+        role = "domain-core";
+      }
+      {
+        scope_kind = "package";
         scope = "noble-cli";
         role = "composition-root";
       }
@@ -77,6 +84,11 @@ let
       {
         scope_kind = "source";
         scope = "crates/noble-wasm/src";
+        role = "domain-core";
+      }
+      {
+        scope_kind = "source";
+        scope = "crates/noble-ngraph/src";
         role = "domain-core";
       }
       {
@@ -116,6 +128,7 @@ let
       { scope = "noble-kernel"; }
       { scope = "noble-contracts"; }
       { scope = "noble-wasm"; }
+      { scope = "noble-ngraph"; }
     ];
     ports = [ ];
     provider_classifications = providers;
@@ -455,6 +468,18 @@ let
         core_no_std = builtins.filter (entry: entry.scope != "noble-wasm") policyBase.core_no_std;
       };
     } "policy-core-no-std-missing")
+    (reject "numeric graph library no-std missing" {
+      architecturePolicyJson = withArchitecture {
+        core_no_std = builtins.filter (entry: entry.scope != "noble-ngraph") policyBase.core_no_std;
+      };
+    } "policy-core-no-std-missing")
+    (reject "numeric graph library package omitted" {
+      architecturePolicyJson = withArchitecture {
+        production = policyBase.production // {
+          packages = builtins.filter (package: package != "noble-ngraph") policyBase.production.packages;
+        };
+      };
+    } "policy-package-missing")
     (reject "policy core no-std mismatch" {
       architecturePolicyJson = withArchitecture {
         core_no_std = [ { scope = "noble-cli"; } ];

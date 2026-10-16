@@ -66,17 +66,20 @@ let
     "noble-cli"
     "noble-contracts"
     "noble-kernel"
+    "noble-ngraph"
     "noble-wasm"
   ];
   requiredScopes = [
     "crates/noble-cli/src"
     "crates/noble-contracts/src"
     "crates/noble-kernel/src"
+    "crates/noble-ngraph/src"
     "crates/noble-wasm/src"
   ];
   requiredCorePackages = [
     "noble-contracts"
     "noble-kernel"
+    "noble-ngraph"
     "noble-wasm"
   ];
   production = policy.production or { };
