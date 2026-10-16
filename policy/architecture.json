@@ -118,8 +118,8 @@
     {
       "authority": "unprotected",
       "executor_methods": [
-        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3123:3127",
-        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3196:3200",
+        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3611:3615",
+        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3684:3688",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:3086:3094",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:467:478",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:4761:4767",

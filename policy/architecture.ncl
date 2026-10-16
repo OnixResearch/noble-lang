@@ -197,8 +197,8 @@ let contracts = import "./architecture.contracts.ncl" in
       family = "filesystem",
       executor_scope = "crates/noble-cli/src",
       executor_methods = [
-        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3123:3127",
-        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3196:3200",
+        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3611:3615",
+        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3684:3688",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:3086:3094",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:467:478",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:4761:4767",
@@ -341,9 +341,9 @@ let contracts = import "./architecture.contracts.ncl" in
     # experiment is net zero (ir_check and extract_b1 moved to the library,
     # format_roundtrip and identity_agreement added). A scratch collection of
     # the merged policy (caps raised only in the scratch copy) observed exactly
-    # 88 complete units. Its largest shard, the CLI noble bin+test, had 21,827
-    # calls, 19,093 constructors, 23,998 spans and 32,662,633 bytes, and the
-    # IR was 175,811,674 bytes, so every other cap is unchanged.
+    # 88 complete units. Its largest shard, the CLI noble bin+test, had 21,870
+    # calls, 19,133 constructors, 24,049 spans and 32,741,848 bytes, and the
+    # IR was 177,843,955 bytes, so every other cap is unchanged.
     # This exact capacity is not a classification waiver, source/native
     # assurance approval, or a gate PASS.
     max_units = 88,
