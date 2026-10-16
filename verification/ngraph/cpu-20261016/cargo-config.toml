@@ -1,0 +1,12 @@
+[build]
+jobs = 6
+rustc-wrapper = ""
+
+[source.crates-io]
+replace-with = "noble-reviewed-offline"
+
+[source.noble-reviewed-offline]
+directory = "/nix/store/4bf1y4d9pqwpxkxb8n1clh6nsjm30lj8-noble-reviewed-offline-vendor/source-registry-0"
+
+[net]
+offline = true

@@ -1,0 +1,718 @@
+{
+  "schema": "noble-ngraph-phase-c-core-evidence/v1",
+  "issue": "OnixResearch/noble-lang#14",
+  "run": {
+    "source_revision": "cd76c608721f25ce7f7bc896dfc7cdeb54e9b004",
+    "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "profiles": "ngraph-ir/0; ngraph-sem/0; ngraph-facts/0; ngraph-layered/0; ngraph-deriv-real/0; adam/0",
+    "oracle": "rustc_apfloat =0.2.3+llvm-462a31f5a5ab (ieee::Single, NearestTiesToEven)",
+    "prng": "splitmix64/0",
+    "target": "x86_64-linux (default x86-64 target features: no FMA instructions; rustc does not contract)",
+    "optimization_mode": "release (overflow-checks=true, panic=unwind per workspace profile)",
+    "cpu": "AMD RYZEN AI MAX+ 395 w/ Radeon 8060S",
+    "pinned_cpu": "2",
+    "governor": "performance",
+    "cpufreq_driver": "amd-pstate-epp",
+    "load_average_at_start": "33.10 29.16 16.95 16/5344 3264444",
+    "load_average_at_end": "31.57 28.91 16.94 37/5314 3265818",
+    "host_shared": true,
+    "warm_samples": 2000,
+    "cold_reps": 21,
+    "timer": "std::time::Instant (CLOCK_MONOTONIC); hardware counters: unsupported",
+    "wasm_features": "not applicable to these legs (no Wasm executed); the ordinary Wasm/V8 leg is the extraction leg's L1 harness",
+    "wall_seconds": 5.012091065
+  },
+  "w3": [
+    {
+      "workload": "W3-S",
+      "shape": "ReGluNet { d_in: 4, hidden: 4, batch: 1 }: 76 ops, 45 params, 4 inputs",
+      "ordinary_noble_path": "not applicable: ngraph-f32/0 graphs are authored IR (B0(b)); Noble's ordinary path has no F32",
+      "extraction": "not applicable (authored IR, B0(b))",
+      "authoring_build_graph_ns": 22251.0,
+      "graph": {
+        "graph_logical_id": "3bd9bf935af8978891bc81de69dc25edb255c30ecb292fedd67706038c6446ba",
+        "live_nodes": 125,
+        "depth_layers": 12
+      },
+      "bytes": {
+        "param_bytes": 180,
+        "activation_bytes_l3": 2000,
+        "activation_bytes_l4_register_file": 504,
+        "retained_graph_bytes_estimate": 12318,
+        "retained_compiled_code_bytes_estimate": 2864,
+        "measurement": "estimates from element counts × element sizes; allocator overhead and RSS: unsupported"
+      },
+      "agreement_before_timing": "200 input vectors: native, L3, L4 agree under ≡obs = true",
+      "cold": {
+        "admission_check": {
+          "n": 21,
+          "median_ns": 19256.0,
+          "p25_ns": 19156.0,
+          "p75_ns": 19787.0,
+          "iqr_ns": 631.0,
+          "min_ns": 18936.0,
+          "max_ns": 25077.0
+        },
+        "build_compile": {
+          "n": 21,
+          "median_ns": 2725.0,
+          "p25_ns": 2655.0,
+          "p75_ns": 3016.0,
+          "iqr_ns": 361.0,
+          "min_ns": 2575.0,
+          "max_ns": 7183.0
+        },
+        "first_evaluation_l4": {
+          "n": 21,
+          "median_ns": 1964.0000000000002,
+          "p25_ns": 1934.0,
+          "p75_ns": 2074.0,
+          "iqr_ns": 140.0,
+          "min_ns": 1863.0,
+          "max_ns": 3076.0
+        },
+        "cold_total": {
+          "n": 21,
+          "median_ns": 23945.0,
+          "p25_ns": 23725.0,
+          "p75_ns": 24897.0,
+          "iqr_ns": 1172.0,
+          "min_ns": 23454.0,
+          "max_ns": 32190.0
+        }
+      },
+      "warm_l3_reference": {
+        "n": 2000,
+        "median_ns": 552.75,
+        "p25_ns": 544.296875,
+        "p75_ns": 558.078125,
+        "iqr_ns": 13.78125,
+        "min_ns": 535.84375,
+        "max_ns": 1080.296875,
+        "batch_per_sample": 64
+      },
+      "warm_l4_compiled": {
+        "n": 2000,
+        "median_ns": 256.6484375,
+        "p25_ns": 252.03125,
+        "p75_ns": 262.0546875,
+        "iqr_ns": 10.0234375,
+        "min_ns": 239.90624999999997,
+        "max_ns": 535.921875,
+        "batch_per_sample": 128
+      },
+      "warm_native_rust": {
+        "n": 2000,
+        "median_ns": 20.15478515625,
+        "p25_ns": 19.83203125,
+        "p75_ns": 20.5166015625,
+        "iqr_ns": 0.6845703125,
+        "min_ns": 19.10302734375,
+        "max_ns": 101.08251953125,
+        "batch_per_sample": 2048
+      },
+      "throughput_evals_per_s": {
+        "l3": 1565515.9963018817,
+        "l4": 3611560.327555109,
+        "native": 50664282.17066932
+      },
+      "speed": {
+        "l4_speedup_over_native": 0.07853071443791665,
+        "l4_speedup_over_l3_reference": 2.1537243919515388,
+        "native_ns_per_eval": 20.15478515625,
+        "l4_ns_per_eval": 256.6484375,
+        "l3_ns_per_eval": 552.75
+      },
+      "training_step_15_points": {
+        "ours": "reference FP32 backward (grad::objective<f32>) + adam/0 + immutable snapshot publication, amortized over 100 steps, 5 runs",
+        "ours_ns_per_step": {
+          "n": 5,
+          "median_ns": 14227.21,
+          "p25_ns": 14210.68,
+          "p75_ns": 15719.6,
+          "iqr_ns": 1508.92,
+          "min_ns": 14012.21,
+          "max_ns": 20595.62
+        },
+        "ours_loss_ratio_after_100_steps": 0.06779611587775826,
+        "native": "hand-written FP32 forward/backward + binary64 Adam, in-place update, no snapshot (handwired style)",
+        "native_ns_per_step": {
+          "n": 1000,
+          "median_ns": 779.28125,
+          "p25_ns": 755.46875,
+          "p75_ns": 802.125,
+          "iqr_ns": 46.65625,
+          "min_ns": 683.46875,
+          "max_ns": 1479.03125,
+          "batch_per_sample": 32
+        },
+        "native_over_ours_speed_ratio": 18.256836026787504,
+        "backward_scratch_bytes_estimate": 1032
+      }
+    },
+    {
+      "workload": "W3-M",
+      "shape": "ReGluNet { d_in: 4, hidden: 22, batch: 1 }: 418 ops, 243 params, 4 inputs",
+      "ordinary_noble_path": "not applicable: ngraph-f32/0 graphs are authored IR (B0(b)); Noble's ordinary path has no F32",
+      "extraction": "not applicable (authored IR, B0(b))",
+      "authoring_build_graph_ns": 41327.0,
+      "graph": {
+        "graph_logical_id": "53cc1784dc7666b4a2386af3ec6c88f44e30685232bc20be19a16de5f9e07603",
+        "live_nodes": 665,
+        "depth_layers": 30
+      },
+      "bytes": {
+        "param_bytes": 972,
+        "activation_bytes_l3": 10640,
+        "activation_bytes_l4_register_file": 2664,
+        "retained_graph_bytes_estimate": 64554,
+        "retained_compiled_code_bytes_estimate": 15032,
+        "measurement": "estimates from element counts × element sizes; allocator overhead and RSS: unsupported"
+      },
+      "agreement_before_timing": "200 input vectors: native, L3, L4 agree under ≡obs = true",
+      "cold": {
+        "admission_check": {
+          "n": 21,
+          "median_ns": 100047.0,
+          "p25_ns": 99787.0,
+          "p75_ns": 100317.0,
+          "iqr_ns": 530.0,
+          "min_ns": 99496.0,
+          "max_ns": 113112.0
+        },
+        "build_compile": {
+          "n": 21,
+          "median_ns": 11561.0,
+          "p25_ns": 11471.0,
+          "p75_ns": 11702.0,
+          "iqr_ns": 231.0,
+          "min_ns": 11402.0,
+          "max_ns": 19346.0
+        },
+        "first_evaluation_l4": {
+          "n": 21,
+          "median_ns": 8005.0,
+          "p25_ns": 7954.999999999999,
+          "p75_ns": 8086.0,
+          "iqr_ns": 131.0000000000009,
+          "min_ns": 7893.999999999999,
+          "max_ns": 10509.0
+        },
+        "cold_total": {
+          "n": 21,
+          "median_ns": 119554.0,
+          "p25_ns": 119293.0,
+          "p75_ns": 120425.0,
+          "iqr_ns": 1132.0,
+          "min_ns": 118832.0,
+          "max_ns": 140102.0
+        }
+      },
+      "warm_l3_reference": {
+        "n": 2000,
+        "median_ns": 2902.875,
+        "p25_ns": 2842.75,
+        "p75_ns": 3698.125,
+        "iqr_ns": 855.375,
+        "min_ns": 2672.5,
+        "max_ns": 5977.375,
+        "batch_per_sample": 8
+      },
+      "warm_l4_compiled": {
+        "n": 2000,
+        "median_ns": 1295.5,
+        "p25_ns": 1279.3125,
+        "p75_ns": 1334.375,
+        "iqr_ns": 55.0625,
+        "min_ns": 1240.4375,
+        "max_ns": 2703.125,
+        "batch_per_sample": 16
+      },
+      "warm_native_rust": {
+        "n": 2000,
+        "median_ns": 79.28515625,
+        "p25_ns": 76.47265625,
+        "p75_ns": 80.19140625,
+        "iqr_ns": 3.71875,
+        "min_ns": 71.0703125,
+        "max_ns": 201.0390625,
+        "batch_per_sample": 256
+      },
+      "throughput_evals_per_s": {
+        "l3": 322615.2099404852,
+        "l4": 808408.2429365155,
+        "native": 11708792.27133525
+      },
+      "speed": {
+        "l4_speedup_over_native": 0.06120042937089926,
+        "l4_speedup_over_l3_reference": 2.240737167116943,
+        "native_ns_per_eval": 79.28515625,
+        "l4_ns_per_eval": 1295.5,
+        "l3_ns_per_eval": 2902.875
+      },
+      "training_step_15_points": {
+        "ours": "reference FP32 backward (grad::objective<f32>) + adam/0 + immutable snapshot publication, amortized over 100 steps, 5 runs",
+        "ours_ns_per_step": {
+          "n": 5,
+          "median_ns": 80568.28,
+          "p25_ns": 72729.52,
+          "p75_ns": 84081.04,
+          "iqr_ns": 11351.51999999999,
+          "min_ns": 72223.77,
+          "max_ns": 88542.89
+        },
+        "ours_loss_ratio_after_100_steps": 0.0001778610373751175,
+        "native": "hand-written FP32 forward/backward + binary64 Adam, in-place update, no snapshot (handwired style)",
+        "native_ns_per_step": {
+          "n": 1000,
+          "median_ns": 3975.0,
+          "p25_ns": 3633.0,
+          "p75_ns": 4291.75,
+          "iqr_ns": 658.75,
+          "min_ns": 3560.375,
+          "max_ns": 6479.625,
+          "batch_per_sample": 8
+        },
+        "native_over_ours_speed_ratio": 20.26874968553459,
+        "backward_scratch_bytes_estimate": 5352
+      }
+    },
+    {
+      "workload": "W3-L",
+      "shape": "ReGluNet { d_in: 4, hidden: 22, batch: 15 }: 6270 ops, 243 params, 60 inputs",
+      "ordinary_noble_path": "not applicable: ngraph-f32/0 graphs are authored IR (B0(b)); Noble's ordinary path has no F32",
+      "extraction": "not applicable (authored IR, B0(b))",
+      "authoring_build_graph_ns": 276096.0,
+      "graph": {
+        "graph_logical_id": "2e6fa1f3ddfbd6880f482f8c5547c75080d4662336d80d588816c93e14fd4207",
+        "live_nodes": 6573,
+        "depth_layers": 30
+      },
+      "bytes": {
+        "param_bytes": 972,
+        "activation_bytes_l3": 105168,
+        "activation_bytes_l4_register_file": 26296,
+        "retained_graph_bytes_estimate": 631890,
+        "retained_compiled_code_bytes_estimate": 179560,
+        "measurement": "estimates from element counts × element sizes; allocator overhead and RSS: unsupported"
+      },
+      "agreement_before_timing": "200 input vectors: native, L3, L4 agree under ≡obs = true",
+      "cold": {
+        "admission_check": {
+          "n": 21,
+          "median_ns": 986455.0,
+          "p25_ns": 887941.0,
+          "p75_ns": 1067246.0,
+          "iqr_ns": 179305.0,
+          "min_ns": 838558.0,
+          "max_ns": 1324127.0
+        },
+        "build_compile": {
+          "n": 21,
+          "median_ns": 187070.0,
+          "p25_ns": 174787.0,
+          "p75_ns": 215824.0,
+          "iqr_ns": 41037.0,
+          "min_ns": 165520.0,
+          "max_ns": 286255.0
+        },
+        "first_evaluation_l4": {
+          "n": 21,
+          "median_ns": 13886.0,
+          "p25_ns": 13064.0,
+          "p75_ns": 16039.999999999998,
+          "iqr_ns": 2975.999999999998,
+          "min_ns": 12644.0,
+          "max_ns": 25167.0
+        },
+        "cold_total": {
+          "n": 21,
+          "median_ns": 1193152.0,
+          "p25_ns": 1076633.0,
+          "p75_ns": 1366706.0,
+          "iqr_ns": 290073.0,
+          "min_ns": 1016722.0000000001,
+          "max_ns": 1597498.0
+        }
+      },
+      "warm_l3_reference": {
+        "n": 2000,
+        "median_ns": 23293.0,
+        "p25_ns": 22573.0,
+        "p75_ns": 24626.0,
+        "iqr_ns": 2053.0,
+        "min_ns": 21831.0,
+        "max_ns": 48691.0,
+        "batch_per_sample": 1
+      },
+      "warm_l4_compiled": {
+        "n": 2000,
+        "median_ns": 8009.999999999999,
+        "p25_ns": 7959.749999999999,
+        "p75_ns": 8581.0,
+        "iqr_ns": 621.2500000000009,
+        "min_ns": 7874.500000000001,
+        "max_ns": 25573.0,
+        "batch_per_sample": 4
+      },
+      "warm_native_rust": {
+        "n": 2000,
+        "median_ns": 1045.0625,
+        "p25_ns": 1034.4375,
+        "p75_ns": 1060.09375,
+        "iqr_ns": 25.65625,
+        "min_ns": 949.90625,
+        "max_ns": 2227.59375,
+        "batch_per_sample": 32
+      },
+      "throughput_evals_per_s": {
+        "l3": 36171.68500644792,
+        "l4": 121886.00980506492,
+        "native": 1008999.4639390368
+      },
+      "speed": {
+        "l4_speedup_over_native": 0.13046972534332085,
+        "l4_speedup_over_l3_reference": 2.9079900124843947,
+        "native_ns_per_eval": 1045.0625,
+        "l4_ns_per_eval": 8009.999999999999,
+        "l3_ns_per_eval": 23293.0
+      },
+      "training_step_15_points": {
+        "ours": "reference FP32 backward (grad::objective<f32>) + adam/0 + immutable snapshot publication, amortized over 100 steps, 5 runs",
+        "ours_ns_per_step": {
+          "n": 5,
+          "median_ns": 47091.47,
+          "p25_ns": 47039.17,
+          "p75_ns": 47279.82,
+          "iqr_ns": 240.65000000000146,
+          "min_ns": 46841.51,
+          "max_ns": 47716.14
+        },
+        "ours_loss_ratio_after_100_steps": 2.6466938387024027e-5,
+        "native": "hand-written FP32 forward/backward + binary64 Adam, in-place update, no snapshot (handwired style)",
+        "native_ns_per_step": {
+          "n": 1000,
+          "median_ns": 3834.75,
+          "p25_ns": 3743.25,
+          "p75_ns": 4063.875,
+          "iqr_ns": 320.625,
+          "min_ns": 3663.125,
+          "max_ns": 6066.375,
+          "batch_per_sample": 8
+        },
+        "native_over_ours_speed_ratio": 12.280192972162462,
+        "backward_scratch_bytes_estimate": 53176
+      }
+    }
+  ],
+  "w4": {
+    "workload": "W4",
+    "shape": "32 reads of one 10000-entry constant table (refuse/refuse), summed by affine(-0)",
+    "ordinary_noble_path": "not applicable: F32 authored IR (B0(b))",
+    "extraction": "not applicable (authored IR, B0(b))",
+    "authoring_build_graph_ns": 389187.0,
+    "graph": {
+      "graph_logical_id": "58d8a04d401fad0469c1fef5819fbfe79ea6597ad3f5f4b3f42bb5f04a539f58",
+      "live_nodes": 10065,
+      "depth_layers": 3
+    },
+    "bytes": {
+      "param_bytes": 0,
+      "activation_bytes_l3": 161040,
+      "activation_bytes_l4_register_file": 40264,
+      "retained_graph_bytes_estimate": 2252028,
+      "retained_compiled_code_bytes_estimate": 2721604,
+      "measurement": "estimates from element counts × element sizes; allocator overhead and RSS: unsupported"
+    },
+    "agreement_before_timing": "200 index vectors incl. out-of-range (refusal): native, L3, L4 agree = true",
+    "cold": {
+      "admission_check": {
+        "n": 21,
+        "median_ns": 6862554.0,
+        "p25_ns": 6733213.0,
+        "p75_ns": 7115177.0,
+        "iqr_ns": 381964.0,
+        "min_ns": 6633155.0,
+        "max_ns": 8803825.0
+      },
+      "build_compile": {
+        "n": 21,
+        "median_ns": 1159820.0,
+        "p25_ns": 1119844.0,
+        "p75_ns": 1201898.0,
+        "iqr_ns": 82054.0,
+        "min_ns": 1061315.0,
+        "max_ns": 1789426.0
+      },
+      "first_evaluation_l4": {
+        "n": 21,
+        "median_ns": 8045.0,
+        "p25_ns": 7323.0,
+        "p75_ns": 8786.0,
+        "iqr_ns": 1463.0,
+        "min_ns": 6913.0,
+        "max_ns": 12033.0
+      },
+      "cold_total": {
+        "n": 21,
+        "median_ns": 7996484.999999999,
+        "p25_ns": 7875620.0,
+        "p75_ns": 8307487.000000001,
+        "iqr_ns": 431867.00000000093,
+        "min_ns": 7794457.0,
+        "max_ns": 10605284.0
+      }
+    },
+    "warm_l3_reference": {
+      "n": 2000,
+      "median_ns": 32792.0,
+      "p25_ns": 32331.0,
+      "p75_ns": 33182.0,
+      "iqr_ns": 851.0,
+      "min_ns": 29094.0,
+      "max_ns": 83586.0,
+      "batch_per_sample": 1
+    },
+    "warm_l4_compiled": {
+      "n": 2000,
+      "median_ns": 433.9375,
+      "p25_ns": 430.953125,
+      "p75_ns": 436.90625,
+      "iqr_ns": 5.953125,
+      "min_ns": 424.390625,
+      "max_ns": 597.21875,
+      "batch_per_sample": 64
+    },
+    "warm_native_rust": {
+      "n": 2000,
+      "median_ns": 105.04296875,
+      "p25_ns": 100.03125,
+      "p75_ns": 107.3515625,
+      "iqr_ns": 7.3203125,
+      "min_ns": 93.88671875,
+      "max_ns": 122.33984375000001,
+      "batch_per_sample": 256
+    },
+    "throughput_evals_per_s": {
+      "l3": 33351.843252284816,
+      "l4": 2342315.4892571475,
+      "native": 10427593.221239084
+    },
+    "speed": {
+      "l4_speedup_over_native": 0.24206935042488836,
+      "l4_speedup_over_l3_reference": 75.56848624513898,
+      "native_ns_per_eval": 105.04296875,
+      "l4_ns_per_eval": 433.9375,
+      "l3_ns_per_eval": 32792.0
+    },
+    "training_step": "not applicable (no params)"
+  },
+  "w1_w2_cpu_legs": [
+    {
+      "workload": "W1 = I1 (x=5, y=4 → 24)",
+      "graph_source": "hand-built ngraph-i64/0 IR equal to the I1 lowering; extraction time and the ordinary Wasm/V8 leg come from the extraction leg's L1 harness",
+      "graph": {
+        "graph_logical_id": "7f6904378ef10464965a4a7b7479d62ebeeed6e069e660444856e62b9cc29c32",
+        "live_nodes": 8,
+        "depth_layers": 4
+      },
+      "bytes": {
+        "param_bytes": 0,
+        "activation_bytes_l3": 128,
+        "activation_bytes_l4_register_file": 72,
+        "retained_graph_bytes_estimate": 992,
+        "retained_compiled_code_bytes_estimate": 188,
+        "measurement": "estimates from element counts × element sizes; allocator overhead and RSS: unsupported"
+      },
+      "cold": {
+        "admission_check": {
+          "n": 21,
+          "median_ns": 1803.0,
+          "p25_ns": 1774.0,
+          "p75_ns": 1924.0000000000002,
+          "iqr_ns": 150.00000000000023,
+          "min_ns": 1743.0,
+          "max_ns": 15189.0
+        },
+        "build_compile": {
+          "n": 21,
+          "median_ns": 631.0,
+          "p25_ns": 611.0,
+          "p75_ns": 651.0,
+          "iqr_ns": 40.0,
+          "min_ns": 591.0,
+          "max_ns": 4007.0
+        },
+        "first_evaluation_l4": {
+          "n": 21,
+          "median_ns": 110.0,
+          "p25_ns": 110.0,
+          "p75_ns": 111.0,
+          "iqr_ns": 1.0,
+          "min_ns": 100.0,
+          "max_ns": 1162.0
+        },
+        "cold_total": {
+          "n": 21,
+          "median_ns": 2545.0,
+          "p25_ns": 2505.0,
+          "p75_ns": 2665.0,
+          "iqr_ns": 160.0,
+          "min_ns": 2445.0,
+          "max_ns": 20358.0
+        }
+      },
+      "warm_l3_reference": {
+        "n": 2000,
+        "median_ns": 56.119140625,
+        "p25_ns": 55.767578125,
+        "p75_ns": 56.4921875,
+        "iqr_ns": 0.724609375,
+        "min_ns": 52.48046875,
+        "max_ns": 111.5546875,
+        "batch_per_sample": 512
+      },
+      "warm_l4_compiled": {
+        "n": 2000,
+        "median_ns": 47.470703125,
+        "p25_ns": 47.35546875,
+        "p75_ns": 47.626953125,
+        "iqr_ns": 0.271484375,
+        "min_ns": 46.962890625,
+        "max_ns": 76.548828125,
+        "batch_per_sample": 512
+      },
+      "warm_native_rust": {
+        "n": 2000,
+        "median_ns": 0.4801788330078125,
+        "p25_ns": 0.47727966308593756,
+        "p75_ns": 0.49102783203125,
+        "iqr_ns": 0.013748168945312444,
+        "min_ns": 0.45465087890625,
+        "max_ns": 0.6472625732421875,
+        "batch_per_sample": 65536
+      },
+      "speed": {
+        "l4_speedup_over_native": 0.010115266920386752,
+        "l4_speedup_over_l3_reference": 1.1821847356511006,
+        "native_ns_per_eval": 0.4801788330078125,
+        "l4_ns_per_eval": 47.470703125,
+        "l3_ns_per_eval": 56.119140625
+      },
+      "training_step": "not applicable (E-DERIV-I64)"
+    },
+    {
+      "workload": "W2 = I4 transition (s,i,k) → (s·k+i, s·k+i), 10^5 host steps from s=11, i=3, k=-7",
+      "graph_source": "hand-built ngraph-i64/0 IR equal to the I4 lowering; extraction time and the ordinary Wasm/V8 leg come from the extraction leg's L1 harness",
+      "graph": {
+        "graph_logical_id": "e2cea982e906e11b5681a7b08cc3e7e88ccfa6efcb8ba535e5cc7d40da666863",
+        "live_nodes": 5,
+        "depth_layers": 3
+      },
+      "bytes": {
+        "param_bytes": 0,
+        "activation_bytes_l3": 80,
+        "activation_bytes_l4_register_file": 48,
+        "retained_graph_bytes_estimate": 710,
+        "retained_compiled_code_bytes_estimate": 116,
+        "measurement": "estimates from element counts × element sizes; allocator overhead and RSS: unsupported"
+      },
+      "final_state_agreement": "L3 -6083400928511612821, L4 -6083400928511612821, native -6083400928511612821, expected -6083400928511612821: equal = true",
+      "total_10^5_steps_l3_ns": {
+        "n": 7,
+        "median_ns": 5876711.0,
+        "p25_ns": 5841124.0,
+        "p75_ns": 5909672.0,
+        "iqr_ns": 68548.0,
+        "min_ns": 5752489.0,
+        "max_ns": 5915393.0
+      },
+      "total_10^5_steps_l4_ns": {
+        "n": 7,
+        "median_ns": 5978000.0,
+        "p25_ns": 5689771.0,
+        "p75_ns": 7331752.0,
+        "iqr_ns": 1641981.0,
+        "min_ns": 5489536.0,
+        "max_ns": 7876721.0
+      },
+      "total_10^5_steps_native_ns": {
+        "n": 7,
+        "median_ns": 107792.0,
+        "p25_ns": 107752.0,
+        "p75_ns": 108052.0,
+        "iqr_ns": 300.0,
+        "min_ns": 107591.0,
+        "max_ns": 108984.0
+      },
+      "training_step": "not applicable (E-DERIV-I64)"
+    }
+  ],
+  "c2": {
+    "reference_agreement": "Per workload, before timing: host-native, L3 and L4 agree under ≡obs on 200 input vectors (W3, W4) and on the W1 value and the W2 final state; see each workload's agreement field. Phase B: L2 (rustc_apfloat), B2-ORACLE, L3, L4 agree on all vectors (phase-b-core.json).",
+    "finite_coverage": "Finite only: Phase B boundary vectors, 8 seeded random graphs x 20,000 vectors, 10^6 operand pairs per operation, 2,000 gradient samples, the 35 core rejection controls; Phase C agreement samples above. No exhaustive or symbolic coverage.",
+    "theorem_obligations": [
+      {
+        "id": "NG-PO-A",
+        "statement": "extraction preserves Obs on the I64 overlap",
+        "status": "open"
+      },
+      {
+        "id": "NG-PO-B",
+        "statement": "graph-checker soundness",
+        "status": "open"
+      },
+      {
+        "id": "NG-PO-C",
+        "statement": "compiled evaluator refines the reference",
+        "status": "open"
+      },
+      {
+        "id": "NG-PO-D",
+        "statement": "reference model corresponds to IEEE binary32",
+        "status": "open"
+      },
+      {
+        "id": "NG-PO-E",
+        "statement": "fact-transfer soundness",
+        "status": "open"
+      },
+      {
+        "id": "NG-PO-F",
+        "statement": "ngraph-deriv-real/0 computes the real derivative away from corners",
+        "status": "open"
+      },
+      {
+        "id": "NG-PO-G",
+        "statement": "snapshot and provenance binding",
+        "status": "open"
+      },
+      {
+        "id": "NG-PO-H",
+        "statement": "executed compiled-graph bytes correspond to the admitted graph",
+        "status": "open"
+      }
+    ],
+    "trusted_boundaries": [
+      "rustc/LLVM release codegen of the pinned nightly (no contraction; default x86-64 features)",
+      "host CPU IEEE binary32/64 arithmetic, no FTZ/DAZ",
+      "rustc_apfloat =0.2.3+llvm-462a31f5a5ab as L2 oracle (Phase B)",
+      "blake3 =1.8.7 identities (bytes only)",
+      "this crate's checker, L3, L4, trainer and the hand-written native baselines",
+      "std::time::Instant and a shared, unisolated host for timings"
+    ],
+    "unsupported_instrumentation": "hardware performance counters, RSS/allocator peak, cache misses, energy: unsupported (not zero); byte figures are element-count estimates",
+    "not_run": "pinned handwired under pinned Bun (optional, informational): not run"
+  },
+  "c3": {
+    "thresholds": "kept at approval: stop unless compiled CPU graph ≥2× faster than both baselines on warm W3; admission ≤100 ms at W3 scale; ≥2× margin over compiled CPU before any scoped #2 GPU experiment",
+    "both_baselines_interpretation": "W3 is ngraph-f32/0 authored IR (B0(b)); Noble's ordinary Wasm/V8 path has no F32, so that baseline does not exist for W3. The test is applied to the one existing baseline (host-native Rust) and cannot pass on the missing one: the missing baseline never makes the outcome more favourable. The I64 workloads W1/W2, where the ordinary path exists, are reported separately and do not substitute for W3.",
+    "w3_large_l4_speedup_over_native": 0.13046972534332085,
+    "w3_large_admission_ms_median": 0.986455,
+    "admission_within_100ms": true,
+    "training_value_demonstrated": "B5 passed (loss ≤10% of initial on F1); W3 training cost measured",
+    "w4_l4_speedup_over_native": 0.24206935042488836,
+    "recommendation": "stop",
+    "gpu_experiment": "blocked: no measured or explicitly modelled transfer and launch costs; and the compiled CPU graph is not the comparison point that would need a 2× GPU margin unless CPU specialization were recommended"
+  }
+}

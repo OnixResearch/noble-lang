@@ -1,0 +1,21 @@
+CARGO_HOME=
+RUSTFLAGS=
+CARGO_BUILD_RUSTC_WRAPPER=
+CARGO_TARGET_DIR=/home/brittonr/.cache/noble-issues/targets/ngraph-cpu-20261016
+NX_FLAKE=/home/brittonr/.cache/noble-issues/wt/nxflake
+rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)
+binary: rustc
+commit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a
+commit-date: 2026-03-20
+host: x86_64-unknown-linux-gnu
+release: 1.96.0-nightly
+LLVM version: 22.1.0
+cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)
+release: 1.96.0-nightly
+commit-hash: cbb9bb8bd0fb272b1be0d63a010701ecb3d1d6d3
+commit-date: 2026-03-13
+host: x86_64-unknown-linux-gnu
+libgit2: 1.9.2 (sys:0.20.4 vendored)
+libcurl: 8.15.0-DEV (sys:0.4.83+curl-8.15.0 vendored ssl:OpenSSL/3.5.4)
+ssl: OpenSSL 3.5.4 30 Sep 2025
+os: NixOS 26.11.0 [64-bit]

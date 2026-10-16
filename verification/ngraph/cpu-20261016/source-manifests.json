@@ -1,0 +1,592 @@
+[
+  {
+    "label": "baseline",
+    "root": "/home/brittonr/.cache/noble-issues/wt/ngraph-cpu-baseline-20261016",
+    "source_revision": "f03aa4d1a4d8612721fbed9a1577ae65befffa93",
+    "files": [
+      {
+        "path": "Cargo.lock",
+        "git_blob": "acb077d526085cc4057deec749cbf219d79ba54c",
+        "sha256": "5ba51b5c980e43c0e4956034f3be9e41bd94b5b953ec7f03e3704c5fe47e2ce3",
+        "bytes": 24588
+      },
+      {
+        "path": "Cargo.toml",
+        "git_blob": "a9347cd93cea612d5272374b60a37b00b6fbff2d",
+        "sha256": "d0d718b46958904e242065b9d20d5e6fac83ca1395570ed0da00ecac5aa6afd6",
+        "bytes": 762
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/b2i64/l2.rs",
+        "git_blob": "498bbbdb2de78b129f68fbec42a198f38b6b7ecd",
+        "sha256": "e7a47fb6df7a74fb0814b68ea6e35bb85164841788193ce6426f15efd637d477",
+        "bytes": 3434
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/b2i64/mod.rs",
+        "git_blob": "a81bc7d8122a237cb1461ce9caa4bed4bd440e24",
+        "sha256": "4d39bd181f9c73a56ee75f49a875a8a635357fb12a9aec8e0899607e55d707ac",
+        "bytes": 22748
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/b2i64/oracle.mjs",
+        "git_blob": "4914c7ecf11b149172208ec37503d16bfe5ef7fb",
+        "sha256": "832503558f6590c5d13ae043a8bd462cb30dab1560e8f4d03cbb70c13d044e96",
+        "bytes": 2036
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/b2i64/random.rs",
+        "git_blob": "01ad43f1447c0cd8cf6f61a645da8e7c8b1432b9",
+        "sha256": "597146107d8e68b8abe64268f4cfd1ef151573a63617da760642af9bfc91e67d",
+        "bytes": 7260
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/bench.rs",
+        "git_blob": "1a272e035e57c5af6da0a30691f708d103ca218a",
+        "sha256": "976b3bb73b86f6aa40c496484f0467f52ef41407bb441376c8e2b1854b6a9fd9",
+        "bytes": 2978
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/bin/ngraph-phase-b-extract.rs",
+        "git_blob": "19bd1214d5f5fdea7e9b322e60c07f968e7a041d",
+        "sha256": "ff29eef8b11d2ff1f9974057e12bd0589924b260d09b727ba9b91f823af9c945",
+        "bytes": 15327
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/bin/ngraph-phase-b.rs",
+        "git_blob": "ba5fd8a7b8a3299cd8b80831349d3eb90f71899d",
+        "sha256": "1feb7265bdf038082f4058685aca180a64e43408e04d4c2e85fb121ffc35e3fb",
+        "bytes": 39163
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/bin/ngraph-phase-c-l1.rs",
+        "git_blob": "5bc6b8f35ab56e5b41017262a9800a2f15067e0b",
+        "sha256": "e6a9d91d3c514c084117557f0bd0c0b7837d3db4a7aa4eadaf45d0db7f224d18",
+        "bytes": 27663
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/bin/ngraph-phase-c.rs",
+        "git_blob": "b051945b0bca6bc2b89c7cfd3b4ab1359eafcc4a",
+        "sha256": "e7c3a43b09beb50ae162e0bb260cae6a1a4b46826c6b36c9062099d31a718503",
+        "bytes": 28820
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/controls.rs",
+        "git_blob": "e15b2a4bfe1b204ce30ae93749a99cc12263651c",
+        "sha256": "94b283ce5d9321ce63798304d53d7dc464895e546dd0ce7ed9b6ee329cf45060",
+        "bytes": 14071
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/differential.rs",
+        "git_blob": "f4183c8612871a5a31f212e707b9d03aa1018d5b",
+        "sha256": "5a7790fdb798bb86804f3f8619d180f0698b96601b612f0323444e98ac34e24a",
+        "bytes": 4795
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/evidence.rs",
+        "git_blob": "871443084797d40b6dc1a14cee51e8fa8d440cd1",
+        "sha256": "b4b0a8c3b5a9502c99a0372f52594ba85a4ca794d39e8e376f23dd96c66c7e45",
+        "bytes": 3891
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/fixtures.rs",
+        "git_blob": "0ac0357f24bb92ff171c7dd9babf879751d7c7f0",
+        "sha256": "2cadcb6d3d0649dc38ed2902e5d17c2b803cfcc477fcd6635c5ffef9d83cce5a",
+        "bytes": 12323
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/json.rs",
+        "git_blob": "011529f5142491f374f94cebf774acc1677117c8",
+        "sha256": "2bd4a3973cace49f8933f206ce6929b42f10b51b3aadbc03d79ce5991d65238b",
+        "bytes": 3724
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/l1/mod.rs",
+        "git_blob": "30ddba1bdd7824906dc7473e4ad2b982fd15336a",
+        "sha256": "9bcb8f06da43b8aa9742a7db9cb6928cc28c463fee8538fbf2b73aaaaddc6c75",
+        "bytes": 17868
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/lib.rs",
+        "git_blob": "0b322290c4a2c88212c8d719fbc0aa166e36a050",
+        "sha256": "f9dd2b8630082beb45bb77b9d7115ca681e05d14898abb5bbaae16f284c43cdb",
+        "bytes": 923
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/oracle.rs",
+        "git_blob": "a0977e3a369223f3b8c04842233fe3551cf35770",
+        "sha256": "ba2539a74cc496989c25a358f1d9b8419088c43daf6715ea511caa0e9ac99a1f",
+        "bytes": 7902
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/random.rs",
+        "git_blob": "7958630b3f63c88c5e818dce86163b015d9ed740",
+        "sha256": "cec0a4c8be56cdc4fc7222981301b0cc1152573d465ef08a748808657b41df7e",
+        "bytes": 7370
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/rejections.rs",
+        "git_blob": "440cad24f1855104e07b92a9f96bbd357da98eec",
+        "sha256": "8de6c6f72d1fbb0ae4e1a46602962743645d4a988057ca1a1882e2bb93b67173",
+        "bytes": 12999
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/scheme.rs",
+        "git_blob": "b278167322d5e9f8a5314b9e44fc3f43f0d618a2",
+        "sha256": "13118ff97e89bdc73adab2e813cd99a7eedcc97d1caf25834f976f735a54a978",
+        "bytes": 1007
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/suites.rs",
+        "git_blob": "1a04fbae137a4daadbba7687e79c747ca23ff099",
+        "sha256": "d101a1fea842096e5fcd60f1ee5faac0d4bdb586f558027827755e5b0d3cd38a",
+        "bytes": 9509
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/workloads.rs",
+        "git_blob": "74575f1758cb2c5c37ebc9a04e3554140c709a47",
+        "sha256": "fd53e5614ea1d51a8107d2ec33cd8f5a1c90f825c75a2be491c180705faa154d",
+        "bytes": 12879
+      },
+      {
+        "path": "crates/noble-ngraph/src/check.rs",
+        "git_blob": "a966a189525afee8012e6b9a397b8c6f32e7ada1",
+        "sha256": "0fc64889e9dec07cad1affeb3473cf20b9967895b6f5d73b68be5a60b497461f",
+        "bytes": 34754
+      },
+      {
+        "path": "crates/noble-ngraph/src/compiled.rs",
+        "git_blob": "062a82abd0e69b1cae33ea23df55a83460c0076e",
+        "sha256": "dd7070ca3699fcdd8cdd85be83b8b8bb1eaa015816e16857d189aeebecbacdf1",
+        "bytes": 19768
+      },
+      {
+        "path": "crates/noble-ngraph/src/diag.rs",
+        "git_blob": "cdf753960a69519cd284838ed64147355020c09c",
+        "sha256": "e9ebbc68a7b7c308b9512953053fe0bc203030b0155269f5cb7dd7da12e1ad19",
+        "bytes": 13268
+      },
+      {
+        "path": "crates/noble-ngraph/src/eval.rs",
+        "git_blob": "2ba9391eb861918fa4f966f1c320d6df2af6b340",
+        "sha256": "23a0fb8b9a2b46f1c08c27bb69d303c7ab53590d71e690ecc16488a18c2a5f1f",
+        "bytes": 15904
+      },
+      {
+        "path": "crates/noble-ngraph/src/extract/admission.rs",
+        "git_blob": "e325517f91fb6fe9f2e30b46886e2d70d6a93847",
+        "sha256": "62e7daa3f0958a462b360f5401b3cbae3e1e8d4e5c475ce90ea0416e4a1d69fe",
+        "bytes": 20309
+      },
+      {
+        "path": "crates/noble-ngraph/src/extract/mod.rs",
+        "git_blob": "24579b471597b77a134e13d293e44f117d304a1d",
+        "sha256": "81e5f4e53e5c6c5c4702c2faf622a7b0c2108ff19d217dd648cacd4815bcfaca",
+        "bytes": 3083
+      },
+      {
+        "path": "crates/noble-ngraph/src/extract/source.rs",
+        "git_blob": "e0422a4a55543f223ed86351dfd6f749dfe5b748",
+        "sha256": "c0c012e8a0c18f1f294bdfc7619709ca045faf1b8a0048d70a72292c28581477",
+        "bytes": 2723
+      },
+      {
+        "path": "crates/noble-ngraph/src/extract/symbolic.rs",
+        "git_blob": "53ad75f08c52b6959248bdabf4df5189babbd81e",
+        "sha256": "65c7281443781632e28b6560403b7dbb21880cd584e3cf34c41185f3d98a48e6",
+        "bytes": 28170
+      },
+      {
+        "path": "crates/noble-ngraph/src/facts.rs",
+        "git_blob": "06283c69e4d94edf98f6bc8c789f317c9425b43f",
+        "sha256": "6e34b100361830e50dcd473837009fe4a89d867d427dbe4264f5993e0cea3d2a",
+        "bytes": 15264
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/data.rs",
+        "git_blob": "18fb694b55d04759379a98b247849417e8557ebb",
+        "sha256": "b4bd28fd41e092ab8a3e8f4fe691a401d94b468ef0b17041af233745629be0ab",
+        "bytes": 5460
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/graph.rs",
+        "git_blob": "927a41c8d0fe2df1437753c25ff8a2302447d885",
+        "sha256": "6e0b252e32334a9f4277a0d9b675c27b1570c7dc47ce2d24a17054c804165038",
+        "bytes": 25742
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/mod.rs",
+        "git_blob": "5e4671e42853fdbdd6f60f5e275c1d76345642c0",
+        "sha256": "81740975b0364f6a7dc756ca6913aaed878fcbcbb6d53fb5e11d433b581a496d",
+        "bytes": 3210
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/snapshot.rs",
+        "git_blob": "97951100b4ec914e88f997c2be22e258ce8bd175",
+        "sha256": "a334a776446c75de5b6ee217f19797776f9332bec868983b820c248a077ae25e",
+        "bytes": 20036
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/value.rs",
+        "git_blob": "ae4cc9133060d141bcd61bc23726b8bbf6f6b34d",
+        "sha256": "e6dd23fa2df6e36a4ebc6966bb183de884d44fb376a5e744c040aed76a09904f",
+        "bytes": 5125
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/vectors.rs",
+        "git_blob": "513da2eb87bdc0ca273d1dad96273054f62a9ab3",
+        "sha256": "5db130f7e87bc7fdd89c4e43be1bdada0b88e50626d521122c183f904da2ad36",
+        "bytes": 2526
+      },
+      {
+        "path": "crates/noble-ngraph/src/grad.rs",
+        "git_blob": "da6857b21a551a1c62e1c96acc9a03dcd56e8dd5",
+        "sha256": "15089f3e1061a8078990cdbf7a85980301195c10647856b228c02209be0b5b77",
+        "bytes": 25753
+      },
+      {
+        "path": "crates/noble-ngraph/src/identity.rs",
+        "git_blob": "c1294405ef556db598ced3630be4c5aa80ab6cdb",
+        "sha256": "bb050e5caa8799711241e5f90633062c4f50d2ce39211de42397e102bbd66da5",
+        "bytes": 982
+      },
+      {
+        "path": "crates/noble-ngraph/src/ir.rs",
+        "git_blob": "1839ba168772291554060bc7e197010e6b11e2d3",
+        "sha256": "298cc9948e1a09df9f7cc29cc4c218c781fe80fc5160b1f92f910be02eb07cd0",
+        "bytes": 31133
+      },
+      {
+        "path": "crates/noble-ngraph/src/lib.rs",
+        "git_blob": "c63ce1b9183c40c8dd6cb4e241131cb8535715ea",
+        "sha256": "87f4d04c8b6d1e464711c1edfe6926a4ee068e1c7d6fe5ade9cee41a4c320ea4",
+        "bytes": 1367
+      },
+      {
+        "path": "crates/noble-ngraph/src/prng.rs",
+        "git_blob": "3833361b4ef9da1e88317a2ed7d548f2d4018d1e",
+        "sha256": "8fb0b5aa3f67bb5d8c7d595a57fe905722f6cfa4a7925d9938b4c2c760afe015",
+        "bytes": 1500
+      },
+      {
+        "path": "crates/noble-ngraph/src/sem.rs",
+        "git_blob": "f484d2f5135ae0f77b902a2adb4f7f188d778dba",
+        "sha256": "fb1eb10b7f519a0f484266cc9ae89e7f542abbfcddc064b1864996e7db105122",
+        "bytes": 20296
+      },
+      {
+        "path": "crates/noble-ngraph/src/snapshot.rs",
+        "git_blob": "ea0af17de411653f7007ca790d248bc8ff175ab0",
+        "sha256": "436463af4798ebca07bbc7bfd7d03e296f99a3077407cf751a97a431833da4a8",
+        "bytes": 6567
+      },
+      {
+        "path": "crates/noble-ngraph/src/train.rs",
+        "git_blob": "1dbb64bb4ef94f9fbd53c92c1c75f10e7eaf2c5a",
+        "sha256": "9f5fe755c9b3ff14a8b07b712bbd7d7edb1e35670f0cc715e63d84f5176b8da5",
+        "bytes": 20467
+      },
+      {
+        "path": "rust-toolchain.toml",
+        "git_blob": "dd9dba8fe14586d3446e499a7e2a7bd7ae12f478",
+        "sha256": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271",
+        "bytes": 145
+      }
+    ]
+  },
+  {
+    "label": "optimized",
+    "root": "/home/brittonr/.cache/noble-issues/wt/ngraph-cpu-20261016",
+    "source_revision": "7e1de8f1eccdece595dea295a6e00a14c93b2e62",
+    "files": [
+      {
+        "path": "Cargo.lock",
+        "git_blob": "acb077d526085cc4057deec749cbf219d79ba54c",
+        "sha256": "5ba51b5c980e43c0e4956034f3be9e41bd94b5b953ec7f03e3704c5fe47e2ce3",
+        "bytes": 24588
+      },
+      {
+        "path": "Cargo.toml",
+        "git_blob": "a9347cd93cea612d5272374b60a37b00b6fbff2d",
+        "sha256": "d0d718b46958904e242065b9d20d5e6fac83ca1395570ed0da00ecac5aa6afd6",
+        "bytes": 762
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/b2i64/l2.rs",
+        "git_blob": "498bbbdb2de78b129f68fbec42a198f38b6b7ecd",
+        "sha256": "e7a47fb6df7a74fb0814b68ea6e35bb85164841788193ce6426f15efd637d477",
+        "bytes": 3434
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/b2i64/mod.rs",
+        "git_blob": "a81bc7d8122a237cb1461ce9caa4bed4bd440e24",
+        "sha256": "4d39bd181f9c73a56ee75f49a875a8a635357fb12a9aec8e0899607e55d707ac",
+        "bytes": 22748
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/b2i64/oracle.mjs",
+        "git_blob": "4914c7ecf11b149172208ec37503d16bfe5ef7fb",
+        "sha256": "832503558f6590c5d13ae043a8bd462cb30dab1560e8f4d03cbb70c13d044e96",
+        "bytes": 2036
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/b2i64/random.rs",
+        "git_blob": "01ad43f1447c0cd8cf6f61a645da8e7c8b1432b9",
+        "sha256": "597146107d8e68b8abe64268f4cfd1ef151573a63617da760642af9bfc91e67d",
+        "bytes": 7260
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/bench.rs",
+        "git_blob": "1a272e035e57c5af6da0a30691f708d103ca218a",
+        "sha256": "976b3bb73b86f6aa40c496484f0467f52ef41407bb441376c8e2b1854b6a9fd9",
+        "bytes": 2978
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/bin/ngraph-phase-b-extract.rs",
+        "git_blob": "19bd1214d5f5fdea7e9b322e60c07f968e7a041d",
+        "sha256": "ff29eef8b11d2ff1f9974057e12bd0589924b260d09b727ba9b91f823af9c945",
+        "bytes": 15327
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/bin/ngraph-phase-b.rs",
+        "git_blob": "ba5fd8a7b8a3299cd8b80831349d3eb90f71899d",
+        "sha256": "1feb7265bdf038082f4058685aca180a64e43408e04d4c2e85fb121ffc35e3fb",
+        "bytes": 39163
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/bin/ngraph-phase-c-l1.rs",
+        "git_blob": "5bc6b8f35ab56e5b41017262a9800a2f15067e0b",
+        "sha256": "e6a9d91d3c514c084117557f0bd0c0b7837d3db4a7aa4eadaf45d0db7f224d18",
+        "bytes": 27663
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/bin/ngraph-phase-c.rs",
+        "git_blob": "febd9655ed8164236dab99ef9ec6184648f208f5",
+        "sha256": "d7b45deb6df6b6bd8e900543bbed39a68ab17eae4793a0221d75b9ba6e685dae",
+        "bytes": 28981
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/controls.rs",
+        "git_blob": "e15b2a4bfe1b204ce30ae93749a99cc12263651c",
+        "sha256": "94b283ce5d9321ce63798304d53d7dc464895e546dd0ce7ed9b6ee329cf45060",
+        "bytes": 14071
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/differential.rs",
+        "git_blob": "f4183c8612871a5a31f212e707b9d03aa1018d5b",
+        "sha256": "5a7790fdb798bb86804f3f8619d180f0698b96601b612f0323444e98ac34e24a",
+        "bytes": 4795
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/evidence.rs",
+        "git_blob": "871443084797d40b6dc1a14cee51e8fa8d440cd1",
+        "sha256": "b4b0a8c3b5a9502c99a0372f52594ba85a4ca794d39e8e376f23dd96c66c7e45",
+        "bytes": 3891
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/fixtures.rs",
+        "git_blob": "0ac0357f24bb92ff171c7dd9babf879751d7c7f0",
+        "sha256": "2cadcb6d3d0649dc38ed2902e5d17c2b803cfcc477fcd6635c5ffef9d83cce5a",
+        "bytes": 12323
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/json.rs",
+        "git_blob": "011529f5142491f374f94cebf774acc1677117c8",
+        "sha256": "2bd4a3973cace49f8933f206ce6929b42f10b51b3aadbc03d79ce5991d65238b",
+        "bytes": 3724
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/l1/mod.rs",
+        "git_blob": "30ddba1bdd7824906dc7473e4ad2b982fd15336a",
+        "sha256": "9bcb8f06da43b8aa9742a7db9cb6928cc28c463fee8538fbf2b73aaaaddc6c75",
+        "bytes": 17868
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/lib.rs",
+        "git_blob": "0b322290c4a2c88212c8d719fbc0aa166e36a050",
+        "sha256": "f9dd2b8630082beb45bb77b9d7115ca681e05d14898abb5bbaae16f284c43cdb",
+        "bytes": 923
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/oracle.rs",
+        "git_blob": "a0977e3a369223f3b8c04842233fe3551cf35770",
+        "sha256": "ba2539a74cc496989c25a358f1d9b8419088c43daf6715ea511caa0e9ac99a1f",
+        "bytes": 7902
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/random.rs",
+        "git_blob": "7958630b3f63c88c5e818dce86163b015d9ed740",
+        "sha256": "cec0a4c8be56cdc4fc7222981301b0cc1152573d465ef08a748808657b41df7e",
+        "bytes": 7370
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/rejections.rs",
+        "git_blob": "440cad24f1855104e07b92a9f96bbd357da98eec",
+        "sha256": "8de6c6f72d1fbb0ae4e1a46602962743645d4a988057ca1a1882e2bb93b67173",
+        "bytes": 12999
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/scheme.rs",
+        "git_blob": "b278167322d5e9f8a5314b9e44fc3f43f0d618a2",
+        "sha256": "13118ff97e89bdc73adab2e813cd99a7eedcc97d1caf25834f976f735a54a978",
+        "bytes": 1007
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/suites.rs",
+        "git_blob": "1a04fbae137a4daadbba7687e79c747ca23ff099",
+        "sha256": "d101a1fea842096e5fcd60f1ee5faac0d4bdb586f558027827755e5b0d3cd38a",
+        "bytes": 9509
+      },
+      {
+        "path": "crates/noble-ngraph-experiment/src/workloads.rs",
+        "git_blob": "74575f1758cb2c5c37ebc9a04e3554140c709a47",
+        "sha256": "fd53e5614ea1d51a8107d2ec33cd8f5a1c90f825c75a2be491c180705faa154d",
+        "bytes": 12879
+      },
+      {
+        "path": "crates/noble-ngraph/src/check.rs",
+        "git_blob": "a966a189525afee8012e6b9a397b8c6f32e7ada1",
+        "sha256": "0fc64889e9dec07cad1affeb3473cf20b9967895b6f5d73b68be5a60b497461f",
+        "bytes": 34754
+      },
+      {
+        "path": "crates/noble-ngraph/src/compiled.rs",
+        "git_blob": "8faa5cc2f706a1385b81c9ad44690d1303ad1148",
+        "sha256": "49e1ef97536aa23c13ecbe4073aeca668cdcaea826f6c0222a5c59bef741f52f",
+        "bytes": 21404
+      },
+      {
+        "path": "crates/noble-ngraph/src/diag.rs",
+        "git_blob": "cdf753960a69519cd284838ed64147355020c09c",
+        "sha256": "e9ebbc68a7b7c308b9512953053fe0bc203030b0155269f5cb7dd7da12e1ad19",
+        "bytes": 13268
+      },
+      {
+        "path": "crates/noble-ngraph/src/eval.rs",
+        "git_blob": "a9398f661d3f10ba3fa59fe5319f2137ef240892",
+        "sha256": "bd09289473fe0f1d58d7ea0f8ede2759edc10ce7588a5ae15649e47adf84189a",
+        "bytes": 16616
+      },
+      {
+        "path": "crates/noble-ngraph/src/extract/admission.rs",
+        "git_blob": "e325517f91fb6fe9f2e30b46886e2d70d6a93847",
+        "sha256": "62e7daa3f0958a462b360f5401b3cbae3e1e8d4e5c475ce90ea0416e4a1d69fe",
+        "bytes": 20309
+      },
+      {
+        "path": "crates/noble-ngraph/src/extract/mod.rs",
+        "git_blob": "24579b471597b77a134e13d293e44f117d304a1d",
+        "sha256": "81e5f4e53e5c6c5c4702c2faf622a7b0c2108ff19d217dd648cacd4815bcfaca",
+        "bytes": 3083
+      },
+      {
+        "path": "crates/noble-ngraph/src/extract/source.rs",
+        "git_blob": "e0422a4a55543f223ed86351dfd6f749dfe5b748",
+        "sha256": "c0c012e8a0c18f1f294bdfc7619709ca045faf1b8a0048d70a72292c28581477",
+        "bytes": 2723
+      },
+      {
+        "path": "crates/noble-ngraph/src/extract/symbolic.rs",
+        "git_blob": "53ad75f08c52b6959248bdabf4df5189babbd81e",
+        "sha256": "65c7281443781632e28b6560403b7dbb21880cd584e3cf34c41185f3d98a48e6",
+        "bytes": 28170
+      },
+      {
+        "path": "crates/noble-ngraph/src/facts.rs",
+        "git_blob": "06283c69e4d94edf98f6bc8c789f317c9425b43f",
+        "sha256": "6e34b100361830e50dcd473837009fe4a89d867d427dbe4264f5993e0cea3d2a",
+        "bytes": 15264
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/data.rs",
+        "git_blob": "18fb694b55d04759379a98b247849417e8557ebb",
+        "sha256": "b4bd28fd41e092ab8a3e8f4fe691a401d94b468ef0b17041af233745629be0ab",
+        "bytes": 5460
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/graph.rs",
+        "git_blob": "927a41c8d0fe2df1437753c25ff8a2302447d885",
+        "sha256": "6e0b252e32334a9f4277a0d9b675c27b1570c7dc47ce2d24a17054c804165038",
+        "bytes": 25742
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/mod.rs",
+        "git_blob": "5e4671e42853fdbdd6f60f5e275c1d76345642c0",
+        "sha256": "81740975b0364f6a7dc756ca6913aaed878fcbcbb6d53fb5e11d433b581a496d",
+        "bytes": 3210
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/snapshot.rs",
+        "git_blob": "97951100b4ec914e88f997c2be22e258ce8bd175",
+        "sha256": "a334a776446c75de5b6ee217f19797776f9332bec868983b820c248a077ae25e",
+        "bytes": 20036
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/value.rs",
+        "git_blob": "ae4cc9133060d141bcd61bc23726b8bbf6f6b34d",
+        "sha256": "e6dd23fa2df6e36a4ebc6966bb183de884d44fb376a5e744c040aed76a09904f",
+        "bytes": 5125
+      },
+      {
+        "path": "crates/noble-ngraph/src/format/vectors.rs",
+        "git_blob": "513da2eb87bdc0ca273d1dad96273054f62a9ab3",
+        "sha256": "5db130f7e87bc7fdd89c4e43be1bdada0b88e50626d521122c183f904da2ad36",
+        "bytes": 2526
+      },
+      {
+        "path": "crates/noble-ngraph/src/grad.rs",
+        "git_blob": "b220d45caf77b9e54aabdeb6a527a19748e0c85b",
+        "sha256": "ab18e3ac1a97d87f9e5661c0faa7e1d18e36a99d3487466bd102df5d5d6f59ff",
+        "bytes": 26704
+      },
+      {
+        "path": "crates/noble-ngraph/src/identity.rs",
+        "git_blob": "c1294405ef556db598ced3630be4c5aa80ab6cdb",
+        "sha256": "bb050e5caa8799711241e5f90633062c4f50d2ce39211de42397e102bbd66da5",
+        "bytes": 982
+      },
+      {
+        "path": "crates/noble-ngraph/src/ir.rs",
+        "git_blob": "647fd84f86eb6a060da6035d4e1700fbd1664a6a",
+        "sha256": "0b6c6d56f88e68d1796fd644211a95514166775fda53953471e867475182491c",
+        "bytes": 31944
+      },
+      {
+        "path": "crates/noble-ngraph/src/lib.rs",
+        "git_blob": "c63ce1b9183c40c8dd6cb4e241131cb8535715ea",
+        "sha256": "87f4d04c8b6d1e464711c1edfe6926a4ee068e1c7d6fe5ade9cee41a4c320ea4",
+        "bytes": 1367
+      },
+      {
+        "path": "crates/noble-ngraph/src/prng.rs",
+        "git_blob": "3833361b4ef9da1e88317a2ed7d548f2d4018d1e",
+        "sha256": "8fb0b5aa3f67bb5d8c7d595a57fe905722f6cfa4a7925d9938b4c2c760afe015",
+        "bytes": 1500
+      },
+      {
+        "path": "crates/noble-ngraph/src/sem.rs",
+        "git_blob": "f484d2f5135ae0f77b902a2adb4f7f188d778dba",
+        "sha256": "fb1eb10b7f519a0f484266cc9ae89e7f542abbfcddc064b1864996e7db105122",
+        "bytes": 20296
+      },
+      {
+        "path": "crates/noble-ngraph/src/snapshot.rs",
+        "git_blob": "ea0af17de411653f7007ca790d248bc8ff175ab0",
+        "sha256": "436463af4798ebca07bbc7bfd7d03e296f99a3077407cf751a97a431833da4a8",
+        "bytes": 6567
+      },
+      {
+        "path": "crates/noble-ngraph/src/train.rs",
+        "git_blob": "6b2864663431e0bee6f76057b6fef684c35f1bbf",
+        "sha256": "dd55ecdc354e5850223ecf4cc7d5eab564bc6ae113b0d49a5de4c1939f3d18e5",
+        "bytes": 20868
+      },
+      {
+        "path": "rust-toolchain.toml",
+        "git_blob": "dd9dba8fe14586d3446e499a7e2a7bd7ae12f478",
+        "sha256": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271",
+        "bytes": 145
+      }
+    ]
+  }
+]

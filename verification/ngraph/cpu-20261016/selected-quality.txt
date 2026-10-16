@@ -1,0 +1,252 @@
+
+running 4 tests
+test prng::tests::reference_vector ... ok
+test extract::admission::tests::interface_items_nest_at_most_the_shape_bound ... ok
+test sem::tests::signed_zero_rules ... ok
+test sem::tests::exact_decimal_literals ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 4 tests
+test i1_routing_constants_and_operand_order ... ok
+test i2_captures_composition_and_one_shared_capture ... ok
+test i3_repeated_named_call_to_one_identity ... ok
+test i4_transition_for_1000_host_steps ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+test authored_name_sugar_comments_and_spacing_are_not_identity_bearing ... ok
+test evidence_and_range_literals_are_symmetric ... ok
+test malformed_records_are_refused_with_their_codes ... ok
+test number_tokens_take_no_plus_sign_and_at_most_eight_hex_digits ... ok
+test printed_graphs_parse_back_to_the_same_graph_and_identity ... ok
+test extracted_graphs_round_trip_without_origins ... ok
+test shape_trees_nest_at_most_127_pairs ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 6 tests
+test a_leading_plus_sign_is_not_a_number ... ok
+test f32_tokens_are_exact_encodings_or_exact_decimals ... ok
+test rendering_keeps_bits_and_merges_every_nan ... ok
+test data_files_split_inputs_and_targets_at_one_separator ... ok
+test vector_files_are_typed_and_refused_as_a_whole ... ok
+test decimal_exactness_is_decided_inside_the_binary32_window ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 6 tests
+test nonfinite_constant_and_caller_assertion_are_refused ... ok
+test malformed_topology_is_refused ... ok
+test i64_wraps_and_eq ... ok
+test i64_graph_operand_order_and_value ... ok
+test type_mix_is_refused ... ok
+test refusals_before_evaluation_evaluate_no_node ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+test opt_in_records_must_be_canonically_ordered ... ok
+test binding_refuses_other_graphs_facts_layouts_and_pins ... ok
+test printed_files_reload_with_recomputed_identities ... ok
+test the_provenance_digest_follows_the_documented_encoding ... ok
+test tampered_or_malformed_files_are_refused ... ok
+test recorded_optimizers_outside_the_adam_domain_are_refused_on_load ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 4 tests
+test ten_million_bit_patterns_match_std ... ignored, slow (10^7 patterns per routine); run: cargo test --release -p noble-ngraph --test soft_float -- --ignored
+test special_values_match_std ... ok
+test powers_of_two_are_exact ... ok
+test seeded_bit_patterns_match_std ... ok
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 7 tests
+test budgets_bound_training_before_any_step ... ok
+test opt_ins_must_name_a_node_they_apply_to_in_train_and_replay ... ok
+test adam_values_outside_the_optimizer_domain_are_refused_by_train_and_replay ... ok
+test the_checked_objective_equals_the_plain_objective_on_admitted_points ... ok
+test points_the_reference_refuses_stop_training_unpublished ... ok
+test replay_starts_from_the_recorded_parent ... ok
+test the_loss_graph_interface_is_admitted ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+test flush_to_zero_is_detected_by_the_subnormal_vector ... ok
+test fused_multiply_add_would_be_detected ... ok
+test compiled_matches_first_guard_in_canonical_order ... ok
+test boundary_vectors_agree_on_every_leg_and_match_expected_bits ... ok
+test f1_f2_f3_agree_on_every_leg ... ok
+test per_operation_binary64_rounding_matches_apfloat_and_host ... ok
+test seeded_random_graphs_agree_small ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+
+running 2 tests
+test every_core_rejection_yields_its_code ... ok
+test guard_failure_stops_before_the_dependent_node ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+
+running 8 tests
+test i64_and_undeclared_params_are_refused ... ok
+test analytic_examples ... ok
+test index_candidate_gradients_accumulate ... ok
+test boolean_path_is_refused_statically_and_surrogates_are_recorded ... ok
+test index_operand_policies_reject_zero_backward_difference ... ok
+test select_gate_path_is_refused_by_default ... ok
+test relu_corner_at_plus_and_minus_zero_gives_zero_gate_gradient ... ok
+test smooth_region_g1_and_g2_hold_on_f1_mse ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 4 tests
+test wrong_graph_layout_and_stale_snapshots_are_refused ... ok
+test nonfinite_update_publishes_nothing ... ok
+test old_subject_evidence_is_refused_for_a_captured_subject ... ok
+test train_f1_publishes_only_new_param_snapshots ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+
+
+running 5 tests
+test reused_workspace_returns_fresh_results ... ok
+test duplicate_owners_release_in_both_orders ... ok
+test scratch_is_released_exactly_once_on_every_exit ... ok
+test retained_snapshot_is_used_after_the_invocation_exits ... ok
+test cancelled_or_failed_training_publishes_no_partial_snapshot ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 4 tests
+test w1_w2_native_agree ... ok
+test compiled_tables_preserve_order_rules_and_guard_precedence ... ok
+test w3_sizes_reach_gallery_scale_and_native_agrees ... ok
+test w4_native_agrees ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+
+running 3 tests
+test l2_node_bigint_oracle_agrees_with_l3 ... ignored, needs NOBLE_NODE (pinned Node) for the L2 BigInt oracle
+test design_vectors_agree_on_l3_and_l4 ... ok
+test seeded_random_programs_extract_and_agree_on_l3_and_l4 ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+
+running 5 tests
+test supplied_dependency_list_must_match_the_body ... ok
+test closure_and_profile_admission ... ok
+test unreached_effectful_quotation_is_not_refused ... ok
+test chain_budgets_are_charged_before_pruning ... ok
+test every_source_control_is_refused_with_its_d6_code ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+
+running 2 tests
+test every_corpus_graph_round_trips_with_its_identity ... ok
+test comments_blank_lines_and_spacing_do_not_change_any_corpus_graph ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.63s
+
+
+running 4 tests
+test b2_vector_observations_and_b3_codes_match_the_record ... ok
+test graph_identities_and_fact_bindings_match_the_record ... ok
+test b5_training_identities_match_the_record_and_the_receipt ... ok
+test seeded_campaigns_match_the_record ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 20 tests
+test check_identity_follows_the_d4_records ... ok
+test check_reports_every_d7_field ... ok
+test check_refusal_classes ... ok
+test check_budgets_and_usage ... ok
+test eval_outcome_classes_and_first_failure_exit ... ok
+test eval_probes_are_bitwise_in_both_evaluators ... ok
+test eval_refuses_inputs_before_evaluation ... ok
+test extract_publication_never_replaces_existing_paths ... ok
+test deep_shape_trees_are_one_coded_refusal ... ok
+test failing_output_streams_keep_the_d8_exit ... ok
+test extract_i1_to_i4_round_trip_through_check_and_eval ... ok
+test extract_refusals_publish_nothing ... ok
+test forged_optimizers_and_opt_ins_are_refused ... ok
+test provenance_consistent_forgeries_are_refused_by_layout_or_replay ... ok
+test numbers_take_no_plus_sign_and_adam_values_have_a_domain ... ok
+test snapshot_integrity_and_binding_refusals ... ok
+test train_publishes_immutable_snapshots ... ok
+test train_contract_refusals_publish_nothing ... ok
+test verify_binds_and_replays_provenance ... ok
+test b5_training_through_the_cli_reproduces_the_recorded_identities ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+
+612 explicit expected native table boundary/NaN/refusal cases passed
+training guard refusal actual forward/validation events=4; reference stopped after 3 canonical nodes; original full-forward-then-scan semantics preserved, no cutoff claim; published0, snapshot unchanged, scratch (1, 1, 0)
+cancel before step: actual0, published0, scratch0/0/0
+{"l3_l4_exact_reports":true,"parent_bytes_unchanged":true,"replayed":true,"actual_train_publication":true,"guard_and_binding_refusal":true,"fuel_refusal":true}
+
+running 5 tests
+test reused_workspace_returns_fresh_results ... ok
+test duplicate_owners_release_in_both_orders ... ok
+test scratch_is_released_exactly_once_on_every_exit ... ok
+test retained_snapshot_is_used_after_the_invocation_exits ... ok
+test cancelled_or_failed_training_publishes_no_partial_snapshot ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

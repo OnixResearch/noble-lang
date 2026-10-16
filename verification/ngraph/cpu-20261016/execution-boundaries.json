@@ -1,0 +1,22 @@
+{
+  "schema": "noble-ngraph-cpu-execution-boundaries/v1",
+  "anchor": "cd76c608721f25ce7f7bc896dfc7cdeb54e9b004",
+  "direct_source_archive": "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/baseline-source-f03aa4d.tar",
+  "anchor_source_observations": {
+    "train.rs:353-394": "loss_and_grad runs eval::preflight for input/snapshot/facts, then grad::objective_checked. It did not run reference evaluation first.",
+    "grad.rs:547-585": "objective_checked computes all model forward values, then scans first_failure; on model success it builds/preflights loss inputs and computes all loss forward values before its first_failure scan.",
+    "compiled.rs:384-425": "slot registers are written before layer cancellation/fuel checks. Historical Report credits both slots and cached constants before those checks."
+  },
+  "contract": {
+    "source": ".cairn/changes/numeric-graph-v1/design.md:335-342 (D10)",
+    "meaning": "Reference preflight, then canonical failure scan of the same binary32 forward values; first failing point stops its step unpublished, including final-loss evaluation. This is not a no-later-pure-work cutoff contract.",
+    "unchanged": ["diagnostic/failure order", "fuel charge and layer cancellation boundaries", "scratch lease accounting", "snapshot publication and lineage", "all numerical operation order"],
+    "non_claim": "No claim that a failing training guard prevents later pure forward value computation; that work occurs before the canonical scan in both anchor and current implementation."
+  },
+  "observer": {
+    "compiled": "Counts actual slot register writes and executed instructions, not reused constants. A one-input compiled call at fuel=0 still counts one real slot write. Historical Report remains unchanged.",
+    "training": "Counts actual non-guard forward value operations plus actual guard/index validation events in the canonical scan; excludes backward/optimizer work. Index validation may occur in both forward and canonical validation scan and each actual event is counted.",
+    "storage": "Caller-owned Option<&mut u64>; no library mutable global/atomics. Default None; CLI observation feature supplied by separate safety owner.",
+    "proof": "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/observer-proof.txt: default vs observed reports, scratch counters, losses, snapshots, optimizer state equal; 7808 training forward events; cancellation-before-step zero events."
+  }
+}

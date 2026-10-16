@@ -663,6 +663,19 @@ exact library mappings and supplemental runtime bounds. This is bounded
 case acceptance, not whole-feature or global-gate acceptance. The
 [change](.cairn/changes/numeric-graph-v1/design.md) stays active and is not archived.
 
+**CPU follow-on (2026-10-16).** A source-pinned comparison of the existing CPU
+workloads motivated removing per-instruction table copies and repeated derivative
+reachability walks, plus specializing the default instruction loop away from
+optional observation. In the selected pair, W4 cold compile fell from
+0.919–1.012 ms to 0.085–0.124 ms, and W3-L derivative admission from 115.606 µs
+to 30.357 µs. Warm W3-L evaluation ranges overlap and it remains slower than
+host-native Rust; this is not a new performance/backend/GPU claim. Numerical,
+snapshot and scratch/layout agreement is finite evidence, not proof. The
+[separate CPU receipt](verification/ngraph/README.md#supported-profile-cpu-follow-on-2026-10-16)
+records source/binary/harness hashes, all measured phases, shared-host limits,
+resource-boundary observations and reproduction details. Historical receipts
+and the frozen acceptance/review packets are unchanged.
+
 ### Experimental checked live slots (opt-in; acceptance not established)
 
 `noble live slot --engine v8 --authority ABS_PATH` selects a separate resident
