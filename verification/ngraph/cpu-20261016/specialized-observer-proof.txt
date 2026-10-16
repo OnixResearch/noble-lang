@@ -1,0 +1,38 @@
+
+running 5 tests
+test duplicate_owners_release_in_both_orders ... ok
+test reused_workspace_returns_fresh_results ... ok
+test retained_snapshot_is_used_after_the_invocation_exits ... ok
+test scratch_is_released_exactly_once_on_every_exit ... ok
+test cancelled_or_failed_training_publishes_no_partial_snapshot ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 4 tests
+test w1_w2_native_agree ... ok
+test compiled_tables_preserve_order_rules_and_guard_precedence ... ok
+test w3_sizes_reach_gallery_scale_and_native_agrees ... ok
+test w4_native_agrees ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+reference=false input=[1.0] fuel=None actual_events=3 historical_report_nodes=4 obs=Normal([F32(1077936128)])
+reference=false input=[1.0] fuel=Some(0) actual_events=1 historical_report_nodes=2 obs=Exhausted(Fuel)
+reference=false input=[1.0] fuel=Some(3) actual_events=2 historical_report_nodes=3 obs=Exhausted(Fuel)
+reference=false input=[inf] fuel=None actual_events=3 historical_report_nodes=4 obs=GuardFailed { node: NodeId(3), fact: Finite }
+reference=false input=[inf] fuel=Some(0) actual_events=1 historical_report_nodes=2 obs=Exhausted(Fuel)
+reference=false input=[inf] fuel=Some(3) actual_events=2 historical_report_nodes=3 obs=Exhausted(Fuel)
+reference=false input=[] fuel=None actual_events=0 historical_report_nodes=0 obs=Refused(Diagnostic { code: Interface, site: Slot(0), budget: None, fact: None, detail: "missing input" })
+reference=false input=[] fuel=Some(0) actual_events=0 historical_report_nodes=0 obs=Refused(Diagnostic { code: Interface, site: Slot(0), budget: None, fact: None, detail: "missing input" })
+reference=false input=[] fuel=Some(3) actual_events=0 historical_report_nodes=0 obs=Refused(Diagnostic { code: Interface, site: Slot(0), budget: None, fact: None, detail: "missing input" })
+reference=true input=[1.0] fuel=None actual_events=4 historical_report_nodes=4 obs=Normal([F32(1077936128)])
+reference=true input=[1.0] fuel=Some(0) actual_events=0 historical_report_nodes=0 obs=Exhausted(Fuel)
+reference=true input=[1.0] fuel=Some(3) actual_events=3 historical_report_nodes=3 obs=Exhausted(Fuel)
+reference=true input=[inf] fuel=None actual_events=4 historical_report_nodes=4 obs=GuardFailed { node: NodeId(3), fact: Finite }
+reference=true input=[inf] fuel=Some(0) actual_events=0 historical_report_nodes=0 obs=Exhausted(Fuel)
+reference=true input=[inf] fuel=Some(3) actual_events=3 historical_report_nodes=3 obs=Exhausted(Fuel)
+reference=true input=[] fuel=None actual_events=0 historical_report_nodes=0 obs=Refused(Diagnostic { code: Interface, site: Slot(0), budget: None, fact: None, detail: "missing input" })
+reference=true input=[] fuel=Some(0) actual_events=0 historical_report_nodes=0 obs=Refused(Diagnostic { code: Interface, site: Slot(0), budget: None, fact: None, detail: "missing input" })
+reference=true input=[] fuel=Some(3) actual_events=0 historical_report_nodes=0 obs=Refused(Diagnostic { code: Interface, site: Slot(0), budget: None, fact: None, detail: "missing input" })
+training_actual_forward_events=7808 identical snapshot/losses/optimizer

@@ -1,0 +1,164 @@
+{
+  "source_revision": "7e1de8f1eccdece595dea295a6e00a14c93b2e62",
+  "executable_sha256": "a982f8dbbacd7d66c2cb12b706aca2bd14cfcbdb7a320292dfe08074c20917cb",
+  "checks": {
+    "l3_l4_exact_reports": true,
+    "parent_bytes_unchanged": true,
+    "replayed": true,
+    "actual_train_publication": true,
+    "guard_and_binding_refusal": true,
+    "fuel_refusal": true
+  },
+  "commands": [
+    {
+      "args": [
+        "train",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/model.ngraph",
+        "--loss",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/loss.ngraph",
+        "--data",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/data.ngraph",
+        "--policy",
+        "ngraph-deriv-real/0",
+        "--optimizer",
+        "adam/0",
+        "--seed",
+        "123",
+        "--steps",
+        "0",
+        "--out",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/selected-seed.snapshot"
+      ],
+      "exit": 0,
+      "stdout": "{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"train\",\"stage\":\"training\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"snapshot\":\"ce2ec95463a9d7f48c29005aa3f2ba526009d309b949e1cfd1ee4d5a54570e93\",\"graph\":\"1abb53f87b0b15eebdd7a212a7fdfdf45369d2696d08b7493eb21eea606e3e38\",\"parent\":\"ce2ec95463a9d7f48c29005aa3f2ba526009d309b949e1cfd1ee4d5a54570e93\",\"steps\":0,\"loss_initial\":\"0x3fad67acaaaaaaaa\",\"loss_final\":\"0x3fad67acaaaaaaaa\"}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "train",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/model.ngraph",
+        "--loss",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/loss.ngraph",
+        "--data",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/data.ngraph",
+        "--policy",
+        "ngraph-deriv-real/0",
+        "--optimizer",
+        "adam/0",
+        "--seed",
+        "123",
+        "--steps",
+        "10",
+        "--from",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/selected-seed.snapshot",
+        "--out",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/selected-trained.snapshot"
+      ],
+      "exit": 0,
+      "stdout": "{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"train\",\"stage\":\"training\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"snapshot\":\"5495b154c00044acd3919b4bff945e1a4f6c033740fb3d7d8b7a7623f9de480f\",\"graph\":\"1abb53f87b0b15eebdd7a212a7fdfdf45369d2696d08b7493eb21eea606e3e38\",\"parent\":\"ce2ec95463a9d7f48c29005aa3f2ba526009d309b949e1cfd1ee4d5a54570e93\",\"steps\":10,\"loss_initial\":\"0x3fad67acaaaaaaaa\",\"loss_final\":\"0x3f7c0f352aaaaaaa\"}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "verify",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/model.ngraph",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/selected-trained.snapshot",
+        "--replay",
+        "--loss",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/loss.ngraph",
+        "--data",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/data.ngraph",
+        "--from",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/selected-seed.snapshot"
+      ],
+      "exit": 0,
+      "stdout": "{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"verify\",\"stage\":\"replay\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"snapshot\":\"5495b154c00044acd3919b4bff945e1a4f6c033740fb3d7d8b7a7623f9de480f\",\"graph\":\"1abb53f87b0b15eebdd7a212a7fdfdf45369d2696d08b7493eb21eea606e3e38\",\"bound\":true,\"replayed\":true}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "eval",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/model.ngraph",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/vectors.ngraph",
+        "--snapshot",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/selected-trained.snapshot"
+      ],
+      "exit": 0,
+      "stdout": "{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"graph\":\"1abb53f87b0b15eebdd7a212a7fdfdf45369d2696d08b7493eb21eea606e3e38\",\"snapshot\":\"5495b154c00044acd3919b4bff945e1a4f6c033740fb3d7d8b7a7623f9de480f\"}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":0,\"outputs\":[\"f32:0x80000000\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":1,\"outputs\":[\"f32:0x00000000\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":2,\"outputs\":[\"f32:nan\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":3,\"outputs\":[\"f32:0xff800000\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":4,\"outputs\":[\"f32:0x3ecc195f\"]}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "eval",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/model.ngraph",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/vectors.ngraph",
+        "--snapshot",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/selected-trained.snapshot",
+        "--reference"
+      ],
+      "exit": 0,
+      "stdout": "{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"graph\":\"1abb53f87b0b15eebdd7a212a7fdfdf45369d2696d08b7493eb21eea606e3e38\",\"snapshot\":\"5495b154c00044acd3919b4bff945e1a4f6c033740fb3d7d8b7a7623f9de480f\"}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":0,\"outputs\":[\"f32:0x80000000\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":1,\"outputs\":[\"f32:0x00000000\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":2,\"outputs\":[\"f32:nan\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":3,\"outputs\":[\"f32:0xff800000\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":4,\"outputs\":[\"f32:0x3ecc195f\"]}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "eval",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/model.ngraph",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/vectors.ngraph"
+      ],
+      "exit": 2,
+      "stdout": "{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"binding\",\"outcome\":\"reject\",\"code\":\"E-SNAPSHOT-LAYOUT\",\"site\":\"graph\",\"detail\":\"the graph has param slots but no --snapshot was given\"}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "eval",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/guard.ngraph",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/vectors.ngraph"
+      ],
+      "exit": 1,
+      "stdout": "{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"graph\":\"ad5d14b11648166a490d352a049d77982837f3dd076fa450dae2c83874ea0053\",\"snapshot\":null}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":0,\"outputs\":[\"f32:0x80000000\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":1,\"outputs\":[\"f32:0x00000001\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"trap\",\"code\":\"G-FACT-FALSE\",\"site\":\"node %1\",\"detail\":\"%1 fails its finite fact\",\"vector\":2}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"trap\",\"code\":\"G-FACT-FALSE\",\"site\":\"node %1\",\"detail\":\"%1 fails its finite fact\",\"vector\":3}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":4,\"outputs\":[\"f32:0x3f800000\"]}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "eval",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/model.ngraph",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/vectors.ngraph",
+        "--snapshot",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/selected-trained.snapshot",
+        "--fuel",
+        "0"
+      ],
+      "exit": 5,
+      "stdout": "{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"graph\":\"1abb53f87b0b15eebdd7a212a7fdfdf45369d2696d08b7493eb21eea606e3e38\",\"snapshot\":\"5495b154c00044acd3919b4bff945e1a4f6c033740fb3d7d8b7a7623f9de480f\"}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"exhausted\",\"code\":\"E-BUDGET-FUEL\",\"site\":null,\"detail\":\"host evaluation fuel exhausted\",\"vector\":0}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"exhausted\",\"code\":\"E-BUDGET-FUEL\",\"site\":null,\"detail\":\"host evaluation fuel exhausted\",\"vector\":1}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"exhausted\",\"code\":\"E-BUDGET-FUEL\",\"site\":null,\"detail\":\"host evaluation fuel exhausted\",\"vector\":2}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"exhausted\",\"code\":\"E-BUDGET-FUEL\",\"site\":null,\"detail\":\"host evaluation fuel exhausted\",\"vector\":3}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"exhausted\",\"code\":\"E-BUDGET-FUEL\",\"site\":null,\"detail\":\"host evaluation fuel exhausted\",\"vector\":4}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "eval",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/guard.ngraph",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/vectors.ngraph",
+        "--reference"
+      ],
+      "exit": 1,
+      "stdout": "{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"graph\":\"ad5d14b11648166a490d352a049d77982837f3dd076fa450dae2c83874ea0053\",\"snapshot\":null}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":0,\"outputs\":[\"f32:0x80000000\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":1,\"outputs\":[\"f32:0x00000001\"]}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"trap\",\"code\":\"G-FACT-FALSE\",\"site\":\"node %1\",\"detail\":\"%1 fails its finite fact\",\"vector\":2}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"trap\",\"code\":\"G-FACT-FALSE\",\"site\":\"node %1\",\"detail\":\"%1 fails its finite fact\",\"vector\":3}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"vector\":4,\"outputs\":[\"f32:0x3f800000\"]}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "eval",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/model.ngraph",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/vectors.ngraph",
+        "--snapshot",
+        "/home/brittonr/.cache/noble-issues/evidence/ngraph-cpu-20261016/cli/selected-trained.snapshot",
+        "--reference",
+        "--fuel",
+        "0"
+      ],
+      "exit": 5,
+      "stdout": "{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"normal\",\"code\":null,\"site\":null,\"graph\":\"1abb53f87b0b15eebdd7a212a7fdfdf45369d2696d08b7493eb21eea606e3e38\",\"snapshot\":\"5495b154c00044acd3919b4bff945e1a4f6c033740fb3d7d8b7a7623f9de480f\"}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"exhausted\",\"code\":\"E-BUDGET-FUEL\",\"site\":null,\"detail\":\"host evaluation fuel exhausted\",\"vector\":0}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"exhausted\",\"code\":\"E-BUDGET-FUEL\",\"site\":null,\"detail\":\"host evaluation fuel exhausted\",\"vector\":1}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"exhausted\",\"code\":\"E-BUDGET-FUEL\",\"site\":null,\"detail\":\"host evaluation fuel exhausted\",\"vector\":2}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"exhausted\",\"code\":\"E-BUDGET-FUEL\",\"site\":null,\"detail\":\"host evaluation fuel exhausted\",\"vector\":3}\n{\"schema\":\"noble-ngraph-report/v1\",\"command\":\"eval\",\"stage\":\"evaluation\",\"outcome\":\"exhausted\",\"code\":\"E-BUDGET-FUEL\",\"site\":null,\"detail\":\"host evaluation fuel exhausted\",\"vector\":4}\n",
+      "stderr": ""
+    }
+  ]
+}

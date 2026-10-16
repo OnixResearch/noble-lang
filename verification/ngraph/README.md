@@ -195,3 +195,125 @@ No hash match or agreement is reported as discharging an obligation.
 - **GPU (#2).** Blocked. No transfer or launch cost was measured or modelled, and with a stop recommendation there is no compiled-CPU specialization to compare a GPU against.
 - **W1/W2 against both baselines** (`phase-c-l1.json`). These do not change the outcome. L4 is far faster than the ordinary path's per-submission interface but 0.0066–0.0077× host-native, so it is not at least 2× faster than both baselines on any workload. W1/W2 are `I64` and do not stand in for the W3 test.
 - **Interpretation, not measured.** The compiled evaluator interprets one enum-dispatched instruction per node, about 1.5 ns per node on W3-L. A straightforward native loop is 7.6–16.5× faster on these shapes. Only a design change could plausibly reach the 2× threshold, such as batch-vectorized evaluation or native code generation. Doing so would be a new experiment and is not claimed here.
+
+# Supported-profile CPU follow-on (2026-10-16)
+
+This is a separate, source-pinned measurement after the owner adopted the profile;
+it does not replace the frozen Phase B/C receipts above or the lifecycle acceptance
+and review packets in `verification/numeric-graph-v1/`. It makes no GPU, backend
+selection, theorem, or claim of beating native Rust.
+
+## Source, method and limits
+
+The comparison uses the existing Phase C W1/W2/W3-S/M/L/W4 constructors and exact
+input, parameter, dataset and optimizer bits, with the selected locked/offline
+vendor and the same rustc/Cargo release profile in both lanes. The library baseline
+is byte-identical to published anchor `cd76c608721f25ce7f7bc896dfc7cdeb54e9b004`.
+Baseline harness commit `f03aa4d1a4d8612721fbed9a1577ae65befffa93` adds measurement
+only; final implementation/harness commit is
+`7e1de8f1eccdece595dea295a6e00a14c93b2e62`. The intermediate selected
+`5ca3665` lane is retained, including its measured observer overhead, not silently
+substituted for the final lane. Raw receipts, exact hashes, source manifests and
+the reproduction configuration are in [`cpu-20261016/`](cpu-20261016/).
+
+Each selected lane has three complete runs with the unchanged harness defaults
+`--samples 2000 --cold-reps 21`
+and one `--phase-profile true` function-level wall-time run; measurements use
+CPU 2 via `taskset`, `nice -n 10`, and the campaign Cargo lock. `perf` was absent
+from PATH and `perf_event_paranoid` was 2, so the profile is **real function-level
+wall timing and structural retained/scratch-byte accounting**, not sampled CPU
+stacks or an allocation-count profile. No unsafe global allocator was installed.
+The host was shared, not idle or isolated: final-run load averages were lower
+than baseline. The lock excluded campaign builds, not all host activity. Tiny
+latency differences and overlapping ranges are not evidence of improvement.
+
+The initial pre-edit/exploratory baseline remains contextual evidence only: its
+then-used dependency/vendor context is not retrospectively called the selected
+context. The final ratios below use only the paired selected receipts.
+
+## Measured changes
+
+Ranges below are the three runs' reported medians, not confidence intervals.
+Admission/check, cold compile, warm evaluation and training are separate costs.
+The one-step and derivative-admission rows come from the separate function-profile
+runs and are not the steady 100-step measurement.
+
+| Cost | Selected baseline | Final | Interpretation |
+| --- | ---: | ---: | --- |
+| W4 graph check | 5.979–6.209 ms | 6.156–6.434 ms | No checker speedup |
+| W4 cold compile | 0.919–1.012 ms | 0.085–0.124 ms | 7.4–12.0× lower compile time across the ranges |
+| W4 total cold check + compile + first evaluation | 6.893–7.267 ms | 6.259–6.573 ms | Checker still dominates cold admission |
+| W4 retained compiled-code byte estimate | 2,721,604 B | 161,472 B | 16.85× smaller; structural estimate, not allocator/RSS measurement |
+| W3-L derivative admission | 115.606 µs | 30.357 µs | 3.81× lower wall time in the function-profile pair |
+| W3-L inclusive one-step training call | 196.467 µs | 103.003 µs | 1.91× lower wall time; includes admission/setup/finalization |
+| W3-L steady training, per step, 15 points | 35.912–39.392 µs | 35.547–37.001 µs | Overlap; no steady-training throughput claim |
+| W3-L warm compiled evaluation | 5.879–6.107 µs | 5.808–6.487 µs | Overlap; no warm-evaluation speedup claim |
+
+The measured bottlenecks justify three boring implementation changes: compiled
+table instructions borrow the single retained checked-graph table instead of
+copying it into every instruction; derivative admission propagates parameter
+influence once in canonical dependency order instead of repeating recursive
+reachability walks; and observed/unobserved private instruction loops specialize
+once per layer so the default path does not pay an optional observer branch per
+instruction. There is no new backend, dependency, workspace target, numerical
+profile, optimizer or scheduler/compiler revision. The separately approved
+caller-owned safety observer hooks are exercised both with and without an observer.
+
+On the final W3-L runs L4 remains only 0.142–0.155× host-native Rust speed, about
+6.5–7.0× slower. These observations do not reverse the historical stop result or
+establish that this profile is faster than either required baseline.
+
+## Numerical and resource semantics
+
+All 12 selected receipts (baseline, intermediate and final, including their
+function-profile runs) retain exact W3 parameter/input/data bits, graph and packed
+layout identities, final loss bits, snapshot identities and optimizer-state
+hashes. The W3/W4 per-run L3/L4 agreements pass; I64 layouts and W2 final-state
+agreements also match. Register/scratch estimates are unchanged; the intentional
+retained-code reduction is reported separately. This is finite execution evidence,
+not a discharged proof obligation.
+
+Guard ordering and fuel/cancellation checkpoints are not moved. Compiled execution
+still materializes input slots before its first layer fuel/cancellation check;
+those writes are actual work and observer counters include them even when fuel
+is zero. Historical `Report::evaluated_nodes` charges are not redefined as actual
+events. Training still computes all pure model forward values before scanning
+for the first canonical failure, as the anchor did; a failed point stops the
+step and publishes no snapshot, but this is **not** a no-later-work cutoff claim.
+Scratch leases and cancellation-before-step behavior remain independently
+observed boundaries. See the resource proofs and production CLI smoke linked
+from the receipt, rather than inferring work counts from output agreement.
+
+The machine-readable index is [`cpu-20261016/receipt.json`](cpu-20261016/receipt.json).
+It hashes every retained raw receipt, source manifest, harness/probe source and
+recorded runner, and identifies benchmark/CLI/probe binaries and external frozen
+source archives. The scripts are exact **host-specific recorded invocations**,
+not automatic source-lane selectors: reproduce the specified source in separately
+owned worktrees, retain the selected vendor/toolchain/configuration, and choose
+new output paths rather than overwriting frozen evidence. Hold the campaign lock
+around both the build and timing command. `run-selected-comparison.sh` records
+the baseline/intermediate run; `run-selected-final.sh` records the final run.
+The old environment capture supplies compiler version details; selected Cargo
+home and vendor overrides are explicitly recorded separately in the receipt.
+
+## Executed quality and production smoke
+
+On the final selected source, `run-selected-quality.sh` completed with exit 0:
+the complete `noble-ngraph` and `noble-ngraph-experiment` suites plus the existing
+CLI `ngraph` suite passed (106 passed, two existing ignored tests), followed by
+three-package all-target clippy with `-D warnings`, three-package format check,
+and a release build of the production `noble` executable. A separate selected
+baseline release ownership check passed all five tests; the combined log therefore
+has 111 passes and two ignored tests. Commands and logs are retained with the receipt.
+
+The actual final release CLI created a seed snapshot, trained ten steps from it,
+saved the child, replay-verified it from the parent, and evaluated saved parameters
+through both evaluators with exactly equal reports. Assertions check signed zero,
+NaN, infinity and finite output encodings, missing-snapshot binding refusal,
+canonical guard refusal, fuel-zero refusal, lineage and unchanged parent bytes.
+The external native-oracle table probe also passed 612 explicit boundary,
+NaN and refusal cases. The training refusal probe observed four forward/validation
+events versus the reference evaluator's three-node cutoff, no publication,
+unchanged snapshot bytes, and scratch `(acquired, released, live) = (1, 1, 0)`;
+cancellation before a step observed zero events/publications/leases. These are
+finite, specific exercised cases, not global no-work or resource-proof claims.

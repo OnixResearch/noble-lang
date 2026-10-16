@@ -1,0 +1,6 @@
+ngraph-ir/0 ngraph-f32/0
+subject authored-name cpu-current-cli-guard
+slot input f32
+%0 = input 0
+%1 = guard %0 finite
+out %0
