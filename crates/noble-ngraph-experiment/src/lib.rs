@@ -10,6 +10,7 @@
 //! model (NG-PO-D) correct. NG-PO-A..H stay open.
 
 pub mod b2i64;
+pub mod bench;
 pub mod check;
 pub mod compiled;
 pub mod diag;

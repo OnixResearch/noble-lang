@@ -15,11 +15,15 @@
 //! definitions; transitions carry the state across chunks on the host side.
 //!
 //! Phase C reuse: W1 = [`Cli::run_vectors`] on I1, W2 =
-//! [`Cli::run_transition`] on I4.
+//! [`Cli::run_transition`] on I4. The CLI writes one report line per
+//! submission as it finishes, so each line's arrival time (from the session
+//! process spawn) times that submission ([`Timing`]); the CLI reports no
+//! timing itself.
 
 use std::io::{BufRead as _, BufReader, Write as _};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::time::{Duration, Instant};
 
 /// Submissions per session process. A Core session retains each prepared
 /// module; ~430 two-value submissions exhaust its allocation quota with the
@@ -149,6 +153,20 @@ impl Cli {
     /// # Errors
     /// Spawn/IO failure or an unparsable report line.
     pub fn session(&self, submissions: &[String]) -> Result<Vec<Report>, Error> {
+        Ok(self
+            .session_timed(submissions)?
+            .into_iter()
+            .map(|(r, _)| r)
+            .collect())
+    }
+
+    /// [`Cli::session`] with each report's arrival time measured from the
+    /// process spawn.
+    ///
+    /// # Errors
+    /// As [`Cli::session`].
+    pub fn session_timed(&self, submissions: &[String]) -> Result<Vec<(Report, Duration)>, Error> {
+        let spawned = Instant::now();
         let mut child = Command::new(&self.bin)
             .args(["session", "--framed", "--opt", self.opt.flag()])
             .stdin(Stdio::piped())
@@ -175,7 +193,9 @@ impl Cli {
             .ok_or_else(|| Error::Protocol("no stdout".into()))?;
         let mut reports = Vec::with_capacity(submissions.len());
         for line in BufReader::new(stdout).lines() {
-            reports.push(parse(&line?)?);
+            let line = line?;
+            let at = spawned.elapsed();
+            reports.push((parse(&line)?, at));
         }
         child.wait()?;
         writer
@@ -210,6 +230,7 @@ impl Cli {
         let per_chunk = (MAX_SUBMISSIONS.saturating_sub(definitions.len()) / 2).max(1);
         let mut run = Run {
             results: Vec::with_capacity(vectors.len()),
+            timing: Vec::with_capacity(vectors.len()),
             restarts: 0,
         };
         let mut at = 0;
@@ -220,7 +241,7 @@ impl Cli {
                 subs.push(push_line(if i == 0 { 0 } else { outputs }, v));
                 subs.push(root.to_owned());
             }
-            let reports = self.session(&subs)?;
+            let (reports, times) = split(self.session_timed(&subs)?);
             for i in 0..chunk.len() {
                 let r = root_report(&reports, definitions.len(), i)?;
                 if !r.ok() && i > 0 && quota(r) {
@@ -228,6 +249,7 @@ impl Cli {
                     break;
                 }
                 run.results.push(r.clone());
+                run.timing.push(timing(&times, definitions.len(), i));
                 at += 1;
                 if !r.ok() {
                     // Later input lines no longer match the stack.
@@ -263,6 +285,7 @@ impl Cli {
         let mut state = initial_state.to_vec();
         let mut run = Run {
             results: Vec::with_capacity(steps.len()),
+            timing: Vec::with_capacity(steps.len()),
             restarts: 0,
         };
         let mut at = 0;
@@ -278,7 +301,7 @@ impl Cli {
                 subs.push(line);
                 subs.push(root.to_owned());
             }
-            let reports = self.session(&subs)?;
+            let (reports, times) = split(self.session_timed(&subs)?);
             for i in 0..chunk.len() {
                 let r = root_report(&reports, definitions.len(), i)?;
                 if !r.ok() && i > 0 && quota(r) {
@@ -290,6 +313,7 @@ impl Cli {
                 }
                 state = r.stack[..initial_state.len()].to_vec();
                 run.results.push(r.stack.clone());
+                run.timing.push(timing(&times, definitions.len(), i));
                 at += 1;
             }
         }
@@ -302,10 +326,46 @@ impl Cli {
 pub struct Run<T> {
     /// One result per vector or step, in order.
     pub results: Vec<T>,
+    /// One [`Timing`] per result.
+    pub timing: Vec<Timing>,
     /// Fresh sessions started because accumulated session state hit an
     /// ordinary-path quota ([`quota`]), reported separately from
     /// observations.
     pub restarts: usize,
+}
+
+/// Wall-clock timing of one vector or step, from report arrival times.
+#[derive(Clone, Copy, Debug)]
+pub struct Timing {
+    /// The input submission: previous report (process spawn for a session's
+    /// first submission) to its report.
+    pub push: Duration,
+    /// The root submission: input report to root report. The ordinary path
+    /// checks, compiles, instantiates and runs every submission, so this is
+    /// its whole per-evaluation cost.
+    pub root: Duration,
+    /// Process spawn to the root report.
+    pub since_spawn: Duration,
+    /// Whether this is the first vector or step of its session process (its
+    /// `push` includes process start-up and the definitions).
+    pub first_in_session: bool,
+}
+
+fn split(timed: Vec<(Report, Duration)>) -> (Vec<Report>, Vec<Duration>) {
+    timed.into_iter().unzip()
+}
+
+/// Timing of vector `vector` from arrival times; `root_report` has already
+/// checked that both of its reports exist.
+fn timing(times: &[Duration], definitions: usize, vector: usize) -> Timing {
+    let push_at = definitions + 2 * vector;
+    let before = push_at.checked_sub(1).map_or(Duration::ZERO, |p| times[p]);
+    Timing {
+        push: times[push_at] - before,
+        root: times[push_at + 1] - times[push_at],
+        since_spawn: times[push_at + 1],
+        first_in_session: vector == 0,
+    }
 }
 
 /// An ordinary-path quota outcome: a static `exhausted` refusal (the

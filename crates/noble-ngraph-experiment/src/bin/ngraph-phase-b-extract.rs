@@ -13,13 +13,14 @@
 //!
 //! `--out` must not exist. Exit status 1 if any record failed.
 
-use std::path::{Path, PathBuf};
-use std::process::{Command, ExitCode};
+use std::path::PathBuf;
+use std::process::ExitCode;
 use std::time::Instant;
 
 use serde_json::{json, Value as J};
 
 use noble_ngraph_experiment::b2i64::{self, Config, Lowered};
+use noble_ngraph_experiment::bench::{cpu_model, read, sha256};
 use noble_ngraph_experiment::compiled::COMPILER_REVISION;
 use noble_ngraph_experiment::extract::Budget;
 use noble_ngraph_experiment::ir::{hex, Op, IR_VERSION, SEMANTIC_REVISION};
@@ -35,28 +36,6 @@ const TRUSTED: [&str; 7] = [
     "rustc/LLVM of the pinned nightly toolchain",
     "blake3 =1.8.7 (pure) and sha256sum for identities: a hash identifies bytes, it proves nothing",
 ];
-
-fn sha256(path: &Path) -> String {
-    Command::new("sha256sum")
-        .arg(path)
-        .output()
-        .ok()
-        .and_then(|o| String::from_utf8(o.stdout).ok())
-        .and_then(|s| s.split_whitespace().next().map(str::to_owned))
-        .unwrap_or_else(|| "unavailable".to_owned())
-}
-
-fn read(path: &str) -> String {
-    std::fs::read_to_string(path).unwrap_or_else(|_| "unavailable".to_owned())
-}
-
-fn cpu_model() -> String {
-    read("/proc/cpuinfo")
-        .lines()
-        .find(|l| l.starts_with("model name"))
-        .and_then(|l| l.split(':').nth(1))
-        .map_or_else(|| "unavailable".to_owned(), |m| m.trim().to_owned())
-}
 
 #[allow(clippy::too_many_arguments)]
 fn record(
