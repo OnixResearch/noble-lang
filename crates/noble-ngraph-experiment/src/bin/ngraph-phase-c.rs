@@ -37,6 +37,7 @@ struct Args {
     pinned_cpu: String,
     samples: usize,
     cold_reps: usize,
+    phase_profile: bool,
 }
 
 fn args() -> Args {
@@ -47,6 +48,7 @@ fn args() -> Args {
         pinned_cpu: "unpinned".into(),
         samples: 2_000,
         cold_reps: 21,
+        phase_profile: false,
     };
     let v: Vec<String> = std::env::args().skip(1).collect();
     let mut i = 0;
@@ -59,6 +61,7 @@ fn args() -> Args {
             "--pinned-cpu" => a.pinned_cpu = val,
             "--samples" => a.samples = val.parse().unwrap_or(a.samples),
             "--cold-reps" => a.cold_reps = val.parse().unwrap_or(a.cold_reps),
+            "--phase-profile" => a.phase_profile = val.parse().expect("true or false"),
             other => panic!("unknown argument {other}"),
         }
         i += 2;
@@ -116,6 +119,7 @@ fn bytes_json(c: &CheckedGraph, comp: &Compiled, params: usize) -> Json {
         ("param_bytes", Json::U(params as u64 * 4)),
         ("activation_bytes_l3", Json::U(reference_scratch_bytes(c))),
         ("activation_bytes_l4_register_file", Json::U(comp.scratch_bytes())),
+        ("packed_layout_key", Json::s(hex(&comp.layout_key()))),
         ("retained_graph_bytes_estimate", Json::U(retained_bytes(c.graph()))),
         ("retained_compiled_code_bytes_estimate", Json::U(comp.retained_bytes())),
         ("measurement", Json::s("estimates from element counts × element sizes; allocator overhead and RSS: unsupported")),
@@ -144,6 +148,39 @@ struct W3Out {
     json: Json,
     l4_over_native: f64,
     admission_ms: f64,
+}
+
+/// Inclusive wall-clock function timings, not sampling/hardware/allocation
+/// profiling. Reuses the exact timed workload, snapshot, input and data.
+fn phase_profile(a: &Args, c: &train::Contract, s: &ParamSnapshot, xi: &[Value]) -> Json {
+    if !a.phase_profile {
+        return Json::s("not requested (--phase-profile true)");
+    }
+    let model = &c.model;
+    let slots: Vec<f32> = noble_ngraph::eval::preflight(model, xi, Some(s))
+        .expect("slots")
+        .iter()
+        .map(|v| match v {
+            Value::F32(b) => f32::from_bits(*b),
+            _ => unreachable!("W3 is F32"),
+        })
+        .collect();
+    let vals = noble_ngraph::grad::forward(model, &slots);
+    let seeds = vec![1.0; model.graph().outputs.len()];
+    let measure = |f: &mut dyn FnMut()| warm(a.samples, f).0;
+    Json::obj([
+        ("kind", Json::s("inclusive function wall-clock; nested phases overlap; no allocation or hardware counts")),
+        ("data_digest", Json::s(hex(&train::data_digest(&BLAKE3, &c.data)))),
+        ("snapshot", Json::s(hex(&s.id()))),
+        ("snapshot_check_use", measure(&mut || { black_box(s.check_use(black_box(model))).expect("bound"); })),
+        ("eval_preflight", measure(&mut || { black_box(noble_ngraph::eval::preflight(model, black_box(xi), Some(s))).expect("slots"); })),
+        ("grad_forward", measure(&mut || { black_box(noble_ngraph::grad::forward(model, black_box(&slots))); })),
+        ("first_failure", measure(&mut || { black_box(noble_ngraph::eval::first_failure(model, black_box(&vals))); })),
+        ("grad_backward", measure(&mut || { black_box(noble_ngraph::grad::backward(model, black_box(&vals), &seeds, &c.deriv)); })),
+        ("objective_checked", measure(&mut || { black_box(noble_ngraph::grad::objective_checked(model, &c.loss, black_box(&slots), &c.data[0].targets, &c.deriv)).expect("objective"); })),
+        ("train_admit", measure(&mut || { train::admit(model, &c.loss, &c.params, &c.deriv).expect("admitted"); })),
+        ("train_one_step", measure(&mut || { black_box(train::train(&BLAKE3, c, None, 1, &mut TrainControl::default())).expect("trains"); })),
+    ])
 }
 
 #[allow(clippy::too_many_lines)]
@@ -236,8 +273,10 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
             .collect(),
     };
     let steps = 100u64;
+    let phases = phase_profile(a, &contract, &s, &xi);
     let mut ours = Vec::new();
     let mut loss_ratio = 0.0;
+    let mut training_result = Json::Null;
     for _ in 0..5 {
         let t = Instant::now();
         let r = train::train(
@@ -251,6 +290,12 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
         #[allow(clippy::cast_precision_loss)]
         ours.push(ns(t.elapsed()) / steps as f64);
         loss_ratio = r.losses[r.losses.len() - 1] / r.losses[0];
+        training_result = Json::obj([
+            ("initial_snapshot", Json::s(hex(&r.initial.id()))),
+            ("final_snapshot", Json::s(hex(&r.snapshot.id()))),
+            ("optimizer_state", Json::s(hex(&r.state.digest(&BLAKE3)))),
+            ("loss_f64_bits", Json::A(r.losses.iter().map(|v| Json::s(format!("0x{:016x}", v.to_bits()))).collect())),
+        ]);
     }
     let flat_x: Vec<f32> = points.iter().flat_map(|(xs, _)| xs.clone()).collect();
     let flat_t: Vec<f32> = points.iter().flat_map(|(_, ts)| ts.clone()).collect();
@@ -275,6 +320,16 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
             ("bytes", bytes_json(&c, &comp, net.params())),
             ("agreement_before_timing", Json::s(format!("200 input vectors: native, L3, L4 agree under ≡obs = {agree}"))),
             ("cold", cold),
+            ("function_wall_profile", phases),
+            ("reproducibility", Json::obj([
+                ("param_seed", Json::s("0x00c30003")),
+                ("input_seed", Json::s("0x00c10003")),
+                ("input_f32_bits", Json::A(x.iter().map(|v| Json::s(format!("0x{:08x}", v.to_bits()))).collect())),
+                ("param_f32_bits", Json::A(p.iter().map(|v| Json::s(format!("0x{:08x}", v.to_bits()))).collect())),
+                ("data_digest", Json::s(hex(&train::data_digest(&BLAKE3, &contract.data)))),
+                ("steps", Json::U(steps)),
+                ("training_result", training_result),
+            ])),
             ("warm_l3_reference", l3j),
             ("warm_l4_compiled", l4j),
             ("warm_native_rust", nj),
@@ -538,6 +593,7 @@ fn main() {
     ]);
     let run = Json::obj([
         ("source_revision", Json::s(a.source_rev.clone())),
+        ("executable_sha256", Json::s(std::env::current_exe().map_or_else(|_| "unsupported".into(), |p| noble_ngraph_experiment::bench::sha256(&p)))),
         ("toolchain", Json::s(a.toolchain.clone())),
         ("profiles", Json::s(format!("{IR_VERSION}; {SEMANTIC_REVISION}; {FACT_RULE_REVISION}; {COMPILER_REVISION}; ngraph-deriv-real/0; adam/0"))),
         ("oracle", Json::s(APFLOAT_ORACLE)),
