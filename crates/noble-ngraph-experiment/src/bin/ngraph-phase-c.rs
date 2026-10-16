@@ -554,6 +554,55 @@ fn main() {
         ("recommendation", Json::s(recommendation)),
         ("gpu_experiment", Json::s("blocked: no measured or explicitly modelled transfer and launch costs; and the compiled CPU graph is not the comparison point that would need a 2× GPU margin unless CPU specialization were recommended")),
     ]);
+    let po = |id: &str, what: &str| {
+        Json::obj([
+            ("id", Json::s(id)),
+            ("statement", Json::s(what)),
+            ("status", Json::s("open")),
+        ])
+    };
+    let c2 = Json::obj([
+        (
+            "reference_agreement",
+            Json::s("Per workload, before timing: host-native, L3 and L4 agree under ≡obs on 200 input vectors (W3, W4) and on the W1 value and the W2 final state; see each workload's agreement field. Phase B: L2 (rustc_apfloat), B2-ORACLE, L3, L4 agree on all vectors (phase-b-core.json)."),
+        ),
+        (
+            "finite_coverage",
+            Json::s("Finite only: Phase B boundary vectors, 8 seeded random graphs x 20,000 vectors, 10^6 operand pairs per operation, 2,000 gradient samples, the 35 core rejection controls; Phase C agreement samples above. No exhaustive or symbolic coverage."),
+        ),
+        (
+            "theorem_obligations",
+            Json::A(vec![
+                po("NG-PO-A", "extraction preserves Obs on the I64 overlap"),
+                po("NG-PO-B", "graph-checker soundness"),
+                po("NG-PO-C", "compiled evaluator refines the reference"),
+                po("NG-PO-D", "reference model corresponds to IEEE binary32"),
+                po("NG-PO-E", "fact-transfer soundness"),
+                po("NG-PO-F", "ngraph-deriv-real/0 computes the real derivative away from corners"),
+                po("NG-PO-G", "snapshot and provenance binding"),
+                po("NG-PO-H", "executed compiled-graph bytes correspond to the admitted graph"),
+            ]),
+        ),
+        (
+            "trusted_boundaries",
+            Json::A(vec![
+                Json::s("rustc/LLVM release codegen of the pinned nightly (no contraction; default x86-64 features)"),
+                Json::s("host CPU IEEE binary32/64 arithmetic, no FTZ/DAZ"),
+                Json::s("rustc_apfloat =0.2.3+llvm-462a31f5a5ab as L2 oracle (Phase B)"),
+                Json::s("blake3 =1.8.7 identities (bytes only)"),
+                Json::s("this crate's checker, L3, L4, trainer and the hand-written native baselines"),
+                Json::s("std::time::Instant and a shared, unisolated host for timings"),
+            ]),
+        ),
+        (
+            "unsupported_instrumentation",
+            Json::s("hardware performance counters, RSS/allocator peak, cache misses, energy: unsupported (not zero); byte figures are element-count estimates"),
+        ),
+        (
+            "not_run",
+            Json::s("pinned handwired under pinned Bun (optional, informational): not run"),
+        ),
+    ]);
     let run = Json::obj([
         ("source_revision", Json::s(a.source_rev.clone())),
         ("toolchain", Json::s(a.toolchain.clone())),
@@ -582,6 +631,7 @@ fn main() {
         ("w3", Json::A(w3s.into_iter().map(|w| w.json).collect())),
         ("w4", w4j),
         ("w1_w2_cpu_legs", w12j),
+        ("c2", c2),
         ("c3", c3),
     ]);
     let text = doc.pretty();
