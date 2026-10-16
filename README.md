@@ -377,8 +377,9 @@ dependency and exact I64 capture; `artifact_sha256` is null, not the builder
 artifact. The local `v2-blake3` IDs use BLAKE3 1.8.7 with separate template
 and captured-value domains, over this strict checked I64 projection only;
 they are not the canonical portable P-ID-04 encoding. The eight-lock offline
-vendor closure contains 237 archives, five beyond the formerly reviewed 232:
-`unicode-width` 0.2.2 and four BLAKE3-related crates. A hash-checked candidate
+vendor closure contains 238 archives, six beyond the formerly reviewed 232:
+`unicode-width` 0.2.2, four BLAKE3-related crates and, for the issue #14
+numeric graph experiment, `rustc_apfloat` 0.2.3. A hash-checked candidate
 vendor was realized locally, with its measured path and NAR bound by M5/M6
 in this WIP selection, without source-bound assurance. That is not a selected
 Nix, source-inventory or native-assurance gate pass. Source locations, builder
