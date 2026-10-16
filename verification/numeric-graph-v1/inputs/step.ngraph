@@ -1,0 +1,11 @@
+ngraph-ir/0 ngraph-f32/0
+subject authored-name cli-train-step
+slot input f32
+slot param f32
+%0 = input 0
+%1 = param 1
+%2 = f32.mul %1 %0
+%3 = guard %2 range 0x00000000 0x3f800000
+%4 = f32.step %2
+%5 = f32.add %4 %0
+out %5

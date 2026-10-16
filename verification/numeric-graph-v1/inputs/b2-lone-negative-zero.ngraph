@@ -1,0 +1,6 @@
+ngraph-ir/0 ngraph-f32/0
+subject authored c5896cc9f46af716fed00e677eba0dc055d6055079a86b03477fe993725ecae5 closure -
+slot input f32
+%0 = input 0
+%1 = f32.affine 0x80000000 0x3f800000 %0
+out %1

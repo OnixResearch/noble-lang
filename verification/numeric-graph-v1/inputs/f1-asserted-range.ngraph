@@ -1,0 +1,85 @@
+ngraph-ir/0 ngraph-f32/0
+subject authored 816941950e745b2a722e1fb6ca1b2471559d9993966e89d75ac7f7914d31effe closure -
+slot input f32
+slot input f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+slot param f32
+%0 = input 0
+%1 = input 1
+%2 = param 2
+%3 = param 3
+%4 = param 4
+%5 = param 5
+%6 = param 6
+%7 = param 7
+%8 = param 8
+%9 = param 9
+%10 = param 10
+%11 = param 11
+%12 = param 12
+%13 = param 13
+%14 = param 14
+%15 = param 15
+%16 = param 16
+%17 = param 17
+%18 = param 18
+%19 = param 19
+%20 = param 20
+%21 = param 21
+%22 = param 22
+%23 = param 23
+%24 = f32.mul %2 %0
+%25 = f32.add %4 %24
+%26 = f32.mul %3 %1
+%27 = f32.add %25 %26
+%28 = f32.mul %5 %0
+%29 = f32.add %7 %28
+%30 = f32.mul %6 %1
+%31 = f32.add %29 %30
+%32 = f32.reglu %27 %31
+%33 = f32.mul %8 %0
+%34 = f32.add %10 %33
+%35 = f32.mul %9 %1
+%36 = f32.add %34 %35
+%37 = f32.mul %11 %0
+%38 = f32.add %13 %37
+%39 = f32.mul %12 %1
+%40 = f32.add %38 %39
+%41 = f32.reglu %36 %40
+%42 = f32.mul %14 %0
+%43 = f32.add %16 %42
+%44 = f32.mul %15 %1
+%45 = f32.add %43 %44
+%46 = f32.mul %17 %0
+%47 = f32.add %19 %46
+%48 = f32.mul %18 %1
+%49 = f32.add %47 %48
+%50 = f32.reglu %45 %49
+%51 = f32.mul %20 %32
+%52 = f32.add %23 %51
+%53 = f32.mul %21 %41
+%54 = f32.add %52 %53
+%55 = f32.mul %22 %50
+%56 = f32.add %54 %55
+fact %56 range 0xbf800000 0x3f800000 asserted
+out %56

@@ -1,0 +1,6 @@
+ngraph-ir/0 ngraph-f32/0
+subject authored-name cli-train-loss-short
+slot input f32
+%0 = input 0
+%1 = f32.mul %0 %0
+out %1

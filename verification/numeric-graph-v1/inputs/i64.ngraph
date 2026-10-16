@@ -1,0 +1,7 @@
+ngraph-ir/0 ngraph-i64/0
+subject authored-name cli-train-i64
+slot input i64
+%0 = input 0
+%1 = const i64 3
+%2 = i64.mul %0 %1
+out %2

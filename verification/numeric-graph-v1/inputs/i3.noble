@@ -1,0 +1,2 @@
+def sq [ dup * ]
+sq swap sq +
