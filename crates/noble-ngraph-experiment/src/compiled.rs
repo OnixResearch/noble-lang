@@ -263,6 +263,24 @@ impl Compiled {
         self.layout_key
     }
 
+    /// Estimated retained bytes of the compiled code (instructions, term
+    /// arrays, register map, constants, layer tables), excluding the graph.
+    #[must_use]
+    pub fn retained_bytes(&self) -> u64 {
+        let code = match &self.code {
+            Code::F32 { ins, coef, src } => {
+                ins.len() * std::mem::size_of::<F>() + coef.len() * 4 + src.len() * 4
+            }
+            Code::I64 { ins } => ins.len() * std::mem::size_of::<I>(),
+        };
+        (code
+            + self.layers.len() * 8
+            + self.fail_suffix_min.len() * 4
+            + self.reg.len() * 4
+            + self.consts.len() * 12
+            + self.slot_regs.len() * 8) as u64
+    }
+
     /// The checked graph.
     #[must_use]
     pub const fn checked(&self) -> &CheckedGraph {

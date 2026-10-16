@@ -176,6 +176,7 @@ pub fn preflight(
     }
     let mut values = Vec::with_capacity(g.slots.len());
     let mut it = inputs.iter();
+    let mut param_pos = 0usize;
     for (k, slot) in g.slots.iter().enumerate() {
         let k32 = k as u32;
         let v = match slot.kind {
@@ -197,7 +198,11 @@ pub fn preflight(
                 }
             },
             SlotKind::Param => {
-                Value::F32(snapshot.and_then(|s| s.bits_of_slot(k32)).ok_or_else(|| {
+                // `check_use` established `snapshot.slots() == param_slots()`, so
+                // the j-th param slot is snapshot position j.
+                let pos = param_pos;
+                param_pos += 1;
+                Value::F32(snapshot.and_then(|s| s.bits_at(pos)).ok_or_else(|| {
                     Diagnostic::new(Code::SnapshotLayout, Site::Slot(k32), "param missing")
                 })?)
             }

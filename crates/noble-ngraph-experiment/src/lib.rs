@@ -29,6 +29,7 @@ pub mod snapshot;
 pub mod suites;
 pub mod text;
 pub mod train;
+pub mod workloads;
 
 pub use check::{check, check_with, Budgets, CheckedGraph};
 pub use diag::{BudgetKind, Code, Diagnostic, Malformed, Site};
