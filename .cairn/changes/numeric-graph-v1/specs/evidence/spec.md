@@ -13,7 +13,7 @@ r[NGRAPH-SNAP-02]
 - the complete NGRAPH-SNAP-01 training provenance, including the fact-binding digest of the model graph;
 - a domain-separated digest of that provenance record.
 
-**Loading.** Loading a snapshot file MUST recompute the layout, the snapshot identity and the provenance digest from the recorded fields, and MUST refuse any mismatch with `E-SNAPSHOT-INTEGRITY` before use.
+**Loading.** Loading a snapshot file MUST recompute the layout, the snapshot identity and the provenance digest from the recorded fields, and MUST refuse any mismatch with `E-SNAPSHOT-INTEGRITY` before use. The provenance digest MUST be the domain-separated identity encoding (a domain tag, then length-prefixed byte strings and fixed-width little-endian integers) of every record in file order except the schema line and the digest itself, so that any reader can recompute it.
 
 **Binding.** Binding a snapshot to a graph MUST refuse:
 

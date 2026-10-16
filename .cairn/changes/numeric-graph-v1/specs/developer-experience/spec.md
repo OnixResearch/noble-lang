@@ -16,8 +16,8 @@ r[NGRAPH-CLI-01]
 
 **Reports.**
 
-- Every outcome other than a usage error MUST be reported as a JSON line with the schema `noble-ngraph-report/v1`.
-- A refusal MUST carry one stable code and a stable site. The codes are the D6 codes of `NumericGraph-Design`, `E-FORMAT`, `E-SNAPSHOT-INTEGRITY`, `E-SNAPSHOT-ID` and `E-SNAPSHOT-REPLAY`.
+- Every outcome other than a usage error MUST be reported as a JSON line with the schema `noble-ngraph-report/v1`. A usage error MUST print its usage on standard error and nothing on standard output.
+- A refusal MUST carry one stable code and a stable site. The codes are the D6 codes of `NumericGraph-Design`, `E-FORMAT`, `E-SNAPSHOT-INTEGRITY`, `E-SNAPSHOT-ID` and `E-SNAPSHOT-REPLAY`. Run-time observations that have no site (host-fuel exhaustion and cancellation) and host conditions MAY report a null site.
 - A refusal that belongs to admission, snapshot binding or input validation MUST occur before any graph node is evaluated.
 
 **Exit status.** The exit status MUST follow the outcome class:
@@ -77,7 +77,7 @@ For `eval`, the exit status MUST be that of the first non-normal vector in file 
 ### Requirement: NGRAPH-FORMAT-01
 r[NGRAPH-FORMAT-01]
 
-Graph, vector and training-data files MUST each begin with a schema identifier line: `ngraph-ir/0 <sub-profile>` for graphs, `noble-ngraph-vectors/0` for evaluation vectors and `noble-ngraph-data/0` for training data. An unknown or missing identifier MUST be refused before any further parsing, with `E-GRAPH-MALFORMED` for graphs and `E-FORMAT` otherwise.
+Graph, vector and training-data files MUST each begin with a schema identifier line: `ngraph-ir/0 <sub-profile>` for graphs, `noble-ngraph-vectors/0` for evaluation vectors and `noble-ngraph-data/0` for training data. A missing or unknown identifier MUST be refused before any further parsing: a graph file without the `ngraph-ir/0` schema line with `E-GRAPH-MALFORMED`, a graph file naming an unknown sub-profile with `E-PROFILE`, and any other file with `E-FORMAT`.
 
 **Graph files.**
 

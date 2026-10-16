@@ -305,7 +305,7 @@ Each subcommand prints JSON report lines with the schema
 | Command | Arguments and main options | Report |
 |---|---|---|
 | `noble ngraph check GRAPH` | Checker budgets. | One line: `graph` (the `GraphLogicalId`), `profile`, `subject`, `closure`, `inputs` and `outputs` (types), `params` (count), `live_nodes`, `layers`, `facts`, `param_layout`. |
-| `noble ngraph extract SOURCE --inputs T[,T…] --out GRAPH` | `SOURCE` holds newline-separated submissions as in `noble session`, definitions first and the root last (`--framed` selects session framing). `--inputs` lists the root's input types, bottom of the stack first. `--profile ngraph-i64/0` is the only accepted profile. Extraction and checker budgets. | One line: the `check` fields plus `work_units`, `expanded_nodes`, `pruned_nodes`, `inline_depth`. |
+| `noble ngraph extract SOURCE --inputs T[,T…] --out GRAPH` | `SOURCE` holds newline-separated submissions as in `noble session`, definitions first and the root last (`--framed` selects session framing). Every submission before the root must be a definition. `--inputs` lists the root's input types (`i64` or `bool`), bottom of the stack first. `--profile ngraph-i64/0` is the only accepted profile. Extraction and checker budgets. | One line: the `check` fields plus `work_units`, `expanded_nodes`, `pruned_nodes`, `inline_depth`. |
 | `noble ngraph eval GRAPH VECTORS` | `--reference` (the compiled evaluator is the default), `--snapshot FILE`, `--snapshot-id HEX`, `--fuel N`, checker budgets, `--budget-forward-scratch N`. | A header line (`graph`, `snapshot` or null), then one line per vector: `vector`, `outcome`, and `outputs` or `code` and `site`. |
 | `noble ngraph train MODEL --loss LOSS --data DATA --policy ngraph-deriv-real/0 --optimizer adam/0 --seed U64 --steps N --out SNAPSHOT` | `--from PARENT`, repeated `--opt-in`, `--adam-lr`, `--adam-beta1`, `--adam-beta2`, `--adam-eps`, checker budgets, `--budget-backward-scratch`, `--budget-snapshot-bytes`, `--budget-steps`. | One line: `snapshot`, `graph`, `parent`, `steps`, `loss_initial`, `loss_final` (binary64 bits). |
 | `noble ngraph verify GRAPH SNAPSHOT` | `--snapshot-id HEX`; `--replay --loss LOSS --data DATA [--from PARENT]`. | One line: `snapshot`, `graph`, `bound: true`, `replayed: true` or `false`. |
@@ -326,7 +326,34 @@ printf '%s\n' noble-ngraph-vectors/0 'types i64 i64' 'v 3 4' > squares.vectors
 ./result/bin/noble ngraph eval squares.ngraph squares.vectors
 ```
 
-<!-- output: filled from a real run before landing -->
+`extract` publishes `squares.ngraph` and prints (all three commands exit 0):
+
+```text
+{"schema":"noble-ngraph-report/v1","command":"extract","stage":"extraction","outcome":"normal","code":null,"site":null,"graph":"179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304","profile":"ngraph-i64/0","subject":"extracted 4a6f0f48eef6c936b33e1c5cbf1f12d2dd21dbcc230d9f01abac87168a79c357 closure 1","closure":[1],"inputs":["i64","i64"],"params":0,"outputs":["i64"],"live_nodes":5,"layers":3,"facts":0,"param_layout":"8cfa89c77cf14c664ffde4385e05ffe779538cacd3583d91e36c57a702330a3c","work_units":8,"expanded_nodes":5,"pruned_nodes":0,"inline_depth":1}
+```
+
+`check` prints the same fields without the four extraction counters, and
+`eval` prints a header and one line per vector:
+
+```text
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"graph":"179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304","snapshot":null}
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"vector":0,"outputs":["i64:25"]}
+```
+
+The written graph file is:
+
+```text
+ngraph-ir/0 ngraph-i64/0
+subject extracted 4a6f0f48eef6c936b33e1c5cbf1f12d2dd21dbcc230d9f01abac87168a79c357 closure 1
+slot input i64
+slot input i64
+%0 = input 0
+%1 = input 1
+%2 = i64.mul %1 %1
+%3 = i64.mul %0 %0
+%4 = i64.add %2 %3
+out %4
+```
 
 **Graph files.** A graph file is UTF-8 text. This `ngraph-f32/0` model
 computes `y = rn(rn(w·x) + b)`, with `w` and `b` in `param` slots and the input
@@ -350,8 +377,9 @@ out %4
 The first non-comment line names the schema and the sub-profile. `#` starts a
 comment, and blank lines, comments and runs of spaces carry no meaning. The
 line `subject <authored|extracted|captured> <64 hex> closure <ids|->` is
-required; `subject authored-name TOKEN` is authoring sugar for the authored
-subject of `TOKEN`, and printed graphs always use the hex form. Optional
+required; `subject authored-name NAME` is authoring sugar for the authored
+subject named by the rest of the line (its tokens joined by single spaces),
+and printed graphs always use the hex form. Optional
 `shape input` and `shape output` lines record stack shapes as trees `s`, `u`
 and `(p A B)`. Then come the slots (`input`, or `param` in `ngraph-f32/0`),
 the nodes `%k = OP …` in order, the `fact` records and the `out` records. The
@@ -375,9 +403,10 @@ one kernel revision.
 **Vector and data files.** A vector file (for `eval`) and a training-data file
 (for `train`) declare the graph's `input` slot types on a `types` line; a data
 file adds `;` and the loss graph's target types. Parameters never come from
-these files, only from snapshots. An `f32` value is `0x` plus 8 hex digits
-(any encoding, including NaN, infinities and subnormals) or an exactly
-representable decimal; an `i64` value is a signed decimal in range; a `bool`
+these files, only from snapshots. An `f32` value is `0x` plus one to eight hex
+digits (any encoding, including NaN, infinities and subnormals) or an exactly
+representable decimal (`nan` and `inf` words are `E-LITERAL-NONFINITE`; give
+those values as bits); an `i64` value is a signed decimal in range; a `bool`
 value is `true` or `false`:
 
 ```text
@@ -399,8 +428,9 @@ point 1 ; 3
 A `types` line that differs from the graph is `E-INTERFACE`. An unknown or
 missing schema line, a row with the wrong number of values and any other
 syntax error are `E-FORMAT`, and an inexact decimal is `E-LITERAL-INEXACT`;
-each is refused before any evaluation. Row order is preserved, and the
-training-data digest binds it.
+each is refused before any evaluation: one bad row refuses the whole file.
+Input-fact validation (`E-FACT-INPUT`) stays per vector. Row order is
+preserved, and the training-data digest binds it.
 
 **Training.** `train` changes only the model's `param` slots. The contract is
 explicit: `--policy`, `--optimizer`, `--seed` and `--steps` have no defaults.
@@ -434,7 +464,7 @@ noble-ngraph-snapshot/0
 snapshot <64 hex>            # ParamSnapshotId = H(noble.ngraph.params.v0 ‖ graph ‖ slots ‖ LE bytes)
 graph <64 hex>               # GraphLogicalId
 layout <64 hex>              # param layout key
-param <slot> 0x<8 hex>       # one line per param slot, in slot order
+param <slot> 0x<8 hex>       # one line per param slot: interface slot index and bits
 optimizer-state <64 hex>
 parent <64 hex>
 subject <kind> <64 hex> closure <ids|->
@@ -443,14 +473,21 @@ facts <64 hex>               # fact-binding digest of the model graph
 loss <64 hex>
 data <64 hex>
 policy ngraph-deriv-real/0
-opt-in %<node> boolean straight-through | boolean clamped-linear 0x<8 hex> | index zero | index backward-difference
+opt-in %<node> boolean refuse|straight-through|clamped-linear 0x<8 hex> | index refuse|zero|backward-difference
 seed 0x<16 hex>
 prng splitmix64/0
 optimizer adam/0 lr 0x<16 hex> beta1 0x<16 hex> beta2 0x<16 hex> eps 0x<16 hex>
 steps <n>
 tools noble-ngraph/0; ngraph-ir/0; ngraph-sem/0; ngraph-facts/0; ngraph-layered/0
-provenance <64 hex>          # H(noble.ngraph.provenance.v0 ‖ every field above except this line)
+provenance <64 hex>          # H(noble.ngraph.provenance.v0 ‖ every record above, in file order)
 ```
+
+Records appear in this order (hex is lowercase). For a snapshot trained from
+the seed, `parent` is the id of the seed-initialized snapshot S₀. The
+provenance digest uses the same identity encoding as every other identity
+(length-prefixed byte strings and fixed-width little-endian integers); its
+exact field list is in design D6 of the
+[numeric-graph-v1 change](.cairn/changes/numeric-graph-v1/design.md).
 
 Loading a snapshot recomputes its layout key, its `ParamSnapshotId` and its
 provenance digest; any mismatch is `E-SNAPSHOT-INTEGRITY`. Binding it to a
@@ -503,7 +540,21 @@ printf '%s\n' noble-ngraph-vectors/0 'types f32' 'v 0.5' 'v -1' > inputs.vectors
   --replay --loss loss.ngraph --data data.points
 ```
 
-<!-- output: filled from a real run before landing -->
+Each command exits 0. The two `train` runs print:
+
+```text
+{"schema":"noble-ngraph-report/v1","command":"train","stage":"training","outcome":"normal","code":null,"site":null,"snapshot":"b877b38358afd078fdf3d0ad1152f1e474b8897d25f285b30cf27a4da4e8eb60","graph":"3ef6d14e9a0b429e9446b166b3db175b0fe308174eca8d622400a273f15540f7","parent":"b877b38358afd078fdf3d0ad1152f1e474b8897d25f285b30cf27a4da4e8eb60","steps":0,"loss_initial":"0x4015bd11d3800000","loss_final":"0x4015bd11d3800000"}
+{"schema":"noble-ngraph-report/v1","command":"train","stage":"training","outcome":"normal","code":null,"site":null,"snapshot":"693184119553c5456c2319a3090ae14e4eb1b7cc51ce443a6d2c0b2491791b72","graph":"3ef6d14e9a0b429e9446b166b3db175b0fe308174eca8d622400a273f15540f7","parent":"b877b38358afd078fdf3d0ad1152f1e474b8897d25f285b30cf27a4da4e8eb60","steps":25,"loss_initial":"0x4015bd11d3800000","loss_final":"0x40064a1dbfc00000"}
+```
+
+`eval` and `verify --replay` print:
+
+```text
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"graph":"3ef6d14e9a0b429e9446b166b3db175b0fe308174eca8d622400a273f15540f7","snapshot":"693184119553c5456c2319a3090ae14e4eb1b7cc51ce443a6d2c0b2491791b72"}
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"vector":0,"outputs":["f32:0x3e459c1c"]}
+{"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"vector":1,"outputs":["f32:0xbec00d06"]}
+{"schema":"noble-ngraph-report/v1","command":"verify","stage":"replay","outcome":"normal","code":null,"site":null,"snapshot":"693184119553c5456c2319a3090ae14e4eb1b7cc51ce443a6d2c0b2491791b72","graph":"3ef6d14e9a0b429e9446b166b3db175b0fe308174eca8d622400a273f15540f7","bound":true,"replayed":true}
+```
 
 **Outcomes and exit codes.** Every report line has `schema`, `command`,
 `stage`, `outcome`, `code` (a string or null) and `site` (a string or null). An
@@ -520,7 +571,7 @@ contract. The outcome decides the exit status:
 
 `eval` exits with the status of the first non-`normal` vector in file order,
 or 0. A refusal of the whole graph, by the checker or by snapshot binding,
-prints one report line and no vector lines. Usage errors print usage on stderr
+prints one report line and no vector lines. Usage errors print nothing on stdout and the usage on stderr
 and exit 2.
 
 **Budgets and input bounds.** Every `/0` budget has a flag `--budget-<kind> N`,

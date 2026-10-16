@@ -1748,7 +1748,7 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/design.md",
-      "sha256": "2a20411ca0d835634d50abb8e7673e4673bed53c17ef8a4216146ba863e076c7"
+      "sha256": "afc9816645c0d76367067a93d155e2b92feeee1c1d6611b2aaa8966d1a5f8535"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/proposal.md",
@@ -1756,11 +1756,11 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/specs/developer-experience/spec.md",
-      "sha256": "af2efd931ce96ac3701dddac54a7cd560207faafb3c4746864e4db8c8238c9ad"
+      "sha256": "f2e0a9aacbd93226d7ceb4b6386da9d1a29040cc2746a3c1ab16029ed02f9db8"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/specs/evidence/spec.md",
-      "sha256": "5c324db3f34d596dbd08394110a6deeee3e18b57fe15179c0fa47293a8ef9dfa"
+      "sha256": "45df3933ea3ebe26104f217f151b88037c613d16646429e941f2c66020095212"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/specs/language/spec.md",
@@ -1768,7 +1768,7 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/tasks.md",
-      "sha256": "ca922ddc2f1c31fecc4c76809c1970c10ba2e70466eae6fd00c4ec03a7fc9761"
+      "sha256": "2decb743be0d9c3cf80436066bca2fea68079095d9d6ab1e9c76a1dac6a96862"
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
@@ -2132,7 +2132,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "62c23f3615f0449210a44cf85d29c4c41223dad2a4c7ed9556c3a4045f2f784f"
+      "sha256": "b4b988160929eb37d79fa9d79fc2257915899ba5384fbe0465c73c8e6736cd3f"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -2452,7 +2452,7 @@
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "f1da19177220819b0db9e484c720c44665cdd6ac926142662a365da6be0aac2e"
+      "sha256": "08d45370d0d24b20bf4785e799f7ba35b64fc6bc869c751a2e8f0122551dc217"
     },
     {
       "file": "verification/source-inventory.md",
