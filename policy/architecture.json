@@ -5,37 +5,37 @@
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "filesystem",
-      "rationale": "Only the CLI reads bounded source, contract, proof, companion-session, WIT, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Component builds emit only independently accepted typed exports for one selected WIT world. Owned Wasm/JS assets are separately byte-bound by tool selection."
+      "rationale": "In the compiler path, only the CLI reads bounded source, contract, proof, companion-session, WIT, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Component builds emit only independently accepted typed exports for one selected WIT world. Owned Wasm/JS assets are separately byte-bound by tool selection. Outside that path, the issue #14 noble-ngraph-experiment harness reads its own inputs and host identity files, writes its measurement receipts, and creates and removes one temporary file."
     },
     {
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "process",
-      "rationale": "Only the CLI resolves the local Lean runtime closure, launches isolated proof workers, runs the pinned resource-free Core-Bootstrap/MC2 Node helper, and assembles the pinned synchronous component ABI with bounded wasm-tools subprocesses. Proof workers require bubblewrap and a user-systemd scope; missing proof isolation fails closed. The core consumes immutable exact independent-check observations and never invokes a host callback. Checker soundness and observation authenticity remain trusted premises; a process exit or producer report is not evidence admission. The trusted Node/Wasm tool subprocess boundary is separate and is not claimed to have the proof sandbox."
+      "rationale": "In the compiler path, only the CLI resolves the local Lean runtime closure, launches isolated proof workers, runs the pinned resource-free Core-Bootstrap/MC2 Node helper, and assembles the pinned synchronous component ABI with bounded wasm-tools subprocesses. Proof workers require bubblewrap and a user-systemd scope; missing proof isolation fails closed. The core consumes immutable exact independent-check observations and never invokes a host callback. Checker soundness and observation authenticity remain trusted premises; a process exit or producer report is not evidence admission. The trusted Node/Wasm tool subprocess boundary is separate and is not claimed to have the proof sandbox. Outside that path, the noble-ngraph-experiment harness runs the selected Node oracle, sha256sum, /bin/sh and a selected Noble CLI binary for its measurement legs; their output is measurement data, not evidence admission."
     },
     {
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "environment",
-      "rationale": "Only the CLI captures process arguments, consumer-selected absolute tool and rule-library paths, the user runtime directory, and the temporary-directory root. Child environments are cleared and explicitly populated."
+      "rationale": "In the compiler path, only the CLI captures process arguments, consumer-selected absolute tool and rule-library paths, the user runtime directory, and the temporary-directory root. Child environments are cleared and explicitly populated. Outside that path, the noble-ngraph-experiment harness reads its process arguments and the temporary-directory root."
     },
     {
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "time",
-      "rationale": "Only the CLI observes clocks for bounded proof/runtime-worker supervision and private temporary-directory naming; clock values never enter Noble or contract meaning."
+      "rationale": "In the compiler path, only the CLI observes clocks for bounded proof/runtime-worker supervision and private temporary-directory naming; clock values never enter Noble or contract meaning. Outside that path, the noble-ngraph-experiment harness reads monotonic clocks to time measurement legs; timings never enter graph semantics."
     },
     {
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "concurrency",
-      "rationale": "Only the CLI starts and joins bounded subprocess readers, receives bounded runtime replies and sleeps while supervising workers. Domain-core evaluation remains synchronous and effect-free."
+      "rationale": "In the compiler path, only the CLI starts and joins bounded subprocess readers, receives bounded runtime replies and sleeps while supervising workers. Domain-core evaluation remains synchronous and effect-free. Outside that path, the noble-ngraph-experiment harness starts and joins stdin-writer threads for its subprocesses."
     },
     {
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "observability",
-      "rationale": "Only the CLI emits execution/verification/build/companion reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests, inspection results, captured traces and seven-outcome text are observations, not proof acceptance or protected capabilities."
+      "rationale": "In the compiler path, only the CLI emits execution/verification/build/companion reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests, inspection results, captured traces and seven-outcome text are observations, not proof acceptance or protected capabilities. Outside that path, the noble-ngraph-experiment harness prints measurement reports and diagnostics."
     },
     {
       "core_handling": "forbidden",
@@ -56,14 +56,14 @@
     "max_items": 4096,
     "max_modules": 2048,
     "max_shard_bytes": 67108864,
-    "max_shards": 58,
+    "max_shards": 78,
     "max_signatures": 4096,
     "max_span_bytes": 1048576,
     "max_spans": 32768,
     "max_traits": 512,
     "max_type_shapes": 4096,
     "max_types": 4096,
-    "max_units": 58,
+    "max_units": 78,
     "max_unknowns": 4096,
     "max_value_flow_bodies": 4096,
     "max_value_flow_rounds": 64,
@@ -246,14 +246,16 @@
       "noble-contracts",
       "noble-wasm",
       "noble-cli",
-      "noble-syndicate"
+      "noble-syndicate",
+      "noble-ngraph-experiment"
     ],
     "source_scopes": [
       "crates/noble-kernel/src",
       "crates/noble-contracts/src",
       "crates/noble-wasm/src",
       "crates/noble-cli/src",
-      "crates/noble-syndicate/src"
+      "crates/noble-syndicate/src",
+      "crates/noble-ngraph-experiment/src"
     ],
     "targets": [
       {
@@ -285,7 +287,7 @@
       "permitted_caller_roles": [
         "composition-root"
       ],
-      "rationale": "Observed CLI byte-digest computation. Digest implementation and any optimized or native code retain separate unproved safety assumptions."
+      "rationale": "Observed CLI and ngraph-experiment byte-digest computation. Digest implementation and any optimized or native code retain separate unproved safety assumptions."
     },
     {
       "edge_kinds": [
@@ -303,11 +305,22 @@
         "normal"
       ],
       "kind": "pure-value",
+      "package": "rustc_apfloat",
+      "permitted_caller_roles": [
+        "composition-root"
+      ],
+      "rationale": "Observed ngraph-experiment software IEEE binary32 arithmetic used as an independent comparison model; agreement with it is not a proof of the binary32 model or of the experiment's evaluators."
+    },
+    {
+      "edge_kinds": [
+        "normal"
+      ],
+      "kind": "pure-value",
       "package": "serde_json",
       "permitted_caller_roles": [
         "composition-root"
       ],
-      "rationale": "Observed CLI JSON value parsing and serialization; external input remains untrusted and this is not a semantic acceptance witness."
+      "rationale": "Observed CLI and ngraph-experiment JSON value parsing and serialization; external input remains untrusted and this is not a semantic acceptance witness."
     },
     {
       "edge_kinds": [
@@ -370,6 +383,11 @@
       "scope_kind": "package"
     },
     {
+      "role": "composition-root",
+      "scope": "noble-ngraph-experiment",
+      "scope_kind": "package"
+    },
+    {
       "role": "domain-core",
       "scope": "crates/noble-kernel/src",
       "scope_kind": "source"
@@ -395,6 +413,11 @@
       "scope_kind": "source"
     },
     {
+      "role": "composition-root",
+      "scope": "crates/noble-ngraph-experiment/src",
+      "scope_kind": "source"
+    },
+    {
       "role": "test",
       "scope": "crates/noble-kernel/tests",
       "scope_kind": "source"
@@ -417,6 +440,11 @@
     {
       "role": "test",
       "scope": "crates/noble-syndicate/tests",
+      "scope_kind": "source"
+    },
+    {
+      "role": "test",
+      "scope": "crates/noble-ngraph-experiment/tests",
       "scope_kind": "source"
     }
   ],

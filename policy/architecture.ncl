@@ -4,8 +4,8 @@ let contracts = import "./architecture.contracts.ncl" in
   project_id = "noble",
   mode = "gate",
   production = {
-    packages = ["noble-kernel", "noble-contracts", "noble-wasm", "noble-cli", "noble-syndicate"],
-    source_scopes = ["crates/noble-kernel/src", "crates/noble-contracts/src", "crates/noble-wasm/src", "crates/noble-cli/src", "crates/noble-syndicate/src"],
+    packages = ["noble-kernel", "noble-contracts", "noble-wasm", "noble-cli", "noble-syndicate", "noble-ngraph-experiment"],
+    source_scopes = ["crates/noble-kernel/src", "crates/noble-contracts/src", "crates/noble-wasm/src", "crates/noble-cli/src", "crates/noble-syndicate/src", "crates/noble-ngraph-experiment/src"],
     targets = [{
       triple = "x86_64-unknown-linux-gnu",
       features = [],
@@ -18,16 +18,19 @@ let contracts = import "./architecture.contracts.ncl" in
     { scope_kind = "package", scope = "noble-wasm", role = "domain-core" },
     { scope_kind = "package", scope = "noble-cli", role = "composition-root" },
     { scope_kind = "package", scope = "noble-syndicate", role = "composition-root" },
+    { scope_kind = "package", scope = "noble-ngraph-experiment", role = "composition-root" },
     { scope_kind = "source", scope = "crates/noble-kernel/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-contracts/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-wasm/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-cli/src", role = "composition-root" },
     { scope_kind = "source", scope = "crates/noble-syndicate/src", role = "composition-root" },
+    { scope_kind = "source", scope = "crates/noble-ngraph-experiment/src", role = "composition-root" },
     { scope_kind = "source", scope = "crates/noble-kernel/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-contracts/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-wasm/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-cli/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-syndicate/tests", role = "test" },
+    { scope_kind = "source", scope = "crates/noble-ngraph-experiment/tests", role = "test" },
   ],
   dependency_rules = [
     {
@@ -41,13 +44,18 @@ let contracts = import "./architecture.contracts.ncl" in
       edge_kinds = ["normal", "build"],
     },
   ],
-  # The observed Cargo graph has seven direct third-party normal edges, all
-  # from noble-cli; no application-owned ports are declared. Provider
-  # permission is role-granular: noble-syndicate is also composition-root, so
-  # this policy alone would allow its future normal edges to these providers.
+  # The observed Cargo graph has ten direct third-party normal edges: seven
+  # from noble-cli and three (blake3, rustc_apfloat, serde_json) from the
+  # issue #14 noble-ngraph-experiment crate. That crate is an isolated
+  # measurement harness outside the ordinary compiler path; the policy has no
+  # non-production package role, and Octet collects only production packages,
+  # so it is a composition root like noble-cli and noble-syndicate. No
+  # application-owned ports are declared. Provider permission is
+  # role-granular: noble-syndicate is also composition-root, so this policy
+  # alone would allow its future normal edges to these providers.
   # The separate native and source comparisons bind exact observed callers:
-  # seven CLI external edges are now source-reviewed, and a new syndicate
-  # external edge would fail source dependency closure. Source comparison
+  # the ten external edges are source-reviewed, and a new syndicate external
+  # edge would fail source dependency closure. Source comparison
   # remains red on other classifications; neither downstream comparator runs
   # after the blocked Octet architecture gate or attests native safety.
   # The CLI owns consumer I/O; no domain-core crate executes host effects.
@@ -87,7 +95,7 @@ let contracts = import "./architecture.contracts.ncl" in
       kind = "pure-value",
       permitted_caller_roles = ["composition-root"],
       edge_kinds = ["normal"],
-      rationale = "Observed CLI byte-digest computation. Digest implementation and any optimized or native code retain separate unproved safety assumptions.",
+      rationale = "Observed CLI and ngraph-experiment byte-digest computation. Digest implementation and any optimized or native code retain separate unproved safety assumptions.",
     },
     {
       package = "libc",
@@ -97,11 +105,18 @@ let contracts = import "./architecture.contracts.ncl" in
       rationale = "Observed CLI use of libc open flags for no-follow path walking via Rust OpenOptions; this static edge permission does not establish FFI or native safety.",
     },
     {
+      package = "rustc_apfloat",
+      kind = "pure-value",
+      permitted_caller_roles = ["composition-root"],
+      edge_kinds = ["normal"],
+      rationale = "Observed ngraph-experiment software IEEE binary32 arithmetic used as an independent comparison model; agreement with it is not a proof of the binary32 model or of the experiment's evaluators.",
+    },
+    {
       package = "serde_json",
       kind = "pure-value",
       permitted_caller_roles = ["composition-root"],
       edge_kinds = ["normal"],
-      rationale = "Observed CLI JSON value parsing and serialization; external input remains untrusted and this is not a semantic acceptance witness.",
+      rationale = "Observed CLI and ngraph-experiment JSON value parsing and serialization; external input remains untrusted and this is not a semantic acceptance witness.",
     },
     {
       package = "wasmparser",
@@ -131,37 +146,37 @@ let contracts = import "./architecture.contracts.ncl" in
       family = "filesystem",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI reads bounded source, contract, proof, companion-session, WIT, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Component builds emit only independently accepted typed exports for one selected WIT world. Owned Wasm/JS assets are separately byte-bound by tool selection.",
+      rationale = "In the compiler path, only the CLI reads bounded source, contract, proof, companion-session, WIT, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Component builds emit only independently accepted typed exports for one selected WIT world. Owned Wasm/JS assets are separately byte-bound by tool selection. Outside that path, the issue #14 noble-ngraph-experiment harness reads its own inputs and host identity files, writes its measurement receipts, and creates and removes one temporary file.",
     },
     {
       family = "process",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI resolves the local Lean runtime closure, launches isolated proof workers, runs the pinned resource-free Core-Bootstrap/MC2 Node helper, and assembles the pinned synchronous component ABI with bounded wasm-tools subprocesses. Proof workers require bubblewrap and a user-systemd scope; missing proof isolation fails closed. The core consumes immutable exact independent-check observations and never invokes a host callback. Checker soundness and observation authenticity remain trusted premises; a process exit or producer report is not evidence admission. The trusted Node/Wasm tool subprocess boundary is separate and is not claimed to have the proof sandbox.",
+      rationale = "In the compiler path, only the CLI resolves the local Lean runtime closure, launches isolated proof workers, runs the pinned resource-free Core-Bootstrap/MC2 Node helper, and assembles the pinned synchronous component ABI with bounded wasm-tools subprocesses. Proof workers require bubblewrap and a user-systemd scope; missing proof isolation fails closed. The core consumes immutable exact independent-check observations and never invokes a host callback. Checker soundness and observation authenticity remain trusted premises; a process exit or producer report is not evidence admission. The trusted Node/Wasm tool subprocess boundary is separate and is not claimed to have the proof sandbox. Outside that path, the noble-ngraph-experiment harness runs the selected Node oracle, sha256sum, /bin/sh and a selected Noble CLI binary for its measurement legs; their output is measurement data, not evidence admission.",
     },
     {
       family = "environment",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI captures process arguments, consumer-selected absolute tool and rule-library paths, the user runtime directory, and the temporary-directory root. Child environments are cleared and explicitly populated.",
+      rationale = "In the compiler path, only the CLI captures process arguments, consumer-selected absolute tool and rule-library paths, the user runtime directory, and the temporary-directory root. Child environments are cleared and explicitly populated. Outside that path, the noble-ngraph-experiment harness reads its process arguments and the temporary-directory root.",
     },
     {
       family = "time",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI observes clocks for bounded proof/runtime-worker supervision and private temporary-directory naming; clock values never enter Noble or contract meaning.",
+      rationale = "In the compiler path, only the CLI observes clocks for bounded proof/runtime-worker supervision and private temporary-directory naming; clock values never enter Noble or contract meaning. Outside that path, the noble-ngraph-experiment harness reads monotonic clocks to time measurement legs; timings never enter graph semantics.",
     },
     {
       family = "concurrency",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI starts and joins bounded subprocess readers, receives bounded runtime replies and sleeps while supervising workers. Domain-core evaluation remains synchronous and effect-free.",
+      rationale = "In the compiler path, only the CLI starts and joins bounded subprocess readers, receives bounded runtime replies and sleeps while supervising workers. Domain-core evaluation remains synchronous and effect-free. Outside that path, the noble-ngraph-experiment harness starts and joins stdin-writer threads for its subprocesses.",
     },
     {
       family = "observability",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "Only the CLI emits execution/verification/build/companion reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests, inspection results, captured traces and seven-outcome text are observations, not proof acceptance or protected capabilities.",
+      rationale = "In the compiler path, only the CLI emits execution/verification/build/companion reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests, inspection results, captured traces and seven-outcome text are observations, not proof acceptance or protected capabilities. Outside that path, the noble-ngraph-experiment harness prints measurement reports and diagnostics.",
     },
     {
       family = "unsafe-code",
@@ -304,10 +319,15 @@ let contracts = import "./architecture.contracts.ncl" in
     # The issue #22 integration adds noble-cli tests/calculator_engine.rs (#17)
     # and noble-wasm tests/calculator_numeric_paths.rs (#20); a scratch
     # collection of integration eccbc02 observed exactly 58 complete units.
+    # Issue #14 adds the noble-ngraph-experiment production package: lib,
+    # lib+test, four bins and their bin+test units, and ten integration tests.
+    # A scratch collection of 2d03e99 with this package policy observed
+    # exactly 78 complete units; the package's largest shard (lib+test, 7,300 calls,
+    # 12,441,948 bytes) and the 163,306,150-byte IR fit the existing caps.
     # This exact capacity is not a classification waiver, source/native
     # assurance approval, or a gate PASS.
-    max_units = 58,
-    max_shards = 58,
+    max_units = 78,
+    max_shards = 78,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,

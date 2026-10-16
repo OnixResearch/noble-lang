@@ -79,6 +79,27 @@
         "name": "wat",
         "role": "noble-cli",
         "version": "1.243.0"
+      },
+      {
+        "assumption": "Experiment receipt and graph digests use the selected std/pure features; collision resistance and external implementation safety are not established here.",
+        "edge_kind": "normal",
+        "name": "blake3",
+        "role": "noble-ngraph-experiment",
+        "version": "1.8.7"
+      },
+      {
+        "assumption": "Experiment binary32 comparison model; agreement with this external software float implementation does not prove the experiment's evaluators or the binary32 model, and its implementation safety is not audited.",
+        "edge_kind": "normal",
+        "name": "rustc_apfloat",
+        "role": "noble-ngraph-experiment",
+        "version": "0.2.3+llvm-462a31f5a5ab"
+      },
+      {
+        "assumption": "Experiment receipt and oracle JSON parsing and serialization; syntactic parsing and external implementation safety do not establish trusted measurements.",
+        "edge_kind": "normal",
+        "name": "serde_json",
+        "role": "noble-ngraph-experiment",
+        "version": "1.0.151"
       }
     ]
   },
@@ -111,7 +132,8 @@
     "noble-contracts",
     "noble-wasm",
     "noble-cli",
-    "noble-syndicate"
+    "noble-syndicate",
+    "noble-ngraph-experiment"
   ],
   "required_targets": [
     {
@@ -140,10 +162,14 @@
     {
       "argument": "Safe std composition-root policy serializes bounded M7 table access with a Mutex and host-owned AtomicU64 session identity. The workspace unsafe_code forbid lint is the owned-unsafe basis; compiler accounting must confirm no foreign-item facts and no third-party production dependencies. Host-assigned facets and engine trap authenticity remain explicit assumptions; source inventory leaves new choreography/parser/refinement bodies open.",
       "scope": "noble-syndicate"
+    },
+    {
+      "argument": "Safe std composition-root measurement harness for issue #14, outside the ordinary compiler path, depending inward on noble-kernel and noble-contracts. It spawns the selected Node oracle, sha256sum, /bin/sh and a selected Noble CLI binary with stdin-writer threads. The workspace unsafe_code forbid lint is the owned-unsafe basis; compiler accounting must confirm no foreign-item facts. External float, digest and JSON implementations and subprocess behavior remain explicit assumptions; source inventory leaves its authored bodies open.",
+      "scope": "noble-ngraph-experiment"
     }
   ],
   "schema_version": "noble-native-assurance-policy/v1",
-  "scope_note": "Five-crate workspace scope: noble-kernel, noble-contracts, noble-wasm, noble-cli and noble-syndicate on x86_64-unknown-linux-gnu. This records native Rust and dependency scope, not whole-program soundness or Wasm runtime correspondence. Owned WAT assets and Node/wasm-tools/Binaryen subprocesses are separately byte-bound by tool selection; their semantics are unproved and are not Rust inventory subjects or native linked dependencies. The independent Wasmtime verification peers are separate Cargo workspaces, with the M8 peer's external Cargo lock derived exactly from the reviewed M7 peer lock and selected source/vendor NAR identities. Engine behavior, native resource lifetime and host credential provenance remain explicit assumptions, not production dependency or unsafe-code discharge.",
+  "scope_note": "Six-crate workspace scope: noble-kernel, noble-contracts, noble-wasm, noble-cli, noble-syndicate and the issue #14 noble-ngraph-experiment measurement harness on x86_64-unknown-linux-gnu. This records native Rust and dependency scope, not whole-program soundness or Wasm runtime correspondence. Owned WAT assets and Node/wasm-tools/Binaryen subprocesses are separately byte-bound by tool selection; their semantics are unproved and are not Rust inventory subjects or native linked dependencies. The independent Wasmtime verification peers are separate Cargo workspaces, with the M8 peer's external Cargo lock derived exactly from the reviewed M7 peer lock and selected source/vendor NAR identities. Engine behavior, native resource lifetime and host credential provenance remain explicit assumptions, not production dependency or unsafe-code discharge.",
   "target_assumptions": [
     {
       "assumptions": [
@@ -151,7 +177,7 @@
         "strict provenance is the required Miri model",
         "The compiler/Cargo inventory does not audit linked system libraries or transitive native/unsafe dependency implementations; no owned foreign-item fact is not a linker-closure or host-ABI proof",
         "Core-Bootstrap managed-linear-memory execution, Component-Sync-Bootstrap and the two M3 Wasm experiments are separately scoped guest execution, not additional claimed native Rust targets",
-        "Verification-only Wasmtime peers and their dependencies are not included in the five-crate production unsafe-code or native dependency inventory"
+        "Verification-only Wasmtime peers and their dependencies are not included in the six-crate production unsafe-code or native dependency inventory"
       ],
       "target": "x86_64-unknown-linux-gnu",
       "word_bits": 64

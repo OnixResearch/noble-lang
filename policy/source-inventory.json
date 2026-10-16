@@ -56,6 +56,31 @@
       "edge_kind": "normal"
     },
     {
+      "callee": "blake3",
+      "caller": "noble-ngraph-experiment",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "noble-contracts",
+      "caller": "noble-ngraph-experiment",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "noble-kernel",
+      "caller": "noble-ngraph-experiment",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "rustc_apfloat",
+      "caller": "noble-ngraph-experiment",
+      "edge_kind": "normal"
+    },
+    {
+      "callee": "serde_json",
+      "caller": "noble-ngraph-experiment",
+      "edge_kind": "normal"
+    },
+    {
       "callee": "noble-kernel",
       "caller": "noble-syndicate",
       "edge_kind": "normal"
