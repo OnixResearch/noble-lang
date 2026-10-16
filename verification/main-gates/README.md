@@ -55,7 +55,7 @@ stay outside the repository; their hashes bind them.
 
 All 14 checks were built locally (`--builders ""`). A first remote attempt
 stalled while copying Rust toolchains to the builder and was stopped; its
-partial logs are listed in `receipt.json` (`flake_note`).
+partial logs are listed in `receipt-f2b398d.json` (`flake_note`).
 
 `rust-tests` ran 471 tests in 68 test binaries: 471 passed, 0 failed and 5
 ignored. The crate adds 15 binaries with 48 passing tests and 1 ignored
@@ -259,7 +259,7 @@ the commit that adds this note.
 - The commit that adds these entries.
 
 Integration also renews the collection capacity to 58 units (`1d074ea`), with
-collector evidence in `receipt.json`, and renews the source inventory
+collector evidence in `receipt-f2b398d.json`, and renews the source inventory
 (`2edb977`). The pure comparator returns `valid=true`.
 
 The rest of this document describes the issue #22 branch run on `8df6c43`.
@@ -347,7 +347,7 @@ The follow-ups are filed by root cause:
 ## Remaining failures
 
 Every remaining failure also fails at the parent `0ea10d3f`. The parent was run
-with the same runner, and its logs are in `receipt.json` under
+with the same runner, and its logs are in `receipt-f2b398d.json` under
 `parent_comparison`. None of them is weakened here. Each failure has a
 follow-up issue: #25, #26 or #27.
 
