@@ -116,7 +116,14 @@ fn extraction(
     let mut last = None;
     for _ in 0..reps.max(1) {
         let t0 = Instant::now();
-        let p = source::prepare(&[], root, &source::i64s(inputs)).expect("Core frontend");
+        let p = source::prepare(
+            noble_contracts::source::Session::new(),
+            noble_contracts::Limits::default(),
+            &[],
+            root,
+            &source::i64s(inputs),
+        )
+        .expect("Core frontend");
         let t1 = Instant::now();
         let admitted = extract::admit(
             &BLAKE3,
@@ -134,7 +141,7 @@ fn extraction(
         let t3 = Instant::now();
         let comp = Compiled::new(&BLAKE3, &e.checked);
         let t4 = Instant::now();
-        black_box(comp.evaluate(first, None, &Control::default()));
+        black_box(comp.evaluate(first, None, &mut Control::default()));
         let t5 = Instant::now();
         fe.push(ns(t1 - t0));
         adm.push(ns(t2 - t1));
@@ -192,7 +199,7 @@ fn graph_json(e: &Extraction, hand_built: &Graph) -> Json {
 }
 
 fn l4_outputs(comp: &Compiled, inputs: &[i64]) -> Vec<i64> {
-    comp.evaluate(&i64_inputs(inputs), None, &Control::default())
+    comp.evaluate(&i64_inputs(inputs), None, &mut Control::default())
         .obs
         .outputs()
         .expect("normal")
@@ -422,17 +429,17 @@ fn main() -> ExitCode {
     }
     let load_start = read("/proc/loadavg");
     let started = Instant::now();
-    let ctl = Control::default();
+    let mut ctl = Control::default();
 
     // W1: extraction, L3/L4 on the extracted graph, native.
     let (w1_ext, e1, comp1) = extraction(I1_ROOT, 2, &i64_inputs(&[5, 4]), a.cold_reps);
     let x1 = i64_inputs(&[5, 4]);
     let mut ws1 = comp1.workspace();
     let (l3j, l3m, _) = warm(a.samples, || {
-        black_box(reference(&e1.checked, black_box(&x1), None, &ctl));
+        black_box(reference(&e1.checked, black_box(&x1), None, &mut ctl));
     });
     let (l4j, l4m, _) = warm(a.samples, || {
-        black_box(comp1.evaluate_in(&mut ws1, black_box(&x1), None, &ctl));
+        black_box(comp1.evaluate_in(&mut ws1, black_box(&x1), None, &mut ctl));
     });
     let (nj, nm, _) = warm(a.samples, || {
         black_box(workloads::w1_native(black_box(5), black_box(4)));
@@ -463,13 +470,13 @@ fn main() -> ExitCode {
     let steps_u64 = a.w2_steps as u64;
     let want2 = workloads::w2_native(W2_S0, W2_I, W2_K, steps_u64);
     let mut ws2 = comp2.workspace();
-    let run_l = |l4: bool, ws: &mut noble_ngraph::compiled::Workspace| {
+    let mut run_l = |l4: bool, ws: &mut noble_ngraph::compiled::Workspace| {
         let mut s = W2_S0;
         for _ in 0..a.w2_steps {
             let r = if l4 {
-                comp2.evaluate_in(ws, &i64_inputs(&[s, W2_I, W2_K]), None, &ctl)
+                comp2.evaluate_in(ws, &i64_inputs(&[s, W2_I, W2_K]), None, &mut ctl)
             } else {
-                reference(&e2.checked, &i64_inputs(&[s, W2_I, W2_K]), None, &ctl)
+                reference(&e2.checked, &i64_inputs(&[s, W2_I, W2_K]), None, &mut ctl)
             };
             if let Some([Value::I64(n), _]) = r.obs.outputs() {
                 s = *n;

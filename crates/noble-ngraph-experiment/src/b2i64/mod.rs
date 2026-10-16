@@ -52,7 +52,13 @@ impl Lowered {
     /// A frontend or D6 refusal, rendered.
     pub fn new(definitions: &[String], root: &str, inputs: usize) -> Result<Self, String> {
         let defs: Vec<&str> = definitions.iter().map(String::as_str).collect();
-        let p = source::prepare(&defs, root, &source::i64s(inputs))?;
+        let p = source::prepare(
+            noble_contracts::source::Session::new(),
+            noble_contracts::Limits::default(),
+            &defs,
+            root,
+            &source::i64s(inputs),
+        )?;
         let admitted = extract::admit(
             &BLAKE3,
             &p.submission,
@@ -87,7 +93,15 @@ impl Lowered {
     /// # Errors
     /// A non-normal observation.
     pub fn l3(&self, inputs: &[Value]) -> Result<Vec<Value>, String> {
-        normal(eval::reference(&self.extraction.checked, inputs, None, &Control::default()).obs)
+        normal(
+            eval::reference(
+                &self.extraction.checked,
+                inputs,
+                None,
+                &mut Control::default(),
+            )
+            .obs,
+        )
     }
 
     /// L4 outputs.
@@ -97,7 +111,7 @@ impl Lowered {
     pub fn l4(&self, inputs: &[Value]) -> Result<Vec<Value>, String> {
         normal(
             self.compiled
-                .evaluate(inputs, None, &Control::default())
+                .evaluate(inputs, None, &mut Control::default())
                 .obs,
         )
     }

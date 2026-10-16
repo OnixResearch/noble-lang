@@ -31,15 +31,6 @@ pub mod sem;
 pub mod snapshot;
 pub mod train;
 
-mod prelude {
-    pub(crate) use alloc::borrow::ToOwned;
-    pub(crate) use alloc::boxed::Box;
-    pub(crate) use alloc::format;
-    pub(crate) use alloc::string::{String, ToString};
-    pub(crate) use alloc::vec;
-    pub(crate) use alloc::vec::Vec;
-}
-
 pub use check::{check, check_with, Budgets, CheckedGraph};
 pub use diag::{BudgetKind, Code, Diagnostic, Malformed, Outcome, Site};
 pub use eval::{reference, Control, Obs, Report};

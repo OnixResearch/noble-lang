@@ -4,8 +4,10 @@
 //!
 //! * Static training admission: `E-DERIV-I64`, `E-PARAM-UNDECLARED`,
 //!   `E-DERIV-BOOLEAN` (a param reaches the loss through `step` or a `select`
-//!   gate under the default policy), `E-DERIV-INDEX` (a param reaches an index
-//!   operand under the default policy).
+//!   gate under the default policy, or a boolean opt-in names no `step` or
+//!   `select` it applies to), `E-DERIV-INDEX` (a param reaches an index
+//!   operand under the default policy, or an index opt-in names no `index`
+//!   node).
 //! * Reverse mode visits nodes in reverse canonical order and accumulates each
 //!   node's contributions in stored operand/term order, so FP32 gradients are
 //!   bitwise reproducible. [`Real`] instantiates it in binary32 (the reference
@@ -14,13 +16,12 @@
 //!   `backward-difference`, `select` gate straight-through) are opt-ins and are
 //!   labelled as surrogates; they are never described as exact derivatives.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
 use alloc::collections::BTreeMap;
+use alloc::{format, string::String, vec, vec::Vec};
 
 use crate::check::CheckedGraph;
 use crate::diag::{Code, Diagnostic, Site};
-use crate::ir::{AffineOperand, NodeId, Op, SlotKind, SubProfile};
+use crate::ir::{AffineOperand, Graph, NodeId, Op, SlotKind, SubProfile};
 use crate::sem;
 
 /// Derivative policy revision.
@@ -112,7 +113,10 @@ impl DerivOptions {
 }
 
 /// Static training admission (D10/D11) for `model` with trainable `params`
-/// (slot indices).
+/// (slot indices). Every opt-in must name a node of `model` that its policy
+/// applies to: `straight-through` and `refuse` a `step` or `select`,
+/// `clamped-linear` a `step`, and every index policy an `index` (design D6
+/// and D10 of `numeric-graph-v1`; replay re-admits recorded opt-ins here).
 ///
 /// # Errors
 /// `E-DERIV-I64`, `E-PARAM-UNDECLARED`, `E-DERIV-BOOLEAN` or `E-DERIV-INDEX`.
@@ -137,6 +141,7 @@ pub fn admit(model: &CheckedGraph, params: &[u32], opts: &DerivOptions) -> Resul
             ));
         }
     }
+    admit_options(g, opts)?;
     let n = g.nodes.len();
     let mut dep = vec![false; n];
     for (i, node) in g.nodes.iter().enumerate() {
@@ -189,6 +194,37 @@ pub fn admit(model: &CheckedGraph, params: &[u32], opts: &DerivOptions) -> Resul
                 ));
             }
             _ => {}
+        }
+    }
+    Ok(())
+}
+
+/// Every opt-in names a node of `g` that its policy applies to.
+fn admit_options(g: &Graph, opts: &DerivOptions) -> Result<(), Diagnostic> {
+    let op = |n: NodeId| g.nodes.get(n.index()).map(|node| &node.op);
+    let refuse = |code: Code, n: NodeId, what: &str| {
+        let why = match op(n) {
+            Some(o) => format!("the {what} opt-in does not apply to {}", o.name()),
+            None => format!("the {what} opt-in names no node of the model"),
+        };
+        Err(Diagnostic::new(code, Site::Node(n), why))
+    };
+    for (&n, policy) in &opts.boolean {
+        let applies = matches!(
+            (policy, op(n)),
+            (BooleanPolicy::ClampedLinear(_), Some(Op::F32Step(_)))
+                | (
+                    BooleanPolicy::Refuse | BooleanPolicy::StraightThrough,
+                    Some(Op::F32Step(_) | Op::F32Select { .. }),
+                )
+        );
+        if !applies {
+            return refuse(Code::DerivBoolean, n, "boolean");
+        }
+    }
+    for &n in opts.index.keys() {
+        if !matches!(op(n), Some(Op::F32Index { .. })) {
+            return refuse(Code::DerivIndex, n, "index");
         }
     }
     Ok(())
@@ -278,7 +314,6 @@ fn position<R: Real>(
     below: crate::ir::OutOfRange,
     above: crate::ir::OutOfRange,
 ) -> Option<Option<usize>> {
-    #[allow(clippy::cast_possible_truncation)]
     let f = i.to_f64() as f32;
     sem::index_position(f, len, below, above).ok()
 }
@@ -344,7 +379,6 @@ pub fn forward<R: Real>(g: &CheckedGraph, slots: &[R]) -> Vec<R> {
 /// Reverse mode: given forward values and output seeds `(output position,
 /// gradient)`, returns the gradient of every node.
 #[must_use]
-#[allow(clippy::too_many_lines)]
 pub fn backward<R: Real>(g: &CheckedGraph, vals: &[R], seeds: &[R], opts: &DerivOptions) -> Vec<R> {
     let graph = g.graph();
     let mut gr = vec![R::ZERO; graph.nodes.len()];

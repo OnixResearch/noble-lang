@@ -55,7 +55,15 @@
 - `noble-ngraph → noble-kernel` and `noble-ngraph → noble-contracts` are allowed by `domain-core → [domain-core]`.
 - No role rule, provider caller-role list or capability classification changes.
 
-**Why `no_std` although policy does not require it.** Without `std`, the library cannot reach filesystem, process, environment, clock, thread or output APIs: the compiler enforces the NGRAPH-CLI-01 effect boundary. It also matches the three existing domain-core crates. Adding `noble-ngraph` to `core_no_std` is **not** part of this change. That needs `nix/octet-controls.nix` `requiredCorePackages` to change (`:77-81`, checked at `:180-182`), which is an owner decision (open question Q1). The crate is `no_std` either way.
+**`no_std`, now also required by policy.** Without `std`, the library cannot reach filesystem, process, environment, clock, thread or output APIs: the compiler enforces the NGRAPH-CLI-01 effect boundary. It also matches the three existing domain-core crates. Q1 was approved as a tightening, and the integrator applied it on `integration/ngraph-v1`: `policy/architecture.ncl` `core_no_std` adds `noble-ngraph` and `dylint.toml` `core_source_scopes` adds `crates/noble-ngraph/src` (`e5decb9`), and `nix/octet-controls.nix` adds it to `requiredCorePackages`, `requiredPackages` and `requiredScopes`, with rejection controls for a missing no-std entry and an omitted package (`ff4e9ba`). Dropping the crate from production or from `core_no_std` is now a policy diagnostic.
+
+**Core-scope lints.** With `crates/noble-ngraph/src` in `core_source_scopes`, the core dylint lints report on the library (warning-only while deny-all stops in `noble-kernel`, #26). Two groups are fixed at the source, with the boring design:
+
+- `interior_mutability_in_core`: the B6 scratch counters were `Cell<u64>` fields shared through `&ScratchCounters`. They are now plain `u64` fields owned by the caller and lent for one call: `Control::scratch` and `TrainControl::scratch` hold `Option<&mut ScratchCounters>`, the evaluators and `train`/`replay` take `&mut Control`/`&mut TrainControl`, and a `ScratchLease` holds the exclusive borrow, so its drop is still the single release. The B6 evidence semantics are unchanged: the caller reads `(acquired, released, live_bytes)` and the peak after every outcome (normal, guard failure, preflight refusal, cancellation, fuel exhaustion, a stopped training step). The reference interpreter's evaluated-node counter is a plain local.
+- `concrete_construction_in_core`: `extract::source::prepare` constructed the frontend `Session` and its `Limits`. The caller now injects both (`prepare(Session::new(), Limits::default(), …)` in the CLI, the experiment and the tests).
+- `mutating_input_in_pure` stays a measured warning: it reports every `&mut` parameter (builders, encoders, parsers, evaluator workspaces), and the counter change above adds a few more such parameters. Recasting those APIs as returned state transitions is not a contained change.
+
+**Lint style.** The library follows `noble-kernel` and `noble-contracts`: every module imports the `alloc` items it uses explicitly (no glob prelude, so no `#[allow(unused_imports)]`), and no `#[allow]` remains. The pedantic clippy allows (`too_many_lines`, the cast lints) were no-ops, because the workspace gate runs clippy's default lint set with `-D warnings`, so they are deleted rather than turned into `#[expect]`, which would fail as unfulfilled. `sem::index_position` returns the named error `IndexRefused` instead of `()` (clippy `result_unit_err`). The library uses no `tigerstyle::`/`octet::` lint attribute, so, unlike `noble-kernel` and `noble-contracts`, it registers no tools; the CLI keeps its existing `#[expect(tigerstyle::…, reason = "Owner: …")]` convention.
 
 **What `no_std` and the forbidden families require of the moved code:**
 
@@ -77,7 +85,7 @@
    - The corner-distance sampler (`grad.rs:664`) is used only by the B4 harness, so it moves to the experiment's `suites`.
    - Rejected: `core_float_math` (unstable, and it lowers to platform intrinsics) and a `libm` dependency (a provider edge).
 3. **No atomics or shared-mutable globals.**
-   - `ScratchCounters` becomes `Cell<u64>` fields. The only threaded use (`ngraph-phase-c-l1` W2 modes) moves CLI handles, not library values.
+   - `ScratchCounters` holds plain `u64` fields lent as `&mut` for one call (see "Core-scope lints" above; the first cutover used `Cell<u64>`). The only threaded use (`ngraph-phase-c-l1` W2 modes) moves CLI handles, not library values.
    - `Arc` becomes `alloc::rc::Rc`.
    - `env!("CARGO_PKG_VERSION")` in `train::tools()` becomes the constant `TOOL_REVISION = "noble-ngraph/0"`.
    - `std::error::Error` becomes `core::error::Error`; `BTreeMap` comes from `alloc`.
@@ -90,14 +98,14 @@
 | `diag.rs` | `::diag` | Adds `E-FORMAT`, `E-SNAPSHOT-INTEGRITY`, `E-SNAPSHOT-ID` and `E-SNAPSHOT-REPLAY`, plus the D8 outcome class (D8 below) |
 | `check.rs`, `facts.rs`, `compiled.rs` | `::check`, `::facts`, `::compiled` | `Rc`; software `trunc`/`pow2` |
 | `sem.rs` (+ unit tests) | `::sem` | Adds `sem::soft` |
-| `eval.rs` | `::eval` | `Cell` counters |
+| `eval.rs` | `::eval` | Caller-owned scratch counters lent as `&mut` |
 | `grad.rs` | `::grad` | The training forward pass enforces facts and guards (D10); the sampler moves out |
 | `train.rs` | `::train` | Software `sqrt`; loss admission; parent-aware replay; `TOOL_REVISION` |
 | `snapshot.rs` | `::snapshot` | Provenance record and digest |
 | `prng.rs` (+ unit tests) | `::prng` | — |
 | `text.rs` | `::format::graph` | Identity-complete, symmetric codec (D4) |
 | — (new) | `::format::{value, vectors, data, snapshot}` | D5, D6 |
-| `extract/{mod,admission,symbolic,source}.rs` | `::extract` | Scheme injection only |
+| `extract/{mod,admission,symbolic,source}.rs` | `::extract` | Scheme injection; the frontend session and limits are injected too |
 | `extract/controls.rs` | experiment `controls` | Uses `serde_json` and the live-slot session; harness only |
 | `evidence.rs`, `fixtures.rs`, `suites.rs`, `workloads.rs`, `random.rs`, `rejections.rs`, `differential.rs`, `oracle.rs`, `b2i64/`, `l1/`, `bench.rs`, `json.rs`, `bin/*` | stay in the experiment | Import `noble_ngraph::…`; `Blake3Scheme` |
 
@@ -140,6 +148,12 @@ The permanent experiment test `identity_agreement.rs` recomputes all of these th
   - `subject authored-name <name>` is authoring sugar for `Subject::authored(name)` under the injected scheme. The name is the rest of the line: one or more tokens joined by single spaces, so fixture names such as `issue14/MSE point loss` can be spelled. `print` always emits the canonical hex form.
   - A missing, duplicate or malformed subject line is `E-GRAPH-MALFORMED`.
 - `shape input|output <trees…>` records `Some(trees)`; an absent line records `None`. Zero trees means `Some([])`. A duplicate or malformed shape line is `E-GRAPH-MALFORMED`.
+- **Shape depth.** A shape tree nests at most 127 pairs (`ir::MAX_SHAPE_DEPTH`). The bound is what extraction can produce: the Core frontend limits every value type to 256 structural nodes (`noble-contracts` `TYPE_CAP`, which it sends as the kernel request's `type_size`, and the kernel counts one node per constructor), and a path through `d` nested pairs needs at least `2d + 1` nodes, so an extracted interface item nests at most 127 pairs. The bound holds at construction for every producer:
+  - `ShapeTree` is opaque, and `ShapeTree::pair` is its only pair constructor; it refuses a 128th nested pair with `E-GRAPH-MALFORMED` (payload), so the builder can only ever hold shallow trees. Code reads trees through `ShapeTree::node()`. This replaces the public enum variants, a deliberate exception to the IR module's additive-change rule;
+  - the parser counts the enclosing pairs while it reads a tree and refuses the 128th `(p` with `E-GRAPH-MALFORMED` at that line before descending any further;
+  - extraction refuses a root interface item with more nested pairs as `E-AGGREGATE` at admission (only a forged submission, with type limits above the frontend's, can reach it).
+  - Reason: identity hashing, printing, comparison and drop walk shape trees recursively. The independent review found that a 40,000-deep tree in a 240 KB file aborted `check` with a stack overflow (exit 134, no report line); with the bound it is one coded report line, exit 2.
+- **Number tokens.** Every number is spelled without a sign other than a leading `-` on signed values (`i64` literals, `grid`): node ids `%N`, slot indices, closure ids and other counts are ASCII digits, an `F32` bit pattern is `0x` plus one to eight hex digits (the vector-file rule, D5), and a `derived` rule escape is `%` plus two hex digits. A leading `+` is `E-GRAPH-MALFORMED`. Rust's integer parsers accept a leading `+` (also after `0x` in `from_str_radix`), which made `+3`, `0x+1` and `%+f` valid by accident; the same strict grammar now applies to every file and every `noble ngraph` flag (D5, D6, D7).
 - Node, slot, fact and `out` lines keep today's grammar, with these corrections so that printing and parsing are symmetric for every graph value, including ones the checker refuses:
   - `evidence <hex>` is decoded from hex, and `evidence -` is an empty witness. Odd length or non-hex digits are `E-GRAPH-MALFORMED`. The checker still refuses `evidence` (P5).
   - `derived <rule>` requires its rule token. Rules are printed percent-encoded (every byte outside printable ASCII, and `%`, `#` and `"`, as `%XX`), and the empty rule is printed `""`. A bad escape is `E-GRAPH-MALFORMED`.
@@ -172,7 +186,13 @@ types f32 f32 ; f32
 point 0x3f000000 0x3e800000 ; 0x3f400000
 ```
 
-- **Value tokens.** An `f32` value is either `0x` plus one to eight hex digits (any encoding, including NaN, ±∞ and subnormals) or an exactly representable finite decimal; an inexact decimal is `E-LITERAL-INEXACT` and a `nan`/`inf` word is `E-LITERAL-NONFINITE` (NaN and infinities are given as bits). An `i64` value is a signed decimal within range. A `bool` value is `true` or `false`. Any other token is `E-FORMAT`.
+- **Value tokens.** An `f32` value is either `0x` plus one to eight hex digits (any encoding, including NaN, ±∞ and subnormals) or an exactly representable finite decimal; an inexact decimal is `E-LITERAL-INEXACT` and a `nan`/`inf` word is `E-LITERAL-NONFINITE` (NaN and infinities are given as bits). An `i64` value is ASCII digits within range, optionally after `-`. A `bool` value is `true` or `false`. Any other token is `E-FORMAT`, including a leading `+` (D4 number tokens). Graph files read `F32` literals with the same rules.
+- **Decimals.** A decimal is `[-]digits[.digits][(e|E)[+|-]digits]`, where either side of the `.` may be empty but not both (Rust's float grammar without the leading `+` and the `inf`/`nan` words). Exactness is decided in time linear in the token (`sem::exact_f32_decimal`):
+  - one pass strips leading zeros and trailing fraction zeros, giving `±D × 10^E` with `D` free of zeros at either end; an overlong exponent saturates;
+  - every exact binary32 value `M × 2^q` (`M < 2^24`, `-149 ≤ q ≤ 104`) satisfies `digits(D) ≤ 112` (`(2^24 − 1) × 5^149 < 10^112`), `-149 ≤ E ≤ 38` and `-44 ≤ digits(D) + E ≤ 39` (`2^-149 > 10^-45`, `2^128 < 10^39`); a literal outside that window is `E-LITERAL-INEXACT` before any big-integer work;
+  - inside the window, the comparison of `D × 10^E` with the nearest binary32 value works on at most 112 digits and exponents of at most 149.
+  - The codes are unchanged for every token: inexact or out-of-range decimals stay `E-LITERAL-INEXACT`, `nan`/`inf` words `E-LITERAL-NONFINITE`. The full expansions of `2^-149` (105 digits), of `(2^24 − 1) × 2^-149` (112 digits) and of the largest finite value are accepted, and one more significant digit is refused.
+  - Reason: the previous check built a big integer digit by digit and multiplied it by powers of ten once per unit of exponent, quadratic in the digit count; the review measured 7.1 s for one 400,000-digit token, and a 64 MiB file bound alone does not bound CPU time.
 - `types` lists the graph's ordered **input** slot types. Parameters never come from these files (D3 of the archived design): they come only from a snapshot. For data files, the types after `;` are the loss graph's target slot types.
 - The `types` line must appear exactly once, before any row; it may list zero types. A data file's `types` and `point` lines contain exactly one `;` (it may touch its neighbours).
 - A `types` line that differs from the graph is `E-INTERFACE`, before any evaluation. A wrong count on a row is `E-FORMAT`.
@@ -217,20 +237,23 @@ provenance <64 hex>          # the provenance digest below
   - `snapshot = H("noble.ngraph.params.v0" ‖ bytes(graph) ‖ u64le(n) ‖ u32le(slot)* ‖ bytes(u32le(bits)*))`;
   - `provenance` is the encoding of every record in file order except the schema and `provenance` lines: `H("noble.ngraph.provenance.v0" ‖ bytes(snapshot) ‖ bytes(graph) ‖ bytes(layout) ‖ u64le(n) ‖ (u32le(slot) ‖ u32le(bits))* ‖ bytes(optimizer-state) ‖ bytes(parent) ‖ str(subject kind) ‖ bytes(subject identity) ‖ u64le(#closure) ‖ u64le(id)* ‖ str(sub-profile) ‖ str(semantic revision) ‖ bytes(facts) ‖ bytes(loss) ‖ bytes(data) ‖ str(policy) ‖ u64le(#opt-ins) ‖ (u32le(node) ‖ str(kind) ‖ str(rule) ‖ [u32le(width bits)])* ‖ u64le(seed) ‖ str(prng) ‖ str(optimizer) ‖ u64le(lr bits) ‖ u64le(beta1 bits) ‖ u64le(beta2 bits) ‖ u64le(eps bits) ‖ u64le(steps) ‖ str(tools))`, where the width is present only for `clamped-linear` and `tools` is the record's text after `tools `.
   - Digest values enter as their 32 bytes, not as hex. `crates/noble-ngraph/tests/snapshot_file.rs` and `crates/noble-cli/tests/ngraph.rs` each re-implement this encoding from this text and reproduce the published identities.
-- **Loading** recomputes three things: `layout` from the param slot list, `snapshot` from `graph`, the slots and the bytes, and `provenance` from the records. Any mismatch, and any non-finite parameter, is `E-SNAPSHOT-INTEGRITY`, raised before use. More parameter bytes than `--budget-snapshot-bytes` is `E-BUDGET-SNAPSHOT-BYTES`. Snapshot files are read under a 32 MiB bound; the largest legal snapshot is 1,048,576 params at about 21 bytes per line.
+- **Loading** recomputes three things: `layout` from the param slot list, `snapshot` from `graph`, the slots and the bytes, and `provenance` from the records. Any mismatch is `E-SNAPSHOT-INTEGRITY`, raised before use, and so are two records that `train` can never publish, however consistent their digests: a non-finite parameter, and `optimizer` hyperparameters outside the `adam/0` domain (D7). More parameter bytes than `--budget-snapshot-bytes` is `E-BUDGET-SNAPSHOT-BYTES`. Snapshot files are read under a 32 MiB bound; the largest legal snapshot is 1,048,576 params at about 21 bytes per line. Numbers in snapshot files follow the D4 number tokens (no leading `+`; `E-FORMAT`).
 - **Binding** to a checked graph runs these checks before any node is evaluated:
   - a `graph` other than the graph's `GraphLogicalId` is `E-SNAPSHOT-STALE`;
   - a `facts` digest other than the graph's fact-binding digest is `E-SNAPSHOT-STALE`, because fact records are not part of `GraphLogicalId`, and a graph whose facts changed must not silently accept parameters trained under other facts;
   - a different layout is `E-SNAPSHOT-LAYOUT`;
   - a caller-pinned `--snapshot-id` that differs is `E-SNAPSHOT-ID`.
 - **Publication.** The CLI writes `<out>.partial` with create-new, syncs it, `hard_link`s it to `<out>` (which fails if `<out>` exists) and removes `<out>.partial`.
+  - The link decides the outcome. Once it exists, `<out>` holds the complete, immutable bytes, so the command reports its normal line (exit 0) even if removing `<out>.partial` then fails. That leftover is a second name for the same bytes; the CLI warns about it on stderr (`noble ngraph: the output was published, but its .partial file could not be removed: …`), and it matters only to a later publication to the same `--out` after `<out>` is removed, which refuses the existing `.partial` as usual. Reporting a refusal there would claim that nothing was published while `<out>` exists.
+  - If the link fails, the refusal also says when `<out>.partial` could not be removed.
   - No path is ever truncated, renamed over or modified, including the parent snapshot, which is only read.
   - An existing `<out>` or `<out>.partial` is a host refusal (exit 2) that leaves both untouched.
   - A training call that stops publishes nothing; no partial snapshot is kept (D11 of the archived design).
   - `extract --out` uses the same publication.
 - **Replay.** `verify --replay` rebuilds the training contract from the model, loss and data files, the recorded seed, policy, opt-ins, optimizer and steps, and an optional `--from` parent.
   - The model, loss, data and parent identities must equal the recorded `graph`, `loss`, `data` and `parent` values. Otherwise `E-SNAPSHOT-STALE`.
-  - Replay then trains and requires byte-identical parameters, `optimizer-state` and `snapshot`. Otherwise `E-SNAPSHOT-REPLAY`.
+  - Replay then admits the recorded contract exactly as `train` admits its flags (D7, D10). A recorded opt-in naming no node of the model, or a node its policy does not apply to, is `E-DERIV-BOOLEAN` or `E-DERIV-INDEX` (stage `replay`, exit 4), as `train --opt-in` with the same opt-in is. Hyperparameters outside the `adam/0` domain never reach replay: loading refuses them. Integrity only proves that the digests match the records, so without this a re-signed forgery with opt-ins that `train` refuses replayed as `replayed: true`.
+  - Finally, replay trains and requires byte-identical parameters, `optimizer-state` and `snapshot`. Otherwise `E-SNAPSHOT-REPLAY`.
   - Replay is defined on one pinned platform only.
 
 r[NGRAPH-SNAP-02]
@@ -248,11 +271,14 @@ r[NGRAPH-SNAP-02]
 | `noble ngraph verify GRAPH SNAPSHOT` | graph file, snapshot file | `--snapshot-id HEX`; `--replay --loss LOSS --data DATA [--from PARENT]` | one line: `snapshot`, `graph`, `bound: true`, `replayed: true|false` |
 
 - **Usage.** Every subcommand refuses an unknown, duplicated, missing or inapplicable flag, a missing or extra positional argument and a malformed flag value as a usage error: stdout stays empty, stderr starts with `noble ngraph:` followed by the usage text, and the exit is 2. A bare `noble ngraph` or an unknown subcommand is a usage error too.
+- **Streams.** Writes to stderr never panic: a usage error still exits 2, and a report that cannot be written exits 2, when stderr itself fails (`eprintln!` exited 101 there). If stdout is closed rather than failing, Rust's standard output discards the report without an error, so the outcome's exit stands.
 - **One line.** `check`, `extract`, `train` and `verify` print exactly one report line for every outcome other than a usage error. `command` is the subcommand name.
 - **`eval` lines.** All static work runs before anything is printed: the graph (read, parse, check), the snapshot (load, integrity, binding, or `E-SNAPSHOT-LAYOUT` for a graph with `param` slots and no `--snapshot`) and the vector file (parse, `types` interface). Any such refusal is the only line. Otherwise the header comes first (no `vector` key; `graph`; `snapshot` id or null), then one line per row: `vector` (the 0-based row index) and `outputs` for a normal row, or `code`, `site` and `detail` and no `outputs` otherwise.
 - **`check` fields.** `subject` is the subject record text `<kind> <64 hex> closure <ids|->`; `closure` is the array of definition identities; `inputs` and `outputs` are arrays of type names; `params`, `live_nodes`, `layers` and `facts` are counts (`facts` counts fact records); `graph` and `param_layout` are lowercase hex.
 - **`extract` source.** Newline-separated submissions with blank lines skipped, or `noble session` framing with `--framed` (a decimal byte-count line, then that many bytes). Every submission before the root must be a definition; otherwise `E-SUBJECT`, like any Core frontend refusal. `--inputs` takes one or more of `i64` and `bool`; a Program-typed input cannot be spelled, so `E-DYNAMIC-RUN` is reachable only through the library (the experiment's B3 controls).
-- **`train` values.** `--seed` is decimal or `0x` hex, `--steps` decimal. A `--policy` or `--optimizer` other than `ngraph-deriv-real/0` or `adam/0` is `E-PROFILE`. `--opt-in` must name a node of the model of the applicable kind (`straight-through`: `step` or `select`; `clamped-linear`: `step`; index rules: `index`); otherwise, or for two policies of one kind on one node, it is a usage error. On a training refusal the line also carries `published_steps`, and nothing is published. `loss_initial` and `loss_final` are the first and last recorded binary64 mean losses as `0x%016x`.
+- **`train` values.** `--seed` is decimal digits or `0x` plus one to 16 hex digits, `--steps` decimal digits; no flag value takes a leading `+` (D4 number tokens; usage error). A `--policy` or `--optimizer` other than `ngraph-deriv-real/0` or `adam/0` is `E-PROFILE`. On a training refusal the line also carries `published_steps`, and nothing is published. `loss_initial` and `loss_final` are the first and last recorded binary64 mean losses as `0x%016x`.
+- **`--adam-*` values.** Each takes `0x` plus exactly 16 hex digits (the binary64 encoding) or a decimal (D5 grammar) rounded to nearest, ties to even; anything else, including `nan`, `inf` and a short hex encoding, is a usage error. A well-formed value outside the domain that `adam/0` needs is `E-PROFILE` at stage `request`, with the policy and optimizer names and before any file is read (`train::Adam::admit`): every value finite, `lr > 0`, `eps > 0` and `0 ≤ β₁, β₂ < 1`, compared as numbers, so `-0` is a zero β. The archived D11 names `adam/0` but no domain; outside this one the bias correction `1 − βᵗ` or the denominator `√v̂ + eps` can be zero, the moments never decay, or the step ascends. The review found `nan`, `inf`, negative and zero values accepted, and an `lr` of NaN even published S₀ and replayed. `train` itself (and so replay) re-admits the domain, and loading refuses a recorded out-of-domain optimizer (D6).
+- **`--opt-in`.** Malformed text, and two policies of one kind on one node, are usage errors. Whether an opt-in applies is training admission in the library, shared with replay (D6, D10): one naming no node of the model, or a node its rule does not apply to (`straight-through` and `refuse`: `step` or `select`; `clamped-linear`: `step`; index rules: `index`), is `E-DERIV-BOOLEAN` or `E-DERIV-INDEX` at stage `admission` (exit 4). These are the codes of the derivative policy, whose default-refused paths they already name; an inapplicable opt-in is a derivative option the policy does not support for that node. The first implementation refused these in the CLI as usage errors, which replay could not apply to a recorded opt-in.
 - **`verify` flags.** `--loss`, `--data` and `--from` apply only with `--replay`, which needs both `--loss` and `--data`.
 - **Explicit training contract.** `--policy`, `--optimizer`, `--seed` and `--steps` have no defaults. `--steps 0` publishes S₀ from the seed, which is the only way to create an untrained snapshot in v1 (Q4).
 - **Values in reports.** `f32` values are `"f32:0x%08x"`, and every NaN encoding renders `"f32:nan"` (the D3 single class). `i64` values are `"i64:<decimal>"` and bools are `"bool:true|false"`.
@@ -276,6 +302,7 @@ r[NGRAPH-CLI-01]
 | `exhausted` | 5 | `E-BUDGET-<kind>`, including `FUEL` (runtime) and `STEPS` |
 
 - Usage errors print usage on stderr and exit 2, as every other subcommand does.
+- A usage error and a report-output failure exit 2 even when stderr cannot be written.
 - For `eval`, the process exit is the exit of the **first** non-`normal` vector in file order, or 0.
 - A graph-level refusal (checker or snapshot binding) prints one report line and no vector lines.
 - The four new codes are feature-level and do not change any D6 meaning:
@@ -299,7 +326,7 @@ r[NGRAPH-CLI-01]
 - A budget is exhausted when the observed count exceeds the limit; a limit equal to the observed count or to the default is accepted.
 - `backward-scratch` is charged before the first step on the per-step lease, `16 × (model nodes + loss nodes)` bytes.
 - A value above the default is `E-PROFILE` (raising needs a new profile policy revision, as in the experiment).
-- A value that is not a `u64` is a usage error.
+- A value that is not a `u64` written in decimal digits is a usage error (no sign, no leading `+`).
 - `--fuel N` is host policy and has no default limit; exhaustion is reported as `E-BUDGET-FUEL`.
 - The host input bounds (graph 64 MiB, vectors 64 MiB, data 64 MiB, snapshot 32 MiB, source 1 MiB with each submission at most 65,536 bytes) are fixed and documented. They are host limits, not profile budgets.
 
@@ -312,6 +339,7 @@ r[NGRAPH-CLI-01]
 - **Forward-pass enforcement.** `grad::forward` skips guards and input facts (callers of the B4 campaigns sample admissible points). The supported trainer (`grad::objective_checked`) first runs the reference preflight, including param facts under the current parameters, then scans the same binary32 forward values for the first failing guard or refusing index read in canonical order, for the model and then for the loss graph (whose input facts are validated too), point by point. The first failing point stops the step with its D8 code (`E-FACT-INPUT` or `G-FACT-FALSE`), and nothing is published. The final-loss evaluation after the last step applies the same rule; a refusal there also publishes nothing (fail closed).
 - **Loss admission.** Training admission checks the loss graph: `ngraph-f32/0`, no `param` slot, input slots equal to the model outputs followed by the data target types, and exactly one `F32` output. Otherwise `E-INTERFACE`.
 - **Parent-aware replay.** `replay` takes the parent snapshot: `train(c, Some(parent), …)`, with `parent` checked against the recorded id.
+- **Replay re-admission.** `replay` trains through `train`, so the recorded contract passes the same admission as a new one: the `adam/0` domain (`E-PROFILE`) and, in `grad::admit`, the applicability of every opt-in (`E-DERIV-BOOLEAN`, `E-DERIV-INDEX`) before the default-refused paths.
 
  r[NGRAPH-SNAP-02]
 
@@ -353,25 +381,40 @@ r[NGRAPH-SCOPE-01]
 The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_BIN_EXE_noble")`, and no ngraph path spawns Node or Wasm. The tests below ran; their results are recorded in [tasks.md](tasks.md). The draft cases in [the case file](cases/numeric-graph-cases.json) stay `absent / not-run / open / unassessed` with `evidence: []` until they are registered and recorded (Phase 7): a passing test is not a recorded case execution.
 
 - **`crates/noble-ngraph/tests`:**
-  - `ir_check.rs` and `extract_b1.rs` (moved);
-  - `format_graph.rs`: round trip on inline authored graphs and the extracted `I1`–`I4`; `authored-name` sugar; evidence hex symmetry; malformed subject and shape lines;
-  - `format_values.rs`: vectors and data, with schema, `types`, inexact-decimal, NaN-bits and row-count controls;
-  - `snapshot_file.rs`: round trip; an independent implementation of the D6 provenance-digest encoding; tampered param, layout and provenance; opt-in order; stale graph or facts; pinned id; swapped params with recomputed identities;
-  - `train_admission.rs`: data points failing a guard or input fact; loss arity; parent-aware replay; `E-SNAPSHOT-REPLAY` from a provenance-consistent forged file;
+  - `ir_check.rs` and `extract_b1.rs` (moved); `ir_check.rs` also shows that every refusal before evaluation (input fact, interface, missing or stale snapshot) leaves both evaluators at zero evaluated nodes (`refusals_before_evaluation_evaluate_no_node`; NGRAPH-CASE-04/08/12 `evaluated_nodes`, which no CLI report carries);
+  - `format_graph.rs`: round trip on inline authored graphs and the extracted `I1`–`I4`; `authored-name` sugar; evidence hex symmetry; malformed subject and shape lines; the 127-pair shape bound in the parser and in `ShapeTree::pair`, including the 40,000-deep repro; number tokens without `+` and with at most eight hex digits;
+  - `format_values.rs`: vectors and data, with schema, `types`, inexact-decimal, NaN-bits and row-count controls; the decimal window's boundaries (the expansions of `2^-149`, `(2^24 − 1) × 2^-149` and the largest finite value, one more digit, a 100,001-digit token, saturated exponents); no leading `+`;
+  - `snapshot_file.rs`: round trip; an independent implementation of the D6 provenance-digest encoding; tampered param, layout and provenance; opt-in order; stale graph or facts; pinned id; swapped params with recomputed identities; re-signed optimizers outside the `adam/0` domain; `+` in records;
+  - `train_admission.rs`: data points failing a guard or input fact; loss arity; parent-aware replay; `E-SNAPSHOT-REPLAY` from a provenance-consistent forged file; the `adam/0` domain and opt-in applicability, each refused alike by `train` and by `replay` of a record;
   - `soft_float.rs`: software routines against std on specials, every power of two and 100,000 seeded patterns per routine, with an ignored 10⁷ tier (`cargo test --release -p noble-ngraph --test soft_float -- --ignored`).
   - The test targets link std and use a test-only SipHash identity scheme (`tests/common`), so the library has no third-party dependency of any kind; BLAKE3 identities are pinned by the experiment.
 - **`crates/noble-ngraph-experiment/tests`:**
   - the existing Phase B/C tests, retargeted;
   - `identity_agreement.rs` (D3);
   - `format_roundtrip.rs`: the permanent identity round trip over F1–F3 (nine rule pairs), MSE, W3-S/M/L, W4, seeded random graphs 1–8 and the extracted `I1`–`I4`; requires structural equality with origins cleared, the same `GraphLogicalId`, the same fact-binding digest and the same checker outcome.
-- **`crates/noble-cli/tests/ngraph.rs`** (NGRAPH-CASE-03..13): per subcommand, the success path and each outcome class; snapshot immutability and replay; wrong or stale snapshot refusal. Temporary directories come from `std::env::temp_dir()` with unique names. The first 14 tests were written independently from this design (`feat/ngraph-cli-tests`, 429da01) before the CLI existed and passed unchanged; two tests added at integration cover the forged-snapshot cases (CASE-12 swapped params, CASE-13 replay) with an independent implementation of the D6 encoding, and the recorded B5 identities through the CLI (CASE-10, fixture `tests/ngraph/b5.points`).
+  - `format_roundtrip.rs` also re-parses every corpus graph with a leading comment, blank lines, trailing comments and runs of spaces, and requires the same graph, identity, fact-binding digest and checker outcome (`comments_blank_lines_and_spacing_do_not_change_any_corpus_graph`; NGRAPH-CASE-06 variants on the whole corpus).
+- **Library unit tests:** `extract::admission` refuses a root interface item with 128 nested pairs (`E-AGGREGATE`) and admits 127.
+- **`crates/noble-cli/tests/ngraph.rs`** (NGRAPH-CASE-03..13): per subcommand, the success path and each outcome class; snapshot immutability and replay; wrong or stale snapshot refusal. Temporary directories come from `std::env::temp_dir()` with unique names. The first 14 tests were written independently from this design (`feat/ngraph-cli-tests`, 429da01) before the CLI existed and passed unchanged; two tests added at integration cover the forged-snapshot cases (CASE-12 swapped params, CASE-13 replay) with an independent implementation of the D6 encoding, and the recorded B5 identities through the CLI (CASE-10, fixture `tests/ngraph/b5.points`). Four tests cover the boundary review: the 40,000-deep shape repro (one line, exit 2), failing stdout and stderr pipes (exit 2, not a panic), strict numbers and the `adam/0` domain, and re-signed snapshots with out-of-domain optimizers or opt-ins that `train` refuses.
+- **`noble-cli` unit test:** `ngraph::files` publication outcomes (a linked output stays published when its `.partial` removal fails).
 
 ## Implementation notes
 
 - `CheckedGraph::fact_bindings(ids)` computes the fact-binding digest on demand, so checking a graph costs no extra hash; it is identical to the experiment's B5 `facts` value (D3).
 - `extract::source::prepare` refuses an executable submission before the root (it would run in `noble session` but has no meaning for extraction).
-- Training admission order is params, then the derivative policy (`E-DERIV-*`), then the loss interface; the CLI runs it before reading the data file, so an `ngraph-i64/0` model is `E-DERIV-I64` whatever its data.
+- Training admission order is the budget policy, the `adam/0` domain (`E-PROFILE`), the params (`E-PARAM-UNDECLARED`), then the derivative policy (`E-DERIV-I64`, opt-in applicability, the default-refused paths), then the loss interface; the CLI checks the `adam/0` domain at stage `request` and runs the rest before reading the data file, so an `ngraph-i64/0` model is `E-DERIV-I64` whatever its data.
 - The readings of the black-box test worker (agent `noble-ngraph-cli-tests`) were settled on 2026-10-16 and are folded into D5–D9: `command` is the subcommand name; coded lines carry a string `site` except the run-time observations; one line per non-usage outcome except `eval`; usage errors keep stdout empty; the `eval` header; whole-file refusal of vector files; `facts` is a count; `param <slot>` is the interface slot index; a seed-trained snapshot's parent is S₀; lowercase hex with `provenance` last; inapplicable flags are usage errors; and a budget is exceeded only when observed > limit.
+- **Independent boundary review (2026-10-16).** The review of `20df84c` (agent `noble-ngraph-cli-tests`; repros outside the repository) found two bugs, two specification mismatches and six notes. The eight items selected for this pass are fixed at the source, each with a regression test and a decision recorded above:
+  - a 40,000-deep `shape` tree aborted `check` with a stack overflow: the 127-pair bound (D4);
+  - decimal exactness was quadratic in the digit count: the linear window (D5);
+  - `eprintln!` panicked (exit 101) when stderr failed: non-panicking writes (D7 streams, D8);
+  - `--adam-*` accepted `nan`, `inf`, negative and zero values: the strict grammar and the `adam/0` domain in `train`, on load and through replay (D6, D7);
+  - replay accepted forged opt-ins that `train` refuses: opt-in applicability moved into training admission (D6, D7, D10);
+  - a failed `.partial` removal after a successful link was reported as a refusal: the link decides (D6);
+  - a leading `+` was accepted in flags and values: refused everywhere (D4, D5, D9);
+  - 39 `#[allow]` in the library, 20 of them on a glob prelude: explicit imports, no `#[allow]` (D2 lint style).
+  - With them, the two contained core-scope dylint groups were fixed (D2: `interior_mutability_in_core`, `concrete_construction_in_core`).
+  - Before and after, on the reviewer's release build of `20df84c` and on this one: the 40,000-deep tree went from exit 134 with no report to one `E-GRAPH-MALFORMED` line (exit 2); one 400,000-digit token from about 7 s (6.9 and 7.5 s in two runs) to 4 ms (both `E-LITERAL-INEXACT`); a usage error with stderr on `/dev/full` from exit 101 to 2; `--adam-lr nan` from a published S₀ to a usage error and `--adam-lr -1` to `E-PROFILE`; the reviewer's forged snapshots from `replayed: true` to `E-DERIV-BOOLEAN` and `E-DERIV-INDEX` (exit 4) and from bound to `E-SNAPSHOT-INTEGRITY` (NaN `lr`); `--steps +3` from 3 steps to a usage error.
+  - Not changed: the `.partial` file is removed by path rather than by handle, the directory is not synced after the link and unlink (D6 requires syncing the file only), and a closed stdout still loses the report with the outcome's exit (D7 streams).
 
 ## Integration impacts (for the integrator)
 
@@ -383,18 +426,19 @@ The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_
   - the provider comment loses blake3, serde_json and rustc_apfloat as library callers (they stay experiment and CLI callers);
   - the filesystem and observability rationales gain the CLI's ngraph file reads, create-new and hard-link publication, `.partial` removal and report output;
   - no change to rules, provider roles or capability handling.
-  - Q1 (approved): `core_no_std` and `nix/octet-controls.nix` `requiredCorePackages`, `requiredPackages` and `requiredScopes` add `noble-ngraph`.
+  - Q1 (approved; applied in `e5decb9` and `ff4e9ba`): `core_no_std` and `nix/octet-controls.nix` `requiredCorePackages`, `requiredPackages` and `requiredScopes` add `noble-ngraph`, and `dylint.toml` `core_source_scopes` adds `crates/noble-ngraph/src`.
 - **Native assurance.** `policy/native-assurance.ncl`/`.json`: `required_packages` and the scope note go from six to seven crates. The experiment's provider rows stay, and there is no new row (the library has no external dependency).
 - **Source inventory.** Renew `policy/source-inventory.ncl`/`.json` with `tools/source-inventory-renew.mjs` from a complete collection: new `noble-ngraph` paths, removed experiment paths and new `noble-cli` ngraph paths. Update `verification/source-inventory.md` and `verification/native-assurance.md` counts.
 - **Octet capacity.**
   - Recompute `max_units`/`max_shards` (78 today). As implemented: `noble-ngraph` adds 9 units (lib, lib+test, and the integration tests `ir_check`, `extract_b1`, `format_graph`, `format_values`, `snapshot_file`, `train_admission`, `soft_float`); the experiment is net 0 (`ir_check` and `extract_b1` moved out, `identity_agreement` and `format_roundtrip` added); `noble-cli` adds `tests/ngraph.rs`. Expected 88 units, to be confirmed by a complete collection.
   - The `noble` bin and bin+test shards were already truncated at 16,384 calls and constructors and were doubled to 32,768 (`architecture.ncl:339-345`), so re-collect and raise `max_calls`, `max_constructors`, `max_spans` and `max_shard_bytes` only from observed complete counts.
-- **Lints.** The new CLI module uses `attempt!` instead of `?` and `#[expect(tigerstyle::assertion_density, …)]` on its fallible entry points, following the crate's conventions; the library is moved code. The Octet/tigerstyle gates were not run in this change.
-- **Edges.** New normal edges: `noble-ngraph → noble-kernel`, `noble-ngraph → noble-contracts`, `noble-ngraph-experiment → noble-ngraph`, `noble-cli → noble-ngraph`. `noble-ngraph` has no dev-dependency; its tests use a test-only SipHash identity scheme. `dylint.toml` `core_source_scopes` may also need `crates/noble-ngraph/src` with the Q1 tightening.
+- **Lints.** The new CLI module uses `attempt!` instead of `?` and `#[expect(tigerstyle::assertion_density, …)]` on its fallible entry points, following the crate's conventions. The library has no `#[allow]` and fixes the core-scope `interior_mutability_in_core` (6 findings in the integrator's collection of `ff4e9ba`) and `concrete_construction_in_core` (4) groups at the source (D2); `mutating_input_in_pure` stays a measured warning, and the `&mut` scratch counters add a few findings to it. The Octet/tigerstyle gates were not run in this change.
+- **Capacity after the review fixes.** The new tests are added to existing targets, so the unit count (88) does not change; the library, CLI and test shards grow slightly, so the call, constructor and span counts need the complete re-collection anyway.
+- **Edges.** New normal edges: `noble-ngraph → noble-kernel`, `noble-ngraph → noble-contracts`, `noble-ngraph-experiment → noble-ngraph`, `noble-cli → noble-ngraph`. `noble-ngraph` has no dev-dependency; its tests use a test-only SipHash identity scheme. `dylint.toml` `core_source_scopes` gained `crates/noble-ngraph/src` with the Q1 tightening (`e5decb9`).
 
 ## Open questions (recommended answers)
 
-- **Q1** Add `noble-ngraph` to `core_no_std`? This needs `nix/octet-controls.nix` `requiredCorePackages` (and, for symmetry, `requiredPackages`/`requiredScopes`) to include it. **Recommend yes, as a separately approved tightening.** The crate is `no_std` regardless.
+- **Q1** Add `noble-ngraph` to `core_no_std`? This needs `nix/octet-controls.nix` `requiredCorePackages` (and, for symmetry, `requiredPackages`/`requiredScopes`) to include it. **Recommend yes, as a separately approved tightening.** The crate is `no_std` regardless. Approved and applied by the integrator (`e5decb9`, `ff4e9ba`; D2).
 - **Q2** The extracted subject identity is BLAKE3 over the kernel's `Debug` rendering (`admission.rs:521-545`), which is stable only within one kernel revision. **Recommend keeping it for v1 and documenting it.** A kernel change changes `GraphLogicalId`, so old snapshots are refused as stale (fail closed). A canonical kernel encoding is a separate change.
 - **Q3** Persist the `adam/0` moments so that training can resume? **Recommend no.** `--from` restarts the optimizer state at zero and records the parent, and the snapshot records the state digest only.
 - **Q4** Snapshots from caller-written values? **Recommend deferring.** Archived D3 supplies parameters only through snapshots, and `--steps 0` covers S₀.

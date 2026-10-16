@@ -27,7 +27,7 @@ fn i64_graph_operand_order_and_value() {
     let r = b.op(Op::I64Sub(s, seven));
     b.output(r);
     let c = check(&IDS, b.finish()).expect("checks");
-    let rep = reference(&c, &i64_inputs(&[5, 4]), None, &Control::default());
+    let rep = reference(&c, &i64_inputs(&[5, 4]), None, &mut Control::default());
     assert_eq!(rep.obs, Obs::Normal(vec![Value::I64(24)]));
     // `5 3 -` = 2 (a is the deeper operand).
     let mut b = GraphBuilder::new(SubProfile::I64, subject());
@@ -36,7 +36,7 @@ fn i64_graph_operand_order_and_value() {
     let d = b.op(Op::I64Sub(a, bb));
     b.output(d);
     let c = check(&IDS, b.finish()).expect("checks");
-    let rep = reference(&c, &[], None, &Control::default());
+    let rep = reference(&c, &[], None, &mut Control::default());
     assert_eq!(rep.obs, Obs::Normal(vec![Value::I64(2)]));
 }
 
@@ -51,7 +51,7 @@ fn i64_wraps_and_eq() {
     b.output(s);
     b.output(e);
     let c = check(&IDS, b.finish()).expect("checks");
-    let rep = reference(&c, &i64_inputs(&[i64::MAX]), None, &Control::default());
+    let rep = reference(&c, &i64_inputs(&[i64::MAX]), None, &mut Control::default());
     assert_eq!(
         rep.obs,
         Obs::Normal(vec![Value::I64(i64::MIN), Value::Bool(true)])
@@ -164,4 +164,57 @@ fn nonfinite_constant_and_caller_assertion_are_refused() {
         check(&IDS, b.finish()).unwrap_err().code,
         Code::FactUnchecked
     );
+}
+
+/// NGRAPH-CASE-04/08/12 `evaluated_nodes: 0` (not a CLI report field):
+/// every refusal before evaluation — an input fact, the interface, a missing
+/// or stale snapshot — leaves both evaluators at zero evaluated nodes, and
+/// an admitted vector evaluates every node.
+#[test]
+fn refusals_before_evaluation_evaluate_no_node() {
+    use noble_ngraph::compiled::Compiled;
+    use noble_ngraph::eval::f32_inputs;
+    use noble_ngraph::snapshot::ParamSnapshot;
+    let model = check(&IDS, common::linear(false, true)).expect("checks");
+    let other = check(&IDS, common::linear(true, false)).expect("checks");
+    let s = ParamSnapshot::new(&IDS, &model, &[2.0, 0.5]).expect("snapshot");
+    let stale = ParamSnapshot::new(&IDS, &other, &[2.0, 0.5]).expect("snapshot");
+    let refusals: [(&str, Vec<Value>, Option<&ParamSnapshot>, Code); 5] = [
+        ("input fact", f32_inputs(&[5.0]), Some(&s), Code::FactInput),
+        ("missing input", vec![], Some(&s), Code::Interface),
+        ("input type", vec![Value::I64(1)], Some(&s), Code::Interface),
+        (
+            "no snapshot",
+            f32_inputs(&[1.0]),
+            None,
+            Code::SnapshotLayout,
+        ),
+        (
+            "stale snapshot",
+            f32_inputs(&[1.0]),
+            Some(&stale),
+            Code::SnapshotStale,
+        ),
+    ];
+    let compiled = Compiled::new(&IDS, &model);
+    for (name, inputs, snapshot, want) in refusals {
+        for report in [
+            reference(&model, &inputs, snapshot, &mut Control::default()),
+            compiled.evaluate(&inputs, snapshot, &mut Control::default()),
+        ] {
+            assert!(
+                matches!(&report.obs, Obs::Refused(d) if d.code == want),
+                "{name}: {report:?}"
+            );
+            assert_eq!(report.evaluated_nodes, 0, "{name}");
+        }
+    }
+    let admitted = reference(
+        &model,
+        &f32_inputs(&[1.0]),
+        Some(&s),
+        &mut Control::default(),
+    );
+    assert_eq!(admitted.obs, Obs::Normal(vec![Value::f32(2.5)]));
+    assert_eq!(admitted.evaluated_nodes, model.node_count() as u64);
 }

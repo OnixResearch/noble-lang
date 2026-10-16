@@ -20,7 +20,7 @@ fn outputs_on(c: &train::Contract, s: &ParamSnapshot) -> Vec<Obs> {
                 &c.model,
                 &f32_inputs(&p.inputs),
                 Some(s),
-                &Control::default(),
+                &mut Control::default(),
             )
             .obs
         })
@@ -42,7 +42,8 @@ fn train_f1_publishes_only_new_param_snapshots() {
     let s0_bytes = s0.bytes().to_vec();
     let s0_out = outputs_on(&c, &s0);
 
-    let t = train::train(&BLAKE3, &c, None, B5_STEPS, &TrainControl::default()).expect("trains");
+    let t =
+        train::train(&BLAKE3, &c, None, B5_STEPS, &mut TrainControl::default()).expect("trains");
     assert_eq!(t.initial, s0);
     let (first, last) = (t.losses[0], *t.losses.last().expect("losses"));
     assert!(last <= 0.1 * first, "loss {first} → {last}");
@@ -71,9 +72,15 @@ fn train_f1_publishes_only_new_param_snapshots() {
     );
 
     // Replay from provenance reproduces the final snapshot bytes.
-    let replayed = train::replay(&BLAKE3, &c, &t.provenance, None, &TrainControl::default())
-        .expect("replays")
-        .snapshot;
+    let replayed = train::replay(
+        &BLAKE3,
+        &c,
+        &t.provenance,
+        None,
+        &mut TrainControl::default(),
+    )
+    .expect("replays")
+    .snapshot;
     assert_eq!(replayed.bytes(), t.snapshot.bytes());
     assert_eq!(replayed.id(), t.provenance.result);
     assert_eq!(t.provenance.steps, B5_STEPS);
@@ -88,7 +95,7 @@ fn wrong_graph_layout_and_stale_snapshots_are_refused() {
     // Wrong graph: an F2 snapshot.
     let f2 = check(&BLAKE3, fixtures::f2()).expect("F2");
     let s2 = ParamSnapshot::new(&BLAKE3, &f2, &[1.0, 2.0, 3.0, 4.0]).expect("F2 snapshot");
-    let r = reference(&c.model, &x, Some(&s2), &Control::default());
+    let r = reference(&c.model, &x, Some(&s2), &mut Control::default());
     assert!(
         matches!(&r.obs, Obs::Refused(d) if d.code == Code::SnapshotStale),
         "{r:?}"
@@ -104,7 +111,7 @@ fn wrong_graph_layout_and_stale_snapshots_are_refused() {
         slots,
         s.bytes().to_vec(),
     );
-    let r = reference(&c.model, &x, Some(&bad), &Control::default());
+    let r = reference(&c.model, &x, Some(&bad), &mut Control::default());
     assert!(
         matches!(&r.obs, Obs::Refused(d) if d.code == Code::SnapshotLayout),
         "{r:?}"
@@ -114,13 +121,13 @@ fn wrong_graph_layout_and_stale_snapshots_are_refused() {
     g_old.subject = noble_ngraph::ir::Subject::authored(&BLAKE3, "issue14/F1 previous revision");
     let old = check(&BLAKE3, g_old).expect("old F1");
     let s_old = ParamSnapshot::new(&BLAKE3, &old, &fixtures::F1_FIXED).expect("old snapshot");
-    let r = reference(&c.model, &x, Some(&s_old), &Control::default());
+    let r = reference(&c.model, &x, Some(&s_old), &mut Control::default());
     assert!(
         matches!(&r.obs, Obs::Refused(d) if d.code == Code::SnapshotStale),
         "{r:?}"
     );
     // Training refuses a stale initial snapshot too.
-    let e = train::train(&BLAKE3, &c, Some(&s_old), 1, &TrainControl::default()).unwrap_err();
+    let e = train::train(&BLAKE3, &c, Some(&s_old), 1, &mut TrainControl::default()).unwrap_err();
     assert_eq!(e.diagnostic.code, Code::SnapshotStale);
 }
 
@@ -143,10 +150,16 @@ fn old_subject_evidence_is_refused_for_a_captured_subject() {
             &c.model,
             &f32_inputs(&p.inputs),
             Some(&s),
-            &Control::default(),
+            &mut Control::default(),
         )
         .obs;
-        let b = reference(&captured, &f32_inputs(&p.inputs), None, &Control::default()).obs;
+        let b = reference(
+            &captured,
+            &f32_inputs(&p.inputs),
+            None,
+            &mut Control::default(),
+        )
+        .obs;
         assert!(a.obs_eq(&b));
     }
     // A different snapshot of the same graph is not covered either.
@@ -162,7 +175,7 @@ fn old_subject_evidence_is_refused_for_a_captured_subject() {
 fn nonfinite_update_publishes_nothing() {
     let mut c = b5_contract(B5_SEED, B5_DATA_SEED);
     c.data[3].targets[0] = f32::INFINITY;
-    let e = train::train(&BLAKE3, &c, None, 5, &TrainControl::default()).unwrap_err();
+    let e = train::train(&BLAKE3, &c, None, 5, &mut TrainControl::default()).unwrap_err();
     assert_eq!(e.diagnostic.code, Code::NonfiniteUpdate);
     assert_eq!(e.published_steps, 0);
     let s0 = ParamSnapshot::new(

@@ -133,9 +133,8 @@ pub(super) fn parse(
             budget_seen.push(kind.flag);
             let v = attempt!(value(kind.flag));
             let text = attempt!(utf8(kind.flag, &v));
-            let n = attempt!(text
-                .parse::<u64>()
-                .map_err(|_| std::format!("{} takes an unsigned 64-bit integer", kind.flag)));
+            let n = attempt!(noble_ngraph::format::decimal_u64(&text)
+                .ok_or_else(|| std::format!("{} takes an unsigned 64-bit integer", kind.flag)));
             (kind.set)(&mut parsed.budgets, n);
         } else {
             return Err(std::format!("{text} is not an option of this subcommand"));
@@ -197,27 +196,32 @@ impl Parsed {
     }
 }
 
-/// An unsigned integer: decimal, or `0x` hex.
+/// An unsigned integer: decimal digits, or `0x` plus one to 16 hex digits.
+/// No sign is accepted, as in every `ngraph` file.
 pub(super) fn unsigned(flag: &str, text: &str) -> Result<u64, std::string::String> {
-    let parsed = match text.strip_prefix("0x") {
-        Some(h) if !h.is_empty() && h.len() <= 16 => u64::from_str_radix(h, 16).ok(),
-        Some(_) => None,
-        None => text.parse::<u64>().ok(),
+    let parsed = if text.starts_with("0x") {
+        noble_ngraph::format::hex_bits(text, 16)
+    } else {
+        noble_ngraph::format::decimal_u64(text)
     };
     parsed.ok_or_else(|| std::format!("{flag} takes an unsigned 64-bit integer"))
 }
 
-/// A binary64 value: `0x` plus up to 16 hex digits of its encoding, or a
-/// decimal rounded to nearest, ties to even.
+/// A binary64 value: `0x` plus exactly 16 hex digits of its encoding, or a
+/// decimal ([`noble_ngraph::sem::is_decimal`]: no leading `+`, no `nan` or
+/// `inf` word) rounded to nearest, ties to even. Whether the value is in an
+/// optimizer's domain is the library's admission, not syntax.
 pub(super) fn binary64(flag: &str, text: &str) -> Result<f64, std::string::String> {
-    let parsed = match text.strip_prefix("0x") {
-        Some(h) if !h.is_empty() && h.len() <= 16 => {
-            u64::from_str_radix(h, 16).ok().map(f64::from_bits)
-        }
-        Some(_) => None,
-        None => text.parse::<f64>().ok(),
+    let parsed = if text.starts_with("0x") {
+        noble_ngraph::format::hex_bits(text, 16)
+            .filter(|_| text.len() == 18)
+            .map(f64::from_bits)
+    } else if noble_ngraph::sem::is_decimal(text) {
+        text.parse::<f64>().ok()
+    } else {
+        None
     };
-    parsed.ok_or_else(|| std::format!("{flag} takes 0x<binary64 bits> or a decimal"))
+    parsed.ok_or_else(|| std::format!("{flag} takes 0x<16 hex digits> or a decimal"))
 }
 
 /// A 64-digit hex digest.

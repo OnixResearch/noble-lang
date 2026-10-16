@@ -42,8 +42,8 @@ pub fn run_legs(c: &Compiled, inputs: &[Value], snapshot: Option<&ParamSnapshot>
     Legs {
         l2_apfloat: oracle::apfloat(checked, inputs, snapshot),
         b2_oracle_f64: oracle::f64_per_op(checked, inputs, snapshot),
-        l3_reference: eval::reference(checked, inputs, snapshot, &Control::default()).obs,
-        l4_compiled: c.evaluate(inputs, snapshot, &Control::default()).obs,
+        l3_reference: eval::reference(checked, inputs, snapshot, &mut Control::default()).obs,
+        l4_compiled: c.evaluate(inputs, snapshot, &mut Control::default()).obs,
     }
 }
 

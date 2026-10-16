@@ -29,8 +29,7 @@
 //! `E-SNAPSHOT-INTEGRITY`. A matching identity identifies bytes; it proves
 //! nothing about the parameters, the optimizer or the evaluators.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
+use alloc::{format, string::String, vec::Vec};
 use core::fmt::Write as _;
 
 use super::value::format_diag;
@@ -173,8 +172,9 @@ impl SnapshotFile {
     /// `E-FORMAT` (schema, field order, syntax), `E-BUDGET-SNAPSHOT-BYTES`
     /// over `snapshot_bytes`, or `E-SNAPSHOT-INTEGRITY` when the layout key,
     /// the snapshot identity or the provenance digest differs from its
-    /// recomputation, or a parameter is not finite.
-    #[allow(clippy::too_many_lines)]
+    /// recomputation, a parameter is not finite, or the recorded `adam/0`
+    /// hyperparameters are outside the optimizer's domain
+    /// ([`Adam::admit`]) — values `train` can never publish.
     pub fn parse(
         ids: &dyn IdentityScheme,
         text: &str,
@@ -202,7 +202,7 @@ impl SnapshotFile {
         let mut bytes = Vec::new();
         while let Some(l) = c.take_if("param") {
             let (k, b) = match l.tokens.as_slice() {
-                [_, k, b] => (k.parse::<u32>().ok(), bits32(b)),
+                [_, k, b] => (super::decimal_u32(k), bits32(b)),
                 _ => (None, None),
             };
             let (Some(k), Some(b)) = (k, b) else {
@@ -285,9 +285,13 @@ impl SnapshotFile {
                 "expected `optimizer adam/0 lr 0x… beta1 0x… beta2 0x… eps 0x…`",
             )
         })?;
+        // `train` never publishes hyperparameters outside the adam/0 domain.
+        optimizer
+            .admit()
+            .map_err(|d| integrity(format!("recorded optimizer: {}", d.detail)))?;
         let (t, n) = c.field("steps")?;
         let steps = match t.as_slice() {
-            [s] => s.parse::<u64>().ok(),
+            [s] => super::decimal_u64(s),
             _ => None,
         }
         .ok_or_else(|| format_diag(n, "expected `steps <n>`"))?;
@@ -427,19 +431,11 @@ impl<'a, I: Iterator<Item = super::Line<'a>>> Cursor<'a, I> {
 }
 
 fn bits32(s: &str) -> Option<u32> {
-    let h = s.strip_prefix("0x")?;
-    if h.is_empty() || h.len() > 8 {
-        return None;
-    }
-    u32::from_str_radix(h, 16).ok()
+    super::hex_bits(s, 8).and_then(|b| u32::try_from(b).ok())
 }
 
 fn hex_u64(s: &str) -> Option<u64> {
-    let h = s.strip_prefix("0x")?;
-    if h.is_empty() || h.len() > 16 {
-        return None;
-    }
-    u64::from_str_radix(h, 16).ok()
+    super::hex_bits(s, 16)
 }
 
 fn subject(t: &[&str], n: usize) -> Result<Subject, Diagnostic> {
@@ -461,7 +457,7 @@ fn subject(t: &[&str], n: usize) -> Result<Subject, Diagnostic> {
         Vec::new()
     } else {
         ids.split(',')
-            .map(|d| d.parse::<u64>().map_err(|_| bad()))
+            .map(|d| super::decimal_u64(d).ok_or_else(bad))
             .collect::<Result<Vec<u64>, Diagnostic>>()?
     };
     Ok(Subject {
@@ -477,7 +473,7 @@ fn opt_in(t: &[&str], n: usize, deriv: &mut DerivOptions) -> Result<(u32, u8), D
     let node = t
         .first()
         .and_then(|s| s.strip_prefix('%'))
-        .and_then(|s| s.parse::<u32>().ok())
+        .and_then(super::decimal_u32)
         .map(NodeId)
         .ok_or_else(bad)?;
     match &t[1..] {

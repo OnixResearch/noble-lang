@@ -102,13 +102,8 @@ fn f32_zoo() -> Graph {
         Provenance::Guard(guard),
     );
     b.fact(mul, Fact::Integral, Provenance::Asserted);
-    b.shapes(
-        Some(vec![
-            ShapeTree::Pair(Box::new(ShapeTree::Scalar), Box::new(ShapeTree::Unit)),
-            ShapeTree::Scalar,
-        ]),
-        Some(vec![]),
-    );
+    let pair = ShapeTree::pair(ShapeTree::SCALAR, ShapeTree::UNIT).expect("a shallow pair");
+    b.shapes(Some(vec![pair, ShapeTree::SCALAR]), Some(vec![]));
     b.finish()
 }
 
@@ -139,7 +134,7 @@ fn i64_zoo() -> Graph {
         },
         Provenance::InputValidated,
     );
-    b.shapes(None, Some(vec![ShapeTree::Scalar, ShapeTree::Scalar]));
+    b.shapes(None, Some(vec![ShapeTree::SCALAR, ShapeTree::SCALAR]));
     b.finish()
 }
 
@@ -170,7 +165,14 @@ fn extracted_graphs_round_trip_without_origins() {
         (&[], "swap [ * ] dip + dup", 3),
     ];
     for (defs, root, n) in cases {
-        let p = source::prepare(defs, root, &vec![Ty::I64; n]).expect("frontend");
+        let p = source::prepare(
+            noble_contracts::source::Session::new(),
+            noble_contracts::Limits::default(),
+            defs,
+            root,
+            &vec![Ty::I64; n],
+        )
+        .expect("frontend");
         let admitted = extract::admit(
             &IDS,
             &p.submission,
@@ -347,4 +349,75 @@ fn evidence_and_range_literals_are_symmetric() {
     .expect("parses");
     let d = noble_ngraph::check(&IDS, only_evidence).expect_err("evidence refused");
     assert_eq!(d.code_string(), "E-FACT-UNCHECKED");
+}
+
+/// A `shape input` tree nesting `depth` pairs: `(p (p … s u) u)`.
+fn nested_shape(depth: usize) -> String {
+    format!("{}s{}", "(p ".repeat(depth), " u)".repeat(depth))
+}
+
+fn shaped(depth: usize) -> String {
+    format!(
+        "ngraph-ir/0 ngraph-f32/0\nsubject authored-name deep\nshape input {}\n{BODY}",
+        nested_shape(depth)
+    )
+}
+
+#[test]
+fn shape_trees_nest_at_most_127_pairs() {
+    // 127 is the deepest pair nesting an extracted interface can have (a
+    // 256-node Core type); it parses, prints back and has an identity.
+    let deepest = parse(&IDS, &shaped(127)).expect("127 nested pairs parse");
+    let tree = &deepest.input_shape.as_ref().expect("a shape")[0];
+    assert_eq!(tree.depth(), 127);
+    let again = parse(&IDS, &print(&deepest)).expect("reparses");
+    assert_eq!(again, deepest);
+    noble_ngraph::check(&IDS, again).expect("shapes are not checker input");
+    // One more pair, and a tree deep enough to exhaust a recursive walk,
+    // are refused at their line before the parser descends any further.
+    for depth in [128, 40_000] {
+        let d = parse(&IDS, &shaped(depth)).expect_err("too deep");
+        assert_eq!(d.code_string(), "E-GRAPH-MALFORMED", "{depth}: {d}");
+        assert_eq!(d.site, noble_ngraph::Site::Line(3), "{depth}");
+    }
+    // Builders get the same bound: only `ShapeTree::pair` makes a pair.
+    let mut tree = ShapeTree::SCALAR;
+    for _ in 0..127 {
+        tree = ShapeTree::pair(tree, ShapeTree::UNIT).expect("within the bound");
+    }
+    let refused = ShapeTree::pair(ShapeTree::UNIT, tree).expect_err("a 128th pair");
+    assert_eq!(refused.code_string(), "E-GRAPH-MALFORMED");
+}
+
+#[test]
+fn number_tokens_take_no_plus_sign_and_at_most_eight_hex_digits() {
+    let head = "ngraph-ir/0 ngraph-f32/0\nsubject authored-name t\n";
+    let i64_head = "ngraph-ir/0 ngraph-i64/0\nsubject authored-name t\n";
+    let refused = [
+        format!("{head}slot input f32\n%0 = const f32 +1.5\nout %0\n"),
+        format!("{head}slot input f32\n%0 = const f32 0x03f800000\nout %0\n"),
+        format!("{head}slot input f32\n%0 = const f32 0x+3f80000\nout %0\n"),
+        format!("{head}slot input f32\n%0 = input +0\nout %0\n"),
+        format!("{head}slot input f32\n%+0 = input 0\nout %0\n"),
+        format!("{head}slot input f32\n%0 = input 0\nout %+0\n"),
+        format!("{i64_head}slot input i64\n%0 = const i64 +5\nout %0\n"),
+        format!("{i64_head}slot input i64\n%0 = input 0\nfact %0 range +1 2 asserted\nout %0\n"),
+        format!("{head}{BODY}fact %0 range i64:+1 2 asserted\n"),
+        format!("{head}{BODY}fact %0 finite derived a%+f\n"),
+        format!(
+            "ngraph-ir/0 ngraph-f32/0\nsubject authored {} closure +1\n{BODY}",
+            "ab".repeat(32)
+        ),
+    ];
+    for text in refused {
+        let d = parse(&IDS, &text).expect_err(&text);
+        assert_eq!(d.code_string(), "E-GRAPH-MALFORMED", "{text}\n{d}");
+    }
+    // The accepted spellings are unchanged.
+    let g = parse(
+        &IDS,
+        &format!("{head}slot input f32\n%0 = input 0\n%1 = const f32 0x3f800000\n%2 = const f32 -1.5e0\n%3 = f32.affine 0x0 1 %0 1.0 %1 0x1 %2\nout %3\n"),
+    )
+    .expect("strict spellings parse");
+    assert_eq!(g.nodes.len(), 4);
 }

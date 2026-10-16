@@ -8,7 +8,7 @@
 //! nothing.
 
 use crate::ir::Digest;
-use crate::prelude::*;
+use alloc::boxed::Box;
 
 /// One running digest computation.
 pub trait IdentityHasher {

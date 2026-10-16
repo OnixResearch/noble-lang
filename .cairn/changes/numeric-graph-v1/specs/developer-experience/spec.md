@@ -85,6 +85,9 @@ Graph, vector and training-data files MUST each begin with a schema identifier l
 - Comments, whitespace, file names and paths MUST NOT be identity-bearing. Producer origins are not identity-bearing and MAY be omitted.
 - Printing MUST be canonical and deterministic, and every encoding MUST be symmetric between printing and parsing, including `evidence` provenance. Parsing a printed graph MUST reproduce the same graph apart from origins, with the same `GraphLogicalId`, fact records and checker outcome.
 - Parsing MUST only build producer data; admission MUST still be decided by the independent graph checker. `F32` constants MUST obey the exact-literal rules of NGRAPH-F32-01.
+- An interface shape tree MUST nest at most 127 pairs, the deepest root interface item that source extraction can produce; a deeper tree MUST be refused with `E-GRAPH-MALFORMED` before it is walked.
+
+**Numbers in every file.** Integers MUST be written as ASCII digits, with a leading `-` only on signed values, and bit patterns as `0x` plus hex digits; a leading `+` MUST be refused like any other malformed token. Deciding whether a decimal is exact MUST take time linear in its length.
 
 **Vector and data files.**
 

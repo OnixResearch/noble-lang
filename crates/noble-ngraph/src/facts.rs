@@ -10,9 +10,8 @@
 //! checker's rules; NG-PO-E (fact-transfer soundness) remains open.
 
 use crate::ir::{Fact, Literal, NodeId, ScalarType};
-#[allow(unused_imports)]
-use crate::prelude::*;
 use crate::sem::{self, Value};
+use alloc::vec::Vec;
 
 /// 2^24 as `f32`.
 pub const TWO_POW_24: f32 = 16_777_216.0;

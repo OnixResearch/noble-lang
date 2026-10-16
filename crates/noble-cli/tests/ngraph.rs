@@ -2880,3 +2880,263 @@ fn b5_training_through_the_cli_reproduces_the_recorded_identities() -> TestResul
     assert_eq!(replay["snapshot"], B5_FINAL);
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// Regressions of the independent boundary review (design D4–D7).
+// ---------------------------------------------------------------------------
+
+// A one-input graph whose `shape input` tree nests `depth` pairs.
+fn deep_graph(depth: usize) -> String {
+    format!(
+        "ngraph-ir/0 ngraph-f32/0\nsubject authored-name cli-deep-shape\nshape input {}s{}\n{SUGAR_BODY}",
+        "(p ".repeat(depth),
+        " u)".repeat(depth)
+    )
+}
+
+#[test]
+fn deep_shape_trees_are_one_coded_refusal() -> TestResult {
+    // D4: a shape tree nests at most 127 pairs (the deepest extractable
+    // interface item). The reviewed 40,000-deep repro aborted with a stack
+    // overflow (exit 134) and no report line.
+    let scratch = Scratch::new("deep-shapes")?;
+    let deepest = scratch.write("deepest.ngraph", &deep_graph(127))?;
+    expect_normal(&scratch.run(&Ngraph::new("check").arg(&deepest))?, "check")?;
+    for depth in [128, 40_000] {
+        let graph = scratch.write(&format!("deep-{depth}.ngraph"), &deep_graph(depth))?;
+        let line = expect_code(
+            &scratch.run(&Ngraph::new("check").arg(&graph))?,
+            "check",
+            "E-GRAPH-MALFORMED",
+        )?;
+        assert_eq!(line["stage"], "input", "{line}");
+        assert_eq!(line["site"], "line 3", "{line}");
+    }
+    Ok(())
+}
+
+#[test]
+fn failing_output_streams_keep_the_d8_exit() -> TestResult {
+    // D8: a usage error exits 2 even when stderr fails, and a report that
+    // cannot be written exits 2 even when the complaint cannot be either.
+    // Each stream is a pipe whose reader is already closed, so every write
+    // fails; `eprintln!` turned that into a panic (exit 101).
+    let closed = || -> std::io::Result<std::io::PipeWriter> {
+        let (reader, writer) = std::io::pipe()?;
+        drop(reader);
+        Ok(writer)
+    };
+    let noble = || std::process::Command::new(env!("CARGO_BIN_EXE_noble"));
+    let usage = noble()
+        .args(["ngraph", "check"])
+        .stdout(std::process::Stdio::null())
+        .stderr(closed()?)
+        .status()?;
+    assert_eq!(usage.code(), Some(2), "usage error");
+    let scratch = Scratch::new("closed-streams")?;
+    let graph = scratch.write("graph.ngraph", CHECK_GRAPH)?;
+    let report = noble()
+        .arg("ngraph")
+        .arg("check")
+        .arg(&graph)
+        .stdout(closed()?)
+        .stderr(closed()?)
+        .status()?;
+    assert_eq!(report.code(), Some(2), "report output failure");
+    Ok(())
+}
+
+#[test]
+fn numbers_take_no_plus_sign_and_adam_values_have_a_domain() -> TestResult {
+    let scratch = Scratch::new("strict-numbers")?;
+    let files = TrainFiles::new(&scratch)?;
+    let out = scratch.path("refused.snapshot");
+    let train = |flags: &[(&str, &str)]| {
+        let mut command = files.train(0, &out);
+        for (flag, value) in flags {
+            command = command.arg(*flag).arg(*value);
+        }
+        command
+    };
+    // D7: a sign other than a leading `-` on signed values, a `nan`/`inf`
+    // word and a short binary64 encoding are malformed values (usage).
+    for flags in [
+        [("--seed", "+7")],
+        [("--seed", "0x+7")],
+        [("--budget-steps", "+5")],
+        [("--adam-lr", "+0.5")],
+        [("--adam-lr", "nan")],
+        [("--adam-beta1", "inf")],
+        [("--adam-eps", "0x1")],
+        [("--opt-in", "%+3:boolean=straight-through")],
+    ] {
+        expect_usage(&scratch.run(&train(&flags))?);
+        assert_no_publication(&out);
+    }
+    let steps = files
+        .train(0, &out)
+        .args
+        .into_iter()
+        .map(|a| if a == "0" { OsString::from("+0") } else { a })
+        .collect();
+    expect_usage(&scratch.run(&Ngraph { args: steps })?);
+    expect_usage(
+        &scratch.run(
+            &Ngraph::new("check")
+                .arg(&files.model)
+                .arg("--budget-live-nodes")
+                .arg("+4"),
+        )?,
+    );
+    // D7: well-formed values outside adam/0's domain are E-PROFILE, refused
+    // with the optimizer name before any file is read.
+    for flags in [
+        [("--adam-lr", "0")],
+        [("--adam-lr", "-0.02")],
+        [("--adam-beta1", "1")],
+        [("--adam-beta2", "1.5")],
+        [("--adam-eps", "0x0000000000000000")],
+        [("--adam-eps", "1e400")],
+    ] {
+        let line = expect_code(&scratch.run(&train(&flags))?, "train", "E-PROFILE")?;
+        assert_eq!(line["stage"], "request", "{line}");
+        assert_no_publication(&out);
+    }
+    // In-domain values are recorded bit-exactly in either spelling.
+    let edge = scratch.path("edge.snapshot");
+    let mut command = files.train(0, &edge);
+    for (flag, value) in [
+        ("--adam-beta1", "0"),
+        ("--adam-beta2", "0x3fefffffffffffff"),
+    ] {
+        command = command.arg(flag).arg(value);
+    }
+    expect_normal(&scratch.run(&command)?, "train")?;
+    let optimizer = Snapshot::read(&edge)?.one("optimizer").to_owned();
+    assert!(
+        optimizer.contains("beta1 0x0000000000000000 beta2 0x3fefffffffffffff"),
+        "{optimizer}"
+    );
+    // D5: values in files take no `+` either.
+    let vectors = scratch.write("plus.vectors", &vector_file("f32", &["v +0.5"]))?;
+    let snapshot = scratch.path("s0.snapshot");
+    expect_normal(&scratch.run(&files.train(0, &snapshot))?, "train")?;
+    eval_refusal(
+        &scratch.run(
+            &Ngraph::new("eval")
+                .arg(&files.model)
+                .arg(&vectors)
+                .arg("--snapshot")
+                .arg(&snapshot),
+        )?,
+        "E-FORMAT",
+        true,
+    )?;
+    let plus_graph = scratch.write(
+        "plus.ngraph",
+        &MODEL.replace("%0 = input 0", "%0 = input +0"),
+    )?;
+    expect_code(
+        &scratch.run(&Ngraph::new("check").arg(&plus_graph))?,
+        "check",
+        "E-GRAPH-MALFORMED",
+    )?;
+    Ok(())
+}
+
+#[test]
+fn forged_optimizers_and_opt_ins_are_refused() -> TestResult {
+    let scratch = Scratch::new("forged-provenance")?;
+    let files = TrainFiles::new(&scratch)?;
+    let sn = scratch.path("s2.snapshot");
+    expect_normal(&scratch.run(&files.train(2, &sn))?, "train")?;
+    let text = std::fs::read_to_string(&sn)?;
+    let vectors = scratch.write("forged.vectors", &vector_file("f32", &["v 0.5"]))?;
+
+    // D6: a re-signed record of hyperparameters outside adam/0's domain is
+    // not a training product: E-SNAPSHOT-INTEGRITY on load, for every use.
+    let optimizer = text
+        .lines()
+        .find(|l| l.starts_with("optimizer "))
+        .ok_or("optimizer record")?;
+    let lr = optimizer.split(' ').nth(3).ok_or("lr bits")?;
+    let zero_lr = forge(
+        &text.replacen(
+            optimizer,
+            &optimizer.replacen(lr, "0x0000000000000000", 1),
+            1,
+        ),
+        |_| {},
+    )?;
+    let forged = scratch.write("zero-lr.snapshot", &zero_lr)?;
+    eval_refusal(
+        &scratch.run(
+            &Ngraph::new("eval")
+                .arg(&files.model)
+                .arg(&vectors)
+                .arg("--snapshot")
+                .arg(&forged),
+        )?,
+        "E-SNAPSHOT-INTEGRITY",
+        true,
+    )?;
+    expect_code(
+        &scratch.run(&Ngraph::new("verify").arg(&files.model).arg(&forged))?,
+        "verify",
+        "E-SNAPSHOT-INTEGRITY",
+    )?;
+    expect_code(
+        &scratch.run(&files.replay(&forged))?,
+        "verify",
+        "E-SNAPSHOT-INTEGRITY",
+    )?;
+
+    // D6/D10: replay re-admits recorded opt-ins exactly as `train` admits
+    // `--opt-in`: one naming no node, one naming a node it does not apply
+    // to (`%3` is the model's f32.mul).
+    for (name, record, spec, code) in [
+        (
+            "no-node",
+            "opt-in %4000000000 boolean straight-through",
+            "%4000000000:boolean=straight-through",
+            "E-DERIV-BOOLEAN",
+        ),
+        (
+            "mul-index",
+            "opt-in %3 index zero",
+            "%3:index=zero",
+            "E-DERIV-INDEX",
+        ),
+    ] {
+        let with_opt_in = forge(
+            &text.replacen(
+                "policy ngraph-deriv-real/0\n",
+                &format!("policy ngraph-deriv-real/0\n{record}\n"),
+                1,
+            ),
+            |_| {},
+        )?;
+        let forged = scratch.write(&format!("{name}.snapshot"), &with_opt_in)?;
+        let bound = expect_normal(
+            &scratch.run(&Ngraph::new("verify").arg(&files.model).arg(&forged))?,
+            "verify",
+        )?;
+        assert_eq!(bound["bound"], true, "{name}: integrity and binding hold");
+        let line = expect_code(&scratch.run(&files.replay(&forged))?, "verify", code)?;
+        assert_eq!(line["stage"], "replay", "{line}");
+        let out = scratch.path(&format!("{name}-train.snapshot"));
+        let line = expect_code(
+            &scratch.run(&files.train(1, &out).arg("--opt-in").arg(spec))?,
+            "train",
+            code,
+        )?;
+        assert_eq!(line["stage"], "admission", "{line}");
+        assert_no_publication(&out);
+    }
+    assert_eq!(
+        std::fs::read_to_string(&sn)?,
+        text,
+        "the parent is only read"
+    );
+    Ok(())
+}

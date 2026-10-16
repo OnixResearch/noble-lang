@@ -42,6 +42,95 @@ fn f32_tokens_are_exact_encodings_or_exact_decimals() {
     assert_eq!(code(b("1")), "E-FORMAT");
 }
 
+/// Decimal digits of `m · 5^k`.
+fn times_pow5(m: u64, k: u32) -> String {
+    let mut digits: Vec<u64> = m
+        .to_string()
+        .bytes()
+        .rev()
+        .map(|b| u64::from(b - b'0'))
+        .collect();
+    for _ in 0..k {
+        let mut carry = 0;
+        for d in &mut digits {
+            let v = *d * 5 + carry;
+            *d = v % 10;
+            carry = v / 10;
+        }
+        while carry > 0 {
+            digits.push(carry % 10);
+            carry /= 10;
+        }
+    }
+    digits
+        .iter()
+        .rev()
+        .map(|d| char::from(b'0' + u8::try_from(*d).unwrap_or(0)))
+        .collect()
+}
+
+/// The decimal expansion `0.000…digits` of `digits × 10^-149`.
+fn below_one(digits: &str) -> String {
+    format!("0.{}{digits}", "0".repeat(149 - digits.len()))
+}
+
+#[test]
+fn decimal_exactness_is_decided_inside_the_binary32_window() {
+    let f = |t: &str| value::parse(ScalarType::F32, t, 1);
+    // The longest exact expansions are accepted: 2^-149, the largest finite
+    // value, and (2^24 - 1) · 2^-149 with 112 significant digits.
+    let least = times_pow5(1, 149);
+    assert_eq!(least.len(), 105);
+    assert_eq!(f(&below_one(&least)).unwrap(), Value::F32(1));
+    let longest = times_pow5((1 << 24) - 1, 149);
+    assert_eq!(longest.len(), 112);
+    assert_eq!(f(&below_one(&longest)).unwrap(), Value::F32(0x00ff_ffff));
+    let max = "340282346638528859811704183484516925440";
+    assert_eq!(f(max).unwrap(), Value::F32(0x7f7f_ffff));
+    assert_eq!(
+        f(&format!("000{max}.000")).unwrap(),
+        Value::F32(0x7f7f_ffff),
+        "leading and trailing zeros are stripped"
+    );
+    // One more significant digit is refused, as is everything outside the
+    // window; the existing codes stay.
+    assert_eq!(
+        code(f(&format!("{}1", below_one(&longest)))),
+        "E-LITERAL-INEXACT"
+    );
+    assert_eq!(
+        code(f(&format!("{}1", below_one(&least)))),
+        "E-LITERAL-INEXACT"
+    );
+    assert_eq!(code(f(&format!("{max}1"))), "E-LITERAL-INEXACT");
+    assert_eq!(code(f(&format!("{max}.5"))), "E-LITERAL-INEXACT");
+    assert_eq!(code(f("1e39")), "E-LITERAL-INEXACT");
+    assert_eq!(code(f("1e-46")), "E-LITERAL-INEXACT");
+    assert_eq!(code(f("1e-99999999999999999999999")), "E-LITERAL-INEXACT");
+    assert_eq!(code(f("Infinity")), "E-LITERAL-NONFINITE");
+    // Long literals: only their significant digits matter.
+    let long_one = format!("1.{}", "0".repeat(100_000));
+    assert_eq!(f(&long_one).unwrap(), Value::F32(0x3f80_0000));
+    assert_eq!(code(f(&format!("{long_one}1"))), "E-LITERAL-INEXACT");
+    assert_eq!(f("0e99999999999999999999999").unwrap(), Value::F32(0));
+    assert_eq!(f(".5").unwrap(), Value::F32(0x3f00_0000));
+    assert_eq!(f("5.").unwrap(), Value::F32(0x40a0_0000));
+    assert_eq!(f("1e+1").unwrap(), Value::F32(0x4120_0000));
+}
+
+#[test]
+fn a_leading_plus_sign_is_not_a_number() {
+    let f = |t: &str| value::parse(ScalarType::F32, t, 1);
+    let i = |t: &str| value::parse(ScalarType::I64, t, 1);
+    for bad in ["+1.5", "+0", "0x+1", "+", "1e"] {
+        assert_eq!(code(f(bad)), "E-FORMAT", "{bad}");
+    }
+    for bad in ["+5", "+0", "--5", "-"] {
+        assert_eq!(code(i(bad)), "E-FORMAT", "{bad}");
+    }
+    assert_eq!(i("-5").unwrap(), Value::I64(-5));
+}
+
 #[test]
 fn rendering_keeps_bits_and_merges_every_nan() {
     assert_eq!(value::render(Value::F32(0x8000_0000)), "f32:0x80000000");

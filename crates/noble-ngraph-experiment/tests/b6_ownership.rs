@@ -36,7 +36,7 @@ fn recomputed_id(s: &ParamSnapshot) -> [u8; 32] {
 fn retained_snapshot_is_used_after_the_invocation_exits() {
     fn invocation() -> (CheckedGraph, ParamSnapshot) {
         let c = b5_contract(B5_SEED, B5_DATA_SEED);
-        let t = train::train(&BLAKE3, &c, None, 3, &TrainControl::default()).expect("trains");
+        let t = train::train(&BLAKE3, &c, None, 3, &mut TrainControl::default()).expect("trains");
         (c.model.clone(), t.snapshot)
     }
     let (g, s) = invocation();
@@ -45,7 +45,7 @@ fn retained_snapshot_is_used_after_the_invocation_exits() {
         &g,
         &f32_inputs(&[0.5, -0.25]),
         Some(&s),
-        &Control::default(),
+        &mut Control::default(),
     );
     assert!(matches!(r.obs, Obs::Normal(_)));
     assert_eq!(recomputed_id(&s), id);
@@ -70,7 +70,7 @@ fn duplicate_owners_release_in_both_orders() {
             &g,
             &f32_inputs(&[1.0, 2.0]),
             Some(survivor),
-            &Control::default(),
+            &mut Control::default(),
         );
         assert!(matches!(r.obs, Obs::Normal(_)));
         owners[order[1]] = None;
@@ -110,16 +110,16 @@ fn scratch_is_released_exactly_once_on_every_exit() {
     for k in 0..layers {
         let cancel = move |l: u32| l == k;
         for use_compiled in [false, true] {
-            let counters = ScratchCounters::default();
-            let control = Control {
+            let mut counters = ScratchCounters::default();
+            let mut control = Control {
                 cancel: Some(&cancel),
-                scratch: Some(&counters),
+                scratch: Some(&mut counters),
                 ..Control::default()
             };
             let r = if use_compiled {
-                comp.evaluate(&x, Some(&s), &control)
+                comp.evaluate(&x, Some(&s), &mut control)
             } else {
-                reference(&g, &x, Some(&s), &control)
+                reference(&g, &x, Some(&s), &mut control)
             };
             assert_eq!(r.obs, Obs::Cancelled, "layer {k}");
             assert_eq!(
@@ -132,16 +132,16 @@ fn scratch_is_released_exactly_once_on_every_exit() {
     }
     // Exhaustion (fuel) mid-evaluation.
     for use_compiled in [false, true] {
-        let counters = ScratchCounters::default();
-        let control = Control {
+        let mut counters = ScratchCounters::default();
+        let mut control = Control {
             fuel: Some(20),
-            scratch: Some(&counters),
+            scratch: Some(&mut counters),
             ..Control::default()
         };
         let r = if use_compiled {
-            comp.evaluate(&x, Some(&s), &control)
+            comp.evaluate(&x, Some(&s), &mut control)
         } else {
-            reference(&g, &x, Some(&s), &control)
+            reference(&g, &x, Some(&s), &mut control)
         };
         assert_eq!(r.obs, Obs::Exhausted(BudgetKind::Fuel));
         assert_eq!(counters.snapshot(), (1, 1, 0));
@@ -157,27 +157,32 @@ fn scratch_is_released_exactly_once_on_every_exit() {
     .expect("checks");
     let gc = Compiled::new(&BLAKE3, &guarded);
     for use_compiled in [false, true] {
-        let counters = ScratchCounters::default();
-        let control = Control {
-            scratch: Some(&counters),
-            ..Control::default()
-        };
-        let ev = |inp: &[f32]| {
+        let mut counters = ScratchCounters::default();
+        let ev = |inp: &[f32], counters: &mut ScratchCounters| {
+            let mut control = Control {
+                scratch: Some(counters),
+                ..Control::default()
+            };
             if use_compiled {
-                gc.evaluate(&f32_inputs(inp), None, &control)
+                gc.evaluate(&f32_inputs(inp), None, &mut control)
             } else {
-                reference(&guarded, &f32_inputs(inp), None, &control)
+                reference(&guarded, &f32_inputs(inp), None, &mut control)
             }
         };
-        assert!(matches!(ev(&[0.25]).obs, Obs::GuardFailed { .. }));
+        assert!(matches!(
+            ev(&[0.25], &mut counters).obs,
+            Obs::GuardFailed { .. }
+        ));
         assert_eq!(counters.snapshot(), (1, 1, 0));
-        assert!(matches!(&ev(&[]).obs, Obs::Refused(d) if d.code == Code::Interface));
+        assert!(
+            matches!(&ev(&[], &mut counters).obs, Obs::Refused(d) if d.code == Code::Interface)
+        );
         assert_eq!(
             counters.snapshot(),
             (1, 1, 0),
             "preflight refusal acquires nothing"
         );
-        assert!(matches!(ev(&[0.5]).obs, Obs::Normal(_)));
+        assert!(matches!(ev(&[0.5], &mut counters).obs, Obs::Normal(_)));
         assert_eq!(counters.snapshot(), (2, 2, 0));
     }
     assert_eq!(
@@ -197,14 +202,14 @@ fn reused_workspace_returns_fresh_results() {
         &mut w,
         &f32_inputs(&[0.5, 1.5]),
         Some(&s),
-        &Control::default(),
+        &mut Control::default(),
     );
     let a_copy = a.obs.clone();
     let b = comp.evaluate_in(
         &mut w,
         &f32_inputs(&[-1.0, 0.25]),
         Some(&s),
-        &Control::default(),
+        &mut Control::default(),
     );
     assert_eq!(
         a.obs, a_copy,
@@ -216,18 +221,18 @@ fn reused_workspace_returns_fresh_results() {
 #[test]
 fn cancelled_or_failed_training_publishes_no_partial_snapshot() {
     let c = b5_contract(B5_SEED, B5_DATA_SEED);
-    let full = train::train(&BLAKE3, &c, None, 4, &TrainControl::default()).expect("trains");
-    let three = train::train(&BLAKE3, &c, None, 3, &TrainControl::default()).expect("trains");
-    let counters = ScratchCounters::default();
+    let full = train::train(&BLAKE3, &c, None, 4, &mut TrainControl::default()).expect("trains");
+    let three = train::train(&BLAKE3, &c, None, 3, &mut TrainControl::default()).expect("trains");
+    let mut counters = ScratchCounters::default();
     let cancel = |t: u64| t == 4;
     let e = train::train(
         &BLAKE3,
         &c,
         None,
         10,
-        &TrainControl {
+        &mut TrainControl {
             cancel_before_step: Some(&cancel),
-            scratch: Some(&counters),
+            scratch: Some(&mut counters),
             ..TrainControl::default()
         },
     )

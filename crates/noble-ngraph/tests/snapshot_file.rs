@@ -13,9 +13,12 @@ use noble_ngraph::snapshot::{layout_key_of, ParamSnapshot};
 use noble_ngraph::train::{self, TrainControl};
 use noble_ngraph::IdentityScheme;
 
+/// A named edit of the recorded `adam/0` hyperparameters.
+type AdamEdit = (&'static str, fn(&mut train::Adam));
+
 fn trained(steps: u64) -> SnapshotFile {
     let c = contract(checked(linear(false, false)), points());
-    let t = train::train(&IDS, &c, None, steps, &TrainControl::default()).expect("trains");
+    let t = train::train(&IDS, &c, None, steps, &mut TrainControl::default()).expect("trains");
     SnapshotFile {
         snapshot: t.snapshot,
         provenance: t.provenance,
@@ -212,12 +215,51 @@ fn tampered_or_malformed_files_are_refused() {
             "E-FORMAT",
         ),
         (swap("prng splitmix64/0", "prng xorshift/0"), "E-FORMAT"),
+        (swap("steps 3", "steps +3"), "E-FORMAT"),
+        (
+            swap(&param, &param.replacen("param 1", "param +1", 1)),
+            "E-FORMAT",
+        ),
+        (swap(&seed, "seed 0x+000000000000001"), "E-FORMAT"),
     ];
     for (bad, want) in cases {
         assert_eq!(load(&bad).err().as_deref(), Some(want), "{bad}");
     }
     let small = SnapshotFile::parse(&IDS, &text, 4).map_err(|d| d.code_string());
     assert_eq!(small.err().as_deref(), Some("E-BUDGET-SNAPSHOT-BYTES"));
+}
+
+#[test]
+fn recorded_optimizers_outside_the_adam_domain_are_refused_on_load() {
+    // Internally consistent forgeries: `print` recomputes every identity.
+    let edits: [AdamEdit; 6] = [
+        ("lr 0", |a| a.lr = 0.0),
+        ("lr NaN", |a| a.lr = f64::NAN),
+        ("beta1 1", |a| a.beta1 = 1.0),
+        ("beta2 < 0", |a| a.beta2 = -0.25),
+        ("eps 0", |a| a.eps = 0.0),
+        ("eps -inf", |a| a.eps = f64::NEG_INFINITY),
+    ];
+    for (name, edit) in edits {
+        let mut f = trained(1);
+        edit(&mut f.provenance.optimizer);
+        let text = f.print(&IDS);
+        assert_eq!(
+            noble_ngraph::ir::hex(&documented_digest(&IDS, &text)),
+            text.lines().last().unwrap()["provenance ".len()..],
+            "{name}: the forgery is consistent"
+        );
+        assert_eq!(
+            load(&text).err().as_deref(),
+            Some("E-SNAPSHOT-INTEGRITY"),
+            "{name}"
+        );
+    }
+    let mut zero_betas = trained(1);
+    zero_betas.provenance.optimizer.beta1 = -0.0;
+    zero_betas.provenance.optimizer.beta2 = 0.0;
+    let text = zero_betas.print(&IDS);
+    assert_eq!(load(&text).expect("inside the domain"), zero_betas);
 }
 
 #[test]

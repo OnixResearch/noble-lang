@@ -7,9 +7,8 @@
 //! facts, guards and refusing index reads stop the step), the loss graph's
 //! interface is admitted, and replay starts from the recorded parent.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
 use alloc::rc::Rc;
+use alloc::{boxed::Box, format, string::String, vec, vec::Vec};
 
 use crate::check::{Budgets, CheckedGraph};
 use crate::compiled::COMPILER_REVISION;
@@ -74,6 +73,40 @@ impl Adam {
             && self.beta1.to_bits() == other.beta1.to_bits()
             && self.beta2.to_bits() == other.beta2.to_bits()
             && self.eps.to_bits() == other.eps.to_bits()
+    }
+
+    /// Admits the hyperparameters `adam/0` defines (design D7 of
+    /// `numeric-graph-v1`): every value finite, `lr > 0`, `eps > 0` and
+    /// `0 ≤ β₁, β₂ < 1`, compared as numbers (so `-0` is a zero β). Outside
+    /// this domain the bias correction `1 − βᵗ` or the denominator
+    /// `√v̂ + eps` can be zero, the moments never decay, or the step does not
+    /// descend.
+    ///
+    /// # Errors
+    /// `E-PROFILE` naming the first value outside the domain.
+    pub fn admit(&self) -> Result<(), Diagnostic> {
+        let refuse = |name: &str, value: f64, rule: &str| {
+            Err(Diagnostic::new(
+                Code::Profile,
+                Site::Graph,
+                format!(
+                    "{ADAM} {name} 0x{:016x} is outside its domain ({rule})",
+                    value.to_bits()
+                ),
+            ))
+        };
+        if !(self.lr.is_finite() && self.lr > 0.0) {
+            return refuse("lr", self.lr, "finite, > 0");
+        }
+        for (name, beta) in [("beta1", self.beta1), ("beta2", self.beta2)] {
+            if !(0.0..1.0).contains(&beta) {
+                return refuse(name, beta, "0 <= beta < 1");
+            }
+        }
+        if !(self.eps.is_finite() && self.eps > 0.0) {
+            return refuse("eps", self.eps, "finite, > 0");
+        }
+        Ok(())
     }
 }
 
@@ -234,7 +267,6 @@ pub struct Stopped {
 #[must_use]
 pub fn init_params(seed: u64, n: usize) -> Vec<f32> {
     let mut r = SplitMix64::new(seed);
-    #[allow(clippy::cast_possible_truncation)]
     (0..n).map(|_| (r.next_f64() - 0.5) as f32).collect()
 }
 
@@ -352,7 +384,6 @@ fn loss_and_grad(
             *acc += f64::from(gk);
         }
     }
-    #[allow(clippy::cast_precision_loss)]
     let n = c.data.len().max(1) as f64;
     let inv = 1.0 / n;
     Ok((
@@ -375,7 +406,6 @@ fn adam_step(a: &Adam, s: &AdamState, p: &[f32], g: &[f64]) -> (Vec<f32>, AdamSt
         let mhat = n.m[k] / (1.0 - n.b1t);
         let vhat = n.v[k] / (1.0 - n.b2t);
         let upd = a.lr * mhat / (sem::soft::sqrt_f64(vhat) + a.eps);
-        #[allow(clippy::cast_possible_truncation)]
         out.push((f64::from(p[k]) - upd) as f32);
     }
     (out, n)
@@ -386,8 +416,8 @@ fn adam_step(a: &Adam, s: &AdamState, p: &[f32], g: &[f64]) -> (Vec<f32>, AdamSt
 pub struct TrainControl<'a> {
     /// Cancel before step `t` (1-based) when this returns `true`.
     pub cancel_before_step: Option<&'a dyn Fn(u64) -> bool>,
-    /// Scratch instrumentation (one lease per step).
-    pub scratch: Option<&'a ScratchCounters>,
+    /// Scratch instrumentation (one lease per step), lent for the call.
+    pub scratch: Option<&'a mut ScratchCounters>,
     /// Budgets (D5): `optimizer_steps`, `backward_scratch` and
     /// `snapshot_bytes` are charged; a raised budget is `E-PROFILE`.
     pub budgets: Budgets,
@@ -398,13 +428,12 @@ pub struct TrainControl<'a> {
 ///
 /// # Errors
 /// [`Stopped`] with the code and the last published snapshot.
-#[allow(clippy::too_many_lines)]
 pub fn train(
     ids: &dyn IdentityScheme,
     c: &Contract,
     init: Option<&ParamSnapshot>,
     steps: u64,
-    control: &TrainControl<'_>,
+    control: &mut TrainControl<'_>,
 ) -> Result<Trained, Box<Stopped>> {
     let stop = |d: Diagnostic, last: Option<ParamSnapshot>, k: u64| {
         Box::new(Stopped {
@@ -415,6 +444,7 @@ pub fn train(
     };
     let budgets = &control.budgets;
     budgets.validate_policy().map_err(|d| stop(d, None, 0))?;
+    c.adam.admit().map_err(|d| stop(d, None, 0))?;
     admit(&c.model, &c.loss, &c.params, &c.deriv).map_err(|d| stop(d, None, 0))?;
     check_data(c).map_err(|d| stop(d, None, 0))?;
     if steps > budgets.optimizer_steps {
@@ -460,7 +490,7 @@ pub fn train(
                 t - 1,
             ));
         }
-        let lease = ScratchLease::acquire(control.scratch, step_bytes);
+        let lease = ScratchLease::acquire(control.scratch.as_deref_mut(), step_bytes);
         let (l, g, finite) = match loss_and_grad(c, &current) {
             Ok(r) => r,
             Err(d) => {
@@ -537,7 +567,7 @@ pub fn replay(
     c: &Contract,
     p: &Provenance,
     parent: Option<&ParamSnapshot>,
-    control: &TrainControl<'_>,
+    control: &mut TrainControl<'_>,
 ) -> Result<Trained, Box<Stopped>> {
     let refuse = |code: Code, what: &str| {
         Box::new(Stopped {

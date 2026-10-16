@@ -172,23 +172,23 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
         let mut out = vec![0f32; net.batch];
         net.native(&p, &xs, &mut out);
         let native = Obs::Normal(out.iter().map(|v| Value::f32(*v)).collect());
-        let l3 = reference(&c, &f32_inputs(&xs), Some(&s), &Control::default()).obs;
+        let l3 = reference(&c, &f32_inputs(&xs), Some(&s), &mut Control::default()).obs;
         let l4 = comp
-            .evaluate(&f32_inputs(&xs), Some(&s), &Control::default())
+            .evaluate(&f32_inputs(&xs), Some(&s), &mut Control::default())
             .obs;
         agree &= l3.obs_eq(&native) && l4.obs_eq(&native);
     }
     let (cold, cold_adm_ns) = cold(a.cold_reps, &g, |c, comp| {
         let s = ParamSnapshot::new(&BLAKE3, c, &p).expect("snapshot");
-        comp.evaluate(&xi, Some(&s), &Control::default()).obs
+        comp.evaluate(&xi, Some(&s), &mut Control::default()).obs
     });
     let mut ws = comp.workspace();
-    let ctl = Control::default();
+    let mut ctl = Control::default();
     let (l3j, l3m, _) = warm(a.samples, || {
-        black_box(reference(&c, black_box(&xi), Some(&s), &ctl));
+        black_box(reference(&c, black_box(&xi), Some(&s), &mut ctl));
     });
     let (l4j, l4m, _) = warm(a.samples, || {
-        black_box(comp.evaluate_in(&mut ws, black_box(&xi), Some(&s), &ctl));
+        black_box(comp.evaluate_in(&mut ws, black_box(&xi), Some(&s), &mut ctl));
     });
     let mut out = vec![0f32; net.batch];
     let (nj, nm, _) = warm(a.samples, || {
@@ -196,10 +196,10 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
         black_box(&out);
     });
     let tp_l3 = throughput(|| {
-        black_box(reference(&c, black_box(&xi), Some(&s), &ctl));
+        black_box(reference(&c, black_box(&xi), Some(&s), &mut ctl));
     });
     let tp_l4 = throughput(|| {
-        black_box(comp.evaluate_in(&mut ws, black_box(&xi), Some(&s), &ctl));
+        black_box(comp.evaluate_in(&mut ws, black_box(&xi), Some(&s), &mut ctl));
     });
     let tp_n = throughput(|| {
         net.native(black_box(&p), black_box(&x), &mut out);
@@ -240,8 +240,14 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
     let mut loss_ratio = 0.0;
     for _ in 0..5 {
         let t = Instant::now();
-        let r = train::train(&BLAKE3, &contract, None, steps, &TrainControl::default())
-            .expect("trains");
+        let r = train::train(
+            &BLAKE3,
+            &contract,
+            None,
+            steps,
+            &mut TrainControl::default(),
+        )
+        .expect("trains");
         #[allow(clippy::cast_precision_loss)]
         ours.push(ns(t.elapsed()) / steps as f64);
         loss_ratio = r.losses[r.losses.len() - 1] / r.losses[0];
@@ -310,9 +316,9 @@ fn w4(a: &Args) -> (Json, f64) {
         let ix: Vec<f32> = (0..workloads::W4_READS)
             .map(|_| rng.below(W4_TABLE as u64 + 2) as f32)
             .collect();
-        let l3 = reference(&c, &f32_inputs(&ix), None, &Control::default()).obs;
+        let l3 = reference(&c, &f32_inputs(&ix), None, &mut Control::default()).obs;
         let l4 = comp
-            .evaluate(&f32_inputs(&ix), None, &Control::default())
+            .evaluate(&f32_inputs(&ix), None, &mut Control::default())
             .obs;
         let n = workloads::w4_native(&table, &ix);
         let nat_ok = match (&l3, n) {
@@ -323,25 +329,25 @@ fn w4(a: &Args) -> (Json, f64) {
         agree &= nat_ok && l3.obs_eq(&l4);
     }
     let (cold, _) = cold(a.cold_reps, &g, |_, comp| {
-        comp.evaluate(&ii, None, &Control::default()).obs
+        comp.evaluate(&ii, None, &mut Control::default()).obs
     });
     let mut ws = comp.workspace();
-    let ctl = Control::default();
+    let mut ctl = Control::default();
     let (l3j, l3m, _) = warm(a.samples, || {
-        black_box(reference(&c, black_box(&ii), None, &ctl));
+        black_box(reference(&c, black_box(&ii), None, &mut ctl));
     });
     let (l4j, l4m, _) = warm(a.samples, || {
-        black_box(comp.evaluate_in(&mut ws, black_box(&ii), None, &ctl));
+        black_box(comp.evaluate_in(&mut ws, black_box(&ii), None, &mut ctl));
     });
     let (nj, nm, _) = warm(a.samples, || {
         black_box(workloads::w4_native(black_box(&table), black_box(&idx)));
     });
     let tp = |f: &mut dyn FnMut()| throughput(f);
     let tp_l3 = tp(&mut || {
-        black_box(reference(&c, black_box(&ii), None, &ctl));
+        black_box(reference(&c, black_box(&ii), None, &mut ctl));
     });
     let tp_l4 = tp(&mut || {
-        black_box(comp.evaluate_in(&mut ws, black_box(&ii), None, &ctl));
+        black_box(comp.evaluate_in(&mut ws, black_box(&ii), None, &mut ctl));
     });
     let tp_n = tp(&mut || {
         black_box(workloads::w4_native(black_box(&table), black_box(&idx)));
@@ -374,19 +380,19 @@ fn w12(a: &Args) -> Json {
     let c1 = check(&BLAKE3, g1.clone()).expect("W1");
     let comp1 = Compiled::new(&BLAKE3, &c1);
     let x1 = i64_inputs(&[5, 4]);
-    let ctl = Control::default();
+    let mut ctl = Control::default();
     let mut ws1 = comp1.workspace();
     let (l3j, l3m, _) = warm(a.samples, || {
-        black_box(reference(&c1, black_box(&x1), None, &ctl));
+        black_box(reference(&c1, black_box(&x1), None, &mut ctl));
     });
     let (l4j, l4m, _) = warm(a.samples, || {
-        black_box(comp1.evaluate_in(&mut ws1, black_box(&x1), None, &ctl));
+        black_box(comp1.evaluate_in(&mut ws1, black_box(&x1), None, &mut ctl));
     });
     let (nj, nm, _) = warm(a.samples, || {
         black_box(workloads::w1_native(black_box(5), black_box(4)));
     });
     let (cold1, _) = cold(a.cold_reps, &g1, |_, comp| {
-        comp.evaluate(&x1, None, &Control::default()).obs
+        comp.evaluate(&x1, None, &mut Control::default()).obs
     });
     let w1 = Json::obj([
         ("workload", Json::s("W1 = I1 (x=5, y=4 → 24)")),
@@ -406,13 +412,13 @@ fn w12(a: &Args) -> Json {
     let (s0, i, k) = (11i64, 3i64, -7i64);
     let steps = 100_000u64;
     let mut ws2 = comp2.workspace();
-    let run_l = |l4: bool, ws: &mut noble_ngraph::compiled::Workspace| {
+    let mut run_l = |l4: bool, ws: &mut noble_ngraph::compiled::Workspace| {
         let mut s = s0;
         for _ in 0..steps {
             let r = if l4 {
-                comp2.evaluate_in(ws, &i64_inputs(&[s, i, k]), None, &ctl)
+                comp2.evaluate_in(ws, &i64_inputs(&[s, i, k]), None, &mut ctl)
             } else {
-                reference(&c2, &i64_inputs(&[s, i, k]), None, &ctl)
+                reference(&c2, &i64_inputs(&[s, i, k]), None, &mut ctl)
             };
             if let Some([Value::I64(n), _]) = r.obs.outputs() {
                 s = *n;

@@ -1,9 +1,8 @@
 //! D7 stages 2–5: symbolic stack execution, pruning and the independent
 //! graph check.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
 use alloc::rc::Rc;
+use alloc::{format, string::String, vec, vec::Vec};
 
 use noble_kernel::contracts::{Behavior, Definition};
 use noble_kernel::types::Ty;
@@ -107,7 +106,7 @@ pub fn extract(
     let mut input_shapes = Vec::with_capacity(inputs.len());
     for ty in inputs {
         let sym = m.input(ty)?;
-        input_shapes.push(shape(ty));
+        input_shapes.push(shape(ty)?);
         m.sigma.push(sym);
     }
     let root = &admitted.bodies[0];
@@ -124,7 +123,10 @@ pub fn extract(
     for s in &m.sigma {
         flatten(s, &mut out_ids)?;
     }
-    let output_shapes: Vec<ShapeTree> = outputs.iter().map(shape).collect();
+    let mut output_shapes = Vec::with_capacity(outputs.len());
+    for ty in outputs {
+        output_shapes.push(shape(ty)?);
+    }
     let static_bound = static_bound(admitted)?;
     if static_bound > admitted.budget.expanded_nodes {
         return Err(Diagnostic::budget(
@@ -400,7 +402,6 @@ impl<'a, 's> Machine<'a, 's> {
         Ok(())
     }
 
-    #[allow(clippy::too_many_lines)]
     fn invoke(
         &mut self,
         body: usize,
@@ -626,7 +627,7 @@ impl<'a, 's> Machine<'a, 's> {
         for o in outputs {
             builder.output(remap[*o as usize]);
         }
-        let flat = |s: &[ShapeTree]| s.iter().all(|t| matches!(t, ShapeTree::Scalar));
+        let flat = |s: &[ShapeTree]| s.iter().all(ShapeTree::is_scalar);
         if !flat(&input_shapes) || !flat(&output_shapes) {
             builder.shapes(Some(input_shapes), Some(output_shapes));
         }
@@ -701,11 +702,20 @@ fn flatten(s: &Sym, out: &mut Vec<u32>) -> Result<(), Diagnostic> {
     Ok(())
 }
 
-fn shape(ty: &Ty) -> ShapeTree {
+/// The shape tree of a root interface type. Admission has already refused
+/// an item nesting more than `MAX_SHAPE_DEPTH` pairs, which bounds this
+/// recursion; [`ShapeTree::pair`] refuses one again if it ever arrives.
+fn shape(ty: &Ty) -> Result<ShapeTree, Diagnostic> {
     match ty {
-        Ty::Unit => ShapeTree::Unit,
-        Ty::Pair(a, b) => ShapeTree::Pair(Box::new(shape(a)), Box::new(shape(b))),
-        _ => ShapeTree::Scalar,
+        Ty::Unit => Ok(ShapeTree::UNIT),
+        Ty::Pair(a, b) => ShapeTree::pair(shape(a)?, shape(b)?).map_err(|_| {
+            Diagnostic::new(
+                Code::Aggregate,
+                Site::Graph,
+                "a root interface item nests too many pairs for a shape tree",
+            )
+        }),
+        _ => Ok(ShapeTree::SCALAR),
     }
 }
 

@@ -15,10 +15,9 @@ use crate::eval::{self, Control, Obs, Report, ScratchLease};
 use crate::facts;
 use crate::identity::IdentityScheme;
 use crate::ir::{AffineOperand, Canon, Digest, Fact, NodeId, Op, OutOfRange, SubProfile};
-#[allow(unused_imports)]
-use crate::prelude::*;
 use crate::sem::{self, Value};
 use crate::snapshot::ParamSnapshot;
+use alloc::{vec, vec::Vec};
 
 /// Scheduler/compiler revision bound into the `PackedLayoutKey`.
 pub const COMPILER_REVISION: &str = "ngraph-layered/0";
@@ -109,7 +108,6 @@ pub struct Workspace {
 impl Compiled {
     /// Compiles a checked graph.
     #[must_use]
-    #[allow(clippy::too_many_lines)]
     pub fn new(ids: &dyn IdentityScheme, checked: &CheckedGraph) -> Self {
         let g = checked.graph();
         let n = g.nodes.len();
@@ -342,7 +340,7 @@ impl Compiled {
         &self,
         inputs: &[Value],
         snapshot: Option<&ParamSnapshot>,
-        control: &Control<'_>,
+        control: &mut Control<'_>,
     ) -> Report {
         let mut w = self.workspace();
         self.evaluate_in(&mut w, inputs, snapshot, control)
@@ -364,7 +362,7 @@ impl Compiled {
         w: &mut Workspace,
         inputs: &[Value],
         snapshot: Option<&ParamSnapshot>,
-        control: &Control<'_>,
+        control: &mut Control<'_>,
     ) -> Report {
         let slots = match eval::preflight(&self.checked, inputs, snapshot) {
             Ok(v) => v,
@@ -382,7 +380,7 @@ impl Compiled {
                 evaluated_nodes: 0,
             };
         }
-        let _lease = ScratchLease::acquire(control.scratch, bytes);
+        let _lease = ScratchLease::acquire(control.scratch.as_deref_mut(), bytes);
         for &(r, k) in &self.slot_regs {
             match slots[k as usize] {
                 Value::F32(b) => w.f[r as usize] = f32::from_bits(b),
@@ -502,7 +500,7 @@ impl Compiled {
                     match sem::index_position(rf[i as usize], len, below, above) {
                         Ok(Some(k)) => rf[d as usize] = rf[src[start as usize + k] as usize],
                         Ok(None) => rf[d as usize] = 0.0,
-                        Err(()) => note(node, eval::index_refusal_fact(len)),
+                        Err(sem::IndexRefused) => note(node, eval::index_refusal_fact(len)),
                     }
                 }
                 F::Guard { node } => {

@@ -112,13 +112,13 @@ fn eval_case(
             }
         }
     };
-    let control = Control {
+    let mut control = Control {
         forward_scratch: control_scratch,
         ..Control::default()
     };
     let ins = eval::f32_inputs(inputs);
-    let l3 = eval::reference(&g, &ins, None, &control);
-    let l4 = Compiled::new(&BLAKE3, &g).evaluate(&ins, None, &control);
+    let l3 = eval::reference(&g, &ins, None, &mut control);
+    let l4 = Compiled::new(&BLAKE3, &g).evaluate(&ins, None, &mut control);
     let (observed, stage, detail) = match &l3.obs {
         Obs::Refused(d) => (d.code_string(), "preflight", d.detail.clone()),
         Obs::GuardFailed { node, fact } => (

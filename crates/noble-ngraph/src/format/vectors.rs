@@ -10,8 +10,7 @@
 //! `types` lists the graph's ordered input slot types (parameters never come
 //! from vector files). The caller compares it with the graph (`E-INTERFACE`).
 
-#[allow(unused_imports)]
-use crate::prelude::*;
+use alloc::{format, string::String, vec::Vec};
 
 use super::value::{format_diag, row, row_text, type_names, types};
 use crate::diag::Diagnostic;
