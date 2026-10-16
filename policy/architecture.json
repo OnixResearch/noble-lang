@@ -5,7 +5,7 @@
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "filesystem",
-      "rationale": "In the compiler path, only the CLI reads bounded source, contract, proof, companion-session, WIT, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Component builds emit only independently accepted typed exports for one selected WIT world. Owned Wasm/JS assets are separately byte-bound by tool selection. Outside that path, the issue #14 noble-ngraph-experiment harness reads its own inputs and host identity files, writes its measurement receipts, and creates and removes one temporary file."
+      "rationale": "In the compiler path, only the CLI reads bounded source, contract, proof, companion-session, WIT, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Component builds emit only independently accepted typed exports for one selected WIT world. Owned Wasm/JS assets are separately byte-bound by tool selection. The CLI's opt-in noble ngraph entry reads only the named graph, vector, data, snapshot and Core source files under byte bounds, and publishes each output by creating <out>.partial with create-new, hard-linking it to a fresh <out> and removing that partial file; it never truncates, renames over or modifies an existing path. Outside that path, the issue #14 noble-ngraph-experiment harness reads its own inputs and host identity files, writes its measurement receipts, and creates and removes one temporary file."
     },
     {
       "core_handling": "forbidden",
@@ -35,7 +35,7 @@
       "core_handling": "forbidden",
       "executor_role": "composition-root",
       "family": "observability",
-      "rationale": "In the compiler path, only the CLI emits execution/verification/build/companion reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests, inspection results, captured traces and seven-outcome text are observations, not proof acceptance or protected capabilities. Outside that path, the noble-ngraph-experiment harness prints measurement reports and diagnostics."
+      "rationale": "In the compiler path, only the CLI emits execution/verification/build/companion reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests, inspection results, captured traces and seven-outcome text are observations, not proof acceptance or protected capabilities. The noble ngraph entry prints noble-ngraph-report/v1 JSON lines and usage diagnostics; a report is not a proof of the graph, evaluator or snapshot. Outside that path, the noble-ngraph-experiment harness prints measurement reports and diagnostics."
     },
     {
       "core_handling": "forbidden",
@@ -56,14 +56,14 @@
     "max_items": 4096,
     "max_modules": 2048,
     "max_shard_bytes": 67108864,
-    "max_shards": 78,
+    "max_shards": 88,
     "max_signatures": 4096,
     "max_span_bytes": 1048576,
     "max_spans": 32768,
     "max_traits": 512,
     "max_type_shapes": 4096,
     "max_types": 4096,
-    "max_units": 78,
+    "max_units": 88,
     "max_unknowns": 4096,
     "max_value_flow_bodies": 4096,
     "max_value_flow_rounds": 64,
@@ -79,6 +79,9 @@
     },
     {
       "scope": "noble-wasm"
+    },
+    {
+      "scope": "noble-ngraph"
     }
   ],
   "dependency_rules": [
@@ -115,6 +118,8 @@
     {
       "authority": "unprotected",
       "executor_methods": [
+        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3123:3127",
+        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3196:3200",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:3086:3094",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:467:478",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:4761:4767",
@@ -131,6 +136,8 @@
         "noble::core::framing::read_file",
         "noble::core::framing::write_new",
         "noble::core::worker::configuration::build",
+        "noble::ngraph::files::publish",
+        "noble::ngraph::files::read",
         "noble::sandbox::Environment::discover",
         "noble::sandbox::runtime::executable",
         "noble::sandbox::runtime::installation",
@@ -146,7 +153,7 @@
       "executor_scope": "crates/noble-cli/src",
       "family": "filesystem",
       "protected": null,
-      "rationale": "Local consumer I/O reads selected regular files and rule-library sources, creates only fresh output files/directories, and deletes only owned temporary artifacts. Path metadata observations are included even where the bounded collector does not classify std::path calls. No protected domain operation or artifact authenticity follows from this classification."
+      "rationale": "Local consumer I/O reads selected regular files and rule-library sources, creates only fresh output files/directories, and deletes only owned temporary artifacts. noble ngraph publication creates <out>.partial with create-new, hard-links it to a fresh <out> and removes only that partial file. Path metadata observations are included even where the bounded collector does not classify std::path calls. No protected domain operation or artifact authenticity follows from this classification."
     },
     {
       "authority": "unprotected",
@@ -230,13 +237,14 @@
         "noble::core::output::print",
         "noble::core::entry::run",
         "noble::main",
+        "noble::ngraph::run",
         "noble::workflow::print_report",
         "noble::write_outcome"
       ],
       "executor_scope": "crates/noble-cli/src",
       "family": "observability",
       "protected": null,
-      "rationale": "Consumer-facing execution, verification, build and companion-session reports, help and smoke diagnostics write only to the CLI output streams. Output is not an authorization witness, an external-success receipt, accepted evidence, or permission to execute a protected domain effect."
+      "rationale": "Consumer-facing execution, verification, build, companion-session and noble-ngraph-report/v1 reports, help and smoke diagnostics write only to the CLI output streams. Output is not an authorization witness, an external-success receipt, accepted evidence, or permission to execute a protected domain effect."
     }
   ],
   "ports": [],
@@ -247,6 +255,7 @@
       "noble-wasm",
       "noble-cli",
       "noble-syndicate",
+      "noble-ngraph",
       "noble-ngraph-experiment"
     ],
     "source_scopes": [
@@ -255,6 +264,7 @@
       "crates/noble-wasm/src",
       "crates/noble-cli/src",
       "crates/noble-syndicate/src",
+      "crates/noble-ngraph/src",
       "crates/noble-ngraph-experiment/src"
     ],
     "targets": [
@@ -309,7 +319,7 @@
       "permitted_caller_roles": [
         "composition-root"
       ],
-      "rationale": "Observed ngraph-experiment software IEEE binary32 arithmetic used as an independent comparison model; agreement with it is not a proof of the binary32 model or of the experiment's evaluators."
+      "rationale": "Observed ngraph-experiment software IEEE binary32 arithmetic used as an independent comparison model; agreement with it is not a proof of the binary32 model or of the noble-ngraph evaluators."
     },
     {
       "edge_kinds": [
@@ -383,6 +393,11 @@
       "scope_kind": "package"
     },
     {
+      "role": "domain-core",
+      "scope": "noble-ngraph",
+      "scope_kind": "package"
+    },
+    {
       "role": "composition-root",
       "scope": "noble-ngraph-experiment",
       "scope_kind": "package"
@@ -413,6 +428,11 @@
       "scope_kind": "source"
     },
     {
+      "role": "domain-core",
+      "scope": "crates/noble-ngraph/src",
+      "scope_kind": "source"
+    },
+    {
       "role": "composition-root",
       "scope": "crates/noble-ngraph-experiment/src",
       "scope_kind": "source"
@@ -440,6 +460,11 @@
     {
       "role": "test",
       "scope": "crates/noble-syndicate/tests",
+      "scope_kind": "source"
+    },
+    {
+      "role": "test",
+      "scope": "crates/noble-ngraph/tests",
       "scope_kind": "source"
     },
     {

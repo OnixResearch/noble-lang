@@ -4,8 +4,8 @@ let contracts = import "./architecture.contracts.ncl" in
   project_id = "noble",
   mode = "gate",
   production = {
-    packages = ["noble-kernel", "noble-contracts", "noble-wasm", "noble-cli", "noble-syndicate", "noble-ngraph-experiment"],
-    source_scopes = ["crates/noble-kernel/src", "crates/noble-contracts/src", "crates/noble-wasm/src", "crates/noble-cli/src", "crates/noble-syndicate/src", "crates/noble-ngraph-experiment/src"],
+    packages = ["noble-kernel", "noble-contracts", "noble-wasm", "noble-cli", "noble-syndicate", "noble-ngraph", "noble-ngraph-experiment"],
+    source_scopes = ["crates/noble-kernel/src", "crates/noble-contracts/src", "crates/noble-wasm/src", "crates/noble-cli/src", "crates/noble-syndicate/src", "crates/noble-ngraph/src", "crates/noble-ngraph-experiment/src"],
     targets = [{
       triple = "x86_64-unknown-linux-gnu",
       features = [],
@@ -18,18 +18,21 @@ let contracts = import "./architecture.contracts.ncl" in
     { scope_kind = "package", scope = "noble-wasm", role = "domain-core" },
     { scope_kind = "package", scope = "noble-cli", role = "composition-root" },
     { scope_kind = "package", scope = "noble-syndicate", role = "composition-root" },
+    { scope_kind = "package", scope = "noble-ngraph", role = "domain-core" },
     { scope_kind = "package", scope = "noble-ngraph-experiment", role = "composition-root" },
     { scope_kind = "source", scope = "crates/noble-kernel/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-contracts/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-wasm/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-cli/src", role = "composition-root" },
     { scope_kind = "source", scope = "crates/noble-syndicate/src", role = "composition-root" },
+    { scope_kind = "source", scope = "crates/noble-ngraph/src", role = "domain-core" },
     { scope_kind = "source", scope = "crates/noble-ngraph-experiment/src", role = "composition-root" },
     { scope_kind = "source", scope = "crates/noble-kernel/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-contracts/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-wasm/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-cli/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-syndicate/tests", role = "test" },
+    { scope_kind = "source", scope = "crates/noble-ngraph/tests", role = "test" },
     { scope_kind = "source", scope = "crates/noble-ngraph-experiment/tests", role = "test" },
   ],
   dependency_rules = [
@@ -49,7 +52,11 @@ let contracts = import "./architecture.contracts.ncl" in
   # issue #14 noble-ngraph-experiment crate. That crate is an isolated
   # measurement harness outside the ordinary compiler path; the policy has no
   # non-production package role, and Octet collects only production packages,
-  # so it is a composition root like noble-cli and noble-syndicate. No
+  # so it is a composition root like noble-cli and noble-syndicate. The
+  # Numeric-Graph-v1 library noble-ngraph is domain-core, no_std and has no
+  # third-party dependency: the ngraph IR, checker, evaluators, trainer and
+  # codecs that moved out of the experiment call no provider, and BLAKE3
+  # identities are injected by the CLI and experiment composition roots. No
   # application-owned ports are declared. Provider permission is
   # role-granular: noble-syndicate is also composition-root, so this policy
   # alone would allow its future normal edges to these providers.
@@ -109,7 +116,7 @@ let contracts = import "./architecture.contracts.ncl" in
       kind = "pure-value",
       permitted_caller_roles = ["composition-root"],
       edge_kinds = ["normal"],
-      rationale = "Observed ngraph-experiment software IEEE binary32 arithmetic used as an independent comparison model; agreement with it is not a proof of the binary32 model or of the experiment's evaluators.",
+      rationale = "Observed ngraph-experiment software IEEE binary32 arithmetic used as an independent comparison model; agreement with it is not a proof of the binary32 model or of the noble-ngraph evaluators.",
     },
     {
       package = "serde_json",
@@ -146,7 +153,7 @@ let contracts = import "./architecture.contracts.ncl" in
       family = "filesystem",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "In the compiler path, only the CLI reads bounded source, contract, proof, companion-session, WIT, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Component builds emit only independently accepted typed exports for one selected WIT world. Owned Wasm/JS assets are separately byte-bound by tool selection. Outside that path, the issue #14 noble-ngraph-experiment harness reads its own inputs and host identity files, writes its measurement receipts, and creates and removes one temporary file.",
+      rationale = "In the compiler path, only the CLI reads bounded source, contract, proof, companion-session, WIT, rule-library and toolchain inputs, creates fresh artifacts, and removes its private temporary workspace. Proof-required builds release only after exact source/claim-bound admission. Component builds emit only independently accepted typed exports for one selected WIT world. Owned Wasm/JS assets are separately byte-bound by tool selection. The CLI's opt-in noble ngraph entry reads only the named graph, vector, data, snapshot and Core source files under byte bounds, and publishes each output by creating <out>.partial with create-new, hard-linking it to a fresh <out> and removing that partial file; it never truncates, renames over or modifies an existing path. Outside that path, the issue #14 noble-ngraph-experiment harness reads its own inputs and host identity files, writes its measurement receipts, and creates and removes one temporary file.",
     },
     {
       family = "process",
@@ -176,7 +183,7 @@ let contracts = import "./architecture.contracts.ncl" in
       family = "observability",
       core_handling = "forbidden",
       executor_role = "composition-root",
-      rationale = "In the compiler path, only the CLI emits execution/verification/build/companion reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests, inspection results, captured traces and seven-outcome text are observations, not proof acceptance or protected capabilities. Outside that path, the noble-ngraph-experiment harness prints measurement reports and diagnostics.",
+      rationale = "In the compiler path, only the CLI emits execution/verification/build/companion reports, help, internal smoke outcomes and diagnostics. Explanation and statement generation do not launch proof tools. Resource-free guest test requests, inspection results, captured traces and seven-outcome text are observations, not proof acceptance or protected capabilities. The noble ngraph entry prints noble-ngraph-report/v1 JSON lines and usage diagnostics; a report is not a proof of the graph, evaluator or snapshot. Outside that path, the noble-ngraph-experiment harness prints measurement reports and diagnostics.",
     },
     {
       family = "unsafe-code",
@@ -190,6 +197,8 @@ let contracts = import "./architecture.contracts.ncl" in
       family = "filesystem",
       executor_scope = "crates/noble-cli/src",
       executor_methods = [
+        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3123:3127",
+        "noble-cli::closure@crates/noble-cli/src/ngraph/files.rs:3196:3200",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:3086:3094",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:467:478",
         "noble-cli::closure@crates/noble-cli/src/sandbox/runtime.rs:4761:4767",
@@ -206,6 +215,8 @@ let contracts = import "./architecture.contracts.ncl" in
         "noble::core::framing::read_file",
         "noble::core::framing::write_new",
         "noble::core::worker::configuration::build",
+        "noble::ngraph::files::publish",
+        "noble::ngraph::files::read",
         "noble::sandbox::Environment::discover",
         "noble::sandbox::runtime::executable",
         "noble::sandbox::runtime::installation",
@@ -219,7 +230,7 @@ let contracts = import "./architecture.contracts.ncl" in
         "noble::workflow::rules::selected_root",
       ],
       authority = "unprotected",
-      rationale = "Local consumer I/O reads selected regular files and rule-library sources, creates only fresh output files/directories, and deletes only owned temporary artifacts. Path metadata observations are included even where the bounded collector does not classify std::path calls. No protected domain operation or artifact authenticity follows from this classification.",
+      rationale = "Local consumer I/O reads selected regular files and rule-library sources, creates only fresh output files/directories, and deletes only owned temporary artifacts. noble ngraph publication creates <out>.partial with create-new, hard-links it to a fresh <out> and removes only that partial file. Path metadata observations are included even where the bounded collector does not classify std::path calls. No protected domain operation or artifact authenticity follows from this classification.",
     },
     {
       family = "process",
@@ -300,14 +311,15 @@ let contracts = import "./architecture.contracts.ncl" in
         "noble::core::output::print",
         "noble::core::entry::run",
         "noble::main",
+        "noble::ngraph::run",
         "noble::workflow::print_report",
         "noble::write_outcome",
       ],
       authority = "unprotected",
-      rationale = "Consumer-facing execution, verification, build and companion-session reports, help and smoke diagnostics write only to the CLI output streams. Output is not an authorization witness, an external-success receipt, accepted evidence, or permission to execute a protected domain effect.",
+      rationale = "Consumer-facing execution, verification, build, companion-session and noble-ngraph-report/v1 reports, help and smoke diagnostics write only to the CLI output streams. Output is not an authorization witness, an external-success receipt, accepted evidence, or permission to execute a protected domain effect.",
     },
   ],
-  core_no_std = [{ scope = "noble-kernel" }, { scope = "noble-contracts" }, { scope = "noble-wasm" }],
+  core_no_std = [{ scope = "noble-kernel" }, { scope = "noble-contracts" }, { scope = "noble-wasm" }, { scope = "noble-ngraph" }],
   admission = null,
   waivers = [],
   collection_limits = {
@@ -324,10 +336,18 @@ let contracts = import "./architecture.contracts.ncl" in
     # A scratch collection of 2d03e99 with this package policy observed
     # exactly 78 complete units; the package's largest shard (lib+test, 7,300 calls,
     # 12,441,948 bytes) and the 163,306,150-byte IR fit the existing caps.
+    # Numeric-Graph-v1 adds the domain-core noble-ngraph package (lib,
+    # lib+test and seven integration tests) and noble-cli tests/ngraph.rs; the
+    # experiment is net zero (ir_check and extract_b1 moved to the library,
+    # format_roundtrip and identity_agreement added). A scratch collection of
+    # the merged policy (caps raised only in the scratch copy) observed exactly
+    # 88 complete units. Its largest shard, the CLI noble bin+test, had 21,827
+    # calls, 19,093 constructors, 23,998 spans and 32,662,633 bytes, and the
+    # IR was 175,811,674 bytes, so every other cap is unchanged.
     # This exact capacity is not a classification waiver, source/native
     # assurance approval, or a gate PASS.
-    max_units = 78,
-    max_shards = 78,
+    max_units = 88,
+    max_shards = 88,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,

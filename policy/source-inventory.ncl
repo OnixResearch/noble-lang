@@ -14834,23 +14834,28 @@ let
     "std::writeln",
     "words::subst::finish::attempt_segment",
   ],
-  # Seven historical internal edges and seven exact external normal edges
-  # observed from noble-cli in the complete 54-unit candidate Cargo graph.
+  # Thirteen internal edges and ten exact external normal edges (seven from
+  # noble-cli, three from noble-ngraph-experiment) observed in the complete
+  # 88-unit Numeric-Graph-v1 integration Cargo graph.
   dependencies | Array { caller | String, callee | String, edge_kind | String } = [
     { caller = "noble-cli", callee = "anyhow", edge_kind = "normal" },
     { caller = "noble-cli", callee = "blake3", edge_kind = "normal" },
     { caller = "noble-cli", callee = "libc", edge_kind = "normal" },
     { caller = "noble-cli", callee = "noble-contracts", edge_kind = "normal" },
     { caller = "noble-cli", callee = "noble-kernel", edge_kind = "normal" },
+    { caller = "noble-cli", callee = "noble-ngraph", edge_kind = "normal" },
     { caller = "noble-cli", callee = "noble-wasm", edge_kind = "normal" },
     { caller = "noble-cli", callee = "serde_json", edge_kind = "normal" },
     { caller = "noble-cli", callee = "wasmparser", edge_kind = "normal" },
     { caller = "noble-cli", callee = "wasmtime", edge_kind = "normal" },
     { caller = "noble-cli", callee = "wat", edge_kind = "normal" },
     { caller = "noble-contracts", callee = "noble-kernel", edge_kind = "normal" },
+    { caller = "noble-ngraph", callee = "noble-contracts", edge_kind = "normal" },
+    { caller = "noble-ngraph", callee = "noble-kernel", edge_kind = "normal" },
     { caller = "noble-ngraph-experiment", callee = "blake3", edge_kind = "normal" },
     { caller = "noble-ngraph-experiment", callee = "noble-contracts", edge_kind = "normal" },
     { caller = "noble-ngraph-experiment", callee = "noble-kernel", edge_kind = "normal" },
+    { caller = "noble-ngraph-experiment", callee = "noble-ngraph", edge_kind = "normal" },
     { caller = "noble-ngraph-experiment", callee = "rustc_apfloat", edge_kind = "normal" },
     { caller = "noble-ngraph-experiment", callee = "serde_json", edge_kind = "normal" },
     { caller = "noble-syndicate", callee = "noble-kernel", edge_kind = "normal" },
