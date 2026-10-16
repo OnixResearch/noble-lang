@@ -19,6 +19,7 @@
   "crates/noble-kernel/Cargo.toml"
   "crates/noble-syndicate/Cargo.toml"
   "crates/noble-ngraph-experiment/Cargo.toml"
+  "crates/noble-ngraph/Cargo.toml"
   "crates/noble-contracts/Cargo.toml"
   "crates/noble-cli/Cargo.toml"
   "crates/noble-cli/src/core/live_slot.rs"
