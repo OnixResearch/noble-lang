@@ -96,6 +96,7 @@ The design's Phase C plan was approved on 2026-10-15 with the C3 thresholds kept
 |---|---|
 | [phase-c-core-run1.json](phase-c-core-run1.json) | Primary run (schema `noble-ngraph-phase-c-core-evidence/v1`). It records run pins, W3 (3 sizes), W4, the W1/W2 CPU legs, C2 claim separation and the C3 decision. |
 | [phase-c-core-run2.json](phase-c-core-run2.json), [phase-c-core-run3.json](phase-c-core-run3.json) | Back-to-back repeats with the same command. They show run-to-run stability; the key ratios are given below. |
+| [phase-c-l1.json](phase-c-l1.json) | W1/W2 from Core source (schema `noble-ngraph-phase-c-l1-evidence/v1`). It records extraction timing per D7 stage, L3/L4 on the extracted graphs, host-native, and the ordinary Noble Wasm/V8 baseline (L1, `--opt off` and `on`), with run pins and the CLI SHA-256. |
 
 ## Reproduce
 
@@ -103,9 +104,12 @@ The design's Phase C plan was approved on 2026-10-15 with the C3 thresholds kept
 cargo build --release -p noble-ngraph-experiment --bin ngraph-phase-c
 taskset -c 2 target/release/ngraph-phase-c --out verification/ngraph/phase-c-core-run1.json \
   --source-rev "$(git rev-parse HEAD)" --toolchain "$(rustc -V)" --pinned-cpu 2
+cargo build --release -p noble-ngraph-experiment --bin ngraph-phase-c-l1
+target/release/ngraph-phase-c-l1 --cli /abs/noble --out verification/ngraph/phase-c-l1.json \
+  --source-rev "$(git rev-parse HEAD)" --toolchain "$(rustc -V)"
 ```
 
-The harness is a separate release binary and is not part of the default test suite. The workload shapes, and bitwise agreement between each native baseline and L3/L4, are default tests in [c1_workloads.rs](../../crates/noble-ngraph-experiment/tests/c1_workloads.rs). One run takes about 5 s.
+The harnesses are separate release binaries and are not part of the default test suite. The workload shapes, and bitwise agreement between each native baseline and L3/L4, are default tests in [c1_workloads.rs](../../crates/noble-ngraph-experiment/tests/c1_workloads.rs). One `ngraph-phase-c` run takes about 5 s. One `ngraph-phase-c-l1` run took 2.7 h, almost all of it W2 through L1 with `--opt on`.
 
 ## Run conditions
 
@@ -147,9 +151,27 @@ Runs 2 and 3 match run 1 within ±10%. The exceptions are sub-0.05 ms cold figur
   | W3-L | 60.0 µs | 4.84 µs | 12.4× |
 
   Backward scratch estimates: 1,032 / 5,352 / 53,176 B.
-- **Extraction time** does not apply to W3/W4: they are authored IR under B0(b), and graph authoring took 0.03–0.48 ms. For W1/W2 it comes from the extraction leg.
-- **Ordinary Noble Wasm/V8 baseline**: none exists for W3/W4, because Noble's ordinary path has no `F32` under B0(b). For W1/W2 it comes from the extraction leg's L1 harness and is **pending**. W1/W2 here use hand-built IR equal to the `I1`/`I4` lowering.
+- **Extraction time** does not apply to W3/W4: they are authored IR under B0(b), and graph authoring took 0.03–0.48 ms. For W1/W2, see the next section.
+- **Ordinary Noble Wasm/V8 baseline**: none exists for W3/W4, because Noble's ordinary path has no `F32` under B0(b). For W1/W2, see the next section. The W1/W2 rows above use hand-built IR, which has the same operations and outputs as the extracted `I1`/`I4` graphs (`phase-c-l1.json` checks this).
 - **Pinned handwired under pinned Bun** (optional, informational): not run.
+
+## C1 W1/W2 from source against both baselines (`phase-c-l1.json`)
+
+Run conditions: source `e60d0d86706de8d11d3aa2deced631c89748766c`, same toolchain and profile. The CLI was `noble-integration-eccbc02-release` (`origin/main` code, SHA-256 in the receipt). The process was **not** pinned, because L1 spawns multi-threaded Node/V8 and wasm-opt processes. The host was more heavily loaded than for the core runs: load average 21.2 at start and 19.8–21.4 at end, on 32 CPUs. As a result, the CPU-leg figures here are 1.5–2.7× slower than the pinned core run above (W1 L4 137 ns versus 65 ns; W2 L4 20.6 ms versus 7.48 ms). The ratios below compare legs from the same run. W1 ran `--opt off` and then `--opt on`; the two W2 modes ran concurrently.
+
+Agreement before timing: every L1 observation is compared with L4 on the extracted graph. W1: 1,000 vectors per mode (the design vector `(5, 4)` plus 999 `splitmix64/0` vectors, seed `0x1414c101`), and all 1,000 agree in both modes. W2: all 100,000 steps agree in both modes, and the final state `-6083400928511612821` equals L3, L4 and native. There were no quota outcomes or session restarts.
+
+- **Extraction** (median of 21; W1 / W2): frontend prepare 140 / 148 µs; admission (kernel re-check) 53 / 60 µs; extraction including the graph checker 7.6 / 9.1 µs; L4 build 1.3 / 1.3 µs; source to first L4 result 206 / 232 µs. The extractor counters for W1 are 8 work units, 8 expanded nodes, 0 pruned and inline depth 0. Live nodes / depth: 8 / 4 and 5 / 3.
+- **L1 cost model.** `noble session` prepares, compiles, instantiates and runs every submission, so one L1 evaluation is one root submission, and one W2 host step is an input submission plus a root submission. The receipt times both from report-line arrival. These are the costs of that host interface, not of a call into an already instantiated Wasm function, which the CLI does not expose. Guest-side metrics for the W1 design vector: 768 B allocated, 48 B operand peak, 18 execution steps, 1 MiB linear memory. Wasm module bytes, V8 heap and RSS are unsupported.
+
+| Workload | L4 (compiled graph) | L3 | Host-native | L1 `--opt off` | L1 `--opt on` | L4 ÷ native speed | L4 ÷ L1 speed (off / on) |
+|---|---|---|---|---|---|---|---|
+| W1 warm, per evaluation (median [IQR]) | 137 ns [26] | 162 ns | 1.06 ns | 31.0 ms [5.0] | 42.3 ms [4.6] | 0.0077× | 2.3×10^5 / 3.1×10^5 |
+| W1 cold (spawn or source to first result) | 206 µs | — | — | 388 ms | 263 ms | — | — |
+| W2, 10^5 host steps (total) | 20.6 ms | 18.6 ms | 0.135 ms | 3,633 s | 9,710 s | 0.0066× | 1.8×10^5 / 4.7×10^5 |
+| W2 per host step (L1 warm median [IQR]) | — | — | — | 33.0 ms (root 16.6 [2.6]) | 87.0 ms (root 43.4 [5.4]) | — | — |
+
+On W1 and W2 the compiled graph is about five orders of magnitude faster than the ordinary path's per-submission host interface. It is still 130–150× slower than host-native, so it is not at least 2× faster than both baselines (`l4_at_least_2x_faster_than_both_baselines: false` for both workloads). Host loop throughput through L1 was 14.9 / 10.4 W1 evaluations/s and 27.5 / 10.3 W2 steps/s (off / on). There is no training step for these workloads (`E-DERIV-I64`).
 
 ## C2 claim separation
 
@@ -169,4 +191,5 @@ No hash match or agreement is reported as discharging an obligation.
 - **Admission.** Admission at W3 scale is 1.1 ms, within the 100 ms threshold. Training value was demonstrated (B5). Neither changes the outcome, because the speed condition alone triggers stop.
 - **"Both baselines" for W3.** W3 is `ngraph-f32/0` authored IR (B0(b)), and Noble's ordinary Wasm/V8 path has no `F32`, so that baseline does not exist for W3. I applied the test to the one existing baseline, host-native Rust. A missing baseline cannot make the outcome more favourable: passing would have required beating host-native by 2× and also an ordinary-path comparison that cannot be made. W1/W2, where the ordinary path exists, are reported separately and do not stand in for W3.
 - **GPU (#2).** Blocked. No transfer or launch cost was measured or modelled, and with a stop recommendation there is no compiled-CPU specialization to compare a GPU against.
+- **W1/W2 against both baselines** (`phase-c-l1.json`). These do not change the outcome. L4 is far faster than the ordinary path's per-submission interface but 0.0066–0.0077× host-native, so it is not at least 2× faster than both baselines on any workload. W1/W2 are `I64` and do not stand in for the W3 test.
 - **Interpretation, not measured.** The compiled evaluator interprets one enum-dispatched instruction per node, about 1.5 ns per node on W3-L. A straightforward native loop is 7.6–16.5× faster on these shapes. Only a design change could plausibly reach the 2× threshold, such as batch-vectorized evaluation or native code generation. Doing so would be a new experiment and is not claimed here.

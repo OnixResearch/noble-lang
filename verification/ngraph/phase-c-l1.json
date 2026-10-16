@@ -1,0 +1,495 @@
+{
+  "schema": "noble-ngraph-phase-c-l1-evidence/v1",
+  "issue": "OnixResearch/noble-lang#14",
+  "scope": "Phase C C1 for W1 (I1) and W2 (I4): extraction time and the ordinary Noble Wasm/V8 baseline (L1), next to L3/L4 on the extracted graph and the host-native baseline",
+  "result": "passed",
+  "failures": [],
+  "run": {
+    "source_revision": "e60d0d86706de8d11d3aa2deced631c89748766c",
+    "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "profiles": "ngraph-ir/0; ngraph-i64/0 (extraction); ngraph-sem/0; ngraph-layered/0",
+    "prng": "splitmix64/0",
+    "seed": "0x1414c101",
+    "target": "x86_64-linux",
+    "optimization_mode": "release (overflow-checks=true, panic=unwind per workspace profile)",
+    "cpu": "AMD RYZEN AI MAX+ 395 w/ Radeon 8060S",
+    "pinned_cpu": "unpinned: L1 runs multi-threaded Node/V8 (and wasm-opt) child processes",
+    "governor": "performance",
+    "cpufreq_driver": "amd-pstate-epp",
+    "load_average_at_start": "21.19 11.28 7.75 34/3693 725584",
+    "load_average_at_end": "20.24 21.42 19.80 11/3976 1333465",
+    "host_shared": true,
+    "warm_samples": 2000,
+    "cold_reps": 21,
+    "ordinary_path": {
+      "cli": "/home/brittonr/.cache/noble-issues/bin/noble-integration-eccbc02-release",
+      "cli_sha256": "f7f02dfbc9f6723a10879fd269abd4319a8736aa9d952ebb06f5d9bc2c5085ec",
+      "modes": "noble session --framed --opt off; noble session --framed --opt on",
+      "session_chunking": "≤ 240 submissions per session process (l1::MAX_SUBMISSIONS): 120 vectors/steps per session"
+    },
+    "wasm_features": "as fixed by the pinned CLI runtime (managed-linear-memory backend; --opt on runs wasm-opt --enable-gc --enable-reference-types --enable-bulk-memory -O2 --strip-debug)",
+    "resource_limits": "extraction /0 defaults; checker /0 defaults; CLI Core session limits",
+    "timer": "std::time::Instant (CLOCK_MONOTONIC); hardware counters: unsupported",
+    "wall_seconds": 9874.114231669
+  },
+  "w1": {
+    "workload": "W1 = I1 `dup * swap 3 * + 7 -` over (I64 I64); design vector (5, 4) → 24 plus 999 splitmix64/0 vectors",
+    "graph_source": "extracted from Core source (D7) in this run",
+    "graph": {
+      "graph_logical_id": "75b70f84b6d265c4c1e016f5bf7ab88c2280456f15390bdb539e39cd24e6a1d9",
+      "live_nodes": 8,
+      "depth_layers": 4,
+      "ops_and_outputs_equal_ngraph_phase_c_hand_built_graph": true
+    },
+    "extraction": {
+      "repetitions": 21,
+      "frontend_prepare": {
+        "n": 21,
+        "median_ns": 140463.0,
+        "p25_ns": 130664.00000000001,
+        "p75_ns": 157415.0,
+        "iqr_ns": 26750.999999999985,
+        "min_ns": 118391.0,
+        "max_ns": 1236765.0
+      },
+      "admission_d7_stage1_kernel_recheck": {
+        "n": 21,
+        "median_ns": 53240.0,
+        "p25_ns": 52138.0,
+        "p75_ns": 64300.00000000001,
+        "iqr_ns": 12162.000000000007,
+        "min_ns": 46396.0,
+        "max_ns": 261269.0
+      },
+      "extraction_d7_stages2_5_including_graph_checker": {
+        "n": 21,
+        "median_ns": 7614.0,
+        "p25_ns": 6622.0,
+        "p75_ns": 9347.0,
+        "iqr_ns": 2725.0,
+        "min_ns": 5891.0,
+        "max_ns": 144571.0
+      },
+      "build_compile_l4": {
+        "n": 21,
+        "median_ns": 1273.0,
+        "p25_ns": 1132.0,
+        "p75_ns": 1563.0,
+        "iqr_ns": 431.0,
+        "min_ns": 1032.0,
+        "max_ns": 18254.0
+      },
+      "first_evaluation_l4": {
+        "n": 21,
+        "median_ns": 430.0,
+        "p25_ns": 361.0,
+        "p75_ns": 611.0,
+        "iqr_ns": 250.0,
+        "min_ns": 291.0,
+        "max_ns": 14046.0
+      },
+      "cold_total_source_to_first_result": {
+        "n": 21,
+        "median_ns": 205655.0,
+        "p25_ns": 192049.0,
+        "p75_ns": 230321.0,
+        "iqr_ns": 38272.0,
+        "min_ns": 173174.0,
+        "max_ns": 1346410.0
+      },
+      "extractor_counters": {
+        "work_units": 8,
+        "expanded_nodes": 8,
+        "pruned_nodes": 0,
+        "max_inline_depth": 0
+      }
+    },
+    "native_agrees_with_l4_on_all_vectors": true,
+    "warm_l3_reference": {
+      "n": 2000,
+      "median_ns": 162.4140625,
+      "p25_ns": 153.5703125,
+      "p75_ns": 172.1953125,
+      "iqr_ns": 18.625,
+      "min_ns": 85.46875,
+      "max_ns": 16042.296875,
+      "batch_per_sample": 128
+    },
+    "warm_l4_compiled": {
+      "n": 2000,
+      "median_ns": 137.453125,
+      "p25_ns": 119.4375,
+      "p75_ns": 145.109375,
+      "iqr_ns": 25.671875,
+      "min_ns": 65.109375,
+      "max_ns": 940.515625,
+      "batch_per_sample": 64
+    },
+    "warm_native_rust": {
+      "n": 2000,
+      "median_ns": 1.059722900390625,
+      "p25_ns": 1.00592041015625,
+      "p75_ns": 1.218719482421875,
+      "iqr_ns": 0.212799072265625,
+      "min_ns": 0.697723388671875,
+      "max_ns": 63.302703857421875,
+      "batch_per_sample": 32768
+    },
+    "l1_ordinary_wasm_v8": {
+      "off": {
+        "vectors": 1000,
+        "observed": 1000,
+        "agree_with_l4": 1000,
+        "ordinary_quota_outcomes": 0,
+        "session_restarts_after_ordinary_quota": 0,
+        "mismatches": [],
+        "timing": {
+          "sessions": 9,
+          "warm_root_submission_latency": {
+            "n": 991,
+            "median_ns": 31042325.0,
+            "p25_ns": 29007627.0,
+            "p75_ns": 33993970.0,
+            "iqr_ns": 4986343.0,
+            "min_ns": 22919816.0,
+            "max_ns": 58063038.0
+          },
+          "warm_input_submission_latency": {
+            "n": 991,
+            "median_ns": 30850106.0,
+            "p25_ns": 28698455.0,
+            "p75_ns": 33454979.000000004,
+            "iqr_ns": 4756524.000000004,
+            "min_ns": 23113985.0,
+            "max_ns": 61033069.0
+          },
+          "warm_host_step_input_plus_root": {
+            "n": 991,
+            "median_ns": 61987165.0,
+            "p25_ns": 58459046.0,
+            "p75_ns": 67001095.99999999,
+            "iqr_ns": 8542049.999999993,
+            "min_ns": 48296823.0,
+            "max_ns": 117979105.0
+          },
+          "cold_spawn_to_first_root_report": {
+            "n": 9,
+            "median_ns": 387749188.0,
+            "p25_ns": 364165082.0,
+            "p75_ns": 394879258.0,
+            "iqr_ns": 30714176.0,
+            "min_ns": 350309211.0,
+            "max_ns": 442395780.0
+          },
+          "wall_ns_all_sessions": 67253108211.0,
+          "host_loop_evaluations_per_s": 14.869201239927804,
+          "timing_source": "report-line arrival times (CLI flushes one line per finished submission); warm = every vector/step that is not the first of its session process; cold = process spawn to the first root report of each session"
+        },
+        "design_vector_root_metrics": {
+          "allocated_total_bytes": 768,
+          "allocation_peak_bytes": 768,
+          "operand_peak_bytes": 48,
+          "continuation_peak_bytes": 8,
+          "linear_memory_bytes": 1048576,
+          "execution_steps": 18,
+          "source": "the root report's noble-core-report/v1 `metrics` (guest-side counters); Wasm module bytes, V8 heap and process RSS: unsupported (the report carries module hashes only)"
+        }
+      },
+      "on": {
+        "vectors": 1000,
+        "observed": 1000,
+        "agree_with_l4": 1000,
+        "ordinary_quota_outcomes": 0,
+        "session_restarts_after_ordinary_quota": 0,
+        "mismatches": [],
+        "timing": {
+          "sessions": 9,
+          "warm_root_submission_latency": {
+            "n": 991,
+            "median_ns": 42255381.0,
+            "p25_ns": 40617569.0,
+            "p75_ns": 45191365.0,
+            "iqr_ns": 4573796.0,
+            "min_ns": 36686887.0,
+            "max_ns": 132973242.99999999
+          },
+          "warm_input_submission_latency": {
+            "n": 991,
+            "median_ns": 42012564.0,
+            "p25_ns": 40192109.0,
+            "p75_ns": 44593726.0,
+            "iqr_ns": 4401617.0,
+            "min_ns": 36065334.0,
+            "max_ns": 124195610.0
+          },
+          "warm_host_step_input_plus_root": {
+            "n": 991,
+            "median_ns": 84343395.0,
+            "p25_ns": 81085253.0,
+            "p75_ns": 89250289.0,
+            "iqr_ns": 8165036.0,
+            "min_ns": 73664319.0,
+            "max_ns": 243011575.0
+          },
+          "cold_spawn_to_first_root_report": {
+            "n": 9,
+            "median_ns": 262837991.0,
+            "p25_ns": 257905425.00000003,
+            "p75_ns": 267816836.0,
+            "iqr_ns": 9911410.99999997,
+            "min_ns": 255014632.00000003,
+            "max_ns": 538491444.0
+          },
+          "wall_ns_all_sessions": 96127507115.0,
+          "host_loop_evaluations_per_s": 10.40284961102416,
+          "timing_source": "report-line arrival times (CLI flushes one line per finished submission); warm = every vector/step that is not the first of its session process; cold = process spawn to the first root report of each session"
+        },
+        "design_vector_root_metrics": {
+          "allocated_total_bytes": 768,
+          "allocation_peak_bytes": 768,
+          "operand_peak_bytes": 48,
+          "continuation_peak_bytes": 8,
+          "linear_memory_bytes": 1048576,
+          "execution_steps": 18,
+          "source": "the root report's noble-core-report/v1 `metrics` (guest-side counters); Wasm module bytes, V8 heap and process RSS: unsupported (the report carries module hashes only)"
+        }
+      }
+    },
+    "speed_warm_per_evaluation": {
+      "l4_speedup_over_native": 0.007709703947368421,
+      "l4_speedup_over_l1_opt_off": 225839.35432533818,
+      "native_speedup_over_l1_opt_off": 29292869.851691864,
+      "l4_speedup_over_l1_opt_on": 307416.6629532795,
+      "native_speedup_over_l1_opt_on": 39873990.629460044,
+      "l4_at_least_2x_faster_than_both_baselines": false
+    },
+    "l3_ns_per_eval": 162.4140625,
+    "training_step": "not applicable (E-DERIV-I64)"
+  },
+  "w2": {
+    "workload": "W2 = I4 `swap [ * ] dip + dup` transition (s,i,k) → (s·k+i, s·k+i), 100000 host steps from s=11, i=3, k=-7",
+    "graph_source": "extracted from Core source (D7) in this run",
+    "graph": {
+      "graph_logical_id": "ede73e27b1b5b2d25f1a0bfaac85d3b4471f2d9c98613caad673da1656f28333",
+      "live_nodes": 5,
+      "depth_layers": 3,
+      "ops_and_outputs_equal_ngraph_phase_c_hand_built_graph": true
+    },
+    "extraction": {
+      "repetitions": 21,
+      "frontend_prepare": {
+        "n": 21,
+        "median_ns": 147537.0,
+        "p25_ns": 137096.0,
+        "p75_ns": 179546.0,
+        "iqr_ns": 42450.0,
+        "min_ns": 118041.0,
+        "max_ns": 352620.0
+      },
+      "admission_d7_stage1_kernel_recheck": {
+        "n": 21,
+        "median_ns": 59943.0,
+        "p25_ns": 56546.0,
+        "p75_ns": 66845.0,
+        "iqr_ns": 10299.0,
+        "min_ns": 51747.0,
+        "max_ns": 104025.0
+      },
+      "extraction_d7_stages2_5_including_graph_checker": {
+        "n": 21,
+        "median_ns": 9117.0,
+        "p25_ns": 8476.0,
+        "p75_ns": 10470.0,
+        "iqr_ns": 1994.0,
+        "min_ns": 7073.0,
+        "max_ns": 31819.999999999996
+      },
+      "build_compile_l4": {
+        "n": 21,
+        "median_ns": 1313.0,
+        "p25_ns": 1253.0,
+        "p75_ns": 1663.0,
+        "iqr_ns": 410.0,
+        "min_ns": 922.0,
+        "max_ns": 45304.0
+      },
+      "first_evaluation_l4": {
+        "n": 21,
+        "median_ns": 431.0,
+        "p25_ns": 381.0,
+        "p75_ns": 601.0,
+        "iqr_ns": 220.0,
+        "min_ns": 260.0,
+        "max_ns": 2014.0000000000002
+      },
+      "cold_total_source_to_first_result": {
+        "n": 21,
+        "median_ns": 232085.0,
+        "p25_ns": 205384.0,
+        "p75_ns": 254556.99999999997,
+        "iqr_ns": 49172.99999999997,
+        "min_ns": 183874.0,
+        "max_ns": 481681.0
+      },
+      "extractor_counters": {
+        "work_units": 7,
+        "expanded_nodes": 5,
+        "pruned_nodes": 0,
+        "max_inline_depth": 1
+      }
+    },
+    "final_state_agreement_cpu_legs": "L3 -6083400928511612821, L4 -6083400928511612821, native -6083400928511612821, expected -6083400928511612821: equal = true",
+    "total_steps_l3_ns": {
+      "n": 7,
+      "median_ns": 18556779.0,
+      "p25_ns": 18135420.0,
+      "p75_ns": 23286493.0,
+      "iqr_ns": 5151073.0,
+      "min_ns": 17004142.0,
+      "max_ns": 23340665.0
+    },
+    "total_steps_l4_ns": {
+      "n": 7,
+      "median_ns": 20567804.0,
+      "p25_ns": 20376064.0,
+      "p75_ns": 21736351.0,
+      "iqr_ns": 1360287.0,
+      "min_ns": 17219305.0,
+      "max_ns": 21771617.0
+    },
+    "total_steps_native_ns": {
+      "n": 7,
+      "median_ns": 135434.0,
+      "p25_ns": 135333.0,
+      "p75_ns": 136125.0,
+      "iqr_ns": 792.0,
+      "min_ns": 135133.0,
+      "max_ns": 148628.0
+    },
+    "l1_ordinary_wasm_v8": {
+      "off": {
+        "steps": 100000,
+        "agree_with_l4_per_step": 100000,
+        "final_state": -6083400928511612821,
+        "session_restarts_after_ordinary_quota": 0,
+        "mismatches": [],
+        "total_10^5_steps_wall_ns": 3633249554498.0,
+        "timing": {
+          "sessions": 834,
+          "warm_root_submission_latency": {
+            "n": 99166,
+            "median_ns": 16573801.0,
+            "p25_ns": 15476620.0,
+            "p75_ns": 18076031.0,
+            "iqr_ns": 2599411.0,
+            "min_ns": 1807319.0,
+            "max_ns": 401335402.0
+          },
+          "warm_input_submission_latency": {
+            "n": 99166,
+            "median_ns": 16349188.0,
+            "p25_ns": 15255895.0,
+            "p75_ns": 17852401.0,
+            "iqr_ns": 2596506.0,
+            "min_ns": 6712448.0,
+            "max_ns": 200086748.0
+          },
+          "warm_host_step_input_plus_root": {
+            "n": 99166,
+            "median_ns": 32969151.000000004,
+            "p25_ns": 31126763.0,
+            "p75_ns": 35515042.0,
+            "iqr_ns": 4388279.0,
+            "min_ns": 24844600.0,
+            "max_ns": 508777328.0
+          },
+          "cold_spawn_to_first_root_report": {
+            "n": 834,
+            "median_ns": 216984138.0,
+            "p25_ns": 212851626.0,
+            "p75_ns": 224350304.0,
+            "iqr_ns": 11498678.0,
+            "min_ns": 200933539.0,
+            "max_ns": 464561072.0
+          },
+          "wall_ns_all_sessions": 3633249554498.0,
+          "host_loop_evaluations_per_s": 27.52357042917654,
+          "timing_source": "report-line arrival times (CLI flushes one line per finished submission); warm = every vector/step that is not the first of its session process; cold = process spawn to the first root report of each session"
+        }
+      },
+      "on": {
+        "steps": 100000,
+        "agree_with_l4_per_step": 100000,
+        "final_state": -6083400928511612821,
+        "session_restarts_after_ordinary_quota": 0,
+        "mismatches": [],
+        "total_10^5_steps_wall_ns": 9710165978307.0,
+        "timing": {
+          "sessions": 834,
+          "warm_root_submission_latency": {
+            "n": 99166,
+            "median_ns": 43405196.0,
+            "p25_ns": 41303030.0,
+            "p75_ns": 46681034.0,
+            "iqr_ns": 5378004.0,
+            "min_ns": 35709297.0,
+            "max_ns": 511997795.99999994
+          },
+          "warm_input_submission_latency": {
+            "n": 99166,
+            "median_ns": 43428462.0,
+            "p25_ns": 41322133.0,
+            "p75_ns": 46709508.0,
+            "iqr_ns": 5387375.0,
+            "min_ns": 35849666.0,
+            "max_ns": 606105392.0
+          },
+          "warm_host_step_input_plus_root": {
+            "n": 99166,
+            "median_ns": 86999564.0,
+            "p25_ns": 82997974.0,
+            "p75_ns": 93241503.0,
+            "iqr_ns": 10243529.0,
+            "min_ns": 72371000.0,
+            "max_ns": 732469795.0
+          },
+          "cold_spawn_to_first_root_report": {
+            "n": 834,
+            "median_ns": 276485274.0,
+            "p25_ns": 264795981.0,
+            "p75_ns": 329854145.0,
+            "iqr_ns": 65058164.0,
+            "min_ns": 245307661.0,
+            "max_ns": 2840512932.0
+          },
+          "wall_ns_all_sessions": 9710165978307.0,
+          "host_loop_evaluations_per_s": 10.298485136444118,
+          "timing_source": "report-line arrival times (CLI flushes one line per finished submission); warm = every vector/step that is not the first of its session process; cold = process spawn to the first root report of each session"
+        }
+      }
+    },
+    "l1_modes_concurrent": true,
+    "l1_wall_ns_both_modes": 9710188973752.0,
+    "speed_total_steps": {
+      "l4_speedup_over_native": 0.006584757419897623,
+      "l4_speedup_over_l1_opt_off": 176647.42208249358,
+      "native_speedup_over_l1_opt_off": 26826716.736550644,
+      "l4_speedup_over_l1_opt_on": 472105.13958160044,
+      "native_speedup_over_l1_opt_on": 71696663.89759588,
+      "l4_at_least_2x_faster_than_both_baselines": false
+    },
+    "training_step": "not applicable (E-DERIV-I64)"
+  },
+  "interpretation": "The ordinary path's host interface (`noble session`) prepares, compiles, instantiates and runs every submission, so an L1 evaluation is one root submission and a W2 host step is an input submission plus a root submission. These are the costs a host pays through that interface; they are not the cost of calling an already instantiated Wasm function, which the CLI does not expose.",
+  "trusted_boundaries": [
+    "the pinned noble release CLI, its Node/V8 runtime and wasm-opt (--opt on) as the ordinary path (PO-17/18 open)",
+    "noble_kernel::acceptance::check as the independent subject checker; the extractor (NG-PO-A open); this crate's checker, L3 and L4 (NG-PO-B/C open)",
+    "rustc/LLVM of the pinned nightly toolchain; the hand-written native baselines",
+    "std::time::Instant, report-line arrival timing and a shared, unisolated host",
+    "sha256sum and blake3 identities: a hash identifies bytes, it proves nothing"
+  ],
+  "non_claims": [
+    "Finite agreement proves neither extraction (NG-PO-A) nor the evaluators (NG-PO-C); NG-PO-A..H stay open.",
+    "Timings are from a shared host and are informational at the stated precision."
+  ]
+}
