@@ -218,3 +218,39 @@ fn refusals_before_evaluation_evaluate_no_node() {
     assert_eq!(admitted.obs, Obs::Normal(vec![Value::f32(2.5)]));
     assert_eq!(admitted.evaluated_nodes, model.node_count() as u64);
 }
+
+/// Preflight refusal cannot consume a caller's accumulated counter, and a
+/// successful reused evaluator must accumulate rather than reset that state.
+#[test]
+fn caller_owned_node_observer_tracks_execution_not_refusals() {
+    use noble_ngraph::compiled::Compiled;
+    let mut b = GraphBuilder::new(SubProfile::I64, subject());
+    let x = b.input(ScalarType::I64);
+    let twice = b.op(Op::I64Add(x, x));
+    b.output(twice);
+    let checked = check(&IDS, b.finish()).unwrap();
+    let compiled = Compiled::new(&IDS, &checked);
+    let mut workspace = compiled.workspace();
+    for reference_mode in [true, false] {
+        let mut nodes = 7;
+        let mut run = |inputs: &[Value], nodes: &mut u64| {
+            let mut control = Control { evaluated_nodes: Some(nodes), ..Control::default() };
+            let report = if reference_mode {
+                reference(&checked, inputs, None, &mut control)
+            } else {
+                compiled.evaluate_in(&mut workspace, inputs, None, &mut control)
+            };
+            report.obs
+        };
+        assert!(matches!(run(&[Value::F32(0)], &mut nodes), Obs::Refused(_)));
+        assert_eq!(nodes, 7, "preflight refusal preserves caller state");
+        assert_eq!(run(&i64_inputs(&[9]), &mut nodes), Obs::Normal(vec![Value::I64(18)]));
+        let per_call = nodes - 7;
+        assert!(per_call > 0, "successful execution contributes actual work");
+        assert_eq!(run(&i64_inputs(&[9]), &mut nodes), Obs::Normal(vec![Value::I64(18)]));
+        assert_eq!(nodes, 7 + 2 * per_call, "reused execution accumulates without resetting");
+        let before_refusal = nodes;
+        assert!(matches!(run(&[], &mut nodes), Obs::Refused(_)));
+        assert_eq!(nodes, before_refusal, "later preflight refusal preserves accumulated work");
+    }
+}

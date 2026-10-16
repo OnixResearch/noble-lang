@@ -16,9 +16,13 @@ function rejectStartSection(bytes) {
 
 async function protocol(config) {
   let engine;
-  const emit = (outcome, value) => {
+  const emit = (outcome, value, terminal = false) => {
     const json = Buffer.from(JSON.stringify(value));
     if (json.length > MAX_FRAME) fail('engine output limit exceeded');
+    // Rust may reap a failed worker as soon as it sees the terminal reply.
+    // Seal the real operation stream at this actual protocol transition,
+    // before publishing that reply; an unrelated hard kill stays incomplete.
+    if (terminal) globalThis.nobleSafetyFinish?.();
     process.stdout.write(`${outcome} ${json.length}\n`);
     process.stdout.write(json);
   };
@@ -45,7 +49,7 @@ async function protocol(config) {
       emit('internal-failure', { ...reportError(error), session_state: 'restore-required' });
       return false;
     }
-    emit('internal-failure', reportError(error));
+    emit('internal-failure', reportError(error), true);
     return true;
   };
   try {
@@ -67,7 +71,7 @@ async function protocol(config) {
           const header = utf8.decode(pending.subarray(0, newline));
           pending = pending.subarray(newline + 1);
           if (header === 'shutdown') {
-            emit('closed', { outcome: 'closed' });
+            emit('closed', { outcome: 'closed' }, true);
             return;
           }
           if (config.slot_mode === true) {
@@ -93,7 +97,7 @@ async function protocol(config) {
               emit(report.outcome, report);
             } catch (error) {
               emit('internal-failure', { ...reportError(error),
-                session_state: 'terminated-after-restore-failure' });
+                session_state: 'terminated-after-restore-failure' }, true);
               return;
             }
             continue;
@@ -105,14 +109,14 @@ async function protocol(config) {
             try {
               const report = header === 'publish-bin' ? engine.publishBinary() : engine.discardBinary();
               emit(report.outcome, report);
-            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            } catch (error) { emit('internal-failure', reportError(error), true); return; }
             continue;
           }
           if (header === 'take-live-proposal') {
             try {
               const report = engine.takeLiveProposal();
               emit(report.outcome, report);
-            } catch (error) { emit('internal-failure', reportError(error)); return; }
+            } catch (error) { emit('internal-failure', reportError(error), true); return; }
             continue;
           }
           const grant = /^live-grant ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
@@ -135,14 +139,14 @@ async function protocol(config) {
             command = { kind: 'execute', inputs: integer(count, MAX_FRAME, 'injection frame') };
           } else if (/^observe [0-9]+$/.test(header)) {
             try { emit('observed', engine.observe(Number(header.slice('observe '.length)))); }
-            catch (error) { emit('internal-failure', reportError(error)); return; }
+            catch (error) { emit('internal-failure', reportError(error), true); return; }
             continue;
           } else if (/^push [0-9]+$/.test(header)) {
             const count = Number(header.slice('push '.length));
             command = { kind: 'push', inputs: integer(count, MAX_FRAME, 'injection frame') };
           } else if (/^project [0-9]+$/.test(header)) {
             try { emit('projected', engine.project(Number(header.slice('project '.length)))); }
-            catch (error) { emit('internal-failure', reportError(error)); return; }
+            catch (error) { emit('internal-failure', reportError(error), true); return; }
             continue;
           } else {
             const admission = /^admit ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)$/.exec(header);
@@ -175,9 +179,9 @@ async function protocol(config) {
           command = null;
           try {
             const report = engine.request(JSON.parse(utf8.decode(json)), binary);
-            emit(report.outcome, { ...report, retire_code_spans: engine.retireCodeSpans() });
+            emit(report.outcome, { ...report, retire_code_spans: engine.retireCodeSpans() }, engine.poisoned);
             if (engine.poisoned) return;
-          } catch (error) { emit('internal-failure', reportError(error)); return; }
+          } catch (error) { emit('internal-failure', reportError(error), true); return; }
           continue;
         }
         if (command.kind === 'live-grant') {
@@ -194,12 +198,14 @@ async function protocol(config) {
           const bytes = pending.subarray(0, command.inputs);
           pending = pending.subarray(command.inputs);
           command = null;
+          let terminal = false;
           try {
             const inputs = bytes.length ? JSON.parse(utf8.decode(bytes)) : [];
             const report = engine.execute({ inputs });
-            emit(report.outcome, report);
+            terminal = engine.poisoned && !engine.calculatorRestorable();
+            emit(report.outcome, report, terminal);
           } catch (error) { if (failed(error)) return; }
-          if (engine.poisoned && !engine.calculatorRestorable()) return;
+          if (terminal) return;
           continue;
         }
         if (command.kind === 'push') {
@@ -209,9 +215,9 @@ async function protocol(config) {
           command = null;
           let inputs;
           try { inputs = JSON.parse(utf8.decode(bytes)); }
-          catch (error) { emit('internal-failure', reportError(error)); return; }
+          catch (error) { emit('internal-failure', reportError(error), true); return; }
           try { emit('pushed', engine.push(inputs)); }
-          catch (error) { emit('internal-failure', reportError(error)); return; }
+          catch (error) { emit('internal-failure', reportError(error), true); return; }
           continue;
         }
         if (command.kind === 'admit') {
@@ -230,7 +236,7 @@ async function protocol(config) {
             const report = engine.admit(artifact, wat, source,
               JSON.parse(utf8.decode(claims)), JSON.parse(utf8.decode(allowed)), source.length > 0);
             emit(report.outcome, report);
-          } catch (error) { emit('internal-failure', reportError(error)); return; }
+          } catch (error) { emit('internal-failure', reportError(error), true); return; }
           continue;
         }
         if (pending.length < command.bytes + command.source) break;
@@ -249,7 +255,7 @@ async function protocol(config) {
       }
     }
     if (pending.length || command) fail('truncated engine request');
-  } catch (error) { emit('internal-failure', reportError(error)); }
+  } catch (error) { emit('internal-failure', reportError(error), true); }
   finally { if (engine) engine.close(); }
 }
 

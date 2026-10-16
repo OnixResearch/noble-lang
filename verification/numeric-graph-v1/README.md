@@ -183,8 +183,10 @@ Cases **01/06/07/08/10/13/14/15** are
 `implemented/passed/open/explicit` with receipt-linked evidence at source
 `sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f`.
 All seven static/admission cases below remain
-`absent/not-run/open/unassessed` with `evidence: []`; passing variant outputs
-do not satisfy their unobserved fields:
+`absent/not-run/open/unassessed` with `evidence: []`. The following table records
+the missing fields in the immutable historical packet, not the scope of the
+fresh safety-observation supplement below. Passing historical variant outputs
+alone did not satisfy those fields:
 
 | Case | Unobserved acceptance field or additional gap |
 |---|---|
@@ -196,10 +198,10 @@ do not satisfy their unobserved fields:
 | 11 | Guest/protected counters are structural, not directly observed. |
 | 12 | Guest/protected counters are structural, not directly observed. |
 
-CASE-04's zero evaluated nodes is structural accounting of `check`, not an
-observed counter: the cited library test measures eval refusals, not check.
-CASE-12's parse/integrity paths likewise have no complete directly measured
-node count. No telemetry, semantic expectation, case kind, input, profile or
+In that historical packet, CASE-04's zero evaluated nodes is structural
+accounting of `check`, not an observed counter: the cited library test measures
+eval refusals, not check. CASE-12's parse/integrity paths likewise have no
+complete directly measured node count there. No semantic expectation, case kind, input, profile or
 requirement was changed to manufacture acceptance. The original immutable
 acceptance, review, provenance, normalized prepromotion cases and raw outputs
 retain their historical prepromotion wording and bytes. CALC records and the
@@ -252,3 +254,92 @@ runtime artifacts; it does not rerun the historical review against changed
 documents, re-execute acceptance, rebuild, run global gates, sync, archive,
 commit or publish. Its receipt is bounded lifecycle verification, not a
 replacement for the immutable acceptance/review or a globally green gate.
+
+## Safety-observation supplement (2026-10-16; no promotion)
+
+`safety.mjs` is a separate, source-bound observation runner. It never rewrites
+the historical packets, registered cases, expected fields, or their states.
+The CLI's explicit `safety-observe` Cargo feature enables a private JSONL
+sidecar at the composition root and actual Rust/JavaScript guest-request and
+protected-operation entries. The default build does not read the observation
+environment variable or add report fields. The domain library remains
+`no_std`, forbids unsafe code, and has no new normal dependency or global
+counter. Its optional caller-owned counter measures actual node
+materializations, compiled instructions, and guard validations; this is not
+`Report::evaluated_nodes` fuel accounting. Cached constant reuse contributes
+no new evaluation, and compiled input materialization can precede a fuel
+refusal without changing the original execution order.
+
+Use the policy-selected Node with no Node flags, existing absolute input
+paths, and a fresh external output whose parent already exists:
+
+```sh
+"$NODE" verification/numeric-graph-v1/safety.mjs \
+  --binary /absolute/observed-noble \
+  --plain-binary /absolute/immutable-historical-noble \
+  --current-plain-binary /absolute/current-default-noble \
+  --test-binary /absolute/observed-cli-test-executable \
+  --build-source /absolute/build-source.json \
+  --out /absolute/fresh-evidence-directory
+```
+
+The build record must contain the complete crate/Cargo byte-and-mode manifest
+and hashes of both feature modes and the test executable. The runner checks
+that manifest against actual current source, copies the executables, hashes
+the copies it executes, and rechecks those bytes at termination. Its output
+parent is canonicalized before any write, so a symlink ancestor cannot route
+an external-looking output into source. `receipt.json` binds the exact runner,
+slot helper, build record, complete source manifest, commands, and semantic
+boundary inventory. Missing, reordered, truncated, or unclosed observer
+streams fail closed; real-stream mutation controls exercise those refusals.
+At an actual terminal worker transition the child stream is sealed before
+publishing the terminal response, so immediate failed-worker reaping cannot
+race an exit listener. The exit fallback is idempotent; an unrelated hard
+kill without that terminal transition still leaves incomplete evidence.
+
+**MEASURED scope:** all 100 original scenario commands run in observed,
+current-default, and immutable-historical directories. Exit, stdout, stderr,
+published files, and directory contents must agree byte for byte. Exact
+CASE-03/04/05/11/12 requests directly measure guest/protected zero; every
+CASE-04 `check` refusal and both commands for all seven CASE-12 binding edits
+also measure actual node zero, including parse/integrity refusals. The eight
+CASE-09 inputs execute the real parsers, preserving accepted NaN and negative
+zero bits. A real B3 source control exercises `E-DYNAMIC-RUN`. Actual check
+requests also supply finite CASE-02 counter observations, not capability
+closure.
+
+Nonzero production controls prevent disconnected zero counters: classic
+`test.emit` measures 1 guest/0 protected; an authorized scripted clock 1/1;
+bounded region read plus explicit release 2/1; bounds refusal 2/0; actual
+`canon resource.drop` alone 1/0 with one retired owner and no region read.
+The existing selected live-slot CLI contract supplies pure dispatch 1/0,
+dispatch plus two emits 3/2, and exact frozen replay after policy revocation
+3/0. A real refused emit measures 2/0 and retains its terminal
+`execution-failed` report and exit 2. `safety-slot.mjs` uses the existing
+authority/source fixture and real CLI, not a mock worker.
+The denied-terminal sequence runs in three fresh sessions and requires the
+child end to be present immediately after the terminal reply. A separate
+fresh owned worker is hard-terminated only after verifying its actual parent
+PID; its missing-end stream must be rejected rather than completed by the
+parent observer.
+
+**INFERRED scope:** `observer-boundaries.json` inventories the 17 existing
+semantic guest entries and six protected-operation entries. Guest events
+occur before validation/checkpoint/replay branching, including Rust resource
+destructors; delegated registry paths do not double-count. Compiler-managed
+VM bookkeeping, trusted CLI file I/O, and host fallback owner cleanup are
+not guest requests. Syscall totals and this source inventory are not direct
+semantic zero measurements.
+
+**OPEN:** CASE-02 still needs the actual complete, compiler-authenticated
+selected caller/callback capability closure, with no relevant unknowns or
+forbidden uses. The historical 637-unknown record is unchanged. A separate
+real `std` consumer accepted by the `no_std` library reads a private input and
+appends a private effect log through its injected `IdentityHasher`; the
+finite original control observed 42 reads and 42 writes while returning
+`I64(7)`. This disproves a universal arbitrary-caller purity inference from
+`no_std` or manifest dependencies alone; it is not a disproof of the exact
+assembled CLI BLAKE3 closure. No compiler unknown is waived, no case is
+promoted, and no proof, global-gate, archive, performance, or cross-platform
+acceptance follows from this supplement. Failed and interrupted attempts
+remain separate rejected evidence, never relabeled as the fresh result.

@@ -20,6 +20,7 @@ mod calculator;
 mod component;
 mod core;
 mod ngraph;
+mod safety_observe;
 mod sandbox;
 mod workflow;
 
@@ -36,6 +37,7 @@ enum InputError {
     reason = "Owner: noble-maintainers; CLI routing accepts arbitrary OS argument bytes and reports usage or budget failures as exit statuses. Assertions would turn malformed user input into panics."
 )]
 fn main() -> std::process::ExitCode {
+    let _observation = safety_observe::begin();
     let arguments: std::vec::Vec<std::ffi::OsString> = read_arguments().skip(1).collect();
     if arguments
         .first()

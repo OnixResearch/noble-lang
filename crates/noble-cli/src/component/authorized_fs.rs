@@ -143,6 +143,7 @@ impl Host {
         };
         let accessible = self.table.native_access(&admitted.borrow).is_ok();
         let result = if accessible {
+            crate::safety_observe::event("protected-operation");
             let read = self.directory.read(path);
             self.protected_operations += 1;
             read
@@ -245,6 +246,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                     match item {
                         ComponentItem::ComponentFunc(_) if function == "read" => {
                             instance.func_new(function, |mut store, _, params, results| {
+                                crate::safety_observe::event("guest-request");
                                 let [Val::String(path)] = params else {
                                     bail!("invalid fs.read arguments")
                                 };

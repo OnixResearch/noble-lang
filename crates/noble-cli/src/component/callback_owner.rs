@@ -209,6 +209,7 @@ impl Host {
             "invalid token representation or custody"
         );
         self.release_pending(rep)?;
+        crate::safety_observe::event("protected-operation");
         self.protected_operations += 1;
         Ok(42)
     }
@@ -307,6 +308,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                 function,
                                 ResourceType::host::<Token>(),
                                 |mut store, rep| {
+                                    crate::safety_observe::event("guest-request");
                                     if store.data().owner.is_some() {
                                         store.data_mut().release_pending(rep)?;
                                     }
@@ -316,6 +318,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                         }
                         ComponentItem::ComponentFunc(_) if function == "issue" => {
                             instance.func_new(function, |mut store, _, params, results| {
+                                crate::safety_observe::event("guest-request");
                                 ensure!(params.is_empty(), "invalid issue arguments");
                                 let [slot] = results else {
                                     bail!("invalid issue result");
@@ -335,6 +338,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                         }
                         ComponentItem::ComponentFunc(_) if function == "consume" => {
                             instance.func_new(function, |mut store, _, params, results| {
+                                crate::safety_observe::event("guest-request");
                                 let [Val::Resource(resource)] = params else {
                                     bail!("invalid consume argument");
                                 };

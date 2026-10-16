@@ -107,6 +107,7 @@ function installSharedGlobals(engine, abi) {
 }
 function installTestHosts(engine, declared_modules) {
     engine.shared.test_emit = (offset, count) => {
+      globalThis.nobleSafetyObserve?.('guest-request');
       if (declared_modules) {
         engine.hostRequestsTotal += 1;
         engine.ambientFallbackCalls += 1;
@@ -119,6 +120,7 @@ function installTestHosts(engine, declared_modules) {
       return 0;
     };
     engine.shared.test_emit_bound = (offset, count, slot) => {
+      globalThis.nobleSafetyObserve?.('guest-request');
       engine.hostRequestsTotal += 1;
       engine.boundRequestsTotal += 1;
       const binding = engine.boundAdapters.get(slot);
@@ -140,10 +142,12 @@ function installTestHosts(engine, declared_modules) {
       engine.boundRequests.push(request);
       engine.trace.push(`test.emit:${binding?.adapter ?? 'unbound'}:${request.decision}:${text}`);
       if (request.decision !== 'allow') return 1;
+      globalThis.nobleSafetyObserve?.('protected-operation');
       engine.protectedOperations += 1;
       return 0;
     };
     engine.shared.test_clock_bound = (slot) => {
+      globalThis.nobleSafetyObserve?.('guest-request');
       engine.hostRequestsTotal += 1;
       engine.boundRequestsTotal += 1;
       const binding = engine.boundAdapters.get(slot);
@@ -174,10 +178,12 @@ function installTestHosts(engine, declared_modules) {
       engine.boundRequests.push(request);
       engine.trace.push(`test.clock:${binding?.adapter ?? 'unbound'}:${request.decision}`);
       if (request.decision !== 'allow') return [1, 0n];
+      globalThis.nobleSafetyObserve?.('protected-operation');
       engine.protectedOperations += 1;
       return [0, step.value];
     };
     engine.shared.test_abort = () => {
+      globalThis.nobleSafetyObserve?.('guest-request');
       if (declared_modules) engine.hostRequestsTotal += 1;
       if (engine.trace.length < 4096) engine.trace.push('test.abort');
       return 0;

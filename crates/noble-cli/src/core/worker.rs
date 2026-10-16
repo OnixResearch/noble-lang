@@ -11,6 +11,8 @@ const HOST: &str = concat!(
     include_str!("runtime/engine.mjs"),
     include_str!("runtime/protocol.mjs"),
 );
+#[cfg(feature = "safety-observe")]
+const SAFETY_OBSERVER: &str = include_str!("runtime/safety-observe.mjs");
 const SLOT_HOST: &str = concat!(
     include_str!("runtime/preamble.mjs"),
     include_str!("runtime/slot-policy.mjs"),
@@ -628,6 +630,13 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
     let mut command = std::process::Command::new(NODE);
     let slot = child_control.is_some();
     command.env_clear();
+    crate::safety_observe::child(&mut command);
+    #[cfg(feature = "safety-observe")]
+    let (first_line, body) = host.split_once('\n').expect("embedded worker preamble");
+    #[cfg(feature = "safety-observe")]
+    let observed_host = std::format!("{first_line}\n{SAFETY_OBSERVER}\n{body}");
+    #[cfg(feature = "safety-observe")]
+    let host = observed_host.as_str();
     if let Some(temp) = temp {
         command.env("TMPDIR", temp);
     }
