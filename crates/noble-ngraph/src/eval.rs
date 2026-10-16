@@ -127,6 +127,9 @@ pub struct Control<'a> {
     pub scratch: Option<&'a mut ScratchCounters>,
     /// Forward scratch budget in bytes (defaults to the `/0` budget).
     pub forward_scratch: Option<u64>,
+    /// Caller-owned count of actual node evaluations. Early refusals leave
+    /// it unchanged; successive evaluations accumulate into the same count.
+    pub evaluated_nodes: Option<&'a mut u64>,
 }
 
 /// An evaluation result with the number of graph nodes evaluated.
@@ -385,6 +388,9 @@ pub fn reference(
             };
         }
         evaluated += 1;
+        if let Some(count) = control.evaluated_nodes.as_deref_mut() {
+            *count += 1;
+        }
         let get = |x: NodeId| vals[x.index()];
         if let Op::Guard { fact, value } = &node.op {
             if !guard_holds(checked, fact, *value, get) {
