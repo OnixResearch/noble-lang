@@ -97,7 +97,7 @@ fn at(code: Code, body: Option<u64>, node: NodeId, detail: impl Into<String>) ->
 /// D7 stage 1 (a)–(d).
 ///
 /// # Errors
-/// `E-PROFILE`, `E-SUBJECT`, `E-CLOSURE`, `E-LIVE-SLOT`, `E-RESOURCE`,
+/// `E-PROFILE`, `E-SUBJECT`, `E-LIVE-SLOT`, `E-RECURSION`, `E-CLOSURE`, `E-RESOURCE`,
 /// `E-DYNAMIC-RUN`, `E-PROGRAM-OUTPUT`, `E-AGGREGATE` or `E-EFFECT`, in that
 /// stage order; nothing is extracted or evaluated.
 pub fn admit<'s>(

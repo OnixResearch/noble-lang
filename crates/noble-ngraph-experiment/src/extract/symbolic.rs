@@ -494,6 +494,11 @@ impl<'a, 's> Machine<'a, 's> {
                     return Err(self.err(Code::Effect, body, node, "host operation row"));
                 };
                 let identity = self.a.bodies[target].identity;
+                // D7's expansion-stack rule, kept as defense in depth:
+                // admission already refuses a closure whose identity call
+                // graph (over every arena node, quotations included)
+                // recurses, and the kernel refuses a cycle recorded in
+                // `Env::deps`, so this is not expected to fire.
                 if self
                     .active
                     .iter()

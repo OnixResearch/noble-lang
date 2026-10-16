@@ -189,6 +189,14 @@ impl Cli {
     /// stack length (the values a host clears before the next vector).
     /// Returns each root submission's report, normal or not.
     ///
+    /// A Core session retains compiled modules and runtime allocations
+    /// across submissions. When a later root submission hits an
+    /// ordinary-path quota ([`quota`]: static `exhausted` or
+    /// `runtime-exhausted`, BE-LIMIT-01 classes, not observations of the
+    /// root) the vector is retried in a fresh session and the restart is
+    /// counted; a quota outcome on the first vector of a fresh session is
+    /// returned as that vector's report.
+    ///
     /// # Errors
     /// A definition or input submission that is not accepted, a session that
     /// ends early, or a protocol/IO failure.
@@ -198,10 +206,15 @@ impl Cli {
         root: &str,
         outputs: usize,
         vectors: &[Vec<Value>],
-    ) -> Result<Vec<Report>, Error> {
+    ) -> Result<Run<Report>, Error> {
         let per_chunk = (MAX_SUBMISSIONS.saturating_sub(definitions.len()) / 2).max(1);
-        let mut out = Vec::with_capacity(vectors.len());
-        for chunk in vectors.chunks(per_chunk) {
+        let mut run = Run {
+            results: Vec::with_capacity(vectors.len()),
+            restarts: 0,
+        };
+        let mut at = 0;
+        while at < vectors.len() {
+            let chunk = &vectors[at..(at + per_chunk).min(vectors.len())];
             let mut subs: Vec<String> = definitions.iter().map(|d| (*d).to_owned()).collect();
             for (i, v) in chunk.iter().enumerate() {
                 subs.push(push_line(if i == 0 { 0 } else { outputs }, v));
@@ -209,10 +222,20 @@ impl Cli {
             }
             let reports = self.session(&subs)?;
             for i in 0..chunk.len() {
-                out.push(root_report(&reports, definitions.len(), i)?.clone());
+                let r = root_report(&reports, definitions.len(), i)?;
+                if !r.ok() && i > 0 && quota(r) {
+                    run.restarts += 1;
+                    break;
+                }
+                run.results.push(r.clone());
+                at += 1;
+                if !r.ok() {
+                    // Later input lines no longer match the stack.
+                    break;
+                }
             }
         }
-        Ok(out)
+        Ok(run)
     }
 
     /// Runs a host-driven transition. The host installs `initial_state` on
@@ -220,8 +243,9 @@ impl Cli {
     /// `root`, whose `outputs` results are the next state (the first
     /// `initial_state.len()` values) followed by the step's observable
     /// outputs, which the host drops before the next step. Returns each
-    /// step's full output stack (bottom-first). Chunks start fresh sessions
-    /// from the host-held state.
+    /// step's full output stack (bottom-first). Chunks — and restarts after
+    /// a session's own compile-budget exhaustion, as in
+    /// [`Cli::run_vectors`] — start fresh sessions from the host-held state.
     ///
     /// # Errors
     /// A step that is not normal, a session that ends early, or a
@@ -233,12 +257,17 @@ impl Cli {
         outputs: usize,
         initial_state: &[Value],
         steps: &[Vec<Value>],
-    ) -> Result<Vec<Vec<Value>>, Error> {
+    ) -> Result<Run<Vec<Value>>, Error> {
         let per_chunk = (MAX_SUBMISSIONS.saturating_sub(definitions.len()) / 2).max(1);
         let observable = outputs.saturating_sub(initial_state.len());
         let mut state = initial_state.to_vec();
-        let mut out = Vec::with_capacity(steps.len());
-        for chunk in steps.chunks(per_chunk) {
+        let mut run = Run {
+            results: Vec::with_capacity(steps.len()),
+            restarts: 0,
+        };
+        let mut at = 0;
+        while at < steps.len() {
+            let chunk = &steps[at..(at + per_chunk).min(steps.len())];
             let mut subs: Vec<String> = definitions.iter().map(|d| (*d).to_owned()).collect();
             for (i, inputs) in chunk.iter().enumerate() {
                 let line = if i == 0 {
@@ -252,15 +281,38 @@ impl Cli {
             let reports = self.session(&subs)?;
             for i in 0..chunk.len() {
                 let r = root_report(&reports, definitions.len(), i)?;
+                if !r.ok() && i > 0 && quota(r) {
+                    run.restarts += 1;
+                    break;
+                }
                 if !r.ok() || r.stack.len() != outputs {
                     return Err(Error::Refused(Box::new(r.clone())));
                 }
                 state = r.stack[..initial_state.len()].to_vec();
-                out.push(r.stack.clone());
+                run.results.push(r.stack.clone());
+                at += 1;
             }
         }
-        Ok(out)
+        Ok(run)
     }
+}
+
+/// Results of a multi-session run.
+#[derive(Clone, Debug)]
+pub struct Run<T> {
+    /// One result per vector or step, in order.
+    pub results: Vec<T>,
+    /// Fresh sessions started because accumulated session state hit an
+    /// ordinary-path quota ([`quota`]), reported separately from
+    /// observations.
+    pub restarts: usize,
+}
+
+/// An ordinary-path quota outcome: a static `exhausted` refusal (the
+/// session survives; nothing ran) or `runtime-exhausted` (the session ends).
+#[must_use]
+pub fn quota(r: &Report) -> bool {
+    r.outcome == "exhausted" || r.outcome == "runtime-exhausted"
 }
 
 fn root_report(reports: &[Report], definitions: usize, vector: usize) -> Result<&Report, Error> {

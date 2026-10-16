@@ -8,8 +8,10 @@
 //!    its request and every definition specialization under its own expected
 //!    interface — with every arena node covered by a derivation
 //!    (`E-SUBJECT`); the exact named-call closure is recomputed from resolved
-//!    definition identities and compared with the caller's claim
-//!    (`E-CLOSURE`); the root interface must be `I64`/`Bool` scalars, `Unit`
+//!    definition identities — live-slot dispatch has none (`E-LIVE-SLOT`),
+//!    an identity reached again below itself is `E-RECURSION`, and each
+//!    definition's supplied `Env::deps` list and the caller's claim must
+//!    match it (`E-CLOSURE`); the root interface must be `I64`/`Bool` scalars, `Unit`
 //!    or pairs of them (`E-RESOURCE`, `E-DYNAMIC-RUN`, `E-PROGRAM-OUTPUT`,
 //!    `E-AGGREGATE`); the root effect bound must be empty (`E-EFFECT`).
 //! 2. [`extract`]: symbolic stack execution over typed value ids. Node

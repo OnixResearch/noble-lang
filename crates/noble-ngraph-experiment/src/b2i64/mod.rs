@@ -290,11 +290,18 @@ fn legs(
         let mut modes = serde_json::Map::new();
         for opt in [Opt::Off, Opt::On] {
             let cli = Cli::new(bin.clone(), opt);
-            let reports = cli
+            let run = cli
                 .run_vectors(&defs, &lowered.root, lowered.outputs(), &inputs)
                 .map_err(|e| format!("{name} L1 {}: {e}", opt.flag()))?;
             let mut agree = 0usize;
-            for (i, r) in reports.iter().enumerate() {
+            let mut quota = Vec::new();
+            for (i, r) in run.results.iter().enumerate() {
+                // An ordinary-path quota (BE-LIMIT-01) is a distinct class,
+                // never counted as agreement or as a disagreement.
+                if l1::quota(r) {
+                    quota.push(json!({ "vector": i, "outcome": r.outcome, "stage": r.stage, "diagnostic": r.diagnostic }));
+                    continue;
+                }
                 let ok = r.outcome == "normal" && r.stack == l1_values(&l3_all[i]);
                 t.check(
                     || {
@@ -311,7 +318,12 @@ fn legs(
             }
             modes.insert(
                 opt.flag().to_owned(),
-                json!({ "vectors": n, "agree": agree }),
+                json!({
+                    "vectors": n,
+                    "agree": agree,
+                    "ordinary_quota_outcomes": quota,
+                    "session_restarts_after_ordinary_quota": run.restarts,
+                }),
             );
         }
         l1_record = serde_json::Value::Object(modes);
@@ -413,10 +425,44 @@ pub fn campaign(cfg: &Config) -> Result<serde_json::Value, String> {
     Ok(json!({
         "named": named,
         "i4_transition": transition,
+        "l1_totals": l1_totals(named.iter().chain(&random_records)),
         "random": random_records,
         "mismatches": t.mismatches,
         "agree": t.mismatches.is_empty(),
     }))
+}
+
+/// Sums the per-graph L1 records per `--opt` mode.
+fn l1_totals<'a>(records: impl Iterator<Item = &'a serde_json::Value>) -> serde_json::Value {
+    let mut sums = [[0u64; 5]; 2];
+    for r in records {
+        for (m, opt) in [Opt::Off, Opt::On].iter().enumerate() {
+            let mode = &r["l1"][opt.flag()];
+            if mode.is_null() {
+                continue;
+            }
+            let quota = mode["ordinary_quota_outcomes"]
+                .as_array()
+                .map_or(0, Vec::len) as u64;
+            sums[m][0] += 1;
+            sums[m][1] += mode["vectors"].as_u64().unwrap_or(0);
+            sums[m][2] += mode["agree"].as_u64().unwrap_or(0);
+            sums[m][3] += quota;
+            sums[m][4] += mode["session_restarts_after_ordinary_quota"]
+                .as_u64()
+                .unwrap_or(0);
+        }
+    }
+    let row = |s: [u64; 5]| {
+        json!({
+            "graphs": s[0],
+            "vectors": s[1],
+            "agree": s[2],
+            "ordinary_quota_outcomes": s[3],
+            "session_restarts_after_ordinary_quota": s[4],
+        })
+    };
+    json!({ "off": row(sums[0]), "on": row(sums[1]) })
 }
 
 /// I4 as a host-driven transition for `transition_steps` steps.
@@ -476,11 +522,11 @@ fn transition(
         let host: Vec<Vec<l1::Value>> = steps.iter().map(|s| l1_values(&i64s(s))).collect();
         let mut modes = serde_json::Map::new();
         for opt in [Opt::Off, Opt::On] {
-            let out = Cli::new(bin.clone(), opt)
+            let run = Cli::new(bin.clone(), opt)
                 .run_transition(&[], &lowered.root, 2, &[l1::Value::I64(s0)], &host)
                 .map_err(|e| format!("I4 L1 {}: {e}", opt.flag()))?;
             let mut agree = 0usize;
-            for (j, o) in out.iter().enumerate() {
+            for (j, o) in run.results.iter().enumerate() {
                 let ok = *o == l1_values(&l3_steps[j]);
                 t.check(
                     || format!("I4 step {j}: L1 --opt {} {o:?} ≢ L3", opt.flag()),
@@ -490,7 +536,7 @@ fn transition(
             }
             modes.insert(
                 opt.flag().to_owned(),
-                json!({ "steps": out.len(), "agree": agree }),
+                json!({ "steps": run.results.len(), "agree": agree, "session_restarts_after_ordinary_quota": run.restarts }),
             );
         }
         l1_record = serde_json::Value::Object(modes);
