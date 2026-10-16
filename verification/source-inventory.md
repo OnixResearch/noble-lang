@@ -774,6 +774,35 @@ test-only paths and 80 macro origins. The pure comparator over the same
 collection returns `valid=true`. The architecture-phase blocker described
 above still applies, so the flake `source-coverage` check remains open.
 
+### Numeric graph experiment renewal (issue #14, 2026-10-15)
+
+Issue #14 adds the workspace member `noble-ngraph-experiment`, an isolated
+Phase B/C measurement harness outside the ordinary compiler path. Octet
+collects only policy production packages. Without a policy change, a
+collection of the merged source still selected five packages and 58 units,
+so none of the crate's code was inventoried. `20067cb` therefore makes it a
+production composition root, because the architecture policy has no
+non-production package role. The commit also reviews its five dependency
+edges here: `blake3`, `noble-contracts`, `noble-kernel`, `rustc_apfloat` and
+`serde_json`, all `normal`. It raises unit capacity from 58 to 78: the lib,
+its test unit, four bins, their four test units and ten integration tests.
+
+A complete 78/78-unit collection of `20067cb` observed 11,774 production
+item facts. The same renewal tool kept all 9,063 reviewed paths, removed
+none, and added 2,432 new paths, all in `noble-ngraph-experiment`: 897 OPEN
+bodies, 779 generated and 756 structural. No existing classification
+changed. The 366 new test-only paths all come from the crate's integration
+tests and its test-mode units. The five new macro origins are
+`std::cmp::Ord`, `std::cmp::PartialOrd`, `std::hash::Hash`, `std::print`
+and `std::write`.
+
+The renewed policy has 11,495 paths (5,435 OPEN bodies, 3,430 generated,
+2,630 structural), 3,127 test-only paths, 85 macro origins and 19 dependency
+edges. The pure comparator over the same collection returns `valid=true`.
+The crate adds 842 of the architecture phase's 3,545
+`required-compiler-unknown` findings, so the flake `source-coverage` check
+remains open on the same blocker.
+
 ## Classification
 
 Each compiler-derived production subject is reviewed as one of three categories.
