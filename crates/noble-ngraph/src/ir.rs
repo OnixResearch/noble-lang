@@ -12,7 +12,7 @@
 
 use crate::diag::{Diagnostic, Malformed, Site};
 use crate::identity::{IdentityHasher, IdentityScheme};
-use alloc::{boxed::Box, format, string::String, vec, vec::Vec};
+use alloc::{boxed::Box, format, string::String, vec::Vec};
 
 /// IR version tag (D2).
 pub const IR_VERSION: &str = "ngraph-ir/0";
@@ -376,37 +376,46 @@ impl Op {
     /// Value operands in canonical order (affine `One` operands omitted).
     #[must_use]
     pub fn operands(&self) -> Vec<NodeId> {
+        let capacity = match self {
+            Self::Input(_) | Self::Param(_) | Self::Const(_) => 0,
+            Self::F32Affine { terms, .. } => terms.len(),
+            Self::F32Index { table, .. } => table.len() + 1,
+            Self::Guard { fact: Fact::OneHot { group, .. }, .. } => group.len() + 1,
+            _ => 3,
+        };
+        let mut operands = Vec::with_capacity(capacity);
+        self.visit_operands(|n| operands.push(n));
+        operands
+    }
+
+    /// Visits value operands in canonical order without allocating.
+    pub(crate) fn visit_operands(&self, mut visit: impl FnMut(NodeId)) {
         match self {
-            Self::Input(_) | Self::Param(_) | Self::Const(_) => Vec::new(),
+            Self::Input(_) | Self::Param(_) | Self::Const(_) => {}
             Self::I64Add(a, b)
             | Self::I64Sub(a, b)
             | Self::I64Mul(a, b)
             | Self::I64Eq(a, b)
             | Self::F32Add(a, b)
             | Self::F32Sub(a, b)
-            | Self::F32Mul(a, b) => vec![*a, *b],
-            Self::F32Affine { terms, .. } => terms
-                .iter()
-                .filter_map(|t| match t.operand {
-                    AffineOperand::One => None,
-                    AffineOperand::Node(n) => Some(n),
-                })
-                .collect(),
-            Self::F32Relu(x) | Self::F32Step(x) => vec![*x],
-            Self::F32Reglu { left, gate } => vec![*left, *gate],
-            Self::F32Select { bit, off, on } => vec![*bit, *off, *on],
+            | Self::F32Mul(a, b) => { visit(*a); visit(*b); }
+            Self::F32Affine { terms, .. } => {
+                for term in terms {
+                    if let AffineOperand::Node(n) = term.operand { visit(n); }
+                }
+            }
+            Self::F32Relu(x) | Self::F32Step(x) => visit(*x),
+            Self::F32Reglu { left, gate } => { visit(*left); visit(*gate); }
+            Self::F32Select { bit, off, on } => { visit(*bit); visit(*off); visit(*on); }
             Self::F32Index { index, table, .. } => {
-                let mut v = Vec::with_capacity(table.len() + 1);
-                v.push(*index);
-                v.extend_from_slice(table);
-                v
+                visit(*index);
+                for &n in table { visit(n); }
             }
             Self::Guard { value, fact } => {
-                let mut v = vec![*value];
+                visit(*value);
                 if let Fact::OneHot { group, .. } = fact {
-                    v.extend(group.iter().copied().filter(|g| g != value));
+                    for &n in group { if n != *value { visit(n); } }
                 }
-                v
             }
         }
     }

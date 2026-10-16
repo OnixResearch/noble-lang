@@ -145,10 +145,13 @@ pub fn admit(model: &CheckedGraph, params: &[u32], opts: &DerivOptions) -> Resul
     let n = g.nodes.len();
     let mut dep = vec![false; n];
     for (i, node) in g.nodes.iter().enumerate() {
-        dep[i] = match node.op {
-            Op::Param(k) => params.contains(&k),
-            _ => node.op.operands().iter().any(|o| dep[o.index()]),
-        };
+        let mut depends = false;
+        if let Op::Param(k) = node.op {
+            depends = params.contains(&k);
+        } else {
+            node.op.visit_operands(|o| depends |= dep[o.index()]);
+        }
+        dep[i] = depends;
     }
     let mut reaches = vec![false; n];
     for o in &g.outputs {
@@ -156,9 +159,7 @@ pub fn admit(model: &CheckedGraph, params: &[u32], opts: &DerivOptions) -> Resul
     }
     for i in (0..n).rev() {
         if reaches[i] && !g.nodes[i].op.is_guard() {
-            for o in g.nodes[i].op.operands() {
-                reaches[o.index()] = true;
-            }
+            g.nodes[i].op.visit_operands(|o| reaches[o.index()] = true);
         }
     }
     for (i, node) in g.nodes.iter().enumerate() {

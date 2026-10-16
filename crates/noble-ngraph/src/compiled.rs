@@ -45,8 +45,6 @@ enum F {
     Index {
         d: u32,
         i: u32,
-        start: u32,
-        end: u32,
         below: OutOfRange,
         above: OutOfRange,
         node: u32,
@@ -192,15 +190,10 @@ impl Compiled {
                 }),
                 Op::F32Index {
                     index,
-                    table,
                     below,
                     above,
+                    ..
                 } => {
-                    let start = src.len() as u32;
-                    for t in table {
-                        coef.push(0.0);
-                        src.push(r(t));
-                    }
                     if *below == OutOfRange::Refuse || *above == OutOfRange::Refuse {
                         let m = &mut fail_min_at_layer[l as usize];
                         *m = (*m).min(i);
@@ -208,8 +201,6 @@ impl Compiled {
                     fins.push(F::Index {
                         d,
                         i: r(index),
-                        start,
-                        end: src.len() as u32,
                         below: *below,
                         above: *above,
                         node: i,
@@ -497,15 +488,20 @@ impl Compiled {
                 F::Index {
                     d,
                     i,
-                    start,
-                    end,
                     below,
                     above,
                     node,
                 } => {
-                    let len = (end - start) as usize;
+                    // The checked graph already retains this exact ordered
+                    // table. Only the selected operand needs a register lookup.
+                    let Op::F32Index { table, .. } =
+                        &self.checked.graph().nodes[node as usize].op
+                    else {
+                        unreachable!("compiled index comes from a checked index node");
+                    };
+                    let len = table.len();
                     match sem::index_position(rf[i as usize], len, below, above) {
-                        Ok(Some(k)) => rf[d as usize] = rf[src[start as usize + k] as usize],
+                        Ok(Some(k)) => rf[d as usize] = rf[self.reg[table[k].index()] as usize],
                         Ok(None) => rf[d as usize] = 0.0,
                         Err(sem::IndexRefused) => note(node, eval::index_refusal_fact(len)),
                     }
