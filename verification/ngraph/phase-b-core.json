@@ -1,0 +1,1478 @@
+{
+  "schema": "noble-ngraph-phase-b-core-evidence/v1",
+  "issue": "OnixResearch/noble-lang#14",
+  "change": ".cairn/changes/numeric-graph-profile",
+  "scope": "Phase B core legs: authored F32 IR (B0(b)), graph checker, L2/B2-ORACLE/L3/L4, B3 core controls, B4, B5, B6. I64 extraction, L1 Wasm/V8 and the BigInt oracle are the extraction leg's evidence.",
+  "non_claims": [
+    "Finite tests and evaluator agreement do not prove the compiler, the graph checker (NG-PO-B) or the evaluators (NG-PO-C) correct.",
+    "NG-PO-A..H remain open; no obligation is added to obligations.json.",
+    "No performance claim (Phase C)."
+  ],
+  "run": {
+    "source_revision": "f5b9ce5180350796dc11474b3007b003b90c40de",
+    "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "crate": "noble-ngraph-experiment 0.0.0",
+    "profiles": "ngraph-ir/0; ngraph-i64/0 + ngraph-f32/0; ngraph-sem/0; ngraph-facts/0; ngraph-layered/0",
+    "oracle": "rustc_apfloat =0.2.3+llvm-462a31f5a5ab (ieee::Single, NearestTiesToEven)",
+    "prng": "splitmix64/0",
+    "target": "x86_64-linux",
+    "optimization_mode": "release (overflow-checks=true, panic=unwind per workspace profile)",
+    "cpu": "AMD RYZEN AI MAX+ 395 w/ Radeon 8060S",
+    "logical_cpus": 32,
+    "load_average_at_start": "4.72 5.12 5.72 4/3681 2953917",
+    "workload": "B1 F1-F3; B2 vectors + 8 random graphs x 20000 vectors (48 ops) + 1000000 op pairs; B3 core controls; B4 2000 gradient samples; B5 500 steps; B6 cleanup matrix",
+    "resource_limits": "/0 defaults: live nodes 262144, layers 16384, affine terms 4096, table 65536 / 1048576, facts 262144, graph bytes 33554432, snapshot bytes 4194304, forward scratch 67108864, backward scratch 134217728, optimizer steps 1000000",
+    "wasm_features": {
+      "gc": "not-applicable: CPU-only Rust legs; no Wasm executed by this harness",
+      "function_references": "not-applicable",
+      "multi_value": "not-applicable",
+      "tail_call": "not-applicable",
+      "component_model": "not-applicable"
+    },
+    "instrumentation": "scratch-lease counters (crate); wall-clock seconds via std::time::Instant; no hardware counters (unsupported, not zero)",
+    "load_average_at_end": "4.66 5.10 5.71 6/3680 2954024",
+    "wall_seconds": 0.655654089
+  },
+  "record_count": 8,
+  "records": [
+    {
+      "id": "B1-core F1-F3",
+      "requirements": [
+        "NGRAPH-EXTRACT-01",
+        "NGRAPH-F32-01"
+      ],
+      "claim": "F1 (2-3-1 ReGLU), F2 (transition, 1,000 host steps) and F3 (index over [a,a,b,-0], every rule pair) are admitted by the graph checker and evaluate identically on L2/B2-ORACLE/L3/L4",
+      "implementation": "implemented",
+      "execution": "passed",
+      "proof": "open",
+      "open_obligations": [
+        "NG-PO-B",
+        "NG-PO-C",
+        "NG-PO-D"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "rustc/LLVM codegen of the pinned nightly toolchain (no contraction; IEEE binary32 SSE arithmetic on x86_64)",
+        "host CPU IEEE 754 behaviour (no FTZ/DAZ set by this process)",
+        "rustc_apfloat =0.2.3+llvm-462a31f5a5ab as the independent binary32 oracle (L2)",
+        "blake3 =1.8.7 (pure) for identities: a hash identifies bytes, it proves nothing",
+        "this crate's checker, evaluators and trainer (NG-PO-B/C/E/F/G open)"
+      ],
+      "evidence": {
+        "kind": "test",
+        "subject": "B1-core F1-F3",
+        "revision": "f5b9ce5180350796dc11474b3007b003b90c40de",
+        "configuration": "see run.config (BE-CONFIG-01)",
+        "claim": "F1 (2-3-1 ReGLU), F2 (transition, 1,000 host steps) and F3 (index over [a,a,b,-0], every rule pair) are admitted by the graph checker and evaluate identically on L2/B2-ORACLE/L3/L4",
+        "assumptions": [
+          "F32 graphs are authored IR (no source extraction under B0(b)); I1-I4 are the extraction leg's records"
+        ],
+        "result": {
+          "authoring": "B0(b): F32 graphs authored directly in ngraph-ir/0; checked only by the graph checker",
+          "graphs": [
+            {
+              "name": "F1 2-3-1 ReGLU (22 params)",
+              "graph_logical_id": "6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661",
+              "nodes": 57,
+              "layers": 9,
+              "ir_text_blake3": "385d5f28e2da70d2eabcdc9fd6372ccc1c42c9117d7d38da9950e6d5846253ab"
+            },
+            {
+              "name": "F2 transition (4 params)",
+              "graph_logical_id": "66784231cce52b3e97027e221d3e2aad4d91f9d8871169700e1c3f5a896d5b51",
+              "nodes": 12,
+              "layers": 3,
+              "ir_text_blake3": "3850ca1772f8c97171dce8deed730965ea68257c9702bf81281f89017a0be959"
+            },
+            {
+              "name": "MSE point loss",
+              "graph_logical_id": "50f67078a67012ca5914d95c1615946a8230bb591be056b6fb10a0c1c9ad69c0",
+              "nodes": 4,
+              "layers": 3,
+              "ir_text_blake3": "4f6b6af921983e6d4f6089570e2207ea7a2e04802edcc5ce36c43559487f74aa"
+            }
+          ],
+          "f1_fixed_params_on_(0.5,-0.25)": "Normal[f32:0x3e1b0000]",
+          "f2_state_after_1000_host_steps": "[0xffc00000, 0xffc00000]",
+          "f3": [
+            {
+              "below": "refuse",
+              "above": "refuse",
+              "table": "[a, a, b, -0] with a=2.5, b=-7",
+              "observations": [
+                "i=-1: GuardFailed(%4,range)",
+                "i=0: Normal[f32:0x40200000]",
+                "i=1: Normal[f32:0x40200000]",
+                "i=2: Normal[f32:0xc0e00000]",
+                "i=3: Normal[f32:0x80000000]",
+                "i=4: GuardFailed(%4,range)"
+              ]
+            },
+            {
+              "below": "refuse",
+              "above": "clamp",
+              "table": "[a, a, b, -0] with a=2.5, b=-7",
+              "observations": [
+                "i=-1: GuardFailed(%4,range)",
+                "i=0: Normal[f32:0x40200000]",
+                "i=1: Normal[f32:0x40200000]",
+                "i=2: Normal[f32:0xc0e00000]",
+                "i=3: Normal[f32:0x80000000]",
+                "i=4: Normal[f32:0x80000000]"
+              ]
+            },
+            {
+              "below": "refuse",
+              "above": "zero",
+              "table": "[a, a, b, -0] with a=2.5, b=-7",
+              "observations": [
+                "i=-1: GuardFailed(%4,range)",
+                "i=0: Normal[f32:0x40200000]",
+                "i=1: Normal[f32:0x40200000]",
+                "i=2: Normal[f32:0xc0e00000]",
+                "i=3: Normal[f32:0x80000000]",
+                "i=4: Normal[f32:0x00000000]"
+              ]
+            },
+            {
+              "below": "clamp",
+              "above": "refuse",
+              "table": "[a, a, b, -0] with a=2.5, b=-7",
+              "observations": [
+                "i=-1: Normal[f32:0x40200000]",
+                "i=0: Normal[f32:0x40200000]",
+                "i=1: Normal[f32:0x40200000]",
+                "i=2: Normal[f32:0xc0e00000]",
+                "i=3: Normal[f32:0x80000000]",
+                "i=4: GuardFailed(%4,range)"
+              ]
+            },
+            {
+              "below": "clamp",
+              "above": "clamp",
+              "table": "[a, a, b, -0] with a=2.5, b=-7",
+              "observations": [
+                "i=-1: Normal[f32:0x40200000]",
+                "i=0: Normal[f32:0x40200000]",
+                "i=1: Normal[f32:0x40200000]",
+                "i=2: Normal[f32:0xc0e00000]",
+                "i=3: Normal[f32:0x80000000]",
+                "i=4: Normal[f32:0x80000000]"
+              ]
+            },
+            {
+              "below": "clamp",
+              "above": "zero",
+              "table": "[a, a, b, -0] with a=2.5, b=-7",
+              "observations": [
+                "i=-1: Normal[f32:0x40200000]",
+                "i=0: Normal[f32:0x40200000]",
+                "i=1: Normal[f32:0x40200000]",
+                "i=2: Normal[f32:0xc0e00000]",
+                "i=3: Normal[f32:0x80000000]",
+                "i=4: Normal[f32:0x00000000]"
+              ]
+            },
+            {
+              "below": "zero",
+              "above": "refuse",
+              "table": "[a, a, b, -0] with a=2.5, b=-7",
+              "observations": [
+                "i=-1: Normal[f32:0x00000000]",
+                "i=0: Normal[f32:0x40200000]",
+                "i=1: Normal[f32:0x40200000]",
+                "i=2: Normal[f32:0xc0e00000]",
+                "i=3: Normal[f32:0x80000000]",
+                "i=4: GuardFailed(%4,range)"
+              ]
+            },
+            {
+              "below": "zero",
+              "above": "clamp",
+              "table": "[a, a, b, -0] with a=2.5, b=-7",
+              "observations": [
+                "i=-1: Normal[f32:0x00000000]",
+                "i=0: Normal[f32:0x40200000]",
+                "i=1: Normal[f32:0x40200000]",
+                "i=2: Normal[f32:0xc0e00000]",
+                "i=3: Normal[f32:0x80000000]",
+                "i=4: Normal[f32:0x80000000]"
+              ]
+            },
+            {
+              "below": "zero",
+              "above": "zero",
+              "table": "[a, a, b, -0] with a=2.5, b=-7",
+              "observations": [
+                "i=-1: Normal[f32:0x00000000]",
+                "i=0: Normal[f32:0x40200000]",
+                "i=1: Normal[f32:0x40200000]",
+                "i=2: Normal[f32:0xc0e00000]",
+                "i=3: Normal[f32:0x80000000]",
+                "i=4: Normal[f32:0x00000000]"
+              ]
+            }
+          ],
+          "all_legs_agree": true
+        }
+      }
+    },
+    {
+      "id": "B2-core boundary vectors",
+      "requirements": [
+        "NGRAPH-F32-01"
+      ],
+      "claim": "L2 (rustc_apfloat), B2-ORACLE (binary64 per op), L3 and L4 agree under ≡obs with the expected bits on the reassociation, FMA, signed-zero, nonfinite, subnormal, repeated-read and boundary-index vectors; simulated FTZ and fused evaluation are detected",
+      "implementation": "implemented",
+      "execution": "passed",
+      "proof": "open",
+      "open_obligations": [
+        "NG-PO-C",
+        "NG-PO-D"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "rustc/LLVM codegen of the pinned nightly toolchain (no contraction; IEEE binary32 SSE arithmetic on x86_64)",
+        "host CPU IEEE 754 behaviour (no FTZ/DAZ set by this process)",
+        "rustc_apfloat =0.2.3+llvm-462a31f5a5ab as the independent binary32 oracle (L2)",
+        "blake3 =1.8.7 (pure) for identities: a hash identifies bytes, it proves nothing",
+        "this crate's checker, evaluators and trainer (NG-PO-B/C/E/F/G open)"
+      ],
+      "evidence": {
+        "kind": "test",
+        "subject": "B2-core boundary vectors",
+        "revision": "f5b9ce5180350796dc11474b3007b003b90c40de",
+        "configuration": "see run.config (BE-CONFIG-01)",
+        "claim": "L2 (rustc_apfloat), B2-ORACLE (binary64 per op), L3 and L4 agree under ≡obs with the expected bits on the reassociation, FMA, signed-zero, nonfinite, subnormal, repeated-read and boundary-index vectors; simulated FTZ and fused evaluation are detected",
+        "assumptions": [
+          "≡obs: bitwise binary32 with one NaN class",
+          "FTZ and FMA are simulated (no unsafe MXCSR access); the vectors detect them"
+        ],
+        "result": {
+          "vectors": [
+            {
+              "name": "reassociation: affine(-0; 2^24·x, 1·y, 1·z) = 2^24 (not 2^24+2)",
+              "expected": "Normal[f32:0x4b800000]",
+              "l2_apfloat": "Normal[f32:0x4b800000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x4b800000]",
+              "l3_reference": "Normal[f32:0x4b800000]",
+              "l4_compiled": "Normal[f32:0x4b800000]",
+              "passed": true
+            },
+            {
+              "name": "reassociation (constant-one operands): affine(-0; 2^24·1, 1·1, 1·1) = 2^24",
+              "expected": "Normal[f32:0x4b800000]",
+              "l2_apfloat": "Normal[f32:0x4b800000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x4b800000]",
+              "l3_reference": "Normal[f32:0x4b800000]",
+              "l4_compiled": "Normal[f32:0x4b800000]",
+              "passed": true
+            },
+            {
+              "name": "FMA detection: rn(rn(a·b)+c) = +0 with a=b=1+2^-12, c=-(1+2^-11) (fused: 2^-24)",
+              "expected": "Normal[f32:0x00000000]",
+              "l2_apfloat": "Normal[f32:0x00000000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x00000000]",
+              "l3_reference": "Normal[f32:0x00000000]",
+              "l4_compiled": "Normal[f32:0x00000000]",
+              "passed": true
+            },
+            {
+              "name": "FMA detection in affine: affine(c; a·b) = +0",
+              "expected": "Normal[f32:0x00000000]",
+              "l2_apfloat": "Normal[f32:0x00000000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x00000000]",
+              "l3_reference": "Normal[f32:0x00000000]",
+              "l4_compiled": "Normal[f32:0x00000000]",
+              "passed": true
+            },
+            {
+              "name": "signed zero: lone -0 term in a bias-free sum stays -0",
+              "expected": "Normal[f32:0x80000000]",
+              "l2_apfloat": "Normal[f32:0x80000000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x80000000]",
+              "l3_reference": "Normal[f32:0x80000000]",
+              "l4_compiled": "Normal[f32:0x80000000]",
+              "passed": true
+            },
+            {
+              "name": "signed zero: relu(-0) = +0",
+              "expected": "Normal[f32:0x00000000]",
+              "l2_apfloat": "Normal[f32:0x00000000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x00000000]",
+              "l3_reference": "Normal[f32:0x00000000]",
+              "l4_compiled": "Normal[f32:0x00000000]",
+              "passed": true
+            },
+            {
+              "name": "signed zero: reglu(-1, 0) = -0",
+              "expected": "Normal[f32:0x80000000]",
+              "l2_apfloat": "Normal[f32:0x80000000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x80000000]",
+              "l3_reference": "Normal[f32:0x80000000]",
+              "l4_compiled": "Normal[f32:0x80000000]",
+              "passed": true
+            },
+            {
+              "name": "signed zero: select returns a -0 operand bitwise",
+              "expected": "Normal[f32:0x80000000]",
+              "l2_apfloat": "Normal[f32:0x80000000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x80000000]",
+              "l3_reference": "Normal[f32:0x80000000]",
+              "l4_compiled": "Normal[f32:0x80000000]",
+              "passed": true
+            },
+            {
+              "name": "nonfinite: 2^127·2 = +inf",
+              "expected": "Normal[f32:0x7f800000]",
+              "l2_apfloat": "Normal[f32:0x7f800000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x7f800000]",
+              "l3_reference": "Normal[f32:0x7f800000]",
+              "l4_compiled": "Normal[f32:0x7f800000]",
+              "passed": true
+            },
+            {
+              "name": "nonfinite: reglu(inf, 0) = NaN (class)",
+              "expected": "Normal[f32:0x7fc00000]",
+              "l2_apfloat": "Normal[f32:0x7fc00000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0xffc00000]",
+              "l3_reference": "Normal[f32:0xffc00000]",
+              "l4_compiled": "Normal[f32:0xffc00000]",
+              "passed": true
+            },
+            {
+              "name": "nonfinite: a NaN candidate passes through index",
+              "expected": "Normal[f32:0x7fc00000]",
+              "l2_apfloat": "Normal[f32:0x7fc00000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x7fc00000]",
+              "l3_reference": "Normal[f32:0x7fc00000]",
+              "l4_compiled": "Normal[f32:0x7fc00000]",
+              "passed": true
+            },
+            {
+              "name": "subnormal: 2^-126 · 0.5 = 2^-127 (no flush to zero)",
+              "expected": "Normal[f32:0x00400000]",
+              "l2_apfloat": "Normal[f32:0x00400000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x00400000]",
+              "l3_reference": "Normal[f32:0x00400000]",
+              "l4_compiled": "Normal[f32:0x00400000]",
+              "passed": true
+            },
+            {
+              "name": "subnormal: 2^-149 + 2^-149 = 2^-148",
+              "expected": "Normal[f32:0x00000002]",
+              "l2_apfloat": "Normal[f32:0x00000002]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x00000002]",
+              "l3_reference": "Normal[f32:0x00000002]",
+              "l4_compiled": "Normal[f32:0x00000002]",
+              "passed": true
+            },
+            {
+              "name": "repeated reads: index(1,[a,a,b]) + index(0,[a,a,b]) = 2a",
+              "expected": "Normal[f32:0x40400000]",
+              "l2_apfloat": "Normal[f32:0x40400000]",
+              "b2_oracle_f64_per_op": "Normal[f32:0x40400000]",
+              "l3_reference": "Normal[f32:0x40400000]",
+              "l4_compiled": "Normal[f32:0x40400000]",
+              "passed": true
+            }
+          ],
+          "index_boundaries": [
+            "refuse/refuse i=-16777215: GuardFailed(%4,range)",
+            "refuse/refuse i=-1: GuardFailed(%4,range)",
+            "refuse/refuse i=0: Normal[f32:0x40200000]",
+            "refuse/refuse i=3: Normal[f32:0x80000000]",
+            "refuse/refuse i=4: GuardFailed(%4,range)",
+            "refuse/refuse i=16777215: GuardFailed(%4,range)",
+            "refuse/clamp i=-16777215: GuardFailed(%4,range)",
+            "refuse/clamp i=-1: GuardFailed(%4,range)",
+            "refuse/clamp i=0: Normal[f32:0x40200000]",
+            "refuse/clamp i=3: Normal[f32:0x80000000]",
+            "refuse/clamp i=4: Normal[f32:0x80000000]",
+            "refuse/clamp i=16777215: Normal[f32:0x80000000]",
+            "refuse/zero i=-16777215: GuardFailed(%4,range)",
+            "refuse/zero i=-1: GuardFailed(%4,range)",
+            "refuse/zero i=0: Normal[f32:0x40200000]",
+            "refuse/zero i=3: Normal[f32:0x80000000]",
+            "refuse/zero i=4: Normal[f32:0x00000000]",
+            "refuse/zero i=16777215: Normal[f32:0x00000000]",
+            "clamp/refuse i=-16777215: Normal[f32:0x40200000]",
+            "clamp/refuse i=-1: Normal[f32:0x40200000]",
+            "clamp/refuse i=0: Normal[f32:0x40200000]",
+            "clamp/refuse i=3: Normal[f32:0x80000000]",
+            "clamp/refuse i=4: GuardFailed(%4,range)",
+            "clamp/refuse i=16777215: GuardFailed(%4,range)",
+            "clamp/clamp i=-16777215: Normal[f32:0x40200000]",
+            "clamp/clamp i=-1: Normal[f32:0x40200000]",
+            "clamp/clamp i=0: Normal[f32:0x40200000]",
+            "clamp/clamp i=3: Normal[f32:0x80000000]",
+            "clamp/clamp i=4: Normal[f32:0x80000000]",
+            "clamp/clamp i=16777215: Normal[f32:0x80000000]",
+            "clamp/zero i=-16777215: Normal[f32:0x40200000]",
+            "clamp/zero i=-1: Normal[f32:0x40200000]",
+            "clamp/zero i=0: Normal[f32:0x40200000]",
+            "clamp/zero i=3: Normal[f32:0x80000000]",
+            "clamp/zero i=4: Normal[f32:0x00000000]",
+            "clamp/zero i=16777215: Normal[f32:0x00000000]",
+            "zero/refuse i=-16777215: Normal[f32:0x00000000]",
+            "zero/refuse i=-1: Normal[f32:0x00000000]",
+            "zero/refuse i=0: Normal[f32:0x40200000]",
+            "zero/refuse i=3: Normal[f32:0x80000000]",
+            "zero/refuse i=4: GuardFailed(%4,range)",
+            "zero/refuse i=16777215: GuardFailed(%4,range)",
+            "zero/clamp i=-16777215: Normal[f32:0x00000000]",
+            "zero/clamp i=-1: Normal[f32:0x00000000]",
+            "zero/clamp i=0: Normal[f32:0x40200000]",
+            "zero/clamp i=3: Normal[f32:0x80000000]",
+            "zero/clamp i=4: Normal[f32:0x80000000]",
+            "zero/clamp i=16777215: Normal[f32:0x80000000]",
+            "zero/zero i=-16777215: Normal[f32:0x00000000]",
+            "zero/zero i=-1: Normal[f32:0x00000000]",
+            "zero/zero i=0: Normal[f32:0x40200000]",
+            "zero/zero i=3: Normal[f32:0x80000000]",
+            "zero/zero i=4: Normal[f32:0x00000000]",
+            "zero/zero i=16777215: Normal[f32:0x00000000]"
+          ],
+          "simulated_ftz_result_for_2^-126*0.5": "0x00000000 (conforming: 0x00400000)",
+          "fused_result_for_fma_vector": "0x33800000 (conforming unfused: 0x00000000)"
+        }
+      }
+    },
+    {
+      "id": "B2-ORACLE double rounding",
+      "requirements": [
+        "NGRAPH-F32-01"
+      ],
+      "claim": "For random binary32 operand pairs, rn32(x op64 y) equals the rustc_apfloat binary32 result and the host binary32 result for +, -, × (the D3 double-rounding inference, checked on finite samples)",
+      "implementation": "implemented",
+      "execution": "passed",
+      "proof": "open",
+      "open_obligations": [
+        "NG-PO-D"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "rustc/LLVM codegen of the pinned nightly toolchain (no contraction; IEEE binary32 SSE arithmetic on x86_64)",
+        "host CPU IEEE 754 behaviour (no FTZ/DAZ set by this process)",
+        "rustc_apfloat =0.2.3+llvm-462a31f5a5ab as the independent binary32 oracle (L2)",
+        "blake3 =1.8.7 (pure) for identities: a hash identifies bytes, it proves nothing",
+        "this crate's checker, evaluators and trainer (NG-PO-B/C/E/F/G open)"
+      ],
+      "evidence": {
+        "kind": "test",
+        "subject": "B2-ORACLE double rounding",
+        "revision": "f5b9ce5180350796dc11474b3007b003b90c40de",
+        "configuration": "see run.config (BE-CONFIG-01)",
+        "claim": "For random binary32 operand pairs, rn32(x op64 y) equals the rustc_apfloat binary32 result and the host binary32 result for +, -, × (the D3 double-rounding inference, checked on finite samples)",
+        "assumptions": [
+          "operands: 20% specials, 30% raw bit patterns, 50% moderate values (splitmix64/0, seed 0xd0b1e0000014)",
+          "a finite sample is not a proof of the inference"
+        ],
+        "result": {
+          "pairs_per_operation": 1000000,
+          "mismatches_add_sub_mul": [
+            0,
+            0,
+            0
+          ],
+          "seconds": 0.188779211
+        }
+      }
+    },
+    {
+      "id": "B2-core seeded random F32 graphs",
+      "requirements": [
+        "NGRAPH-F32-01"
+      ],
+      "claim": "Seeded random ngraph-f32/0 graphs (all whitelist nodes incl. guards, step, select, index under every rule) agree on L2/B2-ORACLE/L3/L4 under ≡obs for ≥10,000 input vectors each, including Normal, GuardFailed and E-FACT-INPUT observations",
+      "implementation": "implemented",
+      "execution": "passed",
+      "proof": "open",
+      "open_obligations": [
+        "NG-PO-B",
+        "NG-PO-C",
+        "NG-PO-D"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "rustc/LLVM codegen of the pinned nightly toolchain (no contraction; IEEE binary32 SSE arithmetic on x86_64)",
+        "host CPU IEEE 754 behaviour (no FTZ/DAZ set by this process)",
+        "rustc_apfloat =0.2.3+llvm-462a31f5a5ab as the independent binary32 oracle (L2)",
+        "blake3 =1.8.7 (pure) for identities: a hash identifies bytes, it proves nothing",
+        "this crate's checker, evaluators and trainer (NG-PO-B/C/E/F/G open)"
+      ],
+      "evidence": {
+        "kind": "test",
+        "subject": "B2-core seeded random F32 graphs",
+        "revision": "f5b9ce5180350796dc11474b3007b003b90c40de",
+        "configuration": "see run.config (BE-CONFIG-01)",
+        "claim": "Seeded random ngraph-f32/0 graphs (all whitelist nodes incl. guards, step, select, index under every rule) agree on L2/B2-ORACLE/L3/L4 under ≡obs for ≥10,000 input vectors each, including Normal, GuardFailed and E-FACT-INPUT observations",
+        "assumptions": [
+          "generator and inputs: splitmix64/0, seeds recorded per graph",
+          "finite coverage only"
+        ],
+        "result": {
+          "campaigns": [
+            {
+              "graph_seed": 1,
+              "input_seed": 6840123409045651457,
+              "ops_requested": 48,
+              "nodes": 57,
+              "layers": 8,
+              "graph_logical_id": "934a9b860da1c88e4a929e41825556ee2fdd075284efad877d41f79be2b9d5c2",
+              "vectors": 20000,
+              "normal": 4734,
+              "guard_failed": 10527,
+              "refused_input_fact": 4739,
+              "nan_outputs": 2136,
+              "signed_zero_outputs": 13923,
+              "subnormal_outputs": 158,
+              "infinite_outputs": 3247,
+              "disagreements": 0,
+              "first_disagreement": null,
+              "checker_refusal": null
+            },
+            {
+              "graph_seed": 2,
+              "input_seed": 6840123409045651458,
+              "ops_requested": 48,
+              "nodes": 55,
+              "layers": 9,
+              "graph_logical_id": "bf9707d0905ec9f9897bf526fa370a1dceeb2d2026dbddf7377666b14ff906ce",
+              "vectors": 20000,
+              "normal": 9568,
+              "guard_failed": 5758,
+              "refused_input_fact": 4674,
+              "nan_outputs": 16991,
+              "signed_zero_outputs": 32613,
+              "subnormal_outputs": 8968,
+              "infinite_outputs": 12119,
+              "disagreements": 0,
+              "first_disagreement": null,
+              "checker_refusal": null
+            },
+            {
+              "graph_seed": 3,
+              "input_seed": 6840123409045651459,
+              "ops_requested": 48,
+              "nodes": 55,
+              "layers": 8,
+              "graph_logical_id": "cc3009ae40f65cb5134c89a8ba603d3c1cbb55b678d9682e9d2787beb184c08d",
+              "vectors": 20000,
+              "normal": 1158,
+              "guard_failed": 14132,
+              "refused_input_fact": 4710,
+              "nan_outputs": 1415,
+              "signed_zero_outputs": 5293,
+              "subnormal_outputs": 190,
+              "infinite_outputs": 1482,
+              "disagreements": 0,
+              "first_disagreement": null,
+              "checker_refusal": null
+            },
+            {
+              "graph_seed": 4,
+              "input_seed": 6840123409045651460,
+              "ops_requested": 48,
+              "nodes": 55,
+              "layers": 8,
+              "graph_logical_id": "946c472aaa65172ca80291cc5aa21f4d577c779bcb61f44c23d9519fc07a4889",
+              "vectors": 20000,
+              "normal": 1948,
+              "guard_failed": 13496,
+              "refused_input_fact": 4556,
+              "nan_outputs": 1741,
+              "signed_zero_outputs": 9243,
+              "subnormal_outputs": 117,
+              "infinite_outputs": 1818,
+              "disagreements": 0,
+              "first_disagreement": null,
+              "checker_refusal": null
+            },
+            {
+              "graph_seed": 5,
+              "input_seed": 6840123409045651461,
+              "ops_requested": 48,
+              "nodes": 57,
+              "layers": 10,
+              "graph_logical_id": "f314b55eb24eaa138051860be922715949825e9075030f966145f2cf93c95a17",
+              "vectors": 20000,
+              "normal": 5603,
+              "guard_failed": 9756,
+              "refused_input_fact": 4641,
+              "nan_outputs": 9568,
+              "signed_zero_outputs": 14356,
+              "subnormal_outputs": 913,
+              "infinite_outputs": 8677,
+              "disagreements": 0,
+              "first_disagreement": null,
+              "checker_refusal": null
+            },
+            {
+              "graph_seed": 6,
+              "input_seed": 6840123409045651462,
+              "ops_requested": 48,
+              "nodes": 56,
+              "layers": 8,
+              "graph_logical_id": "a7649d2302cecb77d060f9c7dffc64d918a0eec2479f2a1d6221b3651bafde2a",
+              "vectors": 20000,
+              "normal": 1961,
+              "guard_failed": 13506,
+              "refused_input_fact": 4533,
+              "nan_outputs": 2866,
+              "signed_zero_outputs": 6047,
+              "subnormal_outputs": 216,
+              "infinite_outputs": 5072,
+              "disagreements": 0,
+              "first_disagreement": null,
+              "checker_refusal": null
+            },
+            {
+              "graph_seed": 7,
+              "input_seed": 6840123409045651463,
+              "ops_requested": 48,
+              "nodes": 55,
+              "layers": 7,
+              "graph_logical_id": "1f4ac5351b920fe8a883ca8da56c001d753b661e58a868fb9de55c7dd1340ed8",
+              "vectors": 20000,
+              "normal": 3525,
+              "guard_failed": 11884,
+              "refused_input_fact": 4591,
+              "nan_outputs": 326,
+              "signed_zero_outputs": 25255,
+              "subnormal_outputs": 639,
+              "infinite_outputs": 1526,
+              "disagreements": 0,
+              "first_disagreement": null,
+              "checker_refusal": null
+            },
+            {
+              "graph_seed": 8,
+              "input_seed": 6840123409045651464,
+              "ops_requested": 48,
+              "nodes": 55,
+              "layers": 12,
+              "graph_logical_id": "8d25353558279d55b2f0462228f0fab363de0ff40761d5df7f46ae52f6e0725c",
+              "vectors": 20000,
+              "normal": 13287,
+              "guard_failed": 2016,
+              "refused_input_fact": 4697,
+              "nan_outputs": 51129,
+              "signed_zero_outputs": 34356,
+              "subnormal_outputs": 117,
+              "infinite_outputs": 17263,
+              "disagreements": 0,
+              "first_disagreement": null,
+              "checker_refusal": null
+            }
+          ],
+          "seconds": 0.38797796
+        }
+      }
+    },
+    {
+      "id": "B3-core rejections on authored IR",
+      "requirements": [
+        "NGRAPH-FACT-01",
+        "NGRAPH-EXTRACT-01"
+      ],
+      "claim": "Every core control (caller-asserted/underivable/evidence facts, violating inputs and intermediates, bad indices, malformed IR, budgets) yields its D6 code; static and preflight refusals evaluate 0 nodes; guard failures evaluate no dependent node; the ordinary Noble path is not involved",
+      "implementation": "implemented",
+      "execution": "passed",
+      "proof": "open",
+      "open_obligations": [
+        "NG-PO-B",
+        "NG-PO-E"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "rustc/LLVM codegen of the pinned nightly toolchain (no contraction; IEEE binary32 SSE arithmetic on x86_64)",
+        "host CPU IEEE 754 behaviour (no FTZ/DAZ set by this process)",
+        "rustc_apfloat =0.2.3+llvm-462a31f5a5ab as the independent binary32 oracle (L2)",
+        "blake3 =1.8.7 (pure) for identities: a hash identifies bytes, it proves nothing",
+        "this crate's checker, evaluators and trainer (NG-PO-B/C/E/F/G open)"
+      ],
+      "evidence": {
+        "kind": "test",
+        "subject": "B3-core rejections on authored IR",
+        "revision": "f5b9ce5180350796dc11474b3007b003b90c40de",
+        "configuration": "see run.config (BE-CONFIG-01)",
+        "claim": "Every core control (caller-asserted/underivable/evidence facts, violating inputs and intermediates, bad indices, malformed IR, budgets) yields its D6 code; static and preflight refusals evaluate 0 nodes; guard failures evaluate no dependent node; the ordinary Noble path is not involved",
+        "assumptions": [
+          "source-level controls (effects, resources, dynamic run, recursion, reflect, control, Program output, the k=20 expansion chain) are the extraction leg's records",
+          "evidence facts excluded by approval P5"
+        ],
+        "result": {
+          "cases": [
+            {
+              "name": "caller-asserted range",
+              "group": "false-fact",
+              "expected": "E-FACT-UNCHECKED",
+              "observed": "E-FACT-UNCHECKED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "caller-asserted grid",
+              "group": "false-fact",
+              "expected": "E-FACT-UNCHECKED",
+              "observed": "E-FACT-UNCHECKED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "caller-asserted bit",
+              "group": "false-fact",
+              "expected": "E-FACT-UNCHECKED",
+              "observed": "E-FACT-UNCHECKED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "caller-asserted one-hot",
+              "group": "false-fact",
+              "expected": "E-FACT-UNCHECKED",
+              "observed": "E-FACT-UNCHECKED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "step without any range fact",
+              "group": "false-fact",
+              "expected": "E-FACT-UNCHECKED",
+              "observed": "E-FACT-UNCHECKED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "derived claim the checker cannot derive (x+x in [0,1])",
+              "group": "false-fact",
+              "expected": "E-FACT-UNCHECKED",
+              "observed": "E-FACT-UNCHECKED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "evidence fact (excluded from Phase B by P5)",
+              "group": "false-fact",
+              "expected": "E-FACT-UNCHECKED",
+              "observed": "E-FACT-UNCHECKED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "violating input with an input-validated range",
+              "group": "false-fact",
+              "expected": "E-FACT-INPUT",
+              "observed": "E-FACT-INPUT",
+              "stage": "preflight",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "violating intermediate under a guard: 0.5 held in a bit",
+              "group": "false-fact",
+              "expected": "G-FACT-FALSE",
+              "observed": "G-FACT-FALSE",
+              "stage": "evaluation",
+              "l3_evaluated_nodes": 3,
+              "l4_evaluated_nodes": 4,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "fractional index 2.5 under an input-validated integral fact",
+              "group": "bad-index",
+              "expected": "E-FACT-INPUT",
+              "observed": "E-FACT-INPUT",
+              "stage": "preflight",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "index without an integral fact",
+              "group": "bad-index",
+              "expected": "E-FACT-UNCHECKED",
+              "observed": "E-FACT-UNCHECKED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "index range fact reaching 2^24",
+              "group": "bad-index",
+              "expected": "E-FACT-UNCHECKED",
+              "observed": "E-FACT-UNCHECKED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "out-of-range index 3 under refuse",
+              "group": "bad-index",
+              "expected": "G-FACT-FALSE",
+              "observed": "G-FACT-FALSE",
+              "stage": "evaluation",
+              "l3_evaluated_nodes": 3,
+              "l4_evaluated_nodes": 3,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "NaN index under a guard",
+              "group": "bad-index",
+              "expected": "G-FACT-FALSE",
+              "observed": "G-FACT-FALSE",
+              "stage": "evaluation",
+              "l3_evaluated_nodes": 3,
+              "l4_evaluated_nodes": 5,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "cycle",
+              "group": "malformed",
+              "expected": "E-GRAPH-MALFORMED",
+              "observed": "E-GRAPH-MALFORMED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "forward reference",
+              "group": "malformed",
+              "expected": "E-GRAPH-MALFORMED",
+              "observed": "E-GRAPH-MALFORMED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "type mix (i64 op in an f32 graph)",
+              "group": "malformed",
+              "expected": "E-TYPE-MIX",
+              "observed": "E-TYPE-MIX",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "type mix (i64 constant in an f32 graph)",
+              "group": "malformed",
+              "expected": "E-TYPE-MIX",
+              "observed": "E-TYPE-MIX",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "dangling node",
+              "group": "malformed",
+              "expected": "E-GRAPH-MALFORMED",
+              "observed": "E-GRAPH-MALFORMED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "unknown node",
+              "group": "malformed",
+              "expected": "E-GRAPH-MALFORMED",
+              "observed": "E-GRAPH-MALFORMED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "unknown operation",
+              "group": "malformed",
+              "expected": "E-GRAPH-MALFORMED",
+              "observed": "E-GRAPH-MALFORMED",
+              "stage": "parse",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "inexact decimal constant 0.1",
+              "group": "malformed",
+              "expected": "E-LITERAL-INEXACT",
+              "observed": "E-LITERAL-INEXACT",
+              "stage": "parse",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "NaN constant (bits)",
+              "group": "malformed",
+              "expected": "E-LITERAL-NONFINITE",
+              "observed": "E-LITERAL-NONFINITE",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "NaN constant (word)",
+              "group": "malformed",
+              "expected": "E-LITERAL-NONFINITE",
+              "observed": "E-LITERAL-NONFINITE",
+              "stage": "parse",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "infinite affine coefficient",
+              "group": "malformed",
+              "expected": "E-LITERAL-NONFINITE",
+              "observed": "E-LITERAL-NONFINITE",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "duplicate slot",
+              "group": "malformed",
+              "expected": "E-GRAPH-MALFORMED",
+              "observed": "E-GRAPH-MALFORMED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "param slot in ngraph-i64/0",
+              "group": "malformed",
+              "expected": "E-GRAPH-MALFORMED",
+              "observed": "E-GRAPH-MALFORMED",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "unknown sub-profile",
+              "group": "malformed",
+              "expected": "E-PROFILE",
+              "observed": "E-PROFILE",
+              "stage": "parse",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "live nodes over a lowered budget",
+              "group": "budget",
+              "expected": "E-BUDGET-LIVE-NODES",
+              "observed": "E-BUDGET-LIVE-NODES",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "layers over a lowered budget",
+              "group": "budget",
+              "expected": "E-BUDGET-LAYERS",
+              "observed": "E-BUDGET-LAYERS",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "layers over the /0 default (16,384)",
+              "group": "budget",
+              "expected": "E-BUDGET-LAYERS",
+              "observed": "E-BUDGET-LAYERS",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "affine terms over the /0 default (4,096)",
+              "group": "budget",
+              "expected": "E-BUDGET-AFFINE-TERMS",
+              "observed": "E-BUDGET-AFFINE-TERMS",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "index table over the /0 default (65,536)",
+              "group": "budget",
+              "expected": "E-BUDGET-TABLE-LENGTH",
+              "observed": "E-BUDGET-TABLE-LENGTH",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "raising a budget above /0",
+              "group": "budget",
+              "expected": "E-PROFILE",
+              "observed": "E-PROFILE",
+              "stage": "graph-check",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            },
+            {
+              "name": "forward scratch over a lowered host budget",
+              "group": "budget",
+              "expected": "E-BUDGET-FORWARD-SCRATCH",
+              "observed": "E-BUDGET-FORWARD-SCRATCH",
+              "stage": "preflight",
+              "l3_evaluated_nodes": 0,
+              "l4_evaluated_nodes": 0,
+              "legs_agree": true,
+              "passed": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "B5 training F1 with adam/0",
+      "requirements": [
+        "NGRAPH-SNAP-01",
+        "NGRAPH-DERIV-01"
+      ],
+      "claim": "500 adam/0 steps on F1 against the fixed 64-point target set reduce the MSE to ≤10% of its initial value; GraphLogicalId and every non-param byte are unchanged; S0 evaluates bitwise-identically afterwards; replay reproduces the final snapshot bytes; wrong graph, wrong layout and stale snapshots are refused; old-subject evidence does not apply to the captured subject; a non-finite update publishes nothing",
+      "implementation": "implemented",
+      "execution": "passed",
+      "proof": "open",
+      "open_obligations": [
+        "NG-PO-F",
+        "NG-PO-G"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "rustc/LLVM codegen of the pinned nightly toolchain (no contraction; IEEE binary32 SSE arithmetic on x86_64)",
+        "host CPU IEEE 754 behaviour (no FTZ/DAZ set by this process)",
+        "rustc_apfloat =0.2.3+llvm-462a31f5a5ab as the independent binary32 oracle (L2)",
+        "blake3 =1.8.7 (pure) for identities: a hash identifies bytes, it proves nothing",
+        "this crate's checker, evaluators and trainer (NG-PO-B/C/E/F/G open)"
+      ],
+      "evidence": {
+        "kind": "test",
+        "subject": "B5 training F1 with adam/0",
+        "revision": "f5b9ce5180350796dc11474b3007b003b90c40de",
+        "configuration": "see run.config (BE-CONFIG-01)",
+        "claim": "500 adam/0 steps on F1 against the fixed 64-point target set reduce the MSE to ≤10% of its initial value; GraphLogicalId and every non-param byte are unchanged; S0 evaluates bitwise-identically afterwards; replay reproduces the final snapshot bytes; wrong graph, wrong layout and stale snapshots are refused; old-subject evidence does not apply to the captured subject; a non-finite update publishes nothing",
+        "assumptions": [
+          "smoke threshold, not a convergence claim",
+          "replay on the same pinned platform only; cross-platform reproducibility is not claimed",
+          "targets are F1 with F1_FIXED params (teacher) evaluated by L3"
+        ],
+        "result": {
+          "seed": 336855045,
+          "data_seed": 336910970,
+          "prng": "splitmix64/0",
+          "data_points": 64,
+          "data_digest": "7c40293c13b0089020b0a66ffbccf2d523be6171887ede799f38ee4d728f0692",
+          "steps": 500,
+          "initial_loss": 0.3059424045150081,
+          "final_loss": 0.0005224126773801241,
+          "final_over_initial": 0.0017075523682579183,
+          "graph_logical_id_before": "6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661",
+          "graph_logical_id_after": "6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661",
+          "s0_snapshot_id": "a912b177c248ed35d5d7b5943e08e2efec7466623dffc385c6a8ab77f8998046",
+          "final_snapshot_id": "075f58cadc9a3abc91161b4224fd48bf9426af0ed8660851670e0ff0536f7f9d",
+          "replayed_snapshot_id": "075f58cadc9a3abc91161b4224fd48bf9426af0ed8660851670e0ff0536f7f9d",
+          "optimizer_state_digest": "4a84153598df346b8d873e6349afa206c355164df0542b7909b48a2638b92a75",
+          "s0_outputs_unchanged_on_64_points": true,
+          "wrong_graph": "E-SNAPSHOT-STALE",
+          "wrong_layout": "E-SNAPSHOT-LAYOUT",
+          "stale_snapshot": "E-SNAPSHOT-STALE",
+          "old_subject_evidence_on_captured_subject": "Err(OtherSubject)",
+          "captured_graph_logical_id": "ca8a4ce3bf6345d35bbd35b44b59eca8512dce01124986e7218c1a4395f24a0d",
+          "nonfinite_update": "E-NONFINITE-UPDATE after 0 published steps",
+          "training_seconds": 0.013690396,
+          "provenance": {
+            "parent": "a912b177c248ed35d5d7b5943e08e2efec7466623dffc385c6a8ab77f8998046",
+            "subject": "816941950e745b2a722e1fb6ca1b2471559d9993966e89d75ac7f7914d31effe",
+            "graph": "6065e93ff4262398603bd7c25392b6461335dbc24867024f25910cee0758d661",
+            "profile": "ngraph-f32/0 ngraph-sem/0",
+            "deriv": "ngraph-deriv-real/0",
+            "facts": "a4847a4429bf0da5a2076517ea2877b0d76d97ee12be45a45e1ee89f1c8ec7ce",
+            "loss": "50f67078a67012ca5914d95c1615946a8230bb591be056b6fb10a0c1c9ad69c0",
+            "data": "7c40293c13b0089020b0a66ffbccf2d523be6171887ede799f38ee4d728f0692",
+            "seed": 336855045,
+            "prng": "splitmix64/0",
+            "optimizer": "adam/0(lr=0x3f947ae147ae147b,beta1=0x3feccccccccccccd,beta2=0x3feff7ced916872b,eps=0x3e45798ee2308c3a;binary64 RNE, no FMA, running beta products, no pow; no weight decay/clipping/clamp)",
+            "steps": 500,
+            "tools": "noble-ngraph-experiment 0.0.0; ngraph-ir/0; ngraph-sem/0; ngraph-facts/0; ngraph-layered/0",
+            "result": "075f58cadc9a3abc91161b4224fd48bf9426af0ed8660851670e0ff0536f7f9d"
+          }
+        }
+      }
+    },
+    {
+      "id": "B6 ownership and cleanup",
+      "requirements": [
+        "NGRAPH-OWN-01"
+      ],
+      "claim": "Scratch leases are released exactly once on normal return, guard failure, exhaustion and cancellation at every layer (L3 and L4); preflight refusals acquire none; duplicate snapshot owners release in both orders; cancelled training publishes no partial snapshot; retained graph and snapshot digests are unchanged; a retained snapshot is used after the training invocation exits (tests/b6_ownership.rs)",
+      "implementation": "implemented",
+      "execution": "passed",
+      "proof": "open",
+      "open_obligations": [
+        "NG-PO-C",
+        "NG-PO-G"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "rustc/LLVM codegen of the pinned nightly toolchain (no contraction; IEEE binary32 SSE arithmetic on x86_64)",
+        "host CPU IEEE 754 behaviour (no FTZ/DAZ set by this process)",
+        "rustc_apfloat =0.2.3+llvm-462a31f5a5ab as the independent binary32 oracle (L2)",
+        "blake3 =1.8.7 (pure) for identities: a hash identifies bytes, it proves nothing",
+        "this crate's checker, evaluators and trainer (NG-PO-B/C/E/F/G open)"
+      ],
+      "evidence": {
+        "kind": "test",
+        "subject": "B6 ownership and cleanup",
+        "revision": "f5b9ce5180350796dc11474b3007b003b90c40de",
+        "configuration": "see run.config (BE-CONFIG-01)",
+        "claim": "Scratch leases are released exactly once on normal return, guard failure, exhaustion and cancellation at every layer (L3 and L4); preflight refusals acquire none; duplicate snapshot owners release in both orders; cancelled training publishes no partial snapshot; retained graph and snapshot digests are unchanged; a retained snapshot is used after the training invocation exits (tests/b6_ownership.rs)",
+        "assumptions": [
+          "instrumentation: the crate's scratch-lease counters, not a global allocator (a counting allocator needs unsafe, forbidden by workspace policy)",
+          "#3 OWN-SCRATCH-01 is proposed, not canonical (P6)"
+        ],
+        "result": {
+          "evaluation_cases": [
+            {
+              "case": "cancel at layer 0 (L3)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 0 (L4)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 1 (L3)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 1 (L4)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 2 (L3)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 2 (L4)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 3 (L3)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 3 (L4)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 4 (L3)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 4 (L4)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 5 (L3)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 5 (L4)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 6 (L3)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 6 (L4)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 7 (L3)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 7 (L4)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 8 (L3)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "cancel at layer 8 (L4)",
+              "observation": "Cancelled",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "fuel exhaustion after 20 nodes (L3)",
+              "observation": "Exhausted(FUEL)",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "fuel exhaustion after 20 nodes (L4)",
+              "observation": "Exhausted(FUEL)",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "guard failure G-FACT-FALSE (L3)",
+              "observation": "GuardFailed(%2,bit)",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "preflight refusal E-SNAPSHOT-STALE, no scratch acquired (L3)",
+              "observation": "Refused(E-SNAPSHOT-STALE)",
+              "scratch_acquired": 0,
+              "scratch_released": 0,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "normal return (L3)",
+              "observation": "Normal[f32:0xbe880000]",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "guard failure G-FACT-FALSE (L4)",
+              "observation": "GuardFailed(%2,bit)",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "preflight refusal E-SNAPSHOT-STALE, no scratch acquired (L4)",
+              "observation": "Refused(E-SNAPSHOT-STALE)",
+              "scratch_acquired": 0,
+              "scratch_released": 0,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            },
+            {
+              "case": "normal return (L4)",
+              "observation": "Normal[f32:0xbe880000]",
+              "scratch_acquired": 1,
+              "scratch_released": 1,
+              "scratch_live_bytes_after": 0,
+              "passed": true
+            }
+          ],
+          "owners_released_in_both_orders": true,
+          "training_cancel_before_step_4": "C-CANCELLED published_steps=3 last_equals_3_step_snapshot=true",
+          "training_scratch_acquired_released_live": [
+            3,
+            3,
+            0
+          ],
+          "retained_digests_unchanged": true
+        }
+      }
+    },
+    {
+      "id": "B4 gradients (F1 + MSE)",
+      "requirements": [
+        "NGRAPH-DERIV-01"
+      ],
+      "claim": "G1 binary64 reverse mode matches binary64 central differences within 1e-6·max(1,|∂|) with h = 2^-20·max(1,|p|); G2 FP32 reference backward matches G1 within 4·depth·2^-24 relative to the absolute-value magnitude of the computation; corner, boolean and index policies are tested separately (tests/b4_gradients.rs)",
+      "implementation": "implemented",
+      "execution": "passed",
+      "proof": "open",
+      "open_obligations": [
+        "NG-PO-F"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "rustc/LLVM codegen of the pinned nightly toolchain (no contraction; IEEE binary32 SSE arithmetic on x86_64)",
+        "host CPU IEEE 754 behaviour (no FTZ/DAZ set by this process)",
+        "rustc_apfloat =0.2.3+llvm-462a31f5a5ab as the independent binary32 oracle (L2)",
+        "blake3 =1.8.7 (pure) for identities: a hash identifies bytes, it proves nothing",
+        "this crate's checker, evaluators and trainer (NG-PO-B/C/E/F/G open)"
+      ],
+      "evidence": {
+        "kind": "test",
+        "subject": "B4 gradients (F1 + MSE)",
+        "revision": "f5b9ce5180350796dc11474b3007b003b90c40de",
+        "configuration": "see run.config (BE-CONFIG-01)",
+        "claim": "G1 binary64 reverse mode matches binary64 central differences within 1e-6·max(1,|∂|) with h = 2^-20·max(1,|p|); G2 FP32 reference backward matches G1 within 4·depth·2^-24 relative to the absolute-value magnitude of the computation; corner, boolean and index policies are tested separately (tests/b4_gradients.rs)",
+        "assumptions": [
+          "samples farther than 64·4h from every ReLU/ReGLU corner, step threshold and index boundary",
+          "G2 scale: the reverse pass over |values| and |local derivatives| (first-order running-error magnitude); a first attempt scaled by |forward values| alone failed 20/1440 slot checks from cancellation in d = y - t and was investigated, not loosened (README)",
+          "policy cases (corner at +0/-0, E-DERIV-BOOLEAN, straight-through and clamped-linear surrogates, candidate accumulation a <- 2g, index reject/zero/backward-difference surrogate, E-DERIV-I64, E-PARAM-UNDECLARED) are cargo tests recorded in test-log.txt"
+        ],
+        "result": {
+          "seed": 11796481,
+          "samples_requested": 2000,
+          "samples_used": 2000,
+          "skipped_near_corner": 0,
+          "composed_depth": 12,
+          "h_rule": "2^-20·max(1,|p|) (h(1)=0.00000095367431640625)",
+          "g1_tolerance_rule": "1e-6·max(1,|∂|) (tol(0)=0.000001)",
+          "g1_checks": 48000,
+          "g1_failures": 0,
+          "g1_worst_error_over_tolerance": 0.013913018515054887,
+          "g2_checks": 48000,
+          "g2_failures": 0,
+          "g2_worst_error_over_bound": 0.09646261469945593,
+          "g2_checks_also_within_plain_|g1|_relative_bound": 47604,
+          "first_failure": null,
+          "seconds": 0.03938537
+        }
+      }
+    }
+  ],
+  "result": "passed"
+}

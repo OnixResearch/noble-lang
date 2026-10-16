@@ -1,6 +1,6 @@
 ## Context
 
-Issue #14 Phase A asks for a bounded design decision. Phase B (the CPU feasibility experiment) and Phase C (the measured continuation decision) start only after the owner approves the design. This document gives the complete Phase A decision. It also writes Phase B and Phase C as concrete experiment plans that have **not been run** and **wait for approval**; see [Acceptance mapping](#acceptance-mapping). r[NGRAPH-SCOPE-01]
+Issue #14 Phase A asks for a bounded design decision. Phase B (the CPU feasibility experiment) and Phase C (the measured continuation decision) start only after the owner approves the design. This document gives the complete Phase A decision. It also writes Phase B and Phase C as concrete experiment plans. The owner approved both on 2026-10-15 ([Phase B approval and decisions](#phase-b-approval-and-decisions)); execution status is in [Acceptance mapping](#acceptance-mapping). r[NGRAPH-SCOPE-01]
 
 ### Verified Noble baseline and drift
 
@@ -287,7 +287,31 @@ Producer metadata (extractor node types, fact records, counts, hashes) is **neve
 
 **Rationale:** This places every new trust edge next to an existing open obligation instead of inheriting the bootstrap fragment's accepted proofs. r[NGRAPH-PROOF-01] r[NGRAPH-EXTRACT-01]
 
-## Phase B plan: CPU-only feasibility experiment (awaiting approval; not executed)
+## Phase B approval and decisions
+
+The owner approved Phase B and Phase C on #14 on 2026-10-15. The decisions under that approval:
+
+- **P1:** D1–D13 and the nine NGRAPH-* requirements are the basis for Phase B.
+- **P2:** Option **B0(b)**. `F32` graphs are authored directly in `ngraph-ir/0` (builder API or the text form) and checked only by the graph checker. Source extraction is for `I64` only. No kernel type, word or frontend changes; K-NUM-01 and the accepted PO-09/10/11 fragment are untouched.
+- **P3:** The isolated workspace crate `crates/noble-ngraph-experiment/`. It does not modify noble-kernel, noble-contracts, noble-wasm or noble-cli sources; it may depend on them as a consumer (the `I64` extraction leg does).
+- **P4:** The pinned independent binary32 oracle is `rustc_apfloat =0.2.3+llvm-462a31f5a5ab` (crates.io, pure Rust port of LLVM APFloat, `#![forbid(unsafe_code)]`).
+- **P5:** `evidence` facts are excluded from Phase B. The checker refuses an `evidence` provenance with `E-FACT-UNCHECKED`.
+- **P6:** #3 OWN-SCRATCH-01 is **proposed** (active change `ownership-lifetime-contract`), not canonical. B6 tests the numeric-graph instance only.
+- **Phase C thresholds kept** as proposed in C3: stop unless the compiled CPU graph is at least 2× faster than both baselines on warm `W3`; admission at most 100 ms at `W3` scale; at least a 2× margin over compiled CPU before any scoped #2 GPU experiment.
+
+**Interpretations made while executing Phase B.** These follow from the design; none changes a decision.
+
+- `affine` coefficients are constants (D2), so trainable layers in `F1` combine `param` values with `mul`/`add` in the affine order (bias first, then terms in stored order).
+- `index` under `refuse` with an out-of-range index is reported as `G-FACT-FALSE` at the index node with the fact `range[0, n−1]`. Evaluators report the first failure point (guard or refusing index read) in canonical node order.
+- Host fuel (`Exhausted`) and cancellation (`C-CANCELLED`) are host policy checked at layer boundaries; their observation point is evaluator-specific and they are not compared across evaluators.
+- The B4 G2 bound `4·depth·2^-24` is applied relative to the absolute-value magnitude of the computation (the same reverse pass over |values| and |local derivatives|). A first run scaled by |forward values| alone failed 20 of 1,440 slot checks from cancellation in `d = y − t`; this was investigated, not loosened silently ([receipts](../../../verification/ngraph/README.md)).
+- A `select` gate reached by a param is refused (`E-DERIV-BOOLEAN`) unless that node opts into the `straight-through` surrogate, defined as `(on − off)`. `clamped-linear` applies to `step` only.
+- Applicability of old-subject evidence is checked on run records (subject, `GraphLogicalId`, snapshot). D6 has no code for it; it is reported as `NotApplicable(OtherSubject)`. #8 and #10 own witness binding.
+- B6 instrumentation is the crate's scratch-lease counters. A counting global allocator would need `unsafe`, which the workspace forbids.
+
+**Execution status.** Receipts and commands are in [verification/ngraph/README.md](../../../verification/ngraph/README.md). B4–B6 are executed. The core legs of B1–B3 are executed (`F1`–`F3`, the `F32` legs L2, B2-ORACLE, L3 and L4, and the core rejection controls on authored IR); the `I64` extraction legs (`I1`–`I4`, L1, the BigInt oracle and the source-level controls) are recorded separately by the extraction leg. NG-PO-A..H stay open.
+
+## Phase B plan: CPU-only feasibility experiment (approved 2026-10-15)
 
 **Prerequisites:**
 
@@ -347,7 +371,7 @@ Every result becomes an evidence record whose implementation, execution, proof a
   - Two owners are released in both orders.
   - Cancellation is injected at layer `k`, alongside a guard failure and exhaustion. Instrumented allocator counters must show scratch released exactly once, no partial snapshot, and retained digests unchanged.
 
-## Phase C plan: measured continuation decision (awaiting approval; not executed)
+## Phase C plan: measured continuation decision (approved 2026-10-15)
 
 **Prerequisites:** Phase B is complete, and its evidence has been reviewed.
 
@@ -380,15 +404,15 @@ Every result becomes an evidence record whose implementation, execution, proof a
 | A1 Whitelist, FP32/I64 boundary, effect exclusions, limits, diagnostics | [D1](#decision-d1-scope-and-the-exact-i64-versus-fp32-boundary), [D2](#decision-d2-graph-ir-and-operationtype-whitelist), [D3](#decision-d3-fp32-reference-contract), [D4](#decision-d4-effect-exclusions), [D5](#decision-d5-resource-and-expansion-limits), [D6](#decision-d6-unsupported-diagnostics) | Designed |
 | A2 Forward observations, checked assumption provenance, derivative policy, immutable snapshot identity | [D8](#decision-d8-forward-observations), [D9](#decision-d9-checked-facts-and-provenance), [D10](#decision-d10-derivative-policies), [D11](#decision-d11-training-contract-immutable-snapshots-and-provenance) | Designed |
 | A3 Map to kernel admission, source extraction, runtime ownership, proof-to-artifact; producer metadata is not validation | [D7](#decision-d7-admission-and-stack-to-graph-extraction-algorithm), [D12](#decision-d12-ownership-and-backend-boundary), [D13](#decision-d13-mapping-to-kernel-admission-source-extraction-runtime-ownership-and-proof-to-artifact-obligations) | Designed |
-| B1 Lower pure program and state transition with captures, composition, repeated inputs | [Phase B](#phase-b-plan-cpu-only-feasibility-experiment-awaiting-approval-not-executed) B1 | **Awaiting approval** |
-| B2 Differential: original, independent reference, compiled graph | Phase B B2 | **Awaiting approval** |
-| B3 Reject false facts, bad indices, effects/resources, malformed topology, budgets | Phase B B3 | **Awaiting approval** |
-| B4 Gradients versus analytic and finite differences; policies separately | Phase B B4 | **Awaiting approval** |
-| B5 Train a fixed-shape example; snapshots and identity | Phase B B5 | **Awaiting approval** |
-| B6 Retained snapshots, owner orders, failure/cancellation cleanup | Phase B B6 | **Awaiting approval** |
-| C1 Costs and baselines | [Phase C](#phase-c-plan-measured-continuation-decision-awaiting-approval-not-executed) C1 | **Awaiting approval** |
-| C2 Pin revisions; separate agreement, coverage, theorems, trust | Phase C C2 | **Awaiting approval** |
-| C3 Stop / CPU specialization / scoped GPU recommendation | Phase C C3 | **Awaiting approval** |
+| B1 Lower pure program and state transition with captures, composition, repeated inputs | [Phase B](#phase-b-plan-cpu-only-feasibility-experiment-approved-2026-10-15) B1 | **Core executed** (`F1`–`F3`); `I1`–`I4` extraction leg pending |
+| B2 Differential: original, independent reference, compiled graph | Phase B B2 | **Core executed** (`F32` L2, B2-ORACLE, L3, L4); `I64` L1 and BigInt legs pending |
+| B3 Reject false facts, bad indices, effects/resources, malformed topology, budgets | Phase B B3 | **Core executed** (authored-IR controls); source-level controls pending |
+| B4 Gradients versus analytic and finite differences; policies separately | Phase B B4 | **Executed** |
+| B5 Train a fixed-shape example; snapshots and identity | Phase B B5 | **Executed** |
+| B6 Retained snapshots, owner orders, failure/cancellation cleanup | Phase B B6 | **Executed** |
+| C1 Costs and baselines | [Phase C](#phase-c-plan-measured-continuation-decision-approved-2026-10-15) C1 | **Approved; not started** |
+| C2 Pin revisions; separate agreement, coverage, theorems, trust | Phase C C2 | **Approved; not started** |
+| C3 Stop / CPU specialization / scoped GPU recommendation | Phase C C3 | **Approved; not started** |
 
 ## Risks / Trade-offs
 
@@ -400,7 +424,7 @@ Every result becomes an evidence record whose implementation, execution, proof a
 
 ## Non-claims
 
-- No implementation, executed scenario, proof, benchmark or GPU claim.
+- No proof, benchmark or GPU claim. Phase B results are finite tests in the isolated experiment crate ([receipts](../../../verification/ngraph/README.md)); they discharge none of NG-PO-A..H.
 - No change to K-NUM-01 or ordinary Programs.
 - No automatic whole-language compilation, general tensor language, structure evolution, live publication, effects inside the graph, or default surrogate gradients.
 - Finite differential tests and matching hashes do not establish a verified compiler.
