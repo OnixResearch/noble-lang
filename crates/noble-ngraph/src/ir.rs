@@ -380,7 +380,10 @@ impl Op {
             Self::Input(_) | Self::Param(_) | Self::Const(_) => 0,
             Self::F32Affine { terms, .. } => terms.len(),
             Self::F32Index { table, .. } => table.len() + 1,
-            Self::Guard { fact: Fact::OneHot { group, .. }, .. } => group.len() + 1,
+            Self::Guard {
+                fact: Fact::OneHot { group, .. },
+                ..
+            } => group.len() + 1,
             _ => 3,
         };
         let mut operands = Vec::with_capacity(capacity);
@@ -398,23 +401,41 @@ impl Op {
             | Self::I64Eq(a, b)
             | Self::F32Add(a, b)
             | Self::F32Sub(a, b)
-            | Self::F32Mul(a, b) => { visit(*a); visit(*b); }
+            | Self::F32Mul(a, b) => {
+                visit(*a);
+                visit(*b);
+            }
             Self::F32Affine { terms, .. } => {
                 for term in terms {
-                    if let AffineOperand::Node(n) = term.operand { visit(n); }
+                    if let AffineOperand::Node(n) = term.operand {
+                        visit(n);
+                    }
                 }
             }
             Self::F32Relu(x) | Self::F32Step(x) => visit(*x),
-            Self::F32Reglu { left, gate } => { visit(*left); visit(*gate); }
-            Self::F32Select { bit, off, on } => { visit(*bit); visit(*off); visit(*on); }
+            Self::F32Reglu { left, gate } => {
+                visit(*left);
+                visit(*gate);
+            }
+            Self::F32Select { bit, off, on } => {
+                visit(*bit);
+                visit(*off);
+                visit(*on);
+            }
             Self::F32Index { index, table, .. } => {
                 visit(*index);
-                for &n in table { visit(n); }
+                for &n in table {
+                    visit(n);
+                }
             }
             Self::Guard { value, fact } => {
                 visit(*value);
                 if let Fact::OneHot { group, .. } = fact {
-                    for &n in group { if n != *value { visit(n); } }
+                    for &n in group {
+                        if n != *value {
+                            visit(n);
+                        }
+                    }
                 }
             }
         }

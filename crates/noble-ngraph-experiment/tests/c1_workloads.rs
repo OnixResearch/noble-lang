@@ -63,13 +63,18 @@ fn w4_native_agrees() {
 
 #[test]
 fn compiled_tables_preserve_order_rules_and_guard_precedence() {
-    use noble_ngraph::ir::{AffineOperand, Fact, GraphBuilder, Op, Provenance, ScalarType, Subject, SubProfile};
+    use noble_ngraph::ir::{
+        AffineOperand, Fact, GraphBuilder, Op, Provenance, ScalarType, SubProfile, Subject,
+    };
     use noble_ngraph_experiment::fixtures::{range, RULES};
 
     for len in [1, 2, 7, 257] {
         for below in RULES {
             for above in RULES {
-                let mut b = GraphBuilder::new(SubProfile::F32, Subject::authored(&BLAKE3, "table boundaries"));
+                let mut b = GraphBuilder::new(
+                    SubProfile::F32,
+                    Subject::authored(&BLAKE3, "table boundaries"),
+                );
                 let i = b.input(ScalarType::F32);
                 let a = b.input(ScalarType::F32);
                 let z = b.f32_const(-0.0);
@@ -81,12 +86,28 @@ fn compiled_tables_preserve_order_rules_and_guard_precedence() {
                 let deep = b.op(Op::F32Add(pre, pre));
                 b.guard(Fact::Finite, deep);
                 let table: Vec<_> = (0..len).map(|k| if k % 2 == 0 { a } else { z }).collect();
-                let first = b.op(Op::F32Index { index: i, table: table.clone(), below, above });
-                let second = b.op(Op::F32Index { index: i, table: table.into_iter().rev().collect(), below, above });
+                let first = b.op(Op::F32Index {
+                    index: i,
+                    table: table.clone(),
+                    below,
+                    above,
+                });
+                let second = b.op(Op::F32Index {
+                    index: i,
+                    table: table.into_iter().rev().collect(),
+                    below,
+                    above,
+                });
                 // Canonically later but shallower: when both fail, the first
                 // guard must still win despite the compiled layer schedule.
                 b.guard(range(0.0, 0.0), a);
-                let post = b.affine(-0.0, &[(2.0, AffineOperand::Node(first)), (1.0, AffineOperand::Node(second))]);
+                let post = b.affine(
+                    -0.0,
+                    &[
+                        (2.0, AffineOperand::Node(first)),
+                        (1.0, AffineOperand::Node(second)),
+                    ],
+                );
                 b.output(first);
                 b.output(second);
                 b.output(post);
@@ -95,10 +116,21 @@ fn compiled_tables_preserve_order_rules_and_guard_precedence() {
                 let compiled = Compiled::new(&BLAKE3, &checked);
                 let mut workspace = compiled.workspace();
                 for index in [-1.0, -0.0, (len - 1) as f32, len as f32] {
-                    for value in [-0.0, 0.0, f32::from_bits(1), f32::INFINITY, f32::from_bits(0xffc0_0042)] {
+                    for value in [
+                        -0.0,
+                        0.0,
+                        f32::from_bits(1),
+                        f32::INFINITY,
+                        f32::from_bits(0xffc0_0042),
+                    ] {
                         let inputs = f32_inputs(&[index, value]);
                         let reference = reference(&checked, &inputs, None, &mut Control::default());
-                        let result = compiled.evaluate_in(&mut workspace, &inputs, None, &mut Control::default());
+                        let result = compiled.evaluate_in(
+                            &mut workspace,
+                            &inputs,
+                            None,
+                            &mut Control::default(),
+                        );
                         assert!(result.obs.obs_eq(&reference.obs), "len={len} {below:?}/{above:?} index={index:?} value={value:?}: {:?} != {:?}", result.obs, reference.obs);
                     }
                 }

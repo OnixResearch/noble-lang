@@ -400,10 +400,18 @@ impl Compiled {
             }
             evaluated += width;
             let f = match &self.code {
-                Code::F32 { ins, coef, src } => {
-                    self.run_f32(&ins[start as usize..end as usize], coef, src, w, &mut control.evaluated_nodes)
-                }
-                Code::I64 { ins } => self.run_i64(&ins[start as usize..end as usize], w, &mut control.evaluated_nodes),
+                Code::F32 { ins, coef, src } => self.run_f32(
+                    &ins[start as usize..end as usize],
+                    coef,
+                    src,
+                    w,
+                    &mut control.evaluated_nodes,
+                ),
+                Code::I64 { ins } => self.run_i64(
+                    &ins[start as usize..end as usize],
+                    w,
+                    &mut control.evaluated_nodes,
+                ),
             };
             if let Some((node, fact)) = f {
                 if fail.as_ref().is_none_or(|(m, _)| node < *m) {
@@ -494,8 +502,7 @@ impl Compiled {
                 } => {
                     // The checked graph already retains this exact ordered
                     // table. Only the selected operand needs a register lookup.
-                    let Op::F32Index { table, .. } =
-                        &self.checked.graph().nodes[node as usize].op
+                    let Op::F32Index { table, .. } = &self.checked.graph().nodes[node as usize].op
                     else {
                         unreachable!("compiled index comes from a checked index node");
                     };
@@ -516,7 +523,12 @@ impl Compiled {
         fail
     }
 
-    fn run_i64(&self, ins: &[I], w: &mut Workspace, evaluated_nodes: &mut Option<&mut u64>) -> Option<(u32, Fact)> {
+    fn run_i64(
+        &self,
+        ins: &[I],
+        w: &mut Workspace,
+        evaluated_nodes: &mut Option<&mut u64>,
+    ) -> Option<(u32, Fact)> {
         let mut fail: Option<(u32, Fact)> = None;
         let ri = &mut w.i;
         for x in ins {
