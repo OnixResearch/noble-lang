@@ -1,0 +1,2798 @@
+{
+  "change": ".cairn/changes/numeric-graph-profile",
+  "issue": "OnixResearch/noble-lang#14",
+  "non_claims": [
+    "Finite differential agreement does not prove extraction (NG-PO-A), the checker (NG-PO-B) or the evaluators (NG-PO-C).",
+    "The subject digest is a producer digest over the kernel's Debug rendering; it is not independent validation.",
+    "NG-PO-A..H remain open; no obligation is added to obligations.json. No performance claim (Phase C)."
+  ],
+  "record_count": 3,
+  "records": [
+    {
+      "claim": "I1–I4 lower through D7 admission and symbolic extraction to checked ngraph-i64/0 graphs that give the design's results (I1 24, I2 44 with one shared capture, I3 25 via one identity, I4 s·k+i for 1,000 host steps)",
+      "evidence": {
+        "assumptions": [
+          "subjects come from the ordinary Core frontend and are re-accepted by the kernel"
+        ],
+        "claim": "I1–I4 lower through D7 admission and symbolic extraction to checked ngraph-i64/0 graphs that give the design's results (I1 24, I2 44 with one shared capture, I3 25 via one identity, I4 s·k+i for 1,000 host steps)",
+        "configuration": "see run (BE-CONFIG-01)",
+        "kind": "test",
+        "result": {
+          "i2_one_shared_capture_used_twice": true,
+          "i3_repeated_call_one_identity": true,
+          "i4_host_steps": {
+            "final_state": 5187812948084275287,
+            "l3_l4_agree_with_s_k_plus_i": true,
+            "seed": "0x1404b104",
+            "steps": 1000
+          },
+          "programs": [
+            {
+              "definitions": [],
+              "design_inputs": [
+                5,
+                4
+              ],
+              "expanded_nodes": 8,
+              "expected": [
+                24
+              ],
+              "graph_logical_id": "75b70f84b6d265c4c1e016f5bf7ab88c2280456f15390bdb539e39cd24e6a1d9",
+              "input_types": [
+                "I64",
+                "I64"
+              ],
+              "ir_ops": [
+                "Input(0)",
+                "Input(1)",
+                "I64Mul(NodeId(1), NodeId(1))",
+                "Const(I64(3))",
+                "I64Mul(NodeId(0), NodeId(3))",
+                "I64Add(NodeId(2), NodeId(4))",
+                "Const(I64(7))",
+                "I64Sub(NodeId(5), NodeId(6))"
+              ],
+              "l3": "[I64(24)]",
+              "l4": "[I64(24)]",
+              "live_nodes": 8,
+              "max_inline_depth": 0,
+              "name": "I1",
+              "pruned_nodes": 0,
+              "root": "dup * swap 3 * + 7 -",
+              "subject_closure": []
+            },
+            {
+              "definitions": [],
+              "design_inputs": [
+                40
+              ],
+              "expanded_nodes": 4,
+              "expected": [
+                44
+              ],
+              "graph_logical_id": "ce1e156093d799d06933b01f7d6d00edca94ac7475d5553796357f08e820e452",
+              "input_types": [
+                "I64"
+              ],
+              "ir_ops": [
+                "Input(0)",
+                "Const(I64(2))",
+                "I64Add(NodeId(0), NodeId(1))",
+                "I64Add(NodeId(2), NodeId(1))"
+              ],
+              "l3": "[I64(44)]",
+              "l4": "[I64(44)]",
+              "live_nodes": 4,
+              "max_inline_depth": 1,
+              "name": "I2",
+              "pruned_nodes": 0,
+              "root": "2 quote [ + ] compose dup compose run",
+              "subject_closure": []
+            },
+            {
+              "definitions": [
+                "def sq [ dup * ]"
+              ],
+              "design_inputs": [
+                3,
+                4
+              ],
+              "expanded_nodes": 5,
+              "expected": [
+                25
+              ],
+              "graph_logical_id": "179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304",
+              "input_types": [
+                "I64",
+                "I64"
+              ],
+              "ir_ops": [
+                "Input(0)",
+                "Input(1)",
+                "I64Mul(NodeId(1), NodeId(1))",
+                "I64Mul(NodeId(0), NodeId(0))",
+                "I64Add(NodeId(2), NodeId(3))"
+              ],
+              "l3": "[I64(25)]",
+              "l4": "[I64(25)]",
+              "live_nodes": 5,
+              "max_inline_depth": 1,
+              "name": "I3",
+              "pruned_nodes": 0,
+              "root": "sq swap sq +",
+              "subject_closure": [
+                1
+              ]
+            },
+            {
+              "definitions": [],
+              "design_inputs": [
+                2,
+                3,
+                5
+              ],
+              "expanded_nodes": 5,
+              "expected": [
+                13,
+                13
+              ],
+              "graph_logical_id": "ede73e27b1b5b2d25f1a0bfaac85d3b4471f2d9c98613caad673da1656f28333",
+              "input_types": [
+                "I64",
+                "I64",
+                "I64"
+              ],
+              "ir_ops": [
+                "Input(0)",
+                "Input(1)",
+                "Input(2)",
+                "I64Mul(NodeId(0), NodeId(2))",
+                "I64Add(NodeId(3), NodeId(1))"
+              ],
+              "l3": "[I64(13), I64(13)]",
+              "l4": "[I64(13), I64(13)]",
+              "live_nodes": 5,
+              "max_inline_depth": 1,
+              "name": "I4",
+              "pruned_nodes": 0,
+              "root": "swap [ * ] dip + dup",
+              "subject_closure": []
+            }
+          ],
+          "surface_syntax": "Core frontend: the design's (block IN OUT [ body ]) is the body prepared with the block's input types (what `noble session` submits with those values on its stack); `sq = [ dup * ]` is spelled `def sq [ dup * ]`"
+        },
+        "revision": "f5806a0f2dec22c59ad53d5b446a8c4db800e32c",
+        "subject": "B1-I64-lowering"
+      },
+      "execution": "passed",
+      "id": "B1-I64-lowering",
+      "implementation": "implemented",
+      "open_obligations": [
+        "NG-PO-A",
+        "NG-PO-B",
+        "NG-PO-C"
+      ],
+      "proof": "open",
+      "requirements": [
+        "NGRAPH-EXTRACT-01"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "noble_kernel::acceptance::check as the independent subject checker (PO-09/10/11 accepted for bootstrap fragment v1 only)",
+        "the extractor's unpruned compose/run expansion accounting (inside the trusted extraction boundary until NG-PO-A)",
+        "this crate's graph checker and L3/L4 evaluators (NG-PO-B/C open)",
+        "the pinned noble release CLI, its Node/V8 runtime and wasm-opt (--opt on) as the ordinary path (PO-17/18 open)",
+        "the pinned Node BigInt implementation as the L2 oracle runtime",
+        "rustc/LLVM of the pinned nightly toolchain",
+        "blake3 =1.8.7 (pure) and sha256sum for identities: a hash identifies bytes, it proves nothing"
+      ]
+    },
+    {
+      "claim": "L1 (real CLI, --opt off and on), L2 (Node BigInt mod 2^64), L3 and L4 agree under ≡obs on the named vectors (5 3 - = 2, MAX 1 + = MIN, MIN -1 * = MIN, I1–I4), the I4 host-step chain and seeded random Core I64 programs",
+      "evidence": {
+        "assumptions": [
+          "L2 evaluates the extracted graph, so L1 is the only leg that observes the source independently of extraction",
+          "L1 covers a recorded sample; L2–L4 cover every vector"
+        ],
+        "claim": "L1 (real CLI, --opt off and on), L2 (Node BigInt mod 2^64), L3 and L4 agree under ≡obs on the named vectors (5 3 - = 2, MAX 1 + = MIN, MIN -1 * = MIN, I1–I4), the I4 host-step chain and seeded random Core I64 programs",
+        "configuration": "see run (BE-CONFIG-01)",
+        "kind": "test",
+        "result": {
+          "agree": true,
+          "i4_transition": {
+            "final_state": -5292467923277209818,
+            "graph_logical_id": "ede73e27b1b5b2d25f1a0bfaac85d3b4471f2d9c98613caad673da1656f28333",
+            "initial_state": 1,
+            "l1": {
+              "off": {
+                "agree": 1000,
+                "session_restarts_after_ordinary_quota": 0,
+                "steps": 1000
+              },
+              "on": {
+                "agree": 1000,
+                "session_restarts_after_ordinary_quota": 0,
+                "steps": 1000
+              }
+            },
+            "root": "swap [ * ] dip + dup",
+            "steps": 1000
+          },
+          "l1_totals": {
+            "off": {
+              "agree": 538,
+              "graphs": 26,
+              "ordinary_quota_outcomes": 24,
+              "session_restarts_after_ordinary_quota": 24,
+              "vectors": 562
+            },
+            "on": {
+              "agree": 538,
+              "graphs": 26,
+              "ordinary_quota_outcomes": 24,
+              "session_restarts_after_ordinary_quota": 24,
+              "vectors": 562
+            }
+          },
+          "mismatches": [],
+          "named": [
+            {
+              "definitions": [],
+              "design_expected": [
+                24
+              ],
+              "design_inputs": [
+                5,
+                4
+              ],
+              "expanded_nodes": 8,
+              "graph_logical_id": "75b70f84b6d265c4c1e016f5bf7ab88c2280456f15390bdb539e39cd24e6a1d9",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                },
+                "on": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "207f301d84aea3a7c95552a4c6b74224c9b41530945c8fe487207665168f5a28",
+              "live_nodes": 8,
+              "max_inline_depth": 0,
+              "name": "I1",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "dup * swap 3 * + 7 -",
+              "work_units": 8
+            },
+            {
+              "definitions": [],
+              "design_expected": [
+                44
+              ],
+              "design_inputs": [
+                40
+              ],
+              "expanded_nodes": 4,
+              "graph_logical_id": "ce1e156093d799d06933b01f7d6d00edca94ac7475d5553796357f08e820e452",
+              "inputs": 1,
+              "l1": {
+                "off": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                },
+                "on": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "58ede3144b5617a6b770e0eebfe7fc26b8714185a9786aa4c977e470a8e36fa5",
+              "live_nodes": 4,
+              "max_inline_depth": 1,
+              "name": "I2",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "2 quote [ + ] compose dup compose run",
+              "work_units": 16
+            },
+            {
+              "definitions": [
+                "def sq [ dup * ]"
+              ],
+              "design_expected": [
+                25
+              ],
+              "design_inputs": [
+                3,
+                4
+              ],
+              "expanded_nodes": 5,
+              "graph_logical_id": "179a0a0e3529bf6ea90b2940ad63db4903a7a4ffdf57b7d3873dd8f0d5a70304",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                },
+                "on": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "62a4abdc24f1a75cfb987084971cb715da5756844c24bae0084df2fa243b00a6",
+              "live_nodes": 5,
+              "max_inline_depth": 1,
+              "name": "I3",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "sq swap sq +",
+              "work_units": 8
+            },
+            {
+              "definitions": [],
+              "design_expected": [
+                13,
+                13
+              ],
+              "design_inputs": [
+                2,
+                3,
+                5
+              ],
+              "expanded_nodes": 5,
+              "graph_logical_id": "ede73e27b1b5b2d25f1a0bfaac85d3b4471f2d9c98613caad673da1656f28333",
+              "inputs": 3,
+              "l1": {
+                "off": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                },
+                "on": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "ff7b68639cdf51accf82b0baf93d5c9a9c86a5f57d1addc462a39ff1a994c39a",
+              "live_nodes": 5,
+              "max_inline_depth": 1,
+              "name": "I4",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "swap [ * ] dip + dup",
+              "work_units": 7
+            },
+            {
+              "definitions": [],
+              "design_expected": [
+                2
+              ],
+              "design_inputs": [],
+              "expanded_nodes": 3,
+              "graph_logical_id": "4b9a2a5e5d8066381a6c45bbc479a12bb01e6624dded1554f75238348617467a",
+              "inputs": 0,
+              "l1": {
+                "off": {
+                  "agree": 1,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 1
+                },
+                "on": {
+                  "agree": 1,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 1
+                }
+              },
+              "l2_l3_l4_vectors": 1,
+              "l3_output_digest": "d9c93a4aea7ab49056e64de300b8fe7e0fd8bb22aa6fd237d2a24ae4e1b052d8",
+              "live_nodes": 3,
+              "max_inline_depth": 0,
+              "name": "operand-order-literals",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "5 3 -",
+              "work_units": 3
+            },
+            {
+              "definitions": [],
+              "design_expected": [
+                2
+              ],
+              "design_inputs": [
+                5,
+                3
+              ],
+              "expanded_nodes": 3,
+              "graph_logical_id": "ba3a1f99c907cee749556c35bb06238a8d28ddb593d9d9496ec79cc9c5997202",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                },
+                "on": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "64c539f6cf8aaac8fcfcbf2f2bd25a7a4546bc473cb8b82daca2f73ea0c20096",
+              "live_nodes": 3,
+              "max_inline_depth": 0,
+              "name": "operand-order",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "-",
+              "work_units": 1
+            },
+            {
+              "definitions": [],
+              "design_expected": [
+                -9223372036854775808
+              ],
+              "design_inputs": [],
+              "expanded_nodes": 3,
+              "graph_logical_id": "14dd5a068e7d1acabc6f9d0b5966b820e5efc6dab7fcf112ce1c5a3a92cb6f3b",
+              "inputs": 0,
+              "l1": {
+                "off": {
+                  "agree": 1,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 1
+                },
+                "on": {
+                  "agree": 1,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 1
+                }
+              },
+              "l2_l3_l4_vectors": 1,
+              "l3_output_digest": "9bdc94668f7f088746b242f484d5b2d206c1cd26f161d35bad939dbc2e2f84fe",
+              "live_nodes": 3,
+              "max_inline_depth": 0,
+              "name": "overflow-add-literals",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "9223372036854775807 1 +",
+              "work_units": 3
+            },
+            {
+              "definitions": [],
+              "design_expected": [
+                -9223372036854775808
+              ],
+              "design_inputs": [
+                9223372036854775807,
+                1
+              ],
+              "expanded_nodes": 3,
+              "graph_logical_id": "a098bc552305b239a1cad9660e1383a1970880a154e20507a450da7d490f91c6",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                },
+                "on": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "b080de2fe16bce64f65b254eb73f0454f4d2edd02c840da5c7aab6c316c3d127",
+              "live_nodes": 3,
+              "max_inline_depth": 0,
+              "name": "overflow-add",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "+",
+              "work_units": 1
+            },
+            {
+              "definitions": [],
+              "design_expected": [
+                -9223372036854775808
+              ],
+              "design_inputs": [],
+              "expanded_nodes": 3,
+              "graph_logical_id": "5b2503da17932ec766c38180f4c22864a0db45ee15fd5b7697d383a20d6c12dd",
+              "inputs": 0,
+              "l1": {
+                "off": {
+                  "agree": 1,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 1
+                },
+                "on": {
+                  "agree": 1,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 1
+                }
+              },
+              "l2_l3_l4_vectors": 1,
+              "l3_output_digest": "9bdc94668f7f088746b242f484d5b2d206c1cd26f161d35bad939dbc2e2f84fe",
+              "live_nodes": 3,
+              "max_inline_depth": 0,
+              "name": "overflow-mul-literals",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "-9223372036854775808 -1 *",
+              "work_units": 3
+            },
+            {
+              "definitions": [],
+              "design_expected": [
+                -9223372036854775808
+              ],
+              "design_inputs": [
+                -9223372036854775808,
+                -1
+              ],
+              "expanded_nodes": 3,
+              "graph_logical_id": "397876b4766a8e63b4478359e766166f8c37105c9cd3379f85826803aa621f43",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                },
+                "on": {
+                  "agree": 25,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 25
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "be3c349f831a0fa12ebec0410d819faf573bab6e03d0484f9fd88f85bb957b1e",
+              "live_nodes": 3,
+              "max_inline_depth": 0,
+              "name": "overflow-mul",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "*",
+              "work_units": 1
+            }
+          ],
+          "random": [
+            {
+              "definitions": [
+                "def u0 [ -3 * ]",
+                "def u1 [ u0 2 * dup + ]",
+                "def b0 [ - -5227431915496100116 - u1 6780239456222673636 + ]"
+              ],
+              "expanded_nodes": 48,
+              "graph_logical_id": "9a7bc4bce9213d15dd2d27b46c26f1b67ef1ed4d1873985d852b66dc62cff17d",
+              "inputs": 4,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 1,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 1,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "e0a7e9ee5a1d74da3fc3cc03b160b3161c1e1d8301b9ee75c56934a8bb5c52fe",
+              "live_nodes": 8,
+              "max_inline_depth": 4,
+              "name": "random-0",
+              "outputs": 3,
+              "pruned_nodes": 40,
+              "root": "8437519735069906083 - dup quote [ * = ] compose run 572658078223874599 [ dup ] [ + 3 ] compose run dup dup + 0 + [ - [ dup * dup 1 + * dup 1 + * ] dup compose run ] dip [ [  ] dip ] [ 6649922500316617860 ] compose run quote [ [ 6 * u1 ] dup compose run + u0 ] compose run * drop",
+              "work_units": 110
+            },
+            {
+              "definitions": [
+                "def u0 [ dup 1 + * ]",
+                "def u1 [ u0 -5957363106659227109 - dup * ]",
+                "def b0 [ swap - ]"
+              ],
+              "expanded_nodes": 47,
+              "graph_logical_id": "84b3a41929108b431671018bde452ea109d9210235d048fc04fd5cc680359c00",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 0,
+                  "ordinary_quota_outcomes": [
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 0
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 1
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 2
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 3
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 4
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 5
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 6
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 7
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 8
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 9
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 10
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 11
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 12
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 13
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 14
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 15
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 16
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 17
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 18
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 19
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 20
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 21
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 22
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 23
+                    }
+                  ],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 0,
+                  "ordinary_quota_outcomes": [
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 0
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 1
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 2
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 3
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 4
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 5
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 6
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 7
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 8
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 9
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 10
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 11
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 12
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 13
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 14
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 15
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 16
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 17
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 18
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 19
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 20
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 21
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 22
+                    },
+                    {
+                      "diagnostic": "independent source compilation refused",
+                      "outcome": "exhausted",
+                      "stage": "acceptance",
+                      "vector": 23
+                    }
+                  ],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "a44e5d67d73b06e7a1c0b3d749fd39e74caee5d8ade1d2e82817a7ee7ec0c980",
+              "live_nodes": 44,
+              "max_inline_depth": 3,
+              "name": "random-1",
+              "outputs": 1,
+              "pruned_nodes": 3,
+              "root": "[ drop ] [ u1 ] compose run 2090298760633110942 + u1 112892077379606625 dup [ 4294967296 - dup + dup 1 + * ] dup compose run u1 * swap * -2 [ quote [ u0 - ] compose run -5013024826231949096 ] [ -3 ] compose run = 6361324679355435887 quote [ swap ] compose run dup drop drop *",
+              "work_units": 105
+            },
+            {
+              "definitions": [
+                "def u0 [ dup 1 + * dup + ]",
+                "def u1 [ dup * u0 ]",
+                "def b0 [ swap + ]"
+              ],
+              "expanded_nodes": 6,
+              "graph_logical_id": "aa7a5f3f4b732243bf841220c0ce5719877e79e1ef616df7fe6b96f1d76edf3a",
+              "inputs": 3,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "b954f096610b8a8cc71463254316410f7795a336ee54fa084111bbaadcae92ba",
+              "live_nodes": 4,
+              "max_inline_depth": 1,
+              "name": "random-2",
+              "outputs": 1,
+              "pruned_nodes": 2,
+              "root": "[ dup * ] dup compose run dup drop drop *",
+              "work_units": 15
+            },
+            {
+              "definitions": [
+                "def u0 [ dup + ]"
+              ],
+              "expanded_nodes": 11,
+              "graph_logical_id": "41ae0a806e563bc260b158e59c78ceb46faa43f33c941a48e730ce36bbba29ec",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "0daf7cacc0f98c3e36241f93655295ce6443b2cb705a7f96a9d73444ea347c4b",
+              "live_nodes": 5,
+              "max_inline_depth": 2,
+              "name": "random-3",
+              "outputs": 3,
+              "pruned_nodes": 6,
+              "root": "= [ -2 ] [ [  ] dip swap ] compose run dup 2429052744870832068 -406503219762529059 swap quote [ dup -7176308475560825197 quote [ -3 ] compose run ] compose run [ swap ] dip u0 -3964408277307864926 drop drop drop = [ swap ] dip quote [ dup [  ] [  ] compose run ] compose run drop drop drop",
+              "work_units": 68
+            },
+            {
+              "definitions": [
+                "def b0 [ -1 + 9223372036854775806 * dup + swap 4025205255683087692 - dup + - ]"
+              ],
+              "expanded_nodes": 40,
+              "graph_logical_id": "3aec3880f51727437703cd7a479dc5970b48fae79ecbf26223ea7a9af2e627b4",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "82845f167f6112f680c723131af65421993fc4e6f59f4976c43731963f876fe9",
+              "live_nodes": 40,
+              "max_inline_depth": 2,
+              "name": "random-4",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "2 dup - + [ dup 1 + * dup 1 + * ] dup compose run - quote [ [ dup * ] dup compose run ] compose run [ dup * ] dup compose run [  ] [ [ dup 1 + * 3 - dup 1 + * ] dup compose run dup ] compose run quote [ * ] compose run -8495267103925982549",
+              "work_units": 101
+            },
+            {
+              "definitions": [
+                "def b0 [ + dup * ]"
+              ],
+              "expanded_nodes": 7,
+              "graph_logical_id": "131690ee0e2dc52c29f9c6f515f29b4a3b69c4c2b729073e52fa512ab47ff1f2",
+              "inputs": 3,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "4cb3faba0f9d7ca46734746d060f947df176a8dfe0cf177e5a561e9a3a3329af",
+              "live_nodes": 6,
+              "max_inline_depth": 2,
+              "name": "random-5",
+              "outputs": 3,
+              "pruned_nodes": 1,
+              "root": "- [ [  ] [  ] compose run ] dip = dup quote [ dup ] compose run swap [ [  ] dip 6 ] dip -3 drop drop",
+              "work_units": 32
+            },
+            {
+              "definitions": [
+                "def u0 [ 0 + ]"
+              ],
+              "expanded_nodes": 9,
+              "graph_logical_id": "c4b71f5b07376cde4c5a16016f9212850c6aa218d920e656e1745422d3d8ef38",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "5f276a77c83f09a2549fc34f5e576265da9fb90590dbf9ff86fe5f636f3db972",
+              "live_nodes": 8,
+              "max_inline_depth": 2,
+              "name": "random-6",
+              "outputs": 2,
+              "pruned_nodes": 1,
+              "root": "- u0 [ u0 ] [  ] compose run 1 quote [ 3974993814888603110 drop ] compose run",
+              "work_units": 24
+            },
+            {
+              "definitions": [
+                "def u0 [ -1 - ]",
+                "def u1 [ 3 + -54573678909593722 + ]"
+              ],
+              "expanded_nodes": 16,
+              "graph_logical_id": "489009a8856c92672ab6edaf11e9f4c12dc2f119fecd26bc8c2368e951ca9c86",
+              "inputs": 3,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "70abef1a61c39b585e548d5a0deb2d6793fb03cb7925561a3fd529a9a7e6c984",
+              "live_nodes": 15,
+              "max_inline_depth": 2,
+              "name": "random-7",
+              "outputs": 3,
+              "pruned_nodes": 1,
+              "root": "* quote [ quote [  ] compose run ] compose run [ dup * dup 1 + * ] dup compose run + [  ] [ quote [ -127700079691573130 ] compose run ] compose run = dup swap dup 6873942645709528142 drop",
+              "work_units": 56
+            },
+            {
+              "definitions": [
+                "def u0 [ -6661558647365632871 * ]",
+                "def b0 [ swap + ]"
+              ],
+              "expanded_nodes": 20,
+              "graph_logical_id": "e37e5197d536500a7c375ac6db8445c87b8755373173f7cd65d426166a1c619e",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "d062779440b975905dfc9dcc74b1bb76f85813244bdb287058733bad87eacee2",
+              "live_nodes": 20,
+              "max_inline_depth": 3,
+              "name": "random-8",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "drop [ dup * u0 u0 ] dup compose run -3 [ u0 ] dip 8044858180507158634 quote [ [ swap - ] [ u0 ] compose run - ] compose run",
+              "work_units": 52
+            },
+            {
+              "definitions": [
+                "def u0 [ 1275373407182548653 * dup 1 + * ]",
+                "def u1 [ -1 + dup 1 + * u0 ]",
+                "def b0 [ - u1 3 * ]"
+              ],
+              "expanded_nodes": 7,
+              "graph_logical_id": "a2fb1bbdd9facef339ae5f20323e948a82c61cf548fb47eb25a60c5c561f21a1",
+              "inputs": 4,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "b27040ddf4b7c39420f4f6de33e8b90a330755fd1ebc33483f14b8a75ec08f9a",
+              "live_nodes": 5,
+              "max_inline_depth": 0,
+              "name": "random-9",
+              "outputs": 1,
+              "pruned_nodes": 2,
+              "root": "-5113353975968653755 = swap drop drop -",
+              "work_units": 6
+            },
+            {
+              "definitions": [
+                "def b0 [ - 0 * 6 + dup * ]",
+                "def b1 [ + dup * 6 + ]"
+              ],
+              "expanded_nodes": 13,
+              "graph_logical_id": "ca91faad91bb33f255d004431fd0ea8553fb85eb7bd6a906d6828308094f71ee",
+              "inputs": 4,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "f8d6809ff99c63578407556647d85c9b83cfb2109157ab105f562b647bd880fc",
+              "live_nodes": 6,
+              "max_inline_depth": 1,
+              "name": "random-10",
+              "outputs": 2,
+              "pruned_nodes": 7,
+              "root": "dup quote [ swap ] compose run b0 + drop - 2",
+              "work_units": 21
+            },
+            {
+              "definitions": [
+                "def u0 [ 0 + ]",
+                "def u1 [ dup 1 + * u0 dup + ]",
+                "def b0 [ * ]"
+              ],
+              "expanded_nodes": 48,
+              "graph_logical_id": "ddd06c38ed377d2fc134c369a67c927b9aef013893bc05ad4cef5105dc323ffe",
+              "inputs": 1,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 23,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 23,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "1fc87f5bfe7e260b21625a17289026969e1e2fe23c3d73c459c7765e429ea2fa",
+              "live_nodes": 47,
+              "max_inline_depth": 3,
+              "name": "random-11",
+              "outputs": 3,
+              "pruned_nodes": 1,
+              "root": "dup - quote [ [ -7591270502440629180 drop ] [ dup ] compose run [ 2 - ] dup compose run ] compose run -1712430820792340520 + u0 b0 quote [ u1 ] compose run [ 6 u1 ] [ * quote [  ] compose run ] compose run [ 4 + dup * dup + ] dup compose run dup [ quote [ [ dup + dup 1 + * -2 - ] dup compose run -9223372036854775808 ] compose run ] dip dup *",
+              "work_units": 136
+            },
+            {
+              "definitions": [
+                "def u0 [ 0 * -3 * 1212202939909336245 + ]",
+                "def u1 [ dup + u0 ]",
+                "def b0 [ 5 - dup + 0 + swap dup + dup 1 + * * ]",
+                "def b1 [ 3407372320869626980 * swap 1 + u0 5 - * ]"
+              ],
+              "expanded_nodes": 5,
+              "graph_logical_id": "d96d1e048b91735847c898ee4253b2fe03b08bcdb3d292b4808329fc4113c321",
+              "inputs": 3,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "c6ea405e3658bf64405dd7f5d99ced2ee9d4b23933ee81a59816e9bfc9a9d94b",
+              "live_nodes": 5,
+              "max_inline_depth": 2,
+              "name": "random-12",
+              "outputs": 3,
+              "pruned_nodes": 0,
+              "root": "drop swap [  ] dip [ dup [ -6250900979919718119 ] [ = ] compose run ] dip",
+              "work_units": 18
+            },
+            {
+              "definitions": [
+                "def u0 [ -1 + ]",
+                "def b0 [ + ]"
+              ],
+              "expanded_nodes": 32,
+              "graph_logical_id": "6662d2ab373f8cb96cc580f985118da7d8c4d8d29be8012aea14150f7ad35fa9",
+              "inputs": 3,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "1b6c9b1db7ecc4385af2308a97609950e5678efe925908d232b2f24f752c69eb",
+              "live_nodes": 3,
+              "max_inline_depth": 2,
+              "name": "random-13",
+              "outputs": 3,
+              "pruned_nodes": 29,
+              "root": "3 5 swap 3 quote [ u0 ] compose run b0 dup [ 3 ] [ * ] compose run = swap [ [ dup + ] dup compose run ] [ [ 6 ] dip + ] compose run -5419873657267120577 u0 [ 4076419944269193877 [ -3 * -1 - ] dup compose run ] dip swap 6 b0 * - drop drop",
+              "work_units": 82
+            },
+            {
+              "definitions": [
+                "def u0 [ 150524244671521185 - 4 * ]",
+                "def b0 [ swap - ]",
+                "def b1 [ * ]"
+              ],
+              "expanded_nodes": 15,
+              "graph_logical_id": "4c8f302550d7a0ebc1321db51ead3c709cc52dd90c204e20ed0c855554bc43fb",
+              "inputs": 1,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "23bf46d9fc629e5a5131d59a531694e93e598467154f8356d61f5c60d1a33b4d",
+              "live_nodes": 14,
+              "max_inline_depth": 3,
+              "name": "random-14",
+              "outputs": 2,
+              "pruned_nodes": 1,
+              "root": "dup - 1 drop [ [ dup * dup * u0 ] dup compose run ] [ dup ] compose run",
+              "work_units": 37
+            },
+            {
+              "definitions": [
+                "def u0 [ 5 * ]",
+                "def b0 [ - 1 * -467398329767974902 + ]"
+              ],
+              "expanded_nodes": 4,
+              "graph_logical_id": "0ae11bb0dd3a2fc8f4b52c4e781e72dc250e1f557b6c7857cd1737280e68b2a7",
+              "inputs": 2,
+              "l1": {
+                "off": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                },
+                "on": {
+                  "agree": 24,
+                  "ordinary_quota_outcomes": [],
+                  "session_restarts_after_ordinary_quota": 0,
+                  "vectors": 24
+                }
+              },
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "c2ed7ea13cc7dd10801467db287b1915068216c01e9fa9c8ce93f80919cc62b3",
+              "live_nodes": 4,
+              "max_inline_depth": 1,
+              "name": "random-15",
+              "outputs": 3,
+              "pruned_nodes": 0,
+              "root": "dup 0 = [ swap ] [  ] compose run",
+              "work_units": 11
+            },
+            {
+              "definitions": [
+                "def u0 [ dup * 9223372036854775807 - ]",
+                "def u1 [ -5400201303274582058 * 9223372036854775806 + u0 ]",
+                "def b0 [ * ]"
+              ],
+              "expanded_nodes": 19,
+              "graph_logical_id": "b7db6bb63939ab863124383936df25be73efb4ffaabd979616111356ca09f928",
+              "inputs": 1,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "97031436cf2d9934ed43c930904fc5d1fe22f0b78b716e3c713076a7be5defad",
+              "live_nodes": 19,
+              "max_inline_depth": 2,
+              "name": "random-16",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "[  ] [ [ dup * dup * dup 1 + * ] dup compose run ] compose run 6 swap u1",
+              "work_units": 42
+            },
+            {
+              "definitions": [
+                "def b0 [ swap * ]",
+                "def b1 [ 4294967296 * 6 + swap dup + * ]"
+              ],
+              "expanded_nodes": 21,
+              "graph_logical_id": "5af3bfefb404c2f0f8eed54ce443517d44943983814d4cb538a772b0d8f36a76",
+              "inputs": 1,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "9304b160ad433ba61b8a1b748e63c63f05f14d52d5db53ac8b78d0c8541d928f",
+              "live_nodes": 10,
+              "max_inline_depth": 2,
+              "name": "random-17",
+              "outputs": 2,
+              "pruned_nodes": 11,
+              "root": "[ 4294967296 0 ] [ dup ] compose run - = swap swap swap dup [ dup * dup * ] dup compose run = quote [ -4294967296 ] compose run 1 [ dup * dup 1 + * ] dup compose run = drop quote [ [  ] [  ] compose run ] compose run",
+              "work_units": 76
+            },
+            {
+              "definitions": [],
+              "expanded_nodes": 23,
+              "graph_logical_id": "29f1a3f2d7db82b29f81dd1eb6ca0375412b7a4b7ed2199d7fc9737e707470de",
+              "inputs": 2,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "da82b8bbac83d229108e01e36a7fddb3b281026f6740015b1992175e7113b239",
+              "live_nodes": 3,
+              "max_inline_depth": 2,
+              "name": "random-18",
+              "outputs": 3,
+              "pruned_nodes": 20,
+              "root": "drop dup dup = [ -9223372036854775808 drop ] dip [ dup ] [ [  ] [  ] compose run dup ] compose run [  ] [  ] compose run 3 quote [ [ 0 ] dip ] compose run * swap [ [ 3 + dup * -1 - ] dup compose run ] dip 9223372036854775807 3 * -2537534721471644601 dup - + drop drop drop",
+              "work_units": 78
+            },
+            {
+              "definitions": [
+                "def b0 [ + dup 1 + * dup 1 + * dup 1 + * ]",
+                "def b1 [ swap * ]"
+              ],
+              "expanded_nodes": 27,
+              "graph_logical_id": "d7f794ce8047e3f381ffe7000d41c8d4cacc3914e039562431e025474fd69c25",
+              "inputs": 1,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "3c17acd0b904bc0e595c874b7a81a4e7d8ace621a7729d188a1ac2b87673b8f0",
+              "live_nodes": 14,
+              "max_inline_depth": 2,
+              "name": "random-19",
+              "outputs": 3,
+              "pruned_nodes": 13,
+              "root": "2 -2 [ = ] dip [ dup 1 + * 0 * ] dup compose run drop [ quote [  ] compose run ] [ -1 ] compose run drop 6148914691236517205 9223372036854775807 -1696306179413565798 2147483648 dup [ quote [ 0 drop ] compose run 9223372036854775806 ] [ swap ] compose run 2 quote [ swap ] compose run * - * - -",
+              "work_units": 79
+            },
+            {
+              "definitions": [
+                "def u0 [ dup + 6148914691236517205 * dup + ]",
+                "def u1 [ -612544138671098270 + 9223372036854775806 - -698338658898311318 * ]"
+              ],
+              "expanded_nodes": 36,
+              "graph_logical_id": "2716b844fb9bef1a58235808fee8fa51b57a085db212df37259d327696d33c4b",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "b75a2dc157bcd148e71201324c979fcec914a99910418991d4d6d4925fab57fc",
+              "live_nodes": 6,
+              "max_inline_depth": 2,
+              "name": "random-20",
+              "outputs": 3,
+              "pruned_nodes": 30,
+              "root": "[ dup + ] dup compose run [  ] [ -5922058093833523426 u0 ] compose run [ u0 u0 dup 1 + * ] dup compose run + swap dup [ drop drop ] dip 942228158111579263 +",
+              "work_units": 79
+            },
+            {
+              "definitions": [
+                "def u0 [ -6424262754175083368 - ]"
+              ],
+              "expanded_nodes": 8,
+              "graph_logical_id": "5a6f114512cb08d0522c4d723941500fb96d8177f87c11b2a350a486cf27ccb4",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "a59aee2e63e0df1a575adce4749f292e4a7401155c858e28ee6660cba5765115",
+              "live_nodes": 7,
+              "max_inline_depth": 3,
+              "name": "random-21",
+              "outputs": 3,
+              "pruned_nodes": 1,
+              "root": "[ = ] [ quote [ 0 [ dup * ] dup compose run ] compose run ] compose run quote [ [  ] dip 2 ] compose run quote [ drop ] compose run",
+              "work_units": 46
+            },
+            {
+              "definitions": [
+                "def u0 [ dup 1 + * dup * ]",
+                "def b0 [ -3800956960344075342 - dup + -1 - swap -2 * + ]",
+                "def b1 [ dup + u0 swap 6057987361711606083 * dup * 3 * - ]"
+              ],
+              "expanded_nodes": 23,
+              "graph_logical_id": "1796ae8de2ab7d0d6dcaed056512bfc93eda8e974be01c24a7e8b3a07bf1cfd9",
+              "inputs": 2,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "e7d1cafd5b0243e5ea133d9b107dcf566c77958a6e6134c8c57b5f983e520796",
+              "live_nodes": 22,
+              "max_inline_depth": 1,
+              "name": "random-22",
+              "outputs": 3,
+              "pruned_nodes": 1,
+              "root": "= 1314001248667612626 6 + [ dup + ] dup compose run dup drop [ dup + dup * 1 * ] dup compose run [ dup * ] dup compose run u0 3078761377600642514 drop swap dup",
+              "work_units": 58
+            },
+            {
+              "definitions": [
+                "def u0 [ dup * 1 - dup + ]",
+                "def u1 [ u0 dup + ]",
+                "def b0 [ swap * ]"
+              ],
+              "expanded_nodes": 1,
+              "graph_logical_id": "0b16e2b513952d96bca29fb1222e2fe115028088f36afe4ede902c2a1dc1e7c4",
+              "inputs": 1,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "00fdc39431a69e3b7687486cdee229651ea20da8f9a675a5635a999ef0562e81",
+              "live_nodes": 1,
+              "max_inline_depth": 1,
+              "name": "random-23",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "quote [  ] compose run",
+              "work_units": 7
+            },
+            {
+              "definitions": [],
+              "expanded_nodes": 21,
+              "graph_logical_id": "f603cffebfa91230667288daccde00c94de94edf65a2115bc138c1b080a3ac2f",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "ece1a62a1d4ff60af1cde70a7fbf1bfe3f23ed17d77ad055bde300b3f8f4a5d9",
+              "live_nodes": 19,
+              "max_inline_depth": 1,
+              "name": "random-24",
+              "outputs": 3,
+              "pruned_nodes": 2,
+              "root": "= [  ] [  ] compose run swap drop -5544646688949958723 drop quote [ 0 drop ] compose run quote [ -8057463007464804317 ] compose run [ dup 1 + * dup + -6639323189831622332 * ] dup compose run [  ] dip swap [ 5 ] [ dup ] compose run *",
+              "work_units": 66
+            },
+            {
+              "definitions": [
+                "def u0 [ 3 + ]",
+                "def u1 [ 5849166530876485019 * ]",
+                "def b0 [ swap * ]",
+                "def b1 [ swap * ]"
+              ],
+              "expanded_nodes": 30,
+              "graph_logical_id": "942d7c3fb2353d66144b22129507494f579dc57b656cb4eeb0c78b177b913672",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "2242388b2d1c2f649fe30228aa011506fe5805e30aa66a62b27c12388ddbc788",
+              "live_nodes": 7,
+              "max_inline_depth": 4,
+              "name": "random-25",
+              "outputs": 3,
+              "pruned_nodes": 23,
+              "root": "= [ quote [ -2 ] compose run + ] dip -2 [ [ 6789564539830974755 dup ] dip swap [ -3 drop ] [ u0 ] compose run ] dip dup swap [ 3604195236191178050 drop ] dip -9223372036854775807 [ u1 ] [ = quote [ drop = ] compose run ] compose run 1763696491593419501 drop -4294967296 -4294967296 [ 6 u0 ] [ = ] compose run [ drop ] [ 7547356896378295556 [ [ u1 ] dup compose run ] [ swap ] compose run ] compose run b1 drop drop",
+              "work_units": 114
+            },
+            {
+              "definitions": [],
+              "expanded_nodes": 9,
+              "graph_logical_id": "dfe3638d0fdbc7aadac16c257f7bbce1383146843693818ee23e70658c2d57ac",
+              "inputs": 1,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "4b5e9ad5bdf60fb6df14cdf4a9c028723fae1ee415279566dc118df7fb734718",
+              "live_nodes": 9,
+              "max_inline_depth": 1,
+              "name": "random-26",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "6148914691236517205 + 4 -1 + swap = [ -9223372036854775807 ] [ dup ] compose run *",
+              "work_units": 17
+            },
+            {
+              "definitions": [
+                "def u0 [ 2 * ]",
+                "def u1 [ dup + u0 dup 1 + * ]",
+                "def b0 [ - ]",
+                "def b1 [ - ]"
+              ],
+              "expanded_nodes": 13,
+              "graph_logical_id": "53845b9bb5bfbd1a6b9c41a873d4a3938f4094e06b155e303a82fc70cac46647",
+              "inputs": 1,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "e29ef935a4b9906484bac6690f32b80e03bb87ec811f0ea3d73e22a6e214a7dd",
+              "live_nodes": 13,
+              "max_inline_depth": 1,
+              "name": "random-27",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "quote [ dup ] compose run 2 [ * -9040113419467989895 ] dip [ 1 * ] dup compose run 4 u0 b1 =",
+              "work_units": 32
+            },
+            {
+              "definitions": [
+                "def u0 [ dup * -2 * dup * ]",
+                "def b0 [ -6993785613683985147 - 9223372036854775806 - swap dup 1 + * dup * - ]",
+                "def b1 [ - dup * 4 + u0 ]"
+              ],
+              "expanded_nodes": 19,
+              "graph_logical_id": "130f60ed2472963327054ccdd2ad80a43894a7f4b243ecb1ae60093f9c186e5f",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "fcf41f584ded9c95a35eddccba4ba281c2b5e4ddb17085036f972ca788ac0757",
+              "live_nodes": 17,
+              "max_inline_depth": 1,
+              "name": "random-28",
+              "outputs": 3,
+              "pruned_nodes": 2,
+              "root": "drop 4136759634716201459 swap swap dup = drop b0 = 8034736228374365986 dup [ 1099503440380440356 ] dip -",
+              "work_units": 28
+            },
+            {
+              "definitions": [
+                "def u0 [ 3 + ]",
+                "def u1 [ 1 * 3492509797171831097 - ]"
+              ],
+              "expanded_nodes": 51,
+              "graph_logical_id": "8acaefc3c48a57e2938cba61270261755c27b40427bd101ee7ccb78c15d341fe",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "fe944c9901c5e7791032f5593a8baee8757780c890384e9643a58804ef6c0636",
+              "live_nodes": 32,
+              "max_inline_depth": 2,
+              "name": "random-29",
+              "outputs": 3,
+              "pruned_nodes": 19,
+              "root": "6148914691236517205 [ dup 1 + * 3 * dup + ] dup compose run = -733395907441320525 quote [ u1 ] compose run u1 quote [  ] compose run -7048622356705905070 [ [ dup 1 + * 1 - 1 * ] dup compose run [  ] [  ] compose run ] dip [ 5427721730643419208 - ] dup compose run - [ swap 3 ] [ [ -675935004902114686 ] dip ] compose run 7262971847722491009 - + drop drop",
+              "work_units": 114
+            },
+            {
+              "definitions": [
+                "def u0 [ dup 1 + * ]",
+                "def b0 [ * ]"
+              ],
+              "expanded_nodes": 27,
+              "graph_logical_id": "7d7cdd54c53f7c60135ce54cf7352468e664ab256dd2e21e9ccfc1dd4b8488bd",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "c21c1b5f1cf3e1e6448de5a1c1aec802a6100fc31a143a9706d58f66240bd535",
+              "live_nodes": 25,
+              "max_inline_depth": 1,
+              "name": "random-30",
+              "outputs": 3,
+              "pruned_nodes": 2,
+              "root": "[ dup 1 + * dup + ] dup compose run dup 4 [ - ] dip b0 u0 dup 3 - drop - [  ] dip + 1 u0 dup [ dup + ] dup compose run",
+              "work_units": 59
+            },
+            {
+              "definitions": [],
+              "expanded_nodes": 31,
+              "graph_logical_id": "4f128401975914a370dee0c63ec73573d887b9416e82642896e274b51e95cfae",
+              "inputs": 2,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "575952b284588cc2c478320c411ae284d29d9c00b0b8d8fca0eb73f069e38654",
+              "live_nodes": 23,
+              "max_inline_depth": 2,
+              "name": "random-31",
+              "outputs": 3,
+              "pruned_nodes": 8,
+              "root": "[ swap ] [ 3150203408073458757 ] compose run [ dup * ] dup compose run swap * dup swap [ -1255651923193035805 - 6227093023024033332 * ] dup compose run drop -8587736862405912275 [ 6 quote [ -7700472969463263295 ] compose run ] dip dup - [ * [ 265580910078559991 + -6490798686141954377 + ] dup compose run ] [ * + ] compose run = quote [ dup [  ] dip ] compose run [  ] [  ] compose run 5",
+              "work_units": 100
+            },
+            {
+              "definitions": [
+                "def b0 [ swap - ]"
+              ],
+              "expanded_nodes": 38,
+              "graph_logical_id": "6023ace102d4a90da3585c86f42d4195ccc13802d93daba4fefcac23610ef79a",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "5c27b9908d3469d4ffd1a91b47a641c5bdbe179dcd27c03ca27c2dcc17ba9957",
+              "live_nodes": 35,
+              "max_inline_depth": 2,
+              "name": "random-32",
+              "outputs": 3,
+              "pruned_nodes": 3,
+              "root": "drop [ quote [ drop * ] compose run 4 ] [ = ] compose run [  ] [  ] compose run -4294967296 [ dup 1 + * dup 1 + * ] dup compose run [ 7 + dup + -1 + ] dup compose run [ -2 - ] dup compose run [  ] [ dup ] compose run [ - ] [ quote [  ] compose run dup ] compose run dup [ 966314652909688278 ] [ = [  ] dip ] compose run 0 drop drop",
+              "work_units": 120
+            },
+            {
+              "definitions": [
+                "def u0 [ -5528266090044454128 * dup 1 + * 0 - ]",
+                "def u1 [ 5 * ]"
+              ],
+              "expanded_nodes": 34,
+              "graph_logical_id": "36c323a7ad3711332508b1651cbd246f7bb4f3a28c451180cd64d06be6f2f4bf",
+              "inputs": 1,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "e5f61b513cde7f193e93a811d6d4633f431a9b59680ab01357dc7b91aecc6ab9",
+              "live_nodes": 34,
+              "max_inline_depth": 3,
+              "name": "random-33",
+              "outputs": 1,
+              "pruned_nodes": 0,
+              "root": "[ -1368046711301621377 * dup 1 + * -7452022954423489925 - ] dup compose run dup drop quote [ quote [ u0 ] compose run ] compose run -7142601286068120637 + u0 [  ] [ 5815733495048662818 ] compose run [  ] dip dup [ + ] dip *",
+              "work_units": 76
+            },
+            {
+              "definitions": [],
+              "expanded_nodes": 13,
+              "graph_logical_id": "f0729af6912f91737ff2fe59790b5836a1796dfd44678de0d22a397d436468dc",
+              "inputs": 2,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "5fab4749afb820479e07e121fbc5f46f9995ea0549a205e14e99bcf4b15c314c",
+              "live_nodes": 13,
+              "max_inline_depth": 3,
+              "name": "random-34",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "[ dup - ] [ [ -1 ] [ 0 - ] compose run swap ] compose run quote [ swap ] compose run 6 [ [ [ dup * ] dup compose run ] dip [ * ] [ - ] compose run ] dip [ 0 ] dip =",
+              "work_units": 60
+            },
+            {
+              "definitions": [
+                "def u0 [ 203214428838479082 * ]",
+                "def b0 [ swap - ]",
+                "def b1 [ * -7957532098076914906 - ]"
+              ],
+              "expanded_nodes": 18,
+              "graph_logical_id": "a0acbc99ff1c066771d843e567a6b79970da947968de1fe5640adf9566dfb55f",
+              "inputs": 2,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "32723a45a140b2fff1c73c90b9163aee18e4da15b1380ee0b24ade66d96422dd",
+              "live_nodes": 6,
+              "max_inline_depth": 3,
+              "name": "random-35",
+              "outputs": 2,
+              "pruned_nodes": 12,
+              "root": "[ dup 1 + * -2665145087364053565 * ] dup compose run [ 6 ] dip swap b0 1050938626281048475 [ u0 swap ] [ drop ] compose run quote [ dup quote [ swap b0 ] compose run ] compose run swap",
+              "work_units": 60
+            },
+            {
+              "definitions": [
+                "def u0 [ dup + dup 1 + * dup * ]"
+              ],
+              "expanded_nodes": 53,
+              "graph_logical_id": "07b319d82353066d6e64e694d210a3b273882938092065ae5e9491aeff51bf90",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "cb2b7b9963a53f3a91ef7eb17244ebecf668bed8e0d37ea2d191d03de1b57a08",
+              "live_nodes": 49,
+              "max_inline_depth": 2,
+              "name": "random-36",
+              "outputs": 3,
+              "pruned_nodes": 4,
+              "root": "drop -2 [  ] [ + quote [ 8542967883775700692 ] compose run ] compose run [ drop ] dip = 1877205608273472776 -3 drop [ u0 -3 - ] dup compose run [  ] dip [ u0 0 + ] dup compose run [ 9223372036854775806 + -4463561336538992532 - ] dup compose run u0 [ 5 drop ] dip dup swap - [ quote [  ] compose run ] [ quote [  ] compose run [  ] [ swap ] compose run ] compose run",
+              "work_units": 148
+            },
+            {
+              "definitions": [
+                "def b0 [ dup + dup 1 + * dup * swap dup * - ]",
+                "def b1 [ dup + dup * dup 1 + * swap -3037131154242558334 + -2 * 0 * - ]"
+              ],
+              "expanded_nodes": 6,
+              "graph_logical_id": "85df186820c03794cff2e7793b0d4bd5eedc2bfe95b461f6eb911e61bd9c7134",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "e41005fc541d98aecd3859ac36e8278c56526e748af7027b6ccac11b54295038",
+              "live_nodes": 5,
+              "max_inline_depth": 2,
+              "name": "random-37",
+              "outputs": 1,
+              "pruned_nodes": 1,
+              "root": "- [ - ] [ quote [  ] compose run ] compose run -2 drop [  ] [  ] compose run [  ] [  ] compose run",
+              "work_units": 32
+            },
+            {
+              "definitions": [],
+              "expanded_nodes": 23,
+              "graph_logical_id": "a75033f938b4f726dc394072c69cdfb01413040ce227b07a7d2fab12b77ddcfa",
+              "inputs": 1,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "2bdbb7883da1e5c048fde595d41faf702e38588623b3c172c07c6410300d0463",
+              "live_nodes": 23,
+              "max_inline_depth": 2,
+              "name": "random-38",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "quote [  ] compose run [ 2 + ] dup compose run [ 1147267470195588333 * 1 + 6998489923240554882 * ] dup compose run [ quote [  ] compose run ] [ quote [ 5 ] compose run ] compose run quote [ 4 1 ] compose run swap * [ * ] dip = dup swap",
+              "work_units": 77
+            },
+            {
+              "definitions": [
+                "def u0 [ 3 * dup * ]"
+              ],
+              "expanded_nodes": 17,
+              "graph_logical_id": "ce04e38698117af404c5f8a4fdf69628d762dc9cc01b9614e7a5c9d58dfa23f2",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "32e93e2a4ae69b2d873735a91b10f741e2a286529bbcd58dba0b553d2bc13dae",
+              "live_nodes": 17,
+              "max_inline_depth": 1,
+              "name": "random-39",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "u0 - [ dup * 6 - dup * ] dup compose run [ -2 ] [ = ] compose run",
+              "work_units": 34
+            },
+            {
+              "definitions": [
+                "def u0 [ dup 1 + * 2 * 1 - ]",
+                "def u1 [ dup + ]"
+              ],
+              "expanded_nodes": 13,
+              "graph_logical_id": "7367fa30b3cf99e595ece5cb01ba2eacada846ec3737c031fc6ca301c409aced",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "3dc61a610ca2bdd32d029c42b1850f8d75e6b2c292ea3a5d40dbecda1ff9ce31",
+              "live_nodes": 6,
+              "max_inline_depth": 1,
+              "name": "random-40",
+              "outputs": 3,
+              "pruned_nodes": 7,
+              "root": "u0 2 swap drop -",
+              "work_units": 13
+            },
+            {
+              "definitions": [
+                "def u0 [ 2 + 4 + dup + ]",
+                "def u1 [ dup 1 + * 8810714918318352581 - dup * ]"
+              ],
+              "expanded_nodes": 29,
+              "graph_logical_id": "8aaf9044973f424464a63d0d193a9ea06295128b65cc69b2991cf12dbc13cd98",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "a9528fcf073c13882353eccf330c7f6d7270048b36a0510d62c0317dd5074710",
+              "live_nodes": 27,
+              "max_inline_depth": 2,
+              "name": "random-41",
+              "outputs": 3,
+              "pruned_nodes": 2,
+              "root": "* * [ [ dup 1 + * dup 1 + * dup + ] dup compose run ] dip dup swap dup = 3941842208886603049 [ dup + 2 - ] dup compose run swap quote [  ] compose run -2 drop drop",
+              "work_units": 63
+            },
+            {
+              "definitions": [
+                "def u0 [ dup + ]"
+              ],
+              "expanded_nodes": 23,
+              "graph_logical_id": "4c5a0480e438484140cbfb97dbb14726776059b4ce2c4cfe7f67e231a1d7660a",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "88f54b8df77ebe9c761d5915cd09ffe87a9b0e4bb5a7ddbdf736d30fa123d1e2",
+              "live_nodes": 23,
+              "max_inline_depth": 2,
+              "name": "random-42",
+              "outputs": 3,
+              "pruned_nodes": 0,
+              "root": "* * 0 [ 407998953889384634 ] [ -3 ] compose run [ - u0 ] dip + - 7740837365522278222 * [ dup + ] dup compose run - 1 9223372036854775807 * 2 u0",
+              "work_units": 42
+            },
+            {
+              "definitions": [
+                "def u0 [ 3486702654330780352 - dup * dup * ]",
+                "def b0 [ + ]",
+                "def b1 [ * ]"
+              ],
+              "expanded_nodes": 33,
+              "graph_logical_id": "c68116052e87768380c9da30a1f68d179b6e68a2f4010d52c80bf7874e67280c",
+              "inputs": 2,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "136d1ee5ad48d9f8093b59d5711a18d20d5ac47862a2080533c117cca19b10d2",
+              "live_nodes": 33,
+              "max_inline_depth": 2,
+              "name": "random-43",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "swap * 4 5591236247026114705 b0 - [ -3 + 2 * ] dup compose run u0 [ -1 ] [ quote [ * ] compose run dup ] compose run [ - ] [ u0 u0 ] compose run 1 6074510767463920857 [ = ] dip",
+              "work_units": 74
+            },
+            {
+              "definitions": [
+                "def u0 [ dup + 179447448926999319 * ]",
+                "def b0 [ 9223372036854775807 + -2406638779319749952 - swap dup 1 + * dup 1 + * + ]"
+              ],
+              "expanded_nodes": 57,
+              "graph_logical_id": "d81b7cc0b9b2e7fb0bd244c50642ab9549a9e617de1f24f56b553065c3de4e5b",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "404fac514a511446ab1c3376fdae96218f0f91ff11f7f3eaaec064e700bd1125",
+              "live_nodes": 57,
+              "max_inline_depth": 4,
+              "name": "random-44",
+              "outputs": 3,
+              "pruned_nodes": 0,
+              "root": "[ 2347480828043263886 -2 ] [ swap ] compose run + b0 2 quote [ quote [ [ -2 - u0 ] dup compose run ] compose run u0 quote [ - ] compose run ] compose run dup b0 dup swap [ swap ] dip [ -4294967296 - dup + dup * ] dup compose run u0 + -",
+              "work_units": 123
+            },
+            {
+              "definitions": [
+                "def u0 [ dup + -1 - ]",
+                "def u1 [ 0 - ]"
+              ],
+              "expanded_nodes": 6,
+              "graph_logical_id": "d414c02ab47b7236fde8f2e4f5af8e95b79f0cae491fa78bdc2873b76c085528",
+              "inputs": 2,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "3ffe609a6268672e070faea4af7dbdd6476aba50df75ad9a9a62af9d4af56bdb",
+              "live_nodes": 6,
+              "max_inline_depth": 1,
+              "name": "random-45",
+              "outputs": 3,
+              "pruned_nodes": 0,
+              "root": "dup - - 4 quote [ dup = swap ] compose run dup",
+              "work_units": 15
+            },
+            {
+              "definitions": [
+                "def u0 [ dup + dup * dup 1 + * ]",
+                "def u1 [ 3 + 6 * dup 1 + * ]",
+                "def b0 [ * ]",
+                "def b1 [ - ]"
+              ],
+              "expanded_nodes": 38,
+              "graph_logical_id": "afdae713f939845607173d8a223548ea74ee48d2f003c35ef53ed92b9eba059f",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "9eb62a9392b1cce4cbc91ed853e92a7a7f6fb3110373749c09949ef5c52793ed",
+              "live_nodes": 26,
+              "max_inline_depth": 2,
+              "name": "random-46",
+              "outputs": 2,
+              "pruned_nodes": 12,
+              "root": "u1 u0 drop 4 + -2 * [ - ] dip -1616687710800632753 quote [ [ dup * -1 + 5 - ] dup compose run quote [  ] compose run u0 ] compose run [ = ] dip swap quote [  ] compose run",
+              "work_units": 82
+            },
+            {
+              "definitions": [
+                "def u0 [ 7 * ]",
+                "def u1 [ dup 1 + * dup + dup + ]",
+                "def b0 [ -2862368995640596329 - swap dup + dup 1 + * 0 * - ]"
+              ],
+              "expanded_nodes": 7,
+              "graph_logical_id": "ce16cc3728e3dcdee73a87b57f43fe26ef5b5f6a254d2e5159c2d2a672468f27",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "656cc88f62ee5e0800c1b6d686fbdd7a42fd5086ad6c7592e7172d1d2dca99ab",
+              "live_nodes": 7,
+              "max_inline_depth": 1,
+              "name": "random-47",
+              "outputs": 3,
+              "pruned_nodes": 0,
+              "root": "quote [ swap ] compose run u0 -3 =",
+              "work_units": 13
+            },
+            {
+              "definitions": [
+                "def b0 [ + ]"
+              ],
+              "expanded_nodes": 4,
+              "graph_logical_id": "5c3bb836f54a7973b685a8c70e1bf1b6e3ae91a24faca9659508ddb73361609d",
+              "inputs": 2,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "f4e0e994983b04ecb8d1df2d06478b517ce004abd563087494d9d255226cb514",
+              "live_nodes": 3,
+              "max_inline_depth": 2,
+              "name": "random-48",
+              "outputs": 1,
+              "pruned_nodes": 1,
+              "root": "0 drop [ dup [ drop ] [  ] compose run ] dip quote [ - ] compose run",
+              "work_units": 22
+            },
+            {
+              "definitions": [
+                "def u0 [ dup 1 + * dup + -1 * ]",
+                "def u1 [ dup + ]",
+                "def b0 [ swap - ]",
+                "def b1 [ 7877603042373464058 * swap dup 1 + * 2275798313661828563 - - ]"
+              ],
+              "expanded_nodes": 10,
+              "graph_logical_id": "01dccd007a7e28cd12a0b80cbc42b15504a9d3c098cb75201949d00e9503813d",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "c27806d6c161573f36362f30fee5faec146e41a500a88d981621891c3c024026",
+              "live_nodes": 9,
+              "max_inline_depth": 2,
+              "name": "random-49",
+              "outputs": 2,
+              "pruned_nodes": 1,
+              "root": "dup 9223372036854775807 quote [ u1 dup ] compose run quote [ [ = drop ] dip - ] compose run - =",
+              "work_units": 28
+            },
+            {
+              "definitions": [
+                "def b0 [ * 0 - ]"
+              ],
+              "expanded_nodes": 7,
+              "graph_logical_id": "20f4a415220c7264bb2073d0956698cb7afff02a8fa4a62625d594d74f03df1b",
+              "inputs": 2,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "42480c0d4044f4bad409b71a2a1124364197395b37e97e58e11c2eea01036451",
+              "live_nodes": 7,
+              "max_inline_depth": 1,
+              "name": "random-50",
+              "outputs": 3,
+              "pruned_nodes": 0,
+              "root": "dup swap quote [ dup ] compose run [ 1 + ] dup compose run =",
+              "work_units": 22
+            },
+            {
+              "definitions": [
+                "def b0 [ swap + ]",
+                "def b1 [ swap + ]"
+              ],
+              "expanded_nodes": 7,
+              "graph_logical_id": "37d2403153441f2da32f07fb85b2b708620c766555cea1bd7a4309d3c03c05d1",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "d1b56cda7acedf65f7e8a3389cb215a671daeb4fcff9db61346a61c0f46b8d1d",
+              "live_nodes": 3,
+              "max_inline_depth": 2,
+              "name": "random-51",
+              "outputs": 3,
+              "pruned_nodes": 4,
+              "root": "[ dup + ] dup compose run [ [ -1 ] [ swap - ] compose run ] [ drop ] compose run dup",
+              "work_units": 30
+            },
+            {
+              "definitions": [
+                "def u0 [ dup 1 + * ]",
+                "def b0 [ - dup * dup * u0 ]",
+                "def b1 [ + ]"
+              ],
+              "expanded_nodes": 37,
+              "graph_logical_id": "a39c4837f503294484bee7bc4975a7da4c38d7936e1dbff1f66fb30084df1a33",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "e12616aa802f201ee2eb9ba6198a6f98603f3f32274311b3a0eaf5951ababa0e",
+              "live_nodes": 16,
+              "max_inline_depth": 2,
+              "name": "random-52",
+              "outputs": 3,
+              "pruned_nodes": 21,
+              "root": "drop [ -3144388770387281450 * ] dup compose run -6799359645714585642 u0 dup [ -6545545596415377872 * ] dip [ [ + ] dip ] dip quote [ [ = ] dip [  ] [ -5236417581037300050 + ] compose run 4294967296 ] compose run [ u0 ] dip + 6001559183458941644 + swap [  ] [ [ dup drop ] dip ] compose run swap [ dup ] dip -2724137951541315177 swap -2 [ -4294967296 * 3 + ] dup compose run [ * [  ] dip ] dip swap * drop",
+              "work_units": 109
+            },
+            {
+              "definitions": [
+                "def u0 [ dup 1 + * 7 + ]",
+                "def u1 [ u0 ]",
+                "def b0 [ + ]",
+                "def b1 [ + 5 * -2 + dup + ]"
+              ],
+              "expanded_nodes": 33,
+              "graph_logical_id": "1a5ea75f42edbcba42b40bcf449b38461dfc11ee9b36faf5999f76637242fcdf",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "db83ae49ae26ed42c64513fc2a1e7b7f0813206d60e2be245834f697eb2bf870",
+              "live_nodes": 17,
+              "max_inline_depth": 2,
+              "name": "random-53",
+              "outputs": 3,
+              "pruned_nodes": 16,
+              "root": "-4987716579452110235 [ 4 - -1 + 5 - ] dup compose run drop swap quote [ - ] compose run u0 quote [ = ] compose run 2 [ dup 8019590338422607086 ] dip = quote [  ] compose run quote [ drop -3 ] compose run [ quote [ drop ] compose run dup swap ] dip 6 * 1 -2 - *",
+              "work_units": 87
+            },
+            {
+              "definitions": [
+                "def b0 [ * dup * dup 1 + * -4294967296 + ]"
+              ],
+              "expanded_nodes": 7,
+              "graph_logical_id": "bf7406f3697f145c37fbda9d1ab02aa61365cf5313d728dde25c8a9da6087b74",
+              "inputs": 2,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "d2b7485e975d2c573d0a52f04fb845e776952a061c21466cc03361670dd246ce",
+              "live_nodes": 6,
+              "max_inline_depth": 2,
+              "name": "random-54",
+              "outputs": 3,
+              "pruned_nodes": 1,
+              "root": "* [  ] [  ] compose run -2 quote [ [  ] [ = -1 ] compose run ] compose run [ quote [  ] compose run ] dip swap dup -6770465722202197878 drop dup swap [  ] dip drop",
+              "work_units": 45
+            },
+            {
+              "definitions": [
+                "def u0 [ 1 * -3 + dup * ]",
+                "def u1 [ dup + ]",
+                "def b0 [ swap * ]",
+                "def b1 [ swap * ]"
+              ],
+              "expanded_nodes": 29,
+              "graph_logical_id": "fe941771958adc38e735c831a6379e379886ab1cf2550e7798f8fe0c493212cc",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "c43e1f02f6187e95b17a768b3890dad7e8da84fa18f38b5f5b2661d43b58872e",
+              "live_nodes": 19,
+              "max_inline_depth": 3,
+              "name": "random-55",
+              "outputs": 3,
+              "pruned_nodes": 10,
+              "root": "- swap drop 4 [ u1 dup 1 + * ] dup compose run u1 drop [  ] [ [ u0 ] [  ] compose run ] compose run -8707090188896561934 [  ] dip = -1 swap 1 u0 dup = swap [  ] dip",
+              "work_units": 71
+            },
+            {
+              "definitions": [
+                "def u0 [ 5641146645804531110 - -3 - -8015225564834464713 * ]",
+                "def u1 [ u0 ]",
+                "def b0 [ 3 + 5 * dup * swap u1 5 + -679021340041111293 + * ]",
+                "def b1 [ u1 dup * swap 9223162948318416543 - u0 -9223372036854775808 * + ]"
+              ],
+              "expanded_nodes": 8,
+              "graph_logical_id": "17b0c78800c12e147423c600f44f2686df69c097c4e0d18ba3e1a65f04298689",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "7478782fd5e9ef9b914ce31b3e15ea61b9b395ed428b69524dcb0c4b7ff52b9c",
+              "live_nodes": 5,
+              "max_inline_depth": 2,
+              "name": "random-56",
+              "outputs": 3,
+              "pruned_nodes": 3,
+              "root": "7 [ -6493321374720766712 [ + ] dip ] dip = drop",
+              "work_units": 11
+            },
+            {
+              "definitions": [
+                "def u0 [ 2794188685329843740 + dup 1 + * 9218338045174903986 - ]"
+              ],
+              "expanded_nodes": 22,
+              "graph_logical_id": "9123eb8d4cd69de245b2c461de2be041f95500d6246f3fce14f677969681a90b",
+              "inputs": 1,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "d744fa04826eff23bf2914992c2d64df0ddd955a46fa30a13823023c3b3dbec8",
+              "live_nodes": 8,
+              "max_inline_depth": 2,
+              "name": "random-57",
+              "outputs": 3,
+              "pruned_nodes": 14,
+              "root": "-3 = 4391671892510417882 [ -3 - ] dup compose run swap dup drop quote [ swap [ dup ] dip ] compose run swap quote [ dup ] compose run 7 quote [ -974116247400662848 drop ] compose run [ dup * -2 + dup 1 + * ] dup compose run drop drop",
+              "work_units": 73
+            },
+            {
+              "definitions": [
+                "def b0 [ * ]"
+              ],
+              "expanded_nodes": 32,
+              "graph_logical_id": "e78a01397400ddba4bb1c7707c95ad79cc535b5f421d065906a0949d86fb05df",
+              "inputs": 1,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "91e25021529889db181001dc9ed731346e193f065b9aa1cb9ea74e77b9e0abda",
+              "live_nodes": 32,
+              "max_inline_depth": 2,
+              "name": "random-58",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "-2 quote [ [ dup * 355602377491371940 + ] dup compose run + ] compose run [ -2 - dup + dup 1 + * ] dup compose run -4294967296 [ 3089348390910574843 - dup 1 + * ] dup compose run",
+              "work_units": 67
+            },
+            {
+              "definitions": [
+                "def u0 [ dup + 2 + ]",
+                "def b0 [ * ]"
+              ],
+              "expanded_nodes": 6,
+              "graph_logical_id": "b66dca911f8ac04ae01b2f49dc992788b13208018834c7d983195fd554ee680a",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "1a091fded3f48aab56f0592acdcbb9228566dc43fd0bd3623a95669a5ef50780",
+              "live_nodes": 6,
+              "max_inline_depth": 1,
+              "name": "random-59",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "dup [ drop - ] [ * ] compose run 2",
+              "work_units": 12
+            },
+            {
+              "definitions": [],
+              "expanded_nodes": 15,
+              "graph_logical_id": "89244150b6aee4feddea9d3301ea46b71e7d7d628723b4d1872628d8d4a4ccea",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "0523b18e2ff41b28ce8fb3fce1b90905cf861d3d3068503eac764e686daa671d",
+              "live_nodes": 15,
+              "max_inline_depth": 1,
+              "name": "random-60",
+              "outputs": 3,
+              "pruned_nodes": 0,
+              "root": "drop 5 dup [ 3 5176667892035231687 3846870681225000870 ] dip -3799164036946051593 + + * - - +",
+              "work_units": 16
+            },
+            {
+              "definitions": [
+                "def u0 [ 1 * ]",
+                "def u1 [ 5014879349168319165 - dup 1 + * ]"
+              ],
+              "expanded_nodes": 7,
+              "graph_logical_id": "2d1aa5df35f28a99a55f04eab7bb3c84e2a1575cc4a5d4070e05385893febc5c",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "fddb68440941749ede125b942f1a77db22a4ba20195d550d53cbab3a52642f4b",
+              "live_nodes": 7,
+              "max_inline_depth": 0,
+              "name": "random-61",
+              "outputs": 3,
+              "pruned_nodes": 0,
+              "root": "0 2 + -",
+              "work_units": 4
+            },
+            {
+              "definitions": [
+                "def u0 [ 1 * -1 + -1 - ]",
+                "def b0 [ 3 + dup + u0 swap dup * - ]"
+              ],
+              "expanded_nodes": 45,
+              "graph_logical_id": "c3a86f25ba76bc2a59a3cd02a47fd5f684f5e144e4658569ca56e732f777fe88",
+              "inputs": 3,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "a4c7794f0c246faad9a9b9d99db45919aa52307bc097a48c09f7755cd183b55b",
+              "live_nodes": 45,
+              "max_inline_depth": 2,
+              "name": "random-62",
+              "outputs": 2,
+              "pruned_nodes": 0,
+              "root": "u0 -3 [ - ] [ - ] compose run [  ] dip swap drop [ u0 dup + 652453198015609562 - ] dup compose run [ dup * ] dup compose run [ u0 ] dup compose run -9223372036854775808",
+              "work_units": 84
+            },
+            {
+              "definitions": [
+                "def b0 [ dup * swap -7041874272158911370 * -7931759397555729019 + * ]"
+              ],
+              "expanded_nodes": 15,
+              "graph_logical_id": "4d587f654d09af98644923da4ee81c14b38d60d806e72eb42f00ec7cf2120077",
+              "inputs": 4,
+              "l1": null,
+              "l2_l3_l4_vectors": 10000,
+              "l3_output_digest": "6fd1a18149ec89fba979d428f9d84a519787bad075b8fc8c54783c956dde7b0b",
+              "live_nodes": 4,
+              "max_inline_depth": 1,
+              "name": "random-63",
+              "outputs": 2,
+              "pruned_nodes": 11,
+              "root": "+ swap b0 1 4 swap * = [ dup ] dip swap [ drop ] dip",
+              "work_units": 25
+            }
+          ]
+        },
+        "revision": "f5806a0f2dec22c59ad53d5b446a8c4db800e32c",
+        "subject": "B2-I64-differential"
+      },
+      "execution": "passed",
+      "id": "B2-I64-differential",
+      "implementation": "implemented",
+      "open_obligations": [
+        "NG-PO-A",
+        "NG-PO-B",
+        "NG-PO-C",
+        "PO-17",
+        "PO-18"
+      ],
+      "proof": "open",
+      "requirements": [
+        "NGRAPH-EXTRACT-01",
+        "NGRAPH-PROOF-01"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "noble_kernel::acceptance::check as the independent subject checker (PO-09/10/11 accepted for bootstrap fragment v1 only)",
+        "the extractor's unpruned compose/run expansion accounting (inside the trusted extraction boundary until NG-PO-A)",
+        "this crate's graph checker and L3/L4 evaluators (NG-PO-B/C open)",
+        "the pinned noble release CLI, its Node/V8 runtime and wasm-opt (--opt on) as the ordinary path (PO-17/18 open)",
+        "the pinned Node BigInt implementation as the L2 oracle runtime",
+        "rustc/LLVM of the pinned nightly toolchain",
+        "blake3 =1.8.7 (pure) and sha256sum for identities: a hash identifies bytes, it proves nothing"
+      ]
+    },
+    {
+      "claim": "every forbidden source construct is refused by admission/extraction with its D6 code before any graph exists (0 graph nodes evaluated), while the ordinary path's own behavior on the same source is unchanged",
+      "evidence": {
+        "assumptions": [
+          "recursion and the k=20 chain cannot be written in Core source (the frontend refuses recursion and exhausts at d10); they are minimally forged, kernel-accepted submissions"
+        ],
+        "claim": "every forbidden source construct is refused by admission/extraction with its D6 code before any graph exists (0 graph nodes evaluated), while the ordinary path's own behavior on the same source is unchanged",
+        "configuration": "see run (BE-CONFIG-01)",
+        "kind": "test",
+        "result": {
+          "cases": [
+            {
+              "budget": null,
+              "detail": "E-EFFECT at Graph: root effect bound EffSet([EffId(0)]) is not empty",
+              "expected": "E-EFFECT",
+              "graph_nodes_evaluated": 0,
+              "name": "test.emit",
+              "observed": "E-EFFECT",
+              "ordinary": {
+                "first_non_normal": null,
+                "first_non_normal_outcome": null,
+                "last_outcome": "normal",
+                "last_stack": "[I64(5)]",
+                "last_trace": [
+                  "test.emit:hi"
+                ],
+                "reports": 1,
+                "submissions": [
+                  "\"hi\" test.emit 5"
+                ]
+              },
+              "subject": "defs []; root \"\\\"hi\\\" test.emit 5\"; inputs []"
+            },
+            {
+              "budget": null,
+              "detail": "E-EFFECT at Graph: root effect bound EffSet([EffId(0)]) is not empty",
+              "expected": "E-EFFECT",
+              "graph_nodes_evaluated": 0,
+              "name": "test.emit-in-run",
+              "observed": "E-EFFECT",
+              "ordinary": {
+                "first_non_normal": null,
+                "first_non_normal_outcome": null,
+                "last_outcome": "normal",
+                "last_stack": "[I64(5)]",
+                "last_trace": [
+                  "test.emit:hi"
+                ],
+                "reports": 1,
+                "submissions": [
+                  "[ \"hi\" test.emit ] run 5"
+                ]
+              },
+              "subject": "defs []; root \"[ \\\"hi\\\" test.emit ] run 5\"; inputs []"
+            },
+            {
+              "budget": null,
+              "detail": "E-RESOURCE at Slot(0): Resource or LiveRef in the root interface: Resource(ResourceKind(0))",
+              "expected": "E-RESOURCE",
+              "graph_nodes_evaluated": 0,
+              "name": "resource-input",
+              "observed": "E-RESOURCE",
+              "ordinary": {
+                "not_expressible": "Core source refuses Resource inputs; only declared-module/component hosts supply them, and `noble session` has no resource input"
+              },
+              "subject": "Declared-Modules-v1 session; root \"swap\"; inputs [Resource(ResourceKind(0)), I64]"
+            },
+            {
+              "budget": null,
+              "detail": "E-RESOURCE at Slot(1): Resource or LiveRef in the root interface: LiveRef([I64], [I64], EffSet([]))",
+              "expected": "E-RESOURCE",
+              "graph_nodes_evaluated": 0,
+              "name": "liveref-input",
+              "observed": "E-RESOURCE",
+              "ordinary": {
+                "last_stack": [
+                  {
+                    "kind": 1,
+                    "value": "6"
+                  }
+                ],
+                "live_slot_requests": [
+                  "{\"id\":\"subject\",\"inputs\":[\"I64\",\"LiveRef<I64,I64,pure>\"],\"operation\":\"install\",\"source\":\"1 +\"}",
+                  "{\"operation\":\"define\",\"id\":\"definition\",\"name\":\"inc\",\"source\":\"def inc [ 1 + ]\",\"inputs\":[]}",
+                  "{\"operation\":\"install\",\"id\":\"named\",\"source\":\"inc\",\"inputs\":[\"I64\"],\"selected_name\":\"inc\"}",
+                  "{\"operation\":\"publish\",\"slot\":\"inc\",\"id\":\"named\",\"program_index\":0,\"expected_epoch\":\"0\"}",
+                  "{\"id\":\"subject\",\"inputs\":[{\"kind\":\"i64\",\"value\":\"5\"}],\"operation\":\"invoke\",\"refs\":[{\"ordinal\":0,\"position\":1,\"slot\":\"inc\"}]}"
+                ],
+                "outcomes": [
+                  "configured",
+                  "installed",
+                  "definition-retained",
+                  "installed",
+                  "published",
+                  "executed"
+                ]
+              },
+              "subject": "live-slot session; root \"1 +\"; inputs [I64, LiveRef([I64], [I64], EffSet([]))]"
+            },
+            {
+              "budget": null,
+              "detail": "E-LIVE-SLOT at Source(SourceRef { definition: None, node: 0 }): live-slot dispatch selects its target at run time; no static closure exists",
+              "expected": "E-LIVE-SLOT",
+              "graph_nodes_evaluated": 0,
+              "name": "live-slot-dispatch",
+              "observed": "E-LIVE-SLOT",
+              "ordinary": {
+                "last_stack": [
+                  {
+                    "kind": 1,
+                    "value": "6"
+                  }
+                ],
+                "live_slot_requests": [
+                  "{\"id\":\"subject\",\"inputs\":[\"I64\",\"LiveRef<I64,I64,pure>\"],\"operation\":\"install\",\"source\":\"slot.invoke\"}",
+                  "{\"operation\":\"define\",\"id\":\"definition\",\"name\":\"inc\",\"source\":\"def inc [ 1 + ]\",\"inputs\":[]}",
+                  "{\"operation\":\"install\",\"id\":\"named\",\"source\":\"inc\",\"inputs\":[\"I64\"],\"selected_name\":\"inc\"}",
+                  "{\"operation\":\"publish\",\"slot\":\"inc\",\"id\":\"named\",\"program_index\":0,\"expected_epoch\":\"0\"}",
+                  "{\"id\":\"subject\",\"inputs\":[{\"kind\":\"i64\",\"value\":\"5\"}],\"operation\":\"invoke\",\"refs\":[{\"ordinal\":0,\"position\":1,\"slot\":\"inc\"}]}"
+                ],
+                "outcomes": [
+                  "configured",
+                  "installed",
+                  "definition-retained",
+                  "installed",
+                  "published",
+                  "executed"
+                ]
+              },
+              "subject": "live-slot session; root \"slot.invoke\"; inputs [I64, LiveRef([I64], [I64], EffSet([]))]"
+            },
+            {
+              "budget": null,
+              "detail": "E-DYNAMIC-RUN at Graph: Program-valued root interface item Program([I64], [I64], EffSet([]))",
+              "expected": "E-DYNAMIC-RUN",
+              "graph_nodes_evaluated": 0,
+              "name": "run-of-program-input",
+              "observed": "E-DYNAMIC-RUN",
+              "ordinary": {
+                "first_non_normal": null,
+                "first_non_normal_outcome": null,
+                "last_outcome": "normal",
+                "last_stack": "[I64(6)]",
+                "last_trace": [],
+                "reports": 2,
+                "submissions": [
+                  "5 [ 1 + ]",
+                  "run"
+                ]
+              },
+              "subject": "defs []; root \"run\"; inputs [I64, Program([I64], [I64], EffSet([]))]"
+            },
+            {
+              "budget": null,
+              "detail": "E-RECURSION at Graph: definition identity Some(1) is reached again below itself",
+              "expected": "E-RECURSION",
+              "graph_nodes_evaluated": 0,
+              "name": "self-recursion",
+              "observed": "E-RECURSION",
+              "ordinary": {
+                "first_non_normal": 0,
+                "first_non_normal_outcome": {
+                  "diagnostic": "recursive definitions require a signature and are outside Core-Bootstrap",
+                  "outcome": "unsupported",
+                  "stage": "resolve"
+                },
+                "last_outcome": "unbound-word",
+                "last_stack": "[]",
+                "last_trace": [],
+                "reports": 2,
+                "submissions": [
+                  "def f [ f ]",
+                  "5 f"
+                ]
+              },
+              "subject": "forged f = [ f ] from [\"def f [ dup drop ]\"] / \"5 f\"; Env::deps left as produced"
+            },
+            {
+              "budget": null,
+              "detail": "E-SUBJECT at Graph: body of None is not kernel-accepted: Unsupported(RecursiveDependency(Definition(24)))",
+              "expected": "E-SUBJECT",
+              "graph_nodes_evaluated": 0,
+              "name": "self-recursion-kernel",
+              "observed": "E-SUBJECT",
+              "ordinary": {
+                "first_non_normal": 0,
+                "first_non_normal_outcome": {
+                  "diagnostic": "recursive definitions require a signature and are outside Core-Bootstrap",
+                  "outcome": "unsupported",
+                  "stage": "resolve"
+                },
+                "last_outcome": "unbound-word",
+                "last_stack": "[]",
+                "last_trace": [],
+                "reports": 2,
+                "submissions": [
+                  "def f [ f ]",
+                  "5 f"
+                ]
+              },
+              "subject": "forged f = [ f ] from [\"def f [ dup drop ]\"] / \"5 f\"; Env::deps forged to match"
+            },
+            {
+              "budget": null,
+              "detail": "E-RECURSION at Graph: definition identity Some(2) is reached again below itself",
+              "expected": "E-RECURSION",
+              "graph_nodes_evaluated": 0,
+              "name": "mutual-recursion",
+              "observed": "E-RECURSION",
+              "ordinary": {
+                "first_non_normal": 0,
+                "first_non_normal_outcome": {
+                  "diagnostic": "unbound word in immutable namespace snapshot",
+                  "outcome": "unbound-word",
+                  "stage": "resolve"
+                },
+                "last_outcome": "unbound-word",
+                "last_stack": "[]",
+                "last_trace": [],
+                "reports": 1,
+                "submissions": [
+                  "def f [ g ]"
+                ]
+              },
+              "subject": "forged f = [ g ], g = [ f ] from [\"def g [ 1 + ]\", \"def f [ g ]\"] / \"5 f\"; Env::deps left as produced"
+            },
+            {
+              "budget": null,
+              "detail": "E-SUBJECT at Graph: body of None is not kernel-accepted: Unsupported(RecursiveDependency(Definition(24)))",
+              "expected": "E-SUBJECT",
+              "graph_nodes_evaluated": 0,
+              "name": "mutual-recursion-kernel",
+              "observed": "E-SUBJECT",
+              "ordinary": {
+                "first_non_normal": 0,
+                "first_non_normal_outcome": {
+                  "diagnostic": "unbound word in immutable namespace snapshot",
+                  "outcome": "unbound-word",
+                  "stage": "resolve"
+                },
+                "last_outcome": "unbound-word",
+                "last_stack": "[]",
+                "last_trace": [],
+                "reports": 1,
+                "submissions": [
+                  "def f [ g ]"
+                ]
+              },
+              "subject": "forged f = [ g ], g = [ f ] from [\"def g [ 1 + ]\", \"def f [ g ]\"] / \"5 f\"; Env::deps forged to match"
+            },
+            {
+              "budget": null,
+              "detail": "E-REFLECT at Source(SourceRef { definition: None, node: 2 }): reflect",
+              "expected": "E-REFLECT",
+              "graph_nodes_evaluated": 0,
+              "name": "reflect",
+              "observed": "E-REFLECT",
+              "ordinary": {
+                "first_non_normal": null,
+                "first_non_normal_outcome": null,
+                "last_outcome": "normal",
+                "last_stack": "[I64(5)]",
+                "last_trace": [],
+                "reports": 1,
+                "submissions": [
+                  "[ 1 ] reflect drop 5"
+                ]
+              },
+              "subject": "defs []; root \"[ 1 ] reflect drop 5\"; inputs []"
+            },
+            {
+              "budget": null,
+              "detail": "E-CONTROL at Source(SourceRef { definition: None, node: 5 }): If",
+              "expected": "E-CONTROL",
+              "graph_nodes_evaluated": 0,
+              "name": "if",
+              "observed": "E-CONTROL",
+              "ordinary": {
+                "first_non_normal": null,
+                "first_non_normal_outcome": null,
+                "last_outcome": "normal",
+                "last_stack": "[I64(1)]",
+                "last_trace": [],
+                "reports": 1,
+                "submissions": [
+                  "true [ 1 ] [ 2 ] if"
+                ]
+              },
+              "subject": "defs []; root \"true [ 1 ] [ 2 ] if\"; inputs []"
+            },
+            {
+              "budget": null,
+              "detail": "E-CONTROL at Source(SourceRef { definition: None, node: 1 }): Inl",
+              "expected": "E-CONTROL",
+              "graph_nodes_evaluated": 0,
+              "name": "case",
+              "observed": "E-CONTROL",
+              "ordinary": {
+                "first_non_normal": null,
+                "first_non_normal_outcome": null,
+                "last_outcome": "normal",
+                "last_stack": "[I64(6)]",
+                "last_trace": [],
+                "reports": 1,
+                "submissions": [
+                  "5 inl [ 1 + ] [ drop 0 ] case"
+                ]
+              },
+              "subject": "defs []; root \"5 inl [ 1 + ] [ drop 0 ] case\"; inputs []"
+            },
+            {
+              "budget": null,
+              "detail": "E-CONTROL at Source(SourceRef { definition: None, node: 9 }): ListCase",
+              "expected": "E-CONTROL",
+              "graph_nodes_evaluated": 0,
+              "name": "list.case",
+              "observed": "E-CONTROL",
+              "ordinary": {
+                "first_non_normal": null,
+                "first_non_normal_outcome": null,
+                "last_outcome": "normal",
+                "last_stack": "[I64(1)]",
+                "last_trace": [],
+                "reports": 1,
+                "submissions": [
+                  "1 nil cons [ 0 ] [ drop drop 1 ] list.case"
+                ]
+              },
+              "subject": "defs []; root \"1 nil cons [ 0 ] [ drop drop 1 ] list.case\"; inputs []"
+            },
+            {
+              "budget": null,
+              "detail": "E-PROGRAM-OUTPUT at Graph: Program-valued root interface item Program([I64], [I64], EffSet([]))",
+              "expected": "E-PROGRAM-OUTPUT",
+              "graph_nodes_evaluated": 0,
+              "name": "program-output",
+              "observed": "E-PROGRAM-OUTPUT",
+              "ordinary": {
+                "first_non_normal": null,
+                "first_non_normal_outcome": null,
+                "last_outcome": "normal",
+                "last_stack": "[Other(\"Program\")]",
+                "last_trace": [],
+                "reports": 1,
+                "submissions": [
+                  "[ 1 + ]"
+                ]
+              },
+              "subject": "defs []; root \"[ 1 + ]\"; inputs []"
+            },
+            {
+              "budget": [
+                262144,
+                262145
+              ],
+              "detail": "E-BUDGET-EXPANSION at Graph: observed 262145 > limit 262144",
+              "expected": "E-BUDGET-EXPANSION",
+              "graph_nodes_evaluated": 0,
+              "name": "expansion-chain-k20",
+              "observed": "E-BUDGET-EXPANSION",
+              "ordinary": {
+                "first_non_normal": 10,
+                "first_non_normal_outcome": {
+                  "diagnostic": "frontend node limit exceeded",
+                  "outcome": "exhausted",
+                  "stage": "check"
+                },
+                "last_outcome": "unbound-word",
+                "last_stack": "[]",
+                "last_trace": [],
+                "reports": 22,
+                "submissions": [
+                  "def d0 [ 1 + ]",
+                  "def d1 [ d0 d0 ]",
+                  "def d2 [ d1 d1 ]",
+                  "def d3 [ d2 d2 ]",
+                  "def d4 [ d3 d3 ]",
+                  "def d5 [ d4 d4 ]",
+                  "def d6 [ d5 d5 ]",
+                  "def d7 [ d6 d6 ]",
+                  "def d8 [ d7 d7 ]",
+                  "def d9 [ d8 d8 ]",
+                  "def d10 [ d9 d9 ]",
+                  "def d11 [ d10 d10 ]",
+                  "def d12 [ d11 d11 ]",
+                  "def d13 [ d12 d12 ]",
+                  "def d14 [ d13 d13 ]",
+                  "def d15 [ d14 d14 ]",
+                  "def d16 [ d15 d15 ]",
+                  "def d17 [ d16 d16 ]",
+                  "def d18 [ d17 d17 ]",
+                  "def d19 [ d18 d18 ]",
+                  "def d20 [ d19 d19 ]",
+                  "0 d20 drop 7"
+                ]
+              },
+              "subject": "d0 = [ 1 + ], dk = [ dk-1 dk-1 ] (k = 1..20, one shared row each); root `0 d20 drop 7`"
+            }
+          ]
+        },
+        "revision": "f5806a0f2dec22c59ad53d5b446a8c4db800e32c",
+        "subject": "B3-I64-source-controls"
+      },
+      "execution": "passed",
+      "id": "B3-I64-source-controls",
+      "implementation": "implemented",
+      "open_obligations": [
+        "NG-PO-A"
+      ],
+      "proof": "open",
+      "requirements": [
+        "NGRAPH-EXTRACT-01",
+        "NGRAPH-SCOPE-01"
+      ],
+      "trust": "explicit",
+      "trusted_boundaries": [
+        "noble_kernel::acceptance::check as the independent subject checker (PO-09/10/11 accepted for bootstrap fragment v1 only)",
+        "the extractor's unpruned compose/run expansion accounting (inside the trusted extraction boundary until NG-PO-A)",
+        "this crate's graph checker and L3/L4 evaluators (NG-PO-B/C open)",
+        "the pinned noble release CLI, its Node/V8 runtime and wasm-opt (--opt on) as the ordinary path (PO-17/18 open)",
+        "the pinned Node BigInt implementation as the L2 oracle runtime",
+        "rustc/LLVM of the pinned nightly toolchain",
+        "blake3 =1.8.7 (pure) and sha256sum for identities: a hash identifies bytes, it proves nothing"
+      ]
+    }
+  ],
+  "result": "passed",
+  "run": {
+    "cpu": "AMD RYZEN AI MAX+ 395 w/ Radeon 8060S",
+    "crate": "noble-ngraph-experiment 0.0.0",
+    "instrumentation": "wall-clock seconds via std::time::Instant; extractor counters (work units, expanded/pruned nodes, inline depth); no hardware counters (unsupported, not zero)",
+    "load_average_at_end": "7.57 7.32 7.06 4/3764 341449",
+    "load_average_at_start": "4.89 6.83 6.90 2/3667 4015045",
+    "logical_cpus": 32,
+    "optimization_mode": "release (overflow-checks=true, panic=unwind per workspace profile)",
+    "oracle": {
+      "kind": "L2 BigInt modulo-2^64 (explicit reduction), Node -e",
+      "node": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "node_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "node_version": "v24.13.0",
+      "oracle_blake3": "a668ce49b3eeda2ffc9154f5602c2b0fd666077516a3f8f87f4c5d9c0339025e"
+    },
+    "ordinary_path": {
+      "cli": "/home/brittonr/.cache/noble-issues/bin/noble-integration-eccbc02-release",
+      "cli_sha256": "f7f02dfbc9f6723a10879fd269abd4319a8736aa9d952ebb06f5d9bc2c5085ec",
+      "modes": [
+        "noble session --framed --opt off",
+        "noble session --framed --opt on",
+        "noble live slot --engine v8 (B3 live-slot controls)"
+      ]
+    },
+    "prng": "splitmix64/0",
+    "profiles": "ngraph-ir/0; ngraph-i64/0 (extraction); ngraph-sem/0; ngraph-layered/0",
+    "resource_limits": "extraction /0 defaults: work units 4194304, expanded nodes 262144, inline depth 64; checker /0 defaults; CLI Core session limits (65,536 bytes, 16,384 nodes, depth 64, work 2,000,000)",
+    "seed": "0x1404b201",
+    "source_revision": "f5806a0f2dec22c59ad53d5b446a8c4db800e32c",
+    "target": "x86_64-linux",
+    "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "wall_seconds": 231.857548071,
+    "wasm_features": "as fixed by the pinned CLI runtime (managed-linear-memory backend; --opt on runs wasm-opt --enable-gc --enable-reference-types --enable-bulk-memory -O2 --strip-debug)",
+    "workload": "B1 I1-I4; B2 10 named graphs + 64 random Core programs x 10000 vectors (L2-L4), L1 on named design vectors + 24 vectors per named graph and 16 random programs x 24 vectors, I4 1000 host steps; B3 source controls"
+  },
+  "schema": "noble-ngraph-phase-b-extract-evidence/v1",
+  "scope": "Phase B I64 extraction leg: D7 admission/extraction from Core source (B0(b): I64 only), B1 I1-I4, B2 L1/L2/L3/L4 for I64, B3 source-level controls"
+}
