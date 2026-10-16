@@ -2,8 +2,7 @@
 //! executes any graph node.
 
 use crate::ir::{Fact, NodeId, SourceRef};
-#[allow(unused_imports)]
-use crate::prelude::*;
+use alloc::{borrow::ToOwned, format, string::String};
 
 /// D5 budget kinds (`E-BUDGET-<kind>`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

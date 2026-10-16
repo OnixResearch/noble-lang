@@ -101,7 +101,13 @@ fn from_source(
     inputs: &[Ty],
     ordinary: Ordinary,
 ) -> Case {
-    let result = match source::prepare(defs, root, inputs) {
+    let result = match source::prepare(
+        noble_contracts::source::Session::new(),
+        noble_contracts::Limits::default(),
+        defs,
+        root,
+        inputs,
+    ) {
         Ok(p) => default_outcome(&p.submission, &p.claimed_closure),
         Err(e) => Err(Diagnostic::new(
             noble_ngraph::diag::Code::Subject,
@@ -139,7 +145,14 @@ fn forge_call(sub: &mut Submission, at: usize, target: Definition) {
 /// If the frontend refuses the `d0` seed (a fixed, valid source).
 #[must_use]
 pub fn chain(k: u32) -> (Submission, Vec<u64>) {
-    let p = source::prepare(&["def d0 [ 1 + ]"], "0 d0 drop 7", &[]).expect("d0 seed source");
+    let p = source::prepare(
+        noble_contracts::source::Session::new(),
+        noble_contracts::Limits::default(),
+        &["def d0 [ 1 + ]"],
+        "0 d0 drop 7",
+        &[],
+    )
+    .expect("d0 seed source");
     let mut sub = p.submission;
     let d0 = sub.definitions[0].definition;
     let mut closure = vec![sub.definitions[0].identity];
@@ -177,7 +190,14 @@ fn recursion(name: &'static str, mutual: bool, consistent_deps: bool) -> Case {
     } else {
         (&["def f [ dup drop ]"], "5 f")
     };
-    let p = source::prepare(defs, root, &[]).expect("recursion seed source");
+    let p = source::prepare(
+        noble_contracts::source::Session::new(),
+        noble_contracts::Limits::default(),
+        defs,
+        root,
+        &[],
+    )
+    .expect("recursion seed source");
     let mut sub = p.submission;
     let f = sub.definitions[0].definition;
     let (at, row) = if mutual {

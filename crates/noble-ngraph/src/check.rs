@@ -9,10 +9,9 @@
 //!
 //! The checker is ordinary Rust; its soundness is the open obligation NG-PO-B.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
 use alloc::collections::BTreeMap;
 use alloc::rc::Rc;
+use alloc::{format, vec, vec::Vec};
 
 use crate::diag::{BudgetKind, Code, Diagnostic, Malformed, Site};
 use crate::facts::{Abs, AbsF32, AbsI64, Requirement};
@@ -311,7 +310,6 @@ pub fn check(ids: &dyn IdentityScheme, graph: Graph) -> Result<CheckedGraph, Dia
 ///
 /// # Errors
 /// The first D6 refusal in stage order.
-#[allow(clippy::too_many_lines)]
 pub fn check_with(
     ids: &dyn IdentityScheme,
     graph: Graph,
@@ -554,7 +552,6 @@ fn finite_bits(bits: u32) -> bool {
     f32::from_bits(bits).is_finite()
 }
 
-#[allow(clippy::too_many_lines)]
 fn check_types(g: &Graph) -> Result<Vec<Option<ScalarType>>, Diagnostic> {
     let mut types: Vec<Option<ScalarType>> = Vec::with_capacity(g.nodes.len());
     for (i, node) in g.nodes.iter().enumerate() {
@@ -723,7 +720,6 @@ fn unchecked(site: Site, fact: Fact, why: &str) -> Diagnostic {
     Diagnostic::new(Code::FactUnchecked, site, why).with_fact(fact)
 }
 
-#[allow(clippy::too_many_lines)]
 fn check_facts(
     g: &Graph,
     types: &[Option<ScalarType>],

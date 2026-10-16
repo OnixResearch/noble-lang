@@ -8,8 +8,7 @@
 //! meaning. Parsing only builds producer data: graphs are still admitted by
 //! the independent checker, and snapshot identities are recomputed.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
+use alloc::vec::Vec;
 
 use crate::ir::Digest;
 
@@ -61,4 +60,47 @@ pub fn bytes_from_hex(s: &str) -> Option<Vec<u8>> {
 pub fn digest_from_hex(s: &str) -> Option<Digest> {
     let v = bytes_from_hex(s)?;
     <Digest>::try_from(v.as_slice()).ok()
+}
+
+/// Whether `t` is one or more ASCII decimal digits.
+fn is_digits(t: &str) -> bool {
+    !t.is_empty() && t.bytes().all(|b| b.is_ascii_digit())
+}
+
+/// An unsigned decimal integer: ASCII digits only, so a sign (including a
+/// leading `+`) is refused, as everywhere in the `ngraph` file formats and
+/// `noble ngraph` flags (design D5).
+#[must_use]
+pub fn decimal_u64(t: &str) -> Option<u64> {
+    if is_digits(t) {
+        t.parse().ok()
+    } else {
+        None
+    }
+}
+
+/// [`decimal_u64`] within `u32`.
+#[must_use]
+pub fn decimal_u32(t: &str) -> Option<u32> {
+    decimal_u64(t).and_then(|v| u32::try_from(v).ok())
+}
+
+/// A signed decimal integer: an optional `-`, then ASCII digits.
+#[must_use]
+pub fn decimal_i64(t: &str) -> Option<i64> {
+    if is_digits(t.strip_prefix('-').unwrap_or(t)) {
+        t.parse().ok()
+    } else {
+        None
+    }
+}
+
+/// `0x` followed by one to `max_digits` hex digits (either case).
+#[must_use]
+pub fn hex_bits(t: &str, max_digits: usize) -> Option<u64> {
+    let h = t.strip_prefix("0x")?;
+    if h.is_empty() || h.len() > max_digits || !h.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
+    }
+    u64::from_str_radix(h, 16).ok()
 }

@@ -31,7 +31,7 @@ pub(crate) const USAGE: &str = "usage:
   noble ngraph verify GRAPH SNAPSHOT [--snapshot-id HEX] [--replay --loss LOSS --data DATA
       [--from PARENT]] [--budget-KIND N]...
   T: i64 | bool. SPEC: %N:boolean=straight-through | %N:boolean=clamped-linear:0xBITS |
-      %N:index=zero | %N:index=backward-difference. X: 0x<binary64 bits> or a decimal.
+      %N:index=zero | %N:index=backward-difference. X: 0x<16 hex digits> or a decimal.
   KIND: work expansion inline-depth live-nodes layers inputs outputs affine-terms table-length
       table-entries facts graph-bytes snapshot-bytes forward-scratch backward-scratch steps
       (each subcommand accepts the kinds it charges; a value may only lower the /0 default).
@@ -81,6 +81,31 @@ fn usage<T>(message: impl Into<std::string::String>) -> Result<T, Stop> {
     Err(Stop::Usage(message.into()))
 }
 
+/// Publishes an output file (design D6). A publication that succeeded but
+/// left its `.partial` sibling behind is still published; the leftover is
+/// reported on stderr, and the report line stays normal.
+fn publish(command: &'static str, out: &std::path::Path, bytes: &[u8]) -> Result<(), Line> {
+    match files::publish(out, bytes) {
+        Ok(files::Published::Clean) => Ok(()),
+        Ok(files::Published::PartialLeft(why)) => {
+            complain(&std::format!(
+                "noble ngraph: the output was published, but its .partial file could not be removed: {why}\n"
+            ));
+            Ok(())
+        }
+        Err(message) => Err(Line::host(command, "output", message)),
+    }
+}
+
+/// Writes `text` to stderr without panicking: if stderr itself fails there
+/// is nowhere left to report it, so the failure is dropped and the exit
+/// status stays the outcome's (design D8).
+fn complain(text: &str) {
+    let mut stderr = std::io::stderr().lock();
+    let _ = std::io::Write::write_all(&mut stderr, text.as_bytes());
+    let _ = std::io::Write::flush(&mut stderr);
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; ngraph routing reports usage errors on stderr and every other outcome as report lines with their exit status. Malformed input must not panic."
@@ -99,7 +124,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         Ok(lines) => lines,
         Err(Stop::Report(line)) => std::vec![line],
         Err(Stop::Usage(message)) => {
-            eprintln!("noble ngraph: {message}\n{USAGE}");
+            complain(&std::format!("noble ngraph: {message}\n{USAGE}\n"));
             return std::process::ExitCode::from(2);
         }
     };
@@ -107,12 +132,16 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let mut out = std::io::stdout().lock();
     for line in &lines {
         if let Err(error) = std::io::Write::write_all(&mut out, (line.encode() + "\n").as_bytes()) {
-            eprintln!("noble ngraph: report output failed: {error}");
+            complain(&std::format!(
+                "noble ngraph: report output failed: {error}\n"
+            ));
             return std::process::ExitCode::from(2);
         }
     }
     if let Err(error) = std::io::Write::flush(&mut out) {
-        eprintln!("noble ngraph: report output failed: {error}");
+        complain(&std::format!(
+            "noble ngraph: report output failed: {error}\n"
+        ));
         return std::process::ExitCode::from(2);
     }
     std::process::ExitCode::from(exit)
@@ -344,10 +373,14 @@ fn extract(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop
         .iter()
         .map(std::string::String::as_str)
         .collect();
-    let prepared = attempt!(
-        noble_ngraph::extract::source::prepare(&definitions, root, &inputs)
-            .map_err(|e| subject_refusal(C, e))
-    );
+    let prepared = attempt!(noble_ngraph::extract::source::prepare(
+        noble_contracts::source::Session::new(),
+        noble_contracts::Limits::default(),
+        &definitions,
+        root,
+        &inputs
+    )
+    .map_err(|e| subject_refusal(C, e)));
     let admitted = attempt!(noble_ngraph::extract::admit(
         &IDS,
         &prepared.submission,
@@ -365,7 +398,7 @@ fn extract(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop
     let extraction = attempt!(noble_ngraph::extract::extract(&IDS, &admitted, &budgets)
         .map_err(|d| Line::diagnostic(C, "extraction", &d)));
     let graph_text = noble_ngraph::format::graph::print(extraction.checked.graph());
-    attempt!(files::publish(&out, graph_text.as_bytes()).map_err(|m| Line::host(C, "output", m)));
+    attempt!(publish(C, &out, graph_text.as_bytes()));
     let s = extraction.stats;
     Ok(std::vec![check_fields(
         Line::normal(C, "extraction"),
@@ -444,7 +477,7 @@ fn eval(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> {
         )
         .into());
     }
-    let control = noble_ngraph::Control {
+    let mut control = noble_ngraph::Control {
         fuel,
         forward_scratch: Some(args.budgets.forward_scratch),
         ..noble_ngraph::Control::default()
@@ -463,8 +496,8 @@ fn eval(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> {
         .map(noble_ngraph::compiled::Compiled::workspace);
     for (i, row) in vectors.rows.iter().enumerate() {
         let obs = match (&compiled, &mut workspace) {
-            (Some(c), Some(w)) => c.evaluate_in(w, row, param_snapshot, &control).obs,
-            _ => noble_ngraph::reference(&graph, row, param_snapshot, &control).obs,
+            (Some(c), Some(w)) => c.evaluate_in(w, row, param_snapshot, &mut control).obs,
+            _ => noble_ngraph::reference(&graph, row, param_snapshot, &mut control).obs,
         };
         lines.push(match &obs {
             noble_ngraph::Obs::Normal(values) => Line::normal(C, "evaluation")
@@ -493,13 +526,13 @@ fn pinned(args: &Parsed) -> Result<Option<[u8; 32]>, Stop> {
     }
 }
 
-/// Parses `--opt-in` values into `deriv`, validated against `model`.
-fn opt_ins(
-    specs: &[&str],
-    model: &CheckedGraph,
-) -> Result<noble_ngraph::grad::DerivOptions, std::string::String> {
+/// Parses `--opt-in` values. Malformed text and two policies of one kind on
+/// one node are usage errors; whether each opt-in applies to a node of the
+/// model is the library's training admission (`E-DERIV-BOOLEAN`,
+/// `E-DERIV-INDEX`), which replay applies to recorded opt-ins too.
+fn opt_ins(specs: &[&str]) -> Result<noble_ngraph::grad::DerivOptions, std::string::String> {
     use noble_ngraph::grad::{BooleanPolicy, IndexPolicy};
-    use noble_ngraph::ir::{NodeId, Op};
+    use noble_ngraph::ir::NodeId;
     let mut deriv = noble_ngraph::grad::DerivOptions::default();
     for spec in specs {
         let bad = || std::format!("--opt-in {spec:?} is not a derivative opt-in");
@@ -507,41 +540,20 @@ fn opt_ins(
             .strip_prefix('%')
             .and_then(|s| s.split_once(':'))
             .ok_or_else(bad));
-        let node = NodeId(attempt!(node.parse::<u32>().map_err(|_| bad())));
-        let op = &attempt!(model
-            .graph()
-            .nodes
-            .get(node.index())
-            .ok_or_else(|| std::format!("--opt-in {spec:?} names no node of the model")))
-        .op;
+        let node = NodeId(attempt!(
+            noble_ngraph::format::decimal_u32(node).ok_or_else(bad)
+        ));
         let (kind, rule) = attempt!(rest.split_once('=').ok_or_else(bad));
-        let inapplicable = || {
-            std::format!(
-                "--opt-in {spec:?} does not apply to %{} ({})",
-                node.0,
-                op.name()
-            )
-        };
         match kind {
             "boolean" => {
                 let policy = match rule.split_once(':') {
                     Some(("clamped-linear", w)) => {
-                        let bits = attempt!(w
-                            .strip_prefix("0x")
-                            .filter(|h| !h.is_empty() && h.len() <= 8)
-                            .and_then(|h| u32::from_str_radix(h, 16).ok())
+                        let bits = attempt!(noble_ngraph::format::hex_bits(w, 8)
+                            .and_then(|b| u32::try_from(b).ok())
                             .ok_or_else(bad));
-                        if !matches!(op, Op::F32Step(_)) {
-                            return Err(inapplicable());
-                        }
                         BooleanPolicy::ClampedLinear(f32::from_bits(bits))
                     }
-                    None if rule == "straight-through" => {
-                        if !matches!(op, Op::F32Step(_) | Op::F32Select { .. }) {
-                            return Err(inapplicable());
-                        }
-                        BooleanPolicy::StraightThrough
-                    }
+                    None if rule == "straight-through" => BooleanPolicy::StraightThrough,
                     _ => return Err(bad()),
                 };
                 if deriv.boolean.insert(node, policy).is_some() {
@@ -557,9 +569,6 @@ fn opt_ins(
                     "backward-difference" => IndexPolicy::BackwardDifference,
                     _ => return Err(bad()),
                 };
-                if !matches!(op, Op::F32Index { .. }) {
-                    return Err(inapplicable());
-                }
                 if deriv.index.insert(node, policy).is_some() {
                     return Err(std::format!(
                         "--opt-in gives %{} two index policies",
@@ -659,7 +668,7 @@ fn train(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
     let seed_text = attempt!(args.required("--seed").map_err(Stop::Usage));
     let seed = attempt!(arguments::unsigned("--seed", &seed_text).map_err(Stop::Usage));
     let steps_text = attempt!(args.required("--steps").map_err(Stop::Usage));
-    let Ok(steps) = steps_text.parse::<u64>() else {
+    let Some(steps) = noble_ngraph::format::decimal_u64(&steps_text) else {
         return usage("--steps takes an unsigned 64-bit integer");
     };
     let mut adam = noble_ngraph::train::Adam::default();
@@ -673,6 +682,7 @@ fn train(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
             *slot = attempt!(arguments::binary64(flag, &t).map_err(Stop::Usage));
         }
     }
+    let deriv = attempt!(opt_ins(&args.all("--opt-in")).map_err(Stop::Usage));
     let budgets = args.budgets.clone();
     attempt!(policy(C, &budgets));
     if policy_name != noble_ngraph::grad::DERIV_POLICY {
@@ -685,9 +695,9 @@ fn train(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
             profile_refusal(C, std::format!("unknown optimizer {optimizer_name:?}")).into(),
         );
     }
+    attempt!(adam.admit().map_err(|d| Line::diagnostic(C, "request", &d)));
     let model = attempt!(load_graph(C, &args.path(0), &budgets, "model graph"));
     let loss = attempt!(load_graph(C, &loss_path, &budgets, "loss graph"));
-    let deriv = attempt!(opt_ins(&args.all("--opt-in"), &model).map_err(Stop::Usage));
     let params = model.param_slots().to_vec();
     attempt!(noble_ngraph::train::admit(&model, &loss, &params, &deriv)
         .map_err(|d| Line::diagnostic(C, "admission", &d)));
@@ -713,7 +723,7 @@ fn train(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
         seed,
         data,
     };
-    let control = noble_ngraph::train::TrainControl {
+    let mut control = noble_ngraph::train::TrainControl {
         budgets,
         ..noble_ngraph::train::TrainControl::default()
     };
@@ -722,7 +732,7 @@ fn train(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
         &contract,
         parent.as_ref().map(|f| &f.snapshot),
         steps,
-        &control
+        &mut control
     )
     .map_err(|s| Line::diagnostic(C, "training", &s.diagnostic)
         .with("published_steps", Json::Number(s.published_steps))));
@@ -734,9 +744,7 @@ fn train(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
         snapshot: trained.snapshot,
         provenance: trained.provenance,
     };
-    attempt!(
-        files::publish(&out, file.print(&IDS).as_bytes()).map_err(|m| Line::host(C, "output", m))
-    );
+    attempt!(publish(C, &out, file.print(&IDS).as_bytes()));
     Ok(std::vec![Line::normal(C, "training")
         .with("snapshot", report::digest(&file.snapshot.id()))
         .with("graph", report::digest(&file.snapshot.graph()))
@@ -820,7 +828,7 @@ fn verify(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop>
             seed: p.seed,
             data,
         };
-        let control = noble_ngraph::train::TrainControl {
+        let mut control = noble_ngraph::train::TrainControl {
             budgets,
             ..noble_ngraph::train::TrainControl::default()
         };
@@ -829,7 +837,7 @@ fn verify(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop>
             &contract,
             p,
             parent.as_ref().map(|f| &f.snapshot),
-            &control
+            &mut control
         )
         .map_err(|s| Line::diagnostic(C, "replay", &s.diagnostic)));
     }

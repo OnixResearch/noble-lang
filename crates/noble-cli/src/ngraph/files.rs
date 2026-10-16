@@ -45,16 +45,30 @@ fn partial(out: &std::path::Path) -> std::path::PathBuf {
     std::path::PathBuf::from(name)
 }
 
+/// A completed publication (design D6).
+#[derive(Debug, PartialEq, Eq)]
+pub(super) enum Published {
+    /// `out` holds the bytes and `<out>.partial` is gone.
+    Clean,
+    /// `out` holds the bytes, but `<out>.partial`, a second name for the
+    /// same file, could not be removed (the I/O error, without a path).
+    PartialLeft(std::string::String),
+}
+
 /// Publishes `bytes` as a new file at `out`: `<out>.partial` is created with
 /// create-new, written and synced, hard-linked to `out` (which fails if
 /// `out` exists) and removed. No existing path is ever truncated, renamed
 /// over or modified; an existing `out` or `<out>.partial` is refused and left
-/// untouched.
+/// untouched. Once the link exists the output is published, even if the
+/// removal then fails ([`Published::PartialLeft`]).
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; publication reports every existing path and I/O failure as a host refusal and removes only the partial file it created itself."
 )]
-pub(super) fn publish(out: &std::path::Path, bytes: &[u8]) -> Result<(), std::string::String> {
+pub(super) fn publish(
+    out: &std::path::Path,
+    bytes: &[u8],
+) -> Result<Published, std::string::String> {
     if std::fs::symlink_metadata(out).is_ok() {
         return Err("the output path already exists".into());
     }
@@ -71,12 +85,54 @@ pub(super) fn publish(out: &std::path::Path, bytes: &[u8]) -> Result<(), std::st
     drop(file);
     let linked = written.and_then(|()| std::fs::hard_link(&staging, out));
     let removed = std::fs::remove_file(&staging);
+    outcome(linked, removed)
+}
+
+/// The outcome of linking `<out>.partial` to `out` and then removing it.
+/// The link decides: after it, `out` is complete and immutable, so a failed
+/// removal leaves an extra name for the same bytes rather than undoing the
+/// publication.
+fn outcome(
+    linked: std::io::Result<()>,
+    removed: std::io::Result<()>,
+) -> Result<Published, std::string::String> {
+    let left = |r: std::io::Result<()>| match r {
+        Ok(()) => std::string::String::new(),
+        Err(e) => std::format!("; the .partial file could not be removed: {e}"),
+    };
     match (linked, removed) {
-        (Ok(()), Ok(())) => Ok(()),
-        (Err(e), _) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-            Err("the output path already exists".into())
+        (Ok(()), Ok(())) => Ok(Published::Clean),
+        (Ok(()), Err(e)) => Ok(Published::PartialLeft(std::format!("{e}"))),
+        (Err(e), r) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+            Err(std::format!("the output path already exists{}", left(r)))
         }
-        (Err(e), _) => Err(std::format!("output: {e}")),
-        (Ok(()), Err(e)) => Err(std::format!("output: removing the .partial file: {e}")),
+        (Err(e), r) => Err(std::format!("output: {e}{}", left(r))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{outcome, Published};
+
+    fn injected() -> std::io::Error {
+        std::io::Error::other("injected")
+    }
+
+    #[test]
+    fn a_linked_output_is_published_even_if_its_partial_file_stays() {
+        assert_eq!(outcome(Ok(()), Ok(())), Ok(Published::Clean));
+        assert_eq!(
+            outcome(Ok(()), Err(injected())),
+            Ok(Published::PartialLeft("injected".into()))
+        );
+        let exists = || std::io::Error::from(std::io::ErrorKind::AlreadyExists);
+        assert_eq!(
+            outcome(Err(exists()), Ok(())),
+            Err("the output path already exists".into())
+        );
+        assert_eq!(
+            outcome(Err(injected()), Err(injected())),
+            Err("output: injected; the .partial file could not be removed: injected".into())
+        );
     }
 }

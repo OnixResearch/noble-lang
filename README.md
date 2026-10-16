@@ -378,27 +378,29 @@ The first non-comment line names the schema and the sub-profile. `#` starts a
 comment, and blank lines, comments and runs of spaces carry no meaning. The
 line `subject <authored|extracted|captured> <64 hex> closure <ids|->` is
 required; `subject authored-name NAME` is authoring sugar for the authored
-subject named by the rest of the line (its tokens joined by single spaces),
-and printed graphs always use the hex form. Optional
-`shape input` and `shape output` lines record stack shapes as trees `s`, `u`
-and `(p A B)`. Then come the slots (`input`, or `param` in `ngraph-f32/0`),
-the nodes `%k = OP …` in order, the `fact` records and the `out` records. The
-operations are `input`, `param`, `const`, `i64.add`, `i64.sub`, `i64.mul`,
-`i64.eq`, `f32.add`, `f32.sub`, `f32.mul`, `f32.affine` (a bias, then
-coefficient and operand terms folded in stored order), `f32.relu`,
-`f32.reglu`, `f32.step`, `f32.select`, `f32.index` (with a `refuse`, `clamp` or
-`zero` rule for each side out of range) and `guard`. An `F32` literal is a
-`0x` bit pattern or an exactly representable decimal: `0.1` is
-`E-LITERAL-INEXACT`. Each fact has one provenance: `input-validated` (checked
-on the actual input or param before evaluation), `derived RULE` (re-derived by
-the checker), `guard %k`, `asserted` (always refused) or `evidence HEX`
-(refused, see above). The `GraphLogicalId` covers the sub-profile with its
-semantic and fact-rule revisions, the nodes in order, the slots, both shapes,
-the outputs, and the subject kind, identity and closure. Comments, whitespace,
-file names and paths never contribute, and neither do fact records, which
-snapshots bind separately. An extracted graph's subject identity is a digest
-of the kernel's rendering of the accepted subject, so it is stable only within
-one kernel revision.
+subject named by the rest of the line (its tokens joined by single spaces), and
+printed graphs always use the hex form. Optional `shape input` and
+`shape output` lines record stack shapes as trees `s`, `u` and `(p A B)`,
+nesting at most 127 pairs (the deepest interface item that extraction can
+produce; a deeper tree is `E-GRAPH-MALFORMED` at its line). Then come the slots
+(`input`, or `param` in `ngraph-f32/0`), the nodes `%k = OP …` in order, the
+`fact` records and the `out` records. The operations are `input`, `param`,
+`const`, `i64.add`, `i64.sub`, `i64.mul`, `i64.eq`, `f32.add`, `f32.sub`,
+`f32.mul`, `f32.affine` (a bias, then coefficient and operand terms folded in
+stored order), `f32.relu`, `f32.reglu`, `f32.step`, `f32.select`, `f32.index`
+(with a `refuse`, `clamp` or `zero` rule for each side out of range) and
+`guard`. An `F32` literal is a `0x` bit pattern of one to eight hex digits or
+an exactly representable decimal: `0.1` is `E-LITERAL-INEXACT`. No number in
+any `ngraph` file or `noble ngraph` flag takes a leading `+`. Each fact has one
+provenance: `input-validated` (checked on the actual input or param before
+evaluation), `derived RULE` (re-derived by the checker), `guard %k`, `asserted`
+(always refused) or `evidence HEX` (refused, see above). The `GraphLogicalId`
+covers the sub-profile with its semantic and fact-rule revisions, the nodes in
+order, the slots, both shapes, the outputs, and the subject kind, identity and
+closure. Comments, whitespace, file names and paths never contribute, and
+neither do fact records, which snapshots bind separately. An extracted graph's
+subject identity is a digest of the kernel's rendering of the accepted subject,
+so it is stable only within one kernel revision.
 
 **Vector and data files.** A vector file (for `eval`) and a training-data file
 (for `train`) declare the graph's `input` slot types on a `types` line; a data
@@ -406,8 +408,13 @@ file adds `;` and the loss graph's target types. Parameters never come from
 these files, only from snapshots. An `f32` value is `0x` plus one to eight hex
 digits (any encoding, including NaN, infinities and subnormals) or an exactly
 representable decimal (`nan` and `inf` words are `E-LITERAL-NONFINITE`; give
-those values as bits); an `i64` value is a signed decimal in range; a `bool`
-value is `true` or `false`:
+those values as bits); an `i64` value is digits in range, optionally after `-`;
+a `bool` value is `true` or `false`. A decimal is
+`[-]digits[.digits][e[+|-]digits]` (either side of the `.` may be empty, not
+both). Exactness is decided in time linear in the token: a binary32 value
+written exactly has at most 112 significant digits, the last at `10^-149` to
+`10^38`, so any other decimal is `E-LITERAL-INEXACT` without further
+arithmetic:
 
 ```text
 noble-ngraph-vectors/0
@@ -447,14 +454,19 @@ or `--opt-in %N:boolean=clamped-linear:0xBITS`. A param that reaches an
 `f32.index` operand is refused (`E-DERIV-INDEX`) unless opted in with
 `--opt-in %N:index=zero` or `--opt-in %N:index=backward-difference`. Every
 opt-in is recorded in the snapshot, and the surrogates are never described as
-exact derivatives. An `ngraph-i64/0` model is refused with `E-DERIV-I64`. In
-each step, every data point is first checked in point order as `eval` checks
-a vector. A failing input fact (`E-FACT-INPUT`) or guard (`G-FACT-FALSE`), or
-a non-finite gradient or update (`E-NONFINITE-UPDATE`), stops training and
+exact derivatives. An opt-in naming no node of the model, or a node its rule
+does not apply to (`straight-through` takes a `step` or `select`,
+`clamped-linear` a `step`, the index rules an `index`), is refused with the
+same codes. An `ngraph-i64/0` model is refused with `E-DERIV-I64`. In each
+step, every data point is first checked in point order as `eval` checks a
+vector. A failing input fact (`E-FACT-INPUT`) or guard (`G-FACT-FALSE`), or a
+non-finite gradient or update (`E-NONFINITE-UPDATE`), stops training and
 publishes nothing. `--adam-lr`, `--adam-beta1`, `--adam-beta2` and `--adam-eps`
-take binary64 bits (`0x…`) or a decimal rounded to nearest even. The defaults
-are the `adam/0` values 0.02, 0.9, 0.999 and 1e-8, and the exact bits are
-recorded.
+take `0x` plus the 16 hex digits of a binary64 encoding, or a decimal rounded
+to nearest even. The defaults are the `adam/0` values 0.02, 0.9, 0.999 and
+1e-8, and the exact bits are recorded. Values outside the domain that `adam/0`
+needs (all finite, `lr > 0`, `eps > 0`, `0 ≤ β < 1`) are `E-PROFILE`, before
+any file is read.
 
 **Snapshot files.** A snapshot file records the parameters, their identities
 and the complete training provenance, one field per line:
@@ -490,14 +502,15 @@ exact field list is in design D6 of the
 [numeric-graph-v1 change](.cairn/changes/numeric-graph-v1/design.md).
 
 Loading a snapshot recomputes its layout key, its `ParamSnapshotId` and its
-provenance digest; any mismatch is `E-SNAPSHOT-INTEGRITY`. Binding it to a
-graph then refuses a different `GraphLogicalId` or a different fact-binding
-digest (`E-SNAPSHOT-STALE`, so a graph whose fact records changed does not
-accept parameters trained under other facts), a different param layout
-(`E-SNAPSHOT-LAYOUT`) and a snapshot other than the one pinned with
-`--snapshot-id` (`E-SNAPSHOT-ID`). A graph with `param` slots and no
-`--snapshot` is `E-SNAPSHOT-LAYOUT`. All of these refusals happen before any
-graph node is evaluated.
+provenance digest; any mismatch, a non-finite parameter or recorded `adam/0`
+values outside the optimizer's domain are `E-SNAPSHOT-INTEGRITY`, because
+training never publishes them. Binding it to a graph then refuses a different
+`GraphLogicalId` or a different fact-binding digest (`E-SNAPSHOT-STALE`, so a
+graph whose fact records changed does not accept parameters trained under other
+facts), a different param layout (`E-SNAPSHOT-LAYOUT`) and a snapshot other
+than the one pinned with `--snapshot-id` (`E-SNAPSHOT-ID`). A graph with
+`param` slots and no `--snapshot` is `E-SNAPSHOT-LAYOUT`. All of these refusals
+happen before any graph node is evaluated.
 
 **Immutable publication and replay.** `train --out` and `extract --out` publish
 only new files. The CLI writes `<out>.partial` with create-new, syncs it,
@@ -505,13 +518,18 @@ hard-links it to `<out>` (which fails if `<out>` exists) and removes
 `<out>.partial`. No path is ever truncated, renamed over or modified, and a
 `--from` parent is only read. An existing `<out>` or `<out>.partial` is a host
 refusal (exit 2) that leaves both untouched, and a refused or stopped command
-creates neither file. `verify --replay` rebuilds the training contract from
-the model, loss and data files, the recorded seed, policy, opt-ins, optimizer
-and step count, and the parent given with `--from`. The supplied model, loss,
-data and parent must match the recorded `graph`, `loss`, `data` and `parent`
-identities (otherwise `E-SNAPSHOT-STALE`). Replay then trains again and
-requires byte-identical parameters, optimizer-state digest and snapshot
-identity (otherwise `E-SNAPSHOT-REPLAY`). To train the model above, save it as
+creates neither file. Once the hard link exists the output is published: if
+removing `<out>.partial` then fails, the command still reports success and
+warns on stderr about the leftover, a second name for the same bytes.
+`verify --replay` rebuilds the training contract from the model, loss and data
+files, the recorded seed, policy, opt-ins, optimizer and step count, and the
+parent given with `--from`. The supplied model, loss, data and parent must
+match the recorded `graph`, `loss`, `data` and `parent` identities (otherwise
+`E-SNAPSHOT-STALE`). Replay then trains again and admits the recorded contract
+as `train` admits its flags, so a recorded opt-in that `train` would refuse is
+refused with the same `E-DERIV-BOOLEAN` or `E-DERIV-INDEX`. It requires
+byte-identical parameters, optimizer-state digest and snapshot identity
+(otherwise `E-SNAPSHOT-REPLAY`). To train the model above, save it as
 `model.ngraph`, the data file above as `data.points`, and this MSE point loss
 as `loss.ngraph`:
 

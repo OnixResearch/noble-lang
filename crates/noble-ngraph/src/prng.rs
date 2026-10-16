@@ -1,8 +1,6 @@
 //! `splitmix64/0`: the host-side PRNG named by D11 (initialization, data and
 //! random-graph generation). Never used inside a graph.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
 /// PRNG revision recorded in provenance.
 pub const PRNG: &str = "splitmix64/0";
 
@@ -28,7 +26,6 @@ impl SplitMix64 {
 
     /// Uniform binary64 in `[0, 1)` from the top 53 bits.
     pub fn next_f64(&mut self) -> f64 {
-        #[allow(clippy::cast_precision_loss)]
         let v = (self.next_u64() >> 11) as f64;
         v * (1.0 / 9_007_199_254_740_992.0)
     }

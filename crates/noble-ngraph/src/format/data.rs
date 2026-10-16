@@ -10,8 +10,7 @@
 //! after it the loss graph's target slot types. Row order is preserved; the
 //! training-data digest binds it.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
+use alloc::{format, string::String, vec, vec::Vec};
 
 use super::value::{format_diag, row, row_text, type_names, types};
 use crate::diag::{Code, Diagnostic, Site};

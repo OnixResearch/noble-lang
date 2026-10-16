@@ -2,7 +2,8 @@
 //! NGRAPH-CASE-06): for every fixture, workload, seeded random graph and
 //! extracted `I1`–`I4`, `parse(print(g))` equals `g` with producer origins
 //! cleared and has the same `GraphLogicalId`, fact-binding digest and
-//! checker outcome.
+//! checker outcome; comments, blank lines and runs of spaces change none of
+//! that.
 
 use noble_ngraph::check;
 use noble_ngraph::format::graph::{parse, print};
@@ -33,5 +34,40 @@ fn every_corpus_graph_round_trips_with_its_identity() {
                 "{name}: checker outcome"
             ),
         }
+    }
+}
+
+/// `text` with a comment and a blank line before the schema line, a blank
+/// line and a trailing comment after every record, and runs of spaces
+/// around every token.
+fn noisy(text: &str) -> String {
+    let mut out = String::from("# a comment before the schema line\n\n");
+    for line in text.lines() {
+        let spaced = line.split(' ').collect::<Vec<_>>().join("   ");
+        out.push_str("  ");
+        out.push_str(&spaced);
+        out.push_str("   # a trailing comment\n\n");
+    }
+    out
+}
+
+#[test]
+fn comments_blank_lines_and_spacing_do_not_change_any_corpus_graph() {
+    for (name, g) in suites::identity_corpus() {
+        let text = print(&g);
+        let canonical = parse(&BLAKE3, &text).unwrap_or_else(|d| panic!("{name}: {d}"));
+        let noisy_text = noisy(&text);
+        let back = parse(&BLAKE3, &noisy_text).unwrap_or_else(|d| panic!("{name}: {d}"));
+        assert_eq!(back, canonical, "{name}");
+        assert_eq!(print(&back), text, "{name}: printing drops the noise");
+        assert_eq!(
+            check(&BLAKE3, back)
+                .map(|c| (c.id(), c.fact_bindings(&BLAKE3)))
+                .map_err(|d| d.code_string()),
+            check(&BLAKE3, canonical)
+                .map(|c| (c.id(), c.fact_bindings(&BLAKE3)))
+                .map_err(|d| d.code_string()),
+            "{name}: identity and checker outcome"
+        );
     }
 }

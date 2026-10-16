@@ -171,7 +171,7 @@ pub fn b5_data(data_seed: u64) -> Vec<noble_ngraph::train::Point> {
                 &model,
                 &noble_ngraph::eval::f32_inputs(&x),
                 Some(&teacher),
-                &noble_ngraph::eval::Control::default(),
+                &mut noble_ngraph::eval::Control::default(),
             );
             let t = match r.obs.outputs() {
                 Some([noble_ngraph::sem::Value::F32(b)]) => f32::from_bits(*b),

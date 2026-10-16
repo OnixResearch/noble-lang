@@ -1,8 +1,7 @@
 //! Value tokens of vector and data files (design D5) and the report
 //! rendering of observed values (design D7).
 
-#[allow(unused_imports)]
-use crate::prelude::*;
+use alloc::{borrow::ToOwned, format, string::String, string::ToString, vec::Vec};
 
 use crate::diag::{Code, Diagnostic, Site};
 use crate::ir::ScalarType;
@@ -10,6 +9,37 @@ use crate::sem::Value;
 
 fn format_error(line: usize, why: impl Into<String>) -> Diagnostic {
     Diagnostic::new(Code::Format, Site::Line(line), why)
+}
+
+/// Why an `f32` token was refused; each file format maps `Malformed` to its
+/// own syntax code.
+pub(crate) enum F32Refusal {
+    /// Neither `0x` bits nor a decimal.
+    Malformed,
+    /// A `nan`/`inf` word (`E-LITERAL-NONFINITE`).
+    Nonfinite,
+    /// A decimal that no binary32 value equals (`E-LITERAL-INEXACT`).
+    Inexact,
+}
+
+/// Reads an `f32` token of any `ngraph` file: `0x` plus one to eight hex
+/// digits (any encoding, including NaN, infinities and subnormals), or an
+/// exactly representable decimal ([`crate::sem::is_decimal`]). Linear in the
+/// token's length.
+pub(crate) fn f32_token(tok: &str) -> Result<u32, F32Refusal> {
+    if tok.starts_with("0x") {
+        return super::hex_bits(tok, 8)
+            .and_then(|b| u32::try_from(b).ok())
+            .ok_or(F32Refusal::Malformed);
+    }
+    let word = |w: &[u8]| w.eq_ignore_ascii_case(b"nan") || w.eq_ignore_ascii_case(b"inf");
+    if tok.as_bytes().windows(3).any(word) {
+        return Err(F32Refusal::Nonfinite);
+    }
+    if !crate::sem::is_decimal(tok) {
+        return Err(F32Refusal::Malformed);
+    }
+    crate::sem::exact_f32_decimal(tok).ok_or(F32Refusal::Inexact)
 }
 
 /// Parses one value token of type `ty` on file line `line`.
@@ -24,40 +54,22 @@ fn format_error(line: usize, why: impl Into<String>) -> Diagnostic {
 /// `nan`/`inf` word, `E-FORMAT` otherwise.
 pub fn parse(ty: ScalarType, tok: &str, line: usize) -> Result<Value, Diagnostic> {
     match ty {
-        ScalarType::F32 => {
-            if let Some(h) = tok.strip_prefix("0x") {
-                if h.is_empty() || h.len() > 8 {
-                    return Err(format_error(line, format!("bad f32 bits {tok:?}")));
-                }
-                return u32::from_str_radix(h, 16)
-                    .map(Value::F32)
-                    .map_err(|_| format_error(line, format!("bad f32 bits {tok:?}")));
-            }
-            let lower = tok.to_ascii_lowercase();
-            if lower.contains("nan") || lower.contains("inf") {
-                return Err(Diagnostic::new(
-                    Code::LiteralNonfinite,
-                    Site::Line(line),
-                    format!("non-finite f32 value {tok}; give NaN and infinities as 0x bits"),
-                ));
-            }
-            if tok.parse::<f64>().is_err() {
-                return Err(format_error(line, format!("bad f32 value {tok:?}")));
-            }
-            crate::sem::exact_f32_decimal(tok)
-                .map(Value::F32)
-                .ok_or_else(|| {
-                    Diagnostic::new(
-                        Code::LiteralInexact,
-                        Site::Line(line),
-                        format!("{tok} is not exactly representable in binary32"),
-                    )
-                })
-        }
-        ScalarType::I64 => tok
-            .parse::<i64>()
+        ScalarType::F32 => f32_token(tok).map(Value::F32).map_err(|r| match r {
+            F32Refusal::Malformed => format_error(line, format!("bad f32 value {tok:?}")),
+            F32Refusal::Nonfinite => Diagnostic::new(
+                Code::LiteralNonfinite,
+                Site::Line(line),
+                format!("non-finite f32 value {tok}; give NaN and infinities as 0x bits"),
+            ),
+            F32Refusal::Inexact => Diagnostic::new(
+                Code::LiteralInexact,
+                Site::Line(line),
+                format!("{tok} is not exactly representable in binary32"),
+            ),
+        }),
+        ScalarType::I64 => super::decimal_i64(tok)
             .map(Value::I64)
-            .map_err(|_| format_error(line, format!("bad i64 value {tok:?}"))),
+            .ok_or_else(|| format_error(line, format!("bad i64 value {tok:?}"))),
         ScalarType::Bool => match tok {
             "true" => Ok(Value::Bool(true)),
             "false" => Ok(Value::Bool(false)),

@@ -1,7 +1,6 @@
 //! D7 stage 1: admission of an exact, independently kernel-accepted subject.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
+use alloc::{format, string::String, vec, vec::Vec};
 use noble_kernel::contracts::Behavior;
 use noble_kernel::execution::Submission;
 use noble_kernel::types::Ty;
@@ -9,7 +8,7 @@ use noble_kernel::untrusted::{Candidate, Checked, Interface, Node, NodeId, Outco
 
 use crate::diag::{Code, Diagnostic, Site};
 use crate::identity::IdentityScheme;
-use crate::ir::{ScalarType, SourceRef, SubProfile, Subject, SubjectKind};
+use crate::ir::{ScalarType, SourceRef, SubProfile, Subject, SubjectKind, MAX_SHAPE_DEPTH};
 
 use super::Budget;
 
@@ -485,15 +484,25 @@ fn push_shape<'a>(work: &mut Vec<&'a Ty>, shape: &'a noble_kernel::types::Nomina
 
 /// Root interface item: `I64`/`Bool` scalars, `Unit` or pairs of them.
 /// A Program input is never statically known (`E-DYNAMIC-RUN`); a Program
-/// output exposes its recipe (`E-PROGRAM-OUTPUT`, V-OBS-01).
+/// output exposes its recipe (`E-PROGRAM-OUTPUT`, V-OBS-01). An item that
+/// nests more than [`MAX_SHAPE_DEPTH`] pairs has no `ngraph-ir/0` shape tree
+/// (`E-AGGREGATE`); the Core frontend's 256-node type bound never produces
+/// one, so only a forged submission reaches this refusal.
 fn classify(ty: &Ty, program: Code) -> Result<(), Diagnostic> {
-    let mut work = vec![ty];
-    while let Some(t) = work.pop() {
+    // Each entry carries the number of pairs enclosing it.
+    let mut work = vec![(ty, 0u32)];
+    while let Some((t, open)) = work.pop() {
         match t {
             Ty::I64 | Ty::Bool | Ty::Unit => {}
             Ty::Pair(a, b) => {
-                work.push(a);
-                work.push(b);
+                if open >= MAX_SHAPE_DEPTH {
+                    return Err(refuse(
+                        Code::Aggregate,
+                        format!("a root interface item nests more than {MAX_SHAPE_DEPTH} pairs"),
+                    ));
+                }
+                work.push((a, open + 1));
+                work.push((b, open + 1));
             }
             Ty::Program(..) => {
                 return Err(refuse(
@@ -546,4 +555,27 @@ fn subject_of(ids: &dyn IdentityScheme, submission: &Submission, closure: &[u64]
     }
     let refs: Vec<&[u8]> = parts.iter().map(Vec::as_slice).collect();
     Subject::derive(ids, SubjectKind::Extracted, &refs, closure.to_vec())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{classify, Code, Ty, MAX_SHAPE_DEPTH};
+    use alloc::boxed::Box;
+
+    /// `I64` under `depth` nested pairs.
+    fn nested(depth: u32) -> Ty {
+        let mut t = Ty::I64;
+        for _ in 0..depth {
+            t = Ty::Pair(Box::new(t), Box::new(Ty::Unit));
+        }
+        t
+    }
+
+    #[test]
+    fn interface_items_nest_at_most_the_shape_bound() {
+        classify(&nested(MAX_SHAPE_DEPTH), Code::DynamicRun).expect("the deepest extractable item");
+        let d =
+            classify(&nested(MAX_SHAPE_DEPTH + 1), Code::DynamicRun).expect_err("one more pair");
+        assert_eq!(d.code, Code::Aggregate);
+    }
 }

@@ -208,6 +208,6 @@ fn compiled_matches_first_guard_in_canonical_order() {
             fact: Fact::Finite
         }
     );
-    let r = comp.evaluate(&f32_inputs(&[0.5]), None, &Control::default());
+    let r = comp.evaluate(&f32_inputs(&[0.5]), None, &mut Control::default());
     assert_eq!(r.obs, Obs::Normal(vec![Value::F32(2.0f32.to_bits())]));
 }

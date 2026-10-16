@@ -10,8 +10,11 @@ use noble_ngraph::grad::{self, BooleanPolicy, DerivOptions};
 use noble_ngraph::ir::{GraphBuilder, NodeId, Op, ScalarType, SubProfile, Subject};
 use noble_ngraph::train::{self, Point, Stopped, TrainControl, Trained};
 
+/// A named edit of the `adam/0` hyperparameters.
+type AdamEdit = (&'static str, fn(&mut train::Adam));
+
 fn run(c: &train::Contract, steps: u64) -> Result<Trained, Box<Stopped>> {
-    train::train(&IDS, c, None, steps, &TrainControl::default())
+    train::train(&IDS, c, None, steps, &mut TrainControl::default())
 }
 
 fn code(r: Result<Trained, Box<Stopped>>) -> String {
@@ -52,7 +55,7 @@ fn points_the_reference_refuses_stop_training_unpublished() {
                 &model,
                 &eval::f32_inputs(&[5.0]),
                 Some(s0),
-                &Control::default(),
+                &mut Control::default(),
             )
             .obs;
             match (want, obs) {
@@ -166,7 +169,7 @@ fn budgets_bound_training_before_any_step() {
             &c,
             None,
             steps,
-            &TrainControl {
+            &mut TrainControl {
                 budgets: b,
                 ..TrainControl::default()
             },
@@ -238,23 +241,23 @@ fn budgets_bound_training_before_any_step() {
 #[test]
 fn replay_starts_from_the_recorded_parent() {
     let c = contract(checked(linear(false, false)), points());
-    let none = TrainControl::default();
+    let mut none = TrainControl::default();
     let s_n = run(&c, 4).expect("trains");
-    let child = train::train(&IDS, &c, Some(&s_n.snapshot), 3, &none).expect("trains on");
+    let child = train::train(&IDS, &c, Some(&s_n.snapshot), 3, &mut none).expect("trains on");
     assert_eq!(child.provenance.parent, s_n.snapshot.id());
     assert_eq!(s_n.provenance.parent, s_n.initial.id());
 
-    let again =
-        train::replay(&IDS, &c, &child.provenance, Some(&s_n.snapshot), &none).expect("replays");
+    let again = train::replay(&IDS, &c, &child.provenance, Some(&s_n.snapshot), &mut none)
+        .expect("replays");
     assert_eq!(again.snapshot, child.snapshot);
     assert_eq!(again.provenance, child.provenance);
     assert!(
-        train::replay(&IDS, &c, &s_n.provenance, None, &none).is_ok(),
+        train::replay(&IDS, &c, &s_n.provenance, None, &mut none).is_ok(),
         "seed replay"
     );
 
-    let refuse = |c: &train::Contract, p: &train::Provenance, parent| {
-        code(train::replay(&IDS, c, p, parent, &none))
+    let mut refuse = |c: &train::Contract, p: &train::Provenance, parent| {
+        code(train::replay(&IDS, c, p, parent, &mut none))
     };
     assert_eq!(refuse(&c, &child.provenance, None), "E-SNAPSHOT-STALE");
     assert_eq!(
@@ -288,4 +291,103 @@ fn replay_starts_from_the_recorded_parent() {
     let mut state = child.provenance.clone();
     state.optimizer_state = [3; 32];
     assert_eq!(refuse(&c, &state, Some(&s_n.snapshot)), "E-SNAPSHOT-REPLAY");
+}
+
+#[test]
+fn adam_values_outside_the_optimizer_domain_are_refused_by_train_and_replay() {
+    let c = contract(checked(linear(false, false)), points());
+    let t = run(&c, 2).expect("trains");
+    let edits: [AdamEdit; 8] = [
+        ("lr 0", |a| a.lr = 0.0),
+        ("lr < 0", |a| a.lr = -0.02),
+        ("lr NaN", |a| a.lr = f64::NAN),
+        ("beta1 1", |a| a.beta1 = 1.0),
+        ("beta1 < 0", |a| a.beta1 = -0.5),
+        ("beta2 inf", |a| a.beta2 = f64::INFINITY),
+        ("eps 0", |a| a.eps = 0.0),
+        ("eps inf", |a| a.eps = f64::INFINITY),
+    ];
+    for (name, edit) in edits {
+        let mut bad = c.clone();
+        edit(&mut bad.adam);
+        let e = run(&bad, 1).expect_err(name);
+        assert_eq!(e.diagnostic.code_string(), "E-PROFILE", "{name}");
+        assert!(e.last.is_none(), "{name}: refused before S0");
+        // A provenance record naming the same values replays nothing.
+        let mut p = t.provenance.clone();
+        edit(&mut p.optimizer);
+        assert_eq!(
+            code(train::replay(
+                &IDS,
+                &bad,
+                &p,
+                None,
+                &mut TrainControl::default()
+            )),
+            "E-PROFILE",
+            "{name}"
+        );
+    }
+    // The domain's edges are admitted: zero (also `-0`) betas and the least
+    // positive learning rate.
+    let mut edge = c;
+    edge.adam.beta1 = 0.0;
+    edge.adam.beta2 = -0.0;
+    edge.adam.lr = f64::from_bits(1);
+    run(&edge, 1).expect("inside the domain");
+}
+
+#[test]
+fn opt_ins_must_name_a_node_they_apply_to_in_train_and_replay() {
+    // `linear`: %0 input, %1 and %2 params, %3 f32.mul, %4 f32.add.
+    let c = contract(checked(linear(false, false)), points());
+    let t = run(&c, 2).expect("trains");
+    let boolean = |n: u32, p: BooleanPolicy| {
+        let mut d = DerivOptions::default();
+        d.boolean.insert(NodeId(n), p);
+        d
+    };
+    let index = |n: u32, p: grad::IndexPolicy| {
+        let mut d = DerivOptions::default();
+        d.index.insert(NodeId(n), p);
+        d
+    };
+    let cases = [
+        (
+            boolean(4_000_000_000, BooleanPolicy::StraightThrough),
+            "E-DERIV-BOOLEAN",
+        ),
+        (
+            boolean(3, BooleanPolicy::StraightThrough),
+            "E-DERIV-BOOLEAN",
+        ),
+        (boolean(3, BooleanPolicy::Refuse), "E-DERIV-BOOLEAN"),
+        (
+            boolean(4, BooleanPolicy::ClampedLinear(0.5)),
+            "E-DERIV-BOOLEAN",
+        ),
+        (index(3, grad::IndexPolicy::Zero), "E-DERIV-INDEX"),
+        (
+            index(99, grad::IndexPolicy::BackwardDifference),
+            "E-DERIV-INDEX",
+        ),
+    ];
+    for (deriv, want) in cases {
+        let mut bad = c.clone();
+        bad.deriv = deriv.clone();
+        assert_eq!(code(run(&bad, 1)), want, "{deriv:?}");
+        // Replay re-admits recorded opt-ins exactly as training does.
+        let mut p = t.provenance.clone();
+        p.deriv = deriv;
+        assert_eq!(
+            code(train::replay(
+                &IDS,
+                &bad,
+                &p,
+                None,
+                &mut TrainControl::default()
+            )),
+            want
+        );
+    }
 }

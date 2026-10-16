@@ -1,9 +1,7 @@
 //! D8 forward observations, evaluation preflight, scratch accounting (D12)
 //! and the normative CPU reference interpreter (leg L3).
 
-#[allow(unused_imports)]
-use crate::prelude::*;
-use core::cell::Cell;
+use alloc::{format, vec::Vec};
 
 use crate::check::CheckedGraph;
 use crate::diag::{BudgetKind, Code, Diagnostic, Site};
@@ -60,50 +58,48 @@ impl Obs {
     }
 }
 
-/// Instrumented scratch counters (B6). Every evaluation acquires its scratch
-/// through a [`ScratchLease`] whose drop releases it exactly once.
-/// Single-threaded instrumentation (`Cell`): the library holds no atomics
-/// or shared mutable globals (design D2).
-#[derive(Debug, Default)]
+/// Instrumented scratch counters (B6), owned by the caller and lent to one
+/// evaluation or training call at a time ([`Control::scratch`],
+/// [`crate::train::TrainControl::scratch`]). Every evaluation acquires its
+/// scratch through a [`ScratchLease`] whose drop releases it exactly once.
+/// Plain fields under an exclusive borrow: the library holds no interior
+/// mutability, atomics or shared mutable globals (design D2).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct ScratchCounters {
     /// Leases acquired.
-    pub acquired: Cell<u64>,
+    pub acquired: u64,
     /// Leases released.
-    pub released: Cell<u64>,
+    pub released: u64,
     /// Bytes currently leased.
-    pub live_bytes: Cell<u64>,
+    pub live_bytes: u64,
     /// Peak leased bytes.
-    pub peak_bytes: Cell<u64>,
+    pub peak_bytes: u64,
 }
 
 impl ScratchCounters {
     /// `(acquired, released, live_bytes)`.
     #[must_use]
-    pub fn snapshot(&self) -> (u64, u64, u64) {
-        (
-            self.acquired.get(),
-            self.released.get(),
-            self.live_bytes.get(),
-        )
+    pub const fn snapshot(&self) -> (u64, u64, u64) {
+        (self.acquired, self.released, self.live_bytes)
     }
 }
 
-/// A scratch lease; its drop is the single release.
+/// A scratch lease; its drop is the single release. It holds the counters'
+/// exclusive borrow for its lifetime.
 #[derive(Debug)]
 pub struct ScratchLease<'a> {
-    counters: Option<&'a ScratchCounters>,
+    counters: Option<&'a mut ScratchCounters>,
     bytes: u64,
 }
 
 impl<'a> ScratchLease<'a> {
     /// Acquires `bytes` of scratch.
     #[must_use]
-    pub fn acquire(counters: Option<&'a ScratchCounters>, bytes: u64) -> Self {
-        if let Some(c) = counters {
-            c.acquired.set(c.acquired.get() + 1);
-            let live = c.live_bytes.get() + bytes;
-            c.live_bytes.set(live);
-            c.peak_bytes.set(c.peak_bytes.get().max(live));
+    pub fn acquire(mut counters: Option<&'a mut ScratchCounters>, bytes: u64) -> Self {
+        if let Some(c) = counters.as_deref_mut() {
+            c.acquired += 1;
+            c.live_bytes += bytes;
+            c.peak_bytes = c.peak_bytes.max(c.live_bytes);
         }
         Self { counters, bytes }
     }
@@ -111,9 +107,9 @@ impl<'a> ScratchLease<'a> {
 
 impl Drop for ScratchLease<'_> {
     fn drop(&mut self) {
-        if let Some(c) = self.counters {
-            c.released.set(c.released.get() + 1);
-            c.live_bytes.set(c.live_bytes.get() - self.bytes);
+        if let Some(c) = self.counters.as_deref_mut() {
+            c.released += 1;
+            c.live_bytes -= self.bytes;
         }
     }
 }
@@ -127,8 +123,8 @@ pub struct Control<'a> {
     pub fuel: Option<u64>,
     /// Returns `true` to cancel before starting the given layer.
     pub cancel: Option<&'a dyn Fn(u32) -> bool>,
-    /// Scratch instrumentation.
-    pub scratch: Option<&'a ScratchCounters>,
+    /// Scratch instrumentation, lent for the evaluation.
+    pub scratch: Option<&'a mut ScratchCounters>,
     /// Forward scratch budget in bytes (defaults to the `/0` budget).
     pub forward_scratch: Option<u64>,
 }
@@ -258,7 +254,6 @@ pub(crate) fn scratch_preflight(bytes: u64, control: &Control<'_>) -> Result<(),
 /// The fact an `index` read fails under `refuse`, for `G-FACT-FALSE`.
 #[must_use]
 pub fn index_refusal_fact(len: usize) -> Fact {
-    #[allow(clippy::cast_precision_loss)]
     let hi = (len.saturating_sub(1)) as f32;
     Fact::Range {
         lo: Literal::F32(0),
@@ -321,7 +316,7 @@ pub(crate) fn eval_node(
         } => match sem::index_position(f(*index), table.len(), *below, *above) {
             Ok(Some(k)) => get(table[k]),
             Ok(None) => Value::F32(sem::POS_ZERO),
-            Err(()) => return Err(index_refusal_fact(table.len())),
+            Err(sem::IndexRefused) => return Err(index_refusal_fact(table.len())),
         },
         Op::Guard { .. } => Value::Bool(true),
     })
@@ -356,7 +351,7 @@ pub fn reference(
     checked: &CheckedGraph,
     inputs: &[Value],
     snapshot: Option<&ParamSnapshot>,
-    control: &Control<'_>,
+    control: &mut Control<'_>,
 ) -> Report {
     let slots = match preflight(checked, inputs, snapshot) {
         Ok(v) => v,
@@ -366,10 +361,10 @@ pub fn reference(
     if let Err(d) = scratch_preflight(bytes, control) {
         return Report::refused(d);
     }
-    let _lease = ScratchLease::acquire(control.scratch, bytes);
+    let _lease = ScratchLease::acquire(control.scratch.as_deref_mut(), bytes);
     let g = checked.graph();
     let mut vals: Vec<Value> = Vec::with_capacity(g.nodes.len());
-    let evaluated = Cell::new(0u64);
+    let mut evaluated = 0u64;
     let mut entered: Option<u32> = None;
     for (i, node) in g.nodes.iter().enumerate() {
         let id = NodeId(i as u32);
@@ -379,17 +374,17 @@ pub fn reference(
             if control.cancel.is_some_and(|c| c(layer)) {
                 return Report {
                     obs: Obs::Cancelled,
-                    evaluated_nodes: evaluated.get(),
+                    evaluated_nodes: evaluated,
                 };
             }
         }
-        if control.fuel.is_some_and(|f| evaluated.get() >= f) {
+        if control.fuel.is_some_and(|f| evaluated >= f) {
             return Report {
                 obs: Obs::Exhausted(BudgetKind::Fuel),
-                evaluated_nodes: evaluated.get(),
+                evaluated_nodes: evaluated,
             };
         }
-        evaluated.set(evaluated.get() + 1);
+        evaluated += 1;
         let get = |x: NodeId| vals[x.index()];
         if let Op::Guard { fact, value } = &node.op {
             if !guard_holds(checked, fact, *value, get) {
@@ -398,7 +393,7 @@ pub fn reference(
                         node: id,
                         fact: fact.clone(),
                     },
-                    evaluated_nodes: evaluated.get(),
+                    evaluated_nodes: evaluated,
                 };
             }
             vals.push(Value::Bool(true));
@@ -409,14 +404,14 @@ pub fn reference(
             Err(fact) => {
                 return Report {
                     obs: Obs::GuardFailed { node: id, fact },
-                    evaluated_nodes: evaluated.get(),
+                    evaluated_nodes: evaluated,
                 };
             }
         }
     }
     Report {
         obs: Obs::Normal(collect_outputs(checked, |x| vals[x.index()])),
-        evaluated_nodes: evaluated.get(),
+        evaluated_nodes: evaluated,
     }
 }
 

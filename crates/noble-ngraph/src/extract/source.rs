@@ -1,14 +1,13 @@
 //! Ordinary Core-Bootstrap source preparation for extraction subjects.
 //!
 //! This is the same public frontend the CLI session uses
-//! (`noble_contracts::source::Session`): definitions are prepared and
-//! committed one submission at a time, then the root body is prepared with
-//! its ordered (bottom-first) input stack types. The resulting
-//! [`Submission`] is untrusted producer data; [`super::admit`] re-runs the
-//! kernel on it.
+//! (`noble_contracts::source::Session`), injected by the caller together
+//! with its limits: definitions are prepared and committed one submission at
+//! a time, then the root body is prepared with its ordered (bottom-first)
+//! input stack types. The resulting [`Submission`] is untrusted producer
+//! data; [`super::admit`] re-runs the kernel on it.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
+use alloc::{format, string::String, vec, vec::Vec};
 use noble_kernel::execution::Submission;
 use noble_kernel::types::Ty;
 
@@ -23,16 +22,22 @@ pub struct Prepared {
 }
 
 /// Prepares `definitions` (each one `def NAME [ … ]` submission, committed in
-/// order) and then `root` with `inputs`, in a fresh `Session::new()` (the
-/// CLI's Core-Bootstrap namespace with the `test.emit`/`test.abort` hosts).
-/// Every submission before the root must be a definition: an executable
-/// submission would run in `noble session` but has no meaning here.
+/// order) and then `root` with `inputs`, in `session` under `limits`. Callers
+/// pass a fresh `Session::new()` (the CLI's Core-Bootstrap namespace with the
+/// `test.emit`/`test.abort` hosts) and `Limits::default()`; the session is
+/// consumed. Every submission before the root must be a definition: an
+/// executable submission would run in `noble session` but has no meaning
+/// here.
 ///
 /// # Errors
 /// The frontend's refusal rendered as text.
-pub fn prepare(definitions: &[&str], root: &str, inputs: &[Ty]) -> Result<Prepared, String> {
-    let mut session = noble_contracts::source::Session::new();
-    let limits = noble_contracts::Limits::default();
+pub fn prepare(
+    mut session: noble_contracts::source::Session,
+    limits: noble_contracts::Limits,
+    definitions: &[&str],
+    root: &str,
+    inputs: &[Ty],
+) -> Result<Prepared, String> {
     for d in definitions {
         let p = session
             .prepare(d.as_bytes(), &[], limits)

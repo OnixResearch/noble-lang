@@ -496,7 +496,8 @@ fn b5(cfg: &Json) -> (Json, bool) {
     let id_before = c.model.id();
     let text_before = noble_ngraph::format::graph::print(c.model.graph());
     let start = Instant::now();
-    let t = train::train(&BLAKE3, &c, None, B5_STEPS, &TrainControl::default()).expect("training");
+    let t =
+        train::train(&BLAKE3, &c, None, B5_STEPS, &mut TrainControl::default()).expect("training");
     let secs = start.elapsed().as_secs_f64();
     let (first, last) = (t.losses[0], *t.losses.last().expect("loss"));
     let ratio = last / first;
@@ -509,14 +510,20 @@ fn b5(cfg: &Json) -> (Json, bool) {
                 &c.model,
                 &f32_inputs(&p.inputs),
                 Some(&t.initial),
-                &Control::default(),
+                &mut Control::default(),
             )
             .obs
         })
         .collect();
-    let replay = train::replay(&BLAKE3, &c, &t.provenance, None, &TrainControl::default())
-        .expect("replay")
-        .snapshot;
+    let replay = train::replay(
+        &BLAKE3,
+        &c,
+        &t.provenance,
+        None,
+        &mut TrainControl::default(),
+    )
+    .expect("replay")
+    .snapshot;
     let s0_after: Vec<Obs> = c
         .data
         .iter()
@@ -525,13 +532,13 @@ fn b5(cfg: &Json) -> (Json, bool) {
                 &c.model,
                 &f32_inputs(&p.inputs),
                 Some(&t.initial),
-                &Control::default(),
+                &mut Control::default(),
             )
             .obs
         })
         .collect();
     let refused =
-        |s: &ParamSnapshot| match reference(&c.model, &x, Some(s), &Control::default()).obs {
+        |s: &ParamSnapshot| match reference(&c.model, &x, Some(s), &mut Control::default()).obs {
             Obs::Refused(d) => d.code_string(),
             o => obs_text(&o),
         };
@@ -557,7 +564,7 @@ fn b5(cfg: &Json) -> (Json, bool) {
     let mut bad = b5_contract(B5_SEED, B5_DATA_SEED);
     bad.data[3].targets[0] = f32::INFINITY;
     let nonfinite =
-        train::train(&BLAKE3, &bad, None, 5, &TrainControl::default()).expect_err("nonfinite");
+        train::train(&BLAKE3, &bad, None, 5, &mut TrainControl::default()).expect_err("nonfinite");
     let ok = ratio <= 0.1
         && c.model.id() == id_before
         && noble_ngraph::format::graph::print(c.model.graph()) == text_before
@@ -638,9 +645,9 @@ fn b6(cfg: &Json) -> (Json, bool) {
     let mut ok = true;
     let mut rows = Vec::new();
     let mut run =
-        |label: String, ctl: &dyn Fn(&ScratchCounters) -> Obs, want: &dyn Fn(&Obs) -> bool| {
-            let counters = ScratchCounters::default();
-            let o = ctl(&counters);
+        |label: String, ctl: &dyn Fn(&mut ScratchCounters) -> Obs, want: &dyn Fn(&Obs) -> bool| {
+            let mut counters = ScratchCounters::default();
+            let o = ctl(&mut counters);
             let (acq, rel, live) = counters.snapshot();
             let pass = want(&o) && acq == rel && live == 0 && acq <= 1;
             ok &= pass;
@@ -662,15 +669,15 @@ fn b6(cfg: &Json) -> (Json, bool) {
                     if compiled { "L4" } else { "L3" }
                 ),
                 &|c| {
-                    let control = Control {
+                    let mut control = Control {
                         cancel: Some(&cancel),
                         scratch: Some(c),
                         ..Control::default()
                     };
                     if compiled {
-                        comp.evaluate(&x, Some(&s), &control).obs
+                        comp.evaluate(&x, Some(&s), &mut control).obs
                     } else {
-                        reference(&g, &x, Some(&s), &control).obs
+                        reference(&g, &x, Some(&s), &mut control).obs
                     }
                 },
                 &|o| *o == Obs::Cancelled,
@@ -684,15 +691,15 @@ fn b6(cfg: &Json) -> (Json, bool) {
                 if compiled { "L4" } else { "L3" }
             ),
             &|c| {
-                let control = Control {
+                let mut control = Control {
                     fuel: Some(20),
                     scratch: Some(c),
                     ..Control::default()
                 };
                 if compiled {
-                    comp.evaluate(&x, Some(&s), &control).obs
+                    comp.evaluate(&x, Some(&s), &mut control).obs
                 } else {
-                    reference(&g, &x, Some(&s), &control).obs
+                    reference(&g, &x, Some(&s), &mut control).obs
                 }
             },
             &|o| *o == Obs::Exhausted(BudgetKind::Fuel),
@@ -711,15 +718,15 @@ fn b6(cfg: &Json) -> (Json, bool) {
         run(
             format!("guard failure G-FACT-FALSE ({tag})"),
             &|c| {
-                let control = Control {
+                let mut control = Control {
                     scratch: Some(c),
                     ..Control::default()
                 };
                 let i = f32_inputs(&[0.25]);
                 if compiled {
-                    gc.evaluate(&i, None, &control).obs
+                    gc.evaluate(&i, None, &mut control).obs
                 } else {
-                    reference(&guarded, &i, None, &control).obs
+                    reference(&guarded, &i, None, &mut control).obs
                 }
             },
             &|o| matches!(o, Obs::GuardFailed { .. }),
@@ -727,16 +734,16 @@ fn b6(cfg: &Json) -> (Json, bool) {
         run(
             format!("preflight refusal E-SNAPSHOT-STALE, no scratch acquired ({tag})"),
             &|c| {
-                let control = Control {
+                let mut control = Control {
                     scratch: Some(c),
                     ..Control::default()
                 };
                 let other = checked(fixtures::f2());
                 let s2 = ParamSnapshot::new(&BLAKE3, &other, &[1.0, 2.0, 3.0, 4.0]).expect("s2");
                 if compiled {
-                    comp.evaluate(&x, Some(&s2), &control).obs
+                    comp.evaluate(&x, Some(&s2), &mut control).obs
                 } else {
-                    reference(&g, &x, Some(&s2), &control).obs
+                    reference(&g, &x, Some(&s2), &mut control).obs
                 }
             },
             &|o| matches!(o, Obs::Refused(d) if d.code == Code::SnapshotStale),
@@ -744,14 +751,14 @@ fn b6(cfg: &Json) -> (Json, bool) {
         run(
             format!("normal return ({tag})"),
             &|c| {
-                let control = Control {
+                let mut control = Control {
                     scratch: Some(c),
                     ..Control::default()
                 };
                 if compiled {
-                    comp.evaluate(&x, Some(&s), &control).obs
+                    comp.evaluate(&x, Some(&s), &mut control).obs
                 } else {
-                    reference(&g, &x, Some(&s), &control).obs
+                    reference(&g, &x, Some(&s), &mut control).obs
                 }
             },
             &|o| matches!(o, Obs::Normal(_)),
@@ -770,17 +777,17 @@ fn b6(cfg: &Json) -> (Json, bool) {
     }
     // Training cancelled before step 4: last published = after step 3.
     let c = b5_contract(B5_SEED, B5_DATA_SEED);
-    let three = train::train(&BLAKE3, &c, None, 3, &TrainControl::default()).expect("3 steps");
-    let counters = ScratchCounters::default();
+    let three = train::train(&BLAKE3, &c, None, 3, &mut TrainControl::default()).expect("3 steps");
+    let mut counters = ScratchCounters::default();
     let cancel = |t: u64| t == 4;
     let e = train::train(
         &BLAKE3,
         &c,
         None,
         10,
-        &TrainControl {
+        &mut TrainControl {
             cancel_before_step: Some(&cancel),
-            scratch: Some(&counters),
+            scratch: Some(&mut counters),
             ..TrainControl::default()
         },
     )

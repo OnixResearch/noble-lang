@@ -6,10 +6,13 @@
 //! independent validation).
 //!
 //! API stability: after the `IR_READY` milestone this module only changes
-//! additively (new variants/fields are added with defaults; nothing is renamed).
+//! additively (new variants/fields are added with defaults; nothing is renamed),
+//! except where a recorded boundary fix needs otherwise: `numeric-graph-v1`
+//! D4 made [`ShapeTree`] opaque so that its depth is bounded at construction.
 
+use crate::diag::{Diagnostic, Malformed, Site};
 use crate::identity::{IdentityHasher, IdentityScheme};
-use crate::prelude::*;
+use alloc::{boxed::Box, format, string::String, vec, vec::Vec};
 
 /// IR version tag (D2).
 pub const IR_VERSION: &str = "ngraph-ir/0";
@@ -509,15 +512,101 @@ impl Subject {
     }
 }
 
+/// The most pairs one [`ShapeTree`] may nest (design D4 of
+/// `numeric-graph-v1`).
+///
+/// Extraction is the only producer of non-flat shapes from Core source, and
+/// the Core frontend bounds every value type to 256 structural type nodes
+/// (`noble-contracts` `TYPE_CAP`, sent to the kernel as the request's
+/// `type_size`; the kernel's `Ty::size` counts one node per constructor). A
+/// path through `d` nested pairs needs at least `2d + 1` nodes, because every
+/// pair on it has a sibling subtree and the path ends in a leaf, so an
+/// extracted interface item nests at most 127 pairs. Authored files and the
+/// builder get the same bound: a deeper tree describes no extractable
+/// interface and would only exhaust the recursive walks over shapes
+/// (identity, printing, comparison, drop).
+pub const MAX_SHAPE_DEPTH: u32 = 127;
+
+/// The refusal of a shape tree deeper than [`MAX_SHAPE_DEPTH`] at `site`.
+#[must_use]
+pub fn shape_depth_refusal(site: Site) -> Diagnostic {
+    Diagnostic::malformed(
+        Malformed::Payload,
+        site,
+        format!("a shape tree nests at most {MAX_SHAPE_DEPTH} pairs"),
+    )
+}
+
 /// Shape of one interface stack item; pairs flatten to ordered scalars (D7).
+///
+/// Pairs are built only by [`ShapeTree::pair`], which refuses a tree that
+/// would nest more than [`MAX_SHAPE_DEPTH`] pairs, so every tree that exists
+/// is shallow enough for recursive walks.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum ShapeTree {
+pub struct ShapeTree(Shape);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+enum Shape {
+    Scalar,
+    Unit,
+    /// Nested-pair depth (one more than the deeper part's) and the parts.
+    Pair(u32, Box<(ShapeTree, ShapeTree)>),
+}
+
+/// One node of a [`ShapeTree`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ShapeNode<'a> {
     /// One scalar slot/output.
     Scalar,
     /// `Unit`: no slot/output.
     Unit,
     /// `Pair(a, b)`: `a`'s scalars then `b`'s.
-    Pair(Box<ShapeTree>, Box<ShapeTree>),
+    Pair(&'a ShapeTree, &'a ShapeTree),
+}
+
+impl ShapeTree {
+    /// One scalar slot/output.
+    pub const SCALAR: Self = Self(Shape::Scalar);
+    /// `Unit`: no slot/output.
+    pub const UNIT: Self = Self(Shape::Unit);
+
+    /// `Pair(a, b)`: `a`'s scalars then `b`'s.
+    ///
+    /// # Errors
+    /// `E-GRAPH-MALFORMED` (payload) when the pair would nest more than
+    /// [`MAX_SHAPE_DEPTH`] pairs.
+    pub fn pair(a: Self, b: Self) -> Result<Self, Diagnostic> {
+        let depth = a.depth().max(b.depth()).saturating_add(1);
+        if depth > MAX_SHAPE_DEPTH {
+            return Err(shape_depth_refusal(Site::Graph));
+        }
+        Ok(Self(Shape::Pair(depth, Box::new((a, b)))))
+    }
+
+    /// Nested pairs on the deepest path (0 for a leaf).
+    #[must_use]
+    pub const fn depth(&self) -> u32 {
+        match &self.0 {
+            Shape::Pair(depth, _) => *depth,
+            Shape::Scalar | Shape::Unit => 0,
+        }
+    }
+
+    /// The tree's root node.
+    #[must_use]
+    pub fn node(&self) -> ShapeNode<'_> {
+        match &self.0 {
+            Shape::Scalar => ShapeNode::Scalar,
+            Shape::Unit => ShapeNode::Unit,
+            Shape::Pair(_, parts) => ShapeNode::Pair(&parts.0, &parts.1),
+        }
+    }
+
+    /// Whether the tree is one scalar.
+    #[must_use]
+    pub const fn is_scalar(&self) -> bool {
+        matches!(self.0, Shape::Scalar)
+    }
 }
 
 /// A `ngraph-ir/0` graph (producer data until checked).
@@ -838,11 +927,12 @@ impl<'s> Canon<'s> {
     }
 
     fn shapes(&mut self, s: Option<&Vec<ShapeTree>>) {
+        // Recursion depth is bounded by `MAX_SHAPE_DEPTH`.
         fn tree(c: &mut Canon<'_>, t: &ShapeTree) {
-            match t {
-                ShapeTree::Scalar => c.u8(0),
-                ShapeTree::Unit => c.u8(1),
-                ShapeTree::Pair(a, b) => {
+            match t.node() {
+                ShapeNode::Scalar => c.u8(0),
+                ShapeNode::Unit => c.u8(1),
+                ShapeNode::Pair(a, b) => {
                     c.u8(2);
                     tree(c, a);
                     tree(c, b);

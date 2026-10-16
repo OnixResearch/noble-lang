@@ -4,9 +4,8 @@
 //! param layout ‖ exact LE bytes)`. A hash identifies bytes; it does not prove
 //! correctness. Snapshots are retained owners (D12): immutable and shareable.
 
-#[allow(unused_imports)]
-use crate::prelude::*;
 use alloc::rc::Rc;
+use alloc::{format, vec::Vec};
 
 use crate::check::CheckedGraph;
 use crate::diag::{BudgetKind, Code, Diagnostic, Site};

@@ -9,8 +9,7 @@
 //! the correctly rounded software routines in [`soft`].
 
 use crate::ir::{Literal, OutOfRange, ScalarType};
-#[allow(unused_imports)]
-use crate::prelude::*;
+use alloc::{format, vec, vec::Vec};
 
 /// A graph value at the ABI (D3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -146,23 +145,27 @@ pub const fn select(bit: u32, off: u32, on: u32) -> u32 {
     }
 }
 
+/// A refused `index` read: the caller reports `G-FACT-FALSE` with the
+/// table's range fact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct IndexRefused;
+
 /// Index position selected by `index` under the out-of-range rules: `Ok(Some(k))`
-/// = candidate `k`; `Ok(None)` = `+0` (`zero` rule); `Err(())` = refused (guard
+/// = candidate `k`; `Ok(None)` = `+0` (`zero` rule); `Err(IndexRefused)` = refused (guard
 /// failure). A non-integral or NaN index is refused (it cannot be selected; the
 /// checked `integral` fact normally excludes it statically).
-#[allow(clippy::result_unit_err)]
 pub fn index_position(
     i: f32,
     len: usize,
     below: OutOfRange,
     above: OutOfRange,
-) -> Result<Option<usize>, ()> {
+) -> Result<Option<usize>, IndexRefused> {
     if i.is_nan() || i.is_infinite() || soft::trunc_f32(i) != i {
-        return Err(());
+        return Err(IndexRefused);
     }
     if i < 0.0 {
         return match below {
-            OutOfRange::Refuse => Err(()),
+            OutOfRange::Refuse => Err(IndexRefused),
             OutOfRange::Clamp => Ok(Some(0)),
             OutOfRange::Zero => Ok(None),
         };
@@ -170,15 +173,13 @@ pub fn index_position(
     // |i| < 2^24 under the checked range fact; larger finite values still
     // compare correctly against `len` (≤ 65,536) as f64.
     let fi = f64::from(i);
-    #[allow(clippy::cast_precision_loss)]
     if fi >= len as f64 {
         return match above {
-            OutOfRange::Refuse => Err(()),
+            OutOfRange::Refuse => Err(IndexRefused),
             OutOfRange::Clamp => Ok(Some(len - 1)),
             OutOfRange::Zero => Ok(None),
         };
     }
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     Ok(Some(fi as usize))
 }
 
@@ -210,56 +211,147 @@ pub const fn i64_mul(a: i64, b: i64) -> i64 {
     a.wrapping_mul(b)
 }
 
-/// Whether `bits` is an exactly representable decimal of `text` (`E-LITERAL-INEXACT` check).
-/// Returns `Some(bits)` iff the decimal string denotes exactly a binary32 value.
-#[must_use]
-pub fn exact_f32_decimal(text: &str) -> Option<u32> {
-    // Parse with binary64 (correctly rounded) and binary32; the decimal is
-    // exact in binary32 iff both agree and the binary64 value re-prints to an
-    // exact decimal equal to the input. We avoid printing by checking exactness
-    // with rational arithmetic on the decimal digits.
-    let v32: f32 = text.parse().ok()?;
-    if !v32.is_finite() {
-        return None;
-    }
-    if decimal_equals_f32(text, v32) {
-        Some(v32.to_bits())
-    } else {
-        None
-    }
+/// A decimal literal reduced to its significant digits `int ‖ frac`: the
+/// value is `±(int ‖ frac) × 10^exponent`, and the joined digits have no
+/// leading or trailing zero (both parts are empty for zero).
+struct Decimal<'a> {
+    negative: bool,
+    /// Significant digits before the `.`.
+    int: &'a str,
+    /// Significant digits after the `.`.
+    frac: &'a str,
+    /// Power of ten of the last significant digit (saturating).
+    exponent: i64,
 }
 
-/// Exact comparison of a decimal string `[-]digits[.digits][e[-]exp]` with a
-/// finite binary32 value, using big-integer arithmetic on `u32` limbs.
-fn decimal_equals_f32(text: &str, v: f32) -> bool {
-    let (neg, body) = text
-        .strip_prefix('-')
-        .map_or((false, text.strip_prefix('+').unwrap_or(text)), |b| {
-            (true, b)
-        });
-    if v.is_sign_negative() != neg && v != 0.0 {
-        return false;
-    }
-    let (mant, exp10) = match body.find(['e', 'E']) {
-        Some(p) => match body[p + 1..].parse::<i32>() {
-            Ok(e) => (&body[..p], e),
-            Err(_) => return false,
-        },
-        None => (body, 0),
+/// Whether `text` is a decimal literal of the `ngraph` file formats:
+/// `[-]digits[.digits][(e|E)[+|-]digits]`, where either the integer or the
+/// fraction digits may be empty but not both. A leading `+` is not part of
+/// the grammar (design D5).
+#[must_use]
+pub fn is_decimal(text: &str) -> bool {
+    decimal(text).is_some()
+}
+
+/// Splits a decimal literal and strips its zeros in one linear pass, without
+/// copying digits.
+fn decimal(text: &str) -> Option<Decimal<'_>> {
+    let (negative, body) = match text.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, text),
     };
-    let (int_part, frac_part) = mant.split_once('.').unwrap_or((mant, ""));
-    if !int_part
-        .bytes()
-        .chain(frac_part.bytes())
-        .all(|b| b.is_ascii_digit())
+    let (mantissa, exp_text) = match body.find(['e', 'E']) {
+        Some(p) => (&body[..p], Some(&body[p + 1..])),
+        None => (body, None),
+    };
+    let (int_part, frac_part) = mantissa.split_once('.').unwrap_or((mantissa, ""));
+    let all_digits = |s: &str| s.bytes().all(|b| b.is_ascii_digit());
+    if (int_part.is_empty() && frac_part.is_empty())
+        || !all_digits(int_part)
+        || !all_digits(frac_part)
     {
-        return false;
+        return None;
     }
-    let digits: String = format!("{int_part}{frac_part}");
-    let Ok(frac_len) = i32::try_from(frac_part.len()) else {
-        return false;
+    let written: i64 = match exp_text {
+        None => 0,
+        Some(e) => {
+            let (sign, digits) = match e.as_bytes().first() {
+                Some(b'-') => (-1, &e[1..]),
+                Some(b'+') => (1, &e[1..]),
+                _ => (1, e),
+            };
+            if digits.is_empty() || !all_digits(digits) {
+                return None;
+            }
+            // Saturation keeps every overlong exponent outside the window.
+            digits.bytes().fold(0i64, |acc, b| {
+                acc.saturating_mul(10).saturating_add(i64::from(b - b'0'))
+            }) * sign
+        }
     };
-    let e10 = exp10.saturating_sub(frac_len);
+    let int_digits = int_part.trim_start_matches('0');
+    let frac_digits = frac_part.trim_end_matches('0');
+    let length = |s: &str| i64::try_from(s.len()).unwrap_or(i64::MAX);
+    Some(if frac_digits.is_empty() {
+        // An integer: its trailing zeros move into the exponent.
+        let kept = int_digits.trim_end_matches('0');
+        Decimal {
+            negative,
+            int: kept,
+            frac: "",
+            exponent: written.saturating_add(length(int_digits) - length(kept)),
+        }
+    } else if int_digits.is_empty() {
+        // A pure fraction: its leading zeros are positions, not digits.
+        Decimal {
+            negative,
+            int: "",
+            frac: frac_digits.trim_start_matches('0'),
+            exponent: written.saturating_sub(length(frac_digits)),
+        }
+    } else {
+        Decimal {
+            negative,
+            int: int_digits,
+            frac: frac_digits,
+            exponent: written.saturating_sub(length(frac_digits)),
+        }
+    })
+}
+
+/// Most significant digits of a finite nonzero binary32 value written
+/// exactly. Every such value is `M × 2^q` with `M < 2^24` and
+/// `-149 ≤ q ≤ 104`. For `q ≥ 0` it is an integer below `2^128 < 10^39`. For
+/// `q < 0` it is `M × 5^-q × 10^q`, whose digits `M × 5^-q` are at most
+/// `(2^24 - 1) × 5^149 < 10^112` (112 digits, reached by
+/// `(2^24 - 1) × 2^-149`).
+const EXACT_DIGITS: i64 = 112;
+/// Lowest power of ten of an exact binary32 value's last significant digit
+/// (`q = -149`).
+const EXACT_MIN_EXPONENT: i64 = -149;
+/// Highest such power (`2^128 < 10^39` leaves at most 39 integer digits).
+const EXACT_MAX_EXPONENT: i64 = 38;
+/// The leading digit's power of ten plus one lies in `[-44, 39]`, because
+/// `2^-149 > 10^-45` and `2^128 < 10^39`.
+const EXACT_MIN_MAGNITUDE: i64 = -44;
+/// See [`EXACT_MIN_MAGNITUDE`].
+const EXACT_MAX_MAGNITUDE: i64 = 39;
+
+/// The binary32 encoding of a decimal literal when it denotes a binary32
+/// value exactly (`E-LITERAL-INEXACT` otherwise; design D3, D5).
+///
+/// Leading zeros and trailing fraction zeros are stripped in one linear
+/// pass, and a literal outside the window that every exact binary32 value
+/// satisfies (at most [`EXACT_DIGITS`] significant digits, last digit at
+/// `10^-149 … 10^38`, leading digit at `10^-45 … 10^38`) is refused before
+/// any big-integer work. Inside the window the exact comparison works on at
+/// most 112 digits and exponents of at most 149, so the whole check is linear
+/// in the literal's length. `None` also for text outside the decimal grammar
+/// ([`is_decimal`]); callers report that separately.
+#[must_use]
+pub fn exact_f32_decimal(text: &str) -> Option<u32> {
+    let d = decimal(text)?;
+    let count = d.int.len().saturating_add(d.frac.len());
+    if count == 0 {
+        return Some(if d.negative { NEG_ZERO } else { POS_ZERO });
+    }
+    let n = i64::try_from(count).unwrap_or(i64::MAX);
+    let magnitude = n.saturating_add(d.exponent);
+    if n > EXACT_DIGITS
+        || !(EXACT_MIN_EXPONENT..=EXACT_MAX_EXPONENT).contains(&d.exponent)
+        || !(EXACT_MIN_MAGNITUDE..=EXACT_MAX_MAGNITUDE).contains(&magnitude)
+    {
+        return None;
+    }
+    // At most 112 digits and an exponent in [-149, 38]: a short literal.
+    let sign = if d.negative { "-" } else { "" };
+    let v: f32 = format!("{sign}{}{}e{}", d.int, d.frac, d.exponent)
+        .parse()
+        .ok()?;
+    if !v.is_finite() {
+        return None;
+    }
+    let e10 = i32::try_from(d.exponent).ok()?;
     // decimal = D · 10^e10 ; binary = M · 2^e2 (M odd or 0).
     let bits = v.abs().to_bits();
     let (m, e2) = if bits == 0 {
@@ -273,15 +365,12 @@ fn decimal_equals_f32(text: &str, v: f32) -> bool {
             (frac | 0x80_0000, exp - 150)
         }
     };
-    let d = Big::from_decimal(&digits);
     if m == 0 {
-        return d.is_zero();
-    }
-    if d.is_zero() {
-        return false;
+        // Nonzero digits that rounded to zero.
+        return None;
     }
     // Compare D·10^e10 with m·2^e2 by cross-multiplying to integers.
-    let mut lhs = d;
+    let mut lhs = Big::from_decimal(d.int.bytes().chain(d.frac.bytes()));
     let mut rhs = Big::from_u64(m);
     if e10 >= 0 {
         lhs.mul_pow(10, e10.unsigned_abs());
@@ -295,7 +384,7 @@ fn decimal_equals_f32(text: &str, v: f32) -> bool {
     }
     lhs.trim();
     rhs.trim();
-    lhs.0 == rhs.0
+    (lhs.0 == rhs.0).then_some(v.to_bits())
 }
 
 /// Minimal unsigned big integer for exact literal checks.
@@ -308,9 +397,10 @@ impl Big {
         b.trim();
         b
     }
-    fn from_decimal(s: &str) -> Self {
+    /// The value of ASCII decimal digits (callers pass at most 112).
+    fn from_decimal(digits: impl Iterator<Item = u8>) -> Self {
         let mut b = Self::default();
-        for c in s.bytes() {
+        for c in digits {
             b.mul_small(10);
             b.add_small(u32::from(c - b'0'));
         }
@@ -320,9 +410,6 @@ impl Big {
         while self.0.last() == Some(&0) {
             self.0.pop();
         }
-    }
-    fn is_zero(&self) -> bool {
-        self.0.iter().all(|&l| l == 0)
     }
     fn mul_small(&mut self, k: u32) {
         let mut carry = 0u64;
@@ -508,7 +595,6 @@ pub mod soft {
         let rem = n - r * r;
         let round = (r >> 2) & 1 == 1;
         let sticky = r & 0b11 != 0 || rem != 0;
-        #[allow(clippy::cast_possible_truncation)]
         let mut sig = (r >> 3) as u64;
         if round && (sticky || sig & 1 == 1) {
             sig += 1;
@@ -518,7 +604,6 @@ pub mod soft {
             sig >>= 1;
             e_res += 1;
         }
-        #[allow(clippy::cast_sign_loss)]
         let biased_res = (e_res + 1075) as u64;
         f64::from_bits((biased_res << 52) | (sig & F64_FRAC))
     }
@@ -527,6 +612,7 @@ pub mod soft {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::string::String;
 
     #[test]
     fn exact_decimal_literals() {
@@ -537,27 +623,22 @@ mod tests {
         assert_eq!(exact_f32_decimal("16777217"), None);
         assert_eq!(exact_f32_decimal("1e40"), None);
         // 2^-149, the least subnormal, written exactly.
-        let tiny = f32::from_bits(1);
-        let mut s = String::from("1");
-        let mut b = Big::from_u64(1);
-        b.mul_pow(5, 149);
-        s.clear();
-        // decimal digits of 5^149 then e-149
-        let mut digits = Vec::new();
-        let mut cur = b;
-        while !cur.is_zero() {
-            let mut rem = 0u64;
-            for l in cur.0.iter_mut().rev() {
-                let v = (rem << 32) | u64::from(*l);
-                *l = (v / 10) as u32;
-                rem = v % 10;
+        // Decimal digits of 5^149 (least significant first), then e-149.
+        let mut digits = vec![1u8];
+        for _ in 0..149 {
+            let mut carry = 0;
+            for d in &mut digits {
+                let v = *d * 5 + carry;
+                *d = v % 10;
+                carry = v / 10;
             }
-            cur.trim();
-            digits.push(char::from(b'0' + rem as u8));
+            if carry > 0 {
+                digits.push(carry);
+            }
         }
-        s.extend(digits.iter().rev());
+        let mut s: String = digits.iter().rev().map(|d| char::from(b'0' + d)).collect();
         s.push_str("e-149");
-        assert_eq!(exact_f32_decimal(&s), Some(tiny.to_bits()));
+        assert_eq!(exact_f32_decimal(&s), Some(1));
     }
 
     #[test]

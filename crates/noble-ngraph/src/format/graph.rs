@@ -37,21 +37,23 @@
 //! origins are not printed. [`print`] is canonical: `parse(print(g))` equals
 //! `g` with origins cleared.
 //!
-//! Codes: unknown operations, syntax errors and a missing, duplicate or
-//! malformed subject or shape line give `E-GRAPH-MALFORMED`; an unknown
-//! sub-profile `E-PROFILE`; inexact decimal literals `E-LITERAL-INEXACT`;
-//! `nan`/`inf` literals `E-LITERAL-NONFINITE` (non-finite bit patterns are
-//! refused by the checker).
+//! Codes: unknown operations, syntax errors (including a number with a
+//! leading `+`) and a missing, duplicate or malformed subject or shape line
+//! (including a shape tree nesting more than [`MAX_SHAPE_DEPTH`] pairs) give
+//! `E-GRAPH-MALFORMED`; an unknown sub-profile `E-PROFILE`; inexact decimal
+//! literals `E-LITERAL-INEXACT`; `nan`/`inf` literals `E-LITERAL-NONFINITE`
+//! (non-finite bit patterns are refused by the checker).
 
-#[allow(unused_imports)]
-use crate::prelude::*;
+use alloc::{borrow::ToOwned, format, string::String, string::ToString, vec::Vec};
 use core::fmt::Write as _;
 
+use super::value::F32Refusal;
 use crate::diag::{Code, Diagnostic, Malformed, Site};
 use crate::identity::IdentityScheme;
 use crate::ir::{
-    hex, AffineOperand, AffineTerm, Fact, Graph, GraphBuilder, Literal, NodeId, Op, OutOfRange,
-    Provenance, ScalarType, ShapeTree, SlotKind, SubProfile, Subject, SubjectKind, IR_VERSION,
+    hex, shape_depth_refusal, AffineOperand, AffineTerm, Fact, Graph, GraphBuilder, Literal,
+    NodeId, Op, OutOfRange, Provenance, ScalarType, ShapeNode, ShapeTree, SlotKind, SubProfile,
+    Subject, SubjectKind, IR_VERSION, MAX_SHAPE_DEPTH,
 };
 
 fn syntax(line: usize, why: impl Into<String>) -> Diagnostic {
@@ -95,14 +97,14 @@ impl<'a> Toks<'a> {
     fn node(&mut self) -> Result<NodeId, Diagnostic> {
         let t = self.next()?;
         t.strip_prefix('%')
-            .and_then(|n| n.parse::<u32>().ok())
+            .and_then(super::decimal_u32)
             .map(NodeId)
             .ok_or_else(|| syntax(self.line, format!("expected %node, got {t:?}")))
     }
     fn u32(&mut self) -> Result<u32, Diagnostic> {
         let t = self.next()?;
-        t.parse()
-            .map_err(|_| syntax(self.line, format!("expected integer, got {t:?}")))
+        super::decimal_u32(t)
+            .ok_or_else(|| syntax(self.line, format!("expected integer, got {t:?}")))
     }
     fn f32_bits(&mut self) -> Result<u32, Diagnostic> {
         let t = self.next()?;
@@ -110,36 +112,28 @@ impl<'a> Toks<'a> {
     }
     fn i64(&mut self) -> Result<i64, Diagnostic> {
         let t = self.next()?;
-        t.parse()
-            .map_err(|_| syntax(self.line, format!("expected i64, got {t:?}")))
+        super::decimal_i64(t).ok_or_else(|| syntax(self.line, format!("expected i64, got {t:?}")))
     }
 }
 
-/// Parses an `F32` literal token: exact decimal or `0x` bits.
+/// Parses an `F32` literal token: `0x` plus one to eight hex digits, or an
+/// exactly representable decimal (the vector-file rule, design D4/D5).
 ///
 /// # Errors
 /// `E-LITERAL-NONFINITE`, `E-LITERAL-INEXACT` or a syntax error.
 pub fn parse_f32(t: &str, line: usize) -> Result<u32, Diagnostic> {
-    if let Some(h) = t.strip_prefix("0x") {
-        return u32::from_str_radix(h, 16).map_err(|_| syntax(line, format!("bad f32 bits {t:?}")));
-    }
-    let lower = t.to_ascii_lowercase();
-    if lower.contains("nan") || lower.contains("inf") {
-        return Err(Diagnostic::new(
+    super::value::f32_token(t).map_err(|r| match r {
+        F32Refusal::Malformed => syntax(line, format!("bad f32 literal {t:?}")),
+        F32Refusal::Nonfinite => Diagnostic::new(
             Code::LiteralNonfinite,
             Site::Line(line),
             format!("non-finite f32 literal {t}"),
-        ));
-    }
-    if t.parse::<f64>().is_err() {
-        return Err(syntax(line, format!("bad f32 literal {t:?}")));
-    }
-    crate::sem::exact_f32_decimal(t).ok_or_else(|| {
-        Diagnostic::new(
+        ),
+        F32Refusal::Inexact => Diagnostic::new(
             Code::LiteralInexact,
             Site::Line(line),
             format!("{t} is not exactly representable in binary32"),
-        )
+        ),
     })
 }
 
@@ -181,17 +175,15 @@ fn range_literal(t: &mut Toks<'_>, profile: SubProfile) -> Result<Literal, Diagn
         _ => {}
     }
     if let Some(v) = tok.strip_prefix("i64:") {
-        return v
-            .parse()
+        return super::decimal_i64(v)
             .map(Literal::I64)
-            .map_err(|_| syntax(line, format!("expected i64, got {tok:?}")));
+            .ok_or_else(|| syntax(line, format!("expected i64, got {tok:?}")));
     }
     match profile {
         SubProfile::F32 => Ok(Literal::F32(parse_f32(tok, line)?)),
-        SubProfile::I64 => tok
-            .parse()
+        SubProfile::I64 => super::decimal_i64(tok)
             .map(Literal::I64)
-            .map_err(|_| syntax(line, format!("expected i64, got {tok:?}"))),
+            .ok_or_else(|| syntax(line, format!("expected i64, got {tok:?}"))),
     }
 }
 
@@ -248,8 +240,7 @@ fn subject_record(t: &mut Toks<'_>, kind: SubjectKind) -> Result<Subject, Diagno
     } else {
         ids.split(',')
             .map(|d| {
-                d.parse::<u64>()
-                    .map_err(|_| syntax(line, format!("bad closure id {d:?}")))
+                super::decimal_u64(d).ok_or_else(|| syntax(line, format!("bad closure id {d:?}")))
             })
             .collect::<Result<Vec<u64>, Diagnostic>>()?
     };
@@ -260,31 +251,42 @@ fn subject_record(t: &mut Toks<'_>, kind: SubjectKind) -> Result<Subject, Diagno
     })
 }
 
-/// Parses the shape trees of a `shape input|output` line.
+/// Parses the shape trees of a `shape input|output` line. A tree that would
+/// nest more than [`MAX_SHAPE_DEPTH`] pairs is refused before the parser
+/// descends any deeper (design D4).
 fn shape_trees(tokens: &[&str], line: usize) -> Result<Vec<ShapeTree>, Diagnostic> {
     let joined = tokens.join(" ").replace('(', " ( ").replace(')', " ) ");
     let toks: Vec<&str> = joined.split_whitespace().collect();
-    fn tree(toks: &[&str], at: &mut usize, line: usize) -> Result<ShapeTree, Diagnostic> {
+    /// One tree inside `open` enclosing pairs.
+    fn tree(
+        toks: &[&str],
+        at: &mut usize,
+        line: usize,
+        open: u32,
+    ) -> Result<ShapeTree, Diagnostic> {
         let t = toks
             .get(*at)
             .copied()
             .ok_or_else(|| syntax(line, "unterminated shape tree"))?;
         *at += 1;
         match t {
-            "s" => Ok(ShapeTree::Scalar),
-            "u" => Ok(ShapeTree::Unit),
+            "s" => Ok(ShapeTree::SCALAR),
+            "u" => Ok(ShapeTree::UNIT),
             "(" => {
+                if open >= MAX_SHAPE_DEPTH {
+                    return Err(shape_depth_refusal(Site::Line(line)));
+                }
                 if toks.get(*at).copied() != Some("p") {
                     return Err(syntax(line, "expected `p` after `(` in a shape tree"));
                 }
                 *at += 1;
-                let a = tree(toks, at, line)?;
-                let b = tree(toks, at, line)?;
+                let a = tree(toks, at, line, open + 1)?;
+                let b = tree(toks, at, line, open + 1)?;
                 if toks.get(*at).copied() != Some(")") {
                     return Err(syntax(line, "expected `)` in a shape tree"));
                 }
                 *at += 1;
-                Ok(ShapeTree::Pair(Box::new(a), Box::new(b)))
+                ShapeTree::pair(a, b).map_err(|_| shape_depth_refusal(Site::Line(line)))
             }
             o => Err(syntax(line, format!("bad shape tree token {o:?}"))),
         }
@@ -292,7 +294,7 @@ fn shape_trees(tokens: &[&str], line: usize) -> Result<Vec<ShapeTree>, Diagnosti
     let mut at = 0;
     let mut out = Vec::new();
     while at < toks.len() {
-        out.push(tree(&toks, &mut at, line)?);
+        out.push(tree(&toks, &mut at, line, 0)?);
     }
     Ok(out)
 }
@@ -310,6 +312,7 @@ fn decode_rule(tok: &str, line: usize) -> Result<String, Diagnostic> {
             let v = b
                 .get(i + 1..i + 3)
                 .and_then(|h| core::str::from_utf8(h).ok())
+                .filter(|h| h.bytes().all(|c| c.is_ascii_hexdigit()))
                 .and_then(|h| u8::from_str_radix(h, 16).ok())
                 .ok_or_else(|| syntax(line, format!("bad escape in rule {tok:?}")))?;
             out.push(v);
@@ -531,9 +534,9 @@ pub fn parse(ids: &dyn IdentityScheme, text: &str) -> Result<Graph, Diagnostic> 
                 b.fact(n, f, p);
             }
             h if h.starts_with('%') => {
-                let id = h[1..]
-                    .parse::<usize>()
-                    .map_err(|_| syntax(line, "bad node id"))?;
+                let id = super::decimal_u64(&h[1..])
+                    .and_then(|v| usize::try_from(v).ok())
+                    .ok_or_else(|| syntax(line, "bad node id"))?;
                 if id != b.len() {
                     return Err(syntax(
                         line,
@@ -596,11 +599,12 @@ fn fact_text(f: &Fact, profile: SubProfile) -> String {
 }
 
 fn shape_text(trees: &[ShapeTree]) -> String {
+    // Recursion depth is bounded by `MAX_SHAPE_DEPTH`.
     fn tree(t: &ShapeTree, s: &mut String) {
-        match t {
-            ShapeTree::Scalar => s.push('s'),
-            ShapeTree::Unit => s.push('u'),
-            ShapeTree::Pair(a, b) => {
+        match t.node() {
+            ShapeNode::Scalar => s.push('s'),
+            ShapeNode::Unit => s.push('u'),
+            ShapeNode::Pair(a, b) => {
                 s.push_str("(p ");
                 tree(a, s);
                 s.push(' ');

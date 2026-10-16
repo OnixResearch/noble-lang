@@ -28,9 +28,9 @@ fn w3_sizes_reach_gallery_scale_and_native_agrees() {
             let mut out = vec![0f32; net.batch];
             net.native(&p, &x, &mut out);
             let native = Obs::Normal(out.iter().map(|v| Value::f32(*v)).collect());
-            let l3 = reference(&g, &f32_inputs(&x), Some(&s), &Control::default()).obs;
+            let l3 = reference(&g, &f32_inputs(&x), Some(&s), &mut Control::default()).obs;
             let l4 = c
-                .evaluate(&f32_inputs(&x), Some(&s), &Control::default())
+                .evaluate(&f32_inputs(&x), Some(&s), &mut Control::default())
                 .obs;
             assert!(l3.obs_eq(&native) && l4.obs_eq(&native), "{name}");
         }
@@ -49,11 +49,13 @@ fn w4_native_agrees() {
             .collect();
         let n = workloads::w4_native(&table, &idx).expect("in range");
         let want = Obs::Normal(vec![Value::f32(n)]);
-        assert!(reference(&g, &f32_inputs(&idx), None, &Control::default())
-            .obs
-            .obs_eq(&want));
+        assert!(
+            reference(&g, &f32_inputs(&idx), None, &mut Control::default())
+                .obs
+                .obs_eq(&want)
+        );
         assert!(c
-            .evaluate(&f32_inputs(&idx), None, &Control::default())
+            .evaluate(&f32_inputs(&idx), None, &mut Control::default())
             .obs
             .obs_eq(&want));
     }
@@ -62,7 +64,7 @@ fn w4_native_agrees() {
 #[test]
 fn w1_w2_native_agree() {
     let g1 = check(&BLAKE3, workloads::w1_graph()).expect("checks");
-    let r = reference(&g1, &i64_inputs(&[5, 4]), None, &Control::default()).obs;
+    let r = reference(&g1, &i64_inputs(&[5, 4]), None, &mut Control::default()).obs;
     assert_eq!(r, Obs::Normal(vec![Value::I64(workloads::w1_native(5, 4))]));
     assert_eq!(workloads::w1_native(5, 4), 24);
     let g2 = check(&BLAKE3, workloads::w2_graph()).expect("checks");
@@ -71,7 +73,7 @@ fn w1_w2_native_agree() {
     let mut s = 11i64;
     for _ in 0..1000 {
         let o = c2
-            .evaluate(&i64_inputs(&[s, i, k]), None, &Control::default())
+            .evaluate(&i64_inputs(&[s, i, k]), None, &mut Control::default())
             .obs;
         let Obs::Normal(v) = o else { panic!() };
         let Value::I64(n) = v[0] else { panic!() };

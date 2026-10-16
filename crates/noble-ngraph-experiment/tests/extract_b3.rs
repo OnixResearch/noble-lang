@@ -34,7 +34,14 @@ fn unreached_effectful_quotation_is_not_refused() {
     // A dropped, never-run effectful quotation leaves the root bound empty
     // and is never reached: the subject extracts to `const 5` (the ordinary
     // path emits nothing either).
-    let p = source::prepare(&[], "[ \"hi\" test.emit ] drop 5", &[]).expect("source");
+    let p = source::prepare(
+        noble_contracts::source::Session::new(),
+        noble_contracts::Limits::default(),
+        &[],
+        "[ \"hi\" test.emit ] drop 5",
+        &[],
+    )
+    .expect("source");
     let admitted = extract::admit(
         &BLAKE3,
         &p.submission,
@@ -59,8 +66,14 @@ fn unreached_effectful_quotation_is_not_refused() {
 
 #[test]
 fn closure_and_profile_admission() {
-    let p =
-        source::prepare(&["def sq [ dup * ]"], "sq swap sq +", &source::i64s(2)).expect("source");
+    let p = source::prepare(
+        noble_contracts::source::Session::new(),
+        noble_contracts::Limits::default(),
+        &["def sq [ dup * ]"],
+        "sq swap sq +",
+        &source::i64s(2),
+    )
+    .expect("source");
     let refuse = |claimed: &[u64], profile: &str, budget: Budget| {
         outcome(&p.submission, claimed, profile, budget)
             .expect_err("refused")

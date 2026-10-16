@@ -94,7 +94,7 @@ fn b2_vector_observations_and_b3_codes_match_the_record() {
     assert_eq!(built.len(), vectors.len());
     for v in built {
         let c = check(&BLAKE3, v.graph).expect("vector graph");
-        let r = reference(&c, &f32_inputs(&v.inputs), None, &Control::default());
+        let r = reference(&c, &f32_inputs(&v.inputs), None, &mut Control::default());
         assert_eq!(obs_text(&r.obs), vectors[v.name], "{}", v.name);
     }
     let codes = named("rejection");
@@ -128,7 +128,7 @@ fn b5_training_identities_match_the_record_and_the_receipt() {
         &c,
         None,
         suites::B5_STEPS,
-        &TrainControl::default(),
+        &mut TrainControl::default(),
     )
     .expect("trains");
     let mut h = blake3::Hasher::new();

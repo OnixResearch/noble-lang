@@ -17,7 +17,14 @@ use noble_ngraph::ir::{Op, SubjectKind};
 use noble_ngraph::Value;
 
 fn lower(defs: &[&str], root: &str, inputs: &[Ty]) -> extract::Extraction {
-    let p = source::prepare(defs, root, inputs).expect("frontend accepts");
+    let p = source::prepare(
+        noble_contracts::source::Session::new(),
+        noble_contracts::Limits::default(),
+        defs,
+        root,
+        inputs,
+    )
+    .expect("frontend accepts");
     let admitted = extract::admit(
         &IDS,
         &p.submission,
@@ -36,7 +43,7 @@ fn run(x: &extract::Extraction, inputs: &[i64]) -> Vec<Value> {
         &x.checked,
         &eval::i64_inputs(inputs),
         None,
-        &Control::default(),
+        &mut Control::default(),
     );
     match r.obs {
         Obs::Normal(v) => v,

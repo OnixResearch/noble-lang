@@ -13,7 +13,7 @@ r[NGRAPH-SNAP-02]
 - the complete NGRAPH-SNAP-01 training provenance, including the fact-binding digest of the model graph;
 - a domain-separated digest of that provenance record.
 
-**Loading.** Loading a snapshot file MUST recompute the layout, the snapshot identity and the provenance digest from the recorded fields, and MUST refuse any mismatch with `E-SNAPSHOT-INTEGRITY` before use. The provenance digest MUST be the domain-separated identity encoding (a domain tag, then length-prefixed byte strings and fixed-width little-endian integers) of every record in file order except the schema line and the digest itself, so that any reader can recompute it.
+**Loading.** Loading a snapshot file MUST recompute the layout, the snapshot identity and the provenance digest from the recorded fields, and MUST refuse any mismatch with `E-SNAPSHOT-INTEGRITY` before use. The provenance digest MUST be the domain-separated identity encoding (a domain tag, then length-prefixed byte strings and fixed-width little-endian integers) of every record in file order except the schema line and the digest itself, so that any reader can recompute it. Records that training can never publish, a non-finite parameter or optimizer hyperparameters outside the optimizer's domain, MUST also be refused with `E-SNAPSHOT-INTEGRITY`, however consistent their digests.
 
 **Binding.** Binding a snapshot to a graph MUST refuse:
 
@@ -23,11 +23,12 @@ r[NGRAPH-SNAP-02]
 
 Every binding refusal MUST occur before any graph node is evaluated.
 
-**Publication.** Training MUST publish its result only as a new file at a path that did not exist. The write MUST never truncate, replace or modify an existing file, including the parent snapshot. A training call that stops MUST NOT leave a snapshot or partial file at the requested path.
+**Publication.** Training MUST publish its result only as a new file at a path that did not exist. The write MUST never truncate, replace or modify an existing file, including the parent snapshot. A training call that stops MUST NOT leave a snapshot or partial file at the requested path. Once the new file exists with its complete bytes, the call MUST report the publication as done, even if cleaning up a staging name fails.
 
 **Replay.**
 
 - Replaying a snapshot's provenance MUST first require that the supplied model, loss graph, training data and parent match the recorded identities; otherwise `E-SNAPSHOT-STALE`.
+- Replay MUST admit the recorded training contract exactly as training admits a new one, so a recorded derivative opt-in that training would refuse MUST be refused with the code training gives it.
 - On the same pinned platform, replay MUST then reproduce the parameter bytes, the optimizer-state digest and the snapshot identity exactly; otherwise `E-SNAPSHOT-REPLAY`.
 
 **Non-claim.** A snapshot file identifies bytes. A matching identity or a successful replay MUST NOT be reported as evidence that the trained parameters, the optimizer or the evaluators are correct.
