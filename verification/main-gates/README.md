@@ -123,6 +123,24 @@ source. Three integration commits follow:
   native-assurance comparators over that collection both return
   `valid=true`.
 
+### Docs-only commits after the tested commit `f2b398d`
+
+None of these commits changes Rust, WAT, `.noble`, Nix, Cargo, proof or
+`policy/` sources. They touch only Markdown and receipt JSON, so the heavy
+results above still apply.
+
+- `2c13735`: this receipt.
+- `2002db3`: records the owner's decision to keep the composition-root
+  classification (one README sentence).
+- `33d4d87`: merge of `feat/issue-14-ngraph-core` `233429d`, the Phase C1
+  Wasm/V8 receipt. It changes only
+  `.cairn/changes/numeric-graph-profile/{design,tasks}.md`,
+  `verification/ngraph/README.md` and the new
+  `verification/ngraph/phase-c-l1.json`.
+- The commit that adds this list. The doc-sensitive gates (`documents`,
+  `cairn`, `tool-selection`, `policy`, `format`) were re-run on it; all five
+  pass.
+
 ## Results at integration `2edb977`
 
 | check | result | branch `8df6c43` | parent `0ea10d3f` | follow-up |
