@@ -25,6 +25,8 @@ pub struct Prepared {
 /// Prepares `definitions` (each one `def NAME [ … ]` submission, committed in
 /// order) and then `root` with `inputs`, in a fresh `Session::new()` (the
 /// CLI's Core-Bootstrap namespace with the `test.emit`/`test.abort` hosts).
+/// Every submission before the root must be a definition: an executable
+/// submission would run in `noble session` but has no meaning here.
 ///
 /// # Errors
 /// The frontend's refusal rendered as text.
@@ -35,6 +37,11 @@ pub fn prepare(definitions: &[&str], root: &str, inputs: &[Ty]) -> Result<Prepar
         let p = session
             .prepare(d.as_bytes(), &[], limits)
             .map_err(|e| format!("definition {d:?}: {e:?}"))?;
+        if p.definition_name().is_none() {
+            return Err(format!(
+                "submission {d:?} precedes the root but is not a definition"
+            ));
+        }
         session
             .commit(p)
             .map_err(|e| format!("definition {d:?}: {e:?}"))?;

@@ -442,6 +442,7 @@ dependencies = [
  "libc",
  "noble-contracts",
  "noble-kernel",
+ "noble-ngraph",
  "noble-wasm",
  "serde_json",
  "wasmparser",

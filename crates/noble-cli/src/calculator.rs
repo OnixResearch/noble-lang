@@ -71,6 +71,7 @@ const NAMESPACE_MODULES: usize = 11;
 /// `NOBLE_CALCULATOR_MODULE_CACHE=off` disables exact module reuse in the
 /// host and the worker (a diagnostic control; outputs are identical).
 const MODULE_CACHE_VARIABLE: &str = "NOBLE_CALCULATOR_MODULE_CACHE";
+pub(crate) const USAGE: &str = "usage: noble calculator [--framed] [--finite-decimal] [--input-bytes N] [--numeric-digits N] [--intermediate-bits N] [--syntax-depth N] [--call-depth N] [--evaluation-work N] [--output-size N]";
 
 pub(crate) fn assembler_version(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     if arguments.len() != 1 {
@@ -121,7 +122,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let (framed, finite_decimal, budget) = match parse_options(&arguments[1..]) {
         Ok(options) => options,
         Err(message) => {
-            eprintln!("{message}\nusage: noble calculator [--framed] [--finite-decimal] [--input-bytes N] [--numeric-digits N] [--intermediate-bits N] [--syntax-depth N] [--call-depth N] [--evaluation-work N] [--output-size N]");
+            eprintln!("{message}\n{USAGE}");
             return std::process::ExitCode::from(2);
         }
     };
