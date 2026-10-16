@@ -119,6 +119,7 @@ impl Host {
         };
         let authorized = self.table.native_access(&admitted.borrow).is_ok();
         let output = if authorized {
+            crate::safety_observe::event("protected-operation");
             self.region_reads += 1;
             Some(self.bytes[start..finish].to_vec())
         } else {
@@ -199,6 +200,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                                 function,
                                 ResourceType::host::<Region>(),
                                 |mut store, rep| {
+                                    crate::safety_observe::event("guest-request");
                                     if store.data().owner.is_some() {
                                         store.data_mut().release(rep)?;
                                     }
@@ -208,6 +210,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                         }
                         ComponentItem::ComponentFunc(_) if function == "[method]region.read" => {
                             instance.func_new(function, |mut store, _, params, results| {
+                                crate::safety_observe::event("guest-request");
                                 let [Val::Resource(resource), Val::S64(offset), Val::S64(length)] =
                                     params
                                 else {
@@ -241,6 +244,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                         }
                         ComponentItem::ComponentFunc(_) if function == "release" => {
                             instance.func_new(function, |mut store, _, params, results| {
+                                crate::safety_observe::event("guest-request");
                                 let [Val::Resource(resource)] = params else {
                                     bail!("invalid release arguments");
                                 };
@@ -264,6 +268,7 @@ fn link(engine: &Engine, component: &Component, linker: &mut Linker<Host>) -> Re
                     name,
                     ResourceType::host::<Region>(),
                     |mut store, rep| {
+                        crate::safety_observe::event("guest-request");
                         if store.data().owner.is_some() {
                             store.data_mut().release(rep)?;
                         }

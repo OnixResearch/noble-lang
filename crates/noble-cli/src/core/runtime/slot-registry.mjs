@@ -785,6 +785,7 @@ export class SlotRegistry {
     root.operations += 1;
     let response;
     try {
+      globalThis.nobleSafetyObserve?.('protected-operation');
       response = this.#performEffect(effect, request, selected.version);
       if (response !== responseBound) {
         throw Error('protected effect response exceeds pre-authorized trace reservation');

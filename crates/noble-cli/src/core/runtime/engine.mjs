@@ -634,6 +634,7 @@ export class CoreEngine {
   }
 
   liveGeneration() {
+    globalThis.nobleSafetyObserve?.('guest-request');
     if (!this.inProcessLive || !this.liveExecuting || this.liveInstalling) {
       fail('live generation observation outside execution');
     }
@@ -643,6 +644,7 @@ export class CoreEngine {
   }
 
   livePropose(owner, expected, program) {
+    globalThis.nobleSafetyObserve?.('guest-request');
     if (!this.inProcessLive || !this.liveExecuting || this.liveInstalling) {
       fail('live proposal outside execution');
     }

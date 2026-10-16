@@ -9,6 +9,10 @@ default-run = "noble"
 name = "noble"
 path = "src/main.rs"
 
+[features]
+# Explicit evidence build only; the ordinary binary never reads observer env.
+safety-observe = []
+
 [dependencies]
 noble-kernel = { path = "../noble-kernel" }
 noble-contracts = { path = "../noble-contracts" }

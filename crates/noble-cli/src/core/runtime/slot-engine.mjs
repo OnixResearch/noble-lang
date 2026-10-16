@@ -302,6 +302,7 @@ class SlotEngine {
       }
     };
     const selected = guarded((ordinal, site) => {
+      globalThis.nobleSafetyObserve?.('guest-request');
       this.checkpoint('live_select', site >>> 0, ordinal >>> 0);
       const decision = this.registry.dispatch(active(), ordinal >>> 0, checkedModule(), site >>> 0);
       return decision.handle >>> 0;
@@ -310,6 +311,7 @@ class SlotEngine {
       this.registry.enterFrame(active(), checkedModule(), site, ptr, handle, this.memory));
     const frameLeave = guarded(token => this.registry.leaveFrame(active(), token), 1);
     const emit = guarded((offset, length) => {
+      globalThis.nobleSafetyObserve?.('guest-request');
       this.checkpoint('test_emit');
       if (!Number.isInteger(offset) || !Number.isInteger(length) || offset < 0
         || length < 0 || length > 65536 || offset + length > this.memory.buffer.byteLength) {
@@ -339,6 +341,7 @@ class SlotEngine {
         this.registry.validateResourceBinding(active(), checkedModule(), ...args)),
       test_emit: emit,
       test_abort: guarded(() => {
+        globalThis.nobleSafetyObserve?.('guest-request');
         this.checkpoint('test_abort');
         if (this.replaying) throw Error('protected effects are unavailable during frozen replay');
         const result = this.registry.requestEffect(active(), this.shared.live_frame.value,
