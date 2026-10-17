@@ -1768,7 +1768,7 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/tasks.md",
-      "sha256": "7f6da1cfd7049de1bd0b8f2fa0f3a1984053d0ffa2b558b5949fd151c900d02d"
+      "sha256": "124c07656df84a570be787f30b0a552d9c300860878635b6e8d1625a3da5cd1f"
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
@@ -2188,7 +2188,7 @@
     },
     {
       "file": "specs/conformance/numeric-graph-cases.json",
-      "sha256": "65492a54cfa1dc4853873047cad61b67efc73b512ebf17e651614112a2a7967b"
+      "sha256": "4865d8618ec62f43a570eb03000f75edaa3a4f9b0282700bd2d5adf47d00a84e"
     },
     {
       "file": "specs/conformance/octet-adoption-cases.json",

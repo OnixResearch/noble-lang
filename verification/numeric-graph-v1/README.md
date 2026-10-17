@@ -420,3 +420,20 @@ The selected full-workspace gates and CPU measurements are separate bounded
 receipts. A passing selected gate run is not a rerun or PASS for the historical
 14-check packet (10 PASS / 4 known FAIL), and CPU evidence establishes no GPU,
 canonical CALC, proof, or all-host performance claim.
+
+The production Octet feature-scope guard controls are recorded in the
+corrected external receipt
+`/home/brittonr/.cache/noble-issues/proof/ngraph-feature-controls-20261017-a/receipt-corrected.json`
+(SHA-256 `9a000af83679962a94bdf5182e096aaf16e2615685048bd97bedc827343163ab`).
+Its captured Cargo/source input manifests are `evidence.sha256` (SHA-256
+`b2cbd8aa18c2cc52857ec7bfb605ad9ddc29295190bf0319d4cfe31724b47cfd`) and
+`evidence.modes` (SHA-256
+`fb4e1ac56735519d4e8e05b9c5758e58c9b7ee32666b1649371600230ddcae00`), to be
+matched against the exact final source freeze. The actual observer-derived
+`safety-observe` inventory passes while missing/extra declarations and a
+nonempty explicit feature configuration fail with the intended diagnostic;
+the valid lane retains `all_features=true`, `default_features=true`, and
+`configuration.features=[]`. The receipt records an earlier network fetch
+attempt but confirms no network during the final asserted offline controls.
+Non-feature DTO fields use the documented comparator-only baseline; this is
+not whole-tool compatibility, compiler-origin, or acceptance evidence.
