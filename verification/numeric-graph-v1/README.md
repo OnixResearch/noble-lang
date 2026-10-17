@@ -1,10 +1,12 @@
 # Numeric-Graph-v1 lifecycle evidence
 
-The registered [NGRAPH cases](../../specs/conformance/numeric-graph-cases.json)
-and [profile status](../../specs/STATUS.json) record **8 passed, 7 not-run**,
-with proof open for every case. The immutable [acceptance receipt](acceptance.json)
-and [independent review receipt](review-receipt.json) bind the finite execution
-and review evidence. The [implementation change](../../.cairn/changes/numeric-graph-v1/design.md)
+The immutable historical [acceptance receipt](acceptance.json) and
+[independent review receipt](review-receipt.json) support eight original cases;
+the current [case records](../../specs/conformance/numeric-graph-cases.json)
+also carry six draft finite counter-evidence records for CASE-03/04/05/09/11/12.
+Those six remain subject to final integrated-source cold review and bounded
+terminal verification; CASE-02 remains unrun with its capability closure open.
+Proof stays open for every case. The [implementation change](../../.cairn/changes/numeric-graph-v1/design.md)
 stays active and is not archived; this is not whole-feature or global-gate acceptance.
 
 `acceptance.mjs` records observations for `NGRAPH-CASE-01..15`. It never edits
@@ -255,7 +257,7 @@ documents, re-execute acceptance, rebuild, run global gates, sync, archive,
 commit or publish. Its receipt is bounded lifecycle verification, not a
 replacement for the immutable acceptance/review or a globally green gate.
 
-## Safety-observation supplement (2026-10-16; no promotion)
+## Safety-observation supplement (2026-10-16; finite evidence, proof open)
 
 `safety.mjs` is a separate, source-bound observation runner. It never rewrites
 the historical packets, registered cases, expected fields, or their states.
@@ -339,7 +341,70 @@ appends a private effect log through its injected `IdentityHasher`; the
 finite original control observed 42 reads and 42 writes while returning
 `I64(7)`. This disproves a universal arbitrary-caller purity inference from
 `no_std` or manifest dependencies alone; it is not a disproof of the exact
-assembled CLI BLAKE3 closure. No compiler unknown is waived, no case is
-promoted, and no proof, global-gate, archive, performance, or cross-platform
-acceptance follows from this supplement. Failed and interrupted attempts
-remain separate rejected evidence, never relabeled as the fresh result.
+assembled CLI BLAKE3 closure. The six draft case records use this finite
+observation packet but keep proof open and await final source review and
+terminal verification. No compiler unknown is waived, and this supplement
+does not establish CASE-02, proof, global-gate, archive, performance, or
+cross-platform acceptance. Failed and interrupted attempts remain separate
+rejected evidence, never relabeled as the fresh result.
+
+## Integrated counter record and selected-tool boundary (2026-10-17)
+
+The immutable counter packet
+`/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json`
+(SHA-256 `3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb`)
+and its independent preliminary 57-command review
+`/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json`
+(SHA-256 `5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7`)
+bind the six draft cases to source commit `002d8ecdea2b8eb073a3094140c659ffe5309ee9`.
+The packet has 112 safety commands, all six expected case IDs, directly
+observed CASE-03/04/05/09/11/12 counters, and an effectful hostile library
+consumer (`I64(7)`, 42 callback reads and 42 writes). The review is explicitly
+preliminary to this final integrated source; it is not relabeled as final
+acceptance. The separate combined-source freeze, final cold review and bounded
+terminal verifier must bind the exact case records before the draft entries
+are treated as accepted.
+
+The selected Octet helper build is pinned to derivation
+`fh42f6yzlqz3a4hpz3bvsdvzdw2lghn6-cargo-octet-0.1.0-typed-strict-trait.drv`
+and output
+`/nix/store/nwjvr71aksyyfcympfh3lvk50d5wrgxr-cargo-octet-0.1.0-typed-strict-trait`.
+The wrapped lint CLI rejects a deliberately bad `no_unwrap` fixture (exit 2)
+while the clean control passes; this is expected negative/positive lint
+behavior, not a compiler blocker. The actual permanent wrapper verifies the
+retained full-88 artifact with exit 0, `status: valid`, and no diagnostics.
+The combined package-build/smoke receipt
+`/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/patched-wrapped-build-smoke-fh42-20261016.txt`
+has SHA-256 `63eb62119dd73f2fb7a4843458b110a60f676f043da357ac00b0c125e3f75aaf`.
+Its permanent wrapper, unwrapped CLI, root cdylib and production driver hashes
+are respectively `fb5abe97e6c0730b32d7dc79898ee5691bd9aace9b864d3d9fd1d8bf41a7012f`,
+`97df65997d1e5292d36809bf0b8e81aff8ba8c316c2b2fbc9e9d830bd82be8d7`,
+`e07b4cffe14678a176f4f5aab8a18efaa8da88cc277bdaaaedbce44f2547b3bd`, and
+`20395a8ef7b405065926e4cc54f4517233076b4fbea7fe156494054635433268`.
+Its external receipt is
+`/home/brittonr/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/permanent-helper-consumer-nwjvr-retained-r8/receipt.json`
+(SHA-256 `57b7df0920a0c236cbbaf6baa9bdadbea1bb0a81d7a4cec53d460ac2f594c1f9`),
+bound to command/environment SHA-256
+`c70804da59a00cdcd81073348704e3686ae53c079e13a4cc3e754a0b86aaf949`.
+The source-only index
+`/home/brittonr/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/trait-resolver-r8-source-only-final-index.json`
+(SHA-256 `01500903da42bafe61ad8a3a9a5e6d83603890a9ef522fa3dea43b7998ad0493`)
+uses the independently checked Rust `PathBuf` component-order correction
+`source-envelope-component-order-correction-r8.json` (SHA-256
+`4172b09328c8a2609eaea711c994c71d154ce69ccc09f491289d7e83241c5db2`): all
+88 raw shards are source-only with zero canonical mismatches, and the
+archive-after-run closure confirms all 2,094 extracted source rows unchanged.
+The closure receipt SHA-256 is
+`6e99af7c00606b6c7b9eb85196a21fb6b34025502d7ca8a2478f29117a6167b9`. The
+original whole-path JavaScript comparator failure remains historical; the
+independently checked Rust component-order index is the current source-only
+result.
+This is ordinary source-only coverage and artifact integrity, not
+authenticated-origin or Architecture PASS. Original producer CLI/runner exit
+1, Architecture blocked with 4,389 open required unknowns, and zero waivers
+remain preserved; no capability closure or CASE-02 acceptance follows.
+
+The selected full-workspace gates and CPU measurements are separate bounded
+receipts. A passing selected gate run is not a rerun or PASS for the historical
+14-check packet (10 PASS / 4 known FAIL), and CPU evidence establishes no GPU,
+canonical CALC, proof, or all-host performance claim.

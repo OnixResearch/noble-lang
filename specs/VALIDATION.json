@@ -17,7 +17,7 @@
   "documents": 13,
   "requirements": 543,
   "scenarios": 213,
-  "scenarios_executed": 124,
+  "scenarios_executed": 130,
   "open_test_design": 193,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -1748,7 +1748,7 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/design.md",
-      "sha256": "a422a53e8327c799728e21ce82b1f418172f5fbc4947e80a3b01199da35adc52"
+      "sha256": "6f9db21f2be1f5f17b9f919418b126443bf1554ca6b5ee394267f340ff781956"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/proposal.md",
@@ -1768,7 +1768,7 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/tasks.md",
-      "sha256": "4a741e5774f0ced3cd7ee8aefcbbe32ebc5a63badc3fae388e795137b30e919a"
+      "sha256": "9446c54b5bbc0465890af3295f6ac50209db1a111d9bde95d5b36c1eec4718e0"
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
@@ -2132,7 +2132,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "26659d43ef6db3a99cdc1cc5c5ae4148e97edc18189da93058d354c280154bb8"
+      "sha256": "b2a58fba537780e6f28a152ff19eb61d1985fd0e5c26ff92041dfef1e90ec134"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -2188,7 +2188,7 @@
     },
     {
       "file": "specs/conformance/numeric-graph-cases.json",
-      "sha256": "07378055b1db8cd0caf4c0ccc487f2c95a0c8ba514ea7ae5f69a2a1cdfc7a4c5"
+      "sha256": "f7d2c4867d1bd149d6f1ddd1a522a5f03e449de1cd7bcac6e961efc82f8be22d"
     },
     {
       "file": "specs/conformance/octet-adoption-cases.json",
@@ -2264,7 +2264,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "47e5944135b44e4509bc5be2e4681ff1d882826c7a3a0e1718950da78222cb6e"
+      "sha256": "e4d0ced4d639214241afada45b0c882a687148b1c563688b4ff7df8e674ce04c"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2284,7 +2284,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "5fd7f888b8bb9d140a250c3c3c3fc45c7aa45e44c7460b79c3006af9fa8e00d8"
+      "sha256": "4575bd1f8ea52f52c4c3bead3cc55462295e1b76a5ab5b74a37ceb672497d946"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2448,7 +2448,7 @@
     },
     {
       "file": "verification/main-gates/README.md",
-      "sha256": "f27db741db30a398019e7d8b63aa597941365cbd4334e6a1bfea7a99b1cf3fc7"
+      "sha256": "55be263aad4c7f5bc7f263ab098a60e3e915e3bb9834e5764c72b50a9ff20bfb"
     },
     {
       "file": "verification/native-assurance.md",
@@ -2456,15 +2456,15 @@
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "08d45370d0d24b20bf4785e799f7ba35b64fc6bc869c751a2e8f0122551dc217"
+      "sha256": "6bcee6d9286974bb1252700e0929181f2d7ee2bf9a49e9bc94714659af3dc999"
     },
     {
       "file": "verification/numeric-graph-v1/README.md",
-      "sha256": "2bf93959c3564d09d10d9f37f73172721cf4ff950d3fbf79a8a668d4f26713c4"
+      "sha256": "6b554c9668b0125d1644fb7106b7791d6db6ae1c44162486b7ae6de0c1186966"
     },
     {
       "file": "verification/source-inventory.md",
-      "sha256": "ccfd9a13117314b74520f15d5c6e623322d8b5c9f81b7d4fb87338560aeb6a2a"
+      "sha256": "ecdaee17164bc84f0e1578c036e5802137ab28210ae14e13233e5b1382d6bb50"
     },
     {
       "file": "verification/tool-selection.md",

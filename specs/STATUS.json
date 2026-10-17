@@ -983,9 +983,12 @@
     "implementation": "partial",
     "implementation_scope": "Selected noble ngraph CLI and noble-ngraph library only: exact I64 extraction, directly authored F32 graphs admitted by the graph checker, reference/compiled CPU evaluation, immutable adam/0 snapshots and same-platform provenance replay. No kernel F32, ordinary entry-point selection or frontend syntax change.",
     "execution": "passed",
-    "execution_scope": "Only the eight listed passed cases have accepted finite execution/review evidence. Seven static/admission case contracts remain not-run because their required observations are incomplete; this is not whole-feature or global-gate acceptance.",
+    "execution_scope": "The immutable historical acceptance/review receipts support the eight listed cases. Six additional draft case records (03/04/05/09/11/12) now bind direct finite safety observations and an independent preliminary replay at source 002d8ec; final integrated-source cold review and bounded terminal verification remain pending. CASE-02 remains unrun because complete compiler-authenticated capability closure is incomplete. No proof, whole-feature or global-gate acceptance is implied.",
     "passed_cases": ["NGRAPH-CASE-01", "NGRAPH-CASE-06", "NGRAPH-CASE-07", "NGRAPH-CASE-08", "NGRAPH-CASE-10", "NGRAPH-CASE-13", "NGRAPH-CASE-14", "NGRAPH-CASE-15"],
-    "held_cases": ["NGRAPH-CASE-02", "NGRAPH-CASE-03", "NGRAPH-CASE-04", "NGRAPH-CASE-05", "NGRAPH-CASE-09", "NGRAPH-CASE-11", "NGRAPH-CASE-12"],
+    "pending_review_cases": ["NGRAPH-CASE-03", "NGRAPH-CASE-04", "NGRAPH-CASE-05", "NGRAPH-CASE-09", "NGRAPH-CASE-11", "NGRAPH-CASE-12"],
+    "pending_review_packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+    "pending_review_packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+    "held_cases": ["NGRAPH-CASE-02"],
     "held_state": {
       "implementation": "absent",
       "execution": "not-run",
@@ -994,13 +997,24 @@
       "evidence": []
     },
     "held_gaps": {
-      "NGRAPH-CASE-02": "Guest/protected-operation counters are structural, not directly observed. Complete forbidden-capability-use=0 closure is missing: 637 relevant unknowns remain; no_std, dependency inspection and policy membership are not closure evidence.",
-      "NGRAPH-CASE-03": "Guest/protected-operation counters are structural, not directly observed.",
-      "NGRAPH-CASE-04": "Guest/protected-operation counters and check evaluated_nodes=0 are structural, not directly observed; the library zero-node test measures eval refusals, not check.",
-      "NGRAPH-CASE-05": "Guest/protected-operation counters are structural, not directly observed.",
-      "NGRAPH-CASE-09": "Guest/protected-operation counters are structural, not directly observed.",
-      "NGRAPH-CASE-11": "Guest/protected-operation counters are structural, not directly observed.",
-      "NGRAPH-CASE-12": "Guest/protected-operation counters are structural, not directly observed; library binding-refusal measurements and reviewed parse/integrity paths do not supply a complete directly measured node counter for every variant."
+      "NGRAPH-CASE-02": "Complete forbidden-capability-use=0 closure is missing: 637 relevant unknowns remain; no_std, dependency inspection, an ordinary source-only collection or artifact integrity verification is not compiler-authenticated caller/callback closure."
+    },
+    "selected_tool_boundary": {
+      "scope": "Complete 88-unit ordinary source-only collection and actual permanent-wrapper artifact consumer; not authenticated-origin or Architecture PASS.",
+      "source_only_index": "/home/brittonr/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/trait-resolver-r8-source-only-final-index.json",
+      "source_only_index_sha256": "01500903da42bafe61ad8a3a9a5e6d83603890a9ef522fa3dea43b7998ad0493",
+      "source_only_units": 88,
+      "canonical_mismatches": 0,
+      "component_order_correction_sha256": "4172b09328c8a2609eaea711c994c71d154ce69ccc09f491289d7e83241c5db2",
+      "archive_after_run_closure": "/home/brittonr/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/source-archive-after-run-closure-r8.json",
+      "archive_after_run_closure_sha256": "6e99af7c00606b6c7b9eb85196a21fb6b34025502d7ca8a2478f29117a6167b9",
+      "permanent_consumer_receipt": "/home/brittonr/.cache/noble-issues/proof/octet-e651755-vanilla-20261016/permanent-helper-consumer-nwjvr-retained-r8/receipt.json",
+      "permanent_consumer_receipt_sha256": "57b7df0920a0c236cbbaf6baa9bdadbea1bb0a81d7a4cec53d460ac2f594c1f9",
+      "original_producer_cli_exit": 1,
+      "original_proof_runner_exit": 1,
+      "architecture_status": "blocked",
+      "open_required_unknowns": 4389,
+      "waivers": 0
     },
     "scenario_file": "conformance/numeric-graph-cases.json",
     "execution_record": "../verification/numeric-graph-v1/acceptance.json",

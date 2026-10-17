@@ -1,0 +1,37 @@
+diff --git a/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs b/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
+index 0b80b276..5cdea807 100644
+--- a/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
++++ b/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
+@@ -37,6 +37,7 @@ pub fn observe<F: Fn(u32) -> u32>(
+     let _ = dynamic(output);
+     let _ = pointer(output);
+     port.invoke();
++    Port::invoke(port);
+     let _ = Wrapper::construct(output);
+     output
+ }
+diff --git a/tests/ui.rs b/tests/ui.rs
+index 982e19fe..bd526eff 100644
+--- a/tests/ui.rs
++++ b/tests/ui.rs
+@@ -994,6 +994,20 @@ fn compiler_architecture_typed_calls() {
+         panic!("trait-object call lost dynamic dispatch: {dynamic_call:#?}");
+     };
+     assert!(unknown_at(dynamic_span, caller_item_id, UnknownFactKind::DynamicDispatch));
++    let (dynamic_ufcs_span, dynamic_ufcs_call) = call_at("Port::invoke(port)");
++    let CompilerArchitectureFact::Call {
++        caller_item_id, resolved_definition: Some(definition), dispatch: DispatchKind::Trait, ..
++    } = dynamic_ufcs_call else {
++        panic!("trait UFCS call on a dyn receiver invented a concrete target: {dynamic_ufcs_call:#?}");
++    };
++    assert_eq!(definition, "typed_calls_and_boundaries::Port::invoke",
++        "dyn UFCS call was retargeted away from its abstract trait declaration");
++    assert!(unknown_at(dynamic_ufcs_span, caller_item_id, UnknownFactKind::AmbiguousTraitDispatch));
++    assert!(!shard.facts.iter().any(|fact| matches!(
++        fact, CompilerArchitectureFact::Effect {
++            caller_item_id: current, span_id, ..
++        } if current == caller_item_id && span_id == dynamic_ufcs_span
++    )), "dyn UFCS call acquired an implementation-only capability");
+     let (trait_span, trait_call) = call_at("generic_port.invoke()");
+     let CompilerArchitectureFact::Call {
+         caller_item_id, dispatch: DispatchKind::Trait, ..

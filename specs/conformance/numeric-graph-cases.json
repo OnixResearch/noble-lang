@@ -229,12 +229,44 @@
         }
       },
       "state": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "All recorded CASE-03 check-report fields passed in the immutable measured run and independent preliminary replay; this finite result is not proof, capability closure, full14 acceptance or final case registration.",
+          "subject": "NGRAPH-CASE-03",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:cdc92437e634d0fb9ec6368a0a2cd73bcf1c451cacbd14c7f6af7175ed5f8251",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-03",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2/raw/receipt.json",
+            "measurement_receipt_sha256": "8108d7b2675c52deb15d2090cd07542a5eae79087e037823628f9f8e756de3db",
+            "independent_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "independent_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7",
+            "review_runner": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-xthdXt/review.mjs",
+            "review_runner_sha256": "ff4ae1f8dfb8f10e0d590b3d10a4458af73e1c9102fd4bdcf64a025760c84a65",
+            "review_scope": "preliminary-source-002d-only",
+            "prepromotion_case_sha256": "619e485394b5e9c4a3c7fcbf26ab78ad76aa7fd18589a1ca5723b866ad63f524",
+            "prepromotion_case_file_sha256": "07378055b1db8cd0caf4c0ccc487f2c95a0c8ba514ea7ae5f69a2a1cdfc7a4c5",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "case_preservation_preimage": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/case-preservation-preimage.json",
+            "case_preservation_preimage_sha256": "6a5f9f5bccd1effd1abe98ae5ff363f2fc98646eaf371b3fa3c7d992bbf18106"
+          },
+          "assumptions": [
+            "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
+            "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
+          ]
+        }
+      ]
     },
     {
       "id": "NGRAPH-CASE-04",
@@ -314,12 +346,44 @@
         "evaluated_nodes": 0
       },
       "state": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "All recorded CASE-04 refusal code, exit, zero-node and zero-effect fields passed in the immutable measured run and independent preliminary replay; this finite result is not proof, capability closure, full14 acceptance or final case registration.",
+          "subject": "NGRAPH-CASE-04",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:cdc92437e634d0fb9ec6368a0a2cd73bcf1c451cacbd14c7f6af7175ed5f8251",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-04",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2/raw/receipt.json",
+            "measurement_receipt_sha256": "8108d7b2675c52deb15d2090cd07542a5eae79087e037823628f9f8e756de3db",
+            "independent_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "independent_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7",
+            "review_runner": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-xthdXt/review.mjs",
+            "review_runner_sha256": "ff4ae1f8dfb8f10e0d590b3d10a4458af73e1c9102fd4bdcf64a025760c84a65",
+            "review_scope": "preliminary-source-002d-only",
+            "prepromotion_case_sha256": "b00a420c67bfddd5e536cd394a83e6cffcaaa6ff9a9b33f67dc942a3ae52f2b0",
+            "prepromotion_case_file_sha256": "07378055b1db8cd0caf4c0ccc487f2c95a0c8ba514ea7ae5f69a2a1cdfc7a4c5",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "case_preservation_preimage": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/case-preservation-preimage.json",
+            "case_preservation_preimage_sha256": "6a5f9f5bccd1effd1abe98ae5ff363f2fc98646eaf371b3fa3c7d992bbf18106"
+          },
+          "assumptions": [
+            "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
+            "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
+          ]
+        }
+      ]
     },
     {
       "id": "NGRAPH-CASE-05",
@@ -411,12 +475,44 @@
         "refusals_write_no_file": true
       },
       "state": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "All recorded CASE-05 I1-I4 extraction/report, refusal, no-publication and zero-effect fields passed in the immutable measured run and independent preliminary replay; this finite result is not proof, capability closure, full14 acceptance or final case registration.",
+          "subject": "NGRAPH-CASE-05",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:cdc92437e634d0fb9ec6368a0a2cd73bcf1c451cacbd14c7f6af7175ed5f8251",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-05",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2/raw/receipt.json",
+            "measurement_receipt_sha256": "8108d7b2675c52deb15d2090cd07542a5eae79087e037823628f9f8e756de3db",
+            "independent_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "independent_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7",
+            "review_runner": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-xthdXt/review.mjs",
+            "review_runner_sha256": "ff4ae1f8dfb8f10e0d590b3d10a4458af73e1c9102fd4bdcf64a025760c84a65",
+            "review_scope": "preliminary-source-002d-only",
+            "prepromotion_case_sha256": "3661393bbcd095a653fc6872445833d41abee9a6ef671d90ad1df33b7e31312b",
+            "prepromotion_case_file_sha256": "07378055b1db8cd0caf4c0ccc487f2c95a0c8ba514ea7ae5f69a2a1cdfc7a4c5",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "case_preservation_preimage": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/case-preservation-preimage.json",
+            "case_preservation_preimage_sha256": "6a5f9f5bccd1effd1abe98ae5ff363f2fc98646eaf371b3fa3c7d992bbf18106"
+          },
+          "assumptions": [
+            "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
+            "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
+          ]
+        }
+      ]
     },
     {
       "id": "NGRAPH-CASE-06",
@@ -831,12 +927,44 @@
         "data file types line without ';'": "E-FORMAT"
       },
       "state": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "All eight recorded CASE-09 format acceptance/refusal outcomes and zero-effect fields passed in the immutable measured run and independent preliminary replay; this finite result is not proof, capability closure, full14 acceptance or final case registration.",
+          "subject": "NGRAPH-CASE-09",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:cdc92437e634d0fb9ec6368a0a2cd73bcf1c451cacbd14c7f6af7175ed5f8251",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-09",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2/raw/receipt.json",
+            "measurement_receipt_sha256": "8108d7b2675c52deb15d2090cd07542a5eae79087e037823628f9f8e756de3db",
+            "independent_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "independent_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7",
+            "review_runner": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-xthdXt/review.mjs",
+            "review_runner_sha256": "ff4ae1f8dfb8f10e0d590b3d10a4458af73e1c9102fd4bdcf64a025760c84a65",
+            "review_scope": "preliminary-source-002d-only",
+            "prepromotion_case_sha256": "4f6cdc77fdddd9e84071fceb88d24869318fd655cda0fbca7223d4c90d546709",
+            "prepromotion_case_file_sha256": "07378055b1db8cd0caf4c0ccc487f2c95a0c8ba514ea7ae5f69a2a1cdfc7a4c5",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "case_preservation_preimage": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/case-preservation-preimage.json",
+            "case_preservation_preimage_sha256": "6a5f9f5bccd1effd1abe98ae5ff363f2fc98646eaf371b3fa3c7d992bbf18106"
+          },
+          "assumptions": [
+            "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
+            "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
+          ]
+        }
+      ]
     },
     {
       "id": "NGRAPH-CASE-10",
@@ -1005,12 +1133,44 @@
         "refusals_create_no_output_or_partial_file": true
       },
       "state": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "All recorded CASE-11 policy admission/refusal, evaluator guard, no-partial-output and zero-effect fields passed in the immutable measured run and independent preliminary replay; this finite result is not proof, capability closure, full14 acceptance or final case registration.",
+          "subject": "NGRAPH-CASE-11",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:cdc92437e634d0fb9ec6368a0a2cd73bcf1c451cacbd14c7f6af7175ed5f8251",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-11",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2/raw/receipt.json",
+            "measurement_receipt_sha256": "8108d7b2675c52deb15d2090cd07542a5eae79087e037823628f9f8e756de3db",
+            "independent_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "independent_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7",
+            "review_runner": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-xthdXt/review.mjs",
+            "review_runner_sha256": "ff4ae1f8dfb8f10e0d590b3d10a4458af73e1c9102fd4bdcf64a025760c84a65",
+            "review_scope": "preliminary-source-002d-only",
+            "prepromotion_case_sha256": "64c6753c54abfeb66d5b131f5e97b91d8042c951858814e25a22b9d5c233a5e7",
+            "prepromotion_case_file_sha256": "07378055b1db8cd0caf4c0ccc487f2c95a0c8ba514ea7ae5f69a2a1cdfc7a4c5",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "case_preservation_preimage": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/case-preservation-preimage.json",
+            "case_preservation_preimage_sha256": "6a5f9f5bccd1effd1abe98ae5ff363f2fc98646eaf371b3fa3c7d992bbf18106"
+          },
+          "assumptions": [
+            "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
+            "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
+          ]
+        }
+      ]
     },
     {
       "id": "NGRAPH-CASE-12",
@@ -1052,12 +1212,44 @@
         "evaluated_nodes": 0
       },
       "state": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
-      "evidence": []
+      "evidence": [
+        {
+          "claim": "All recorded CASE-12 snapshot binding mismatches, refusal codes, zero-node and zero-effect fields passed in the immutable measured run and independent preliminary replay; this finite result is not proof, capability closure, full14 acceptance or final case registration.",
+          "subject": "NGRAPH-CASE-12",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:cdc92437e634d0fb9ec6368a0a2cd73bcf1c451cacbd14c7f6af7175ed5f8251",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-12",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2/raw/receipt.json",
+            "measurement_receipt_sha256": "8108d7b2675c52deb15d2090cd07542a5eae79087e037823628f9f8e756de3db",
+            "independent_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "independent_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7",
+            "review_runner": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-xthdXt/review.mjs",
+            "review_runner_sha256": "ff4ae1f8dfb8f10e0d590b3d10a4458af73e1c9102fd4bdcf64a025760c84a65",
+            "review_scope": "preliminary-source-002d-only",
+            "prepromotion_case_sha256": "b8d4bf450f79c4a0631b9457a5a9a873229b3f0e7426225b061be8c72fba5e0e",
+            "prepromotion_case_file_sha256": "07378055b1db8cd0caf4c0ccc487f2c95a0c8ba514ea7ae5f69a2a1cdfc7a4c5",
+            "prepromotion_cases": "../../verification/numeric-graph-v1/prepromotion-cases.json",
+            "prepromotion_cases_sha256": "96150208b0f6984919a7016ef4f2b825657e8a4ab809eaaf537fd11dd654b545",
+            "case_preservation_preimage": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/case-preservation-preimage.json",
+            "case_preservation_preimage_sha256": "6a5f9f5bccd1effd1abe98ae5ff363f2fc98646eaf371b3fa3c7d992bbf18106"
+          },
+          "assumptions": [
+            "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
+            "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
+          ]
+        }
+      ]
     },
     {
       "id": "NGRAPH-CASE-13",

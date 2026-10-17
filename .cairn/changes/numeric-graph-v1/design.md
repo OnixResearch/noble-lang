@@ -470,25 +470,45 @@ The director reviewed this design (proposal, tasks, D1–D13) on 2026-10-16 unde
 ## Lifecycle record
 
 The registered [NGRAPH-CASE-01..15](../../../specs/conformance/numeric-graph-cases.json)
-and [profile status](../../../specs/STATUS.json) record **8 passed, 7 not-run**.
-Cases 01/06/07/08/10/13/14/15 are `implemented/passed/open/explicit` with
-the immutable [acceptance receipt](../../../verification/numeric-graph-v1/acceptance.json)
-and [independent review receipt](../../../verification/numeric-graph-v1/review-receipt.json).
-The accepted source revision is
+retain the original immutable [acceptance receipt](../../../verification/numeric-graph-v1/acceptance.json),
+[independent review receipt](../../../verification/numeric-graph-v1/review-receipt.json),
+and [build provenance](../../../verification/numeric-graph-v1/build-provenance.json).
+Those original records support only cases 01/06/07/08/10/13/14/15 at source
 `sha256:2f4ebb1dc161687fc9844e9ab69cb1f992caf27bd6fd6ecd83aa0ff9d30f6f9f`;
-the [build provenance](../../../verification/numeric-graph-v1/build-provenance.json)
-binds the 707 build/policy inputs that are byte-identical at published
-`0eb5c04` and tested `bc10df8`. The original prepromotion records, source
+the build provenance binds the 707 build/policy inputs byte-identical at
+published `0eb5c04` and tested `bc10df8`. Their prepromotion records, source
 receipts and external raw outputs remain immutable.
 
-Cases 02/03/04/05/09/11/12 remain `absent/not-run/open/unassessed` with
-`evidence: []`. All seven lack directly observed guest/protected-operation
-counters; CASE-04 additionally lacks measured check-node zero, and CASE-02
-lacks a complete zero-use capability closure (637 relevant unknowns).
-CASE-12's reviewed parsing paths and library binding measurements are not
-a complete directly measured node counter for every variant. No input,
-expected field, case kind, profile or requirement is weakened to change this
-disposition.
+The separate immutable safety-observation packet now supplies directly
+measured finite expected-field evidence for CASE-03/04/05/09/11/12, including
+guest/protected-operation counters and CASE-04/12 node-zero observations. The
+case records name the measured source commit `002d8ecdea2b8eb073a3094140c659ffe5309ee9`,
+the counter packet, and its independent preliminary 57-command replay;
+they retain `proof: open` and explicitly distinguish those reused finite
+observations from final integrated-source review and bounded terminal
+verification. The six execution records do not rewrite or relabel historical
+acceptance/review receipts. The combined-source cold review and terminal
+receipt remain required before this draft disposition is final.
+
+CASE-02 remains `absent/not-run/open/unassessed` with `evidence: []`: complete
+compiler-authenticated zero-use capability closure is still missing, with
+637 relevant unknowns in the historical record. The actual arbitrary `std`
+consumer of the `no_std` library produced `I64(7)` while recording 42 reads
+and 42 writes; it is a finite adversarial boundary control, not a CASE-02
+capability proof. No input, expected field, case kind, profile, policy,
+capacity or requirement is weakened to change this boundary.
+
+The current selected-tool boundary is complete for ordinary source-only
+coverage: the corrected r8 final index binds all 88 raw shards with zero
+canonical mismatches and the archive-after-run closure binds all 2,094
+extracted source rows unchanged. The new permanent wrapper verifies the
+retained full-88 artifact (`status: valid`, no diagnostics, exit 0). These
+receipts establish neither authenticated origin nor Architecture PASS; the
+historical producer/runner exit 1, Architecture blocked state, 4,389 open
+required unknowns and zero waivers are preserved. CASE-02 and its exact
+capability-closure obligation remain open. The selected Octet package's
+deliberate `no_unwrap` negative fixture is denied while its clean positive
+control passes; this is expected lint behavior, not a compiler blocker.
 
 The [independent claims review](../../../verification/numeric-graph-v1/review.json)
 and [lifecycle evidence record](../../../verification/numeric-graph-v1/README.md)

@@ -112,15 +112,20 @@ type universe are unchanged; there is no kernel `F32` or milestone dependency
 added by this opt-in profile.
 
 The [registered cases](conformance/numeric-graph-cases.json) and
-[status](STATUS.json) record **8 passed, 7 not-run**, with implementation
-partial: 01/06/07/08/10/13/14/15 have finite receipt-linked acceptance under
-the immutable [execution packet](../verification/numeric-graph-v1/acceptance.json)
+[status](STATUS.json) preserve the original eight-case acceptance under the
+immutable [execution packet](../verification/numeric-graph-v1/acceptance.json)
 and [independent review](../verification/numeric-graph-v1/review-receipt.json).
-02/03/04/05/09/11/12 remain `absent/not-run/open/unassessed` with empty
-evidence. All seven lack directly observed guest/protected-operation
-counters; CASE-04 also lacks measured check-node zero, and CASE-02 lacks
-complete zero-use capability closure (637 relevant unknowns). The
-[lifecycle evidence record](../verification/numeric-graph-v1/README.md)
+Six additional draft case records (03/04/05/09/11/12) now carry direct finite
+safety-observation evidence and an independent preliminary replay, but remain
+subject to final integrated-source cold review and bounded terminal
+verification; their proofs stay open. CASE-02 remains
+`absent/not-run/open/unassessed` with empty evidence: 637 relevant compiler
+unknowns remain, and ordinary source-only coverage plus artifact-integrity
+verification do not establish authenticated caller/callback capability
+closure. The current selected-tool r8 record covers all 88 ordinary source-only
+units and its actual permanent-wrapper consumer validates the retained artifact;
+the architecture result remains blocked and the historical producer/runner
+red results are preserved. The [lifecycle evidence record](../verification/numeric-graph-v1/README.md)
 binds the supplemental CORE runtime packet and exact CASE-08 library
 node-zero mapping without claiming a CLI counter.
 

@@ -369,7 +369,7 @@ let
     ) "rust-profile-mismatch")
     (require (
       get config "features" == [ ]
-      && get observation "features" == [ ]
+      && get observation "features" == [ "safety-observe" ]
       && get config "all_features" == true
       && get config "default_features" == true
     ) "feature-scope-mismatch")

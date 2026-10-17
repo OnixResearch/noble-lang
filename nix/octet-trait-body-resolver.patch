@@ -1,0 +1,381 @@
+
+diff --git a/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs b/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
+index 93606040..0b80b276 100644
+--- a/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
++++ b/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
+@@ -43,4 +43,66 @@ pub fn observe<F: Fn(u32) -> u32>(
+ 
+ pub fn call_generic_port<T: Port>(generic_port: &T) {
+     generic_port.invoke();
++    Port::invoke(generic_port);
++}
++
++pub struct ConcretePort;
++pub struct AlternatePort;
++
++impl Port for ConcretePort {
++    fn invoke(&self) {
++        let _ = std::fs::read("octet-concrete-impl-never-executed");
++    }
++}
++
++impl Port for AlternatePort {
++    fn invoke(&self) {}
++}
++
++pub fn call_concrete_port() {
++    ConcretePort.invoke();
++    Port::invoke(&ConcretePort);
++    AlternatePort.invoke();
++}
++
++pub trait DefaultPort {
++    fn default_invoke(&self) {}
++}
++
++impl DefaultPort for ConcretePort {}
++
++pub fn call_default_port() {
++    ConcretePort.default_invoke();
++}
++
++pub struct ConcreteEndpoint;
++
++impl std::net::ToSocketAddrs for ConcreteEndpoint {
++    type Iter = std::vec::IntoIter<std::net::SocketAddr>;
++
++    fn to_socket_addrs(&self) -> std::io::Result<Self::Iter> {
++        Ok(Vec::new().into_iter())
++    }
++}
++
++pub fn call_network_interface() {
++    use std::net::ToSocketAddrs;
++    let _ = ConcreteEndpoint.to_socket_addrs();
++}
++
++pub struct ConcreteExit;
++
++impl std::process::Termination for ConcreteExit {
++    fn report(self) -> std::process::ExitCode {
++        std::process::ExitCode::SUCCESS
++    }
++}
++
++pub fn call_process_interface() {
++    let _ = std::process::Termination::report(ConcreteExit);
++}
++
++pub fn try_read() -> Result<usize, std::io::Error> {
++    let bytes = std::fs::read("octet-try-never-executed")?;
++    Ok(bytes.len())
+ }
+diff --git a/src/architecture_collector.rs b/src/architecture_collector.rs
+index ec83249e..f4867c5f 100644
+--- a/src/architecture_collector.rs
++++ b/src/architecture_collector.rs
+@@ -35,6 +35,7 @@ use rustc_lint::LintContext;
+ use rustc_middle::mir;
+ use rustc_middle::ty;
+ use rustc_middle::ty::Ty;
++use rustc_middle::ty::TypeVisitableExt;
+ use rustc_session::impl_lint_pass;
+ use rustc_span::Span;
+ use rustc_span::Spanned;
+@@ -497,6 +498,7 @@ impl ArchitectureCollector {
+         cx: &LateContext<'_>,
+         expr: &hir::Expr<'_>,
+         def_id: Option<DefId>,
++        declared_def_id: Option<DefId>,
+         dispatch: DispatchKind,
+     ) {
+         let caller_item_id = self.caller_item_id(cx, expr.hir_id);
+@@ -532,20 +534,27 @@ impl ArchitectureCollector {
+         assign_fact_identity(&mut fact);
+         self.push_fact(fact);
+ 
+-        if let Some(definition) = resolved_definition.as_deref()
+-            && let Some(family) = def_id
+-                .and_then(|current| resolved_randomness_family(cx, current))
+-                .or_else(|| effect_family(definition))
+-        {
+-            let mut effect = CompilerArchitectureFact::Effect {
+-                fact_id: String::new(),
+-                caller_item_id: caller_item_id.clone(),
+-                capability_family: family,
+-                primitive_definition: definition.to_owned(),
+-                span_id: span_id.clone(),
+-            };
+-            assign_fact_identity(&mut effect);
+-            self.push_fact(effect);
++        let mut emit_effect = |current: DefId, definition: &str| {
++            if let Some(family) =
++                resolved_randomness_family(cx, current).or_else(|| effect_family(definition))
++            {
++                let mut effect = CompilerArchitectureFact::Effect {
++                    fact_id: String::new(),
++                    caller_item_id: caller_item_id.clone(),
++                    capability_family: family,
++                    primitive_definition: definition.to_owned(),
++                    span_id: span_id.clone(),
++                };
++                assign_fact_identity(&mut effect);
++                self.push_fact(effect);
++            }
++        };
++        if let (Some(current), Some(definition)) = (def_id, resolved_definition.as_deref()) {
++            emit_effect(current, definition);
++        }
++        if let Some(original) = declared_def_id.filter(|original| Some(*original) != def_id) {
++            let original_definition = qualified_definition(cx, original);
++            emit_effect(original, &original_definition);
+         }
+         if let Some(def_id) = def_id
+             && definition_is_foreign(cx, def_id)
+@@ -1243,15 +1252,33 @@ impl<'tcx> LateLintPass<'tcx> for ArchitectureCollector {
+                     ty::Closure(current, _) => Some(*current),
+                     _ => None,
+                 });
+-                let dispatch = def_id.map_or(DispatchKind::Unknown, |current| dispatch_kind(cx, current, None));
+-                self.collect_call(cx, expr, def_id, dispatch);
++                let resolved = def_id.map(|current| {
++                    let ty::FnDef(typed, args) = cx.typeck_results().expr_ty(callee).kind() else {
++                        return current;
++                    };
++                    if *typed != current {
++                        return current;
++                    }
++                    concrete_trait_body(cx, current, args).unwrap_or(current)
++                });
++                let dispatch = resolved.map_or(DispatchKind::Unknown, |current| dispatch_kind(cx, current, None));
++                self.collect_call(cx, expr, resolved, def_id, dispatch);
+             }
+             hir::ExprKind::MethodCall(_, receiver, _, _) => {
+-                let def_id = cx.typeck_results().type_dependent_def_id(expr.hir_id);
+                 let receiver_ty = cx.typeck_results().expr_ty(receiver);
++                let def_id = cx.typeck_results().type_dependent_def_id(expr.hir_id);
++                let resolved = def_id.map(|current| {
++                    if matches!(receiver_ty.peel_refs().kind(), ty::Dynamic(..)) {
++                        return current;
++                    }
++                    cx.typeck_results()
++                        .node_args_opt(expr.hir_id)
++                        .and_then(|args| concrete_trait_body(cx, current, args))
++                        .unwrap_or(current)
++                });
+                 let dispatch =
+-                    def_id.map_or(DispatchKind::Unknown, |current| dispatch_kind(cx, current, Some(receiver_ty)));
+-                self.collect_call(cx, expr, def_id, dispatch);
++                    resolved.map_or(DispatchKind::Unknown, |current| dispatch_kind(cx, current, Some(receiver_ty)));
++                self.collect_call(cx, expr, resolved, def_id, dispatch);
+             }
+             _ => {}
+         }
+@@ -1264,6 +1291,31 @@ impl<'tcx> LateLintPass<'tcx> for ArchitectureCollector {
+     }
+ }
+ 
++fn concrete_trait_body<'tcx>(
++    cx: &LateContext<'tcx>,
++    def_id: DefId,
++    args: ty::GenericArgsRef<'tcx>,
++) -> Option<DefId> {
++    let parent = cx.tcx.opt_parent(def_id)?;
++    if cx.tcx.def_kind(def_id) != DefKind::AssocFn
++        || cx.tcx.def_kind(parent) != DefKind::Trait
++        || args.len() != cx.tcx.generics_of(def_id).count()
++        || args.still_further_specializable()
++    {
++        return None;
++    }
++    let typing_env = ty::TypingEnv::post_analysis(cx.tcx, cx.typeck_results().hir_owner.def_id);
++    let ty::InstanceKind::Item(body) = ty::Instance::try_resolve(cx.tcx, typing_env, def_id, args).ok().flatten()?.def
++    else {
++        return None;
++    };
++    let body_parent = cx.tcx.opt_parent(body)?;
++    (body != def_id
++        && matches!(cx.tcx.def_kind(body), DefKind::AssocFn | DefKind::Fn)
++        && matches!(cx.tcx.def_kind(body_parent), DefKind::Impl { of_trait: true }))
++        .then_some(body)
++}
++
+ fn qualified_definition(cx: &LateContext<'_>, def_id: DefId) -> String {
+     let path = cx.tcx.def_path_str(def_id);
+     if def_id.is_local() {
+diff --git a/tests/ui.rs b/tests/ui.rs
+index 4fd65287..982e19fe 100644
+--- a/tests/ui.rs
++++ b/tests/ui.rs
+@@ -1,6 +1,7 @@
+ use std::collections::HashMap;
+ use std::env;
+ use std::fs;
++use std::io::Write;
+ #[cfg(unix)]
+ use std::os::unix::fs::symlink;
+ use std::path::Path;
+@@ -703,10 +704,22 @@ fn run_compiler_architecture_target(
+         .collect::<Vec<_>>();
+     shard_paths.sort();
+     assert_eq!(shard_paths.len(), COMPILER_FIXTURE_MAX_UNITS);
+-    let shard = serde_json::from_slice::<CompilerArchitectureShard>(
+-        &fs::read(&shard_paths[0]).expect("read compiler fixture shard"),
+-    )
+-    .expect("parse compiler fixture shard");
++    let raw_shard = fs::read(&shard_paths[0]).expect("read compiler fixture shard");
++    if fixture_name == "negative/typed_calls_and_boundaries.rs"
++        && let Some(path) = env::var_os("OCTET_TYPED_CALL_RAW_SHARD")
++    {
++        let path = PathBuf::from(path);
++        assert!(path.is_absolute(), "retained compiler fixture shard path must be absolute");
++        fs::OpenOptions::new()
++            .write(true)
++            .create_new(true)
++            .open(&path)
++            .expect("create retained compiler fixture shard")
++            .write_all(&raw_shard)
++            .expect("retain compiler-emitted fixture shard bytes");
++    }
++    let shard = serde_json::from_slice::<CompilerArchitectureShard>(&raw_shard)
++        .expect("parse compiler fixture shard");
+     fs::remove_dir_all(&work_dir).expect("remove compiler fixture work dir");
+     shard
+ }
+@@ -988,6 +1001,136 @@ fn compiler_architecture_typed_calls() {
+         panic!("generic trait call lost unresolved trait dispatch: {trait_call:#?}");
+     };
+     assert!(unknown_at(trait_span, caller_item_id, UnknownFactKind::AmbiguousTraitDispatch));
++    let (generic_ufcs_span, generic_ufcs_call) = call_at("Port::invoke(generic_port)");
++    let CompilerArchitectureFact::Call { caller_item_id, dispatch: DispatchKind::Trait, .. } = generic_ufcs_call else {
++        panic!("generic UFCS trait call lost unresolved dispatch: {generic_ufcs_call:#?}");
++    };
++    assert!(unknown_at(generic_ufcs_span, caller_item_id, UnknownFactKind::AmbiguousTraitDispatch));
++    let (concrete_span, concrete_call) = call_at("ConcretePort.invoke()");
++    let CompilerArchitectureFact::Call {
++        caller_item_id, callee_item_id: Some(callee), resolved_definition: Some(definition),
++        dispatch: DispatchKind::Trait, ..
++    } = concrete_call else {
++        panic!("concrete trait call did not resolve its implementation body: {concrete_call:#?}");
++    };
++    assert!(item_exists(callee), "concrete trait call has no exact local implementation item");
++    assert!(definition.ends_with("::invoke") && !definition.contains("::Port::invoke"),
++        "concrete trait call still names only the trait declaration: {definition}");
++    assert!(!unknown_at(concrete_span, caller_item_id, UnknownFactKind::AmbiguousTraitDispatch));
++    let concrete_callee = callee;
++    let (ufcs_span, ufcs_call) = call_at("Port::invoke(&ConcretePort)");
++    let CompilerArchitectureFact::Call {
++        caller_item_id, callee_item_id: Some(ufcs_callee),
++        resolved_definition: Some(ufcs_definition), dispatch: DispatchKind::Trait, ..
++    } = ufcs_call else {
++        panic!("concrete UFCS trait call did not resolve its body: {ufcs_call:#?}");
++    };
++    assert_eq!(ufcs_callee, concrete_callee, "method and UFCS call targeted different implementations");
++    assert_eq!(ufcs_definition, definition, "method and UFCS call targeted different definitions");
++    assert!(!unknown_at(ufcs_span, caller_item_id, UnknownFactKind::AmbiguousTraitDispatch));
++    let (alternate_span, alternate_call) = call_at("AlternatePort.invoke()");
++    let CompilerArchitectureFact::Call {
++        caller_item_id, callee_item_id: Some(alternate_callee), dispatch: DispatchKind::Trait, ..
++    } = alternate_call else {
++        panic!("second concrete implementation was not resolved: {alternate_call:#?}");
++    };
++    assert_ne!(alternate_callee, concrete_callee, "distinct trait implementations were conflated");
++    assert!(!unknown_at(alternate_span, caller_item_id, UnknownFactKind::AmbiguousTraitDispatch));
++    let (body_span, body_call) = call_at("std::fs::read(\"octet-concrete-impl-never-executed\")");
++    let CompilerArchitectureFact::Call {
++        caller_item_id: body_owner, resolved_definition: Some(body_primitive), ..
++    } = body_call else {
++        panic!("concrete implementation filesystem call was not compiler-resolved: {body_call:#?}");
++    };
++    assert_eq!(body_owner, concrete_callee, "concrete body effect has a different owner from its call target");
++    assert!(shard.facts.iter().any(|fact| matches!(
++        fact, CompilerArchitectureFact::Effect {
++            caller_item_id, capability_family: CapabilityFamily::Filesystem,
++            primitive_definition, span_id, ..
++        } if caller_item_id == concrete_callee && primitive_definition == body_primitive && span_id == body_span
++    )), "concrete trait body lost its exact filesystem primitive/effect join");
++    assert!(!shard.facts.iter().any(|fact| matches!(
++        fact, CompilerArchitectureFact::Effect {
++            caller_item_id, capability_family: CapabilityFamily::Filesystem, ..
++        } if caller_item_id == alternate_callee
++    )), "alternate pure implementation acquired the filesystem effect");
++
++    let (default_span, default_call) = call_at("ConcretePort.default_invoke()");
++    let CompilerArchitectureFact::Call { caller_item_id, dispatch: DispatchKind::Trait, .. } = default_call else {
++        panic!("default trait body lost its unresolved trait boundary: {default_call:#?}");
++    };
++    assert!(unknown_at(default_span, caller_item_id, UnknownFactKind::AmbiguousTraitDispatch),
++        "trait declaration/default body was promoted without a distinct implementation body");
++
++    for (expression, family, prefix, method) in [
++        ("ConcreteEndpoint.to_socket_addrs()", CapabilityFamily::Network, "std::net::", "ToSocketAddrs::to_socket_addrs"),
++        ("std::process::Termination::report(ConcreteExit)", CapabilityFamily::Process, "std::process::", "Termination::report"),
++    ] {
++        let (span_id, call) = call_at(expression);
++        let CompilerArchitectureFact::Call {
++            caller_item_id, callee_item_id: Some(callee),
++            resolved_definition: Some(definition), dispatch: DispatchKind::Trait, ..
++        } = call else {
++            panic!("interface-effect trait call lacks concrete body: {call:#?}");
++        };
++        assert!(item_exists(callee), "concrete interface-effect body has no local item");
++        assert!(definition.starts_with("typed_calls_and_boundaries::"),
++            "interface-effect call did not retarget to local implementation: {definition}");
++        assert!(shard.facts.iter().any(|fact| matches!(
++            fact, CompilerArchitectureFact::Effect {
++                caller_item_id: current, capability_family, primitive_definition, span_id: current_span, ..
++            } if current == caller_item_id && *capability_family == family
++                && primitive_definition.starts_with(prefix) && primitive_definition.ends_with(method)
++                && current_span == span_id
++        )), "retargeting erased original interface effect at {expression}");
++        assert!(!unknown_at(span_id, caller_item_id, UnknownFactKind::AmbiguousTraitDispatch));
++    }
++    let (try_span, try_call) = call_at("std::fs::read(\"octet-try-never-executed\")");
++    let CompilerArchitectureFact::Call {
++        caller_item_id: try_owner, resolved_definition: Some(try_primitive), ..
++    } = try_call else {
++        panic!("authored question-mark filesystem primitive is unresolved: {try_call:#?}");
++    };
++    assert!(shard.facts.iter().any(|fact| matches!(
++        fact, CompilerArchitectureFact::Effect {
++            caller_item_id, capability_family: CapabilityFamily::Filesystem,
++            primitive_definition, span_id, ..
++        } if caller_item_id == try_owner && primitive_definition == try_primitive && span_id == try_span
++    )), "question-mark expression lost its independently classified filesystem effect");
++    let question_mark_spans = shard.spans.iter().filter(|span| {
++        span.from_expansion
++            && matches!(&span.origin, SourceOrigin::Workspace { source_path } if source_path == relative)
++            && source.get(span.byte_start as usize..span.byte_end as usize)
++                == Some(b"std::fs::read(\"octet-try-never-executed\")?".as_slice())
++    }).collect::<Vec<_>>();
++    assert_eq!(question_mark_spans.len(), 1, "question-mark lowering lost its authored source span");
++    let generated_span = question_mark_spans[0].span_id.as_str();
++    let generated_calls = shard.facts.iter().filter(|fact| {
++        matches!(fact, CompilerArchitectureFact::Call { span_id, .. } if span_id == generated_span)
++    }).collect::<Vec<_>>();
++    assert_eq!(generated_calls.len(), 2, "question-mark lowering lost its two compiler-resolved trait calls");
++    let mut saw_try_branch = false;
++    let mut saw_from_residual = false;
++    for call in generated_calls {
++        let CompilerArchitectureFact::Call {
++            caller_item_id, resolved_definition: Some(definition), dispatch: DispatchKind::Trait, ..
++        } = call else {
++            panic!("question-mark trait call is not compiler-resolved: {call:#?}");
++        };
++        assert_eq!(caller_item_id, try_owner, "question-mark call has a different owner from authored filesystem call");
++        assert!(definition.starts_with("<std::result::Result<"),
++            "question-mark call still names only an abstract trait declaration: {definition}");
++        saw_try_branch |= definition.ends_with(" as std::ops::Try>::branch");
++        saw_from_residual |= definition.contains(" as std::ops::FromResidual<")
++            && definition.ends_with(">::from_residual");
++        assert!(!unknown_at(generated_span, caller_item_id, UnknownFactKind::AmbiguousTraitDispatch),
++            "a concrete rustc instance remained an abstract trait call");
++    }
++    assert!(saw_try_branch && saw_from_residual, "question-mark lowering did not expose both actual trait bodies");
++    assert!(shard.unknowns.iter().any(|unknown| {
++        unknown.kind == UnknownFactKind::UnsupportedExpansion
++            && unknown.span_id.as_deref() == Some(generated_span)
++    }), "resolving question-mark trait bodies erased independent unknown expansion origin");
+     assert!(!shard.unknowns.iter().any(|unknown| unknown.kind == UnknownFactKind::MissingBody),
+         "ordinary required trait declarations were misclassified as missing bodies");
+ }

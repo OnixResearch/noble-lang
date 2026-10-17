@@ -207,7 +207,9 @@ let
       "release"
       "overflow-checks"
     ] false)
-    (badObservation "unreviewed feature" "feature-scope-mismatch" [ "features" ] [ "extra" ])
+    (badObservation "missing declared observer feature" "feature-scope-mismatch" [ "features" ] [ ])
+    (badObservation "extra declared feature" "feature-scope-mismatch" [ "features" ] [ "safety-observe" "extra" ])
+    (badPolicy "explicit feature selection" "feature-scope-mismatch" [ "configuration" "features" ] [ "safety-observe" ])
     (badPolicy "missing Lean artifact hash" "lean-artifact-pin" [ "lean" "archive_sha256" ] null)
     (badPolicy "selection promoted to acceptance" "selection-claim-limits"
       [ "claims" ]

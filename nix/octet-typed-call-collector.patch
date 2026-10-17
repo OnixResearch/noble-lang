@@ -1,0 +1,380 @@
+diff --git a/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs b/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
+new file mode 100644
+index 00000000..93606040
+--- /dev/null
++++ b/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
+@@ -0,0 +1,46 @@
++pub trait Port {
++    fn invoke(&self);
++}
++
++pub fn direct(value: u32) -> u32 {
++    value + 2
++}
++
++pub const STORED_FUNCTION: fn(u32) -> u32 = direct;
++pub static STORED_STATIC_FUNCTION: fn(u32) -> u32 = direct;
++
++pub struct Wrapper(pub u32);
++
++impl Wrapper {
++    pub fn construct(value: u32) -> Self {
++        Self(value)
++    }
++}
++
++pub fn observe<F: Fn(u32) -> u32>(
++    generic: F,
++    dynamic: &dyn Fn(u32) -> u32,
++    pointer: fn(u32) -> u32,
++    port: &dyn Port,
++) -> u32 {
++    let pure = |value: u32| value + 1;
++    let output = pure(7);
++    let filesystem = || {
++        let _ = std::fs::read("octet-fixture-never-executed");
++    };
++    filesystem();
++    let direct_fn = direct;
++    let _ = direct_fn(output);
++    let _ = STORED_FUNCTION(output);
++    let _ = STORED_STATIC_FUNCTION(output);
++    let _ = generic(output);
++    let _ = dynamic(output);
++    let _ = pointer(output);
++    port.invoke();
++    let _ = Wrapper::construct(output);
++    output
++}
++
++pub fn call_generic_port<T: Port>(generic_port: &T) {
++    generic_port.invoke();
++}
+diff --git a/src/architecture_collector.rs b/src/architecture_collector.rs
+index dd776898..ec83249e 100644
+--- a/src/architecture_collector.rs
++++ b/src/architecture_collector.rs
+@@ -513,7 +513,14 @@ impl ArchitectureCollector {
+         }
+         let callee_item_id = def_id
+             .filter(|current| current.is_local())
+-            .map(|current| self.local_item_identity(cx, current.expect_local()));
++            .and_then(|current| {
++                let local = current.expect_local();
++                match cx.tcx.def_kind(current) {
++                    DefKind::Ctor(..) => None,
++                    DefKind::Closure => Some(self.closure_item_id(cx, local)),
++                    _ => Some(self.local_item_identity(cx, local)),
++                }
++            });
+         let mut fact = CompilerArchitectureFact::Call {
+             fact_id: String::new(),
+             caller_item_id: caller_item_id.clone(),
+@@ -560,6 +567,19 @@ impl ArchitectureCollector {
+                 "dynamic dispatch target is not statically unique",
+             );
+         }
++        if dispatch == DispatchKind::Trait
++            && def_id
++                .and_then(|current| cx.tcx.opt_parent(current))
++                .is_some_and(|parent| cx.tcx.def_kind(parent) == DefKind::Trait)
++        {
++            self.push_unknown(
++                UnknownFactKind::AmbiguousTraitDispatch,
++                Some(&caller_item_id),
++                resolved_definition.as_deref(),
++                Some(&span_id),
++                "trait method call has no statically unique implementation",
++            );
++        }
+         self.collect_constructor(cx, expr, &caller_item_id, def_id, &span_id);
+         if expr.span.from_expansion() {
+             self.collect_expansion(cx, expr.span, &span_id);
+@@ -610,31 +630,7 @@ impl ArchitectureCollector {
+             return item_id.clone();
+         }
+         if cx.tcx.def_kind(owner) == DefKind::Closure {
+-            let span = cx.tcx.def_span(owner);
+-            let span_id = self.collect_span(cx, span);
+-            let qualified_path =
+-                closure_qualified_path(cx, span, &self.selected.unit.package_name, &self.context.workspace_root);
+-            let item_id = item_identity(
+-                &self.selected.unit.package_name,
+-                &qualified_path,
+-                ItemKind::Other,
+-                None,
+-                &self.selected.unit.source_blake3,
+-            );
+-            let mut fact = CompilerArchitectureFact::Item {
+-                fact_id: String::new(),
+-                item_id: item_id.clone(),
+-                qualified_path,
+-                item_kind: ItemKind::Other,
+-                origin_crate: self.selected.unit.package_name.clone(),
+-                visibility: "private".to_owned(),
+-                signature_id: None,
+-                span_id,
+-            };
+-            assign_fact_identity(&mut fact);
+-            self.push_fact(fact);
+-            self.insert_item_identity(owner, &item_id);
+-            return item_id;
++            return self.closure_item_id(cx, owner);
+         }
+         // r[impl octet.compiler_architecture_ir.body_owner_kinds]
+         // A call can belong to a constant initializer, not only a function.
+@@ -644,6 +640,37 @@ impl ArchitectureCollector {
+         self.collect_item(cx, owner, kind, cx.tcx.def_span(owner), kind == ItemKind::Function)
+     }
+ 
++    fn closure_item_id(&mut self, cx: &LateContext<'_>, def_id: LocalDefId) -> String {
++        if let Some(item_id) = self.item_ids.get(&def_id) {
++            return item_id.clone();
++        }
++        let span = cx.tcx.def_span(def_id);
++        let span_id = self.collect_span(cx, span);
++        let qualified_path =
++            closure_qualified_path(cx, span, &self.selected.unit.package_name, &self.context.workspace_root);
++        let item_id = item_identity(
++            &self.selected.unit.package_name,
++            &qualified_path,
++            ItemKind::Other,
++            None,
++            &self.selected.unit.source_blake3,
++        );
++        let mut fact = CompilerArchitectureFact::Item {
++            fact_id: String::new(),
++            item_id: item_id.clone(),
++            qualified_path,
++            item_kind: ItemKind::Other,
++            origin_crate: self.selected.unit.package_name.clone(),
++            visibility: "private".to_owned(),
++            signature_id: None,
++            span_id,
++        };
++        assign_fact_identity(&mut fact);
++        self.push_fact(fact);
++        self.insert_item_identity(def_id, &item_id);
++        item_id
++    }
++
+     fn insert_item_identity(&mut self, def_id: LocalDefId, item_id: &str) {
+         if let std::collections::hash_map::Entry::Occupied(mut existing) = self.item_ids.entry(def_id) {
+             existing.insert(item_id.to_owned());
+@@ -1192,26 +1219,30 @@ impl<'tcx> LateLintPass<'tcx> for ArchitectureCollector {
+     fn check_trait_item(&mut self, cx: &LateContext<'tcx>, item: &'tcx hir::TraitItem<'tcx>) {
+         let signature = matches!(item.kind, hir::TraitItemKind::Fn(..));
+         let item_kind = def_kind_to_item_kind(cx.tcx.def_kind(item.owner_id.def_id));
+-        let item_id = self.collect_item(cx, item.owner_id.def_id, item_kind, item.span, signature);
+-        if matches!(item.kind, hir::TraitItemKind::Fn(_, hir::TraitFn::Required(_))) {
+-            let span_id = self.collect_span(cx, item.span);
+-            self.push_unknown(
+-                UnknownFactKind::MissingBody,
+-                Some(&item_id),
+-                None,
+-                Some(&span_id),
+-                "required trait method has no body in this compilation unit",
+-            );
+-        }
++        self.collect_item(cx, item.owner_id.def_id, item_kind, item.span, signature);
+     }
+ 
+     fn check_expr(&mut self, cx: &LateContext<'tcx>, expr: &'tcx hir::Expr<'tcx>) {
+         match &expr.kind {
+             hir::ExprKind::Call(callee, _) => {
+                 let def_id = match &callee.kind {
+-                    hir::ExprKind::Path(qpath) => cx.qpath_res(qpath, callee.hir_id).opt_def_id(),
++                    hir::ExprKind::Path(qpath) => cx
++                        .qpath_res(qpath, callee.hir_id)
++                        .opt_def_id()
++                        .filter(|current| {
++                            matches!(cx.tcx.def_kind(*current), DefKind::Fn | DefKind::AssocFn | DefKind::Ctor(..))
++                        }),
+                     _ => None,
+-                };
++                }
++                .or_else(|| match cx.typeck_results().expr_ty(callee).kind() {
++                    ty::FnDef(current, _)
++                        if matches!(cx.tcx.def_kind(*current), DefKind::Fn | DefKind::AssocFn | DefKind::Ctor(..)) =>
++                    {
++                        Some(*current)
++                    }
++                    ty::Closure(current, _) => Some(*current),
++                    _ => None,
++                });
+                 let dispatch = def_id.map_or(DispatchKind::Unknown, |current| dispatch_kind(cx, current, None));
+                 self.collect_call(cx, expr, def_id, dispatch);
+             }
+diff --git a/tests/ui.rs b/tests/ui.rs
+index a6524ae8..4fd65287 100644
+--- a/tests/ui.rs
++++ b/tests/ui.rs
+@@ -10,6 +10,7 @@ use std::time::SystemTime;
+ use std::time::UNIX_EPOCH;
+ 
+ use octet_architecture_ir::ArchitectureCollectionLimits;
++use octet_architecture_ir::CapabilityFamily;
+ use octet_architecture_ir::CollectionStatus;
+ use octet_architecture_ir::CollectorCompilationUnit;
+ use octet_architecture_ir::CompilationUnit;
+@@ -18,6 +19,8 @@ use octet_architecture_ir::CompilerArchitectureFact;
+ use octet_architecture_ir::CompilerArchitectureRole;
+ use octet_architecture_ir::CompilerArchitectureShard;
+ use octet_architecture_ir::CompilerValueFlowSelection;
++use octet_architecture_ir::DispatchKind;
++use octet_architecture_ir::SourceOrigin;
+ use octet_architecture_ir::SourceRoleScope;
+ use octet_architecture_ir::UnknownFactKind;
+ use serde::Deserialize;
+@@ -844,6 +847,151 @@ fn compiler_architecture_ir_fixtures() {
+     }));
+ }
+ 
++#[test]
++#[ignore = "run via cargo test --test ui compiler_architecture_typed_calls -- --ignored --nocapture"]
++fn compiler_architecture_typed_calls() {
++    let toolchain = rustup_toolchain();
++    let library = build_library(&toolchain);
++    let host = host_triple();
++    let driver = build_driver(&toolchain);
++    let relative = "fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs";
++    let source = fs::read(Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect("read typed calls fixture");
++    let shard = run_compiler_architecture_fixture(&driver, &library, &host, "negative/typed_calls_and_boundaries.rs");
++    assert_eq!(shard.collection_status, CollectionStatus::Complete);
++    assert_eq!(shard.unit.source_path, relative);
++
++    let call_at = |expression: &str| {
++        let spans = shard
++            .spans
++            .iter()
++            .filter(|span| {
++                matches!(&span.origin, SourceOrigin::Workspace { source_path } if source_path == relative)
++                    && source.get(span.byte_start as usize..span.byte_end as usize) == Some(expression.as_bytes())
++            })
++            .collect::<Vec<_>>();
++        assert_eq!(spans.len(), 1, "expected one compiler span for {expression}");
++        let span_id = spans[0].span_id.as_str();
++        let calls = shard
++            .facts
++            .iter()
++            .filter(|fact| matches!(fact, CompilerArchitectureFact::Call { span_id: call_span, .. } if call_span == span_id))
++            .collect::<Vec<_>>();
++        assert_eq!(calls.len(), 1, "expected one compiler call for {expression}");
++        (span_id, calls[0])
++    };
++    let unknown_at = |span_id: &str, owner: &str, kind| {
++        shard.unknowns.iter().any(|unknown| {
++            unknown.span_id.as_deref() == Some(span_id)
++                && unknown.owner_item_id.as_deref() == Some(owner)
++                && unknown.kind == kind
++        })
++    };
++    let item_exists = |item_id: &str| {
++        shard.facts.iter().any(|fact| {
++            matches!(fact, CompilerArchitectureFact::Item { item_id: current, .. } if current == item_id)
++        })
++    };
++
++    for expression in ["pure(7)", "filesystem()"] {
++        let (span_id, call) = call_at(expression);
++        let CompilerArchitectureFact::Call {
++            caller_item_id, callee_item_id: Some(callee), resolved_definition: Some(definition),
++            dispatch: DispatchKind::Static, ..
++        } = call else {
++            panic!("concrete closure call {expression} was not compiler-resolved: {call:#?}");
++        };
++        assert!(definition.contains("closure"), "unexpected closure body: {definition}");
++        assert!(item_exists(callee), "closure call has no exact local callee item");
++        assert!(!unknown_at(span_id, caller_item_id, UnknownFactKind::UnresolvedDefinition));
++    }
++
++    let (direct_span, direct_call) = call_at("direct_fn(output)");
++    let CompilerArchitectureFact::Call {
++        caller_item_id, callee_item_id: Some(callee), resolved_definition: Some(definition),
++        dispatch: DispatchKind::Static, ..
++    } = direct_call else {
++        panic!("local function item call was not compiler-resolved: {direct_call:#?}");
++    };
++    assert_eq!(definition, "typed_calls_and_boundaries::direct");
++    assert!(item_exists(callee), "local function item call has no callee item");
++    assert!(!unknown_at(direct_span, caller_item_id, UnknownFactKind::UnresolvedDefinition));
++
++    let (_, pure_call) = call_at("pure(7)");
++    let CompilerArchitectureFact::Call { callee_item_id: Some(pure_owner), .. } = pure_call else {
++        unreachable!("checked concrete pure closure above")
++    };
++    assert!(!shard.facts.iter().any(|fact| {
++        matches!(fact, CompilerArchitectureFact::Effect { caller_item_id, .. } if caller_item_id == pure_owner)
++    }), "pure closure acquired an unrelated capability");
++
++    let (_, filesystem_call) = call_at("filesystem()");
++    let CompilerArchitectureFact::Call { callee_item_id: Some(filesystem_owner), .. } = filesystem_call else {
++        unreachable!("checked concrete filesystem closure above")
++    };
++    let (read_span, read_call) = call_at("std::fs::read(\"octet-fixture-never-executed\")");
++    let CompilerArchitectureFact::Call {
++        caller_item_id: read_owner, resolved_definition: Some(read_definition), ..
++    } = read_call else {
++        panic!("filesystem primitive call not resolved: {read_call:#?}");
++    };
++    assert_eq!(read_owner, filesystem_owner, "filesystem effect belongs to a different closure");
++    assert!(shard.facts.iter().any(|fact| {
++        matches!(fact, CompilerArchitectureFact::Effect {
++            caller_item_id, capability_family: CapabilityFamily::Filesystem,
++            primitive_definition, span_id, ..
++        } if caller_item_id == filesystem_owner
++            && primitive_definition == read_definition && span_id == read_span)
++    }), "effectful closure lost the compiler-resolved filesystem effect");
++
++    let (constructor_span, constructor_call) = call_at("Self(value)");
++    let CompilerArchitectureFact::Call {
++        caller_item_id, callee_item_id: None, resolved_definition: Some(definition),
++        dispatch: DispatchKind::Static, ..
++    } = constructor_call else {
++        panic!("tuple constructor call was not compiler-resolved: {constructor_call:#?}");
++    };
++    assert!(shard.facts.iter().any(|fact| {
++        matches!(fact, CompilerArchitectureFact::Constructor {
++            constructor_definition: Some(current), span_id, ..
++        } if current == definition && span_id == constructor_span)
++    }), "tuple constructor result fact does not join its exact constructor definition");
++    assert!(!unknown_at(constructor_span, caller_item_id, UnknownFactKind::UnresolvedDefinition));
++
++    for expression in [
++        "generic(output)",
++        "dynamic(output)",
++        "pointer(output)",
++        "STORED_FUNCTION(output)",
++        "STORED_STATIC_FUNCTION(output)",
++    ] {
++        let (span_id, call) = call_at(expression);
++        let CompilerArchitectureFact::Call {
++            caller_item_id, callee_item_id: None, resolved_definition: None,
++            dispatch: DispatchKind::Unknown, ..
++        } = call else {
++            panic!("indirect call {expression} was incorrectly resolved: {call:#?}");
++        };
++        assert!(unknown_at(span_id, caller_item_id, UnknownFactKind::UnresolvedDefinition),
++            "indirect call {expression} was not blocked at its own compiler span");
++    }
++    let (dynamic_span, dynamic_call) = call_at("port.invoke()");
++    let CompilerArchitectureFact::Call {
++        caller_item_id, dispatch: DispatchKind::Dynamic, ..
++    } = dynamic_call else {
++        panic!("trait-object call lost dynamic dispatch: {dynamic_call:#?}");
++    };
++    assert!(unknown_at(dynamic_span, caller_item_id, UnknownFactKind::DynamicDispatch));
++    let (trait_span, trait_call) = call_at("generic_port.invoke()");
++    let CompilerArchitectureFact::Call {
++        caller_item_id, dispatch: DispatchKind::Trait, ..
++    } = trait_call else {
++        panic!("generic trait call lost unresolved trait dispatch: {trait_call:#?}");
++    };
++    assert!(unknown_at(trait_span, caller_item_id, UnknownFactKind::AmbiguousTraitDispatch));
++    assert!(!shard.unknowns.iter().any(|unknown| unknown.kind == UnknownFactKind::MissingBody),
++        "ordinary required trait declarations were misclassified as missing bodies");
++}
++
+ #[test]
+ #[ignore = "run via cargo test --test ui compiler_architecture_target_fixtures -- --ignored --nocapture"]
+ fn compiler_architecture_target_fixtures() {
