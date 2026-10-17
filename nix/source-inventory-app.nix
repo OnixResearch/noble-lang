@@ -148,11 +148,12 @@ pkgs.writeShellApplication {
             # Cargo reads ancestor configuration. Only the separately reviewed
             # home config digest above may accompany the original source tree.
             cd "$root"
+            # Exact policy row: default_features=true, features=[].
             env -i PATH="$PATH" HOME="$HOME" CARGO_HOME="$CARGO_HOME" \
               CARGO_TARGET_DIR="$CARGO_TARGET_DIR" CARGO_BUILD_TARGET_DIR="$CARGO_TARGET_DIR" \
-              CARGO_BUILD_RUSTC_WRAPPER= CARGO_BUILD_JOBS=2 CARGO_NET_OFFLINE=true TMPDIR="$HOME" \
+              CARGO_BUILD_RUSTC_WRAPPER= CARGO_BUILD_JOBS=4 CARGO_NET_OFFLINE=true TMPDIR="$HOME" \
               cargo-octet check --workspace --output-format json \
-              --artifact-dir "$artifacts/collector" -- --all-targets --all-features --offline
+              --artifact-dir "$artifacts/collector" -- --all-targets --offline -j4
           ) > "$artifacts/collector.stdout" 2> "$artifacts/collector.stderr" || collector_status=$?
           reviewed_cargo_ancestors "$root"
           [ "$collector_status" -eq 0 ] || return "$collector_status"

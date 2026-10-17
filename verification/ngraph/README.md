@@ -214,7 +214,7 @@ only; final implementation/harness commit is
 `7e1de8f1eccdece595dea295a6e00a14c93b2e62`. The intermediate selected
 `5ca3665` lane is retained, including its measured observer overhead, not silently
 substituted for the final lane. Raw receipts, exact hashes, source manifests and
-the reproduction configuration are in [`cpu-20261016/`](cpu-20261016/).
+the reproduction configuration are in [`cpu-20261016/receipt.json`](cpu-20261016/receipt.json).
 
 Each selected lane has three complete runs with the unchanged harness defaults
 `--samples 2000 --cold-reps 21`

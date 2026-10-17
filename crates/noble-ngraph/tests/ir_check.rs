@@ -234,7 +234,10 @@ fn caller_owned_node_observer_tracks_execution_not_refusals() {
     for reference_mode in [true, false] {
         let mut nodes = 7;
         let mut run = |inputs: &[Value], nodes: &mut u64| {
-            let mut control = Control { evaluated_nodes: Some(nodes), ..Control::default() };
+            let mut control = Control {
+                evaluated_nodes: Some(nodes),
+                ..Control::default()
+            };
             let report = if reference_mode {
                 reference(&checked, inputs, None, &mut control)
             } else {
@@ -244,13 +247,26 @@ fn caller_owned_node_observer_tracks_execution_not_refusals() {
         };
         assert!(matches!(run(&[Value::F32(0)], &mut nodes), Obs::Refused(_)));
         assert_eq!(nodes, 7, "preflight refusal preserves caller state");
-        assert_eq!(run(&i64_inputs(&[9]), &mut nodes), Obs::Normal(vec![Value::I64(18)]));
+        assert_eq!(
+            run(&i64_inputs(&[9]), &mut nodes),
+            Obs::Normal(vec![Value::I64(18)])
+        );
         let per_call = nodes - 7;
         assert!(per_call > 0, "successful execution contributes actual work");
-        assert_eq!(run(&i64_inputs(&[9]), &mut nodes), Obs::Normal(vec![Value::I64(18)]));
-        assert_eq!(nodes, 7 + 2 * per_call, "reused execution accumulates without resetting");
+        assert_eq!(
+            run(&i64_inputs(&[9]), &mut nodes),
+            Obs::Normal(vec![Value::I64(18)])
+        );
+        assert_eq!(
+            nodes,
+            7 + 2 * per_call,
+            "reused execution accumulates without resetting"
+        );
         let before_refusal = nodes;
         assert!(matches!(run(&[], &mut nodes), Obs::Refused(_)));
-        assert_eq!(nodes, before_refusal, "later preflight refusal preserves accumulated work");
+        assert_eq!(
+            nodes, before_refusal,
+            "later preflight refusal preserves accumulated work"
+        );
     }
 }

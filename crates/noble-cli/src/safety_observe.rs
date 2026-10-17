@@ -31,7 +31,10 @@ mod enabled {
             let mut output = OUTPUT.lock().expect("safety observation lock");
             assert!(output.is_none(), "one safety observation scope per process");
             *output = Some(Output {
-                file, sequence: 0, guest: 0, protected: 0,
+                file,
+                sequence: 0,
+                guest: 0,
+                protected: 0,
             });
             drop(output);
             event("begin");
@@ -57,7 +60,10 @@ mod enabled {
             }
             let mut bytes = serde_json::to_vec(&value).expect("encode safety observation");
             bytes.push(b'\n');
-            output.file.write_all(&bytes).expect("write safety observation");
+            output
+                .file
+                .write_all(&bytes)
+                .expect("write safety observation");
             output.file.flush().expect("flush safety observation");
         }
     }
@@ -75,8 +81,12 @@ mod enabled {
 
     pub(crate) struct Nodes(pub(crate) u64);
     impl Nodes {
-        pub(crate) const fn new() -> Self { Self(0) }
-        pub(crate) fn counter(&mut self) -> Option<&mut u64> { Some(&mut self.0) }
+        pub(crate) const fn new() -> Self {
+            Self(0)
+        }
+        pub(crate) fn counter(&mut self) -> Option<&mut u64> {
+            Some(&mut self.0)
+        }
     }
     impl Drop for Nodes {
         fn drop(&mut self) {
@@ -98,12 +108,18 @@ pub(crate) use enabled::*;
 #[cfg(not(feature = "safety-observe"))]
 mod disabled {
     pub(crate) struct Scope;
-    pub(crate) const fn begin() -> Scope { Scope }
+    pub(crate) const fn begin() -> Scope {
+        Scope
+    }
     pub(crate) const fn event(_: &str) {}
     pub(crate) struct Nodes;
     impl Nodes {
-        pub(crate) const fn new() -> Self { Self }
-        pub(crate) const fn counter(&mut self) -> Option<&mut u64> { None }
+        pub(crate) const fn new() -> Self {
+            Self
+        }
+        pub(crate) const fn counter(&mut self) -> Option<&mut u64> {
+            None
+        }
     }
     pub(crate) const fn child(_: &mut std::process::Command) {}
 }
@@ -120,13 +136,37 @@ mod tests {
     fn registered_format_values() {
         let _scope = super::begin();
         let variants = [
-            ("noble-ngraph-vectors/1 schema line", "noble-ngraph-vectors/1\ntypes f32\nv 1\n", "E-FORMAT"),
+            (
+                "noble-ngraph-vectors/1 schema line",
+                "noble-ngraph-vectors/1\ntypes f32\nv 1\n",
+                "E-FORMAT",
+            ),
             ("missing schema line", "types f32\nv 1\n", "E-FORMAT"),
-            ("f32 value 0.1", "noble-ngraph-vectors/0\ntypes f32\nv 0.1\n", "E-LITERAL-INEXACT"),
-            ("f32 value 0x7fc00001", "noble-ngraph-vectors/0\ntypes f32\nv 0x7fc00001\n", "0x7fc00001"),
-            ("f32 value -0", "noble-ngraph-vectors/0\ntypes f32\nv -0\n", "0x80000000"),
-            ("i64 value 9223372036854775808", "noble-ngraph-vectors/0\ntypes i64\nv 9223372036854775808\n", "E-FORMAT"),
-            ("row with one value too few", "noble-ngraph-vectors/0\ntypes f32 f32\nv 1\n", "E-FORMAT"),
+            (
+                "f32 value 0.1",
+                "noble-ngraph-vectors/0\ntypes f32\nv 0.1\n",
+                "E-LITERAL-INEXACT",
+            ),
+            (
+                "f32 value 0x7fc00001",
+                "noble-ngraph-vectors/0\ntypes f32\nv 0x7fc00001\n",
+                "0x7fc00001",
+            ),
+            (
+                "f32 value -0",
+                "noble-ngraph-vectors/0\ntypes f32\nv -0\n",
+                "0x80000000",
+            ),
+            (
+                "i64 value 9223372036854775808",
+                "noble-ngraph-vectors/0\ntypes i64\nv 9223372036854775808\n",
+                "E-FORMAT",
+            ),
+            (
+                "row with one value too few",
+                "noble-ngraph-vectors/0\ntypes f32 f32\nv 1\n",
+                "E-FORMAT",
+            ),
         ];
         for (variant, input, expected) in variants {
             let observed = match vectors::parse(input) {
@@ -140,8 +180,10 @@ mod tests {
                 },
             };
             assert_eq!(observed, expected, "{variant}");
-            super::record(&serde_json::json!({"event":"format-result", "variant":variant,
-                "input":input,"observed":observed}));
+            super::record(
+                &serde_json::json!({"event":"format-result", "variant":variant,
+                "input":input,"observed":observed}),
+            );
         }
         let input = "noble-ngraph-data/0\ntypes f32 f32\npoint 1 ; 2\n";
         let observed = data::parse(input).unwrap_err().code_string();

@@ -412,7 +412,10 @@ fn extract(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop
     .with("inline_depth", Json::Number(s.max_inline_depth))])
 }
 
-fn eval(arguments: &[std::ffi::OsString], observed: &mut crate::safety_observe::Nodes) -> Result<std::vec::Vec<Line>, Stop> {
+fn eval(
+    arguments: &[std::ffi::OsString],
+    observed: &mut crate::safety_observe::Nodes,
+) -> Result<std::vec::Vec<Line>, Stop> {
     const C: &str = "eval";
     let budget_kinds = kinds(&[
         &arguments::CHECKER,
@@ -625,7 +628,10 @@ fn load_points(
         .map_err(|d| Line::diagnostic(command, "input", &about(d, "data file")))
 }
 
-fn train(arguments: &[std::ffi::OsString], observed: &mut crate::safety_observe::Nodes) -> Result<std::vec::Vec<Line>, Stop> {
+fn train(
+    arguments: &[std::ffi::OsString],
+    observed: &mut crate::safety_observe::Nodes,
+) -> Result<std::vec::Vec<Line>, Stop> {
     const C: &str = "train";
     let budget_kinds = kinds(&[
         &arguments::CHECKER,
@@ -766,7 +772,10 @@ fn profile_refusal(command: &'static str, detail: std::string::String) -> Line {
     )
 }
 
-fn verify(arguments: &[std::ffi::OsString], observed: &mut crate::safety_observe::Nodes) -> Result<std::vec::Vec<Line>, Stop> {
+fn verify(
+    arguments: &[std::ffi::OsString],
+    observed: &mut crate::safety_observe::Nodes,
+) -> Result<std::vec::Vec<Line>, Stop> {
     const C: &str = "verify";
     let budget_kinds = kinds(&[
         &arguments::CHECKER,
@@ -860,23 +869,37 @@ fn verify(arguments: &[std::ffi::OsString], observed: &mut crate::safety_observe
 #[test]
 fn registered_dynamic_run_control() {
     let _scope = crate::safety_observe::begin();
-    let inputs = [noble_kernel::types::Ty::I64, noble_kernel::types::Ty::program(
-        std::vec![noble_kernel::types::Ty::I64],
-        std::vec![noble_kernel::types::Ty::I64],
-        noble_kernel::types::EffSet::empty(),
-    )];
+    let inputs = [
+        noble_kernel::types::Ty::I64,
+        noble_kernel::types::Ty::program(
+            std::vec![noble_kernel::types::Ty::I64],
+            std::vec![noble_kernel::types::Ty::I64],
+            noble_kernel::types::EffSet::empty(),
+        ),
+    ];
     let prepared = noble_ngraph::extract::source::prepare(
-        noble_contracts::source::Session::new(), noble_contracts::Limits::default(),
-        &[], "run", &inputs,
-    ).expect("real source prepares");
-    let admitted = noble_ngraph::extract::admit(&IDS, &prepared.submission,
-        &noble_ngraph::extract::Request { profile: "ngraph-i64/0",
+        noble_contracts::source::Session::new(),
+        noble_contracts::Limits::default(),
+        &[],
+        "run",
+        &inputs,
+    )
+    .expect("real source prepares");
+    let admitted = noble_ngraph::extract::admit(
+        &IDS,
+        &prepared.submission,
+        &noble_ngraph::extract::Request {
+            profile: "ngraph-i64/0",
             claimed_closure: &prepared.claimed_closure,
-            budget: noble_ngraph::extract::Budget::default() });
+            budget: noble_ngraph::extract::Budget::default(),
+        },
+    );
     let diagnostic = match admitted {
         Err(diagnostic) => diagnostic,
-        Ok(admitted) => noble_ngraph::extract::extract(&IDS, &admitted,
-            &noble_ngraph::Budgets::default()).expect_err("dynamic run must refuse"),
+        Ok(admitted) => {
+            noble_ngraph::extract::extract(&IDS, &admitted, &noble_ngraph::Budgets::default())
+                .expect_err("dynamic run must refuse")
+        }
     };
     assert_eq!(diagnostic.code_string(), "E-DYNAMIC-RUN");
     crate::safety_observe::record(&serde_json::json!({"event":"dynamic-run-result",

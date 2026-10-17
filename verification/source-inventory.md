@@ -698,15 +698,15 @@ Its JSON export is checked, not refreshed, by the `policy` check.
 `nix/source-inventory-app.nix` is the thin execution and file adapter.
 Octet owns the compiler facts, coverage report, and Cargo graph.
 
-The inventory comes from `cargo-octet check` on the real workspace with all targets and features.
+Historical inventory receipts below retain their recorded all-targets/all-features invocations. The current flake `inventoryArtifacts` producer, shared by `source-coverage` and `native-assurance`, collects the ordinary compiler Architecture IR using the exact reviewed production row: `cargo-octet check --workspace --output-format json --artifact-dir <fresh> -- --all-targets --offline -j4`. The row is `x86_64-unknown-linux-gnu`, `default_features=true`, `features=[]`; explicit collector arguments override the workspace Octet metadata default. This full-root IR observation is distinct from the required `noble-octet-gate` deny-all hook, whose explicit all-features contract remains unchanged and whose status is not replaced or waived by advisory inventory evidence. All-features Cargo quality checks remain separate.
 Nothing in the inventory is hand-written: units, subjects, macro origins, dependency edges, and the compiler coverage report are compiler-derived.
 The reviewed classifications are project-owned policy, not compiler certifications.
 
 The policy is not an isolated historical M1 fixture. `flake.nix` still compares
 it with the current workspace compiler inventory and current architecture
 scope. Its authoritative scope includes `noble-kernel`, `noble-contracts`,
-`noble-wasm`, `noble-cli` and `noble-syndicate`; the CLI executable's compiler
-namespace is `noble`. Independent Wasmtime peers are separate
+`noble-wasm`, `noble-cli`, `noble-syndicate`, `noble-ngraph` and
+`noble-ngraph-experiment`; the CLI executable's compiler namespace is `noble`. Independent Wasmtime peers are separate
 verification-only workspaces. Owned JS/WAT/runtime assets, the canonical ABI,
 host provenance, native release and external tools require separately bound
 evidence and trust accounting, not Rust extraction coverage.
