@@ -2188,7 +2188,7 @@
     },
     {
       "file": "specs/conformance/numeric-graph-cases.json",
-      "sha256": "4865d8618ec62f43a570eb03000f75edaa3a4f9b0282700bd2d5adf47d00a84e"
+      "sha256": "abeaf185b2a60725e4ca906894c87b900356cbca2ac47187611835e5bef9c93b"
     },
     {
       "file": "specs/conformance/octet-adoption-cases.json",
@@ -2460,7 +2460,7 @@
     },
     {
       "file": "verification/numeric-graph-v1/README.md",
-      "sha256": "bfc8fe746573ddfc6760912c7e10ac83d764192a55b975286984da12a9bcaf09"
+      "sha256": "72b4fa9a4ed7a97abe7840744daead9061ddba0e5dd47003e011746c0fba9585"
     },
     {
       "file": "verification/source-inventory.md",
