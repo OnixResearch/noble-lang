@@ -265,6 +265,30 @@
             "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
             "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
           ]
+        },
+        {
+          "claim": "Fresh full-source safety observations bind finite CASE-03 fields to the final candidate's exact measurement scope; this is not proof, CASE-02 closure, or global-gate acceptance.",
+          "subject": "NGRAPH-CASE-03",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-03",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/packet.json",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/raw/receipt.json",
+            "source_manifest_sha256": "2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+            "runner_sha256": "b7857235d9192aa5d00738727f986654c518a012bbc9f38c50066e40cd82b365",
+            "historical_packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "historical_packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "historical_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "historical_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7"
+          },
+          "assumptions": [
+            "Observed command outcomes and direct counters are finite execution evidence; proof remains open.",
+            "CASE-02 capability closure, global gate completion, archive authorization and publication are not claimed."
+          ]
         }
       ]
     },
@@ -381,6 +405,30 @@
           "assumptions": [
             "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
             "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
+          ]
+        },
+        {
+          "claim": "Fresh full-source safety observations bind finite CASE-04 refusal, zero-node and zero-effect counters to the final candidate; this is not proof, CASE-02 closure, or global-gate acceptance.",
+          "subject": "NGRAPH-CASE-04",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-04",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/packet.json",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/raw/receipt.json",
+            "source_manifest_sha256": "2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+            "runner_sha256": "b7857235d9192aa5d00738727f986654c518a012bbc9f38c50066e40cd82b365",
+            "historical_packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "historical_packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "historical_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "historical_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7"
+          },
+          "assumptions": [
+            "Observed refusal classes and counters are finite execution evidence; proof remains open.",
+            "CASE-02 capability closure, global gate completion, archive authorization and publication are not claimed."
           ]
         }
       ]
@@ -510,6 +558,30 @@
           "assumptions": [
             "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
             "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
+          ]
+        },
+        {
+          "claim": "Fresh full-source safety observations bind finite CASE-05 extraction, refusal, publication and zero-effect counters to the final candidate; this is not proof, CASE-02 closure, or global-gate acceptance.",
+          "subject": "NGRAPH-CASE-05",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-05",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/packet.json",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/raw/receipt.json",
+            "source_manifest_sha256": "2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+            "runner_sha256": "b7857235d9192aa5d00738727f986654c518a012bbc9f38c50066e40cd82b365",
+            "historical_packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "historical_packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "historical_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "historical_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7"
+          },
+          "assumptions": [
+            "Observed extraction and refusal outcomes are finite execution evidence; proof remains open.",
+            "CASE-02 capability closure, global gate completion, archive authorization and publication are not claimed."
           ]
         }
       ]
@@ -963,6 +1035,30 @@
             "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
             "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
           ]
+        },
+        {
+          "claim": "Fresh full-source safety observations bind finite CASE-09 format and zero-effect counters to the final candidate; this is not proof, CASE-02 closure, or global-gate acceptance.",
+          "subject": "NGRAPH-CASE-09",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-09",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/packet.json",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/raw/receipt.json",
+            "source_manifest_sha256": "2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+            "runner_sha256": "b7857235d9192aa5d00738727f986654c518a012bbc9f38c50066e40cd82b365",
+            "historical_packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "historical_packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "historical_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "historical_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7"
+          },
+          "assumptions": [
+            "Observed format and zero-effect outcomes are finite execution evidence; proof remains open.",
+            "CASE-02 capability closure, global gate completion, archive authorization and publication are not claimed."
+          ]
         }
       ]
     },
@@ -1169,6 +1265,30 @@
             "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
             "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
           ]
+        },
+        {
+          "claim": "Fresh full-source safety observations bind finite CASE-11 admission, evaluator and zero-effect counters to the final candidate; this is not proof, CASE-02 closure, or global-gate acceptance.",
+          "subject": "NGRAPH-CASE-11",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-11",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/packet.json",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/raw/receipt.json",
+            "source_manifest_sha256": "2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+            "runner_sha256": "b7857235d9192aa5d00738727f986654c518a012bbc9f38c50066e40cd82b365",
+            "historical_packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "historical_packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "historical_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "historical_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7"
+          },
+          "assumptions": [
+            "Observed admission, evaluator and zero-effect outcomes are finite execution evidence; proof remains open.",
+            "CASE-02 capability closure, global gate completion, archive authorization and publication are not claimed."
+          ]
         }
       ]
     },
@@ -1247,6 +1367,30 @@
           "assumptions": [
             "The independent review is preliminary for source 002d only; final staged-source cold review and bounded terminal verification remain pending.",
             "NGRAPH-CASE-02 and complete capability closure remain open; no proof, full14 gate, archive or publication claim is made."
+          ]
+        },
+        {
+          "claim": "Fresh full-source safety observations bind finite CASE-12 snapshot binding, zero-node and zero-effect counters to the final candidate; this is not proof, CASE-02 closure, or global-gate acceptance.",
+          "subject": "NGRAPH-CASE-12",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-12",
+            "packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/packet.json",
+            "measurement_receipt": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/raw/receipt.json",
+            "source_manifest_sha256": "2b9b78054fe945ffd3bd3d375395657b969ae726e5bbb4bea0644be0067bb2cd",
+            "runner_sha256": "b7857235d9192aa5d00738727f986654c518a012bbc9f38c50066e40cd82b365",
+            "historical_packet": "/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json",
+            "historical_packet_sha256": "3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb",
+            "historical_preliminary_review": "/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json",
+            "historical_preliminary_review_sha256": "5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7"
+          },
+          "assumptions": [
+            "Observed binding and refusal outcomes are finite execution evidence; proof remains open.",
+            "CASE-02 capability closure, global gate completion, archive authorization and publication are not claimed."
           ]
         }
       ]

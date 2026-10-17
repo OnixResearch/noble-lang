@@ -378,7 +378,7 @@ r[NGRAPH-SCOPE-01]
 
 ## Test plan
 
-The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_BIN_EXE_noble")`, and no ngraph path spawns Node or Wasm. The tests below ran; their results are recorded in [tasks.md](tasks.md). The registered [case file](../../../specs/conformance/numeric-graph-cases.json) now records a 14-passed/1-held candidate: eight cases retain immutable historical acceptance, six proposed final execution records await final integrated-source cold review and bounded terminal verification, and CASE-02 remains held. Passing tests alone are not complete case acceptance.
+The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_BIN_EXE_noble")`, and no ngraph path spawns Node or Wasm. The tests below ran; their results are recorded in [tasks.md](tasks.md). The registered [case file](../../../specs/conformance/numeric-graph-cases.json) now records a 14-passed/1-held candidate: eight cases retain immutable historical acceptance, six additional execution records retain their preliminary packet and bind fresh full-source safety observations, and CASE-02 remains held. The exact integrated-source cold-review and bounded terminal receipts govern the six-record disposition. Passing tests alone are not complete case acceptance.
 
 - **`crates/noble-ngraph/tests`:**
   - `ir_check.rs` and `extract_b1.rs` (moved); `refusals_before_evaluation_evaluate_no_node` directly observes input-fact, interface and missing/stale-snapshot eval refusals at zero evaluated nodes in both library evaluators. The approved NGRAPH-CASE-08 mapping uses the exact three named refusal classes, not CLI counters or CLI guard/F1 bytes. This test does not measure NGRAPH-CASE-04 `check`, guest/protected-operation counters or every NGRAPH-CASE-12 parse/integrity path;
@@ -479,17 +479,15 @@ the build provenance binds the 707 build/policy inputs byte-identical at
 published `0eb5c04` and tested `bc10df8`. Their prepromotion records, source
 receipts and external raw outputs remain immutable.
 
-The separate immutable safety-observation packet now supplies directly
-measured finite expected-field evidence for CASE-03/04/05/09/11/12, including
-guest/protected-operation counters and CASE-04/12 node-zero observations. The
-case records name the measured source commit `002d8ecdea2b8eb073a3094140c659ffe5309ee9`,
-the counter packet, and its independent preliminary 57-command replay;
-they retain `proof: open` and explicitly distinguish those reused finite
-observations from final integrated-source review and bounded terminal
-verification. The six execution records do not rewrite or relabel historical
-acceptance/review receipts. The combined-source cold review and terminal
-receipt remain required before this proposed 14-passed/1-held disposition is
-finally approved.
+The historical safety-observation packet supplies directly measured finite
+expected-field evidence for CASE-03/04/05/09/11/12, including guest/protected-
+operation counters and CASE-04/12 node-zero observations. Its source-002d
+packet and independent preliminary replay remain preserved as historical
+support. Separate fresh full-source observations bind the final candidate's
+current runner, binaries and build-source manifest; the final cold-review and
+bounded terminal receipts bind their exact packet and source hashes. Every
+case retains `proof: open`; none of these execution records rewrite or relabel
+historical acceptance/review receipts, close global gates, or authorize archive.
 
 CASE-02 remains `absent/not-run/open/unassessed` with `evidence: []`: complete
 compiler-authenticated zero-use capability closure is still missing, with

@@ -116,10 +116,10 @@ The [registered cases](conformance/numeric-graph-cases.json) and
 immutable [execution packet](../verification/numeric-graph-v1/acceptance.json)
 and [independent review](../verification/numeric-graph-v1/review-receipt.json).
 The case file now records a 14-passed/1-held candidate. Six additional
-proposed final case records (03/04/05/09/11/12) carry direct finite
-safety-observation evidence and an independent preliminary replay, but remain
-subject to final integrated-source cold review and bounded terminal
-verification; their proofs stay open. CASE-02 remains
+execution records (03/04/05/09/11/12) retain their historical preliminary
+packet and carry a fresh full-source safety observation for the final
+candidate; the exact integrated-source cold-review and bounded terminal
+receipts bind their disposition. Their proofs stay open. CASE-02 remains
 `absent/not-run/open/unassessed` with empty evidence: 637 relevant compiler
 unknowns remain, and ordinary source-only coverage plus artifact-integrity
 verification do not establish authenticated caller/callback capability

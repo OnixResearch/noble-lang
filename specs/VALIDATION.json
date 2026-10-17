@@ -1748,7 +1748,7 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/design.md",
-      "sha256": "b2a1b259fdb0e4d3c3fc6a0b267fc2c7f7d267ce75aedc01847dc09b03d30d6d"
+      "sha256": "af0ad0c3ddb509c07d38f0de855b4021df65f6c35dd907c26caa448c973b7044"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/proposal.md",
@@ -1768,7 +1768,7 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/tasks.md",
-      "sha256": "3b0a666e279d09894b8fad30302ab12ed6a9eab2d0c09d8eb3a74bd00bbdc022"
+      "sha256": "7f6da1cfd7049de1bd0b8f2fa0f3a1984053d0ffa2b558b5949fd151c900d02d"
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
@@ -2132,7 +2132,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "092eccd6816265e1929614a898b6c8f9d5132536b1b4c75dda41481ccb21b2e1"
+      "sha256": "8e5a2b383c2d04dd2038c9d66776e664c9d46e880fcabac9d1750d7498c7d983"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -2188,7 +2188,7 @@
     },
     {
       "file": "specs/conformance/numeric-graph-cases.json",
-      "sha256": "f7d2c4867d1bd149d6f1ddd1a522a5f03e449de1cd7bcac6e961efc82f8be22d"
+      "sha256": "65492a54cfa1dc4853873047cad61b67efc73b512ebf17e651614112a2a7967b"
     },
     {
       "file": "specs/conformance/octet-adoption-cases.json",
@@ -2264,7 +2264,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "e8194fe78111f2b4b1e93edd7be479c7a877a54fe2449cd6075a2387b78342ee"
+      "sha256": "aa20654df7beb9a04540d9a6d38e4f970743be2e316e7dfc092c29f23246bd01"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2284,7 +2284,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "dde569e373cf504d53d5d6f609c004df17f92f6f9f02c32c3a63280aab209eae"
+      "sha256": "89e2036ef984c86443762d400cd13836493c39979bea1365419ed1a7965328bd"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2460,7 +2460,7 @@
     },
     {
       "file": "verification/numeric-graph-v1/README.md",
-      "sha256": "c7967b67b65b7ffef3fc4596a8c2e392b5a6e61f2f9dfa4f5bb571e16ce7da63"
+      "sha256": "bfc8fe746573ddfc6760912c7e10ac83d764192a55b975286984da12a9bcaf09"
     },
     {
       "file": "verification/source-inventory.md",

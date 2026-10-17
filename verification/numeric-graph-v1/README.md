@@ -3,10 +3,11 @@
 The immutable historical [acceptance receipt](acceptance.json) and
 [independent review receipt](review-receipt.json) support eight original cases;
 the current [case records](../../specs/conformance/numeric-graph-cases.json)
-record a 14-passed/1-held candidate, including six proposed final finite
-counter-evidence records for CASE-03/04/05/09/11/12. Those six remain subject
-to final integrated-source cold review and bounded terminal verification;
-CASE-02 remains unrun with its capability closure open.
+record a 14-passed/1-held candidate, including six additional finite
+counter-evidence records for CASE-03/04/05/09/11/12. The records retain the
+historical 002d packet and bind a fresh full-source safety run for the final
+candidate; exact-source cold review and bounded terminal receipts bind their
+disposition. CASE-02 remains unrun with its capability closure open.
 Proof stays open for every case. The [implementation change](../../.cairn/changes/numeric-graph-v1/design.md)
 stays active and is not archived; this is not whole-feature or global-gate acceptance.
 
@@ -348,29 +349,33 @@ appends a private effect log through its injected `IdentityHasher`; the
 finite original control observed 42 reads and 42 writes while returning
 `I64(7)`. This disproves a universal arbitrary-caller purity inference from
 `no_std` or manifest dependencies alone; it is not a disproof of the exact
-assembled CLI BLAKE3 closure. The six proposed final case records use this
-finite observation packet but keep proof open and await final source review
-and terminal verification. No compiler unknown is waived, and this supplement
+assembled CLI BLAKE3 closure. The six additional case records use fresh finite
+observation packets and keep proof open. No compiler unknown is waived, and this supplement
 does not establish CASE-02, proof, global-gate, archive, performance, or
 cross-platform acceptance. Failed and interrupted attempts remain separate
 rejected evidence, never relabeled as the fresh result.
 
 ## Integrated counter record and selected-tool boundary (2026-10-17)
 
-The immutable counter packet
+The immutable historical counter packet
 `/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-002d8ec-r2-resume3/packet.json`
 (SHA-256 `3bf511ebf9553fa8eb60d76d53b2dbf2cf4d2993ec0d3ac3509a8b70f801f5fb`)
 and its independent preliminary 57-command review
 `/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json`
 (SHA-256 `5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7`)
-bind the six proposed final cases to source commit `002d8ecdea2b8eb073a3094140c659ffe5309ee9`.
+bind the preliminary observation set for the six additional cases to source
+commit `002d8ecdea2b8eb073a3094140c659ffe5309ee9`; this remains historical
+support and is not relabeled as the final candidate measurement.
 The packet has 112 safety commands, all six expected case IDs, directly
 observed CASE-03/04/05/09/11/12 counters, and an effectful hostile library
 consumer (`I64(7)`, 42 callback reads and 42 writes). The review is explicitly
 preliminary to this final integrated source; it is not relabeled as final
-acceptance. The separate combined-source freeze, final cold review and bounded
-terminal verifier must bind the exact case records before the proposed entries
-are treated as finally accepted.
+acceptance. Fresh final-candidate observations are recorded separately at
+`/home/brittonr/.cache/noble-issues/proof/ngraph-integrated-20261016/counter-final-numeric-graph-v1-20261017/`;
+that packet binds the fresh observed/default/test binaries, build-source file,
+full-source before/after receipts and every measured manifest path. The exact
+final cold-review and bounded terminal receipts bind the final case records
+and this packet; this scope does not close proof or CASE-02.
 
 The selected Octet helper build is pinned to derivation
 `fh42f6yzlqz3a4hpz3bvsdvzdw2lghn6-cargo-octet-0.1.0-typed-strict-trait.drv`
