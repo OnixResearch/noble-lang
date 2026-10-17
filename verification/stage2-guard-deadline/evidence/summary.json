@@ -1,0 +1,178 @@
+{
+  "format": "noble-stage2-deadline-public-evidence-summary-v2",
+  "classification": "Derived public-safe summary, not an original raw receipt, full acceptance, or source-bound assurance packet.",
+  "snapshot": {
+    "guard_sha256": "fce2063a036554a78aaff139dd2f94230c75681472073cf741fef240b30da261",
+    "corrected_fixture_sha256": "52a81aa369e0a336ca5fe9adbe255847a807143a47a6f13c6491fea7c972998e",
+    "r2_source_index_sha256": "9a6fc05e9644691838809e53608fab5b268319da8b1104f43cbce8ac44ecf407",
+    "corrected_verification_index_sha256": "6e5010298d3c5e142ea3a85af510797da1154c9655da468d04041a622aa2b3f2",
+    "independent_final_evidence_index_sha256": "f238b68a5987f5d2ebd3f5c17e7d7a29eb5b40030054f12f0bdf80bd84700322"
+  },
+  "scope": "Local user-systemd scope, real host statvfs sample, cgroup watcher/stop ordering only. No ext4 project-quota success, Bonsai provisioning/activation, full stage2 guard acceptance, or universal real-time guarantee.",
+  "r2_snapshot_observations": [
+    {
+      "id": "r1-before-stale-window",
+      "raw_capture_sha256": "7857d4a804e73f2297762543648acf4e71833dc7cbb95cda78238f2c0d081cbe",
+      "guard_sha256": "2bd1ab921b557d98a21f24aaab86a076caa4d663fda212041a6216a9b4ee53c3",
+      "fixture_sha256": "1f55a1012a4d1d4b315435a075e16080366d40e7c6e185ddcfabd3df24658efd",
+      "result": "The exact local scope remained populated at sample age 2.150058483 s, 150.058483 ms after the 2 s sample deadline; it was then manually stopped exactly.",
+      "exit_code": 0
+    },
+    {
+      "id": "r2-after-late",
+      "raw_capture_sha256": "0daa5cae3d7eab223189db1c1b6c4650d00b1b29da23117c5513def1dad230f5",
+      "guard_sha256": "fce2063a036554a78aaff139dd2f94230c75681472073cf741fef240b30da261",
+      "fixture_sha256": "1f55a1012a4d1d4b315435a075e16080366d40e7c6e185ddcfabd3df24658efd",
+      "result": "After a 1.400736380 s decision delay, the exact scope was empty at sample age 2.150061066 s. Failsafe stop began 449,863 ns after the acquisition-based expiry; watcher exited 3.",
+      "exit_code": 0
+    },
+    {
+      "id": "r2-after-fresh-host-statvfs-heartbeat",
+      "raw_capture_sha256": "713326d9076aaf261bf900b75f64aac6e1b542a46c057d12b98da24cd88ec471",
+      "guard_sha256": "fce2063a036554a78aaff139dd2f94230c75681472073cf741fef240b30da261",
+      "fixture_sha256": "1f55a1012a4d1d4b315435a075e16080366d40e7c6e185ddcfabd3df24658efd",
+      "result": "A fresh real host statvfs sample/heartbeat acquired after about 0.701 s renewed the scope; it remained populated 150.069 ms after the original expiry and was then manually stopped exactly.",
+      "exit_code": 0
+    },
+    {
+      "id": "r2-after-queued-expired",
+      "raw_capture_sha256": "c11d1488744cbd3e9583a440d34b51123493c89d22712a10aa854e5e53568b91",
+      "guard_sha256": "fce2063a036554a78aaff139dd2f94230c75681472073cf741fef240b30da261",
+      "fixture_sha256": "2aad9463227e0f242cc221775c98fcc3ab7119a22c09fc01356473a4e77ff971",
+      "result": "The owned watcher was paused past expiry; a newer actual statvfs heartbeat was queued. After resume, the expired prior deadline caused exact stop and the queued renewal was rejected.",
+      "exit_code": 0,
+      "scope_note": "The deliberate pause means this is not evidence of a hard-real-time stop bound while a watcher is paused."
+    }
+  ],
+  "corrected_verification_package_runs": [
+    {
+      "id": "verification-package-after-late",
+      "raw_capture_sha256": "f3afb36d8891abd06339e4e9436da874128d0ead9b0715efdebc9a69daf01865",
+      "guard_sha256": "fce2063a036554a78aaff139dd2f94230c75681472073cf741fef240b30da261",
+      "fixture_sha256": "52a81aa369e0a336ca5fe9adbe255847a807143a47a6f13c6491fea7c972998e",
+      "result": "Verification-package fixture returned 0; exact scope empty at sample age 2.150060890 s; watcher exited 3 after receipt join.",
+      "exit_code": 0,
+      "not_independent_replay": true
+    },
+    {
+      "id": "verification-package-after-fresh-host-statvfs-heartbeat",
+      "raw_capture_sha256": "4cbda387154b414624f14c2b169eb94794fa791993919c522fae88371edaa348",
+      "guard_sha256": "fce2063a036554a78aaff139dd2f94230c75681472073cf741fef240b30da261",
+      "fixture_sha256": "52a81aa369e0a336ca5fe9adbe255847a807143a47a6f13c6491fea7c972998e",
+      "result": "Verification-package fixture returned 0; fresh real host statvfs sample renewed and the scope remained populated beyond the prior expiry; watcher exited 0 after exact cleanup.",
+      "exit_code": 0,
+      "not_independent_replay": true
+    },
+    {
+      "id": "verification-package-after-queued-expired",
+      "raw_capture_sha256": "f795d323bff122b54937b0105182b32d17e989a41bc78b38c13365f2964b61d0",
+      "guard_sha256": "fce2063a036554a78aaff139dd2f94230c75681472073cf741fef240b30da261",
+      "fixture_sha256": "52a81aa369e0a336ca5fe9adbe255847a807143a47a6f13c6491fea7c972998e",
+      "result": "Verification-package fixture returned 0; queued late renewal rejected, exact scope empty, watcher exited 3 after joining before receipt read.",
+      "exit_code": 0,
+      "not_independent_replay": true
+    }
+  ],
+  "actual_independent_replay_outputs": [
+    {
+      "id": "independent-after-late",
+      "independent_index_sha256": "f238b68a5987f5d2ebd3f5c17e7d7a29eb5b40030054f12f0bdf80bd84700322",
+      "stdout_sha256": "a87cd0cda67b854adfa88910bc1cd027bc08332168df8e12b86ab99bc940a3e5",
+      "exit_status_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "guard_sha256": "fce2063a036554a78aaff139dd2f94230c75681472073cf741fef240b30da261",
+      "fixture_sha256": "52a81aa369e0a336ca5fe9adbe255847a807143a47a6f13c6491fea7c972998e",
+      "result": "Independent index records PASS, exit 0, no stderr; scope empty at acquired_ns+2.150058923 s; exact watcher receipt had the acquisition+2 s deadline and exact cgroup empty; watcher exited 3."
+    },
+    {
+      "id": "independent-after-fresh-host-statvfs-heartbeat",
+      "independent_index_sha256": "f238b68a5987f5d2ebd3f5c17e7d7a29eb5b40030054f12f0bdf80bd84700322",
+      "stdout_sha256": "9a197dd764b991682bf4ebb34bfe1b97dab4eb0b0e8167bd5b1af60c9d849f8e",
+      "exit_status_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "guard_sha256": "fce2063a036554a78aaff139dd2f94230c75681472073cf741fef240b30da261",
+      "fixture_sha256": "52a81aa369e0a336ca5fe9adbe255847a807143a47a6f13c6491fea7c972998e",
+      "result": "Independent index records PASS, exit 0, no stderr; at acquired_ns+2.150059719 s the scope remained populated after a real fresh sample, followed by exact manual stop and watcher exit 0."
+    },
+    {
+      "id": "independent-after-queued-expired",
+      "independent_index_sha256": "f238b68a5987f5d2ebd3f5c17e7d7a29eb5b40030054f12f0bdf80bd84700322",
+      "stdout_sha256": "c0ba56bce0fecf812a7c66b5aebc4d6a3333786e1d67f38ac1ed178c1bc81951",
+      "exit_status_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "guard_sha256": "fce2063a036554a78aaff139dd2f94230c75681472073cf741fef240b30da261",
+      "fixture_sha256": "52a81aa369e0a336ca5fe9adbe255847a807143a47a6f13c6491fea7c972998e",
+      "result": "Independent index records PASS, exit 0, no stderr; queued renewal after the original expiry was rejected; exact scope empty; committed receipt read only after waitpid; watcher exited 3."
+    }
+  ],
+  "preserved_failures": [
+    {
+      "id": "original-independent-queued-expired-fixture-race",
+      "raw_packet_sha256": "14bc4cf70eeb3e2c86f8f432099b8141efb42303a52498d5fcee355272427092",
+      "raw_stderr_sha256": "4b7e4ddb5462dd2009b5a25e52604639fb44a25c267440242449d10703f759dc",
+      "status": "FAIL_OR_STOP",
+      "summary": "The exact scope was already empty, but the fixture read its receipt before the watcher finished writing and raised FileNotFoundError. This was a fixture observation race. The unchanged failed invocation was not rerun or relabelled; corrected fixture joins the watcher before reading."
+    },
+    {
+      "id": "lease-attempt-1-selector-harness-error",
+      "raw_proof_sha256": "76d8a3c690bafc02669ac28c7ca272697420e79214b458217effcf199e73021e",
+      "status": "FAIL_EXCEPTION",
+      "summary": "Supervisor called selectors.select as though it were callable before starting the contender. No lease test completed."
+    },
+    {
+      "id": "lease-attempt-2-supervisor-assertion-false-negative",
+      "raw_proof_sha256": "dc38af784534768b01f93676a3ca91fc051bfd945f727dcb883d7ae66a9641a8",
+      "status": "FAIL_EXCEPTION",
+      "summary": "Manager's incidental 150 ms early-read assertion rejected available contender output. The raw payload recorded acquisition after exact stop, but the overall attempt remains FAIL."
+    }
+  ],
+  "lease_lifecycle_selected_observation": {
+    "raw_attempt_3_proof_sha256": "3ce135b613b63b86f0b4b8f44727aa434b4f06a74197a0cb4d4e8ad1f6380710",
+    "status": "PASS for this local attempt only",
+    "controller_died_by_os_exit": true,
+    "failed_lock_attempts_while_scope_populated": 25,
+    "contender_acquired_only_after_exact_stop_and_receipt": true,
+    "exact_cgroup_empty_before_acquisition": true,
+    "qualification": "Bounded local lifecycle observation; not a universal concurrency proof or production deployment acceptance. Raw supervisor/environment/process details are withheld."
+  },
+  "native_sandbox_selected_observation": {
+    "raw_proof_continuation_sha256": "9b75b8e5b7f0a8d76c1e074f5ab164841b2d1332e85060824e84f85a62aa59d8",
+    "raw_index_check_sha256": "ea7aa7d1f1e7296043324d5f1679d40a13c2855a0098d568444a09b0821c856c",
+    "status": "PASS for bounded local component fixture only",
+    "passed_record_names": [
+      "private-fchmod-fchown",
+      "outside-procfd-denied",
+      "benign-tiny-c-compile"
+    ],
+    "fixture_unchanged": true,
+    "source_unchanged": true,
+    "outside_sentinel_unchanged": true,
+    "blocked_create_absent": true,
+    "qualification": "Local dummy-pinned fixture binary is not included. No production-integrated sandbox acceptance claimed; full host-attestation packet and process inventory are withheld."
+  },
+  "deployment_disposition": {
+    "bonsai": "HOLD",
+    "production_prerequisites": "The original five production/compiler blockers remain BLOCKED despite this publication authorization.",
+    "compiler_full_acceptance": "BLOCKED",
+    "observed_filesystem": "Read-only check found neither ext4 quota nor project features.",
+    "private_project_usage": "Unmeasured.",
+    "observed_free_bytes": 186661830656,
+    "required_floor_bytes": 193273528320,
+    "protected_service_launcher_shared_lock": "Not installed/proven on host.",
+    "on_host_source_bound_harmless_smokes": "Not run; prerequisite absent.",
+    "case_spec_archive": "No CASE02, proof, canonical spec, archive, waiver, or global-gate status promotion."
+  },
+  "custody_and_omissions": {
+    "raw_receipts": "Original local capture JSONs, stdout/base64, argv/environment and host-attestation packets remain immutable and private; raw SHA-256 values above identify selected records for custody only. The digests do not make omitted raw content public or independently replayable.",
+    "host_data_omitted": [
+      "absolute home/scratch paths",
+      "user numeric IDs",
+      "PIDs and transient systemd unit names",
+      "environment maps",
+      "private host pin inventory",
+      "SSH material",
+      "broad process inventory"
+    ],
+    "authenticity": "This summary is a derived editorial record from selected immutable receipt fields and hashes. It is not signed, not a replacement receipt, and not a complete replay packet."
+  }
+}
