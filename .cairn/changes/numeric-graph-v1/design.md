@@ -378,7 +378,7 @@ r[NGRAPH-SCOPE-01]
 
 ## Test plan
 
-The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_BIN_EXE_noble")`, and no ngraph path spawns Node or Wasm. The tests below ran; their results are recorded in [tasks.md](tasks.md). The registered [case file](../../../specs/conformance/numeric-graph-cases.json) records eight passed and seven not-run contracts under the receipt-linked lifecycle record below. Passing tests alone are not complete case acceptance.
+The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_BIN_EXE_noble")`, and no ngraph path spawns Node or Wasm. The tests below ran; their results are recorded in [tasks.md](tasks.md). The registered [case file](../../../specs/conformance/numeric-graph-cases.json) now records a 14-passed/1-held candidate: eight cases retain immutable historical acceptance, six proposed final execution records await final integrated-source cold review and bounded terminal verification, and CASE-02 remains held. Passing tests alone are not complete case acceptance.
 
 - **`crates/noble-ngraph/tests`:**
   - `ir_check.rs` and `extract_b1.rs` (moved); `refusals_before_evaluation_evaluate_no_node` directly observes input-fact, interface and missing/stale-snapshot eval refusals at zero evaluated nodes in both library evaluators. The approved NGRAPH-CASE-08 mapping uses the exact three named refusal classes, not CLI counters or CLI guard/F1 bytes. This test does not measure NGRAPH-CASE-04 `check`, guest/protected-operation counters or every NGRAPH-CASE-12 parse/integrity path;
@@ -488,7 +488,8 @@ they retain `proof: open` and explicitly distinguish those reused finite
 observations from final integrated-source review and bounded terminal
 verification. The six execution records do not rewrite or relabel historical
 acceptance/review receipts. The combined-source cold review and terminal
-receipt remain required before this draft disposition is final.
+receipt remain required before this proposed 14-passed/1-held disposition is
+finally approved.
 
 CASE-02 remains `absent/not-run/open/unassessed` with `evidence: []`: complete
 compiler-authenticated zero-use capability closure is still missing, with

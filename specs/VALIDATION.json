@@ -1748,7 +1748,7 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/design.md",
-      "sha256": "6f9db21f2be1f5f17b9f919418b126443bf1554ca6b5ee394267f340ff781956"
+      "sha256": "b2a1b259fdb0e4d3c3fc6a0b267fc2c7f7d267ce75aedc01847dc09b03d30d6d"
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/proposal.md",
@@ -1768,7 +1768,7 @@
     },
     {
       "file": ".cairn/changes/numeric-graph-v1/tasks.md",
-      "sha256": "9446c54b5bbc0465890af3295f6ac50209db1a111d9bde95d5b36c1eec4718e0"
+      "sha256": "3b0a666e279d09894b8fad30302ab12ed6a9eab2d0c09d8eb3a74bd00bbdc022"
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
@@ -2132,7 +2132,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "b2a58fba537780e6f28a152ff19eb61d1985fd0e5c26ff92041dfef1e90ec134"
+      "sha256": "092eccd6816265e1929614a898b6c8f9d5132536b1b4c75dda41481ccb21b2e1"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -2264,7 +2264,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "e4d0ced4d639214241afada45b0c882a687148b1c563688b4ff7df8e674ce04c"
+      "sha256": "e8194fe78111f2b4b1e93edd7be479c7a877a54fe2449cd6075a2387b78342ee"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2284,7 +2284,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "4575bd1f8ea52f52c4c3bead3cc55462295e1b76a5ab5b74a37ceb672497d946"
+      "sha256": "dde569e373cf504d53d5d6f609c004df17f92f6f9f02c32c3a63280aab209eae"
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
@@ -2460,7 +2460,7 @@
     },
     {
       "file": "verification/numeric-graph-v1/README.md",
-      "sha256": "6b554c9668b0125d1644fb7106b7791d6db6ae1c44162486b7ae6de0c1186966"
+      "sha256": "c7967b67b65b7ffef3fc4596a8c2e392b5a6e61f2f9dfa4f5bb571e16ce7da63"
     },
     {
       "file": "verification/source-inventory.md",

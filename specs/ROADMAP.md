@@ -115,7 +115,8 @@ The [registered cases](conformance/numeric-graph-cases.json) and
 [status](STATUS.json) preserve the original eight-case acceptance under the
 immutable [execution packet](../verification/numeric-graph-v1/acceptance.json)
 and [independent review](../verification/numeric-graph-v1/review-receipt.json).
-Six additional draft case records (03/04/05/09/11/12) now carry direct finite
+The case file now records a 14-passed/1-held candidate. Six additional
+proposed final case records (03/04/05/09/11/12) carry direct finite
 safety-observation evidence and an independent preliminary replay, but remain
 subject to final integrated-source cold review and bounded terminal
 verification; their proofs stay open. CASE-02 remains
@@ -132,8 +133,8 @@ node-zero mapping without claiming a CLI counter.
 NG-PO-A..H and full-feature acceptance remain open. One pinned x86_64 Linux
 platform supplies finite differential evidence, not proof or cross-platform
 bit reproducibility. Phase C's host-native W3-L **0.131× STOP** is unchanged;
-there is no performance, speedup, GPU or backend-selection claim. The seven
-incomplete case contracts and four retained global gate failures block
+there is no performance, speedup, GPU or backend-selection claim. CASE-02's
+incomplete capability closure and four retained global gate failures block
 archive; CALC states and proof obligations do not change.
 
 ## Platform increments

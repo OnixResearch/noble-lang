@@ -3,9 +3,10 @@
 The immutable historical [acceptance receipt](acceptance.json) and
 [independent review receipt](review-receipt.json) support eight original cases;
 the current [case records](../../specs/conformance/numeric-graph-cases.json)
-also carry six draft finite counter-evidence records for CASE-03/04/05/09/11/12.
-Those six remain subject to final integrated-source cold review and bounded
-terminal verification; CASE-02 remains unrun with its capability closure open.
+record a 14-passed/1-held candidate, including six proposed final finite
+counter-evidence records for CASE-03/04/05/09/11/12. Those six remain subject
+to final integrated-source cold review and bounded terminal verification;
+CASE-02 remains unrun with its capability closure open.
 Proof stays open for every case. The [implementation change](../../.cairn/changes/numeric-graph-v1/design.md)
 stays active and is not archived; this is not whole-feature or global-gate acceptance.
 
@@ -179,7 +180,7 @@ and the old active case path. Do not rerun it against the recorded-state
 documents or moved case file; preserve its original review receipt and raw
 outputs unchanged.
 
-## Registered disposition: 8 passed, 7 not-run
+## Historical registered disposition before safety counters: 8 passed, 7 not-run
 
 Cases **01/06/07/08/10/13/14/15** are
 `implemented/passed/open/explicit` with receipt-linked evidence at source
@@ -216,7 +217,13 @@ boundary-controls (#26/#27), Octet (#26), source-coverage and native-assurance
 0.131× host-native STOP remains unchanged. This packet makes no proof,
 performance, GPU, backend-selection or cross-platform claim.
 
-## Bounded postpromotion verification
+## Historical bounded postpromotion verifier interface
+
+The `postpromotion.mjs` interface and receipt below bind the prior eight-passed,
+seven-held case set. Preserve that historical verifier and receipt; do not rerun
+it against the current 14-passed/1-held candidate. The current combined-source
+closeout uses a separate external source freeze, cold review and bounded
+terminal verifier.
 
 `postpromotion.mjs` verifies the staged lifecycle documents against the exact
 independently audited anchor `16fd5369a6625d1d166a25190bbb02532832432a`.
@@ -341,9 +348,9 @@ appends a private effect log through its injected `IdentityHasher`; the
 finite original control observed 42 reads and 42 writes while returning
 `I64(7)`. This disproves a universal arbitrary-caller purity inference from
 `no_std` or manifest dependencies alone; it is not a disproof of the exact
-assembled CLI BLAKE3 closure. The six draft case records use this finite
-observation packet but keep proof open and await final source review and
-terminal verification. No compiler unknown is waived, and this supplement
+assembled CLI BLAKE3 closure. The six proposed final case records use this
+finite observation packet but keep proof open and await final source review
+and terminal verification. No compiler unknown is waived, and this supplement
 does not establish CASE-02, proof, global-gate, archive, performance, or
 cross-platform acceptance. Failed and interrupted attempts remain separate
 rejected evidence, never relabeled as the fresh result.
@@ -356,14 +363,14 @@ The immutable counter packet
 and its independent preliminary 57-command review
 `/home/brittonr/.cache/noble-issues/proof/ngraph-cold-002d-review-btv0vn/review.json`
 (SHA-256 `5958bde63dd6a1002356c722bfa47d0455152a9ffd03b19f28416650109909e7`)
-bind the six draft cases to source commit `002d8ecdea2b8eb073a3094140c659ffe5309ee9`.
+bind the six proposed final cases to source commit `002d8ecdea2b8eb073a3094140c659ffe5309ee9`.
 The packet has 112 safety commands, all six expected case IDs, directly
 observed CASE-03/04/05/09/11/12 counters, and an effectful hostile library
 consumer (`I64(7)`, 42 callback reads and 42 writes). The review is explicitly
 preliminary to this final integrated source; it is not relabeled as final
 acceptance. The separate combined-source freeze, final cold review and bounded
-terminal verifier must bind the exact case records before the draft entries
-are treated as accepted.
+terminal verifier must bind the exact case records before the proposed entries
+are treated as finally accepted.
 
 The selected Octet helper build is pinned to derivation
 `fh42f6yzlqz3a4hpz3bvsdvzdw2lghn6-cargo-octet-0.1.0-typed-strict-trait.drv`
