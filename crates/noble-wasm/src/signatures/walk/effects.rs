@@ -1,9 +1,5 @@
 //! Effect serialization for the signature walk.
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; Core signature refusal must inspect program effects via EffSet::is_empty, which is nonconst over the kernel-owned effect set; the borrowed classifier cannot be const."
-)]
 pub(super) fn unavailable_in_core(ty: &noble_kernel::types::Ty) -> bool {
     match ty {
         noble_kernel::types::Ty::Text
