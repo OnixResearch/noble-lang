@@ -43,54 +43,7 @@ fn two_calls_preserve_distinct_specializations_and_exact_original_occurrences() 
     assert_eq!(subject.named_imports[0].alias, "d");
     assert_eq!(subject.named_imports[0].owner, uses[1].definition_owner);
     assert_eq!(subject.named_imports[0].module_index, uses[1].module_index);
-    for occurrence in &uses[1..] {
-        assert_eq!(occurrence.definition_name, "step");
-        assert_eq!(
-            occurrence.definition_ordinal, 1,
-            "same-body `other` must not be mistaken for original `step`"
-        );
-        assert_eq!(occurrence.caller_definition, Some(root.definition));
-        let source = occurrence
-            .source_span
-            .ok_or("missing original named call span")?;
-        let start =
-            usize::try_from(source.start).map_err(|_| "source start exceeds address space")?;
-        let end = usize::try_from(source.end).map_err(|_| "source end exceeds address space")?;
-        assert_eq!(TWICE.get(start..end), Some(b"d.step".as_slice()));
-        let owner = &subject.source_dependencies[occurrence.module_index];
-        assert_eq!((owner.module.as_str(), owner.version), ("donor", 1));
-        assert_eq!(owner.owner, occurrence.definition_owner);
-        assert_eq!(owner.full_source.as_slice(), DONOR);
-        let body_start = usize::try_from(occurrence.body_span.start)
-            .map_err(|_| "definition body start exceeds address space")?;
-        let body_end = usize::try_from(occurrence.body_span.end)
-            .map_err(|_| "definition body end exceeds address space")?;
-        assert_eq!(DONOR.get(body_start..body_end), Some(b"[ 1 + ]".as_slice()));
-        let def_start = usize::try_from(occurrence.definition_span.start)
-            .map_err(|_| "definition start exceeds address space")?;
-        let def_end = usize::try_from(occurrence.definition_span.end)
-            .map_err(|_| "definition end exceeds address space")?;
-        assert_eq!(
-            DONOR.get(def_start..def_end),
-            Some(b"def step# original step body\n[ 1 + ]".as_slice())
-        );
-        let row = subject
-            .accepted_submission
-            .definitions
-            .iter()
-            .find(|row| row.definition == occurrence.definition)
-            .ok_or("accepted graph lost named per-use row")?;
-        assert_eq!(row.identity, occurrence.definition_identity);
-        assert_eq!(row.expected.stack_in, [noble_kernel::types::Ty::I64]);
-        assert_eq!(row.expected.stack_out, [noble_kernel::types::Ty::I64]);
-    }
-    assert_ne!(
-        uses[1].definition, uses[2].definition,
-        "two `d.step` calls must not share one dynamic specialization slot"
-    );
-    assert_ne!(uses[1].source_node, uses[2].source_node);
-    assert_ne!(uses[1].source_span, uses[2].source_span);
-    assert_ne!(uses[1].candidate_node, uses[2].candidate_node);
+    asserts_each_named_use_keeps_its_own_slot(subject)?;
     let (session, outcome) = session.commit(prepared);
     outcome.map_err(|error| format!("{error:?}"))?;
     let typed = session
@@ -262,5 +215,62 @@ fn revision_two_rejects_pure_proofs_noncanonical_revisions_and_new_field_syntax(
         );
     }
     assert_eq!(session.generation(), 0);
+    Ok(())
+}
+
+/// Every per-use row must carry its own specialization identity and stack shape.
+fn asserts_each_named_use_keeps_its_own_slot(
+    subject: &noble_contracts::intrinsic::SubjectBinding,
+) -> Result<(), String> {
+    let uses = &subject.named_uses;
+    let root = &uses[0];
+    for occurrence in &uses[1..] {
+        assert_eq!(occurrence.definition_name, "step");
+        assert_eq!(
+            occurrence.definition_ordinal, 1,
+            "same-body `other` must not be mistaken for original `step`"
+        );
+        assert_eq!(occurrence.caller_definition, Some(root.definition));
+        let source = occurrence
+            .source_span
+            .ok_or("missing original named call span")?;
+        let start =
+            usize::try_from(source.start).map_err(|_| "source start exceeds address space")?;
+        let end = usize::try_from(source.end).map_err(|_| "source end exceeds address space")?;
+        assert_eq!(TWICE.get(start..end), Some(b"d.step".as_slice()));
+        let owner = &subject.source_dependencies[occurrence.module_index];
+        assert_eq!((owner.module.as_str(), owner.version), ("donor", 1));
+        assert_eq!(owner.owner, occurrence.definition_owner);
+        assert_eq!(owner.full_source.as_slice(), DONOR);
+        let body_start = usize::try_from(occurrence.body_span.start)
+            .map_err(|_| "definition body start exceeds address space")?;
+        let body_end = usize::try_from(occurrence.body_span.end)
+            .map_err(|_| "definition body end exceeds address space")?;
+        assert_eq!(DONOR.get(body_start..body_end), Some(b"[ 1 + ]".as_slice()));
+        let def_start = usize::try_from(occurrence.definition_span.start)
+            .map_err(|_| "definition start exceeds address space")?;
+        let def_end = usize::try_from(occurrence.definition_span.end)
+            .map_err(|_| "definition end exceeds address space")?;
+        assert_eq!(
+            DONOR.get(def_start..def_end),
+            Some(b"def step# original step body\n[ 1 + ]".as_slice())
+        );
+        let row = subject
+            .accepted_submission
+            .definitions
+            .iter()
+            .find(|row| row.definition == occurrence.definition)
+            .ok_or("accepted graph lost named per-use row")?;
+        assert_eq!(row.identity, occurrence.definition_identity);
+        assert_eq!(row.expected.stack_in, [noble_kernel::types::Ty::I64]);
+        assert_eq!(row.expected.stack_out, [noble_kernel::types::Ty::I64]);
+    }
+    assert_ne!(
+        uses[1].definition, uses[2].definition,
+        "two `d.step` calls must not share one dynamic specialization slot"
+    );
+    assert_ne!(uses[1].source_node, uses[2].source_node);
+    assert_ne!(uses[1].source_span, uses[2].source_span);
+    assert_ne!(uses[1].candidate_node, uses[2].candidate_node);
     Ok(())
 }
