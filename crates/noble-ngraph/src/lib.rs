@@ -5,6 +5,10 @@
     tigerstyle::module_file_count,
     reason = "Owner: noble-maintainers; the crate modules follow the D1-D9 design sections rather than an arbitrary file count"
 )]
+#![expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-maintainers; noble-ngraph supports only targets with usize >= 32 bits (x86_64, aarch64, wasm32); every flagged cast is a u32 index converted to usize"
+)]
 //! `Numeric-Graph-v1`: the pure library of the opt-in numeric graph profile
 //! (`NumericGraph-Design`, design changes `numeric-graph-profile` and
 //! `numeric-graph-v1`).
