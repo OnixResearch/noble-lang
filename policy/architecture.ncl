@@ -349,8 +349,12 @@ let contracts = import "./architecture.contracts.ncl" in
     # IR was 177,843,955 bytes, so every other cap is unchanged.
     # This exact capacity is not a classification waiver, source/native
     # assurance approval, or a gate PASS.
-    max_units = 88,
-    max_shards = 88,
+    # 89 units: the collector reports observed_units=89, expected=89, 0 missing,
+    # 0 unexpected, status=complete (receipt
+    # c5141c143199c3b622da256ed8c9b73ede7f6dc525a2c1fa12190eb1b18b2a2c). The
+    # previous 88 predated the #31 graph-byte accounting helpers.
+    max_units = 89,
+    max_shards = 89,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
     max_modules = 2048,
