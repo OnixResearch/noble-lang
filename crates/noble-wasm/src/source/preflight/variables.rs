@@ -410,7 +410,7 @@ fn node(
     )
     .map_err(|_| crate::Diagnostic::Exhausted));
     let (sizes, volumes, witness_size) = attempt!(witness(inst, lookup_rows, work));
-    let mut size = attempt!(mul(witness_size, 16));
+    let mut cost = attempt!(mul(witness_size, 16));
     let input;
     let output;
     let quotation_input;
@@ -421,7 +421,7 @@ fn node(
     let quotation_output_height;
     match node {
         noble_kernel::untrusted::Node::Literal { .. } => {
-            size = attempt!(add(size, attempt!(mul(sizes[0], 32))));
+            cost = attempt!(add(cost, attempt!(mul(sizes[0], 32))));
             input = sizes[0];
             output = attempt!(add(input, 1));
             quotation_input = 0;
@@ -432,12 +432,12 @@ fn node(
             quotation_output_height = 0;
         }
         noble_kernel::untrusted::Node::Quotation { body, .. } => {
-            size = attempt!(add(size, attempt!(mul(body.len() as u64, 16))));
+            cost = attempt!(add(cost, attempt!(mul(body.len() as u64, 16))));
             let stack = attempt!(add(
                 attempt!(mul(sizes[0], 2)),
                 attempt!(add(sizes[1], sizes[2]))
             ));
-            size = attempt!(add(size, attempt!(mul(stack, 16))));
+            cost = attempt!(add(cost, attempt!(mul(stack, 16))));
             let constructed = attempt!(volumes[1].add(volumes[2])).constructed(1, false);
             input = sizes[0];
             output = attempt!(add(
@@ -456,15 +456,15 @@ fn node(
                 .environment
                 .scheme(*def)
                 .ok_or(crate::Diagnostic::Invalid));
-            size = attempt!(add(
-                size,
+            cost = attempt!(add(
+                cost,
                 attempt!(super::super::admission::witness_scheme(
                     submission, *def, work
                 ))
             ));
             for value in scheme.stack_in.iter().chain(scheme.stack_out.iter()) {
-                size = attempt!(add(
-                    size,
+                cost = attempt!(add(
+                    cost,
                     attempt!(pattern(value, &sizes, 0, lookup_rows, work))
                 ));
             }
@@ -484,7 +484,7 @@ fn node(
         }
     }
     Ok(Cost {
-        clone: size,
+        clone: cost,
         input,
         output,
         quotation_input,
@@ -525,22 +525,22 @@ fn appearance(
         .nodes
         .get(index)
         .ok_or(crate::Diagnostic::Invalid));
-    let size = attempt!(walk.sizes.get(index).ok_or(crate::Diagnostic::Invalid));
+    let cost = attempt!(walk.sizes.get(index).ok_or(crate::Diagnostic::Invalid));
     // match_tail compares this carried frame with this invocation's input,
     // never a later frame against an earlier interface. Keep charging each
     // successful join's entire carried frame separately below.
     *largest = (*largest).max(attempt!(mismatch_reserve(
         *frame,
-        size.input,
+        cost.input,
         *frame_height,
-        size.input_height,
+        cost.input_height,
         walk.permitted_height
     )));
     attempt!(work.charge(attempt!(mul(*frame, 16))));
-    attempt!(work.charge(size.clone));
+    attempt!(work.charge(cost.clone));
     if let noble_kernel::untrusted::Node::Quotation { body: children, .. } = node {
-        let mut child_frame = size.quotation_input;
-        let mut child_height = size.quotation_input_height;
+        let mut child_frame = cost.quotation_input;
+        let mut child_height = cost.quotation_input_height;
         for child in children {
             attempt!(appearance(
                 walk,
@@ -555,20 +555,20 @@ fn appearance(
         // Even an empty quotation body completes against its claimed Stack2.
         *largest = (*largest).max(attempt!(mismatch_reserve(
             child_frame,
-            size.quotation_output,
+            cost.quotation_output,
             child_height,
-            size.quotation_output_height,
+            cost.quotation_output_height,
             walk.permitted_height
         )));
     }
     let remainder = attempt!(frame
-        .checked_sub(size.input)
+        .checked_sub(cost.input)
         .ok_or(crate::Diagnostic::Invalid));
     let remainder_height = attempt!(frame_height
-        .checked_sub(size.input_height)
+        .checked_sub(cost.input_height)
         .ok_or(crate::Diagnostic::Invalid));
-    *frame = attempt!(add(remainder, size.output));
-    *frame_height = attempt!(add(remainder_height, size.output_height));
+    *frame = attempt!(add(remainder, cost.output));
+    *frame_height = attempt!(add(remainder_height, cost.output_height));
     Ok(())
 }
 

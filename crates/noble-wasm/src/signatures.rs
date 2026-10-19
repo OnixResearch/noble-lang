@@ -22,7 +22,7 @@ const CALCULATOR_EXPANDED_KEY_LIMIT: usize = 4 * crate::OUTPUT_BYTE_LIMIT;
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct PrefixKey {
     prefix: u32,
-    length: u32,
+    length_bytes: u32,
     hash: u64,
     suffix: alloc::vec::Vec<u8>,
 }
@@ -36,7 +36,7 @@ fn fingerprint(bytes: &[u8]) -> u64 {
 }
 
 /// Comparisons charged for one ordered-index probe over `entries` distinct
-/// (fingerprint, length) classes: a bound on the search height, not the
+/// (fingerprint, length_bytes) classes: a bound on the search height, not the
 /// number of records the session has retained.
 const fn index_probe_cost(entries: usize) -> usize {
     (usize::BITS - entries.leading_zeros()) as usize + 1
@@ -50,7 +50,7 @@ const fn index_probe_cost(entries: usize) -> usize {
 pub(crate) struct Pool {
     pub(crate) keys: alloc::vec::Vec<alloc::vec::Vec<u8>>,
     prefix_keys: alloc::vec::Vec<PrefixKey>,
-    // Compact records by (fingerprint, length), each list in ascending ID
+    // Compact records by (fingerprint, length_bytes), each list in ascending ID
     // order. A lookup visits only records that could equal the key, so its
     // metered cost does not grow with the session's accumulated pool.
     candidates: alloc::collections::BTreeMap<(u64, u32), alloc::vec::Vec<u32>>,
@@ -130,7 +130,7 @@ impl Pool {
 
     pub(crate) fn key_len(&self, index: usize) -> usize {
         if self.compact {
-            self.prefix_keys[index].length as usize
+            self.prefix_keys[index].length_bytes as usize
         } else {
             self.keys[index].len()
         }
@@ -163,7 +163,7 @@ impl Pool {
         let mut expanded_bytes = 0usize;
         for record in delta {
             attempt!(charge(1));
-            expanded_bytes = match expanded_bytes.checked_add(record.length as usize) {
+            expanded_bytes = match expanded_bytes.checked_add(record.length_bytes as usize) {
                 Some(value) => value,
                 None => return Err(crate::Diagnostic::Exhausted),
             };
@@ -188,7 +188,8 @@ impl Pool {
             attempt!(charge(record.suffix.len().saturating_add(1)));
             scratch.extend_from_slice(&record.suffix);
             attempt!(charge(scratch.len()));
-            if scratch.len() != record.length as usize || fingerprint(&scratch) != record.hash {
+            if scratch.len() != record.length_bytes as usize || fingerprint(&scratch) != record.hash
+            {
                 return Err(crate::Diagnostic::Defective);
             }
             if index >= first {
@@ -265,7 +266,7 @@ impl Pool {
                 let Some(existing) = self.prefix_keys.get(index) else {
                     return Err(crate::Diagnostic::Defective);
                 };
-                if existing.hash != hash || existing.length as usize != key.len() {
+                if existing.hash != hash || existing.length_bytes as usize != key.len() {
                     continue;
                 }
                 scratch.clear();
@@ -327,7 +328,7 @@ impl Pool {
         let id = attempt!(number(index));
         self.prefix_keys.push(PrefixKey {
             prefix,
-            length: length_bytes,
+            length_bytes,
             hash,
             suffix: suffix.to_vec(),
         });
@@ -423,7 +424,7 @@ mod tests {
         let mut pool = super::Pool::source();
         pool.select_calculator();
         // Different first bytes make each key independent of its predecessor.
-        // Sixty-four maximum-length keys reach exactly the preexisting WAT
+        // Sixty-four maximum-length_bytes keys reach exactly the preexisting WAT
         // expansion ceiling, while front-coded storage exceeds one MiB.
         for first in 0..64u8 {
             let key = alloc::vec![first; 65_536];
