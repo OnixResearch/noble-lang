@@ -4,6 +4,7 @@
   rust,
   nickel,
   octetGate,
+  standards,
   cargoOctet,
   wasmtimeSource,
   reviewedVendor,
@@ -141,12 +142,23 @@ let
         b3sum Cargo.toml Cargo.lock crates/*/Cargo.toml crates/*/src/*.rs crates/*/tests/*.rs > "$out/source-blake3.txt"
         tar -cf "$out/source.tar" Cargo.toml Cargo.lock rust-toolchain.toml dylint.toml crates policy
         ${pkgs.lib.optionalString (case.base == "acyclic_shell") ''
-          # Issue #27: the acyclic shell base adds two lib units beyond the reviewed
-          # 88-unit workspace roster, so this fixture alone collects at a raised
-          # capacity. Every other case keeps the reviewed 88.
-          ${pkgs.jq}/bin/jq '.collection_limits.max_units = 90 | .collection_limits.max_shards = 90' \
-            policy/architecture.json > "$out/architecture-acyclic.json"
-          mv "$out/architecture-acyclic.json" policy/architecture.json
+          # Issue #27: the acyclic-shell base adds two lib units beyond the reviewed
+          # 88-unit workspace roster. This fixture alone re-exports the architecture
+          # policy at a raised capacity with the same deterministic exporter the
+          # reviewed check uses, so the export manifest stays consistent. Every other
+          # case keeps the reviewed 88.
+          cp policy/architecture.ncl "$out/architecture-acyclic.ncl"
+          sed -i 's/max_units = 88,/max_units = 90,/; s/max_shards = 88,/max_shards = 90,/' \
+            "$out/architecture-acyclic.ncl"
+          mv "$out/architecture-acyclic.ncl" policy/architecture.ncl
+          ${nickel}/bin/nickel export --format json policy/architecture-export-spec.ncl \
+            > "$out/export-spec.json"
+          ${standards}/bin/octet-standards nickel-export-manifest \
+            --spec "$out/export-spec.json" --output "$out/architecture.json" \
+            --manifest-out "$out/architecture.manifest.json" \
+            --nickel-identity "$(${nickel}/bin/nickel --version)"
+          mv "$out/architecture.json" policy/architecture.json
+          mv "$out/architecture.manifest.json" policy/architecture.manifest.json
         ''}
         code=0
         timeout ${toString policy.timeout_seconds} noble-octet-gate --workspace --output-format json \
