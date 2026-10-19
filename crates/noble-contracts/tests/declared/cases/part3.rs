@@ -100,6 +100,14 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
     session = next;
     assert_eq!(session.generation(), prior);
 
+    rejects_unsupported_profile_then_accepts_valid_claim(session, prior)
+}
+
+/// An unsupported callback profile, then a valid claim, must resolve exactly.
+fn rejects_unsupported_profile_then_accepts_valid_claim(
+    mut session: noble_contracts::source::ModuleSession,
+    prior: u64,
+) -> Result<(), String> {
     let unsupported = b"module identity@1 [ def id [ ] contract 1 id-law [ subject id input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (in x)) ] ] proof 1 forged for id-law [ (export-unary-I64 (intro (tail Stack) (intro (x I64) (pc-sequence (pc-exact (exec-literal 1)) (pc-exact (exec-add)) (bridge (by-exact-append-assoc)) (join (by-exact-result))))) (mc1-true-eq-wrap)) ] ]";
     let prepared = session
         .prepare(unsupported, &[], super::super::LIMITS)
