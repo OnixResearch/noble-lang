@@ -1,0 +1,30 @@
+{
+  "schema": "noble-finite-bases-receipt/v1",
+  "relation": "finite-bases/v0",
+  "source_revision": "aee8bf834c616443a1ff698c79325700a4663dd7",
+  "dirty": false,
+  "command": "nix develop --command cargo test -p noble-contracts --test source -- --nocapture finite_bases",
+  "toolchain": {
+    "rust": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)"
+  },
+  "bounds": {
+    "universe_bits_max": 4,
+    "inputs": 0,
+    "outputs": 1,
+    "family_cap": 16
+  },
+  "counts": {
+    "cases": 277,
+    "accepted": 94,
+    "refused": 183,
+    "principal_families": 277,
+    "ambiguous": 0,
+    "max_family": 16,
+    "real_accepted": 3,
+    "real_refused": 4
+  },
+  "decision": "no-go",
+  "rationale": "Every supported family has a principal candidate; the only non-reflexive relation is directed effect-bound inclusion.",
+  "elapsed_ms": 15068
+}

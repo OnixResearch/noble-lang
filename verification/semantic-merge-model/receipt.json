@@ -1,0 +1,29 @@
+{
+  "schema": "noble-semantic-merge-model-receipt/v1",
+  "relation": "SMERGE/1-model",
+  "source_revision": "aee8bf834c616443a1ff698c79325700a4663dd7",
+  "dirty": false,
+  "command": "nix develop --command cargo test -p noble-contracts --test source -- --nocapture semantic_merge_model",
+  "toolchain": {
+    "rust": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)"
+  },
+  "bounds": {
+    "inputs": 25,
+    "output_len": 2,
+    "i64": "wrapping-u64",
+    "model_scope": "pure-first-order-total"
+  },
+  "counts": {
+    "fixtures": 10,
+    "verified": 4,
+    "conflicts": 1,
+    "counterexamples": 3,
+    "incompatible": 1,
+    "abnormal": 1
+  },
+  "decision": "no-go",
+  "lean_obligations_open": true,
+  "rationale": "The bounded model exercises the relation and fixtures, but SM-1 through SM-6 (Lean relation, termination, claim elaboration, checker soundness, evidence binding, outcome discipline) remain open; no integration.",
+  "elapsed_ms": 839
+}
