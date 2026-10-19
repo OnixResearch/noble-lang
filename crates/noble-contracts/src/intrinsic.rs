@@ -405,39 +405,39 @@ macro_rules! work_push {
     reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
 )]
         let limit = $bound;
-        if let Some(total) = $stack.total.checked_add(1).filter(|next| *next <= limit) {
-            if $stack.inline_len < INLINE_TREE_FRAMES && $stack.spill.is_empty() {
+        let has_inline_room = $stack.inline_len < INLINE_TREE_FRAMES && $stack.spill.is_empty();
+        let has_spill_room = $stack.spill.len() < limit;
+        match ($stack.total.checked_add(1).filter(|next| *next <= limit), has_inline_room, has_spill_room) {
+            (Some(total), true, _) => {
                 $stack.inline[$stack.inline_len] = Some($value);
                 $stack.inline_len = $stack.inline_len.saturating_add(1);
                 $stack.total = total;
                 Ok(())
-            } else if $stack.spill.len() >= limit {
-                Err(())
-            } else {
-                // Spill only when a real walk exhausts its inline slots.
+            }
+            // Spill only when a real walk exhausts its inline slots.
+            (Some(total), false, true) => {
                 $stack.spill.push($value);
                 $stack.total = total;
                 Ok(())
             }
-        } else {
-            Err(())
+            (Some(_), false, false) | (None, _, _) => Err(()),
         }
     }};
 }
 macro_rules! work_pop {
     ($stack:ident) => {{
-        if let Some(value) = $stack.spill.pop() {
-            $stack.total = $stack.total.saturating_sub(1);
-            Some(value)
-        } else if let Some(next) = $stack.inline_len.checked_sub(1) {
-            $stack.inline_len = next;
-            let value = $stack.inline[next].take();
-            if value.is_some() {
+        match ($stack.spill.pop(), $stack.inline_len.checked_sub(1)) {
+            (Some(value), _) => {
                 $stack.total = $stack.total.saturating_sub(1);
+                Some(value)
             }
-            value
-        } else {
-            None
+            (None, Some(next)) => {
+                $stack.inline_len = next;
+                let value = $stack.inline[next].take();
+                $stack.total = $stack.total.saturating_sub(usize::from(value.is_some()));
+                value
+            }
+            (None, None) => None,
         }
     }};
 }
