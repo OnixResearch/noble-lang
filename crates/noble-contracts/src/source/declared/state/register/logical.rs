@@ -129,6 +129,10 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
             span: proof.span,
         });
     }
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
+    )]
     let limit = usize::try_from(request.limits.bytes).map_err(|_| {
         crate::source::declared::error(
             crate::source::Stage::Check,

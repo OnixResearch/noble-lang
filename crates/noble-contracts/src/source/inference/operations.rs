@@ -127,6 +127,10 @@ pub(super) fn builtin(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+)]
 /// A ref is selected from the root's typed borrowed-input sidecar, never
 /// constructed from a value or literal. The unqualified spelling chooses the
 /// uniquely most-specific compatible interface; ambiguous peers require the

@@ -1,4 +1,8 @@
 #[expect(
+    tigerstyle::renamed_imports,
+    reason = "Owner: noble-contracts; the local alias matches the domain vocabulary used throughout this module"
+)]
+#[expect(
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
 )]

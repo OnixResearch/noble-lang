@@ -100,6 +100,10 @@ impl Tree {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+)]
 /// Follow immutable named targets, including calls inside quotations. A
 /// replacement must not enter the old identity through any historical body:
 /// rebuilding current dependents would otherwise publish an apparent cycle
@@ -151,6 +155,10 @@ fn reaches_index(
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
 )]
 /// Replay is allowed to change exactly the named edges rebuilt in this batch.
 /// Source spelling alone is not authority to retarget a shadowed historical
@@ -487,6 +495,10 @@ impl Session {
         !self.current_dependents(index).is_empty()
     }
 
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
     fn current_dependents(&self, original: usize) -> alloc::vec::Vec<usize> {
         // Every resolved edge points to an earlier immutable definition.
         // Current dependent bodies can therefore be visited in declaration
@@ -657,6 +669,10 @@ impl Session {
         Ok(successor)
     }
 
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
     /// Definition history is length-prefixed in precisely the append order of
     /// `definitions`. Never reconstruct a dependent from its already-resolved
     /// tree: that would silently keep calls to the prior generation.
@@ -703,6 +719,10 @@ impl Session {
         ))
     }
 
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
     /// A definition declaration has no executable root; checking only an
     /// empty post-definition submission would miss latent host operations in
     /// its body. Walk resolved calls (including immutable named dependencies)

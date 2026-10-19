@@ -151,6 +151,10 @@ impl super::ModuleSession {
         candidate_bytes: usize,
         limits: crate::Limits,
     ) -> Result<(), crate::source::Error> {
+        #[expect(
+            tigerstyle::numeric_units,
+            reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
+        )]
         let limit = attempt!(self.retained_source_limit(limits));
         let mut bytes = candidate_bytes;
         for module in &self.modules {

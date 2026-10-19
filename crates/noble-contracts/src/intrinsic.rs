@@ -400,6 +400,10 @@ impl<T> WorkStack<T> {
 // mechanics at the callsite avoids passing a mutable proof-checking capability.
 macro_rules! work_push {
     ($stack:ident,$value:expr,$bound:expr) => {{
+#[expect(
+    tigerstyle::numeric_units,
+    reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
+)]
         let limit = $bound;
         if let Some(total) = $stack.total.checked_add(1).filter(|next| *next <= limit) {
             if $stack.inline_len < INLINE_TREE_FRAMES && $stack.spill.is_empty() {
@@ -520,6 +524,10 @@ enum SizeNode<'a> {
 fn tree_size(root: SizeNode<'_>, bound: usize) -> Option<usize> {
     let mut pending = WorkStack::new();
     work_push!(pending, root, bound).ok()?;
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
+    )]
     let mut size = 0usize;
     while let Some(node) = work_pop!(pending) {
         match node {
@@ -905,6 +913,10 @@ fn binder<'a>(
 #[expect(
     tigerstyle::nested_conditionals,
     reason = "Owner: noble-contracts; the guard chain states the admission rule verbatim; extracting it would obscure the predicate it states"
+)]
+#[expect(
+    tigerstyle::foreign_enum_catch_all,
+    reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
 )]
 fn parsed<'m>(
     root: ParseFrame<'_>,
@@ -1517,6 +1529,10 @@ fn proof_walk<'a, 'm>(
                 };
                 let charged = (|| {
                     let sort_text = lean_sort(expected.as_ref(), term.span, meter.tree_bounds)?;
+                    #[expect(
+                        tigerstyle::numeric_units,
+                        reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
+                    )]
                     let size = body
                         .as_ref()
                         .map_or(0, String::len)
@@ -1903,6 +1919,10 @@ fn proof_walk<'a, 'm>(
                                 "subst motive must be a total Eq proposition",
                             ));
                         }
+                        #[expect(
+                            tigerstyle::numeric_units,
+                            reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
+                        )]
                         let size = proposition_size(&body, bound)
                             .and_then(|size| size.checked_mul(2))
                             .ok_or_else(|| exhausted(term.span))?;

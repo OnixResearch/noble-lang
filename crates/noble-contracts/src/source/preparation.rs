@@ -30,6 +30,10 @@ impl super::Session {
         self.prepare_signed_metered(source_bytes, inputs, signature, &mut meter)
     }
 
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
     pub(super) fn prepare_signed_metered(
         &self,
         source_bytes: &[u8],

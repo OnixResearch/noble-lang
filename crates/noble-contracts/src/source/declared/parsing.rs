@@ -363,6 +363,10 @@ fn scan_context(
         tigerstyle::non_trait_imports,
         reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
     )]
+    #[expect(
+        tigerstyle::renamed_imports,
+        reason = "Owner: noble-contracts; the local alias matches the domain vocabulary used throughout this module"
+    )]
     use ScanContext as C;
     match context {
         C::Member if before_depth == 1 && word_is(token, b"export") => C::ExportTarget,

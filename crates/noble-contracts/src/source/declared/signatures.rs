@@ -276,6 +276,10 @@ fn parse_effect(
     tigerstyle::nested_conditionals,
     reason = "Owner: noble-contracts; the guard chain states the admission rule verbatim; extracting it would obscure the predicate it states"
 )]
+#[expect(
+    tigerstyle::foreign_enum_catch_all,
+    reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
+)]
 fn pattern(
     word: &str,
     binders: &[(String, VariableKind)],

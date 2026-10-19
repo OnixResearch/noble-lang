@@ -450,6 +450,10 @@ impl super::ModuleSession {
         const INLINE: usize = 32;
         let mut inline = [0usize; INLINE];
         let mut spill = alloc::vec::Vec::new();
+        #[expect(
+            tigerstyle::numeric_units,
+            reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
+        )]
         let imported_count = batch.dependencies.len();
         for (obligation, result) in batch.obligations.iter().zip(checked) {
             // At most one selection per imported or earlier local proof.
