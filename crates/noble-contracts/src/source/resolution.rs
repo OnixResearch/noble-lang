@@ -48,6 +48,10 @@ fn resolve_node(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; reverse lookup charges every inspected immutable definition and byte comparison, then rejects unavailable hosts, recursion, imports, or unbound words with typed diagnostics."
 )]
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
 fn lookup(
     word: &[u8],
     declaration: Option<&str>,
@@ -222,6 +226,10 @@ fn declared_lookup(
     Err(crate::invalid(span, "unbound or unexported module word"))
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn calculator_word(word: &[u8]) -> Option<super::Target> {
     let identity = match word {
         b"text.byte" => 26,

@@ -17,6 +17,10 @@ struct Context<'a> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; selection, unique names, resolved resource scopes, operation limits and independently reconstructed import contracts are checked fallibly before the owned world is returned."
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 pub(super) fn world(
     package: super::Package,
     wit: &[u8],

@@ -119,6 +119,10 @@ pub(super) fn builtin(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 /// A ref is selected from the root's typed borrowed-input sidecar, never
 /// constructed from a value or literal. The unqualified spelling chooses the
 /// uniquely most-specific compatible interface; ambiguous peers require the
@@ -248,6 +252,10 @@ pub(super) fn slot_invoke(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn mismatched_literal_origin(
     frame: &super::Frame,
     state: &super::State,
@@ -280,6 +288,10 @@ fn mismatched_literal_origin(
     (!matches).then_some(draft.span)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn contextualize(
     mut error: crate::Diagnostic,
     definition: noble_kernel::contracts::Definition,

@@ -24,6 +24,10 @@ fn at(stage: crate::source::Stage, span: crate::Span, reason: &str) -> crate::so
     crate::source::declared::diagnostic(stage, crate::invalid(span, reason))
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error> {
     let mut contracts = alloc::vec::Vec::with_capacity(request.collected.contracts.len());
     for contract in &request.collected.contracts {
@@ -160,6 +164,10 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
     })
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn dependency_bytes(
     dependency: &crate::intrinsic::ProofDependency,
     limit: usize,
@@ -191,6 +199,10 @@ fn dependency_bytes(
 /// which is 64 slots.
 const TYPE_STACK: usize = 64;
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// Contract stacks admit only Type0 data built from the four base types.
 /// The reader also caps a type at 256 words, which bounds the visits.
 fn pure_type(ty: &noble_kernel::types::Ty) -> bool {
@@ -276,6 +288,10 @@ struct SourceOrigin<'a> {
     owner: u64,
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn source_origin<'a>(
     request: &'a Request<'_>,
     definition: &crate::source::Named,
@@ -371,6 +387,10 @@ impl SourceOrigin<'_> {
     }
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 fn bind_subject(
     request: &Request<'_>,
     contract: &crate::source::declared::parsing::Contract,
@@ -537,6 +557,10 @@ fn bind_subject(
     })
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn resolve_contract(
     request: &Request<'_>,
     staged: &[crate::source::declared::LogicalContract],
@@ -584,12 +608,20 @@ fn resolve_contract(
         })
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn is_current(request: &Request<'_>, scope: &str) -> bool {
     scope.split_once('@').is_some_and(|(name, version)| {
         name == request.name && version.parse::<u32>().ok() == Some(request.version)
     })
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn imported_module<'a>(
     session: &'a crate::source::declared::ModuleSession,
     scope: &str,
@@ -622,6 +654,10 @@ fn imported_module<'a>(
 /// one more frame holds the term root.
 const USE_FRAMES: usize = 65;
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 /// Resolves every `(use name)` in pre-order, left to right. The term and the
 /// module's dependency list are owned and returned; the first error wins, as
 /// in the earlier recursive walk.

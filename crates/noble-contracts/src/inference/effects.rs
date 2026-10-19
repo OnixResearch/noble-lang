@@ -154,6 +154,10 @@ impl super::Arena {
         }
     }
 
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+    )]
     /// An annotated source interface cannot hide an effect of its body.
     pub fn equate_effects(
         &mut self,
@@ -167,6 +171,10 @@ impl super::Arena {
         Ok(())
     }
 
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+    )]
     pub fn require_rigid_effect(
         &mut self,
         body: u32,

@@ -255,6 +255,10 @@ impl super::ModuleSession {
         (prepared.staged, Ok(()))
     }
 
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn current_snapshot(&self, prepared: &super::ModulePrepared) -> bool {
         self.generation == prepared.generation
             && self.source.calculator == prepared.staged.source.calculator
@@ -264,6 +268,10 @@ impl super::ModuleSession {
             && self.source.history == prepared.previous_history
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
     /// This API trusts the **host callback**, not any no_std proof marker.
     /// The callback must perform bounded source checking and a separate pinned
     /// independent exact-claim Lean check before returning checked results.
@@ -527,6 +535,10 @@ impl super::ModuleSession {
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn revision(value: &str) -> bool {
     value.len() == 64
         && value
@@ -534,6 +546,10 @@ fn revision(value: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// Charges a retained dependency and its transitive closure in the same
 /// pre-order as the published copy, returning the remaining byte and node
 /// budgets, or `None` once either is exhausted.
@@ -583,6 +599,10 @@ fn charge_dependency(
     Some((bytes, nodes))
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn uses(form: &crate::intrinsic::Form, name: &str) -> bool {
     use crate::intrinsic::FormKind;
     let FormKind::List(items) = &form.kind else {
@@ -603,6 +623,10 @@ mod tests {
     use noble_kernel::contracts::Behavior;
     use noble_kernel::{shapes::Pattern, words::Scheme};
 
+    #[expect(
+        tigerstyle::path_segment_repetition,
+        reason = "Owner: noble-contracts; the item name reads as the domain term at its use sites; renaming would churn the extracted subject"
+    )]
     #[test]
     fn calculator_source_refuses_897_lightweight_rows_before_namespace_snapshot_clone() {
         let mut session = ModuleSession::new_calculator()
@@ -642,6 +666,10 @@ mod tests {
         assert_eq!(refused.diagnostic().kind, crate::DiagnosticKind::Exhausted);
     }
 
+    #[expect(
+        tigerstyle::path_segment_repetition,
+        reason = "Owner: noble-contracts; the item name reads as the domain term at its use sites; renaming would churn the extracted subject"
+    )]
     #[test]
     fn calculator_source_refuses_deep_environment_before_namespace_snapshot_clone() {
         let mut session = ModuleSession::new_calculator()

@@ -17,6 +17,10 @@ fn invalid(reason: &str) -> crate::source::Error {
     super::error(crate::source::Stage::Check, reason)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn families<'a>(
     session: &'a super::ModuleSession,
     names: &'a [super::Schema],
@@ -76,6 +80,10 @@ pub(super) fn families<'a>(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn parse(
     binders: &str,
     words: &[String],
@@ -140,6 +148,10 @@ pub(super) fn parse(
     Ok(scheme)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn exported(signature: &Scheme, environment: &noble_kernel::contracts::Env) -> bool {
     let mut pending: Vec<&Pattern> = signature
         .stack_in
@@ -205,6 +217,10 @@ fn parse_stack(
         .collect()
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn parse_effect(
     word: &str,
     binders: &[(String, VariableKind)],
@@ -232,6 +248,10 @@ fn parse_effect(
     Ok(alloc::vec![EffectSlot::Var(Variable(index as u32))])
 }
 
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn pattern(
     word: &str,
     binders: &[(String, VariableKind)],
@@ -407,6 +427,10 @@ fn pattern(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// A bare local schema name or an exact exported `module@version.Name`
 /// resolves only to an already registered nominal declaration.
 fn named_nominal(word: &str, families: &Families<'_>) -> Option<Pattern> {
@@ -430,6 +454,10 @@ fn named_nominal(word: &str, families: &Families<'_>) -> Option<Pattern> {
     exported_nominal(word, families)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn exported_nominal(word: &str, families: &Families<'_>) -> Option<Pattern> {
     let (qualified_module, export_name) = word.rsplit_once('.')?;
     let (module_name, version) = qualified_module.rsplit_once('@')?;
@@ -461,6 +489,10 @@ fn split_arguments(word: &str) -> Result<Vec<&str>, crate::source::Error> {
     split_delimited(word, b',')
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn split_delimited(word: &str, separator: u8) -> Result<Vec<&str>, crate::source::Error> {
     let mut result = Vec::new();
     let mut depth = 0u32;

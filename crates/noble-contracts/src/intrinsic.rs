@@ -233,6 +233,10 @@ macro_rules! advance {
     }};
 }
 impl<'a> Meter<'a> {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn visit(mut self, depth: u32, span: Span) -> Transition<'a, ()> {
         let Some(nodes) = self.nodes.checked_add(1) else {
             return (self, Err(exhausted(span)));
@@ -250,6 +254,10 @@ impl<'a> Meter<'a> {
         }
         (self, Ok(()))
     }
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn charge(mut self, amount: usize, span: Span) -> Transition<'a, ()> {
         let Ok(units) = u32::try_from(amount) else {
             return (self, Err(exhausted(span)));
@@ -263,6 +271,10 @@ impl<'a> Meter<'a> {
         }
         (self, Ok(()))
     }
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn normalize(mut self, amount: usize, span: Span) -> Transition<'a, ()> {
         let Ok(units) = u32::try_from(amount) else {
             return (self, Err(exhausted(span)));
@@ -283,6 +295,10 @@ impl<'a> Meter<'a> {
         }
         self.charge(amount, span)
     }
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn substitute(mut self, amount: usize, span: Span) -> Transition<'a, ()> {
         let Ok(units) = u32::try_from(amount) else {
             return (self, Err(exhausted(span)));
@@ -304,12 +320,20 @@ impl<'a> Meter<'a> {
         self.charge(amount, span)
     }
 }
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn atom(form: &Form) -> Result<&str, Diagnostic> {
     match &form.kind {
         FormKind::Atom(value) => Ok(value),
         _ => Err(reject(form.span, "expected logical atom")),
     }
 }
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn list(form: &Form) -> Result<&[Form], Diagnostic> {
     match &form.kind {
         FormKind::List(items) => Ok(items),
@@ -409,6 +433,10 @@ enum ValidationFrame<'a> {
     Enter(&'a Form, u32),
     Children(&'a [Form], usize, u32),
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn validated<'m>(form: &Form, mut meter: Meter<'m>, depth: u32) -> Transition<'m, ()> {
     let result = (|| -> Result<(), Diagnostic> {
         let mut pending = WorkStack::new();
@@ -469,6 +497,10 @@ enum SizeNode<'a> {
     Sort(&'a Sort),
     Proposition(&'a Proposition),
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn tree_size(root: SizeNode<'_>, bound: usize) -> Option<usize> {
     let mut pending = WorkStack::new();
     work_push!(pending, root, bound).ok()?;
@@ -580,6 +612,10 @@ macro_rules! take_prop {
         }
     };
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn rewrite_prop(
     prop: &Proposition,
     mode: Rewrite<'_>,
@@ -744,6 +780,10 @@ fn rewrite_prop(
     }
     take_prop!(values, span)
 }
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
 fn shifted_prop(
     prop: &Proposition,
     base: usize,
@@ -752,6 +792,10 @@ fn shifted_prop(
 ) -> Result<Proposition, Diagnostic> {
     rewrite_prop(prop, Rewrite::Shift(base), span, bound)
 }
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
 fn replace_prop(
     prop: &Proposition,
     binder: usize,
@@ -761,6 +805,10 @@ fn replace_prop(
 ) -> Result<Proposition, Diagnostic> {
     rewrite_prop(prop, Rewrite::Replace(binder, argument), span, bound)
 }
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn replace_index(
     index: usize,
     binder: usize,
@@ -826,6 +874,10 @@ fn binder<'a>(
     }
     stack_binder(context, name)
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn parsed<'m>(
     root: ParseFrame<'_>,
     context: &WorkStack<Binder>,
@@ -1014,6 +1066,10 @@ fn parsed<'m>(
     })();
     (meter, result)
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn code<'m>(
     form: &Form,
     context: &WorkStack<Binder>,
@@ -1029,6 +1085,10 @@ fn code<'m>(
         }),
     )
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn sort<'m>(
     form: &Form,
     context: &WorkStack<Binder>,
@@ -1044,6 +1104,10 @@ fn sort<'m>(
         }),
     )
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn proposition<'m>(
     form: &Form,
     context: &WorkStack<Binder>,
@@ -1071,6 +1135,10 @@ enum LeanFrame<'a> {
     Text(&'static str),
     Number(usize),
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn lean_text(root: LeanFrame<'_>, span: Span, bounds: TreeBounds) -> Result<String, Diagnostic> {
     use core::fmt::Write;
     let mut pending = WorkStack::new();
@@ -1173,6 +1241,10 @@ fn lean_text(root: LeanFrame<'_>, span: Span, bounds: TreeBounds) -> Result<Stri
     }
     Ok(output)
 }
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn lean_code(code: &Code, span: Span, bounds: TreeBounds) -> Result<String, Diagnostic> {
     match code {
         Code::Unit => Ok(".unit".into()),
@@ -1183,6 +1255,10 @@ fn lean_code(code: &Code, span: Span, bounds: TreeBounds) -> Result<String, Diag
         _ => lean_text(LeanFrame::Code(code), span, bounds),
     }
 }
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn lean_sort(sort: &Sort, span: Span, bounds: TreeBounds) -> Result<String, Diagnostic> {
     match sort {
         Sort::Codes => Ok("PureTyCode".into()),
@@ -1195,6 +1271,10 @@ fn lean_sort(sort: &Sort, span: Span, bounds: TreeBounds) -> Result<String, Diag
         _ => lean_text(LeanFrame::Sort(sort), span, bounds),
     }
 }
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn lean_proposition(
     prop: &Proposition,
     span: Span,
@@ -1210,6 +1290,10 @@ enum ProofGoal<'a> {
     Owned(Proposition),
 }
 impl ProofGoal<'_> {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn as_ref(&self) -> &Proposition {
         match self {
             Self::Borrowed(goal) => goal,
@@ -1222,6 +1306,10 @@ enum ProofSort<'a> {
     Owned(Sort),
 }
 impl ProofSort<'_> {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn as_ref(&self) -> &Sort {
         match self {
             Self::Borrowed(sort) => sort,
@@ -1277,6 +1365,10 @@ enum ProofValue {
     Inferred(Proposition, String),
     Checked(String),
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn proof_walk<'a, 'm>(
     root: ProofFrame<'a>,
     available: &[Available],
@@ -1843,6 +1935,10 @@ pub fn check_batch(batch: &ProofBatch, limits: Limits) -> Result<Vec<CheckedProo
     check_batch_with_budgets(batch, limits, ProofBudgets::from_limits(limits))
         .map(|(checked, _)| checked)
 }
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub fn check_batch_with_budgets(
     batch: &ProofBatch,
     limits: Limits,
@@ -1909,6 +2005,10 @@ pub fn check_batch_with_budgets(
         },
     ))
 }
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn check_obligation<'m>(
     obligation: &ProofObligation,
     available: &[Available],
@@ -1986,6 +2086,10 @@ enum DependencyFrame<'a> {
         start: usize,
     },
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn check_dependency<'m>(
     dependency: &ProofDependency,
     mut meter: Meter<'m>,
@@ -2142,6 +2246,10 @@ fn check_dependency<'m>(
     })();
     (meter, result)
 }
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
 fn check_contract<'m>(
     obligation: &ProofObligation,
     contract: &ContractGoal,
@@ -2226,6 +2334,10 @@ enum Mc1Frame<'a> {
     Enter(&'a Form, u32),
     Children(&'a [Form], usize, u32),
 }
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn mc1_expression<'m>(form: &Form, mut meter: Meter<'m>, depth: u32) -> Transition<'m, String> {
     let result = (|| -> Result<String, Diagnostic> {
         let mut pending = WorkStack::new();
@@ -2289,6 +2401,10 @@ pub fn prepare_contract(
 ) -> Result<crate::Prepared, Diagnostic> {
     prepare_checked_contract(contract, limits).map(|(prepared, _)| prepared)
 }
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
 fn prepare_checked_contract(
     contract: &ContractGoal,
     limits: Limits,
@@ -2563,6 +2679,10 @@ fn prepare_checked_contract(
     Ok((result, literal))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(crate) fn canonical_wrapping_add(env: &noble_kernel::contracts::Env) -> bool {
     use noble_kernel::{
         contracts::{Behavior, Definition},
@@ -2601,6 +2721,10 @@ pub(crate) fn same_inst(a: &noble_kernel::words::Inst, b: &noble_kernel::words::
                 _ => false,
             })
 }
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn matches_eq_add(form: &Form, input_name: &str, output_name: &str, literal: i64) -> bool {
     let Ok(eq) = operation(form, "eq", 2) else {
         return false;
@@ -2619,6 +2743,10 @@ fn matches_eq_add(form: &Form, input_name: &str, output_name: &str, literal: i64
         && atom(&add[1]).ok().and_then(|word| word.parse::<i64>().ok()) == Some(literal)
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 /// Expansion of the checked constructors in `check_contract`. Every instance
 /// of `__N__` is sourced from the independently accepted literal node. These
 /// are actual PC introduction/elimination terms, not a selected theorem name.

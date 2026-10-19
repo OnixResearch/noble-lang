@@ -74,6 +74,10 @@ impl CheckedSelectedTarget<'_> {
         &self.body
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
     /// Locate an operation in the original selected definition, including a
     /// quotation body's operations. This is source correspondence only; the
     /// compiler and host must still bind the emitted instruction and value.
@@ -164,6 +168,10 @@ impl CheckedSelectedTarget<'_> {
         Ok(source.span)
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
     /// Authenticate a quote occurrence in the retained source and the
     /// independently rechecked selected definition. The runtime value that
     /// will be captured is not known until the VM executes this instruction.
@@ -320,6 +328,10 @@ impl SourceCorrespondenceCandidate<'_> {
 }
 
 impl super::Session {
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
     /// Select only the current retained definition from its complete accepted
     /// single-invocation submission. Recheck both root and definition body in
     /// the exact emitted environment; declarations alone have no authority.

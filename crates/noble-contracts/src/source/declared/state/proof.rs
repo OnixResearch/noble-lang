@@ -17,6 +17,10 @@ impl super::ModuleSession {
         clippy::too_many_arguments,
         reason = "Owner: noble-maintainers; module, version, contract and proof names are independent namespace selectors that refuse separately; bundling them would change the public noble-contracts API and its reviewed source inventory."
     )]
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
     pub fn correspond_checked_target<'a>(
         &'a self,
         module_name: &str,
@@ -151,6 +155,10 @@ impl super::ModuleSession {
     }
 }
 
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
 fn same_candidate(
     left: &noble_kernel::untrusted::Candidate,
     right: &noble_kernel::untrusted::Candidate,

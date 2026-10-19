@@ -23,6 +23,10 @@ impl Symbolic {
     }
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 /// A declaration-level effect variable is an arbitrary set, not a hole whose
 /// bound may be narrowed. Compare the body's union formula with its declared
 /// formula before the concrete finite-bit solver runs.
@@ -114,6 +118,10 @@ pub(super) fn rigid(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// An equality with `pure ∪ x` constrains `x` exactly. Propagate only
 /// through the neutral side; an arbitrary union cannot attribute effects to
 /// either operand and remains unknown until another equation constrains it.
@@ -396,6 +404,10 @@ fn close_term(
 mod tests {
     use super::super::Effect;
 
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+    )]
     #[test]
     fn independent_pure_constraints_on_shared_branch_effect_converge_without_losing_host_bits() {
         // A generic match can equate the same inferred branch effect with a

@@ -95,6 +95,10 @@ fn parse_member<'a>(
     ))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn parse_word_member<'a>(
     cursor: super::Cursor<'a>,
     spelling: &[u8],
@@ -161,6 +165,10 @@ fn logical(
     Ok((cursor, form))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn binding_block(
     mut cursor: super::Cursor<'_>,
 ) -> Result<(super::Cursor<'_>, alloc::vec::Vec<super::Binding>), crate::Diagnostic> {
@@ -209,6 +217,10 @@ fn binding_block(
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn reference(text: &str, logical_target: bool) -> bool {
     let target_name = |name| {
         if logical_target {
@@ -234,6 +246,10 @@ fn reference(text: &str, logical_target: bool) -> bool {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn contract(
     cursor: super::Cursor<'_>,
     span: crate::Span,
@@ -298,6 +314,10 @@ fn contract(
     ))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn proof(
     cursor: super::Cursor<'_>,
     span: crate::Span,
@@ -369,6 +389,10 @@ fn proof(
     ))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn signature(
     cursor: super::Cursor<'_>,
 ) -> Result<(super::Cursor<'_>, super::Member), crate::Diagnostic> {
@@ -449,6 +473,10 @@ fn variant(
     ))
 }
 
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
 fn variant_name(
     spelling: &str,
     span: crate::Span,
@@ -513,6 +541,10 @@ fn variant_arm(
     Ok((cursor, left, left_type, left_public))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn require(
     cursor: super::Cursor<'_>,
 ) -> Result<(super::Cursor<'_>, super::Member), crate::Diagnostic> {

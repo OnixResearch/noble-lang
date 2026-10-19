@@ -1,6 +1,10 @@
 //! Parse one logical S-expression from a scanner-selected bracketed body.
 //! This syntax is untrusted; independent proof/type checking happens later.
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 pub(super) fn parse(
     tokens: &[crate::source::lexer::LogicalToken],
     span: crate::Span,

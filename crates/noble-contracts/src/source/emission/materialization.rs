@@ -117,10 +117,6 @@ pub(super) fn body(
 }
 
 impl Nodes {
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; materializing a draft allocates witness terms and grows the owned node/span/text buffers after checked metering and indexing."
-    )]
     fn push(
         &mut self,
         draft: &mut crate::source::inference::Draft,

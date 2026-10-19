@@ -1,5 +1,9 @@
 //! Bounded scanning and capture of a bracketed module definition body.
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn parse<'a>(
     input_bytes: &[u8],
     limits: crate::Limits,

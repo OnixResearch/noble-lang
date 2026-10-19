@@ -209,6 +209,10 @@ fn finish_draft(
     Ok((node, draft.span))
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 pub(crate) fn check(
     env: &noble_kernel::contracts::Env,
     candidate: &noble_kernel::untrusted::Candidate,

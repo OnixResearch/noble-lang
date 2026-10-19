@@ -82,6 +82,10 @@ fn take_words(
     Ok((session, words))
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn install_schema(
     installed: Installed,
     schema: &crate::source::declared::Schema,

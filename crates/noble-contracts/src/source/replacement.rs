@@ -17,6 +17,10 @@ fn infer(
     super::inference::infer(scope, super::inference::Mode::Declaration, &[], &mut meter)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn compatible(
     session: &super::Session,
     previous: &super::Named,

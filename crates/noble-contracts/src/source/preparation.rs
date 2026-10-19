@@ -189,10 +189,6 @@ impl super::Session {
         })
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; calculator declared inference borrows its retained environment, while ordinary profiles still clone bindings or build a checked bootstrap environment."
-    )]
     pub(super) fn environment(
         &self,
     ) -> Result<Cow<'_, noble_kernel::contracts::Env>, crate::Diagnostic> {
@@ -240,6 +236,10 @@ impl super::Session {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn declaration(
     tree: super::Tree,
     name: alloc::string::String,

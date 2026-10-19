@@ -130,6 +130,10 @@ fn finish(
     Ok(session)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn bound_registration(
     session: &crate::source::declared::ModuleSession,
     name: &str,
@@ -211,6 +215,10 @@ fn declare_word(
     Ok((session, words))
 }
 
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
 fn install_registration(
     mut session: crate::source::declared::ModuleSession,
     registration: Registration,

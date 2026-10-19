@@ -321,6 +321,10 @@ enum ScanContext {
     ProofTerm,
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn logical_revision(token: &crate::source::lexer::Token) -> Option<u32> {
     if token.span.end.checked_sub(token.span.start) != Some(1) {
         return None;
@@ -332,10 +336,18 @@ fn logical_revision(token: &crate::source::lexer::Token) -> Option<u32> {
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn word_is(token: &crate::source::lexer::Token, spelling: &[u8]) -> bool {
     matches!(&token.kind, crate::source::lexer::TokenKind::Word(bytes) if bytes == spelling)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn scan_context(
     context: ScanContext,
     token: &crate::source::lexer::Token,

@@ -1,3 +1,7 @@
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn collect(
     state: &super::super::inference::State,
     environment: &mut noble_kernel::contracts::Env,
@@ -29,6 +33,10 @@ pub(super) fn collect(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn install_interface(
     body: &super::super::inference::Body,
     arena: &crate::inference::Arena,

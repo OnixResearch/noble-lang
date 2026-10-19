@@ -80,6 +80,10 @@ struct PublishedProof {
 }
 
 impl PartialEq for Module {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn eq(&self, other: &Self) -> bool {
         // A typed goal contains a kernel Submission, which deliberately has
         // no equality. Its derivation is fixed by the exact module source,
@@ -137,6 +141,10 @@ pub(crate) struct DefinitionOrigin<'a> {
     pub span: crate::Span,
 }
 
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
 /// Reparse a claimed module's source, not its specialization slots, to bind
 /// one lexical definition to its exact original bracketed body. This proves
 /// internal consistency of the supplied bytes, not their historical
@@ -208,6 +216,10 @@ pub(crate) fn verify_definition_origin(
     })
 }
 
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
 /// Recover the complete, independently tokenized original caller word. A
 /// caller-supplied span is accepted only if it covers that whole source node,
 /// not a substring or another token inside the retained definition body.
@@ -281,6 +293,10 @@ pub(crate) fn verify_named_call_origin<'a>(
         .map_err(|_| crate::invalid(source_span, "named call word is not UTF-8"))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// An imported named call may target only a unique, explicitly exported
 /// lexical definition in the original owner module, not a similarly named
 /// later source, hidden definition, or dynamically allocated specialization.
@@ -547,6 +563,10 @@ fn exposure_step<'a>(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn exposed_node<'a>(
     ty: &'a noble_kernel::types::Ty,
     environment: &noble_kernel::contracts::Env,

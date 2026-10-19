@@ -47,6 +47,10 @@ impl super::materialize::State {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// Build one generic instance after both of its limits are known to hold.
 ///
 /// The instance owns its two ordered arguments *and* a canonical descriptor
@@ -244,6 +248,10 @@ fn push(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// Count, and charge one work unit per node for, the owned `Ty` nodes of a
 /// registered nominal descriptor before a materialized occurrence clones it.
 /// Nodes are counted as they are scheduled, so the worklist stays within
@@ -312,6 +320,10 @@ impl<'a> Reservation<'a> {
         Ok(())
     }
 
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn descriptor(
         &mut self,
         shape: &'a noble_kernel::types::NominalShape,
@@ -346,6 +358,10 @@ fn type_size(constructors: u32, span: crate::Span) -> Result<u32, crate::Diagnos
     }
 }
 
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
 /// Checked sum of owned `Ty` node counts, refused above `TYPE_NODE_CAP`.
 /// This physical bound is independent of the logical constructor limit.
 pub(super) fn type_nodes(

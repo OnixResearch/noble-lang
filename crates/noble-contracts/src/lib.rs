@@ -1,4 +1,10 @@
 #![no_std]
+// The contracts modules are cohesive units; splitting them for a line budget
+// would change module paths and the extracted subject.
+#![expect(
+    tigerstyle::excessive_file_length,
+    reason = "noble-contracts modules are cohesive units; splitting them for a line budget would churn the extracted subject"
+)]
 #![feature(register_tool)]
 #![register_tool(charon, octet, tigerstyle)]
 

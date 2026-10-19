@@ -1,6 +1,10 @@
 mod words;
 
 impl super::ModuleSession {
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+    )]
     /// The checked rank-1 interface exported by one immutable module version.
     /// No parallel Rust signature table is consulted.
     pub fn checked_signature(

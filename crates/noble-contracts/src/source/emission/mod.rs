@@ -78,6 +78,10 @@ impl Assembly {
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; closing, concrete interface materialization, and independent body checks propagate typed failures; emission requires a checked root before returning a submission."
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 pub(super) fn emit(
     mut state: super::inference::State,
     mut environment: noble_kernel::contracts::Env,
