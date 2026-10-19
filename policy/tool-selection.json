@@ -111,7 +111,7 @@
     "crates/noble-wasm/runtime/stack.wat": "6abc22e80a016b4f6f0f263e696bf401d370c3685e732606e388636d9f230db0",
     "crates/noble-wasm/src/component/async.wat": "053a71122f287f857d15f890e0ddcdbabefd3277abaceb73acccd8206f653f58",
     "crates/noble-wasm/src/component/runtime.wat": "c1a21dd7573c87235d176722b3cdd0f7319c896912be564bb210c8cc41eb5754",
-    "crates/noble-wasm/src/source/mod.rs": "82600b0dc1de3be9acd31e0cc42f23854aafadd14ef5122a3efb2654a9facd14",
+    "crates/noble-wasm/src/source/mod.rs": "b745a5fbfb04d43645c6d8102a1f4f5ed56314859b34d5ae0d2562b2e7cbdb35",
     "crates/noble-wasm/src/source/origin.rs": "5ca79d2c72d047ca556c4fea87b969c30a0836b34d4e8e9e55901fff67f18469",
     "crates/noble-wasm/wit/async.wit": "c39188a9900f23c1eb4905ea1d6504c93c735b0d9214f1497b968315d2a505d0",
     "crates/noble-wasm/wit/bootstrap.wit": "d1928908b21d1d63be477fdf2226a6547db7d6efa5ef905635498d1d1e43bc68",
