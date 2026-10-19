@@ -10,10 +10,7 @@
 //! except where a recorded boundary fix needs otherwise: `numeric-graph-v1`
 //! D4 made [`ShapeTree`] opaque so that its depth is bounded at construction.
 
-use crate::diag::{Diagnostic, Malformed, Site};
 use crate::identity::{IdentityHasher, IdentityScheme};
-use alloc::{boxed::Box, format, string::String, vec::Vec};
-
 /// IR version tag (D2).
 pub const IR_VERSION: &str = "ngraph-ir/0";
 /// Semantic revision of the D3 binary32 contract and the K-NUM-01 `I64` reading.
@@ -218,7 +215,7 @@ pub enum Fact {
     /// `allow_zero`) is `1`. Attached to the first member.
     OneHot {
         /// Group members in order.
-        group: Vec<NodeId>,
+        group: alloc::vec::Vec<NodeId>,
         /// Whether the all-zero assignment is allowed.
         allow_zero: bool,
     },
@@ -250,12 +247,12 @@ impl Fact {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Provenance {
     /// Claimed derivable by a transfer rule; the checker re-derives it.
-    Derived(String),
+    Derived(alloc::string::String),
     /// Checked on the actual input/param cell before evaluation (`E-FACT-INPUT`).
     InputValidated,
     /// Evidence-backed (#8 witness). Excluded from Phase B (approval P5):
     /// always `E-FACT-UNCHECKED`.
-    Evidence(Vec<u8>),
+    Evidence(alloc::vec::Vec<u8>),
     /// Established by the named earlier `guard` node.
     Guard(NodeId),
     /// A caller assertion with no allowed provenance: always `E-FACT-UNCHECKED`.
@@ -305,7 +302,7 @@ pub enum Op {
         /// Bias bits (`-0` for a bias-free sum).
         bias: u32,
         /// Terms in stored order.
-        terms: Vec<AffineTerm>,
+        terms: alloc::vec::Vec<AffineTerm>,
     },
     /// `relu(x)`: NaN↦NaN, `x > 0 ? x : +0`.
     F32Relu(NodeId),
@@ -333,7 +330,7 @@ pub enum Op {
         /// Index value.
         index: NodeId,
         /// Candidates (repeats allowed), `1..T_max` entries.
-        table: Vec<NodeId>,
+        table: alloc::vec::Vec<NodeId>,
         /// Rule for `i < 0`.
         below: OutOfRange,
         /// Rule for `i ≥ n`.
@@ -375,7 +372,7 @@ impl Op {
 
     /// Value operands in canonical order (affine `One` operands omitted).
     #[must_use]
-    pub fn operands(&self) -> Vec<NodeId> {
+    pub fn operands(&self) -> alloc::vec::Vec<NodeId> {
         let capacity = match self {
             Self::Input(_) | Self::Param(_) | Self::Const(_) => 0,
             Self::F32Affine { terms, .. } => terms.len(),
@@ -386,7 +383,7 @@ impl Op {
             } => group.len() + 1,
             _ => 3,
         };
-        let mut operands = Vec::with_capacity(capacity);
+        let mut operands = alloc::vec::Vec::with_capacity(capacity);
         self.visit_operands(|n| operands.push(n));
         operands
     }
@@ -466,7 +463,7 @@ pub struct Origin {
     /// Source node that created this graph node.
     pub site: SourceRef,
     /// Expansion stack (outermost first): named calls, `run`, `dip` sites.
-    pub expansion: Vec<SourceRef>,
+    pub expansion: alloc::vec::Vec<SourceRef>,
 }
 
 /// One graph node.
@@ -509,7 +506,7 @@ pub struct Subject {
     /// 32-byte subject identity digest.
     pub identity: [u8; 32],
     /// Exact closure definition identities, in the producer's canonical order.
-    pub closure: Vec<u64>,
+    pub closure: alloc::vec::Vec<u64>,
 }
 
 impl Subject {
@@ -519,7 +516,7 @@ impl Subject {
         ids: &dyn IdentityScheme,
         kind: SubjectKind,
         parts: &[&[u8]],
-        closure: Vec<u64>,
+        closure: alloc::vec::Vec<u64>,
     ) -> Self {
         let mut h = ids.start();
         h.update(b"noble.ngraph.subject.v0");
@@ -538,7 +535,12 @@ impl Subject {
     /// Subject of a directly authored graph identified by its author name/text.
     #[must_use]
     pub fn authored(ids: &dyn IdentityScheme, name: &str) -> Self {
-        Self::derive(ids, SubjectKind::Authored, &[name.as_bytes()], Vec::new())
+        Self::derive(
+            ids,
+            SubjectKind::Authored,
+            &[name.as_bytes()],
+            alloc::vec::Vec::new(),
+        )
     }
 }
 
@@ -559,11 +561,11 @@ pub const MAX_SHAPE_DEPTH: u32 = 127;
 
 /// The refusal of a shape tree deeper than [`MAX_SHAPE_DEPTH`] at `site`.
 #[must_use]
-pub fn shape_depth_refusal(site: Site) -> Diagnostic {
-    Diagnostic::malformed(
-        Malformed::Payload,
+pub fn shape_depth_refusal(site: crate::diag::Site) -> crate::diag::Diagnostic {
+    crate::diag::Diagnostic::malformed(
+        crate::diag::Malformed::Payload,
         site,
-        format!("a shape tree nests at most {MAX_SHAPE_DEPTH} pairs"),
+        alloc::format!("a shape tree nests at most {MAX_SHAPE_DEPTH} pairs"),
     )
 }
 
@@ -580,7 +582,7 @@ enum Shape {
     Scalar,
     Unit,
     /// Nested-pair depth (one more than the deeper part's) and the parts.
-    Pair(u32, Box<(ShapeTree, ShapeTree)>),
+    Pair(u32, alloc::boxed::Box<(ShapeTree, ShapeTree)>),
 }
 
 /// One node of a [`ShapeTree`].
@@ -605,12 +607,12 @@ impl ShapeTree {
     /// # Errors
     /// `E-GRAPH-MALFORMED` (payload) when the pair would nest more than
     /// [`MAX_SHAPE_DEPTH`] pairs.
-    pub fn pair(a: Self, b: Self) -> Result<Self, Diagnostic> {
+    pub fn pair(a: Self, b: Self) -> Result<Self, crate::diag::Diagnostic> {
         let depth = a.depth().max(b.depth()).saturating_add(1);
         if depth > MAX_SHAPE_DEPTH {
-            return Err(shape_depth_refusal(Site::Graph));
+            return Err(shape_depth_refusal(crate::diag::Site::Graph));
         }
-        Ok(Self(Shape::Pair(depth, Box::new((a, b)))))
+        Ok(Self(Shape::Pair(depth, alloc::boxed::Box::new((a, b)))))
     }
 
     /// Nested pairs on the deepest path (0 for a leaf).
@@ -645,19 +647,19 @@ pub struct Graph {
     /// Sub-profile.
     pub profile: SubProfile,
     /// Ordered interface slots.
-    pub slots: Vec<Slot>,
+    pub slots: alloc::vec::Vec<Slot>,
     /// Nodes in canonical (creation) order.
-    pub nodes: Vec<Node>,
+    pub nodes: alloc::vec::Vec<Node>,
     /// Ordered outputs.
-    pub outputs: Vec<NodeId>,
+    pub outputs: alloc::vec::Vec<NodeId>,
     /// Fact records.
-    pub facts: Vec<FactRecord>,
+    pub facts: alloc::vec::Vec<FactRecord>,
     /// Root subject.
     pub subject: Subject,
     /// Input stack shape (`None`: every slot is one flat stack item).
-    pub input_shape: Option<Vec<ShapeTree>>,
+    pub input_shape: Option<alloc::vec::Vec<ShapeTree>>,
     /// Output stack shape (`None`: every output is one flat stack item).
-    pub output_shape: Option<Vec<ShapeTree>>,
+    pub output_shape: Option<alloc::vec::Vec<ShapeTree>>,
 }
 
 /// Incremental graph builder (no validation; the checker validates).
@@ -673,10 +675,10 @@ impl GraphBuilder {
         Self {
             graph: Graph {
                 profile,
-                slots: Vec::new(),
-                nodes: Vec::new(),
-                outputs: Vec::new(),
-                facts: Vec::new(),
+                slots: alloc::vec::Vec::new(),
+                nodes: alloc::vec::Vec::new(),
+                outputs: alloc::vec::Vec::new(),
+                facts: alloc::vec::Vec::new(),
                 subject,
                 input_shape: None,
                 output_shape: None,
@@ -771,7 +773,11 @@ impl GraphBuilder {
     }
 
     /// Records interface shapes.
-    pub fn shapes(&mut self, input: Option<Vec<ShapeTree>>, output: Option<Vec<ShapeTree>>) {
+    pub fn shapes(
+        &mut self,
+        input: Option<alloc::vec::Vec<ShapeTree>>,
+        output: Option<alloc::vec::Vec<ShapeTree>>,
+    ) {
         self.graph.input_shape = input;
         self.graph.output_shape = output;
     }
@@ -806,9 +812,9 @@ pub type Digest = [u8; 32];
 
 /// Lowercase hex of a digest.
 #[must_use]
-pub fn hex(d: &[u8]) -> String {
+pub fn hex(d: &[u8]) -> alloc::string::String {
     use core::fmt::Write as _;
-    let mut s = String::with_capacity(d.len() * 2);
+    let mut s = alloc::string::String::with_capacity(d.len() * 2);
     for b in d {
         let _ = write!(s, "{b:02x}");
     }
@@ -818,7 +824,7 @@ pub fn hex(d: &[u8]) -> String {
 /// Canonical byte encoder used for identities (length-prefixed, little-endian),
 /// streamed into the injected [`IdentityScheme`].
 pub(crate) struct Canon<'s> {
-    h: Box<dyn IdentityHasher + 's>,
+    h: alloc::boxed::Box<dyn IdentityHasher + 's>,
 }
 
 impl<'s> Canon<'s> {
@@ -956,7 +962,7 @@ impl<'s> Canon<'s> {
         }
     }
 
-    fn shapes(&mut self, s: Option<&Vec<ShapeTree>>) {
+    fn shapes(&mut self, s: Option<&alloc::vec::Vec<ShapeTree>>) {
         // Recursion depth is bounded by `MAX_SHAPE_DEPTH`.
         fn tree(c: &mut Canon<'_>, t: &ShapeTree) {
             match t.node() {
@@ -1023,7 +1029,7 @@ impl Graph {
 
     /// Ordered param slot indices.
     #[must_use]
-    pub fn param_slots(&self) -> Vec<u32> {
+    pub fn param_slots(&self) -> alloc::vec::Vec<u32> {
         (0u32..)
             .zip(&self.slots)
             .filter(|(_, s)| s.kind == SlotKind::Param)
@@ -1033,7 +1039,7 @@ impl Graph {
 
     /// Ordered input slot indices.
     #[must_use]
-    pub fn input_slots(&self) -> Vec<u32> {
+    pub fn input_slots(&self) -> alloc::vec::Vec<u32> {
         (0u32..)
             .zip(&self.slots)
             .filter(|(_, s)| s.kind == SlotKind::Input)
