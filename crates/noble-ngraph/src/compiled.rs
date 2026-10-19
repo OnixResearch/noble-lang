@@ -114,15 +114,15 @@ impl Compiled {
         let one_reg = next;
         let regs = next + 1;
         let r = |x: &crate::ir::NodeId| reg[x.index()];
-        let mut consts = alloc::vec::Vec::new();
-        let mut slot_regs = alloc::vec::Vec::new();
+        let mut consts = alloc::vec::Vec::with_capacity(n);
+        let mut slot_regs = alloc::vec::Vec::with_capacity(n);
         let layer_count = checked.layer_count() as usize;
         let mut layers = alloc::vec![(0u32, 0u32); layer_count.max(1)];
         let mut fail_min_at_layer = alloc::vec![u32::MAX; layer_count.max(1)];
-        let mut fins: alloc::vec::Vec<F> = alloc::vec::Vec::new();
-        let mut iins: alloc::vec::Vec<I> = alloc::vec::Vec::new();
-        let mut coef = alloc::vec::Vec::new();
-        let mut src = alloc::vec::Vec::new();
+        let mut fins: alloc::vec::Vec<F> = alloc::vec::Vec::with_capacity(n);
+        let mut iins: alloc::vec::Vec<I> = alloc::vec::Vec::with_capacity(n);
+        let mut coef = alloc::vec::Vec::with_capacity(n);
+        let mut src = alloc::vec::Vec::with_capacity(n);
         let mut cur_layer = u32::MAX;
         for &i in &order {
             let node = &g.nodes[i as usize];
