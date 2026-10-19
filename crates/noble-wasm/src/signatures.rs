@@ -307,14 +307,14 @@ impl Pool {
             attempt!(charge(prefix.saturating_add(1)));
         }
         let suffix = &key[prefix..];
-        let size = match self
+        let size_bytes = match self
             .bytes
             .checked_add(suffix.len().saturating_add(PREFIX_RECORD_BYTES))
         {
             Some(size) => size,
             None => return Err(crate::Diagnostic::Exhausted),
         };
-        let length = match u32::try_from(key.len()) {
+        let length_bytes = match u32::try_from(key.len()) {
             Ok(value) => value,
             Err(_) => return Err(crate::Diagnostic::Exhausted),
         };
@@ -327,12 +327,15 @@ impl Pool {
         let id = attempt!(number(index));
         self.prefix_keys.push(PrefixKey {
             prefix,
-            length,
+            length: length_bytes,
             hash,
             suffix: suffix.to_vec(),
         });
-        self.candidates.entry((hash, length)).or_default().push(id);
-        self.bytes = size;
+        self.candidates
+            .entry((hash, length_bytes))
+            .or_default()
+            .push(id);
+        self.bytes = size_bytes;
         self.expanded_bytes = expanded_bytes;
         Ok(id)
     }
