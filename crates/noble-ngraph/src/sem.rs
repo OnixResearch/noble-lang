@@ -609,7 +609,6 @@ pub mod soft {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloc::string::String;
 
     #[test]
     fn exact_decimal_literals() {
@@ -633,7 +632,8 @@ mod tests {
                 digits.push(carry);
             }
         }
-        let mut s: String = digits.iter().rev().map(|d| char::from(b'0' + d)).collect();
+        let mut s: alloc::string::String =
+            digits.iter().rev().map(|d| char::from(b'0' + d)).collect();
         s.push_str("e-149");
         assert_eq!(exact_f32_decimal(&s), Some(1));
     }
