@@ -40,6 +40,8 @@ fn fixture_for(
     else {
         return Err("missing named contract proof".into());
     };
+    assert_eq!(batch.obligations.len(), 1);
+    assert_eq!(contract.subject.definition_ordinal, 0);
     Ok((contract.as_ref().clone(), batch))
 }
 fn fixture() -> Result<
@@ -235,6 +237,13 @@ fn named_v2_rejects_wrong_inst_and_unreachable_graph() -> Result<(), String> {
         noble_contracts::intrinsic::prepare_named_contract(&orphan_node, LIMITS).is_err(),
         "unreachable node"
     );
+    refuses_orphan_and_misbound_rows(&goal)
+}
+
+/// Orphan and misbound rows must be refused without changing the checked goal.
+fn refuses_orphan_and_misbound_rows(
+    goal: &noble_contracts::intrinsic::ContractGoal,
+) -> Result<(), String> {
     let mut orphan_row = goal.clone();
     let mut extra = orphan_row.subject.accepted_submission.definitions[0].clone();
     extra.definition = noble_kernel::contracts::Definition(1234);
