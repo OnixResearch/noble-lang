@@ -274,30 +274,5 @@ fn nominal_resource_fixture_rejects_dup_drop_and_capture() -> Result<(), String>
     }
     Ok(())
 }
-
-#[test]
-fn private_arm_is_owner_only_but_owner_eliminator_is_callable() -> Result<(), String> {
-    let mut session =
-        noble_contracts::source::ModuleSession::new(&[]).map_err(|e| format!("{e:?}"))?;
-    session = commit(session,b"module ledger@1 [ variant Status Ready I64 public Failed Text private export Status export Status.Ready export make export inspect def make [ \"err\" Status.Failed ] def inspect [ [ drop 1 ] [ drop 0 ] Status.match ] ]")?;
-    let accepted = session
-        .prepare(b"ledger@1.make ledger@1.inspect", &[], LIMITS)
-        .map_err(|e| format!("{e:?}"))?;
-    assert_eq!(accepted.output(), &[noble_kernel::types::Ty::I64]);
-    assert!(accepted.submission().is_some());
-    assert!(session
-        .prepare(b"ledger@1.Status.Failed", &[], LIMITS)
-        .is_err());
-    assert!(session
-        .prepare(
-            b"ledger@1.make [ drop 1 ] [ drop 0 ] ledger@1.Status.match",
-            &[],
-            LIMITS
-        )
-        .is_err());
-    let missing_arm=b"module ledger@2 [ variant Status Ready I64 public Failed Text private export bad def bad [ 1 Status.Ready [ drop 1 ] Status.match ] ]";
-    assert!(
-        matches!(&session.prepare(missing_arm,&[],LIMITS),Err(e) if e.stage()==noble_contracts::source::Stage::Check)
-    );
-    Ok(())
-}
+#[path = "declared/owners.rs"]
+mod owners;
