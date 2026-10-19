@@ -290,7 +290,7 @@ pub(super) fn register_bound_clock(
     registration: super::BoundClockRegistration,
 ) -> Result<(super::Env, super::Definition), super::NominalError> {
     let has_identity = !registration.adapter_identity.is_empty();
-    let has_input = registration.input.is_empty();
+    let has_input = !registration.input.is_empty();
     let is_i64_returning = registration.output.as_slice() == [crate::types::Ty::I64];
     let has_test_clock_effect = registration.effects.as_slice() == [super::TEST_CLOCK];
     let is_registered = env

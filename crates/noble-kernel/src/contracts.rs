@@ -229,7 +229,7 @@ impl ClockPlan<'_> {
     pub fn decide(&self, requested: &str, index: usize) -> Result<ClockDecision, NominalError> {
         let is_test_clock = self.operation == "test.clock";
         let has_adapter = !self.adapter_identity.is_empty();
-        let has_input = self.input.is_empty();
+        let has_input = !self.input.is_empty();
         let is_i64_returning = self.output == [crate::types::Ty::I64];
         let has_test_clock_effect = self.effects == [TEST_CLOCK];
         let is_short_script = self.script.len() <= 16;
