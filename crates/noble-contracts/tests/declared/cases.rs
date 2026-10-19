@@ -891,8 +891,6 @@ fn exact_increment_contract_binds_checked_definition_not_text_only() -> Result<(
 
 #[test]
 fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Result<(), String> {
-    use noble_contracts::intrinsic::{prepare_contract, PendingGoal};
-    use noble_kernel::untrusted::{Node, NodeId};
     let source = b"module arithmetic@1 [
   def other [ 2 + ]
   def increment [ 1 + ]
@@ -912,17 +910,19 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
     let batch = prepared
         .proof_obligations()
         .ok_or("missing contract proof")?;
-    let PendingGoal::Contract { contract } = &batch.obligations[0].goal else {
+    let noble_contracts::intrinsic::PendingGoal::Contract { contract } = &batch.obligations[0].goal
+    else {
         return Err("missing resolved contract".into());
     };
-    prepare_contract(contract, super::LIMITS).map_err(|error| format!("{error:?}"))?;
+    noble_contracts::intrinsic::prepare_contract(contract, super::LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
     noble_contracts::intrinsic::check_batch(batch, super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(contract.subject.definition_ordinal, 1);
     let mut changed = contract.clone();
     changed.subject.definition_source = b"def increment [ 2 + ]".to_vec();
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "forged definition bytes"
     );
     let mut changed = contract.clone();
@@ -939,38 +939,38 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
     changed.subject.definition_source = b"def increment [ 2 + ]".to_vec();
     changed.subject.source_dependencies[0].full_source = changed.subject.module_source.clone();
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "source changed but accepted recipe stayed old"
     );
     let mut changed = contract.clone();
     changed.subject.source_span.start += 1;
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "forged lexical span"
     );
     let mut changed = contract.clone();
     changed.subject.definition_ordinal = 0;
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "forged source ordinal"
     );
     let mut changed = contract.clone();
     changed.subject.definition_owner += 1;
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "forged owner"
     );
     let mut changed = contract.clone();
     changed.subject.source_dependencies[0].full_source[0] = b'x';
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "forged source dependency"
     );
     let mut changed = contract.clone();
     changed.subject.accepted_submission.environment.kinds[4] =
         noble_kernel::contracts::Behavior::Equals;
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "forged builtin behavior"
     );
     let mut changed = contract.clone();
@@ -983,12 +983,14 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         .ok_or("missing accepted specialization")?;
     let first = usize::try_from(definition.body.candidate.body[0].0)
         .map_err(|_| "accepted literal node exceeds host address space")?;
-    let Node::Literal { lit, .. } = &mut definition.body.candidate.nodes[first] else {
+    let noble_kernel::untrusted::Node::Literal { lit, .. } =
+        &mut definition.body.candidate.nodes[first]
+    else {
         return Err("missing literal".into());
     };
     *lit = noble_kernel::untrusted::Lit::I64(2);
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "same interface but different accepted code"
     );
     let mut changed = contract.clone();
@@ -1001,12 +1003,14 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         .ok_or("missing accepted specialization")?;
     let first = usize::try_from(definition.body.candidate.body[0].0)
         .map_err(|_| "accepted literal node exceeds host address space")?;
-    let Node::Literal { inst, .. } = &mut definition.body.candidate.nodes[first] else {
+    let noble_kernel::untrusted::Node::Literal { inst, .. } =
+        &mut definition.body.candidate.nodes[first]
+    else {
         return Err("missing literal".into());
     };
     inst.bindings.clear();
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "forged literal instantiation"
     );
     let mut changed = contract.clone();
@@ -1019,12 +1023,14 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         .ok_or("missing accepted specialization")?;
     let second = usize::try_from(definition.body.candidate.body[1].0)
         .map_err(|_| "accepted add node exceeds host address space")?;
-    let Node::Invocation { inst, .. } = &mut definition.body.candidate.nodes[second] else {
+    let noble_kernel::untrusted::Node::Invocation { inst, .. } =
+        &mut definition.body.candidate.nodes[second]
+    else {
         return Err("missing add".into());
     };
     inst.bindings.clear();
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "forged add instantiation"
     );
     let mut changed = contract.clone();
@@ -1035,9 +1041,12 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         .iter_mut()
         .find(|definition| definition.identity == changed.subject.definition_identity)
         .ok_or("missing accepted specialization")?;
-    definition.body.candidate.body = vec![NodeId(0), NodeId(0)];
+    definition.body.candidate.body = vec![
+        noble_kernel::untrusted::NodeId(0),
+        noble_kernel::untrusted::NodeId(0),
+    ];
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "wrong complete recipe"
     );
     let mut changed = contract.clone();
@@ -1050,13 +1059,13 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         .ok_or("missing accepted specialization")?;
     definition.definition.0 += 1;
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "wrong specialization slot"
     );
     let mut changed = contract.clone();
     let root = usize::try_from(changed.subject.accepted_submission.body.candidate.body[0].0)
         .map_err(|_| "accepted root node exceeds host address space")?;
-    let Node::Invocation { inst, .. } =
+    let noble_kernel::untrusted::Node::Invocation { inst, .. } =
         &mut changed.subject.accepted_submission.body.candidate.nodes[root]
     else {
         return Err("missing root invocation".into());
@@ -1064,7 +1073,7 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
     inst.bindings
         .push(noble_kernel::words::Binding::Stack(vec![]));
     assert!(
-        prepare_contract(&changed, super::LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_contract(&changed, super::LIMITS).is_err(),
         "forged root instantiation"
     );
     Ok(())

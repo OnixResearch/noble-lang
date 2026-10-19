@@ -1,12 +1,10 @@
-use noble_contracts::source::{ModuleSession, Stage};
-use noble_kernel::types::Ty;
-
 const DONOR: &[u8] =
     b"module donor@1 [ def other [ 1 + ] export step def step# original step body\n[ 1 + ] ]";
 const TWICE: &[u8] = b"module chain@1 [ export twice def twice [ d.step d.step ] contract 2 twice-law [ subject twice input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 2)) ] ] export twice-law ]";
 
-fn imported_donor() -> Result<ModuleSession, String> {
-    let session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+fn imported_donor() -> Result<noble_contracts::source::ModuleSession, String> {
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     let session = super::commit(session, DONOR)?;
     super::commit(session, b"import donor@1 as d")
 }
@@ -83,8 +81,8 @@ fn two_named_calls_preserve_distinct_specializations_and_exact_original_occurren
             .find(|row| row.definition == occurrence.definition)
             .ok_or("accepted graph lost named per-use row")?;
         assert_eq!(row.identity, occurrence.definition_identity);
-        assert_eq!(row.expected.stack_in, [Ty::I64]);
-        assert_eq!(row.expected.stack_out, [Ty::I64]);
+        assert_eq!(row.expected.stack_in, [noble_kernel::types::Ty::I64]);
+        assert_eq!(row.expected.stack_out, [noble_kernel::types::Ty::I64]);
     }
     assert_ne!(
         uses[1].definition, uses[2].definition,
@@ -96,9 +94,13 @@ fn two_named_calls_preserve_distinct_specializations_and_exact_original_occurren
     let (session, outcome) = session.commit(prepared);
     outcome.map_err(|error| format!("{error:?}"))?;
     let typed = session
-        .prepare(b"chain@1.twice", &[Ty::I64], super::LIMITS)
+        .prepare(
+            b"chain@1.twice",
+            &[noble_kernel::types::Ty::I64],
+            super::LIMITS,
+        )
         .map_err(|error| format!("{error:?}"))?;
-    assert_eq!(typed.output(), &[Ty::I64]);
+    assert_eq!(typed.output(), &[noble_kernel::types::Ty::I64]);
     Ok(())
 }
 
@@ -151,7 +153,7 @@ fn rebound_import_cannot_rewrite_an_original_named_subject_or_its_proof() -> Res
     let session = super::commit(session, b"import donor@3 as d")?;
     assert!(
         matches!(session.prepare(fresh, &[], super::LIMITS), Err(error)
-        if error.stage() == Stage::Check),
+        if error.stage() == noble_contracts::source::Stage::Check),
         "new source may not silently claim x+2 after rebinding to a two-increment step"
     );
     session
@@ -217,14 +219,16 @@ fn revision_two_proof_targets_only_revision_two_contract() -> Result<(), String>
         "bare source marker must not claim the named graph theorem"
     );
     let (next, outcome) = session.commit(unproved);
-    assert!(matches!(outcome, Err(error) if error.stage() == Stage::Acceptance));
+    assert!(
+        matches!(outcome, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
+    );
     assert!(next
         .prepare(b"import claim@1 as missing", &[], super::LIMITS)
         .is_err());
     let incompatible = b"module incompatible@1 [ proof 1 wrong for c.twice-law [ (refl 0) ] ]";
     assert!(
         matches!(next.prepare(incompatible, &[], super::LIMITS), Err(error)
-        if error.stage() == Stage::Check)
+        if error.stage() == noble_contracts::source::Stage::Check)
     );
 
     let direct = b"module direct@1 [ def inc [ 1 + ] contract 1 inc-law [ subject inc input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] export inc-law ]";
@@ -233,7 +237,7 @@ fn revision_two_proof_targets_only_revision_two_contract() -> Result<(), String>
     let incompatible = b"module incompatible@1 [ proof 2 wrong for direct.inc-law [ (refl 0) ] ]";
     assert!(
         matches!(session.prepare(incompatible, &[], super::LIMITS), Err(error)
-        if error.stage() == Stage::Check)
+        if error.stage() == noble_contracts::source::Stage::Check)
     );
     Ok(())
 }
@@ -241,7 +245,8 @@ fn revision_two_proof_targets_only_revision_two_contract() -> Result<(), String>
 #[test]
 fn revision_two_rejects_pure_proofs_noncanonical_revisions_and_new_field_syntax(
 ) -> Result<(), String> {
-    let session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     let bad = [
         b"module syntax@1 [ proof 2 p : [ true ] [ (refl 0) ] ]".as_slice(),
         b"module syntax@1 [ proof 3 p : [ true ] [ (refl 0) ] ]".as_slice(),
@@ -253,7 +258,7 @@ fn revision_two_rejects_pure_proofs_noncanonical_revisions_and_new_field_syntax(
     for source in bad {
         assert!(
             matches!(session.prepare(source, &[], super::LIMITS), Err(error)
-            if error.stage() == Stage::Parse)
+            if error.stage() == noble_contracts::source::Stage::Parse)
         );
     }
     assert_eq!(session.generation(), 0);
