@@ -59,6 +59,10 @@ struct LogicalContract {
     exported: bool,
 }
 
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the type name is the domain term at its use sites and renaming would churn the extracted subject"
+)]
 #[derive(Clone, Debug, PartialEq)]
 struct DefinitionSource {
     name: alloc::string::String,

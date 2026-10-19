@@ -23,6 +23,10 @@ impl CheckedDefinitionId {
 /// that the checked target lies outside the existing pure unary I64 theorem;
 /// in particular this is not a generic Account/effect/capture proof.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the type name is the domain term at its use sites and renaming would churn the extracted subject"
+)]
 pub enum SourceProofRefusal {
     UnsupportedProfile,
     StaleContext,
@@ -287,6 +291,10 @@ impl CheckedQuoteSite<'_> {
 /// Expected host context, not an attestation. The host must separately
 /// authenticate its pinned checker and the installed artifact bytes.
 #[derive(Clone, Copy)]
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the type name is the domain term at its use sites and renaming would churn the extracted subject"
+)]
 pub struct ProofContext<'a> {
     pub module_generation: u64,
     pub model_revision: &'a str,
@@ -297,6 +305,10 @@ pub struct ProofContext<'a> {
 /// record. This is deliberately NOT a proof receipt or release authorization:
 /// `commit_verified` trusts its host callback, and this no_std crate cannot
 /// attest a Lean process, its assumptions, or installed Wasm bytes.
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the type name is the domain term at its use sites and renaming would churn the extracted subject"
+)]
 pub struct SourceCorrespondenceCandidate<'a> {
     pub(crate) target_id: CheckedDefinitionId,
     pub(crate) target_generation: u64,

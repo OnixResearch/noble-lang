@@ -16,6 +16,10 @@ pub mod proof;
 mod replacement;
 mod resolution;
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; this re-export is the module public surface, not a convenience import"
+)]
 pub(crate) use declared::{
     verify_definition_origin, verify_named_call_origin, verify_named_export, DefinitionOrigin,
 };

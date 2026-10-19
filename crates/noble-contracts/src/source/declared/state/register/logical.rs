@@ -266,6 +266,10 @@ fn pure_type(ty: &noble_kernel::types::Ty) -> bool {
     true
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear mapping are enforced by its callers and the contracts test suite"
+)]
 fn types(
     bindings: &[crate::source::declared::parsing::Binding],
     environment: &noble_kernel::contracts::Env,
@@ -295,6 +299,10 @@ fn types(
     Ok(result)
 }
 
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the type name is the domain term at its use sites and renaming would churn the extracted subject"
+)]
 struct SourceOrigin<'a> {
     module_name: &'a str,
     version: u32,

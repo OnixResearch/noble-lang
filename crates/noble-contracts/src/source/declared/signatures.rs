@@ -288,6 +288,10 @@ fn parse_effect(
     tigerstyle::catch_all_on_enum,
     reason = "Owner: noble-contracts; the catch-all is the deliberate fail-closed arm for an enum this crate does not own"
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass pattern parser is kept linear so the grammar stays readable beside it"
+)]
 fn pattern(
     word: &str,
     binders: &[(String, VariableKind)],

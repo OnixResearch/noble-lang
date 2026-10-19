@@ -2,6 +2,10 @@ mod names;
 pub(super) mod nominals;
 mod types;
 
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the type name is the domain term at its use sites and renaming would churn the extracted subject"
+)]
 pub(super) enum ResolvedSchema {
     Concrete(noble_kernel::types::Ty, noble_kernel::contracts::NominalOps),
     Generic(

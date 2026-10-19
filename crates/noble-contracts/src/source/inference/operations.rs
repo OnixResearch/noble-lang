@@ -139,6 +139,10 @@ pub(super) fn builtin(
 /// constructed from a value or literal. The unqualified spelling chooses the
 /// uniquely most-specific compatible interface; ambiguous peers require the
 /// explicit borrowed formal ordinal (`slot.invoke.N`).
+#[expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-contracts; the loop owns one forwarded slot vector per parameter and the allocation is charged to the metered budget"
+)]
 pub(super) fn slot_invoke(
     selected: Option<u32>,
     span: crate::Span,
@@ -235,7 +239,7 @@ pub(super) fn slot_invoke(
         .iter()
         .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
         .count();
-    let prefix = &actual[..actual.len() - value_count];
+    let prefix = &actual[..actual.len().saturating_sub(value_count)];
     let mut resulting = alloc::vec::Vec::with_capacity(prefix.len().saturating_add(output.len()));
     resulting.extend_from_slice(prefix);
     resulting.extend_from_slice(output);
