@@ -49,7 +49,8 @@ impl super::super::super::Env {
             crate::types::Ty::Resource(kind) => {
                 return max_nodes > 0
                     && self.resource_kinds.contains(kind)
-                    && (payload_only || !super::super::super::live::is_live_kind(self, *kind));
+                    && (payload_only
+                        || !super::super::super::live::kind_is_slot_resource(self, *kind));
             }
             crate::types::Ty::LiveRef(_, _, _) => return false,
             crate::types::Ty::Contract
@@ -122,7 +123,8 @@ impl super::super::super::Env {
                 self.enqueue_known_generic(*id, args, shape, payload_restricted, state, scope)
             }
             crate::types::Ty::Resource(kind) => (self.resource_kinds.contains(kind)
-                && (payload_restricted || !super::super::super::live::is_live_kind(self, *kind)))
+                && (payload_restricted
+                    || !super::super::super::live::kind_is_slot_resource(self, *kind)))
             .then_some(state),
             crate::types::Ty::LiveRef(_, _, _) => None,
             crate::types::Ty::Pair(left, right) | crate::types::Ty::Sum(left, right) => {

@@ -537,11 +537,8 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
 /// Extend the fixed bootstrap table with private reserved rows and one pure
 /// Text byte-at operation, without making it available in other profiles.
 pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
-    use crate::shapes::Pattern;
-    use crate::words::{Scheme, Variable, VariableKind};
-
     let mut env = environment()?;
-    let reserved = Scheme {
+    let reserved = crate::words::Scheme {
         var_kinds: alloc::vec![],
         stack_in: alloc::vec![],
         stack_out: alloc::vec![],
@@ -554,11 +551,19 @@ pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
         env.deps.push(alloc::vec::Vec::new());
         env.definition_owners.push(None);
     }
-    let tail = Pattern::StackVar(Variable(0));
-    let scheme = Scheme {
-        var_kinds: alloc::vec![VariableKind::Stack],
-        stack_in: alloc::vec![tail.clone(), Pattern::Text, Pattern::I64],
-        stack_out: alloc::vec![tail, Pattern::Text, Pattern::I64],
+    let tail = crate::shapes::Pattern::StackVar(crate::words::Variable(0));
+    let scheme = crate::words::Scheme {
+        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+        stack_in: alloc::vec![
+            tail.clone(),
+            crate::shapes::Pattern::Text,
+            crate::shapes::Pattern::I64
+        ],
+        stack_out: alloc::vec![
+            tail,
+            crate::shapes::Pattern::Text,
+            crate::shapes::Pattern::I64
+        ],
         effects: alloc::vec![],
     };
     scheme.validate()?;
@@ -573,54 +578,75 @@ pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
 /// The calculator has its own opt-in prefix. Neither standalone cursor nor
 /// ordinary declared-module admission inherits these extra pure operations.
 pub fn calculator_environment() -> Result<Env, crate::shapes::Defect> {
-    use crate::shapes::Pattern;
-    use crate::words::{Scheme, Variable, VariableKind};
-
     let mut env = text_cursor_environment()?;
     env.text_cursor = false;
     env.calculator = true;
     env.declared_modules = true;
-    let row = Pattern::StackVar(Variable(0));
-    let state = Pattern::Var(Variable(1));
-    let loop_step = Scheme {
-        var_kinds: alloc::vec![VariableKind::Stack, VariableKind::Value],
+    let row = crate::shapes::Pattern::StackVar(crate::words::Variable(0));
+    let state = crate::shapes::Pattern::Var(crate::words::Variable(1));
+    let loop_step = crate::words::Scheme {
+        var_kinds: alloc::vec![
+            crate::words::VariableKind::Stack,
+            crate::words::VariableKind::Value
+        ],
         stack_in: alloc::vec![
             row.clone(),
             state.clone(),
-            Pattern::program(
+            crate::shapes::Pattern::program(
                 alloc::vec![row.clone(), state.clone()],
-                alloc::vec![row.clone(), state.clone(), Pattern::Bool],
+                alloc::vec![row.clone(), state.clone(), crate::shapes::Pattern::Bool],
                 alloc::vec![],
             ),
         ],
         stack_out: alloc::vec![row.clone(), state],
         effects: alloc::vec![],
     };
-    let compare = Scheme {
-        var_kinds: alloc::vec![VariableKind::Stack],
-        stack_in: alloc::vec![row.clone(), Pattern::I64, Pattern::I64],
-        stack_out: alloc::vec![row.clone(), Pattern::I64],
-        effects: alloc::vec![],
-    };
-    let divide = Scheme {
-        var_kinds: alloc::vec![VariableKind::Stack],
-        stack_in: alloc::vec![row.clone(), Pattern::I64, Pattern::I64],
-        stack_out: alloc::vec![row.clone(), Pattern::I64, Pattern::I64, Pattern::Bool],
-        effects: alloc::vec![],
-    };
-    let text = Scheme {
-        var_kinds: alloc::vec![VariableKind::Stack],
+    let compare = crate::words::Scheme {
+        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
         stack_in: alloc::vec![
             row.clone(),
-            Pattern::List(alloc::boxed::Box::new(Pattern::I64))
+            crate::shapes::Pattern::I64,
+            crate::shapes::Pattern::I64
         ],
-        stack_out: alloc::vec![row.clone(), Pattern::Text, Pattern::Bool],
+        stack_out: alloc::vec![row.clone(), crate::shapes::Pattern::I64],
         effects: alloc::vec![],
     };
-    let text_length = Scheme {
-        var_kinds: alloc::vec![VariableKind::Stack],
-        stack_in: alloc::vec![row.clone(), Pattern::Text],
-        stack_out: alloc::vec![row, Pattern::Text, Pattern::I64],
+    let divide = crate::words::Scheme {
+        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+        stack_in: alloc::vec![
+            row.clone(),
+            crate::shapes::Pattern::I64,
+            crate::shapes::Pattern::I64
+        ],
+        stack_out: alloc::vec![
+            row.clone(),
+            crate::shapes::Pattern::I64,
+            crate::shapes::Pattern::I64,
+            crate::shapes::Pattern::Bool
+        ],
+        effects: alloc::vec![],
+    };
+    let text = crate::words::Scheme {
+        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+        stack_in: alloc::vec![
+            row.clone(),
+            crate::shapes::Pattern::List(alloc::boxed::Box::new(crate::shapes::Pattern::I64))
+        ],
+        stack_out: alloc::vec![
+            row.clone(),
+            crate::shapes::Pattern::Text,
+            crate::shapes::Pattern::Bool
+        ],
+        effects: alloc::vec![],
+    };
+    let text_length = crate::words::Scheme {
+        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+        stack_in: alloc::vec![row.clone(), crate::shapes::Pattern::Text],
+        stack_out: alloc::vec![
+            row,
+            crate::shapes::Pattern::Text,
+            crate::shapes::Pattern::I64
+        ],
         effects: alloc::vec![],
     };
     for (behavior, scheme) in [
