@@ -14,9 +14,6 @@ pub mod snapshot;
 pub mod value;
 pub mod vectors;
 
-use alloc::string::String;
-use core::fmt::{self, Write as _};
-
 /// Appends formatted text to `out`.
 ///
 /// `String`'s `core::fmt::Write` implementation is infallible. This
@@ -30,8 +27,8 @@ use core::fmt::{self, Write as _};
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-maintainers; the formatter is the single explicit text-emission boundary and appends to a caller-owned output buffer"
 )]
-pub(crate) fn push_fmt(out: &mut String, args: fmt::Arguments<'_>) {
-    let result = out.write_fmt(args);
+pub(crate) fn push_fmt(out: &mut alloc::string::String, args: core::fmt::Arguments<'_>) {
+    let result = core::fmt::Write::write_fmt(out, args);
     debug_assert!(result.is_ok(), "writing to a String cannot fail");
 }
 
@@ -43,7 +40,7 @@ pub(crate) fn push_fmt(out: &mut String, args: fmt::Arguments<'_>) {
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-maintainers; the line helper is the single explicit text-emission boundary and appends to a caller-owned output buffer"
 )]
-pub(crate) fn push_line(out: &mut String, args: fmt::Arguments<'_>) {
+pub(crate) fn push_line(out: &mut alloc::string::String, args: core::fmt::Arguments<'_>) {
     push_fmt(out, args);
     out.push('\n');
 }
