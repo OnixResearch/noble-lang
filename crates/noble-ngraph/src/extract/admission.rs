@@ -1,17 +1,6 @@
 //! D7 stage 1: admission of an exact, independently kernel-accepted subject.
 
-use alloc::{format, string::String, vec, vec::Vec};
-use noble_kernel::contracts::Behavior;
-use noble_kernel::execution::Submission;
-use noble_kernel::types::Ty;
-use noble_kernel::untrusted::{Candidate, Checked, Interface, Node, NodeId, Outcome};
-
-use crate::diag::{Code, Diagnostic, Site};
 use crate::identity::IdentityScheme;
-use crate::ir::{ScalarType, SourceRef, SubProfile, Subject, SubjectKind, MAX_SHAPE_DEPTH};
-
-use super::Budget;
-
 /// One admission request (D7 stage 1 inputs besides the subject).
 #[derive(Clone, Debug)]
 pub struct Request<'a> {
@@ -22,30 +11,30 @@ pub struct Request<'a> {
     /// reachable from the root through named calls (any order, no repeats).
     pub claimed_closure: &'a [u64],
     /// Budgets; each may only be lowered from the `/0` defaults.
-    pub budget: Budget,
+    pub budget: super::Budget,
 }
 
 /// One kernel-accepted body: the root (`identity == None`) or one definition
 /// specialization.
 #[derive(Debug)]
 pub(super) struct Body<'s> {
-    pub(super) candidate: &'s Candidate,
+    pub(super) candidate: &'s noble_kernel::untrusted::Candidate,
     pub(super) identity: Option<u64>,
     /// Per-node derived interface, or `None` when no consistent derivation
     /// exists (refused with `E-INTERFACE` if the node is ever processed).
-    pub(super) interfaces: Vec<Option<Interface>>,
+    pub(super) interfaces: alloc::vec::Vec<Option<noble_kernel::untrusted::Interface>>,
 }
 
 /// An admitted subject. Only [`admit`] constructs one, after the kernel
 /// accepted every body of the exact submission it borrows.
 #[derive(Debug)]
 pub struct Admitted<'s> {
-    pub(super) submission: &'s Submission,
+    pub(super) submission: &'s noble_kernel::execution::Submission,
     /// `bodies[0]` is the root; `bodies[i + 1]` is `submission.definitions[i]`.
-    pub(super) bodies: Vec<Body<'s>>,
-    pub(super) closure: Vec<u64>,
-    pub(super) subject: Subject,
-    pub(super) budget: Budget,
+    pub(super) bodies: alloc::vec::Vec<Body<'s>>,
+    pub(super) closure: alloc::vec::Vec<u64>,
+    pub(super) subject: crate::ir::Subject,
+    pub(super) budget: super::Budget,
 }
 
 impl Admitted<'_> {
@@ -57,13 +46,13 @@ impl Admitted<'_> {
 
     /// The subject bound into the graph identity.
     #[must_use]
-    pub const fn subject(&self) -> &Subject {
+    pub const fn subject(&self) -> &crate::ir::Subject {
         &self.subject
     }
 
     /// The root's ordered (bottom-first) input and output stack types.
     #[must_use]
-    pub fn root_interface(&self) -> (&[Ty], &[Ty]) {
+    pub fn root_interface(&self) -> (&[noble_kernel::types::Ty], &[noble_kernel::types::Ty]) {
         let e = &self.submission.request.expected;
         (&e.stack_in, &e.stack_out)
     }
@@ -81,14 +70,22 @@ impl Admitted<'_> {
     }
 }
 
-fn refuse(code: Code, detail: impl Into<String>) -> Diagnostic {
-    Diagnostic::new(code, Site::Graph, detail)
+fn refuse(
+    code: crate::diag::Code,
+    detail: impl Into<alloc::string::String>,
+) -> crate::diag::Diagnostic {
+    crate::diag::Diagnostic::new(code, crate::diag::Site::Graph, detail)
 }
 
-fn at(code: Code, body: Option<u64>, node: NodeId, detail: impl Into<String>) -> Diagnostic {
-    Diagnostic::new(
+fn at(
+    code: crate::diag::Code,
+    body: Option<u64>,
+    node: noble_kernel::untrusted::NodeId,
+    detail: impl Into<alloc::string::String>,
+) -> crate::diag::Diagnostic {
+    crate::diag::Diagnostic::new(
         code,
-        Site::Source(SourceRef {
+        crate::diag::Site::Source(crate::ir::SourceRef {
             definition: body,
             node: node.0,
         }),
@@ -104,26 +101,26 @@ fn at(code: Code, body: Option<u64>, node: NodeId, detail: impl Into<String>) ->
 /// stage order; nothing is extracted or evaluated.
 pub fn admit<'s>(
     ids: &dyn IdentityScheme,
-    submission: &'s Submission,
+    submission: &'s noble_kernel::execution::Submission,
     request: &Request<'_>,
-) -> Result<Admitted<'s>, Diagnostic> {
-    match SubProfile::from_name(request.profile) {
-        Some(SubProfile::I64) => {}
-        Some(SubProfile::F32) => {
+) -> Result<Admitted<'s>, crate::diag::Diagnostic> {
+    match crate::ir::SubProfile::from_name(request.profile) {
+        Some(crate::ir::SubProfile::I64) => {}
+        Some(crate::ir::SubProfile::F32) => {
             return Err(refuse(
-                Code::Profile,
+                crate::diag::Code::Profile,
                 "ngraph-f32/0 graphs are authored directly in ngraph-ir/0; source extraction is I64-only (B0(b))",
             ))
         }
-        None => return Err(refuse(Code::Profile, format!("unknown sub-profile {:?}", request.profile))),
+        None => return Err(refuse(crate::diag::Code::Profile, alloc::format!("unknown sub-profile {:?}", request.profile))),
     }
-    let limit = Budget::default();
+    let limit = super::Budget::default();
     if request.budget.work_units > limit.work_units
         || request.budget.expanded_nodes > limit.expanded_nodes
         || request.budget.inline_depth > limit.inline_depth
     {
         return Err(refuse(
-            Code::Profile,
+            crate::diag::Code::Profile,
             "raising a /0 budget requires a new profile policy revision",
         ));
     }
@@ -139,8 +136,8 @@ pub fn admit<'s>(
     claimed.dedup();
     if claimed.len() != claimed_len || claimed != closure {
         return Err(refuse(
-            Code::Closure,
-            format!(
+            crate::diag::Code::Closure,
+            alloc::format!(
                 "claimed closure {claimed:?} differs from the recomputed exact closure {closure:?}"
             ),
         ));
@@ -155,25 +152,25 @@ pub fn admit<'s>(
         .enumerate()
     {
         if has_resource(ty) {
-            return Err(Diagnostic::new(
-                Code::Resource,
-                Site::Slot(u32::try_from(k).unwrap_or(u32::MAX)),
-                format!("Resource or LiveRef in the root interface: {ty:?}"),
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::Resource,
+                crate::diag::Site::Slot(u32::try_from(k).unwrap_or(u32::MAX)),
+                alloc::format!("Resource or LiveRef in the root interface: {ty:?}"),
             ));
         }
     }
     for ty in &expected.stack_in {
-        classify(ty, Code::DynamicRun)?;
+        classify(ty, crate::diag::Code::DynamicRun)?;
     }
     for ty in &expected.stack_out {
-        classify(ty, Code::ProgramOutput)?;
+        classify(ty, crate::diag::Code::ProgramOutput)?;
     }
 
     // (d) The root effect bound must be empty.
     if !bodies[0].1.interface.effects.is_empty() {
         return Err(refuse(
-            Code::Effect,
-            format!(
+            crate::diag::Code::Effect,
+            alloc::format!(
                 "root effect bound {:?} is not empty",
                 bodies[0].1.interface.effects
             ),
@@ -194,28 +191,30 @@ pub fn admit<'s>(
     })
 }
 
-type Accepted<'s> = (Body<'s>, Checked);
+type Accepted<'s> = (Body<'s>, noble_kernel::untrusted::Checked);
 
-fn accept_all(submission: &Submission) -> Result<Vec<Accepted<'_>>, Diagnostic> {
+fn accept_all(
+    submission: &noble_kernel::execution::Submission,
+) -> Result<alloc::vec::Vec<Accepted<'_>>, crate::diag::Diagnostic> {
     let env = &submission.environment;
-    let mut out = Vec::with_capacity(submission.definitions.len() + 1);
+    let mut out = alloc::vec::Vec::with_capacity(submission.definitions.len() + 1);
     out.push((
         Body {
             candidate: &submission.body.candidate,
             identity: None,
-            interfaces: Vec::new(),
+            interfaces: alloc::vec::Vec::new(),
         },
         accept_one(env, &submission.request, &submission.body.candidate, None)?,
     ));
     for (i, d) in submission.definitions.iter().enumerate() {
-        if env.kind(d.definition) != Some(Behavior::Named)
+        if env.kind(d.definition) != Some(noble_kernel::contracts::Behavior::Named)
             || submission.definitions[..i]
                 .iter()
                 .any(|e| e.definition == d.definition)
         {
             return Err(refuse(
-                Code::Subject,
-                format!(
+                crate::diag::Code::Subject,
+                alloc::format!(
                     "definition {:?} is not one unique named specialization",
                     d.definition
                 ),
@@ -243,7 +242,7 @@ fn accept_all(submission: &Submission) -> Result<Vec<Accepted<'_>>, Diagnostic> 
             Body {
                 candidate: &d.body.candidate,
                 identity: Some(d.identity),
-                interfaces: Vec::new(),
+                interfaces: alloc::vec::Vec::new(),
             },
             checked,
         ));
@@ -254,26 +253,26 @@ fn accept_all(submission: &Submission) -> Result<Vec<Accepted<'_>>, Diagnostic> 
 fn accept_one(
     env: &noble_kernel::contracts::Env,
     request: &noble_kernel::untrusted::Request,
-    candidate: &Candidate,
+    candidate: &noble_kernel::untrusted::Candidate,
     identity: Option<u64>,
-) -> Result<Checked, Diagnostic> {
+) -> Result<noble_kernel::untrusted::Checked, crate::diag::Diagnostic> {
     let checked = match noble_kernel::acceptance::check(env, request, candidate) {
-        Outcome::Accepted(checked) => checked,
+        noble_kernel::untrusted::Outcome::Accepted(checked) => checked,
         other => {
             return Err(refuse(
-                Code::Subject,
-                format!("body of {identity:?} is not kernel-accepted: {other:?}"),
+                crate::diag::Code::Subject,
+                alloc::format!("body of {identity:?} is not kernel-accepted: {other:?}"),
             ))
         }
     };
     // No node may hide outside the checked derivations.
-    let mut covered = vec![false; candidate.nodes.len()];
+    let mut covered = alloc::vec![false; candidate.nodes.len()];
     for d in &checked.derivations {
         match covered.get_mut(d.node.0 as usize) {
             Some(slot) => *slot = true,
             None => {
                 return Err(refuse(
-                    Code::Subject,
+                    crate::diag::Code::Subject,
                     "derivation names a node outside the arena",
                 ))
             }
@@ -281,8 +280,8 @@ fn accept_one(
     }
     if covered.iter().any(|c| !c) {
         return Err(refuse(
-            Code::Subject,
-            format!("body of {identity:?} has an unchecked arena node"),
+            crate::diag::Code::Subject,
+            alloc::format!("body of {identity:?} has an unchecked arena node"),
         ));
     }
     if checked.interface.stack_in != request.expected.stack_in
@@ -293,8 +292,8 @@ fn accept_one(
             .is_subset_of(&request.expected.allowed_effects)
     {
         return Err(refuse(
-            Code::Subject,
-            format!("body of {identity:?} was not accepted at its expected interface"),
+            crate::diag::Code::Subject,
+            alloc::format!("body of {identity:?} was not accepted at its expected interface"),
         ));
     }
     Ok(checked)
@@ -302,8 +301,12 @@ fn accept_one(
 
 /// The Wasm planner's `derivation()` rule: every derivation recorded for a
 /// node must agree on `stack_in`, `stack_out` and `effects`.
-fn index_interfaces<'s>(mut body: Body<'s>, checked: &Checked) -> Body<'s> {
-    let mut slots: Vec<Option<Result<Interface, ()>>> = vec![None; body.candidate.nodes.len()];
+fn index_interfaces<'s>(
+    mut body: Body<'s>,
+    checked: &noble_kernel::untrusted::Checked,
+) -> Body<'s> {
+    let mut slots: alloc::vec::Vec<Option<Result<noble_kernel::untrusted::Interface, ()>>> =
+        alloc::vec![None; body.candidate.nodes.len()];
     for d in &checked.derivations {
         let slot = &mut slots[d.node.0 as usize];
         *slot = match slot.take() {
@@ -334,12 +337,12 @@ fn index_interfaces<'s>(mut body: Body<'s>, checked: &Checked) -> Body<'s> {
 /// admission — every listed row is invoked and every invoked submission
 /// definition is listed (`E-CLOSURE`).
 fn recompute_closure(
-    submission: &Submission,
+    submission: &noble_kernel::execution::Submission,
     bodies: &[Accepted<'_>],
-) -> Result<Vec<u64>, Diagnostic> {
+) -> Result<alloc::vec::Vec<u64>, crate::diag::Diagnostic> {
     let env = &submission.environment;
     let target_of = |def: noble_kernel::contracts::Definition| {
-        if env.kind(def) == Some(Behavior::Named) {
+        if env.kind(def) == Some(noble_kernel::contracts::Behavior::Named) {
             submission
                 .definitions
                 .iter()
@@ -350,29 +353,31 @@ fn recompute_closure(
         }
     };
     // Reachable bodies and their named-call children, in node order.
-    let mut children: Vec<Option<Vec<usize>>> = vec![None; bodies.len()];
-    let mut work = vec![0usize];
+    let mut children: alloc::vec::Vec<Option<alloc::vec::Vec<usize>>> =
+        alloc::vec![None; bodies.len()];
+    let mut work = alloc::vec![0usize];
     while let Some(b) = work.pop() {
         if children[b].is_some() {
             continue;
         }
         let body = &bodies[b].0;
-        let mut out = Vec::new();
+        let mut out = alloc::vec::Vec::new();
         for (n, node) in body.candidate.nodes.iter().enumerate() {
             match node {
-                Node::SlotInvoke { .. } => return Err(at(
-                    Code::LiveSlot,
+                noble_kernel::untrusted::Node::SlotInvoke { .. } => return Err(at(
+                    crate::diag::Code::LiveSlot,
                     body.identity,
-                    NodeId(u32::try_from(n).unwrap_or(u32::MAX)),
+                    noble_kernel::untrusted::NodeId(u32::try_from(n).unwrap_or(u32::MAX)),
                     "live-slot dispatch selects its target at run time; no static closure exists",
                 )),
-                Node::Invocation { def, .. } => {
+                noble_kernel::untrusted::Node::Invocation { def, .. } => {
                     if let Some(t) = target_of(*def) {
                         out.push(t);
                         work.push(t);
                     }
                 }
-                Node::Literal { .. } | Node::Quotation { .. } => {}
+                noble_kernel::untrusted::Node::Literal { .. }
+                | noble_kernel::untrusted::Node::Quotation { .. } => {}
             }
         }
         children[b] = Some(out);
@@ -380,8 +385,8 @@ fn recompute_closure(
     // Recursion by definition identity along any call path (three-colour
     // DFS over bodies; a gray ancestor with the same identity or a back edge
     // is recursion).
-    let mut color = vec![0u8; bodies.len()];
-    let mut path: Vec<(usize, usize)> = vec![(0, 0)];
+    let mut color = alloc::vec![0u8; bodies.len()];
+    let mut path: alloc::vec::Vec<(usize, usize)> = alloc::vec![(0, 0)];
     color[0] = 1;
     while let Some(top) = path.last_mut() {
         let (b, next) = *top;
@@ -391,8 +396,10 @@ fn recompute_closure(
             let identity = bodies[c].0.identity;
             if color[c] == 1 || path.iter().any(|&(p, _)| bodies[p].0.identity == identity) {
                 return Err(refuse(
-                    Code::Recursion,
-                    format!("definition identity {identity:?} is reached again below itself"),
+                    crate::diag::Code::Recursion,
+                    alloc::format!(
+                        "definition identity {identity:?} is reached again below itself"
+                    ),
                 ));
             }
             if color[c] == 0 {
@@ -404,7 +411,7 @@ fn recompute_closure(
             path.pop();
         }
     }
-    let mut closure = Vec::new();
+    let mut closure = alloc::vec::Vec::new();
     for (b, kids) in children.iter().enumerate() {
         if b == 0 || kids.is_none() {
             continue;
@@ -414,14 +421,14 @@ fn recompute_closure(
         let listed = usize::try_from(row.0)
             .ok()
             .and_then(|r| env.deps.get(r))
-            .map_or(&[][..], Vec::as_slice);
-        let invoked: Vec<_> = bodies[b]
+            .map_or(&[][..], alloc::vec::Vec::as_slice);
+        let invoked: alloc::vec::Vec<_> = bodies[b]
             .0
             .candidate
             .nodes
             .iter()
             .filter_map(|n| match n {
-                Node::Invocation { def, .. } => Some(*def),
+                noble_kernel::untrusted::Node::Invocation { def, .. } => Some(*def),
                 _ => None,
             })
             .collect();
@@ -430,8 +437,8 @@ fn recompute_closure(
             .any(|d| target_of(*d).is_some() && !listed.contains(d));
         if listed.iter().any(|l| !invoked.contains(l)) || named_unlisted {
             return Err(refuse(
-                Code::Closure,
-                format!(
+                crate::diag::Code::Closure,
+                alloc::format!(
                     "supplied dependency list {listed:?} of {:?} differs from its body's invocations",
                     bodies[b].0.identity
                 ),
@@ -443,36 +450,41 @@ fn recompute_closure(
     Ok(closure)
 }
 
-fn has_resource(ty: &Ty) -> bool {
-    let mut work = vec![ty];
+fn has_resource(ty: &noble_kernel::types::Ty) -> bool {
+    let mut work = alloc::vec![ty];
     while let Some(t) = work.pop() {
         match t {
-            Ty::Resource(_) | Ty::LiveRef(..) => return true,
-            Ty::Pair(a, b) | Ty::Sum(a, b) => {
+            noble_kernel::types::Ty::Resource(_) | noble_kernel::types::Ty::LiveRef(..) => {
+                return true
+            }
+            noble_kernel::types::Ty::Pair(a, b) | noble_kernel::types::Ty::Sum(a, b) => {
                 work.push(a);
                 work.push(b);
             }
-            Ty::List(a) => work.push(a),
-            Ty::Program(i, o, _) => work.extend(i.iter().chain(o.iter())),
-            Ty::Nominal(_, shape) => push_shape(&mut work, shape),
-            Ty::GenericNominal(_, args, shape) => {
+            noble_kernel::types::Ty::List(a) => work.push(a),
+            noble_kernel::types::Ty::Program(i, o, _) => work.extend(i.iter().chain(o.iter())),
+            noble_kernel::types::Ty::Nominal(_, shape) => push_shape(&mut work, shape),
+            noble_kernel::types::Ty::GenericNominal(_, args, shape) => {
                 work.extend(args.iter());
                 push_shape(&mut work, shape);
             }
-            Ty::Unit
-            | Ty::Bool
-            | Ty::I64
-            | Ty::Text
-            | Ty::Syntax
-            | Ty::Contract
-            | Ty::Evidence
-            | Ty::Certified => {}
+            noble_kernel::types::Ty::Unit
+            | noble_kernel::types::Ty::Bool
+            | noble_kernel::types::Ty::I64
+            | noble_kernel::types::Ty::Text
+            | noble_kernel::types::Ty::Syntax
+            | noble_kernel::types::Ty::Contract
+            | noble_kernel::types::Ty::Evidence
+            | noble_kernel::types::Ty::Certified => {}
         }
     }
     false
 }
 
-fn push_shape<'a>(work: &mut Vec<&'a Ty>, shape: &'a noble_kernel::types::NominalShape) {
+fn push_shape<'a>(
+    work: &mut alloc::vec::Vec<&'a noble_kernel::types::Ty>,
+    shape: &'a noble_kernel::types::NominalShape,
+) {
     match shape {
         noble_kernel::types::NominalShape::Opaque(a) => work.push(a),
         noble_kernel::types::NominalShape::Variant(a, b) => {
@@ -485,35 +497,43 @@ fn push_shape<'a>(work: &mut Vec<&'a Ty>, shape: &'a noble_kernel::types::Nomina
 /// Root interface item: `I64`/`Bool` scalars, `Unit` or pairs of them.
 /// A Program input is never statically known (`E-DYNAMIC-RUN`); a Program
 /// output exposes its recipe (`E-PROGRAM-OUTPUT`, V-OBS-01). An item that
-/// nests more than [`MAX_SHAPE_DEPTH`] pairs has no `ngraph-ir/0` shape tree
+/// nests more than [`crate::ir::MAX_SHAPE_DEPTH`] pairs has no `ngraph-ir/0` shape tree
 /// (`E-AGGREGATE`); the Core frontend's 256-node type bound never produces
 /// one, so only a forged submission reaches this refusal.
-fn classify(ty: &Ty, program: Code) -> Result<(), Diagnostic> {
+fn classify(
+    ty: &noble_kernel::types::Ty,
+    program: crate::diag::Code,
+) -> Result<(), crate::diag::Diagnostic> {
     // Each entry carries the number of pairs enclosing it.
-    let mut work = vec![(ty, 0u32)];
+    let mut work = alloc::vec![(ty, 0u32)];
     while let Some((t, open)) = work.pop() {
         match t {
-            Ty::I64 | Ty::Bool | Ty::Unit => {}
-            Ty::Pair(a, b) => {
-                if open >= MAX_SHAPE_DEPTH {
+            noble_kernel::types::Ty::I64
+            | noble_kernel::types::Ty::Bool
+            | noble_kernel::types::Ty::Unit => {}
+            noble_kernel::types::Ty::Pair(a, b) => {
+                if open >= crate::ir::MAX_SHAPE_DEPTH {
                     return Err(refuse(
-                        Code::Aggregate,
-                        format!("a root interface item nests more than {MAX_SHAPE_DEPTH} pairs"),
+                        crate::diag::Code::Aggregate,
+                        alloc::format!(
+                            "a root interface item nests more than {} pairs",
+                            crate::ir::MAX_SHAPE_DEPTH
+                        ),
                     ));
                 }
                 work.push((a, open + 1));
                 work.push((b, open + 1));
             }
-            Ty::Program(..) => {
+            noble_kernel::types::Ty::Program(..) => {
                 return Err(refuse(
                     program,
-                    format!("Program-valued root interface item {ty:?}"),
+                    alloc::format!("Program-valued root interface item {ty:?}"),
                 ));
             }
             other => {
                 return Err(refuse(
-                    Code::Aggregate,
-                    format!("{other:?} is not an ngraph-i64/0 interface type"),
+                    crate::diag::Code::Aggregate,
+                    alloc::format!("{other:?} is not an ngraph-i64/0 interface type"),
                 ))
             }
         }
@@ -522,26 +542,30 @@ fn classify(ty: &Ty, program: Code) -> Result<(), Diagnostic> {
 }
 
 /// `I64`/`Bool` scalar type of a kernel type.
-pub(super) const fn scalar(ty: &Ty) -> Option<ScalarType> {
+pub(super) const fn scalar(ty: &noble_kernel::types::Ty) -> Option<crate::ir::ScalarType> {
     match ty {
-        Ty::I64 => Some(ScalarType::I64),
-        Ty::Bool => Some(ScalarType::Bool),
+        noble_kernel::types::Ty::I64 => Some(crate::ir::ScalarType::I64),
+        noble_kernel::types::Ty::Bool => Some(crate::ir::ScalarType::Bool),
         _ => None,
     }
 }
 
-/// Subject identity: the exact root request and body plus every closure
+/// crate::ir::Subject identity: the exact root request and body plus every closure
 /// definition specialization (identity, contract entry, body, expected
 /// interface), encoded with the kernel's derived `Debug` rendering under a
 /// domain tag. The encoding is deterministic for one kernel revision; it is
 /// a producer digest, not independent validation.
-fn subject_of(ids: &dyn IdentityScheme, submission: &Submission, closure: &[u64]) -> Subject {
-    let mut parts: Vec<Vec<u8>> = vec![
+fn subject_of(
+    ids: &dyn IdentityScheme,
+    submission: &noble_kernel::execution::Submission,
+    closure: &[u64],
+) -> crate::ir::Subject {
+    let mut parts: alloc::vec::Vec<alloc::vec::Vec<u8>> = alloc::vec![
         b"noble.ngraph.subject.kernel-debug.v0".to_vec(),
-        format!("{:?}", submission.request.expected).into_bytes(),
-        format!("{:?}", submission.body.candidate).into_bytes(),
+        alloc::format!("{:?}", submission.request.expected).into_bytes(),
+        alloc::format!("{:?}", submission.body.candidate).into_bytes(),
     ];
-    let mut defs: Vec<_> = submission
+    let mut defs: alloc::vec::Vec<_> = submission
         .definitions
         .iter()
         .filter(|d| closure.binary_search(&d.identity).is_ok())
@@ -550,32 +574,45 @@ fn subject_of(ids: &dyn IdentityScheme, submission: &Submission, closure: &[u64]
     for d in defs {
         parts.push(d.identity.to_le_bytes().to_vec());
         parts.push(
-            format!("{:?}|{:?}|{:?}", d.definition, d.expected, d.body.candidate).into_bytes(),
+            alloc::format!("{:?}|{:?}|{:?}", d.definition, d.expected, d.body.candidate)
+                .into_bytes(),
         );
     }
-    let refs: Vec<&[u8]> = parts.iter().map(Vec::as_slice).collect();
-    Subject::derive(ids, SubjectKind::Extracted, &refs, closure.to_vec())
+    let refs: alloc::vec::Vec<&[u8]> = parts.iter().map(alloc::vec::Vec::as_slice).collect();
+    crate::ir::Subject::derive(
+        ids,
+        crate::ir::SubjectKind::Extracted,
+        &refs,
+        closure.to_vec(),
+    )
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{classify, Code, Ty, MAX_SHAPE_DEPTH};
+    use super::classify;
     use alloc::boxed::Box;
 
     /// `I64` under `depth` nested pairs.
-    fn nested(depth: u32) -> Ty {
-        let mut t = Ty::I64;
+    fn nested(depth: u32) -> noble_kernel::types::Ty {
+        let mut t = noble_kernel::types::Ty::I64;
         for _ in 0..depth {
-            t = Ty::Pair(Box::new(t), Box::new(Ty::Unit));
+            t = noble_kernel::types::Ty::Pair(Box::new(t), Box::new(noble_kernel::types::Ty::Unit));
         }
         t
     }
 
     #[test]
     fn interface_items_nest_at_most_the_shape_bound() {
-        classify(&nested(MAX_SHAPE_DEPTH), Code::DynamicRun).expect("the deepest extractable item");
-        let d =
-            classify(&nested(MAX_SHAPE_DEPTH + 1), Code::DynamicRun).expect_err("one more pair");
-        assert_eq!(d.code, Code::Aggregate);
+        classify(
+            &nested(crate::ir::MAX_SHAPE_DEPTH),
+            crate::diag::Code::DynamicRun,
+        )
+        .expect("the deepest extractable item");
+        let d = classify(
+            &nested(crate::ir::MAX_SHAPE_DEPTH + 1),
+            crate::diag::Code::DynamicRun,
+        )
+        .expect_err("one more pair");
+        assert_eq!(d.code, crate::diag::Code::Aggregate);
     }
 }
