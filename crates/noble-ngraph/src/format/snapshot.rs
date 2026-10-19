@@ -187,6 +187,10 @@ impl SnapshotFile {
     /// recomputation, a parameter is not finite, or the recorded `adam/0`
     /// hyperparameters are outside the optimizer's domain
     /// ([`crate::train::Adam::admit`]) — values `train` can never publish.
+    #[expect(
+        tigerstyle::unbounded_collection_growth,
+        reason = "Owner: noble-maintainers; slots are bounded by the declared snapshot slot count"
+    )]
     pub fn parse(
         ids: &dyn IdentityScheme,
         text: &str,
@@ -543,6 +547,10 @@ struct OptIn {
 
 /// The opt-in records of `deriv`, ordered by node and then kind
 /// (`boolean` before `index`).
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; the output is bounded by the selected boolean and index option counts"
+)]
 fn opt_ins(deriv: &crate::grad::DerivOptions) -> alloc::vec::Vec<OptIn> {
     let mut out: alloc::vec::Vec<(u8, OptIn)> = alloc::vec::Vec::new();
     for (n, p) in &deriv.boolean {

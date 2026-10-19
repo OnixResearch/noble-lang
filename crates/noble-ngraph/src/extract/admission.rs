@@ -336,6 +336,10 @@ fn index_interfaces<'s>(
 /// dependency list (`Env::deps`) must match its body exactly, as in the Wasm
 /// admission — every listed row is invoked and every invoked submission
 /// definition is listed (`E-CLOSURE`).
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; both collections are bounded by the validated body's node and closure counts"
+)]
 fn recompute_closure(
     submission: &noble_kernel::execution::Submission,
     bodies: &[Accepted<'_>],

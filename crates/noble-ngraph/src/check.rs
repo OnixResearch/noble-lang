@@ -1108,6 +1108,10 @@ pub struct CallGraphEntry {
 /// graph, memoized per definition (D7 step 5; does not trust the extractor's
 /// count). `None` if the call graph is recursive or names a missing identity.
 #[must_use]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; the DFS stack and on-stack map grow at most once per closure entry"
+)]
 pub fn expansion_bound(closure: &[CallGraphEntry], root: u64) -> Option<u64> {
     let by_id: alloc::collections::BTreeMap<u64, &CallGraphEntry> =
         closure.iter().map(|e| (e.identity, e)).collect();

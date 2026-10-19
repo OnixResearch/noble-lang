@@ -766,6 +766,10 @@ fn remap_op(op: &crate::ir::Op, remap: &[crate::ir::NodeId]) -> crate::ir::Op {
     }
 }
 
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; the result is bounded by the validated frame chain length"
+)]
 fn expansion(
     frames: &[(u32, crate::ir::SourceRef)],
     mut frame: u32,
@@ -850,6 +854,10 @@ fn shape(ty: &noble_kernel::types::Ty) -> Result<crate::ir::ShapeTree, crate::di
 /// D7 step 5: the checker's saturating named-call expansion bound,
 /// recomputed from the closure call graph (one entry per body; the root uses
 /// an identity outside the closure).
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; call-graph entries and callees are bounded by the admitted body count"
+)]
 fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::Diagnostic> {
     let env = &a.submission.environment;
     let mut root_id = u64::MAX;

@@ -190,6 +190,10 @@ fn range_literal(
     }
 }
 
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; the one-hot group is bounded by the remaining fact tokens"
+)]
 fn fact(
     t: &mut Toks<'_>,
     profile: crate::ir::SubProfile,
@@ -267,6 +271,10 @@ fn subject_record(
 /// Parses the shape trees of a `shape input|output` line. A tree that would
 /// nest more than [`MAX_SHAPE_DEPTH`] pairs is refused before the parser
 /// descends any deeper (design D4).
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; the output is bounded by the supplied shape tokens"
+)]
 fn shape_trees(
     tokens: &[&str],
     line: usize,
@@ -382,6 +390,10 @@ fn provenance(t: &mut Toks<'_>) -> Result<crate::ir::Provenance, crate::diag::Di
     })
 }
 
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; affine terms and index tables are bounded by the supplied operation tokens"
+)]
 fn op(
     t: &mut Toks<'_>,
     profile: crate::ir::SubProfile,

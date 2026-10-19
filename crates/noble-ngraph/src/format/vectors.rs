@@ -27,6 +27,10 @@ pub struct Vectors {
 /// # Errors
 /// `E-FORMAT` (schema, syntax, missing or duplicate `types`, row count),
 /// `E-LITERAL-INEXACT` or `E-LITERAL-NONFINITE`.
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; rows are bounded by the significant line count of the supplied text"
+)]
 pub fn parse(text: &str) -> Result<Vectors, crate::diag::Diagnostic> {
     let mut lines = super::lines(text);
     let header = lines.next().ok_or_else(|| {

@@ -28,6 +28,10 @@ pub struct Data {
 }
 
 /// Splits tokens at the single `;` separator.
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; both halves are bounded by the supplied token slice length"
+)]
 fn halves<'a>(
     tokens: &[&'a str],
     line: usize,
@@ -66,6 +70,10 @@ fn halves<'a>(
 /// # Errors
 /// `E-FORMAT` (schema, syntax, missing or duplicate `types`, separator, row
 /// counts), `E-LITERAL-INEXACT` or `E-LITERAL-NONFINITE`.
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; the points vector is bounded by the significant line count"
+)]
 pub fn parse(text: &str) -> Result<Data, crate::diag::Diagnostic> {
     let mut lines = super::lines(text);
     let header = lines
