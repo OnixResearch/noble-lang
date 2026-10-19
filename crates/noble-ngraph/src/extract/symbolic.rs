@@ -1,34 +1,22 @@
 //! D7 stages 2–5: symbolic stack execution, pruning and the independent
 //! graph check.
 
-use alloc::rc::Rc;
-use alloc::{format, string::String, vec, vec::Vec};
-
-use noble_kernel::contracts::{Behavior, Definition};
-use noble_kernel::types::Ty;
-use noble_kernel::untrusted::{Interface, Lit, Node, NodeId as SrcNode};
-
-use crate::check::{expansion_bound, Budgets, CallGraphEntry, CheckedGraph};
-use crate::diag::{BudgetKind, Code, Diagnostic, Site};
 use crate::identity::IdentityScheme;
-use crate::ir::{
-    GraphBuilder, Literal, NodeId, Op, Origin, ScalarType, ShapeTree, SourceRef, SubProfile,
-};
-
-use super::admission::{scalar, Admitted};
-
 /// A symbolic stack item (D7 `Σ`). Scalars are graph value ids; `dup` and
 /// captures share the same id because values are immutable.
 #[derive(Clone, Debug)]
 enum Sym {
-    Scalar(u32, ScalarType),
+    Scalar(u32, crate::ir::ScalarType),
     Unit,
-    Pair(Rc<(Sym, Sym)>),
+    Pair(alloc::rc::Rc<(Sym, Sym)>),
     /// A statically known Program and its checked type.
-    Known(Rc<Recipe>, Rc<Ty>),
+    Known(
+        alloc::rc::Rc<Recipe>,
+        alloc::rc::Rc<noble_kernel::types::Ty>,
+    ),
     /// A statically built list (`nil`/`cons`); `ngraph-i64/0` has no index
     /// node, so a table may only be routed or dropped (`E-AGGREGATE`).
-    Table(Rc<Ty>),
+    Table(alloc::rc::Rc<noble_kernel::types::Ty>),
 }
 
 /// A statically known Program recipe. `compose` is O(1); expansion walks the
@@ -36,32 +24,35 @@ enum Sym {
 #[derive(Debug)]
 enum Recipe {
     /// A quotation literal of body `body`.
-    Quotation { body: usize, node: SrcNode },
+    Quotation {
+        body: usize,
+        node: noble_kernel::untrusted::NodeId,
+    },
     /// `quote`: pushes the captured value (same id; no copy).
     Capture(Sym),
     /// `compose`.
-    Compose(Rc<Recipe>, Rc<Recipe>),
+    Compose(alloc::rc::Rc<Recipe>, alloc::rc::Rc<Recipe>),
 }
 
 enum Task {
     Node {
         body: usize,
-        node: SrcNode,
+        node: noble_kernel::untrusted::NodeId,
     },
-    Recipe(Rc<Recipe>),
+    Recipe(alloc::rc::Rc<Recipe>),
     Push(Sym),
     Leave,
     /// After a node (and its expansion) completes, `Σ` must match the node's
     /// checked `stack_out`.
     Check {
         body: usize,
-        node: SrcNode,
+        node: noble_kernel::untrusted::NodeId,
     },
 }
 
 struct Pending {
-    op: Op,
-    origin: Option<(SourceRef, u32)>,
+    op: crate::ir::Op,
+    origin: Option<(crate::ir::SourceRef, u32)>,
 }
 
 /// Extraction counters.
@@ -83,7 +74,7 @@ pub struct Stats {
 #[derive(Debug)]
 pub struct Extraction {
     /// The independently checked graph.
-    pub checked: CheckedGraph,
+    pub checked: crate::check::CheckedGraph,
     /// Extraction counters.
     pub stats: Stats,
 }
@@ -98,12 +89,12 @@ pub struct Extraction {
 /// graph-checker refusal). No graph exists on refusal, so none is evaluated.
 pub fn extract(
     ids: &dyn IdentityScheme,
-    admitted: &Admitted<'_>,
-    budgets: &Budgets,
-) -> Result<Extraction, Diagnostic> {
+    admitted: &super::admission::Admitted<'_>,
+    budgets: &crate::check::Budgets,
+) -> Result<Extraction, crate::diag::Diagnostic> {
     let mut m = Machine::new(admitted);
     let (inputs, outputs) = admitted.root_interface();
-    let mut input_shapes = Vec::with_capacity(inputs.len());
+    let mut input_shapes = alloc::vec::Vec::with_capacity(inputs.len());
     for ty in inputs {
         let sym = m.input(ty)?;
         input_shapes.push(shape(ty)?);
@@ -113,24 +104,24 @@ pub fn extract(
     m.push_entries(0, &root.candidate.body);
     m.run()?;
     if m.sigma.len() != outputs.len() || !m.sigma.iter().zip(outputs).all(|(s, t)| matches(s, t)) {
-        return Err(Diagnostic::new(
-            Code::Interface,
-            Site::Graph,
+        return Err(crate::diag::Diagnostic::new(
+            crate::diag::Code::Interface,
+            crate::diag::Site::Graph,
             "final symbolic stack differs from the checked root output",
         ));
     }
-    let mut out_ids = Vec::new();
+    let mut out_ids = alloc::vec::Vec::new();
     for s in &m.sigma {
         flatten(s, &mut out_ids)?;
     }
-    let mut output_shapes = Vec::with_capacity(outputs.len());
+    let mut output_shapes = alloc::vec::Vec::with_capacity(outputs.len());
     for ty in outputs {
         output_shapes.push(shape(ty)?);
     }
     let static_bound = static_bound(admitted)?;
     if static_bound > admitted.budget.expanded_nodes {
-        return Err(Diagnostic::budget(
-            BudgetKind::Expansion,
+        return Err(crate::diag::Diagnostic::budget(
+            crate::diag::BudgetKind::Expansion,
             admitted.budget.expanded_nodes,
             static_bound,
         ));
@@ -148,71 +139,71 @@ pub fn extract(
 }
 
 struct Machine<'a, 's> {
-    a: &'a Admitted<'s>,
-    sigma: Vec<Sym>,
-    tasks: Vec<Task>,
-    nodes: Vec<Pending>,
+    a: &'a super::admission::Admitted<'s>,
+    sigma: alloc::vec::Vec<Sym>,
+    tasks: alloc::vec::Vec<Task>,
+    nodes: alloc::vec::Vec<Pending>,
     /// Expansion frames `(parent, site)`; frame 0 is the root body.
-    frames: Vec<(u32, SourceRef)>,
+    frames: alloc::vec::Vec<(u32, crate::ir::SourceRef)>,
     current: u32,
     /// Active expansions: named identity (if any) and the frame to restore.
-    active: Vec<(Option<u64>, u32)>,
+    active: alloc::vec::Vec<(Option<u64>, u32)>,
     work: u64,
     max_depth: u64,
-    input_types: Vec<ScalarType>,
+    input_types: alloc::vec::Vec<crate::ir::ScalarType>,
 }
 
 impl<'a, 's> Machine<'a, 's> {
-    fn new(a: &'a Admitted<'s>) -> Self {
+    fn new(a: &'a super::admission::Admitted<'s>) -> Self {
         Self {
             a,
-            sigma: Vec::new(),
-            tasks: Vec::new(),
-            nodes: Vec::new(),
-            frames: vec![(
+            sigma: alloc::vec::Vec::new(),
+            tasks: alloc::vec::Vec::new(),
+            nodes: alloc::vec::Vec::new(),
+            frames: alloc::vec![(
                 0,
-                SourceRef {
+                crate::ir::SourceRef {
                     definition: None,
                     node: u32::MAX,
                 },
             )],
             current: 0,
-            active: Vec::new(),
+            active: alloc::vec::Vec::new(),
             work: 0,
             max_depth: 0,
-            input_types: Vec::new(),
+            input_types: alloc::vec::Vec::new(),
         }
     }
 
-    fn input(&mut self, ty: &Ty) -> Result<Sym, Diagnostic> {
+    fn input(&mut self, ty: &noble_kernel::types::Ty) -> Result<Sym, crate::diag::Diagnostic> {
         match ty {
-            Ty::Pair(a, b) => {
+            noble_kernel::types::Ty::Pair(a, b) => {
                 let a = self.input(a)?;
                 let b = self.input(b)?;
-                Ok(Sym::Pair(Rc::new((a, b))))
+                Ok(Sym::Pair(alloc::rc::Rc::new((a, b))))
             }
-            Ty::Unit => Ok(Sym::Unit),
+            noble_kernel::types::Ty::Unit => Ok(Sym::Unit),
             other => {
-                let Some(t) = scalar(other) else {
-                    return Err(Diagnostic::new(
-                        Code::Aggregate,
-                        Site::Graph,
-                        format!("input type {other:?}"),
+                let Some(t) = super::admission::scalar(other) else {
+                    return Err(crate::diag::Diagnostic::new(
+                        crate::diag::Code::Aggregate,
+                        crate::diag::Site::Graph,
+                        alloc::format!("input type {other:?}"),
                     ));
                 };
                 let k = u32::try_from(self.input_types.len()).unwrap_or(u32::MAX);
                 self.input_types.push(t);
-                let id = self.node(Op::Input(k), None)?;
+                let id = self.node(crate::ir::Op::Input(k), None)?;
                 Ok(Sym::Scalar(id, t))
             }
         }
     }
 
-    fn charge(&mut self) -> Result<(), Diagnostic> {
+    fn charge(&mut self) -> Result<(), crate::diag::Diagnostic> {
         self.work += 1;
         if self.work > self.a.budget.work_units {
-            return Err(Diagnostic::budget(
-                BudgetKind::Work,
+            return Err(crate::diag::Diagnostic::budget(
+                crate::diag::BudgetKind::Work,
                 self.a.budget.work_units,
                 self.work,
             ));
@@ -220,11 +211,15 @@ impl<'a, 's> Machine<'a, 's> {
         Ok(())
     }
 
-    fn node(&mut self, op: Op, site: Option<SourceRef>) -> Result<u32, Diagnostic> {
+    fn node(
+        &mut self,
+        op: crate::ir::Op,
+        site: Option<crate::ir::SourceRef>,
+    ) -> Result<u32, crate::diag::Diagnostic> {
         let observed = self.nodes.len() as u64 + 1;
         if observed > self.a.budget.expanded_nodes {
-            return Err(Diagnostic::budget(
-                BudgetKind::Expansion,
+            return Err(crate::diag::Diagnostic::budget(
+                crate::diag::BudgetKind::Expansion,
                 self.a.budget.expanded_nodes,
                 observed,
             ));
@@ -237,23 +232,27 @@ impl<'a, 's> Machine<'a, 's> {
         Ok(id)
     }
 
-    fn push_entries(&mut self, body: usize, entries: &[SrcNode]) {
+    fn push_entries(&mut self, body: usize, entries: &[noble_kernel::untrusted::NodeId]) {
         self.tasks
             .extend(entries.iter().rev().map(|&node| Task::Node { body, node }));
     }
 
-    fn site(&self, body: usize, node: SrcNode) -> SourceRef {
-        SourceRef {
+    fn site(&self, body: usize, node: noble_kernel::untrusted::NodeId) -> crate::ir::SourceRef {
+        crate::ir::SourceRef {
             definition: self.a.bodies[body].identity,
             node: node.0,
         }
     }
 
-    fn enter(&mut self, site: SourceRef, identity: Option<u64>) -> Result<(), Diagnostic> {
+    fn enter(
+        &mut self,
+        site: crate::ir::SourceRef,
+        identity: Option<u64>,
+    ) -> Result<(), crate::diag::Diagnostic> {
         let depth = self.active.len() as u64 + 1;
         if depth > self.a.budget.inline_depth {
-            return Err(Diagnostic::budget(
-                BudgetKind::InlineDepth,
+            return Err(crate::diag::Diagnostic::budget(
+                crate::diag::BudgetKind::InlineDepth,
                 self.a.budget.inline_depth,
                 depth,
             ));
@@ -266,7 +265,7 @@ impl<'a, 's> Machine<'a, 's> {
         Ok(())
     }
 
-    fn run(&mut self) -> Result<(), Diagnostic> {
+    fn run(&mut self) -> Result<(), crate::diag::Diagnostic> {
         while let Some(task) = self.tasks.pop() {
             match task {
                 Task::Node { body, node } => {
@@ -277,12 +276,12 @@ impl<'a, 's> Machine<'a, 's> {
                     self.charge()?;
                     match &*r {
                         Recipe::Quotation { body, node } => {
-                            let Node::Quotation { body: entries, .. } =
+                            let noble_kernel::untrusted::Node::Quotation { body: entries, .. } =
                                 &self.a.bodies[*body].candidate.nodes[node.0 as usize]
                             else {
-                                return Err(Diagnostic::new(
-                                    Code::Interface,
-                                    Site::Graph,
+                                return Err(crate::diag::Diagnostic::new(
+                                    crate::diag::Code::Interface,
+                                    crate::diag::Site::Graph,
                                     "recipe is not a quotation",
                                 ));
                             };
@@ -305,7 +304,7 @@ impl<'a, 's> Machine<'a, 's> {
                     let iface = self.interface(body, node)?;
                     if !suffix_matches(&self.sigma, &iface.stack_out) {
                         return Err(self.err(
-                            Code::Interface,
+                            crate::diag::Code::Interface,
                             body,
                             node,
                             "symbolic result differs from the checked derivation's stack_out",
@@ -317,18 +316,32 @@ impl<'a, 's> Machine<'a, 's> {
         Ok(())
     }
 
-    fn err(&self, code: Code, body: usize, node: SrcNode, detail: impl Into<String>) -> Diagnostic {
-        Diagnostic::new(code, Site::Source(self.site(body, node)), detail)
+    fn err(
+        &self,
+        code: crate::diag::Code,
+        body: usize,
+        node: noble_kernel::untrusted::NodeId,
+        detail: impl Into<alloc::string::String>,
+    ) -> crate::diag::Diagnostic {
+        crate::diag::Diagnostic::new(
+            code,
+            crate::diag::Site::Source(self.site(body, node)),
+            detail,
+        )
     }
 
-    fn interface(&self, body: usize, node: SrcNode) -> Result<&'a Interface, Diagnostic> {
+    fn interface(
+        &self,
+        body: usize,
+        node: noble_kernel::untrusted::NodeId,
+    ) -> Result<&'a noble_kernel::untrusted::Interface, crate::diag::Diagnostic> {
         self.a.bodies[body]
             .interfaces
             .get(node.0 as usize)
             .and_then(Option::as_ref)
             .ok_or_else(|| {
                 self.err(
-                    Code::Interface,
+                    crate::diag::Code::Interface,
                     body,
                     node,
                     "missing or inconsistent checked derivation",
@@ -336,17 +349,30 @@ impl<'a, 's> Machine<'a, 's> {
             })
     }
 
-    fn pop(&mut self, body: usize, node: SrcNode) -> Result<Sym, Diagnostic> {
-        self.sigma
-            .pop()
-            .ok_or_else(|| self.err(Code::Interface, body, node, "symbolic stack underflow"))
+    fn pop(
+        &mut self,
+        body: usize,
+        node: noble_kernel::untrusted::NodeId,
+    ) -> Result<Sym, crate::diag::Diagnostic> {
+        self.sigma.pop().ok_or_else(|| {
+            self.err(
+                crate::diag::Code::Interface,
+                body,
+                node,
+                "symbolic stack underflow",
+            )
+        })
     }
 
-    fn pop_known(&mut self, body: usize, node: SrcNode) -> Result<Rc<Recipe>, Diagnostic> {
+    fn pop_known(
+        &mut self,
+        body: usize,
+        node: noble_kernel::untrusted::NodeId,
+    ) -> Result<alloc::rc::Rc<Recipe>, crate::diag::Diagnostic> {
         match self.pop(body, node)? {
             Sym::Known(r, _) => Ok(r),
             _ => Err(self.err(
-                Code::DynamicRun,
+                crate::diag::Code::DynamicRun,
                 body,
                 node,
                 "Program is not statically known",
@@ -354,50 +380,78 @@ impl<'a, 's> Machine<'a, 's> {
         }
     }
 
-    fn step(&mut self, body: usize, node: SrcNode) -> Result<(), Diagnostic> {
+    fn step(
+        &mut self,
+        body: usize,
+        node: noble_kernel::untrusted::NodeId,
+    ) -> Result<(), crate::diag::Diagnostic> {
         let iface = self.interface(body, node)?;
         if !iface.effects.is_empty() {
             return Err(self.err(
-                Code::Effect,
+                crate::diag::Code::Effect,
                 body,
                 node,
-                format!("nonempty effect bound {:?}", iface.effects),
+                alloc::format!("nonempty effect bound {:?}", iface.effects),
             ));
         }
         if !suffix_matches(&self.sigma, &iface.stack_in) {
             return Err(self.err(
-                Code::Interface,
+                crate::diag::Code::Interface,
                 body,
                 node,
                 "symbolic stack differs from the checked stack_in",
             ));
         }
         let site = self.site(body, node);
-        let out_ty = || Rc::new(iface.stack_out.last().cloned().unwrap_or(Ty::Unit));
+        let out_ty = || {
+            alloc::rc::Rc::new(
+                iface
+                    .stack_out
+                    .last()
+                    .cloned()
+                    .unwrap_or(noble_kernel::types::Ty::Unit),
+            )
+        };
         self.tasks.push(Task::Check { body, node });
         match &self.a.bodies[body].candidate.nodes[node.0 as usize] {
-            Node::Literal { lit, .. } => match lit {
-                Lit::I64(v) => {
-                    let id = self.node(Op::Const(Literal::I64(*v)), Some(site))?;
-                    self.sigma.push(Sym::Scalar(id, ScalarType::I64));
+            noble_kernel::untrusted::Node::Literal { lit, .. } => match lit {
+                noble_kernel::untrusted::Lit::I64(v) => {
+                    let id = self.node(
+                        crate::ir::Op::Const(crate::ir::Literal::I64(*v)),
+                        Some(site),
+                    )?;
+                    self.sigma.push(Sym::Scalar(id, crate::ir::ScalarType::I64));
                 }
-                Lit::Bool(v) => {
-                    let id = self.node(Op::Const(Literal::Bool(*v)), Some(site))?;
-                    self.sigma.push(Sym::Scalar(id, ScalarType::Bool));
+                noble_kernel::untrusted::Lit::Bool(v) => {
+                    let id = self.node(
+                        crate::ir::Op::Const(crate::ir::Literal::Bool(*v)),
+                        Some(site),
+                    )?;
+                    self.sigma
+                        .push(Sym::Scalar(id, crate::ir::ScalarType::Bool));
                 }
-                Lit::Unit => self.sigma.push(Sym::Unit),
-                Lit::Text => return Err(self.err(Code::Aggregate, body, node, "Text literal")),
+                noble_kernel::untrusted::Lit::Unit => self.sigma.push(Sym::Unit),
+                noble_kernel::untrusted::Lit::Text => {
+                    return Err(self.err(crate::diag::Code::Aggregate, body, node, "Text literal"))
+                }
             },
-            Node::Quotation { .. } => {
+            noble_kernel::untrusted::Node::Quotation { .. } => {
                 self.sigma.push(Sym::Known(
-                    Rc::new(Recipe::Quotation { body, node }),
+                    alloc::rc::Rc::new(Recipe::Quotation { body, node }),
                     out_ty(),
                 ));
             }
-            Node::SlotInvoke { .. } => {
-                return Err(self.err(Code::LiveSlot, body, node, "live-slot dispatch"));
+            noble_kernel::untrusted::Node::SlotInvoke { .. } => {
+                return Err(self.err(
+                    crate::diag::Code::LiveSlot,
+                    body,
+                    node,
+                    "live-slot dispatch",
+                ));
             }
-            Node::Invocation { def, .. } => self.invoke(body, node, *def, site, out_ty)?,
+            noble_kernel::untrusted::Node::Invocation { def, .. } => {
+                self.invoke(body, node, *def, site, out_ty)?
+            }
         }
         Ok(())
     }
@@ -405,75 +459,100 @@ impl<'a, 's> Machine<'a, 's> {
     fn invoke(
         &mut self,
         body: usize,
-        node: SrcNode,
-        def: Definition,
-        site: SourceRef,
-        out_ty: impl Fn() -> Rc<Ty>,
-    ) -> Result<(), Diagnostic> {
+        node: noble_kernel::untrusted::NodeId,
+        def: noble_kernel::contracts::Definition,
+        site: crate::ir::SourceRef,
+        out_ty: impl Fn() -> alloc::rc::Rc<noble_kernel::types::Ty>,
+    ) -> Result<(), crate::diag::Diagnostic> {
         let Some(kind) = self.a.submission.environment.kind(def) else {
-            return Err(self.err(Code::Interface, body, node, "unknown definition"));
+            return Err(self.err(
+                crate::diag::Code::Interface,
+                body,
+                node,
+                "unknown definition",
+            ));
         };
         match kind {
-            Behavior::Dup => {
+            noble_kernel::contracts::Behavior::Dup => {
                 let top = self.pop(body, node)?;
                 self.sigma.push(top.clone());
                 self.sigma.push(top);
             }
-            Behavior::Drop => {
+            noble_kernel::contracts::Behavior::Drop => {
                 self.pop(body, node)?;
             }
-            Behavior::Swap => {
+            noble_kernel::contracts::Behavior::Swap => {
                 let b = self.pop(body, node)?;
                 let a = self.pop(body, node)?;
                 self.sigma.push(b);
                 self.sigma.push(a);
             }
-            Behavior::Dip => {
+            noble_kernel::contracts::Behavior::Dip => {
                 let q = self.pop_known(body, node)?;
                 let x = self.pop(body, node)?;
                 self.tasks.push(Task::Push(x));
                 self.enter(site, None)?;
                 self.tasks.push(Task::Recipe(q));
             }
-            Behavior::Arith => {
+            noble_kernel::contracts::Behavior::Arith => {
                 let b = self.pop(body, node)?;
                 let a = self.pop(body, node)?;
-                let (Sym::Scalar(a, ScalarType::I64), Sym::Scalar(b, ScalarType::I64)) = (a, b)
+                let (
+                    Sym::Scalar(a, crate::ir::ScalarType::I64),
+                    Sym::Scalar(b, crate::ir::ScalarType::I64),
+                ) = (a, b)
                 else {
                     return Err(self.err(
-                        Code::Interface,
+                        crate::diag::Code::Interface,
                         body,
                         node,
                         "arithmetic on non-I64 symbols",
                     ));
                 };
-                let (a, b) = (NodeId(a), NodeId(b));
+                let (a, b) = (crate::ir::NodeId(a), crate::ir::NodeId(b));
                 // K-NUM-01: `a` is the deeper operand.
                 let op = match def.0 {
-                    4 => Op::I64Add(a, b),
-                    5 => Op::I64Sub(a, b),
-                    6 => Op::I64Mul(a, b),
+                    4 => crate::ir::Op::I64Add(a, b),
+                    5 => crate::ir::Op::I64Sub(a, b),
+                    6 => crate::ir::Op::I64Mul(a, b),
                     _ => {
-                        return Err(self.err(Code::Interface, body, node, "unknown arithmetic row"))
+                        return Err(self.err(
+                            crate::diag::Code::Interface,
+                            body,
+                            node,
+                            "unknown arithmetic row",
+                        ))
                     }
                 };
                 let id = self.node(op, Some(site))?;
-                self.sigma.push(Sym::Scalar(id, ScalarType::I64));
+                self.sigma.push(Sym::Scalar(id, crate::ir::ScalarType::I64));
             }
-            Behavior::Equals => {
+            noble_kernel::contracts::Behavior::Equals => {
                 let b = self.pop(body, node)?;
                 let a = self.pop(body, node)?;
                 match (a, b) {
-                    (Sym::Scalar(a, ScalarType::I64), Sym::Scalar(b, ScalarType::I64)) => {
-                        let id = self.node(Op::I64Eq(NodeId(a), NodeId(b)), Some(site))?;
-                        self.sigma.push(Sym::Scalar(id, ScalarType::Bool));
+                    (
+                        Sym::Scalar(a, crate::ir::ScalarType::I64),
+                        Sym::Scalar(b, crate::ir::ScalarType::I64),
+                    ) => {
+                        let id = self.node(
+                            crate::ir::Op::I64Eq(crate::ir::NodeId(a), crate::ir::NodeId(b)),
+                            Some(site),
+                        )?;
+                        self.sigma
+                            .push(Sym::Scalar(id, crate::ir::ScalarType::Bool));
                     }
                     (Sym::Table(_), _) | (_, Sym::Table(_)) => {
-                        return Err(self.err(Code::Aggregate, body, node, "a table reaches `=`"));
+                        return Err(self.err(
+                            crate::diag::Code::Aggregate,
+                            body,
+                            node,
+                            "a table reaches `=`",
+                        ));
                     }
                     _ => {
                         return Err(self.err(
-                            Code::Interface,
+                            crate::diag::Code::Interface,
                             body,
                             node,
                             "`=` outside the i64.eq whitelist signature (I64 I64 -- Bool)",
@@ -481,25 +560,32 @@ impl<'a, 's> Machine<'a, 's> {
                     }
                 }
             }
-            Behavior::Quote => {
+            noble_kernel::contracts::Behavior::Quote => {
                 let v = self.pop(body, node)?;
                 self.sigma
-                    .push(Sym::Known(Rc::new(Recipe::Capture(v)), out_ty()));
+                    .push(Sym::Known(alloc::rc::Rc::new(Recipe::Capture(v)), out_ty()));
             }
-            Behavior::Compose => {
+            noble_kernel::contracts::Behavior::Compose => {
                 let y = self.pop_known(body, node)?;
                 let x = self.pop_known(body, node)?;
-                self.sigma
-                    .push(Sym::Known(Rc::new(Recipe::Compose(x, y)), out_ty()));
+                self.sigma.push(Sym::Known(
+                    alloc::rc::Rc::new(Recipe::Compose(x, y)),
+                    out_ty(),
+                ));
             }
-            Behavior::Run => {
+            noble_kernel::contracts::Behavior::Run => {
                 let q = self.pop_known(body, node)?;
                 self.enter(site, None)?;
                 self.tasks.push(Task::Recipe(q));
             }
-            Behavior::Named => {
+            noble_kernel::contracts::Behavior::Named => {
                 let Some(target) = self.a.definition_body(def) else {
-                    return Err(self.err(Code::Effect, body, node, "host operation row"));
+                    return Err(self.err(
+                        crate::diag::Code::Effect,
+                        body,
+                        node,
+                        "host operation row",
+                    ));
                 };
                 let identity = self.a.bodies[target].identity;
                 // D7's expansion-stack rule, kept as defense in depth:
@@ -513,10 +599,10 @@ impl<'a, 's> Machine<'a, 's> {
                     .any(|(id, _)| id.is_some() && *id == identity)
                 {
                     return Err(self.err(
-                        Code::Recursion,
+                        crate::diag::Code::Recursion,
                         body,
                         node,
-                        format!(
+                        alloc::format!(
                             "definition identity {identity:?} is already on the expansion stack"
                         ),
                     ));
@@ -525,61 +611,84 @@ impl<'a, 's> Machine<'a, 's> {
                 let entries = &self.a.bodies[target].candidate.body;
                 self.push_entries(target, entries);
             }
-            Behavior::Reflect => return Err(self.err(Code::Reflect, body, node, "reflect")),
-            Behavior::Unit => self.sigma.push(Sym::Unit),
-            Behavior::Pair => {
+            noble_kernel::contracts::Behavior::Reflect => {
+                return Err(self.err(crate::diag::Code::Reflect, body, node, "reflect"))
+            }
+            noble_kernel::contracts::Behavior::Unit => self.sigma.push(Sym::Unit),
+            noble_kernel::contracts::Behavior::Pair => {
                 let b = self.pop(body, node)?;
                 let a = self.pop(body, node)?;
-                self.sigma.push(Sym::Pair(Rc::new((a, b))));
+                self.sigma.push(Sym::Pair(alloc::rc::Rc::new((a, b))));
             }
-            Behavior::Unpair => match self.pop(body, node)? {
+            noble_kernel::contracts::Behavior::Unpair => match self.pop(body, node)? {
                 Sym::Pair(p) => {
                     self.sigma.push(p.0.clone());
                     self.sigma.push(p.1.clone());
                 }
                 _ => {
                     return Err(self.err(
-                        Code::Interface,
+                        crate::diag::Code::Interface,
                         body,
                         node,
                         "unpair of a non-pair symbol",
                     ))
                 }
             },
-            Behavior::Nil => self.sigma.push(Sym::Table(out_ty())),
-            Behavior::Cons => {
+            noble_kernel::contracts::Behavior::Nil => self.sigma.push(Sym::Table(out_ty())),
+            noble_kernel::contracts::Behavior::Cons => {
                 self.pop(body, node)?;
                 self.pop(body, node)?;
                 self.sigma.push(Sym::Table(out_ty()));
             }
-            Behavior::Inl | Behavior::Inr | Behavior::Case | Behavior::If | Behavior::ListCase => {
-                return Err(self.err(Code::Control, body, node, format!("{kind:?}")));
-            }
-            Behavior::TestEmit | Behavior::BoundEmit(_) | Behavior::BoundClock(_) => {
-                return Err(self.err(Code::Effect, body, node, format!("host operation {kind:?}")));
-            }
-            Behavior::TextByte
-            | Behavior::CalculatorTextFromAscii
-            | Behavior::CalculatorTextLength
-            | Behavior::NominalNew(_)
-            | Behavior::NominalInto(_)
-            | Behavior::NominalLeft(_)
-            | Behavior::NominalRight(_)
-            | Behavior::NominalMatch(_)
-            | Behavior::GenericLeft(_)
-            | Behavior::GenericRight(_)
-            | Behavior::GenericMatch(_) => {
-                return Err(self.err(Code::Aggregate, body, node, format!("{kind:?}")));
-            }
-            Behavior::CalculatorIterate
-            | Behavior::CalculatorCompare
-            | Behavior::CalculatorDivRem
-            | Behavior::Reserved => {
+            noble_kernel::contracts::Behavior::Inl
+            | noble_kernel::contracts::Behavior::Inr
+            | noble_kernel::contracts::Behavior::Case
+            | noble_kernel::contracts::Behavior::If
+            | noble_kernel::contracts::Behavior::ListCase => {
                 return Err(self.err(
-                    Code::Profile,
+                    crate::diag::Code::Control,
                     body,
                     node,
-                    format!("{kind:?} is outside ngraph-i64/0"),
+                    alloc::format!("{kind:?}"),
+                ));
+            }
+            noble_kernel::contracts::Behavior::TestEmit
+            | noble_kernel::contracts::Behavior::BoundEmit(_)
+            | noble_kernel::contracts::Behavior::BoundClock(_) => {
+                return Err(self.err(
+                    crate::diag::Code::Effect,
+                    body,
+                    node,
+                    alloc::format!("host operation {kind:?}"),
+                ));
+            }
+            noble_kernel::contracts::Behavior::TextByte
+            | noble_kernel::contracts::Behavior::CalculatorTextFromAscii
+            | noble_kernel::contracts::Behavior::CalculatorTextLength
+            | noble_kernel::contracts::Behavior::NominalNew(_)
+            | noble_kernel::contracts::Behavior::NominalInto(_)
+            | noble_kernel::contracts::Behavior::NominalLeft(_)
+            | noble_kernel::contracts::Behavior::NominalRight(_)
+            | noble_kernel::contracts::Behavior::NominalMatch(_)
+            | noble_kernel::contracts::Behavior::GenericLeft(_)
+            | noble_kernel::contracts::Behavior::GenericRight(_)
+            | noble_kernel::contracts::Behavior::GenericMatch(_) => {
+                return Err(self.err(
+                    crate::diag::Code::Aggregate,
+                    body,
+                    node,
+                    alloc::format!("{kind:?}"),
+                ));
+            }
+            noble_kernel::contracts::Behavior::CalculatorIterate
+            | noble_kernel::contracts::Behavior::CalculatorCompare
+            | noble_kernel::contracts::Behavior::CalculatorDivRem
+            | noble_kernel::contracts::Behavior::Reserved => {
+                return Err(self.err(
+                    crate::diag::Code::Profile,
+                    body,
+                    node,
+                    alloc::format!("{kind:?} is outside ngraph-i64/0"),
                 ));
             }
         }
@@ -591,13 +700,13 @@ impl<'a, 's> Machine<'a, 's> {
     fn build(
         self,
         outputs: &[u32],
-        input_shapes: Vec<ShapeTree>,
-        output_shapes: Vec<ShapeTree>,
+        input_shapes: alloc::vec::Vec<crate::ir::ShapeTree>,
+        output_shapes: alloc::vec::Vec<crate::ir::ShapeTree>,
         stats: &mut Stats,
     ) -> crate::ir::Graph {
         let n = self.nodes.len();
-        let mut live = vec![false; n];
-        let mut work: Vec<u32> = outputs.to_vec();
+        let mut live = alloc::vec![false; n];
+        let mut work: alloc::vec::Vec<u32> = outputs.to_vec();
         while let Some(v) = work.pop() {
             let v = v as usize;
             if core::mem::replace(&mut live[v], true) {
@@ -605,10 +714,11 @@ impl<'a, 's> Machine<'a, 's> {
             }
             work.extend(self.nodes[v].op.operands().into_iter().map(|o| o.0));
         }
-        let mut builder = GraphBuilder::new(SubProfile::I64, self.a.subject().clone());
-        let mut remap = vec![NodeId(u32::MAX); n];
+        let mut builder =
+            crate::ir::GraphBuilder::new(crate::ir::SubProfile::I64, self.a.subject().clone());
+        let mut remap = alloc::vec![crate::ir::NodeId(u32::MAX); n];
         for (i, p) in self.nodes.into_iter().enumerate() {
-            if let Op::Input(k) = p.op {
+            if let crate::ir::Op::Input(k) = p.op {
                 // Inputs are created first, in slot order.
                 remap[i] = builder.input(self.input_types[k as usize]);
                 continue;
@@ -618,7 +728,7 @@ impl<'a, 's> Machine<'a, 's> {
                 continue;
             }
             let op = remap_op(&p.op, &remap);
-            let origin = p.origin.map(|(site, frame)| Origin {
+            let origin = p.origin.map(|(site, frame)| crate::ir::Origin {
                 site,
                 expansion: expansion(&self.frames, frame),
             });
@@ -627,7 +737,7 @@ impl<'a, 's> Machine<'a, 's> {
         for o in outputs {
             builder.output(remap[*o as usize]);
         }
-        let flat = |s: &[ShapeTree]| s.iter().all(ShapeTree::is_scalar);
+        let flat = |s: &[crate::ir::ShapeTree]| s.iter().all(crate::ir::ShapeTree::is_scalar);
         if !flat(&input_shapes) || !flat(&output_shapes) {
             builder.shapes(Some(input_shapes), Some(output_shapes));
         }
@@ -635,19 +745,22 @@ impl<'a, 's> Machine<'a, 's> {
     }
 }
 
-fn remap_op(op: &Op, remap: &[NodeId]) -> Op {
-    let r = |x: &NodeId| remap[x.index()];
+fn remap_op(op: &crate::ir::Op, remap: &[crate::ir::NodeId]) -> crate::ir::Op {
+    let r = |x: &crate::ir::NodeId| remap[x.index()];
     match op {
-        Op::I64Add(a, b) => Op::I64Add(r(a), r(b)),
-        Op::I64Sub(a, b) => Op::I64Sub(r(a), r(b)),
-        Op::I64Mul(a, b) => Op::I64Mul(r(a), r(b)),
-        Op::I64Eq(a, b) => Op::I64Eq(r(a), r(b)),
+        crate::ir::Op::I64Add(a, b) => crate::ir::Op::I64Add(r(a), r(b)),
+        crate::ir::Op::I64Sub(a, b) => crate::ir::Op::I64Sub(r(a), r(b)),
+        crate::ir::Op::I64Mul(a, b) => crate::ir::Op::I64Mul(r(a), r(b)),
+        crate::ir::Op::I64Eq(a, b) => crate::ir::Op::I64Eq(r(a), r(b)),
         other => other.clone(),
     }
 }
 
-fn expansion(frames: &[(u32, SourceRef)], mut frame: u32) -> Vec<SourceRef> {
-    let mut out = Vec::new();
+fn expansion(
+    frames: &[(u32, crate::ir::SourceRef)],
+    mut frame: u32,
+) -> alloc::vec::Vec<crate::ir::SourceRef> {
+    let mut out = alloc::vec::Vec::new();
     while frame != 0 {
         let (parent, site) = frames[frame as usize];
         out.push(site);
@@ -657,18 +770,18 @@ fn expansion(frames: &[(u32, SourceRef)], mut frame: u32) -> Vec<SourceRef> {
     out
 }
 
-fn matches(s: &Sym, t: &Ty) -> bool {
+fn matches(s: &Sym, t: &noble_kernel::types::Ty) -> bool {
     match (s, t) {
-        (Sym::Scalar(_, ScalarType::I64), Ty::I64)
-        | (Sym::Scalar(_, ScalarType::Bool), Ty::Bool)
-        | (Sym::Unit, Ty::Unit) => true,
-        (Sym::Pair(p), Ty::Pair(a, b)) => matches(&p.0, a) && matches(&p.1, b),
+        (Sym::Scalar(_, crate::ir::ScalarType::I64), noble_kernel::types::Ty::I64)
+        | (Sym::Scalar(_, crate::ir::ScalarType::Bool), noble_kernel::types::Ty::Bool)
+        | (Sym::Unit, noble_kernel::types::Ty::Unit) => true,
+        (Sym::Pair(p), noble_kernel::types::Ty::Pair(a, b)) => matches(&p.0, a) && matches(&p.1, b),
         (Sym::Known(_, ty) | Sym::Table(ty), t) => **ty == *t,
         _ => false,
     }
 }
 
-fn suffix_matches(sigma: &[Sym], stack: &[Ty]) -> bool {
+fn suffix_matches(sigma: &[Sym], stack: &[noble_kernel::types::Ty]) -> bool {
     sigma.len() >= stack.len()
         && sigma[sigma.len() - stack.len()..]
             .iter()
@@ -676,7 +789,7 @@ fn suffix_matches(sigma: &[Sym], stack: &[Ty]) -> bool {
             .all(|(s, t)| matches(s, t))
 }
 
-fn flatten(s: &Sym, out: &mut Vec<u32>) -> Result<(), Diagnostic> {
+fn flatten(s: &Sym, out: &mut alloc::vec::Vec<u32>) -> Result<(), crate::diag::Diagnostic> {
     match s {
         Sym::Scalar(id, _) => out.push(*id),
         Sym::Unit => {}
@@ -685,16 +798,16 @@ fn flatten(s: &Sym, out: &mut Vec<u32>) -> Result<(), Diagnostic> {
             flatten(&p.1, out)?;
         }
         Sym::Known(..) => {
-            return Err(Diagnostic::new(
-                Code::ProgramOutput,
-                Site::Graph,
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::ProgramOutput,
+                crate::diag::Site::Graph,
                 "Program-valued output",
             ));
         }
         Sym::Table(_) => {
-            return Err(Diagnostic::new(
-                Code::Aggregate,
-                Site::Graph,
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::Aggregate,
+                crate::diag::Site::Graph,
                 "table-valued output",
             ));
         }
@@ -704,31 +817,32 @@ fn flatten(s: &Sym, out: &mut Vec<u32>) -> Result<(), Diagnostic> {
 
 /// The shape tree of a root interface type. Admission has already refused
 /// an item nesting more than `MAX_SHAPE_DEPTH` pairs, which bounds this
-/// recursion; [`ShapeTree::pair`] refuses one again if it ever arrives.
-fn shape(ty: &Ty) -> Result<ShapeTree, Diagnostic> {
+/// recursion; [`crate::ir::ShapeTree::pair`] refuses one again if it ever arrives.
+fn shape(ty: &noble_kernel::types::Ty) -> Result<crate::ir::ShapeTree, crate::diag::Diagnostic> {
     match ty {
-        Ty::Unit => Ok(ShapeTree::UNIT),
-        Ty::Pair(a, b) => ShapeTree::pair(shape(a)?, shape(b)?).map_err(|_| {
-            Diagnostic::new(
-                Code::Aggregate,
-                Site::Graph,
-                "a root interface item nests too many pairs for a shape tree",
-            )
-        }),
-        _ => Ok(ShapeTree::SCALAR),
+        noble_kernel::types::Ty::Unit => Ok(crate::ir::ShapeTree::UNIT),
+        noble_kernel::types::Ty::Pair(a, b) => crate::ir::ShapeTree::pair(shape(a)?, shape(b)?)
+            .map_err(|_| {
+                crate::diag::Diagnostic::new(
+                    crate::diag::Code::Aggregate,
+                    crate::diag::Site::Graph,
+                    "a root interface item nests too many pairs for a shape tree",
+                )
+            }),
+        _ => Ok(crate::ir::ShapeTree::SCALAR),
     }
 }
 
 /// D7 step 5: the checker's saturating named-call expansion bound,
 /// recomputed from the closure call graph (one entry per body; the root uses
 /// an identity outside the closure).
-fn static_bound(a: &Admitted<'_>) -> Result<u64, Diagnostic> {
+fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::Diagnostic> {
     let env = &a.submission.environment;
     let mut root_id = u64::MAX;
     while a.closure().binary_search(&root_id).is_ok() {
         root_id -= 1;
     }
-    let mut entries: Vec<CallGraphEntry> = Vec::new();
+    let mut entries: alloc::vec::Vec<crate::check::CallGraphEntry> = alloc::vec::Vec::new();
     for (i, body) in a.bodies.iter().enumerate() {
         let identity = match body.identity {
             None if i == 0 => root_id,
@@ -736,16 +850,20 @@ fn static_bound(a: &Admitted<'_>) -> Result<u64, Diagnostic> {
             _ => continue,
         };
         let mut local = 0u64;
-        let mut callees = Vec::new();
+        let mut callees = alloc::vec::Vec::new();
         for node in &body.candidate.nodes {
             match node {
-                Node::Literal {
-                    lit: Lit::I64(_) | Lit::Bool(_),
+                noble_kernel::untrusted::Node::Literal {
+                    lit:
+                        noble_kernel::untrusted::Lit::I64(_) | noble_kernel::untrusted::Lit::Bool(_),
                     ..
                 } => local += 1,
-                Node::Invocation { def, .. } => match env.kind(*def) {
-                    Some(Behavior::Arith | Behavior::Equals) => local += 1,
-                    Some(Behavior::Named) => {
+                noble_kernel::untrusted::Node::Invocation { def, .. } => match env.kind(*def) {
+                    Some(
+                        noble_kernel::contracts::Behavior::Arith
+                        | noble_kernel::contracts::Behavior::Equals,
+                    ) => local += 1,
+                    Some(noble_kernel::contracts::Behavior::Named) => {
                         if let Some(t) = a.definition_body(*def) {
                             if let Some(id) = a.bodies[t].identity {
                                 callees.push(id);
@@ -754,7 +872,9 @@ fn static_bound(a: &Admitted<'_>) -> Result<u64, Diagnostic> {
                     }
                     _ => {}
                 },
-                Node::Literal { .. } | Node::Quotation { .. } | Node::SlotInvoke { .. } => {}
+                noble_kernel::untrusted::Node::Literal { .. }
+                | noble_kernel::untrusted::Node::Quotation { .. }
+                | noble_kernel::untrusted::Node::SlotInvoke { .. } => {}
             }
         }
         // Several specializations may share one identity: keep the largest.
@@ -764,7 +884,7 @@ fn static_bound(a: &Admitted<'_>) -> Result<u64, Diagnostic> {
                 e.callees = callees;
             }
         } else {
-            entries.push(CallGraphEntry {
+            entries.push(crate::check::CallGraphEntry {
                 identity,
                 local_nodes: local,
                 callees,
@@ -772,9 +892,13 @@ fn static_bound(a: &Admitted<'_>) -> Result<u64, Diagnostic> {
         }
     }
     let inputs = a.root_interface().0.len() as u64;
-    expansion_bound(&entries, root_id)
+    crate::check::expansion_bound(&entries, root_id)
         .map(|b| b.saturating_add(inputs))
         .ok_or_else(|| {
-            Diagnostic::new(Code::Recursion, Site::Graph, "recursive closure call graph")
+            crate::diag::Diagnostic::new(
+                crate::diag::Code::Recursion,
+                crate::diag::Site::Graph,
+                "recursive closure call graph",
+            )
         })
 }
