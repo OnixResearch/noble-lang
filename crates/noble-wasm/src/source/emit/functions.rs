@@ -239,7 +239,10 @@ fn nominal_construct(
     shape: u32,
     branch: &[u8],
 ) -> Result<(), crate::Diagnostic> {
-    attempt!(checked_slot(out, SlotGuard { shape, depth: 1 }));
+    attempt!(slots::checked_slot(
+        out,
+        slots::SlotGuard { shape, depth: 1 }
+    ));
     attempt!(nominal_call(out, b"$op_nominal_construct", id));
     out.append(branch)
 }
@@ -249,7 +252,10 @@ fn nominal_into(
     id: noble_kernel::types::NominalTypeId,
     shape: u32,
 ) -> Result<(), crate::Diagnostic> {
-    attempt!(checked_slot(out, SlotGuard { shape, depth: 1 }));
+    attempt!(slots::checked_slot(
+        out,
+        slots::SlotGuard { shape, depth: 1 }
+    ));
     nominal_call(out, b"$op_nominal_into", id)
 }
 
@@ -264,21 +270,21 @@ fn nominal_match(
     id: noble_kernel::types::NominalTypeId,
     shapes: MatchShapes,
 ) -> Result<(), crate::Diagnostic> {
-    let right = SlotGuard {
+    let right = slots::SlotGuard {
         shape: shapes.right,
         depth: 1,
     };
-    attempt!(checked_slot(out, right));
-    let left = SlotGuard {
+    attempt!(slots::checked_slot(out, right));
+    let left = slots::SlotGuard {
         shape: shapes.left,
         depth: 2,
     };
-    attempt!(checked_slot(out, left));
-    let nominal = SlotGuard {
+    attempt!(slots::checked_slot(out, left));
+    let nominal = slots::SlotGuard {
         shape: shapes.nominal,
         depth: 3,
     };
-    attempt!(checked_slot(out, nominal));
+    attempt!(slots::checked_slot(out, nominal));
     nominal_call(out, b"$op_nominal_match", id)
 }
 
@@ -295,22 +301,5 @@ fn nominal_call(
     out.i32(id.ordinal)
 }
 
-struct SlotGuard {
-    shape: u32,
-    depth: u32,
-}
-
-fn checked_slot(
-    out: &mut crate::output::Buffer,
-    guard: SlotGuard,
-) -> Result<(), crate::Diagnostic> {
-    attempt!(out.append(b"(if (i32.eqz (call $need "));
-    attempt!(out.i32(guard.depth));
-    attempt!(out.append(b")) (then (return)))\n(if (i32.eqz (call $t"));
-    attempt!(out.number(u64::from(guard.shape)));
-    attempt!(out.append(b" (call $slot_kind (i32.sub (global.get $sp) "));
-    attempt!(out.i32(guard.depth));
-    attempt!(out.append(b")) (call $slot_value (i32.sub (global.get $sp) "));
-    attempt!(out.i32(guard.depth));
-    out.append(b")))) (then (call $fail (i32.const 4)) (return)))\n")
-}
+#[path = "functions/slots.rs"]
+mod slots;
