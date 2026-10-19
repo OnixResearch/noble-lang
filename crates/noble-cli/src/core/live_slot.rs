@@ -1931,7 +1931,7 @@ impl Host {
         for row in rows {
             let span = noble_wasm::source::CodeSpan {
                 start: uint(row, "start")?,
-                length: uint(row, "length")?,
+                slots: uint(row, "length")?,
                 generation: uint(row, "generation")?,
             };
             let mut owner = None;
@@ -1946,7 +1946,7 @@ impl Host {
                     owner = Some(id.clone());
                 }
             }
-            if span.length == 0 || owner.is_none() {
+            if span.slots == 0 || owner.is_none() {
                 self.poisoned = true;
                 return Err(reject(
                     "worker requested unknown or duplicate code-span retirement",
@@ -1956,7 +1956,7 @@ impl Host {
             let worker = &mut self.worker;
             let result = self.compiler.retire_code(span, |exact| {
                 let message = json!({"operation":"retire-code","code_span":{
-                    "start":exact.start,"length":exact.length,"generation":exact.generation}});
+                    "start":exact.start,"length":exact.slots,"generation":exact.generation}});
                 let reply = match worker.slot(&message, &[]) {
                     Ok(reply) => reply,
                     Err(error) => {
@@ -2325,7 +2325,7 @@ impl Host {
             "operation":"install", "id":id,
             "source_sha256":source_hash,
             "wat_sha256":crate::workflow::intrinsic::sha256(compiled.wat()),
-            "code_span":{"start":span.start,"length":span.length,"generation":span.generation},
+            "code_span":{"start":span.start,"length":span.slots,"generation":span.generation},
             "target_metadata":{"root_program_index":target.root_program_index,
                 "input_signature":target.input_signature,
                 "output_signature":target.output_signature,
