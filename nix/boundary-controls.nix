@@ -151,6 +151,10 @@ let
           sed -i 's/max_units = 88,/max_units = 90,/; s/max_shards = 88,/max_shards = 90,/' \
             "$out/architecture-acyclic.ncl"
           mv "$out/architecture-acyclic.ncl" policy/architecture.ncl
+          # The exporter reads its --output file, so export the policy first and
+          # then derive the manifest from it, exactly as the reviewed check does.
+          ${nickel}/bin/nickel export --format json policy/architecture.ncl \
+            > "$out/architecture.json"
           ${nickel}/bin/nickel export --format json policy/architecture-export-spec.ncl \
             > "$out/export-spec.json"
           ${standards}/bin/octet-standards nickel-export-manifest \
