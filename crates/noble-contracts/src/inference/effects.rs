@@ -2,6 +2,8 @@
 //! Solving removes impossible bits from the greatest positive-union solution;
 //! it never hides a concrete host request.
 
+#[cfg(test)]
+mod oracle;
 mod solve;
 
 #[derive(Clone, Copy)]

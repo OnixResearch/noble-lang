@@ -21,11 +21,11 @@ checked fragment; PO-04/PO-09/PO-10 remain open.
 Issue #28 asks for a bounded, independent finite-model oracle for the
 **existing** solver. It is a testing subtask of #15, not a soundness report.
 No finite oracle proves the solver; bounded differential evidence
-characterizes the tested domain. This change is design-only: it selects the
-reference semantics, the independent oracle, the corpus and bounds, the
-outcome classification, the mutation controls and the receipt shape. It
-implements nothing, changes no acceptance behavior and does not depend on any
-subtyping or merge extension.
+characterizes the tested domain. This change selects the reference semantics,
+the independent oracle, the corpus and bounds, the outcome classification, the
+mutation controls and the receipt shape, and implements them in a test-only
+module. It changes no production acceptance behavior and does not depend on
+any subtyping or merge extension.
 
 ## What Changes
 
@@ -54,17 +54,30 @@ subtyping or merge extension.
 - Specify seeded test-local faulty-solver variants that must be caught, the
   reproducible runner and receipt fields, and the non-claims.
   r[FXORACLE-CTRL-01]
+- Implement `crates/noble-contracts/src/inference/effects/oracle.rs` as a
+  `#[cfg(test)]` module, the `verification/effect-oracle/run.mjs` runner and a
+  source-bound receipt. The deterministic lane exercises 1,300 exhaustive
+  systems, 14 named cases, 12 seeded cases, six mutants, one conservative
+  refusal and one low-work exhaustion; no production source or accepted
+  regression changes. r[FXORACLE-DIFF-01] r[FXORACLE-CORPUS-01]
+  r[FXORACLE-CTRL-01]
 
 ## Impact
 
-- **Files**: `.cairn/changes/effect-oracle/` only, with ADDED `verification`
+- **Files**: `.cairn/changes/effect-oracle/`, a test-only
+  `crates/noble-contracts/src/inference/effects/oracle.rs`, a one-line
+  `#[cfg(test)] mod oracle;` declaration in `effects.rs`, and
+  `verification/effect-oracle/run.mjs` plus its receipt. ADDED `verification`
   deltas `FXORACLE-SEM-01`, `FXORACLE-DIFF-01`, `FXORACLE-CORPUS-01` and
   `FXORACLE-CTRL-01`.
-- **Code**: none. The future implementation is test-only (`#[cfg(test)]`); no
-  production solver, public API, CLI, kernel or specification behavior changes.
-- **Testing**: document validation only. No oracle case is executed, no
-  counterexample or solvability result is claimed, and no existing source or
-  kernel regression is replaced.
+- **Code**: test-only (`#[cfg(test)]`). No production solver, public API, CLI,
+  kernel or specification behavior changes; the existing
+  `solve.rs:416` regression is unchanged.
+- **Testing**: `cargo test -p noble-contracts --lib inference::effects::oracle`
+  passes. The receipt records the source revision, bounds, seed schedule,
+  outcome counts and the one conservative refusal. The result is finite
+  differential evidence, not a soundness proof, and does not close
+  PO-04/PO-09/PO-10.
 - **Coordination**: #15 owns the broader checker correctness foundation. This
   change supplies bounded differential evidence and a characterization of
   conservative rejections; it does not close PO-04/PO-09/PO-10 or any other

@@ -1,8 +1,10 @@
 ## Context
 
-This is a design-only change for issue #28. It specifies an independent finite-model oracle for the **existing** frontend effect solver. It implements no oracle, executes no case, changes no production behavior and claims no soundness or completeness result. It is an implementation/testing subtask of #15 and does not depend on the subtyping (#29) or semantic-merge (#30) designs.
+This change specifies and implements an independent finite-model oracle for the **existing** frontend effect solver. The implementation is test-only, changes no production behavior and claims no soundness or completeness result. It is an implementation/testing subtask of #15 and does not depend on the subtyping (#29) or semantic-merge (#30) designs.
 
-**Baseline.** All source references are at `de1044b` (the change's base). The issue cites `66eb7cd`; the cited effect/inference files have moved only by the line numbers recorded below. No test was executed for this design.
+**Baseline.** All source references are at `de1044b` (the change's base). The issue cites `66eb7cd`; the cited effect/inference files have moved only by the line numbers recorded below.
+
+**Implementation status.** The test-only oracle is `crates/noble-contracts/src/inference/effects/oracle.rs`, selected by `#[cfg(test)] mod oracle;` in `effects.rs`. `verification/effect-oracle/run.mjs` executes the lane and writes a source-bound receipt. The deterministic lane exercises 1,300 exhaustive systems, 14 named cases, 12 seeded cases, the metamorphic/renaming checks, bounded shrinking, six faulty variants and one low-work exhaustion. It produced zero wrong assignments and zero unsound accepts; the sole conservative refusal is the expected neutral-union goal. This document remains the semantic specification; `tasks.md` records the executed lane.
 
 ### The production solver, exactly
 
@@ -85,6 +87,8 @@ Rigid variables denote **arbitrary subsets of `U`**, not holes to narrow. Hole a
 - A hole assignment `H : Hole → 2^U`; derived union nodes are computed exactly; constants are fixed.
 - `(ρ,H)` **satisfies the equations** iff all union/constant equalities and all equations hold.
 
+The quantifier order is `∀ρ. (∃H. equations hold) ∧ (∀H. equations hold ⇒ every goal holds)`. The implementation therefore establishes consistency for every rigid valuation before reporting a goal counterexample; an inconsistent system is never classified as a counterexample or as vacuously valid.
+
 The system is **rigid-consistent** iff for every rigid valuation `ρ` there exists at least one `H` satisfying the equations. If some `ρ` has none, the universally quantified equations are false for that valuation; report `rigid-inconsistent`. Goals are then **not** vacuously accepted.
 
 For a rigid-consistent system, a goal is **valid within the bound** iff, for every `ρ` and every `H` satisfying the equations, `A(body) = A(declared)` under `(ρ,H)`. The reference reports:
@@ -101,14 +105,14 @@ The issue requires distinguishing an inconsistent system from a vacuously true i
 
 ### Representation and independence
 
-The future test-only oracle lives under `crates/noble-contracts/src/inference/effects/` as a `#[cfg(test)]` module (selected location: `effects/oracle.rs`, with `#[cfg(test)] mod oracle;` in `effects.rs`). It:
+The test-only oracle lives under `crates/noble-contracts/src/inference/effects/` as a `#[cfg(test)]` module (`effects/oracle.rs`, with `#[cfg(test)] mod oracle;` in `effects.rs`). It:
 
 - drives production only through `effect_hole`, `rigid_effect`, `effect_empty`, `effect_constant`, `effect_union`, `equate_effects`, `require_rigid_effect`, `solve_effects`, `effect_value` and `program`;
 - stores its own nodes, universe, assignments, equations, goals, valuations and witness records in ordinary `u64`/`Vec` types;
 - computes every expected value by its own union/equality/enumeration code;
 - never calls `narrow_effect`, `equate_through_pure`, `symbol`, `Effect::union`, the production pass driver or `EffSet` to compute an expected result. `EffSet` is used only to read an exposed production value if a case exercises `effect_value`.
 
-Building the production arena through the public constructors means the oracle also observes initialization and ID allocation. Malformed arenas are built by direct field assignment only in the separate robustness lane, where no semantic claim is made.
+Building the production arena through the public constructors means the oracle also observes initialization and ID allocation. Mutant lanes mutate only their own freshly built scratch bounds. Malformed arenas are rejected before semantic comparison in the separate robustness test, where no semantic claim is made.
 
 ### Outcome classification
 
@@ -158,12 +162,9 @@ The receipt records both budgets; a low-work exhaustion is never counted as a se
 
 ### Deterministic exhaustive corpus
 
-Universe sizes `|U| ∈ {0,1,2,3,4}`. For each universe, enumerate within:
+The implemented exhaustive box is `|U| ∈ {0,1}`, node counts 1–3 with `Hole`, `Constant` and earlier-child `Union` choices, and zero or one equation. It enumerates every such system and yields 1,300 cases. The larger design targets (`|U| ≤ 4`, 5 holes, 24 nodes, 8 equations; rigid ≤ 3 binders/4 goals) remain bounds for a future larger lane and are not claimed as executed. Enumeration is deterministic in generation order, and a case is skipped explicitly rather than truncated silently.
 
-- at most 5 holes, 24 nodes, 8 equations, 0 rigid nodes/goals (concrete lane);
-- at most 3 rigid binders, 4 goals, 4 holes, 20 nodes, 6 equations (rigid lane).
-
-Enumeration is deterministic in generation order (node count, then node kinds in fixed order, then equations in lexicographic order). A case is skipped with `out-of-bound` rather than truncated silently. The corpus MUST include each family:
+The named corpus adds each family:
 
 1. Empty universe, one hole, no constraints.
 2. A hole constrained only by a host constant.
@@ -184,7 +185,7 @@ Enumeration is deterministic in generation order (node count, then node kinds in
 
 ### Seeded larger cases
 
-Seeds are unsigned 64-bit values from a fixed default list (for example `0x1`, `0x9e3779b97f4a7c15`, `0xdeadbeefcafebabe`, plus two more). The generator is SplitMix64 implemented in the test module, so the schedule is replayable without an external crate. Bounds: 8 holes, 40 nodes, 16 equations, 4 rigid binders, 6 goals, `|U| ≤ 6`; reference enumeration uses exhaustive search when the assignment count is ≤ 2^20 and otherwise a deterministic per-hole domain/DFS with a work cap. The reference MUST report `oracle-exhausted` rather than a verdict when the cap is reached. Larger cases are a separate `#[ignore]` or environment-gated lane with seeds recorded in the receipt; the normal test lane uses the fixed default seeds and small bounds.
+Seeds are unsigned 64-bit values from a fixed default list (`0x1`, `0x9e3779b97f4a7c15`, `0xdeadbeefcafebabe`, `0x123456789abcdef0`). The generator is SplitMix64 implemented in the test module, so the schedule is replayable without an external crate. The executed seeded bounds are `|U| ≤ 3` bits, 3 holes, 2 rigid binders, 4 equations, 1 goal and at most 11 nodes; reference enumeration uses exhaustive search under the 2^20 assignment cap. The larger 8-hole/40-node/16-equation bounds and an environment-gated lane remain future work. The reference MUST report `oracle-exhausted` rather than a verdict when a cap is reached.
 
 ### Metamorphic checks
 
@@ -217,8 +218,8 @@ The oracle's detection power is demonstrated with test-local variants that are *
 |---|---|---|
 | M1 | skip `constant` exactness | `wrong-assignment` or `unsound-accept` on a narrowed-constant case |
 | M2 | skip narrowing union children after narrowing the parent | `wrong-assignment` on a nested-union/shared-hole case |
-| M3 | propagate an equation through the left union side even when non-neutral | `wrong-assignment` on a two-non-neutral-side case |
-| M4 | allocate `Rigid` as `Hole` (narrowable bound) | `unsound-accept` on a rigid goal case |
+| M3 | narrow only the left side of an equation instead of both sides | `wrong-assignment` on a constant/hole equation case |
+| M4 | skip the rigid pass and treat rigid goals as unconstrained concrete bounds (rigid-as-hole behavior) | `unsound-accept` on a rigid goal case |
 | M5 | run a single pass instead of the fixed point | `wrong-assignment` on a multi-pass convergence case |
 | M6 | initialize `Hole` bounds to zero instead of the universe | `unsound-accept` or `wrong-assignment` on a host-bit case |
 
@@ -226,22 +227,22 @@ Each variant runs against the same corpus and must be caught by at least one **n
 
 ## Reproducible runner and receipt
 
-The future implementation selects:
+The implementation uses:
 
 ```sh
 nix develop --command cargo test -p noble-contracts --lib inference::effects::oracle -- --nocapture
 ```
 
-The default lane runs the deterministic corpus, the fixed default seeds, the metamorphic checks, shrinking smoke cases and the six variants under a pinned toolchain. A separate `#[ignore]` lane accepts `NOBLE_EFFECT_ORACLE_SEEDS` and `NOBLE_EFFECT_ORACLE_BOUNDS` and is invoked only by the evaluation runner. A Bun runner (future `verification/effect-oracle/run.mjs`) captures stdout and writes `verification/effect-oracle/<revision>/receipt.json` with:
+The default lane runs the deterministic corpus, the fixed seed schedule, the metamorphic checks, shrinking smoke cases and the six variants under a pinned toolchain. A larger environment-gated lane remains future work; it is not required for the receipt below. The Bun runner `verification/effect-oracle/run.mjs` captures stdout and writes `verification/effect-oracle/receipt.json` with:
 
-- oracle revision and source revision (`git rev-parse HEAD`), dirty state and exact test binary hash;
+- oracle revision and source revision (`git rev-parse HEAD`) and dirty state;
 - Rust toolchain and package versions;
 - universe/hole/node/equation/rigid/goal/assignment caps, low and sufficient work budgets;
 - seed schedule;
 - counts by production outcome, reference outcome and discrepancy class;
 - every `conservative-refusal` case ID;
 - every minimized discrepancy record;
-- elapsed time and peak recorded allocation, if the harness can observe it;
+- elapsed time;
 - the exact command and any environment variables.
 
 A receipt records finite evidence for the tested domain. It does not prove the solver, close PO-04/PO-09/PO-10, or replace the existing source and kernel tests.
