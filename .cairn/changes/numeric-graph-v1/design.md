@@ -55,7 +55,22 @@
 - `noble-ngraph → noble-kernel` and `noble-ngraph → noble-contracts` are allowed by `domain-core → [domain-core]`.
 - No role rule, provider caller-role list or capability classification changes.
 
-**`no_std`, now also required by policy.** Without `std`, the library cannot reach filesystem, process, environment, clock, thread or output APIs: the compiler enforces the NGRAPH-CLI-01 effect boundary. It also matches the three existing domain-core crates. Q1 was approved as a tightening, and the integrator applied it on `integration/ngraph-v1`: `policy/architecture.ncl` `core_no_std` adds `noble-ngraph` and `dylint.toml` `core_source_scopes` adds `crates/noble-ngraph/src` (`e5decb9`), and `nix/octet-controls.nix` adds it to `requiredCorePackages`, `requiredPackages` and `requiredScopes`, with rejection controls for a missing no-std entry and an omitted package (`ff4e9ba`). Dropping the crate from production or from `core_no_std` is now a policy diagnostic.
+**`no_std`, now also required by policy.** `#![no_std]` is a crate/build
+constraint, not a transitive purity guarantee. Injected
+`IdentityScheme`/`IdentityHasher` implementations and caller-owned destruction
+are not made effect-free by it. A retained hostile consumer returned `I64(7)`
+while recording 42 reads and 42 writes in the injected hasher callbacks; this
+is callback-effect evidence, not a semantic observer control or a destructor
+measurement. CASE-02 still requires the selected compiler-authenticated
+complete capability closure and remains `absent/not-run/open/unassessed` with
+empty evidence. The crate's no-std status also matches the three existing
+domain-core crates. Q1 was approved as a tightening, and the integrator applied
+it on `integration/ngraph-v1`: `policy/architecture.ncl` `core_no_std` adds
+`noble-ngraph` and `dylint.toml` `core_source_scopes` adds
+`crates/noble-ngraph/src` (`e5decb9`), and `nix/octet-controls.nix` adds it to
+`requiredCorePackages`, `requiredPackages` and `requiredScopes`, with rejection
+controls for a missing no-std entry and an omitted package (`ff4e9ba`). Dropping
+the crate from production or from `core_no_std` is now a policy diagnostic.
 
 **Core-scope lints.** With `crates/noble-ngraph/src` in `core_source_scopes`, the core dylint lints report on the library (warning-only while deny-all stops in `noble-kernel`, #26). Two groups are fixed at the source, with the boring design:
 

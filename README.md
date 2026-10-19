@@ -666,6 +666,15 @@ boundary. The eight-case historical acceptance and six additional finite
 execution records are not whole-feature or global-gate acceptance. The
 [change](.cairn/changes/numeric-graph-v1/design.md) stays active and is not archived.
 
+`#![no_std]` is a crate/build constraint, not a transitive purity guarantee.
+Injected `IdentityScheme`/`IdentityHasher` implementations and caller-owned
+destruction are not made effect-free by it. A retained hostile consumer
+returned `I64(7)` while recording 42 reads and 42 writes in the injected hasher
+callbacks; this is callback-effect evidence, not a semantic observer control or
+a destructor measurement. CASE-02 still requires the selected
+compiler-authenticated complete capability closure and remains
+`absent/not-run/open/unassessed` with `evidence: []`.
+
 **CPU follow-on (2026-10-16).** A source-pinned comparison of the existing CPU
 workloads motivated removing per-instruction table copies and repeated derivative
 reachability walks, plus specializing the default instruction loop away from
