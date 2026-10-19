@@ -66,7 +66,7 @@ struct Work {
     calculator_plan: bool,
     // Observation only: the largest structural node count admitted against
     // the request's `type_size` by borrowed preflight. Never charged.
-    max_type_size: u32,
+    max_type_nodes: u32,
 }
 
 #[expect(
@@ -122,8 +122,8 @@ impl Work {
     }
 
     const fn observe_type_size(&mut self, nodes: u32) {
-        if nodes > self.max_type_size {
-            self.max_type_size = nodes;
+        if nodes > self.max_type_nodes {
+            self.max_type_nodes = nodes;
         }
     }
 }
@@ -177,9 +177,9 @@ pub struct CompileMetrics {
     pub environment_work: u64,
     pub named_bodies: u64,
     /// Largest instantiated stack-entry or value type admitted by preflight.
-    pub max_type_size: u32,
-    /// The request's `type_size` ceiling that `max_type_size` was checked against.
-    pub type_size_limit: u32,
+    pub max_type_nodes: u32,
+    /// The request's `type_size` ceiling that `max_type_nodes` was checked against.
+    pub type_nodes_cap: u32,
     pub signature_keys: u64,
     /// Retained-key length charged before lowering; grows with the pool.
     pub signature_key_charge: u64,
@@ -687,7 +687,7 @@ impl Compiler {
             issued: u64::from(submission.request.limits.work),
             calculator_preflight: self.calculator,
             calculator_plan: false,
-            max_type_size: 0,
+            max_type_nodes: 0,
         };
         attempt!(preflight::check(submission, self.calculator, &mut work));
         work.calculator_preflight = false;
@@ -915,8 +915,8 @@ impl Compiler {
             // The allowance is exactly `environment_work × (named + 3)`.
             environment_work: work_environment_grant / named_bodies.saturating_add(3),
             named_bodies,
-            max_type_size: work.max_type_size,
-            type_size_limit: submission.request.limits.type_size,
+            max_type_nodes: work.max_type_nodes,
+            type_nodes_cap: submission.request.limits.type_size,
             signature_keys: next.signatures.len() as u64,
             signature_key_charge,
             identity_charge,
@@ -1212,7 +1212,7 @@ mod tests {
             issued: CALCULATOR_COMPILER_WORK_LIMIT - 8,
             calculator_preflight: true,
             calculator_plan: false,
-            max_type_size: 0,
+            max_type_nodes: 0,
         };
         assert!(work.charge(7).is_ok());
         assert_eq!(work.remaining, 7);
@@ -1235,7 +1235,7 @@ mod tests {
             issued: 7,
             calculator_preflight: false,
             calculator_plan: false,
-            max_type_size: 0,
+            max_type_nodes: 0,
         };
         assert!(matches!(
             ordinary.charge(8),
@@ -1437,7 +1437,7 @@ mod tests {
             issued: CALCULATOR_COMPILER_WORK_LIMIT - 1_000_000,
             calculator_preflight: false,
             calculator_plan: true,
-            max_type_size: 0,
+            max_type_nodes: 0,
         };
         for length in 1..=64 {
             assert!(
