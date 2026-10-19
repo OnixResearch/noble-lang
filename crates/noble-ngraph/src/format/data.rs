@@ -10,14 +10,6 @@
 //! after it the loss graph's target slot types. Row order is preserved; the
 //! training-data digest binds it.
 
-use alloc::{format, string::String, vec, vec::Vec};
-
-use super::value::{format_diag, row, row_text, type_names, types};
-use crate::diag::{Code, Diagnostic, Site};
-use crate::ir::ScalarType;
-use crate::sem::Value;
-use crate::train::Point;
-
 /// Schema line.
 pub const SCHEMA: &str = "noble-ngraph-data/0";
 
@@ -25,17 +17,23 @@ pub const SCHEMA: &str = "noble-ngraph-data/0";
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Data {
     /// Declared model input types.
-    pub inputs: Vec<ScalarType>,
+    pub inputs: alloc::vec::Vec<crate::ir::ScalarType>,
     /// Declared loss target types.
-    pub targets: Vec<ScalarType>,
+    pub targets: alloc::vec::Vec<crate::ir::ScalarType>,
     /// Points in file order: (inputs, targets).
-    pub points: Vec<(Vec<Value>, Vec<Value>)>,
+    pub points: alloc::vec::Vec<(
+        alloc::vec::Vec<crate::sem::Value>,
+        alloc::vec::Vec<crate::sem::Value>,
+    )>,
 }
 
 /// Splits tokens at the single `;` separator.
-fn halves<'a>(tokens: &[&'a str], line: usize) -> Result<(Vec<&'a str>, Vec<&'a str>), Diagnostic> {
-    let mut left = Vec::new();
-    let mut right = Vec::new();
+fn halves<'a>(
+    tokens: &[&'a str],
+    line: usize,
+) -> Result<(alloc::vec::Vec<&'a str>, alloc::vec::Vec<&'a str>), crate::diag::Diagnostic> {
+    let mut left = alloc::vec::Vec::new();
+    let mut right = alloc::vec::Vec::new();
     let mut seen = 0;
     for tok in tokens {
         let mut parts = tok.split(';');
@@ -55,7 +53,10 @@ fn halves<'a>(tokens: &[&'a str], line: usize) -> Result<(Vec<&'a str>, Vec<&'a 
         }
     }
     if seen != 1 {
-        return Err(format_diag(line, "expected exactly one `;` separator"));
+        return Err(super::value::format_diag(
+            line,
+            "expected exactly one `;` separator",
+        ));
     }
     Ok((left, right))
 }
@@ -65,40 +66,54 @@ fn halves<'a>(tokens: &[&'a str], line: usize) -> Result<(Vec<&'a str>, Vec<&'a 
 /// # Errors
 /// `E-FORMAT` (schema, syntax, missing or duplicate `types`, separator, row
 /// counts), `E-LITERAL-INEXACT` or `E-LITERAL-NONFINITE`.
-pub fn parse(text: &str) -> Result<Data, Diagnostic> {
+pub fn parse(text: &str) -> Result<Data, crate::diag::Diagnostic> {
     let mut lines = super::lines(text);
     let header = lines
         .next()
-        .ok_or_else(|| format_diag(1, "missing noble-ngraph-data/0 schema line"))?;
+        .ok_or_else(|| super::value::format_diag(1, "missing noble-ngraph-data/0 schema line"))?;
     if header.tokens != [SCHEMA] {
-        return Err(format_diag(
+        return Err(super::value::format_diag(
             header.number,
             "missing noble-ngraph-data/0 schema line",
         ));
     }
-    let mut declared: Option<(Vec<ScalarType>, Vec<ScalarType>)> = None;
-    let mut points = Vec::new();
+    let mut declared: Option<(
+        alloc::vec::Vec<crate::ir::ScalarType>,
+        alloc::vec::Vec<crate::ir::ScalarType>,
+    )> = None;
+    let mut points = alloc::vec::Vec::new();
     for l in lines {
         match l.tokens[0] {
             "types" => {
                 if declared.is_some() {
-                    return Err(format_diag(l.number, "duplicate types line"));
+                    return Err(super::value::format_diag(l.number, "duplicate types line"));
                 }
                 let (a, b) = halves(&l.tokens[1..], l.number)?;
-                declared = Some((types(&a, l.number)?, types(&b, l.number)?));
+                declared = Some((
+                    super::value::types(&a, l.number)?,
+                    super::value::types(&b, l.number)?,
+                ));
             }
             "point" => {
-                let (ti, tt) = declared
-                    .as_ref()
-                    .ok_or_else(|| format_diag(l.number, "a point before the types line"))?;
+                let (ti, tt) = declared.as_ref().ok_or_else(|| {
+                    super::value::format_diag(l.number, "a point before the types line")
+                })?;
                 let (a, b) = halves(&l.tokens[1..], l.number)?;
-                points.push((row(ti, &a, l.number)?, row(tt, &b, l.number)?));
+                points.push((
+                    super::value::row(ti, &a, l.number)?,
+                    super::value::row(tt, &b, l.number)?,
+                ));
             }
-            o => return Err(format_diag(l.number, format!("unknown line kind {o:?}"))),
+            o => {
+                return Err(super::value::format_diag(
+                    l.number,
+                    alloc::format!("unknown line kind {o:?}"),
+                ))
+            }
         }
     }
     let (inputs, targets) =
-        declared.ok_or_else(|| format_diag(header.number, "missing types line"))?;
+        declared.ok_or_else(|| super::value::format_diag(header.number, "missing types line"))?;
     Ok(Data {
         inputs,
         targets,
@@ -108,17 +123,17 @@ pub fn parse(text: &str) -> Result<Data, Diagnostic> {
 
 /// Prints a training-data file in canonical form.
 #[must_use]
-pub fn print(d: &Data) -> String {
-    let mut s = format!(
+pub fn print(d: &Data) -> alloc::string::String {
+    let mut s = alloc::format!(
         "{SCHEMA}\ntypes {} ; {}\n",
-        type_names(&d.inputs),
-        type_names(&d.targets)
+        super::value::type_names(&d.inputs),
+        super::value::type_names(&d.targets)
     );
     for (i, t) in &d.points {
         s.push_str("point ");
-        s.push_str(&row_text(i));
+        s.push_str(&super::value::row_text(i));
         s.push_str(" ; ");
-        s.push_str(&row_text(t));
+        s.push_str(&super::value::row_text(t));
         s.push('\n');
     }
     s
@@ -129,31 +144,33 @@ impl Data {
     ///
     /// # Errors
     /// `E-INTERFACE` if a declared type is not `f32`.
-    pub fn to_points(&self) -> Result<Vec<Point>, Diagnostic> {
+    pub fn to_points(
+        &self,
+    ) -> Result<alloc::vec::Vec<crate::train::Point>, crate::diag::Diagnostic> {
         if self
             .inputs
             .iter()
             .chain(&self.targets)
-            .any(|t| *t != ScalarType::F32)
+            .any(|t| *t != crate::ir::ScalarType::F32)
         {
-            return Err(Diagnostic::new(
-                Code::Interface,
-                Site::Graph,
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::Interface,
+                crate::diag::Site::Graph,
                 "training data must be f32",
             ));
         }
-        let f = |vs: &[Value]| {
+        let f = |vs: &[crate::sem::Value]| {
             vs.iter()
                 .map(|v| match v {
-                    Value::F32(b) => f32::from_bits(*b),
-                    Value::I64(_) | Value::Bool(_) => f32::NAN,
+                    crate::sem::Value::F32(b) => f32::from_bits(*b),
+                    crate::sem::Value::I64(_) | crate::sem::Value::Bool(_) => f32::NAN,
                 })
-                .collect::<Vec<f32>>()
+                .collect::<alloc::vec::Vec<f32>>()
         };
         Ok(self
             .points
             .iter()
-            .map(|(i, t)| Point {
+            .map(|(i, t)| crate::train::Point {
                 inputs: f(i),
                 targets: f(t),
             })
@@ -162,14 +179,18 @@ impl Data {
 
     /// The file form of binary32 training points.
     #[must_use]
-    pub fn of_points(points: &[Point]) -> Self {
-        let f = |xs: &[f32]| xs.iter().map(|x| Value::f32(*x)).collect::<Vec<Value>>();
+    pub fn of_points(points: &[crate::train::Point]) -> Self {
+        let f = |xs: &[f32]| {
+            xs.iter()
+                .map(|x| crate::sem::Value::f32(*x))
+                .collect::<alloc::vec::Vec<crate::sem::Value>>()
+        };
         let (ni, nt) = points
             .first()
             .map_or((0, 0), |p| (p.inputs.len(), p.targets.len()));
         Self {
-            inputs: vec![ScalarType::F32; ni],
-            targets: vec![ScalarType::F32; nt],
+            inputs: alloc::vec![crate::ir::ScalarType::F32; ni],
+            targets: alloc::vec![crate::ir::ScalarType::F32; nt],
             points: points
                 .iter()
                 .map(|p| (f(&p.inputs), f(&p.targets)))
