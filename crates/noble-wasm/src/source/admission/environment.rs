@@ -307,11 +307,11 @@ fn canonical_prefix(
         }
         for (index, scheme) in live_schemes().into_iter().enumerate() {
             let row = index + 24;
-            if !same_scheme(&env.defs[row], &scheme)
+            let has_scheme_row_drift = !same_scheme(&env.defs[row], &scheme)
                 || env.kinds[row] != noble_kernel::contracts::Behavior::Named
                 || !env.deps[row].is_empty()
-                || env.definition_owners[row].is_some()
-            {
+                || env.definition_owners[row].is_some();
+            if has_scheme_row_drift {
                 return Err(crate::Diagnostic::Invalid);
             }
             fixed.defs.push(scheme);

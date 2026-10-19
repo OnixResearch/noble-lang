@@ -984,7 +984,7 @@ impl Compiler {
         let Some(named) = matches.next() else {
             return Err(crate::Diagnostic::Invalid);
         };
-        if matches.next().is_some()
+        let has_interface_mismatch = matches.next().is_some()
             || named.stack_in != selected.body().interface.stack_in
             || named.stack_out != selected.body().interface.stack_out
             || named.effects != selected.body().interface.effects
@@ -992,8 +992,8 @@ impl Compiler {
                 root.stack_in == selected.root().interface.stack_in
                     && root.stack_out == selected.root().interface.stack_out
                     && root.effects == selected.root().interface.effects
-            })
-        {
+            });
+        if has_interface_mismatch {
             return Err(crate::Diagnostic::Invalid);
         }
         prepared.selected_target = Some(SelectedTargetArtifact {
