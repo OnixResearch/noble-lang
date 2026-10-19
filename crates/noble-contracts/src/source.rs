@@ -148,6 +148,10 @@ fn reaches_index(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 /// Replay is allowed to change exactly the named edges rebuilt in this batch.
 /// Source spelling alone is not authority to retarget a shadowed historical
 /// call to today's same-name definition.

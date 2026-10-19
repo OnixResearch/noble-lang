@@ -1,5 +1,4 @@
 //! Opt-in, bounded module declarations. Neither preparation nor publication invokes guest code.
-
 mod links;
 mod parsing;
 mod signatures;
@@ -145,6 +144,10 @@ pub(crate) struct DefinitionOrigin<'a> {
     tigerstyle::compound_condition,
     reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// Reparse a claimed module's source, not its specialization slots, to bind
 /// one lexical definition to its exact original bracketed body. This proves
 /// internal consistency of the supplied bytes, not their historical
@@ -219,6 +222,10 @@ pub(crate) fn verify_definition_origin(
 #[expect(
     tigerstyle::compound_condition,
     reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 /// Recover the complete, independently tokenized original caller word. A
 /// caller-supplied span is accepted only if it covers that whole source node,
@@ -296,6 +303,10 @@ pub(crate) fn verify_named_call_origin<'a>(
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
 )]
 /// An imported named call may target only a unique, explicitly exported
 /// lexical definition in the original owner module, not a similarly named

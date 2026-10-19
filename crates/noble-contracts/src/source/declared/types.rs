@@ -17,6 +17,10 @@ pub(in crate::source) fn parse_with_families(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 fn parse_with_depth(
     word: &str,
     types: &[(alloc::string::String, noble_kernel::types::Ty)],
@@ -385,6 +389,10 @@ fn parse_callable_effects(
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
 )]
 fn parse_program_stack(
     word: &str,

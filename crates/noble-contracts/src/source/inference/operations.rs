@@ -123,6 +123,10 @@ pub(super) fn builtin(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// A ref is selected from the root's typed borrowed-input sidecar, never
 /// constructed from a value or literal. The unqualified spelling chooses the
 /// uniquely most-specific compatible interface; ambiguous peers require the
@@ -291,6 +295,10 @@ fn mismatched_literal_origin(
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
 )]
 fn contextualize(
     mut error: crate::Diagnostic,

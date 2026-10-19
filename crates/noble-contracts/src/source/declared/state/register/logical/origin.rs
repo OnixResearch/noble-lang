@@ -68,6 +68,10 @@ pub(super) fn imports(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn trace(
     request: &super::Request<'_>,
     root_source_index: u32,

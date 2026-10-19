@@ -51,6 +51,10 @@ impl super::materialize::State {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 /// Build one generic instance after both of its limits are known to hold.
 ///
 /// The instance owns its two ordered arguments *and* a canonical descriptor

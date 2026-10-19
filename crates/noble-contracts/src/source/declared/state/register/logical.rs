@@ -28,6 +28,10 @@ fn at(stage: crate::source::Stage, span: crate::Span, reason: &str) -> crate::so
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error> {
     let mut contracts = alloc::vec::Vec::with_capacity(request.collected.contracts.len());
     for contract in &request.collected.contracts {
@@ -391,6 +395,10 @@ impl SourceOrigin<'_> {
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn bind_subject(
     request: &Request<'_>,
     contract: &crate::source::declared::parsing::Contract,
@@ -561,6 +569,10 @@ fn bind_subject(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn resolve_contract(
     request: &Request<'_>,
     staged: &[crate::source::declared::LogicalContract],
@@ -622,6 +634,10 @@ fn is_current(request: &Request<'_>, scope: &str) -> bool {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn imported_module<'a>(
     session: &'a crate::source::declared::ModuleSession,
     scope: &str,
@@ -657,6 +673,10 @@ const USE_FRAMES: usize = 65;
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 /// Resolves every `(use name)` in pre-order, left to right. The term and the
 /// module's dependency list are owned and returned; the first error wins, as

@@ -66,6 +66,10 @@ fn unary(expected: &untrusted::Expected) -> bool {
     tigerstyle::compound_condition,
     reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn checked(
     body: &execution::Body,
     request: &untrusted::Request,
@@ -154,6 +158,10 @@ fn empty_inst(inst: &Inst) -> bool {
     tigerstyle::path_segment_repetition,
     reason = "Owner: noble-contracts; the item name reads as the domain term at its use sites; renaming would churn the extracted subject"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn named_scheme(env: &noble_kernel::contracts::Env, slot: Definition, owner: u64) -> bool {
     env.kind(slot) == Some(Behavior::Named)
         && usize::try_from(slot.0)
@@ -209,6 +217,10 @@ fn source_origin(
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 fn source_call(
     goal: &ContractGoal,
@@ -328,6 +340,10 @@ fn same_derived(left: &untrusted::Checked, right: &untrusted::Checked) -> bool {
     tigerstyle::compound_condition,
     reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 fn source_step(
     goal: &ContractGoal,
     origin: &NamedUseOrigin,
@@ -434,6 +450,10 @@ fn source_step(
 #[expect(
     tigerstyle::compound_condition,
     reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
 fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> {
     let subject = &goal.subject;
@@ -838,6 +858,10 @@ pub fn prepare_named_contract(goal: &ContractGoal, limits: Limits) -> Result<Str
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
 fn exact_eq_add(form: &Form, input: &str, output: &str) -> bool {
     let Ok(eq) = operation(form, "eq", 2) else {
         return false;
@@ -858,6 +882,10 @@ fn exact_eq_add(form: &Form, input: &str, output: &str) -> bool {
 #[expect(
     tigerstyle::compound_condition,
     reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
 fn selected_assertion(goal: &ContractGoal) -> Result<(), Diagnostic> {
     if goal.inputs.len() != 1

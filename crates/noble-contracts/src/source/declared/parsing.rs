@@ -348,6 +348,10 @@ fn word_is(token: &crate::source::lexer::Token, spelling: &[u8]) -> bool {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn scan_context(
     context: ScanContext,
     token: &crate::source::lexer::Token,

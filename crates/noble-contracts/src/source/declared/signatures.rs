@@ -37,6 +37,10 @@ fn invalid(reason: &str) -> crate::source::Error {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::nested_conditionals,
+    reason = "Owner: noble-contracts; the guard chain states the admission rule verbatim; extracting it would obscure the predicate it states"
+)]
 pub(super) fn families<'a>(
     session: &'a super::ModuleSession,
     names: &'a [super::Schema],
@@ -267,6 +271,10 @@ fn parse_effect(
 #[expect(
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
+#[expect(
+    tigerstyle::nested_conditionals,
+    reason = "Owner: noble-contracts; the guard chain states the admission rule verbatim; extracting it would obscure the predicate it states"
 )]
 fn pattern(
     word: &str,

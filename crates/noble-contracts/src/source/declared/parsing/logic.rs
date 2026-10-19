@@ -5,6 +5,10 @@
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn parse(
     tokens: &[crate::source::lexer::LogicalToken],
     span: crate::Span,

@@ -134,6 +134,10 @@ fn finish(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn bound_registration(
     session: &crate::source::declared::ModuleSession,
     name: &str,
@@ -218,6 +222,10 @@ fn declare_word(
 #[expect(
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 fn install_registration(
     mut session: crate::source::declared::ModuleSession,

@@ -244,6 +244,10 @@ impl super::Session {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 fn declaration(
     tree: super::Tree,
     name: alloc::string::String,

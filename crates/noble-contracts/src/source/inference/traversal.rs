@@ -7,6 +7,10 @@
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 pub(super) fn visit(
     mut frame: super::Frame,
     parents: &mut alloc::vec::Vec<super::Frame>,

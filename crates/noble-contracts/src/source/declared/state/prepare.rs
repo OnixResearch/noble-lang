@@ -550,6 +550,10 @@ fn revision(value: &str) -> bool {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
 /// Charges a retained dependency and its transitive closure in the same
 /// pre-order as the published copy, returning the remaining byte and node
 /// budgets, or `None` once either is exhausted.

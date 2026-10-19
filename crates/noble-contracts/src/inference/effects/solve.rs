@@ -27,6 +27,10 @@ impl Symbolic {
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// A declaration-level effect variable is an arbitrary set, not a hole whose
 /// bound may be narrowed. Compare the body's union formula with its declared
 /// formula before the concrete finite-bit solver runs.
@@ -121,6 +125,10 @@ pub(super) fn rigid(
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
 )]
 /// An equality with `pure ∪ x` constrains `x` exactly. Propagate only
 /// through the neutral side; an arbitrary union cannot attribute effects to

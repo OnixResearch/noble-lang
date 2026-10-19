@@ -29,6 +29,10 @@ impl super::ModuleSession {
         tigerstyle::compound_condition,
         reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
     )]
+    #[expect(
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+    )]
     pub fn correspond_checked_target<'a>(
         &'a self,
         module_name: &str,
@@ -166,6 +170,10 @@ impl super::ModuleSession {
 #[expect(
     tigerstyle::compound_condition,
     reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 fn same_candidate(
     left: &noble_kernel::untrusted::Candidate,

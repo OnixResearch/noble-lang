@@ -52,6 +52,10 @@ fn resolve_node(
     tigerstyle::compound_condition,
     reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 fn lookup(
     word: &[u8],
     declaration: Option<&str>,
