@@ -126,7 +126,7 @@ impl AdamState {
         }
     }
 
-    /// crate::ir::Digest of the exact state bytes.
+    /// Digest of the exact state bytes.
     #[must_use]
     pub fn digest(&self, ids: &dyn IdentityScheme) -> crate::ir::Digest {
         let mut c = crate::ir::Canon::new(ids, "noble.ngraph.adam-state.v0");
