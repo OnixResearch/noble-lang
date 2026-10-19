@@ -289,6 +289,10 @@ pub fn retained_bytes(g: &crate::ir::Graph) -> u64 {
     }
     /// Bytes retained by one shape tree: one allocation of two `crate::ir::ShapeTree`
     /// per pair node, counted recursively.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-maintainers; the walk is bounded by the declared shape nesting limit"
+    )]
     fn shape_pairs(t: &crate::ir::ShapeTree) -> u64 {
         match t.node() {
             crate::ir::ShapeNode::Pair(a, b) => 2u64
@@ -630,6 +634,10 @@ fn finite_bits(bits: u32) -> bool {
     f32::from_bits(bits).is_finite()
 }
 
+#[expect(
+    tigerstyle::catch_all_on_enum,
+    reason = "Owner: noble-maintainers; the remaining branch is the closed TypeError diagnostic, not an unhandled constructor"
+)]
 fn check_types(
     g: &crate::ir::Graph,
 ) -> Result<alloc::vec::Vec<Option<crate::ir::ScalarType>>, crate::diag::Diagnostic> {

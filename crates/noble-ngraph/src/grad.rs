@@ -582,6 +582,10 @@ pub fn objective_checked(
     objective_observed(model, loss, model_slots, targets, opts, &mut None)
 }
 
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-maintainers; the signature mirrors the model/loss, slot, option and observation inputs of the checked objective"
+)]
 pub(crate) fn objective_observed(
     model: &crate::check::CheckedGraph,
     loss: &crate::check::CheckedGraph,
@@ -764,6 +768,10 @@ fn backward_abs_with_signs(
 
 /// Binary64 central difference of the composed objective in slot `k`.
 #[must_use]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-maintainers; the signature mirrors the model/loss, slot, option and step inputs of the difference"
+)]
 pub fn central_difference(
     model: &crate::check::CheckedGraph,
     loss: &crate::check::CheckedGraph,

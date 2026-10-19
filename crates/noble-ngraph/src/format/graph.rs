@@ -282,6 +282,10 @@ fn shape_trees(
     let joined = tokens.join(" ").replace('(', " ( ").replace(')', " ) ");
     let toks: alloc::vec::Vec<&str> = joined.split_whitespace().collect();
     /// One tree inside `open` enclosing pairs.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-maintainers; the parser is depth-bounded by MAX_SHAPE_DEPTH"
+    )]
     fn tree(
         toks: &[&str],
         at: &mut usize,
@@ -650,6 +654,10 @@ fn shape_text(trees: &[crate::ir::ShapeTree]) -> alloc::string::String {
     #[expect(
         tigerstyle::borrowed_argument_types,
         reason = "Owner: noble-maintainers; canonical shape text grows the owned output String and cannot use a borrowed slice"
+    )]
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-maintainers; the writer is bounded by the declared shape nesting limit"
     )]
     fn tree(t: &crate::ir::ShapeTree, s: &mut alloc::string::String) {
         match t.node() {

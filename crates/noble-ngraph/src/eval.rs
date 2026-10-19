@@ -268,6 +268,10 @@ pub fn index_refusal_fact(len: usize) -> crate::ir::Fact {
 
 /// Evaluates one value node given operand access. Returns `Err(fact)` for a
 /// refusing index read. Guards are handled by the caller.
+#[expect(
+    tigerstyle::catch_all_on_enum,
+    reason = "Owner: noble-maintainers; non-F32 values are the closed NaN observation and non-I64 values the closed zero observation"
+)]
 pub(crate) fn eval_node(
     op: &crate::ir::Op,
     slot: &[crate::sem::Value],

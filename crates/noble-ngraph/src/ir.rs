@@ -963,6 +963,10 @@ impl<'s> Canon<'s> {
 
     fn shapes(&mut self, s: Option<&alloc::vec::Vec<ShapeTree>>) {
         // Recursion depth is bounded by `MAX_SHAPE_DEPTH`.
+        #[expect(
+            tigerstyle::no_recursion,
+            reason = "Owner: noble-maintainers; canonical encoding is bounded by the declared shape nesting limit"
+        )]
         fn tree(c: &mut Canon<'_>, t: &ShapeTree) {
             match t.node() {
                 ShapeNode::Scalar => c.u8(0),

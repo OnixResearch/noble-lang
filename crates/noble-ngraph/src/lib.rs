@@ -1,6 +1,10 @@
 #![no_std]
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
+#![expect(
+    tigerstyle::module_file_count,
+    reason = "Owner: noble-maintainers; the crate modules follow the D1-D9 design sections rather than an arbitrary file count"
+)]
 //! `Numeric-Graph-v1`: the pure library of the opt-in numeric graph profile
 //! (`NumericGraph-Design`, design changes `numeric-graph-profile` and
 //! `numeric-graph-v1`).

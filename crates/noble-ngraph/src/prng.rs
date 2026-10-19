@@ -32,7 +32,8 @@ impl SplitMix64 {
 
     /// Uniform integer in `[0, n)` (`n > 0`; modulo bias is irrelevant here).
     pub fn below(&mut self, n: u64) -> u64 {
-        self.next_u64() % n.max(1)
+        let divisor = n.max(1);
+        self.next_u64().checked_rem(divisor).unwrap_or(0)
     }
 }
 

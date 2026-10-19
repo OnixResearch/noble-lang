@@ -185,6 +185,10 @@ impl<'a, 's> Machine<'a, 's> {
         }
     }
 
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-maintainers; the walk is bounded by the kernel's declared type nesting"
+    )]
     fn input(&mut self, ty: &noble_kernel::types::Ty) -> Result<Sym, crate::diag::Diagnostic> {
         match ty {
             noble_kernel::types::Ty::Pair(a, b) => {
@@ -374,6 +378,10 @@ impl<'a, 's> Machine<'a, 's> {
         })
     }
 
+    #[expect(
+        tigerstyle::catch_all_on_enum,
+        reason = "Owner: noble-maintainers; every non-Known symbol is the closed dynamic-run refusal"
+    )]
     fn pop_known(
         &mut self,
         body: usize,
@@ -784,6 +792,10 @@ fn expansion(
     out
 }
 
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-maintainers; both operands are bounded by the kernel's declared type and symbolic nesting"
+)]
 fn matches(s: &Sym, t: &noble_kernel::types::Ty) -> bool {
     match (s, t) {
         (Sym::Scalar(_, crate::ir::ScalarType::I64), noble_kernel::types::Ty::I64)
@@ -806,6 +818,10 @@ fn suffix_matches(sigma: &[Sym], stack: &[noble_kernel::types::Ty]) -> bool {
 #[expect(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-maintainers; the flattened result is an append-only vector whose final length is not known in advance"
+)]
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-maintainers; the walk is bounded by the symbolic aggregate nesting"
 )]
 fn flatten(s: &Sym, out: &mut alloc::vec::Vec<u32>) -> Result<(), crate::diag::Diagnostic> {
     match s {
@@ -836,6 +852,10 @@ fn flatten(s: &Sym, out: &mut alloc::vec::Vec<u32>) -> Result<(), crate::diag::D
 /// The shape tree of a root interface type. Admission has already refused
 /// an item nesting more than `MAX_SHAPE_DEPTH` pairs, which bounds this
 /// recursion; [`crate::ir::ShapeTree::pair`] refuses one again if it ever arrives.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-maintainers; the walk is bounded by the kernel's declared type nesting"
+)]
 fn shape(ty: &noble_kernel::types::Ty) -> Result<crate::ir::ShapeTree, crate::diag::Diagnostic> {
     match ty {
         noble_kernel::types::Ty::Unit => Ok(crate::ir::ShapeTree::UNIT),
@@ -857,6 +877,10 @@ fn shape(ty: &noble_kernel::types::Ty) -> Result<crate::ir::ShapeTree, crate::di
 #[expect(
     tigerstyle::unbounded_collection_growth,
     reason = "Owner: noble-maintainers; call-graph entries and callees are bounded by the admitted body count"
+)]
+#[expect(
+    tigerstyle::nested_conditionals,
+    reason = "Owner: noble-maintainers; the nested match keeps the identity filter and per-node behavior cases together"
 )]
 fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::Diagnostic> {
     let env = &a.submission.environment;

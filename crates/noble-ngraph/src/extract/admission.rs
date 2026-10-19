@@ -597,8 +597,6 @@ fn subject_of(
 
 #[cfg(test)]
 mod tests {
-    use crate::extract::admission::classify;
-
     /// `I64` under `depth` nested pairs.
     fn nested(depth: u32) -> noble_kernel::types::Ty {
         let mut t = noble_kernel::types::Ty::I64;
@@ -613,12 +611,12 @@ mod tests {
 
     #[test]
     fn interface_items_nest_at_most_the_shape_bound() {
-        classify(
+        crate::extract::admission::classify(
             &nested(crate::ir::MAX_SHAPE_DEPTH),
             crate::diag::Code::DynamicRun,
         )
         .expect("the deepest extractable item");
-        let d = classify(
+        let d = crate::extract::admission::classify(
             &nested(crate::ir::MAX_SHAPE_DEPTH + 1),
             crate::diag::Code::DynamicRun,
         )

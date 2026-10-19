@@ -160,6 +160,10 @@ impl AbsF32 {
 
     /// Refines with a fact known to hold.
     #[must_use]
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-maintainers; refinement follows one fact implication chain bounded by the fact variant set"
+    )]
     pub fn refine(mut self, fact: &crate::ir::Fact) -> Self {
         match fact {
             crate::ir::Fact::Range { lo, hi } => {

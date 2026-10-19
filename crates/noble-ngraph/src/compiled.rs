@@ -459,6 +459,10 @@ impl Compiled {
     }
 
     /// Runs one layer; returns the earliest (canonical) failure in it.
+    #[expect(
+        tigerstyle::no_panic,
+        reason = "Owner: noble-maintainers; the checked graph retains this exact index node, so the match arm is unreachable by construction"
+    )]
     fn run_f32<const OBSERVED: bool>(
         &self,
         ins: &[F],
