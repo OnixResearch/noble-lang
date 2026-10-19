@@ -1,3 +1,7 @@
+#![allow(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 const DONOR: &[u8] =
     b"module donor@1 [ def other [ 1 + ] export step def step# original step body\n[ 1 + ] ]";
 const TWICE: &[u8] = b"module chain@1 [ export twice def twice [ d.step d.step ] contract 2 twice-law [ subject twice input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 2)) ] ] export twice-law ]";

@@ -1,3 +1,10 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::no_unwrap,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Real selected-CLI coverage of independent saved-Program quota ownership and
 //! source-bound frozen replay receipts. This is behavioral evidence, not LSLOT05 proof.
 

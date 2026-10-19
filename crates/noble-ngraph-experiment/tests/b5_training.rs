@@ -1,3 +1,12 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::explicit_defaults,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! B5: train F1 with `adam/0`, a recorded seed and 500 steps against a fixed
 //! 64-point target set; only parameter bytes change; S₀ is stable; replay is
 //! bitwise; wrong/stale identities and old-subject evidence are refused.

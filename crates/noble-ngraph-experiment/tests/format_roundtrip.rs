@@ -1,3 +1,11 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::no_panic,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Graph files preserve identity (design D4, NGRAPH-FORMAT-01,
 //! NGRAPH-CASE-06): for every fixture, workload, seeded random graph and
 //! extracted `I1`–`I4`, `parse(print(g))` equals `g` with producer origins

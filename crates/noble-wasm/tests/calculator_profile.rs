@@ -1,3 +1,17 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_env,
+    tigerstyle::excessive_file_length,
+    tigerstyle::function_length,
+    tigerstyle::no_recursion,
+    tigerstyle::non_trait_imports,
+    tigerstyle::platform_dependent_cast,
+    tigerstyle::renamed_imports,
+    tigerstyle::unchecked_narrowing,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 use noble_kernel::contracts::{Behavior, Definition};
 use noble_kernel::untrusted::{Constraint, Node, Outcome};
 

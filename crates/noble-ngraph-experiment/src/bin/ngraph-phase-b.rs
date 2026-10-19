@@ -1,3 +1,20 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_clock,
+    tigerstyle::ambient_env,
+    tigerstyle::bool_naming,
+    tigerstyle::excessive_file_length,
+    tigerstyle::explicit_defaults,
+    tigerstyle::function_length,
+    tigerstyle::negated_predicate,
+    tigerstyle::no_panic,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::too_many_parameters,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-ngraph-maintainers; this Issue #14 evidence receipt binary measures wall-clock and environment effects and writes its JSON receipt directly, so harness terse names, unwraps and long campaign legs are the intended form."
+)]
 //! Issue #14 Phase B evidence harness (core legs). Runs the B1 (F1–F3),
 //! B2 (F32 legs), B3 (core rejections), B4, B5 and B6 campaigns at full size
 //! and writes one JSON receipt with EV-STATE-01 fields per record and the
@@ -792,9 +809,9 @@ fn b6(cfg: &Json) -> (Json, bool) {
         },
     )
     .expect_err("cancelled");
-    let no_partial = e.diagnostic.code == Code::Cancelled
-        && e.published_steps == 3
-        && e.last.as_ref().map(ParamSnapshot::bytes) == Some(three.snapshot.bytes());
+    let has_partial = e.diagnostic.code != Code::Cancelled
+        || e.published_steps != 3
+        || e.last.as_ref().map(ParamSnapshot::bytes) != Some(three.snapshot.bytes());
     let tc = counters.snapshot();
     let retained = g.id() == gid
         && ParamSnapshot::from_parts(
@@ -806,7 +823,7 @@ fn b6(cfg: &Json) -> (Json, bool) {
         )
         .id()
             == sid;
-    ok &= owners_ok && no_partial && tc.0 == tc.1 && tc.2 == 0 && retained;
+    ok &= owners_ok && !has_partial && tc.0 == tc.1 && tc.2 == 0 && retained;
     (
         record(
             "B6 ownership and cleanup",
@@ -818,7 +835,7 @@ fn b6(cfg: &Json) -> (Json, bool) {
             Json::obj([
                 ("evaluation_cases", Json::A(rows)),
                 ("owners_released_in_both_orders", Json::Bool(owners_ok)),
-                ("training_cancel_before_step_4", Json::s(format!("{} published_steps={} last_equals_3_step_snapshot={}", e.diagnostic.code_string(), e.published_steps, no_partial))),
+                ("training_cancel_before_step_4", Json::s(format!("{} published_steps={} last_equals_3_step_snapshot={}", e.diagnostic.code_string(), e.published_steps, !has_partial))),
                 ("training_scratch_acquired_released_live", Json::A(vec![Json::U(tc.0), Json::U(tc.1), Json::U(tc.2)])),
                 ("retained_digests_unchanged", Json::Bool(retained)),
             ]),

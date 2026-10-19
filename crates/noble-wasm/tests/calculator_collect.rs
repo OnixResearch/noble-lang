@@ -1,3 +1,20 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::bool_naming,
+    tigerstyle::compound_assertion,
+    tigerstyle::excessive_file_length,
+    tigerstyle::explicit_defaults,
+    tigerstyle::function_length,
+    tigerstyle::no_panic,
+    tigerstyle::no_recursion,
+    tigerstyle::non_trait_imports,
+    tigerstyle::platform_dependent_cast,
+    tigerstyle::unbounded_collection_growth,
+    tigerstyle::unchecked_narrowing,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Calculator-v1 boundary compaction against real compiled calculator modules.
 //! Each phase is a separately instantiated module importing one shared memory,
 //! table and global set, as the worker engine does.

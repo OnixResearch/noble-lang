@@ -1,3 +1,13 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_env,
+    tigerstyle::drop_must_use,
+    tigerstyle::excessive_file_length,
+    tigerstyle::ignored_result,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 // r[verify VT-M1-02]
 #[test]
 fn shell_calls_the_real_transition() -> Result<(), std::io::Error> {

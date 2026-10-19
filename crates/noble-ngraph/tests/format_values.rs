@@ -1,3 +1,12 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::fallible_int_fallback,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Vector and training-data files and value tokens (design D5,
 //! NGRAPH-FORMAT-01, NGRAPH-CASE-09) and the report rendering of values
 //! (design D7).

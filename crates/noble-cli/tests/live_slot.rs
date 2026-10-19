@@ -1,3 +1,10 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::no_unwrap,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Host-owned slot transitions and checked CLI replay in selected Node/V8.
 //! These tests do not claim an independently checked LSLOT05 proof.
 

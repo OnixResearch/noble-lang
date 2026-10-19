@@ -1,3 +1,11 @@
+#![allow(
+    tigerstyle::excessive_file_length,
+    tigerstyle::function_length,
+    tigerstyle::non_trait_imports,
+    tigerstyle::platform_dependent_cast,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 
@@ -96,7 +104,7 @@ fn selected_builder(
 #[test]
 fn selected_returned_program_distinguishes_input_from_fixed_literal_and_computation(
 ) -> Result<(), String> {
-    use noble_wasm::source::{OriginAction, OriginI64, OriginProgramValue, OriginSource};
+    use noble_wasm::source::{OriginAction, OriginClass, OriginI64, OriginProgramValue};
     let varying = selected_builder(b"def builder [ quote [ + ] compose ]", &[Ty::I64])?;
     let fixed = selected_builder(b"def builder [ 2 quote [ + ] compose ]", &[Ty::I64])?;
     let computed = selected_builder(b"def builder [ 1 1 + quote [ + ] compose ]", &[Ty::I64])?;
@@ -129,7 +137,7 @@ fn selected_returned_program_distinguishes_input_from_fixed_literal_and_computat
             || origin.programs.len() != prepared.program_metadata().len()
             || !origin.programs.iter().any(|program| {
                 program.program_index == *right_program_index
-                    && program.source_artifact == OriginSource::Definition
+                    && program.source_artifact == OriginClass::Definition
                     && program
                         .operations
                         .iter()
@@ -160,7 +168,7 @@ fn selected_returned_program_distinguishes_input_from_fixed_literal_and_computat
             .programs
             .get(origin.root_program_index)
             .ok_or("selection wrapper missing")?;
-        if root.source_artifact != OriginSource::Selection
+        if root.source_artifact != OriginClass::Selection
             || root.operations.len() != 1
             || root.operations[0].source_span.is_some()
             || !matches!(root.operations[0].action,

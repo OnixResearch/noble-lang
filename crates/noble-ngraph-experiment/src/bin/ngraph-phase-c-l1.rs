@@ -1,3 +1,19 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_clock,
+    tigerstyle::ambient_env,
+    tigerstyle::bool_naming,
+    tigerstyle::excessive_file_length,
+    tigerstyle::explicit_defaults,
+    tigerstyle::function_length,
+    tigerstyle::no_panic,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::platform_dependent_cast,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-ngraph-maintainers; this Issue #14 evidence receipt binary measures wall-clock and environment effects and writes its JSON receipt directly, so harness terse names, unwraps and long campaign legs are the intended form."
+)]
 //! Issue #14 Phase C C1 for the `I64` workloads W1 (`I1`) and W2 (`I4`, 10^5
 //! host steps): extraction from Core source, the extracted graph on L3/L4,
 //! the host-native baseline, and the ordinary Noble Wasm/V8 path (L1, the

@@ -1,3 +1,14 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::excessive_file_length,
+    tigerstyle::explicit_defaults,
+    tigerstyle::function_length,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Snapshot files (design D6, NGRAPH-SNAP-02, NGRAPH-CASE-12/13 at the
 //! library level): canonical print and parse, recomputed identities, the
 //! documented provenance-digest encoding, and binding refusals.

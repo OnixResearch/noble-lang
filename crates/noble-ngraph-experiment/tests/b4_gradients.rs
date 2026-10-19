@@ -1,3 +1,13 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::compound_assertion,
+    tigerstyle::explicit_defaults,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! B4: smooth-region gradients (G1 vs central differences, G2 vs G1) and the
 //! corner, boolean and index policies tested separately.
 

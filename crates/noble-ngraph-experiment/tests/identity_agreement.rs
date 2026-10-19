@@ -1,3 +1,13 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::explicit_defaults,
+    tigerstyle::no_panic,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Design D3 (NGRAPH-CASE-14): every identity, observation and training
 //! result that the pre-cutover experiment recorded at 66eb7cd is reproduced
 //! byte for byte by `noble-ngraph` with the injected BLAKE3 scheme. The

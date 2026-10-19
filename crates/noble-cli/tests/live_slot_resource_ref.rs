@@ -1,3 +1,10 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::no_unwrap,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Canonical LSLOT-03/06 selected-CLI cases, with per-attempt raw JSONL under /tmp.
 //! Unsupported source effects and unrepresentable ref serialization are reported
 //! as partial/non-run, never silently counted as successful negative executions.

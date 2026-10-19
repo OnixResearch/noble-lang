@@ -1,3 +1,16 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::bool_naming,
+    tigerstyle::excessive_file_length,
+    tigerstyle::explicit_defaults,
+    tigerstyle::function_length,
+    tigerstyle::no_panic,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Training admission and replay (design D10, NGRAPH-DERIV-01,
 //! NGRAPH-SNAP-01/02, NGRAPH-CASE-11/13 at the library level).
 

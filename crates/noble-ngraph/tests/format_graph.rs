@@ -1,3 +1,15 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::excessive_file_length,
+    tigerstyle::explicit_defaults,
+    tigerstyle::function_length,
+    tigerstyle::no_panic,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Graph files (design D4, NGRAPH-FORMAT-01, NGRAPH-CASE-06 encodings): the
 //! printed form parses back to the same graph and identity for every record
 //! kind, the `authored-name` sugar and layout are not identity-bearing, and

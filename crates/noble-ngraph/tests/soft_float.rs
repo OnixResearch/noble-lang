@@ -1,3 +1,10 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! `sem::soft` (design D2, NGRAPH-CASE-14): the `no_std` library's float
 //! routines agree bitwise with `std` on every non-NaN result, and give a NaN
 //! wherever `std` does. The default tier checks every special value, every

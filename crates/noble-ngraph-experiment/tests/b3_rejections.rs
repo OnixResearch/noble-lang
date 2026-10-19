@@ -1,3 +1,12 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::unbounded_collection_growth,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! B3: every core rejection control yields its D6 code before protected
 //! execution (0 evaluated nodes for static and preflight refusals; a guard
 //! failure evaluates no dependent node and yields no outputs).

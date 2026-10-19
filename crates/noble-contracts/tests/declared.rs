@@ -1,3 +1,5 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
 #[path = "declared/bindings.rs"]
 mod bindings;
 #[path = "declared/cases.rs"]

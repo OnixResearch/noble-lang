@@ -1,3 +1,15 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_clock,
+    tigerstyle::ambient_env,
+    tigerstyle::bool_naming,
+    tigerstyle::compound_assertion,
+    tigerstyle::excessive_file_length,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Consumer-visible named v2 proof controls. The strict-kernel cases run when
 //! the pinned Lean sandbox tools are explicitly configured for this host.
 use std::{

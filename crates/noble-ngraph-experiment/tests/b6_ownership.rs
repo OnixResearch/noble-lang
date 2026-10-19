@@ -1,3 +1,15 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::explicit_defaults,
+    tigerstyle::function_length,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::path_segment_repetition,
+    tigerstyle::unbounded_collection_growth,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! B6: retained owners outlive invocations; duplicate owners release in any
 //! order; scratch is released exactly once on normal return, guard failure,
 //! preflight refusal, exhaustion and cancellation; no partial snapshot is

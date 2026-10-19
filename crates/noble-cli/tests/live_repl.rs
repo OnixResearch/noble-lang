@@ -1,3 +1,20 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_clock,
+    tigerstyle::ambient_env,
+    tigerstyle::compound_assertion,
+    tigerstyle::drop_must_use,
+    tigerstyle::excessive_file_length,
+    tigerstyle::function_length,
+    tigerstyle::ignored_join_handle,
+    tigerstyle::ignored_result,
+    tigerstyle::no_panic,
+    tigerstyle::non_trait_imports,
+    tigerstyle::unbounded_channel,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Real-process checks for the opt-in live REPL. These are finite runtime cases,
 //! not a source-bound milestone receipt or a refinement proof.
 

@@ -1,3 +1,12 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::bool_naming,
+    tigerstyle::explicit_defaults,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! ADAPT-06: a layout-valid source submission whose public environment
 //! advertises the resource-free `test.emit` host contract as effect-free.
 //! The kernel accepts that locally consistent false premise; the Wasm compiler

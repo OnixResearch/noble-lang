@@ -1,3 +1,19 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_clock,
+    tigerstyle::ambient_env,
+    tigerstyle::bool_naming,
+    tigerstyle::excessive_file_length,
+    tigerstyle::explicit_defaults,
+    tigerstyle::fallible_int_fallback,
+    tigerstyle::function_length,
+    tigerstyle::non_trait_imports,
+    tigerstyle::renamed_imports,
+    tigerstyle::sentinel_fallback,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-ngraph-maintainers; this Issue #14 evidence receipt binary measures wall-clock and environment effects and writes its JSON receipt directly, so harness terse names, unwraps and long campaign legs are the intended form."
+)]
 //! Issue #14 Phase B evidence harness for the `I64` extraction leg: B1
 //! (I1–I4 lowering), B2 (L1 real CLI `--opt off|on`, L2 Node BigInt oracle,
 //! L3, L4) and B3 (source-level controls with their ordinary-path runs).
@@ -18,7 +34,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::Instant;
 
-use serde_json::{json, Value as J};
+use serde_json::json;
 
 use noble_ngraph::compiled::COMPILER_REVISION;
 use noble_ngraph::extract::Budget;
@@ -46,9 +62,9 @@ fn record(
     passed: bool,
     obligations: &[&str],
     assumptions: &[&str],
-    result: J,
-    cfg: &J,
-) -> J {
+    result: serde_json::Value,
+    cfg: &serde_json::Value,
+) -> serde_json::Value {
     json!({
         "id": id,
         "requirements": requirements,
@@ -137,38 +153,41 @@ fn i64s(v: &[i64]) -> Vec<Value> {
 }
 
 /// B1: the design's I1–I4 lowered, with their structural properties.
-fn b1(cfg: &J) -> Result<(J, bool), String> {
+fn b1(cfg: &serde_json::Value) -> Result<(serde_json::Value, bool), String> {
     let lower = |defs: &[&str], root: &str, inputs: usize| {
         let defs: Vec<String> = defs.iter().map(|d| (*d).to_owned()).collect();
         Lowered::new(&defs, root, inputs)
     };
-    let summary =
-        |name: &str, x: &Lowered, design: &[i64], expected: &[i64]| -> Result<(J, bool), String> {
-            let l3 = x.l3(&i64s(design))?;
-            let l4 = x.l4(&i64s(design))?;
-            let ok = l3 == i64s(expected) && l4 == l3;
-            let g = x.extraction.checked.graph();
-            Ok((
-                json!({
-                    "name": name,
-                    "definitions": x.definitions,
-                    "root": x.root,
-                    "input_types": vec!["I64"; x.inputs],
-                    "graph_logical_id": hex(&g.logical_id(&BLAKE3)),
-                    "subject_closure": g.subject.closure,
-                    "live_nodes": g.nodes.len(),
-                    "expanded_nodes": x.extraction.stats.expanded_nodes,
-                    "pruned_nodes": x.extraction.stats.pruned_nodes,
-                    "max_inline_depth": x.extraction.stats.max_inline_depth,
-                    "design_inputs": design,
-                    "expected": expected,
-                    "l3": format!("{l3:?}"),
-                    "l4": format!("{l4:?}"),
-                    "ir_ops": g.nodes.iter().map(|n| format!("{:?}", n.op)).collect::<Vec<_>>(),
-                }),
-                ok,
-            ))
-        };
+    let summary = |name: &str,
+                   x: &Lowered,
+                   design: &[i64],
+                   expected: &[i64]|
+     -> Result<(serde_json::Value, bool), String> {
+        let l3 = x.l3(&i64s(design))?;
+        let l4 = x.l4(&i64s(design))?;
+        let ok = l3 == i64s(expected) && l4 == l3;
+        let g = x.extraction.checked.graph();
+        Ok((
+            json!({
+                "name": name,
+                "definitions": x.definitions,
+                "root": x.root,
+                "input_types": vec!["I64"; x.inputs],
+                "graph_logical_id": hex(&g.logical_id(&BLAKE3)),
+                "subject_closure": g.subject.closure,
+                "live_nodes": g.nodes.len(),
+                "expanded_nodes": x.extraction.stats.expanded_nodes,
+                "pruned_nodes": x.extraction.stats.pruned_nodes,
+                "max_inline_depth": x.extraction.stats.max_inline_depth,
+                "design_inputs": design,
+                "expected": expected,
+                "l3": format!("{l3:?}"),
+                "l4": format!("{l4:?}"),
+                "ir_ops": g.nodes.iter().map(|n| format!("{:?}", n.op)).collect::<Vec<_>>(),
+            }),
+            ok,
+        ))
+    };
     let i1 = lower(&[], "dup * swap 3 * + 7 -", 2)?;
     let i2 = lower(&[], "2 quote [ + ] compose dup compose run", 1)?;
     let i3 = lower(&["def sq [ dup * ]"], "sq swap sq +", 2)?;
@@ -181,7 +200,7 @@ fn b1(cfg: &J) -> Result<(J, bool), String> {
     let g2 = i2.extraction.checked.graph();
     let consts: Vec<u32> = (0..g2.nodes.len())
         .filter(|&i| matches!(g2.nodes[i].op, Op::Const(_)))
-        .map(|i| u32::try_from(i).unwrap_or(u32::MAX))
+        .filter_map(|i| u32::try_from(i).ok())
         .collect();
     let shared_uses = consts.first().map_or(0, |c| {
         g2.nodes

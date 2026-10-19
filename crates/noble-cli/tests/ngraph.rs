@@ -1,3 +1,18 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_env,
+    tigerstyle::bool_naming,
+    tigerstyle::borrowed_argument_types,
+    tigerstyle::compound_assertion,
+    tigerstyle::excessive_file_length,
+    tigerstyle::function_length,
+    tigerstyle::nested_conditionals,
+    tigerstyle::no_panic,
+    tigerstyle::non_trait_imports,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! Black-box tests of the `noble ngraph` CLI (`Numeric-Graph-v1`).
 //!
 //! Every expectation is derived from `.cairn/changes/numeric-graph-v1`:

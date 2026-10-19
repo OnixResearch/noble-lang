@@ -1,3 +1,11 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::compound_assertion,
+    tigerstyle::no_unwrap,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! The calculator engine's Node tests (arena commit/restore), run with the
 //! selected Node/V8 and the built `noble` binary as the WAT assembler.
 

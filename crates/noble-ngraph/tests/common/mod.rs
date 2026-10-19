@@ -1,3 +1,10 @@
+#![allow(
+    tigerstyle::explicit_defaults,
+    tigerstyle::fallible_int_fallback,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! A test-only identity scheme: four SipHash-1-3 streams (std's
 //! `DefaultHasher` with fixed zero keys), each prefixed with its index,
 //! concatenated to 32 bytes. Deterministic for one toolchain; it keeps the

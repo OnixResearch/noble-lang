@@ -1,3 +1,11 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::function_length,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! A classified dynamic saved owner can pin an independently admitted static child.
 use noble_kernel::types::{EffSet, Ty};
 use noble_wasm::source::OriginProgramValue;

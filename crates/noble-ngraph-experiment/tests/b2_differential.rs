@@ -1,3 +1,15 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::compound_assertion,
+    tigerstyle::explicit_defaults,
+    tigerstyle::function_length,
+    tigerstyle::no_panic,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+)]
 //! B2: L2 (APFloat), B2-ORACLE (binary64 per op), L3 and L4 agree under
 //! `≡obs` on the boundary vectors, F1–F3 and seeded random graphs. The full
 //! ≥10,000-vector campaign runs in the `ngraph-phase-b` harness (release).

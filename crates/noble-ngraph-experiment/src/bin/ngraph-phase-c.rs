@@ -1,3 +1,19 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![allow(
+    tigerstyle::ambient_clock,
+    tigerstyle::ambient_env,
+    tigerstyle::bool_naming,
+    tigerstyle::excessive_file_length,
+    tigerstyle::explicit_defaults,
+    tigerstyle::function_length,
+    tigerstyle::no_panic,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::unbounded_collection_growth,
+    tigerstyle::unchecked_division,
+    reason = "Owner: noble-ngraph-maintainers; this Issue #14 evidence receipt binary measures wall-clock and environment effects and writes its JSON receipt directly, so harness terse names, unwraps and long campaign legs are the intended form."
+)]
 //! Issue #14 Phase C measurement harness (C1–C3, core legs). Release only;
 //! not part of the default test suite.
 //!
@@ -244,7 +260,8 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
     });
     // Training step cost: 15 points per step.
     let loss = check(&BLAKE3, workloads::sse_loss(net.batch)).expect("loss");
-    let points: Vec<(Vec<f32>, Vec<f32>)> = (0..15 / net.batch)
+    let steps = 15usize.checked_div(net.batch).unwrap_or_default();
+    let points: Vec<(Vec<f32>, Vec<f32>)> = (0..steps)
         .map(|_| {
             #[allow(clippy::cast_possible_truncation)]
             let xs: Vec<f32> = (0..net.inputs())
