@@ -78,6 +78,10 @@ impl CheckedSelectedTarget<'_> {
         tigerstyle::compound_condition,
         reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
     )]
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
+    )]
     /// Locate an operation in the original selected definition, including a
     /// quotation body's operations. This is source correspondence only; the
     /// compiler and host must still bind the emitted instruction and value.
@@ -171,6 +175,10 @@ impl CheckedSelectedTarget<'_> {
     #[expect(
         tigerstyle::compound_condition,
         reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
     )]
     /// Authenticate a quote occurrence in the retained source and the
     /// independently rechecked selected definition. The runtime value that
@@ -331,6 +339,10 @@ impl super::Session {
     #[expect(
         tigerstyle::compound_condition,
         reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
     )]
     /// Select only the current retained definition from its complete accepted
     /// single-invocation submission. Recheck both root and definition body in

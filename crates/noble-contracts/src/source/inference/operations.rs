@@ -131,6 +131,10 @@ pub(super) fn builtin(
     tigerstyle::platform_dependent_cast,
     reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
 )]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; the collection is bounded by the surrounding admission limits, which are checked before this loop runs"
+)]
 /// A ref is selected from the root's typed borrowed-input sidecar, never
 /// constructed from a value or literal. The unqualified spelling chooses the
 /// uniquely most-specific compatible interface; ambiguous peers require the

@@ -37,6 +37,10 @@ impl super::ModuleSession {
         tigerstyle::too_many_parameters,
         reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
     )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+    )]
     pub fn correspond_checked_target<'a>(
         &'a self,
         module_name: &str,

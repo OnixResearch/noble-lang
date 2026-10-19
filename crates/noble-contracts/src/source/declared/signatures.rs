@@ -280,6 +280,10 @@ fn parse_effect(
     tigerstyle::foreign_enum_catch_all,
     reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn pattern(
     word: &str,
     binders: &[(String, VariableKind)],

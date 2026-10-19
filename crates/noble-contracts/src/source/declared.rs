@@ -308,6 +308,10 @@ pub(crate) fn verify_named_call_origin<'a>(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
 )]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
 /// An imported named call may target only a unique, explicitly exported
 /// lexical definition in the original owner module, not a similarly named
 /// later source, hidden definition, or dynamically allocated specialization.

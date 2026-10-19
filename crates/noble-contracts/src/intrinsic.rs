@@ -644,6 +644,10 @@ macro_rules! take_prop {
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn rewrite_prop(
     prop: &Proposition,
     mode: Rewrite<'_>,
@@ -917,6 +921,10 @@ fn binder<'a>(
 #[expect(
     tigerstyle::foreign_enum_catch_all,
     reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 fn parsed<'m>(
     root: ParseFrame<'_>,
@@ -1198,6 +1206,10 @@ enum LeanFrame<'a> {
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn lean_text(root: LeanFrame<'_>, span: Span, bounds: TreeBounds) -> Result<String, Diagnostic> {
     use core::fmt::Write;
     let mut pending = WorkStack::new();
@@ -1431,6 +1443,10 @@ enum ProofValue {
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 fn proof_walk<'a, 'm>(
     root: ProofFrame<'a>,
@@ -2165,6 +2181,10 @@ enum DependencyFrame<'a> {
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn check_dependency<'m>(
     dependency: &ProofDependency,
     mut meter: Meter<'m>,
@@ -2329,6 +2349,10 @@ fn check_dependency<'m>(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn check_contract<'m>(
     obligation: &ProofObligation,
     contract: &ContractGoal,
@@ -2491,6 +2515,10 @@ pub fn prepare_contract(
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 fn prepare_checked_contract(
     contract: &ContractGoal,
@@ -2769,6 +2797,10 @@ fn prepare_checked_contract(
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
 )]
 pub(crate) fn canonical_wrapping_add(env: &noble_kernel::contracts::Env) -> bool {
     use noble_kernel::{

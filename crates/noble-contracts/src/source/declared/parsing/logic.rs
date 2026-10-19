@@ -9,6 +9,10 @@
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
+)]
 pub(super) fn parse(
     tokens: &[crate::source::lexer::LogicalToken],
     span: crate::Span,

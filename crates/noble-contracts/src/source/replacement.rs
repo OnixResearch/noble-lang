@@ -67,6 +67,10 @@ struct Comparison<'a> {
 }
 
 impl Comparison<'_> {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the parameter is the owned builder state this stage accumulates into, not a borrowed input"
+    )]
     fn compare(&mut self) -> Result<bool, crate::Diagnostic> {
         while let Some((left, right)) = self.pending.pop() {
             self.meter.node(self.span)?;

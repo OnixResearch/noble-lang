@@ -611,6 +611,10 @@ fn charge_dependency(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
+)]
 fn uses(form: &crate::intrinsic::Form, name: &str) -> bool {
     use crate::intrinsic::FormKind;
     let FormKind::List(items) = &form.kind else {

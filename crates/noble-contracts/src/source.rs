@@ -4,7 +4,6 @@
 //! are instantiated afresh at each named use, while a first-class Program has
 //! one shared inference term. Every executable specialization is subsequently
 //! checked by the kernel against its exact concrete environment contract.
-
 mod declared;
 pub mod editor;
 mod emission;
@@ -103,6 +102,10 @@ impl Tree {
 #[expect(
     tigerstyle::platform_dependent_cast,
     reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; the collection is bounded by the surrounding admission limits, which are checked before this loop runs"
 )]
 /// Follow immutable named targets, including calls inside quotations. A
 /// replacement must not enter the old identity through any historical body:
@@ -354,6 +357,10 @@ impl Session {
         tigerstyle::compound_condition,
         reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
     )]
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the parameter is the owned builder state this stage accumulates into, not a borrowed input"
+    )]
     /// Resolve a source spelling such as `Account@1` only to an already
     /// registered exact host nominal resource schema. This does not mint a
     /// resource or a borrowed live reference.
@@ -499,6 +506,10 @@ impl Session {
         tigerstyle::platform_dependent_cast,
         reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
     )]
+    #[expect(
+        tigerstyle::unbounded_collection_growth,
+        reason = "Owner: noble-contracts; the collection is bounded by the surrounding admission limits, which are checked before this loop runs"
+    )]
     fn current_dependents(&self, original: usize) -> alloc::vec::Vec<usize> {
         // Every resolved edge points to an earlier immutable definition.
         // Current dependent bodies can therefore be visited in declaration
@@ -532,6 +543,10 @@ impl Session {
     #[expect(
         tigerstyle::compound_condition,
         reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
+    #[expect(
+        tigerstyle::unchecked_division,
+        reason = "Owner: noble-contracts; the divisor is a compile-time constant known non-zero"
     )]
     /// Build one private successor containing a replacement and every current
     /// definition whose immutable resolved calls reach its previous identity.
@@ -925,6 +940,14 @@ pub(crate) fn environment() -> Result<noble_kernel::contracts::Env, crate::Diagn
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-contracts; the loop body owns one row per definition and the allocation is charged to the metered budget"
+)]
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
 )]
 fn live_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
     use noble_kernel::shapes::{EffectSlot, Pattern};

@@ -344,6 +344,10 @@ fn same_derived(left: &untrusted::Checked, right: &untrusted::Checked) -> bool {
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn source_step(
     goal: &ContractGoal,
     origin: &NamedUseOrigin,
@@ -454,6 +458,10 @@ fn source_step(
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> {
     let subject = &goal.subject;

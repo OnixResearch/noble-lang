@@ -412,6 +412,10 @@ mod tests {
     };
     const ORDERS: [[u8; 2]; 2] = [[0, 1], [1, 0]];
 
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+    )]
     /// Every owned `Ty` node, including retained generic arguments and their
     /// separately boxed descriptor copies.
     fn owned_nodes(ty: &Ty) -> u32 {

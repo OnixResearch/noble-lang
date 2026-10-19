@@ -211,6 +211,10 @@ const TYPE_STACK: usize = 64;
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
+)]
 /// Contract stacks admit only Type0 data built from the four base types.
 /// The reader also caps a type at 256 words, which bounds the visits.
 fn pure_type(ty: &noble_kernel::types::Ty) -> bool {
@@ -299,6 +303,10 @@ struct SourceOrigin<'a> {
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the item name reads as the domain term at its use sites; renaming would churn the extracted subject"
 )]
 fn source_origin<'a>(
     request: &'a Request<'_>,
@@ -681,6 +689,10 @@ const USE_FRAMES: usize = 65;
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
 )]
 /// Resolves every `(use name)` in pre-order, left to right. The term and the
 /// module's dependency list are owned and returned; the first error wins, as

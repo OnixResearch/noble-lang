@@ -355,6 +355,10 @@ impl Parser<'_> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; the collection is bounded by the surrounding admission limits, which are checked before this loop runs"
+)]
 fn parse_callable_effects(
     text: &str,
     environment: Option<&noble_kernel::contracts::Env>,

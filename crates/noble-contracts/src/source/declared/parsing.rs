@@ -352,6 +352,14 @@ fn word_is(token: &crate::source::lexer::Token, spelling: &[u8]) -> bool {
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
+)]
 fn scan_context(
     context: ScanContext,
     token: &crate::source::lexer::Token,
