@@ -1,14 +1,15 @@
 //! Value tokens of vector and data files (design D5) and the report
 //! rendering of observed values (design D7).
 
-use alloc::{borrow::ToOwned, format, string::String, string::ToString, vec::Vec};
+use alloc::borrow::ToOwned;
+use alloc::string::ToString;
 
-use crate::diag::{Code, Diagnostic, Site};
-use crate::ir::ScalarType;
-use crate::sem::Value;
-
-fn format_error(line: usize, why: impl Into<String>) -> Diagnostic {
-    Diagnostic::new(Code::Format, Site::Line(line), why)
+fn format_error(line: usize, why: impl Into<alloc::string::String>) -> crate::diag::Diagnostic {
+    crate::diag::Diagnostic::new(
+        crate::diag::Code::Format,
+        crate::diag::Site::Line(line),
+        why,
+    )
 }
 
 /// Why an `f32` token was refused; each file format maps `Malformed` to its
@@ -52,28 +53,40 @@ pub(crate) fn f32_token(tok: &str) -> Result<u32, F32Refusal> {
 /// # Errors
 /// `E-LITERAL-INEXACT` for an inexact decimal, `E-LITERAL-NONFINITE` for a
 /// `nan`/`inf` word, `E-FORMAT` otherwise.
-pub fn parse(ty: ScalarType, tok: &str, line: usize) -> Result<Value, Diagnostic> {
+pub fn parse(
+    ty: crate::ir::ScalarType,
+    tok: &str,
+    line: usize,
+) -> Result<crate::sem::Value, crate::diag::Diagnostic> {
     match ty {
-        ScalarType::F32 => f32_token(tok).map(Value::F32).map_err(|r| match r {
-            F32Refusal::Malformed => format_error(line, format!("bad f32 value {tok:?}")),
-            F32Refusal::Nonfinite => Diagnostic::new(
-                Code::LiteralNonfinite,
-                Site::Line(line),
-                format!("non-finite f32 value {tok}; give NaN and infinities as 0x bits"),
-            ),
-            F32Refusal::Inexact => Diagnostic::new(
-                Code::LiteralInexact,
-                Site::Line(line),
-                format!("{tok} is not exactly representable in binary32"),
-            ),
-        }),
-        ScalarType::I64 => super::decimal_i64(tok)
-            .map(Value::I64)
-            .ok_or_else(|| format_error(line, format!("bad i64 value {tok:?}"))),
-        ScalarType::Bool => match tok {
-            "true" => Ok(Value::Bool(true)),
-            "false" => Ok(Value::Bool(false)),
-            _ => Err(format_error(line, format!("bad bool value {tok:?}"))),
+        crate::ir::ScalarType::F32 => {
+            f32_token(tok)
+                .map(crate::sem::Value::F32)
+                .map_err(|r| match r {
+                    F32Refusal::Malformed => {
+                        format_error(line, alloc::format!("bad f32 value {tok:?}"))
+                    }
+                    F32Refusal::Nonfinite => crate::diag::Diagnostic::new(
+                        crate::diag::Code::LiteralNonfinite,
+                        crate::diag::Site::Line(line),
+                        alloc::format!(
+                            "non-finite f32 value {tok}; give NaN and infinities as 0x bits"
+                        ),
+                    ),
+                    F32Refusal::Inexact => crate::diag::Diagnostic::new(
+                        crate::diag::Code::LiteralInexact,
+                        crate::diag::Site::Line(line),
+                        alloc::format!("{tok} is not exactly representable in binary32"),
+                    ),
+                })
+        }
+        crate::ir::ScalarType::I64 => super::decimal_i64(tok)
+            .map(crate::sem::Value::I64)
+            .ok_or_else(|| format_error(line, alloc::format!("bad i64 value {tok:?}"))),
+        crate::ir::ScalarType::Bool => match tok {
+            "true" => Ok(crate::sem::Value::Bool(true)),
+            "false" => Ok(crate::sem::Value::Bool(false)),
+            _ => Err(format_error(line, alloc::format!("bad bool value {tok:?}"))),
         },
     }
 }
@@ -81,11 +94,11 @@ pub fn parse(ty: ScalarType, tok: &str, line: usize) -> Result<Value, Diagnostic
 /// The canonical file token of a value: `f32` as its exact `0x%08x`
 /// encoding, `i64` in decimal, `bool` as `true`/`false`.
 #[must_use]
-pub fn token(v: Value) -> String {
+pub fn token(v: crate::sem::Value) -> alloc::string::String {
     match v {
-        Value::F32(b) => format!("0x{b:08x}"),
-        Value::I64(x) => x.to_string(),
-        Value::Bool(x) => x.to_string(),
+        crate::sem::Value::F32(b) => alloc::format!("0x{b:08x}"),
+        crate::sem::Value::I64(x) => x.to_string(),
+        crate::sem::Value::Bool(x) => x.to_string(),
     }
 }
 
@@ -93,36 +106,39 @@ pub fn token(v: Value) -> String {
 /// encoding rendered as the single class `f32:nan` (D3 `≡obs`); `i64:N`;
 /// `bool:true|false`.
 #[must_use]
-pub fn render(v: Value) -> String {
+pub fn render(v: crate::sem::Value) -> alloc::string::String {
     match v {
-        Value::F32(b) if f32::from_bits(b).is_nan() => "f32:nan".to_owned(),
-        Value::F32(b) => format!("f32:0x{b:08x}"),
-        Value::I64(x) => format!("i64:{x}"),
-        Value::Bool(x) => format!("bool:{x}"),
+        crate::sem::Value::F32(b) if f32::from_bits(b).is_nan() => "f32:nan".to_owned(),
+        crate::sem::Value::F32(b) => alloc::format!("f32:0x{b:08x}"),
+        crate::sem::Value::I64(x) => alloc::format!("i64:{x}"),
+        crate::sem::Value::Bool(x) => alloc::format!("bool:{x}"),
     }
 }
 
 /// Parses the type tokens of a `types` line.
-pub(crate) fn types(tokens: &[&str], line: usize) -> Result<Vec<ScalarType>, Diagnostic> {
+pub(crate) fn types(
+    tokens: &[&str],
+    line: usize,
+) -> Result<alloc::vec::Vec<crate::ir::ScalarType>, crate::diag::Diagnostic> {
     tokens
         .iter()
         .map(|t| {
             super::graph::scalar_type(t)
-                .ok_or_else(|| format_error(line, format!("bad type {t:?}")))
+                .ok_or_else(|| format_error(line, alloc::format!("bad type {t:?}")))
         })
         .collect()
 }
 
 /// Parses one row of value tokens against `types`.
 pub(crate) fn row(
-    types: &[ScalarType],
+    types: &[crate::ir::ScalarType],
     tokens: &[&str],
     line: usize,
-) -> Result<Vec<Value>, Diagnostic> {
+) -> Result<alloc::vec::Vec<crate::sem::Value>, crate::diag::Diagnostic> {
     if tokens.len() != types.len() {
         return Err(format_error(
             line,
-            format!("{} values for {} types", tokens.len(), types.len()),
+            alloc::format!("{} values for {} types", tokens.len(), types.len()),
         ));
     }
     types
@@ -132,18 +148,25 @@ pub(crate) fn row(
         .collect()
 }
 
-pub(crate) fn type_names(types: &[ScalarType]) -> String {
-    types.iter().map(|t| t.name()).collect::<Vec<_>>().join(" ")
-}
-
-pub(crate) fn row_text(values: &[Value]) -> String {
-    values
+pub(crate) fn type_names(types: &[crate::ir::ScalarType]) -> alloc::string::String {
+    types
         .iter()
-        .map(|v| token(*v))
-        .collect::<Vec<_>>()
+        .map(|t| t.name())
+        .collect::<alloc::vec::Vec<_>>()
         .join(" ")
 }
 
-pub(crate) fn format_diag(line: usize, why: impl Into<String>) -> Diagnostic {
+pub(crate) fn row_text(values: &[crate::sem::Value]) -> alloc::string::String {
+    values
+        .iter()
+        .map(|v| token(*v))
+        .collect::<alloc::vec::Vec<_>>()
+        .join(" ")
+}
+
+pub(crate) fn format_diag(
+    line: usize,
+    why: impl Into<alloc::string::String>,
+) -> crate::diag::Diagnostic {
     format_error(line, why)
 }
