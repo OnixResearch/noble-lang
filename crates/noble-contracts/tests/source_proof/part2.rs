@@ -139,19 +139,15 @@ fn proof_candidate_refuses_context_claim_evidence_and_resource_interface() -> Re
         ),
         Err(noble_contracts::source::proof::SourceProofRefusal::MissingEvidence)
     ));
-    assert!(matches!(
-        modules.correspond_checked_target(
-            "selected",
-            1,
-            "law",
-            "unproved",
-            &target,
-            super::context(&modules),
-            super::LIMITS,
-        ),
-        Err(noble_contracts::source::proof::SourceProofRefusal::MissingEvidence)
-    ));
+    refuses_missing_evidence(&modules, &target)?;
 
+    refuses_resource_interface_and_context_claims(&modules)
+}
+
+/// The live-slot resource session must refuse context, claim, evidence and interface drift.
+fn refuses_resource_interface_and_context_claims(
+    modules: &noble_contracts::source::ModuleSession,
+) -> Result<(), String> {
     let nominal = noble_kernel::contracts::NominalDecl {
         id: noble_kernel::types::NominalTypeId {
             module: 302,
@@ -203,6 +199,26 @@ fn proof_candidate_refuses_context_claim_evidence_and_resource_interface() -> Re
             super::LIMITS,
         ),
         Err(noble_contracts::source::proof::SourceProofRefusal::UnsupportedProfile)
+    ));
+    Ok(())
+}
+
+/// A candidate without retained evidence must be refused as MissingEvidence.
+fn refuses_missing_evidence<'a>(
+    modules: &noble_contracts::source::ModuleSession,
+    target: &noble_contracts::source::proof::CheckedSelectedTarget<'a>,
+) -> Result<(), String> {
+    assert!(matches!(
+        modules.correspond_checked_target(
+            "selected",
+            1,
+            "law",
+            "unproved",
+            target,
+            super::context(modules),
+            super::LIMITS,
+        ),
+        Err(noble_contracts::source::proof::SourceProofRefusal::MissingEvidence)
     ));
     Ok(())
 }
