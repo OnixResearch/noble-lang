@@ -789,6 +789,10 @@ fn suffix_matches(sigma: &[Sym], stack: &[noble_kernel::types::Ty]) -> bool {
             .all(|(s, t)| matches(s, t))
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the flattened result is an append-only vector whose final length is not known in advance"
+)]
 fn flatten(s: &Sym, out: &mut alloc::vec::Vec<u32>) -> Result<(), crate::diag::Diagnostic> {
     match s {
         Sym::Scalar(id, _) => out.push(*id),

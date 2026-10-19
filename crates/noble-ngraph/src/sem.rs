@@ -47,6 +47,10 @@ impl Value {
     }
 
     /// Little-endian ABI bytes (D3).
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the ABI encoding appends a variable number of bytes to the owned output buffer"
+    )]
     pub fn write_abi(self, out: &mut alloc::vec::Vec<u8>) {
         match self {
             Self::I64(v) => out.extend_from_slice(&v.to_le_bytes()),

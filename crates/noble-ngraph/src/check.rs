@@ -280,6 +280,10 @@ impl CheckedGraph {
 #[must_use]
 pub fn retained_bytes(g: &crate::ir::Graph) -> u64 {
     /// Element storage retained by one vector, at its current capacity.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; capacity is the measured property, so a slice cannot replace the owned vector"
+    )]
     fn vec_bytes<T>(v: &alloc::vec::Vec<T>) -> u64 {
         (v.capacity() as u64).saturating_mul(core::mem::size_of::<T>() as u64)
     }

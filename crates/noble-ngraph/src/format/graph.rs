@@ -632,6 +632,10 @@ fn fact_text(f: &crate::ir::Fact, profile: crate::ir::SubProfile) -> alloc::stri
 
 fn shape_text(trees: &[crate::ir::ShapeTree]) -> alloc::string::String {
     // Recursion depth is bounded by `crate::ir::MAX_SHAPE_DEPTH`.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; canonical shape text grows the owned output String and cannot use a borrowed slice"
+    )]
     fn tree(t: &crate::ir::ShapeTree, s: &mut alloc::string::String) {
         match t.node() {
             crate::ir::ShapeNode::Scalar => s.push('s'),

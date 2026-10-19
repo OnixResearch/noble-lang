@@ -481,6 +481,10 @@ fn has_resource(ty: &noble_kernel::types::Ty) -> bool {
     false
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the traversal worklist must grow while nested shapes are expanded"
+)]
 fn push_shape<'a>(
     work: &mut alloc::vec::Vec<&'a noble_kernel::types::Ty>,
     shape: &'a noble_kernel::types::NominalShape,
