@@ -140,6 +140,14 @@ let
         cmp Cargo.toml ${src}/Cargo.toml
         b3sum Cargo.toml Cargo.lock crates/*/Cargo.toml crates/*/src/*.rs crates/*/tests/*.rs > "$out/source-blake3.txt"
         tar -cf "$out/source.tar" Cargo.toml Cargo.lock rust-toolchain.toml dylint.toml crates policy
+        ${pkgs.lib.optionalString (case.base == "acyclic_shell") ''
+          # Issue #27: the acyclic shell base adds two lib units beyond the reviewed
+          # 88-unit workspace roster, so this fixture alone collects at a raised
+          # capacity. Every other case keeps the reviewed 88.
+          ${pkgs.jq}/bin/jq '.collection_limits.max_units = 90 | .collection_limits.max_shards = 90' \
+            policy/architecture.json > "$out/architecture-acyclic.json"
+          mv "$out/architecture-acyclic.json" policy/architecture.json
+        ''}
         code=0
         timeout ${toString policy.timeout_seconds} noble-octet-gate --workspace --output-format json \
           --artifact-dir "$out/deny" -- --all-targets --all-features > "$out/deny.stdout" 2> "$out/deny.stderr" || code=$?
