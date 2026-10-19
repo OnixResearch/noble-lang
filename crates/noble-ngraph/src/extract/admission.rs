@@ -550,7 +550,7 @@ pub(super) const fn scalar(ty: &noble_kernel::types::Ty) -> Option<crate::ir::Sc
     }
 }
 
-/// crate::ir::Subject identity: the exact root request and body plus every closure
+/// Subject identity: the exact root request and body plus every closure
 /// definition specialization (identity, contract entry, body, expected
 /// interface), encoded with the kernel's derived `Debug` rendering under a
 /// domain tag. The encoding is deterministic for one kernel revision; it is
