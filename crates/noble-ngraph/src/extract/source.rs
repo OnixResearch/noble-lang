@@ -4,21 +4,17 @@
 //! (`noble_contracts::source::Session`), injected by the caller together
 //! with its limits: definitions are prepared and committed one submission at
 //! a time, then the root body is prepared with its ordered (bottom-first)
-//! input stack types. The resulting [`Submission`] is untrusted producer
+//! input stack types. The resulting [`noble_kernel::execution::Submission`] is untrusted producer
 //! data; [`super::admit`] re-runs the kernel on it.
-
-use alloc::{format, string::String, vec, vec::Vec};
-use noble_kernel::execution::Submission;
-use noble_kernel::types::Ty;
 
 /// A prepared root submission and the producer's claimed closure (every
 /// definition identity the frontend placed in the submission).
 #[derive(Clone, Debug)]
 pub struct Prepared {
     /// The root submission.
-    pub submission: Submission,
+    pub submission: noble_kernel::execution::Submission,
     /// Producer-claimed closure (sorted, unique).
-    pub claimed_closure: Vec<u64>,
+    pub claimed_closure: alloc::vec::Vec<u64>,
 }
 
 /// Prepares `definitions` (each one `def NAME [ … ]` submission, committed in
@@ -36,29 +32,30 @@ pub fn prepare(
     limits: noble_contracts::Limits,
     definitions: &[&str],
     root: &str,
-    inputs: &[Ty],
-) -> Result<Prepared, String> {
+    inputs: &[noble_kernel::types::Ty],
+) -> Result<Prepared, alloc::string::String> {
     for d in definitions {
         let p = session
             .prepare(d.as_bytes(), &[], limits)
-            .map_err(|e| format!("definition {d:?}: {e:?}"))?;
+            .map_err(|e| alloc::format!("definition {d:?}: {e:?}"))?;
         if p.definition_name().is_none() {
-            return Err(format!(
+            return Err(alloc::format!(
                 "submission {d:?} precedes the root but is not a definition"
             ));
         }
         session
             .commit(p)
-            .map_err(|e| format!("definition {d:?}: {e:?}"))?;
+            .map_err(|e| alloc::format!("definition {d:?}: {e:?}"))?;
     }
     let p = session
         .prepare(root.as_bytes(), inputs, limits)
-        .map_err(|e| format!("root {root:?}: {e:?}"))?;
+        .map_err(|e| alloc::format!("root {root:?}: {e:?}"))?;
     let submission = p
         .submission()
         .cloned()
-        .ok_or_else(|| format!("root {root:?} produced no submission"))?;
-    let mut claimed_closure: Vec<u64> = submission.definitions.iter().map(|d| d.identity).collect();
+        .ok_or_else(|| alloc::format!("root {root:?} produced no submission"))?;
+    let mut claimed_closure: alloc::vec::Vec<u64> =
+        submission.definitions.iter().map(|d| d.identity).collect();
     claimed_closure.sort_unstable();
     claimed_closure.dedup();
     Ok(Prepared {
@@ -69,6 +66,6 @@ pub fn prepare(
 
 /// `n` `I64` input types.
 #[must_use]
-pub fn i64s(n: usize) -> Vec<Ty> {
-    vec![Ty::I64; n]
+pub fn i64s(n: usize) -> alloc::vec::Vec<noble_kernel::types::Ty> {
+    alloc::vec![noble_kernel::types::Ty::I64; n]
 }
