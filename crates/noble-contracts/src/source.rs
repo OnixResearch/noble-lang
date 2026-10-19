@@ -499,7 +499,7 @@ impl Session {
                 || self
                     .definitions
                     .iter()
-                    .skip(index + 1)
+                    .skip(index.saturating_add(1))
                     .any(|later| later.name == definition.name)
             {
                 continue;

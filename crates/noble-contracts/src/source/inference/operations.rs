@@ -157,7 +157,7 @@ pub(super) fn slot_invoke(
             || !input
                 .iter()
                 .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
-                .zip(&actual[actual.len() - value_count..])
+                .zip(&actual[actual.len().saturating_sub(value_count)..])
                 .all(|(left, right)| left == right)
         {
             continue;

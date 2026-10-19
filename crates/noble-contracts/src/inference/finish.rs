@@ -417,20 +417,24 @@ mod tests {
     fn owned_nodes(ty: &Ty) -> u32 {
         let shape = |shape: &NominalShape| match shape {
             NominalShape::Opaque(inner) => owned_nodes(inner),
-            NominalShape::Variant(left, right) => owned_nodes(left) + owned_nodes(right),
+            NominalShape::Variant(left, right) => {
+                (owned_nodes(left)).saturating_add(owned_nodes(right))
+            }
         };
-        1 + match ty {
-            Ty::Pair(left, right) | Ty::Sum(left, right) => owned_nodes(left) + owned_nodes(right),
+        1u32.saturating_add(match ty {
+            Ty::Pair(left, right) | Ty::Sum(left, right) => {
+                (owned_nodes(left)).saturating_add(owned_nodes(right))
+            }
             Ty::List(item) => owned_nodes(item),
             Ty::Program(input, output, _) | Ty::LiveRef(input, output, _) => {
                 input.iter().chain(output.iter()).map(owned_nodes).sum()
             }
             Ty::Nominal(_, descriptor) => shape(descriptor),
-            Ty::GenericNominal(_, arguments, descriptor) => {
-                owned_nodes(&arguments[0]) + owned_nodes(&arguments[1]) + shape(descriptor)
-            }
+            Ty::GenericNominal(_, arguments, descriptor) => (owned_nodes(&arguments[0]))
+                .saturating_add(owned_nodes(&arguments[1]))
+                .saturating_add(shape(descriptor)),
             _ => 0,
-        }
+        })
     }
 
     /// `T0 = I64`, `T(n+1) = G<Tn, I64>` as a small acyclic symbolic arena.
@@ -477,7 +481,7 @@ mod tests {
             constructors: extent.constructors,
             accounted: extent.nodes,
             owned: owned_nodes(&ty),
-            charged: before - meter.work,
+            charged: (before).saturating_sub(meter.work),
         })
     }
 
@@ -488,8 +492,14 @@ mod tests {
                 let built = materialize(depth, payload_params, crate::Limits::default())
                     .expect("depth within the representation bound");
                 // Logical size grows linearly; owned nodes double per level.
-                assert_eq!(built.constructors, 2 * depth + 1);
-                assert_eq!(built.owned, 4 * (1 << depth) - 3);
+                assert_eq!(
+                    built.constructors,
+                    2u32.saturating_mul(depth).saturating_add(1)
+                );
+                assert_eq!(
+                    built.owned,
+                    4u32.saturating_mul(1u32 << depth).saturating_sub(3)
+                );
                 assert_eq!(
                     built.accounted, built.owned,
                     "{payload_params:?} depth {depth}"
