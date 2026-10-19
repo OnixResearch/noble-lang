@@ -1240,9 +1240,17 @@ fn proof_lexer_modes_and_stale_host_gate_leave_prior_namespace_intact() -> Resul
     }
     session = super::commit(session, b"import logic@1 as alias")?;
     let prior = session.generation();
+    let mut was_checker_invoked = false;
     let (session, result) = session.commit_verified(staged, |_| -> Result<_, String> {
-        panic!("stale staged source must not invoke the independent checker")
+        was_checker_invoked = true;
+        Err(String::from(
+            "stale staged source must not invoke the independent checker",
+        ))
     });
+    assert!(
+        !was_checker_invoked,
+        "stale staged source invoked the independent checker"
+    );
     assert!(
         matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
     );

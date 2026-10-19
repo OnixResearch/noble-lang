@@ -343,7 +343,7 @@ fn unsigned_wit_requires_a_selected_checked_boundary() -> Result<(), String> {
 }
 
 #[test]
-fn checked_unsigned_selector_requires_import_free_exact_scalar_export() {
+fn checked_unsigned_selector_requires_import_free_exact_scalar_export() -> Result<(), String> {
     for wit in [
         b"package test:unsigned@1.0.0; world main { import signed: func(value: s64) -> s64; export echo: func(value: u64) -> u64; }".as_slice(),
         b"package test:unsigned@1.0.0; world main { import unsigned: func(value: u64) -> u64; export echo: func(value: u64) -> u64; }",
@@ -360,8 +360,11 @@ fn checked_unsigned_selector_requires_import_free_exact_scalar_export() {
         assert_eq!(error.diagnostic.kind, noble_contracts::DiagnosticKind::Unsupported);
     }
     let signed = b"package test:signed@1.0.0; world main { import signed: func(value: s64) -> s64; export echo: func(value: s64) -> s64; }";
-    let world = noble_contracts::component::World::parse(signed, "main", LIMITS)
-        .expect("normal signed import/export world must remain supported");
+    let world =
+        noble_contracts::component::World::parse(signed, "main", LIMITS).map_err(|error| {
+            format!("normal signed import/export world must remain supported: {error:?}")
+        })?;
     assert_eq!(world.imports().len(), 1);
     assert_eq!(world.exports().len(), 1);
+    Ok(())
 }

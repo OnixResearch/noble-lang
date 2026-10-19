@@ -83,7 +83,8 @@ fn calculator_retains_ten_individually_bounded_module_sources() -> Result<(), St
             ));
         }
     }
-    assert!(aggregate > 262_144 && aggregate < 524_288);
+    assert!(aggregate > 262_144);
+    assert!(aggregate < 524_288);
     assert_eq!(calculator.generation(), 10);
     assert_eq!(ordinary.generation(), 9);
     Ok(())
