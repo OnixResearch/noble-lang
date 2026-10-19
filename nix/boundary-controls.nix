@@ -157,8 +157,9 @@ let
             --spec "$out/export-spec.json" --output "$out/architecture.json" \
             --manifest-out "$out/architecture.manifest.json" \
             --nickel-identity "$(${nickel}/bin/nickel --version)"
-          mv "$out/architecture.json" policy/architecture.json
-          mv "$out/architecture.manifest.json" policy/architecture.manifest.json
+          # Keep the exports in $out as case artifacts and use copies as the policy.
+          cp "$out/architecture.json" policy/architecture.json
+          cp "$out/architecture.manifest.json" policy/architecture.manifest.json
         ''}
         code=0
         timeout ${toString policy.timeout_seconds} noble-octet-gate --workspace --output-format json \

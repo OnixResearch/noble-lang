@@ -120,7 +120,7 @@
     "flake.lock": "3c0558d476937ec8d50f2e2185847ea33ea9d394e5f228f6f103b9fa5ffc3d2d",
     "flake.nix": "52fb638350b3a88c8804cb9e97058e6a9ba89c445e578a1d6d0ad6d255eb5423",
     "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
-    "nix/boundary-controls.nix": "8d773e488a4de1c34c531d0090796475181228e40f81ca3dfcde74e102fa2ab0",
+    "nix/boundary-controls.nix": "81d4fb59dfe0f95af55da9dde31ec8404b2a9f97e8e268509ab9d473c4358cdd",
     "nix/m3-wasm-app.nix": "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
     "nix/native-assurance-app.nix": "dacb83263d3d384fec40cff87c5d0495fbb4e10d17dd4c00821c26f16151303b",
     "nix/octet-dynamic-trait-ufcs.patch": "ea2822d321cd11a4839ae7e8201b7116e8ab71eccf00b300809ea5c6072ad498",
