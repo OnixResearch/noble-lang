@@ -395,51 +395,67 @@ impl<T> WorkStack<T> {
             total: 0,
         }
     }
+
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the traversal stack is locally owned state and its mutation is the operation"
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the operation pushes into owned storage, which is not const"
+    )]
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-contracts; the bound is the frame count supplied by the tree budget"
+    )]
+    /// Push one frame, spilling once the inline slots are exhausted.
+    fn push_bounded(&mut self, value: T, limit: usize) -> Result<(), ()> {
+        let Some(total) = self.total.checked_add(1).filter(|next| *next <= limit) else {
+            return Err(());
+        };
+        if self.inline_len < INLINE_TREE_FRAMES && self.spill.is_empty() {
+            self.inline[self.inline_len] = Some(value);
+            self.inline_len = self.inline_len.saturating_add(1);
+            self.total = total;
+            return Ok(());
+        }
+        if self.spill.len() >= limit {
+            return Err(());
+        }
+        // Spill only when a real walk exhausts its inline slots.
+        self.spill.push(value);
+        self.total = total;
+        Ok(())
+    }
+
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the traversal stack is locally owned state and its mutation is the operation"
+    )]
+    /// Pop one frame from the spill or the inline slots.
+    fn pop_bounded(&mut self) -> Option<T> {
+        if let Some(value) = self.spill.pop() {
+            self.total = self.total.saturating_sub(1);
+            return Some(value);
+        }
+        let next = self.inline_len.checked_sub(1)?;
+        self.inline_len = next;
+        let value = self.inline[next].take();
+        self.total = self.total.saturating_sub(usize::from(value.is_some()));
+        value
+    }
 }
 // These operations mutate only a locally owned traversal stack. Keeping the
 // mechanics at the callsite avoids passing a mutable proof-checking capability.
 macro_rules! work_push {
-    ($stack:ident,$value:expr,$bound:expr) => {{
-#[expect(
-    tigerstyle::numeric_units,
-    reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
-)]
-        let limit = $bound;
-        let has_inline_room = $stack.inline_len < INLINE_TREE_FRAMES && $stack.spill.is_empty();
-        let has_spill_room = $stack.spill.len() < limit;
-        match ($stack.total.checked_add(1).filter(|next| *next <= limit), has_inline_room, has_spill_room) {
-            (Some(total), true, _) => {
-                $stack.inline[$stack.inline_len] = Some($value);
-                $stack.inline_len = $stack.inline_len.saturating_add(1);
-                $stack.total = total;
-                Ok(())
-            }
-            // Spill only when a real walk exhausts its inline slots.
-            (Some(total), false, true) => {
-                $stack.spill.push($value);
-                $stack.total = total;
-                Ok(())
-            }
-            (Some(_), false, false) | (None, _, _) => Err(()),
-        }
-    }};
+    ($stack:ident,$value:expr,$bound:expr) => {
+        $stack.push_bounded($value, $bound)
+    };
 }
 macro_rules! work_pop {
-    ($stack:ident) => {{
-        match ($stack.spill.pop(), $stack.inline_len.checked_sub(1)) {
-            (Some(value), _) => {
-                $stack.total = $stack.total.saturating_sub(1);
-                Some(value)
-            }
-            (None, Some(next)) => {
-                $stack.inline_len = next;
-                let value = $stack.inline[next].take();
-                $stack.total = $stack.total.saturating_sub(usize::from(value.is_some()));
-                value
-            }
-            (None, None) => None,
-        }
-    }};
+    ($stack:ident) => {
+        $stack.pop_bounded()
+    };
 }
 enum ValidationFrame<'a> {
     Enter(&'a Form, u32),
