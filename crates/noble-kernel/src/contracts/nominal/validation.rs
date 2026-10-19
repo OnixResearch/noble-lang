@@ -3,19 +3,19 @@
 impl super::super::Env {
     pub(crate) fn valid_generic_declarations(&self) -> bool {
         let mut index = 0;
-        let mut valid = true;
-        while index < self.generic_variants.len() && valid {
+        let mut is_valid = true;
+        while index < self.generic_variants.len() && is_valid {
             let decl = &self.generic_variants[index];
-            valid =
+            is_valid =
                 matches!(decl.payload_params, [0, 1] | [1, 0]) && self.nominal(decl.id).is_none();
             let mut prior = 0;
-            while prior < index && valid {
-                valid = self.generic_variants[prior].id != decl.id;
+            while prior < index && is_valid {
+                is_valid = self.generic_variants[prior].id != decl.id;
                 prior += 1;
             }
             index += 1;
         }
-        valid
+        is_valid
     }
 
     pub(crate) fn validate_contracts(&self) -> bool {
@@ -135,9 +135,12 @@ fn bootstrap_matches(env: &super::super::Env) -> bool {
         .kinds
         .iter()
         .any(|kind| matches!(kind, super::super::Behavior::BoundClock(_)));
-    env.resource_kinds.len() == 1 + env.live_resource_nominals.len()
+    env.resource_kinds.len() == 1usize.saturating_add(env.live_resource_nominals.len())
         && env.resource_kinds[0].0 == super::super::FIXTURE_RESOURCE.0
-        && env.effects.len() == 1 + usize::from(has_clock) + usize::from(env.live_slots)
+        && env.effects.len()
+            == 1usize
+                .saturating_add(usize::from(has_clock))
+                .saturating_add(usize::from(env.live_slots))
         && env.effects[0].0 == super::super::TEST_EMIT.0
         && env.effects.contains(&super::super::TEST_CLOCK) == has_clock
         && env.effects.contains(&super::super::LIVE_DISPATCH) == env.live_slots

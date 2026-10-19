@@ -27,7 +27,7 @@ pub(super) fn entry_frame(
     candidate: &crate::untrusted::Candidate,
 ) -> super::Frame {
     let mut values = alloc::vec::Vec::with_capacity(request.expected.stack_in.len());
-    let mut borrowed = alloc::vec::Vec::new();
+    let mut borrowed = alloc::vec::Vec::with_capacity(request.expected.stack_in.len());
     let mut index = 0;
     while index < request.expected.stack_in.len() {
         if matches!(

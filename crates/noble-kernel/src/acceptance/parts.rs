@@ -90,22 +90,22 @@ fn limits_of_with(
             crate::untrusted::LimitKind::StackHeight,
         ));
     }
-    let mut valid = true;
+    let mut is_valid = true;
     let mut index = 0;
     while index < stack.len() {
-        let next = if allow_borrowed && matches!(&stack[index], crate::types::Ty::LiveRef(_, _, _))
-        {
-            ctx.env.valid_live_ref(&stack[index])
-        } else {
-            ctx.env.valid_type(&stack[index], 512)
-        };
-        if !next {
-            valid = false;
+        let is_next =
+            if allow_borrowed && matches!(&stack[index], crate::types::Ty::LiveRef(_, _, _)) {
+                ctx.env.valid_live_ref(&stack[index])
+            } else {
+                ctx.env.valid_type(&stack[index], 512)
+            };
+        if !is_next {
+            is_valid = false;
             break;
         }
         index += 1;
     }
-    if !valid {
+    if !is_valid {
         return Err(invalid_without_stacks(
             site(None, None),
             crate::untrusted::Constraint::InvalidType,

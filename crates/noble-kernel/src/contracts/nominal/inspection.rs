@@ -77,10 +77,6 @@ impl super::super::Env {
         matches!(self.nominal(id), Some(decl) if &decl.shape == shape)
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; the bounded pattern work queue requires non-const Vec<&Pattern>::push (E0658) on both pinned Rust compilers; reassess when Vec mutation becomes const-capable."
-    )]
     fn enqueue_pattern<'a>(
         &self,
         pattern: &'a crate::shapes::Pattern,

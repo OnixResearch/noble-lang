@@ -233,13 +233,13 @@ impl super::super::super::Env {
             return false;
         }
         if self.live_slots && !self.live_resource_nominals.contains(&decl.id) {
-            let owns_resource = match &decl.shape {
+            let is_owns_resource = match &decl.shape {
                 crate::types::NominalShape::Opaque(representation) => !representation.is_data(),
                 crate::types::NominalShape::Variant(left, right) => {
                     !left.is_data() || !right.is_data()
                 }
             };
-            if owns_resource {
+            if is_owns_resource {
                 return false;
             }
         }

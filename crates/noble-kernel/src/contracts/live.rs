@@ -50,13 +50,14 @@ pub(super) fn catalog_valid(env: &Env) -> bool {
         };
         if !decl.exported
             || decl.public != [false, false]
-            || resource_kind(decl) != Some(env.resource_kinds[index + 1])
+            || resource_kind(decl) != Some(env.resource_kinds[index.saturating_add(1)])
         {
             return false;
         }
         let mut prior = 0;
         while prior < index {
-            if env.resource_kinds[prior + 1] == env.resource_kinds[index + 1]
+            if env.resource_kinds[prior.saturating_add(1)]
+                == env.resource_kinds[index.saturating_add(1)]
                 || env.live_resource_nominals[prior] == env.live_resource_nominals[index]
             {
                 return false;

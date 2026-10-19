@@ -66,10 +66,6 @@ fn advance<'a>(
     enter(frame.ty, state)
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; both pinned Rust compilers reject Vec<Frame/Pattern>::push (E0658) and owned Build destruction (E0493) in enter; reassess when these runtime transitions become const-capable."
-)]
 fn enter<'a>(ty: &'a crate::types::Ty, mut state: Build<'a>) -> Option<Build<'a>> {
     debug_assert!(state.entered > 0 && state.entered <= 512);
     debug_assert!(state.built.len() <= state.entered);
