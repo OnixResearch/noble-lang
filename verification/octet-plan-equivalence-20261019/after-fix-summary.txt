@@ -1,0 +1,162 @@
+--- octet summary ---
+Status: integration-failure
+Findings: 118
+Warnings: 2
+Errors: 116
+Autofixable: 6
+Tool: cargo-octet 0.1.0
+Toolchain: nightly-2026-03-21-x86_64-unknown-linux-gnu
+Profile: workspace-metadata
+Config hash: b3:46e6399052c541c7c3a651ef69cb31fbb300342e0353453ae70fb2472fba28ab
+Profile hash: b3:c8cb7f3e9d7bcc41f7f3e93f539f06a38841426f35cf79da054a1873e14c1875
+
+By crate:
+  noble_kernel        118
+
+By effect:
+  failure         44
+  resource        39
+  unknown         35
+
+By lint:
+  raw_arithmetic_overflow              22
+  non_trait_imports                    18
+  assertion_density                    16
+  excessive_file_length                10
+  mutating_input_in_pure               10
+  bool_naming                          6
+  missing_const_fn                     6
+  compound_condition                   5
+  function_length                      5
+  catch_all_on_enum                    3
+  allocation_in_loop                   2
+  ambiguous_params                     2
+  nested_conditionals                  2
+  no_recursion                         2
+  path_segment_repetition              2
+  too_many_parameters                  2
+  unfulfilled_lint_expectations        2
+  unbounded_collection_growth          1
+  underscore_in_module_filename        1
+  usize_in_public_api                  1
+
+Index:
+  F1    assertion_density             noble_kernel  crates/noble-kernel/src/acceptance/frames.rs:28
+  F2    unbounded_collection_growth   noble_kernel  crates/noble-kernel/src/acceptance/frames.rs:37
+  F3    excessive_file_length         noble_kernel  crates/noble-kernel/src/acceptance/nodes.rs:1
+  F4    ambiguous_params              noble_kernel  crates/noble-kernel/src/acceptance/nodes.rs:113
+  F5    too_many_parameters           noble_kernel  crates/noble-kernel/src/acceptance/nodes.rs:113
+  F6    assertion_density             noble_kernel  crates/noble-kernel/src/acceptance/nodes.rs:128
+  F7    function_length               noble_kernel  crates/noble-kernel/src/acceptance/nodes.rs:128
+  F8    missing_const_fn              noble_kernel  crates/noble-kernel/src/acceptance/nodes/visibility.rs:22
+  F9    assertion_density             noble_kernel  crates/noble-kernel/src/acceptance/nodes/visibility.rs:26
+  F10   catch_all_on_enum             noble_kernel  crates/noble-kernel/src/acceptance/nodes/visibility.rs:65
+  F11   missing_const_fn              noble_kernel  crates/noble-kernel/src/acceptance/nodes/visibility.rs:69
+  F12   bool_naming                   noble_kernel  crates/noble-kernel/src/acceptance/parts.rs:93
+  F13   bool_naming                   noble_kernel  crates/noble-kernel/src/acceptance/parts.rs:96
+  F14   excessive_file_length         noble_kernel  crates/noble-kernel/src/acceptance/parts/instantiate.rs:1
+  F15   missing_const_fn              noble_kernel  crates/noble-kernel/src/acceptance/preflight.rs:194
+  F16   excessive_file_length         noble_kernel  crates/noble-kernel/src/contracts.rs:1
+  F17   usize_in_public_api           noble_kernel  crates/noble-kernel/src/contracts.rs:225
+  F18   compound_condition            noble_kernel  crates/noble-kernel/src/contracts.rs:226
+  F19   compound_condition            noble_kernel  crates/noble-kernel/src/contracts.rs:360
+  F20   bool_naming                   noble_kernel  crates/noble-kernel/src/contracts.rs:405
+  F21   assertion_density             noble_kernel  crates/noble-kernel/src/contracts.rs:539
+  F22   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts.rs:540
+  F23   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts.rs:541
+  F24   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts.rs:541
+  F25   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts.rs:541
+  F26   allocation_in_loop            noble_kernel  crates/noble-kernel/src/contracts.rs:554
+  F27   assertion_density             noble_kernel  crates/noble-kernel/src/contracts.rs:575
+  F28   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts.rs:576
+  F29   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts.rs:577
+  F30   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts.rs:577
+  F31   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts.rs:577
+  F32   allocation_in_loop            noble_kernel  crates/noble-kernel/src/contracts.rs:636
+  F33   underscore_in_module_filename noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:1
+  F34   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:7
+  F35   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:8
+  F36   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:8
+  F37   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:9
+  F38   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:19
+  F39   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:23
+  F40   path_segment_repetition       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:29
+  F41   mutating_input_in_pure        noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:41
+  F42   mutating_input_in_pure        noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:46
+  F43   mutating_input_in_pure        noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:51
+  F44   mutating_input_in_pure        noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:63
+  F45   mutating_input_in_pure        noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:67
+  F46   mutating_input_in_pure        noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:72
+  F47   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:80
+  F48   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:81
+  F49   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:83
+  F50   no_recursion                  noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:100
+  F51   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:100
+  F52   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:110
+  F53   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:111
+  F54   mutating_input_in_pure        noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:130
+  F55   mutating_input_in_pure        noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:135
+  F56   mutating_input_in_pure        noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:146
+  F57   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:154
+  F58   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:155
+  F59   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:157
+  F60   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:161
+  F61   no_recursion                  noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:168
+  F62   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:168
+  F63   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:169
+  F64   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:172
+  F65   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:189
+  F66   mutating_input_in_pure        noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:206
+  F67   compound_condition            noble_kernel  crates/noble-kernel/src/contracts/clone_budget.rs:207
+  F68   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts/live.rs:3
+  F69   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts/live.rs:3
+  F70   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts/live.rs:3
+  F71   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts/live.rs:4
+  F72   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts/live.rs:4
+  F73   non_trait_imports             noble_kernel  crates/noble-kernel/src/contracts/live.rs:4
+  F74   compound_condition            noble_kernel  crates/noble-kernel/src/contracts/live.rs:18
+  F75   assertion_density             noble_kernel  crates/noble-kernel/src/contracts/live.rs:37
+  F76   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/live.rs:53
+  F77   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/live.rs:59
+  F78   raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/live.rs:59
+  F79   path_segment_repetition       noble_kernel  crates/noble-kernel/src/contracts/live.rs:71
+  F80   assertion_density             noble_kernel  crates/noble-kernel/src/contracts/live.rs:88
+  F81   excessive_file_length         noble_kernel  crates/noble-kernel/src/contracts/nominal.rs:1
+  F82   missing_const_fn              noble_kernel  crates/noble-kernel/src/contracts/nominal.rs:77
+  F83   assertion_density             noble_kernel  crates/noble-kernel/src/contracts/nominal.rs:90
+  F84   assertion_density             noble_kernel  crates/noble-kernel/src/contracts/nominal.rs:279
+  F85   compound_condition            noble_kernel  crates/noble-kernel/src/contracts/nominal.rs:280
+  F86   unfulfilled_lint_expectations noble_kernel  crates/noble-kernel/src/contracts/nominal/inspection.rs:81
+  F87   unfulfilled_lint_expectations noble_kernel  crates/noble-kernel/src/contracts/nominal/payload.rs:70
+  F88   function_length               noble_kernel  crates/noble-kernel/src/contracts/nominal/payload.rs:73
+  F89   nested_conditionals           noble_kernel  crates/noble-kernel/src/contracts/nominal/payload.rs:122
+  F90   ambiguous_params              noble_kernel  crates/noble-kernel/src/contracts/nominal/payload.rs:202
+  F91   assertion_density             noble_kernel  crates/noble-kernel/src/contracts/nominal/payload.rs:207
+  F92   assertion_density             noble_kernel  crates/noble-kernel/src/contracts/nominal/schemes.rs:158
+  F93   catch_all_on_enum             noble_kernel  crates/noble-kernel/src/contracts/nominal/schemes.rs:203
+  F94   excessive_file_length         noble_kernel  crates/noble-kernel/src/contracts/nominal/type/walk.rs:1
+  F95   too_many_parameters           noble_kernel  crates/noble-kernel/src/contracts/nominal/type/walk.rs:194
+  F96   bool_naming                   noble_kernel  crates/noble-kernel/src/contracts/nominal/type/walk.rs:236
+  F97   excessive_file_length         noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:1
+  F98   bool_naming                   noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:6
+  F99   assertion_density             noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:58
+  F100  raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:138
+  F101  raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:140
+  F102  raw_arithmetic_overflow       noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:140
+  F103  assertion_density             noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:174
+  F104  assertion_density             noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:230
+  F105  nested_conditionals           noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:241
+  F106  catch_all_on_enum             noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:257
+  F107  missing_const_fn              noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:261
+  F108  missing_const_fn              noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:301
+  F109  assertion_density             noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:301
+  F110  assertion_density             noble_kernel  crates/noble-kernel/src/contracts/nominal/validation.rs:328
+  F111  excessive_file_length         noble_kernel  crates/noble-kernel/src/shapes.rs:1
+  F112  excessive_file_length         noble_kernel  crates/noble-kernel/src/types.rs:1
+  F113  bool_naming                   noble_kernel  crates/noble-kernel/src/types.rs:132
+  F114  excessive_file_length         noble_kernel  crates/noble-kernel/src/types/impls.rs:1
+  F115  function_length               noble_kernel  crates/noble-kernel/src/types/impls.rs:116
+  F116  excessive_file_length         noble_kernel  crates/noble-kernel/src/untrusted.rs:1
+  F117  function_length               noble_kernel  crates/noble-kernel/src/words/subst.rs:156
+  F118  function_length               noble_kernel  crates/noble-kernel/src/words/subst/finish.rs:16
+---
