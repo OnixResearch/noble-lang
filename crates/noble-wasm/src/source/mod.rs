@@ -497,8 +497,8 @@ impl Prepared {
 }
 
 impl Compiler {
-    fn reserve_code(&mut self, length: u32) -> Result<CodeSpan, crate::Diagnostic> {
-        if length == 0 {
+    fn reserve_code(&mut self, slots: u32) -> Result<CodeSpan, crate::Diagnostic> {
+        if slots == 0 {
             return Ok(CodeSpan {
                 start: self.functions,
                 length: 0,
@@ -507,29 +507,29 @@ impl Compiler {
         }
         let mut start = self.functions;
         if self.live_slots {
-            if let Some(index) = self.free_code.iter().position(|free| free.length >= length) {
+            if let Some(index) = self.free_code.iter().position(|free| free.length >= slots) {
                 let free = &mut self.free_code[index];
                 start = free.start;
-                free.start += length;
-                free.length -= length;
+                free.start += slots;
+                free.length -= slots;
                 if free.length == 0 {
                     self.free_code.remove(index);
                 }
             } else {
-                self.functions = match self.functions.checked_add(length) {
+                self.functions = match self.functions.checked_add(slots) {
                     Some(end) if end <= TABLE_LIMIT => end,
                     Some(_) | None => return Err(crate::Diagnostic::Exhausted),
                 };
             }
         } else {
-            self.functions = match self.functions.checked_add(length) {
+            self.functions = match self.functions.checked_add(slots) {
                 Some(end) if end <= TABLE_LIMIT => end,
                 Some(_) | None => return Err(crate::Diagnostic::Exhausted),
             };
         }
         let span = CodeSpan {
             start,
-            length,
+            length: slots,
             generation: self.generation,
         };
         if self.live_slots {
@@ -722,10 +722,10 @@ impl Compiler {
         let mut identity_charge = 0u64;
         let mut failure = None;
         while identity < retained {
-            let length = self.identities[identity].recipe.len();
-            match work.entries(length) {
+            let entries = self.identities[identity].recipe.len();
+            match work.entries(entries) {
                 Ok(()) => {
-                    identity_charge = identity_charge.saturating_add(length as u64);
+                    identity_charge = identity_charge.saturating_add(entries as u64);
                     identity += 1;
                 }
                 Err(problem) => {
