@@ -10,13 +10,6 @@
 //! `types` lists the graph's ordered input slot types (parameters never come
 //! from vector files). The caller compares it with the graph (`E-INTERFACE`).
 
-use alloc::{format, string::String, vec::Vec};
-
-use super::value::{format_diag, row, row_text, type_names, types};
-use crate::diag::Diagnostic;
-use crate::ir::ScalarType;
-use crate::sem::Value;
-
 /// Schema line.
 pub const SCHEMA: &str = "noble-ngraph-vectors/0";
 
@@ -24,9 +17,9 @@ pub const SCHEMA: &str = "noble-ngraph-vectors/0";
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Vectors {
     /// Declared input types.
-    pub types: Vec<ScalarType>,
+    pub types: alloc::vec::Vec<crate::ir::ScalarType>,
     /// Rows in file order.
-    pub rows: Vec<Vec<Value>>,
+    pub rows: alloc::vec::Vec<alloc::vec::Vec<crate::sem::Value>>,
 }
 
 /// Parses a vector file.
@@ -34,47 +27,53 @@ pub struct Vectors {
 /// # Errors
 /// `E-FORMAT` (schema, syntax, missing or duplicate `types`, row count),
 /// `E-LITERAL-INEXACT` or `E-LITERAL-NONFINITE`.
-pub fn parse(text: &str) -> Result<Vectors, Diagnostic> {
+pub fn parse(text: &str) -> Result<Vectors, crate::diag::Diagnostic> {
     let mut lines = super::lines(text);
-    let header = lines
-        .next()
-        .ok_or_else(|| format_diag(1, "missing noble-ngraph-vectors/0 schema line"))?;
+    let header = lines.next().ok_or_else(|| {
+        super::value::format_diag(1, "missing noble-ngraph-vectors/0 schema line")
+    })?;
     if header.tokens != [SCHEMA] {
-        return Err(format_diag(
+        return Err(super::value::format_diag(
             header.number,
             "missing noble-ngraph-vectors/0 schema line",
         ));
     }
-    let mut declared: Option<Vec<ScalarType>> = None;
-    let mut rows = Vec::new();
+    let mut declared: Option<alloc::vec::Vec<crate::ir::ScalarType>> = None;
+    let mut rows = alloc::vec::Vec::new();
     for l in lines {
         match l.tokens[0] {
             "types" => {
                 if declared.is_some() {
-                    return Err(format_diag(l.number, "duplicate types line"));
+                    return Err(super::value::format_diag(l.number, "duplicate types line"));
                 }
-                declared = Some(types(&l.tokens[1..], l.number)?);
+                declared = Some(super::value::types(&l.tokens[1..], l.number)?);
             }
             "v" => {
-                let t = declared
-                    .as_ref()
-                    .ok_or_else(|| format_diag(l.number, "a v row before the types line"))?;
-                rows.push(row(t, &l.tokens[1..], l.number)?);
+                let t = declared.as_ref().ok_or_else(|| {
+                    super::value::format_diag(l.number, "a v row before the types line")
+                })?;
+                rows.push(super::value::row(t, &l.tokens[1..], l.number)?);
             }
-            o => return Err(format_diag(l.number, format!("unknown line kind {o:?}"))),
+            o => {
+                return Err(super::value::format_diag(
+                    l.number,
+                    alloc::format!("unknown line kind {o:?}"),
+                ))
+            }
         }
     }
-    let types = declared.ok_or_else(|| format_diag(header.number, "missing types line"))?;
+    let types =
+        declared.ok_or_else(|| super::value::format_diag(header.number, "missing types line"))?;
     Ok(Vectors { types, rows })
 }
 
 /// Prints a vector file in canonical form.
 #[must_use]
-pub fn print(v: &Vectors) -> String {
-    let mut s = format!("{SCHEMA}\ntypes {}\n", type_names(&v.types));
+pub fn print(v: &Vectors) -> alloc::string::String {
+    let mut s = alloc::format!("{SCHEMA}\ntypes {}\n", super::value::type_names(&v.types));
     for r in &v.rows {
         s.push_str("v ");
-        s.push_str(&row_text(r));
+        s.push_str(&super::value::row_text(r));
         s.push('\n');
     }
     s
