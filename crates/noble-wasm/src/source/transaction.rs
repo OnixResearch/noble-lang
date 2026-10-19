@@ -133,18 +133,17 @@ impl Base {
 
 #[cfg(test)]
 mod tests {
-    use super::Base;
-    use crate::source::Compiler;
-    use noble_kernel::types::{ResourceKind, Ty};
 
     #[test]
     fn calculator_cumulative_prepare_commit_keeps_ids_beyond_ordinary_boundary() {
-        let mut compiler = Compiler::new_calculator();
+        let mut compiler = crate::source::Compiler::new_calculator();
         for index in 0..=crate::signatures::SOURCE_KEY_LIMIT {
             assert_eq!(
                 compiler
                     .signatures
-                    .intern(&[Ty::Resource(ResourceKind(index as u32))])
+                    .intern(&[noble_kernel::types::Ty::Resource(
+                        noble_kernel::types::ResourceKind(index as u32)
+                    )])
                     .ok(),
                 Some(index as u32)
             );
@@ -173,21 +172,25 @@ mod tests {
         assert_eq!(
             compiler
                 .signatures
-                .intern(&[Ty::Resource(ResourceKind(4096))])
+                .intern(&[noble_kernel::types::Ty::Resource(
+                    noble_kernel::types::ResourceKind(4096)
+                )])
                 .ok(),
             Some(4096)
         );
         let expected_id = compiler.signatures.len() as u32;
         let next_id = compiler
             .signatures
-            .intern(&[Ty::Resource(ResourceKind(4097))])
+            .intern(&[noble_kernel::types::Ty::Resource(
+                noble_kernel::types::ResourceKind(4097),
+            )])
             .unwrap_or_else(|_| panic!("calculator refused next stable signature"));
         assert_eq!(next_id, expected_id);
         let second = compiler
             .prepare(submission)
             .unwrap_or_else(|_| panic!("calculator cumulative prepare refused"));
         assert!(compiler.can_commit(&second));
-        let stale = Base::capture(
+        let stale = super::Base::capture(
             &compiler,
             compiler.identities.len(),
             compiler.signatures.len(),
@@ -199,12 +202,14 @@ mod tests {
         assert_eq!(
             compiler
                 .signatures
-                .intern(&[Ty::Resource(ResourceKind(4097))])
+                .intern(&[noble_kernel::types::Ty::Resource(
+                    noble_kernel::types::ResourceKind(4097)
+                )])
                 .ok(),
             Some(next_id)
         );
         assert!(!stale.matches(&compiler, &compiler));
-        let mut bogus = Base::capture(
+        let mut bogus = super::Base::capture(
             &compiler,
             compiler.identities.len(),
             compiler.signatures.len(),
@@ -212,7 +217,7 @@ mod tests {
         );
         bogus.signature_count = crate::signatures::CALCULATOR_SOURCE_KEY_LIMIT + 1;
         assert!(!bogus.matches(&compiler, &compiler));
-        let mut bogus = Base::capture(
+        let mut bogus = super::Base::capture(
             &compiler,
             compiler.identities.len(),
             compiler.signatures.len(),
