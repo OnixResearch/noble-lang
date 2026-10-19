@@ -10,19 +10,7 @@
 use alloc::rc::Rc;
 use alloc::{boxed::Box, format, string::String, vec, vec::Vec};
 
-use crate::check::{Budgets, CheckedGraph};
-use crate::compiled::COMPILER_REVISION;
-use crate::diag::{BudgetKind, Code, Diagnostic, Site};
-use crate::eval::{self, ScratchCounters, ScratchLease};
-use crate::grad::{self, DerivOptions, DERIV_POLICY};
 use crate::identity::IdentityScheme;
-use crate::ir::{
-    Canon, Digest, SubProfile, Subject, FACT_RULE_REVISION, IR_VERSION, SEMANTIC_REVISION,
-};
-use crate::prng::SplitMix64;
-use crate::sem::{self, Value};
-use crate::snapshot::ParamSnapshot;
-
 /// Optimizer revision.
 pub const ADAM: &str = "adam/0";
 
@@ -84,11 +72,11 @@ impl Adam {
     ///
     /// # Errors
     /// `E-PROFILE` naming the first value outside the domain.
-    pub fn admit(&self) -> Result<(), Diagnostic> {
+    pub fn admit(&self) -> Result<(), crate::diag::Diagnostic> {
         let refuse = |name: &str, value: f64, rule: &str| {
-            Err(Diagnostic::new(
-                Code::Profile,
-                Site::Graph,
+            Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::Profile,
+                crate::diag::Site::Graph,
                 format!(
                     "{ADAM} {name} 0x{:016x} is outside its domain ({rule})",
                     value.to_bits()
@@ -138,10 +126,10 @@ impl AdamState {
         }
     }
 
-    /// Digest of the exact state bytes.
+    /// crate::ir::Digest of the exact state bytes.
     #[must_use]
-    pub fn digest(&self, ids: &dyn IdentityScheme) -> Digest {
-        let mut c = Canon::new(ids, "noble.ngraph.adam-state.v0");
+    pub fn digest(&self, ids: &dyn IdentityScheme) -> crate::ir::Digest {
+        let mut c = crate::ir::Canon::new(ids, "noble.ngraph.adam-state.v0");
         c.u64(self.t);
         c.u64(self.b1t.to_bits());
         c.u64(self.b2t.to_bits());
@@ -165,8 +153,8 @@ pub struct Point {
 
 /// Ordered training-data digest.
 #[must_use]
-pub fn data_digest(ids: &dyn IdentityScheme, points: &[Point]) -> Digest {
-    let mut c = Canon::new(ids, "noble.ngraph.training-data.v0");
+pub fn data_digest(ids: &dyn IdentityScheme, points: &[Point]) -> crate::ir::Digest {
+    let mut c = crate::ir::Canon::new(ids, "noble.ngraph.training-data.v0");
     c.u64(points.len() as u64);
     for p in points {
         c.u64(p.inputs.len() as u64);
@@ -185,13 +173,13 @@ pub fn data_digest(ids: &dyn IdentityScheme, points: &[Point]) -> Digest {
 #[derive(Clone, Debug)]
 pub struct Contract {
     /// Model graph.
-    pub model: CheckedGraph,
+    pub model: crate::check::CheckedGraph,
     /// Separately admitted loss graph `(outputs, targets) → F32`.
-    pub loss: CheckedGraph,
+    pub loss: crate::check::CheckedGraph,
     /// Trainable param slots (all must be `param`).
     pub params: Vec<u32>,
     /// Derivative options.
-    pub deriv: DerivOptions,
+    pub deriv: crate::grad::DerivOptions,
     /// Optimizer hyperparameters.
     pub adam: Adam,
     /// Seed (`splitmix64/0`) used for initialization.
@@ -205,21 +193,21 @@ pub struct Contract {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Provenance {
     /// Parent snapshot id.
-    pub parent: Digest,
+    pub parent: crate::ir::Digest,
     /// Model subject (kind, identity and closure).
-    pub subject: Subject,
+    pub subject: crate::ir::Subject,
     /// Model `GraphLogicalId`.
-    pub graph: Digest,
-    /// Model sub-profile (with [`SEMANTIC_REVISION`]).
-    pub profile: SubProfile,
+    pub graph: crate::ir::Digest,
+    /// Model sub-profile (with [`crate::ir::SEMANTIC_REVISION`]).
+    pub profile: crate::ir::SubProfile,
     /// Fact-binding digest of the model.
-    pub facts: Digest,
+    pub facts: crate::ir::Digest,
     /// Loss graph id.
-    pub loss: Digest,
+    pub loss: crate::ir::Digest,
     /// Training-data digest.
-    pub data: Digest,
-    /// Derivative opt-ins (policy [`DERIV_POLICY`]).
-    pub deriv: DerivOptions,
+    pub data: crate::ir::Digest,
+    /// Derivative opt-ins (policy [`crate::grad::DERIV_POLICY`]).
+    pub deriv: crate::grad::DerivOptions,
     /// Seed (PRNG [`crate::prng::PRNG`]).
     pub seed: u64,
     /// Optimizer hyperparameters (optimizer [`ADAM`]).
@@ -229,9 +217,9 @@ pub struct Provenance {
     /// Tool revisions.
     pub tools: String,
     /// Resulting snapshot id.
-    pub result: Digest,
+    pub result: crate::ir::Digest,
     /// Resulting optimizer-state digest.
-    pub optimizer_state: Digest,
+    pub optimizer_state: crate::ir::Digest,
 }
 
 /// The result of a training call: the last published snapshot pair and its
@@ -239,9 +227,9 @@ pub struct Provenance {
 #[derive(Clone, Debug)]
 pub struct Trained {
     /// Initial snapshot `S₀` (the parent).
-    pub initial: ParamSnapshot,
+    pub initial: crate::snapshot::ParamSnapshot,
     /// Last published snapshot.
-    pub snapshot: ParamSnapshot,
+    pub snapshot: crate::snapshot::ParamSnapshot,
     /// Last published optimizer state.
     pub state: Rc<AdamState>,
     /// Loss before each step, then the final loss (binary64 mean).
@@ -255,9 +243,9 @@ pub struct Trained {
 pub struct Stopped {
     /// The refusal (`E-NONFINITE-UPDATE`, `C-CANCELLED`, `G-FACT-FALSE`,
     /// `E-FACT-INPUT`, admission codes).
-    pub diagnostic: Diagnostic,
+    pub diagnostic: crate::diag::Diagnostic,
     /// The last published snapshot (unchanged by the failed step), if any.
-    pub last: Option<ParamSnapshot>,
+    pub last: Option<crate::snapshot::ParamSnapshot>,
     /// Steps published before stopping.
     pub published_steps: u64,
 }
@@ -266,7 +254,7 @@ pub struct Stopped {
 /// `[-0.5, 0.5)` in binary64, named RNE conversion to binary32.
 #[must_use]
 pub fn init_params(seed: u64, n: usize) -> Vec<f32> {
-    let mut r = SplitMix64::new(seed);
+    let mut r = crate::prng::SplitMix64::new(seed);
     (0..n).map(|_| (r.next_f64() - 0.5) as f32).collect()
 }
 
@@ -274,7 +262,12 @@ pub fn init_params(seed: u64, n: usize) -> Vec<f32> {
 #[must_use]
 pub fn tools() -> String {
     format!(
-        "{TOOL_REVISION}; {IR_VERSION}; {SEMANTIC_REVISION}; {FACT_RULE_REVISION}; {COMPILER_REVISION}"
+        "{}; {}; {}; {}; {}",
+        TOOL_REVISION,
+        crate::ir::IR_VERSION,
+        crate::ir::SEMANTIC_REVISION,
+        crate::ir::FACT_RULE_REVISION,
+        crate::compiled::COMPILER_REVISION
     )
 }
 
@@ -286,23 +279,29 @@ pub fn tools() -> String {
 /// or `E-INTERFACE` (loss graph: not `ngraph-f32/0`, a `param` slot, fewer
 /// input slots than model outputs, or not exactly one output).
 pub fn admit(
-    model: &CheckedGraph,
-    loss: &CheckedGraph,
+    model: &crate::check::CheckedGraph,
+    loss: &crate::check::CheckedGraph,
     params: &[u32],
-    deriv: &DerivOptions,
-) -> Result<(), Diagnostic> {
+    deriv: &crate::grad::DerivOptions,
+) -> Result<(), crate::diag::Diagnostic> {
     if model.param_slots() != params {
         let k = params.first().copied().unwrap_or(0);
-        return Err(Diagnostic::new(
-            Code::ParamUndeclared,
-            Site::Slot(k),
+        return Err(crate::diag::Diagnostic::new(
+            crate::diag::Code::ParamUndeclared,
+            crate::diag::Site::Slot(k),
             "params must be every param slot in order",
         ));
     }
-    grad::admit(model, params, deriv)?;
+    crate::grad::admit(model, params, deriv)?;
     let lg = loss.graph();
-    let interface = |why: &str| Err(Diagnostic::new(Code::Interface, Site::Graph, why));
-    if lg.profile != SubProfile::F32 {
+    let interface = |why: &str| {
+        Err(crate::diag::Diagnostic::new(
+            crate::diag::Code::Interface,
+            crate::diag::Site::Graph,
+            why,
+        ))
+    };
+    if lg.profile != crate::ir::SubProfile::F32 {
         return interface("the loss graph must be ngraph-f32/0");
     }
     if !loss.param_slots().is_empty() {
@@ -319,21 +318,24 @@ pub fn admit(
 
 /// Number of target values each training point must carry for `loss`.
 #[must_use]
-pub fn target_count(model: &CheckedGraph, loss: &CheckedGraph) -> usize {
+pub fn target_count(
+    model: &crate::check::CheckedGraph,
+    loss: &crate::check::CheckedGraph,
+) -> usize {
     loss.graph()
         .slots
         .len()
         .saturating_sub(model.graph().outputs.len())
 }
 
-fn check_data(c: &Contract) -> Result<(), Diagnostic> {
+fn check_data(c: &Contract) -> Result<(), crate::diag::Diagnostic> {
     let inputs = c.model.graph().input_slots().len();
     let targets = target_count(&c.model, &c.loss);
     for (i, p) in c.data.iter().enumerate() {
         if p.inputs.len() != inputs || p.targets.len() != targets {
-            return Err(Diagnostic::new(
-                Code::Interface,
-                Site::Graph,
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::Interface,
+                crate::diag::Site::Graph,
                 format!(
                     "data point {i} has {} inputs and {} targets; the model takes {inputs} and the loss {targets}",
                     p.inputs.len(),
@@ -345,12 +347,12 @@ fn check_data(c: &Contract) -> Result<(), Diagnostic> {
     Ok(())
 }
 
-fn values_f32(slots: &[Value]) -> Vec<f32> {
+fn values_f32(slots: &[crate::sem::Value]) -> Vec<f32> {
     slots
         .iter()
         .map(|v| match v {
-            Value::F32(b) => f32::from_bits(*b),
-            Value::I64(_) | Value::Bool(_) => f32::NAN,
+            crate::sem::Value::F32(b) => f32::from_bits(*b),
+            crate::sem::Value::I64(_) | crate::sem::Value::Bool(_) => f32::NAN,
         })
         .collect()
 }
@@ -363,15 +365,16 @@ fn values_f32(slots: &[Value]) -> Vec<f32> {
 /// in canonical order.
 fn loss_and_grad(
     c: &Contract,
-    params: &ParamSnapshot,
+    params: &crate::snapshot::ParamSnapshot,
     evaluated_nodes: &mut Option<&mut u64>,
-) -> Result<(f64, Vec<f64>, bool), Diagnostic> {
+) -> Result<(f64, Vec<f64>, bool), crate::diag::Diagnostic> {
     let mut grad_sum = vec![0f64; c.params.len()];
     let mut loss_sum = 0f64;
     let mut finite = true;
     for p in &c.data {
-        let model_slots = eval::preflight(&c.model, &eval::f32_inputs(&p.inputs), Some(params))?;
-        let (l, gs) = grad::objective_observed(
+        let model_slots =
+            crate::eval::preflight(&c.model, &crate::eval::f32_inputs(&p.inputs), Some(params))?;
+        let (l, gs) = crate::grad::objective_observed(
             &c.model,
             &c.loss,
             &values_f32(&model_slots),
@@ -407,7 +410,7 @@ fn adam_step(a: &Adam, s: &AdamState, p: &[f32], g: &[f64]) -> (Vec<f32>, AdamSt
         n.v[k] = a.beta2 * s.v[k] + (1.0 - a.beta2) * (g[k] * g[k]);
         let mhat = n.m[k] / (1.0 - n.b1t);
         let vhat = n.v[k] / (1.0 - n.b2t);
-        let upd = a.lr * mhat / (sem::soft::sqrt_f64(vhat) + a.eps);
+        let upd = a.lr * mhat / (crate::sem::soft::sqrt_f64(vhat) + a.eps);
         out.push((f64::from(p[k]) - upd) as f32);
     }
     (out, n)
@@ -419,14 +422,14 @@ pub struct TrainControl<'a> {
     /// Cancel before step `t` (1-based) when this returns `true`.
     pub cancel_before_step: Option<&'a dyn Fn(u64) -> bool>,
     /// Scratch instrumentation (one lease per step), lent for the call.
-    pub scratch: Option<&'a mut ScratchCounters>,
+    pub scratch: Option<&'a mut crate::eval::ScratchCounters>,
     /// Actual forward value operations and guard/index validation events.
     /// This is not the evaluator's historical fuel/Report node accounting;
     /// backward and optimizer work are not graph evaluation events.
     pub evaluated_nodes: Option<&'a mut u64>,
-    /// Budgets (D5): `optimizer_steps`, `backward_scratch` and
+    /// crate::check::Budgets (D5): `optimizer_steps`, `backward_scratch` and
     /// `snapshot_bytes` are charged; a raised budget is `E-PROFILE`.
-    pub budgets: Budgets,
+    pub budgets: crate::check::Budgets,
 }
 
 /// Runs `steps` `adam/0` steps from `init` (or from the seed). Each step
@@ -437,17 +440,18 @@ pub struct TrainControl<'a> {
 pub fn train(
     ids: &dyn IdentityScheme,
     c: &Contract,
-    init: Option<&ParamSnapshot>,
+    init: Option<&crate::snapshot::ParamSnapshot>,
     steps: u64,
     control: &mut TrainControl<'_>,
 ) -> Result<Trained, Box<Stopped>> {
-    let stop = |d: Diagnostic, last: Option<ParamSnapshot>, k: u64| {
-        Box::new(Stopped {
-            diagnostic: d,
-            last,
-            published_steps: k,
-        })
-    };
+    let stop =
+        |d: crate::diag::Diagnostic, last: Option<crate::snapshot::ParamSnapshot>, k: u64| {
+            Box::new(Stopped {
+                diagnostic: d,
+                last,
+                published_steps: k,
+            })
+        };
     let budgets = &control.budgets;
     budgets.validate_policy().map_err(|d| stop(d, None, 0))?;
     c.adam.admit().map_err(|d| stop(d, None, 0))?;
@@ -455,7 +459,11 @@ pub fn train(
     check_data(c).map_err(|d| stop(d, None, 0))?;
     if steps > budgets.optimizer_steps {
         return Err(stop(
-            Diagnostic::budget(BudgetKind::Steps, budgets.optimizer_steps, steps),
+            crate::diag::Diagnostic::budget(
+                crate::diag::BudgetKind::Steps,
+                budgets.optimizer_steps,
+                steps,
+            ),
             None,
             0,
         ));
@@ -463,8 +471,8 @@ pub fn train(
     let step_bytes = (c.model.node_count() + c.loss.node_count()) as u64 * 16;
     if step_bytes > budgets.backward_scratch {
         return Err(stop(
-            Diagnostic::budget(
-                BudgetKind::BackwardScratch,
+            crate::diag::Diagnostic::budget(
+                crate::diag::BudgetKind::BackwardScratch,
                 budgets.backward_scratch,
                 step_bytes,
             ),
@@ -472,8 +480,9 @@ pub fn train(
             0,
         ));
     }
-    let snapshot =
-        |values: &[f32]| ParamSnapshot::with_budget(ids, &c.model, values, budgets.snapshot_bytes);
+    let snapshot = |values: &[f32]| {
+        crate::snapshot::ParamSnapshot::with_budget(ids, &c.model, values, budgets.snapshot_bytes)
+    };
     let s0 = match init {
         Some(s) => {
             s.check_use(&c.model).map_err(|d| stop(d, None, 0))?;
@@ -487,16 +496,16 @@ pub fn train(
     for t in 1..=steps {
         if control.cancel_before_step.is_some_and(|f| f(t)) {
             return Err(stop(
-                Diagnostic::new(
-                    Code::Cancelled,
-                    Site::Graph,
+                crate::diag::Diagnostic::new(
+                    crate::diag::Code::Cancelled,
+                    crate::diag::Site::Graph,
                     format!("cancelled before step {t}"),
                 ),
                 Some(current),
                 t - 1,
             ));
         }
-        let lease = ScratchLease::acquire(control.scratch.as_deref_mut(), step_bytes);
+        let lease = crate::eval::ScratchLease::acquire(control.scratch.as_deref_mut(), step_bytes);
         let (l, g, finite) = match loss_and_grad(c, &current, &mut control.evaluated_nodes) {
             Ok(r) => r,
             Err(d) => {
@@ -508,9 +517,9 @@ pub fn train(
         if !finite || g.iter().any(|x| !x.is_finite()) {
             drop(lease);
             return Err(stop(
-                Diagnostic::new(
-                    Code::NonfiniteUpdate,
-                    Site::Graph,
+                crate::diag::Diagnostic::new(
+                    crate::diag::Code::NonfiniteUpdate,
+                    crate::diag::Site::Graph,
                     format!("non-finite gradient at step {t}"),
                 ),
                 Some(current),
@@ -572,17 +581,21 @@ pub fn replay(
     ids: &dyn IdentityScheme,
     c: &Contract,
     p: &Provenance,
-    parent: Option<&ParamSnapshot>,
+    parent: Option<&crate::snapshot::ParamSnapshot>,
     control: &mut TrainControl<'_>,
 ) -> Result<Trained, Box<Stopped>> {
-    let refuse = |code: Code, what: &str| {
+    let refuse = |code: crate::diag::Code, what: &str| {
         Box::new(Stopped {
-            diagnostic: Diagnostic::new(code, Site::Graph, format!("provenance {what} differs")),
+            diagnostic: crate::diag::Diagnostic::new(
+                code,
+                crate::diag::Site::Graph,
+                format!("provenance {what} differs"),
+            ),
             last: None,
             published_steps: 0,
         })
     };
-    let stale = |what: &str| refuse(Code::SnapshotStale, what);
+    let stale = |what: &str| refuse(crate::diag::Code::SnapshotStale, what);
     if c.model.id() != p.graph {
         return Err(stale("graph"));
     }
@@ -600,7 +613,7 @@ pub fn replay(
     }
     let parent_id = match parent {
         Some(s) => s.id(),
-        None => ParamSnapshot::with_budget(
+        None => crate::snapshot::ParamSnapshot::with_budget(
             ids,
             &c.model,
             &init_params(c.seed, c.params.len()),
@@ -620,7 +633,10 @@ pub fn replay(
     }
     let t = train(ids, c, parent, p.steps, control)?;
     if t.snapshot.id() != p.result || t.provenance.optimizer_state != p.optimizer_state {
-        return Err(refuse(Code::SnapshotReplay, "replayed snapshot"));
+        return Err(refuse(
+            crate::diag::Code::SnapshotReplay,
+            "replayed snapshot",
+        ));
     }
     Ok(t)
 }
@@ -628,5 +644,5 @@ pub fn replay(
 /// The derivative policy revision named by every training contract.
 #[must_use]
 pub const fn policy() -> &'static str {
-    DERIV_POLICY
+    crate::grad::DERIV_POLICY
 }
