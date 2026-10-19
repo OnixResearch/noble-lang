@@ -1,0 +1,46 @@
+{
+  "schema": "noble-effect-oracle-receipt/v1",
+  "oracle": "finite-effects/v1",
+  "source_revision": "1b14b844e05368c11be05f9089425996ba998c5d",
+  "dirty": false,
+  "command": "nix develop --command cargo test -p noble-contracts --lib inference::effects::oracle -- --nocapture",
+  "toolchain": {
+    "rust": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)"
+  },
+  "bounds": {
+    "universe_bits_max": 3,
+    "holes_max": 3,
+    "nodes_max": 12,
+    "exhaustive_universe_bits_max": 1,
+    "exhaustive_nodes_max": 3,
+    "exhaustive_equations_max": 1,
+    "seeded_nodes_max": 11,
+    "assignments_max": 1048576,
+    "work_low": 1,
+    "work_sufficient": 2000000
+  },
+  "seeds": [
+    1,
+    "0x9e3779b97f4a7c15",
+    "0xdeadbeefcafebabe",
+    "0x123456789abcdef0"
+  ],
+  "counts": {
+    "cases": 1314,
+    "exhaustive_cases": 1300,
+    "agree_accept": 1227,
+    "agree_refuse": 86,
+    "conservative_refusal": 1,
+    "wrong_assignment": 0,
+    "unsound_accept": 0,
+    "mutants_caught": 6,
+    "seeds": 12,
+    "low_work_exhausted": 1
+  },
+  "conservative_refusals": [
+    "conservative-valid-goal"
+  ],
+  "minimized_discrepancies": [],
+  "elapsed_ms": 11347
+}
