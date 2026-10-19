@@ -118,7 +118,7 @@
     "crates/noble-wasm/wit/syndicate.wit": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
     "dylint.toml": "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
     "flake.lock": "3c0558d476937ec8d50f2e2185847ea33ea9d394e5f228f6f103b9fa5ffc3d2d",
-    "flake.nix": "c220504abd89a031c07ea62894b2846fc7b614efd3a58545d6554054be305640",
+    "flake.nix": "52fb638350b3a88c8804cb9e97058e6a9ba89c445e578a1d6d0ad6d255eb5423",
     "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
     "nix/boundary-controls.nix": "8d773e488a4de1c34c531d0090796475181228e40f81ca3dfcde74e102fa2ab0",
     "nix/m3-wasm-app.nix": "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",

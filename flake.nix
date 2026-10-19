@@ -167,6 +167,7 @@
           nickel
           octetGate
           ;
+        standards = standards;
         wasmtimeSource = selectedWasmtimeSource;
         inherit reviewedVendor reviewedCargoConfig;
         inherit cargoOctet;
