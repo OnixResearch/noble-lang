@@ -14,7 +14,7 @@ pub(super) fn compile_json(metrics: &noble_wasm::source::CompileMetrics) -> serd
         "environment_rows": metrics.environment_rows,
         "environment_work": metrics.environment_work,
         "named_bodies": metrics.named_bodies,
-        "max_type_size": metrics.max_type_size,
+        "max_type_size": metrics.max_type_nodes,
         "signature_keys": metrics.signature_keys,
         "signature_key_charge": metrics.signature_key_charge,
         "identity_charge": metrics.identity_charge,
@@ -23,7 +23,7 @@ pub(super) fn compile_json(metrics: &noble_wasm::source::CompileMetrics) -> serd
         "wat_bytes": metrics.wat_bytes,
         "caps": {
             "work_issued": caps.work_issued,
-            "type_size": metrics.type_size_limit,
+            "type_size": metrics.type_nodes_cap,
             "environment_rows": caps.environment_rows,
             "named_bodies": caps.named_bodies,
             "signature_keys": caps.signature_keys,

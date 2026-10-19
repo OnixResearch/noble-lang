@@ -908,7 +908,7 @@ mod tests {
             "target_metadata":{"root_program_index":prepared.target_metadata()
                 .ok_or("missing root metadata")?.root_program_index,
                 "stack_out":["Program([I64]->[I64]!{})"]},
-            "code_span":{"start":span.start,"length":span.length,"generation":span.generation},
+            "code_span":{"start":span.start,"length":span.slots,"generation":span.generation},
             "program_metadata":metadata
         });
         let binary = super::super::assemble_slot(prepared.wat())?;
@@ -964,7 +964,7 @@ mod tests {
         }
         let init_code = format!(
             "(table.init $code (i32.const {}) (i32.const 0) (i32.const {}))",
-            span.start, span.length
+            span.start, span.slots
         );
         if !wat.contains(&init_code) {
             return Err("test could not locate checked table initializer".into());
@@ -1037,7 +1037,7 @@ mod tests {
         )?;
         let mut later_install = install.clone();
         later_install["code_span"] = serde_json::json!({
-            "start":later_span.start,"length":later_span.length,"generation":later_span.generation
+            "start":later_span.start,"length":later_span.slots,"generation":later_span.generation
         });
         later_install["program_metadata"] = serde_json::json!(later
             .program_metadata()
