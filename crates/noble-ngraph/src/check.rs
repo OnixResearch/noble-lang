@@ -138,7 +138,7 @@ fn budget(
 /// An input/param fact validated before evaluation (`E-FACT-INPUT`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InputFact {
-    /// crate::ir::Fact record index in the graph.
+    /// Fact record index in the graph.
     pub record: usize,
     /// Slot node.
     pub node: crate::ir::NodeId,
@@ -146,7 +146,7 @@ pub struct InputFact {
     pub slot: u32,
     /// Slot kind.
     pub kind: crate::ir::SlotKind,
-    /// crate::ir::Fact.
+    /// Fact.
     pub fact: crate::ir::Fact,
 }
 
