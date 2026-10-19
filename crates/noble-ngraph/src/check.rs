@@ -138,15 +138,15 @@ fn budget(
 /// An input/param fact validated before evaluation (`E-FACT-INPUT`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InputFact {
-    /// Fact record index in the graph.
+    /// crate::ir::Fact record index in the graph.
     pub record: usize,
-    /// Slot node.
+    /// crate::ir::Slot node.
     pub node: crate::ir::NodeId,
     /// Interface slot.
     pub slot: u32,
-    /// Slot kind.
+    /// crate::ir::Slot kind.
     pub kind: crate::ir::SlotKind,
-    /// Fact.
+    /// crate::ir::Fact.
     pub fact: crate::ir::Fact,
 }
 
@@ -233,7 +233,7 @@ impl CheckedGraph {
     }
 
     /// crate::ir::Fact-binding digest: `H(noble.ngraph.fact-bindings.v0 ‖ GraphLogicalId ‖
-    /// fact-rule revision ‖ fact records)`. Fact records are not part of
+    /// fact-rule revision ‖ fact records)`. crate::ir::Fact records are not part of
     /// `GraphLogicalId`, so snapshot binding also compares this (design D6).
     #[must_use]
     pub fn fact_bindings(&self, ids: &dyn IdentityScheme) -> crate::ir::Digest {
@@ -263,24 +263,74 @@ impl CheckedGraph {
 }
 
 /// Estimated retained bytes of a graph (charged against `graph_bytes`).
+///
+/// The estimate covers the `crate::ir::Graph` header plus every graph-owned heap
+/// allocation: the interface slot and output vectors, node headers with their
+/// operation payloads and `origin.expansion` vectors, fact headers with
+/// `one-hot` groups and `derived`/`evidence` provenance payloads, the subject
+/// closure, and the input/output shape vectors together with the boxed pair
+/// children of every shape tree.
+///
+/// Element storage is charged at `alloc::vec::Vec::capacity`, so spare capacity retained
+/// by a producer counts against the budget. The estimator is conservative and
+/// never wraps: every sum and product saturates, so an unrepresentable total
+/// is charged as `u64::MAX` and refused rather than admitted. Allocator
+/// bookkeeping and the checker's own derived caches (`CheckedGraph` maps and
+/// layers) are outside this contract.
 #[must_use]
 pub fn retained_bytes(g: &crate::ir::Graph) -> u64 {
+    /// Element storage retained by one vector, at its current capacity.
+    fn vec_bytes<T>(v: &alloc::vec::Vec<T>) -> u64 {
+        (v.capacity() as u64).saturating_mul(core::mem::size_of::<T>() as u64)
+    }
+    /// Bytes retained by one shape tree: one allocation of two `crate::ir::ShapeTree`
+    /// per pair node, counted recursively.
+    fn shape_pairs(t: &crate::ir::ShapeTree) -> u64 {
+        match t.node() {
+            crate::ir::ShapeNode::Pair(a, b) => 2u64
+                .saturating_mul(core::mem::size_of::<crate::ir::ShapeTree>() as u64)
+                .saturating_add(shape_pairs(a))
+                .saturating_add(shape_pairs(b)),
+            crate::ir::ShapeNode::Scalar | crate::ir::ShapeNode::Unit => 0,
+        }
+    }
     let mut b = core::mem::size_of::<crate::ir::Graph>() as u64;
-    b += (g.slots.len() * core::mem::size_of::<crate::ir::Slot>()) as u64;
-    b += (g.outputs.len() * 4) as u64;
+    b = b.saturating_add(vec_bytes(&g.slots));
+    b = b.saturating_add(vec_bytes(&g.outputs));
     for n in &g.nodes {
-        b += core::mem::size_of::<crate::ir::Node>() as u64;
-        b += match &n.op {
-            crate::ir::Op::F32Affine { terms, .. } => (terms.len() * 12) as u64,
-            crate::ir::Op::F32Index { table, .. } => (table.len() * 4) as u64,
+        b = b.saturating_add(core::mem::size_of::<crate::ir::Node>() as u64);
+        b = b.saturating_add(match &n.op {
+            crate::ir::Op::F32Affine { terms, .. } => vec_bytes(terms),
+            crate::ir::Op::F32Index { table, .. } => vec_bytes(table),
             crate::ir::Op::Guard {
                 fact: crate::ir::Fact::OneHot { group, .. },
                 ..
-            } => (group.len() * 4) as u64,
+            } => vec_bytes(group),
             _ => 0,
-        };
+        });
+        if let Some(origin) = &n.origin {
+            b = b.saturating_add(vec_bytes(&origin.expansion));
+        }
     }
-    b += (g.facts.len() * core::mem::size_of::<crate::ir::FactRecord>()) as u64;
+    for f in &g.facts {
+        b = b.saturating_add(core::mem::size_of::<crate::ir::FactRecord>() as u64);
+        b = b.saturating_add(match &f.fact {
+            crate::ir::Fact::OneHot { group, .. } => vec_bytes(group),
+            _ => 0,
+        });
+        b = b.saturating_add(match &f.provenance {
+            crate::ir::Provenance::Derived(rule) => rule.capacity() as u64,
+            crate::ir::Provenance::Evidence(bytes) => vec_bytes(bytes),
+            _ => 0,
+        });
+    }
+    b = b.saturating_add(vec_bytes(&g.subject.closure));
+    for shapes in [&g.input_shape, &g.output_shape].into_iter().flatten() {
+        b = b.saturating_add(vec_bytes(shapes));
+        for t in shapes {
+            b = b.saturating_add(shape_pairs(t));
+        }
+    }
     b
 }
 
