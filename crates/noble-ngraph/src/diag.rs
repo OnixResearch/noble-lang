@@ -1,11 +1,10 @@
 //! D6 stage-scoped diagnostics. Every refusal carries a stable code; none
 //! executes any graph node.
-
-use crate::ir::{Fact, NodeId, SourceRef};
-use alloc::{borrow::ToOwned, format, string::String};
+use alloc::borrow::ToOwned;
 
 /// D5 budget kinds (`E-BUDGET-<kind>`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+
 pub enum BudgetKind {
     /// Extraction work units.
     Work,
@@ -192,9 +191,9 @@ pub enum Code {
 impl Code {
     /// The stable D6 code string.
     #[must_use]
-    pub fn as_string(self) -> String {
+    pub fn as_string(self) -> alloc::string::String {
         match self {
-            Self::Budget(k) => format!("E-BUDGET-{}", k.name()),
+            Self::Budget(k) => alloc::format!("E-BUDGET-{}", k.name()),
             other => other.base().to_owned(),
         }
     }
@@ -329,13 +328,13 @@ pub enum Site {
     /// Whole request/graph.
     Graph,
     /// A graph node.
-    Node(NodeId),
+    Node(crate::ir::NodeId),
     /// An interface slot.
     Slot(u32),
     /// A fact record index.
     Fact(usize),
     /// A source node (extraction).
-    Source(SourceRef),
+    Source(crate::ir::SourceRef),
     /// A text-form line (1-based).
     Line(usize),
 }
@@ -344,17 +343,17 @@ impl Site {
     /// Stable rendering: `graph`, `node %N`, `slot K`, `fact I`,
     /// `source D:N` (`root:N` for the root body) or `line L`.
     #[must_use]
-    pub fn render(&self) -> String {
+    pub fn render(&self) -> alloc::string::String {
         match self {
             Self::Graph => "graph".to_owned(),
-            Self::Node(n) => format!("node %{}", n.0),
-            Self::Slot(k) => format!("slot {k}"),
-            Self::Fact(i) => format!("fact {i}"),
+            Self::Node(n) => alloc::format!("node %{}", n.0),
+            Self::Slot(k) => alloc::format!("slot {k}"),
+            Self::Fact(i) => alloc::format!("fact {i}"),
             Self::Source(s) => match s.definition {
-                Some(d) => format!("source {d}:{}", s.node),
-                None => format!("source root:{}", s.node),
+                Some(d) => alloc::format!("source {d}:{}", s.node),
+                None => alloc::format!("source root:{}", s.node),
             },
-            Self::Line(l) => format!("line {l}"),
+            Self::Line(l) => alloc::format!("line {l}"),
         }
     }
 }
@@ -370,15 +369,15 @@ pub struct Diagnostic {
     /// Budget limit and observed count, for `E-BUDGET-*`.
     pub budget: Option<(u64, u64)>,
     /// Failing fact, for `G-FACT-FALSE`, `E-FACT-*`.
-    pub fact: Option<Fact>,
+    pub fact: Option<crate::ir::Fact>,
     /// Human-readable detail (not part of the stable contract).
-    pub detail: String,
+    pub detail: alloc::string::String,
 }
 
 impl Diagnostic {
     /// A diagnostic with code, site and detail.
     #[must_use]
-    pub fn new(code: Code, site: Site, detail: impl Into<String>) -> Self {
+    pub fn new(code: Code, site: Site, detail: impl Into<alloc::string::String>) -> Self {
         Self {
             code,
             site,
@@ -390,7 +389,11 @@ impl Diagnostic {
 
     /// `E-GRAPH-MALFORMED(kind)` at `site`.
     #[must_use]
-    pub fn malformed(kind: Malformed, site: Site, detail: impl Into<String>) -> Self {
+    pub fn malformed(
+        kind: Malformed,
+        site: Site,
+        detail: impl Into<alloc::string::String>,
+    ) -> Self {
         Self::new(Code::GraphMalformed(kind), site, detail)
     }
 
@@ -402,20 +405,20 @@ impl Diagnostic {
             site: Site::Graph,
             budget: Some((limit, observed)),
             fact: None,
-            detail: format!("observed {observed} > limit {limit}"),
+            detail: alloc::format!("observed {observed} > limit {limit}"),
         }
     }
 
     /// Attaches a fact.
     #[must_use]
-    pub fn with_fact(mut self, fact: Fact) -> Self {
+    pub fn with_fact(mut self, fact: crate::ir::Fact) -> Self {
         self.fact = Some(fact);
         self
     }
 
     /// Stable code string.
     #[must_use]
-    pub fn code_string(&self) -> String {
+    pub fn code_string(&self) -> alloc::string::String {
         self.code.as_string()
     }
 }
