@@ -23,6 +23,10 @@ impl CheckedDefinitionId {
 /// that the checked target lies outside the existing pure unary I64 theorem;
 /// in particular this is not a generic Account/effect/capture proof.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the type name is the domain term at its use sites and renaming would churn the extracted subject"
+)]
 pub enum SourceProofRefusal {
     UnsupportedProfile,
     StaleContext,
@@ -74,6 +78,14 @@ impl CheckedSelectedTarget<'_> {
         &self.body
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
+    )]
     /// Locate an operation in the original selected definition, including a
     /// quotation body's operations. This is source correspondence only; the
     /// compiler and host must still bind the emitted instruction and value.
@@ -117,7 +129,7 @@ impl CheckedSelectedTarget<'_> {
             .get(start..end)
             .filter(|bytes| !bytes.is_empty())
             .ok_or(SourceProofRefusal::MismatchedSource)?;
-        let valid = match (&source.kind, checked) {
+        let is_valid = match (&source.kind, checked) {
             (
                 super::Kind::Literal(Lit::I64(a)),
                 Node::Literal {
@@ -148,7 +160,7 @@ impl CheckedSelectedTarget<'_> {
             }
             _ => false,
         };
-        if !valid {
+        if !is_valid {
             return Err(SourceProofRefusal::MismatchedSource);
         }
         if self
@@ -164,6 +176,14 @@ impl CheckedSelectedTarget<'_> {
         Ok(source.span)
     }
 
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
+    )]
     /// Authenticate a quote occurrence in the retained source and the
     /// independently rechecked selected definition. The runtime value that
     /// will be captured is not known until the VM executes this instruction.
@@ -271,6 +291,10 @@ impl CheckedQuoteSite<'_> {
 /// Expected host context, not an attestation. The host must separately
 /// authenticate its pinned checker and the installed artifact bytes.
 #[derive(Clone, Copy)]
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the type name is the domain term at its use sites and renaming would churn the extracted subject"
+)]
 pub struct ProofContext<'a> {
     pub module_generation: u64,
     pub model_revision: &'a str,
@@ -281,6 +305,10 @@ pub struct ProofContext<'a> {
 /// record. This is deliberately NOT a proof receipt or release authorization:
 /// `commit_verified` trusts its host callback, and this no_std crate cannot
 /// attest a Lean process, its assumptions, or installed Wasm bytes.
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the type name is the domain term at its use sites and renaming would churn the extracted subject"
+)]
 pub struct SourceCorrespondenceCandidate<'a> {
     pub(crate) target_id: CheckedDefinitionId,
     pub(crate) target_generation: u64,
@@ -320,6 +348,14 @@ impl SourceCorrespondenceCandidate<'_> {
 }
 
 impl super::Session {
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
+    )]
     /// Select only the current retained definition from its complete accepted
     /// single-invocation submission. Recheck both root and definition body in
     /// the exact emitted environment; declarations alone have no authority.
@@ -333,6 +369,14 @@ impl super::Session {
             contracts::Behavior,
             untrusted::{Node, Outcome, Request},
         };
+        #[expect(
+            tigerstyle::non_trait_imports,
+            reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+        )]
+        #[expect(
+            tigerstyle::renamed_imports,
+            reason = "Owner: noble-contracts; the local alias matches the domain vocabulary used throughout this module"
+        )]
         use SourceProofRefusal as Refusal;
         if self.live_slots.is_none() {
             return Err(Refusal::UnsupportedProfile);

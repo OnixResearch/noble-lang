@@ -3,6 +3,10 @@
     reason = "Owner: noble-maintainers; preparation's mutable parameters are only its request-local meter; draft trees and output buffers are newly owned, while source bytes, supplied types, and the committed session are borrowed unchanged until an explicit later commit."
 )]
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use alloc::borrow::Cow;
 
 impl super::Session {
@@ -26,6 +30,10 @@ impl super::Session {
         self.prepare_signed_metered(source_bytes, inputs, signature, &mut meter)
     }
 
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
     pub(super) fn prepare_signed_metered(
         &self,
         source_bytes: &[u8],
@@ -189,10 +197,6 @@ impl super::Session {
         })
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; calculator declared inference borrows its retained environment, while ordinary profiles still clone bindings or build a checked bootstrap environment."
-    )]
     pub(super) fn environment(
         &self,
     ) -> Result<Cow<'_, noble_kernel::contracts::Env>, crate::Diagnostic> {
@@ -240,6 +244,14 @@ impl super::Session {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 fn declaration(
     tree: super::Tree,
     name: alloc::string::String,

@@ -50,7 +50,7 @@ pub struct Reusable {
     epoch: CanonicalEpoch,
     next: super::Compiler,
     code_start: u32,
-    code_length: u32,
+    code_slots: u32,
     work_issued: u64,
     metrics: super::CompileMetrics,
     wat: alloc::vec::Vec<u8>,
@@ -134,7 +134,7 @@ impl super::Compiler {
             next,
             code_span: super::CodeSpan {
                 start: artifact.code_start,
-                length: artifact.code_length,
+                slots: artifact.code_slots,
                 generation,
             },
             live_sites: alloc::vec::Vec::new(),
@@ -176,21 +176,21 @@ impl super::Prepared {
     /// live, selected, origin or resource metadata, is reusable.
     pub fn reusable(&self) -> Option<Reusable> {
         let epoch = self.epoch.clone()?;
-        if !self.live_sites.is_empty()
+        let has_live_metadata = !self.live_sites.is_empty()
             || self.target_metadata.is_some()
             || !self.program_metadata.is_empty()
             || !self.named_targets.is_empty()
             || self.selected_target.is_some()
             || self.selected_origin.is_some()
-            || !self.resource_catalog.is_empty()
-        {
+            || !self.resource_catalog.is_empty();
+        if has_live_metadata {
             return None;
         }
         Some(Reusable {
             epoch,
             next: self.next.clone(),
             code_start: self.code_span.start,
-            code_length: self.code_span.length,
+            code_slots: self.code_span.slots,
             work_issued: self.work_issued,
             metrics: self.metrics,
             wat: self.wat.clone(),

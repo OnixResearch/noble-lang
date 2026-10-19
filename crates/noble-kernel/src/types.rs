@@ -129,21 +129,21 @@ impl EffSet {
     /// allocation rather than allocating a temporary singleton set.
     pub fn with_id(&self, id: EffId) -> EffSet {
         let mut out = alloc::vec::Vec::with_capacity(self.0.len().saturating_add(1));
-        let mut inserted = false;
+        let mut is_inserted = false;
         let mut index = 0;
         while index < self.0.len() {
             let existing = self.0[index];
-            if !inserted && id.0 < existing.0 {
+            if !is_inserted && id.0 < existing.0 {
                 out.push(id);
-                inserted = true;
+                is_inserted = true;
             }
             if existing == id {
-                inserted = true;
+                is_inserted = true;
             }
             out.push(existing);
             index += 1;
         }
-        if !inserted {
+        if !is_inserted {
             out.push(id);
         }
         EffSet(out)

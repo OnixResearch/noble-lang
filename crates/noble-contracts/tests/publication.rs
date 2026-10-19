@@ -1,7 +1,5 @@
 //! Publication copy budgets for transitive imported proof dependencies.
 
-use noble_contracts::source::{ModuleSession, Stage};
-
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
     nodes: 16_384,
@@ -11,7 +9,10 @@ const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
 const BASE: &[u8] = b"module a@1 [ proof 1 base : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] export base ]";
 const MIDDLE: &[u8] = b"module b@1 [ proof 1 mid : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (use a.base) x)) ] proof 1 other : [ (Pi (y I64) (Eq I64 y y)) ] [ (intro (y I64) (apply (use a.base) y)) ] export mid export other ]";
 
-fn commit(session: ModuleSession, source: &[u8]) -> Result<ModuleSession, String> {
+fn commit(
+    session: noble_contracts::source::ModuleSession,
+    source: &[u8],
+) -> Result<noble_contracts::source::ModuleSession, String> {
     let prepared = session
         .prepare(source, &[], LIMITS)
         .map_err(|error| format!("{error:?}"))?;
@@ -21,10 +22,16 @@ fn commit(session: ModuleSession, source: &[u8]) -> Result<ModuleSession, String
 }
 
 fn publish(
-    session: ModuleSession,
+    session: noble_contracts::source::ModuleSession,
     source: &[u8],
     limits: noble_contracts::Limits,
-) -> Result<(ModuleSession, Result<(), noble_contracts::source::Error>), String> {
+) -> Result<
+    (
+        noble_contracts::source::ModuleSession,
+        Result<(), noble_contracts::source::Error>,
+    ),
+    String,
+> {
     let prepared = session
         .prepare(source, &[], limits)
         .map_err(|error| format!("{error:?}"))?;
@@ -40,9 +47,9 @@ fn publish(
     }))
 }
 
-fn imported_chain() -> Result<ModuleSession, String> {
+fn imported_chain() -> Result<noble_contracts::source::ModuleSession, String> {
     let (session, result) = publish(
-        ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?,
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?,
         BASE,
         LIMITS,
     )?;
@@ -89,7 +96,7 @@ fn nested_imported_dependencies_are_charged_for_every_published_use() -> Result<
     let error = refused
         .err()
         .ok_or("one byte below the nested copy budget must refuse publication")?;
-    assert_eq!(error.stage(), Stage::Acceptance);
+    assert_eq!(error.stage(), noble_contracts::source::Stage::Acceptance);
     assert_eq!(
         error.diagnostic().message,
         "proof publication dependency budget exhausted"

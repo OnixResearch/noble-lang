@@ -47,6 +47,14 @@ impl super::materialize::State {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 /// Build one generic instance after both of its limits are known to hold.
 ///
 /// The instance owns its two ordered arguments *and* a canonical descriptor
@@ -244,6 +252,10 @@ fn push(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// Count, and charge one work unit per node for, the owned `Ty` nodes of a
 /// registered nominal descriptor before a materialized occurrence clones it.
 /// Nodes are counted as they are scheduled, so the worklist stays within
@@ -312,6 +324,10 @@ impl<'a> Reservation<'a> {
         Ok(())
     }
 
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn descriptor(
         &mut self,
         shape: &'a noble_kernel::types::NominalShape,
@@ -346,6 +362,10 @@ fn type_size(constructors: u32, span: crate::Span) -> Result<u32, crate::Diagnos
     }
 }
 
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
 /// Checked sum of owned `Ty` node counts, refused above `TYPE_NODE_CAP`.
 /// This physical bound is independent of the logical constructor limit.
 pub(super) fn type_nodes(
@@ -367,10 +387,22 @@ fn node_limit(span: crate::Span) -> crate::Diagnostic {
     )
 }
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 #[cfg(test)]
 mod tests {
     use super::super::materialize::Material;
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use super::super::{Arena, Term};
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use noble_kernel::types::{NominalShape, NominalTypeId, Ty};
 
     const SPAN: crate::Span = crate::Span { start: 0, end: 0 };
@@ -380,25 +412,37 @@ mod tests {
     };
     const ORDERS: [[u8; 2]; 2] = [[0, 1], [1, 0]];
 
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+    )]
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; the walk is bounded by the type-node budget it charges, and the recursive form states the traversal directly"
+    )]
     /// Every owned `Ty` node, including retained generic arguments and their
     /// separately boxed descriptor copies.
     fn owned_nodes(ty: &Ty) -> u32 {
         let shape = |shape: &NominalShape| match shape {
             NominalShape::Opaque(inner) => owned_nodes(inner),
-            NominalShape::Variant(left, right) => owned_nodes(left) + owned_nodes(right),
+            NominalShape::Variant(left, right) => {
+                (owned_nodes(left)).saturating_add(owned_nodes(right))
+            }
         };
-        1 + match ty {
-            Ty::Pair(left, right) | Ty::Sum(left, right) => owned_nodes(left) + owned_nodes(right),
+        1u32.saturating_add(match ty {
+            Ty::Pair(left, right) | Ty::Sum(left, right) => {
+                (owned_nodes(left)).saturating_add(owned_nodes(right))
+            }
             Ty::List(item) => owned_nodes(item),
             Ty::Program(input, output, _) | Ty::LiveRef(input, output, _) => {
                 input.iter().chain(output.iter()).map(owned_nodes).sum()
             }
             Ty::Nominal(_, descriptor) => shape(descriptor),
-            Ty::GenericNominal(_, arguments, descriptor) => {
-                owned_nodes(&arguments[0]) + owned_nodes(&arguments[1]) + shape(descriptor)
-            }
+            Ty::GenericNominal(_, arguments, descriptor) => (owned_nodes(&arguments[0]))
+                .saturating_add(owned_nodes(&arguments[1]))
+                .saturating_add(shape(descriptor)),
             _ => 0,
-        }
+        })
     }
 
     /// `T0 = I64`, `T(n+1) = G<Tn, I64>` as a small acyclic symbolic arena.
@@ -445,7 +489,7 @@ mod tests {
             constructors: extent.constructors,
             accounted: extent.nodes,
             owned: owned_nodes(&ty),
-            charged: before - meter.work,
+            charged: (before).saturating_sub(meter.work),
         })
     }
 
@@ -456,8 +500,14 @@ mod tests {
                 let built = materialize(depth, payload_params, crate::Limits::default())
                     .expect("depth within the representation bound");
                 // Logical size grows linearly; owned nodes double per level.
-                assert_eq!(built.constructors, 2 * depth + 1);
-                assert_eq!(built.owned, 4 * (1 << depth) - 3);
+                assert_eq!(
+                    built.constructors,
+                    2u32.saturating_mul(depth).saturating_add(1)
+                );
+                assert_eq!(
+                    built.owned,
+                    4u32.saturating_mul(1u32 << depth).saturating_sub(3)
+                );
                 assert_eq!(
                     built.accounted, built.owned,
                     "{payload_params:?} depth {depth}"

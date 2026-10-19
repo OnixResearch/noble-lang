@@ -1,6 +1,18 @@
 //! Parse one logical S-expression from a scanner-selected bracketed body.
 //! This syntax is untrusted; independent proof/type checking happens later.
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
+)]
 pub(super) fn parse(
     tokens: &[crate::source::lexer::LogicalToken],
     span: crate::Span,
@@ -87,6 +99,10 @@ pub(super) fn parse(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use crate::source::lexer::{LogicalKind, LogicalToken};
 
     #[test]

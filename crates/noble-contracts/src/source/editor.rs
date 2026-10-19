@@ -1,6 +1,10 @@
 //! Editor-only syntax transport. No editor node is a kernel candidate or a
 //! `.noble` token. An executable tree is re-parsed by normal source admission.
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use alloc::{string::String, vec::Vec};
 
 pub const FORMAT: u32 = 1;

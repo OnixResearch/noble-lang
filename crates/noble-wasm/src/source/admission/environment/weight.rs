@@ -182,11 +182,11 @@ pub(super) fn scheme(
     lookup_rows: usize,
     work: &mut super::super::super::Work,
 ) -> Result<u64, crate::Diagnostic> {
-    if scheme.stack_in.len() > super::super::super::NODE_LIMIT
+    let has_excess_scheme_rows = scheme.stack_in.len() > super::super::super::NODE_LIMIT
         || scheme.stack_out.len() > super::super::super::NODE_LIMIT
         || scheme.var_kinds.len() > super::super::super::NODE_LIMIT
-        || scheme.effects.len() > super::super::super::NODE_LIMIT
-    {
+        || scheme.effects.len() > super::super::super::NODE_LIMIT;
+    if has_excess_scheme_rows {
         return Err(crate::Diagnostic::Exhausted);
     }
     let scalar = attempt!(u64::try_from(

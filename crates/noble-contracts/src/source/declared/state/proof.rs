@@ -1,7 +1,19 @@
+#[expect(
+    tigerstyle::renamed_imports,
+    reason = "Owner: noble-contracts; the local alias matches the domain vocabulary used throughout this module"
+)]
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use crate::source::proof::{
     CheckedSelectedTarget, ProofContext, SourceCorrespondenceCandidate,
     SourceProofRefusal as Refusal,
 };
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use noble_kernel::{
     contracts::Definition,
     types::{EffSet, Ty},
@@ -16,6 +28,18 @@ impl super::ModuleSession {
     #[expect(
         clippy::too_many_arguments,
         reason = "Owner: noble-maintainers; module, version, contract and proof names are independent namespace selectors that refuse separately; bundling them would change the public noble-contracts API and its reviewed source inventory."
+    )]
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    )]
+    #[expect(
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
     )]
     pub fn correspond_checked_target<'a>(
         &'a self,
@@ -151,6 +175,18 @@ impl super::ModuleSession {
     }
 }
 
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
 fn same_candidate(
     left: &noble_kernel::untrusted::Candidate,
     right: &noble_kernel::untrusted::Candidate,

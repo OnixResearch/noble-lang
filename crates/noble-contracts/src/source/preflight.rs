@@ -145,6 +145,10 @@ impl Traversal {
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-maintainers; structural expansion charges the mutable runtime meter, grows the owned work vector and constructs owned type diagnostics."
     )]
+    #[expect(
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+    )]
     fn expand(
         &mut self,
         ty: &noble_kernel::types::Ty,
@@ -300,6 +304,14 @@ impl Traversal {
         }
     }
 
+    #[expect(
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+    )]
     fn schedule(
         &mut self,
         count: usize,

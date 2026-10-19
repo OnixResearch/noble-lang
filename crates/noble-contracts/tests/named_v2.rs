@@ -1,15 +1,4 @@
-use noble_contracts::{
-    intrinsic::{self, ContractGoal, PendingGoal, ProofKind},
-    source::ModuleSession,
-    Limits,
-};
-use noble_kernel::{
-    contracts::Definition,
-    types::Ty,
-    untrusted::{Node, NodeId},
-};
-
-const LIMITS: Limits = Limits {
+const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
     nodes: 16_384,
     depth: 64,
@@ -19,8 +8,15 @@ const SOURCE: &[u8] = b"module Subject@3 [ def twice [ d.step d.step ] contract 
 
 fn fixture_for(
     source: &[u8],
-) -> Result<(ContractGoal, noble_contracts::intrinsic::ProofBatch), String> {
-    let mut session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+) -> Result<
+    (
+        noble_contracts::intrinsic::ContractGoal,
+        noble_contracts::intrinsic::ProofBatch,
+    ),
+    String,
+> {
+    let mut session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     for source in [
         b"module Definitions@5 [ export step def step [ 1 + ] ]".as_slice(),
         b"import Definitions@5 as d".as_slice(),
@@ -39,26 +35,39 @@ fn fixture_for(
         .proof_obligations()
         .ok_or("missing named proof obligations")?
         .clone();
-    let Some(PendingGoal::Contract { contract }) =
+    let Some(noble_contracts::intrinsic::PendingGoal::Contract { contract }) =
         batch.obligations.first().map(|proof| &proof.goal)
     else {
         return Err("missing named contract proof".into());
     };
+    assert_eq!(batch.obligations.len(), 1);
+    assert_eq!(contract.subject.definition_ordinal, 0);
     Ok((contract.as_ref().clone(), batch))
 }
-fn fixture() -> Result<(ContractGoal, noble_contracts::intrinsic::ProofBatch), String> {
+fn fixture() -> Result<
+    (
+        noble_contracts::intrinsic::ContractGoal,
+        noble_contracts::intrinsic::ProofBatch,
+    ),
+    String,
+> {
     fixture_for(SOURCE)
 }
 
 #[test]
 fn checked_named_v2_two_distinct_source_calls() -> Result<(), String> {
     let (goal, batch) = fixture()?;
-    intrinsic::prepare_named_contract(&goal, LIMITS).map_err(|error| format!("{error:?}"))?;
-    let checked = intrinsic::check_batch(&batch, LIMITS).map_err(|error| format!("{error:?}"))?;
+    noble_contracts::intrinsic::prepare_named_contract(&goal, LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let checked = noble_contracts::intrinsic::check_batch(&batch, LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
     assert_eq!(checked.len(), 1);
-    assert_eq!(checked[0].kind, ProofKind::NamedContract);
+    assert_eq!(
+        checked[0].kind,
+        noble_contracts::intrinsic::ProofKind::NamedContract
+    );
     assert_eq!(checked[0].claim, "NamedV2Obligation.claim");
-    assert_eq!(goal.subject.input_types, [Ty::I64]);
+    assert_eq!(goal.subject.input_types, [noble_kernel::types::Ty::I64]);
     assert_eq!(goal.subject.named_uses.len(), 3);
     assert_ne!(
         goal.subject.named_uses[1].definition,
@@ -91,19 +100,19 @@ fn named_v2_rejects_forged_owner_slot_and_ordinal() -> Result<(), String> {
     let mut slot = goal.clone();
     slot.subject.named_uses[1].definition = slot.subject.named_uses[2].definition;
     assert!(
-        intrinsic::prepare_named_contract(&slot, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&slot, LIMITS).is_err(),
         "slot alias"
     );
     let mut owner = goal.clone();
     owner.subject.named_uses[1].definition_owner += 1;
     assert!(
-        intrinsic::prepare_named_contract(&owner, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&owner, LIMITS).is_err(),
         "forged imported owner"
     );
     let mut ordinal = goal.clone();
     ordinal.subject.named_uses[1].definition_ordinal += 1;
     assert!(
-        intrinsic::prepare_named_contract(&ordinal, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&ordinal, LIMITS).is_err(),
         "forged lexical ordinal"
     );
     Ok(())
@@ -122,7 +131,7 @@ fn named_v2_rejects_partial_word_wrong_token_and_alias_rebind() -> Result<(), St
         .checked_add(1)
         .ok_or("first original word span start overflows")?;
     assert!(
-        intrinsic::prepare_named_contract(&partial, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&partial, LIMITS).is_err(),
         "partial d is not the original d.step source word"
     );
     let mut other_token = goal.clone();
@@ -136,7 +145,7 @@ fn named_v2_rejects_partial_word_wrong_token_and_alias_rebind() -> Result<(), St
         end: bracket_end,
     });
     assert!(
-        intrinsic::prepare_named_contract(&other_token, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&other_token, LIMITS).is_err(),
         "nonempty bracket position is not the original caller word"
     );
     let mut rebound = goal.clone();
@@ -147,7 +156,7 @@ fn named_v2_rejects_partial_word_wrong_token_and_alias_rebind() -> Result<(), St
         .ok_or("retained imported alias")?;
     alias.owner = goal.subject.definition_owner;
     assert!(
-        intrinsic::prepare_named_contract(&rebound, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&rebound, LIMITS).is_err(),
         "alias cannot silently change original source module owner"
     );
     let mut renamed_alias = goal.clone();
@@ -158,7 +167,7 @@ fn named_v2_rejects_partial_word_wrong_token_and_alias_rebind() -> Result<(), St
         .ok_or("retained imported alias")?;
     alias.alias = "other".into();
     assert!(
-        intrinsic::prepare_named_contract(&renamed_alias, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&renamed_alias, LIMITS).is_err(),
         "source still says d.step, not other.step"
     );
     let mut hidden = goal.clone();
@@ -174,7 +183,7 @@ fn named_v2_rejects_partial_word_wrong_token_and_alias_rebind() -> Result<(), St
         .ok_or("explicit export range overflows")?;
     source[start..end].fill(b' ');
     assert!(
-        intrinsic::prepare_named_contract(&hidden, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&hidden, LIMITS).is_err(),
         "a same-position hidden original step cannot become an imported callee"
     );
     Ok(())
@@ -196,14 +205,17 @@ fn named_v2_rejects_wrong_inst_and_unreachable_graph() -> Result<(), String> {
         .candidate;
     let at = usize::try_from(body.body[0].0)
         .map_err(|_| "first call node exceeds host address space")?;
-    let Node::Invocation { inst: bindings, .. } = &mut body.nodes[at] else {
+    let noble_kernel::untrusted::Node::Invocation { inst: bindings, .. } = &mut body.nodes[at]
+    else {
         return Err("missing first call".into());
     };
     bindings
         .bindings
-        .push(noble_kernel::words::Binding::Stack(vec![Ty::I64]));
+        .push(noble_kernel::words::Binding::Stack(vec![
+            noble_kernel::types::Ty::I64,
+        ]));
     assert!(
-        intrinsic::prepare_named_contract(&inst, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&inst, LIMITS).is_err(),
         "forged per-call Inst"
     );
     let mut orphan_node = goal.clone();
@@ -217,24 +229,31 @@ fn named_v2_rejects_wrong_inst_and_unreachable_graph() -> Result<(), String> {
         .ok_or("selected definition")?
         .body
         .candidate;
-    body.nodes.push(Node::Literal {
+    body.nodes.push(noble_kernel::untrusted::Node::Literal {
         lit: noble_kernel::untrusted::Lit::I64(0),
         inst: noble_kernel::words::Inst { bindings: vec![] },
     });
     assert!(
-        intrinsic::prepare_named_contract(&orphan_node, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&orphan_node, LIMITS).is_err(),
         "unreachable node"
     );
+    refuses_orphan_and_misbound_rows(&goal)
+}
+
+/// Orphan and misbound rows must be refused without changing the checked goal.
+fn refuses_orphan_and_misbound_rows(
+    goal: &noble_contracts::intrinsic::ContractGoal,
+) -> Result<(), String> {
     let mut orphan_row = goal.clone();
     let mut extra = orphan_row.subject.accepted_submission.definitions[0].clone();
-    extra.definition = Definition(1234);
+    extra.definition = noble_kernel::contracts::Definition(1234);
     orphan_row
         .subject
         .accepted_submission
         .definitions
         .push(extra);
     assert!(
-        intrinsic::prepare_named_contract(&orphan_row, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&orphan_row, LIMITS).is_err(),
         "orphan row"
     );
     let mut orphan_environment = goal.clone();
@@ -246,84 +265,17 @@ fn named_v2_rejects_wrong_inst_and_unreachable_graph() -> Result<(), String> {
     env.definition_owners
         .push(Some(goal.subject.definition_owner));
     assert!(
-        intrinsic::prepare_named_contract(&orphan_environment, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&orphan_environment, LIMITS).is_err(),
         "orphan environment row"
     );
     let mut duplicate_occurrence = goal.clone();
-    duplicate_occurrence.subject.named_uses[2].candidate_node = NodeId(0);
+    duplicate_occurrence.subject.named_uses[2].candidate_node = noble_kernel::untrusted::NodeId(0);
     assert!(
-        intrinsic::prepare_named_contract(&duplicate_occurrence, LIMITS).is_err(),
+        noble_contracts::intrinsic::prepare_named_contract(&duplicate_occurrence, LIMITS).is_err(),
         "misbound occurrence"
     );
     Ok(())
 }
 
-#[test]
-fn named_v2_rejects_weak_or_mismatched_source_proof() -> Result<(), String> {
-    let (_, batch) = fixture()?;
-    let mut repeated_call = batch.clone();
-    if let intrinsic::FormKind::List(root) = &mut repeated_call.obligations[0].term.kind {
-        if let intrinsic::FormKind::List(second) = &mut root[2].kind {
-            second[1].kind = intrinsic::FormKind::Atom("0".into());
-        }
-    }
-    assert!(
-        intrinsic::check_batch(&repeated_call, LIMITS).is_err(),
-        "repeated first call"
-    );
-    let mut admitted = batch.clone();
-    if let intrinsic::FormKind::List(root) = &mut admitted.obligations[0].term.kind {
-        if let intrinsic::FormKind::List(wrap) = &mut root[4].kind {
-            wrap[0].kind = intrinsic::FormKind::Atom("admit".into());
-        }
-    }
-    assert!(
-        intrinsic::check_batch(&admitted, LIMITS).is_err(),
-        "unchecked final rule"
-    );
-    let mut missing_slice = batch.clone();
-    if let intrinsic::FormKind::List(root) = &mut missing_slice.obligations[0].term.kind {
-        root.remove(2);
-    }
-    assert!(
-        intrinsic::check_batch(&missing_slice, LIMITS).is_err(),
-        "missing call slice"
-    );
-    Ok(())
-}
-
-#[test]
-fn named_v2_rejects_wrong_precondition_or_output_claim() -> Result<(), String> {
-    let (goal, _) = fixture()?;
-    let mut pre = goal.clone();
-    pre.requires.kind = intrinsic::FormKind::Atom("false".into());
-    assert!(
-        intrinsic::prepare_named_contract(&pre, LIMITS).is_err(),
-        "generated claim cannot discard source precondition"
-    );
-    let mut output = goal.clone();
-    if let intrinsic::FormKind::List(eq) = &mut output.ensures.kind {
-        if let intrinsic::FormKind::List(add) = &mut eq[2].kind {
-            add[2].kind = intrinsic::FormKind::Atom("3".into());
-        }
-    }
-    assert!(
-        intrinsic::prepare_named_contract(&output, LIMITS).is_err(),
-        "generated claim cannot prove a different postcondition"
-    );
-    Ok(())
-}
-
-#[test]
-fn quoted_named_call_cannot_use_two_direct_call_rule() -> Result<(), String> {
-    let source = String::from_utf8(SOURCE.to_vec()).map_err(|error| error.to_string())?;
-    let quoted = source.replace(
-        "def twice [ d.step d.step ]",
-        "def twice [ [ d.step ] run d.step ]",
-    );
-    assert!(
-        fixture_for(quoted.as_bytes()).is_err(),
-        "quotation/run changed the executable named-call structure"
-    );
-    Ok(())
-}
+#[path = "named_v2/proofs.rs"]
+mod proofs;

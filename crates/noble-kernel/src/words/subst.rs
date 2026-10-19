@@ -148,6 +148,10 @@ fn run_task(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; expand_task checks the Program marker, required segment count and effect substitution before constructing ordered input/output stacks; malformed state returns InstError rather than assertion panics."
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-kernel; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 fn expand_task(
     scheme: &crate::words::Scheme,
     node: crate::shapes::Pattern,

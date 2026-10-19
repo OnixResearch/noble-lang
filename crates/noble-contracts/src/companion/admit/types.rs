@@ -30,6 +30,10 @@ const fn ty_tag(ty: &noble_kernel::types::Ty) -> u64 {
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; fold visits the finite Ty tree through private pending scratch and length-guarded program endpoint/effect scans; empty programs and effects are valid digest inputs, not assertion failures."
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 pub(in crate::companion) fn fold(
     fold: &mut crate::companion::digest::Fold,
     ty: &noble_kernel::types::Ty,

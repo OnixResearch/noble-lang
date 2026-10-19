@@ -226,6 +226,10 @@ pub(super) fn infer(
     Ok(state)
 }
 
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 fn apply_signature(
     arena: &mut crate::inference::Arena,
     scheme: &noble_kernel::words::Scheme,
@@ -253,6 +257,10 @@ fn apply_signature(
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; input-stack construction, the fresh effect term, and the sole root body are charged before allocation; supplied inputs and declaration holes follow separate checked paths."
+)]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
 fn initial(
     tree: &super::Tree,

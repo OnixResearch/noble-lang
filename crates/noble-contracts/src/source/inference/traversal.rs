@@ -3,6 +3,14 @@
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; each frame step is work-charged and child frames require depth/node checks before reserving and pushing continuations; the owned growing worklist cannot be a fixed slice."
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 pub(super) fn visit(
     mut frame: super::Frame,
     parents: &mut alloc::vec::Vec<super::Frame>,

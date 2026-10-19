@@ -10,11 +10,11 @@ pub(super) fn validate(
 ) -> Result<(), crate::Diagnostic> {
     match ty {
         noble_contracts::component::Type::Boolean => {
-            attempt!(read_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
             buffer.append(b" i32.const 1 i32.gt_u if unreachable end\n")
         }
         noble_contracts::component::Type::CheckedU64 => {
-            attempt!(read_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
             buffer.append(b" i64.const 9223372036854775807 i64.gt_u if unreachable end\n")
         }
         noble_contracts::component::Type::S64
@@ -24,8 +24,8 @@ pub(super) fn validate(
         | noble_contracts::component::Type::Own(_)
         | noble_contracts::component::Type::Borrow(_) => Ok(()),
         noble_contracts::component::Type::String | noble_contracts::component::Type::Bytes => {
-            attempt!(read_lane(value, 0, buffer));
-            attempt!(read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
             if ty == noble_contracts::component::Type::String {
                 buffer.append(b" call $utf8\n")
             } else {
@@ -33,27 +33,27 @@ pub(super) fn validate(
             }
         }
         noble_contracts::component::Type::ResultS64String => {
-            attempt!(read_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
             attempt!(buffer.append(b" i32.const 1 i32.gt_u if unreachable end\n"));
-            attempt!(read_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
             attempt!(buffer.append(b" if\n"));
-            attempt!(read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i64.const 4294967295 i64.gt_u if unreachable end\n"));
-            attempt!(read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i32.wrap_i64\n"));
-            attempt!(read_lane(value, 2, buffer));
+            attempt!(lanes::read_lane(value, 2, buffer));
             buffer.append(b" call $utf8 end\n")
         }
         noble_contracts::component::Type::ResultBytesString => {
-            attempt!(read_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
             attempt!(buffer.append(b" i32.const 1 i32.gt_u if unreachable end\n"));
-            attempt!(read_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
             attempt!(buffer.append(b" if\n"));
-            attempt!(read_lane(value, 1, buffer));
-            attempt!(read_lane(value, 2, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 2, buffer));
             attempt!(buffer.append(b" call $utf8\n else\n"));
-            attempt!(read_lane(value, 1, buffer));
-            attempt!(read_lane(value, 2, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 2, buffer));
             buffer.append(b" call $range\n end\n")
         }
     }
@@ -89,14 +89,14 @@ pub(super) fn load(
         Some(noble_contracts::component::Type::Boolean) => {
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load8_u\n"));
-            capture_lane(value, 0, buffer)
+            lanes::capture_lane(value, 0, buffer)
         }
         Some(
             noble_contracts::component::Type::S64 | noble_contracts::component::Type::CheckedU64,
         ) => {
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i64.load\n"));
-            capture_lane(value, 0, buffer)
+            lanes::capture_lane(value, 0, buffer)
         }
         Some(
             noble_contracts::component::Type::Own(_)
@@ -107,46 +107,46 @@ pub(super) fn load(
         ) => {
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load\n"));
-            capture_lane(value, 0, buffer)
+            lanes::capture_lane(value, 0, buffer)
         }
         Some(
             noble_contracts::component::Type::String | noble_contracts::component::Type::Bytes,
         ) => {
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load\n"));
-            attempt!(capture_lane(value, 0, buffer));
+            attempt!(lanes::capture_lane(value, 0, buffer));
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load offset=4\n"));
-            capture_lane(value, 1, buffer)
+            lanes::capture_lane(value, 1, buffer)
         }
         Some(noble_contracts::component::Type::ResultS64String) => {
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load8_u\n"));
-            attempt!(capture_lane(value, 0, buffer));
-            attempt!(read_lane(value, 0, buffer));
+            attempt!(lanes::capture_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
             attempt!(buffer.append(b" i32.eqz if\n"));
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i64.load offset=8\n"));
-            attempt!(capture_lane(value, 1, buffer));
+            attempt!(lanes::capture_lane(value, 1, buffer));
             attempt!(buffer.append(b" else\n"));
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load offset=8 i64.extend_i32_u\n"));
-            attempt!(capture_lane(value, 1, buffer));
+            attempt!(lanes::capture_lane(value, 1, buffer));
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load offset=12\n"));
-            attempt!(capture_lane(value, 2, buffer));
+            attempt!(lanes::capture_lane(value, 2, buffer));
             buffer.append(b" end\n")
         }
         Some(noble_contracts::component::Type::ResultBytesString) => {
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load8_u\n"));
-            attempt!(capture_lane(value, 0, buffer));
+            attempt!(lanes::capture_lane(value, 0, buffer));
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load offset=4\n"));
-            attempt!(capture_lane(value, 1, buffer));
+            attempt!(lanes::capture_lane(value, 1, buffer));
             attempt!(super::super::abi::get(buffer, area));
             attempt!(buffer.append(b" i32.load offset=8\n"));
-            capture_lane(value, 2, buffer)
+            lanes::capture_lane(value, 2, buffer)
         }
         None => Err(crate::Diagnostic::Defective),
     }
@@ -202,26 +202,26 @@ fn copy_result(
 ) -> Result<(), crate::Diagnostic> {
     match ty {
         noble_contracts::component::Type::String | noble_contracts::component::Type::Bytes => {
-            attempt!(read_lane(value, 0, buffer));
-            attempt!(read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
             attempt!(buffer.append(b" call $copy\n"));
-            capture_lane(value, 0, buffer)
+            lanes::capture_lane(value, 0, buffer)
         }
         noble_contracts::component::Type::ResultS64String => {
-            attempt!(read_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
             attempt!(buffer.append(b" if\n"));
-            attempt!(read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i32.wrap_i64\n"));
-            attempt!(read_lane(value, 2, buffer));
+            attempt!(lanes::read_lane(value, 2, buffer));
             attempt!(buffer.append(b" call $copy i64.extend_i32_u\n"));
-            attempt!(capture_lane(value, 1, buffer));
+            attempt!(lanes::capture_lane(value, 1, buffer));
             buffer.append(b" end\n")
         }
         noble_contracts::component::Type::ResultBytesString => {
-            attempt!(read_lane(value, 1, buffer));
-            attempt!(read_lane(value, 2, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 2, buffer));
             attempt!(buffer.append(b" call $copy\n"));
-            capture_lane(value, 1, buffer)
+            lanes::capture_lane(value, 1, buffer)
         }
         noble_contracts::component::Type::Boolean
         | noble_contracts::component::Type::S64
@@ -245,7 +245,7 @@ pub(super) fn store(
     buffer: &mut crate::output::Buffer,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(super::super::abi::get(buffer, area));
-    attempt!(read_lane(value, 0, buffer));
+    attempt!(lanes::read_lane(value, 0, buffer));
     match ty {
         noble_contracts::component::Type::Boolean => buffer.append(b" i32.store8\n"),
         noble_contracts::component::Type::S64 | noble_contracts::component::Type::CheckedU64 => {
@@ -259,49 +259,34 @@ pub(super) fn store(
         noble_contracts::component::Type::String | noble_contracts::component::Type::Bytes => {
             attempt!(buffer.append(b" i32.store\n"));
             attempt!(super::super::abi::get(buffer, area));
-            attempt!(read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
             buffer.append(b" i32.store offset=4\n")
         }
         noble_contracts::component::Type::ResultS64String => {
             attempt!(buffer.append(b" i32.store\n"));
-            attempt!(read_lane(value, 0, buffer));
+            attempt!(lanes::read_lane(value, 0, buffer));
             attempt!(buffer.append(b" i32.eqz if\n"));
             attempt!(super::super::abi::get(buffer, area));
-            attempt!(read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i64.store offset=8\n else\n"));
             attempt!(super::super::abi::get(buffer, area));
-            attempt!(read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i32.wrap_i64 i32.store offset=8\n"));
             attempt!(super::super::abi::get(buffer, area));
-            attempt!(read_lane(value, 2, buffer));
+            attempt!(lanes::read_lane(value, 2, buffer));
             buffer.append(b" i32.store offset=12\n end\n")
         }
         noble_contracts::component::Type::ResultBytesString => {
             attempt!(buffer.append(b" i32.store8\n"));
             attempt!(super::super::abi::get(buffer, area));
-            attempt!(read_lane(value, 1, buffer));
+            attempt!(lanes::read_lane(value, 1, buffer));
             attempt!(buffer.append(b" i32.store offset=4\n"));
             attempt!(super::super::abi::get(buffer, area));
-            attempt!(read_lane(value, 2, buffer));
+            attempt!(lanes::read_lane(value, 2, buffer));
             buffer.append(b" i32.store offset=8\n")
         }
     }
 }
 
-fn read_lane(
-    value: &super::Value,
-    at: usize,
-    buffer: &mut crate::output::Buffer,
-) -> Result<(), crate::Diagnostic> {
-    let local = attempt!(super::slot(value, at));
-    super::super::abi::get(buffer, local)
-}
-
-fn capture_lane(
-    value: &super::Value,
-    at: usize,
-    buffer: &mut crate::output::Buffer,
-) -> Result<(), crate::Diagnostic> {
-    let local = attempt!(super::slot(value, at));
-    super::super::abi::set(buffer, local)
-}
+#[path = "results/lanes.rs"]
+mod lanes;

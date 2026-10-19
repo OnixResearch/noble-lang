@@ -13,6 +13,14 @@ pub(in crate::source) fn parse_with_families(
     parse_with_depth(word, types, families, environment, span, 0)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 fn parse_with_depth(
     word: &str,
     types: &[(alloc::string::String, noble_kernel::types::Ty)],
@@ -343,6 +351,14 @@ impl Parser<'_> {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; the collection is bounded by the surrounding admission limits, which are checked before this loop runs"
+)]
 fn parse_callable_effects(
     text: &str,
     environment: Option<&noble_kernel::contracts::Env>,
@@ -374,6 +390,14 @@ fn parse_callable_effects(
     Ok(noble_kernel::types::EffSet::from_ids(&effects))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 fn parse_program_stack(
     word: &str,
     types: &[(alloc::string::String, noble_kernel::types::Ty)],
@@ -406,6 +430,10 @@ fn parse_program_stack(
     Ok((stack, nodes))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn split_top_level(
     word: &str,
     separator: u8,

@@ -1,5 +1,25 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
+#![expect(
+    tigerstyle::assertion_density,
+    reason = "acceptance crate: assertions are added where each control is checked"
+)]
+#![expect(
+    tigerstyle::excessive_file_length,
+    reason = "one acceptance crate per kernel module, with its controls beside it"
+)]
+#![expect(
+    tigerstyle::function_length,
+    reason = "acceptance crate: one linear control per scenario, kept in reading order"
+)]
+#![expect(
+    tigerstyle::non_trait_imports,
+    reason = "acceptance crate: imports read as the exercised kernel API surface"
+)]
+#![expect(
+    tigerstyle::path_segment_repetition,
+    reason = "acceptance module names mirror the kernel modules they control"
+)]
 //! Acceptance controls for the fragment checker.
 // Names the fragment acceptance contract this crate implements.
 // r[impl VT-M2-01]

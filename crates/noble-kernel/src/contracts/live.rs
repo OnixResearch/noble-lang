@@ -1,30 +1,31 @@
 //! Host-registered nominal resources and borrowed live-slot signatures.
 
-use super::{Env, NominalDecl, NominalError};
-use crate::types::{NominalShape, ResourceKind, Ty};
-
-fn resource_kind(decl: &NominalDecl) -> Option<ResourceKind> {
-    let NominalShape::Opaque(representation) = &decl.shape else {
+fn resource_kind(decl: &super::NominalDecl) -> Option<crate::types::ResourceKind> {
+    let crate::types::NominalShape::Opaque(representation) = &decl.shape else {
         return None;
     };
-    let Ty::Resource(kind) = &**representation else {
+    let crate::types::Ty::Resource(kind) = &**representation else {
         return None;
     };
     Some(*kind)
 }
 
-pub(super) fn register_resource(mut env: Env, decl: NominalDecl) -> Result<Env, NominalError> {
-    let kind = resource_kind(&decl).ok_or(NominalError::InvalidRepresentation)?;
-    if !env.live_slots
-        || !decl.exported
-        || decl.public != [false, false]
-        || kind == super::FIXTURE_RESOURCE
-        || env.resource_kinds.contains(&kind)
-    {
-        return Err(NominalError::InvalidRepresentation);
+pub(super) fn register_resource(
+    mut env: super::Env,
+    decl: super::NominalDecl,
+) -> Result<super::Env, super::NominalError> {
+    let kind = resource_kind(&decl).ok_or(super::NominalError::InvalidRepresentation)?;
+    let is_live = env.live_slots;
+    let is_exported = decl.exported;
+    let is_unpublished = decl.public == [false, false];
+    let is_fixture_kind = kind == super::FIXTURE_RESOURCE;
+    let is_registered = env.resource_kinds.contains(&kind);
+    let is_registrable = is_live && is_exported && is_unpublished;
+    if !is_registrable || is_fixture_kind || is_registered {
+        return Err(super::NominalError::InvalidRepresentation);
     }
     if env.nominal(decl.id).is_some() || env.generic_variant(decl.id).is_some() {
-        return Err(NominalError::DuplicateIdentity);
+        return Err(super::NominalError::DuplicateIdentity);
     }
     env.resource_kinds.push(kind);
     env.live_resource_nominals.push(decl.id);
@@ -32,9 +33,13 @@ pub(super) fn register_resource(mut env: Env, decl: NominalDecl) -> Result<Env, 
     Ok(env)
 }
 
-/// Check the catalog itself, not just its registration path: `Env` fields
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
+/// Check the catalog itself, not just its registration path: `super::Env` fields
 /// are public and may have been altered after host registration.
-pub(super) fn catalog_valid(env: &Env) -> bool {
+pub(super) fn catalog_valid(env: &super::Env) -> bool {
     if !env.live_slots {
         return env.live_resource_nominals.is_empty();
     }
@@ -50,13 +55,14 @@ pub(super) fn catalog_valid(env: &Env) -> bool {
         };
         if !decl.exported
             || decl.public != [false, false]
-            || resource_kind(decl) != Some(env.resource_kinds[index + 1])
+            || resource_kind(decl) != Some(env.resource_kinds[index.saturating_add(1)])
         {
             return false;
         }
         let mut prior = 0;
         while prior < index {
-            if env.resource_kinds[prior + 1] == env.resource_kinds[index + 1]
+            if env.resource_kinds[prior.saturating_add(1)]
+                == env.resource_kinds[index.saturating_add(1)]
                 || env.live_resource_nominals[prior] == env.live_resource_nominals[index]
             {
                 return false;
@@ -68,7 +74,7 @@ pub(super) fn catalog_valid(env: &Env) -> bool {
     true
 }
 
-pub(super) fn is_live_kind(env: &Env, kind: ResourceKind) -> bool {
+pub(super) fn kind_is_slot_resource(env: &super::Env, kind: crate::types::ResourceKind) -> bool {
     if !env.live_slots {
         return false;
     }
@@ -82,14 +88,18 @@ pub(super) fn is_live_kind(env: &Env, kind: ResourceKind) -> bool {
     false
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 /// Only root-positioned borrowed references may be used as authority. Their
 /// signatures are finite concrete trees; a borrowed input may itself be a
 /// root-provided reference, but no result or value child may contain one.
-pub(super) fn valid_ref(env: &Env, ty: &Ty) -> bool {
+pub(super) fn valid_ref(env: &super::Env, ty: &crate::types::Ty) -> bool {
     if !env.live_slots {
         return false;
     }
-    let mut pending: alloc::vec::Vec<&Ty> = alloc::vec::Vec::new();
+    let mut pending: alloc::vec::Vec<&crate::types::Ty> = alloc::vec::Vec::new();
     let mut next = Some(ty);
     let mut visited = 0usize;
     while let Some(current) = next {
@@ -97,7 +107,7 @@ pub(super) fn valid_ref(env: &Env, ty: &Ty) -> bool {
             return false;
         }
         visited += 1;
-        let Ty::LiveRef(input, output, effects) = current else {
+        let crate::types::Ty::LiveRef(input, output, effects) = current else {
             return false;
         };
         if input.len().saturating_add(output.len()) > 512 {
@@ -120,7 +130,7 @@ pub(super) fn valid_ref(env: &Env, ty: &Ty) -> bool {
         let mut input_index = 0;
         while input_index < input.len() {
             let value = &input[input_index];
-            if matches!(value, Ty::LiveRef(_, _, _)) {
+            if matches!(value, crate::types::Ty::LiveRef(_, _, _)) {
                 if pending.len() >= 512 {
                     return false;
                 }

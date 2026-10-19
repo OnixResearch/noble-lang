@@ -103,11 +103,12 @@ fn checked_interface(
             .iter()
             .filter(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(_, _, _)))
             .count();
-        if preceding_refs != usize::try_from(site.ref_ordinal).unwrap_or(usize::MAX)
+        let has_site_shape_mismatch = preceding_refs
+            != usize::try_from(site.ref_ordinal).unwrap_or(usize::MAX)
             || site.stack_in.as_slice() != input.as_slice()
             || site.stack_out.as_slice() != output.as_slice()
-            || site.allowed_effects.as_slice() != ceiling.as_slice()
-        {
+            || site.allowed_effects.as_slice() != ceiling.as_slice();
+        if has_site_shape_mismatch {
             return Err(crate::Diagnostic::Invalid);
         }
         let mut forwarded = site.forwarded_ref_ordinals.iter();
@@ -286,31 +287,5 @@ fn accept_root(
     accept(&submission.environment, &root_request, &submission.body)
 }
 
-pub(super) fn text(
-    body: &noble_kernel::execution::Body,
-    node: noble_kernel::untrusted::NodeId,
-) -> Result<&[u8], crate::Diagnostic> {
-    let mut index = 0usize;
-    let mut found = None;
-    while index < body.texts.len() {
-        if body.texts[index].node == node {
-            found = Some(body.texts[index].bytes.as_slice());
-            break;
-        }
-        index += 1;
-    }
-    match found {
-        Some(bytes) => Ok(bytes),
-        None => Err(crate::Diagnostic::Invalid),
-    }
-}
-
-pub(super) fn node(
-    candidate: &noble_kernel::untrusted::Candidate,
-    id: noble_kernel::untrusted::NodeId,
-) -> Result<&noble_kernel::untrusted::Node, crate::Diagnostic> {
-    match candidate.nodes.get(attempt!(crate::admission::index(id))) {
-        Some(node) => Ok(node),
-        None => Err(crate::Diagnostic::Invalid),
-    }
-}
+#[path = "admission/nodes.rs"]
+pub(in crate::source) mod nodes;

@@ -191,6 +191,10 @@ fn nominal_budget(
     super::parts::charge(remaining, cost)
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "reads env.defs, the runtime definition table, which is not const"
+)]
 fn declared_definition_budget(
     env: &crate::contracts::Env,
     request: &crate::untrusted::Request,

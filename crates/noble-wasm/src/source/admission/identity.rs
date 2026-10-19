@@ -61,7 +61,7 @@ impl Encoding {
             None => return self.out.append(b"]"),
             Some(node) => node,
         };
-        match attempt!(super::node(&body.candidate, node)) {
+        match attempt!(super::nodes::node(&body.candidate, node)) {
             noble_kernel::untrusted::Node::Literal { lit, .. } => {
                 literal(&mut self.out, lit, body, node)
             }
@@ -231,7 +231,7 @@ fn literal(
         noble_kernel::untrusted::Lit::Bool(value) => out.append(if *value { b"t" } else { b"f" }),
         noble_kernel::untrusted::Lit::Unit => out.append(b"u"),
         noble_kernel::untrusted::Lit::Text => {
-            let bytes = attempt!(super::text(body, node));
+            let bytes = attempt!(super::nodes::text(body, node));
             attempt!(out.append(b"s"));
             attempt!(out.index(bytes.len()));
             attempt!(out.append(b":"));
@@ -253,7 +253,7 @@ pub(in crate::source) fn check(
     let mut index = 0usize;
     let mut failure = None;
     while index < submission.definitions.len() {
-        match admit(submission, index, identities, calculator, work) {
+        match records::admit(submission, index, identities, calculator, work) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -272,38 +272,5 @@ pub(in crate::source) fn check(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-maintainers; the prospective compiler owns this bounded growable identity table; existing recipes are compared under the shared meter and never overwritten, while conflicts and capacity exhaustion return diagnostics."
 )]
-fn admit(
-    submission: &noble_kernel::execution::Submission,
-    index: usize,
-    identities: &mut alloc::vec::Vec<super::super::Identity>,
-    calculator: bool,
-    work: &mut super::super::Work,
-) -> Result<(), crate::Diagnostic> {
-    let definition = &submission.definitions[index];
-    let recipe = attempt!(encode(submission, &definition.body, work));
-    attempt!(work.entries(identities.len()));
-    let mut found = 0usize;
-    while found < identities.len() && identities[found].id != definition.identity {
-        found += 1;
-    }
-    if found < identities.len() {
-        attempt!(work.entries(recipe.len()));
-        if identities[found].recipe != recipe {
-            return Err(crate::Diagnostic::Invalid);
-        }
-    } else {
-        let limit = if calculator {
-            super::super::CALCULATOR_DEFINITION_LIMIT
-        } else {
-            super::super::DEFINITION_LIMIT
-        };
-        if identities.len() >= limit {
-            return Err(crate::Diagnostic::Exhausted);
-        }
-        identities.push(super::super::Identity {
-            id: definition.identity,
-            recipe,
-        });
-    }
-    Ok(())
-}
+#[path = "identity/records.rs"]
+mod records;

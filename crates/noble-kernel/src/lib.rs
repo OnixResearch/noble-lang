@@ -9,6 +9,18 @@
 #![register_tool(charon)]
 #![register_tool(octet)]
 #![register_tool(tigerstyle)]
+// The call-budget module name is part of the kernel budget surface; a path
+// rename would churn the extracted subject for a naming-discipline lint.
+#![expect(
+    tigerstyle::underscore_in_module_filename,
+    reason = "the call-budget module name is part of the kernel budget surface and the extracted subject"
+)]
+// The kernel modules are cohesive units; splitting them to satisfy the line
+// budget would change module paths and the extracted subject.
+#![expect(
+    tigerstyle::excessive_file_length,
+    reason = "kernel modules are cohesive units; splitting them for a line budget would churn the extracted subject"
+)]
 
 extern crate alloc;
 

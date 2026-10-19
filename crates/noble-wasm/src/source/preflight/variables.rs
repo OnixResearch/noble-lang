@@ -4,11 +4,6 @@
 //! its witness again while validating and substituting the selected scheme.
 //! Pricing just the unique arena nodes or environment rows misses this work.
 
-use noble_kernel::execution::{Body, Submission};
-use noble_kernel::shapes::Pattern;
-use noble_kernel::untrusted::{Node, NodeId};
-use noble_kernel::words::{Binding, Inst};
-
 fn add(left: u64, right: u64) -> Result<u64, crate::Diagnostic> {
     left.checked_add(right).ok_or(crate::Diagnostic::Exhausted)
 }
@@ -21,7 +16,7 @@ fn mul(left: u64, right: u64) -> Result<u64, crate::Diagnostic> {
 /// already-materialized argument twice again. Reject the exponential chain
 /// while it is still a borrowed pattern, including in unselected env rows.
 fn finite_pattern(
-    value: &Pattern,
+    value: &noble_kernel::shapes::Pattern,
     depth: usize,
     generic: bool,
     work: &mut super::super::Work,
@@ -31,41 +26,43 @@ fn finite_pattern(
         return Err(crate::Diagnostic::Exhausted);
     }
     match value {
-        Pattern::GenericNominal(_, arguments, _) => {
+        noble_kernel::shapes::Pattern::GenericNominal(_, arguments, _) => {
             if generic {
                 return Err(crate::Diagnostic::Exhausted);
             }
             attempt!(finite_pattern(&arguments[0], depth + 1, true, work));
             finite_pattern(&arguments[1], depth + 1, true, work)
         }
-        Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
+        noble_kernel::shapes::Pattern::Pair(left, right)
+        | noble_kernel::shapes::Pattern::Sum(left, right) => {
             attempt!(finite_pattern(left, depth + 1, generic, work));
             finite_pattern(right, depth + 1, generic, work)
         }
-        Pattern::List(item) => finite_pattern(item, depth + 1, generic, work),
-        Pattern::Program(input, output, _) | Pattern::LiveRef(input, output, _) => {
+        noble_kernel::shapes::Pattern::List(item) => finite_pattern(item, depth + 1, generic, work),
+        noble_kernel::shapes::Pattern::Program(input, output, _)
+        | noble_kernel::shapes::Pattern::LiveRef(input, output, _) => {
             for item in input.iter().chain(output.iter()) {
                 attempt!(finite_pattern(item, depth + 1, generic, work));
             }
             Ok(())
         }
-        Pattern::Nominal(_, _)
-        | Pattern::Var(_)
-        | Pattern::StackVar(_)
-        | Pattern::Unit
-        | Pattern::Bool
-        | Pattern::I64
-        | Pattern::Text
-        | Pattern::Syntax
-        | Pattern::Contract
-        | Pattern::Evidence
-        | Pattern::Certified
-        | Pattern::Resource(_) => Ok(()),
+        noble_kernel::shapes::Pattern::Nominal(_, _)
+        | noble_kernel::shapes::Pattern::Var(_)
+        | noble_kernel::shapes::Pattern::StackVar(_)
+        | noble_kernel::shapes::Pattern::Unit
+        | noble_kernel::shapes::Pattern::Bool
+        | noble_kernel::shapes::Pattern::I64
+        | noble_kernel::shapes::Pattern::Text
+        | noble_kernel::shapes::Pattern::Syntax
+        | noble_kernel::shapes::Pattern::Contract
+        | noble_kernel::shapes::Pattern::Evidence
+        | noble_kernel::shapes::Pattern::Certified
+        | noble_kernel::shapes::Pattern::Resource(_) => Ok(()),
     }
 }
 
 pub(super) fn schemes(
-    submission: &Submission,
+    submission: &noble_kernel::execution::Submission,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     for scheme in &submission.environment.defs {
@@ -77,7 +74,7 @@ pub(super) fn schemes(
 }
 
 fn pattern(
-    value: &Pattern,
+    value: &noble_kernel::shapes::Pattern,
     sizes: &[u64; 8],
     depth: u64,
     lookup_rows: u64,
@@ -89,14 +86,15 @@ fn pattern(
         return Err(crate::Diagnostic::Exhausted);
     }
     match value {
-        Pattern::Var(var) | Pattern::StackVar(var) => {
+        noble_kernel::shapes::Pattern::Var(var) | noble_kernel::shapes::Pattern::StackVar(var) => {
             let index = attempt!(usize::try_from(var.0).map_err(|_| crate::Diagnostic::Invalid));
             match sizes.get(index) {
                 Some(size) => mul(*size, attempt!(mul(next, 16))),
                 None => Err(crate::Diagnostic::Invalid),
             }
         }
-        Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
+        noble_kernel::shapes::Pattern::Pair(left, right)
+        | noble_kernel::shapes::Pattern::Sum(left, right) => {
             let first = attempt!(pattern(left, sizes, next, lookup_rows, work));
             add(
                 attempt!(add(
@@ -106,11 +104,12 @@ fn pattern(
                 attempt!(mul(next, 16)),
             )
         }
-        Pattern::List(item) => add(
+        noble_kernel::shapes::Pattern::List(item) => add(
             attempt!(pattern(item, sizes, next, lookup_rows, work)),
             attempt!(mul(next, 16)),
         ),
-        Pattern::Program(input, output, effects) | Pattern::LiveRef(input, output, effects) => {
+        noble_kernel::shapes::Pattern::Program(input, output, effects)
+        | noble_kernel::shapes::Pattern::LiveRef(input, output, effects) => {
             attempt!(work.entries(effects.len()));
             let mut total = attempt!(mul(
                 attempt!(add(effects.len() as u64, 1)),
@@ -124,7 +123,7 @@ fn pattern(
             }
             Ok(total)
         }
-        Pattern::GenericNominal(_, arguments, _) => {
+        noble_kernel::shapes::Pattern::GenericNominal(_, arguments, _) => {
             let first = attempt!(pattern(&arguments[0], sizes, next, lookup_rows, work));
             let children = attempt!(add(
                 first,
@@ -134,7 +133,7 @@ fn pattern(
                 attempt!(add(attempt!(mul(next, 16)), attempt!(mul(lookup_rows, 16))));
             add(attempt!(mul(children, 4)), constructor)
         }
-        Pattern::Nominal(_, shape) => {
+        noble_kernel::shapes::Pattern::Nominal(_, shape) => {
             let mut total = attempt!(mul(next, 16));
             match shape.as_ref() {
                 noble_kernel::types::NominalShape::Opaque(ty) => {
@@ -159,15 +158,15 @@ fn pattern(
             }
             add(total, attempt!(mul(lookup_rows, 16)))
         }
-        Pattern::Unit
-        | Pattern::Bool
-        | Pattern::I64
-        | Pattern::Text
-        | Pattern::Syntax
-        | Pattern::Contract
-        | Pattern::Evidence
-        | Pattern::Certified
-        | Pattern::Resource(_) => mul(next, 16),
+        noble_kernel::shapes::Pattern::Unit
+        | noble_kernel::shapes::Pattern::Bool
+        | noble_kernel::shapes::Pattern::I64
+        | noble_kernel::shapes::Pattern::Text
+        | noble_kernel::shapes::Pattern::Syntax
+        | noble_kernel::shapes::Pattern::Contract
+        | noble_kernel::shapes::Pattern::Evidence
+        | noble_kernel::shapes::Pattern::Certified
+        | noble_kernel::shapes::Pattern::Resource(_) => mul(next, 16),
     }
 }
 
@@ -226,7 +225,7 @@ fn type_volume(
 /// any substituted Ty. One generic family copies each resolved argument into
 /// both the arguments and descriptor; nested families are rejected above.
 fn projected(
-    value: &Pattern,
+    value: &noble_kernel::shapes::Pattern,
     bindings: &[Volume; 8],
     depth: usize,
     work: &mut super::super::Work,
@@ -237,14 +236,15 @@ fn projected(
     }
     let next = depth + 1;
     match value {
-        Pattern::Var(var) | Pattern::StackVar(var) => {
+        noble_kernel::shapes::Pattern::Var(var) | noble_kernel::shapes::Pattern::StackVar(var) => {
             let index = attempt!(usize::try_from(var.0).map_err(|_| crate::Diagnostic::Invalid));
             bindings
                 .get(index)
                 .copied()
                 .ok_or(crate::Diagnostic::Invalid)
         }
-        Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
+        noble_kernel::shapes::Pattern::Pair(left, right)
+        | noble_kernel::shapes::Pattern::Sum(left, right) => {
             let left = attempt!(projected(left, bindings, next, work));
             let right = attempt!(projected(right, bindings, next, work));
             if left.height != 1 || right.height != 1 {
@@ -252,20 +252,21 @@ fn projected(
             }
             attempt!(left.add(right)).constructed(1, false)
         }
-        Pattern::List(item) => {
+        noble_kernel::shapes::Pattern::List(item) => {
             let item = attempt!(projected(item, bindings, next, work));
             if item.height != 1 {
                 return Err(crate::Diagnostic::Invalid);
             }
             item.constructed(1, false)
         }
-        Pattern::Program(input, output, effects) | Pattern::LiveRef(input, output, effects) => {
+        noble_kernel::shapes::Pattern::Program(input, output, effects)
+        | noble_kernel::shapes::Pattern::LiveRef(input, output, effects) => {
             attempt!(work.entries(effects.len()));
             let input = attempt!(projected_stack(input, bindings, next, work));
             let output = attempt!(projected_stack(output, bindings, next, work));
             attempt!(input.add(output)).constructed(1, false)
         }
-        Pattern::Nominal(_, descriptor) => {
+        noble_kernel::shapes::Pattern::Nominal(_, descriptor) => {
             let contents = match descriptor.as_ref() {
                 noble_kernel::types::NominalShape::Opaque(ty) => attempt!(type_volume(ty, work)),
                 noble_kernel::types::NominalShape::Variant(left, right) => {
@@ -275,7 +276,7 @@ fn projected(
             };
             contents.constructed(1, true)
         }
-        Pattern::GenericNominal(_, arguments, _) => {
+        noble_kernel::shapes::Pattern::GenericNominal(_, arguments, _) => {
             let first = attempt!(projected(&arguments[0], bindings, next, work));
             let second = attempt!(projected(&arguments[1], bindings, next, work));
             if first.height != 1 || second.height != 1 {
@@ -283,15 +284,15 @@ fn projected(
             }
             attempt!(first.add(second)).constructed(2, true)
         }
-        Pattern::Unit
-        | Pattern::Bool
-        | Pattern::I64
-        | Pattern::Text
-        | Pattern::Syntax
-        | Pattern::Contract
-        | Pattern::Evidence
-        | Pattern::Certified
-        | Pattern::Resource(_) => Ok(Volume {
+        noble_kernel::shapes::Pattern::Unit
+        | noble_kernel::shapes::Pattern::Bool
+        | noble_kernel::shapes::Pattern::I64
+        | noble_kernel::shapes::Pattern::Text
+        | noble_kernel::shapes::Pattern::Syntax
+        | noble_kernel::shapes::Pattern::Contract
+        | noble_kernel::shapes::Pattern::Evidence
+        | noble_kernel::shapes::Pattern::Certified
+        | noble_kernel::shapes::Pattern::Resource(_) => Ok(Volume {
             height: 1,
             nodes: 1,
             weighted: 1,
@@ -301,7 +302,7 @@ fn projected(
 }
 
 fn projected_stack(
-    patterns: &[Pattern],
+    patterns: &[noble_kernel::shapes::Pattern],
     bindings: &[Volume; 8],
     depth: usize,
     work: &mut super::super::Work,
@@ -314,7 +315,7 @@ fn projected_stack(
 }
 
 fn witness(
-    inst: &Inst,
+    inst: &noble_kernel::words::Inst,
     lookup_rows: u64,
     work: &mut super::super::Work,
 ) -> Result<([u64; 8], [Volume; 8], u64), crate::Diagnostic> {
@@ -325,27 +326,27 @@ fn witness(
     }
     for (index, binding) in inst.bindings.iter().enumerate() {
         volumes[index] = attempt!(match binding {
-            Binding::Value(ty) => type_volume(ty, work),
-            Binding::Stack(stack) => {
+            noble_kernel::words::Binding::Value(ty) => type_volume(ty, work),
+            noble_kernel::words::Binding::Stack(stack) => {
                 let mut total = Volume::default();
                 for ty in stack {
                     total = attempt!(total.add(attempt!(type_volume(ty, work))));
                 }
                 Ok(total)
             }
-            Binding::Effect(effects) => Ok(Volume {
+            noble_kernel::words::Binding::Effect(effects) => Ok(Volume {
                 height: 0,
                 nodes: 0,
                 weighted: effects.as_slice().len() as u64,
                 lookups: 0,
             }),
-            Binding::Ref(_) => Ok(Volume::default()),
+            noble_kernel::words::Binding::Ref(_) => Ok(Volume::default()),
         });
         sizes[index] = attempt!(volumes[index].cost(lookup_rows));
     }
     let mut total = 1u64;
     for index in 0..inst.bindings.len() {
-        if matches!(inst.bindings[index], Binding::Ref(_)) {
+        if matches!(inst.bindings[index], noble_kernel::words::Binding::Ref(_)) {
             let mut current = index;
             let mut hops = 0;
             loop {
@@ -354,7 +355,7 @@ fn witness(
                     return Err(crate::Diagnostic::Invalid);
                 }
                 match &inst.bindings[current] {
-                    Binding::Ref(var) => {
+                    noble_kernel::words::Binding::Ref(var) => {
                         current = attempt!(
                             usize::try_from(var.0).map_err(|_| crate::Diagnostic::Invalid)
                         );
@@ -387,16 +388,18 @@ struct Cost {
 }
 
 fn node(
-    node: &Node,
-    submission: &Submission,
+    node: &noble_kernel::untrusted::Node,
+    submission: &noble_kernel::execution::Submission,
     work: &mut super::super::Work,
 ) -> Result<Cost, crate::Diagnostic> {
     let inst = match node {
-        Node::Literal { inst, .. }
-        | Node::Invocation { inst, .. }
-        | Node::Quotation { inst, .. } => inst,
+        noble_kernel::untrusted::Node::Literal { inst, .. }
+        | noble_kernel::untrusted::Node::Invocation { inst, .. }
+        | noble_kernel::untrusted::Node::Quotation { inst, .. } => inst,
         // The kernel refuses borrowed dispatch outside the live-slot profile.
-        Node::SlotInvoke { .. } => return Err(crate::Diagnostic::Unsupported),
+        noble_kernel::untrusted::Node::SlotInvoke { .. } => {
+            return Err(crate::Diagnostic::Unsupported)
+        }
     };
     let lookup_rows = attempt!(u64::try_from(
         submission
@@ -407,7 +410,7 @@ fn node(
     )
     .map_err(|_| crate::Diagnostic::Exhausted));
     let (sizes, volumes, witness_size) = attempt!(witness(inst, lookup_rows, work));
-    let mut size = attempt!(mul(witness_size, 16));
+    let mut cost = attempt!(mul(witness_size, 16));
     let input;
     let output;
     let quotation_input;
@@ -417,8 +420,8 @@ fn node(
     let quotation_input_height;
     let quotation_output_height;
     match node {
-        Node::Literal { .. } => {
-            size = attempt!(add(size, attempt!(mul(sizes[0], 32))));
+        noble_kernel::untrusted::Node::Literal { .. } => {
+            cost = attempt!(add(cost, attempt!(mul(sizes[0], 32))));
             input = sizes[0];
             output = attempt!(add(input, 1));
             quotation_input = 0;
@@ -428,13 +431,13 @@ fn node(
             quotation_input_height = 0;
             quotation_output_height = 0;
         }
-        Node::Quotation { body, .. } => {
-            size = attempt!(add(size, attempt!(mul(body.len() as u64, 16))));
+        noble_kernel::untrusted::Node::Quotation { body, .. } => {
+            cost = attempt!(add(cost, attempt!(mul(body.len() as u64, 16))));
             let stack = attempt!(add(
                 attempt!(mul(sizes[0], 2)),
                 attempt!(add(sizes[1], sizes[2]))
             ));
-            size = attempt!(add(size, attempt!(mul(stack, 16))));
+            cost = attempt!(add(cost, attempt!(mul(stack, 16))));
             let constructed = attempt!(volumes[1].add(volumes[2])).constructed(1, false);
             input = sizes[0];
             output = attempt!(add(
@@ -448,20 +451,20 @@ fn node(
             quotation_input_height = volumes[1].height;
             quotation_output_height = volumes[2].height;
         }
-        Node::Invocation { def, .. } => {
+        noble_kernel::untrusted::Node::Invocation { def, .. } => {
             let scheme = attempt!(submission
                 .environment
                 .scheme(*def)
                 .ok_or(crate::Diagnostic::Invalid));
-            size = attempt!(add(
-                size,
+            cost = attempt!(add(
+                cost,
                 attempt!(super::super::admission::witness_scheme(
                     submission, *def, work
                 ))
             ));
             for value in scheme.stack_in.iter().chain(scheme.stack_out.iter()) {
-                size = attempt!(add(
-                    size,
+                cost = attempt!(add(
+                    cost,
                     attempt!(pattern(value, &sizes, 0, lookup_rows, work))
                 ));
             }
@@ -476,10 +479,12 @@ fn node(
             quotation_input_height = 0;
             quotation_output_height = 0;
         }
-        Node::SlotInvoke { .. } => return Err(crate::Diagnostic::Unsupported),
+        noble_kernel::untrusted::Node::SlotInvoke { .. } => {
+            return Err(crate::Diagnostic::Unsupported)
+        }
     }
     Ok(Cost {
-        clone: size,
+        clone: cost,
         input,
         output,
         quotation_input,
@@ -493,7 +498,7 @@ fn node(
 
 /// The immutable inputs shared by every recursive `appearance` visit.
 struct Walk<'a> {
-    body: &'a Body,
+    body: &'a noble_kernel::execution::Body,
     sizes: &'a [Cost],
     permitted_height: u32,
 }
@@ -502,7 +507,7 @@ struct Walk<'a> {
 // unique quotation node. Cycles and depth past the kernel bound fail closed.
 fn appearance(
     walk: &Walk<'_>,
-    id: NodeId,
+    id: noble_kernel::untrusted::NodeId,
     depth: usize,
     frame: &mut u64,
     frame_height: &mut u64,
@@ -520,22 +525,22 @@ fn appearance(
         .nodes
         .get(index)
         .ok_or(crate::Diagnostic::Invalid));
-    let size = attempt!(walk.sizes.get(index).ok_or(crate::Diagnostic::Invalid));
+    let cost = attempt!(walk.sizes.get(index).ok_or(crate::Diagnostic::Invalid));
     // match_tail compares this carried frame with this invocation's input,
     // never a later frame against an earlier interface. Keep charging each
     // successful join's entire carried frame separately below.
     *largest = (*largest).max(attempt!(mismatch_reserve(
         *frame,
-        size.input,
+        cost.input,
         *frame_height,
-        size.input_height,
+        cost.input_height,
         walk.permitted_height
     )));
     attempt!(work.charge(attempt!(mul(*frame, 16))));
-    attempt!(work.charge(size.clone));
-    if let Node::Quotation { body: children, .. } = node {
-        let mut child_frame = size.quotation_input;
-        let mut child_height = size.quotation_input_height;
+    attempt!(work.charge(cost.clone));
+    if let noble_kernel::untrusted::Node::Quotation { body: children, .. } = node {
+        let mut child_frame = cost.quotation_input;
+        let mut child_height = cost.quotation_input_height;
         for child in children {
             attempt!(appearance(
                 walk,
@@ -550,28 +555,28 @@ fn appearance(
         // Even an empty quotation body completes against its claimed Stack2.
         *largest = (*largest).max(attempt!(mismatch_reserve(
             child_frame,
-            size.quotation_output,
+            cost.quotation_output,
             child_height,
-            size.quotation_output_height,
+            cost.quotation_output_height,
             walk.permitted_height
         )));
     }
     let remainder = attempt!(frame
-        .checked_sub(size.input)
+        .checked_sub(cost.input)
         .ok_or(crate::Diagnostic::Invalid));
     let remainder_height = attempt!(frame_height
-        .checked_sub(size.input_height)
+        .checked_sub(cost.input_height)
         .ok_or(crate::Diagnostic::Invalid));
-    *frame = attempt!(add(remainder, size.output));
-    *frame_height = attempt!(add(remainder_height, size.output_height));
+    *frame = attempt!(add(remainder, cost.output));
+    *frame_height = attempt!(add(remainder_height, cost.output_height));
     Ok(())
 }
 
 fn body(
-    body: &Body,
+    body: &noble_kernel::execution::Body,
     input: &[noble_kernel::types::Ty],
     claimed: &[noble_kernel::types::Ty],
-    submission: &Submission,
+    submission: &noble_kernel::execution::Submission,
     largest: &mut u64,
     permitted_height: u32,
     work: &mut super::super::Work,
@@ -651,7 +656,7 @@ fn mismatch_reserve(
 }
 
 pub(super) fn check(
-    submission: &Submission,
+    submission: &noble_kernel::execution::Submission,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     // Acceptance halts on its first mismatch across all bodies and nested

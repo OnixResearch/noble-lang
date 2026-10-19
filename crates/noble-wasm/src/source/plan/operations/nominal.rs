@@ -56,11 +56,11 @@ impl<'a> Output<'a> {
 
     pub(super) fn clock_action(self, slot: u32) -> Result<super::super::Action, crate::Diagnostic> {
         for row in &self.env.bound_adapters {
-            if row.adapter_slot == slot
+            let is_clock_adapter = row.adapter_slot == slot
                 && row.input.is_empty()
                 && row.output.as_slice() == [noble_kernel::types::Ty::I64]
-                && row.effects.as_slice() == [noble_kernel::contracts::TEST_CLOCK]
-            {
+                && row.effects.as_slice() == [noble_kernel::contracts::TEST_CLOCK];
+            if is_clock_adapter {
                 return Ok(super::super::Action::ClockBound(slot));
             }
         }

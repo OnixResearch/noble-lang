@@ -80,6 +80,10 @@ impl WordBuilder {
             .any(|(name, _)| name.as_str() == exported)
     }
 
+    #[expect(
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+    )]
     pub(super) fn record_export(
         self,
         schema: &str,

@@ -22,7 +22,7 @@ const CALCULATOR_EXPANDED_KEY_LIMIT: usize = 4 * crate::OUTPUT_BYTE_LIMIT;
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct PrefixKey {
     prefix: u32,
-    length: u32,
+    length_bytes: u32,
     hash: u64,
     suffix: alloc::vec::Vec<u8>,
 }
@@ -36,7 +36,7 @@ fn fingerprint(bytes: &[u8]) -> u64 {
 }
 
 /// Comparisons charged for one ordered-index probe over `entries` distinct
-/// (fingerprint, length) classes: a bound on the search height, not the
+/// (fingerprint, length_bytes) classes: a bound on the search height, not the
 /// number of records the session has retained.
 const fn index_probe_cost(entries: usize) -> usize {
     (usize::BITS - entries.leading_zeros()) as usize + 1
@@ -50,7 +50,7 @@ const fn index_probe_cost(entries: usize) -> usize {
 pub(crate) struct Pool {
     pub(crate) keys: alloc::vec::Vec<alloc::vec::Vec<u8>>,
     prefix_keys: alloc::vec::Vec<PrefixKey>,
-    // Compact records by (fingerprint, length), each list in ascending ID
+    // Compact records by (fingerprint, length_bytes), each list in ascending ID
     // order. A lookup visits only records that could equal the key, so its
     // metered cost does not grow with the session's accumulated pool.
     candidates: alloc::collections::BTreeMap<(u64, u32), alloc::vec::Vec<u32>>,
@@ -130,7 +130,7 @@ impl Pool {
 
     pub(crate) fn key_len(&self, index: usize) -> usize {
         if self.compact {
-            self.prefix_keys[index].length as usize
+            self.prefix_keys[index].length_bytes as usize
         } else {
             self.keys[index].len()
         }
@@ -163,7 +163,7 @@ impl Pool {
         let mut expanded_bytes = 0usize;
         for record in delta {
             attempt!(charge(1));
-            expanded_bytes = match expanded_bytes.checked_add(record.length as usize) {
+            expanded_bytes = match expanded_bytes.checked_add(record.length_bytes as usize) {
                 Some(value) => value,
                 None => return Err(crate::Diagnostic::Exhausted),
             };
@@ -188,7 +188,8 @@ impl Pool {
             attempt!(charge(record.suffix.len().saturating_add(1)));
             scratch.extend_from_slice(&record.suffix);
             attempt!(charge(scratch.len()));
-            if scratch.len() != record.length as usize || fingerprint(&scratch) != record.hash {
+            if scratch.len() != record.length_bytes as usize || fingerprint(&scratch) != record.hash
+            {
                 return Err(crate::Diagnostic::Defective);
             }
             if index >= first {
@@ -265,7 +266,7 @@ impl Pool {
                 let Some(existing) = self.prefix_keys.get(index) else {
                     return Err(crate::Diagnostic::Defective);
                 };
-                if existing.hash != hash || existing.length as usize != key.len() {
+                if existing.hash != hash || existing.length_bytes as usize != key.len() {
                     continue;
                 }
                 scratch.clear();
@@ -307,14 +308,14 @@ impl Pool {
             attempt!(charge(prefix.saturating_add(1)));
         }
         let suffix = &key[prefix..];
-        let size = match self
+        let size_bytes = match self
             .bytes
             .checked_add(suffix.len().saturating_add(PREFIX_RECORD_BYTES))
         {
             Some(size) => size,
             None => return Err(crate::Diagnostic::Exhausted),
         };
-        let length = match u32::try_from(key.len()) {
+        let length_bytes = match u32::try_from(key.len()) {
             Ok(value) => value,
             Err(_) => return Err(crate::Diagnostic::Exhausted),
         };
@@ -327,12 +328,15 @@ impl Pool {
         let id = attempt!(number(index));
         self.prefix_keys.push(PrefixKey {
             prefix,
-            length,
+            length_bytes,
             hash,
             suffix: suffix.to_vec(),
         });
-        self.candidates.entry((hash, length)).or_default().push(id);
-        self.bytes = size;
+        self.candidates
+            .entry((hash, length_bytes))
+            .or_default()
+            .push(id);
+        self.bytes = size_bytes;
         self.expanded_bytes = expanded_bytes;
         Ok(id)
     }
@@ -414,18 +418,13 @@ fn number(index: usize) -> Result<u32, crate::Diagnostic> {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        fingerprint, Pool, CALCULATOR_EXPANDED_KEY_LIMIT, CALCULATOR_SOURCE_KEY_LIMIT,
-        SOURCE_KEY_LIMIT,
-    };
-    use noble_kernel::types::{ResourceKind, Ty};
 
     #[test]
     fn calculator_pool_crosses_front_coded_mib_but_refuses_expanded_overflow_atomically() {
-        let mut pool = Pool::source();
+        let mut pool = super::Pool::source();
         pool.select_calculator();
         // Different first bytes make each key independent of its predecessor.
-        // Sixty-four maximum-length keys reach exactly the preexisting WAT
+        // Sixty-four maximum-length_bytes keys reach exactly the preexisting WAT
         // expansion ceiling, while front-coded storage exceeds one MiB.
         for first in 0..64u8 {
             let key = alloc::vec![first; 65_536];
@@ -434,7 +433,7 @@ mod tests {
                 Some(u32::from(first))
             );
         }
-        assert_eq!(pool.expanded_bytes, CALCULATOR_EXPANDED_KEY_LIMIT);
+        assert_eq!(pool.expanded_bytes, super::CALCULATOR_EXPANDED_KEY_LIMIT);
         assert!(pool.bytes > crate::OUTPUT_BYTE_LIMIT);
         let previous_bytes = pool.bytes;
         assert_eq!(
@@ -442,7 +441,7 @@ mod tests {
                 .ok(),
             Some(0)
         );
-        assert_eq!(pool.expanded_bytes, CALCULATOR_EXPANDED_KEY_LIMIT);
+        assert_eq!(pool.expanded_bytes, super::CALCULATOR_EXPANDED_KEY_LIMIT);
         assert_eq!(pool.bytes, previous_bytes);
         for _ in 0..128 {
             assert_eq!(
@@ -451,7 +450,7 @@ mod tests {
                 Some(0)
             );
         }
-        assert_eq!(pool.expanded_bytes, CALCULATOR_EXPANDED_KEY_LIMIT);
+        assert_eq!(pool.expanded_bytes, super::CALCULATOR_EXPANDED_KEY_LIMIT);
         assert_eq!(pool.bytes, previous_bytes);
         assert!(matches!(
             pool.intern_prefix(alloc::vec![64], &mut |_| Ok(())),
@@ -474,7 +473,7 @@ mod tests {
 
     #[test]
     fn calculator_pool_never_reuses_colliding_fingerprint_or_exceeds_key_count() {
-        let mut pool = Pool::source();
+        let mut pool = super::Pool::source();
         pool.select_calculator();
         let original = alloc::vec![1, 2, 3, 4];
         let different = alloc::vec![4, 3, 2, 1];
@@ -485,19 +484,19 @@ mod tests {
         // Force a genuine fingerprint collision: record 0 is also indexed
         // under the different key's fingerprint, so lookup must decode and
         // compare its bytes rather than trust the matching hash.
-        pool.prefix_keys[0].hash = fingerprint(&different);
+        pool.prefix_keys[0].hash = super::fingerprint(&different);
         pool.candidates
-            .entry((fingerprint(&different), 4))
+            .entry((super::fingerprint(&different), 4))
             .or_default()
             .push(0);
         assert_eq!(
             pool.intern_prefix(different.clone(), &mut |_| Ok(())).ok(),
             Some(1)
         );
-        pool.prefix_keys[0].hash = fingerprint(&original);
+        pool.prefix_keys[0].hash = super::fingerprint(&original);
         assert_eq!(pool.intern_prefix(original, &mut |_| Ok(())).ok(), Some(0));
         assert_eq!(pool.intern_prefix(different, &mut |_| Ok(())).ok(), Some(1));
-        for value in 2..CALCULATOR_SOURCE_KEY_LIMIT {
+        for value in 2..super::CALCULATOR_SOURCE_KEY_LIMIT {
             let key = (value as u32).to_le_bytes().to_vec();
             assert_eq!(
                 pool.intern_prefix(key, &mut |_| Ok(())).ok(),
@@ -510,7 +509,7 @@ mod tests {
             Err(crate::Diagnostic::Exhausted)
         ));
         assert_eq!(pool.bytes, before);
-        assert_eq!(pool.len(), CALCULATOR_SOURCE_KEY_LIMIT);
+        assert_eq!(pool.len(), super::CALCULATOR_SOURCE_KEY_LIMIT);
         assert_eq!(
             pool.intern_prefix(alloc::vec![4, 3, 2, 1], &mut |_| Ok(()))
                 .ok(),
@@ -520,41 +519,44 @@ mod tests {
             .expanded_keys(0, |_| Ok(()))
             .unwrap_or_else(|_| panic!("bounded source keys did not decode"));
         assert_eq!(
-            keys[SOURCE_KEY_LIMIT],
-            (SOURCE_KEY_LIMIT as u32).to_le_bytes()
+            keys[super::SOURCE_KEY_LIMIT],
+            (super::SOURCE_KEY_LIMIT as u32).to_le_bytes()
         );
         assert_eq!(
-            keys[CALCULATOR_SOURCE_KEY_LIMIT - 1],
-            ((CALCULATOR_SOURCE_KEY_LIMIT - 1) as u32).to_le_bytes()
+            keys[super::CALCULATOR_SOURCE_KEY_LIMIT - 1],
+            ((super::CALCULATOR_SOURCE_KEY_LIMIT - 1) as u32).to_le_bytes()
         );
         // A delta that starts mid-block still decodes its front-coded
         // predecessors, but returns and charges output for only its own IDs.
         let mut copied = 0usize;
         let delta = pool
-            .expanded_keys(CALCULATOR_SOURCE_KEY_LIMIT - 1, |bytes| {
+            .expanded_keys(super::CALCULATOR_SOURCE_KEY_LIMIT - 1, |bytes| {
                 copied += bytes;
                 Ok(())
             })
             .unwrap_or_else(|_| panic!("bounded source delta did not decode"));
-        assert_eq!(delta, [keys[CALCULATOR_SOURCE_KEY_LIMIT - 1].clone()]);
+        assert_eq!(
+            delta,
+            [keys[super::CALCULATOR_SOURCE_KEY_LIMIT - 1].clone()]
+        );
         assert!(
             copied < 32 * 16,
             "delta decode charged {copied} for one four-byte key"
         );
         assert_eq!(
-            pool.expanded_keys(CALCULATOR_SOURCE_KEY_LIMIT, |_| Ok(()))
+            pool.expanded_keys(super::CALCULATOR_SOURCE_KEY_LIMIT, |_| Ok(()))
                 .ok(),
             Some(alloc::vec::Vec::new())
         );
         assert!(matches!(
-            pool.expanded_keys(CALCULATOR_SOURCE_KEY_LIMIT + 1, |_| Ok(())),
+            pool.expanded_keys(super::CALCULATOR_SOURCE_KEY_LIMIT + 1, |_| Ok(())),
             Err(crate::Diagnostic::Defective)
         ));
     }
 
     #[test]
     fn calculator_pool_lookup_charge_does_not_grow_with_retained_keys() {
-        fn charged(pool: &mut Pool, key: alloc::vec::Vec<u8>) -> (Option<u32>, usize) {
+        fn charged(pool: &mut super::Pool, key: alloc::vec::Vec<u8>) -> (Option<u32>, usize) {
             let mut total = 0usize;
             let id = pool
                 .intern_prefix(key, &mut |amount| {
@@ -570,7 +572,7 @@ mod tests {
                 .chain(value.to_le_bytes())
                 .collect::<alloc::vec::Vec<u8>>()
         };
-        let mut pool = Pool::source();
+        let mut pool = super::Pool::source();
         pool.select_calculator();
         for value in 0..64 {
             assert_eq!(charged(&mut pool, key(value)).0, Some(value));
@@ -601,15 +603,17 @@ mod tests {
 
     #[test]
     fn calculator_pool_keeps_ordinary_count_ceiling_and_stable_cumulative_ids() {
-        let mut ordinary = Pool::source();
-        let mut selected = Pool::source();
+        let mut ordinary = super::Pool::source();
+        let mut selected = super::Pool::source();
         selected.select_calculator();
-        for index in 0..CALCULATOR_SOURCE_KEY_LIMIT {
+        for index in 0..super::CALCULATOR_SOURCE_KEY_LIMIT {
             let key = (index as u32).to_le_bytes().to_vec();
-            if index < SOURCE_KEY_LIMIT {
+            if index < super::SOURCE_KEY_LIMIT {
                 assert_eq!(
                     ordinary
-                        .intern(&[Ty::Resource(ResourceKind(index as u32))])
+                        .intern(&[noble_kernel::types::Ty::Resource(
+                            noble_kernel::types::ResourceKind(index as u32)
+                        )])
                         .ok(),
                     Some(index as u32)
                 );
@@ -618,29 +622,31 @@ mod tests {
                 selected.intern_prefix(key, &mut |_| Ok(())).ok(),
                 Some(index as u32)
             );
-            if index == SOURCE_KEY_LIMIT {
-                assert_eq!(selected.len(), SOURCE_KEY_LIMIT + 1);
+            if index == super::SOURCE_KEY_LIMIT {
+                assert_eq!(selected.len(), super::SOURCE_KEY_LIMIT + 1);
             }
         }
         let previous = selected.clone();
         assert_eq!(
             selected
                 .intern_prefix(
-                    (SOURCE_KEY_LIMIT as u32).to_le_bytes().to_vec(),
+                    (super::SOURCE_KEY_LIMIT as u32).to_le_bytes().to_vec(),
                     &mut |_| Ok(())
                 )
                 .ok(),
-            Some(SOURCE_KEY_LIMIT as u32)
+            Some(super::SOURCE_KEY_LIMIT as u32)
         );
         assert!(selected.prefix_keys == previous.prefix_keys);
         assert_eq!(selected.bytes, previous.bytes);
         assert_eq!(selected.expanded_bytes, previous.expanded_bytes);
         let count = ordinary.len();
-        assert_eq!(count, SOURCE_KEY_LIMIT);
+        assert_eq!(count, super::SOURCE_KEY_LIMIT);
         // Ordinary source always uses complete, uncompressed stack keys.
         let ordinary_bytes = ordinary.bytes;
         assert!(matches!(
-            ordinary.intern(&[Ty::Resource(ResourceKind(4096))]),
+            ordinary.intern(&[noble_kernel::types::Ty::Resource(
+                noble_kernel::types::ResourceKind(4096)
+            )]),
             Err(crate::Diagnostic::Exhausted)
         ));
         assert_eq!(ordinary.len(), count);
@@ -649,13 +655,13 @@ mod tests {
 
     #[test]
     fn calculator_pool_preserves_ordinary_source_one_mib_boundary() {
-        let mut pool = Pool::source();
+        let mut pool = super::Pool::source();
         // Reserve the walker's six-slot worklist headroom as well as its
         // scalar-work limit, so only the aggregate byte ceiling can refuse.
-        let mut stack = alloc::vec![Ty::I64; 2044];
+        let mut stack = alloc::vec![noble_kernel::types::Ty::I64; 2044];
         let mut refused = false;
         for kind in 0..256u32 {
-            stack[0] = Ty::Resource(ResourceKind(kind));
+            stack[0] = noble_kernel::types::Ty::Resource(noble_kernel::types::ResourceKind(kind));
             if matches!(pool.intern(&stack), Err(crate::Diagnostic::Exhausted)) {
                 refused = true;
                 break;
@@ -682,7 +688,7 @@ mod tests {
             work: 2_000_000,
         };
         let mut compiler = crate::source::Compiler::new_calculator();
-        let mut pool = Pool::source();
+        let mut pool = super::Pool::source();
         pool.select_calculator();
         let mut ids = alloc::vec::Vec::new();
         let mut types = alloc::vec::Vec::new();
@@ -730,7 +736,7 @@ mod tests {
         );
         assert!(
             matches!((&types[0], &types[1]),
-            (Ty::GenericNominal(first, first_args, _), Ty::GenericNominal(second, second_args, _))
+            (noble_kernel::types::Ty::GenericNominal(first, first_args, _), noble_kernel::types::Ty::GenericNominal(second, second_args, _))
             if first == second && first_args.as_ref() == second_args.as_ref()),
             "test must isolate payload mapping from nominal identity and generic arguments"
         );

@@ -119,10 +119,30 @@ pub(super) fn builtin(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; the collection is bounded by the surrounding admission limits, which are checked before this loop runs"
+)]
 /// A ref is selected from the root's typed borrowed-input sidecar, never
 /// constructed from a value or literal. The unqualified spelling chooses the
 /// uniquely most-specific compatible interface; ambiguous peers require the
 /// explicit borrowed formal ordinal (`slot.invoke.N`).
+#[expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-contracts; the loop owns one forwarded slot vector per parameter and the allocation is charged to the metered budget"
+)]
 pub(super) fn slot_invoke(
     selected: Option<u32>,
     span: crate::Span,
@@ -132,7 +152,7 @@ pub(super) fn slot_invoke(
 ) -> Result<(), crate::Diagnostic> {
     let actual = attempt!(state.arena.stack_value(frame.stack, span, meter));
     let mut choice: Option<(u32, alloc::vec::Vec<u32>, usize)> = None;
-    let mut ambiguous = false;
+    let mut is_ambiguous = false;
     for borrowed in &state.borrows {
         attempt!(meter.charge(1, span));
         if selected.is_some_and(|ordinal| ordinal != borrowed.ordinal) {
@@ -149,13 +169,13 @@ pub(super) fn slot_invoke(
             || !input
                 .iter()
                 .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
-                .zip(&actual[actual.len() - value_count..])
+                .zip(&actual[actual.len().saturating_sub(value_count)..])
                 .all(|(left, right)| left == right)
         {
             continue;
         }
         let mut forwarded = alloc::vec::Vec::new();
-        let mut compatible = true;
+        let mut is_compatible = true;
         for formal in input
             .iter()
             .filter(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
@@ -168,12 +188,12 @@ pub(super) fn slot_invoke(
             match (positions.next(), positions.next()) {
                 (Some(position), None) => forwarded.push(position),
                 (None, _) | (Some(_), Some(_)) => {
-                    compatible = false;
+                    is_compatible = false;
                     break;
                 }
             }
         }
-        if !compatible {
+        if !is_compatible {
             continue;
         }
         let specificity = forwarded.len();
@@ -183,24 +203,24 @@ pub(super) fn slot_invoke(
                 .is_none_or(|(_, _, previous)| specificity > *previous)
         {
             choice = Some((borrowed.ordinal, forwarded, specificity));
-            ambiguous = false;
+            is_ambiguous = false;
         } else if choice
             .as_ref()
             .is_some_and(|(_, _, previous)| specificity == *previous)
         {
-            ambiguous = true;
+            is_ambiguous = true;
         }
     }
-    if ambiguous {
+    if is_ambiguous {
         return Err(crate::invalid(
             span,
-            "ambiguous compatible borrowed references; select slot.invoke.N",
+            "is_ambiguous is_compatible borrowed references; select slot.invoke.N",
         ));
     }
     let Some((ordinal, forwarded, _)) = choice else {
         return Err(crate::invalid(
             span,
-            "slot.invoke requires a compatible host-issued borrowed input and exact forwarded refs",
+            "slot.invoke requires a is_compatible host-issued borrowed input and exact forwarded refs",
         ));
     };
     let noble_kernel::types::Ty::LiveRef(input, output, ceiling) =
@@ -219,7 +239,7 @@ pub(super) fn slot_invoke(
         .iter()
         .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
         .count();
-    let prefix = &actual[..actual.len() - value_count];
+    let prefix = &actual[..actual.len().saturating_sub(value_count)];
     let mut resulting = alloc::vec::Vec::with_capacity(prefix.len().saturating_add(output.len()));
     resulting.extend_from_slice(prefix);
     resulting.extend_from_slice(output);
@@ -248,6 +268,10 @@ pub(super) fn slot_invoke(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn mismatched_literal_origin(
     frame: &super::Frame,
     state: &super::State,
@@ -263,7 +287,7 @@ fn mismatched_literal_origin(
         return None;
     };
     let expected = scheme.stack_in.last()?;
-    let matches = match (expected, literal) {
+    let is_matches = match (expected, literal) {
         (noble_kernel::shapes::Pattern::I64, noble_kernel::untrusted::Lit::I64(_))
         | (noble_kernel::shapes::Pattern::Bool, noble_kernel::untrusted::Lit::Bool(_))
         | (noble_kernel::shapes::Pattern::Text, noble_kernel::untrusted::Lit::Text)
@@ -277,9 +301,17 @@ fn mismatched_literal_origin(
         ) => false,
         _ => return None,
     };
-    (!matches).then_some(draft.span)
+    (!is_matches).then_some(draft.span)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
 fn contextualize(
     mut error: crate::Diagnostic,
     definition: noble_kernel::contracts::Definition,

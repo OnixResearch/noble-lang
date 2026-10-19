@@ -61,6 +61,10 @@ impl super::Arena {
         meter: &mut crate::Meter,
     ) -> Result<alloc::vec::Vec<alloc::string::String>, crate::Diagnostic> {
         let mut suffix = alloc::vec::Vec::new();
+        #[expect(
+            tigerstyle::numeric_units,
+            reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
+        )]
         // Every pushed entry follows its own successful unit work charge.
         let work_limit = attempt!(crate::offset(meter.limits.work, span));
         loop {

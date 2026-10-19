@@ -257,7 +257,7 @@ fn quotation_program_has_its_own_checked_interface_and_code_owner() -> Result<()
         || saved.capture_right != 0
         || saved.recipe_leaves != 2
         || saved.entry < span.start
-        || saved.entry >= span.start + span.length
+        || saved.entry >= span.start + span.slots
         || prepared.target_metadata().is_none_or(|root| {
             root.root_program_index != wrapper.program_index
                 || root.input_signature != wrapper.input_signature

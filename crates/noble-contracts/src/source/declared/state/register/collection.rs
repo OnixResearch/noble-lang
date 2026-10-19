@@ -230,6 +230,14 @@ impl Collected {
         Ok(self)
     }
 
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+    )]
     fn add_signature(
         mut self,
         name: alloc::string::String,
@@ -246,6 +254,10 @@ impl Collected {
         Ok(self)
     }
 
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn add_definition(
         mut self,
         name: alloc::string::String,

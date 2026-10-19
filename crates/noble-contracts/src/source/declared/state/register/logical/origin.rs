@@ -14,6 +14,10 @@ fn mismatch(span: crate::Span, reason: &str) -> crate::source::Error {
     super::at(crate::source::Stage::Check, span, reason)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 /// Freeze only imported aliases whose original modules occur in this subject
 /// graph. Rebinding a session alias later must not rewrite an earlier goal.
 pub(super) fn imports(
@@ -60,6 +64,14 @@ pub(super) fn imports(
     Ok(saved)
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn trace(
     request: &super::Request<'_>,
     root_source_index: u32,

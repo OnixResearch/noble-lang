@@ -18,6 +18,10 @@ pub(super) struct Work<'a> {
     pub meter: crate::Meter,
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn install(
     session: crate::source::declared::ModuleSession,
     mut work: Work<'_>,
@@ -178,6 +182,14 @@ struct DefinitionInput<'a> {
     exports: &'a [alloc::string::String],
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the parameter is the owned builder state this stage accumulates into, not a borrowed input"
+)]
 fn install_one(
     session: crate::source::declared::ModuleSession,
     input: DefinitionInput<'_>,
@@ -222,6 +234,14 @@ fn exported_definition(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the parameter is the owned builder state this stage accumulates into, not a borrowed input"
+)]
 fn commit_definition(
     mut session: crate::source::declared::ModuleSession,
     definition_bytes: &[u8],

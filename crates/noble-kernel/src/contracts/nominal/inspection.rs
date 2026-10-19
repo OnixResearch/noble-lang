@@ -18,7 +18,7 @@ impl super::super::Env {
             crate::shapes::Pattern::Resource(kind) => {
                 return max_nodes > 0
                     && self.resource_kinds.contains(kind)
-                    && !super::super::live::is_live_kind(self, *kind);
+                    && !super::super::live::kind_is_slot_resource(self, *kind);
             }
             crate::shapes::Pattern::Unit
             | crate::shapes::Pattern::Bool
@@ -77,10 +77,6 @@ impl super::super::Env {
         matches!(self.nominal(id), Some(decl) if &decl.shape == shape)
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; the bounded pattern work queue requires non-const Vec<&Pattern>::push (E0658) on both pinned Rust compilers; reassess when Vec mutation becomes const-capable."
-    )]
     fn enqueue_pattern<'a>(
         &self,
         pattern: &'a crate::shapes::Pattern,
@@ -109,7 +105,7 @@ impl super::super::Env {
                 Some(work)
             }
             crate::shapes::Pattern::Resource(kind) => (self.resource_kinds.contains(kind)
-                && !super::super::live::is_live_kind(self, *kind))
+                && !super::super::live::kind_is_slot_resource(self, *kind))
             .then_some(work),
             crate::shapes::Pattern::LiveRef(_, _, _) => None,
             crate::shapes::Pattern::Pair(left, right)

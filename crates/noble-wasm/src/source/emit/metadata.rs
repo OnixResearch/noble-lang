@@ -252,9 +252,6 @@ fn descriptor_entry(
 
 #[cfg(test)]
 mod tests {
-    use super::{calculator_signature_address, descriptors, signature_segment};
-    use crate::{output::Buffer, Diagnostic};
-    use wasmtime::{Engine, Linker, Memory, MemoryType, Module, Store};
 
     #[test]
     fn calculator_observes_exact_signatures_at_sixteen_page_scratch_boundary() {
@@ -267,24 +264,25 @@ mod tests {
         let rows = core::iter::once((983_040, 9))
             .chain(keys.iter().map(|key| (983_040, key.len() as u32)))
             .collect::<alloc::vec::Vec<_>>();
-        let mut out = Buffer::new(131_072);
+        let mut out = crate::output::Buffer::new(131_072);
         assert!(out.append(b"(module\n(import \"noble\" \"memory\" (memory 16 64))\n(func $fail (param i32))\n").is_ok());
         for (index, key) in keys.iter().enumerate() {
-            assert!(signature_segment(&mut out, index + 1, key).is_ok());
+            assert!(super::signature_segment(&mut out, index + 1, key).is_ok());
         }
-        assert!(descriptors(&mut out, &rows, Some((1, &keys))).is_ok());
+        assert!(super::descriptors(&mut out, &rows, Some((1, &keys))).is_ok());
         assert!(out.append(b")\n").is_ok());
         let wat = out.finish();
         let wasm = wat::parse_bytes(&wat)
             .unwrap_or_else(|_| panic!("bounded signature WAT did not assemble"));
-        let engine = Engine::default();
-        let module = Module::new(&engine, wasm.as_ref())
+        let engine = wasmtime::Engine::default();
+        let module = wasmtime::Module::new(&engine, wasm.as_ref())
             .unwrap_or_else(|_| panic!("selected signature WAT did not validate"));
 
-        let mut short_store = Store::new(&engine, ());
-        let short_memory = Memory::new(&mut short_store, MemoryType::new(15, Some(64)))
-            .unwrap_or_else(|_| panic!("fifteen-page memory failed to allocate"));
-        let mut short_linker = Linker::new(&engine);
+        let mut short_store = wasmtime::Store::new(&engine, ());
+        let short_memory =
+            wasmtime::Memory::new(&mut short_store, wasmtime::MemoryType::new(15, Some(64)))
+                .unwrap_or_else(|_| panic!("fifteen-page memory failed to allocate"));
+        let mut short_linker = wasmtime::Linker::new(&engine);
         short_linker
             .define(&mut short_store, "noble", "memory", short_memory)
             .unwrap_or_else(|_| panic!("fifteen-page import failed to register"));
@@ -293,10 +291,10 @@ mod tests {
             "the selected module must not import less than sixteen pages"
         );
 
-        let mut store = Store::new(&engine, ());
-        let memory = Memory::new(&mut store, MemoryType::new(16, Some(64)))
+        let mut store = wasmtime::Store::new(&engine, ());
+        let memory = wasmtime::Memory::new(&mut store, wasmtime::MemoryType::new(16, Some(64)))
             .unwrap_or_else(|_| panic!("sixteen-page memory failed to allocate"));
-        let mut linker = Linker::new(&engine);
+        let mut linker = wasmtime::Linker::new(&engine);
         linker
             .define(&mut store, "noble", "memory", memory)
             .unwrap_or_else(|_| panic!("selected memory import failed to register"));
@@ -309,7 +307,7 @@ mod tests {
         let length = instance
             .get_typed_func::<i32, i32>(&mut store, "signature_length")
             .unwrap_or_else(|_| panic!("signature length export missing"));
-        let range = |name: &str, store: &mut Store<()>| {
+        let range = |name: &str, store: &mut wasmtime::Store<()>| {
             instance
                 .get_typed_func::<(), i32>(&mut *store, name)
                 .unwrap_or_else(|_| panic!("signature range export missing"))
@@ -336,35 +334,40 @@ mod tests {
         assert_eq!(address.call(&mut store, 4).ok(), Some(0));
 
         let oversized = alloc::vec![b'z'; 65_537];
-        let mut rejected = Buffer::new(128);
+        let mut rejected = crate::output::Buffer::new(128);
         assert!(matches!(
-            signature_segment(&mut rejected, 0, &oversized),
-            Err(Diagnostic::Exhausted)
+            super::signature_segment(&mut rejected, 0, &oversized),
+            Err(crate::Diagnostic::Exhausted)
         ));
         assert!(matches!(
-            calculator_signature_address(&mut rejected, 0, &[(983_040, 65_537)], &[oversized]),
-            Err(Diagnostic::Defective)
+            super::calculator_signature_address(
+                &mut rejected,
+                0,
+                &[(983_040, 65_537)],
+                &[oversized]
+            ),
+            Err(crate::Diagnostic::Defective)
         ));
         assert!(matches!(
-            descriptors(&mut rejected, &rows, Some((5, &[][..]))),
-            Err(Diagnostic::Defective)
+            super::descriptors(&mut rejected, &rows, Some((5, &[][..]))),
+            Err(crate::Diagnostic::Defective)
         ));
     }
 
     #[test]
     fn ordinary_signature_address_still_returns_its_original_descriptor() {
-        let mut out = Buffer::new(1024);
+        let mut out = crate::output::Buffer::new(1024);
         assert!(out.append(b"(module\n(func $fail (param i32))\n").is_ok());
-        assert!(descriptors(&mut out, &[(12_345, 7)], None).is_ok());
+        assert!(super::descriptors(&mut out, &[(12_345, 7)], None).is_ok());
         assert!(out.append(b")\n").is_ok());
         let wat = out.finish();
         let wasm = wat::parse_bytes(&wat)
             .unwrap_or_else(|_| panic!("ordinary descriptor WAT did not assemble"));
-        let engine = Engine::default();
-        let module = Module::new(&engine, wasm.as_ref())
+        let engine = wasmtime::Engine::default();
+        let module = wasmtime::Module::new(&engine, wasm.as_ref())
             .unwrap_or_else(|_| panic!("ordinary descriptor WAT did not validate"));
-        let mut store = Store::new(&engine, ());
-        let instance = Linker::new(&engine)
+        let mut store = wasmtime::Store::new(&engine, ());
+        let instance = wasmtime::Linker::new(&engine)
             .instantiate(&mut store, &module)
             .unwrap_or_else(|_| panic!("ordinary descriptor module refused"));
         let address = instance

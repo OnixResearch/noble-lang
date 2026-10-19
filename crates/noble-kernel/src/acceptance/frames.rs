@@ -21,13 +21,17 @@ pub(super) enum Completion {
     },
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 /// The entry frame for one request.
 pub(super) fn entry_frame(
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
 ) -> super::Frame {
     let mut values = alloc::vec::Vec::with_capacity(request.expected.stack_in.len());
-    let mut borrowed = alloc::vec::Vec::new();
+    let mut borrowed = alloc::vec::Vec::with_capacity(request.expected.stack_in.len());
     let mut index = 0;
     while index < request.expected.stack_in.len() {
         if matches!(

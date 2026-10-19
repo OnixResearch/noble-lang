@@ -66,7 +66,8 @@ fn atom(
     }
     attempt!(out.append(b" (i32.const 0) (i32.const 0) "));
     attempt!(out.i32(tag));
-    if tag == 2 || tag == 15 || tag == 33 || tag.wrapping_sub(26) <= 6 {
+    let has_immediate_operands = tag == 2 || tag == 15 || tag == 33 || tag.wrapping_sub(26) <= 6;
+    if has_immediate_operands {
         attempt!(out.append(b" "));
         attempt!(out.i32(operation.input));
         attempt!(out.append(b" "));

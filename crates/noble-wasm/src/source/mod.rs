@@ -66,7 +66,7 @@ struct Work {
     calculator_plan: bool,
     // Observation only: the largest structural node count admitted against
     // the request's `type_size` by borrowed preflight. Never charged.
-    max_type_size: u32,
+    max_type_nodes: u32,
 }
 
 #[expect(
@@ -122,8 +122,8 @@ impl Work {
     }
 
     const fn observe_type_size(&mut self, nodes: u32) {
-        if nodes > self.max_type_size {
-            self.max_type_size = nodes;
+        if nodes > self.max_type_nodes {
+            self.max_type_nodes = nodes;
         }
     }
 }
@@ -177,9 +177,9 @@ pub struct CompileMetrics {
     pub environment_work: u64,
     pub named_bodies: u64,
     /// Largest instantiated stack-entry or value type admitted by preflight.
-    pub max_type_size: u32,
-    /// The request's `type_size` ceiling that `max_type_size` was checked against.
-    pub type_size_limit: u32,
+    pub max_type_nodes: u32,
+    /// The request's `type_size` ceiling that `max_type_nodes` was checked against.
+    pub type_nodes_cap: u32,
     pub signature_keys: u64,
     /// Retained-key length charged before lowering; grows with the pool.
     pub signature_key_charge: u64,
@@ -218,7 +218,7 @@ pub struct Compiler {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CodeSpan {
     pub start: u32,
-    pub length: u32,
+    pub slots: u32,
     pub generation: u32,
 }
 
@@ -406,7 +406,7 @@ pub struct ResourceCatalogEntry {
 #[derive(Clone, Copy, Debug)]
 struct FreeCode {
     start: u32,
-    length: u32,
+    slots: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -497,39 +497,39 @@ impl Prepared {
 }
 
 impl Compiler {
-    fn reserve_code(&mut self, length: u32) -> Result<CodeSpan, crate::Diagnostic> {
-        if length == 0 {
+    fn reserve_code(&mut self, slots: u32) -> Result<CodeSpan, crate::Diagnostic> {
+        if slots == 0 {
             return Ok(CodeSpan {
                 start: self.functions,
-                length: 0,
+                slots: 0,
                 generation: self.generation,
             });
         }
         let mut start = self.functions;
         if self.live_slots {
-            if let Some(index) = self.free_code.iter().position(|free| free.length >= length) {
+            if let Some(index) = self.free_code.iter().position(|free| free.slots >= slots) {
                 let free = &mut self.free_code[index];
                 start = free.start;
-                free.start += length;
-                free.length -= length;
-                if free.length == 0 {
+                free.start += slots;
+                free.slots -= slots;
+                if free.slots == 0 {
                     self.free_code.remove(index);
                 }
             } else {
-                self.functions = match self.functions.checked_add(length) {
+                self.functions = match self.functions.checked_add(slots) {
                     Some(end) if end <= TABLE_LIMIT => end,
                     Some(_) | None => return Err(crate::Diagnostic::Exhausted),
                 };
             }
         } else {
-            self.functions = match self.functions.checked_add(length) {
+            self.functions = match self.functions.checked_add(slots) {
                 Some(end) if end <= TABLE_LIMIT => end,
                 Some(_) | None => return Err(crate::Diagnostic::Exhausted),
             };
         }
         let span = CodeSpan {
             start,
-            length,
+            slots: slots,
             generation: self.generation,
         };
         if self.live_slots {
@@ -687,7 +687,7 @@ impl Compiler {
             issued: u64::from(submission.request.limits.work),
             calculator_preflight: self.calculator,
             calculator_plan: false,
-            max_type_size: 0,
+            max_type_nodes: 0,
         };
         attempt!(preflight::check(submission, self.calculator, &mut work));
         work.calculator_preflight = false;
@@ -722,10 +722,10 @@ impl Compiler {
         let mut identity_charge = 0u64;
         let mut failure = None;
         while identity < retained {
-            let length = self.identities[identity].recipe.len();
-            match work.entries(length) {
+            let entries = self.identities[identity].recipe.len();
+            match work.entries(entries) {
                 Ok(()) => {
-                    identity_charge = identity_charge.saturating_add(length as u64);
+                    identity_charge = identity_charge.saturating_add(entries as u64);
                     identity += 1;
                 }
                 Err(problem) => {
@@ -805,7 +805,7 @@ impl Compiler {
         };
         let code_span = CodeSpan {
             start: plan.first_function,
-            length: plan.functions - plan.first_function,
+            slots: plan.functions - plan.first_function,
             generation: next.generation,
         };
         let target_metadata = if self.live_slots {
@@ -915,8 +915,8 @@ impl Compiler {
             // The allowance is exactly `environment_work × (named + 3)`.
             environment_work: work_environment_grant / named_bodies.saturating_add(3),
             named_bodies,
-            max_type_size: work.max_type_size,
-            type_size_limit: submission.request.limits.type_size,
+            max_type_nodes: work.max_type_nodes,
+            type_nodes_cap: submission.request.limits.type_size,
             signature_keys: next.signatures.len() as u64,
             signature_key_charge,
             identity_charge,
@@ -984,7 +984,7 @@ impl Compiler {
         let Some(named) = matches.next() else {
             return Err(crate::Diagnostic::Invalid);
         };
-        if matches.next().is_some()
+        let has_interface_mismatch = matches.next().is_some()
             || named.stack_in != selected.body().interface.stack_in
             || named.stack_out != selected.body().interface.stack_out
             || named.effects != selected.body().interface.effects
@@ -992,8 +992,8 @@ impl Compiler {
                 root.stack_in == selected.root().interface.stack_in
                     && root.stack_out == selected.root().interface.stack_out
                     && root.effects == selected.root().interface.effects
-            })
-        {
+            });
+        if has_interface_mismatch {
             return Err(crate::Diagnostic::Invalid);
         }
         prepared.selected_target = Some(SelectedTargetArtifact {
@@ -1043,13 +1043,13 @@ impl Compiler {
         span: CodeSpan,
         verify_and_clear: impl FnOnce(CodeSpan) -> Result<(), crate::Diagnostic>,
     ) -> Result<(), crate::Diagnostic> {
-        if !self.live_slots || span.length == 0 || span.start < 4 {
+        if !self.live_slots || span.slots == 0 || span.start < 4 {
             return Err(crate::Diagnostic::Invalid);
         }
         let Some(index) = self.installed_code.iter().position(|owned| *owned == span) else {
             return Err(crate::Diagnostic::Invalid);
         };
-        let Some(end) = span.start.checked_add(span.length) else {
+        let Some(end) = span.start.checked_add(span.slots) else {
             return Err(crate::Diagnostic::Invalid);
         };
         if end > self.functions || self.retention_revision == u64::MAX {
@@ -1064,25 +1064,25 @@ impl Compiler {
             index,
             FreeCode {
                 start: span.start,
-                length: span.length,
+                slots: span.slots,
             },
         );
         if index > 0
-            && self.free_code[index - 1].start + self.free_code[index - 1].length
+            && self.free_code[index - 1].start + self.free_code[index - 1].slots
                 == self.free_code[index].start
         {
             let right = self.free_code.remove(index);
-            self.free_code[index - 1].length += right.length;
+            self.free_code[index - 1].slots += right.slots;
             index -= 1;
         }
         if index + 1 < self.free_code.len()
-            && self.free_code[index].start + self.free_code[index].length
+            && self.free_code[index].start + self.free_code[index].slots
                 == self.free_code[index + 1].start
         {
             let right = self.free_code.remove(index + 1);
-            self.free_code[index].length += right.length;
+            self.free_code[index].slots += right.slots;
         }
-        if self.free_code[index].start + self.free_code[index].length == self.functions {
+        if self.free_code[index].start + self.free_code[index].slots == self.functions {
             self.functions = self.free_code[index].start;
             self.free_code.remove(index);
         }
@@ -1114,20 +1114,14 @@ mod retention_tests {
         assert!(compiler.retire_code(former, |_| Ok(())).is_ok());
         compiler.generation = 3;
         let reused = compiler.reserve_code(2).ok().expect("reused span");
-        assert_eq!((reused.start, reused.length), (4, 2));
+        assert_eq!((reused.start, reused.slots), (4, 2));
         assert_ne!(reused.generation, former.generation);
         assert!(matches!(
             compiler.retire_code(former, |_| Ok(())),
             Err(Diagnostic::Invalid)
         ));
         assert!(matches!(
-            compiler.retire_code(
-                CodeSpan {
-                    length: 1,
-                    ..pinned
-                },
-                |_| Ok(())
-            ),
+            compiler.retire_code(CodeSpan { slots: 1, ..pinned }, |_| Ok(())),
             Err(Diagnostic::Invalid)
         ));
         compiler.generation = 4;
@@ -1212,7 +1206,7 @@ mod tests {
             issued: CALCULATOR_COMPILER_WORK_LIMIT - 8,
             calculator_preflight: true,
             calculator_plan: false,
-            max_type_size: 0,
+            max_type_nodes: 0,
         };
         assert!(work.charge(7).is_ok());
         assert_eq!(work.remaining, 7);
@@ -1235,7 +1229,7 @@ mod tests {
             issued: 7,
             calculator_preflight: false,
             calculator_plan: false,
-            max_type_size: 0,
+            max_type_nodes: 0,
         };
         assert!(matches!(
             ordinary.charge(8),
@@ -1437,12 +1431,12 @@ mod tests {
             issued: CALCULATOR_COMPILER_WORK_LIMIT - 1_000_000,
             calculator_preflight: false,
             calculator_plan: true,
-            max_type_size: 0,
+            max_type_nodes: 0,
         };
-        for length in 1..=64 {
+        for entries in 1..=64 {
             assert!(
                 compiler
-                    .signature(&alloc::vec![Ty::I64; length], &mut work)
+                    .signature(&alloc::vec![Ty::I64; entries], &mut work)
                     .is_ok(),
                 "finite distinct structural signatures fit the remaining ceiling"
             );

@@ -270,7 +270,9 @@
     "targets": [
       {
         "default_features": true,
-        "features": [],
+        "features": [
+          "safety-observe"
+        ],
         "triple": "x86_64-unknown-linux-gnu"
       }
     ]

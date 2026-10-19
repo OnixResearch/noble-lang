@@ -1,19 +1,17 @@
-use noble_contracts::source::{ModuleSession, Stage};
-use noble_kernel::types::Ty;
-
 const DONOR: &[u8] =
     b"module donor@1 [ def other [ 1 + ] export step def step# original step body\n[ 1 + ] ]";
 const TWICE: &[u8] = b"module chain@1 [ export twice def twice [ d.step d.step ] contract 2 twice-law [ subject twice input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 2)) ] ] export twice-law ]";
 
-fn imported_donor() -> Result<ModuleSession, String> {
-    let session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+fn imported_donor() -> Result<noble_contracts::source::ModuleSession, String> {
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     let session = super::commit(session, DONOR)?;
     super::commit(session, b"import donor@1 as d")
 }
 
 #[test]
-fn two_named_calls_preserve_distinct_specializations_and_exact_original_occurrences(
-) -> Result<(), String> {
+fn two_calls_preserve_distinct_specializations_and_exact_original_occurrences() -> Result<(), String>
+{
     let session = imported_donor()?;
     let prepared = session
         .prepare(TWICE, &[], super::LIMITS)
@@ -45,65 +43,22 @@ fn two_named_calls_preserve_distinct_specializations_and_exact_original_occurren
     assert_eq!(subject.named_imports[0].alias, "d");
     assert_eq!(subject.named_imports[0].owner, uses[1].definition_owner);
     assert_eq!(subject.named_imports[0].module_index, uses[1].module_index);
-    for occurrence in &uses[1..] {
-        assert_eq!(occurrence.definition_name, "step");
-        assert_eq!(
-            occurrence.definition_ordinal, 1,
-            "same-body `other` must not be mistaken for original `step`"
-        );
-        assert_eq!(occurrence.caller_definition, Some(root.definition));
-        let source = occurrence
-            .source_span
-            .ok_or("missing original named call span")?;
-        let start =
-            usize::try_from(source.start).map_err(|_| "source start exceeds address space")?;
-        let end = usize::try_from(source.end).map_err(|_| "source end exceeds address space")?;
-        assert_eq!(TWICE.get(start..end), Some(b"d.step".as_slice()));
-        let owner = &subject.source_dependencies[occurrence.module_index];
-        assert_eq!((owner.module.as_str(), owner.version), ("donor", 1));
-        assert_eq!(owner.owner, occurrence.definition_owner);
-        assert_eq!(owner.full_source.as_slice(), DONOR);
-        let body_start = usize::try_from(occurrence.body_span.start)
-            .map_err(|_| "definition body start exceeds address space")?;
-        let body_end = usize::try_from(occurrence.body_span.end)
-            .map_err(|_| "definition body end exceeds address space")?;
-        assert_eq!(DONOR.get(body_start..body_end), Some(b"[ 1 + ]".as_slice()));
-        let def_start = usize::try_from(occurrence.definition_span.start)
-            .map_err(|_| "definition start exceeds address space")?;
-        let def_end = usize::try_from(occurrence.definition_span.end)
-            .map_err(|_| "definition end exceeds address space")?;
-        assert_eq!(
-            DONOR.get(def_start..def_end),
-            Some(b"def step# original step body\n[ 1 + ]".as_slice())
-        );
-        let row = subject
-            .accepted_submission
-            .definitions
-            .iter()
-            .find(|row| row.definition == occurrence.definition)
-            .ok_or("accepted graph lost named per-use row")?;
-        assert_eq!(row.identity, occurrence.definition_identity);
-        assert_eq!(row.expected.stack_in, [Ty::I64]);
-        assert_eq!(row.expected.stack_out, [Ty::I64]);
-    }
-    assert_ne!(
-        uses[1].definition, uses[2].definition,
-        "two `d.step` calls must not share one dynamic specialization slot"
-    );
-    assert_ne!(uses[1].source_node, uses[2].source_node);
-    assert_ne!(uses[1].source_span, uses[2].source_span);
-    assert_ne!(uses[1].candidate_node, uses[2].candidate_node);
+    asserts_each_named_use_keeps_its_own_slot(subject)?;
     let (session, outcome) = session.commit(prepared);
     outcome.map_err(|error| format!("{error:?}"))?;
     let typed = session
-        .prepare(b"chain@1.twice", &[Ty::I64], super::LIMITS)
+        .prepare(
+            b"chain@1.twice",
+            &[noble_kernel::types::Ty::I64],
+            super::LIMITS,
+        )
         .map_err(|error| format!("{error:?}"))?;
-    assert_eq!(typed.output(), &[Ty::I64]);
+    assert_eq!(typed.output(), &[noble_kernel::types::Ty::I64]);
     Ok(())
 }
 
 #[test]
-fn rebound_import_cannot_rewrite_an_original_named_subject_or_its_proof() -> Result<(), String> {
+fn rebound_import_cannot_rewrite_an_original_subject_or_its_proof() -> Result<(), String> {
     let session = imported_donor()?;
     let session = super::commit(session, TWICE)?;
     let second = b"module donor@2 [ export step def step [ 1 + ] ]";
@@ -151,7 +106,7 @@ fn rebound_import_cannot_rewrite_an_original_named_subject_or_its_proof() -> Res
     let session = super::commit(session, b"import donor@3 as d")?;
     assert!(
         matches!(session.prepare(fresh, &[], super::LIMITS), Err(error)
-        if error.stage() == Stage::Check),
+        if error.stage() == noble_contracts::source::Stage::Check),
         "new source may not silently claim x+2 after rebinding to a two-increment step"
     );
     session
@@ -217,14 +172,16 @@ fn revision_two_proof_targets_only_revision_two_contract() -> Result<(), String>
         "bare source marker must not claim the named graph theorem"
     );
     let (next, outcome) = session.commit(unproved);
-    assert!(matches!(outcome, Err(error) if error.stage() == Stage::Acceptance));
+    assert!(
+        matches!(outcome, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
+    );
     assert!(next
         .prepare(b"import claim@1 as missing", &[], super::LIMITS)
         .is_err());
     let incompatible = b"module incompatible@1 [ proof 1 wrong for c.twice-law [ (refl 0) ] ]";
     assert!(
         matches!(next.prepare(incompatible, &[], super::LIMITS), Err(error)
-        if error.stage() == Stage::Check)
+        if error.stage() == noble_contracts::source::Stage::Check)
     );
 
     let direct = b"module direct@1 [ def inc [ 1 + ] contract 1 inc-law [ subject inc input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] export inc-law ]";
@@ -233,7 +190,7 @@ fn revision_two_proof_targets_only_revision_two_contract() -> Result<(), String>
     let incompatible = b"module incompatible@1 [ proof 2 wrong for direct.inc-law [ (refl 0) ] ]";
     assert!(
         matches!(session.prepare(incompatible, &[], super::LIMITS), Err(error)
-        if error.stage() == Stage::Check)
+        if error.stage() == noble_contracts::source::Stage::Check)
     );
     Ok(())
 }
@@ -241,7 +198,8 @@ fn revision_two_proof_targets_only_revision_two_contract() -> Result<(), String>
 #[test]
 fn revision_two_rejects_pure_proofs_noncanonical_revisions_and_new_field_syntax(
 ) -> Result<(), String> {
-    let session = ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
+    let session =
+        noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     let bad = [
         b"module syntax@1 [ proof 2 p : [ true ] [ (refl 0) ] ]".as_slice(),
         b"module syntax@1 [ proof 3 p : [ true ] [ (refl 0) ] ]".as_slice(),
@@ -253,9 +211,66 @@ fn revision_two_rejects_pure_proofs_noncanonical_revisions_and_new_field_syntax(
     for source in bad {
         assert!(
             matches!(session.prepare(source, &[], super::LIMITS), Err(error)
-            if error.stage() == Stage::Parse)
+            if error.stage() == noble_contracts::source::Stage::Parse)
         );
     }
     assert_eq!(session.generation(), 0);
+    Ok(())
+}
+
+/// Every per-use row must carry its own specialization identity and stack shape.
+fn asserts_each_named_use_keeps_its_own_slot(
+    subject: &noble_contracts::intrinsic::SubjectBinding,
+) -> Result<(), String> {
+    let uses = &subject.named_uses;
+    let root = &uses[0];
+    for occurrence in &uses[1..] {
+        assert_eq!(occurrence.definition_name, "step");
+        assert_eq!(
+            occurrence.definition_ordinal, 1,
+            "same-body `other` must not be mistaken for original `step`"
+        );
+        assert_eq!(occurrence.caller_definition, Some(root.definition));
+        let source = occurrence
+            .source_span
+            .ok_or("missing original named call span")?;
+        let start =
+            usize::try_from(source.start).map_err(|_| "source start exceeds address space")?;
+        let end = usize::try_from(source.end).map_err(|_| "source end exceeds address space")?;
+        assert_eq!(TWICE.get(start..end), Some(b"d.step".as_slice()));
+        let owner = &subject.source_dependencies[occurrence.module_index];
+        assert_eq!((owner.module.as_str(), owner.version), ("donor", 1));
+        assert_eq!(owner.owner, occurrence.definition_owner);
+        assert_eq!(owner.full_source.as_slice(), DONOR);
+        let body_start = usize::try_from(occurrence.body_span.start)
+            .map_err(|_| "definition body start exceeds address space")?;
+        let body_end = usize::try_from(occurrence.body_span.end)
+            .map_err(|_| "definition body end exceeds address space")?;
+        assert_eq!(DONOR.get(body_start..body_end), Some(b"[ 1 + ]".as_slice()));
+        let def_start = usize::try_from(occurrence.definition_span.start)
+            .map_err(|_| "definition start exceeds address space")?;
+        let def_end = usize::try_from(occurrence.definition_span.end)
+            .map_err(|_| "definition end exceeds address space")?;
+        assert_eq!(
+            DONOR.get(def_start..def_end),
+            Some(b"def step# original step body\n[ 1 + ]".as_slice())
+        );
+        let row = subject
+            .accepted_submission
+            .definitions
+            .iter()
+            .find(|row| row.definition == occurrence.definition)
+            .ok_or("accepted graph lost named per-use row")?;
+        assert_eq!(row.identity, occurrence.definition_identity);
+        assert_eq!(row.expected.stack_in, [noble_kernel::types::Ty::I64]);
+        assert_eq!(row.expected.stack_out, [noble_kernel::types::Ty::I64]);
+    }
+    assert_ne!(
+        uses[1].definition, uses[2].definition,
+        "two `d.step` calls must not share one dynamic specialization slot"
+    );
+    assert_ne!(uses[1].source_node, uses[2].source_node);
+    assert_ne!(uses[1].source_span, uses[2].source_span);
+    assert_ne!(uses[1].candidate_node, uses[2].candidate_node);
     Ok(())
 }

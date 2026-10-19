@@ -28,30 +28,31 @@ fn abort_scheme() -> noble_kernel::words::Scheme {
 }
 
 fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
-    use noble_kernel::shapes::{EffectSlot, Pattern};
-    use noble_kernel::types::EffId;
-    use noble_kernel::words::{Scheme, Variable, VariableKind};
-    let stack = Pattern::StackVar(Variable(0));
+    let stack = noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0));
     [
-        Scheme {
-            var_kinds: alloc::vec![VariableKind::Stack],
+        noble_kernel::words::Scheme {
+            var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
             stack_in: alloc::vec![
                 stack.clone(),
-                Pattern::I64,
-                Pattern::program(
-                    alloc::vec![Pattern::I64],
-                    alloc::vec![Pattern::I64],
+                noble_kernel::shapes::Pattern::I64,
+                noble_kernel::shapes::Pattern::program(
+                    alloc::vec![noble_kernel::shapes::Pattern::I64],
+                    alloc::vec![noble_kernel::shapes::Pattern::I64],
                     alloc::vec::Vec::new()
                 )
             ],
-            stack_out: alloc::vec![stack.clone(), Pattern::Unit],
-            effects: alloc::vec![EffectSlot::Effect(EffId(3))],
+            stack_out: alloc::vec![stack.clone(), noble_kernel::shapes::Pattern::Unit],
+            effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
+                noble_kernel::types::EffId(3)
+            )],
         },
-        Scheme {
-            var_kinds: alloc::vec![VariableKind::Stack],
+        noble_kernel::words::Scheme {
+            var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
             stack_in: alloc::vec![stack.clone()],
-            stack_out: alloc::vec![stack, Pattern::I64],
-            effects: alloc::vec![EffectSlot::Effect(EffId(4))],
+            stack_out: alloc::vec![stack, noble_kernel::shapes::Pattern::I64],
+            effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
+                noble_kernel::types::EffId(4)
+            )],
         },
     ]
 }
@@ -68,7 +69,7 @@ pub(super) fn check(
     calculator: bool,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
-    let definition_limit = if calculator {
+    let definition_cap = if calculator {
         super::super::CALCULATOR_DEFINITION_LIMIT
     } else {
         super::super::DEFINITION_LIMIT
@@ -76,9 +77,9 @@ pub(super) fn check(
     let maximum_rows = if calculator {
         noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
     } else {
-        definition_limit.saturating_add(27)
+        definition_cap.saturating_add(27)
     };
-    if env.defs.len() > maximum_rows || submission.definitions.len() > definition_limit {
+    if env.defs.len() > maximum_rows || submission.definitions.len() > definition_cap {
         return Err(crate::Diagnostic::Exhausted);
     }
     if env.defs.len() < 23 {
@@ -93,23 +94,23 @@ pub(super) fn check(
     if env.definition_owners.len() != env.defs.len() {
         return Err(crate::Diagnostic::Invalid);
     }
-    if env.nominals.len() > definition_limit
-        || env.generic_variants.len() > definition_limit
-        || env.bound_adapters.len() > definition_limit
+    let has_excess_definitions = env.nominals.len() > definition_cap
+        || env.generic_variants.len() > definition_cap
+        || env.bound_adapters.len() > definition_cap
         || env.live_resource_nominals.len() > super::super::DEFINITION_LIMIT
-        || env.resource_kinds.len() > super::super::DEFINITION_LIMIT.saturating_add(1)
-    {
+        || env.resource_kinds.len() > super::super::DEFINITION_LIMIT.saturating_add(1);
+    if has_excess_definitions {
         return Err(crate::Diagnostic::Invalid);
     }
-    if env.live_slots != live_slots
+    let has_session_shape_mismatch = env.live_slots != live_slots
         || (env.live_test_hosts && !live_slots)
         || (live_slots && (live || text_cursor || !env.declared_modules))
         || env.text_cursor != text_cursor
         || (text_cursor && (live || env.declared_modules))
         || env.calculator != calculator
         || (calculator && (!env.declared_modules || !env.bound_adapters.is_empty()))
-        || (!live_slots && !env.live_resource_nominals.is_empty())
-    {
+        || (!live_slots && !env.live_resource_nominals.is_empty());
+    if has_session_shape_mismatch {
         return Err(crate::Diagnostic::Invalid);
     }
     let has_noncanonical_core_declarations = !env.declared_modules
@@ -176,7 +177,6 @@ pub(super) fn check(
 }
 
 fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: bool) -> bool {
-    use noble_kernel::contracts::{LIVE_DISPATCH, TEST_CLOCK, TEST_EMIT};
     let has_clock = env
         .kinds
         .iter()
@@ -186,19 +186,36 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
         // Both orderings are produced by the checked Env APIs, but no other
         // identity, duplication, or slot effect is ambiently available.
         return if has_clock {
-            env.effects == [TEST_EMIT, LIVE_DISPATCH, TEST_CLOCK]
-                || env.effects == [TEST_EMIT, TEST_CLOCK, LIVE_DISPATCH]
+            env.effects
+                == [
+                    noble_kernel::contracts::TEST_EMIT,
+                    noble_kernel::contracts::LIVE_DISPATCH,
+                    noble_kernel::contracts::TEST_CLOCK,
+                ]
+                || env.effects
+                    == [
+                        noble_kernel::contracts::TEST_EMIT,
+                        noble_kernel::contracts::TEST_CLOCK,
+                        noble_kernel::contracts::LIVE_DISPATCH,
+                    ]
         } else {
-            env.effects == [TEST_EMIT, LIVE_DISPATCH]
+            env.effects
+                == [
+                    noble_kernel::contracts::TEST_EMIT,
+                    noble_kernel::contracts::LIVE_DISPATCH,
+                ]
         };
     }
     let mut effects = if count == 23 || count == 27 || count == 32 {
-        alloc::vec![TEST_EMIT]
+        alloc::vec![noble_kernel::contracts::TEST_EMIT]
     } else {
-        alloc::vec![TEST_EMIT, noble_kernel::types::EffId(1)]
+        alloc::vec![
+            noble_kernel::contracts::TEST_EMIT,
+            noble_kernel::types::EffId(1)
+        ]
     };
     if has_clock {
-        effects.push(TEST_CLOCK);
+        effects.push(noble_kernel::contracts::TEST_CLOCK);
     }
     if count == 26 {
         effects.push(noble_kernel::types::EffId(3));
@@ -222,11 +239,11 @@ fn canonical_prefix(
         }
         let mut index = 0usize;
         while index < 32 {
-            if !same_scheme(&env.defs[index], &fixed.defs[index])
+            let has_definition_drift = !same_scheme(&env.defs[index], &fixed.defs[index])
                 || env.kinds[index] != fixed.kinds[index]
                 || !env.deps[index].is_empty()
-                || env.definition_owners[index].is_some()
-            {
+                || env.definition_owners[index].is_some();
+            if has_definition_drift {
                 return Err(crate::Diagnostic::Invalid);
             }
             index += 1;
@@ -241,11 +258,11 @@ fn canonical_prefix(
         }
         let mut index = 0usize;
         while index < 27 {
-            if !same_scheme(&env.defs[index], &fixed.defs[index])
+            let has_definition_drift = !same_scheme(&env.defs[index], &fixed.defs[index])
                 || env.kinds[index] != fixed.kinds[index]
                 || !env.deps[index].is_empty()
-                || env.definition_owners[index].is_some()
-            {
+                || env.definition_owners[index].is_some();
+            if has_definition_drift {
                 return Err(crate::Diagnostic::Invalid);
             }
             index += 1;
@@ -290,11 +307,11 @@ fn canonical_prefix(
         }
         for (index, scheme) in live_schemes().into_iter().enumerate() {
             let row = index + 24;
-            if !same_scheme(&env.defs[row], &scheme)
+            let has_scheme_row_drift = !same_scheme(&env.defs[row], &scheme)
                 || env.kinds[row] != noble_kernel::contracts::Behavior::Named
                 || !env.deps[row].is_empty()
-                || env.definition_owners[row].is_some()
-            {
+                || env.definition_owners[row].is_some();
+            if has_scheme_row_drift {
                 return Err(crate::Diagnostic::Invalid);
             }
             fixed.defs.push(scheme);
@@ -410,7 +427,7 @@ pub(super) fn work(
     calculator: bool,
     meter: &mut super::super::Work,
 ) -> Result<u64, crate::Diagnostic> {
-    let definition_limit = if calculator {
+    let definition_cap = if calculator {
         super::super::CALCULATOR_DEFINITION_LIMIT
     } else {
         super::super::DEFINITION_LIMIT
@@ -418,14 +435,14 @@ pub(super) fn work(
     let maximum_rows = if calculator {
         noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
     } else {
-        definition_limit.saturating_add(27)
+        definition_cap.saturating_add(27)
     };
     if environment.defs.len() > maximum_rows || environment.deps.len() > maximum_rows {
         return Err(crate::Diagnostic::Exhausted);
     }
-    if environment.nominals.len() > definition_limit
-        || environment.generic_variants.len() > definition_limit
-        || environment.bound_adapters.len() > definition_limit
+    if environment.nominals.len() > definition_cap
+        || environment.generic_variants.len() > definition_cap
+        || environment.bound_adapters.len() > definition_cap
     {
         return Err(crate::Diagnostic::Exhausted);
     }

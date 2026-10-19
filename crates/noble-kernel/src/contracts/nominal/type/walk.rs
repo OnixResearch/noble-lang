@@ -49,7 +49,8 @@ impl super::super::super::Env {
             crate::types::Ty::Resource(kind) => {
                 return max_nodes > 0
                     && self.resource_kinds.contains(kind)
-                    && (payload_only || !super::super::super::live::is_live_kind(self, *kind));
+                    && (payload_only
+                        || !super::super::super::live::kind_is_slot_resource(self, *kind));
             }
             crate::types::Ty::LiveRef(_, _, _) => return false,
             crate::types::Ty::Contract
@@ -122,7 +123,8 @@ impl super::super::super::Env {
                 self.enqueue_known_generic(*id, args, shape, payload_restricted, state, scope)
             }
             crate::types::Ty::Resource(kind) => (self.resource_kinds.contains(kind)
-                && (payload_restricted || !super::super::super::live::is_live_kind(self, *kind)))
+                && (payload_restricted
+                    || !super::super::super::live::kind_is_slot_resource(self, *kind)))
             .then_some(state),
             crate::types::Ty::LiveRef(_, _, _) => None,
             crate::types::Ty::Pair(left, right) | crate::types::Ty::Sum(left, right) => {
@@ -191,6 +193,10 @@ impl super::super::super::Env {
         Some(state)
     }
 
+    #[expect(
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-kernel; the parameter list is the kernel internal call shape; bundling it would change the extracted subject"
+    )]
     fn enqueue_known_generic<'a>(
         &self,
         id: crate::types::NominalTypeId,
@@ -233,13 +239,13 @@ impl super::super::super::Env {
             return false;
         }
         if self.live_slots && !self.live_resource_nominals.contains(&decl.id) {
-            let owns_resource = match &decl.shape {
+            let is_owns_resource = match &decl.shape {
                 crate::types::NominalShape::Opaque(representation) => !representation.is_data(),
                 crate::types::NominalShape::Variant(left, right) => {
                     !left.is_data() || !right.is_data()
                 }
             };
-            if owns_resource {
+            if is_owns_resource {
                 return false;
             }
         }

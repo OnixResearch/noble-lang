@@ -17,6 +17,10 @@ fn infer(
     super::inference::infer(scope, super::inference::Mode::Declaration, &[], &mut meter)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn compatible(
     session: &super::Session,
     previous: &super::Named,
@@ -63,6 +67,10 @@ struct Comparison<'a> {
 }
 
 impl Comparison<'_> {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the parameter is the owned builder state this stage accumulates into, not a borrowed input"
+    )]
     fn compare(&mut self) -> Result<bool, crate::Diagnostic> {
         while let Some((left, right)) = self.pending.pop() {
             self.meter.node(self.span)?;
@@ -70,6 +78,10 @@ impl Comparison<'_> {
             let right = self.new.root(right, self.span, &mut self.meter)?;
             let before = self.old.get(left, self.span)?;
             let after = self.new.get(right, self.span)?;
+            #[expect(
+                tigerstyle::non_trait_imports,
+                reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+            )]
             use crate::inference::Term;
             match (before, after) {
                 (Term::Hole(a), Term::Hole(b)) if a == b => {
