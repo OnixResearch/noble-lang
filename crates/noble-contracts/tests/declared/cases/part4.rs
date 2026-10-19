@@ -131,6 +131,13 @@ fn exact_increment_contract_binds_checked_definition_not_text_only() -> Result<(
     assert!(
         matches!(result, Err(error) if error.stage() == noble_contracts::source::Stage::Acceptance)
     );
+    asserts_rejected_budget_left_no_generation(session)
+}
+
+/// A rejected dependency-budget overflow must not advance the session generation.
+fn asserts_rejected_budget_left_no_generation(
+    session: noble_contracts::source::ModuleSession,
+) -> Result<(), String> {
     assert_eq!(session.generation(), 0);
     assert!(session
         .prepare(b"arithmetic@1.increment", &[], super::super::LIMITS)

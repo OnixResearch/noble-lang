@@ -65,15 +65,7 @@ fn direct_contract_uses_lexical_provenance_not_kernel_slot() -> Result<(), Strin
     );
     let (session, outcome) = session.commit(prepared);
     outcome.map_err(|error| format!("{error:?}"))?;
-    let executable = session
-        .prepare(
-            b"arithmetic@1.increment",
-            &[noble_kernel::types::Ty::I64],
-            super::LIMITS,
-        )
-        .map_err(|error| format!("{error:?}"))?;
-    assert_eq!(executable.output(), &[noble_kernel::types::Ty::I64]);
-    Ok(())
+    asserts_committed_increment_remains_executable(session)
 }
 
 #[test]
@@ -150,5 +142,20 @@ fn named_subject_cannot_claim_a_direct_builtin_only_mc1_body() -> Result<(), Str
     assert!(session
         .prepare(b"import named@1 as absent", &[], super::LIMITS)
         .is_err());
+    Ok(())
+}
+
+/// After the definition commits, the module-qualified call must stay executable.
+fn asserts_committed_increment_remains_executable(
+    session: noble_contracts::source::ModuleSession,
+) -> Result<(), String> {
+    let executable = session
+        .prepare(
+            b"arithmetic@1.increment",
+            &[noble_kernel::types::Ty::I64],
+            super::LIMITS,
+        )
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(executable.output(), &[noble_kernel::types::Ty::I64]);
     Ok(())
 }
