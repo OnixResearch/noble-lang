@@ -1,0 +1,8 @@
+{
+  "archive_id": "2026-09-28-2026-09-26-declared-modules-v1",
+  "archive_root": "af1ed20882d9d8ee2a0caa7b33fa101e26790ede57aad342be5ae2f0c7ab3f72",
+  "lossiness": "lossless",
+  "pack_manifest_path": ".cairn/compaction/v1/packs/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/manifest.json",
+  "pack_root": "98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331",
+  "schema_version": "cairn.archive-pointer.v1"
+}

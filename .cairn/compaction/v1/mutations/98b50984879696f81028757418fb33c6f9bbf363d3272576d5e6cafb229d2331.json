@@ -1,0 +1,512 @@
+{
+  "actions": [
+    {
+      "content_hash": "fa9767304f11d7d8a61b1bc6f79607077c997e3f221e915aaab96684bed0cec2",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/1970-01-01-m6-native-async"
+    },
+    {
+      "content_hash": "0e4b0bbced712038418bf7503b31bb2c037fd24378f38e0df32c6854ccdf0b79",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-09-15-m1-workspace"
+    },
+    {
+      "content_hash": "b4d636df58f13035b538a682b66f4f16c8c209f093b2b2859b03155e8ea46df4",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-09-18-m2-checker-feasibility"
+    },
+    {
+      "content_hash": "a186196fd1fe71c30af53a0a32f639094bbb38351f131157e299b2b9e1cbcfe6",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-09-19-m3-checker-coverage"
+    },
+    {
+      "content_hash": "6ad8978580882d330de9ff24743b718fc48c3b34fbbce2b1aa21fd1335068dee",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-09-20-m3-wasm-feasibility"
+    },
+    {
+      "content_hash": "b0775bc08561bc1ff19e356e55d1c623a1c566fe759ec7bf2442dcb9525176c0",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-09-20-mc1-contract-frontend"
+    },
+    {
+      "content_hash": "5aa5f8e8567d2ccc9685e6bf1f2c6a222f6e074f815851d4a4c6911300b8509d",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-09-21-m4-end-to-end-core"
+    },
+    {
+      "content_hash": "09044f6d588664d14704f8b6afbdbabf4eea783c66b66dff20744f7c12bb87cd",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-09-23-mc2-first-class-certified-programs"
+    },
+    {
+      "content_hash": "9eea04e1f8dd40a24cc9c62c9ce939e49c6c7aa61e437bbf1587df2ef3743598",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-09-25-m7-syndicate-service"
+    },
+    {
+      "content_hash": "e01af7e8a70c4f96887c2af74e635d5b366f879fa6f37e6fe0969dfddab16932",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-09-26-m8-choreography-projection"
+    },
+    {
+      "content_hash": "af1ed20882d9d8ee2a0caa7b33fa101e26790ede57aad342be5ae2f0c7ab3f72",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-09-28-2026-09-26-declared-modules-v1"
+    },
+    {
+      "content_hash": "adf8b5a4c4d2ce7be4c2e3615c3d7251bfe7e110a229dbc9615af035617f2f31",
+      "kind": "prune_expanded_archive",
+      "path": ".cairn/archive/2026-10-16-numeric-graph-profile"
+    },
+    {
+      "content_hash": null,
+      "kind": "append_ledger",
+      "path": ".cairn/compaction/v1/ledger.json"
+    },
+    {
+      "content_hash": null,
+      "kind": "write_mutation_manifest",
+      "path": ".cairn/compaction/v1/mutations/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331.json"
+    },
+    {
+      "content_hash": "0364a2f4444d42646005db5ea2a47a42d9864edb45bffdb43f75d778a65e1e79",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/0364a2f4444d42646005db5ea2a47a42d9864edb45bffdb43f75d778a65e1e79"
+    },
+    {
+      "content_hash": "093d4fb87a559291215235e2c9b687397dc4e685c0250e00bb61d2ec23560df1",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/093d4fb87a559291215235e2c9b687397dc4e685c0250e00bb61d2ec23560df1"
+    },
+    {
+      "content_hash": "0b28e6dd7318870338d1cc27fe1f33fe271727112b3fec3c2683a48fcc96fa20",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/0b28e6dd7318870338d1cc27fe1f33fe271727112b3fec3c2683a48fcc96fa20"
+    },
+    {
+      "content_hash": "0cc5dcb24922c2d49fc417153c5d2a0d4a0abae5d9f6cad007736b9af1163065",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/0cc5dcb24922c2d49fc417153c5d2a0d4a0abae5d9f6cad007736b9af1163065"
+    },
+    {
+      "content_hash": "0e23fdae3b038368150781ed52775753206e40c2bd344f21986e1870655c0c60",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/0e23fdae3b038368150781ed52775753206e40c2bd344f21986e1870655c0c60"
+    },
+    {
+      "content_hash": "12a8ba6983b055f809c2658cdef0a23d2e3b686dd6c88570c6a8c63811c127c9",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/12a8ba6983b055f809c2658cdef0a23d2e3b686dd6c88570c6a8c63811c127c9"
+    },
+    {
+      "content_hash": "15f48bacb3ee3cbf2114462b7bff4b5ca144e06b04947221517c49a4bb67c0e8",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/15f48bacb3ee3cbf2114462b7bff4b5ca144e06b04947221517c49a4bb67c0e8"
+    },
+    {
+      "content_hash": "16ffd3b7afc8f8f14289a79bb4a1ad83d3c72c32b88620a93bc049414910a38e",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/16ffd3b7afc8f8f14289a79bb4a1ad83d3c72c32b88620a93bc049414910a38e"
+    },
+    {
+      "content_hash": "17b14b650a38f360dfe64af9a9c3d8cbdc0b5d0c268400d817008738f6b90a66",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/17b14b650a38f360dfe64af9a9c3d8cbdc0b5d0c268400d817008738f6b90a66"
+    },
+    {
+      "content_hash": "1e5f647a34eec1fb086ff322e8d312b3111432d9d05ad031fc5669204d38bf45",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/1e5f647a34eec1fb086ff322e8d312b3111432d9d05ad031fc5669204d38bf45"
+    },
+    {
+      "content_hash": "229d10384eeb58e55bed14b7b1c8c153b2cab9ccdae404d8b8eb023433dbd0e3",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/229d10384eeb58e55bed14b7b1c8c153b2cab9ccdae404d8b8eb023433dbd0e3"
+    },
+    {
+      "content_hash": "2772cc1594b33b206c747d1f45292ecc6388f71a73bff900aae35daa8d4f1897",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/2772cc1594b33b206c747d1f45292ecc6388f71a73bff900aae35daa8d4f1897"
+    },
+    {
+      "content_hash": "3055c8b1cc1402f0554a1e3ad396e40e13af6fa9c50de98e468d6952cf780052",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/3055c8b1cc1402f0554a1e3ad396e40e13af6fa9c50de98e468d6952cf780052"
+    },
+    {
+      "content_hash": "331e03d74b730d82e8ac858f07a6c41d6586b329fb64231f8aeb96bf9cc4368d",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/331e03d74b730d82e8ac858f07a6c41d6586b329fb64231f8aeb96bf9cc4368d"
+    },
+    {
+      "content_hash": "39111fb7732330ecf26d9dc43b45cdfeab9f8f23759d94f509dfc973914e6e8b",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/39111fb7732330ecf26d9dc43b45cdfeab9f8f23759d94f509dfc973914e6e8b"
+    },
+    {
+      "content_hash": "3933cde5fcbb43614a52288672b89c763078cdd378442ebcece8b24220bbc58f",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/3933cde5fcbb43614a52288672b89c763078cdd378442ebcece8b24220bbc58f"
+    },
+    {
+      "content_hash": "3e267de2d73ffbff0dfe12ba4ea9f0bb05ee681fa54fe0de598191de61583910",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/3e267de2d73ffbff0dfe12ba4ea9f0bb05ee681fa54fe0de598191de61583910"
+    },
+    {
+      "content_hash": "4985073e9b7028a3f4d33cda308e903accf10cbd27f0797dfd9893d085780751",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/4985073e9b7028a3f4d33cda308e903accf10cbd27f0797dfd9893d085780751"
+    },
+    {
+      "content_hash": "4da99c42d05bc4470dac1b826a9c96f45aa8126a63982066882ed813674bfa58",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/4da99c42d05bc4470dac1b826a9c96f45aa8126a63982066882ed813674bfa58"
+    },
+    {
+      "content_hash": "4f802c0f20e6cadfd29870d0610889d4dcbfd59b382e7269d185d0bc0804cd44",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/4f802c0f20e6cadfd29870d0610889d4dcbfd59b382e7269d185d0bc0804cd44"
+    },
+    {
+      "content_hash": "5122fa398df0424c3dc5c47443feea460c605b1655483ddeeb6f55b581a34f94",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/5122fa398df0424c3dc5c47443feea460c605b1655483ddeeb6f55b581a34f94"
+    },
+    {
+      "content_hash": "578078be3124aa5b1658d48989a1f2fda281652fa51c35521ce7a51c3b164dcd",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/578078be3124aa5b1658d48989a1f2fda281652fa51c35521ce7a51c3b164dcd"
+    },
+    {
+      "content_hash": "5bf97d3a0d0b0d6bc4b9cfceb2da1388fe3916af93038fe8309b52607a024c17",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/5bf97d3a0d0b0d6bc4b9cfceb2da1388fe3916af93038fe8309b52607a024c17"
+    },
+    {
+      "content_hash": "614e86a878dc4288f866d6bc8ec5e1d716688903f97393816f4b2cbb7b7cb73a",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/614e86a878dc4288f866d6bc8ec5e1d716688903f97393816f4b2cbb7b7cb73a"
+    },
+    {
+      "content_hash": "631aa98eff410d90c68d45e1c2f17184fc0332a62101079baca17dce2256df0a",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/631aa98eff410d90c68d45e1c2f17184fc0332a62101079baca17dce2256df0a"
+    },
+    {
+      "content_hash": "63dcf03f50a0baef61448fb50c0524ab0d6577cfb96e3e7504f7d6e029c3687c",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/63dcf03f50a0baef61448fb50c0524ab0d6577cfb96e3e7504f7d6e029c3687c"
+    },
+    {
+      "content_hash": "6cb8cc44716f209f7123f203809202de080d9cbb12bda53fc2ff3683c9f5fbb3",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/6cb8cc44716f209f7123f203809202de080d9cbb12bda53fc2ff3683c9f5fbb3"
+    },
+    {
+      "content_hash": "70389443ae84fadb2b7c0a0f572d8b5f3cd8ecede64e451f377b293d09cb7016",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/70389443ae84fadb2b7c0a0f572d8b5f3cd8ecede64e451f377b293d09cb7016"
+    },
+    {
+      "content_hash": "764ea0c85bc0493c9134245f53e3598be247ee9f8ac66ce8ebd64f9474ecef9e",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/764ea0c85bc0493c9134245f53e3598be247ee9f8ac66ce8ebd64f9474ecef9e"
+    },
+    {
+      "content_hash": "7b71ad5fc5a7b072620b4282207b925ff2cbaa6187de594e9d13e9522e4b6365",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/7b71ad5fc5a7b072620b4282207b925ff2cbaa6187de594e9d13e9522e4b6365"
+    },
+    {
+      "content_hash": "7db6c92162cc83c160cffa86ba82a0a20fc23ec573506d5ae9b4535c74dde387",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/7db6c92162cc83c160cffa86ba82a0a20fc23ec573506d5ae9b4535c74dde387"
+    },
+    {
+      "content_hash": "860eb86b7b47a3524c5d598059de9e64feeb1eadee2b2f30a3473e8641241f1f",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/860eb86b7b47a3524c5d598059de9e64feeb1eadee2b2f30a3473e8641241f1f"
+    },
+    {
+      "content_hash": "86c8182fea731ee7d3de44a70d1c87b30761308cae33ad5d53c066388a2a7c75",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/86c8182fea731ee7d3de44a70d1c87b30761308cae33ad5d53c066388a2a7c75"
+    },
+    {
+      "content_hash": "89b36d97c8d9c0157a9187e9d7c04ea861f924909744cc8338332e8c0e7b043e",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/89b36d97c8d9c0157a9187e9d7c04ea861f924909744cc8338332e8c0e7b043e"
+    },
+    {
+      "content_hash": "8ecdbfac45445c9d9340a394a27e74911d9d55530b1ca7f7bd4416ceec42cc8b",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/8ecdbfac45445c9d9340a394a27e74911d9d55530b1ca7f7bd4416ceec42cc8b"
+    },
+    {
+      "content_hash": "9523b0caab219c1b790bb275973e17a419fb2ad88b1a48958a3415b1f64ce0df",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/9523b0caab219c1b790bb275973e17a419fb2ad88b1a48958a3415b1f64ce0df"
+    },
+    {
+      "content_hash": "98065daadb78bf403d0391a43316118e5f2003aaaad5f680f4bb0e801918a34b",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/98065daadb78bf403d0391a43316118e5f2003aaaad5f680f4bb0e801918a34b"
+    },
+    {
+      "content_hash": "a2a986cdcacbe52f16a1247a68baccd91bfecb3ec7715a9c4b9004f65bec31fd",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/a2a986cdcacbe52f16a1247a68baccd91bfecb3ec7715a9c4b9004f65bec31fd"
+    },
+    {
+      "content_hash": "ab60880ba5fd03fa9b5c40e2a5d999c25762460a780289ec1d6d106474eb93fd",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/ab60880ba5fd03fa9b5c40e2a5d999c25762460a780289ec1d6d106474eb93fd"
+    },
+    {
+      "content_hash": "abb5e3a4a6c1f6be52961347772228f7c32492d02777dc7e58dedaa217eab0a2",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/abb5e3a4a6c1f6be52961347772228f7c32492d02777dc7e58dedaa217eab0a2"
+    },
+    {
+      "content_hash": "b18b3310f4818ad9e4edc26ddbf81fa1ebe24fed8b36a1d7a9faa0f5d3a5fcb1",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/b18b3310f4818ad9e4edc26ddbf81fa1ebe24fed8b36a1d7a9faa0f5d3a5fcb1"
+    },
+    {
+      "content_hash": "bbab9c101b2876dea83f2e2d3e162a116f0a765e41c3d06ec54f043453e98cbd",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/bbab9c101b2876dea83f2e2d3e162a116f0a765e41c3d06ec54f043453e98cbd"
+    },
+    {
+      "content_hash": "c7b88cf0c31afd9f499e8b7df162ff09f8f98711e18764c97dc5c0a53560f260",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/c7b88cf0c31afd9f499e8b7df162ff09f8f98711e18764c97dc5c0a53560f260"
+    },
+    {
+      "content_hash": "c7f172acbbcb80d3eba32ea6d4a481e9aba7f7d2dc7298af503f5f63b7765339",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/c7f172acbbcb80d3eba32ea6d4a481e9aba7f7d2dc7298af503f5f63b7765339"
+    },
+    {
+      "content_hash": "c8b9bb64d4d7bc4d12d39ab6bd50c3a318c1396e87b5e5b219acd51360051e1a",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/c8b9bb64d4d7bc4d12d39ab6bd50c3a318c1396e87b5e5b219acd51360051e1a"
+    },
+    {
+      "content_hash": "d2540125990d59266351f4c51ea86a9d05b84e6420a28f452d8c8403f828cbd3",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/d2540125990d59266351f4c51ea86a9d05b84e6420a28f452d8c8403f828cbd3"
+    },
+    {
+      "content_hash": "d567c98f52796b13af1271a46444eb1b2c0ead4d66e4418df49a057733583294",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/d567c98f52796b13af1271a46444eb1b2c0ead4d66e4418df49a057733583294"
+    },
+    {
+      "content_hash": "d6f22ecbbd19de76cdd6bd1bc643e1bf2794134c3f888ef65f92fcd112a86c9d",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/d6f22ecbbd19de76cdd6bd1bc643e1bf2794134c3f888ef65f92fcd112a86c9d"
+    },
+    {
+      "content_hash": "dc8bebab5b6053795a6a969663d9980886a83676da407b1df19ed9fc388ab9ae",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/dc8bebab5b6053795a6a969663d9980886a83676da407b1df19ed9fc388ab9ae"
+    },
+    {
+      "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db"
+    },
+    {
+      "content_hash": "e22fbbabae34876d4e5a1792d8f13603449ca520b7490655466952eac7f9866b",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/e22fbbabae34876d4e5a1792d8f13603449ca520b7490655466952eac7f9866b"
+    },
+    {
+      "content_hash": "e78b749963baa3ce891161b986759360c617b698c90f3ad9b9f6415646a0b4e8",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/e78b749963baa3ce891161b986759360c617b698c90f3ad9b9f6415646a0b4e8"
+    },
+    {
+      "content_hash": "e7fe3c0d3af0d1cd935748c55888452cf95d1b608c52361f218035ecc37162e7",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/e7fe3c0d3af0d1cd935748c55888452cf95d1b608c52361f218035ecc37162e7"
+    },
+    {
+      "content_hash": "e976c184a3d61ed067db3eae61302adf206e468ccbe83196dbe899fab9b4a8db",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/e976c184a3d61ed067db3eae61302adf206e468ccbe83196dbe899fab9b4a8db"
+    },
+    {
+      "content_hash": "ebf370be9732ecee6f8f9fed517920e1a475304cb143e8ec83ea0708b48c37ba",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/ebf370be9732ecee6f8f9fed517920e1a475304cb143e8ec83ea0708b48c37ba"
+    },
+    {
+      "content_hash": "ee48ab3e30f813d2e846aad3e44548328439349fbc2991bb3f01365d21bd6e63",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/ee48ab3e30f813d2e846aad3e44548328439349fbc2991bb3f01365d21bd6e63"
+    },
+    {
+      "content_hash": "f1a916bad9edad2e156e6ba0a71dc8a8b703961ea059e958205241c8704e5388",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/f1a916bad9edad2e156e6ba0a71dc8a8b703961ea059e958205241c8704e5388"
+    },
+    {
+      "content_hash": "f812f2426c4e3733a98f11b19d8f3cc7d31753e09c2ae7d93464c7d467e78171",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/f812f2426c4e3733a98f11b19d8f3cc7d31753e09c2ae7d93464c7d467e78171"
+    },
+    {
+      "content_hash": "fc46a8e226e13e01711adaa1250eaaf5d34d5bf69959e7f2006b915deb35f582",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/fc46a8e226e13e01711adaa1250eaaf5d34d5bf69959e7f2006b915deb35f582"
+    },
+    {
+      "content_hash": "fd6224c4312576956a62aeff8bb22a91c52d24fb58339a52b93e687dd269da48",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/fd6224c4312576956a62aeff8bb22a91c52d24fb58339a52b93e687dd269da48"
+    },
+    {
+      "content_hash": "ff4ac3965109658bd376232d027b1b782306fa16579f28bab140692f1cece92c",
+      "kind": "write_object",
+      "path": ".cairn/compaction/v1/objects/blake3/ff4ac3965109658bd376232d027b1b782306fa16579f28bab140692f1cece92c"
+    },
+    {
+      "content_hash": "70e34e3739fefef61bdb1d12e6e7fff05f6c67c87bdb7c3a8c77d8fdca60e8e3",
+      "kind": "write_pack_manifest",
+      "path": ".cairn/compaction/v1/packs/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/manifest.json"
+    },
+    {
+      "content_hash": "245a0c593a57916c578ef45538579819cbab97cfb9e00d855a5207f6fd722b54",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/1970-01-01-m6-native-async.json"
+    },
+    {
+      "content_hash": "3f4cf1101df55243b1686a471076bc64bfa63b1ddaeb777246d2b914b6c4e457",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-09-15-m1-workspace.json"
+    },
+    {
+      "content_hash": "a6f3640949189ea10cf3fcaa29e97a8c9a79244d7e4ce3381d355a3f1e3c9d91",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-09-18-m2-checker-feasibility.json"
+    },
+    {
+      "content_hash": "dd6e11bdd2db270752fd98451590449d38d4ed76911c5133e3f6fcaaabafd26c",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-09-19-m3-checker-coverage.json"
+    },
+    {
+      "content_hash": "7d7a43dc9eb207b220da8887f22af23ac2f8db33d72184b6ef0d62d0c1d376b4",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-09-20-m3-wasm-feasibility.json"
+    },
+    {
+      "content_hash": "72052b997399b44f6cf6150725c163b195899ccc59fecb2c04bef26bc7340444",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-09-20-mc1-contract-frontend.json"
+    },
+    {
+      "content_hash": "4c1103463070b8d0c6780a038166671e03b5fdeba62794ce1964992b7fe5cda3",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-09-21-m4-end-to-end-core.json"
+    },
+    {
+      "content_hash": "bb3dfd0d70491a660a0347c750c1a0973df86cf6646cbe0d7bae5afd63b85aff",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-09-23-mc2-first-class-certified-programs.json"
+    },
+    {
+      "content_hash": "bf05d275994695431eb5bf302b1a5e09e59877b92e3607133edb02d222ab5af2",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-09-25-m7-syndicate-service.json"
+    },
+    {
+      "content_hash": "05c347238da7fc4739680c7982ed966e9481abefeada2ae2e81ae2ec13c3d3f4",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-09-26-m8-choreography-projection.json"
+    },
+    {
+      "content_hash": "402bbf47973e223322d9a61b65e6179427e8bc67f6604d45c597c7877aa1b447",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-09-28-2026-09-26-declared-modules-v1.json"
+    },
+    {
+      "content_hash": "62398c10044f22f013383ab34ac636b396887d8eece365c7d5f43ddf2c101cf6",
+      "kind": "finalize_pointer",
+      "path": ".cairn/compaction/v1/pointers/2026-10-16-numeric-graph-profile.json"
+    },
+    {
+      "content_hash": "245a0c593a57916c578ef45538579819cbab97cfb9e00d855a5207f6fd722b54",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/1970-01-01-m6-native-async.json"
+    },
+    {
+      "content_hash": "3f4cf1101df55243b1686a471076bc64bfa63b1ddaeb777246d2b914b6c4e457",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-09-15-m1-workspace.json"
+    },
+    {
+      "content_hash": "a6f3640949189ea10cf3fcaa29e97a8c9a79244d7e4ce3381d355a3f1e3c9d91",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-09-18-m2-checker-feasibility.json"
+    },
+    {
+      "content_hash": "dd6e11bdd2db270752fd98451590449d38d4ed76911c5133e3f6fcaaabafd26c",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-09-19-m3-checker-coverage.json"
+    },
+    {
+      "content_hash": "7d7a43dc9eb207b220da8887f22af23ac2f8db33d72184b6ef0d62d0c1d376b4",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-09-20-m3-wasm-feasibility.json"
+    },
+    {
+      "content_hash": "72052b997399b44f6cf6150725c163b195899ccc59fecb2c04bef26bc7340444",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-09-20-mc1-contract-frontend.json"
+    },
+    {
+      "content_hash": "4c1103463070b8d0c6780a038166671e03b5fdeba62794ce1964992b7fe5cda3",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-09-21-m4-end-to-end-core.json"
+    },
+    {
+      "content_hash": "bb3dfd0d70491a660a0347c750c1a0973df86cf6646cbe0d7bae5afd63b85aff",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-09-23-mc2-first-class-certified-programs.json"
+    },
+    {
+      "content_hash": "bf05d275994695431eb5bf302b1a5e09e59877b92e3607133edb02d222ab5af2",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-09-25-m7-syndicate-service.json"
+    },
+    {
+      "content_hash": "05c347238da7fc4739680c7982ed966e9481abefeada2ae2e81ae2ec13c3d3f4",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-09-26-m8-choreography-projection.json"
+    },
+    {
+      "content_hash": "402bbf47973e223322d9a61b65e6179427e8bc67f6604d45c597c7877aa1b447",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-09-28-2026-09-26-declared-modules-v1.json"
+    },
+    {
+      "content_hash": "62398c10044f22f013383ab34ac636b396887d8eece365c7d5f43ddf2c101cf6",
+      "kind": "write_prepared_pointer",
+      "path": ".cairn/compaction/v1/prepared/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/2026-10-16-numeric-graph-profile.json"
+    },
+    {
+      "content_hash": null,
+      "kind": "write_receipt",
+      "path": ".cairn/compaction/v1/receipts/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331.json"
+    }
+  ],
+  "mutation_manifest_hash": "861c5f9ce3ba24abcc2455697d929d50cb412b4895888b0955250216e7c9561f",
+  "plan_hash": "5d8ecfc6529642b076b1f69e4cf6384d3fb79395080d933b6f950d160dfc545f",
+  "schema_version": "cairn.archive-compaction-mutation-manifest.v1"
+}

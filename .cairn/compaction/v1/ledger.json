@@ -1,0 +1,15 @@
+{
+  "entries": [
+    {
+      "chain_hash": "8b02f7ffe23f41feda7625b6a7f4d782d082736cc39626af807328d127828bc7",
+      "receipt_hash": "7f0b3c2db1973964760c89a1809feb6730d677676f63dd93e61040a85eb64eb1",
+      "receipt_path": ".cairn/compaction/v1/receipts/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331.json",
+      "sequence": 1
+    }
+  ],
+  "genesis_chain_hash": "48bf221364bad3770d8692d75460061ef933ac0be720b07407d97fbb19008ab0",
+  "latest_chain_hash": "8b02f7ffe23f41feda7625b6a7f4d782d082736cc39626af807328d127828bc7",
+  "ledger_hash": "bd6ad44a7314a91ed94c810b1c30bf3d05ae62b37a8819a6efbe3b6d1494a07f",
+  "policy_hash": "ea271eb6f17312d7960a4848201e568039ba6fc7e476c748413e5f90cba45d0a",
+  "schema_version": "cairn.archive-compaction-ledger.v1"
+}

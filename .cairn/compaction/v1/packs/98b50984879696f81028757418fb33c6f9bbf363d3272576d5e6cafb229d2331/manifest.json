@@ -1,0 +1,829 @@
+{
+  "archives": [
+    {
+      "archive_id": "1970-01-01-m6-native-async",
+      "archive_root": "fa9767304f11d7d8a61b1bc6f79607077c997e3f221e915aaab96684bed0cec2",
+      "entries": [
+        {
+          "archive_id": "1970-01-01-m6-native-async",
+          "byte_length": 9250,
+          "content_hash": "0364a2f4444d42646005db5ea2a47a42d9864edb45bffdb43f75d778a65e1e79",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "1970-01-01-m6-native-async",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "1970-01-01-m6-native-async",
+          "byte_length": 1817,
+          "content_hash": "d2540125990d59266351f4c51ea86a9d05b84e6420a28f452d8c8403f828cbd3",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "1970-01-01-m6-native-async",
+          "byte_length": 22758,
+          "content_hash": "12a8ba6983b055f809c2658cdef0a23d2e3b686dd6c88570c6a8c63811c127c9",
+          "path": "specs/resource-adapters/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "1970-01-01-m6-native-async",
+          "byte_length": 18801,
+          "content_hash": "3933cde5fcbb43614a52288672b89c763078cdd378442ebcece8b24220bbc58f",
+          "path": "specs/wit-wasi/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "1970-01-01-m6-native-async",
+          "byte_length": 2225,
+          "content_hash": "c7b88cf0c31afd9f499e8b7df162ff09f8f98711e18764c97dc5c0a53560f260",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-09-15-m1-workspace",
+      "archive_root": "0e4b0bbced712038418bf7503b31bb2c037fd24378f38e0df32c6854ccdf0b79",
+      "entries": [
+        {
+          "archive_id": "2026-09-15-m1-workspace",
+          "byte_length": 2767,
+          "content_hash": "860eb86b7b47a3524c5d598059de9e64feeb1eadee2b2f30a3473e8641241f1f",
+          "path": "body-owner-adoption-evidence.md",
+          "role": "archive_file"
+        },
+        {
+          "archive_id": "2026-09-15-m1-workspace",
+          "byte_length": 3582,
+          "content_hash": "f1a916bad9edad2e156e6ba0a71dc8a8b703961ea059e958205241c8704e5388",
+          "path": "boundary-evidence.md",
+          "role": "archive_file"
+        },
+        {
+          "archive_id": "2026-09-15-m1-workspace",
+          "byte_length": 15854,
+          "content_hash": "ebf370be9732ecee6f8f9fed517920e1a475304cb143e8ec83ea0708b48c37ba",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-09-15-m1-workspace",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-09-15-m1-workspace",
+          "byte_length": 4381,
+          "content_hash": "0b28e6dd7318870338d1cc27fe1f33fe271727112b3fec3c2683a48fcc96fa20",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-09-15-m1-workspace",
+          "byte_length": 4447,
+          "content_hash": "3e267de2d73ffbff0dfe12ba4ea9f0bb05ee681fa54fe0de598191de61583910",
+          "path": "randomness-evidence.md",
+          "role": "archive_file"
+        },
+        {
+          "archive_id": "2026-09-15-m1-workspace",
+          "byte_length": 4655,
+          "content_hash": "86c8182fea731ee7d3de44a70d1c87b30761308cae33ad5d53c066388a2a7c75",
+          "path": "runbook-evidence.md",
+          "role": "archive_file"
+        },
+        {
+          "archive_id": "2026-09-15-m1-workspace",
+          "byte_length": 10861,
+          "content_hash": "8ecdbfac45445c9d9340a394a27e74911d9d55530b1ca7f7bd4416ceec42cc8b",
+          "path": "specs/verification-toolchain/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-15-m1-workspace",
+          "byte_length": 7089,
+          "content_hash": "d6f22ecbbd19de76cdd6bd1bc643e1bf2794134c3f888ef65f92fcd112a86c9d",
+          "path": "tasks.md",
+          "role": "tasks"
+        },
+        {
+          "archive_id": "2026-09-15-m1-workspace",
+          "byte_length": 4019,
+          "content_hash": "e7fe3c0d3af0d1cd935748c55888452cf95d1b608c52361f218035ecc37162e7",
+          "path": "tool-selection-evidence.md",
+          "role": "archive_file"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-09-18-m2-checker-feasibility",
+      "archive_root": "b4d636df58f13035b538a682b66f4f16c8c209f093b2b2859b03155e8ea46df4",
+      "entries": [
+        {
+          "archive_id": "2026-09-18-m2-checker-feasibility",
+          "byte_length": 15924,
+          "content_hash": "4f802c0f20e6cadfd29870d0610889d4dcbfd59b382e7269d185d0bc0804cd44",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-09-18-m2-checker-feasibility",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-09-18-m2-checker-feasibility",
+          "byte_length": 5749,
+          "content_hash": "e22fbbabae34876d4e5a1792d8f13603449ca520b7490655466952eac7f9866b",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-09-18-m2-checker-feasibility",
+          "byte_length": 6413,
+          "content_hash": "0e23fdae3b038368150781ed52775753206e40c2bd344f21986e1870655c0c60",
+          "path": "specs/verification-toolchain/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-18-m2-checker-feasibility",
+          "byte_length": 5026,
+          "content_hash": "1e5f647a34eec1fb086ff322e8d312b3111432d9d05ad031fc5669204d38bf45",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-09-19-m3-checker-coverage",
+      "archive_root": "a186196fd1fe71c30af53a0a32f639094bbb38351f131157e299b2b9e1cbcfe6",
+      "entries": [
+        {
+          "archive_id": "2026-09-19-m3-checker-coverage",
+          "byte_length": 24159,
+          "content_hash": "331e03d74b730d82e8ac858f07a6c41d6586b329fb64231f8aeb96bf9cc4368d",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-09-19-m3-checker-coverage",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-09-19-m3-checker-coverage",
+          "byte_length": 7049,
+          "content_hash": "6cb8cc44716f209f7123f203809202de080d9cbb12bda53fc2ff3683c9f5fbb3",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-09-19-m3-checker-coverage",
+          "byte_length": 8853,
+          "content_hash": "fc46a8e226e13e01711adaa1250eaaf5d34d5bf69959e7f2006b915deb35f582",
+          "path": "specs/verification-toolchain/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-19-m3-checker-coverage",
+          "byte_length": 17869,
+          "content_hash": "16ffd3b7afc8f8f14289a79bb4a1ad83d3c72c32b88620a93bc049414910a38e",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-09-20-m3-wasm-feasibility",
+      "archive_root": "6ad8978580882d330de9ff24743b718fc48c3b34fbbce2b1aa21fd1335068dee",
+      "entries": [
+        {
+          "archive_id": "2026-09-20-m3-wasm-feasibility",
+          "byte_length": 7020,
+          "content_hash": "ff4ac3965109658bd376232d027b1b782306fa16579f28bab140692f1cece92c",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-09-20-m3-wasm-feasibility",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-09-20-m3-wasm-feasibility",
+          "byte_length": 1676,
+          "content_hash": "229d10384eeb58e55bed14b7b1c8c153b2cab9ccdae404d8b8eb023433dbd0e3",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-09-20-m3-wasm-feasibility",
+          "byte_length": 3840,
+          "content_hash": "631aa98eff410d90c68d45e1c2f17184fc0332a62101079baca17dce2256df0a",
+          "path": "specs/backend-experiments/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-20-m3-wasm-feasibility",
+          "byte_length": 3062,
+          "content_hash": "d567c98f52796b13af1271a46444eb1b2c0ead4d66e4418df49a057733583294",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-09-20-mc1-contract-frontend",
+      "archive_root": "b0775bc08561bc1ff19e356e55d1c623a1c566fe759ec7bf2442dcb9525176c0",
+      "entries": [
+        {
+          "archive_id": "2026-09-20-mc1-contract-frontend",
+          "byte_length": 5955,
+          "content_hash": "c8b9bb64d4d7bc4d12d39ab6bd50c3a318c1396e87b5e5b219acd51360051e1a",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-09-20-mc1-contract-frontend",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-09-20-mc1-contract-frontend",
+          "byte_length": 1625,
+          "content_hash": "70389443ae84fadb2b7c0a0f572d8b5f3cd8ecede64e451f377b293d09cb7016",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-09-20-mc1-contract-frontend",
+          "byte_length": 4084,
+          "content_hash": "98065daadb78bf403d0391a43316118e5f2003aaaad5f680f4bb0e801918a34b",
+          "path": "specs/program-contracts/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-20-mc1-contract-frontend",
+          "byte_length": 3736,
+          "content_hash": "614e86a878dc4288f866d6bc8ec5e1d716688903f97393816f4b2cbb7b7cb73a",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-09-21-m4-end-to-end-core",
+      "archive_root": "5aa5f8e8567d2ccc9685e6bf1f2c6a222f6e074f815851d4a4c6911300b8509d",
+      "entries": [
+        {
+          "archive_id": "2026-09-21-m4-end-to-end-core",
+          "byte_length": 6840,
+          "content_hash": "2772cc1594b33b206c747d1f45292ecc6388f71a73bff900aae35daa8d4f1897",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-09-21-m4-end-to-end-core",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-09-21-m4-end-to-end-core",
+          "byte_length": 2111,
+          "content_hash": "9523b0caab219c1b790bb275973e17a419fb2ad88b1a48958a3415b1f64ce0df",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-09-21-m4-end-to-end-core",
+          "byte_length": 3521,
+          "content_hash": "c7f172acbbcb80d3eba32ea6d4a481e9aba7f7d2dc7298af503f5f63b7765339",
+          "path": "specs/core-bootstrap/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-21-m4-end-to-end-core",
+          "byte_length": 3634,
+          "content_hash": "f812f2426c4e3733a98f11b19d8f3cc7d31753e09c2ae7d93464c7d467e78171",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-09-23-mc2-first-class-certified-programs",
+      "archive_root": "09044f6d588664d14704f8b6afbdbabf4eea783c66b66dff20744f7c12bb87cd",
+      "entries": [
+        {
+          "archive_id": "2026-09-23-mc2-first-class-certified-programs",
+          "byte_length": 5652,
+          "content_hash": "5bf97d3a0d0b0d6bc4b9cfceb2da1388fe3916af93038fe8309b52607a024c17",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-09-23-mc2-first-class-certified-programs",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-09-23-mc2-first-class-certified-programs",
+          "byte_length": 2215,
+          "content_hash": "b18b3310f4818ad9e4edc26ddbf81fa1ebe24fed8b36a1d7a9faa0f5d3a5fcb1",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-09-23-mc2-first-class-certified-programs",
+          "byte_length": 4357,
+          "content_hash": "bbab9c101b2876dea83f2e2d3e162a116f0a765e41c3d06ec54f043453e98cbd",
+          "path": "specs/program-contracts/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-23-mc2-first-class-certified-programs",
+          "byte_length": 2865,
+          "content_hash": "0cc5dcb24922c2d49fc417153c5d2a0d4a0abae5d9f6cad007736b9af1163065",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-09-25-m7-syndicate-service",
+      "archive_root": "9eea04e1f8dd40a24cc9c62c9ce939e49c6c7aa61e437bbf1587df2ef3743598",
+      "entries": [
+        {
+          "archive_id": "2026-09-25-m7-syndicate-service",
+          "byte_length": 5492,
+          "content_hash": "7b71ad5fc5a7b072620b4282207b925ff2cbaa6187de594e9d13e9522e4b6365",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-09-25-m7-syndicate-service",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-09-25-m7-syndicate-service",
+          "byte_length": 2425,
+          "content_hash": "5122fa398df0424c3dc5c47443feea460c605b1655483ddeeb6f55b581a34f94",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-09-25-m7-syndicate-service",
+          "byte_length": 16818,
+          "content_hash": "764ea0c85bc0493c9134245f53e3598be247ee9f8ac66ce8ebd64f9474ecef9e",
+          "path": "specs/safety/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-25-m7-syndicate-service",
+          "byte_length": 8504,
+          "content_hash": "a2a986cdcacbe52f16a1247a68baccd91bfecb3ec7715a9c4b9004f65bec31fd",
+          "path": "specs/wit-wasi/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-25-m7-syndicate-service",
+          "byte_length": 2070,
+          "content_hash": "ab60880ba5fd03fa9b5c40e2a5d999c25762460a780289ec1d6d106474eb93fd",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-09-26-m8-choreography-projection",
+      "archive_root": "e01af7e8a70c4f96887c2af74e635d5b366f879fa6f37e6fe0969dfddab16932",
+      "entries": [
+        {
+          "archive_id": "2026-09-26-m8-choreography-projection",
+          "byte_length": 9792,
+          "content_hash": "89b36d97c8d9c0157a9187e9d7c04ea861f924909744cc8338332e8c0e7b043e",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-09-26-m8-choreography-projection",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-09-26-m8-choreography-projection",
+          "byte_length": 2739,
+          "content_hash": "fd6224c4312576956a62aeff8bb22a91c52d24fb58339a52b93e687dd269da48",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-09-26-m8-choreography-projection",
+          "byte_length": 7457,
+          "content_hash": "63dcf03f50a0baef61448fb50c0524ab0d6577cfb96e3e7504f7d6e029c3687c",
+          "path": "specs/safety/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-26-m8-choreography-projection",
+          "byte_length": 3248,
+          "content_hash": "4985073e9b7028a3f4d33cda308e903accf10cbd27f0797dfd9893d085780751",
+          "path": "specs/wit-wasi/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-26-m8-choreography-projection",
+          "byte_length": 2312,
+          "content_hash": "dc8bebab5b6053795a6a969663d9980886a83676da407b1df19ed9fc388ab9ae",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-09-28-2026-09-26-declared-modules-v1",
+      "archive_root": "af1ed20882d9d8ee2a0caa7b33fa101e26790ede57aad342be5ae2f0c7ab3f72",
+      "entries": [
+        {
+          "archive_id": "2026-09-28-2026-09-26-declared-modules-v1",
+          "byte_length": 13239,
+          "content_hash": "ee48ab3e30f813d2e846aad3e44548328439349fbc2991bb3f01365d21bd6e63",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-09-28-2026-09-26-declared-modules-v1",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-09-28-2026-09-26-declared-modules-v1",
+          "byte_length": 2435,
+          "content_hash": "39111fb7732330ecf26d9dc43b45cdfeab9f8f23759d94f509dfc973914e6e8b",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-09-28-2026-09-26-declared-modules-v1",
+          "byte_length": 5817,
+          "content_hash": "15f48bacb3ee3cbf2114462b7bff4b5ca144e06b04947221517c49a4bb67c0e8",
+          "path": "specs/developer-experience/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-09-28-2026-09-26-declared-modules-v1",
+          "byte_length": 2583,
+          "content_hash": "093d4fb87a559291215235e2c9b687397dc4e685c0250e00bb61d2ec23560df1",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    },
+    {
+      "archive_id": "2026-10-16-numeric-graph-profile",
+      "archive_root": "adf8b5a4c4d2ce7be4c2e3615c3d7251bfe7e110a229dbc9615af035617f2f31",
+      "entries": [
+        {
+          "archive_id": "2026-10-16-numeric-graph-profile",
+          "byte_length": 63268,
+          "content_hash": "abb5e3a4a6c1f6be52961347772228f7c32492d02777dc7e58dedaa217eab0a2",
+          "path": "design.md",
+          "role": "design"
+        },
+        {
+          "archive_id": "2026-10-16-numeric-graph-profile",
+          "byte_length": 105,
+          "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db",
+          "path": "metadata.json",
+          "role": "metadata"
+        },
+        {
+          "archive_id": "2026-10-16-numeric-graph-profile",
+          "byte_length": 4410,
+          "content_hash": "e976c184a3d61ed067db3eae61302adf206e468ccbe83196dbe899fab9b4a8db",
+          "path": "proposal.md",
+          "role": "proposal"
+        },
+        {
+          "archive_id": "2026-10-16-numeric-graph-profile",
+          "byte_length": 889,
+          "content_hash": "3055c8b1cc1402f0554a1e3ad396e40e13af6fa9c50de98e468d6952cf780052",
+          "path": "specs/backend-experiments/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-10-16-numeric-graph-profile",
+          "byte_length": 1119,
+          "content_hash": "e78b749963baa3ce891161b986759360c617b698c90f3ad9b9f6415646a0b4e8",
+          "path": "specs/evidence/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-10-16-numeric-graph-profile",
+          "byte_length": 3834,
+          "content_hash": "4da99c42d05bc4470dac1b826a9c96f45aa8126a63982066882ed813674bfa58",
+          "path": "specs/language/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-10-16-numeric-graph-profile",
+          "byte_length": 865,
+          "content_hash": "17b14b650a38f360dfe64af9a9c3d8cbdc0b5d0c268400d817008738f6b90a66",
+          "path": "specs/safety/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-10-16-numeric-graph-profile",
+          "byte_length": 1783,
+          "content_hash": "7db6c92162cc83c160cffa86ba82a0a20fc23ec573506d5ae9b4535c74dde387",
+          "path": "specs/verification/spec.md",
+          "role": "delta_spec"
+        },
+        {
+          "archive_id": "2026-10-16-numeric-graph-profile",
+          "byte_length": 6074,
+          "content_hash": "578078be3124aa5b1658d48989a1f2fda281652fa51c35521ce7a51c3b164dcd",
+          "path": "tasks.md",
+          "role": "tasks"
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "byte_length": 9250,
+      "content_hash": "0364a2f4444d42646005db5ea2a47a42d9864edb45bffdb43f75d778a65e1e79"
+    },
+    {
+      "byte_length": 2583,
+      "content_hash": "093d4fb87a559291215235e2c9b687397dc4e685c0250e00bb61d2ec23560df1"
+    },
+    {
+      "byte_length": 4381,
+      "content_hash": "0b28e6dd7318870338d1cc27fe1f33fe271727112b3fec3c2683a48fcc96fa20"
+    },
+    {
+      "byte_length": 2865,
+      "content_hash": "0cc5dcb24922c2d49fc417153c5d2a0d4a0abae5d9f6cad007736b9af1163065"
+    },
+    {
+      "byte_length": 6413,
+      "content_hash": "0e23fdae3b038368150781ed52775753206e40c2bd344f21986e1870655c0c60"
+    },
+    {
+      "byte_length": 22758,
+      "content_hash": "12a8ba6983b055f809c2658cdef0a23d2e3b686dd6c88570c6a8c63811c127c9"
+    },
+    {
+      "byte_length": 5817,
+      "content_hash": "15f48bacb3ee3cbf2114462b7bff4b5ca144e06b04947221517c49a4bb67c0e8"
+    },
+    {
+      "byte_length": 17869,
+      "content_hash": "16ffd3b7afc8f8f14289a79bb4a1ad83d3c72c32b88620a93bc049414910a38e"
+    },
+    {
+      "byte_length": 865,
+      "content_hash": "17b14b650a38f360dfe64af9a9c3d8cbdc0b5d0c268400d817008738f6b90a66"
+    },
+    {
+      "byte_length": 5026,
+      "content_hash": "1e5f647a34eec1fb086ff322e8d312b3111432d9d05ad031fc5669204d38bf45"
+    },
+    {
+      "byte_length": 1676,
+      "content_hash": "229d10384eeb58e55bed14b7b1c8c153b2cab9ccdae404d8b8eb023433dbd0e3"
+    },
+    {
+      "byte_length": 6840,
+      "content_hash": "2772cc1594b33b206c747d1f45292ecc6388f71a73bff900aae35daa8d4f1897"
+    },
+    {
+      "byte_length": 889,
+      "content_hash": "3055c8b1cc1402f0554a1e3ad396e40e13af6fa9c50de98e468d6952cf780052"
+    },
+    {
+      "byte_length": 24159,
+      "content_hash": "331e03d74b730d82e8ac858f07a6c41d6586b329fb64231f8aeb96bf9cc4368d"
+    },
+    {
+      "byte_length": 2435,
+      "content_hash": "39111fb7732330ecf26d9dc43b45cdfeab9f8f23759d94f509dfc973914e6e8b"
+    },
+    {
+      "byte_length": 18801,
+      "content_hash": "3933cde5fcbb43614a52288672b89c763078cdd378442ebcece8b24220bbc58f"
+    },
+    {
+      "byte_length": 4447,
+      "content_hash": "3e267de2d73ffbff0dfe12ba4ea9f0bb05ee681fa54fe0de598191de61583910"
+    },
+    {
+      "byte_length": 3248,
+      "content_hash": "4985073e9b7028a3f4d33cda308e903accf10cbd27f0797dfd9893d085780751"
+    },
+    {
+      "byte_length": 3834,
+      "content_hash": "4da99c42d05bc4470dac1b826a9c96f45aa8126a63982066882ed813674bfa58"
+    },
+    {
+      "byte_length": 15924,
+      "content_hash": "4f802c0f20e6cadfd29870d0610889d4dcbfd59b382e7269d185d0bc0804cd44"
+    },
+    {
+      "byte_length": 2425,
+      "content_hash": "5122fa398df0424c3dc5c47443feea460c605b1655483ddeeb6f55b581a34f94"
+    },
+    {
+      "byte_length": 6074,
+      "content_hash": "578078be3124aa5b1658d48989a1f2fda281652fa51c35521ce7a51c3b164dcd"
+    },
+    {
+      "byte_length": 5652,
+      "content_hash": "5bf97d3a0d0b0d6bc4b9cfceb2da1388fe3916af93038fe8309b52607a024c17"
+    },
+    {
+      "byte_length": 3736,
+      "content_hash": "614e86a878dc4288f866d6bc8ec5e1d716688903f97393816f4b2cbb7b7cb73a"
+    },
+    {
+      "byte_length": 3840,
+      "content_hash": "631aa98eff410d90c68d45e1c2f17184fc0332a62101079baca17dce2256df0a"
+    },
+    {
+      "byte_length": 7457,
+      "content_hash": "63dcf03f50a0baef61448fb50c0524ab0d6577cfb96e3e7504f7d6e029c3687c"
+    },
+    {
+      "byte_length": 7049,
+      "content_hash": "6cb8cc44716f209f7123f203809202de080d9cbb12bda53fc2ff3683c9f5fbb3"
+    },
+    {
+      "byte_length": 1625,
+      "content_hash": "70389443ae84fadb2b7c0a0f572d8b5f3cd8ecede64e451f377b293d09cb7016"
+    },
+    {
+      "byte_length": 16818,
+      "content_hash": "764ea0c85bc0493c9134245f53e3598be247ee9f8ac66ce8ebd64f9474ecef9e"
+    },
+    {
+      "byte_length": 5492,
+      "content_hash": "7b71ad5fc5a7b072620b4282207b925ff2cbaa6187de594e9d13e9522e4b6365"
+    },
+    {
+      "byte_length": 1783,
+      "content_hash": "7db6c92162cc83c160cffa86ba82a0a20fc23ec573506d5ae9b4535c74dde387"
+    },
+    {
+      "byte_length": 2767,
+      "content_hash": "860eb86b7b47a3524c5d598059de9e64feeb1eadee2b2f30a3473e8641241f1f"
+    },
+    {
+      "byte_length": 4655,
+      "content_hash": "86c8182fea731ee7d3de44a70d1c87b30761308cae33ad5d53c066388a2a7c75"
+    },
+    {
+      "byte_length": 9792,
+      "content_hash": "89b36d97c8d9c0157a9187e9d7c04ea861f924909744cc8338332e8c0e7b043e"
+    },
+    {
+      "byte_length": 10861,
+      "content_hash": "8ecdbfac45445c9d9340a394a27e74911d9d55530b1ca7f7bd4416ceec42cc8b"
+    },
+    {
+      "byte_length": 2111,
+      "content_hash": "9523b0caab219c1b790bb275973e17a419fb2ad88b1a48958a3415b1f64ce0df"
+    },
+    {
+      "byte_length": 4084,
+      "content_hash": "98065daadb78bf403d0391a43316118e5f2003aaaad5f680f4bb0e801918a34b"
+    },
+    {
+      "byte_length": 8504,
+      "content_hash": "a2a986cdcacbe52f16a1247a68baccd91bfecb3ec7715a9c4b9004f65bec31fd"
+    },
+    {
+      "byte_length": 2070,
+      "content_hash": "ab60880ba5fd03fa9b5c40e2a5d999c25762460a780289ec1d6d106474eb93fd"
+    },
+    {
+      "byte_length": 63268,
+      "content_hash": "abb5e3a4a6c1f6be52961347772228f7c32492d02777dc7e58dedaa217eab0a2"
+    },
+    {
+      "byte_length": 2215,
+      "content_hash": "b18b3310f4818ad9e4edc26ddbf81fa1ebe24fed8b36a1d7a9faa0f5d3a5fcb1"
+    },
+    {
+      "byte_length": 4357,
+      "content_hash": "bbab9c101b2876dea83f2e2d3e162a116f0a765e41c3d06ec54f043453e98cbd"
+    },
+    {
+      "byte_length": 2225,
+      "content_hash": "c7b88cf0c31afd9f499e8b7df162ff09f8f98711e18764c97dc5c0a53560f260"
+    },
+    {
+      "byte_length": 3521,
+      "content_hash": "c7f172acbbcb80d3eba32ea6d4a481e9aba7f7d2dc7298af503f5f63b7765339"
+    },
+    {
+      "byte_length": 5955,
+      "content_hash": "c8b9bb64d4d7bc4d12d39ab6bd50c3a318c1396e87b5e5b219acd51360051e1a"
+    },
+    {
+      "byte_length": 1817,
+      "content_hash": "d2540125990d59266351f4c51ea86a9d05b84e6420a28f452d8c8403f828cbd3"
+    },
+    {
+      "byte_length": 3062,
+      "content_hash": "d567c98f52796b13af1271a46444eb1b2c0ead4d66e4418df49a057733583294"
+    },
+    {
+      "byte_length": 7089,
+      "content_hash": "d6f22ecbbd19de76cdd6bd1bc643e1bf2794134c3f888ef65f92fcd112a86c9d"
+    },
+    {
+      "byte_length": 2312,
+      "content_hash": "dc8bebab5b6053795a6a969663d9980886a83676da407b1df19ed9fc388ab9ae"
+    },
+    {
+      "byte_length": 105,
+      "content_hash": "df8b71bae570eb5accd702e7370a816b8ea9f2e4521254c5d75ea82a9cfcf4db"
+    },
+    {
+      "byte_length": 5749,
+      "content_hash": "e22fbbabae34876d4e5a1792d8f13603449ca520b7490655466952eac7f9866b"
+    },
+    {
+      "byte_length": 1119,
+      "content_hash": "e78b749963baa3ce891161b986759360c617b698c90f3ad9b9f6415646a0b4e8"
+    },
+    {
+      "byte_length": 4019,
+      "content_hash": "e7fe3c0d3af0d1cd935748c55888452cf95d1b608c52361f218035ecc37162e7"
+    },
+    {
+      "byte_length": 4410,
+      "content_hash": "e976c184a3d61ed067db3eae61302adf206e468ccbe83196dbe899fab9b4a8db"
+    },
+    {
+      "byte_length": 15854,
+      "content_hash": "ebf370be9732ecee6f8f9fed517920e1a475304cb143e8ec83ea0708b48c37ba"
+    },
+    {
+      "byte_length": 13239,
+      "content_hash": "ee48ab3e30f813d2e846aad3e44548328439349fbc2991bb3f01365d21bd6e63"
+    },
+    {
+      "byte_length": 3582,
+      "content_hash": "f1a916bad9edad2e156e6ba0a71dc8a8b703961ea059e958205241c8704e5388"
+    },
+    {
+      "byte_length": 3634,
+      "content_hash": "f812f2426c4e3733a98f11b19d8f3cc7d31753e09c2ae7d93464c7d467e78171"
+    },
+    {
+      "byte_length": 8853,
+      "content_hash": "fc46a8e226e13e01711adaa1250eaaf5d34d5bf69959e7f2006b915deb35f582"
+    },
+    {
+      "byte_length": 2739,
+      "content_hash": "fd6224c4312576956a62aeff8bb22a91c52d24fb58339a52b93e687dd269da48"
+    },
+    {
+      "byte_length": 7020,
+      "content_hash": "ff4ac3965109658bd376232d027b1b782306fa16579f28bab140692f1cece92c"
+    }
+  ],
+  "pack_root": "98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331",
+  "packed_archives_root": "d68fa9eaf57dc7902b43a2f75d1c40c5c000524c4a21234a4082920e665f1de2",
+  "schema_version": "cairn.archive-pack.v1"
+}

@@ -1,0 +1,20 @@
+{
+  "chain_hash": "8b02f7ffe23f41feda7625b6a7f4d782d082736cc39626af807328d127828bc7",
+  "lossiness": "lossless",
+  "mutation_manifest_hash": "861c5f9ce3ba24abcc2455697d929d50cb412b4895888b0955250216e7c9561f",
+  "non_claims": [
+    "local representation integrity only; archive compaction does not prove archived change correctness, release readiness, remote trust, or semantic review completeness"
+  ],
+  "pack_root": "98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331",
+  "packed_archives_root": "d68fa9eaf57dc7902b43a2f75d1c40c5c000524c4a21234a4082920e665f1de2",
+  "plan_hash": "5d8ecfc6529642b076b1f69e4cf6384d3fb79395080d933b6f950d160dfc545f",
+  "policy_hash": "ea271eb6f17312d7960a4848201e568039ba6fc7e476c748413e5f90cba45d0a",
+  "post_state_root": "24ee102f691d5aae857ad02093e57a58be0762b4f0f1834718166f49d08153b3",
+  "pre_state_root": "34cc36efea601810df960d1d9f374c54cd6e5806fb1922554275e4e1a47be793",
+  "prev_chain_hash": "48bf221364bad3770d8692d75460061ef933ac0be720b07407d97fbb19008ab0",
+  "profile": "lossless-pack",
+  "receipt_hash": "7f0b3c2db1973964760c89a1809feb6730d677676f63dd93e61040a85eb64eb1",
+  "retained_manifest_root": "e0788304b29a51b6c8c88173cbc95e7b5d2fc62734915a1d8f514f07a983c693",
+  "schema_version": "cairn.archive-compaction-receipt.v1",
+  "sequence": 1
+}

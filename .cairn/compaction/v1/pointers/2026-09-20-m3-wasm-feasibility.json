@@ -1,0 +1,8 @@
+{
+  "archive_id": "2026-09-20-m3-wasm-feasibility",
+  "archive_root": "6ad8978580882d330de9ff24743b718fc48c3b34fbbce2b1aa21fd1335068dee",
+  "lossiness": "lossless",
+  "pack_manifest_path": ".cairn/compaction/v1/packs/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/manifest.json",
+  "pack_root": "98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331",
+  "schema_version": "cairn.archive-pointer.v1"
+}

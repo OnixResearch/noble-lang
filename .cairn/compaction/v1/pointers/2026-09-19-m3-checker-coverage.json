@@ -1,0 +1,8 @@
+{
+  "archive_id": "2026-09-19-m3-checker-coverage",
+  "archive_root": "a186196fd1fe71c30af53a0a32f639094bbb38351f131157e299b2b9e1cbcfe6",
+  "lossiness": "lossless",
+  "pack_manifest_path": ".cairn/compaction/v1/packs/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/manifest.json",
+  "pack_root": "98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331",
+  "schema_version": "cairn.archive-pointer.v1"
+}

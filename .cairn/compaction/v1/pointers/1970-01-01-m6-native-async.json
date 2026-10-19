@@ -1,0 +1,8 @@
+{
+  "archive_id": "1970-01-01-m6-native-async",
+  "archive_root": "fa9767304f11d7d8a61b1bc6f79607077c997e3f221e915aaab96684bed0cec2",
+  "lossiness": "lossless",
+  "pack_manifest_path": ".cairn/compaction/v1/packs/98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331/manifest.json",
+  "pack_root": "98b50984879696f81028757418fb33c6f9bbf363d3272576d5e6cafb229d2331",
+  "schema_version": "cairn.archive-pointer.v1"
+}
