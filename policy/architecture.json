@@ -274,11 +274,6 @@
           "safety-observe"
         ],
         "triple": "x86_64-unknown-linux-gnu"
-      },
-      {
-        "default_features": true,
-        "features": [],
-        "triple": "x86_64-unknown-linux-gnu"
       }
     ]
   },

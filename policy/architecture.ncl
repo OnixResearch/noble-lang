@@ -13,12 +13,6 @@ let contracts = import "./architecture.contracts.ncl" in
       # declared row must name it for the plan-equivalence check to hold.
       features = ["safety-observe"],
       default_features = true,
-    }, {
-      # The plain no-feature configuration is also observed by the merged
-      # collector IR; declare it so the plan-equivalence check can hold.
-      triple = "x86_64-unknown-linux-gnu",
-      features = [],
-      default_features = true,
     }],
   },
   roles = [
