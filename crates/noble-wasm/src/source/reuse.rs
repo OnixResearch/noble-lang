@@ -176,14 +176,14 @@ impl super::Prepared {
     /// live, selected, origin or resource metadata, is reusable.
     pub fn reusable(&self) -> Option<Reusable> {
         let epoch = self.epoch.clone()?;
-        if !self.live_sites.is_empty()
+        let has_live_metadata = !self.live_sites.is_empty()
             || self.target_metadata.is_some()
             || !self.program_metadata.is_empty()
             || !self.named_targets.is_empty()
             || self.selected_target.is_some()
             || self.selected_origin.is_some()
-            || !self.resource_catalog.is_empty()
-        {
+            || !self.resource_catalog.is_empty();
+        if has_live_metadata {
             return None;
         }
         Some(Reusable {
