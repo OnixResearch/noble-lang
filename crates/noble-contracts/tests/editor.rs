@@ -1,5 +1,10 @@
 fn limits() -> noble_contracts::Limits {
-    noble_contracts::Limits::default()
+    noble_contracts::Limits {
+        bytes: 65_536,
+        nodes: 16_384,
+        depth: 64,
+        work: 2_000_000,
+    }
 }
 
 fn hole() -> noble_contracts::source::editor::Candidate {
@@ -14,11 +19,11 @@ fn hole() -> noble_contracts::source::editor::Candidate {
 }
 
 #[test]
-fn editor_analysis_retains_real_word_constraints_without_admission() {
+fn editor_analysis_retains_real_word_constraints_without_admission() -> Result<(), String> {
     let session = noble_contracts::source::Session::new();
     let result = session
         .analyze_editor(&hole(), &[], limits())
-        .expect("analyze");
+        .map_err(|error| format!("analyze: {error:?}"))?;
     assert_eq!(result.holes.len(), 1);
     let constraint = &result.holes[0];
     assert_eq!(constraint.input_stack, "?stack I64");
@@ -38,13 +43,14 @@ fn editor_analysis_retains_real_word_constraints_without_admission() {
     };
     let effectful = session
         .analyze_editor(&effectful, &[], limits())
-        .expect("effectful scheme");
+        .map_err(|error| format!("effectful scheme: {error:?}"))?;
     assert_eq!(effectful.holes[0].output_stack, "?stack Text");
     assert_eq!(effectful.holes[0].required_output_suffix, ["Text"]);
     assert!(effectful.holes[0].unresolved_effect);
     assert!(effectful.unresolved_effect);
     assert_eq!(effectful.known_effects, [0]);
     assert_eq!(session.generation(), 0);
+    Ok(())
 }
 
 #[test]
@@ -63,7 +69,7 @@ fn typed_direct_admission_refuses_hole_before_prepared() {
 }
 
 #[test]
-fn typed_nested_quotation_admission_refuses_hole_before_prepared() {
+fn typed_nested_quotation_admission_refuses_hole_before_prepared() -> Result<(), String> {
     let nested = noble_contracts::source::editor::Candidate {
         format: noble_contracts::source::editor::FORMAT,
         nodes: vec![noble_contracts::source::editor::Node::Quotation(vec![
@@ -74,7 +80,7 @@ fn typed_nested_quotation_admission_refuses_hole_before_prepared() {
     assert_eq!(
         session
             .analyze_editor(&nested, &[], limits())
-            .expect("nested")
+            .map_err(|error| format!("nested: {error:?}"))?
             .holes
             .len(),
         1
@@ -88,10 +94,11 @@ fn typed_nested_quotation_admission_refuses_hole_before_prepared() {
         "editor hole cannot enter source admission"
     );
     assert_eq!(session.generation(), 0);
+    Ok(())
 }
 
 #[test]
-fn editor_hole_free_source_uses_ordinary_kernel_preparation() {
+fn editor_hole_free_source_uses_ordinary_kernel_preparation() -> Result<(), String> {
     let session = noble_contracts::source::Session::new();
     let valid = noble_contracts::source::editor::Candidate {
         format: noble_contracts::source::editor::FORMAT,
@@ -101,10 +108,12 @@ fn editor_hole_free_source_uses_ordinary_kernel_preparation() {
             noble_contracts::source::editor::Node::Word(String::from("+")),
         ],
     };
-    let source = valid.admitted_source(limits()).expect("source encoding");
+    let source = valid
+        .admitted_source(limits())
+        .map_err(|error| format!("source encoding: {error:?}"))?;
     let prepared = session
         .prepare(&source, &[], limits())
-        .expect("kernel acceptance");
+        .map_err(|error| format!("kernel acceptance: {error:?}"))?;
     assert_eq!(prepared.output(), &[noble_kernel::types::Ty::I64]);
     assert!(prepared.submission().is_some());
 
@@ -135,4 +144,5 @@ fn editor_hole_free_source_uses_ordinary_kernel_preparation() {
         ])],
     };
     assert!(nested.admitted_source(tiny).is_err());
+    Ok(())
 }
