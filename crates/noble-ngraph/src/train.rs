@@ -7,9 +7,6 @@
 //! facts, guards and refusing index reads stop the step), the loss graph's
 //! interface is admitted, and replay starts from the recorded parent.
 
-use alloc::rc::Rc;
-use alloc::{boxed::Box, format, string::String, vec, vec::Vec};
-
 use crate::identity::IdentityScheme;
 /// Optimizer revision.
 pub const ADAM: &str = "adam/0";
@@ -44,8 +41,8 @@ impl Default for Adam {
 impl Adam {
     /// Canonical description with exact bits.
     #[must_use]
-    pub fn describe(&self) -> String {
-        format!(
+    pub fn describe(&self) -> alloc::string::String {
+        alloc::format!(
             "{ADAM}(lr=0x{:016x},beta1=0x{:016x},beta2=0x{:016x},eps=0x{:016x};binary64 RNE, no FMA, running beta products, no pow; no weight decay/clipping/clamp)",
             self.lr.to_bits(),
             self.beta1.to_bits(),
@@ -77,7 +74,7 @@ impl Adam {
             Err(crate::diag::Diagnostic::new(
                 crate::diag::Code::Profile,
                 crate::diag::Site::Graph,
-                format!(
+                alloc::format!(
                     "{ADAM} {name} 0x{:016x} is outside its domain ({rule})",
                     value.to_bits()
                 ),
@@ -102,9 +99,9 @@ impl Adam {
 #[derive(Clone, Debug, PartialEq)]
 pub struct AdamState {
     /// First moments.
-    pub m: Vec<f64>,
+    pub m: alloc::vec::Vec<f64>,
     /// Second moments.
-    pub v: Vec<f64>,
+    pub v: alloc::vec::Vec<f64>,
     /// Running `β₁ᵗ`.
     pub b1t: f64,
     /// Running `β₂ᵗ`.
@@ -118,8 +115,8 @@ impl AdamState {
     #[must_use]
     pub fn new(n: usize) -> Self {
         Self {
-            m: vec![0.0; n],
-            v: vec![0.0; n],
+            m: alloc::vec![0.0; n],
+            v: alloc::vec![0.0; n],
             b1t: 1.0,
             b2t: 1.0,
             t: 0,
@@ -146,9 +143,9 @@ impl AdamState {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Point {
     /// Model `input` slot values (binary32).
-    pub inputs: Vec<f32>,
+    pub inputs: alloc::vec::Vec<f32>,
     /// Loss targets (binary32).
-    pub targets: Vec<f32>,
+    pub targets: alloc::vec::Vec<f32>,
 }
 
 /// Ordered training-data digest.
@@ -177,7 +174,7 @@ pub struct Contract {
     /// Separately admitted loss graph `(outputs, targets) → F32`.
     pub loss: crate::check::CheckedGraph,
     /// Trainable param slots (all must be `param`).
-    pub params: Vec<u32>,
+    pub params: alloc::vec::Vec<u32>,
     /// Derivative options.
     pub deriv: crate::grad::DerivOptions,
     /// Optimizer hyperparameters.
@@ -185,7 +182,7 @@ pub struct Contract {
     /// Seed (`splitmix64/0`) used for initialization.
     pub seed: u64,
     /// Ordered training data.
-    pub data: Vec<Point>,
+    pub data: alloc::vec::Vec<Point>,
 }
 
 /// Training provenance (D11): everything needed to replay a snapshot, as
@@ -215,7 +212,7 @@ pub struct Provenance {
     /// Steps.
     pub steps: u64,
     /// Tool revisions.
-    pub tools: String,
+    pub tools: alloc::string::String,
     /// Resulting snapshot id.
     pub result: crate::ir::Digest,
     /// Resulting optimizer-state digest.
@@ -231,9 +228,9 @@ pub struct Trained {
     /// Last published snapshot.
     pub snapshot: crate::snapshot::ParamSnapshot,
     /// Last published optimizer state.
-    pub state: Rc<AdamState>,
+    pub state: alloc::rc::Rc<AdamState>,
     /// Loss before each step, then the final loss (binary64 mean).
-    pub losses: Vec<f64>,
+    pub losses: alloc::vec::Vec<f64>,
     /// Provenance of `snapshot`.
     pub provenance: Provenance,
 }
@@ -253,15 +250,15 @@ pub struct Stopped {
 /// Deterministic initialization: `splitmix64/0(seed)`, uniform in
 /// `[-0.5, 0.5)` in binary64, named RNE conversion to binary32.
 #[must_use]
-pub fn init_params(seed: u64, n: usize) -> Vec<f32> {
+pub fn init_params(seed: u64, n: usize) -> alloc::vec::Vec<f32> {
     let mut r = crate::prng::SplitMix64::new(seed);
     (0..n).map(|_| (r.next_f64() - 0.5) as f32).collect()
 }
 
 /// Tool revisions recorded in provenance.
 #[must_use]
-pub fn tools() -> String {
-    format!(
+pub fn tools() -> alloc::string::String {
+    alloc::format!(
         "{}; {}; {}; {}; {}",
         TOOL_REVISION,
         crate::ir::IR_VERSION,
@@ -336,7 +333,7 @@ fn check_data(c: &Contract) -> Result<(), crate::diag::Diagnostic> {
             return Err(crate::diag::Diagnostic::new(
                 crate::diag::Code::Interface,
                 crate::diag::Site::Graph,
-                format!(
+                alloc::format!(
                     "data point {i} has {} inputs and {} targets; the model takes {inputs} and the loss {targets}",
                     p.inputs.len(),
                     p.targets.len()
@@ -347,7 +344,7 @@ fn check_data(c: &Contract) -> Result<(), crate::diag::Diagnostic> {
     Ok(())
 }
 
-fn values_f32(slots: &[crate::sem::Value]) -> Vec<f32> {
+fn values_f32(slots: &[crate::sem::Value]) -> alloc::vec::Vec<f32> {
     slots
         .iter()
         .map(|v| match v {
@@ -367,8 +364,8 @@ fn loss_and_grad(
     c: &Contract,
     params: &crate::snapshot::ParamSnapshot,
     evaluated_nodes: &mut Option<&mut u64>,
-) -> Result<(f64, Vec<f64>, bool), crate::diag::Diagnostic> {
-    let mut grad_sum = vec![0f64; c.params.len()];
+) -> Result<(f64, alloc::vec::Vec<f64>, bool), crate::diag::Diagnostic> {
+    let mut grad_sum = alloc::vec![0f64; c.params.len()];
     let mut loss_sum = 0f64;
     let mut finite = true;
     for p in &c.data {
@@ -399,12 +396,12 @@ fn loss_and_grad(
 }
 
 /// One `adam/0` step into fresh vectors (the published state is untouched).
-fn adam_step(a: &Adam, s: &AdamState, p: &[f32], g: &[f64]) -> (Vec<f32>, AdamState) {
+fn adam_step(a: &Adam, s: &AdamState, p: &[f32], g: &[f64]) -> (alloc::vec::Vec<f32>, AdamState) {
     let mut n = s.clone();
     n.t += 1;
     n.b1t *= a.beta1;
     n.b2t *= a.beta2;
-    let mut out = Vec::with_capacity(p.len());
+    let mut out = alloc::vec::Vec::with_capacity(p.len());
     for k in 0..p.len() {
         n.m[k] = a.beta1 * s.m[k] + (1.0 - a.beta1) * g[k];
         n.v[k] = a.beta2 * s.v[k] + (1.0 - a.beta2) * (g[k] * g[k]);
@@ -443,10 +440,10 @@ pub fn train(
     init: Option<&crate::snapshot::ParamSnapshot>,
     steps: u64,
     control: &mut TrainControl<'_>,
-) -> Result<Trained, Box<Stopped>> {
+) -> Result<Trained, alloc::boxed::Box<Stopped>> {
     let stop =
         |d: crate::diag::Diagnostic, last: Option<crate::snapshot::ParamSnapshot>, k: u64| {
-            Box::new(Stopped {
+            alloc::boxed::Box::new(Stopped {
                 diagnostic: d,
                 last,
                 published_steps: k,
@@ -491,15 +488,16 @@ pub fn train(
         None => snapshot(&init_params(c.seed, c.params.len())).map_err(|d| stop(d, None, 0))?,
     };
     let mut current = s0.clone();
-    let mut state = Rc::new(AdamState::new(c.params.len()));
-    let mut losses = Vec::with_capacity(usize::try_from(steps).unwrap_or(0).saturating_add(1));
+    let mut state = alloc::rc::Rc::new(AdamState::new(c.params.len()));
+    let mut losses =
+        alloc::vec::Vec::with_capacity(usize::try_from(steps).unwrap_or(0).saturating_add(1));
     for t in 1..=steps {
         if control.cancel_before_step.is_some_and(|f| f(t)) {
             return Err(stop(
                 crate::diag::Diagnostic::new(
                     crate::diag::Code::Cancelled,
                     crate::diag::Site::Graph,
-                    format!("cancelled before step {t}"),
+                    alloc::format!("cancelled before step {t}"),
                 ),
                 Some(current),
                 t - 1,
@@ -520,7 +518,7 @@ pub fn train(
                 crate::diag::Diagnostic::new(
                     crate::diag::Code::NonfiniteUpdate,
                     crate::diag::Site::Graph,
-                    format!("non-finite gradient at step {t}"),
+                    alloc::format!("non-finite gradient at step {t}"),
                 ),
                 Some(current),
                 t - 1,
@@ -536,7 +534,7 @@ pub fn train(
         };
         drop(lease);
         current = next;
-        state = Rc::new(ns);
+        state = alloc::rc::Rc::new(ns);
     }
     let (final_loss, _, _) = loss_and_grad(c, &current, &mut control.evaluated_nodes)
         .map_err(|d| stop(d, Some(current.clone()), steps))?;
@@ -583,13 +581,13 @@ pub fn replay(
     p: &Provenance,
     parent: Option<&crate::snapshot::ParamSnapshot>,
     control: &mut TrainControl<'_>,
-) -> Result<Trained, Box<Stopped>> {
+) -> Result<Trained, alloc::boxed::Box<Stopped>> {
     let refuse = |code: crate::diag::Code, what: &str| {
-        Box::new(Stopped {
+        alloc::boxed::Box::new(Stopped {
             diagnostic: crate::diag::Diagnostic::new(
                 code,
                 crate::diag::Site::Graph,
-                format!("provenance {what} differs"),
+                alloc::format!("provenance {what} differs"),
             ),
             last: None,
             published_steps: 0,
@@ -620,7 +618,7 @@ pub fn replay(
             control.budgets.snapshot_bytes,
         )
         .map_err(|d| {
-            Box::new(Stopped {
+            alloc::boxed::Box::new(Stopped {
                 diagnostic: d,
                 last: None,
                 published_steps: 0,

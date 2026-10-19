@@ -590,13 +590,15 @@ fn subject_of(
 #[cfg(test)]
 mod tests {
     use super::classify;
-    use alloc::boxed::Box;
 
     /// `I64` under `depth` nested pairs.
     fn nested(depth: u32) -> noble_kernel::types::Ty {
         let mut t = noble_kernel::types::Ty::I64;
         for _ in 0..depth {
-            t = noble_kernel::types::Ty::Pair(Box::new(t), Box::new(noble_kernel::types::Ty::Unit));
+            t = noble_kernel::types::Ty::Pair(
+                alloc::boxed::Box::new(t),
+                alloc::boxed::Box::new(noble_kernel::types::Ty::Unit),
+            );
         }
         t
     }
