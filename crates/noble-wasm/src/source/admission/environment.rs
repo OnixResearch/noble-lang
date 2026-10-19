@@ -102,15 +102,15 @@ pub(super) fn check(
     if has_excess_definitions {
         return Err(crate::Diagnostic::Invalid);
     }
-    if env.live_slots != live_slots
+    let has_session_shape_mismatch = env.live_slots != live_slots
         || (env.live_test_hosts && !live_slots)
         || (live_slots && (live || text_cursor || !env.declared_modules))
         || env.text_cursor != text_cursor
         || (text_cursor && (live || env.declared_modules))
         || env.calculator != calculator
         || (calculator && (!env.declared_modules || !env.bound_adapters.is_empty()))
-        || (!live_slots && !env.live_resource_nominals.is_empty())
-    {
+        || (!live_slots && !env.live_resource_nominals.is_empty());
+    if has_session_shape_mismatch {
         return Err(crate::Diagnostic::Invalid);
     }
     let has_noncanonical_core_declarations = !env.declared_modules
