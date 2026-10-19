@@ -9,10 +9,6 @@
 //! rounded bound `< 2^24` in magnitude yields `integral`. These are the
 //! checker's rules; NG-PO-E (fact-transfer soundness) remains open.
 
-use crate::ir::{Fact, Literal, NodeId, ScalarType};
-use crate::sem::{self, Value};
-use alloc::vec::Vec;
-
 /// 2^24 as `f32`.
 pub const TWO_POW_24: f32 = 16_777_216.0;
 
@@ -52,7 +48,7 @@ impl AbsF32 {
             hi: v,
             nan: false,
             integral: v.is_finite() && crate::sem::soft::trunc_f32(v) == v,
-            bit: sem::is_bit(v.to_bits()),
+            bit: crate::sem::is_bit(v.to_bits()),
         }
     }
 
@@ -164,37 +160,37 @@ impl AbsF32 {
 
     /// Refines with a fact known to hold.
     #[must_use]
-    pub fn refine(mut self, fact: &Fact) -> Self {
+    pub fn refine(mut self, fact: &crate::ir::Fact) -> Self {
         match fact {
-            Fact::Range { lo, hi } => {
-                if let (Literal::F32(l), Literal::F32(h)) = (lo, hi) {
+            crate::ir::Fact::Range { lo, hi } => {
+                if let (crate::ir::Literal::F32(l), crate::ir::Literal::F32(h)) = (lo, hi) {
                     self.lo = self.lo.max(f32::from_bits(*l));
                     self.hi = self.hi.min(f32::from_bits(*h));
                     self.nan = false;
                 }
             }
-            Fact::Bit => {
+            crate::ir::Fact::Bit => {
                 self.lo = self.lo.max(0.0);
                 self.hi = self.hi.min(1.0);
                 self.nan = false;
                 self.integral = true;
                 self.bit = true;
             }
-            Fact::OneHot { .. } => {
-                return self.refine(&Fact::Bit);
+            crate::ir::Fact::OneHot { .. } => {
+                return self.refine(&crate::ir::Fact::Bit);
             }
-            Fact::Integral => {
+            crate::ir::Fact::Integral => {
                 self.nan = false;
                 self.lo = self.lo.max(f32::MIN);
                 self.hi = self.hi.min(f32::MAX);
                 self.integral = true;
             }
-            Fact::Finite => {
+            crate::ir::Fact::Finite => {
                 self.nan = false;
                 self.lo = self.lo.max(f32::MIN);
                 self.hi = self.hi.min(f32::MAX);
             }
-            Fact::Grid { log2 } => {
+            crate::ir::Fact::Grid { log2 } => {
                 self.nan = false;
                 self.lo = self.lo.max(f32::MIN);
                 self.hi = self.hi.min(f32::MAX);
@@ -202,29 +198,29 @@ impl AbsF32 {
                     self.integral = true;
                 }
             }
-            Fact::Shape(_) => {}
+            crate::ir::Fact::Shape(_) => {}
         }
         self
     }
 
     /// Whether this summary implies `fact` (the `derived` check).
     #[must_use]
-    pub fn implies(&self, fact: &Fact) -> bool {
+    pub fn implies(&self, fact: &crate::ir::Fact) -> bool {
         match fact {
-            Fact::Range { lo, hi } => match (lo, hi) {
-                (Literal::F32(l), Literal::F32(h)) => {
+            crate::ir::Fact::Range { lo, hi } => match (lo, hi) {
+                (crate::ir::Literal::F32(l), crate::ir::Literal::F32(h)) => {
                     !self.nan && self.lo >= f32::from_bits(*l) && self.hi <= f32::from_bits(*h)
                 }
                 _ => false,
             },
-            Fact::Bit => self.bit,
-            Fact::Integral => self.integral,
-            Fact::Finite => self.finite(),
-            Fact::Grid { log2 } => {
+            crate::ir::Fact::Bit => self.bit,
+            crate::ir::Fact::Integral => self.integral,
+            crate::ir::Fact::Finite => self.finite(),
+            crate::ir::Fact::Grid { log2 } => {
                 (*log2 <= 0 && self.integral)
                     || (self.lo == self.hi && !self.nan && grid_holds_f32(self.lo, *log2))
             }
-            Fact::OneHot { .. } | Fact::Shape(_) => false,
+            crate::ir::Fact::OneHot { .. } | crate::ir::Fact::Shape(_) => false,
         }
     }
 }
@@ -286,16 +282,16 @@ impl AbsI64 {
 
     /// Refines with a fact known to hold.
     #[must_use]
-    pub fn refine(mut self, fact: &Fact) -> Self {
+    pub fn refine(mut self, fact: &crate::ir::Fact) -> Self {
         match fact {
-            Fact::Range {
-                lo: Literal::I64(l),
-                hi: Literal::I64(h),
+            crate::ir::Fact::Range {
+                lo: crate::ir::Literal::I64(l),
+                hi: crate::ir::Literal::I64(h),
             } => {
                 self.lo = self.lo.max(*l);
                 self.hi = self.hi.min(*h);
             }
-            Fact::Bit | Fact::OneHot { .. } => {
+            crate::ir::Fact::Bit | crate::ir::Fact::OneHot { .. } => {
                 self.lo = self.lo.max(0);
                 self.hi = self.hi.min(1);
             }
@@ -306,15 +302,15 @@ impl AbsI64 {
 
     /// Whether this summary implies `fact`.
     #[must_use]
-    pub fn implies(&self, fact: &Fact) -> bool {
+    pub fn implies(&self, fact: &crate::ir::Fact) -> bool {
         match fact {
-            Fact::Range {
-                lo: Literal::I64(l),
-                hi: Literal::I64(h),
+            crate::ir::Fact::Range {
+                lo: crate::ir::Literal::I64(l),
+                hi: crate::ir::Literal::I64(h),
             } => self.lo >= *l && self.hi <= *h,
-            Fact::Bit => self.lo >= 0 && self.hi <= 1,
-            Fact::Integral | Fact::Finite => true,
-            Fact::Grid { log2 } => {
+            crate::ir::Fact::Bit => self.lo >= 0 && self.hi <= 1,
+            crate::ir::Fact::Integral | crate::ir::Fact::Finite => true,
+            crate::ir::Fact::Grid { log2 } => {
                 *log2 <= 0 || (self.lo == self.hi && grid_holds_i64(self.lo, *log2))
             }
             _ => false,
@@ -338,7 +334,7 @@ pub enum Abs {
 impl Abs {
     /// Refines with a fact known to hold.
     #[must_use]
-    pub fn refine(self, fact: &Fact) -> Self {
+    pub fn refine(self, fact: &crate::ir::Fact) -> Self {
         match self {
             Self::F32(a) => Self::F32(a.refine(fact)),
             Self::I64(a) => Self::I64(a.refine(fact)),
@@ -348,11 +344,14 @@ impl Abs {
 
     /// Whether the summary implies `fact`.
     #[must_use]
-    pub fn implies(&self, fact: &Fact) -> bool {
+    pub fn implies(&self, fact: &crate::ir::Fact) -> bool {
         match self {
             Self::F32(a) => a.implies(fact),
             Self::I64(a) => a.implies(fact),
-            Self::Bool => matches!(fact, Fact::Bit | Fact::Finite | Fact::Integral),
+            Self::Bool => matches!(
+                fact,
+                crate::ir::Fact::Bit | crate::ir::Fact::Finite | crate::ir::Fact::Integral
+            ),
             Self::None => false,
         }
     }
@@ -382,20 +381,23 @@ fn grid_holds_i64(v: i64, log2: i32) -> bool {
 
 /// Whether a fact payload is well-formed for a value of type `ty`.
 #[must_use]
-pub fn payload_ok(fact: &Fact, ty: ScalarType) -> bool {
+pub fn payload_ok(fact: &crate::ir::Fact, ty: crate::ir::ScalarType) -> bool {
     match (fact, ty) {
-        (Fact::Range { lo, hi }, ScalarType::F32) => match (lo, hi) {
-            (Literal::F32(l), Literal::F32(h)) => {
+        (crate::ir::Fact::Range { lo, hi }, crate::ir::ScalarType::F32) => match (lo, hi) {
+            (crate::ir::Literal::F32(l), crate::ir::Literal::F32(h)) => {
                 let (l, h) = (f32::from_bits(*l), f32::from_bits(*h));
                 !l.is_nan() && !h.is_nan() && l <= h
             }
             _ => false,
         },
-        (Fact::Range { lo, hi }, ScalarType::I64) => {
-            matches!((lo, hi), (Literal::I64(l), Literal::I64(h)) if l <= h)
+        (crate::ir::Fact::Range { lo, hi }, crate::ir::ScalarType::I64) => {
+            matches!((lo, hi), (crate::ir::Literal::I64(l), crate::ir::Literal::I64(h)) if l <= h)
         }
-        (Fact::Range { .. } | Fact::Grid { .. }, ScalarType::Bool) => false,
-        (Fact::OneHot { group, .. }, _) => !group.is_empty(),
+        (
+            crate::ir::Fact::Range { .. } | crate::ir::Fact::Grid { .. },
+            crate::ir::ScalarType::Bool,
+        ) => false,
+        (crate::ir::Fact::OneHot { group, .. }, _) => !group.is_empty(),
         _ => true,
     }
 }
@@ -404,44 +406,54 @@ pub fn payload_ok(fact: &Fact, ty: ScalarType) -> bool {
 /// supplies the values of a one-hot group in order; `shape` the structural
 /// table length of the subject node, if any.
 #[must_use]
-pub fn holds(fact: &Fact, v: Value, group: &[Value], shape: Option<u32>) -> bool {
+pub fn holds(
+    fact: &crate::ir::Fact,
+    v: crate::sem::Value,
+    group: &[crate::sem::Value],
+    shape: Option<u32>,
+) -> bool {
     match (fact, v) {
-        (Fact::Range { lo, hi }, Value::F32(b)) => match (lo, hi) {
-            (Literal::F32(l), Literal::F32(h)) => {
+        (crate::ir::Fact::Range { lo, hi }, crate::sem::Value::F32(b)) => match (lo, hi) {
+            (crate::ir::Literal::F32(l), crate::ir::Literal::F32(h)) => {
                 let x = f32::from_bits(b);
                 !x.is_nan() && x >= f32::from_bits(*l) && x <= f32::from_bits(*h)
             }
             _ => false,
         },
-        (Fact::Range { lo, hi }, Value::I64(x)) => match (lo, hi) {
-            (Literal::I64(l), Literal::I64(h)) => *l <= x && x <= *h,
+        (crate::ir::Fact::Range { lo, hi }, crate::sem::Value::I64(x)) => match (lo, hi) {
+            (crate::ir::Literal::I64(l), crate::ir::Literal::I64(h)) => *l <= x && x <= *h,
             _ => false,
         },
-        (Fact::Grid { log2 }, Value::F32(b)) => grid_holds_f32(f32::from_bits(b), *log2),
-        (Fact::Grid { log2 }, Value::I64(x)) => grid_holds_i64(x, *log2),
-        (Fact::Bit, Value::F32(b)) => sem::is_bit(b),
-        (Fact::Bit, Value::I64(x)) => x == 0 || x == 1,
-        (Fact::Bit, Value::Bool(_))
-        | (Fact::Finite | Fact::Integral, Value::I64(_) | Value::Bool(_)) => true,
-        (Fact::Finite, Value::F32(b)) => f32::from_bits(b).is_finite(),
-        (Fact::Integral, Value::F32(b)) => {
+        (crate::ir::Fact::Grid { log2 }, crate::sem::Value::F32(b)) => {
+            grid_holds_f32(f32::from_bits(b), *log2)
+        }
+        (crate::ir::Fact::Grid { log2 }, crate::sem::Value::I64(x)) => grid_holds_i64(x, *log2),
+        (crate::ir::Fact::Bit, crate::sem::Value::F32(b)) => crate::sem::is_bit(b),
+        (crate::ir::Fact::Bit, crate::sem::Value::I64(x)) => x == 0 || x == 1,
+        (crate::ir::Fact::Bit, crate::sem::Value::Bool(_))
+        | (
+            crate::ir::Fact::Finite | crate::ir::Fact::Integral,
+            crate::sem::Value::I64(_) | crate::sem::Value::Bool(_),
+        ) => true,
+        (crate::ir::Fact::Finite, crate::sem::Value::F32(b)) => f32::from_bits(b).is_finite(),
+        (crate::ir::Fact::Integral, crate::sem::Value::F32(b)) => {
             let x = f32::from_bits(b);
             x.is_finite() && crate::sem::soft::trunc_f32(x) == x
         }
-        (Fact::OneHot { allow_zero, .. }, _) => {
+        (crate::ir::Fact::OneHot { allow_zero, .. }, _) => {
             let mut ones = 0usize;
             for g in group {
                 let one = match *g {
-                    Value::F32(b) if sem::is_bit(b) => b == sem::ONE,
-                    Value::I64(x) if x == 0 || x == 1 => x == 1,
-                    Value::Bool(x) => x,
+                    crate::sem::Value::F32(b) if crate::sem::is_bit(b) => b == crate::sem::ONE,
+                    crate::sem::Value::I64(x) if x == 0 || x == 1 => x == 1,
+                    crate::sem::Value::Bool(x) => x,
                     _ => return false,
                 };
                 ones += usize::from(one);
             }
             ones == 1 || (*allow_zero && ones == 0)
         }
-        (Fact::Shape(n), _) => shape == Some(*n),
+        (crate::ir::Fact::Shape(n), _) => shape == Some(*n),
         _ => false,
     }
 }
@@ -470,23 +482,26 @@ impl Requirement {
 
     /// The canonical fact reported when the requirement is unmet.
     #[must_use]
-    pub const fn fact(self) -> Fact {
+    pub const fn fact(self) -> crate::ir::Fact {
         match self {
-            Self::UnitRange => Fact::Range {
-                lo: Literal::F32(0),
-                hi: Literal::F32(sem::ONE),
+            Self::UnitRange => crate::ir::Fact::Range {
+                lo: crate::ir::Literal::F32(0),
+                hi: crate::ir::Literal::F32(crate::sem::ONE),
             },
-            Self::Bit => Fact::Bit,
-            Self::Index => Fact::Integral,
+            Self::Bit => crate::ir::Fact::Bit,
+            Self::Index => crate::ir::Fact::Integral,
         }
     }
 }
 
 /// Group values of a one-hot fact (helper for evaluators).
 #[must_use]
-pub fn group_values(fact: &Fact, value_of: impl Fn(NodeId) -> Value) -> Vec<Value> {
+pub fn group_values(
+    fact: &crate::ir::Fact,
+    value_of: impl Fn(crate::ir::NodeId) -> crate::sem::Value,
+) -> alloc::vec::Vec<crate::sem::Value> {
     match fact {
-        Fact::OneHot { group, .. } => group.iter().map(|g| value_of(*g)).collect(),
-        _ => Vec::new(),
+        crate::ir::Fact::OneHot { group, .. } => group.iter().map(|g| value_of(*g)).collect(),
+        _ => alloc::vec::Vec::new(),
     }
 }
