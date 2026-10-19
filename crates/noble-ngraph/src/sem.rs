@@ -614,10 +614,10 @@ pub mod soft {
         let n = u128::from(m) << 58;
         let r = n.isqrt();
         let rem = n - r * r;
-        let round = (r >> 2) & 1 == 1;
-        let sticky = r & 0b11 != 0 || rem != 0;
+        let is_round = (r >> 2) & 1 == 1;
+        let has_sticky = r & 0b11 != 0 || rem != 0;
         let mut sig = (r >> 3) as u64;
-        if round && (sticky || sig & 1 == 1) {
+        if is_round && (has_sticky || sig & 1 == 1) {
             sig += 1;
         }
         let mut e_res = 3 + (e - 58) / 2;

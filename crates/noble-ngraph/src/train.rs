@@ -367,7 +367,7 @@ fn loss_and_grad(
 ) -> Result<(f64, alloc::vec::Vec<f64>, bool), crate::diag::Diagnostic> {
     let mut grad_sum = alloc::vec![0f64; c.params.len()];
     let mut loss_sum = 0f64;
-    let mut finite = true;
+    let mut is_finite = true;
     for p in &c.data {
         let model_slots =
             crate::eval::preflight(&c.model, &crate::eval::f32_inputs(&p.inputs), Some(params))?;
@@ -382,7 +382,7 @@ fn loss_and_grad(
         loss_sum += f64::from(l);
         for (acc, k) in grad_sum.iter_mut().zip(&c.params) {
             let gk = gs[*k as usize];
-            finite &= gk.is_finite();
+            is_finite &= gk.is_finite();
             *acc += f64::from(gk);
         }
     }
@@ -391,7 +391,7 @@ fn loss_and_grad(
     Ok((
         loss_sum * inv,
         grad_sum.iter().map(|g| g * inv).collect(),
-        finite && loss_sum.is_finite(),
+        is_finite && loss_sum.is_finite(),
     ))
 }
 
@@ -504,7 +504,7 @@ pub fn train(
             ));
         }
         let lease = crate::eval::ScratchLease::acquire(control.scratch.as_deref_mut(), step_bytes);
-        let (l, g, finite) = match loss_and_grad(c, &current, &mut control.evaluated_nodes) {
+        let (l, g, is_finite) = match loss_and_grad(c, &current, &mut control.evaluated_nodes) {
             Ok(r) => r,
             Err(d) => {
                 drop(lease);
@@ -512,7 +512,7 @@ pub fn train(
             }
         };
         losses.push(l);
-        if !finite || g.iter().any(|x| !x.is_finite()) {
+        if !is_finite || g.iter().any(|x| !x.is_finite()) {
             drop(lease);
             return Err(stop(
                 crate::diag::Diagnostic::new(

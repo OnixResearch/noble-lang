@@ -141,13 +141,13 @@ pub fn admit(
     let n = g.nodes.len();
     let mut dep = alloc::vec![false; n];
     for (i, node) in g.nodes.iter().enumerate() {
-        let mut depends = false;
+        let mut has_dependency = false;
         if let crate::ir::Op::Param(k) = node.op {
-            depends = params.contains(&k);
+            has_dependency = params.contains(&k);
         } else {
-            node.op.visit_operands(|o| depends |= dep[o.index()]);
+            node.op.visit_operands(|o| has_dependency |= dep[o.index()]);
         }
-        dep[i] = depends;
+        dep[i] = has_dependency;
     }
     let mut reaches = alloc::vec![false; n];
     for o in &g.outputs {
@@ -213,7 +213,7 @@ fn admit_options(g: &crate::ir::Graph, opts: &DerivOptions) -> Result<(), crate:
         ))
     };
     for (&n, policy) in &opts.boolean {
-        let applies = matches!(
+        let is_applicable = matches!(
             (policy, op(n)),
             (
                 BooleanPolicy::ClampedLinear(_),
@@ -223,7 +223,7 @@ fn admit_options(g: &crate::ir::Graph, opts: &DerivOptions) -> Result<(), crate:
                 Some(crate::ir::Op::F32Step(_) | crate::ir::Op::F32Select { .. }),
             )
         );
-        if !applies {
+        if !is_applicable {
             return refuse(crate::diag::Code::DerivBoolean, n, "boolean");
         }
     }
@@ -471,7 +471,7 @@ pub fn backward<R: Real>(
                 acc(s, d, &mut gr);
             }
             crate::ir::Op::F32Select { bit, off, on } => {
-                let one = vals[bit.index()].is_one();
+                let is_one = vals[bit.index()].is_one();
                 let gate = match opts.boolean(id) {
                     BooleanPolicy::StraightThrough => {
                         gn.mul(vals[on.index()].sub(vals[off.index()]))
@@ -479,7 +479,7 @@ pub fn backward<R: Real>(
                     _ => R::ZERO,
                 };
                 acc(bit, gate, &mut gr);
-                if one {
+                if is_one {
                     acc(on, gn, &mut gr);
                 } else {
                     acc(off, gn, &mut gr);

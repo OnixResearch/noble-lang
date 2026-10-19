@@ -208,7 +208,7 @@ fn fact(
         "integral" => crate::ir::Fact::Integral,
         "shape" => crate::ir::Fact::Shape(t.u32()?),
         "one-hot" => {
-            let allow_zero = match t.next()? {
+            let is_zero_allowed = match t.next()? {
                 "allow-zero" => true,
                 "exact" => false,
                 o => return Err(syntax(t.line, alloc::format!("bad one-hot mode {o:?}"))),
@@ -217,7 +217,10 @@ fn fact(
             while t.peek().is_some_and(|p| p.starts_with('%')) {
                 group.push(t.node()?);
             }
-            crate::ir::Fact::OneHot { group, allow_zero }
+            crate::ir::Fact::OneHot {
+                group,
+                allow_zero: is_zero_allowed,
+            }
         }
         o => return Err(syntax(t.line, alloc::format!("unknown fact kind {o:?}"))),
     })

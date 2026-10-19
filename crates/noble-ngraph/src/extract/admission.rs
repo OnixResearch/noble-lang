@@ -432,10 +432,10 @@ fn recompute_closure(
                 _ => None,
             })
             .collect();
-        let named_unlisted = invoked
+        let has_named_unlisted = invoked
             .iter()
             .any(|d| target_of(*d).is_some() && !listed.contains(d));
-        if listed.iter().any(|l| !invoked.contains(l)) || named_unlisted {
+        if listed.iter().any(|l| !invoked.contains(l)) || has_named_unlisted {
             return Err(refuse(
                 crate::diag::Code::Closure,
                 alloc::format!(

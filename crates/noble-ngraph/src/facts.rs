@@ -86,8 +86,8 @@ impl AbsF32 {
     /// `rn(a + b)`.
     #[must_use]
     pub fn radd(a: Self, b: Self) -> Self {
-        let nan = a.nan || b.nan || (a.may_inf() && b.may_inf());
-        let mut r = Self::interval(a.lo + b.lo, a.hi + b.hi, nan);
+        let is_nan = a.nan || b.nan || (a.may_inf() && b.may_inf());
+        let mut r = Self::interval(a.lo + b.lo, a.hi + b.hi, is_nan);
         r.integral = a.small_integral() && b.small_integral() && r.finite() && r.small_bounds();
         r
     }
@@ -95,8 +95,8 @@ impl AbsF32 {
     /// `rn(a - b)`.
     #[must_use]
     pub fn rsub(a: Self, b: Self) -> Self {
-        let nan = a.nan || b.nan || (a.may_inf() && b.may_inf());
-        let mut r = Self::interval(a.lo - b.hi, a.hi - b.lo, nan);
+        let is_nan = a.nan || b.nan || (a.may_inf() && b.may_inf());
+        let mut r = Self::interval(a.lo - b.hi, a.hi - b.lo, is_nan);
         r.integral = a.small_integral() && b.small_integral() && r.finite() && r.small_bounds();
         r
     }
@@ -104,7 +104,7 @@ impl AbsF32 {
     /// `rn(a × b)`.
     #[must_use]
     pub fn rmul(a: Self, b: Self) -> Self {
-        let nan = a.nan
+        let is_nan = a.nan
             || b.nan
             || (a.may_inf() && b.contains_zero())
             || (b.may_inf() && a.contains_zero());
@@ -114,7 +114,7 @@ impl AbsF32 {
         }
         let lo = p.iter().copied().fold(f32::INFINITY, f32::min);
         let hi = p.iter().copied().fold(f32::NEG_INFINITY, f32::max);
-        let mut r = Self::interval(lo, hi, nan);
+        let mut r = Self::interval(lo, hi, is_nan);
         r.integral = a.small_integral() && b.small_integral() && r.finite() && r.small_bounds();
         r
     }
@@ -443,13 +443,13 @@ pub fn holds(
         (crate::ir::Fact::OneHot { allow_zero, .. }, _) => {
             let mut ones = 0usize;
             for g in group {
-                let one = match *g {
+                let is_one = match *g {
                     crate::sem::Value::F32(b) if crate::sem::is_bit(b) => b == crate::sem::ONE,
                     crate::sem::Value::I64(x) if x == 0 || x == 1 => x == 1,
                     crate::sem::Value::Bool(x) => x,
                     _ => return false,
                 };
-                ones += usize::from(one);
+                ones += usize::from(is_one);
             }
             ones == 1 || (*allow_zero && ones == 0)
         }

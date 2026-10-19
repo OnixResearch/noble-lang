@@ -1060,8 +1060,8 @@ fn check_facts(
         at_def.push(a);
         if let Some(claims) = derived_claims.get(&i) {
             for (k, fact) in claims {
-                let structural = matches!((fact, &node.op), (crate::ir::Fact::Shape(s), crate::ir::Op::F32Index { table, .. }) if *s as usize == table.len());
-                if !structural && !a.implies(fact) {
+                let is_structural = matches!((fact, &node.op), (crate::ir::Fact::Shape(s), crate::ir::Op::F32Index { table, .. }) if *s as usize == table.len());
+                if !is_structural && !a.implies(fact) {
                     return Err(unchecked(
                         crate::diag::Site::Fact(*k),
                         fact.clone(),
