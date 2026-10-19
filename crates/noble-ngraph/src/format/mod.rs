@@ -14,6 +14,39 @@ pub mod snapshot;
 pub mod value;
 pub mod vectors;
 
+use alloc::string::String;
+use core::fmt::{self, Write as _};
+
+/// Appends formatted text to `out`.
+///
+/// `String`'s `core::fmt::Write` implementation is infallible. This
+/// helper is the crate's single reviewed boundary for that fact; callers
+/// do not ignore a `fmt::Result`.
+pub(crate) fn push_fmt(out: &mut String, args: fmt::Arguments<'_>) {
+    out.write_fmt(args)
+        .expect("writing to a String cannot fail");
+}
+
+pub(crate) fn push_line(out: &mut String, args: fmt::Arguments<'_>) {
+    push_fmt(out, args);
+    out.push('\n');
+}
+
+macro_rules! write_text {
+    ($out:expr, $($arg:tt)*) => {
+        $crate::format::push_fmt(&mut $out, format_args!($($arg)*))
+    };
+}
+
+macro_rules! write_line {
+    ($out:expr, $($arg:tt)*) => {
+        $crate::format::push_line(&mut $out, format_args!($($arg)*))
+    };
+}
+
+pub(crate) use write_line;
+pub(crate) use write_text;
+
 /// One significant line: its 1-based number and its whitespace tokens.
 pub(crate) struct Line<'a> {
     pub(crate) number: usize,

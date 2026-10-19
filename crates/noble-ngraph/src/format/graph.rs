@@ -46,7 +46,6 @@
 
 use alloc::borrow::ToOwned;
 use alloc::string::ToString;
-use core::fmt::Write as _;
 
 use crate::identity::IdentityScheme;
 
@@ -353,7 +352,7 @@ fn encode_rule(rule: &str) -> alloc::string::String {
         if b.is_ascii_graphic() && !matches!(b, b'%' | b'#' | b'"') {
             s.push(char::from(b));
         } else {
-            let _ = write!(s, "%{b:02X}");
+            crate::format::write_text!(s, "%{b:02X}");
         }
     }
     s
@@ -624,7 +623,7 @@ fn fact_text(f: &crate::ir::Fact, profile: crate::ir::SubProfile) -> alloc::stri
                 if *allow_zero { "allow-zero" } else { "exact" }
             );
             for g in group {
-                let _ = write!(s, " %{}", g.0);
+                crate::format::write_text!(s, " %{}", g.0);
             }
             s
         }
@@ -678,19 +677,19 @@ pub fn subject_text(s: &crate::ir::Subject) -> alloc::string::String {
 #[must_use]
 pub fn print(g: &crate::ir::Graph) -> alloc::string::String {
     let mut s = alloc::format!("{} {}\n", crate::ir::IR_VERSION, g.profile.name());
-    let _ = writeln!(s, "subject {}", subject_text(&g.subject));
+    crate::format::write_line!(s, "subject {}", subject_text(&g.subject));
     if let Some(t) = &g.input_shape {
-        let _ = writeln!(s, "shape input{}", shape_text(t));
+        crate::format::write_line!(s, "shape input{}", shape_text(t));
     }
     if let Some(t) = &g.output_shape {
-        let _ = writeln!(s, "shape output{}", shape_text(t));
+        crate::format::write_line!(s, "shape output{}", shape_text(t));
     }
     for slot in &g.slots {
         let k = match slot.kind {
             crate::ir::SlotKind::Input => "input",
             crate::ir::SlotKind::Param => "param",
         };
-        let _ = writeln!(s, "slot {k} {}", slot.ty.name());
+        crate::format::write_line!(s, "slot {k} {}", slot.ty.name());
     }
     let n = |x: &crate::ir::NodeId| alloc::format!("%{}", x.0);
     for (i, node) in g.nodes.iter().enumerate() {
@@ -713,7 +712,7 @@ pub fn print(g: &crate::ir::Graph) -> alloc::string::String {
                         crate::ir::AffineOperand::One => "one".to_owned(),
                         crate::ir::AffineOperand::Node(x) => n(&x),
                     };
-                    let _ = write!(s, " 0x{:08x} {o}", t.coefficient);
+                    crate::format::write_text!(s, " 0x{:08x} {o}", t.coefficient);
                 }
                 s
             }
@@ -735,7 +734,7 @@ pub fn print(g: &crate::ir::Graph) -> alloc::string::String {
                 let mut s =
                     alloc::format!("f32.index {} {} {}", n(index), below.name(), above.name());
                 for t in table {
-                    let _ = write!(s, " {}", n(t));
+                    crate::format::write_text!(s, " {}", n(t));
                 }
                 s
             }
@@ -743,7 +742,7 @@ pub fn print(g: &crate::ir::Graph) -> alloc::string::String {
                 alloc::format!("guard {} {}", n(value), fact_text(fact, g.profile))
             }
         };
-        let _ = writeln!(s, "%{i} = {body}");
+        crate::format::write_line!(s, "%{i} = {body}");
     }
     for f in &g.facts {
         let p = match &f.provenance {
@@ -754,7 +753,7 @@ pub fn print(g: &crate::ir::Graph) -> alloc::string::String {
             crate::ir::Provenance::Evidence(w) if w.is_empty() => "evidence -".to_owned(),
             crate::ir::Provenance::Evidence(w) => alloc::format!("evidence {}", crate::ir::hex(w)),
         };
-        let _ = writeln!(
+        crate::format::write_line!(
             s,
             "fact {} {} {p}",
             n(&f.node),
@@ -762,7 +761,7 @@ pub fn print(g: &crate::ir::Graph) -> alloc::string::String {
         );
     }
     for o in &g.outputs {
-        let _ = writeln!(s, "out {}", n(o));
+        crate::format::write_line!(s, "out {}", n(o));
     }
     s
 }

@@ -813,10 +813,9 @@ pub type Digest = [u8; 32];
 /// Lowercase hex of a digest.
 #[must_use]
 pub fn hex(d: &[u8]) -> alloc::string::String {
-    use core::fmt::Write as _;
     let mut s = alloc::string::String::with_capacity(d.len() * 2);
     for b in d {
-        let _ = write!(s, "{b:02x}");
+        crate::format::write_text!(s, "{b:02x}");
     }
     s
 }

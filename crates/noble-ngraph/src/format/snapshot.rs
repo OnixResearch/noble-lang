@@ -29,8 +29,6 @@
 //! `E-SNAPSHOT-INTEGRITY`. A matching identity identifies bytes; it proves
 //! nothing about the parameters, the optimizer or the evaluators.
 
-use core::fmt::Write as _;
-
 use crate::identity::IdentityScheme;
 /// Schema line.
 pub const SCHEMA: &str = "noble-ngraph-snapshot/0";
@@ -122,40 +120,46 @@ impl SnapshotFile {
         let s = &self.snapshot;
         let p = &self.provenance;
         let mut out = alloc::format!("{SCHEMA}\n");
-        let _ = writeln!(out, "snapshot {}", crate::ir::hex(&s.id()));
-        let _ = writeln!(out, "graph {}", crate::ir::hex(&s.graph()));
-        let _ = writeln!(out, "layout {}", crate::ir::hex(&s.layout()));
+        crate::format::write_line!(out, "snapshot {}", crate::ir::hex(&s.id()));
+        crate::format::write_line!(out, "graph {}", crate::ir::hex(&s.graph()));
+        crate::format::write_line!(out, "layout {}", crate::ir::hex(&s.layout()));
         for (pos, k) in s.slots().iter().enumerate() {
             let bits = s.bits_at(pos).unwrap_or(0);
-            let _ = writeln!(out, "param {k} 0x{bits:08x}");
+            crate::format::write_line!(out, "param {k} 0x{bits:08x}");
         }
-        let _ = writeln!(
+        crate::format::write_line!(
             out,
             "optimizer-state {}",
             crate::ir::hex(&p.optimizer_state)
         );
-        let _ = writeln!(out, "parent {}", crate::ir::hex(&p.parent));
-        let _ = writeln!(out, "subject {}", super::graph::subject_text(&p.subject));
-        let _ = writeln!(
+        crate::format::write_line!(out, "parent {}", crate::ir::hex(&p.parent));
+        crate::format::write_line!(out, "subject {}", super::graph::subject_text(&p.subject));
+        crate::format::write_line!(
             out,
             "profile {} {}",
             p.profile.name(),
             crate::ir::SEMANTIC_REVISION
         );
-        let _ = writeln!(out, "facts {}", crate::ir::hex(&p.facts));
-        let _ = writeln!(out, "loss {}", crate::ir::hex(&p.loss));
-        let _ = writeln!(out, "data {}", crate::ir::hex(&p.data));
-        let _ = writeln!(out, "policy {}", crate::grad::DERIV_POLICY);
+        crate::format::write_line!(out, "facts {}", crate::ir::hex(&p.facts));
+        crate::format::write_line!(out, "loss {}", crate::ir::hex(&p.loss));
+        crate::format::write_line!(out, "data {}", crate::ir::hex(&p.data));
+        crate::format::write_line!(out, "policy {}", crate::grad::DERIV_POLICY);
         for o in opt_ins(&p.deriv) {
-            let _ = match o.width {
-                Some(w) => writeln!(out, "opt-in %{} {} {} 0x{w:08x}", o.node, o.kind, o.rule),
-                None => writeln!(out, "opt-in %{} {} {}", o.node, o.kind, o.rule),
+            match o.width {
+                Some(w) => crate::format::write_line!(
+                    out,
+                    "opt-in %{} {} {} 0x{w:08x}",
+                    o.node,
+                    o.kind,
+                    o.rule
+                ),
+                None => crate::format::write_line!(out, "opt-in %{} {} {}", o.node, o.kind, o.rule),
             };
         }
-        let _ = writeln!(out, "seed 0x{:016x}", p.seed);
-        let _ = writeln!(out, "prng {}", crate::prng::PRNG);
+        crate::format::write_line!(out, "seed 0x{:016x}", p.seed);
+        crate::format::write_line!(out, "prng {}", crate::prng::PRNG);
         let a = &p.optimizer;
-        let _ = writeln!(
+        crate::format::write_line!(
             out,
             "optimizer {} lr 0x{:016x} beta1 0x{:016x} beta2 0x{:016x} eps 0x{:016x}",
             crate::train::ADAM,
@@ -164,9 +168,9 @@ impl SnapshotFile {
             a.beta2.to_bits(),
             a.eps.to_bits()
         );
-        let _ = writeln!(out, "steps {}", p.steps);
-        let _ = writeln!(out, "tools {}", p.tools);
-        let _ = writeln!(
+        crate::format::write_line!(out, "steps {}", p.steps);
+        crate::format::write_line!(out, "tools {}", p.tools);
+        crate::format::write_line!(
             out,
             "provenance {}",
             crate::ir::hex(&self.provenance_digest(ids))
