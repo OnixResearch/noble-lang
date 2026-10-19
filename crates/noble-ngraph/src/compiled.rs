@@ -9,16 +9,7 @@
 //! earliest observed failure in canonical order. Agreement is tested, not
 //! proved (NG-PO-C stays open).
 
-use crate::check::CheckedGraph;
-use crate::diag::BudgetKind;
-use crate::eval::{self, Control, Obs, Report, ScratchLease};
-use crate::facts;
 use crate::identity::IdentityScheme;
-use crate::ir::{AffineOperand, Canon, Digest, Fact, NodeId, Op, OutOfRange, SubProfile};
-use crate::sem::{self, Value};
-use crate::snapshot::ParamSnapshot;
-use alloc::{vec, vec::Vec};
-
 /// Scheduler/compiler revision bound into the `PackedLayoutKey`.
 pub const COMPILER_REVISION: &str = "ngraph-layered/0";
 
@@ -45,8 +36,8 @@ enum F {
     Index {
         d: u32,
         i: u32,
-        below: OutOfRange,
-        above: OutOfRange,
+        below: crate::ir::OutOfRange,
+        above: crate::ir::OutOfRange,
         node: u32,
     },
     Guard {
@@ -66,53 +57,53 @@ enum I {
 #[derive(Clone, Debug)]
 enum Code {
     F32 {
-        ins: Vec<F>,
-        coef: Vec<f32>,
-        src: Vec<u32>,
+        ins: alloc::vec::Vec<F>,
+        coef: alloc::vec::Vec<f32>,
+        src: alloc::vec::Vec<u32>,
     },
     I64 {
-        ins: Vec<I>,
+        ins: alloc::vec::Vec<I>,
     },
 }
 
 /// A compiled graph: instruction stream in layer order plus register layout.
 #[derive(Clone, Debug)]
 pub struct Compiled {
-    checked: CheckedGraph,
+    checked: crate::check::CheckedGraph,
     code: Code,
     /// Instruction ranges per layer.
-    layers: Vec<(u32, u32)>,
+    layers: alloc::vec::Vec<(u32, u32)>,
     /// For each layer, the minimum canonical index of a failure point in this
     /// or any later layer (`u32::MAX` if none).
-    fail_suffix_min: Vec<u32>,
+    fail_suffix_min: alloc::vec::Vec<u32>,
     /// Register of each node (`u32::MAX` for guards).
-    reg: Vec<u32>,
+    reg: alloc::vec::Vec<u32>,
     /// Register count (including the constant-one register).
     regs: u32,
     /// Constant registers and values (bits).
-    consts: Vec<(u32, u64)>,
+    consts: alloc::vec::Vec<(u32, u64)>,
     /// (register, slot) of interface slots.
-    slot_regs: Vec<(u32, u32)>,
-    layout_key: Digest,
+    slot_regs: alloc::vec::Vec<(u32, u32)>,
+    layout_key: crate::ir::Digest,
 }
 
 /// Reusable register workspace. Results are copied out of it (D12).
 #[derive(Clone, Debug)]
 pub struct Workspace {
-    f: Vec<f32>,
-    i: Vec<i64>,
+    f: alloc::vec::Vec<f32>,
+    i: alloc::vec::Vec<i64>,
 }
 
 impl Compiled {
     /// Compiles a checked graph.
     #[must_use]
-    pub fn new(ids: &dyn IdentityScheme, checked: &CheckedGraph) -> Self {
+    pub fn new(ids: &dyn IdentityScheme, checked: &crate::check::CheckedGraph) -> Self {
         let g = checked.graph();
         let n = g.nodes.len();
         // Packed order: (layer, canonical index); guards keep their layer.
-        let mut order: Vec<u32> = (0..n as u32).collect();
-        order.sort_by_key(|&i| (checked.layer(NodeId(i)), i));
-        let mut reg = vec![u32::MAX; n];
+        let mut order: alloc::vec::Vec<u32> = (0..n as u32).collect();
+        order.sort_by_key(|&i| (checked.layer(crate::ir::NodeId(i)), i));
+        let mut reg = alloc::vec![u32::MAX; n];
         let mut next = 0u32;
         for &i in &order {
             if !g.nodes[i as usize].op.is_guard() {
@@ -122,23 +113,23 @@ impl Compiled {
         }
         let one_reg = next;
         let regs = next + 1;
-        let r = |x: &NodeId| reg[x.index()];
-        let mut consts = Vec::new();
-        let mut slot_regs = Vec::new();
+        let r = |x: &crate::ir::NodeId| reg[x.index()];
+        let mut consts = alloc::vec::Vec::new();
+        let mut slot_regs = alloc::vec::Vec::new();
         let layer_count = checked.layer_count() as usize;
-        let mut layers = vec![(0u32, 0u32); layer_count.max(1)];
-        let mut fail_min_at_layer = vec![u32::MAX; layer_count.max(1)];
-        let mut fins: Vec<F> = Vec::new();
-        let mut iins: Vec<I> = Vec::new();
-        let mut coef = Vec::new();
-        let mut src = Vec::new();
+        let mut layers = alloc::vec![(0u32, 0u32); layer_count.max(1)];
+        let mut fail_min_at_layer = alloc::vec![u32::MAX; layer_count.max(1)];
+        let mut fins: alloc::vec::Vec<F> = alloc::vec::Vec::new();
+        let mut iins: alloc::vec::Vec<I> = alloc::vec::Vec::new();
+        let mut coef = alloc::vec::Vec::new();
+        let mut src = alloc::vec::Vec::new();
         let mut cur_layer = u32::MAX;
         for &i in &order {
             let node = &g.nodes[i as usize];
-            let l = checked.layer(NodeId(i));
-            let count = |fins: &Vec<F>, iins: &Vec<I>| match g.profile {
-                SubProfile::F32 => fins.len() as u32,
-                SubProfile::I64 => iins.len() as u32,
+            let l = checked.layer(crate::ir::NodeId(i));
+            let count = |fins: &alloc::vec::Vec<F>, iins: &alloc::vec::Vec<I>| match g.profile {
+                crate::ir::SubProfile::F32 => fins.len() as u32,
+                crate::ir::SubProfile::I64 => iins.len() as u32,
             };
             if l != cur_layer {
                 cur_layer = l;
@@ -147,29 +138,29 @@ impl Compiled {
             }
             let d = reg[i as usize];
             match &node.op {
-                Op::Input(k) | Op::Param(k) => slot_regs.push((d, *k)),
-                Op::Const(lit) => {
-                    let bits = match Value::of_literal(*lit) {
-                        Value::F32(b) => u64::from(b),
-                        Value::I64(v) => v as u64,
-                        Value::Bool(b) => u64::from(b),
+                crate::ir::Op::Input(k) | crate::ir::Op::Param(k) => slot_regs.push((d, *k)),
+                crate::ir::Op::Const(lit) => {
+                    let bits = match crate::sem::Value::of_literal(*lit) {
+                        crate::sem::Value::F32(b) => u64::from(b),
+                        crate::sem::Value::I64(v) => v as u64,
+                        crate::sem::Value::Bool(b) => u64::from(b),
                     };
                     consts.push((d, bits));
                 }
-                Op::I64Add(a, b) => iins.push(I::Add(d, r(a), r(b))),
-                Op::I64Sub(a, b) => iins.push(I::Sub(d, r(a), r(b))),
-                Op::I64Mul(a, b) => iins.push(I::Mul(d, r(a), r(b))),
-                Op::I64Eq(a, b) => iins.push(I::Eq(d, r(a), r(b))),
-                Op::F32Add(a, b) => fins.push(F::Add(d, r(a), r(b))),
-                Op::F32Sub(a, b) => fins.push(F::Sub(d, r(a), r(b))),
-                Op::F32Mul(a, b) => fins.push(F::Mul(d, r(a), r(b))),
-                Op::F32Affine { bias, terms } => {
+                crate::ir::Op::I64Add(a, b) => iins.push(I::Add(d, r(a), r(b))),
+                crate::ir::Op::I64Sub(a, b) => iins.push(I::Sub(d, r(a), r(b))),
+                crate::ir::Op::I64Mul(a, b) => iins.push(I::Mul(d, r(a), r(b))),
+                crate::ir::Op::I64Eq(a, b) => iins.push(I::Eq(d, r(a), r(b))),
+                crate::ir::Op::F32Add(a, b) => fins.push(F::Add(d, r(a), r(b))),
+                crate::ir::Op::F32Sub(a, b) => fins.push(F::Sub(d, r(a), r(b))),
+                crate::ir::Op::F32Mul(a, b) => fins.push(F::Mul(d, r(a), r(b))),
+                crate::ir::Op::F32Affine { bias, terms } => {
                     let start = coef.len() as u32;
                     for t in terms {
                         coef.push(f32::from_bits(t.coefficient));
                         src.push(match t.operand {
-                            AffineOperand::One => one_reg,
-                            AffineOperand::Node(x) => r(&x),
+                            crate::ir::AffineOperand::One => one_reg,
+                            crate::ir::AffineOperand::Node(x) => r(&x),
                         });
                     }
                     fins.push(F::Affine {
@@ -179,22 +170,24 @@ impl Compiled {
                         end: coef.len() as u32,
                     });
                 }
-                Op::F32Relu(x) => fins.push(F::Relu(d, r(x))),
-                Op::F32Reglu { left, gate } => fins.push(F::Reglu(d, r(left), r(gate))),
-                Op::F32Step(x) => fins.push(F::Step(d, r(x))),
-                Op::F32Select { bit, off, on } => fins.push(F::Select {
+                crate::ir::Op::F32Relu(x) => fins.push(F::Relu(d, r(x))),
+                crate::ir::Op::F32Reglu { left, gate } => fins.push(F::Reglu(d, r(left), r(gate))),
+                crate::ir::Op::F32Step(x) => fins.push(F::Step(d, r(x))),
+                crate::ir::Op::F32Select { bit, off, on } => fins.push(F::Select {
                     d,
                     b: r(bit),
                     off: r(off),
                     on: r(on),
                 }),
-                Op::F32Index {
+                crate::ir::Op::F32Index {
                     index,
                     below,
                     above,
                     ..
                 } => {
-                    if *below == OutOfRange::Refuse || *above == OutOfRange::Refuse {
+                    if *below == crate::ir::OutOfRange::Refuse
+                        || *above == crate::ir::OutOfRange::Refuse
+                    {
                         let m = &mut fail_min_at_layer[l as usize];
                         *m = (*m).min(i);
                     }
@@ -206,34 +199,34 @@ impl Compiled {
                         node: i,
                     });
                 }
-                Op::Guard { .. } => {
+                crate::ir::Op::Guard { .. } => {
                     let m = &mut fail_min_at_layer[l as usize];
                     *m = (*m).min(i);
                     match g.profile {
-                        SubProfile::F32 => fins.push(F::Guard { node: i }),
-                        SubProfile::I64 => iins.push(I::Guard { node: i }),
+                        crate::ir::SubProfile::F32 => fins.push(F::Guard { node: i }),
+                        crate::ir::SubProfile::I64 => iins.push(I::Guard { node: i }),
                     }
                 }
             }
             let c = count(&fins, &iins);
             layers[l as usize].1 = c;
         }
-        let mut fail_suffix_min = vec![u32::MAX; layers.len() + 1];
+        let mut fail_suffix_min = alloc::vec![u32::MAX; layers.len() + 1];
         for l in (0..layers.len()).rev() {
             fail_suffix_min[l] = fail_suffix_min[l + 1].min(fail_min_at_layer[l]);
         }
-        let mut c = Canon::new(ids, "noble.ngraph.packed-layout.v0");
+        let mut c = crate::ir::Canon::new(ids, "noble.ngraph.packed-layout.v0");
         c.bytes(&checked.id());
         c.str(COMPILER_REVISION);
         c.str("order=(layer,canonical);regs=dense;one-reg=last");
         let layout_key = c.finish();
         let code = match g.profile {
-            SubProfile::F32 => Code::F32 {
+            crate::ir::SubProfile::F32 => Code::F32 {
                 ins: fins,
                 coef,
                 src,
             },
-            SubProfile::I64 => Code::I64 { ins: iins },
+            crate::ir::SubProfile::I64 => Code::I64 { ins: iins },
         };
         Self {
             checked: checked.clone(),
@@ -251,7 +244,7 @@ impl Compiled {
     /// `PackedLayoutKey = H(GraphLogicalId ‖ compiler rev ‖ layout options)`
     /// (a build key, not semantic identity).
     #[must_use]
-    pub const fn layout_key(&self) -> Digest {
+    pub const fn layout_key(&self) -> crate::ir::Digest {
         self.layout_key
     }
 
@@ -275,7 +268,7 @@ impl Compiled {
 
     /// The checked graph.
     #[must_use]
-    pub const fn checked(&self) -> &CheckedGraph {
+    pub const fn checked(&self) -> &crate::check::CheckedGraph {
         &self.checked
     }
 
@@ -295,12 +288,12 @@ impl Compiled {
         let n = self.regs as usize;
         let mut w = match self.code {
             Code::F32 { .. } => Workspace {
-                f: vec![0.0; n],
-                i: Vec::new(),
+                f: alloc::vec![0.0; n],
+                i: alloc::vec::Vec::new(),
             },
             Code::I64 { .. } => Workspace {
-                f: Vec::new(),
-                i: vec![0; n],
+                f: alloc::vec::Vec::new(),
+                i: alloc::vec![0; n],
             },
         };
         self.reset(&mut w);
@@ -329,20 +322,20 @@ impl Compiled {
     #[must_use]
     pub fn evaluate(
         &self,
-        inputs: &[Value],
-        snapshot: Option<&ParamSnapshot>,
-        control: &mut Control<'_>,
-    ) -> Report {
+        inputs: &[crate::sem::Value],
+        snapshot: Option<&crate::snapshot::ParamSnapshot>,
+        control: &mut crate::eval::Control<'_>,
+    ) -> crate::eval::Report {
         let mut w = self.workspace();
         self.evaluate_in(&mut w, inputs, snapshot, control)
     }
 
-    fn get(&self, w: &Workspace, n: NodeId) -> Value {
+    fn get(&self, w: &Workspace, n: crate::ir::NodeId) -> crate::sem::Value {
         let r = self.reg[n.index()] as usize;
         match self.checked.ty(n) {
-            Some(crate::ir::ScalarType::F32) => Value::F32(w.f[r].to_bits()),
-            Some(crate::ir::ScalarType::Bool) => Value::Bool(w.i[r] != 0),
-            _ => Value::I64(w.i[r]),
+            Some(crate::ir::ScalarType::F32) => crate::sem::Value::F32(w.f[r].to_bits()),
+            Some(crate::ir::ScalarType::Bool) => crate::sem::Value::Bool(w.i[r] != 0),
+            _ => crate::sem::Value::I64(w.i[r]),
         }
     }
 
@@ -351,50 +344,50 @@ impl Compiled {
     pub fn evaluate_in(
         &self,
         w: &mut Workspace,
-        inputs: &[Value],
-        snapshot: Option<&ParamSnapshot>,
-        control: &mut Control<'_>,
-    ) -> Report {
-        let slots = match eval::preflight(&self.checked, inputs, snapshot) {
+        inputs: &[crate::sem::Value],
+        snapshot: Option<&crate::snapshot::ParamSnapshot>,
+        control: &mut crate::eval::Control<'_>,
+    ) -> crate::eval::Report {
+        let slots = match crate::eval::preflight(&self.checked, inputs, snapshot) {
             Ok(v) => v,
             Err(d) => {
-                return Report {
-                    obs: Obs::Refused(d),
+                return crate::eval::Report {
+                    obs: crate::eval::Obs::Refused(d),
                     evaluated_nodes: 0,
                 }
             }
         };
         let bytes = self.scratch_bytes();
-        if let Err(d) = eval::scratch_preflight(bytes, control) {
-            return Report {
-                obs: Obs::Refused(d),
+        if let Err(d) = crate::eval::scratch_preflight(bytes, control) {
+            return crate::eval::Report {
+                obs: crate::eval::Obs::Refused(d),
                 evaluated_nodes: 0,
             };
         }
-        let _lease = ScratchLease::acquire(control.scratch.as_deref_mut(), bytes);
+        let _lease = crate::eval::ScratchLease::acquire(control.scratch.as_deref_mut(), bytes);
         for &(r, k) in &self.slot_regs {
             if let Some(counter) = control.evaluated_nodes.as_deref_mut() {
                 *counter += 1;
             }
             match slots[k as usize] {
-                Value::F32(b) => w.f[r as usize] = f32::from_bits(b),
-                Value::I64(v) => w.i[r as usize] = v,
-                Value::Bool(b) => w.i[r as usize] = i64::from(b),
+                crate::sem::Value::F32(b) => w.f[r as usize] = f32::from_bits(b),
+                crate::sem::Value::I64(v) => w.i[r as usize] = v,
+                crate::sem::Value::Bool(b) => w.i[r as usize] = i64::from(b),
             }
         }
         let mut evaluated = (self.consts.len() + self.slot_regs.len()) as u64;
-        let mut fail: Option<(u32, Fact)> = None;
+        let mut fail: Option<(u32, crate::ir::Fact)> = None;
         for (l, &(start, end)) in self.layers.iter().enumerate() {
             if control.cancel.is_some_and(|c| c(l as u32)) {
-                return Report {
-                    obs: Obs::Cancelled,
+                return crate::eval::Report {
+                    obs: crate::eval::Obs::Cancelled,
                     evaluated_nodes: evaluated,
                 };
             }
             let width = u64::from(end - start);
             if control.fuel.is_some_and(|f| evaluated + width > f) {
-                return Report {
-                    obs: Obs::Exhausted(BudgetKind::Fuel),
+                return crate::eval::Report {
+                    obs: crate::eval::Obs::Exhausted(crate::diag::BudgetKind::Fuel),
                     evaluated_nodes: evaluated,
                 };
             }
@@ -440,9 +433,9 @@ impl Compiled {
             }
         }
         if let Some((node, fact)) = fail {
-            return Report {
-                obs: Obs::GuardFailed {
-                    node: NodeId(node),
+            return crate::eval::Report {
+                obs: crate::eval::Obs::GuardFailed {
+                    node: crate::ir::NodeId(node),
                     fact,
                 },
                 evaluated_nodes: evaluated,
@@ -455,8 +448,8 @@ impl Compiled {
             .iter()
             .map(|o| self.get(w, *o))
             .collect();
-        Report {
-            obs: Obs::Normal(outs),
+        crate::eval::Report {
+            obs: crate::eval::Obs::Normal(outs),
             evaluated_nodes: evaluated,
         }
     }
@@ -469,9 +462,9 @@ impl Compiled {
         src: &[u32],
         w: &mut Workspace,
         evaluated_nodes: &mut Option<&mut u64>,
-    ) -> Option<(u32, Fact)> {
-        let mut fail: Option<(u32, Fact)> = None;
-        let mut note = |node: u32, fact: Fact| {
+    ) -> Option<(u32, crate::ir::Fact)> {
+        let mut fail: Option<(u32, crate::ir::Fact)> = None;
+        let mut note = |node: u32, fact: crate::ir::Fact| {
             if fail.as_ref().is_none_or(|(m, _)| node < *m) {
                 fail = Some((node, fact));
             }
@@ -484,9 +477,9 @@ impl Compiled {
                 }
             }
             match *x {
-                F::Add(d, a, b) => rf[d as usize] = sem::add(rf[a as usize], rf[b as usize]),
-                F::Sub(d, a, b) => rf[d as usize] = sem::sub(rf[a as usize], rf[b as usize]),
-                F::Mul(d, a, b) => rf[d as usize] = sem::mul(rf[a as usize], rf[b as usize]),
+                F::Add(d, a, b) => rf[d as usize] = crate::sem::add(rf[a as usize], rf[b as usize]),
+                F::Sub(d, a, b) => rf[d as usize] = crate::sem::sub(rf[a as usize], rf[b as usize]),
+                F::Mul(d, a, b) => rf[d as usize] = crate::sem::mul(rf[a as usize], rf[b as usize]),
                 F::Affine {
                     d,
                     bias,
@@ -500,11 +493,13 @@ impl Compiled {
                     }
                     rf[d as usize] = v;
                 }
-                F::Relu(d, a) => rf[d as usize] = sem::relu(rf[a as usize]),
-                F::Reglu(d, a, b) => rf[d as usize] = sem::reglu(rf[a as usize], rf[b as usize]),
-                F::Step(d, a) => rf[d as usize] = sem::step(rf[a as usize]),
+                F::Relu(d, a) => rf[d as usize] = crate::sem::relu(rf[a as usize]),
+                F::Reglu(d, a, b) => {
+                    rf[d as usize] = crate::sem::reglu(rf[a as usize], rf[b as usize])
+                }
+                F::Step(d, a) => rf[d as usize] = crate::sem::step(rf[a as usize]),
                 F::Select { d, b, off, on } => {
-                    rf[d as usize] = f32::from_bits(sem::select(
+                    rf[d as usize] = f32::from_bits(crate::sem::select(
                         rf[b as usize].to_bits(),
                         rf[off as usize].to_bits(),
                         rf[on as usize].to_bits(),
@@ -519,15 +514,18 @@ impl Compiled {
                 } => {
                     // The checked graph already retains this exact ordered
                     // table. Only the selected operand needs a register lookup.
-                    let Op::F32Index { table, .. } = &self.checked.graph().nodes[node as usize].op
+                    let crate::ir::Op::F32Index { table, .. } =
+                        &self.checked.graph().nodes[node as usize].op
                     else {
                         unreachable!("compiled index comes from a checked index node");
                     };
                     let len = table.len();
-                    match sem::index_position(rf[i as usize], len, below, above) {
+                    match crate::sem::index_position(rf[i as usize], len, below, above) {
                         Ok(Some(k)) => rf[d as usize] = rf[self.reg[table[k].index()] as usize],
                         Ok(None) => rf[d as usize] = 0.0,
-                        Err(sem::IndexRefused) => note(node, eval::index_refusal_fact(len)),
+                        Err(crate::sem::IndexRefused) => {
+                            note(node, crate::eval::index_refusal_fact(len))
+                        }
                     }
                 }
                 F::Guard { node } => {
@@ -545,8 +543,8 @@ impl Compiled {
         ins: &[I],
         w: &mut Workspace,
         evaluated_nodes: &mut Option<&mut u64>,
-    ) -> Option<(u32, Fact)> {
-        let mut fail: Option<(u32, Fact)> = None;
+    ) -> Option<(u32, crate::ir::Fact)> {
+        let mut fail: Option<(u32, crate::ir::Fact)> = None;
         let ri = &mut w.i;
         for x in ins {
             if OBSERVED {
@@ -555,9 +553,15 @@ impl Compiled {
                 }
             }
             match *x {
-                I::Add(d, a, b) => ri[d as usize] = sem::i64_add(ri[a as usize], ri[b as usize]),
-                I::Sub(d, a, b) => ri[d as usize] = sem::i64_sub(ri[a as usize], ri[b as usize]),
-                I::Mul(d, a, b) => ri[d as usize] = sem::i64_mul(ri[a as usize], ri[b as usize]),
+                I::Add(d, a, b) => {
+                    ri[d as usize] = crate::sem::i64_add(ri[a as usize], ri[b as usize])
+                }
+                I::Sub(d, a, b) => {
+                    ri[d as usize] = crate::sem::i64_sub(ri[a as usize], ri[b as usize])
+                }
+                I::Mul(d, a, b) => {
+                    ri[d as usize] = crate::sem::i64_mul(ri[a as usize], ri[b as usize])
+                }
                 I::Eq(d, a, b) => ri[d as usize] = i64::from(ri[a as usize] == ri[b as usize]),
                 I::Guard { node } => {
                     if let Some(f) = self.guard_fails(node, View::I(ri)) {
@@ -571,24 +575,27 @@ impl Compiled {
         fail
     }
 
-    fn guard_fails(&self, node: u32, view: View<'_>) -> Option<Fact> {
-        let Op::Guard { fact, value } = &self.checked.graph().nodes[node as usize].op else {
+    fn guard_fails(&self, node: u32, view: View<'_>) -> Option<crate::ir::Fact> {
+        let crate::ir::Op::Guard { fact, value } = &self.checked.graph().nodes[node as usize].op
+        else {
             return None;
         };
-        let get = |n: NodeId| {
+        let get = |n: crate::ir::NodeId| {
             let r = self.reg[n.index()] as usize;
             match (view, self.checked.ty(n)) {
-                (View::F(f), _) => Value::F32(f[r].to_bits()),
-                (View::I(i), Some(crate::ir::ScalarType::Bool)) => Value::Bool(i[r] != 0),
-                (View::I(i), _) => Value::I64(i[r]),
+                (View::F(f), _) => crate::sem::Value::F32(f[r].to_bits()),
+                (View::I(i), Some(crate::ir::ScalarType::Bool)) => {
+                    crate::sem::Value::Bool(i[r] != 0)
+                }
+                (View::I(i), _) => crate::sem::Value::I64(i[r]),
             }
         };
-        let group = facts::group_values(fact, get);
+        let group = crate::facts::group_values(fact, get);
         let shape = match &self.checked.graph().nodes[value.index()].op {
-            Op::F32Index { table, .. } => Some(table.len() as u32),
+            crate::ir::Op::F32Index { table, .. } => Some(table.len() as u32),
             _ => None,
         };
-        if facts::holds(fact, get(*value), &group, shape) {
+        if crate::facts::holds(fact, get(*value), &group, shape) {
             None
         } else {
             Some(fact.clone())
