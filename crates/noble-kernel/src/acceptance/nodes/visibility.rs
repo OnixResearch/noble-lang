@@ -58,11 +58,50 @@ fn visible_behavior(
 const fn generic_access(
     kind: crate::contracts::Behavior,
 ) -> Option<(crate::types::NominalTypeId, Access)> {
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-kernel; the Behavior enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+    )]
     match kind {
         crate::contracts::Behavior::GenericLeft(id) => Some((id, Access::Left)),
         crate::contracts::Behavior::GenericRight(id) => Some((id, Access::Right)),
         crate::contracts::Behavior::GenericMatch(id) => Some((id, Access::Match)),
-        _ => None,
+        crate::contracts::Behavior::Dup => None,
+        crate::contracts::Behavior::Drop => None,
+        crate::contracts::Behavior::Swap => None,
+        crate::contracts::Behavior::Dip => None,
+        crate::contracts::Behavior::Arith => None,
+        crate::contracts::Behavior::Equals => None,
+        crate::contracts::Behavior::Quote => None,
+        crate::contracts::Behavior::Compose => None,
+        crate::contracts::Behavior::Run => None,
+        crate::contracts::Behavior::Reflect => None,
+        crate::contracts::Behavior::Unit => None,
+        crate::contracts::Behavior::Pair => None,
+        crate::contracts::Behavior::Unpair => None,
+        crate::contracts::Behavior::Inl => None,
+        crate::contracts::Behavior::Inr => None,
+        crate::contracts::Behavior::Case => None,
+        crate::contracts::Behavior::If => None,
+        crate::contracts::Behavior::Nil => None,
+        crate::contracts::Behavior::Cons => None,
+        crate::contracts::Behavior::ListCase => None,
+        crate::contracts::Behavior::TestEmit => None,
+        crate::contracts::Behavior::TextByte => None,
+        crate::contracts::Behavior::CalculatorIterate => None,
+        crate::contracts::Behavior::CalculatorCompare => None,
+        crate::contracts::Behavior::CalculatorDivRem => None,
+        crate::contracts::Behavior::CalculatorTextFromAscii => None,
+        crate::contracts::Behavior::CalculatorTextLength => None,
+        crate::contracts::Behavior::Reserved => None,
+        crate::contracts::Behavior::BoundEmit(_) => None,
+        crate::contracts::Behavior::BoundClock(_) => None,
+        crate::contracts::Behavior::NominalNew(_) => None,
+        crate::contracts::Behavior::NominalInto(_) => None,
+        crate::contracts::Behavior::NominalLeft(_) => None,
+        crate::contracts::Behavior::NominalRight(_) => None,
+        crate::contracts::Behavior::NominalMatch(_) => None,
+        crate::contracts::Behavior::Named => None,
     }
 }
 

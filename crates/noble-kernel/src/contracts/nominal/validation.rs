@@ -253,11 +253,50 @@ fn definitions_match(env: &super::super::Env) -> bool {
 }
 
 const fn generic_operation_id(kind: super::super::Behavior) -> Option<crate::types::NominalTypeId> {
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-kernel; the Behavior enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+    )]
     match kind {
         super::super::Behavior::GenericLeft(id)
         | super::super::Behavior::GenericRight(id)
         | super::super::Behavior::GenericMatch(id) => Some(id),
-        _ => None,
+        super::super::Behavior::Dup => None,
+        super::super::Behavior::Drop => None,
+        super::super::Behavior::Swap => None,
+        super::super::Behavior::Dip => None,
+        super::super::Behavior::Arith => None,
+        super::super::Behavior::Equals => None,
+        super::super::Behavior::Quote => None,
+        super::super::Behavior::Compose => None,
+        super::super::Behavior::Run => None,
+        super::super::Behavior::Reflect => None,
+        super::super::Behavior::Unit => None,
+        super::super::Behavior::Pair => None,
+        super::super::Behavior::Unpair => None,
+        super::super::Behavior::Inl => None,
+        super::super::Behavior::Inr => None,
+        super::super::Behavior::Case => None,
+        super::super::Behavior::If => None,
+        super::super::Behavior::Nil => None,
+        super::super::Behavior::Cons => None,
+        super::super::Behavior::ListCase => None,
+        super::super::Behavior::TestEmit => None,
+        super::super::Behavior::TextByte => None,
+        super::super::Behavior::CalculatorIterate => None,
+        super::super::Behavior::CalculatorCompare => None,
+        super::super::Behavior::CalculatorDivRem => None,
+        super::super::Behavior::CalculatorTextFromAscii => None,
+        super::super::Behavior::CalculatorTextLength => None,
+        super::super::Behavior::Reserved => None,
+        super::super::Behavior::BoundEmit(_) => None,
+        super::super::Behavior::BoundClock(_) => None,
+        super::super::Behavior::NominalNew(_) => None,
+        super::super::Behavior::NominalInto(_) => None,
+        super::super::Behavior::NominalLeft(_) => None,
+        super::super::Behavior::NominalRight(_) => None,
+        super::super::Behavior::NominalMatch(_) => None,
+        super::super::Behavior::Named => None,
     }
 }
 
