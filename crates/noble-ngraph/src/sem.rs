@@ -393,6 +393,10 @@ pub fn exact_f32_decimal(text: &str) -> Option<u32> {
 struct Big(alloc::vec::Vec<u32>);
 
 impl Big {
+    #[expect(
+        tigerstyle::unchecked_narrowing,
+        reason = "Owner: noble-maintainers; the low and high masks select exactly 32 bits each, so the u64 split is lossless"
+    )]
     fn from_u64(v: u64) -> Self {
         let mut b = Self(alloc::vec![(v & 0xffff_ffff) as u32, (v >> 32) as u32]);
         b.trim();
@@ -412,6 +416,10 @@ impl Big {
             self.0.pop();
         }
     }
+    #[expect(
+        tigerstyle::unchecked_narrowing,
+        reason = "Owner: noble-maintainers; a u32x u32 product plus a u32 carry is below 2^64, so the masked limb and shifted carry fit u32"
+    )]
     fn mul_small(&mut self, k: u32) {
         let mut carry = 0u64;
         for l in &mut self.0 {
@@ -423,6 +431,10 @@ impl Big {
             self.0.push(carry as u32);
         }
     }
+    #[expect(
+        tigerstyle::unchecked_narrowing,
+        reason = "Owner: noble-maintainers; a u32 limb plus a u32 carry is below 2^33, so the masked limb and shifted carry fit u32"
+    )]
     fn add_small(&mut self, k: u32) {
         let mut carry = u64::from(k);
         for l in &mut self.0 {
@@ -455,6 +467,10 @@ pub mod soft {
     const F64_FRAC: u64 = (1 << 52) - 1;
 
     /// `f64::trunc`: rounds toward zero, keeping the sign of zero.
+    #[expect(
+        tigerstyle::unchecked_narrowing,
+        reason = "Owner: noble-maintainers; the exponent is masked to 11 bits before the i32 conversion"
+    )]
     #[must_use]
     pub const fn trunc_f64(x: f64) -> f64 {
         let bits = x.to_bits();
@@ -568,6 +584,10 @@ pub mod soft {
     /// the low two bits with the remainder `M·2^58 − r²` form the sticky
     /// bit. An exact tie cannot occur (an odd 54-bit square root would need
     /// a 107-bit square), but the rule handles one.
+    #[expect(
+        tigerstyle::unchecked_narrowing,
+        reason = "Owner: noble-maintainers; the exponent is masked to 11 bits and the 56-bit square-root significand fits u64"
+    )]
     #[must_use]
     pub fn sqrt_f64(x: f64) -> f64 {
         let bits = x.to_bits();

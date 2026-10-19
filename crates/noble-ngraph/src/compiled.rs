@@ -302,6 +302,10 @@ impl Compiled {
 
     /// Resets the workspace to its post-construction state (constants and
     /// the constant-one register).
+    #[expect(
+        tigerstyle::unchecked_narrowing,
+        reason = "Owner: noble-maintainers; F32 constants are stored from f32::to_bits and already fit u32"
+    )]
     pub fn reset(&self, w: &mut Workspace) {
         match self.code {
             Code::F32 { .. } => {
