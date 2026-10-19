@@ -1,4 +1,6 @@
 #![no_std]
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
 //! `Numeric-Graph-v1`: the pure library of the opt-in numeric graph profile
 //! (`NumericGraph-Design`, design changes `numeric-graph-profile` and
 //! `numeric-graph-v1`).

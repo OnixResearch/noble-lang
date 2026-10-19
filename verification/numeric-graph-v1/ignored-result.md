@@ -12,14 +12,18 @@ which the Octet `ignored_result` lint correctly flags.
 
 `crates/noble-ngraph/src/format/mod.rs` now owns the single reviewed boundary:
 
-- `push_fmt(&mut String, fmt::Arguments)` calls `write_fmt` and consumes the
-  result with `expect("writing to a String cannot fail")`.
+- `push_fmt(&mut String, fmt::Arguments)` calls `write_fmt`, binds the result and
+  checks it with `debug_assert!`; `String`'s implementation is infallible.
 - `push_line` appends the line terminator.
+- The two helpers are the crate's reviewed output-buffer exception for the
+  `borrowed_argument_types` and `mutating_input_in_pure` lints; call sites do
+  not repeat either exception.
 - `write_text!` and `write_line!` are crate-private macros preserving the
   existing call-site syntax.
 
 Callers in `format/snapshot.rs`, `format/graph.rs` and the `ir.rs` hex helper
-use these helpers. No waiver is used and no result is discarded.
+use these helpers. No architecture-policy waiver is used and no result is
+discarded.
 
 ## Measurement
 
@@ -50,5 +54,5 @@ print/parse round-trip tests exercise the affected paths.
 
 This is a lint-family disposition, not a source-coverage or native-assurance
 pass. The desugaring/unresolved-definition decision and the other issue #25
-families remain open. The `expect` relies only on the standard-library
-`String` implementation and does not establish anything about external writers.
+families remain open. The debug assertion relies only on the standard-library `String`
+implementation and does not establish anything about external writers.

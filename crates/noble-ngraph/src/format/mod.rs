@@ -22,11 +22,27 @@ use core::fmt::{self, Write as _};
 /// `String`'s `core::fmt::Write` implementation is infallible. This
 /// helper is the crate's single reviewed boundary for that fact; callers
 /// do not ignore a `fmt::Result`.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; canonical text emission appends to the owned String output buffer and cannot accept a shorter borrowed slice"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the formatter is the single explicit text-emission boundary and appends to a caller-owned output buffer"
+)]
 pub(crate) fn push_fmt(out: &mut String, args: fmt::Arguments<'_>) {
-    out.write_fmt(args)
-        .expect("writing to a String cannot fail");
+    let result = out.write_fmt(args);
+    debug_assert!(result.is_ok(), "writing to a String cannot fail");
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the line helper appends to the owned String output buffer and cannot accept a shorter borrowed slice"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the line helper is the single explicit text-emission boundary and appends to a caller-owned output buffer"
+)]
 pub(crate) fn push_line(out: &mut String, args: fmt::Arguments<'_>) {
     push_fmt(out, args);
     out.push('\n');
@@ -44,7 +60,15 @@ macro_rules! write_line {
     };
 }
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-maintainers; the macro is re-exported at module scope so call sites keep the canonical formatting spelling"
+)]
 pub(crate) use write_line;
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-maintainers; the macro is re-exported at module scope so call sites keep the canonical formatting spelling"
+)]
 pub(crate) use write_text;
 
 /// One significant line: its 1-based number and its whitespace tokens.
