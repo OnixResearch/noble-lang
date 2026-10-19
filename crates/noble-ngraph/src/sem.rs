@@ -8,9 +8,6 @@
 //! The library is `no_std`: float functions that `core` does not provide are
 //! the correctly rounded software routines in [`soft`].
 
-use crate::ir::{Literal, OutOfRange, ScalarType};
-use alloc::{format, vec, vec::Vec};
-
 /// A graph value at the ABI (D3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Value {
@@ -25,11 +22,11 @@ pub enum Value {
 impl Value {
     /// Type.
     #[must_use]
-    pub const fn ty(self) -> ScalarType {
+    pub const fn ty(self) -> crate::ir::ScalarType {
         match self {
-            Self::I64(_) => ScalarType::I64,
-            Self::Bool(_) => ScalarType::Bool,
-            Self::F32(_) => ScalarType::F32,
+            Self::I64(_) => crate::ir::ScalarType::I64,
+            Self::Bool(_) => crate::ir::ScalarType::Bool,
+            Self::F32(_) => crate::ir::ScalarType::F32,
         }
     }
 
@@ -41,16 +38,16 @@ impl Value {
 
     /// The literal's value.
     #[must_use]
-    pub const fn of_literal(l: Literal) -> Self {
+    pub const fn of_literal(l: crate::ir::Literal) -> Self {
         match l {
-            Literal::I64(v) => Self::I64(v),
-            Literal::Bool(v) => Self::Bool(v),
-            Literal::F32(v) => Self::F32(v),
+            crate::ir::Literal::I64(v) => Self::I64(v),
+            crate::ir::Literal::Bool(v) => Self::Bool(v),
+            crate::ir::Literal::F32(v) => Self::F32(v),
         }
     }
 
     /// Little-endian ABI bytes (D3).
-    pub fn write_abi(self, out: &mut Vec<u8>) {
+    pub fn write_abi(self, out: &mut alloc::vec::Vec<u8>) {
         match self {
             Self::I64(v) => out.extend_from_slice(&v.to_le_bytes()),
             Self::Bool(v) => out.push(u8::from(v)),
@@ -157,17 +154,17 @@ pub struct IndexRefused;
 pub fn index_position(
     i: f32,
     len: usize,
-    below: OutOfRange,
-    above: OutOfRange,
+    below: crate::ir::OutOfRange,
+    above: crate::ir::OutOfRange,
 ) -> Result<Option<usize>, IndexRefused> {
     if i.is_nan() || i.is_infinite() || soft::trunc_f32(i) != i {
         return Err(IndexRefused);
     }
     if i < 0.0 {
         return match below {
-            OutOfRange::Refuse => Err(IndexRefused),
-            OutOfRange::Clamp => Ok(Some(0)),
-            OutOfRange::Zero => Ok(None),
+            crate::ir::OutOfRange::Refuse => Err(IndexRefused),
+            crate::ir::OutOfRange::Clamp => Ok(Some(0)),
+            crate::ir::OutOfRange::Zero => Ok(None),
         };
     }
     // |i| < 2^24 under the checked range fact; larger finite values still
@@ -175,9 +172,9 @@ pub fn index_position(
     let fi = f64::from(i);
     if fi >= len as f64 {
         return match above {
-            OutOfRange::Refuse => Err(IndexRefused),
-            OutOfRange::Clamp => Ok(Some(len - 1)),
-            OutOfRange::Zero => Ok(None),
+            crate::ir::OutOfRange::Refuse => Err(IndexRefused),
+            crate::ir::OutOfRange::Clamp => Ok(Some(len - 1)),
+            crate::ir::OutOfRange::Zero => Ok(None),
         };
     }
     Ok(Some(fi as usize))
@@ -345,7 +342,7 @@ pub fn exact_f32_decimal(text: &str) -> Option<u32> {
     }
     // At most 112 digits and an exponent in [-149, 38]: a short literal.
     let sign = if d.negative { "-" } else { "" };
-    let v: f32 = format!("{sign}{}{}e{}", d.int, d.frac, d.exponent)
+    let v: f32 = alloc::format!("{sign}{}{}e{}", d.int, d.frac, d.exponent)
         .parse()
         .ok()?;
     if !v.is_finite() {
@@ -389,11 +386,11 @@ pub fn exact_f32_decimal(text: &str) -> Option<u32> {
 
 /// Minimal unsigned big integer for exact literal checks.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-struct Big(Vec<u32>);
+struct Big(alloc::vec::Vec<u32>);
 
 impl Big {
     fn from_u64(v: u64) -> Self {
-        let mut b = Self(vec![(v & 0xffff_ffff) as u32, (v >> 32) as u32]);
+        let mut b = Self(alloc::vec![(v & 0xffff_ffff) as u32, (v >> 32) as u32]);
         b.trim();
         b
     }
@@ -624,7 +621,7 @@ mod tests {
         assert_eq!(exact_f32_decimal("1e40"), None);
         // 2^-149, the least subnormal, written exactly.
         // Decimal digits of 5^149 (least significant first), then e-149.
-        let mut digits = vec![1u8];
+        let mut digits = alloc::vec![1u8];
         for _ in 0..149 {
             let mut carry = 0;
             for d in &mut digits {
