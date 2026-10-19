@@ -61,7 +61,7 @@ impl Base {
     fn positions_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
         // The descriptor table has exactly one entry for every emitted
         // signature, so its transactional base shares the profile key bound.
-        let key_limit = if self.calculator {
+        let key_cap = if self.calculator {
             crate::signatures::CALCULATOR_SOURCE_KEY_LIMIT
         } else {
             crate::signatures::SOURCE_KEY_LIMIT
@@ -86,8 +86,8 @@ impl Base {
             && self.descriptor_base <= next.descriptors.len()
             && self.identity_base <= self.identity_count
             && self.identity_base <= next.identities.len()
-            && self.signature_count <= key_limit
-            && self.descriptor_count <= key_limit
+            && self.signature_count <= key_cap
+            && self.descriptor_count <= key_cap
             && self.identity_count
                 <= if self.calculator {
                     super::CALCULATOR_DEFINITION_LIMIT

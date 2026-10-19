@@ -98,12 +98,12 @@ pub(super) fn module(
     // The calculator's bounded multi-definition closure may serialize above
     // the ordinary one-MiB module cap. Keep that cap on all other profiles
     // and on individual structural signature keys.
-    let limit = if plan.calculator {
+    let cap = if plan.calculator {
         4 * crate::OUTPUT_BYTE_LIMIT
     } else {
         crate::OUTPUT_BYTE_LIMIT
     };
-    let mut out = crate::output::Buffer::with_limit(32_768, limit);
+    let mut out = crate::output::Buffer::with_limit(32_768, cap);
     attempt!(imports::write(&mut out, plan));
     attempt!(imports::runtime(&mut out, plan));
     attempt!(plan.types.emit(&mut out, plan.calculator));
