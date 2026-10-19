@@ -144,14 +144,14 @@ pub(super) fn literal(
         .map_or(1, |height| height as usize + 2);
     attempt!(work.entries(bytes.len().saturating_add(1).saturating_mul(levels)));
     if let Some(&address) = compiler.static_literals.get(bytes) {
-        let length = attempt!(super::number(bytes.len()));
+        let length_bytes = attempt!(super::number(bytes.len()));
         data.reserve(1);
         data.push((address, bytes.to_vec()));
-        return Ok((address, length));
+        return Ok((address, length_bytes));
     }
-    let (address, length) = attempt!(self::bytes(&mut compiler.text_end, data, bytes, true));
+    let (address, length_bytes) = attempt!(self::bytes(&mut compiler.text_end, data, bytes, true));
     compiler.static_literals.insert(bytes.to_vec(), address);
-    Ok((address, length))
+    Ok((address, length_bytes))
 }
 
 #[expect(
@@ -260,11 +260,11 @@ pub(super) fn finish(
             // The module that first publishes this ID carries its canonical
             // key in passive data; the trusted engine copies it once through
             // host scratch, so signature metadata never consumes literal Text.
-            let length = attempt!(super::number(compiler.signatures.key_len(index)));
-            if length > 65_536 {
+            let length_bytes = attempt!(super::number(compiler.signatures.key_len(index)));
+            if length_bytes > 65_536 {
                 return Err(crate::Diagnostic::Exhausted);
             }
-            Ok((983_040, length))
+            Ok((983_040, length_bytes))
         } else {
             bytes(
                 &mut compiler.text_end,

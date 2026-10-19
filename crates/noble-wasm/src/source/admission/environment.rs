@@ -69,7 +69,7 @@ pub(super) fn check(
     calculator: bool,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
-    let definition_limit = if calculator {
+    let definition_cap = if calculator {
         super::super::CALCULATOR_DEFINITION_LIMIT
     } else {
         super::super::DEFINITION_LIMIT
@@ -77,9 +77,9 @@ pub(super) fn check(
     let maximum_rows = if calculator {
         noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
     } else {
-        definition_limit.saturating_add(27)
+        definition_cap.saturating_add(27)
     };
-    if env.defs.len() > maximum_rows || submission.definitions.len() > definition_limit {
+    if env.defs.len() > maximum_rows || submission.definitions.len() > definition_cap {
         return Err(crate::Diagnostic::Exhausted);
     }
     if env.defs.len() < 23 {
@@ -94,9 +94,9 @@ pub(super) fn check(
     if env.definition_owners.len() != env.defs.len() {
         return Err(crate::Diagnostic::Invalid);
     }
-    if env.nominals.len() > definition_limit
-        || env.generic_variants.len() > definition_limit
-        || env.bound_adapters.len() > definition_limit
+    if env.nominals.len() > definition_cap
+        || env.generic_variants.len() > definition_cap
+        || env.bound_adapters.len() > definition_cap
         || env.live_resource_nominals.len() > super::super::DEFINITION_LIMIT
         || env.resource_kinds.len() > super::super::DEFINITION_LIMIT.saturating_add(1)
     {
@@ -427,7 +427,7 @@ pub(super) fn work(
     calculator: bool,
     meter: &mut super::super::Work,
 ) -> Result<u64, crate::Diagnostic> {
-    let definition_limit = if calculator {
+    let definition_cap = if calculator {
         super::super::CALCULATOR_DEFINITION_LIMIT
     } else {
         super::super::DEFINITION_LIMIT
@@ -435,14 +435,14 @@ pub(super) fn work(
     let maximum_rows = if calculator {
         noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
     } else {
-        definition_limit.saturating_add(27)
+        definition_cap.saturating_add(27)
     };
     if environment.defs.len() > maximum_rows || environment.deps.len() > maximum_rows {
         return Err(crate::Diagnostic::Exhausted);
     }
-    if environment.nominals.len() > definition_limit
-        || environment.generic_variants.len() > definition_limit
-        || environment.bound_adapters.len() > definition_limit
+    if environment.nominals.len() > definition_cap
+        || environment.generic_variants.len() > definition_cap
+        || environment.bound_adapters.len() > definition_cap
     {
         return Err(crate::Diagnostic::Exhausted);
     }
