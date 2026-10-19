@@ -9,19 +9,7 @@
 //!
 //! The checker is ordinary Rust; its soundness is the open obligation NG-PO-B.
 
-use alloc::collections::BTreeMap;
-use alloc::rc::Rc;
-use alloc::{format, vec, vec::Vec};
-
-use crate::diag::{BudgetKind, Code, Diagnostic, Malformed, Site};
-use crate::facts::{Abs, AbsF32, AbsI64, Requirement};
 use crate::identity::IdentityScheme;
-use crate::ir::{
-    AffineOperand, Digest, Fact, Graph, NodeId, Op, OutOfRange, Provenance, ScalarType, SlotKind,
-    SubProfile,
-};
-use crate::ir::{Canon, FACT_RULE_REVISION};
-
 /// D5 budgets with the `/0` policy defaults. A policy may lower a budget;
 /// raising one requires a new profile policy revision (refused, `E-PROFILE`).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -109,14 +97,14 @@ impl Budgets {
     ///
     /// # Errors
     /// `E-PROFILE` if any budget exceeds its default.
-    pub fn validate_policy(&self) -> Result<(), Diagnostic> {
+    pub fn validate_policy(&self) -> Result<(), crate::diag::Diagnostic> {
         let d = Self::default();
         if self.pairs().iter().zip(d.pairs()).all(|(a, b)| *a <= b) {
             Ok(())
         } else {
-            Err(Diagnostic::new(
-                Code::Profile,
-                Site::Graph,
+            Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::Profile,
+                crate::diag::Site::Graph,
                 "raising a /0 budget requires a new profile policy revision",
             ))
         }
@@ -127,7 +115,11 @@ impl Budgets {
 ///
 /// # Errors
 /// `E-BUDGET-<kind>` with the limit and observed count.
-pub const fn charge(kind: BudgetKind, limit: u64, observed: u64) -> Result<(), BudgetKind> {
+pub const fn charge(
+    kind: crate::diag::BudgetKind,
+    limit: u64,
+    observed: u64,
+) -> Result<(), crate::diag::BudgetKind> {
     if observed > limit {
         Err(kind)
     } else {
@@ -135,68 +127,72 @@ pub const fn charge(kind: BudgetKind, limit: u64, observed: u64) -> Result<(), B
     }
 }
 
-fn budget(kind: BudgetKind, limit: u64, observed: u64) -> Result<(), Diagnostic> {
-    charge(kind, limit, observed).map_err(|k| Diagnostic::budget(k, limit, observed))
+fn budget(
+    kind: crate::diag::BudgetKind,
+    limit: u64,
+    observed: u64,
+) -> Result<(), crate::diag::Diagnostic> {
+    charge(kind, limit, observed).map_err(|k| crate::diag::Diagnostic::budget(k, limit, observed))
 }
 
 /// An input/param fact validated before evaluation (`E-FACT-INPUT`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InputFact {
-    /// Fact record index in the graph.
+    /// crate::ir::Fact record index in the graph.
     pub record: usize,
     /// Slot node.
-    pub node: NodeId,
+    pub node: crate::ir::NodeId,
     /// Interface slot.
     pub slot: u32,
     /// Slot kind.
-    pub kind: SlotKind,
-    /// Fact.
-    pub fact: Fact,
+    pub kind: crate::ir::SlotKind,
+    /// crate::ir::Fact.
+    pub fact: crate::ir::Fact,
 }
 
 /// A graph accepted by the checker, with re-derived types, layers and facts.
 #[derive(Clone, Debug)]
 pub struct CheckedGraph {
-    graph: Rc<Graph>,
-    id: Digest,
-    types: Vec<Option<ScalarType>>,
-    layer: Vec<u32>,
+    graph: alloc::rc::Rc<crate::ir::Graph>,
+    id: crate::ir::Digest,
+    types: alloc::vec::Vec<Option<crate::ir::ScalarType>>,
+    layer: alloc::vec::Vec<u32>,
     layers: u32,
-    input_facts: Vec<InputFact>,
-    abs: Vec<Abs>,
-    slot_nodes: Vec<NodeId>,
-    param_slots: Vec<u32>,
-    param_layout: Digest,
+    input_facts: alloc::vec::Vec<InputFact>,
+    abs: alloc::vec::Vec<crate::facts::Abs>,
+    slot_nodes: alloc::vec::Vec<crate::ir::NodeId>,
+    param_slots: alloc::vec::Vec<u32>,
+    param_layout: crate::ir::Digest,
 }
 
 impl CheckedGraph {
     /// The checked graph.
     #[must_use]
-    pub fn graph(&self) -> &Graph {
+    pub fn graph(&self) -> &crate::ir::Graph {
         &self.graph
     }
 
     /// Shared owner of the checked graph (retained, immutable; D12).
     #[must_use]
-    pub fn graph_rc(&self) -> Rc<Graph> {
-        Rc::clone(&self.graph)
+    pub fn graph_rc(&self) -> alloc::rc::Rc<crate::ir::Graph> {
+        alloc::rc::Rc::clone(&self.graph)
     }
 
     /// `GraphLogicalId`.
     #[must_use]
-    pub const fn id(&self) -> Digest {
+    pub const fn id(&self) -> crate::ir::Digest {
         self.id
     }
 
     /// Re-derived type of node `n` (`None` for guard roots).
     #[must_use]
-    pub fn ty(&self, n: NodeId) -> Option<ScalarType> {
+    pub fn ty(&self, n: crate::ir::NodeId) -> Option<crate::ir::ScalarType> {
         self.types[n.index()]
     }
 
     /// Dependency layer of node `n` (handwired depth rule: sources at 0).
     #[must_use]
-    pub fn layer(&self, n: NodeId) -> u32 {
+    pub fn layer(&self, n: crate::ir::NodeId) -> u32 {
         self.layer[n.index()]
     }
 
@@ -214,13 +210,13 @@ impl CheckedGraph {
 
     /// The checker's abstract summary of node `n` at its definition.
     #[must_use]
-    pub fn summary(&self, n: NodeId) -> Abs {
+    pub fn summary(&self, n: crate::ir::NodeId) -> crate::facts::Abs {
         self.abs[n.index()]
     }
 
     /// Node of interface slot `k`.
     #[must_use]
-    pub fn slot_node(&self, k: u32) -> NodeId {
+    pub fn slot_node(&self, k: u32) -> crate::ir::NodeId {
         self.slot_nodes[k as usize]
     }
 
@@ -232,28 +228,28 @@ impl CheckedGraph {
 
     /// Param layout key (computed once at check).
     #[must_use]
-    pub const fn param_layout(&self) -> Digest {
+    pub const fn param_layout(&self) -> crate::ir::Digest {
         self.param_layout
     }
 
-    /// Fact-binding digest: `H(noble.ngraph.fact-bindings.v0 ‖ GraphLogicalId ‖
-    /// fact-rule revision ‖ fact records)`. Fact records are not part of
+    /// crate::ir::Fact-binding digest: `H(noble.ngraph.fact-bindings.v0 ‖ GraphLogicalId ‖
+    /// fact-rule revision ‖ fact records)`. crate::ir::Fact records are not part of
     /// `GraphLogicalId`, so snapshot binding also compares this (design D6).
     #[must_use]
-    pub fn fact_bindings(&self, ids: &dyn IdentityScheme) -> Digest {
-        let mut c = Canon::new(ids, "noble.ngraph.fact-bindings.v0");
+    pub fn fact_bindings(&self, ids: &dyn IdentityScheme) -> crate::ir::Digest {
+        let mut c = crate::ir::Canon::new(ids, "noble.ngraph.fact-bindings.v0");
         c.bytes(&self.id);
-        c.str(FACT_RULE_REVISION);
+        c.str(crate::ir::FACT_RULE_REVISION);
         c.u64(self.graph.facts.len() as u64);
         for f in &self.graph.facts {
             c.u32(f.node.0);
             c.fact(&f.fact);
             c.str(match &f.provenance {
-                Provenance::Derived(_) => "derived",
-                Provenance::InputValidated => "input-validated",
-                Provenance::Evidence(_) => "evidence",
-                Provenance::Guard(_) => "guard",
-                Provenance::Asserted => "asserted",
+                crate::ir::Provenance::Derived(_) => "derived",
+                crate::ir::Provenance::InputValidated => "input-validated",
+                crate::ir::Provenance::Evidence(_) => "evidence",
+                crate::ir::Provenance::Guard(_) => "guard",
+                crate::ir::Provenance::Asserted => "asserted",
             });
         }
         c.finish()
@@ -268,17 +264,17 @@ impl CheckedGraph {
 
 /// Estimated retained bytes of a graph (charged against `graph_bytes`).
 #[must_use]
-pub fn retained_bytes(g: &Graph) -> u64 {
-    let mut b = core::mem::size_of::<Graph>() as u64;
+pub fn retained_bytes(g: &crate::ir::Graph) -> u64 {
+    let mut b = core::mem::size_of::<crate::ir::Graph>() as u64;
     b += (g.slots.len() * core::mem::size_of::<crate::ir::Slot>()) as u64;
     b += (g.outputs.len() * 4) as u64;
     for n in &g.nodes {
         b += core::mem::size_of::<crate::ir::Node>() as u64;
         b += match &n.op {
-            Op::F32Affine { terms, .. } => (terms.len() * 12) as u64,
-            Op::F32Index { table, .. } => (table.len() * 4) as u64,
-            Op::Guard {
-                fact: Fact::OneHot { group, .. },
+            crate::ir::Op::F32Affine { terms, .. } => (terms.len() * 12) as u64,
+            crate::ir::Op::F32Index { table, .. } => (table.len() * 4) as u64,
+            crate::ir::Op::Guard {
+                fact: crate::ir::Fact::OneHot { group, .. },
                 ..
             } => (group.len() * 4) as u64,
             _ => 0,
@@ -288,11 +284,17 @@ pub fn retained_bytes(g: &Graph) -> u64 {
     b
 }
 
-fn op_profile(op: &Op) -> Option<SubProfile> {
+fn op_profile(op: &crate::ir::Op) -> Option<crate::ir::SubProfile> {
     match op {
-        Op::Input(_) | Op::Param(_) | Op::Const(_) | Op::Guard { .. } => None,
-        Op::I64Add(..) | Op::I64Sub(..) | Op::I64Mul(..) | Op::I64Eq(..) => Some(SubProfile::I64),
-        _ => Some(SubProfile::F32),
+        crate::ir::Op::Input(_)
+        | crate::ir::Op::Param(_)
+        | crate::ir::Op::Const(_)
+        | crate::ir::Op::Guard { .. } => None,
+        crate::ir::Op::I64Add(..)
+        | crate::ir::Op::I64Sub(..)
+        | crate::ir::Op::I64Mul(..)
+        | crate::ir::Op::I64Eq(..) => Some(crate::ir::SubProfile::I64),
+        _ => Some(crate::ir::SubProfile::F32),
     }
 }
 
@@ -300,7 +302,10 @@ fn op_profile(op: &Op) -> Option<SubProfile> {
 ///
 /// # Errors
 /// The first D6 refusal in stage order.
-pub fn check(ids: &dyn IdentityScheme, graph: Graph) -> Result<CheckedGraph, Diagnostic> {
+pub fn check(
+    ids: &dyn IdentityScheme,
+    graph: crate::ir::Graph,
+) -> Result<CheckedGraph, crate::diag::Diagnostic> {
     check_with(ids, graph, &Budgets::default())
 }
 
@@ -312,38 +317,50 @@ pub fn check(ids: &dyn IdentityScheme, graph: Graph) -> Result<CheckedGraph, Dia
 /// The first D6 refusal in stage order.
 pub fn check_with(
     ids: &dyn IdentityScheme,
-    graph: Graph,
+    graph: crate::ir::Graph,
     budgets: &Budgets,
-) -> Result<CheckedGraph, Diagnostic> {
+) -> Result<CheckedGraph, crate::diag::Diagnostic> {
     budgets.validate_policy()?;
     let n = graph.nodes.len();
-    budget(BudgetKind::LiveNodes, budgets.live_nodes, n as u64)?;
-    budget(BudgetKind::Inputs, budgets.inputs, graph.slots.len() as u64)?;
     budget(
-        BudgetKind::Outputs,
+        crate::diag::BudgetKind::LiveNodes,
+        budgets.live_nodes,
+        n as u64,
+    )?;
+    budget(
+        crate::diag::BudgetKind::Inputs,
+        budgets.inputs,
+        graph.slots.len() as u64,
+    )?;
+    budget(
+        crate::diag::BudgetKind::Outputs,
         budgets.outputs,
         graph.outputs.len() as u64,
     )?;
-    budget(BudgetKind::Facts, budgets.facts, graph.facts.len() as u64)?;
+    budget(
+        crate::diag::BudgetKind::Facts,
+        budgets.facts,
+        graph.facts.len() as u64,
+    )?;
     let mut table_entries = 0u64;
     for node in &graph.nodes {
         match &node.op {
-            Op::F32Affine { terms, .. } => {
+            crate::ir::Op::F32Affine { terms, .. } => {
                 budget(
-                    BudgetKind::AffineTerms,
+                    crate::diag::BudgetKind::AffineTerms,
                     budgets.affine_terms,
                     terms.len() as u64,
                 )?;
             }
-            Op::F32Index { table, .. } => {
+            crate::ir::Op::F32Index { table, .. } => {
                 budget(
-                    BudgetKind::TableLength,
+                    crate::diag::BudgetKind::TableLength,
                     budgets.table_length,
                     table.len() as u64,
                 )?;
                 table_entries += table.len() as u64;
                 budget(
-                    BudgetKind::TableEntries,
+                    crate::diag::BudgetKind::TableEntries,
                     budgets.table_entries,
                     table_entries,
                 )?;
@@ -352,7 +369,7 @@ pub fn check_with(
         }
     }
     budget(
-        BudgetKind::GraphBytes,
+        crate::diag::BudgetKind::GraphBytes,
         budgets.graph_bytes,
         retained_bytes(&graph),
     )?;
@@ -363,12 +380,16 @@ pub fn check_with(
     check_dangling(&graph)?;
     let (abs, input_facts) = check_facts(&graph, &types)?;
     let (layer, layers) = layering(&graph);
-    budget(BudgetKind::Layers, budgets.layers, u64::from(layers))?;
+    budget(
+        crate::diag::BudgetKind::Layers,
+        budgets.layers,
+        u64::from(layers),
+    )?;
     let id = graph.logical_id(ids);
     let param_slots = graph.param_slots();
     let param_layout = crate::snapshot::layout_key(ids, &graph);
     Ok(CheckedGraph {
-        graph: Rc::new(graph),
+        graph: alloc::rc::Rc::new(graph),
         id,
         types,
         layer,
@@ -381,25 +402,25 @@ pub fn check_with(
     })
 }
 
-fn check_topology(g: &Graph) -> Result<(), Diagnostic> {
+fn check_topology(g: &crate::ir::Graph) -> Result<(), crate::diag::Diagnostic> {
     let n = g.nodes.len();
     let mut forward = None;
     for (i, node) in g.nodes.iter().enumerate() {
-        let site = Site::Node(NodeId(i as u32));
+        let site = crate::diag::Site::Node(crate::ir::NodeId(i as u32));
         for o in node.op.operands() {
             if o.index() >= n {
-                return Err(Diagnostic::malformed(
-                    Malformed::UnknownNode,
+                return Err(crate::diag::Diagnostic::malformed(
+                    crate::diag::Malformed::UnknownNode,
                     site,
-                    format!("operand %{} does not exist", o.0),
+                    alloc::format!("operand %{} does not exist", o.0),
                 ));
             }
             if o.index() >= i && forward.is_none() {
                 forward = Some((i, o));
             }
             if g.nodes[o.index()].op.is_guard() {
-                return Err(Diagnostic::malformed(
-                    Malformed::GuardAsValue,
+                return Err(crate::diag::Diagnostic::malformed(
+                    crate::diag::Malformed::GuardAsValue,
                     site,
                     "a guard root is not a value",
                 ));
@@ -408,32 +429,32 @@ fn check_topology(g: &Graph) -> Result<(), Diagnostic> {
     }
     for (k, o) in g.outputs.iter().enumerate() {
         if o.index() >= n {
-            return Err(Diagnostic::malformed(
-                Malformed::UnknownNode,
-                Site::Graph,
-                format!("output {k} names missing node %{}", o.0),
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::UnknownNode,
+                crate::diag::Site::Graph,
+                alloc::format!("output {k} names missing node %{}", o.0),
             ));
         }
         if g.nodes[o.index()].op.is_guard() {
-            return Err(Diagnostic::malformed(
-                Malformed::GuardAsValue,
-                Site::Node(*o),
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::GuardAsValue,
+                crate::diag::Site::Node(*o),
                 "a guard root is not an output",
             ));
         }
     }
     for (k, f) in g.facts.iter().enumerate() {
-        let mut refs = vec![f.node];
-        if let Fact::OneHot { group, .. } = &f.fact {
+        let mut refs = alloc::vec![f.node];
+        if let crate::ir::Fact::OneHot { group, .. } = &f.fact {
             refs.extend_from_slice(group);
         }
-        if let Provenance::Guard(gd) = &f.provenance {
+        if let crate::ir::Provenance::Guard(gd) = &f.provenance {
             refs.push(*gd);
         }
         if refs.iter().any(|r| r.index() >= n) {
-            return Err(Diagnostic::malformed(
-                Malformed::UnknownNode,
-                Site::Fact(k),
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::UnknownNode,
+                crate::diag::Site::Fact(k),
                 "fact names a missing node",
             ));
         }
@@ -441,31 +462,32 @@ fn check_topology(g: &Graph) -> Result<(), Diagnostic> {
     if let Some((at, operand)) = forward {
         // Distinguish a genuine cycle from an acyclic forward reference.
         if let Some(c) = find_cycle(g) {
-            return Err(Diagnostic::malformed(
-                Malformed::Cycle,
-                Site::Node(c),
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::Cycle,
+                crate::diag::Site::Node(c),
                 "dependency cycle",
             ));
         }
-        return Err(Diagnostic::malformed(
-            Malformed::ForwardReference,
-            Site::Node(NodeId(at as u32)),
-            format!("operand %{} is defined later", operand.0),
+        return Err(crate::diag::Diagnostic::malformed(
+            crate::diag::Malformed::ForwardReference,
+            crate::diag::Site::Node(crate::ir::NodeId(at as u32)),
+            alloc::format!("operand %{} is defined later", operand.0),
         ));
     }
     Ok(())
 }
 
-fn find_cycle(g: &Graph) -> Option<NodeId> {
+fn find_cycle(g: &crate::ir::Graph) -> Option<crate::ir::NodeId> {
     // Iterative three-color DFS.
     let n = g.nodes.len();
-    let mut color = vec![0u8; n];
-    let ops: Vec<Vec<NodeId>> = g.nodes.iter().map(|x| x.op.operands()).collect();
+    let mut color = alloc::vec![0u8; n];
+    let ops: alloc::vec::Vec<alloc::vec::Vec<crate::ir::NodeId>> =
+        g.nodes.iter().map(|x| x.op.operands()).collect();
     for start in 0..n {
         if color[start] != 0 {
             continue;
         }
-        let mut stack = vec![(start, 0usize)];
+        let mut stack = alloc::vec![(start, 0usize)];
         color[start] = 1;
         while let Some((v, next)) = stack.last_mut() {
             let v = *v;
@@ -488,58 +510,60 @@ fn find_cycle(g: &Graph) -> Option<NodeId> {
     None
 }
 
-fn check_slots(g: &Graph) -> Result<Vec<NodeId>, Diagnostic> {
-    let mut seen: Vec<Option<NodeId>> = vec![None; g.slots.len()];
+fn check_slots(
+    g: &crate::ir::Graph,
+) -> Result<alloc::vec::Vec<crate::ir::NodeId>, crate::diag::Diagnostic> {
+    let mut seen: alloc::vec::Vec<Option<crate::ir::NodeId>> = alloc::vec![None; g.slots.len()];
     for (i, node) in g.nodes.iter().enumerate() {
-        let id = NodeId(i as u32);
+        let id = crate::ir::NodeId(i as u32);
         let (k, kind) = match node.op {
-            Op::Input(k) => (k, SlotKind::Input),
-            Op::Param(k) => (k, SlotKind::Param),
+            crate::ir::Op::Input(k) => (k, crate::ir::SlotKind::Input),
+            crate::ir::Op::Param(k) => (k, crate::ir::SlotKind::Param),
             _ => continue,
         };
         let Some(slot) = g.slots.get(k as usize) else {
-            return Err(Diagnostic::malformed(
-                Malformed::SlotMismatch,
-                Site::Node(id),
-                format!("slot {k} is not declared"),
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::SlotMismatch,
+                crate::diag::Site::Node(id),
+                alloc::format!("slot {k} is not declared"),
             ));
         };
         if slot.kind != kind {
-            return Err(Diagnostic::malformed(
-                Malformed::SlotMismatch,
-                Site::Node(id),
-                format!("slot {k} kind differs from its node"),
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::SlotMismatch,
+                crate::diag::Site::Node(id),
+                alloc::format!("slot {k} kind differs from its node"),
             ));
         }
         if let Some(prev) = seen[k as usize] {
-            return Err(Diagnostic::malformed(
-                Malformed::DuplicateSlot,
-                Site::Node(id),
-                format!("slot {k} already defined by %{}", prev.0),
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::DuplicateSlot,
+                crate::diag::Site::Node(id),
+                alloc::format!("slot {k} already defined by %{}", prev.0),
             ));
         }
         seen[k as usize] = Some(id);
     }
-    let mut out = Vec::with_capacity(seen.len());
+    let mut out = alloc::vec::Vec::with_capacity(seen.len());
     for (k, (s, slot)) in seen.iter().zip(&g.slots).enumerate() {
         let Some(id) = s else {
-            return Err(Diagnostic::malformed(
-                Malformed::SlotMismatch,
-                Site::Slot(k as u32),
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::SlotMismatch,
+                crate::diag::Site::Slot(k as u32),
                 "slot has no node",
             ));
         };
         if !g.profile.admits(slot.ty) {
-            return Err(Diagnostic::new(
-                Code::TypeMix,
-                Site::Slot(k as u32),
-                format!("{} slot in {}", slot.ty.name(), g.profile.name()),
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::TypeMix,
+                crate::diag::Site::Slot(k as u32),
+                alloc::format!("{} slot in {}", slot.ty.name(), g.profile.name()),
             ));
         }
-        if slot.kind == SlotKind::Param && g.profile != SubProfile::F32 {
-            return Err(Diagnostic::malformed(
-                Malformed::SlotMismatch,
-                Site::Slot(k as u32),
+        if slot.kind == crate::ir::SlotKind::Param && g.profile != crate::ir::SubProfile::F32 {
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::SlotMismatch,
+                crate::diag::Site::Slot(k as u32),
                 "param slots exist only in ngraph-f32/0",
             ));
         }
@@ -552,48 +576,55 @@ fn finite_bits(bits: u32) -> bool {
     f32::from_bits(bits).is_finite()
 }
 
-fn check_types(g: &Graph) -> Result<Vec<Option<ScalarType>>, Diagnostic> {
-    let mut types: Vec<Option<ScalarType>> = Vec::with_capacity(g.nodes.len());
+fn check_types(
+    g: &crate::ir::Graph,
+) -> Result<alloc::vec::Vec<Option<crate::ir::ScalarType>>, crate::diag::Diagnostic> {
+    let mut types: alloc::vec::Vec<Option<crate::ir::ScalarType>> =
+        alloc::vec::Vec::with_capacity(g.nodes.len());
     for (i, node) in g.nodes.iter().enumerate() {
-        let site = Site::Node(NodeId(i as u32));
+        let site = crate::diag::Site::Node(crate::ir::NodeId(i as u32));
         if let Some(p) = op_profile(&node.op) {
             if p != g.profile {
-                return Err(Diagnostic::new(
-                    Code::TypeMix,
+                return Err(crate::diag::Diagnostic::new(
+                    crate::diag::Code::TypeMix,
                     site,
-                    format!("{} in {}", node.op.name(), g.profile.name()),
+                    alloc::format!("{} in {}", node.op.name(), g.profile.name()),
                 ));
             }
         }
-        let want = |o: NodeId, ty: ScalarType| -> Result<(), Diagnostic> {
+        let want = |o: crate::ir::NodeId,
+                    ty: crate::ir::ScalarType|
+         -> Result<(), crate::diag::Diagnostic> {
             match types[o.index()] {
                 Some(t) if t == ty => Ok(()),
-                Some(t) if !g.profile.admits(t) || !g.profile.admits(ty) => Err(Diagnostic::new(
-                    Code::TypeMix,
+                Some(t) if !g.profile.admits(t) || !g.profile.admits(ty) => {
+                    Err(crate::diag::Diagnostic::new(
+                        crate::diag::Code::TypeMix,
+                        site.clone(),
+                        alloc::format!("operand %{} is {}", o.0, t.name()),
+                    ))
+                }
+                _ => Err(crate::diag::Diagnostic::malformed(
+                    crate::diag::Malformed::TypeError,
                     site.clone(),
-                    format!("operand %{} is {}", o.0, t.name()),
-                )),
-                _ => Err(Diagnostic::malformed(
-                    Malformed::TypeError,
-                    site.clone(),
-                    format!("operand %{} is not {}", o.0, ty.name()),
+                    alloc::format!("operand %{} is not {}", o.0, ty.name()),
                 )),
             }
         };
         let ty = match &node.op {
-            Op::Input(k) | Op::Param(k) => Some(g.slots[*k as usize].ty),
-            Op::Const(l) => {
+            crate::ir::Op::Input(k) | crate::ir::Op::Param(k) => Some(g.slots[*k as usize].ty),
+            crate::ir::Op::Const(l) => {
                 if !g.profile.admits(l.ty()) {
-                    return Err(Diagnostic::new(
-                        Code::TypeMix,
+                    return Err(crate::diag::Diagnostic::new(
+                        crate::diag::Code::TypeMix,
                         site,
-                        format!("{} literal in {}", l.ty().name(), g.profile.name()),
+                        alloc::format!("{} literal in {}", l.ty().name(), g.profile.name()),
                     ));
                 }
                 if let crate::ir::Literal::F32(b) = l {
                     if !finite_bits(*b) {
-                        return Err(Diagnostic::new(
-                            Code::LiteralNonfinite,
+                        return Err(crate::diag::Diagnostic::new(
+                            crate::diag::Code::LiteralNonfinite,
                             site,
                             "non-finite f32 constant",
                         ));
@@ -601,78 +632,82 @@ fn check_types(g: &Graph) -> Result<Vec<Option<ScalarType>>, Diagnostic> {
                 }
                 Some(l.ty())
             }
-            Op::I64Add(a, b) | Op::I64Sub(a, b) | Op::I64Mul(a, b) => {
-                want(*a, ScalarType::I64)?;
-                want(*b, ScalarType::I64)?;
-                Some(ScalarType::I64)
+            crate::ir::Op::I64Add(a, b)
+            | crate::ir::Op::I64Sub(a, b)
+            | crate::ir::Op::I64Mul(a, b) => {
+                want(*a, crate::ir::ScalarType::I64)?;
+                want(*b, crate::ir::ScalarType::I64)?;
+                Some(crate::ir::ScalarType::I64)
             }
-            Op::I64Eq(a, b) => {
-                want(*a, ScalarType::I64)?;
-                want(*b, ScalarType::I64)?;
-                Some(ScalarType::Bool)
+            crate::ir::Op::I64Eq(a, b) => {
+                want(*a, crate::ir::ScalarType::I64)?;
+                want(*b, crate::ir::ScalarType::I64)?;
+                Some(crate::ir::ScalarType::Bool)
             }
-            Op::F32Add(a, b) | Op::F32Sub(a, b) | Op::F32Mul(a, b) => {
-                want(*a, ScalarType::F32)?;
-                want(*b, ScalarType::F32)?;
-                Some(ScalarType::F32)
+            crate::ir::Op::F32Add(a, b)
+            | crate::ir::Op::F32Sub(a, b)
+            | crate::ir::Op::F32Mul(a, b) => {
+                want(*a, crate::ir::ScalarType::F32)?;
+                want(*b, crate::ir::ScalarType::F32)?;
+                Some(crate::ir::ScalarType::F32)
             }
-            Op::F32Affine { bias, terms } => {
+            crate::ir::Op::F32Affine { bias, terms } => {
                 if !finite_bits(*bias) || terms.iter().any(|t| !finite_bits(t.coefficient)) {
-                    return Err(Diagnostic::new(
-                        Code::LiteralNonfinite,
+                    return Err(crate::diag::Diagnostic::new(
+                        crate::diag::Code::LiteralNonfinite,
                         site,
                         "non-finite affine bias or coefficient",
                     ));
                 }
                 for t in terms {
-                    if let AffineOperand::Node(x) = t.operand {
-                        want(x, ScalarType::F32)?;
+                    if let crate::ir::AffineOperand::Node(x) = t.operand {
+                        want(x, crate::ir::ScalarType::F32)?;
                     }
                 }
-                Some(ScalarType::F32)
+                Some(crate::ir::ScalarType::F32)
             }
-            Op::F32Relu(x) | Op::F32Step(x) => {
-                want(*x, ScalarType::F32)?;
-                Some(ScalarType::F32)
+            crate::ir::Op::F32Relu(x) | crate::ir::Op::F32Step(x) => {
+                want(*x, crate::ir::ScalarType::F32)?;
+                Some(crate::ir::ScalarType::F32)
             }
-            Op::F32Reglu { left, gate } => {
-                want(*left, ScalarType::F32)?;
-                want(*gate, ScalarType::F32)?;
-                Some(ScalarType::F32)
+            crate::ir::Op::F32Reglu { left, gate } => {
+                want(*left, crate::ir::ScalarType::F32)?;
+                want(*gate, crate::ir::ScalarType::F32)?;
+                Some(crate::ir::ScalarType::F32)
             }
-            Op::F32Select { bit, off, on } => {
+            crate::ir::Op::F32Select { bit, off, on } => {
                 for x in [bit, off, on] {
-                    want(*x, ScalarType::F32)?;
+                    want(*x, crate::ir::ScalarType::F32)?;
                 }
-                Some(ScalarType::F32)
+                Some(crate::ir::ScalarType::F32)
             }
-            Op::F32Index { index, table, .. } => {
+            crate::ir::Op::F32Index { index, table, .. } => {
                 if table.is_empty() {
-                    return Err(Diagnostic::malformed(
-                        Malformed::Payload,
+                    return Err(crate::diag::Diagnostic::malformed(
+                        crate::diag::Malformed::Payload,
                         site,
                         "index table is empty",
                     ));
                 }
-                want(*index, ScalarType::F32)?;
+                want(*index, crate::ir::ScalarType::F32)?;
                 for x in table {
-                    want(*x, ScalarType::F32)?;
+                    want(*x, crate::ir::ScalarType::F32)?;
                 }
-                Some(ScalarType::F32)
+                Some(crate::ir::ScalarType::F32)
             }
-            Op::Guard { fact, value } => {
-                let t = types[value.index()].unwrap_or(ScalarType::Bool);
+            crate::ir::Op::Guard { fact, value } => {
+                let t = types[value.index()].unwrap_or(crate::ir::ScalarType::Bool);
                 if !crate::facts::payload_ok(fact, t) {
-                    return Err(Diagnostic::malformed(
-                        Malformed::Payload,
+                    return Err(crate::diag::Diagnostic::malformed(
+                        crate::diag::Malformed::Payload,
                         site,
-                        format!("{} fact payload for {}", fact.kind_name(), t.name()),
+                        alloc::format!("{} fact payload for {}", fact.kind_name(), t.name()),
                     ));
                 }
-                if let Fact::OneHot { group, .. } = fact {
+                if let crate::ir::Fact::OneHot { group, .. } = fact {
                     if group.first() != Some(value) {
-                        return Err(Diagnostic::malformed(
-                            Malformed::Payload,
+                        return Err(crate::diag::Diagnostic::malformed(
+                            crate::diag::Malformed::Payload,
                             site,
                             "one-hot fact must be attached to its first member",
                         ));
@@ -689,13 +724,13 @@ fn check_types(g: &Graph) -> Result<Vec<Option<ScalarType>>, Diagnostic> {
     Ok(types)
 }
 
-fn check_dangling(g: &Graph) -> Result<(), Diagnostic> {
+fn check_dangling(g: &crate::ir::Graph) -> Result<(), crate::diag::Diagnostic> {
     let n = g.nodes.len();
-    let mut live = vec![false; n];
-    let mut work: Vec<NodeId> = g.outputs.clone();
+    let mut live = alloc::vec![false; n];
+    let mut work: alloc::vec::Vec<crate::ir::NodeId> = g.outputs.clone();
     for (i, node) in g.nodes.iter().enumerate() {
         if node.op.is_guard() {
-            work.push(NodeId(i as u32));
+            work.push(crate::ir::NodeId(i as u32));
         }
     }
     while let Some(v) = work.pop() {
@@ -705,10 +740,10 @@ fn check_dangling(g: &Graph) -> Result<(), Diagnostic> {
         work.extend(g.nodes[v.index()].op.operands());
     }
     for (i, node) in g.nodes.iter().enumerate() {
-        if !live[i] && !matches!(node.op, Op::Input(_) | Op::Param(_)) {
-            return Err(Diagnostic::malformed(
-                Malformed::DanglingNode,
-                Site::Node(NodeId(i as u32)),
+        if !live[i] && !matches!(node.op, crate::ir::Op::Input(_) | crate::ir::Op::Param(_)) {
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::DanglingNode,
+                crate::diag::Site::Node(crate::ir::NodeId(i as u32)),
                 "node reaches no output and no guard",
             ));
         }
@@ -716,49 +751,58 @@ fn check_dangling(g: &Graph) -> Result<(), Diagnostic> {
     Ok(())
 }
 
-fn unchecked(site: Site, fact: Fact, why: &str) -> Diagnostic {
-    Diagnostic::new(Code::FactUnchecked, site, why).with_fact(fact)
+fn unchecked(site: crate::diag::Site, fact: crate::ir::Fact, why: &str) -> crate::diag::Diagnostic {
+    crate::diag::Diagnostic::new(crate::diag::Code::FactUnchecked, site, why).with_fact(fact)
 }
 
 fn check_facts(
-    g: &Graph,
-    types: &[Option<ScalarType>],
-) -> Result<(Vec<Abs>, Vec<InputFact>), Diagnostic> {
-    // Provenance of each record (before any use).
-    let mut input_facts = Vec::new();
-    let mut derived_claims: BTreeMap<usize, Vec<(usize, Fact)>> = BTreeMap::new();
+    g: &crate::ir::Graph,
+    types: &[Option<crate::ir::ScalarType>],
+) -> Result<
+    (
+        alloc::vec::Vec<crate::facts::Abs>,
+        alloc::vec::Vec<InputFact>,
+    ),
+    crate::diag::Diagnostic,
+> {
+    // crate::ir::Provenance of each record (before any use).
+    let mut input_facts = alloc::vec::Vec::new();
+    let mut derived_claims: alloc::collections::BTreeMap<
+        usize,
+        alloc::vec::Vec<(usize, crate::ir::Fact)>,
+    > = alloc::collections::BTreeMap::new();
     for (k, rec) in g.facts.iter().enumerate() {
-        let site = Site::Fact(k);
+        let site = crate::diag::Site::Fact(k);
         let ty = types[rec.node.index()];
         let Some(ty) = ty else {
             return Err(unchecked(site, rec.fact.clone(), "fact on a guard root"));
         };
         if !crate::facts::payload_ok(&rec.fact, ty) {
-            return Err(Diagnostic::malformed(
-                Malformed::Payload,
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::Payload,
                 site,
                 "fact payload does not fit the value type",
             ));
         }
         match &rec.provenance {
-            Provenance::Asserted => {
+            crate::ir::Provenance::Asserted => {
                 return Err(unchecked(
                     site,
                     rec.fact.clone(),
                     "caller assertion without derived, input-validated or guard provenance",
                 ));
             }
-            Provenance::Evidence(_) => {
+            crate::ir::Provenance::Evidence(_) => {
                 return Err(unchecked(
                     site,
                     rec.fact.clone(),
                     "evidence facts are excluded from Phase B (approval P5)",
                 ));
             }
-            Provenance::InputValidated => {
+            crate::ir::Provenance::InputValidated => {
                 let (slot, kind) = match g.nodes[rec.node.index()].op {
-                    Op::Input(s) => (s, SlotKind::Input),
-                    Op::Param(s) => (s, SlotKind::Param),
+                    crate::ir::Op::Input(s) => (s, crate::ir::SlotKind::Input),
+                    crate::ir::Op::Param(s) => (s, crate::ir::SlotKind::Param),
                     _ => {
                         return Err(unchecked(
                             site,
@@ -767,11 +811,14 @@ fn check_facts(
                         ));
                     }
                 };
-                if let Fact::OneHot { group, .. } = &rec.fact {
+                if let crate::ir::Fact::OneHot { group, .. } = &rec.fact {
                     if group.first() != Some(&rec.node)
-                        || group
-                            .iter()
-                            .any(|m| !matches!(g.nodes[m.index()].op, Op::Input(_) | Op::Param(_)))
+                        || group.iter().any(|m| {
+                            !matches!(
+                                g.nodes[m.index()].op,
+                                crate::ir::Op::Input(_) | crate::ir::Op::Param(_)
+                            )
+                        })
                     {
                         return Err(unchecked(
                             site,
@@ -788,8 +835,9 @@ fn check_facts(
                     fact: rec.fact.clone(),
                 });
             }
-            Provenance::Guard(gd) => match &g.nodes[gd.index()].op {
-                Op::Guard { fact, value } if *value == rec.node && *fact == rec.fact => {}
+            crate::ir::Provenance::Guard(gd) => match &g.nodes[gd.index()].op {
+                crate::ir::Op::Guard { fact, value } if *value == rec.node && *fact == rec.fact => {
+                }
                 _ => {
                     return Err(unchecked(
                         site,
@@ -798,7 +846,7 @@ fn check_facts(
                     ));
                 }
             },
-            Provenance::Derived(_) => {
+            crate::ir::Provenance::Derived(_) => {
                 derived_claims
                     .entry(rec.node.index())
                     .or_default()
@@ -810,30 +858,33 @@ fn check_facts(
     // Abstract interpretation in canonical order. `cur` holds the summary of
     // each value as refined by input validation and earlier guards.
     let n = g.nodes.len();
-    let mut cur: Vec<Abs> = Vec::with_capacity(n);
-    let mut at_def: Vec<Abs> = Vec::with_capacity(n);
-    let f = |cur: &[Abs], x: NodeId| -> AbsF32 {
+    let mut cur: alloc::vec::Vec<crate::facts::Abs> = alloc::vec::Vec::with_capacity(n);
+    let mut at_def: alloc::vec::Vec<crate::facts::Abs> = alloc::vec::Vec::with_capacity(n);
+    let f = |cur: &[crate::facts::Abs], x: crate::ir::NodeId| -> crate::facts::AbsF32 {
         match cur[x.index()] {
-            Abs::F32(a) => a,
-            _ => AbsF32::UNKNOWN,
+            crate::facts::Abs::F32(a) => a,
+            _ => crate::facts::AbsF32::UNKNOWN,
         }
     };
-    let iv = |cur: &[Abs], x: NodeId| -> AbsI64 {
+    let iv = |cur: &[crate::facts::Abs], x: crate::ir::NodeId| -> crate::facts::AbsI64 {
         match cur[x.index()] {
-            Abs::I64(a) => a,
-            _ => AbsI64::UNKNOWN,
+            crate::facts::Abs::I64(a) => a,
+            _ => crate::facts::AbsI64::UNKNOWN,
         }
     };
     for (i, node) in g.nodes.iter().enumerate() {
-        let id = NodeId(i as u32);
-        let need = |cur: &[Abs], x: NodeId, r: Requirement| -> Result<(), Diagnostic> {
+        let id = crate::ir::NodeId(i as u32);
+        let need = |cur: &[crate::facts::Abs],
+                    x: crate::ir::NodeId,
+                    r: crate::facts::Requirement|
+         -> Result<(), crate::diag::Diagnostic> {
             if r.satisfied_by(&f(cur, x)) {
                 Ok(())
             } else {
                 Err(unchecked(
-                    Site::Node(id),
+                    crate::diag::Site::Node(id),
                     r.fact(),
-                    &format!(
+                    &alloc::format!(
                         "{} operand %{} lacks a checked {} fact",
                         node.op.name(),
                         x.0,
@@ -843,17 +894,21 @@ fn check_facts(
             }
         };
         let a = match &node.op {
-            Op::Input(_) | Op::Param(_) => {
+            crate::ir::Op::Input(_) | crate::ir::Op::Param(_) => {
                 let mut a = match types[i] {
-                    Some(ScalarType::F32) => Abs::F32(AbsF32::UNKNOWN),
-                    Some(ScalarType::I64) => Abs::I64(AbsI64::UNKNOWN),
-                    _ => Abs::Bool,
+                    Some(crate::ir::ScalarType::F32) => {
+                        crate::facts::Abs::F32(crate::facts::AbsF32::UNKNOWN)
+                    }
+                    Some(crate::ir::ScalarType::I64) => {
+                        crate::facts::Abs::I64(crate::facts::AbsI64::UNKNOWN)
+                    }
+                    _ => crate::facts::Abs::Bool,
                 };
                 for inf in &input_facts {
                     if inf.node == id {
                         a = a.refine(&inf.fact);
                     }
-                    if let Fact::OneHot { group, .. } = &inf.fact {
+                    if let crate::ir::Fact::OneHot { group, .. } = &inf.fact {
                         if group.contains(&id) {
                             a = a.refine(&inf.fact);
                         }
@@ -861,76 +916,100 @@ fn check_facts(
                 }
                 a
             }
-            Op::Const(l) => match l {
-                crate::ir::Literal::F32(b) => Abs::F32(AbsF32::exact(f32::from_bits(*b))),
-                crate::ir::Literal::I64(v) => Abs::I64(AbsI64 { lo: *v, hi: *v }),
-                crate::ir::Literal::Bool(_) => Abs::Bool,
+            crate::ir::Op::Const(l) => match l {
+                crate::ir::Literal::F32(b) => {
+                    crate::facts::Abs::F32(crate::facts::AbsF32::exact(f32::from_bits(*b)))
+                }
+                crate::ir::Literal::I64(v) => {
+                    crate::facts::Abs::I64(crate::facts::AbsI64 { lo: *v, hi: *v })
+                }
+                crate::ir::Literal::Bool(_) => crate::facts::Abs::Bool,
             },
-            Op::I64Add(a, b) => Abs::I64(AbsI64::radd(iv(&cur, *a), iv(&cur, *b))),
-            Op::I64Sub(a, b) => Abs::I64(AbsI64::rsub(iv(&cur, *a), iv(&cur, *b))),
-            Op::I64Mul(a, b) => Abs::I64(AbsI64::rmul(iv(&cur, *a), iv(&cur, *b))),
-            Op::I64Eq(..) => Abs::Bool,
-            Op::F32Add(a, b) => Abs::F32(AbsF32::radd(f(&cur, *a), f(&cur, *b))),
-            Op::F32Sub(a, b) => Abs::F32(AbsF32::rsub(f(&cur, *a), f(&cur, *b))),
-            Op::F32Mul(a, b) => Abs::F32(AbsF32::rmul(f(&cur, *a), f(&cur, *b))),
-            Op::F32Affine { bias, terms } => {
-                let mut v = AbsF32::exact(f32::from_bits(*bias));
+            crate::ir::Op::I64Add(a, b) => {
+                crate::facts::Abs::I64(crate::facts::AbsI64::radd(iv(&cur, *a), iv(&cur, *b)))
+            }
+            crate::ir::Op::I64Sub(a, b) => {
+                crate::facts::Abs::I64(crate::facts::AbsI64::rsub(iv(&cur, *a), iv(&cur, *b)))
+            }
+            crate::ir::Op::I64Mul(a, b) => {
+                crate::facts::Abs::I64(crate::facts::AbsI64::rmul(iv(&cur, *a), iv(&cur, *b)))
+            }
+            crate::ir::Op::I64Eq(..) => crate::facts::Abs::Bool,
+            crate::ir::Op::F32Add(a, b) => {
+                crate::facts::Abs::F32(crate::facts::AbsF32::radd(f(&cur, *a), f(&cur, *b)))
+            }
+            crate::ir::Op::F32Sub(a, b) => {
+                crate::facts::Abs::F32(crate::facts::AbsF32::rsub(f(&cur, *a), f(&cur, *b)))
+            }
+            crate::ir::Op::F32Mul(a, b) => {
+                crate::facts::Abs::F32(crate::facts::AbsF32::rmul(f(&cur, *a), f(&cur, *b)))
+            }
+            crate::ir::Op::F32Affine { bias, terms } => {
+                let mut v = crate::facts::AbsF32::exact(f32::from_bits(*bias));
                 for t in terms {
                     let x = match t.operand {
-                        AffineOperand::One => AbsF32::exact(1.0),
-                        AffineOperand::Node(x) => f(&cur, x),
+                        crate::ir::AffineOperand::One => crate::facts::AbsF32::exact(1.0),
+                        crate::ir::AffineOperand::Node(x) => f(&cur, x),
                     };
-                    let p = AbsF32::rmul(AbsF32::exact(f32::from_bits(t.coefficient)), x);
-                    v = AbsF32::radd(v, p);
+                    let p = crate::facts::AbsF32::rmul(
+                        crate::facts::AbsF32::exact(f32::from_bits(t.coefficient)),
+                        x,
+                    );
+                    v = crate::facts::AbsF32::radd(v, p);
                 }
-                Abs::F32(v)
+                crate::facts::Abs::F32(v)
             }
-            Op::F32Relu(x) => Abs::F32(AbsF32::relu(f(&cur, *x))),
-            Op::F32Reglu { left, gate } => {
-                Abs::F32(AbsF32::rmul(f(&cur, *left), AbsF32::relu(f(&cur, *gate))))
+            crate::ir::Op::F32Relu(x) => {
+                crate::facts::Abs::F32(crate::facts::AbsF32::relu(f(&cur, *x)))
             }
-            Op::F32Step(s) => {
-                need(&cur, *s, Requirement::UnitRange)?;
-                Abs::F32(AbsF32::step())
+            crate::ir::Op::F32Reglu { left, gate } => {
+                crate::facts::Abs::F32(crate::facts::AbsF32::rmul(
+                    f(&cur, *left),
+                    crate::facts::AbsF32::relu(f(&cur, *gate)),
+                ))
             }
-            Op::F32Select { bit, off, on } => {
-                need(&cur, *bit, Requirement::Bit)?;
-                Abs::F32(AbsF32::hull(f(&cur, *off), f(&cur, *on)))
+            crate::ir::Op::F32Step(s) => {
+                need(&cur, *s, crate::facts::Requirement::UnitRange)?;
+                crate::facts::Abs::F32(crate::facts::AbsF32::step())
             }
-            Op::F32Index {
+            crate::ir::Op::F32Select { bit, off, on } => {
+                need(&cur, *bit, crate::facts::Requirement::Bit)?;
+                crate::facts::Abs::F32(crate::facts::AbsF32::hull(f(&cur, *off), f(&cur, *on)))
+            }
+            crate::ir::Op::F32Index {
                 index,
                 table,
                 below,
                 above,
             } => {
-                need(&cur, *index, Requirement::Index)?;
+                need(&cur, *index, crate::facts::Requirement::Index)?;
                 let mut h = f(&cur, table[0]);
                 for t in &table[1..] {
-                    h = AbsF32::hull(h, f(&cur, *t));
+                    h = crate::facts::AbsF32::hull(h, f(&cur, *t));
                 }
-                if *below == OutOfRange::Zero || *above == OutOfRange::Zero {
-                    h = AbsF32::hull(h, AbsF32::exact(0.0));
+                if *below == crate::ir::OutOfRange::Zero || *above == crate::ir::OutOfRange::Zero {
+                    h = crate::facts::AbsF32::hull(h, crate::facts::AbsF32::exact(0.0));
                 }
-                Abs::F32(h)
+                crate::facts::Abs::F32(h)
             }
-            Op::Guard { fact, value } => {
+            crate::ir::Op::Guard { fact, value } => {
                 cur[value.index()] = cur[value.index()].refine(fact);
-                if let Fact::OneHot { group, .. } = fact {
+                if let crate::ir::Fact::OneHot { group, .. } = fact {
                     for m in group {
                         cur[m.index()] = cur[m.index()].refine(fact);
                     }
                 }
-                Abs::None
+                crate::facts::Abs::None
             }
         };
         cur.push(a);
         at_def.push(a);
         if let Some(claims) = derived_claims.get(&i) {
             for (k, fact) in claims {
-                let structural = matches!((fact, &node.op), (Fact::Shape(s), Op::F32Index { table, .. }) if *s as usize == table.len());
+                let structural = matches!((fact, &node.op), (crate::ir::Fact::Shape(s), crate::ir::Op::F32Index { table, .. }) if *s as usize == table.len());
                 if !structural && !a.implies(fact) {
                     return Err(unchecked(
-                        Site::Fact(*k),
+                        crate::diag::Site::Fact(*k),
                         fact.clone(),
                         "the checker's transfer rules do not derive this fact",
                     ));
@@ -943,8 +1022,8 @@ fn check_facts(
 
 /// Layers by handwired's depth rule: sources (inputs, params, constants) at 0,
 /// otherwise `1 + max(operand layers)`. Returns per-node layers and the count.
-fn layering(g: &Graph) -> (Vec<u32>, u32) {
-    let mut layer = vec![0u32; g.nodes.len()];
+fn layering(g: &crate::ir::Graph) -> (alloc::vec::Vec<u32>, u32) {
+    let mut layer = alloc::vec![0u32; g.nodes.len()];
     let mut max = 0u32;
     for (i, node) in g.nodes.iter().enumerate() {
         let l = node
@@ -968,7 +1047,7 @@ pub struct CallGraphEntry {
     /// Nodes created by the body excluding named calls.
     pub local_nodes: u64,
     /// Named callees, one entry per call site (repeats count).
-    pub callees: Vec<u64>,
+    pub callees: alloc::vec::Vec<u64>,
 }
 
 /// Saturating upper bound on expanded nodes of `root` over the closure call
@@ -976,11 +1055,12 @@ pub struct CallGraphEntry {
 /// count). `None` if the call graph is recursive or names a missing identity.
 #[must_use]
 pub fn expansion_bound(closure: &[CallGraphEntry], root: u64) -> Option<u64> {
-    let by_id: BTreeMap<u64, &CallGraphEntry> = closure.iter().map(|e| (e.identity, e)).collect();
-    let mut memo: BTreeMap<u64, u64> = BTreeMap::new();
-    let mut on_stack: BTreeMap<u64, ()> = BTreeMap::new();
+    let by_id: alloc::collections::BTreeMap<u64, &CallGraphEntry> =
+        closure.iter().map(|e| (e.identity, e)).collect();
+    let mut memo: alloc::collections::BTreeMap<u64, u64> = alloc::collections::BTreeMap::new();
+    let mut on_stack: alloc::collections::BTreeMap<u64, ()> = alloc::collections::BTreeMap::new();
     // Iterative post-order.
-    let mut stack: Vec<(u64, usize)> = vec![(root, 0)];
+    let mut stack: alloc::vec::Vec<(u64, usize)> = alloc::vec![(root, 0)];
     on_stack.insert(root, ());
     while let Some((id, next)) = stack.last_mut() {
         let id = *id;
