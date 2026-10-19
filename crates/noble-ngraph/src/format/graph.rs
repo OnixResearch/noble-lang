@@ -1,4 +1,4 @@
-//! Graph files: the identity-complete text form of `ngraph-ir/0` (design D4
+//! crate::ir::Graph files: the identity-complete text form of `ngraph-ir/0` (design D4
 //! of `numeric-graph-v1`; option B0(b) authoring). Parsing only builds
 //! producer data; [`crate::check`] decides admission.
 //!
@@ -23,7 +23,7 @@
 //! - `subject <authored|extracted|captured> <64 hex> closure <ids|->` is
 //!   required exactly once; `subject authored-name NAME` (one or more tokens,
 //!   joined by single spaces) is authoring sugar for
-//!   [`Subject::authored`], and [`print`] always writes the hex form.
+//!   [`crate::ir::Subject::authored`], and [`print`] always writes the hex form.
 //! - `shape input|output <trees…>` records `Some(trees)`; an absent line is
 //!   `None`.
 //! - Range-fact literals: `0x…` is binary32, `true|false` Bool, `i64:N` an
@@ -44,30 +44,28 @@
 //! literals `E-LITERAL-INEXACT`; `nan`/`inf` literals `E-LITERAL-NONFINITE`
 //! (non-finite bit patterns are refused by the checker).
 
-use alloc::{borrow::ToOwned, format, string::String, string::ToString, vec::Vec};
+use alloc::borrow::ToOwned;
+use alloc::string::ToString;
 use core::fmt::Write as _;
 
-use super::value::F32Refusal;
-use crate::diag::{Code, Diagnostic, Malformed, Site};
 use crate::identity::IdentityScheme;
-use crate::ir::{
-    hex, shape_depth_refusal, AffineOperand, AffineTerm, Fact, Graph, GraphBuilder, Literal,
-    NodeId, Op, OutOfRange, Provenance, ScalarType, ShapeNode, ShapeTree, SlotKind, SubProfile,
-    Subject, SubjectKind, IR_VERSION, MAX_SHAPE_DEPTH,
-};
 
-fn syntax(line: usize, why: impl Into<String>) -> Diagnostic {
-    Diagnostic::malformed(Malformed::Syntax, Site::Line(line), why)
+fn syntax(line: usize, why: impl Into<alloc::string::String>) -> crate::diag::Diagnostic {
+    crate::diag::Diagnostic::malformed(
+        crate::diag::Malformed::Syntax,
+        crate::diag::Site::Line(line),
+        why,
+    )
 }
 
 struct Toks<'a> {
-    t: Vec<&'a str>,
+    t: alloc::vec::Vec<&'a str>,
     i: usize,
     line: usize,
 }
 
 impl<'a> Toks<'a> {
-    fn next(&mut self) -> Result<&'a str, Diagnostic> {
+    fn next(&mut self) -> Result<&'a str, crate::diag::Diagnostic> {
         let t = self
             .t
             .get(self.i)
@@ -79,40 +77,41 @@ impl<'a> Toks<'a> {
     fn peek(&self) -> Option<&'a str> {
         self.t.get(self.i).copied()
     }
-    fn rest(&mut self) -> Vec<&'a str> {
+    fn rest(&mut self) -> alloc::vec::Vec<&'a str> {
         let r = self.t[self.i..].to_vec();
         self.i = self.t.len();
         r
     }
-    fn done(&self) -> Result<(), Diagnostic> {
+    fn done(&self) -> Result<(), crate::diag::Diagnostic> {
         if self.i == self.t.len() {
             Ok(())
         } else {
             Err(syntax(
                 self.line,
-                format!("trailing token {:?}", self.t[self.i]),
+                alloc::format!("trailing token {:?}", self.t[self.i]),
             ))
         }
     }
-    fn node(&mut self) -> Result<NodeId, Diagnostic> {
+    fn node(&mut self) -> Result<crate::ir::NodeId, crate::diag::Diagnostic> {
         let t = self.next()?;
         t.strip_prefix('%')
             .and_then(super::decimal_u32)
-            .map(NodeId)
-            .ok_or_else(|| syntax(self.line, format!("expected %node, got {t:?}")))
+            .map(crate::ir::NodeId)
+            .ok_or_else(|| syntax(self.line, alloc::format!("expected %node, got {t:?}")))
     }
-    fn u32(&mut self) -> Result<u32, Diagnostic> {
+    fn u32(&mut self) -> Result<u32, crate::diag::Diagnostic> {
         let t = self.next()?;
         super::decimal_u32(t)
-            .ok_or_else(|| syntax(self.line, format!("expected integer, got {t:?}")))
+            .ok_or_else(|| syntax(self.line, alloc::format!("expected integer, got {t:?}")))
     }
-    fn f32_bits(&mut self) -> Result<u32, Diagnostic> {
+    fn f32_bits(&mut self) -> Result<u32, crate::diag::Diagnostic> {
         let t = self.next()?;
         parse_f32(t, self.line)
     }
-    fn i64(&mut self) -> Result<i64, Diagnostic> {
+    fn i64(&mut self) -> Result<i64, crate::diag::Diagnostic> {
         let t = self.next()?;
-        super::decimal_i64(t).ok_or_else(|| syntax(self.line, format!("expected i64, got {t:?}")))
+        super::decimal_i64(t)
+            .ok_or_else(|| syntax(self.line, alloc::format!("expected i64, got {t:?}")))
     }
 }
 
@@ -121,113 +120,124 @@ impl<'a> Toks<'a> {
 ///
 /// # Errors
 /// `E-LITERAL-NONFINITE`, `E-LITERAL-INEXACT` or a syntax error.
-pub fn parse_f32(t: &str, line: usize) -> Result<u32, Diagnostic> {
+pub fn parse_f32(t: &str, line: usize) -> Result<u32, crate::diag::Diagnostic> {
     super::value::f32_token(t).map_err(|r| match r {
-        F32Refusal::Malformed => syntax(line, format!("bad f32 literal {t:?}")),
-        F32Refusal::Nonfinite => Diagnostic::new(
-            Code::LiteralNonfinite,
-            Site::Line(line),
-            format!("non-finite f32 literal {t}"),
+        super::value::F32Refusal::Malformed => {
+            syntax(line, alloc::format!("bad f32 literal {t:?}"))
+        }
+        super::value::F32Refusal::Nonfinite => crate::diag::Diagnostic::new(
+            crate::diag::Code::LiteralNonfinite,
+            crate::diag::Site::Line(line),
+            alloc::format!("non-finite f32 literal {t}"),
         ),
-        F32Refusal::Inexact => Diagnostic::new(
-            Code::LiteralInexact,
-            Site::Line(line),
-            format!("{t} is not exactly representable in binary32"),
+        super::value::F32Refusal::Inexact => crate::diag::Diagnostic::new(
+            crate::diag::Code::LiteralInexact,
+            crate::diag::Site::Line(line),
+            alloc::format!("{t} is not exactly representable in binary32"),
         ),
     })
 }
 
-fn rule(t: &str, line: usize) -> Result<OutOfRange, Diagnostic> {
+fn rule(t: &str, line: usize) -> Result<crate::ir::OutOfRange, crate::diag::Diagnostic> {
     match t {
-        "refuse" => Ok(OutOfRange::Refuse),
-        "clamp" => Ok(OutOfRange::Clamp),
-        "zero" => Ok(OutOfRange::Zero),
-        _ => Err(syntax(line, format!("bad out-of-range rule {t:?}"))),
+        "refuse" => Ok(crate::ir::OutOfRange::Refuse),
+        "clamp" => Ok(crate::ir::OutOfRange::Clamp),
+        "zero" => Ok(crate::ir::OutOfRange::Zero),
+        _ => Err(syntax(line, alloc::format!("bad out-of-range rule {t:?}"))),
     }
 }
 
 /// Parses a scalar type name (`i64`, `bool`, `f32`).
 #[must_use]
-pub fn scalar_type(t: &str) -> Option<ScalarType> {
+pub fn scalar_type(t: &str) -> Option<crate::ir::ScalarType> {
     match t {
-        "i64" => Some(ScalarType::I64),
-        "bool" => Some(ScalarType::Bool),
-        "f32" => Some(ScalarType::F32),
+        "i64" => Some(crate::ir::ScalarType::I64),
+        "bool" => Some(crate::ir::ScalarType::Bool),
+        "f32" => Some(crate::ir::ScalarType::F32),
         _ => None,
     }
 }
 
-fn ty(t: &str, line: usize) -> Result<ScalarType, Diagnostic> {
-    scalar_type(t).ok_or_else(|| syntax(line, format!("bad type {t:?}")))
+fn ty(t: &str, line: usize) -> Result<crate::ir::ScalarType, crate::diag::Diagnostic> {
+    scalar_type(t).ok_or_else(|| syntax(line, alloc::format!("bad type {t:?}")))
 }
 
 /// A range-fact literal: `0x…` binary32, `true|false`, `i64:N`, or an
 /// unprefixed decimal of the sub-profile's type.
-fn range_literal(t: &mut Toks<'_>, profile: SubProfile) -> Result<Literal, Diagnostic> {
+fn range_literal(
+    t: &mut Toks<'_>,
+    profile: crate::ir::SubProfile,
+) -> Result<crate::ir::Literal, crate::diag::Diagnostic> {
     let tok = t.next()?;
     let line = t.line;
     if tok.starts_with("0x") {
-        return Ok(Literal::F32(parse_f32(tok, line)?));
+        return Ok(crate::ir::Literal::F32(parse_f32(tok, line)?));
     }
     match tok {
-        "true" => return Ok(Literal::Bool(true)),
-        "false" => return Ok(Literal::Bool(false)),
+        "true" => return Ok(crate::ir::Literal::Bool(true)),
+        "false" => return Ok(crate::ir::Literal::Bool(false)),
         _ => {}
     }
     if let Some(v) = tok.strip_prefix("i64:") {
         return super::decimal_i64(v)
-            .map(Literal::I64)
-            .ok_or_else(|| syntax(line, format!("expected i64, got {tok:?}")));
+            .map(crate::ir::Literal::I64)
+            .ok_or_else(|| syntax(line, alloc::format!("expected i64, got {tok:?}")));
     }
     match profile {
-        SubProfile::F32 => Ok(Literal::F32(parse_f32(tok, line)?)),
-        SubProfile::I64 => super::decimal_i64(tok)
-            .map(Literal::I64)
-            .ok_or_else(|| syntax(line, format!("expected i64, got {tok:?}"))),
+        crate::ir::SubProfile::F32 => Ok(crate::ir::Literal::F32(parse_f32(tok, line)?)),
+        crate::ir::SubProfile::I64 => super::decimal_i64(tok)
+            .map(crate::ir::Literal::I64)
+            .ok_or_else(|| syntax(line, alloc::format!("expected i64, got {tok:?}"))),
     }
 }
 
-fn fact(t: &mut Toks<'_>, profile: SubProfile) -> Result<Fact, Diagnostic> {
+fn fact(
+    t: &mut Toks<'_>,
+    profile: crate::ir::SubProfile,
+) -> Result<crate::ir::Fact, crate::diag::Diagnostic> {
     let kind = t.next()?;
     Ok(match kind {
-        "range" => Fact::Range {
+        "range" => crate::ir::Fact::Range {
             lo: range_literal(t, profile)?,
             hi: range_literal(t, profile)?,
         },
-        "grid" => Fact::Grid {
+        "grid" => crate::ir::Fact::Grid {
             log2: i32::try_from(t.i64()?).map_err(|_| syntax(t.line, "grid exponent"))?,
         },
-        "bit" => Fact::Bit,
-        "finite" => Fact::Finite,
-        "integral" => Fact::Integral,
-        "shape" => Fact::Shape(t.u32()?),
+        "bit" => crate::ir::Fact::Bit,
+        "finite" => crate::ir::Fact::Finite,
+        "integral" => crate::ir::Fact::Integral,
+        "shape" => crate::ir::Fact::Shape(t.u32()?),
         "one-hot" => {
             let allow_zero = match t.next()? {
                 "allow-zero" => true,
                 "exact" => false,
-                o => return Err(syntax(t.line, format!("bad one-hot mode {o:?}"))),
+                o => return Err(syntax(t.line, alloc::format!("bad one-hot mode {o:?}"))),
             };
-            let mut group = Vec::new();
+            let mut group = alloc::vec::Vec::new();
             while t.peek().is_some_and(|p| p.starts_with('%')) {
                 group.push(t.node()?);
             }
-            Fact::OneHot { group, allow_zero }
+            crate::ir::Fact::OneHot { group, allow_zero }
         }
-        o => return Err(syntax(t.line, format!("unknown fact kind {o:?}"))),
+        o => return Err(syntax(t.line, alloc::format!("unknown fact kind {o:?}"))),
     })
 }
 
-fn subject_kind(t: &str) -> Option<SubjectKind> {
+fn subject_kind(t: &str) -> Option<crate::ir::SubjectKind> {
     match t {
-        "authored" => Some(SubjectKind::Authored),
-        "extracted" => Some(SubjectKind::Extracted),
-        "captured" => Some(SubjectKind::Captured),
+        "authored" => Some(crate::ir::SubjectKind::Authored),
+        "extracted" => Some(crate::ir::SubjectKind::Extracted),
+        "captured" => Some(crate::ir::SubjectKind::Captured),
         _ => None,
     }
 }
 
 /// Parses `<64 hex> closure <ids|->` after the subject kind.
-fn subject_record(t: &mut Toks<'_>, kind: SubjectKind) -> Result<Subject, Diagnostic> {
+fn subject_record(
+    t: &mut Toks<'_>,
+    kind: crate::ir::SubjectKind,
+) -> Result<crate::ir::Subject, crate::diag::Diagnostic> {
     let line = t.line;
     let identity = super::digest_from_hex(t.next()?)
         .ok_or_else(|| syntax(line, "subject identity must be 64 hex digits"))?;
@@ -236,15 +246,16 @@ fn subject_record(t: &mut Toks<'_>, kind: SubjectKind) -> Result<Subject, Diagno
     }
     let ids = t.next()?;
     let closure = if ids == "-" {
-        Vec::new()
+        alloc::vec::Vec::new()
     } else {
         ids.split(',')
             .map(|d| {
-                super::decimal_u64(d).ok_or_else(|| syntax(line, format!("bad closure id {d:?}")))
+                super::decimal_u64(d)
+                    .ok_or_else(|| syntax(line, alloc::format!("bad closure id {d:?}")))
             })
-            .collect::<Result<Vec<u64>, Diagnostic>>()?
+            .collect::<Result<alloc::vec::Vec<u64>, crate::diag::Diagnostic>>()?
     };
-    Ok(Subject {
+    Ok(crate::ir::Subject {
         kind,
         identity,
         closure,
@@ -254,27 +265,32 @@ fn subject_record(t: &mut Toks<'_>, kind: SubjectKind) -> Result<Subject, Diagno
 /// Parses the shape trees of a `shape input|output` line. A tree that would
 /// nest more than [`MAX_SHAPE_DEPTH`] pairs is refused before the parser
 /// descends any deeper (design D4).
-fn shape_trees(tokens: &[&str], line: usize) -> Result<Vec<ShapeTree>, Diagnostic> {
+fn shape_trees(
+    tokens: &[&str],
+    line: usize,
+) -> Result<alloc::vec::Vec<crate::ir::ShapeTree>, crate::diag::Diagnostic> {
     let joined = tokens.join(" ").replace('(', " ( ").replace(')', " ) ");
-    let toks: Vec<&str> = joined.split_whitespace().collect();
+    let toks: alloc::vec::Vec<&str> = joined.split_whitespace().collect();
     /// One tree inside `open` enclosing pairs.
     fn tree(
         toks: &[&str],
         at: &mut usize,
         line: usize,
         open: u32,
-    ) -> Result<ShapeTree, Diagnostic> {
+    ) -> Result<crate::ir::ShapeTree, crate::diag::Diagnostic> {
         let t = toks
             .get(*at)
             .copied()
             .ok_or_else(|| syntax(line, "unterminated shape tree"))?;
         *at += 1;
         match t {
-            "s" => Ok(ShapeTree::SCALAR),
-            "u" => Ok(ShapeTree::UNIT),
+            "s" => Ok(crate::ir::ShapeTree::SCALAR),
+            "u" => Ok(crate::ir::ShapeTree::UNIT),
             "(" => {
-                if open >= MAX_SHAPE_DEPTH {
-                    return Err(shape_depth_refusal(Site::Line(line)));
+                if open >= crate::ir::MAX_SHAPE_DEPTH {
+                    return Err(crate::ir::shape_depth_refusal(crate::diag::Site::Line(
+                        line,
+                    )));
                 }
                 if toks.get(*at).copied() != Some("p") {
                     return Err(syntax(line, "expected `p` after `(` in a shape tree"));
@@ -286,13 +302,14 @@ fn shape_trees(tokens: &[&str], line: usize) -> Result<Vec<ShapeTree>, Diagnosti
                     return Err(syntax(line, "expected `)` in a shape tree"));
                 }
                 *at += 1;
-                ShapeTree::pair(a, b).map_err(|_| shape_depth_refusal(Site::Line(line)))
+                crate::ir::ShapeTree::pair(a, b)
+                    .map_err(|_| crate::ir::shape_depth_refusal(crate::diag::Site::Line(line)))
             }
-            o => Err(syntax(line, format!("bad shape tree token {o:?}"))),
+            o => Err(syntax(line, alloc::format!("bad shape tree token {o:?}"))),
         }
     }
     let mut at = 0;
-    let mut out = Vec::new();
+    let mut out = alloc::vec::Vec::new();
     while at < toks.len() {
         out.push(tree(&toks, &mut at, line, 0)?);
     }
@@ -300,12 +317,12 @@ fn shape_trees(tokens: &[&str], line: usize) -> Result<Vec<ShapeTree>, Diagnosti
 }
 
 /// Percent-decodes a `derived` rule token (`""` is the empty rule).
-fn decode_rule(tok: &str, line: usize) -> Result<String, Diagnostic> {
+fn decode_rule(tok: &str, line: usize) -> Result<alloc::string::String, crate::diag::Diagnostic> {
     if tok == "\"\"" {
-        return Ok(String::new());
+        return Ok(alloc::string::String::new());
     }
     let b = tok.as_bytes();
-    let mut out = Vec::with_capacity(b.len());
+    let mut out = alloc::vec::Vec::with_capacity(b.len());
     let mut i = 0;
     while i < b.len() {
         if b[i] == b'%' {
@@ -314,7 +331,7 @@ fn decode_rule(tok: &str, line: usize) -> Result<String, Diagnostic> {
                 .and_then(|h| core::str::from_utf8(h).ok())
                 .filter(|h| h.bytes().all(|c| c.is_ascii_hexdigit()))
                 .and_then(|h| u8::from_str_radix(h, 16).ok())
-                .ok_or_else(|| syntax(line, format!("bad escape in rule {tok:?}")))?;
+                .ok_or_else(|| syntax(line, alloc::format!("bad escape in rule {tok:?}")))?;
             out.push(v);
             i += 3;
         } else {
@@ -322,15 +339,16 @@ fn decode_rule(tok: &str, line: usize) -> Result<String, Diagnostic> {
             i += 1;
         }
     }
-    String::from_utf8(out).map_err(|_| syntax(line, format!("rule {tok:?} is not UTF-8")))
+    alloc::string::String::from_utf8(out)
+        .map_err(|_| syntax(line, alloc::format!("rule {tok:?} is not UTF-8")))
 }
 
 /// Percent-encodes a `derived` rule so that it is one printable token.
-fn encode_rule(rule: &str) -> String {
+fn encode_rule(rule: &str) -> alloc::string::String {
     if rule.is_empty() {
         return "\"\"".to_owned();
     }
-    let mut s = String::with_capacity(rule.len());
+    let mut s = alloc::string::String::with_capacity(rule.len());
     for &b in rule.as_bytes() {
         if b.is_ascii_graphic() && !matches!(b, b'%' | b'#' | b'"') {
             s.push(char::from(b));
@@ -341,76 +359,80 @@ fn encode_rule(rule: &str) -> String {
     s
 }
 
-fn provenance(t: &mut Toks<'_>) -> Result<Provenance, Diagnostic> {
+fn provenance(t: &mut Toks<'_>) -> Result<crate::ir::Provenance, crate::diag::Diagnostic> {
     let line = t.line;
     Ok(match t.next()? {
-        "input-validated" => Provenance::InputValidated,
-        "asserted" => Provenance::Asserted,
-        "derived" => Provenance::Derived(decode_rule(t.next()?, line)?),
-        "guard" => Provenance::Guard(t.node()?),
+        "input-validated" => crate::ir::Provenance::InputValidated,
+        "asserted" => crate::ir::Provenance::Asserted,
+        "derived" => crate::ir::Provenance::Derived(decode_rule(t.next()?, line)?),
+        "guard" => crate::ir::Provenance::Guard(t.node()?),
         "evidence" => {
             let w = t.next()?;
-            Provenance::Evidence(if w == "-" {
-                Vec::new()
+            crate::ir::Provenance::Evidence(if w == "-" {
+                alloc::vec::Vec::new()
             } else {
-                super::bytes_from_hex(w)
-                    .ok_or_else(|| syntax(line, format!("evidence witness {w:?} is not hex")))?
+                super::bytes_from_hex(w).ok_or_else(|| {
+                    syntax(line, alloc::format!("evidence witness {w:?} is not hex"))
+                })?
             })
         }
-        o => return Err(syntax(line, format!("bad provenance {o:?}"))),
+        o => return Err(syntax(line, alloc::format!("bad provenance {o:?}"))),
     })
 }
 
-fn op(t: &mut Toks<'_>, profile: SubProfile) -> Result<Op, Diagnostic> {
+fn op(
+    t: &mut Toks<'_>,
+    profile: crate::ir::SubProfile,
+) -> Result<crate::ir::Op, crate::diag::Diagnostic> {
     let line = t.line;
     let name = t.next()?;
     Ok(match name {
-        "input" => Op::Input(t.u32()?),
-        "param" => Op::Param(t.u32()?),
+        "input" => crate::ir::Op::Input(t.u32()?),
+        "param" => crate::ir::Op::Param(t.u32()?),
         "const" => {
             let ty = ty(t.next()?, line)?;
-            Op::Const(match ty {
-                ScalarType::F32 => Literal::F32(t.f32_bits()?),
-                ScalarType::I64 => Literal::I64(t.i64()?),
-                ScalarType::Bool => Literal::Bool(match t.next()? {
+            crate::ir::Op::Const(match ty {
+                crate::ir::ScalarType::F32 => crate::ir::Literal::F32(t.f32_bits()?),
+                crate::ir::ScalarType::I64 => crate::ir::Literal::I64(t.i64()?),
+                crate::ir::ScalarType::Bool => crate::ir::Literal::Bool(match t.next()? {
                     "true" => true,
                     "false" => false,
-                    o => return Err(syntax(line, format!("bad bool {o:?}"))),
+                    o => return Err(syntax(line, alloc::format!("bad bool {o:?}"))),
                 }),
             })
         }
-        "i64.add" => Op::I64Add(t.node()?, t.node()?),
-        "i64.sub" => Op::I64Sub(t.node()?, t.node()?),
-        "i64.mul" => Op::I64Mul(t.node()?, t.node()?),
-        "i64.eq" => Op::I64Eq(t.node()?, t.node()?),
-        "f32.add" => Op::F32Add(t.node()?, t.node()?),
-        "f32.sub" => Op::F32Sub(t.node()?, t.node()?),
-        "f32.mul" => Op::F32Mul(t.node()?, t.node()?),
+        "i64.add" => crate::ir::Op::I64Add(t.node()?, t.node()?),
+        "i64.sub" => crate::ir::Op::I64Sub(t.node()?, t.node()?),
+        "i64.mul" => crate::ir::Op::I64Mul(t.node()?, t.node()?),
+        "i64.eq" => crate::ir::Op::I64Eq(t.node()?, t.node()?),
+        "f32.add" => crate::ir::Op::F32Add(t.node()?, t.node()?),
+        "f32.sub" => crate::ir::Op::F32Sub(t.node()?, t.node()?),
+        "f32.mul" => crate::ir::Op::F32Mul(t.node()?, t.node()?),
         "f32.affine" => {
             let bias = t.f32_bits()?;
-            let mut terms = Vec::new();
+            let mut terms = alloc::vec::Vec::new();
             while t.peek().is_some() {
                 let coefficient = t.f32_bits()?;
                 let operand = if t.peek() == Some("one") {
                     t.next()?;
-                    AffineOperand::One
+                    crate::ir::AffineOperand::One
                 } else {
-                    AffineOperand::Node(t.node()?)
+                    crate::ir::AffineOperand::Node(t.node()?)
                 };
-                terms.push(AffineTerm {
+                terms.push(crate::ir::AffineTerm {
                     coefficient,
                     operand,
                 });
             }
-            Op::F32Affine { bias, terms }
+            crate::ir::Op::F32Affine { bias, terms }
         }
-        "f32.relu" => Op::F32Relu(t.node()?),
-        "f32.reglu" => Op::F32Reglu {
+        "f32.relu" => crate::ir::Op::F32Relu(t.node()?),
+        "f32.reglu" => crate::ir::Op::F32Reglu {
             left: t.node()?,
             gate: t.node()?,
         },
-        "f32.step" => Op::F32Step(t.node()?),
-        "f32.select" => Op::F32Select {
+        "f32.step" => crate::ir::Op::F32Step(t.node()?),
+        "f32.select" => crate::ir::Op::F32Select {
             bit: t.node()?,
             off: t.node()?,
             on: t.node()?,
@@ -419,11 +441,11 @@ fn op(t: &mut Toks<'_>, profile: SubProfile) -> Result<Op, Diagnostic> {
             let index = t.node()?;
             let below = rule(t.next()?, line)?;
             let above = rule(t.next()?, line)?;
-            let mut table = Vec::new();
+            let mut table = alloc::vec::Vec::new();
             while t.peek().is_some() {
                 table.push(t.node()?);
             }
-            Op::F32Index {
+            crate::ir::Op::F32Index {
                 index,
                 table,
                 below,
@@ -433,13 +455,13 @@ fn op(t: &mut Toks<'_>, profile: SubProfile) -> Result<Op, Diagnostic> {
         "guard" => {
             let value = t.node()?;
             let fact = fact(t, profile)?;
-            Op::Guard { fact, value }
+            crate::ir::Op::Guard { fact, value }
         }
         other => {
-            return Err(Diagnostic::malformed(
-                Malformed::UnknownOp,
-                Site::Line(line),
-                format!("operation {other:?} is not in the ngraph-ir/0 whitelist"),
+            return Err(crate::diag::Diagnostic::malformed(
+                crate::diag::Malformed::UnknownOp,
+                crate::diag::Site::Line(line),
+                alloc::format!("operation {other:?} is not in the ngraph-ir/0 whitelist"),
             ))
         }
     })
@@ -450,31 +472,40 @@ fn op(t: &mut Toks<'_>, profile: SubProfile) -> Result<Op, Diagnostic> {
 ///
 /// # Errors
 /// The first D6 refusal encountered while reading.
-pub fn parse(ids: &dyn IdentityScheme, text: &str) -> Result<Graph, Diagnostic> {
+pub fn parse(
+    ids: &dyn IdentityScheme,
+    text: &str,
+) -> Result<crate::ir::Graph, crate::diag::Diagnostic> {
     let mut lines = super::lines(text);
     let header = lines.next().ok_or_else(|| syntax(1, "empty graph file"))?;
     let hl = header.number;
-    if header.tokens[0] != IR_VERSION {
+    if header.tokens[0] != crate::ir::IR_VERSION {
         return Err(syntax(hl, "missing ngraph-ir/0 schema line"));
     }
     let profile = header
         .tokens
         .get(1)
         .copied()
-        .and_then(SubProfile::from_name)
-        .ok_or_else(|| Diagnostic::new(Code::Profile, Site::Line(hl), "unknown sub-profile"))?;
+        .and_then(crate::ir::SubProfile::from_name)
+        .ok_or_else(|| {
+            crate::diag::Diagnostic::new(
+                crate::diag::Code::Profile,
+                crate::diag::Site::Line(hl),
+                "unknown sub-profile",
+            )
+        })?;
     if header.tokens.len() != 2 {
         return Err(syntax(hl, "trailing tokens on the schema line"));
     }
-    let placeholder = Subject {
-        kind: SubjectKind::Authored,
+    let placeholder = crate::ir::Subject {
+        kind: crate::ir::SubjectKind::Authored,
         identity: [0; 32],
-        closure: Vec::new(),
+        closure: alloc::vec::Vec::new(),
     };
-    let mut b = GraphBuilder::new(profile, placeholder);
-    let mut subject: Option<Subject> = None;
-    let mut input_shape: Option<Vec<ShapeTree>> = None;
-    let mut output_shape: Option<Vec<ShapeTree>> = None;
+    let mut b = crate::ir::GraphBuilder::new(profile, placeholder);
+    let mut subject: Option<crate::ir::Subject> = None;
+    let mut input_shape: Option<alloc::vec::Vec<crate::ir::ShapeTree>> = None;
+    let mut output_shape: Option<alloc::vec::Vec<crate::ir::ShapeTree>> = None;
     for l in lines {
         let line = l.number;
         let mut t = Toks {
@@ -494,10 +525,10 @@ pub fn parse(ids: &dyn IdentityScheme, text: &str) -> Result<Graph, Diagnostic> 
                     if name.is_empty() {
                         return Err(syntax(line, "authored-name needs a name"));
                     }
-                    Subject::authored(ids, &name)
+                    crate::ir::Subject::authored(ids, &name)
                 } else {
                     let k = subject_kind(kind)
-                        .ok_or_else(|| syntax(line, format!("bad subject kind {kind:?}")))?;
+                        .ok_or_else(|| syntax(line, alloc::format!("bad subject kind {kind:?}")))?;
                     subject_record(&mut t, k)?
                 });
             }
@@ -507,18 +538,18 @@ pub fn parse(ids: &dyn IdentityScheme, text: &str) -> Result<Graph, Diagnostic> 
                 let slot = match which {
                     "input" => &mut input_shape,
                     "output" => &mut output_shape,
-                    o => return Err(syntax(line, format!("bad shape side {o:?}"))),
+                    o => return Err(syntax(line, alloc::format!("bad shape side {o:?}"))),
                 };
                 if slot.is_some() {
-                    return Err(syntax(line, format!("duplicate shape {which} line")));
+                    return Err(syntax(line, alloc::format!("duplicate shape {which} line")));
                 }
                 *slot = Some(trees);
             }
             "slot" => {
                 let kind = match t.next()? {
-                    "input" => SlotKind::Input,
-                    "param" => SlotKind::Param,
-                    o => return Err(syntax(line, format!("bad slot kind {o:?}"))),
+                    "input" => crate::ir::SlotKind::Input,
+                    "param" => crate::ir::SlotKind::Param,
+                    o => return Err(syntax(line, alloc::format!("bad slot kind {o:?}"))),
                 };
                 let ty = ty(t.next()?, line)?;
                 b.declare_slot(kind, ty);
@@ -540,7 +571,7 @@ pub fn parse(ids: &dyn IdentityScheme, text: &str) -> Result<Graph, Diagnostic> 
                 if id != b.len() {
                     return Err(syntax(
                         line,
-                        format!("node %{id} out of sequence (next is %{})", b.len()),
+                        alloc::format!("node %{id} out of sequence (next is %{})", b.len()),
                     ));
                 }
                 if t.next()? != "=" {
@@ -549,7 +580,7 @@ pub fn parse(ids: &dyn IdentityScheme, text: &str) -> Result<Graph, Diagnostic> 
                 let o = op(&mut t, profile)?;
                 b.op(o);
             }
-            other => return Err(syntax(line, format!("unknown line kind {other:?}"))),
+            other => return Err(syntax(line, alloc::format!("unknown line kind {other:?}"))),
         }
         t.done()?;
     }
@@ -560,33 +591,35 @@ pub fn parse(ids: &dyn IdentityScheme, text: &str) -> Result<Graph, Diagnostic> 
     Ok(g)
 }
 
-fn lit(l: Literal, profile: SubProfile) -> String {
+fn lit(l: crate::ir::Literal, profile: crate::ir::SubProfile) -> alloc::string::String {
     match (l, profile) {
-        (Literal::I64(v), SubProfile::I64) => v.to_string(),
-        (Literal::I64(v), SubProfile::F32) => format!("i64:{v}"),
-        (Literal::Bool(v), _) => v.to_string(),
-        (Literal::F32(b), _) => format!("0x{b:08x}"),
+        (crate::ir::Literal::I64(v), crate::ir::SubProfile::I64) => v.to_string(),
+        (crate::ir::Literal::I64(v), crate::ir::SubProfile::F32) => alloc::format!("i64:{v}"),
+        (crate::ir::Literal::Bool(v), _) => v.to_string(),
+        (crate::ir::Literal::F32(b), _) => alloc::format!("0x{b:08x}"),
     }
 }
 
-fn const_lit(l: Literal) -> String {
+fn const_lit(l: crate::ir::Literal) -> alloc::string::String {
     match l {
-        Literal::I64(v) => v.to_string(),
-        Literal::Bool(v) => v.to_string(),
-        Literal::F32(b) => format!("0x{b:08x}"),
+        crate::ir::Literal::I64(v) => v.to_string(),
+        crate::ir::Literal::Bool(v) => v.to_string(),
+        crate::ir::Literal::F32(b) => alloc::format!("0x{b:08x}"),
     }
 }
 
-fn fact_text(f: &Fact, profile: SubProfile) -> String {
+fn fact_text(f: &crate::ir::Fact, profile: crate::ir::SubProfile) -> alloc::string::String {
     match f {
-        Fact::Range { lo, hi } => format!("range {} {}", lit(*lo, profile), lit(*hi, profile)),
-        Fact::Grid { log2 } => format!("grid {log2}"),
-        Fact::Bit => "bit".into(),
-        Fact::Finite => "finite".into(),
-        Fact::Integral => "integral".into(),
-        Fact::Shape(n) => format!("shape {n}"),
-        Fact::OneHot { group, allow_zero } => {
-            let mut s = format!(
+        crate::ir::Fact::Range { lo, hi } => {
+            alloc::format!("range {} {}", lit(*lo, profile), lit(*hi, profile))
+        }
+        crate::ir::Fact::Grid { log2 } => alloc::format!("grid {log2}"),
+        crate::ir::Fact::Bit => "bit".into(),
+        crate::ir::Fact::Finite => "finite".into(),
+        crate::ir::Fact::Integral => "integral".into(),
+        crate::ir::Fact::Shape(n) => alloc::format!("shape {n}"),
+        crate::ir::Fact::OneHot { group, allow_zero } => {
+            let mut s = alloc::format!(
                 "one-hot {}",
                 if *allow_zero { "allow-zero" } else { "exact" }
             );
@@ -598,13 +631,13 @@ fn fact_text(f: &Fact, profile: SubProfile) -> String {
     }
 }
 
-fn shape_text(trees: &[ShapeTree]) -> String {
-    // Recursion depth is bounded by `MAX_SHAPE_DEPTH`.
-    fn tree(t: &ShapeTree, s: &mut String) {
+fn shape_text(trees: &[crate::ir::ShapeTree]) -> alloc::string::String {
+    // Recursion depth is bounded by `crate::ir::MAX_SHAPE_DEPTH`.
+    fn tree(t: &crate::ir::ShapeTree, s: &mut alloc::string::String) {
         match t.node() {
-            ShapeNode::Scalar => s.push('s'),
-            ShapeNode::Unit => s.push('u'),
-            ShapeNode::Pair(a, b) => {
+            crate::ir::ShapeNode::Scalar => s.push('s'),
+            crate::ir::ShapeNode::Unit => s.push('u'),
+            crate::ir::ShapeNode::Pair(a, b) => {
                 s.push_str("(p ");
                 tree(a, s);
                 s.push(' ');
@@ -613,7 +646,7 @@ fn shape_text(trees: &[ShapeTree]) -> String {
             }
         }
     }
-    let mut s = String::new();
+    let mut s = alloc::string::String::new();
     for t in trees {
         s.push(' ');
         tree(t, &mut s);
@@ -623,24 +656,28 @@ fn shape_text(trees: &[ShapeTree]) -> String {
 
 /// The subject line body after `subject `: `<kind> <64 hex> closure <ids|->`.
 #[must_use]
-pub fn subject_text(s: &Subject) -> String {
+pub fn subject_text(s: &crate::ir::Subject) -> alloc::string::String {
     let closure = if s.closure.is_empty() {
         "-".to_owned()
     } else {
         s.closure
             .iter()
             .map(u64::to_string)
-            .collect::<Vec<_>>()
+            .collect::<alloc::vec::Vec<_>>()
             .join(",")
     };
-    format!("{} {} closure {closure}", s.kind.name(), hex(&s.identity))
+    alloc::format!(
+        "{} {} closure {closure}",
+        s.kind.name(),
+        crate::ir::hex(&s.identity)
+    )
 }
 
 /// Prints a graph in the canonical file form (`F32` literals as exact bit
 /// patterns; origins omitted).
 #[must_use]
-pub fn print(g: &Graph) -> String {
-    let mut s = format!("{IR_VERSION} {}\n", g.profile.name());
+pub fn print(g: &crate::ir::Graph) -> alloc::string::String {
+    let mut s = alloc::format!("{} {}\n", crate::ir::IR_VERSION, g.profile.name());
     let _ = writeln!(s, "subject {}", subject_text(&g.subject));
     if let Some(t) = &g.input_shape {
         let _ = writeln!(s, "shape input{}", shape_text(t));
@@ -650,65 +687,72 @@ pub fn print(g: &Graph) -> String {
     }
     for slot in &g.slots {
         let k = match slot.kind {
-            SlotKind::Input => "input",
-            SlotKind::Param => "param",
+            crate::ir::SlotKind::Input => "input",
+            crate::ir::SlotKind::Param => "param",
         };
         let _ = writeln!(s, "slot {k} {}", slot.ty.name());
     }
-    let n = |x: &NodeId| format!("%{}", x.0);
+    let n = |x: &crate::ir::NodeId| alloc::format!("%{}", x.0);
     for (i, node) in g.nodes.iter().enumerate() {
         let body = match &node.op {
-            Op::Input(k) | Op::Param(k) => format!("{} {k}", node.op.name()),
-            Op::Const(l) => format!("const {} {}", l.ty().name(), const_lit(*l)),
-            Op::I64Add(a, b)
-            | Op::I64Sub(a, b)
-            | Op::I64Mul(a, b)
-            | Op::I64Eq(a, b)
-            | Op::F32Add(a, b)
-            | Op::F32Sub(a, b)
-            | Op::F32Mul(a, b) => format!("{} {} {}", node.op.name(), n(a), n(b)),
-            Op::F32Affine { bias, terms } => {
-                let mut s = format!("f32.affine 0x{bias:08x}");
+            crate::ir::Op::Input(k) | crate::ir::Op::Param(k) => {
+                alloc::format!("{} {k}", node.op.name())
+            }
+            crate::ir::Op::Const(l) => alloc::format!("const {} {}", l.ty().name(), const_lit(*l)),
+            crate::ir::Op::I64Add(a, b)
+            | crate::ir::Op::I64Sub(a, b)
+            | crate::ir::Op::I64Mul(a, b)
+            | crate::ir::Op::I64Eq(a, b)
+            | crate::ir::Op::F32Add(a, b)
+            | crate::ir::Op::F32Sub(a, b)
+            | crate::ir::Op::F32Mul(a, b) => alloc::format!("{} {} {}", node.op.name(), n(a), n(b)),
+            crate::ir::Op::F32Affine { bias, terms } => {
+                let mut s = alloc::format!("f32.affine 0x{bias:08x}");
                 for t in terms {
                     let o = match t.operand {
-                        AffineOperand::One => "one".to_owned(),
-                        AffineOperand::Node(x) => n(&x),
+                        crate::ir::AffineOperand::One => "one".to_owned(),
+                        crate::ir::AffineOperand::Node(x) => n(&x),
                     };
                     let _ = write!(s, " 0x{:08x} {o}", t.coefficient);
                 }
                 s
             }
-            Op::F32Relu(x) | Op::F32Step(x) => format!("{} {}", node.op.name(), n(x)),
-            Op::F32Reglu { left, gate } => format!("f32.reglu {} {}", n(left), n(gate)),
-            Op::F32Select { bit, off, on } => {
-                format!("f32.select {} {} {}", n(bit), n(off), n(on))
+            crate::ir::Op::F32Relu(x) | crate::ir::Op::F32Step(x) => {
+                alloc::format!("{} {}", node.op.name(), n(x))
             }
-            Op::F32Index {
+            crate::ir::Op::F32Reglu { left, gate } => {
+                alloc::format!("f32.reglu {} {}", n(left), n(gate))
+            }
+            crate::ir::Op::F32Select { bit, off, on } => {
+                alloc::format!("f32.select {} {} {}", n(bit), n(off), n(on))
+            }
+            crate::ir::Op::F32Index {
                 index,
                 table,
                 below,
                 above,
             } => {
-                let mut s = format!("f32.index {} {} {}", n(index), below.name(), above.name());
+                let mut s =
+                    alloc::format!("f32.index {} {} {}", n(index), below.name(), above.name());
                 for t in table {
                     let _ = write!(s, " {}", n(t));
                 }
                 s
             }
-            Op::Guard { fact, value } => {
-                format!("guard {} {}", n(value), fact_text(fact, g.profile))
+            crate::ir::Op::Guard { fact, value } => {
+                alloc::format!("guard {} {}", n(value), fact_text(fact, g.profile))
             }
         };
         let _ = writeln!(s, "%{i} = {body}");
     }
     for f in &g.facts {
         let p = match &f.provenance {
-            Provenance::InputValidated => "input-validated".to_owned(),
-            Provenance::Asserted => "asserted".to_owned(),
-            Provenance::Derived(r) => format!("derived {}", encode_rule(r)),
-            Provenance::Guard(gd) => format!("guard {}", n(gd)),
-            Provenance::Evidence(w) if w.is_empty() => "evidence -".to_owned(),
-            Provenance::Evidence(w) => format!("evidence {}", hex(w)),
+            crate::ir::Provenance::InputValidated => "input-validated".to_owned(),
+            crate::ir::Provenance::Asserted => "asserted".to_owned(),
+            crate::ir::Provenance::Derived(r) => alloc::format!("derived {}", encode_rule(r)),
+            crate::ir::Provenance::Guard(gd) => alloc::format!("guard {}", n(gd)),
+            crate::ir::Provenance::Evidence(w) if w.is_empty() => "evidence -".to_owned(),
+            crate::ir::Provenance::Evidence(w) => alloc::format!("evidence {}", crate::ir::hex(w)),
         };
         let _ = writeln!(
             s,
