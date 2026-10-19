@@ -766,7 +766,7 @@ fn check_facts(
     crate::diag::Diagnostic,
 > {
     // crate::ir::Provenance of each record (before any use).
-    let mut input_facts = alloc::vec::Vec::new();
+    let mut input_facts = alloc::vec::Vec::with_capacity(g.nodes.len());
     let mut derived_claims: alloc::collections::BTreeMap<
         usize,
         alloc::vec::Vec<(usize, crate::ir::Fact)>,
