@@ -1060,7 +1060,8 @@ pub fn expansion_bound(closure: &[CallGraphEntry], root: u64) -> Option<u64> {
     let mut memo: alloc::collections::BTreeMap<u64, u64> = alloc::collections::BTreeMap::new();
     let mut on_stack: alloc::collections::BTreeMap<u64, ()> = alloc::collections::BTreeMap::new();
     // Iterative post-order.
-    let mut stack: alloc::vec::Vec<(u64, usize)> = alloc::vec![(root, 0)];
+    let mut stack: alloc::vec::Vec<(u64, usize)> = alloc::vec::Vec::with_capacity(closure.len());
+    stack.push((root, 0));
     on_stack.insert(root, ());
     while let Some((id, next)) = stack.last_mut() {
         let id = *id;
