@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; the module path names the domain and the item name keeps its canonical operation spelling"
+)]
+
 //! D8 forward observations, evaluation preflight, scratch accounting (D12)
 //! and the normative CPU reference interpreter (leg L3).
 

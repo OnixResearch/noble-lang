@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; the module path names the domain and the item name keeps its canonical operation spelling"
+)]
+
 //! D11 immutable parameter snapshots and their identities.
 //!
 //! `ParamSnapshotId = H("noble.ngraph.params.v0" ‖ GraphLogicalId ‖ ordered

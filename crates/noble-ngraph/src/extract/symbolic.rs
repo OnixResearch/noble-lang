@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; the module path names the domain and the item name keeps its canonical operation spelling"
+)]
+
 //! D7 stages 2–5: symbolic stack execution, pruning and the independent
 //! graph check.
 

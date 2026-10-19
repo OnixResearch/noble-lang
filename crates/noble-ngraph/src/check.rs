@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; the module path names the domain and the item name keeps its canonical operation spelling"
+)]
+
 //! The independent graph checker (D7 step 5).
 //!
 //! It re-derives node types from the D2 whitelist signatures and checks

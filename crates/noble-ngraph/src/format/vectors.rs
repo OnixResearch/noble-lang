@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; the module path names the domain and the item name keeps its canonical operation spelling"
+)]
+
 //! Evaluation vector files `noble-ngraph-vectors/0` (design D5).
 //!
 //! ```text

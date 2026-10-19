@@ -1,3 +1,8 @@
+#![expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; the module path names the domain and the item name keeps its canonical operation spelling"
+)]
+
 //! L4: the compiled CPU layered evaluator (D12 optional backend).
 //!
 //! Nodes are scheduled into dependency layers (handwired's depth rule; only
