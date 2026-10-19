@@ -1638,7 +1638,9 @@ fn proof_walk<'a, 'm>(
                                 shifted_prop(&dependency.goal, context.total, term.span, bound)?,
                                 dependency.lean_term.clone(),
                             ));
-                        } else if let Ok(args) = operation(term, "apply", 2) {
+                            return Ok(());
+                        }
+                        if let Ok(args) = operation(term, "apply", 2) {
                             let child_depth = deeper(depth, args[0].span)?;
                             schedule!(
                                 ProofFrame::ApplyFunction {
@@ -1649,7 +1651,9 @@ fn proof_walk<'a, 'm>(
                                 term.span
                             );
                             schedule!(ProofFrame::Infer(&args[0], child_depth), args[0].span);
-                        } else if let Ok(args) = operation(term, "refl", 1) {
+                            return Ok(());
+                        }
+                        if let Ok(args) = operation(term, "refl", 1) {
                             let name = atom(&args[0])?;
                             let (index, sort) = stack_binder(&context, name)
                                 .ok_or_else(|| reject(args[0].span, "unbound refl value"))?;
@@ -1660,12 +1664,9 @@ fn proof_walk<'a, 'm>(
                                 Proposition::Eq(code.clone(), index, index),
                                 format!("(Eq.refl v{index})"),
                             ));
-                        } else {
-                            return Err(reject(
-                                term.span,
-                                "proof term has no inferable proposition",
-                            ));
+                            return Ok(());
                         }
+                        return Err(reject(term.span, "proof term has no inferable proposition"));
                     }
                     ProofFrame::ApplyFunction {
                         term,
@@ -1837,7 +1838,9 @@ fn proof_walk<'a, 'm>(
                                 term.span
                             );
                             schedule!(ProofFrame::Check(&args[1], rest, body_depth), args[1].span);
-                        } else if let Ok(parts) = operation(term, "subst", 3) {
+                            return Ok(());
+                        }
+                        if let Ok(parts) = operation(term, "subst", 3) {
                             let motive = operation(&parts[0], "motive", 2)?;
                             let binder_form = list(&motive[0])?;
                             if binder_form.len() != 2 {
@@ -1877,7 +1880,9 @@ fn proof_walk<'a, 'm>(
                                 term.span
                             );
                             schedule!(ProofFrame::Infer(&parts[1], child_depth), parts[1].span);
-                        } else {
+                            return Ok(());
+                        }
+                        {
                             let child_depth = deeper(depth, term.span)?;
                             schedule!(
                                 ProofFrame::AfterInfer {
