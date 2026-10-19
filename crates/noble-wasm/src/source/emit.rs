@@ -105,7 +105,7 @@ pub(super) fn module(
     };
     let mut out = crate::output::Buffer::with_limit(32_768, cap);
     attempt!(imports::write(&mut out, plan));
-    attempt!(imports::runtime(&mut out, plan));
+    attempt!(imports::entry::runtime(&mut out, plan));
     attempt!(plan.types.emit(&mut out, plan.calculator));
     attempt!(programs(&mut out, &plan.programs, plan.calculator));
     if generation == 0 {
