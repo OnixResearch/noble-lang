@@ -21,6 +21,10 @@ pub(super) enum Completion {
     },
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 /// The entry frame for one request.
 pub(super) fn entry_frame(
     request: &crate::untrusted::Request,

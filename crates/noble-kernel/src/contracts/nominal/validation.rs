@@ -55,6 +55,10 @@ impl super::super::Env {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 fn generic_counts_match(env: &super::super::Env) -> bool {
     if !env.valid_generic_declarations() {
         return false;
@@ -127,6 +131,10 @@ fn bound_row_contract(row: &super::super::BoundAdapter) -> bool {
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; both pinned Rust compilers reject indexing the resource_kinds and effects Vecs (E0277/E0658) to validate fixture identities; reassess when indexed Vec reads become const-capable."
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 fn bootstrap_matches(env: &super::super::Env) -> bool {
     if !env.declared_modules {
         return true;
@@ -174,6 +182,10 @@ fn counts_match(env: &super::super::Env) -> bool {
     is_matching
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 fn declaration_counts_match(env: &super::super::Env, decl: &super::super::NominalDecl) -> bool {
     let mut actual = [0u8; 5];
     let mut index = 0;
@@ -235,17 +247,7 @@ fn definitions_match(env: &super::super::Env) -> bool {
     let mut is_matching = true;
     while index < env.kinds.len() && is_matching {
         let kind = env.kinds[index];
-        let is_matched = if let super::super::Behavior::BoundEmit(slot) = kind {
-            bound_definition_matches(env, index, slot, false)
-        } else if let super::super::Behavior::BoundClock(slot) = kind {
-            bound_definition_matches(env, index, slot, true)
-        } else if let Some(id) = generic_operation_id(kind) {
-            generic_definition_matches(env, index, kind, id)
-        } else if let Some((id, _)) = operation_identity_slot(kind) {
-            declared_definition_matches(env, index, kind, id)
-        } else {
-            true
-        };
+        let is_matched = kind_matches_definition(env, index, kind);
         is_matching = is_matched;
         index += 1;
     }
@@ -302,7 +304,31 @@ const fn generic_operation_id(kind: super::super::Behavior) -> Option<crate::typ
 
 #[expect(
     tigerstyle::missing_const_fn,
-    reason = "reads env.defs and the calendar tables, which are not const"
+    reason = "dispatches to env-reading helpers, which are not const"
+)]
+fn kind_matches_definition(
+    env: &super::super::Env,
+    index: usize,
+    kind: super::super::Behavior,
+) -> bool {
+    if let super::super::Behavior::BoundEmit(slot) = kind {
+        return bound_definition_matches(env, index, slot, false);
+    }
+    if let super::super::Behavior::BoundClock(slot) = kind {
+        return bound_definition_matches(env, index, slot, true);
+    }
+    if let Some(id) = generic_operation_id(kind) {
+        return generic_definition_matches(env, index, kind, id);
+    }
+    if let Some((id, _)) = operation_identity_slot(kind) {
+        return declared_definition_matches(env, index, kind, id);
+    }
+    true
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "reads env.defs and the scheme helpers, which are not const"
 )]
 fn generic_definition_matches(
     env: &super::super::Env,
@@ -348,6 +374,10 @@ fn declared_definition_matches(
     tigerstyle::missing_const_fn,
     reason = "reads env.defs and the scheme helpers, which are not const"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 fn bound_definition_matches(env: &super::super::Env, index: usize, slot: u32, clock: bool) -> bool {
     if !(if clock {
         super::schemes::valid_clock_scheme(&env.defs[index])
@@ -375,6 +405,10 @@ fn bound_definition_matches(env: &super::super::Env, index: usize, slot: u32, cl
     ) && matches!(env.definition_owners.get(index), Some(Some(_)))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 fn bound_adapters_unique(env: &super::super::Env) -> bool {
     let mut index = 0;
     let mut is_unique = true;

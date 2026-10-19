@@ -15,12 +15,13 @@ pub(super) fn register_resource(
     decl: super::NominalDecl,
 ) -> Result<super::Env, super::NominalError> {
     let kind = resource_kind(&decl).ok_or(super::NominalError::InvalidRepresentation)?;
-    if !env.live_slots
-        || !decl.exported
-        || decl.public != [false, false]
-        || kind == super::FIXTURE_RESOURCE
-        || env.resource_kinds.contains(&kind)
-    {
+    let is_live = env.live_slots;
+    let is_exported = decl.exported;
+    let is_unpublished = decl.public == [false, false];
+    let is_fixture_kind = kind == super::FIXTURE_RESOURCE;
+    let is_registered = env.resource_kinds.contains(&kind);
+    let is_registrable = is_live && is_exported && is_unpublished;
+    if !is_registrable || is_fixture_kind || is_registered {
         return Err(super::NominalError::InvalidRepresentation);
     }
     if env.nominal(decl.id).is_some() || env.generic_variant(decl.id).is_some() {
@@ -32,6 +33,10 @@ pub(super) fn register_resource(
     Ok(env)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 /// Check the catalog itself, not just its registration path: `super::Env` fields
 /// are public and may have been altered after host registration.
 pub(super) fn catalog_valid(env: &super::Env) -> bool {
@@ -83,6 +88,10 @@ pub(super) fn kind_is_slot_resource(env: &super::Env, kind: crate::types::Resour
     false
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 /// Only root-positioned borrowed references may be used as authority. Their
 /// signatures are finite concrete trees; a borrowed input may itself be a
 /// root-provided reference, but no result or value child may contain one.

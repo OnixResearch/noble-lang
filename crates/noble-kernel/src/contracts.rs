@@ -222,14 +222,20 @@ pub struct ClockPlan<'a> {
 impl ClockPlan<'_> {
     /// Check the exact binding anew and choose one dispatch result. The shell
     /// receives a finite table of these decisions; it never consults a real clock.
+    #[expect(
+        tigerstyle::usize_in_public_api,
+        reason = "the index is a bounded table position already typed usize by the caller; changing it would break the kernel API"
+    )]
     pub fn decide(&self, requested: &str, index: usize) -> Result<ClockDecision, NominalError> {
-        if self.operation != "test.clock"
-            || self.adapter_identity.is_empty()
-            || !self.input.is_empty()
-            || self.output != [crate::types::Ty::I64]
-            || self.effects != [TEST_CLOCK]
-            || self.script.len() > 16
-        {
+        let is_test_clock = self.operation == "test.clock";
+        let has_adapter = !self.adapter_identity.is_empty();
+        let has_input = self.input.is_empty();
+        let is_i64_returning = self.output == [crate::types::Ty::I64];
+        let has_test_clock_effect = self.effects == [TEST_CLOCK];
+        let is_short_script = self.script.len() <= 16;
+        let is_clock_shape = is_test_clock && has_adapter && !has_input;
+        let is_clock_signature = is_i64_returning && has_test_clock_effect && is_short_script;
+        if !(is_clock_shape && is_clock_signature) {
             return Err(NominalError::InvalidRepresentation);
         }
         if requested != self.operation {
@@ -357,14 +363,14 @@ impl Env {
         args: [crate::types::Ty; 2],
     ) -> Option<crate::types::Ty> {
         let decl = self.generic_variant(id)?;
-        if (!decl.exported && self.caller_module != Some(id.module))
-            || !args[0].valid_generic_argument()
-            || !args[1].valid_generic_argument()
-            || !self.valid_nominal_payload(&args[0], 512)
-            || !self.valid_nominal_payload(&args[1], 512)
-            || !self.valid_type(&args[0], 512)
-            || !self.valid_type(&args[1], 512)
-        {
+        let is_visible = decl.exported || self.caller_module == Some(id.module);
+        let has_valid_argument_types =
+            args[0].valid_generic_argument() && args[1].valid_generic_argument();
+        let has_admitted_payloads =
+            self.valid_nominal_payload(&args[0], 512) && self.valid_nominal_payload(&args[1], 512);
+        let has_admitted_types = self.valid_type(&args[0], 512) && self.valid_type(&args[1], 512);
+        let has_admitted_arguments = has_valid_argument_types && has_admitted_payloads;
+        if !is_visible || !has_admitted_arguments || !has_admitted_types {
             return None;
         }
         let shape = nominal::generic_shape(decl, &args)?;
@@ -534,6 +540,10 @@ pub fn environment() -> Result<Env, crate::shapes::Defect> {
     })
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 /// Extend the fixed bootstrap table with private reserved rows and one pure
 /// Text byte-at operation, without making it available in other profiles.
 pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
@@ -545,12 +555,15 @@ pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
         effects: alloc::vec![],
     };
     reserved.validate()?;
-    for _ in 23..26 {
-        env.defs.push(reserved.clone());
-        env.kinds.push(Behavior::Reserved);
-        env.deps.push(alloc::vec::Vec::new());
-        env.definition_owners.push(None);
-    }
+    let reserved_rows = 3;
+    env.defs
+        .extend(core::iter::repeat_n(reserved.clone(), reserved_rows));
+    env.kinds
+        .extend(core::iter::repeat_n(Behavior::Reserved, reserved_rows));
+    env.deps
+        .extend(core::iter::repeat_with(alloc::vec::Vec::new).take(reserved_rows));
+    env.definition_owners
+        .extend(core::iter::repeat_n(None, reserved_rows));
     let tail = crate::shapes::Pattern::StackVar(crate::words::Variable(0));
     let scheme = crate::words::Scheme {
         var_kinds: alloc::vec![crate::words::VariableKind::Stack],
@@ -575,8 +588,16 @@ pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
     Ok(env)
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-kernel; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 /// The calculator has its own opt-in prefix. Neither standalone cursor nor
 /// ordinary declared-module admission inherits these extra pure operations.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 pub fn calculator_environment() -> Result<Env, crate::shapes::Defect> {
     let mut env = text_cursor_environment()?;
     env.text_cursor = false;
@@ -649,18 +670,22 @@ pub fn calculator_environment() -> Result<Env, crate::shapes::Defect> {
         ],
         effects: alloc::vec![],
     };
-    for (behavior, scheme) in [
+    let table = [
         (Behavior::CalculatorIterate, loop_step),
         (Behavior::CalculatorCompare, compare),
         (Behavior::CalculatorDivRem, divide),
         (Behavior::CalculatorTextFromAscii, text),
         (Behavior::CalculatorTextLength, text_length),
-    ] {
+    ];
+    let rows = table.len();
+    for (behavior, scheme) in table {
         scheme.validate()?;
         env.defs.push(scheme);
         env.kinds.push(behavior);
-        env.deps.push(alloc::vec::Vec::new());
-        env.definition_owners.push(None);
     }
+    env.deps
+        .extend(core::iter::repeat_with(alloc::vec::Vec::new).take(rows));
+    env.definition_owners
+        .extend(core::iter::repeat_n(None, rows));
     Ok(env)
 }

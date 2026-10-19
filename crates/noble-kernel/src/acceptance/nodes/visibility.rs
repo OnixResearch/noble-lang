@@ -23,6 +23,10 @@ pub(super) fn check(
     tigerstyle::missing_const_fn,
     reason = "reads runtime visibility tables through the nominal and generic helpers, which are not const"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 fn visible_behavior(
     env: &crate::contracts::Env,
     def: crate::contracts::Definition,

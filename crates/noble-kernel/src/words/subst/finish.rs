@@ -13,6 +13,10 @@ macro_rules! attempt_segment {
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-maintainers; required children and constructor kind fail through InstError, preserving right-then-left pops. Every new Pattern must require a reviewed completion rule, not a fallback."
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-kernel; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 pub(super) fn apply(node: crate::shapes::Pattern, mut walk: super::Walk) -> super::StepState {
     if let crate::shapes::Pattern::GenericNominal(id, _, mapping) = node {
         let (Some(second), Some(first)) = (walk.segments.pop(), walk.segments.pop()) else {

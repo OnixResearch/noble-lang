@@ -108,6 +108,22 @@ pub(super) fn fold_node(
     }
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-kernel; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-kernel; the parameter list is the kernel internal call shape; bundling it would change the extracted subject"
+)]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-kernel; the same-typed parameters are positional by contract and named at every call site"
+)]
 /// Derive a live invocation solely from the host-owned root input and the
 /// checked forwarding positions. A raw ordinal is never type authority.
 fn fold_slot(

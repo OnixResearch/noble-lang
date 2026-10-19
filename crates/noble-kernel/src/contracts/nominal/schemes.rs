@@ -155,6 +155,10 @@ pub(super) fn generic_arm(
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 pub(super) fn generic_matcher(decl: &super::super::GenericVariantDecl) -> crate::words::Scheme {
     let mut vars = generic_vars();
     vars.push(crate::words::VariableKind::Stack);

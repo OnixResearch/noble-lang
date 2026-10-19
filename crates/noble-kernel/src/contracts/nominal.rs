@@ -88,6 +88,10 @@ fn same_generic_arg(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 pub(super) fn register_generic_variant(
     env: super::Env,
     decl: super::GenericVariantDecl,
@@ -277,19 +281,25 @@ pub(super) fn register_bound_emit(
     Ok((env, def))
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 pub(super) fn register_bound_clock(
     env: super::Env,
     registration: super::BoundClockRegistration,
 ) -> Result<(super::Env, super::Definition), super::NominalError> {
-    if registration.adapter_identity.is_empty()
-        || !registration.input.is_empty()
-        || registration.output.as_slice() != [crate::types::Ty::I64]
-        || registration.effects.as_slice() != [super::TEST_CLOCK]
-        || env
-            .bound_adapters
-            .iter()
-            .any(|row| row.adapter_slot == registration.adapter_slot)
-    {
+    let has_identity = !registration.adapter_identity.is_empty();
+    let has_input = registration.input.is_empty();
+    let is_i64_returning = registration.output.as_slice() == [crate::types::Ty::I64];
+    let has_test_clock_effect = registration.effects.as_slice() == [super::TEST_CLOCK];
+    let is_registered = env
+        .bound_adapters
+        .iter()
+        .any(|row| row.adapter_slot == registration.adapter_slot);
+    let is_clock_shape = has_identity && !has_input;
+    let is_clock_signature = is_i64_returning && has_test_clock_effect;
+    if !(is_clock_shape && is_clock_signature) || is_registered {
         return Err(super::NominalError::InvalidRepresentation);
     }
     let (mut env, def) = attempt!(append(

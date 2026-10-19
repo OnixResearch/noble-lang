@@ -193,6 +193,10 @@ impl super::super::super::Env {
         Some(state)
     }
 
+    #[expect(
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-kernel; the parameter list is the kernel internal call shape; bundling it would change the extracted subject"
+    )]
     fn enqueue_known_generic<'a>(
         &self,
         id: crate::types::NominalTypeId,

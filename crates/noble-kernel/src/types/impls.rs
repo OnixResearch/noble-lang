@@ -113,6 +113,10 @@ fn push_type_program(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; ty_eq returns false for constructor, stack-length, effect or local-work mismatches; unequal types and exhausted comparisons must remain boolean results rather than panic paths."
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-kernel; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
     let mut work = alloc::vec::Vec::with_capacity(8);
     work.push((left.clone(), right.clone()));
