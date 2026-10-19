@@ -25,8 +25,10 @@ least upper bound, so a principal candidate may exist and the finite-family
 machinery may add nothing. The issue explicitly permits documenting that result.
 This change selects the fragment, the declarative relation, the candidate-family
 semantics, the backward-checking obligation, the differential evaluation and the
-go/no-go criteria. It does not implement a prototype, adopt a type system,
-change source acceptance, or claim a principal-type result.
+go/no-go criteria, and implements a test-only prototype. The prototype confirms
+a principal candidate in every supported family; the selected decision is
+**no-go** for production adoption. It does not adopt a type system, change
+source acceptance, or alter kernel types or the ABI.
 
 ## What Changes
 
@@ -52,6 +54,12 @@ change source acceptance, or claim a principal-type result.
   evaluation against the production checker, with metered construction and
   queries, a distinct exhaustion outcome, deterministic/seeded corpus, negative
   controls, benchmarks and receipts. r[FSUB-EVAL-01]
+- Implement the test-only `crates/noble-contracts/tests/models/finite-bases.rs`
+  prototype and `verification/finite-subtyping/run.mjs` receipt lane. The
+  prototype compares the explicit-family and backward checkers over 277 finite
+  cases, exercises real `result.noble`-style interfaces and records the no-go
+  decision. No production checker or source acceptance changes.
+  r[FSUB-CAND-01] r[FSUB-EVAL-01]
 - Specify the proof obligations (decidable subtyping, sound generation,
   coverage, finite covers, compositional completeness, termination, backward
   elimination, algorithm/declarative equivalence) and the explicit go/no-go
@@ -61,14 +69,17 @@ change source acceptance, or claim a principal-type result.
 
 ## Impact
 
-- **Files**: `.cairn/changes/finite-subtyping/` only, with ADDED `language`
+- **Files**: `.cairn/changes/finite-subtyping/`, the test-only
+  `crates/noble-contracts/tests/models/finite-bases.rs` prototype and
+  `verification/finite-subtyping/run.mjs` plus its receipt. ADDED `language`
   deltas `FSUB-FRAG-01`, `FSUB-REL-01`, `FSUB-CAND-01`, `FSUB-ID-01` and ADDED
   `verification` deltas `FSUB-EVAL-01`, `FSUB-PROOF-01`.
-- **Code**: none. No checker, kernel type, candidate encoding, CLI, ABI,
-  canonical hash or persistence change.
-- **Testing**: document validation only. No prototype is built, no corpus is
-  executed, and no subtyping acceptance result is claimed. Existing source
-  regressions are retained unchanged.
+- **Code**: test-only. No production checker, kernel type, candidate encoding,
+  CLI, ABI, canonical hash or persistence change.
+- **Testing**: `cargo test -p noble-contracts --test source -- finite_bases` passes. The
+  receipt records 277 cases, 277 principal families, zero ambiguity, maximum
+  family size 16, and the `no-go` decision. Existing source regressions are
+  retained unchanged.
 - **Coordination**: #15 owns the correctness foundation. #28 supplies the
   independent oracle for the existing effect solver and does not depend on this
   extension. #3 owns ownership and lifetime design; #13's physical-size

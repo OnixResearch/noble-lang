@@ -1,14 +1,15 @@
 ## Context
 
-This is a design-only change for issue #30. It specifies a bounded four-version
-semantic merge relation and an evaluated checking path. It implements no
-checker, writes no Lean definition, checks no proof and authorizes no merge.
-The relation is not a textual merge, not a recipe comparison and not a claim
-that a candidate is the unique merge.
+This change specifies a bounded four-version semantic merge relation and an
+evaluated checking path. It implements a test-only model of the relation and
+its fixtures, writes no Lean definition, checks no proof and authorizes no
+merge. The relation is not a textual merge, not a recipe comparison and not a
+claim that a candidate is the unique merge.
 
 **Baseline.** All source references are at `de1044b` (the change's base). The
 issue cites `66eb7cd`; the cited contract and README lines have moved only by
-line numbers. No code was changed and no test was executed for this design.
+line numbers. The model is a test-only integration lane; no production code
+changed.
 
 ### Existing contract boundary
 
@@ -332,6 +333,36 @@ A test corpus alone cannot yield a universal proof. The positive cases are
 regression designs for the claim generator, the relation and the evidence
 binding; the negatives test refusal and stale-identity behavior.
 
+## Model outcome and go/no-go
+
+`crates/noble-contracts/tests/models/semantic-merge-model.rs` implements a bounded
+stack model of the relation over 25 two-I64 input vectors:
+
+```text
+fixtures 10
+verified 4
+conflicts 1
+counterexamples 3
+incompatible interfaces 1
+abnormal outcomes 1
+```
+
+The fixtures cover independent changes, equivalent edits, one-sided and
+identical changes, lost changes, incompatible edits, wrapping `I64`, missing
+observations, changed captures, abnormal programs and evidence refusals. The
+model also checks that subject identity binds captures and callees, that a
+wrong proof or stale revision is refused, and that an abnormal or vacuous case
+is never verified. `verification/semantic-merge-model/run.mjs` records the
+source-bound receipt.
+
+**Decision: no-go for integration at this revision.** The model is not the Lean
+relation, does not prove termination, does not generate or independently
+regenerate `noble-merge-claim/v1`, and does not exercise the isolated checker or
+the full evidence envelope. SM-1 through SM-6 remain open. No claim generator,
+Lean definition, admission path or automatic merge is selected. Reopen only
+after those obligations are discharged and a separately reviewed integration
+plan exists.
+
 ## Proof obligations
 
 | Id | Obligation | Relation |
@@ -364,12 +395,13 @@ set, purity, or the existing partial-correctness claim.
 5. Record positive, conflict, counterexample, unknown, unsupported, exhausted
    and internal outcomes exactly.
 
-**Go/no-go.** Proceed to a separately reviewed integration plan only if SM-1
-through SM-6 are discharged for `SMERGE/1`, the fixture plan has no unexplained
-outcome, and SM-7/SM-8 boundaries are documented. Otherwise narrow the fragment
-or stop. A successful check is not an automatic merge: no merge is performed,
-no branch is published, no live slot is admitted and no release permission is
-granted.
+**Go/no-go.** The bounded model executes the fixture plan for its stack
+fragment, but SM-1 through SM-6 remain open. The recorded decision is **no-go
+for integration at this revision**: do not proceed to a claim generator, Lean
+checker, admission path or merge. Reopen only after the obligations are
+discharged and a separately reviewed integration plan exists. A successful
+check would still not be an automatic merge: no merge is performed, no branch
+is published, no live slot is admitted and no release permission is granted.
 
 **Coordination.** #15 owns preservation, effect safety and the broader proof
 foundation; #10 owns proof-to-executed-artifact correspondence, so an installed

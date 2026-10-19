@@ -1,15 +1,16 @@
 ## Context
 
-This is a design-only change for issue #29. It designs a bounded language
-extension, specifies a small experimental prototype and a differential
-evaluation, and states the go/no-go criteria. It implements no checker, adopts
-no type system, changes no source acceptance and claims no principal-type,
+This change designs the bounded language extension for issue #29, specifies a
+small experimental prototype and a differential evaluation, and records the
+go/no-go decision. The test-only prototype confirms a principal candidate in
+every supported family; the selected decision is **no-go** for production
+adoption. It adopts no type system, changes no source acceptance, and claims no
 soundness or completeness result.
 
 **Baseline.** All source references are at `de1044b` (the change's base). The
 issue cites `66eb7cd`; the cited inference, source and type files have moved
-only by line numbers. No code was changed and no test was executed for this
-design.
+only by line numbers. The prototype is a test-only integration lane; no
+production code changed.
 
 ### What exists
 
@@ -311,46 +312,59 @@ E_exp)` and computes what a callee must provide:
   incomparable family appears, adoption still requires discharged proof
   obligations and a separate integration plan; it is not automatic.
 
-## Evaluation plan (future prototype)
+## Executed prototype and evaluation
 
-1. **Explicit-family reference checker.** A separate, small module represents
-   candidates as complete records and implements the declarative relation,
-   subsumption, family construction and whole-candidate operations. It does not
-   reuse production inference helpers as expected results. It is the
-   compatibility reference's complement, not a replacement.
-2. **Differential checker.** A second target-directed/backward implementation
-   runs on the same declarative judgments. Sharing, deduplication and pruning
-   MUST preserve whole-candidate semantics. Cache keys include binder
-   identities, constraints, substitutions and comparison-context changes; a
-   stale or cross-context hit is a defect.
-3. **Corpus.** Real existing examples (`result.noble` `map_ok`, `map_error`,
-   `and_then`, `or_else`; `structural-map.noble`; branch joins; named
-   definitions; monomorphic duplicated Programs) plus generated bounded cases:
-   pure versus effectful Programs, effect widening and narrowing attempts,
-   correlated stack/effect alternatives, nested quotations/composition, shared
-   monomorphic Programs, rigid binders, exact nominal arguments, and
-   malformed/ill-scoped inputs. Resource and LiveRef inputs are expected
-   `unsupported`.
-4. **Metering.** Construction, queries, candidate allocation and expansion from
-   shared representations into owned descriptors are charged. Record family
-   size, maximal/incomparable counts, materialized nodes, subtype/query counts,
-   work, peak storage and elapsed time at pinned revisions and budgets. Return a
-   distinct `exhausted`.
-5. **Outcomes.** `accepted`, `rejected`, `ambiguous`, `unsupported`,
-   `exhausted`, `internal`. All non-accepted states remain visibly non-accepted;
-   a truncated family is never a semantic rejection.
-6. **Negative controls.** Deliberately cross-mix candidates; reuse a stale
-   comparison after a binder or context change; expand a shared representation
-   and compare against the owned descriptor; inject an effect narrowing; and
-   substitute a different nominal ID with the same display name.
-7. **Benchmarks and receipt.** Record accepted/rejected/ambiguous/exhausted
-   outcomes, family/DAG sizes, materialized nodes, subtype/query counts, work,
-   peak storage and elapsed time at pinned revisions and budgets. The receipt
-   records source revision, toolchain, corpus, bounds, seeds and every
-   discrepancy.
+`crates/noble-contracts/tests/models/finite-bases.rs` implements the selected
+`finite-bases/v0` relation over public kernel types:
 
-No paper-derived performance guarantee is claimed. Benchmarks are measurements,
-not a complexity theorem.
+- an explicit-family checker that enumerates the upward effect closure, retains
+  whole `(inputs, outputs, effects)` candidates, and identifies a principal
+  candidate;
+- a target-directed/backward checker that compares the base interface with the
+  expected interface and applies the same stack and effect-inclusion rules;
+- 277 finite differential cases over universes of size 0, 1, 2 and 4;
+- real interface-shaped examples based on `result.noble` (`map_ok`/`and_then`
+  style Programs), data covariance and exact nominal identity;
+- negative controls for effect narrowing, representation-changing data
+  covariance, nominal mismatch and cross-candidate field mixing;
+- outcomes recorded as accepted, refused, principal, ambiguous, unsupported or
+  internal. The executed lane has no ambiguity and no exhaustion.
+
+`verification/finite-subtyping/run.mjs` executes the lane and writes a
+source-bound receipt. The receipt records the source revision, toolchain,
+bounds, counts and the decision.
+
+## Prototype outcome and go/no-go
+
+The executed receipt records:
+
+```text
+cases 277
+accepted 94, refused 183
+principal_families 277, ambiguous 0
+max_family 16
+real accepted 3, real refused 4
+decision no-go
+```
+
+Every supported family has a principal candidate. The only non-reflexive
+relation in `finite-bases/v0` is directed effect-bound inclusion, which already
+has a least element in the base interface and is provided in production by the
+current checker plus K-EFFECT-05. The finite-family machinery therefore adds no
+accepted context in this fragment.
+
+**Decision: no-go for production adoption.** Do not integrate the extension,
+do not change source acceptance, kernel types, canonical identity or the ABI,
+and retain the current checker and K-EFFECT-05. The result is a bounded
+prototype result, not a universal principal-type theorem.
+
+## Future evaluation (not executed)
+
+Metering of construction, queries and materialized nodes; the
+`structural-map.noble`, branch, named-definition, rigid-binder and malformed
+corpora; stale comparison-cache controls; peak-storage and work accounting;
+and a direct differential against the production checker remain future work.
+No paper-derived performance guarantee is claimed.
 
 ## Proof obligations (proved, tested, assumed and open)
 

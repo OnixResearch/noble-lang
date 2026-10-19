@@ -1,3 +1,6 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+
 const fn limits() -> noble_contracts::Limits {
     noble_contracts::Limits {
         bytes: 65_536,
@@ -254,3 +257,9 @@ fn typed_source_resource_input_rejects_dup_with_exact_eligibility() -> Result<()
 
 #[path = "source/lifecycle.rs"]
 mod lifecycle;
+
+#[path = "models/finite-bases.rs"]
+mod finite_bases;
+
+#[path = "models/semantic-merge-model.rs"]
+mod semantic_merge_model;

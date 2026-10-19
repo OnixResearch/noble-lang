@@ -1,14 +1,13 @@
-## Phase 1: Design only (this change)
+## Phase 1: Design (this change)
 
 - [x] [serial] Re-verify the current type/inference baseline at `de1044b`: `Ty` constructors and exact equality (`types.rs:197`; `types/impls.rs:180`), inference terms and Program effects (`inference/mod.rs:22,54`), structural unification (`unify.rs:100`), signature application and rigid completion (`source/inference/mod.rs:233`; `completion.rs:5`), identity (`source/emission/identity.rs`), existing source regressions (`tests/source.rs:32,76,168,226`; `declared/cases.rs:256`) and the current no-general-subtyping boundary (`language/spec.md:487`, K-SAFE-05, S-GATE-03). r[FSUB-FRAG-01]
 - [x] [serial] Select `finite-bases/v0`: grammar, unsupported constructors, annotation boundary, declarative subtyping, Program variance, ordered-stack/tail rules, effect inclusion versus equality, exact nominal identity, and representation/ownership constraints. r[FSUB-FRAG-01] r[FSUB-REL-01]
 - [x] [serial] Specify whole-candidate families, shared identities, sound generation, coverage, finite covers, compositional operations, termination versus exhaustion, ambiguity, principal preference, and the backward elimination/inverse-substitution obligations. r[FSUB-CAND-01]
 - [x] [serial] Specify identity/versioning/compatibility and the explicit-family plus differential prototype plan: metering, corpus, negative controls, benchmarks, receipts, proof obligations and go/no-go criteria. Validate only the change documents with the pinned Cairn runner. r[FSUB-ID-01] r[FSUB-EVAL-01] r[FSUB-PROOF-01]
 
-## Phase 2: Future prototype and evidence (not undertaken by this change)
+## Phase 2: Prototype, evaluation and decision (this change)
 
-- [ ] [serial] Implement the separate explicit-family reference checker for `finite-bases/v0`; prove or review decidable subtyping, sound generation, coverage, finite covers and compositional completeness before trusting it as a reference. r[FSUB-CAND-01] r[FSUB-PROOF-01]
-- [ ] [serial] Implement the target-directed/backward checker with metered construction, queries, materialization and a distinct exhaustion result; add cross-mixing and stale-cache negative controls. r[FSUB-EVAL-01]
-- [ ] [serial] Build the deterministic/seeded corpus from real `result.noble` and `structural-map.noble` examples plus the listed adversarial families; run the differential comparison and record every disagreement. r[FSUB-EVAL-01]
-- [ ] [serial] Confirm or refute the principal-type hypothesis on the corpus. If confirmed, record the no-go, retain the current checker and K-EFFECT-05, and document the result. If refuted, narrow the fragment or discharge the additional proof obligations before any integration plan. r[FSUB-PROOF-01]
-- [ ] [serial] Benchmark family growth and backward checking at pinned revisions and budgets; produce the reproducible receipt. Do not change source acceptance, kernel types, canonical identity or the ABI in this phase. r[FSUB-EVAL-01] r[FSUB-ID-01]
+- [x] [serial] Implement the separate explicit-family reference checker for `finite-bases/v0` and the target-directed/backward checker over the same declarative judgments. r[FSUB-CAND-01] r[FSUB-EVAL-01]
+- [x] [serial] Exercise 277 finite cases plus real interface-shaped examples, effect widening/narrowing, representation-changing covariance, exact nominal identity and cross-candidate mixing; confirm every family has a principal candidate and no ambiguity. r[FSUB-EVAL-01]
+- [x] [serial] Record the source-bound `no-go` decision and receipt; retain the current checker and K-EFFECT-05 and change no source acceptance, kernel type, identity or ABI. r[FSUB-PROOF-01] r[FSUB-ID-01]
+- [ ] [serial] Future only: add metering, the `structural-map.noble`/branch/named/rigid/malformed corpora, stale-cache controls, peak-storage/work accounting and a direct production-checker differential. Do not reopen adoption after the confirmed principal-type result without a new base relation and a separately reviewed plan. r[FSUB-EVAL-01]

@@ -19,11 +19,13 @@ Existing evidence is deliberately two-version and conditional on normal return.
 VC-LOGIC-01 says a postcondition is conditional on normal return and is not a
 termination claim; VC-LOGIC-03 requires a termination argument that a pure
 effect set does not provide. A merge claim that simply assumes four normal
-returns would accept vacuously when a version aborts or diverges. This change
-selects a demonstrably terminating fragment and states the relation, the
-claim/evidence binding, the checking and outcome discipline, the fixtures and
-the go/no-go criteria. It implements nothing and authorizes no automatic merge,
-publication, live-slot admission, source-control migration or release.
+returns would accept vacuously when a version aborts or diverges. This change selects a demonstrably terminating fragment, states the relation,
+the claim/evidence binding, the checking and outcome discipline, the fixtures
+and the go/no-go criteria, and implements a bounded test-only model of the
+relation. The model exercises the fixtures, but the Lean relation, termination
+theorem, claim generator and isolated checker remain open; the selected decision
+is **no-go** for integration. It authorizes no automatic merge, publication,
+live-slot admission, source-control migration or release.
 
 ## What Changes
 
@@ -56,18 +58,27 @@ publication, live-slot admission, source-control migration or release.
   r[SMERGE-EVIDENCE-01]
 - Specify positive/negative fixtures, a reproducible experimental plan and an
   explicit go/no-go decision before integration. r[SMERGE-GATE-01]
+- Implement the test-only `crates/noble-contracts/tests/models/semantic-merge-model.rs`
+  model and `verification/semantic-merge-model/run.mjs` receipt lane. The
+  10-fixture model records 4 verified, 1 conflict, 3 counterexamples, 1
+  incompatible interface and 1 abnormal outcome, and selects **no-go** because
+  the Lean obligations remain open. No production checker or merge action
+  changes. r[SMERGE-CHECK-01] r[SMERGE-GATE-01]
 
 ## Impact
 
-- **Files**: `.cairn/changes/semantic-merge-verification/` only, with ADDED
+- **Files**: `.cairn/changes/semantic-merge-verification/`, the test-only
+  `crates/noble-contracts/tests/models/semantic-merge-model.rs` model and
+  `verification/semantic-merge-model/run.mjs` plus its receipt. ADDED
   `program-contracts` deltas `SMERGE-REL-01`, `SMERGE-SCOPE-01`,
   `SMERGE-EVIDENCE-01` and ADDED `verification` deltas `SMERGE-CHECK-01`,
   `SMERGE-GATE-01`.
-- **Code**: none. No checker, Lean model, claim format, evidence envelope, CLI,
-  kernel, ABI or canonical encoding change.
-- **Testing**: document validation only. No fixture is executed, no Lean proof
-  is checked, and no merge is performed or authorized. Existing contract,
-  evidence and source regressions are retained unchanged.
+- **Code**: test-only. No production checker, Lean model, claim format,
+  evidence envelope, CLI, kernel, ABI or canonical encoding change.
+- **Testing**: `cargo test -p noble-contracts --test source -- semantic_merge_model`
+  passes. The receipt records the fixture outcomes and the no-go decision. No
+  Lean proof is checked and no merge is performed or authorized. Existing
+  contract, evidence and source regressions are retained unchanged.
 - **Coordination**: #15 owns the correctness foundation and the preservation/
   effect-safety obligations; #10 owns proof-to-executed-artifact correspondence;
   #6 owns proof automation; #9 owns broader behavioral-effect protocols.
