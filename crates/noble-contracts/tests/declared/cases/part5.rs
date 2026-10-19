@@ -101,6 +101,12 @@ fn source_bound_contract_preserves_formatting_and_refuses_named_v1() -> Result<(
         )
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(ordinary.output(), &[noble_kernel::types::Ty::I64]);
+    refuses_named_runtime_as_v1_theorem()?;
+    Ok(())
+}
+
+/// A named runtime call must not be accepted as an MC1-v1 theorem or proof.
+fn refuses_named_runtime_as_v1_theorem() -> Result<(), String> {
     let named_contract = b"module named_law@1 [
       def one [ 1 ] def increment [ one + ]
       contract 1 law [ subject increment input [ x I64 ] output [ y I64 ]
