@@ -18,7 +18,7 @@
   "crates/noble-cli/src/core/runtime/protocol.mjs" = "e8b5ed5c8c52818f1cfd2f5b9e4d1613e81fb0d7bee0514cb2c88f3872e819f3",
   "crates/noble-cli/src/core/runtime/values.mjs" = "add0eda94de18275fd8552ec5e0b5fa0f4a0f2ba80ffe02ed55d9931e9deafb4",
   "crates/noble-contracts/Cargo.toml" = "757e1546739b76fb93fadffee7ceb32bc537c030e945adcd2ca6905f79d43bd8",
-  "crates/noble-contracts/src/source/proof.rs" = "041c0569cee889a6c9a12749eddba4413816b08219d8ef8388900b268f97f774",
+  "crates/noble-contracts/src/source/proof.rs" = "48552a0067d0a32f04700a7996c2a2679404b031bbe1e04f06dd521171618f3d",
   "crates/noble-kernel/Cargo.toml" = "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",
   "crates/noble-syndicate/Cargo.toml" = "111546759bcc1665f5575e63f08f9f464ba1ce28d1cf6596aaf49cda659f78f2",
   "crates/noble-ngraph-experiment/Cargo.toml" = "f68a81759c47060dea67e16ef68c80a7a960dbba8cd5ce7996bbd976cc535348",
