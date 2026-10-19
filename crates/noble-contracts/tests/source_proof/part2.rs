@@ -200,6 +200,7 @@ fn refuses_resource_interface_and_context_claims(
         ),
         Err(noble_contracts::source::proof::SourceProofRefusal::UnsupportedProfile)
     ));
+    assert_eq!(resources.generation(), 2);
     Ok(())
 }
 

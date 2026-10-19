@@ -19,6 +19,7 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
     let batch = prepared
         .proof_obligations()
         .ok_or("missing contract proof")?;
+    assert_eq!(batch.obligations.len(), 1);
     let noble_contracts::intrinsic::PendingGoal::Contract { contract } = &batch.obligations[0].goal
     else {
         return Err("missing resolved contract".into());
