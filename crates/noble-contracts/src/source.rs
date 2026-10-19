@@ -548,6 +548,10 @@ impl Session {
         tigerstyle::unchecked_division,
         reason = "Owner: noble-contracts; the divisor is a compile-time constant known non-zero"
     )]
+    #[expect(
+        tigerstyle::sentinel_fallback,
+        reason = "Owner: noble-contracts; the fallback is the documented refusal path of this decoder"
+    )]
     /// Build one private successor containing a replacement and every current
     /// definition whose immutable resolved calls reach its previous identity.
     /// Historical definitions stay in place for already captured Programs.
@@ -687,6 +691,10 @@ impl Session {
     #[expect(
         tigerstyle::platform_dependent_cast,
         reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-contracts; the constant counts source elements, and its unit is stated by the surrounding type and call sites"
     )]
     /// Definition history is length-prefixed in precisely the append order of
     /// `definitions`. Never reconstruct a dependent from its already-resolved

@@ -5,6 +5,14 @@
     tigerstyle::excessive_file_length,
     reason = "noble-contracts modules are cohesive units; splitting them for a line budget would churn the extracted subject"
 )]
+#![expect(
+    tigerstyle::module_file_count,
+    reason = "noble-contracts keeps one module per pipeline stage; merging directories for a file-count budget would churn the extracted subject"
+)]
+#![expect(
+    tigerstyle::underscore_in_module_filename,
+    reason = "the named_v2 module name carries the profile revision it implements"
+)]
 #![feature(register_tool)]
 #![register_tool(charon, octet, tigerstyle)]
 

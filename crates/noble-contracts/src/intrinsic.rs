@@ -926,6 +926,10 @@ fn binder<'a>(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
 fn parsed<'m>(
     root: ParseFrame<'_>,
     context: &WorkStack<Binder>,
@@ -1447,6 +1451,10 @@ enum ProofValue {
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::foreign_enum_catch_all,
+    reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
 )]
 fn proof_walk<'a, 'm>(
     root: ProofFrame<'a>,

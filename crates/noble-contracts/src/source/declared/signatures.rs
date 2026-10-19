@@ -284,6 +284,10 @@ fn parse_effect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::catch_all_on_enum,
+    reason = "Owner: noble-contracts; the catch-all is the deliberate fail-closed arm for an enum this crate does not own"
+)]
 fn pattern(
     word: &str,
     binders: &[(String, VariableKind)],

@@ -176,6 +176,10 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::numeric_units,
+    reason = "Owner: noble-contracts; the constant counts source elements, and its unit is stated by the surrounding type and call sites"
+)]
 fn dependency_bytes(
     dependency: &crate::intrinsic::ProofDependency,
     limit: usize,

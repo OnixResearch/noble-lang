@@ -145,6 +145,10 @@ impl super::ModuleSession {
     }
 }
 
+#[expect(
+    tigerstyle::type_accumulation,
+    reason = "Owner: noble-contracts; the accumulator is the checked declaration this stage builds, not a free-form type bag"
+)]
 impl super::ModuleSession {
     pub(super) fn check_retained_module_bytes(
         &self,

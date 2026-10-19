@@ -416,6 +416,10 @@ mod tests {
         tigerstyle::assertion_density,
         reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
     )]
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; the walk is bounded by the type-node budget it charges, and the recursive form states the traversal directly"
+    )]
     /// Every owned `Ty` node, including retained generic arguments and their
     /// separately boxed descriptor copies.
     fn owned_nodes(ty: &Ty) -> u32 {
