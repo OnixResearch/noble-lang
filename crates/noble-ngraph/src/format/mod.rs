@@ -8,10 +8,6 @@
 //! meaning. Parsing only builds producer data: graphs are still admitted by
 //! the independent checker, and snapshot identities are recomputed.
 
-use alloc::vec::Vec;
-
-use crate::ir::Digest;
-
 pub mod data;
 pub mod graph;
 pub mod snapshot;
@@ -21,14 +17,14 @@ pub mod vectors;
 /// One significant line: its 1-based number and its whitespace tokens.
 pub(crate) struct Line<'a> {
     pub(crate) number: usize,
-    pub(crate) tokens: Vec<&'a str>,
+    pub(crate) tokens: alloc::vec::Vec<&'a str>,
 }
 
 /// Significant lines of `text`: comments removed, blank lines skipped.
 pub(crate) fn lines(text: &str) -> impl Iterator<Item = Line<'_>> {
     text.lines().enumerate().filter_map(|(i, l)| {
         let body = l.split('#').next().unwrap_or("");
-        let tokens: Vec<&str> = body.split_whitespace().collect();
+        let tokens: alloc::vec::Vec<&str> = body.split_whitespace().collect();
         (!tokens.is_empty()).then_some(Line {
             number: i + 1,
             tokens,
@@ -39,7 +35,7 @@ pub(crate) fn lines(text: &str) -> impl Iterator<Item = Line<'_>> {
 /// Decodes lowercase or uppercase hex bytes; `None` on odd length or a
 /// non-hex digit.
 #[must_use]
-pub fn bytes_from_hex(s: &str) -> Option<Vec<u8>> {
+pub fn bytes_from_hex(s: &str) -> Option<alloc::vec::Vec<u8>> {
     let b = s.as_bytes();
     if !b.len().is_multiple_of(2) {
         return None;
@@ -57,9 +53,9 @@ pub fn bytes_from_hex(s: &str) -> Option<Vec<u8>> {
 
 /// Decodes a 64-digit hex digest.
 #[must_use]
-pub fn digest_from_hex(s: &str) -> Option<Digest> {
+pub fn digest_from_hex(s: &str) -> Option<crate::ir::Digest> {
     let v = bytes_from_hex(s)?;
-    <Digest>::try_from(v.as_slice()).ok()
+    <crate::ir::Digest>::try_from(v.as_slice()).ok()
 }
 
 /// Whether `t` is one or more ASCII decimal digits.
