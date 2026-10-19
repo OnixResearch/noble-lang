@@ -28,30 +28,31 @@ fn abort_scheme() -> noble_kernel::words::Scheme {
 }
 
 fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
-    use noble_kernel::shapes::{EffectSlot, Pattern};
-    use noble_kernel::types::EffId;
-    use noble_kernel::words::{Scheme, Variable, VariableKind};
-    let stack = Pattern::StackVar(Variable(0));
+    let stack = noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0));
     [
-        Scheme {
-            var_kinds: alloc::vec![VariableKind::Stack],
+        noble_kernel::words::Scheme {
+            var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
             stack_in: alloc::vec![
                 stack.clone(),
-                Pattern::I64,
-                Pattern::program(
-                    alloc::vec![Pattern::I64],
-                    alloc::vec![Pattern::I64],
+                noble_kernel::shapes::Pattern::I64,
+                noble_kernel::shapes::Pattern::program(
+                    alloc::vec![noble_kernel::shapes::Pattern::I64],
+                    alloc::vec![noble_kernel::shapes::Pattern::I64],
                     alloc::vec::Vec::new()
                 )
             ],
-            stack_out: alloc::vec![stack.clone(), Pattern::Unit],
-            effects: alloc::vec![EffectSlot::Effect(EffId(3))],
+            stack_out: alloc::vec![stack.clone(), noble_kernel::shapes::Pattern::Unit],
+            effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
+                noble_kernel::types::EffId(3)
+            )],
         },
-        Scheme {
-            var_kinds: alloc::vec![VariableKind::Stack],
+        noble_kernel::words::Scheme {
+            var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
             stack_in: alloc::vec![stack.clone()],
-            stack_out: alloc::vec![stack, Pattern::I64],
-            effects: alloc::vec![EffectSlot::Effect(EffId(4))],
+            stack_out: alloc::vec![stack, noble_kernel::shapes::Pattern::I64],
+            effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
+                noble_kernel::types::EffId(4)
+            )],
         },
     ]
 }
@@ -176,7 +177,6 @@ pub(super) fn check(
 }
 
 fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: bool) -> bool {
-    use noble_kernel::contracts::{LIVE_DISPATCH, TEST_CLOCK, TEST_EMIT};
     let has_clock = env
         .kinds
         .iter()
@@ -186,19 +186,36 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
         // Both orderings are produced by the checked Env APIs, but no other
         // identity, duplication, or slot effect is ambiently available.
         return if has_clock {
-            env.effects == [TEST_EMIT, LIVE_DISPATCH, TEST_CLOCK]
-                || env.effects == [TEST_EMIT, TEST_CLOCK, LIVE_DISPATCH]
+            env.effects
+                == [
+                    noble_kernel::contracts::TEST_EMIT,
+                    noble_kernel::contracts::LIVE_DISPATCH,
+                    noble_kernel::contracts::TEST_CLOCK,
+                ]
+                || env.effects
+                    == [
+                        noble_kernel::contracts::TEST_EMIT,
+                        noble_kernel::contracts::TEST_CLOCK,
+                        noble_kernel::contracts::LIVE_DISPATCH,
+                    ]
         } else {
-            env.effects == [TEST_EMIT, LIVE_DISPATCH]
+            env.effects
+                == [
+                    noble_kernel::contracts::TEST_EMIT,
+                    noble_kernel::contracts::LIVE_DISPATCH,
+                ]
         };
     }
     let mut effects = if count == 23 || count == 27 || count == 32 {
-        alloc::vec![TEST_EMIT]
+        alloc::vec![noble_kernel::contracts::TEST_EMIT]
     } else {
-        alloc::vec![TEST_EMIT, noble_kernel::types::EffId(1)]
+        alloc::vec![
+            noble_kernel::contracts::TEST_EMIT,
+            noble_kernel::types::EffId(1)
+        ]
     };
     if has_clock {
-        effects.push(TEST_CLOCK);
+        effects.push(noble_kernel::contracts::TEST_CLOCK);
     }
     if count == 26 {
         effects.push(noble_kernel::types::EffId(3));
