@@ -94,12 +94,12 @@ pub(super) fn check(
     if env.definition_owners.len() != env.defs.len() {
         return Err(crate::Diagnostic::Invalid);
     }
-    if env.nominals.len() > definition_cap
+    let has_excess_definitions = env.nominals.len() > definition_cap
         || env.generic_variants.len() > definition_cap
         || env.bound_adapters.len() > definition_cap
         || env.live_resource_nominals.len() > super::super::DEFINITION_LIMIT
-        || env.resource_kinds.len() > super::super::DEFINITION_LIMIT.saturating_add(1)
-    {
+        || env.resource_kinds.len() > super::super::DEFINITION_LIMIT.saturating_add(1);
+    if has_excess_definitions {
         return Err(crate::Diagnostic::Invalid);
     }
     if env.live_slots != live_slots
