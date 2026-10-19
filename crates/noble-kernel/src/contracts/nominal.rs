@@ -74,6 +74,10 @@ pub(super) fn generic_descriptor_matches(
         && same_generic_arg(second, &args[usize::from(right)])
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Ty has no const PartialEq, measured as E0277 on both pinned compilers"
+)]
 fn same_generic_arg(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
     match (left, right) {
         (crate::types::Ty::Unit, crate::types::Ty::Unit)

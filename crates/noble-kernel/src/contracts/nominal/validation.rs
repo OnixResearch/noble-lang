@@ -300,6 +300,10 @@ const fn generic_operation_id(kind: super::super::Behavior) -> Option<crate::typ
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "reads env.defs and the calendar tables, which are not const"
+)]
 fn generic_definition_matches(
     env: &super::super::Env,
     index: usize,
@@ -340,6 +344,10 @@ fn declared_definition_matches(
     super::schemes::same_scheme(&env.defs[index], &scheme)
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "reads env.defs and the scheme helpers, which are not const"
+)]
 fn bound_definition_matches(env: &super::super::Env, index: usize, slot: u32, clock: bool) -> bool {
     if !(if clock {
         super::schemes::valid_clock_scheme(&env.defs[index])

@@ -19,6 +19,10 @@ pub(super) fn check(
 }
 
 /// An unrecognized behavior is private until its visibility rule is defined.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "reads runtime visibility tables through the nominal and generic helpers, which are not const"
+)]
 fn visible_behavior(
     env: &crate::contracts::Env,
     def: crate::contracts::Definition,
@@ -105,6 +109,10 @@ const fn generic_access(
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "reads the runtime generic-variant table, which is not const"
+)]
 fn generic_visible(
     env: &crate::contracts::Env,
     id: crate::types::NominalTypeId,
