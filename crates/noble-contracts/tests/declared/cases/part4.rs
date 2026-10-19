@@ -66,12 +66,7 @@ fn imported_proof_dependency_budget_counts_each_obligation() -> Result<(), Strin
     let refused = imported
         .prepare(dependent, &[], short)
         .expect_err("one byte below the replicated dependency must fail");
-    assert_eq!(refused.stage(), noble_contracts::source::Stage::Check);
-    assert_eq!(
-        refused.diagnostic().message,
-        "proof dependency snapshot byte budget exhausted"
-    );
-    Ok(())
+    asserts_dependency_budget_refusal(&refused)
 }
 
 #[test]
@@ -142,5 +137,17 @@ fn asserts_rejected_budget_left_no_generation(
     assert!(session
         .prepare(b"arithmetic@1.increment", &[], super::super::LIMITS)
         .is_err());
+    Ok(())
+}
+
+/// One byte below the replicated dependency budget must fail with the exact reason.
+fn asserts_dependency_budget_refusal(
+    refused: &noble_contracts::source::Error,
+) -> Result<(), String> {
+    assert_eq!(refused.stage(), noble_contracts::source::Stage::Check);
+    assert_eq!(
+        refused.diagnostic().message,
+        "proof dependency snapshot byte budget exhausted"
+    );
     Ok(())
 }
