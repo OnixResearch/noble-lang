@@ -1,5 +1,17 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
+#![expect(
+    tigerstyle::excessive_file_length,
+    reason = "one integration test crate per exercised kernel scenario"
+)]
+#![expect(
+    tigerstyle::assertion_density,
+    reason = "test crate: scenario assertions are added where the scenario is checked"
+)]
+#![expect(
+    tigerstyle::function_length,
+    reason = "test crate: one linear scenario, kept in reading order"
+)]
 //! B-CHECK-02/05 rejection controls: recursive definition dependencies,
 //! user-declared recursive schemas, and cyclic substitution witnesses
 //! (fragment v1).

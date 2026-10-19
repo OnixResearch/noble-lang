@@ -1,5 +1,9 @@
 #![feature(register_tool)]
 #![register_tool(octet, tigerstyle)]
+#![expect(
+    tigerstyle::no_panic,
+    reason = "property test crate: a failing generated property panics by design"
+)]
 //! Bounded property harness for the M2 fragment checker (DX-PROPERTY-01/02).
 //!
 //! Lane one generates seeded candidates and requires the kernel checker and

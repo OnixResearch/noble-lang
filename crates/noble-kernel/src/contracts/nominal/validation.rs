@@ -302,10 +302,6 @@ const fn generic_operation_id(kind: super::super::Behavior) -> Option<crate::typ
     }
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "dispatches to env-reading helpers, which are not const"
-)]
 fn kind_matches_definition(
     env: &super::super::Env,
     index: usize,

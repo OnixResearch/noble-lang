@@ -1,5 +1,39 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
+// This test crate asserts behaviour directly; panics and unwraps are the
+// assertion mechanism, and its file name mirrors the module it exercises.
+#![expect(
+    tigerstyle::no_panic,
+    reason = "test crate: assertion panics are the expected failure signal"
+)]
+#![expect(
+    tigerstyle::no_unwrap,
+    reason = "test crate: unwrap on the fixture environment is the assertion form"
+)]
+#![expect(
+    tigerstyle::underscore_in_module_filename,
+    reason = "the test target name mirrors the kernel module it exercises"
+)]
+#![expect(
+    tigerstyle::excessive_file_length,
+    reason = "one integration test crate per exercised kernel module"
+)]
+#![expect(
+    tigerstyle::non_trait_imports,
+    reason = "test crate: imports read as the exercised kernel API surface"
+)]
+#![expect(
+    tigerstyle::function_length,
+    reason = "test crate: one linear scenario per property, kept in reading order"
+)]
+#![expect(
+    tigerstyle::assertion_density,
+    reason = "test crate: scenario assertions are added where the property is checked"
+)]
+#![expect(
+    tigerstyle::ambiguous_params,
+    reason = "test crate: positional fixture parameters are named at each call site"
+)]
 
 use noble_kernel::acceptance::check;
 use noble_kernel::contracts::{environment, Env, NominalDecl, LIVE_DISPATCH, TEST_EMIT};
