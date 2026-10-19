@@ -61,7 +61,7 @@ impl Encoding {
             None => return self.out.append(b"]"),
             Some(node) => node,
         };
-        match attempt!(super::node(&body.candidate, node)) {
+        match attempt!(super::nodes::node(&body.candidate, node)) {
             noble_kernel::untrusted::Node::Literal { lit, .. } => {
                 literal(&mut self.out, lit, body, node)
             }
@@ -231,7 +231,7 @@ fn literal(
         noble_kernel::untrusted::Lit::Bool(value) => out.append(if *value { b"t" } else { b"f" }),
         noble_kernel::untrusted::Lit::Unit => out.append(b"u"),
         noble_kernel::untrusted::Lit::Text => {
-            let bytes = attempt!(super::text(body, node));
+            let bytes = attempt!(super::nodes::text(body, node));
             attempt!(out.append(b"s"));
             attempt!(out.index(bytes.len()));
             attempt!(out.append(b":"));

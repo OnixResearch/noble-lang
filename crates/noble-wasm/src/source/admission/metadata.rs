@@ -149,7 +149,7 @@ fn check_text(
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let text = &body.texts[at];
-    match attempt!(super::node(&body.candidate, text.node)) {
+    match attempt!(super::nodes::node(&body.candidate, text.node)) {
         noble_kernel::untrusted::Node::Literal {
             lit: noble_kernel::untrusted::Lit::Text,
             ..

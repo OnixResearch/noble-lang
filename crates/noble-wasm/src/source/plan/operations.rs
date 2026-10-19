@@ -101,7 +101,10 @@ fn lower_node(
     work: &mut super::super::Work,
 ) -> Result<super::Operation, crate::Diagnostic> {
     let interface = attempt!(derivation(input.checked, id));
-    let node = attempt!(super::super::admission::node(&input.body.candidate, id));
+    let node = attempt!(super::super::admission::nodes::node(
+        &input.body.candidate,
+        id
+    ));
     let action = match node {
         noble_kernel::untrusted::Node::Literal {
             lit: noble_kernel::untrusted::Lit::I64(value),
@@ -119,7 +122,7 @@ fn lower_node(
             lit: noble_kernel::untrusted::Lit::Text,
             ..
         } => {
-            let text = attempt!(super::super::admission::text(input.body, id));
+            let text = attempt!(super::super::admission::nodes::text(input.body, id));
             let (address, length) = if compiler.calculator {
                 attempt!(super::allocation::literal(
                     compiler,
