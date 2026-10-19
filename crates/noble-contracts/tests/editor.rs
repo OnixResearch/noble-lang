@@ -1,13 +1,15 @@
-use noble_contracts::source::editor::{Candidate, Node, FORMAT};
-
 fn limits() -> noble_contracts::Limits {
     noble_contracts::Limits::default()
 }
 
-fn hole() -> Candidate {
-    Candidate {
-        format: FORMAT,
-        nodes: vec![Node::Integer(1), Node::Hole, Node::Word(String::from("+"))],
+fn hole() -> noble_contracts::source::editor::Candidate {
+    noble_contracts::source::editor::Candidate {
+        format: noble_contracts::source::editor::FORMAT,
+        nodes: vec![
+            noble_contracts::source::editor::Node::Integer(1),
+            noble_contracts::source::editor::Node::Hole,
+            noble_contracts::source::editor::Node::Word(String::from("+")),
+        ],
     }
 }
 
@@ -26,12 +28,12 @@ fn editor_analysis_retains_real_word_constraints_without_admission() {
     assert!(constraint.known_effects.is_empty());
     assert!(result.unresolved_effect);
     assert!(result.known_effects.is_empty());
-    let effectful = Candidate {
-        format: FORMAT,
+    let effectful = noble_contracts::source::editor::Candidate {
+        format: noble_contracts::source::editor::FORMAT,
         nodes: vec![
-            Node::Integer(1),
-            Node::Hole,
-            Node::Word(String::from("test.emit")),
+            noble_contracts::source::editor::Node::Integer(1),
+            noble_contracts::source::editor::Node::Hole,
+            noble_contracts::source::editor::Node::Word(String::from("test.emit")),
         ],
     };
     let effectful = session
@@ -62,9 +64,11 @@ fn typed_direct_admission_refuses_hole_before_prepared() {
 
 #[test]
 fn typed_nested_quotation_admission_refuses_hole_before_prepared() {
-    let nested = Candidate {
-        format: FORMAT,
-        nodes: vec![Node::Quotation(vec![Node::Hole])],
+    let nested = noble_contracts::source::editor::Candidate {
+        format: noble_contracts::source::editor::FORMAT,
+        nodes: vec![noble_contracts::source::editor::Node::Quotation(vec![
+            noble_contracts::source::editor::Node::Hole,
+        ])],
     };
     let session = noble_contracts::source::Session::new();
     assert_eq!(
@@ -89,12 +93,12 @@ fn typed_nested_quotation_admission_refuses_hole_before_prepared() {
 #[test]
 fn editor_hole_free_source_uses_ordinary_kernel_preparation() {
     let session = noble_contracts::source::Session::new();
-    let valid = Candidate {
-        format: FORMAT,
+    let valid = noble_contracts::source::editor::Candidate {
+        format: noble_contracts::source::editor::FORMAT,
         nodes: vec![
-            Node::Integer(1),
-            Node::Integer(2),
-            Node::Word(String::from("+")),
+            noble_contracts::source::editor::Node::Integer(1),
+            noble_contracts::source::editor::Node::Integer(2),
+            noble_contracts::source::editor::Node::Word(String::from("+")),
         ],
     };
     let source = valid.admitted_source(limits()).expect("source encoding");
@@ -105,9 +109,11 @@ fn editor_hole_free_source_uses_ordinary_kernel_preparation() {
     assert!(prepared.submission().is_some());
 
     for word in ["[", "]", "true", "1", "1 +", "test.emit\""] {
-        let forged = Candidate {
-            format: FORMAT,
-            nodes: vec![Node::Word(String::from(word))],
+        let forged = noble_contracts::source::editor::Candidate {
+            format: noble_contracts::source::editor::FORMAT,
+            nodes: vec![noble_contracts::source::editor::Node::Word(String::from(
+                word,
+            ))],
         };
         assert!(
             forged.admitted_source(limits()).is_err(),
@@ -122,9 +128,11 @@ fn editor_hole_free_source_uses_ordinary_kernel_preparation() {
     assert!(valid.admitted_source(tiny).is_err());
     tiny = limits();
     tiny.depth = 0;
-    let nested = Candidate {
-        format: FORMAT,
-        nodes: vec![Node::Quotation(vec![Node::Integer(1)])],
+    let nested = noble_contracts::source::editor::Candidate {
+        format: noble_contracts::source::editor::FORMAT,
+        nodes: vec![noble_contracts::source::editor::Node::Quotation(vec![
+            noble_contracts::source::editor::Node::Integer(1),
+        ])],
     };
     assert!(nested.admitted_source(tiny).is_err());
 }
