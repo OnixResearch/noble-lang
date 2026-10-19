@@ -125,10 +125,7 @@ fn async_imports_preserve_direct_style_types_effects_and_owned_results() -> Resu
         vec![noble_kernel::types::Ty::I64]
     );
 
-    let session = world.session().map_err(|error| format!("{error:?}"))?;
-    rejects_source(&session, "service.number service.finish-outcome")?;
-    rejects_source(&session, "service.open service.finish-number")?;
-    Ok(())
+    rejects_async_finish_mismatches(&world)
 }
 
 #[test]
@@ -367,4 +364,13 @@ fn checked_unsigned_selector_requires_import_free_exact_scalar_export() -> Resul
     assert_eq!(world.imports().len(), 1);
     assert_eq!(world.exports().len(), 1);
     Ok(())
+}
+
+/// Async finish-outcome and finish-number mixes must be rejected before publication.
+fn rejects_async_finish_mismatches(
+    world: &noble_contracts::component::World,
+) -> Result<(), String> {
+    let session = world.session().map_err(|error| format!("{error:?}"))?;
+    rejects_source(&session, "service.number service.finish-outcome")?;
+    rejects_source(&session, "service.open service.finish-number")
 }
