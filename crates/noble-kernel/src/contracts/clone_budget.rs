@@ -3,12 +3,6 @@
 //! Each node is counted at every occurrence: boxed nominal payloads and
 //! program stacks cannot hide behind a small top-level scheme count.
 
-use crate::{
-    shapes::Pattern,
-    types::{NominalShape, Ty},
-    words::Scheme,
-};
-
 /// Calculator source and compiler environments retain at most 896 definition
 /// rows. This is independent of the reachable named-body bound.
 pub const CALCULATOR_ENVIRONMENT_ROW_LIMIT: usize = 896;
@@ -16,16 +10,20 @@ pub const CALCULATOR_ENVIRONMENT_ROW_LIMIT: usize = 896;
 /// payload rounding and per-allocation overhead. The observed live ASCII
 /// clone reserves under 9 MiB; this leaves room for the remaining closure
 /// without admitting unbounded nested nominal and program payloads.
-pub const CALCULATOR_ENV_CLONE_BYTES_LIMIT: u64 = 16 * 1024 * 1024;
+pub const CALCULATOR_ENV_CLONE_BYTES_LIMIT: u64 = 1u64 << 24;
 /// Aggregate selected copies reserve at most one GiB, leaving the other half
 /// of the compiler's two-billion-Work ceiling for actual checking and
 /// lowering. The real 59-definition ASCII root reserves ~501 MiB.
-pub const CALCULATOR_ENV_CLONE_FANOUT_LIMIT: u64 = 1024 * 1024 * 1024;
+pub const CALCULATOR_ENV_CLONE_FANOUT_LIMIT: u64 = 1u64 << 30;
 const DEPTH_LIMIT: usize = 64;
 const NODE_LIMIT: usize = 512;
 
 /// Payload bytes and allocator-rounded reservation for one complete clone.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "public kernel budget type; renaming it would change the extracted subject for a path-discipline lint"
+)]
 pub struct CloneBudget {
     pub bytes: u64,
     pub allocations: u64,
@@ -37,6 +35,10 @@ struct Counter {
     allocations: u64,
 }
 
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "the bounded accounting walker mutates only its private counter and per-subtree node budget"
+)]
 impl Counter {
     fn bytes(&mut self, bytes: u64) -> Option<()> {
         self.bytes = self.bytes.checked_add(bytes)?;
@@ -64,29 +66,46 @@ impl Counter {
         self.bytes(u64::try_from(core::mem::size_of::<T>()).ok()?)
     }
 
-    fn boxed_pattern(&mut self, value: &Pattern, depth: usize, nodes: &mut usize) -> Option<()> {
+    fn boxed_pattern(
+        &mut self,
+        value: &crate::shapes::Pattern,
+        depth: usize,
+        nodes: &mut usize,
+    ) -> Option<()> {
         self.allocation()?;
         self.pattern(value, depth, nodes)
     }
 
-    fn pattern(&mut self, value: &Pattern, depth: usize, nodes: &mut usize) -> Option<()> {
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "depth and node budgets are per subtree, so the walk is deliberately recursive; a worklist rewrite would change the accounting subject"
+    )]
+    fn pattern(
+        &mut self,
+        value: &crate::shapes::Pattern,
+        depth: usize,
+        nodes: &mut usize,
+    ) -> Option<()> {
         if depth >= DEPTH_LIMIT || *nodes >= NODE_LIMIT {
             return None;
         }
-        *nodes += 1;
-        self.node::<Pattern>()?;
+        *nodes = nodes.saturating_add(1);
+        self.node::<crate::shapes::Pattern>()?;
         match value {
-            Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
-                self.boxed_pattern(left, depth + 1, nodes)?;
-                self.boxed_pattern(right, depth + 1, nodes)?;
+            crate::shapes::Pattern::Pair(left, right)
+            | crate::shapes::Pattern::Sum(left, right) => {
+                self.boxed_pattern(left, depth.saturating_add(1), nodes)?;
+                self.boxed_pattern(right, depth.saturating_add(1), nodes)?;
             }
-            Pattern::List(item) => self.boxed_pattern(item, depth + 1, nodes)?,
-            Pattern::Program(input, output, effects) => {
+            crate::shapes::Pattern::List(item) => {
+                self.boxed_pattern(item, depth.saturating_add(1), nodes)?
+            }
+            crate::shapes::Pattern::Program(input, output, effects) => {
                 if input.len() > 128 || output.len() > 128 || effects.len() > 8 {
                     return None;
                 }
-                self.node::<alloc::vec::Vec<Pattern>>()?;
-                self.node::<alloc::vec::Vec<Pattern>>()?;
+                self.node::<alloc::vec::Vec<crate::shapes::Pattern>>()?;
+                self.node::<alloc::vec::Vec<crate::shapes::Pattern>>()?;
                 self.node::<alloc::vec::Vec<crate::shapes::EffectSlot>>()?;
                 self.allocations = self.allocations.checked_add(3)?;
                 if !input.is_empty() {
@@ -97,45 +116,55 @@ impl Counter {
                 }
                 self.vector::<crate::shapes::EffectSlot>(effects.len())?;
                 for item in input.iter().chain(output.iter()) {
-                    self.pattern(item, depth + 1, nodes)?;
+                    self.pattern(item, depth.saturating_add(1), nodes)?;
                 }
             }
-            Pattern::Nominal(_, shape) => {
+            crate::shapes::Pattern::Nominal(_, shape) => {
                 self.allocation()?;
-                self.node::<NominalShape>()?;
+                self.node::<crate::types::NominalShape>()?;
                 self.nominal(shape, 0, &mut 0)?;
             }
-            Pattern::GenericNominal(_, arguments, _) => {
+            crate::shapes::Pattern::GenericNominal(_, arguments, _) => {
                 self.allocation()?;
-                self.pattern(&arguments[0], depth + 1, nodes)?;
-                self.pattern(&arguments[1], depth + 1, nodes)?;
+                self.pattern(&arguments[0], depth.saturating_add(1), nodes)?;
+                self.pattern(&arguments[1], depth.saturating_add(1), nodes)?;
             }
             // Calculator environments never admit borrowed live references.
-            Pattern::LiveRef(..) => return None,
-            Pattern::Unit
-            | Pattern::Bool
-            | Pattern::I64
-            | Pattern::Text
-            | Pattern::Syntax
-            | Pattern::Contract
-            | Pattern::Evidence
-            | Pattern::Certified
-            | Pattern::Resource(_)
-            | Pattern::Var(_)
-            | Pattern::StackVar(_) => {}
+            crate::shapes::Pattern::LiveRef(..) => return None,
+            crate::shapes::Pattern::Unit
+            | crate::shapes::Pattern::Bool
+            | crate::shapes::Pattern::I64
+            | crate::shapes::Pattern::Text
+            | crate::shapes::Pattern::Syntax
+            | crate::shapes::Pattern::Contract
+            | crate::shapes::Pattern::Evidence
+            | crate::shapes::Pattern::Certified
+            | crate::shapes::Pattern::Resource(_)
+            | crate::shapes::Pattern::Var(_)
+            | crate::shapes::Pattern::StackVar(_) => {}
         }
         Some(())
     }
 
-    fn boxed_type(&mut self, value: &Ty, depth: usize, nodes: &mut usize) -> Option<()> {
+    fn boxed_type(
+        &mut self,
+        value: &crate::types::Ty,
+        depth: usize,
+        nodes: &mut usize,
+    ) -> Option<()> {
         self.allocation()?;
         self.ty(value, depth, nodes)
     }
 
-    fn nominal(&mut self, shape: &NominalShape, depth: usize, nodes: &mut usize) -> Option<()> {
+    fn nominal(
+        &mut self,
+        shape: &crate::types::NominalShape,
+        depth: usize,
+        nodes: &mut usize,
+    ) -> Option<()> {
         match shape {
-            NominalShape::Opaque(value) => self.boxed_type(value, depth, nodes)?,
-            NominalShape::Variant(left, right) => {
+            crate::types::NominalShape::Opaque(value) => self.boxed_type(value, depth, nodes)?,
+            crate::types::NominalShape::Variant(left, right) => {
                 self.boxed_type(left, depth, nodes)?;
                 self.boxed_type(right, depth, nodes)?;
             }
@@ -143,40 +172,46 @@ impl Counter {
         Some(())
     }
 
-    fn ty(&mut self, value: &Ty, depth: usize, nodes: &mut usize) -> Option<()> {
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "depth and node budgets are per subtree, so the walk is deliberately recursive; a worklist rewrite would change the accounting subject"
+    )]
+    fn ty(&mut self, value: &crate::types::Ty, depth: usize, nodes: &mut usize) -> Option<()> {
         if depth >= DEPTH_LIMIT || *nodes >= NODE_LIMIT {
             return None;
         }
-        *nodes += 1;
-        self.node::<Ty>()?;
+        *nodes = nodes.saturating_add(1);
+        self.node::<crate::types::Ty>()?;
         match value {
-            Ty::Pair(left, right) | Ty::Sum(left, right) => {
-                self.boxed_type(left, depth + 1, nodes)?;
-                self.boxed_type(right, depth + 1, nodes)?;
+            crate::types::Ty::Pair(left, right) | crate::types::Ty::Sum(left, right) => {
+                self.boxed_type(left, depth.saturating_add(1), nodes)?;
+                self.boxed_type(right, depth.saturating_add(1), nodes)?;
             }
-            Ty::List(item) => self.boxed_type(item, depth + 1, nodes)?,
-            Ty::Nominal(_, shape) => {
+            crate::types::Ty::List(item) => {
+                self.boxed_type(item, depth.saturating_add(1), nodes)?
+            }
+            crate::types::Ty::Nominal(_, shape) => {
                 self.allocation()?;
-                self.node::<NominalShape>()?;
-                self.nominal(shape, depth + 1, nodes)?;
+                self.node::<crate::types::NominalShape>()?;
+                self.nominal(shape, depth.saturating_add(1), nodes)?;
             }
-            Ty::GenericNominal(_, arguments, shape) => {
-                if matches!(shape.as_ref(), NominalShape::Opaque(_)) {
+            crate::types::Ty::GenericNominal(_, arguments, shape) => {
+                if matches!(shape.as_ref(), crate::types::NominalShape::Opaque(_)) {
                     return None;
                 }
                 self.allocation()?;
-                self.ty(&arguments[0], depth + 1, nodes)?;
-                self.ty(&arguments[1], depth + 1, nodes)?;
+                self.ty(&arguments[0], depth.saturating_add(1), nodes)?;
+                self.ty(&arguments[1], depth.saturating_add(1), nodes)?;
                 self.allocation()?;
-                self.node::<NominalShape>()?;
-                self.nominal(shape, depth + 1, nodes)?;
+                self.node::<crate::types::NominalShape>()?;
+                self.nominal(shape, depth.saturating_add(1), nodes)?;
             }
-            Ty::Program(input, output, effects) => {
+            crate::types::Ty::Program(input, output, effects) => {
                 if input.len() > 128 || output.len() > 128 || effects.as_slice().len() > 2 {
                     return None;
                 }
-                self.node::<alloc::vec::Vec<Ty>>()?;
-                self.node::<alloc::vec::Vec<Ty>>()?;
+                self.node::<alloc::vec::Vec<crate::types::Ty>>()?;
+                self.node::<alloc::vec::Vec<crate::types::Ty>>()?;
                 self.allocations = self.allocations.checked_add(2)?;
                 if !input.is_empty() {
                     self.allocation()?;
@@ -186,29 +221,28 @@ impl Counter {
                 }
                 self.vector::<crate::types::EffId>(effects.as_slice().len())?;
                 for item in input.iter().chain(output.iter()) {
-                    self.ty(item, depth + 1, nodes)?;
+                    self.ty(item, depth.saturating_add(1), nodes)?;
                 }
             }
-            Ty::LiveRef(..) => return None,
-            Ty::Unit
-            | Ty::Bool
-            | Ty::I64
-            | Ty::Text
-            | Ty::Syntax
-            | Ty::Contract
-            | Ty::Evidence
-            | Ty::Certified
-            | Ty::Resource(_) => {}
+            crate::types::Ty::LiveRef(..) => return None,
+            crate::types::Ty::Unit
+            | crate::types::Ty::Bool
+            | crate::types::Ty::I64
+            | crate::types::Ty::Text
+            | crate::types::Ty::Syntax
+            | crate::types::Ty::Contract
+            | crate::types::Ty::Evidence
+            | crate::types::Ty::Certified
+            | crate::types::Ty::Resource(_) => {}
         }
         Some(())
     }
 
-    fn scheme(&mut self, scheme: &Scheme) -> Option<()> {
-        if scheme.var_kinds.len() > 8
-            || scheme.effects.len() > 8
-            || scheme.stack_in.len() > 128
-            || scheme.stack_out.len() > 128
-        {
+    fn scheme(&mut self, scheme: &crate::words::Scheme) -> Option<()> {
+        let has_too_many_kinds = scheme.var_kinds.len() > 8;
+        let has_too_many_effects = scheme.effects.len() > 8;
+        let has_too_many_stacks = scheme.stack_in.len() > 128 || scheme.stack_out.len() > 128;
+        if has_too_many_kinds || has_too_many_effects || has_too_many_stacks {
             return None;
         }
         self.vector::<crate::words::VariableKind>(scheme.var_kinds.len())?;
@@ -241,7 +275,7 @@ impl super::Env {
             allocations: 0,
         };
         cost.node::<super::Env>()?;
-        cost.vector::<Scheme>(self.defs.len())?;
+        cost.vector::<crate::words::Scheme>(self.defs.len())?;
         cost.vector::<super::Behavior>(self.kinds.len())?;
         cost.vector::<alloc::vec::Vec<super::Definition>>(self.deps.len())?;
         cost.vector::<super::NominalDecl>(self.nominals.len())?;
