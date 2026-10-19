@@ -292,12 +292,12 @@ fn admit(
             return Err(crate::Diagnostic::Invalid);
         }
     } else {
-        let limit = if calculator {
+        let cap = if calculator {
             super::super::CALCULATOR_DEFINITION_LIMIT
         } else {
             super::super::DEFINITION_LIMIT
         };
-        if identities.len() >= limit {
+        if identities.len() >= cap {
             return Err(crate::Diagnostic::Exhausted);
         }
         identities.push(super::super::Identity {

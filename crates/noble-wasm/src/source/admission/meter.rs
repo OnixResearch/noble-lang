@@ -111,10 +111,10 @@ pub(in crate::source) fn compilation(
     let mut key_charge = 0u64;
     let mut failure = None;
     while index < pool.len() {
-        let length = pool.key_len(index);
-        match work.entries(length) {
+        let entries = pool.key_len(index);
+        match work.entries(entries) {
             Ok(()) => {
-                key_charge = key_charge.saturating_add(length as u64);
+                key_charge = key_charge.saturating_add(entries as u64);
                 index += 1;
             }
             Err(problem) => {
