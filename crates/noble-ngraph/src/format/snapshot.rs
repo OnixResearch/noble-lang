@@ -29,19 +29,9 @@
 //! `E-SNAPSHOT-INTEGRITY`. A matching identity identifies bytes; it proves
 //! nothing about the parameters, the optimizer or the evaluators.
 
-use alloc::{format, string::String, vec::Vec};
 use core::fmt::Write as _;
 
-use super::value::format_diag;
-use crate::check::CheckedGraph;
-use crate::diag::{BudgetKind, Code, Diagnostic, Site};
-use crate::grad::{BooleanPolicy, DerivOptions, IndexPolicy, DERIV_POLICY};
 use crate::identity::IdentityScheme;
-use crate::ir::{hex, Canon, Digest, NodeId, SubProfile, Subject, SubjectKind, SEMANTIC_REVISION};
-use crate::prng::PRNG;
-use crate::snapshot::{layout_key_of, ParamSnapshot};
-use crate::train::{Adam, Provenance, ADAM};
-
 /// Schema line.
 pub const SCHEMA: &str = "noble-ngraph-snapshot/0";
 
@@ -50,13 +40,17 @@ pub const SCHEMA: &str = "noble-ngraph-snapshot/0";
 #[derive(Clone, Debug, PartialEq)]
 pub struct SnapshotFile {
     /// The parameter snapshot (graph, layout, slots, bytes, identity).
-    pub snapshot: ParamSnapshot,
+    pub snapshot: crate::snapshot::ParamSnapshot,
     /// The training provenance (`provenance.result == snapshot.id()`).
-    pub provenance: Provenance,
+    pub provenance: crate::train::Provenance,
 }
 
-fn integrity(why: impl Into<String>) -> Diagnostic {
-    Diagnostic::new(Code::SnapshotIntegrity, Site::Graph, why)
+fn integrity(why: impl Into<alloc::string::String>) -> crate::diag::Diagnostic {
+    crate::diag::Diagnostic::new(
+        crate::diag::Code::SnapshotIntegrity,
+        crate::diag::Site::Graph,
+        why,
+    )
 }
 
 impl SnapshotFile {
@@ -74,10 +68,10 @@ impl SnapshotFile {
     /// u64le(beta2) ‖ u64le(eps) ‖ u64le(steps) ‖ str(tools))`, where the
     /// width is present only for `clamped-linear`.
     #[must_use]
-    pub fn provenance_digest(&self, ids: &dyn IdentityScheme) -> Digest {
+    pub fn provenance_digest(&self, ids: &dyn IdentityScheme) -> crate::ir::Digest {
         let s = &self.snapshot;
         let p = &self.provenance;
-        let mut c = Canon::new(ids, "noble.ngraph.provenance.v0");
+        let mut c = crate::ir::Canon::new(ids, "noble.ngraph.provenance.v0");
         c.bytes(&s.id());
         c.bytes(&s.graph());
         c.bytes(&s.layout());
@@ -95,11 +89,11 @@ impl SnapshotFile {
             c.u64(*d);
         }
         c.str(p.profile.name());
-        c.str(SEMANTIC_REVISION);
+        c.str(crate::ir::SEMANTIC_REVISION);
         c.bytes(&p.facts);
         c.bytes(&p.loss);
         c.bytes(&p.data);
-        c.str(DERIV_POLICY);
+        c.str(crate::grad::DERIV_POLICY);
         let opts = opt_ins(&p.deriv);
         c.u64(opts.len() as u64);
         for o in &opts {
@@ -111,8 +105,8 @@ impl SnapshotFile {
             }
         }
         c.u64(p.seed);
-        c.str(PRNG);
-        c.str(ADAM);
+        c.str(crate::prng::PRNG);
+        c.str(crate::train::ADAM);
         c.u64(p.optimizer.lr.to_bits());
         c.u64(p.optimizer.beta1.to_bits());
         c.u64(p.optimizer.beta2.to_bits());
@@ -124,25 +118,34 @@ impl SnapshotFile {
 
     /// Prints the file in canonical form.
     #[must_use]
-    pub fn print(&self, ids: &dyn IdentityScheme) -> String {
+    pub fn print(&self, ids: &dyn IdentityScheme) -> alloc::string::String {
         let s = &self.snapshot;
         let p = &self.provenance;
-        let mut out = format!("{SCHEMA}\n");
-        let _ = writeln!(out, "snapshot {}", hex(&s.id()));
-        let _ = writeln!(out, "graph {}", hex(&s.graph()));
-        let _ = writeln!(out, "layout {}", hex(&s.layout()));
+        let mut out = alloc::format!("{SCHEMA}\n");
+        let _ = writeln!(out, "snapshot {}", crate::ir::hex(&s.id()));
+        let _ = writeln!(out, "graph {}", crate::ir::hex(&s.graph()));
+        let _ = writeln!(out, "layout {}", crate::ir::hex(&s.layout()));
         for (pos, k) in s.slots().iter().enumerate() {
             let bits = s.bits_at(pos).unwrap_or(0);
             let _ = writeln!(out, "param {k} 0x{bits:08x}");
         }
-        let _ = writeln!(out, "optimizer-state {}", hex(&p.optimizer_state));
-        let _ = writeln!(out, "parent {}", hex(&p.parent));
+        let _ = writeln!(
+            out,
+            "optimizer-state {}",
+            crate::ir::hex(&p.optimizer_state)
+        );
+        let _ = writeln!(out, "parent {}", crate::ir::hex(&p.parent));
         let _ = writeln!(out, "subject {}", super::graph::subject_text(&p.subject));
-        let _ = writeln!(out, "profile {} {SEMANTIC_REVISION}", p.profile.name());
-        let _ = writeln!(out, "facts {}", hex(&p.facts));
-        let _ = writeln!(out, "loss {}", hex(&p.loss));
-        let _ = writeln!(out, "data {}", hex(&p.data));
-        let _ = writeln!(out, "policy {DERIV_POLICY}");
+        let _ = writeln!(
+            out,
+            "profile {} {}",
+            p.profile.name(),
+            crate::ir::SEMANTIC_REVISION
+        );
+        let _ = writeln!(out, "facts {}", crate::ir::hex(&p.facts));
+        let _ = writeln!(out, "loss {}", crate::ir::hex(&p.loss));
+        let _ = writeln!(out, "data {}", crate::ir::hex(&p.data));
+        let _ = writeln!(out, "policy {}", crate::grad::DERIV_POLICY);
         for o in opt_ins(&p.deriv) {
             let _ = match o.width {
                 Some(w) => writeln!(out, "opt-in %{} {} {} 0x{w:08x}", o.node, o.kind, o.rule),
@@ -150,11 +153,12 @@ impl SnapshotFile {
             };
         }
         let _ = writeln!(out, "seed 0x{:016x}", p.seed);
-        let _ = writeln!(out, "prng {PRNG}");
+        let _ = writeln!(out, "prng {}", crate::prng::PRNG);
         let a = &p.optimizer;
         let _ = writeln!(
             out,
-            "optimizer {ADAM} lr 0x{:016x} beta1 0x{:016x} beta2 0x{:016x} eps 0x{:016x}",
+            "optimizer {} lr 0x{:016x} beta1 0x{:016x} beta2 0x{:016x} eps 0x{:016x}",
+            crate::train::ADAM,
             a.lr.to_bits(),
             a.beta1.to_bits(),
             a.beta2.to_bits(),
@@ -162,7 +166,11 @@ impl SnapshotFile {
         );
         let _ = writeln!(out, "steps {}", p.steps);
         let _ = writeln!(out, "tools {}", p.tools);
-        let _ = writeln!(out, "provenance {}", hex(&self.provenance_digest(ids)));
+        let _ = writeln!(
+            out,
+            "provenance {}",
+            crate::ir::hex(&self.provenance_digest(ids))
+        );
         out
     }
 
@@ -174,22 +182,21 @@ impl SnapshotFile {
     /// the snapshot identity or the provenance digest differs from its
     /// recomputation, a parameter is not finite, or the recorded `adam/0`
     /// hyperparameters are outside the optimizer's domain
-    /// ([`Adam::admit`]) — values `train` can never publish.
+    /// ([`crate::train::Adam::admit`]) — values `train` can never publish.
     pub fn parse(
         ids: &dyn IdentityScheme,
         text: &str,
         snapshot_bytes: u64,
-    ) -> Result<Self, Diagnostic> {
+    ) -> Result<Self, crate::diag::Diagnostic> {
         let mut c = Cursor {
             lines: super::lines(text).peekable(),
             last: 1,
         };
-        let header = c
-            .lines
-            .next()
-            .ok_or_else(|| format_diag(1, "missing noble-ngraph-snapshot/0 schema line"))?;
+        let header = c.lines.next().ok_or_else(|| {
+            super::value::format_diag(1, "missing noble-ngraph-snapshot/0 schema line")
+        })?;
         if header.tokens != [SCHEMA] {
-            return Err(format_diag(
+            return Err(super::value::format_diag(
                 header.number,
                 "missing noble-ngraph-snapshot/0 schema line",
             ));
@@ -198,18 +205,21 @@ impl SnapshotFile {
         let snapshot_id = c.digest("snapshot")?;
         let graph = c.digest("graph")?;
         let layout = c.digest("layout")?;
-        let mut slots = Vec::new();
-        let mut bytes = Vec::new();
+        let mut slots = alloc::vec::Vec::new();
+        let mut bytes = alloc::vec::Vec::new();
         while let Some(l) = c.take_if("param") {
             let (k, b) = match l.tokens.as_slice() {
                 [_, k, b] => (super::decimal_u32(k), bits32(b)),
                 _ => (None, None),
             };
             let (Some(k), Some(b)) = (k, b) else {
-                return Err(format_diag(l.number, "expected `param <slot> 0x<bits>`"));
+                return Err(super::value::format_diag(
+                    l.number,
+                    "expected `param <slot> 0x<bits>`",
+                ));
             };
             if !f32::from_bits(b).is_finite() {
-                return Err(integrity(format!(
+                return Err(integrity(alloc::format!(
                     "non-finite parameter 0x{b:08x} in slot {k}"
                 )));
             }
@@ -218,8 +228,8 @@ impl SnapshotFile {
         }
         let observed = bytes.len() as u64;
         if observed > snapshot_bytes {
-            return Err(Diagnostic::budget(
-                BudgetKind::SnapshotBytes,
+            return Err(crate::diag::Diagnostic::budget(
+                crate::diag::BudgetKind::SnapshotBytes,
                 snapshot_bytes,
                 observed,
             ));
@@ -229,8 +239,11 @@ impl SnapshotFile {
         let (t, n) = c.field("subject")?;
         let subject = subject(&t, n)?;
         let (t, n) = c.field("profile")?;
-        if t != [SubProfile::F32.name(), SEMANTIC_REVISION] {
-            return Err(format_diag(
+        if t != [
+            crate::ir::SubProfile::F32.name(),
+            crate::ir::SEMANTIC_REVISION,
+        ] {
+            return Err(super::value::format_diag(
                 n,
                 "expected `profile ngraph-f32/0 ngraph-sem/0`",
             ));
@@ -239,15 +252,18 @@ impl SnapshotFile {
         let loss = c.digest("loss")?;
         let data = c.digest("data")?;
         let (t, n) = c.field("policy")?;
-        if t != [DERIV_POLICY] {
-            return Err(format_diag(n, "expected `policy ngraph-deriv-real/0`"));
+        if t != [crate::grad::DERIV_POLICY] {
+            return Err(super::value::format_diag(
+                n,
+                "expected `policy ngraph-deriv-real/0`",
+            ));
         }
-        let mut deriv = DerivOptions::default();
+        let mut deriv = crate::grad::DerivOptions::default();
         let mut previous: Option<(u32, u8)> = None;
         while let Some(l) = c.take_if("opt-in") {
             let key = opt_in(&l.tokens[1..], l.number, &mut deriv)?;
             if previous.is_some_and(|p| p >= key) {
-                return Err(format_diag(
+                return Err(super::value::format_diag(
                     l.number,
                     "opt-in lines must be strictly ordered by node and then kind",
                 ));
@@ -259,16 +275,16 @@ impl SnapshotFile {
             [s] => hex_u64(s),
             _ => None,
         }
-        .ok_or_else(|| format_diag(n, "expected `seed 0x<16 hex>`"))?;
+        .ok_or_else(|| super::value::format_diag(n, "expected `seed 0x<16 hex>`"))?;
         let (t, n) = c.field("prng")?;
-        if t != [PRNG] {
-            return Err(format_diag(n, "expected `prng splitmix64/0`"));
+        if t != [crate::prng::PRNG] {
+            return Err(super::value::format_diag(n, "expected `prng splitmix64/0`"));
         }
         let (t, n) = c.field("optimizer")?;
         let optimizer = match t.as_slice() {
-            [o, "lr", lr, "beta1", b1, "beta2", b2, "eps", eps] if *o == ADAM => {
+            [o, "lr", lr, "beta1", b1, "beta2", b2, "eps", eps] if *o == crate::train::ADAM => {
                 match (hex_u64(lr), hex_u64(b1), hex_u64(b2), hex_u64(eps)) {
-                    (Some(lr), Some(b1), Some(b2), Some(eps)) => Some(Adam {
+                    (Some(lr), Some(b1), Some(b2), Some(eps)) => Some(crate::train::Adam {
                         lr: f64::from_bits(lr),
                         beta1: f64::from_bits(b1),
                         beta2: f64::from_bits(b2),
@@ -280,7 +296,7 @@ impl SnapshotFile {
             _ => None,
         }
         .ok_or_else(|| {
-            format_diag(
+            super::value::format_diag(
                 n,
                 "expected `optimizer adam/0 lr 0x… beta1 0x… beta2 0x… eps 0x…`",
             )
@@ -288,29 +304,29 @@ impl SnapshotFile {
         // `train` never publishes hyperparameters outside the adam/0 domain.
         optimizer
             .admit()
-            .map_err(|d| integrity(format!("recorded optimizer: {}", d.detail)))?;
+            .map_err(|d| integrity(alloc::format!("recorded optimizer: {}", d.detail)))?;
         let (t, n) = c.field("steps")?;
         let steps = match t.as_slice() {
             [s] => super::decimal_u64(s),
             _ => None,
         }
-        .ok_or_else(|| format_diag(n, "expected `steps <n>`"))?;
+        .ok_or_else(|| super::value::format_diag(n, "expected `steps <n>`"))?;
         let (t, n) = c.field("tools")?;
         if t.is_empty() {
-            return Err(format_diag(n, "expected `tools <revisions>`"));
+            return Err(super::value::format_diag(n, "expected `tools <revisions>`"));
         }
         let tools = t.join(" ");
         let recorded = c.digest("provenance")?;
         if let Some(l) = c.lines.next() {
-            return Err(format_diag(
+            return Err(super::value::format_diag(
                 l.number,
                 "unexpected line after the provenance digest",
             ));
         }
-        if layout_key_of(ids, &slots) != layout {
+        if crate::snapshot::layout_key_of(ids, &slots) != layout {
             return Err(integrity("the layout key differs from its recomputation"));
         }
-        let snapshot = ParamSnapshot::from_parts(ids, graph, layout, slots, bytes);
+        let snapshot = crate::snapshot::ParamSnapshot::from_parts(ids, graph, layout, slots, bytes);
         if snapshot.id() != snapshot_id {
             return Err(integrity(
                 "the snapshot identity differs from its recomputation",
@@ -318,11 +334,11 @@ impl SnapshotFile {
         }
         let file = Self {
             snapshot,
-            provenance: Provenance {
+            provenance: crate::train::Provenance {
                 parent,
                 subject,
                 graph,
-                profile: SubProfile::F32,
+                profile: crate::ir::SubProfile::F32,
                 facts,
                 loss,
                 data,
@@ -353,29 +369,29 @@ impl SnapshotFile {
     pub fn bind(
         &self,
         ids: &dyn IdentityScheme,
-        checked: &CheckedGraph,
-        pinned: Option<&Digest>,
-    ) -> Result<(), Diagnostic> {
+        checked: &crate::check::CheckedGraph,
+        pinned: Option<&crate::ir::Digest>,
+    ) -> Result<(), crate::diag::Diagnostic> {
         if self.snapshot.graph() != checked.id() {
-            return Err(Diagnostic::new(
-                Code::SnapshotStale,
-                Site::Graph,
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::SnapshotStale,
+                crate::diag::Site::Graph,
                 "snapshot belongs to another GraphLogicalId",
             ));
         }
         if self.provenance.facts != checked.fact_bindings(ids) {
-            return Err(Diagnostic::new(
-                Code::SnapshotStale,
-                Site::Graph,
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::SnapshotStale,
+                crate::diag::Site::Graph,
                 "snapshot was trained under other fact bindings",
             ));
         }
         self.snapshot.check_use(checked)?;
         if let Some(p) = pinned {
             if *p != self.snapshot.id() {
-                return Err(Diagnostic::new(
-                    Code::SnapshotId,
-                    Site::Graph,
+                return Err(crate::diag::Diagnostic::new(
+                    crate::diag::Code::SnapshotId,
+                    crate::diag::Site::Graph,
                     "snapshot differs from the pinned snapshot identity",
                 ));
             }
@@ -393,15 +409,17 @@ struct Cursor<'a, I: Iterator<Item = super::Line<'a>>> {
 impl<'a, I: Iterator<Item = super::Line<'a>>> Cursor<'a, I> {
     /// The next line, which must start with `key`: its remaining tokens and
     /// its line number.
-    fn field(&mut self, key: &str) -> Result<(Vec<&'a str>, usize), Diagnostic> {
-        let l = self
-            .lines
-            .next()
-            .ok_or_else(|| format_diag(self.last, format!("missing {key} line")))?;
+    fn field(
+        &mut self,
+        key: &str,
+    ) -> Result<(alloc::vec::Vec<&'a str>, usize), crate::diag::Diagnostic> {
+        let l = self.lines.next().ok_or_else(|| {
+            super::value::format_diag(self.last, alloc::format!("missing {key} line"))
+        })?;
         if l.tokens[0] != key {
-            return Err(format_diag(
+            return Err(super::value::format_diag(
                 l.number,
-                format!("expected {key}, got {:?}", l.tokens[0]),
+                alloc::format!("expected {key}, got {:?}", l.tokens[0]),
             ));
         }
         self.last = l.number;
@@ -409,12 +427,16 @@ impl<'a, I: Iterator<Item = super::Line<'a>>> Cursor<'a, I> {
     }
 
     /// `key <64 hex>`.
-    fn digest(&mut self, key: &str) -> Result<Digest, Diagnostic> {
+    fn digest(&mut self, key: &str) -> Result<crate::ir::Digest, crate::diag::Diagnostic> {
         let (t, n) = self.field(key)?;
         match t.as_slice() {
-            [h] => super::digest_from_hex(h)
-                .ok_or_else(|| format_diag(n, format!("{key} must be 64 hex digits"))),
-            _ => Err(format_diag(n, format!("{key} takes one digest"))),
+            [h] => super::digest_from_hex(h).ok_or_else(|| {
+                super::value::format_diag(n, alloc::format!("{key} must be 64 hex digits"))
+            }),
+            _ => Err(super::value::format_diag(
+                n,
+                alloc::format!("{key} takes one digest"),
+            )),
         }
     }
 
@@ -438,15 +460,15 @@ fn hex_u64(s: &str) -> Option<u64> {
     super::hex_bits(s, 16)
 }
 
-fn subject(t: &[&str], n: usize) -> Result<Subject, Diagnostic> {
-    let bad = || format_diag(n, "expected `subject <kind> <64 hex> closure <ids|->`");
+fn subject(t: &[&str], n: usize) -> Result<crate::ir::Subject, crate::diag::Diagnostic> {
+    let bad = || super::value::format_diag(n, "expected `subject <kind> <64 hex> closure <ids|->`");
     let [kind, id, c, ids] = t else {
         return Err(bad());
     };
     let kind = match *kind {
-        "authored" => SubjectKind::Authored,
-        "extracted" => SubjectKind::Extracted,
-        "captured" => SubjectKind::Captured,
+        "authored" => crate::ir::SubjectKind::Authored,
+        "extracted" => crate::ir::SubjectKind::Extracted,
+        "captured" => crate::ir::SubjectKind::Captured,
         _ => return Err(bad()),
     };
     let identity = super::digest_from_hex(id).ok_or_else(bad)?;
@@ -454,13 +476,13 @@ fn subject(t: &[&str], n: usize) -> Result<Subject, Diagnostic> {
         return Err(bad());
     }
     let closure = if *ids == "-" {
-        Vec::new()
+        alloc::vec::Vec::new()
     } else {
         ids.split(',')
             .map(|d| super::decimal_u64(d).ok_or_else(bad))
-            .collect::<Result<Vec<u64>, Diagnostic>>()?
+            .collect::<Result<alloc::vec::Vec<u64>, crate::diag::Diagnostic>>()?
     };
-    Ok(Subject {
+    Ok(crate::ir::Subject {
         kind,
         identity,
         closure,
@@ -468,22 +490,26 @@ fn subject(t: &[&str], n: usize) -> Result<Subject, Diagnostic> {
 }
 
 /// Parses one `opt-in` line into `deriv`; returns its `(node, kind)` key.
-fn opt_in(t: &[&str], n: usize, deriv: &mut DerivOptions) -> Result<(u32, u8), Diagnostic> {
-    let bad = || format_diag(n, "bad opt-in line");
+fn opt_in(
+    t: &[&str],
+    n: usize,
+    deriv: &mut crate::grad::DerivOptions,
+) -> Result<(u32, u8), crate::diag::Diagnostic> {
+    let bad = || super::value::format_diag(n, "bad opt-in line");
     let node = t
         .first()
         .and_then(|s| s.strip_prefix('%'))
         .and_then(super::decimal_u32)
-        .map(NodeId)
+        .map(crate::ir::NodeId)
         .ok_or_else(bad)?;
     match &t[1..] {
         ["boolean", rest @ ..] => {
             let p = match rest {
-                ["refuse"] => BooleanPolicy::Refuse,
-                ["straight-through"] => BooleanPolicy::StraightThrough,
-                ["clamped-linear", w] => {
-                    BooleanPolicy::ClampedLinear(f32::from_bits(bits32(w).ok_or_else(bad)?))
-                }
+                ["refuse"] => crate::grad::BooleanPolicy::Refuse,
+                ["straight-through"] => crate::grad::BooleanPolicy::StraightThrough,
+                ["clamped-linear", w] => crate::grad::BooleanPolicy::ClampedLinear(f32::from_bits(
+                    bits32(w).ok_or_else(bad)?,
+                )),
                 _ => return Err(bad()),
             };
             deriv.boolean.insert(node, p);
@@ -491,9 +517,9 @@ fn opt_in(t: &[&str], n: usize, deriv: &mut DerivOptions) -> Result<(u32, u8), D
         }
         ["index", rest @ ..] => {
             let p = match rest {
-                ["refuse"] => IndexPolicy::Refuse,
-                ["zero"] => IndexPolicy::Zero,
-                ["backward-difference"] => IndexPolicy::BackwardDifference,
+                ["refuse"] => crate::grad::IndexPolicy::Refuse,
+                ["zero"] => crate::grad::IndexPolicy::Zero,
+                ["backward-difference"] => crate::grad::IndexPolicy::BackwardDifference,
                 _ => return Err(bad()),
             };
             deriv.index.insert(node, p);
@@ -513,13 +539,13 @@ struct OptIn {
 
 /// The opt-in records of `deriv`, ordered by node and then kind
 /// (`boolean` before `index`).
-fn opt_ins(deriv: &DerivOptions) -> Vec<OptIn> {
-    let mut out: Vec<(u8, OptIn)> = Vec::new();
+fn opt_ins(deriv: &crate::grad::DerivOptions) -> alloc::vec::Vec<OptIn> {
+    let mut out: alloc::vec::Vec<(u8, OptIn)> = alloc::vec::Vec::new();
     for (n, p) in &deriv.boolean {
         let (rule, width) = match p {
-            BooleanPolicy::Refuse => ("refuse", None),
-            BooleanPolicy::StraightThrough => ("straight-through", None),
-            BooleanPolicy::ClampedLinear(w) => ("clamped-linear", Some(w.to_bits())),
+            crate::grad::BooleanPolicy::Refuse => ("refuse", None),
+            crate::grad::BooleanPolicy::StraightThrough => ("straight-through", None),
+            crate::grad::BooleanPolicy::ClampedLinear(w) => ("clamped-linear", Some(w.to_bits())),
         };
         out.push((
             0,
@@ -533,9 +559,9 @@ fn opt_ins(deriv: &DerivOptions) -> Vec<OptIn> {
     }
     for (n, p) in &deriv.index {
         let rule = match p {
-            IndexPolicy::Refuse => "refuse",
-            IndexPolicy::Zero => "zero",
-            IndexPolicy::BackwardDifference => "backward-difference",
+            crate::grad::IndexPolicy::Refuse => "refuse",
+            crate::grad::IndexPolicy::Zero => "zero",
+            crate::grad::IndexPolicy::BackwardDifference => "backward-difference",
         };
         out.push((
             1,
