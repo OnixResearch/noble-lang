@@ -2,6 +2,16 @@
 //! graph check.
 
 use crate::identity::IdentityScheme;
+
+fn index(value: usize) -> Result<u32, crate::diag::Diagnostic> {
+    u32::try_from(value).map_err(|_| {
+        crate::diag::Diagnostic::new(
+            crate::diag::Code::Format,
+            crate::diag::Site::Graph,
+            "symbolic graph index exceeds u32",
+        )
+    })
+}
 /// A symbolic stack item (D7 `Σ`). Scalars are graph value ids; `dup` and
 /// captures share the same id because values are immutable.
 #[derive(Clone, Debug)]
@@ -191,7 +201,7 @@ impl<'a, 's> Machine<'a, 's> {
                         alloc::format!("input type {other:?}"),
                     ));
                 };
-                let k = u32::try_from(self.input_types.len()).unwrap_or(u32::MAX);
+                let k = index(self.input_types.len())?;
                 self.input_types.push(t);
                 let id = self.node(crate::ir::Op::Input(k), None)?;
                 Ok(Sym::Scalar(id, t))
@@ -224,7 +234,7 @@ impl<'a, 's> Machine<'a, 's> {
                 observed,
             ));
         }
-        let id = u32::try_from(self.nodes.len()).unwrap_or(u32::MAX);
+        let id = index(self.nodes.len())?;
         self.nodes.push(Pending {
             op,
             origin: site.map(|s| (s, self.current)),
@@ -260,7 +270,7 @@ impl<'a, 's> Machine<'a, 's> {
         self.max_depth = self.max_depth.max(depth);
         self.frames.push((self.current, site));
         self.active.push((identity, self.current));
-        self.current = u32::try_from(self.frames.len() - 1).unwrap_or(u32::MAX);
+        self.current = index(self.frames.len() - 1)?;
         self.tasks.push(Task::Leave);
         Ok(())
     }

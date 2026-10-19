@@ -275,8 +275,8 @@ impl AbsI64 {
             i128::from(a.hi) * i128::from(b.lo),
             i128::from(a.hi) * i128::from(b.hi),
         ];
-        let lo = p.iter().copied().min().unwrap_or(i128::MIN);
-        let hi = p.iter().copied().max().unwrap_or(i128::MAX);
+        let lo = p[0].min(p[1]).min(p[2]).min(p[3]);
+        let hi = p[0].max(p[1]).max(p[2]).max(p[3]);
         Self::from_i128(lo, hi)
     }
 

@@ -272,7 +272,7 @@ fn decimal(text: &str) -> Option<Decimal<'_>> {
     };
     let int_digits = int_part.trim_start_matches('0');
     let frac_digits = frac_part.trim_end_matches('0');
-    let length = |s: &str| i64::try_from(s.len()).unwrap_or(i64::MAX);
+    let length = |s: &str| i64::try_from(s.len()).ok();
     Some(if frac_digits.is_empty() {
         // An integer: its trailing zeros move into the exponent.
         let kept = int_digits.trim_end_matches('0');
@@ -280,7 +280,7 @@ fn decimal(text: &str) -> Option<Decimal<'_>> {
             negative,
             int: kept,
             frac: "",
-            exponent: written.saturating_add(length(int_digits) - length(kept)),
+            exponent: written.saturating_add(length(int_digits)? - length(kept)?),
         }
     } else if int_digits.is_empty() {
         // A pure fraction: its leading zeros are positions, not digits.
@@ -288,14 +288,14 @@ fn decimal(text: &str) -> Option<Decimal<'_>> {
             negative,
             int: "",
             frac: frac_digits.trim_start_matches('0'),
-            exponent: written.saturating_sub(length(frac_digits)),
+            exponent: written.saturating_sub(length(frac_digits)?),
         }
     } else {
         Decimal {
             negative,
             int: int_digits,
             frac: frac_digits,
-            exponent: written.saturating_sub(length(frac_digits)),
+            exponent: written.saturating_sub(length(frac_digits)?),
         }
     })
 }
@@ -336,7 +336,7 @@ pub fn exact_f32_decimal(text: &str) -> Option<u32> {
     if count == 0 {
         return Some(if d.negative { NEG_ZERO } else { POS_ZERO });
     }
-    let n = i64::try_from(count).unwrap_or(i64::MAX);
+    let n = i64::try_from(count).ok()?;
     let magnitude = n.saturating_add(d.exponent);
     if n > EXACT_DIGITS
         || !(EXACT_MIN_EXPONENT..=EXACT_MAX_EXPONENT).contains(&d.exponent)

@@ -80,17 +80,17 @@ fn refuse(
 fn at(
     code: crate::diag::Code,
     body: Option<u64>,
-    node: noble_kernel::untrusted::NodeId,
+    node: Option<u32>,
     detail: impl Into<alloc::string::String>,
 ) -> crate::diag::Diagnostic {
-    crate::diag::Diagnostic::new(
-        code,
-        crate::diag::Site::Source(crate::ir::SourceRef {
+    let site = match node {
+        Some(node) => crate::diag::Site::Source(crate::ir::SourceRef {
             definition: body,
-            node: node.0,
+            node,
         }),
-        detail,
-    )
+        None => crate::diag::Site::Graph,
+    };
+    crate::diag::Diagnostic::new(code, site, detail)
 }
 
 /// D7 stage 1 (a)–(d).
@@ -154,7 +154,7 @@ pub fn admit<'s>(
         if has_resource(ty) {
             return Err(crate::diag::Diagnostic::new(
                 crate::diag::Code::Resource,
-                crate::diag::Site::Slot(u32::try_from(k).unwrap_or(u32::MAX)),
+                u32::try_from(k).map_or(crate::diag::Site::Graph, crate::diag::Site::Slot),
                 alloc::format!("Resource or LiveRef in the root interface: {ty:?}"),
             ));
         }
@@ -367,7 +367,7 @@ fn recompute_closure(
                 noble_kernel::untrusted::Node::SlotInvoke { .. } => return Err(at(
                     crate::diag::Code::LiveSlot,
                     body.identity,
-                    noble_kernel::untrusted::NodeId(u32::try_from(n).unwrap_or(u32::MAX)),
+                    u32::try_from(n).ok(),
                     "live-slot dispatch selects its target at run time; no static closure exists",
                 )),
                 noble_kernel::untrusted::Node::Invocation { def, .. } => {
