@@ -617,10 +617,22 @@ fn uses(form: &crate::intrinsic::Form, name: &str) -> bool {
     items.iter().any(|item| uses(item, name))
 }
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 #[cfg(test)]
 mod tests {
     use super::super::ModuleSession;
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use noble_kernel::contracts::Behavior;
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use noble_kernel::{shapes::Pattern, words::Scheme};
 
     #[expect(

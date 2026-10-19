@@ -904,7 +904,15 @@ pub(crate) fn environment() -> Result<noble_kernel::contracts::Env, crate::Diagn
 )]
 fn live_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
     use noble_kernel::shapes::{EffectSlot, Pattern};
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use noble_kernel::types::EffId;
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use noble_kernel::words::{Scheme, Variable, VariableKind};
     let mut env = environment()?;
     let stack = Pattern::StackVar(Variable(0));
@@ -939,6 +947,10 @@ fn live_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic>
     Ok(env)
 }
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 #[cfg(test)]
 mod tests {
     use super::Session;
@@ -1049,6 +1061,10 @@ mod tests {
         assert_eq!(leaf.live_sites().unwrap()[0].forwarded_ref_ordinals, []);
     }
 
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     #[test]
     fn live_slot_rejects_capture_forgery_ambiguity_and_legacy_profiles() {
         use noble_kernel::types::Ty;

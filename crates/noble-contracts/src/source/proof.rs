@@ -345,6 +345,10 @@ impl super::Session {
             contracts::Behavior,
             untrusted::{Node, Outcome, Request},
         };
+        #[expect(
+            tigerstyle::non_trait_imports,
+            reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+        )]
         use SourceProofRefusal as Refusal;
         if self.live_slots.is_none() {
             return Err(Refusal::UnsupportedProfile);

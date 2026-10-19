@@ -355,6 +355,10 @@ fn scan_context(
     after_depth: u32,
 ) -> ScanContext {
     use crate::source::lexer::TokenKind;
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use ScanContext as C;
     match context {
         C::Member if before_depth == 1 && word_is(token, b"export") => C::ExportTarget,

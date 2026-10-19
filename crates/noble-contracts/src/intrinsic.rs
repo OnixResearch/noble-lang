@@ -1,5 +1,13 @@
 //! Bounded, non-executable source proof terms. No Lean source is read from a module.
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use crate::{Diagnostic, DiagnosticKind, Limits, Span};
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use alloc::{
     boxed::Box,
     format,
@@ -2707,6 +2715,10 @@ pub(crate) fn canonical_wrapping_add(env: &noble_kernel::contracts::Env) -> bool
         && scheme.effects.is_empty()
 }
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 pub(crate) fn same_inst(a: &noble_kernel::words::Inst, b: &noble_kernel::words::Inst) -> bool {
     use noble_kernel::words::Binding;
     a.bindings.len() == b.bindings.len()

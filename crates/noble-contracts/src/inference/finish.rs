@@ -383,10 +383,22 @@ fn node_limit(span: crate::Span) -> crate::Diagnostic {
     )
 }
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 #[cfg(test)]
 mod tests {
     use super::super::materialize::Material;
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use super::super::{Arena, Term};
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use noble_kernel::types::{NominalShape, NominalTypeId, Ty};
 
     const SPAN: crate::Span = crate::Span { start: 0, end: 0 };

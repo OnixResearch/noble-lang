@@ -1,15 +1,31 @@
 //! Exact, additive named-call proof profile. These consistency checks do not
 //! turn public binding fields into retained namespace authority.
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use super::{
     atom, operation, reject, CheckedProof, ContractGoal, Form, Meter, NamedUseOrigin, ProofKind,
     ProofObligation, Transition,
 };
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use crate::{Diagnostic, Limits, Span};
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
 };
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use noble_kernel::{
     acceptance,
     contracts::{Behavior, Definition},

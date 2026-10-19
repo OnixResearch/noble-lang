@@ -91,6 +91,10 @@ pub(super) fn parse(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
     use crate::source::lexer::{LogicalKind, LogicalToken};
 
     #[test]
