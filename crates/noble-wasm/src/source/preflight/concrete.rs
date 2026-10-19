@@ -184,10 +184,6 @@ fn type_step(
     }
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the path-only worklist checks both node and depth limits and charges every root-to-child walk before traversal; exhaustion is an input diagnostic and no recursive clone or assertion is needed."
-)]
 pub(super) fn ty(
     root: &noble_kernel::types::Ty,
     max_node_count: u32,
@@ -205,7 +201,11 @@ pub(super) fn sized(
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let (nodes, _, _) = attempt!(count(root, type_nodes, work));
-    work.observe_type_size(u32::try_from(nodes).unwrap_or(u32::MAX));
+    let admitted = match u32::try_from(nodes) {
+        Ok(value) => value,
+        Err(_) => return Err(crate::Diagnostic::Exhausted),
+    };
+    work.observe_type_size(admitted);
     Ok(())
 }
 

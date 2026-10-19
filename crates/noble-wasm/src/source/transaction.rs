@@ -23,7 +23,7 @@ pub(super) struct Base {
 }
 
 impl Base {
-    #[expect(
+    #[allow(
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-maintainers; the content-addressed calculator literal table is a BTreeMap whose len is not const-stable."
     )]
@@ -54,7 +54,7 @@ impl Base {
         self.generation
     }
 
-    #[expect(
+    #[allow(
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-maintainers; comparing the content-addressed calculator literal table size uses the non-const BTreeMap::len."
     )]
@@ -133,6 +133,10 @@ impl Base {
 
 #[cfg(test)]
 mod tests {
+    #![allow(
+        tigerstyle::function_length,
+        reason = "Owner: noble-wasm-maintainers; this fixture drives one cumulative prepare/commit scenario through its retained bases in a single reviewable sequence."
+    )]
 
     #[test]
     fn calculator_cumulative_prepare_commit_keeps_ids_beyond_ordinary_boundary() {

@@ -71,6 +71,10 @@ impl Reusable {
     }
 
     /// Conservative heap accounting for byte-bounded caches.
+    #[expect(
+        tigerstyle::usize_in_public_api,
+        reason = "Owner: noble-wasm-maintainers; retained_bytes mirrors this target's allocator byte accounting and feeds the host cache's usize budget directly."
+    )]
     pub fn retained_bytes(&self) -> usize {
         const RECORD: usize = 64;
         let identities = self.next.identities.iter().fold(0usize, |total, identity| {

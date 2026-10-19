@@ -43,16 +43,21 @@ pub(super) const CALCULATOR_COMPILER_WORK_LIMIT: u64 = 2_000_000_000;
 // Ordinary and declared sessions retain their original fixed prefixes.
 fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
     if env.calculator && env.declared_modules {
-        32
-    } else if env.text_cursor && !env.declared_modules {
-        27
-    } else if !env.declared_modules && env.effects.contains(&noble_kernel::types::EffId(3)) {
-        26
-    } else if !env.declared_modules && env.effects.contains(&noble_kernel::types::EffId(1)) {
-        24
-    } else {
-        23
+        return 32;
     }
+    if env.declared_modules {
+        return 23;
+    }
+    if env.text_cursor {
+        return 27;
+    }
+    if env.effects.contains(&noble_kernel::types::EffId(3)) {
+        return 26;
+    }
+    if env.effects.contains(&noble_kernel::types::EffId(1)) {
+        return 24;
+    }
+    23
 }
 
 struct Work {
@@ -288,14 +293,14 @@ pub struct SelectedOriginMetadata {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OriginSource {
+pub enum OriginClass {
     Definition,
     Selection,
 }
 
 #[derive(Clone, Debug)]
 pub struct OriginProgram {
-    pub source_artifact: OriginSource,
+    pub source_artifact: OriginClass,
     pub program_index: usize,
     pub entry: u32,
     pub input_signature: u32,
@@ -497,6 +502,10 @@ impl Prepared {
 }
 
 impl Compiler {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; reserve_code updates only the unpublished prospective compiler table and preserves every refusal as a diagnostic."
+    )]
     fn reserve_code(&mut self, slots: u32) -> Result<CodeSpan, crate::Diagnostic> {
         if slots == 0 {
             return Ok(CodeSpan {
@@ -913,6 +922,10 @@ impl Compiler {
             work_spent: work.issued - work.remaining,
             environment_rows: submission.environment.defs.len() as u64,
             // The allowance is exactly `environment_work × (named + 3)`.
+            #[expect(
+                tigerstyle::unchecked_division,
+                reason = "Owner: noble-wasm-maintainers; the divisor is named_bodies.saturating_add(3), so it is never zero."
+            )]
             environment_work: work_environment_grant / named_bodies.saturating_add(3),
             named_bodies,
             max_type_nodes: work.max_type_nodes,
@@ -1099,6 +1112,12 @@ impl Default for Compiler {
 
 #[cfg(test)]
 mod retention_tests {
+    #![allow(
+        tigerstyle::bool_naming,
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-wasm-maintainers; these retention fixtures track terse flag names and import the compiler internals they exercise, so a policy prefix or qualified path would obscure the scenario."
+    )]
+
     use super::{CodeSpan, Compiler, TABLE_LIMIT};
     use crate::Diagnostic;
 
@@ -1193,6 +1212,13 @@ mod retention_tests {
 
 #[cfg(test)]
 mod tests {
+    #![allow(
+        tigerstyle::compound_assertion,
+        tigerstyle::function_length,
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-wasm-maintainers; the epoch fixtures keep one long setup per scenario and assert both halves of the restarted boundary together; the compiler internals under test are imported directly."
+    )]
+
     use super::{
         transaction, Compiler, Identity, Work, CALCULATOR_COMPILER_WORK_LIMIT,
         CALCULATOR_DEFINITION_LIMIT,

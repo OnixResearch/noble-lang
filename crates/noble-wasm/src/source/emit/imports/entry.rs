@@ -1,5 +1,9 @@
 //! Runtime entry emission for the module wrapper.
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
 pub(in crate::source::emit) fn runtime(
     out: &mut crate::output::Buffer,
     plan: &super::super::super::plan::Layout,

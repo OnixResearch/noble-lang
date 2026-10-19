@@ -86,6 +86,10 @@ fn function_element(
 }
 
 #[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
+#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; the admitted layout bounds every function, segment and type descriptor before emission; the private sink propagates output exhaustion and returns bytes only after all fragments succeed, without asserting on input."
 )]

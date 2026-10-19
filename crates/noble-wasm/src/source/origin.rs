@@ -61,6 +61,10 @@ fn action(
     Some(result)
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
 fn programs(
     selected: &noble_contracts::source::proof::CheckedSelectedTarget<'_>,
     plan: &super::plan::Layout,
@@ -79,11 +83,11 @@ fn programs(
             return None;
         }
         let source_artifact = if program_index == plan.root {
-            super::OriginSource::Selection
+            super::OriginClass::Selection
         } else {
-            super::OriginSource::Definition
+            super::OriginClass::Definition
         };
-        if source_artifact == super::OriginSource::Selection
+        if source_artifact == super::OriginClass::Selection
             && (program.operations.len() != 1
                 || !matches!(program.operations[0].action, super::plan::Action::Call(..)))
         {
@@ -102,7 +106,7 @@ fn programs(
                 return None;
             }
             let action = action(selected, plan, program_index, operation)?;
-            let source_span = if source_artifact == super::OriginSource::Selection {
+            let source_span = if source_artifact == super::OriginClass::Selection {
                 if operation.node != noble_kernel::untrusted::NodeId(0)
                     || !matches!(action, super::OriginAction::CallSelected(..))
                 {
@@ -143,6 +147,10 @@ fn dynamic(value: Value) -> Option<(alloc::boxed::Box<super::OriginProgramValue>
     }
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
 fn returned_outputs(
     selected: &noble_contracts::source::proof::CheckedSelectedTarget<'_>,
     plan: &super::plan::Layout,
@@ -258,7 +266,7 @@ fn returned_outputs(
     if stack.len() != outputs.len() {
         return None;
     }
-    let mut result = alloc::vec::Vec::new();
+    let mut result = alloc::vec::Vec::with_capacity(outputs.len());
     for (stack_position, (ty, value)) in outputs.iter().zip(stack).enumerate() {
         if matches!(ty, noble_kernel::types::Ty::Program(..)) {
             let (program, _) = dynamic(value)?;

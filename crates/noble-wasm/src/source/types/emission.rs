@@ -26,6 +26,10 @@ pub(super) fn certificates(out: &mut crate::output::Buffer) -> Result<(), crate:
 }
 
 #[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
+#[expect(
     tigerstyle::assertion_density,
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-maintainers; Shape is the closed semantic storage vocabulary and every variant needs its explicit observation predicate; bounded output failures propagate diagnostics rather than assertions."
@@ -38,7 +42,7 @@ pub(super) fn shape(
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func $t"));
     attempt!(out.index(index));
-    let cache = calculator
+    let is_cached = calculator
         && matches!(
             shape,
             super::Shape::Pair(..)
@@ -47,7 +51,7 @@ pub(super) fn shape(
                 | super::Shape::NominalVariant(..)
                 | super::Shape::List(..)
         );
-    if cache {
+    if is_cached {
         // Calculator source submissions have no host imports. Only validated,
         // append-only cells in this one synchronous submit can be certified.
         attempt!(out.append(b" (param $tag i32) (param $value i64) (result i32) (local $h i32) (local $valid i32)\n(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n(if (i32.and (i32.ge_u (local.get $tag) (i32.const 4)) (i64.le_u (local.get $value) (i64.const 4294967295))) (then\n(local.set $h (i32.wrap_i64 (local.get $value)))\n(if (call $is_live (local.get $h)) (then\n(if (i32.eq (call $kind (local.get $h)) (local.get $tag)) (then\n(if (call $type_certificate_has (i32.const "));

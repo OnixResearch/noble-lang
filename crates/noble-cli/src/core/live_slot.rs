@@ -20,7 +20,7 @@ fn selected_origin_json(
     origin: &noble_wasm::source::SelectedOriginMetadata,
     target: &Value,
 ) -> Result<Value, String> {
-    use noble_wasm::source::{OriginAction, OriginI64, OriginProgramValue, OriginSource};
+    use noble_wasm::source::{OriginAction, OriginClass, OriginI64, OriginProgramValue};
     fn result(value: &OriginProgramValue) -> Value {
         match value {
             OriginProgramValue::QuoteI64 {
@@ -108,7 +108,7 @@ fn selected_origin_json(
                 })
                 .collect::<Vec<_>>();
             json!({"source_artifact":match program.source_artifact {
-            OriginSource::Definition => "definition", OriginSource::Selection => "selection",
+            OriginClass::Definition => "definition", OriginClass::Selection => "selection",
         },"program_index":program.program_index,"entry":program.entry,
             "input_signature":program.input_signature,"output_signature":program.output_signature,
             "effect_mask":program.effect_mask,"operations":operations})

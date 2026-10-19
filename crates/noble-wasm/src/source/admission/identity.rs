@@ -66,12 +66,12 @@ impl Encoding {
                 literal(&mut self.out, lit, body, node)
             }
             noble_kernel::untrusted::Node::Invocation { def, .. } => {
-                let byte_cursor =
+                let is_byte_cursor =
                     submission.environment.text_cursor || submission.environment.calculator;
-                if byte_cursor && (22..=25).contains(&def.0) {
+                if is_byte_cursor && (22..=25).contains(&def.0) {
                     return Err(crate::Diagnostic::Invalid);
                 }
-                if byte_cursor && def.0 == 26 {
+                if is_byte_cursor && def.0 == 26 {
                     if submission.environment.kind(*def)
                         != Some(noble_kernel::contracts::Behavior::TextByte)
                     {

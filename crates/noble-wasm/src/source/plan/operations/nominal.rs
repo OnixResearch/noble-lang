@@ -268,12 +268,12 @@ impl<'a> Output<'a> {
             None => return Err(crate::Diagnostic::Invalid),
         };
         let ty = &interface.stack_in[index];
-        let valid = if generic {
+        let is_valid = if generic {
             env.generic_instance_matches(ty, id)
         } else {
             Self::matches_declared_nominal(env, ty, id)
         };
-        if !valid {
+        if !is_valid {
             return Err(crate::Diagnostic::Invalid);
         }
         Ok(index)

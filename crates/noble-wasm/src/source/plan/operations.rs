@@ -55,6 +55,10 @@ pub(super) fn derivation(
 }
 
 #[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the call passes the complete checked input, plan and shared-budget coordinates, and an options struct would only rename the same borrowed fields."
+)]
+#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; admitted sequence entries lower in source order into a fresh reserved operation buffer, and live-pool interning and owned allocation preserve the first shared-budget failure instead of asserting."
 )]
@@ -88,9 +92,16 @@ fn lower_sequence(
 }
 
 #[expect(
-    tigerstyle::assertion_density,
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
+#[allow(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; exact node lowering allocates owned text and interns complete interfaces against the live private pool with shared-budget charges, so it cannot be const; checked lookup and quota failures remain diagnostics."
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the call passes the complete checked input, plan and shared-budget coordinates, and an options struct would only rename the same borrowed fields."
 )]
 fn lower_node(
     input: Input<'_>,
@@ -175,7 +186,8 @@ fn lower_node(
             let input_signature = attempt!(compiler.signature(&site.stack_in, work));
             let output_signature = attempt!(compiler.signature(&site.stack_out, work));
             let effect_mask = attempt!(super::effect_mask(&site.allowed_effects));
-            let mut forwarded_target_positions = alloc::vec::Vec::new();
+            let mut forwarded_target_positions =
+                alloc::vec::Vec::with_capacity(site.stack_in.len());
             for (position, ty) in site.stack_in.iter().enumerate() {
                 if matches!(ty, noble_kernel::types::Ty::LiveRef(_, _, _)) {
                     forwarded_target_positions.push(attempt!(super::number(position)));

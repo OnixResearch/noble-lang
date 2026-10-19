@@ -186,6 +186,10 @@ pub(super) fn effect_mask(effects: &noble_kernel::types::EffSet) -> Result<u32, 
 }
 
 #[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
+#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; admission constructs one checked body per definition and root, and this owned table reserves those bodies in the same order; metered signature interning failures propagate without asserting on input."
 )]

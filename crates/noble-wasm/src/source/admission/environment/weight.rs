@@ -47,6 +47,10 @@ fn types(
     Ok(total)
 }
 
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the walk follows the kernel's checked node, type or pattern tree, and an explicit worklist would change the metered traversal order."
+)]
 fn ty(
     value: &noble_kernel::types::Ty,
     depth: u64,
@@ -104,6 +108,10 @@ fn patterns(
     Ok(total)
 }
 
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the walk follows the kernel's checked node, type or pattern tree, and an explicit worklist would change the metered traversal order."
+)]
 fn pattern(
     value: &noble_kernel::shapes::Pattern,
     depth: u64,

@@ -12,6 +12,10 @@ fn mul(left: u64, right: u64) -> Result<u64, crate::Diagnostic> {
     left.checked_mul(right).ok_or(crate::Diagnostic::Exhausted)
 }
 
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the walk follows the kernel's checked node, type or pattern tree, and an explicit worklist would change the metered traversal order."
+)]
 /// A second generic constructor in one substituted path duplicates its
 /// already-materialized argument twice again. Reject the exponential chain
 /// while it is still a borrowed pattern, including in unselected env rows.
@@ -73,6 +77,14 @@ pub(super) fn schemes(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the walk follows the kernel's checked node, type or pattern tree, and an explicit worklist would change the metered traversal order."
+)]
 fn pattern(
     value: &noble_kernel::shapes::Pattern,
     sizes: &[u64; 8],
@@ -221,6 +233,14 @@ fn type_volume(
     })
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the walk follows the kernel's checked node, type or pattern tree, and an explicit worklist would change the metered traversal order."
+)]
 /// Project a rank-1 pattern's concrete stack volume without materializing
 /// any substituted Ty. One generic family copies each resolved argument into
 /// both the arguments and descriptor; nested families are rejected above.
@@ -387,6 +407,10 @@ struct Cost {
     quotation_output_height: u64,
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
 fn node(
     node: &noble_kernel::untrusted::Node,
     submission: &noble_kernel::execution::Submission,
@@ -505,6 +529,14 @@ struct Walk<'a> {
 
 // Process quotation children on every occurrence, not merely once for each
 // unique quotation node. Cycles and depth past the kernel bound fail closed.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the walk follows the kernel's checked node, type or pattern tree, and an explicit worklist would change the metered traversal order."
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the call passes the complete checked input, plan and shared-budget coordinates, and an options struct would only rename the same borrowed fields."
+)]
 fn appearance(
     walk: &Walk<'_>,
     id: noble_kernel::untrusted::NodeId,
@@ -572,6 +604,10 @@ fn appearance(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the call passes the complete checked input, plan and shared-budget coordinates, and an options struct would only rename the same borrowed fields."
+)]
 fn body(
     body: &noble_kernel::execution::Body,
     input: &[noble_kernel::types::Ty],

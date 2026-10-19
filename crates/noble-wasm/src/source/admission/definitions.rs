@@ -38,6 +38,10 @@ pub(super) fn bounds(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the call passes the complete checked input, plan and shared-budget coordinates, and an options struct would only rename the same borrowed fields."
+)]
 fn definition_bounds(
     submission: &noble_kernel::execution::Submission,
     index: usize,

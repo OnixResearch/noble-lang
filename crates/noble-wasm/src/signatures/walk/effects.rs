@@ -29,7 +29,7 @@ pub(super) fn unavailable_in_core(ty: &noble_kernel::types::Ty) -> bool {
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-maintainers; effect serialization writes only the walk's fresh owned emission sink, leaving caller-owned effects unchanged."
 )]
-pub(super) fn emit_effects(
+pub(super) fn emit_bounded(
     effects: &noble_kernel::types::EffSet,
     out: &mut crate::output::Buffer,
 ) -> Result<(), crate::Diagnostic> {

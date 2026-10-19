@@ -1,6 +1,22 @@
 #![no_std]
 #![feature(register_tool)]
 #![register_tool(charon, octet, tigerstyle)]
+#![expect(
+    tigerstyle::excessive_file_length,
+    reason = "Owner: noble-wasm-maintainers; each selected source unit keeps one lowering stage, its byte layout and its refusal ordering in a single reviewable file"
+)]
+#![expect(
+    tigerstyle::module_file_count,
+    reason = "Owner: noble-wasm-maintainers; the selected source stage is already split by lowering phase at the policy's nine-file capacity"
+)]
+#![expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-wasm-maintainers; supported targets have usize >= 32 bits and every flagged cast converts a validated non-negative count or index"
+)]
+#![expect(
+    tigerstyle::nested_conditionals,
+    reason = "Owner: noble-wasm-maintainers; the ordered emitter dispatch and its early-return macro keep the outer constructor match adjacent to its shape arms, and flattening them would duplicate the constructor guards"
+)]
 //! Bounded, kernel-checked lowering to a fixed Wasm instruction vocabulary.
 //!
 //! The returned bytes are a complete WAT module. Assembly and execution belong

@@ -33,8 +33,7 @@ pub(super) fn write(
     }
 }
 
-#[expect(
-    tigerstyle::assertion_density,
+#[allow(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; allocation bounds the program's complete function range, while non-const checked numbering and allocating sink writes preserve overflow and output-exhaustion diagnostics rather than assertions."
 )]
@@ -78,6 +77,10 @@ fn entry(
     out.append(b")\n")
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
 #[expect(
     tigerstyle::assertion_density,
     tigerstyle::fragile_exhaustive_enum_match,

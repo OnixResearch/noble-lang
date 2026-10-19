@@ -58,6 +58,10 @@ fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
 }
 
 #[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
+#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; every supplied environment row, dependency list and effect bound is untrusted and checked explicitly against the fixed bootstrap contract; mismatches return Invalid instead of asserting."
 )]
@@ -224,6 +228,10 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
     env.effects == effects
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
 fn canonical_prefix(
     env: &noble_kernel::contracts::Env,
     live: bool,
@@ -418,6 +426,10 @@ fn lookup_rows(env: &noble_kernel::contracts::Env) -> Result<usize, crate::Diagn
         .ok_or(crate::Diagnostic::Exhausted)
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; explicit row and component bounds precede saturating work accounting; oversized environments and unrepresentable costs must exhaust the shared budget rather than panic."

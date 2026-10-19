@@ -21,10 +21,6 @@ struct SignatureWords<'a> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; delimiters and trailing fields are untrusted manifest grammar. Invalid ordering and spans must return binding diagnostics, never assertion failures."
 )]
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; delimiter discovery uses runtime iterator position and checked slice parsing to report malformed manifest grammar. Iterator::position is not const on the selected compiler."
-)]
 fn split_signature<'a>(
     words: &'a [&'a str],
     operation: &str,

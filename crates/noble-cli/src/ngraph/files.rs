@@ -11,10 +11,6 @@ pub(super) const SOURCE_BYTES: u64 = 1024 * 1024;
 pub(super) const SUBMISSION_BYTES: u32 = 65_536;
 
 /// Reads a regular file of at most `limit` bytes.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; read rejects non-files, I/O failures and content beyond the byte bound before and after reading. Files may change after metadata observation, so these are reported host refusals rather than assertions."
-)]
 pub(super) fn read(
     path: &std::path::Path,
     limit: u64,
@@ -61,10 +57,6 @@ pub(super) enum Published {
 /// over or modified; an existing `out` or `<out>.partial` is refused and left
 /// untouched. Once the link exists the output is published, even if the
 /// removal then fails ([`Published::PartialLeft`]).
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; publication reports every existing path and I/O failure as a host refusal and removes only the partial file it created itself."
-)]
 pub(super) fn publish(
     out: &std::path::Path,
     bytes: &[u8],

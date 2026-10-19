@@ -252,6 +252,10 @@ fn descriptor_entry(
 
 #[cfg(test)]
 mod tests {
+    #![allow(
+        tigerstyle::function_length,
+        reason = "Owner: noble-wasm-maintainers; this fixture instantiates one module and asserts the complete exported signature range in a single scenario."
+    )]
 
     #[test]
     fn calculator_observes_exact_signatures_at_sixteen_page_scratch_boundary() {

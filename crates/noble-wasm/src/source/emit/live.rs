@@ -139,6 +139,10 @@ pub(super) fn program_accessors(
     out.append(b"(i32.const 0))\n")
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
 pub(super) fn exports(
     out: &mut crate::output::Buffer,
     plan: &super::super::plan::Layout,

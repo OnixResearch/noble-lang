@@ -124,6 +124,10 @@ pub(super) fn bytes(
     Ok((address_bytes, length_bytes))
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-wasm-maintainers; the literal table reserves and pushes one owned pair per distinct content, so the growable vector is the required input."
+)]
 /// Calculator static literal Text is content-addressed: an exact byte string
 /// keeps the address it was first allocated at, and every module that lowers
 /// it still writes it there through its own segment. An address only ever
@@ -154,10 +158,6 @@ pub(super) fn literal(
     Ok((address, length_bytes))
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; checked entry allocation traverses the owned operation sequence before reserving its bounded table span; overflow and table exhaustion remain diagnostics."
-)]
 fn entries(program: &super::Program, calculator: bool) -> Result<u32, crate::Diagnostic> {
     if !calculator {
         return super::number(program.operations.len());
@@ -192,6 +192,10 @@ fn entry(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; checked function additions and byte allocations enforce table and memory limits while actual signature and type interning charges the shared meter; only the unpublished compiler and layout grow on success."
@@ -232,7 +236,10 @@ pub(super) fn finish(
     }
     layout.functions = function;
     if layout.live_slots {
-        let mut value_inputs = alloc::vec::Vec::new();
+        let mut value_inputs = alloc::vec::Vec::with_capacity(checked.interface.stack_in.len());
+        layout
+            .borrowed_input_positions
+            .reserve(checked.interface.stack_in.len());
         for (position, ty) in checked.interface.stack_in.iter().enumerate() {
             if matches!(ty, noble_kernel::types::Ty::LiveRef(_, _, _)) {
                 layout
@@ -261,10 +268,10 @@ pub(super) fn finish(
             // key in passive data; the trusted engine copies it once through
             // host scratch, so signature metadata never consumes literal Text.
             let length_bytes = attempt!(super::number(compiler.signatures.key_len(index)));
-            if length_bytes > 65_536 {
+            if length_bytes > u32::from(u16::MAX) + 1 {
                 return Err(crate::Diagnostic::Exhausted);
             }
-            Ok((983_040, length_bytes))
+            Ok((super::super::CALCULATOR_TEXT_END, length_bytes))
         } else {
             bytes(
                 &mut compiler.text_end,

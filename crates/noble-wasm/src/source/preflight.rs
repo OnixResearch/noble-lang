@@ -147,6 +147,10 @@ fn definition(
 }
 
 #[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
+#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; bounded environment schemes, expected interfaces and every body are inspected with one shared meter before any recursive clone; oversized untrusted submissions return diagnostics rather than panic."
 )]

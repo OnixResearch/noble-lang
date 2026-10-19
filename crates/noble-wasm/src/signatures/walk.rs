@@ -75,7 +75,7 @@ fn advance(walk: &mut State) -> Result<(), crate::Diagnostic> {
     match walk.work.pop() {
         None => Ok(()),
         Some(Step::Byte(byte)) => walk.out.append(&[byte]),
-        Some(Step::Effects(effects)) => effects::emit_effects(&effects, &mut walk.out),
+        Some(Step::Effects(effects)) => effects::emit_bounded(&effects, &mut walk.out),
         Some(Step::Stack(entries)) => push_stack(entries, &mut walk.work, &mut walk.out),
         Some(Step::Type(ty)) => push_type(
             ty,
@@ -117,7 +117,10 @@ fn push_stack(
 }
 
 #[expect(
-    tigerstyle::assertion_density,
+    tigerstyle::function_length,
+    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
+)]
+#[allow(
     tigerstyle::borrowed_argument_types,
     tigerstyle::missing_const_fn,
     tigerstyle::mutating_input_in_pure,

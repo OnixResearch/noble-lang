@@ -98,10 +98,6 @@ impl super::Session {
         })
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; linking clones host-binding identity and commits the runtime module namespace before allocating its actual outcome report."
-    )]
     fn link_declared(
         &mut self,
         prepared: noble_contracts::source::ModulePrepared,

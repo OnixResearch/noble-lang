@@ -254,7 +254,10 @@ impl Pool {
         let hash = fingerprint(&key);
         // Lengths above u32 cannot be stored and are refused below; they
         // also cannot match an existing record.
-        let index_key = (hash, u32::try_from(key.len()).unwrap_or(u32::MAX));
+        let Ok(length_bytes) = u32::try_from(key.len()) else {
+            return Err(crate::Diagnostic::Exhausted);
+        };
+        let index_key = (hash, length_bytes);
         let mut scratch = alloc::vec::Vec::new();
         // One ordered-index probe, then one unit per candidate actually
         // examined, plus every candidate block record actually decoded.
@@ -418,6 +421,13 @@ fn number(index: usize) -> Result<u32, crate::Diagnostic> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(
+        tigerstyle::bool_naming,
+        tigerstyle::function_length,
+        tigerstyle::unbounded_collection_growth,
+        tigerstyle::unchecked_narrowing,
+        reason = "Owner: noble-wasm-maintainers; these pool fixtures build the whole boundary scenario in one function and assert its retention outcome, so terse flags, long setups and bounded test-only pushes are the readable form."
+    )]
 
     #[test]
     fn calculator_pool_crosses_front_coded_mib_but_refuses_expanded_overflow_atomically() {

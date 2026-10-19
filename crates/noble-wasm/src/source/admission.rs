@@ -103,8 +103,9 @@ fn checked_interface(
             .iter()
             .filter(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(_, _, _)))
             .count();
-        let has_site_shape_mismatch = preceding_refs
-            != usize::try_from(site.ref_ordinal).unwrap_or(usize::MAX)
+        let is_ordinal_mismatch =
+            !u32::try_from(preceding_refs).is_ok_and(|refs| refs == site.ref_ordinal);
+        let has_site_shape_mismatch = is_ordinal_mismatch
             || site.stack_in.as_slice() != input.as_slice()
             || site.stack_out.as_slice() != output.as_slice()
             || site.allowed_effects.as_slice() != ceiling.as_slice();
@@ -238,6 +239,10 @@ fn calculator_environment_allowance(
     work.grant_calculator(scans)
 }
 
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the call passes the complete checked input, plan and shared-budget coordinates, and an options struct would only rename the same borrowed fields."
+)]
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     live: bool,
