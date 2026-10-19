@@ -9,6 +9,26 @@
     tigerstyle::platform_dependent_cast,
     reason = "Owner: noble-maintainers; noble-ngraph supports only targets with usize >= 32 bits (x86_64, aarch64, wasm32); every flagged cast is a u32 index converted to usize"
 )]
+#![expect(
+    tigerstyle::excessive_file_length,
+    reason = "Owner: noble-maintainers; each D1-D9 checker/codec file is a cohesive review unit and splitting it would churn canonical paths and the extracted subject"
+)]
+#![expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-maintainers; checker, parser and evaluator functions are kept linear so their rule order remains reviewable in one place"
+)]
+#![expect(
+    tigerstyle::usize_in_public_api,
+    reason = "Owner: noble-maintainers; host-side slice/row lengths use usize and are not part of the guest Wasm ABI"
+)]
+#![expect(
+    tigerstyle::sentinel_fallback,
+    reason = "Owner: noble-maintainers; GraphBuilder converts producer-owned node/slot counts and u32::MAX is an unrepresentable marker that graph admission refuses"
+)]
+#![expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; every &mut parameter is a caller-owned explicit workspace, builder or output buffer; the crate has no ambient state, I/O or hidden mutation"
+)]
 //! `Numeric-Graph-v1`: the pure library of the opt-in numeric graph profile
 //! (`NumericGraph-Design`, design changes `numeric-graph-profile` and
 //! `numeric-graph-v1`).
