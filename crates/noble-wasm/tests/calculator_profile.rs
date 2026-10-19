@@ -1301,7 +1301,7 @@ fn calculator_compile_metrics_track_issued_work_types_and_session_state() -> Res
         );
         assert_eq!(metrics.wat_bytes, prepared.wat().len() as u64);
         let span = prepared.code_span();
-        assert_eq!(metrics.table_end, span.start + span.length);
+        assert_eq!(metrics.table_end, span.start + span.slots);
         // Pair<Pair<I64,I64>,I64> is the largest admitted type: 5 nodes.
         assert_eq!(metrics.max_type_nodes, 5);
         // Static literals are content-addressed: only the first "abcd" allocates.

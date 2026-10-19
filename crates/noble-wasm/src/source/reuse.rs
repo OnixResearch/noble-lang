@@ -134,7 +134,7 @@ impl super::Compiler {
             next,
             code_span: super::CodeSpan {
                 start: artifact.code_start,
-                length: artifact.code_slots,
+                slots: artifact.code_slots,
                 generation,
             },
             live_sites: alloc::vec::Vec::new(),
@@ -190,7 +190,7 @@ impl super::Prepared {
             epoch,
             next: self.next.clone(),
             code_start: self.code_span.start,
-            code_slots: self.code_span.length,
+            code_slots: self.code_span.slots,
             work_issued: self.work_issued,
             metrics: self.metrics,
             wat: self.wat.clone(),

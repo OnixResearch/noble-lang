@@ -218,7 +218,7 @@ pub struct Compiler {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CodeSpan {
     pub start: u32,
-    pub length: u32,
+    pub slots: u32,
     pub generation: u32,
 }
 
@@ -406,7 +406,7 @@ pub struct ResourceCatalogEntry {
 #[derive(Clone, Copy, Debug)]
 struct FreeCode {
     start: u32,
-    length: u32,
+    slots: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -501,18 +501,18 @@ impl Compiler {
         if slots == 0 {
             return Ok(CodeSpan {
                 start: self.functions,
-                length: 0,
+                slots: 0,
                 generation: self.generation,
             });
         }
         let mut start = self.functions;
         if self.live_slots {
-            if let Some(index) = self.free_code.iter().position(|free| free.length >= slots) {
+            if let Some(index) = self.free_code.iter().position(|free| free.slots >= slots) {
                 let free = &mut self.free_code[index];
                 start = free.start;
                 free.start += slots;
-                free.length -= slots;
-                if free.length == 0 {
+                free.slots -= slots;
+                if free.slots == 0 {
                     self.free_code.remove(index);
                 }
             } else {
@@ -529,7 +529,7 @@ impl Compiler {
         }
         let span = CodeSpan {
             start,
-            length: slots,
+            slots: slots,
             generation: self.generation,
         };
         if self.live_slots {
@@ -805,7 +805,7 @@ impl Compiler {
         };
         let code_span = CodeSpan {
             start: plan.first_function,
-            length: plan.functions - plan.first_function,
+            slots: plan.functions - plan.first_function,
             generation: next.generation,
         };
         let target_metadata = if self.live_slots {
@@ -1043,13 +1043,13 @@ impl Compiler {
         span: CodeSpan,
         verify_and_clear: impl FnOnce(CodeSpan) -> Result<(), crate::Diagnostic>,
     ) -> Result<(), crate::Diagnostic> {
-        if !self.live_slots || span.length == 0 || span.start < 4 {
+        if !self.live_slots || span.slots == 0 || span.start < 4 {
             return Err(crate::Diagnostic::Invalid);
         }
         let Some(index) = self.installed_code.iter().position(|owned| *owned == span) else {
             return Err(crate::Diagnostic::Invalid);
         };
-        let Some(end) = span.start.checked_add(span.length) else {
+        let Some(end) = span.start.checked_add(span.slots) else {
             return Err(crate::Diagnostic::Invalid);
         };
         if end > self.functions || self.retention_revision == u64::MAX {
@@ -1064,25 +1064,25 @@ impl Compiler {
             index,
             FreeCode {
                 start: span.start,
-                length: span.length,
+                slots: span.slots,
             },
         );
         if index > 0
-            && self.free_code[index - 1].start + self.free_code[index - 1].length
+            && self.free_code[index - 1].start + self.free_code[index - 1].slots
                 == self.free_code[index].start
         {
             let right = self.free_code.remove(index);
-            self.free_code[index - 1].length += right.length;
+            self.free_code[index - 1].slots += right.slots;
             index -= 1;
         }
         if index + 1 < self.free_code.len()
-            && self.free_code[index].start + self.free_code[index].length
+            && self.free_code[index].start + self.free_code[index].slots
                 == self.free_code[index + 1].start
         {
             let right = self.free_code.remove(index + 1);
-            self.free_code[index].length += right.length;
+            self.free_code[index].slots += right.slots;
         }
-        if self.free_code[index].start + self.free_code[index].length == self.functions {
+        if self.free_code[index].start + self.free_code[index].slots == self.functions {
             self.functions = self.free_code[index].start;
             self.free_code.remove(index);
         }
@@ -1114,20 +1114,14 @@ mod retention_tests {
         assert!(compiler.retire_code(former, |_| Ok(())).is_ok());
         compiler.generation = 3;
         let reused = compiler.reserve_code(2).ok().expect("reused span");
-        assert_eq!((reused.start, reused.length), (4, 2));
+        assert_eq!((reused.start, reused.slots), (4, 2));
         assert_ne!(reused.generation, former.generation);
         assert!(matches!(
             compiler.retire_code(former, |_| Ok(())),
             Err(Diagnostic::Invalid)
         ));
         assert!(matches!(
-            compiler.retire_code(
-                CodeSpan {
-                    length: 1,
-                    ..pinned
-                },
-                |_| Ok(())
-            ),
+            compiler.retire_code(CodeSpan { slots: 1, ..pinned }, |_| Ok(())),
             Err(Diagnostic::Invalid)
         ));
         compiler.generation = 4;
@@ -1439,10 +1433,10 @@ mod tests {
             calculator_plan: true,
             max_type_nodes: 0,
         };
-        for length in 1..=64 {
+        for entries in 1..=64 {
             assert!(
                 compiler
-                    .signature(&alloc::vec![Ty::I64; length], &mut work)
+                    .signature(&alloc::vec![Ty::I64; entries], &mut work)
                     .is_ok(),
                 "finite distinct structural signatures fit the remaining ceiling"
             );
