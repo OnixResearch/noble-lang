@@ -233,7 +233,7 @@ impl CheckedGraph {
     }
 
     /// crate::ir::Fact-binding digest: `H(noble.ngraph.fact-bindings.v0 ‖ GraphLogicalId ‖
-    /// fact-rule revision ‖ fact records)`. crate::ir::Fact records are not part of
+    /// fact-rule revision ‖ fact records)`. Fact records are not part of
     /// `GraphLogicalId`, so snapshot binding also compares this (design D6).
     #[must_use]
     pub fn fact_bindings(&self, ids: &dyn IdentityScheme) -> crate::ir::Digest {
