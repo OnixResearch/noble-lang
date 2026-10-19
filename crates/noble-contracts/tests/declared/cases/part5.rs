@@ -28,6 +28,16 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
     noble_contracts::intrinsic::check_batch(batch, super::super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(contract.subject.definition_ordinal, 1);
+    refuses_public_binding_mutations(contract)?;
+    refuses_recipe_mutations(contract)?;
+    refuses_evidence_mutations(contract)?;
+    refuses_specialization_and_capture_mutations(contract)?;
+    Ok(())
+}
+/// refuses public binding mutations must each be refused by contract preparation.
+fn refuses_public_binding_mutations(
+    contract: &noble_contracts::intrinsic::ContractGoal,
+) -> Result<(), String> {
     let mut changed = contract.clone();
     changed.subject.definition_source = b"def increment [ 2 + ]".to_vec();
     assert!(
@@ -69,6 +79,15 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         noble_contracts::intrinsic::prepare_contract(&changed, super::super::LIMITS).is_err(),
         "forged owner"
     );
+    Ok(())
+}
+
+/// refuses recipe and evidence mutations must each be refused by contract preparation.
+
+/// Recipe and evidence mutations must each be refused by contract preparation.
+fn refuses_recipe_mutations(
+    contract: &noble_contracts::intrinsic::ContractGoal,
+) -> Result<(), String> {
     let mut changed = contract.clone();
     changed.subject.source_dependencies[0].full_source[0] = b'x';
     assert!(
@@ -102,6 +121,13 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         noble_contracts::intrinsic::prepare_contract(&changed, super::super::LIMITS).is_err(),
         "same interface but different accepted code"
     );
+    Ok(())
+}
+
+/// Recipe and evidence mutations must each be refused by contract preparation.
+fn refuses_evidence_mutations(
+    contract: &noble_contracts::intrinsic::ContractGoal,
+) -> Result<(), String> {
     let mut changed = contract.clone();
     let definition = changed
         .subject
@@ -142,6 +168,13 @@ fn direct_mc1_contract_rejects_inconsistent_public_binding_and_recipe() -> Resul
         noble_contracts::intrinsic::prepare_contract(&changed, super::super::LIMITS).is_err(),
         "forged add instantiation"
     );
+    Ok(())
+}
+
+/// refuses specialization and capture mutations must each be refused by contract preparation.
+fn refuses_specialization_and_capture_mutations(
+    contract: &noble_contracts::intrinsic::ContractGoal,
+) -> Result<(), String> {
     let mut changed = contract.clone();
     let definition = changed
         .subject
