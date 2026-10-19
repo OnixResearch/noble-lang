@@ -195,7 +195,7 @@ fn refuses_resource_interface_and_context_claims(
             "law",
             "verified",
             &target,
-            super::context(&modules),
+            super::context(modules),
             super::LIMITS,
         ),
         Err(noble_contracts::source::proof::SourceProofRefusal::UnsupportedProfile)

@@ -529,7 +529,7 @@ impl Compiler {
         }
         let span = CodeSpan {
             start,
-            slots: slots,
+            slots,
             generation: self.generation,
         };
         if self.live_slots {
