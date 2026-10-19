@@ -1,7 +1,7 @@
 const SOURCE: &[u8] = b"module arithmetic@1 [ export increment def unrelated [ 1 + ] def\tincrement# original lexical body\n[ 1 + ] contract 1 increment-law [ subject increment input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] export increment-law ]";
 
 #[test]
-fn direct_contract_uses_unique_lexical_origin_not_kernel_slot() -> Result<(), String> {
+fn direct_contract_uses_lexical_provenance_not_kernel_slot() -> Result<(), String> {
     let session =
         noble_contracts::source::ModuleSession::new(&[]).map_err(|error| format!("{error:?}"))?;
     let prepared = session

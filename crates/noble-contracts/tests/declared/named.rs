@@ -10,8 +10,8 @@ fn imported_donor() -> Result<noble_contracts::source::ModuleSession, String> {
 }
 
 #[test]
-fn two_named_calls_preserve_distinct_specializations_and_exact_original_occurrences(
-) -> Result<(), String> {
+fn two_calls_preserve_distinct_specializations_and_exact_original_occurrences() -> Result<(), String>
+{
     let session = imported_donor()?;
     let prepared = session
         .prepare(TWICE, &[], super::LIMITS)
@@ -105,7 +105,7 @@ fn two_named_calls_preserve_distinct_specializations_and_exact_original_occurren
 }
 
 #[test]
-fn rebound_import_cannot_rewrite_an_original_named_subject_or_its_proof() -> Result<(), String> {
+fn rebound_import_cannot_rewrite_an_original_subject_or_its_proof() -> Result<(), String> {
     let session = imported_donor()?;
     let session = super::commit(session, TWICE)?;
     let second = b"module donor@2 [ export step def step [ 1 + ] ]";

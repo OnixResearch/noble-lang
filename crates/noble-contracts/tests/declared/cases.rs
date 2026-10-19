@@ -584,9 +584,9 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
     let prepared = session
         .prepare(invalid, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    let mut invoked = false;
+    let mut was_invoked = false;
     let (next, result) = session.commit_verified(prepared, |batch| {
-        invoked = true;
+        was_invoked = true;
         Ok(vec![noble_contracts::intrinsic::CheckedProof {
             name: batch.obligations[0].name.clone(),
             kind: noble_contracts::intrinsic::ProofKind::Pure,
@@ -597,7 +597,7 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
         }])
     });
     assert!(
-        !invoked,
+        !was_invoked,
         "source-invalid proof must reject before invoking host"
     );
     assert!(
@@ -610,9 +610,9 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
     let prepared = session
         .prepare(unsupported, &[], super::LIMITS)
         .map_err(|error| format!("{error:?}"))?;
-    let mut invoked = false;
+    let mut was_invoked = false;
     let (next, result) = session.commit_verified(prepared, |batch| {
-        invoked = true;
+        was_invoked = true;
         Ok(vec![noble_contracts::intrinsic::CheckedProof {
             name: batch.obligations[0].name.clone(),
             kind: noble_contracts::intrinsic::ProofKind::Contract,
@@ -623,7 +623,7 @@ fn callback_cannot_publish_invalid_source_or_substituted_claim() -> Result<(), S
         }])
     });
     assert!(
-        !invoked,
+        !was_invoked,
         "unsupported program proof must reject before invoking host"
     );
     assert!(
