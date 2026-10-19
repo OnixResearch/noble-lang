@@ -1,0 +1,32 @@
+{
+  "schema": "noble.verification.ngraph-bytes-issue-31/v1",
+  "issue": "OnixResearch/noble-lang#31",
+  "base_revision": "338c3559b44d10c3b088af8123d31db5b16d6a42",
+  "claims": {
+    "MEASURED": [
+      "Before the fix, growing Subject.closure from empty to 8,192 entries left retained_bytes at 318 while the closure payload is 65,536 bytes; four of the six new regression tests fail (repro-before-fix.txt).",
+      "After the fix the same graph charges 65,854 bytes, and a graph_bytes budget of 318 refuses it with E-BUDGET-GRAPH-BYTES (closure_storage_is_charged_and_budgeted).",
+      "Shape storage is charged: a 64-scalar right-nested ShapeTree adds 2,016 bytes of boxed pair allocations, and a budget covering only the flat estimate refuses the graph.",
+      "Fact payloads (one-hot groups, derived rule strings, evidence buffers) and node operation payloads (affine terms, index tables) raise the charge.",
+      "cargo test -p noble-ngraph passes in full; clippy with -D warnings is clean; rustfmt reports no diff (test-log.txt, clippy-log.txt, fmt-log.txt)."
+    ],
+    "INFERRED": [
+      "Hosts that retain graphs under a lowered graph_bytes quota now charge graph-owned metadata that was previously invisible; default-budget admission of ordinary graphs is unchanged because the added charge is far below 32 MiB."
+    ]
+  },
+  "not_proven": [
+    "No process-memory measurement, allocator-overhead, or denial-of-service claim.",
+    "The u64 saturation path is unreachable in a test (it needs capacities near 2^61) and rests on saturating arithmetic plus review.",
+    "No claim about separately owned checker caches, which stay outside the documented contract."
+  ],
+  "files_changed": [
+    "crates/noble-ngraph/src/check.rs",
+    "crates/noble-ngraph/tests/retained_bytes.rs"
+  ],
+  "logs_sha256": {
+    "clippy-log.txt": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+    "fmt-log.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "repro-before-fix.txt": "a9f0ea84688c26f0f51529ab48bbee586ae7ca150a9072d52ff654f29d84c245",
+    "test-log.txt": "32d75c308ed009567742b16675811216c52d3292814ded3eeb38ea96eb7c1673"
+  }
+}

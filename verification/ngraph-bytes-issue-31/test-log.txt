@@ -1,0 +1,113 @@
+   Compiling noble-ngraph v0.0.0 (/home/brittonr/.cache/noble-issues/wt/issue-31/crates/noble-ngraph)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running unittests src/lib.rs (/home/brittonr/.cache/noble-issues/targets/issue-31/debug/deps/noble_ngraph-091a351e6e4be6ef)
+
+running 4 tests
+test prng::tests::reference_vector ... ok
+test sem::tests::signed_zero_rules ... ok
+test extract::admission::tests::interface_items_nest_at_most_the_shape_bound ... ok
+test sem::tests::exact_decimal_literals ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extract_b1.rs (/home/brittonr/.cache/noble-issues/targets/issue-31/debug/deps/extract_b1-d459997c08950ce7)
+
+running 4 tests
+test i1_routing_constants_and_operand_order ... ok
+test i2_captures_composition_and_one_shared_capture ... ok
+test i3_repeated_named_call_to_one_identity ... ok
+test i4_transition_for_1000_host_steps ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/format_graph.rs (/home/brittonr/.cache/noble-issues/targets/issue-31/debug/deps/format_graph-36d3b58ef5552ccf)
+
+running 7 tests
+test authored_name_sugar_comments_and_spacing_are_not_identity_bearing ... ok
+test evidence_and_range_literals_are_symmetric ... ok
+test number_tokens_take_no_plus_sign_and_at_most_eight_hex_digits ... ok
+test malformed_records_are_refused_with_their_codes ... ok
+test printed_graphs_parse_back_to_the_same_graph_and_identity ... ok
+test extracted_graphs_round_trip_without_origins ... ok
+test shape_trees_nest_at_most_127_pairs ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/format_values.rs (/home/brittonr/.cache/noble-issues/targets/issue-31/debug/deps/format_values-5c4da8ce75102389)
+
+running 6 tests
+test a_leading_plus_sign_is_not_a_number ... ok
+test f32_tokens_are_exact_encodings_or_exact_decimals ... ok
+test rendering_keeps_bits_and_merges_every_nan ... ok
+test data_files_split_inputs_and_targets_at_one_separator ... ok
+test vector_files_are_typed_and_refused_as_a_whole ... ok
+test decimal_exactness_is_decided_inside_the_binary32_window ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/ir_check.rs (/home/brittonr/.cache/noble-issues/targets/issue-31/debug/deps/ir_check-4f415306e9c2a9b7)
+
+running 7 tests
+test i64_wraps_and_eq ... ok
+test malformed_topology_is_refused ... ok
+test i64_graph_operand_order_and_value ... ok
+test caller_owned_node_observer_tracks_execution_not_refusals ... ok
+test nonfinite_constant_and_caller_assertion_are_refused ... ok
+test type_mix_is_refused ... ok
+test refusals_before_evaluation_evaluate_no_node ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/retained_bytes.rs (/home/brittonr/.cache/noble-issues/targets/issue-31/debug/deps/retained_bytes-b1d6b0d9a1b12372)
+
+running 6 tests
+test fact_payloads_are_charged ... ok
+test charge_is_monotone_in_closure_length ... ok
+test node_operation_payloads_are_charged ... ok
+test ordinary_small_graph_is_admitted_under_its_own_charge ... ok
+test shape_storage_is_charged_and_budgeted ... ok
+test closure_storage_is_charged_and_budgeted ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/snapshot_file.rs (/home/brittonr/.cache/noble-issues/targets/issue-31/debug/deps/snapshot_file-19aa68cbbb292749)
+
+running 6 tests
+test opt_in_records_must_be_canonically_ordered ... ok
+test binding_refuses_other_graphs_facts_layouts_and_pins ... ok
+test the_provenance_digest_follows_the_documented_encoding ... ok
+test printed_files_reload_with_recomputed_identities ... ok
+test tampered_or_malformed_files_are_refused ... ok
+test recorded_optimizers_outside_the_adam_domain_are_refused_on_load ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/soft_float.rs (/home/brittonr/.cache/noble-issues/targets/issue-31/debug/deps/soft_float-d14145a429b23939)
+
+running 4 tests
+test ten_million_bit_patterns_match_std ... ignored, slow (10^7 patterns per routine); run: cargo test --release -p noble-ngraph --test soft_float -- --ignored
+test powers_of_two_are_exact ... ok
+test special_values_match_std ... ok
+test seeded_bit_patterns_match_std ... ok
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/train_admission.rs (/home/brittonr/.cache/noble-issues/targets/issue-31/debug/deps/train_admission-ebdeed125af755ec)
+
+running 7 tests
+test the_checked_objective_equals_the_plain_objective_on_admitted_points ... ok
+test budgets_bound_training_before_any_step ... ok
+test opt_ins_must_name_a_node_they_apply_to_in_train_and_replay ... ok
+test the_loss_graph_interface_is_admitted ... ok
+test adam_values_outside_the_optimizer_domain_are_refused_by_train_and_replay ... ok
+test points_the_reference_refuses_stop_training_unpublished ... ok
+test replay_starts_from_the_recorded_parent ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests noble_ngraph
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,18 @@
+thread 'shape_storage_is_charged_and_budgeted' (4050701) panicked at crates/noble-ngraph/tests/retained_bytes.rs:115:5:
+charge 318 must cover the 2016 bytes of boxed shape pairs above 318
+
+---- closure_storage_is_charged_and_budgeted stdout ----
+
+thread 'closure_storage_is_charged_and_budgeted' (4050697) panicked at crates/noble-ngraph/tests/retained_bytes.rs:64:5:
+charge 318 must cover the 65536-byte closure above 318
+
+
+failures:
+    charge_is_monotone_in_closure_length
+    closure_storage_is_charged_and_budgeted
+    fact_payloads_are_charged
+    shape_storage_is_charged_and_budgeted
+
+test result: FAILED. 2 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p noble-ngraph --test retained_bytes`

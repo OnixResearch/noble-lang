@@ -17,8 +17,8 @@ use crate::diag::{BudgetKind, Code, Diagnostic, Malformed, Site};
 use crate::facts::{Abs, AbsF32, AbsI64, Requirement};
 use crate::identity::IdentityScheme;
 use crate::ir::{
-    AffineOperand, Digest, Fact, Graph, NodeId, Op, OutOfRange, Provenance, ScalarType, SlotKind,
-    SubProfile,
+    AffineOperand, Digest, Fact, Graph, NodeId, Op, OutOfRange, Provenance, ScalarType, ShapeNode,
+    ShapeTree, SlotKind, SubProfile,
 };
 use crate::ir::{Canon, FACT_RULE_REVISION};
 
@@ -267,24 +267,74 @@ impl CheckedGraph {
 }
 
 /// Estimated retained bytes of a graph (charged against `graph_bytes`).
+///
+/// The estimate covers the `Graph` header plus every graph-owned heap
+/// allocation: the interface slot and output vectors, node headers with their
+/// operation payloads and `origin.expansion` vectors, fact headers with
+/// `one-hot` groups and `derived`/`evidence` provenance payloads, the subject
+/// closure, and the input/output shape vectors together with the boxed pair
+/// children of every shape tree.
+///
+/// Element storage is charged at `Vec::capacity`, so spare capacity retained
+/// by a producer counts against the budget. The estimator is conservative and
+/// never wraps: every sum and product saturates, so an unrepresentable total
+/// is charged as `u64::MAX` and refused rather than admitted. Allocator
+/// bookkeeping and the checker's own derived caches (`CheckedGraph` maps and
+/// layers) are outside this contract.
 #[must_use]
 pub fn retained_bytes(g: &Graph) -> u64 {
+    /// Element storage retained by one vector, at its current capacity.
+    fn vec_bytes<T>(v: &Vec<T>) -> u64 {
+        (v.capacity() as u64).saturating_mul(core::mem::size_of::<T>() as u64)
+    }
+    /// Bytes retained by one shape tree: one allocation of two `ShapeTree`
+    /// per pair node, counted recursively.
+    fn shape_pairs(t: &ShapeTree) -> u64 {
+        match t.node() {
+            ShapeNode::Pair(a, b) => 2u64
+                .saturating_mul(core::mem::size_of::<ShapeTree>() as u64)
+                .saturating_add(shape_pairs(a))
+                .saturating_add(shape_pairs(b)),
+            ShapeNode::Scalar | ShapeNode::Unit => 0,
+        }
+    }
     let mut b = core::mem::size_of::<Graph>() as u64;
-    b += (g.slots.len() * core::mem::size_of::<crate::ir::Slot>()) as u64;
-    b += (g.outputs.len() * 4) as u64;
+    b = b.saturating_add(vec_bytes(&g.slots));
+    b = b.saturating_add(vec_bytes(&g.outputs));
     for n in &g.nodes {
-        b += core::mem::size_of::<crate::ir::Node>() as u64;
-        b += match &n.op {
-            Op::F32Affine { terms, .. } => (terms.len() * 12) as u64,
-            Op::F32Index { table, .. } => (table.len() * 4) as u64,
+        b = b.saturating_add(core::mem::size_of::<crate::ir::Node>() as u64);
+        b = b.saturating_add(match &n.op {
+            Op::F32Affine { terms, .. } => vec_bytes(terms),
+            Op::F32Index { table, .. } => vec_bytes(table),
             Op::Guard {
                 fact: Fact::OneHot { group, .. },
                 ..
-            } => (group.len() * 4) as u64,
+            } => vec_bytes(group),
             _ => 0,
-        };
+        });
+        if let Some(origin) = &n.origin {
+            b = b.saturating_add(vec_bytes(&origin.expansion));
+        }
     }
-    b += (g.facts.len() * core::mem::size_of::<crate::ir::FactRecord>()) as u64;
+    for f in &g.facts {
+        b = b.saturating_add(core::mem::size_of::<crate::ir::FactRecord>() as u64);
+        b = b.saturating_add(match &f.fact {
+            Fact::OneHot { group, .. } => vec_bytes(group),
+            _ => 0,
+        });
+        b = b.saturating_add(match &f.provenance {
+            Provenance::Derived(rule) => rule.capacity() as u64,
+            Provenance::Evidence(bytes) => vec_bytes(bytes),
+            _ => 0,
+        });
+    }
+    b = b.saturating_add(vec_bytes(&g.subject.closure));
+    for shapes in [&g.input_shape, &g.output_shape].into_iter().flatten() {
+        b = b.saturating_add(vec_bytes(shapes));
+        for t in shapes {
+            b = b.saturating_add(shape_pairs(t));
+        }
+    }
     b
 }
 
