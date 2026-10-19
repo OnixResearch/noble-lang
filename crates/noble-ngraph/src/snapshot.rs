@@ -4,28 +4,21 @@
 //! param layout ‖ exact LE bytes)`. A hash identifies bytes; it does not prove
 //! correctness. Snapshots are retained owners (D12): immutable and shareable.
 
-use alloc::rc::Rc;
-use alloc::{format, vec::Vec};
-
-use crate::check::CheckedGraph;
-use crate::diag::{BudgetKind, Code, Diagnostic, Site};
 use crate::identity::IdentityScheme;
-use crate::ir::{Canon, Digest, Graph, ScalarType};
-
 /// Ordered parameter layout key of a graph: the ordered param slot indices.
 #[must_use]
-pub fn layout_key(ids: &dyn IdentityScheme, graph: &Graph) -> Digest {
+pub fn layout_key(ids: &dyn IdentityScheme, graph: &crate::ir::Graph) -> crate::ir::Digest {
     layout_key_of(ids, &graph.param_slots())
 }
 
 /// Param layout key of an ordered param slot list.
 #[must_use]
-pub fn layout_key_of(ids: &dyn IdentityScheme, params: &[u32]) -> Digest {
-    let mut c = Canon::new(ids, "noble.ngraph.param-layout.v0");
+pub fn layout_key_of(ids: &dyn IdentityScheme, params: &[u32]) -> crate::ir::Digest {
+    let mut c = crate::ir::Canon::new(ids, "noble.ngraph.param-layout.v0");
     c.u64(params.len() as u64);
     for &k in params {
         c.u32(k);
-        c.str(ScalarType::F32.name());
+        c.str(crate::ir::ScalarType::F32.name());
     }
     c.finish()
 }
@@ -33,15 +26,20 @@ pub fn layout_key_of(ids: &dyn IdentityScheme, params: &[u32]) -> Digest {
 /// An immutable parameter snapshot.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ParamSnapshot {
-    graph: Digest,
-    layout: Digest,
-    slots: Rc<[u32]>,
-    bytes: Rc<[u8]>,
-    id: Digest,
+    graph: crate::ir::Digest,
+    layout: crate::ir::Digest,
+    slots: alloc::rc::Rc<[u32]>,
+    bytes: alloc::rc::Rc<[u8]>,
+    id: crate::ir::Digest,
 }
 
-fn snapshot_id(ids: &dyn IdentityScheme, graph: &Digest, slots: &[u32], bytes: &[u8]) -> Digest {
-    let mut c = Canon::new(ids, "noble.ngraph.params.v0");
+fn snapshot_id(
+    ids: &dyn IdentityScheme,
+    graph: &crate::ir::Digest,
+    slots: &[u32],
+    bytes: &[u8],
+) -> crate::ir::Digest {
+    let mut c = crate::ir::Canon::new(ids, "noble.ngraph.params.v0");
     c.bytes(graph);
     c.u64(slots.len() as u64);
     for k in slots {
@@ -59,9 +57,9 @@ impl ParamSnapshot {
     /// non-finite value, `E-BUDGET-SNAPSHOT-BYTES` over the `/0` budget.
     pub fn new(
         ids: &dyn IdentityScheme,
-        checked: &CheckedGraph,
+        checked: &crate::check::CheckedGraph,
         values: &[f32],
-    ) -> Result<Self, Diagnostic> {
+    ) -> Result<Self, crate::diag::Diagnostic> {
         Self::with_budget(
             ids,
             checked,
@@ -76,35 +74,35 @@ impl ParamSnapshot {
     /// See [`Self::new`].
     pub fn with_budget(
         ids: &dyn IdentityScheme,
-        checked: &CheckedGraph,
+        checked: &crate::check::CheckedGraph,
         values: &[f32],
         snapshot_bytes: u64,
-    ) -> Result<Self, Diagnostic> {
+    ) -> Result<Self, crate::diag::Diagnostic> {
         let g = checked.graph();
-        let slots: Vec<u32> = g.param_slots();
+        let slots: alloc::vec::Vec<u32> = g.param_slots();
         if slots.len() != values.len() {
-            return Err(Diagnostic::new(
-                Code::SnapshotLayout,
-                Site::Graph,
-                format!("{} values for {} param slots", values.len(), slots.len()),
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::SnapshotLayout,
+                crate::diag::Site::Graph,
+                alloc::format!("{} values for {} param slots", values.len(), slots.len()),
             ));
         }
         let observed = (values.len() * 4) as u64;
         if observed > snapshot_bytes {
-            return Err(Diagnostic::budget(
-                BudgetKind::SnapshotBytes,
+            return Err(crate::diag::Diagnostic::budget(
+                crate::diag::BudgetKind::SnapshotBytes,
                 snapshot_bytes,
                 observed,
             ));
         }
         if let Some(k) = values.iter().position(|v| !v.is_finite()) {
-            return Err(Diagnostic::new(
-                Code::NonfiniteUpdate,
-                Site::Slot(slots[k]),
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::NonfiniteUpdate,
+                crate::diag::Site::Slot(slots[k]),
                 "non-finite parameter value",
             ));
         }
-        let mut bytes = Vec::with_capacity(values.len() * 4);
+        let mut bytes = alloc::vec::Vec::with_capacity(values.len() * 4);
         for v in values {
             bytes.extend_from_slice(&v.to_bits().to_le_bytes());
         }
@@ -122,10 +120,10 @@ impl ParamSnapshot {
     #[must_use]
     pub fn from_parts(
         ids: &dyn IdentityScheme,
-        graph: Digest,
-        layout: Digest,
-        slots: Vec<u32>,
-        bytes: Vec<u8>,
+        graph: crate::ir::Digest,
+        layout: crate::ir::Digest,
+        slots: alloc::vec::Vec<u32>,
+        bytes: alloc::vec::Vec<u8>,
     ) -> Self {
         let id = snapshot_id(ids, &graph, &slots, &bytes);
         Self {
@@ -139,19 +137,19 @@ impl ParamSnapshot {
 
     /// `ParamSnapshotId`.
     #[must_use]
-    pub const fn id(&self) -> Digest {
+    pub const fn id(&self) -> crate::ir::Digest {
         self.id
     }
 
     /// `GraphLogicalId` this snapshot belongs to.
     #[must_use]
-    pub const fn graph(&self) -> Digest {
+    pub const fn graph(&self) -> crate::ir::Digest {
         self.graph
     }
 
     /// Param layout key.
     #[must_use]
-    pub const fn layout(&self) -> Digest {
+    pub const fn layout(&self) -> crate::ir::Digest {
         self.layout
     }
 
@@ -169,13 +167,13 @@ impl ParamSnapshot {
 
     /// Shared owner of the bytes (for retained-owner accounting).
     #[must_use]
-    pub fn bytes_rc(&self) -> Rc<[u8]> {
-        Rc::clone(&self.bytes)
+    pub fn bytes_rc(&self) -> alloc::rc::Rc<[u8]> {
+        alloc::rc::Rc::clone(&self.bytes)
     }
 
     /// Param values in slot order.
     #[must_use]
-    pub fn values(&self) -> Vec<f32> {
+    pub fn values(&self) -> alloc::vec::Vec<f32> {
         self.bytes
             .chunks_exact(4)
             .map(|c| f32::from_bits(u32::from_le_bytes([c[0], c[1], c[2], c[3]])))
@@ -201,11 +199,14 @@ impl ParamSnapshot {
     ///
     /// # Errors
     /// `E-SNAPSHOT-STALE` or `E-SNAPSHOT-LAYOUT`.
-    pub fn check_use(&self, checked: &CheckedGraph) -> Result<(), Diagnostic> {
+    pub fn check_use(
+        &self,
+        checked: &crate::check::CheckedGraph,
+    ) -> Result<(), crate::diag::Diagnostic> {
         if self.graph != checked.id() {
-            return Err(Diagnostic::new(
-                Code::SnapshotStale,
-                Site::Graph,
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::SnapshotStale,
+                crate::diag::Site::Graph,
                 "snapshot belongs to another GraphLogicalId",
             ));
         }
@@ -214,9 +215,9 @@ impl ParamSnapshot {
             || *self.slots != *params
             || self.bytes.len() != params.len() * 4
         {
-            return Err(Diagnostic::new(
-                Code::SnapshotLayout,
-                Site::Graph,
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::SnapshotLayout,
+                crate::diag::Site::Graph,
                 "snapshot param layout differs from the graph's",
             ));
         }
