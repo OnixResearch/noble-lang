@@ -589,7 +589,7 @@ fn subject_of(
 
 #[cfg(test)]
 mod tests {
-    use super::classify;
+    use crate::extract::admission::classify;
 
     /// `I64` under `depth` nested pairs.
     fn nested(depth: u32) -> noble_kernel::types::Ty {
