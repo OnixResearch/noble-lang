@@ -1,31 +1,22 @@
 //! D8 forward observations, evaluation preflight, scratch accounting (D12)
 //! and the normative CPU reference interpreter (leg L3).
 
-use alloc::{format, vec::Vec};
-
-use crate::check::CheckedGraph;
-use crate::diag::{BudgetKind, Code, Diagnostic, Site};
-use crate::facts;
-use crate::ir::{AffineOperand, Fact, Literal, NodeId, Op, ScalarType, SlotKind};
-use crate::sem::{self, Value};
-use crate::snapshot::ParamSnapshot;
-
 /// `Obs(G, inputs, snapshot)` (D8).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obs {
     /// Fresh immutable outputs, compared by `≡obs`.
-    Normal(Vec<Value>),
+    Normal(alloc::vec::Vec<crate::sem::Value>),
     /// Refused before evaluation (admission, snapshot, input validation, budget).
-    Refused(Diagnostic),
+    Refused(crate::diag::Diagnostic),
     /// `G-FACT-FALSE(node, fact)`: a guard (or a refusing index read) failed; no outputs.
     GuardFailed {
         /// Failing node.
-        node: NodeId,
+        node: crate::ir::NodeId,
         /// Failing fact.
-        fact: Fact,
+        fact: crate::ir::Fact,
     },
     /// Runtime exhaustion of a host budget.
-    Exhausted(BudgetKind),
+    Exhausted(crate::diag::BudgetKind),
     /// `C-CANCELLED` at a layer boundary.
     Cancelled,
 }
@@ -36,7 +27,7 @@ impl Obs {
     #[must_use]
     pub fn obs_eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Self::Normal(a), Self::Normal(b)) => sem::obs_eq_all(a, b),
+            (Self::Normal(a), Self::Normal(b)) => crate::sem::obs_eq_all(a, b),
             (Self::Refused(a), Self::Refused(b)) => a.code == b.code && a.site == b.site,
             (
                 Self::GuardFailed { node: n1, fact: f1 },
@@ -50,7 +41,7 @@ impl Obs {
 
     /// Outputs of a normal observation.
     #[must_use]
-    pub fn outputs(&self) -> Option<&[Value]> {
+    pub fn outputs(&self) -> Option<&[crate::sem::Value]> {
         match self {
             Self::Normal(v) => Some(v),
             _ => None,
@@ -142,7 +133,7 @@ pub struct Report {
 }
 
 impl Report {
-    const fn refused(d: Diagnostic) -> Self {
+    const fn refused(d: crate::diag::Diagnostic) -> Self {
         Self {
             obs: Obs::Refused(d),
             evaluated_nodes: 0,
@@ -151,7 +142,7 @@ impl Report {
 }
 
 /// Slot values after preflight, indexed by slot.
-pub(crate) type SlotValues = Vec<Value>;
+pub(crate) type SlotValues = alloc::vec::Vec<crate::sem::Value>;
 
 /// Evaluation preflight shared by all evaluators: snapshot identity and
 /// layout (D11), input arity/types (`E-INTERFACE`), input-validated facts
@@ -160,76 +151,80 @@ pub(crate) type SlotValues = Vec<Value>;
 /// # Errors
 /// The refusal diagnostic.
 pub fn preflight(
-    checked: &CheckedGraph,
-    inputs: &[Value],
-    snapshot: Option<&ParamSnapshot>,
-) -> Result<SlotValues, Diagnostic> {
+    checked: &crate::check::CheckedGraph,
+    inputs: &[crate::sem::Value],
+    snapshot: Option<&crate::snapshot::ParamSnapshot>,
+) -> Result<SlotValues, crate::diag::Diagnostic> {
     let g = checked.graph();
-    let has_params = g.slots.iter().any(|s| s.kind == SlotKind::Param);
+    let has_params = g.slots.iter().any(|s| s.kind == crate::ir::SlotKind::Param);
     match (snapshot, has_params) {
         (Some(s), _) => s.check_use(checked)?,
         (None, true) => {
-            return Err(Diagnostic::new(
-                Code::SnapshotLayout,
-                Site::Graph,
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::SnapshotLayout,
+                crate::diag::Site::Graph,
                 "graph has param slots but no snapshot was supplied",
             ));
         }
         (None, false) => {}
     }
-    let mut values = Vec::with_capacity(g.slots.len());
+    let mut values = alloc::vec::Vec::with_capacity(g.slots.len());
     let mut it = inputs.iter();
     let mut param_pos = 0usize;
     for (k, slot) in g.slots.iter().enumerate() {
         let k32 = k as u32;
         let v = match slot.kind {
-            SlotKind::Input => match it.next() {
+            crate::ir::SlotKind::Input => match it.next() {
                 Some(v) if v.ty() == slot.ty => *v,
                 Some(v) => {
-                    return Err(Diagnostic::new(
-                        Code::Interface,
-                        Site::Slot(k32),
-                        format!("{} input for {} slot", v.ty().name(), slot.ty.name()),
+                    return Err(crate::diag::Diagnostic::new(
+                        crate::diag::Code::Interface,
+                        crate::diag::Site::Slot(k32),
+                        alloc::format!("{} input for {} slot", v.ty().name(), slot.ty.name()),
                     ));
                 }
                 None => {
-                    return Err(Diagnostic::new(
-                        Code::Interface,
-                        Site::Slot(k32),
+                    return Err(crate::diag::Diagnostic::new(
+                        crate::diag::Code::Interface,
+                        crate::diag::Site::Slot(k32),
                         "missing input",
                     ));
                 }
             },
-            SlotKind::Param => {
+            crate::ir::SlotKind::Param => {
                 // `check_use` established `snapshot.slots() == param_slots()`, so
                 // the j-th param slot is snapshot position j.
                 let pos = param_pos;
                 param_pos += 1;
-                Value::F32(snapshot.and_then(|s| s.bits_at(pos)).ok_or_else(|| {
-                    Diagnostic::new(Code::SnapshotLayout, Site::Slot(k32), "param missing")
+                crate::sem::Value::F32(snapshot.and_then(|s| s.bits_at(pos)).ok_or_else(|| {
+                    crate::diag::Diagnostic::new(
+                        crate::diag::Code::SnapshotLayout,
+                        crate::diag::Site::Slot(k32),
+                        "param missing",
+                    )
                 })?)
             }
         };
         values.push(v);
     }
     if it.next().is_some() {
-        return Err(Diagnostic::new(
-            Code::Interface,
-            Site::Graph,
+        return Err(crate::diag::Diagnostic::new(
+            crate::diag::Code::Interface,
+            crate::diag::Site::Graph,
             "too many inputs",
         ));
     }
     for inf in checked.input_facts() {
         let v = values[inf.slot as usize];
-        let group = facts::group_values(&inf.fact, |m| match g.nodes[m.index()].op {
-            Op::Input(s) | Op::Param(s) => values[s as usize],
+        let group = crate::facts::group_values(&inf.fact, |m| match g.nodes[m.index()].op {
+            crate::ir::Op::Input(s) | crate::ir::Op::Param(s) => values[s as usize],
             _ => v,
         });
-        if !facts::holds(&inf.fact, v, &group, None) {
-            return Err(Diagnostic::new(
-                Code::FactInput,
-                Site::Slot(inf.slot),
-                format!("input fails its {} fact", inf.fact.kind_name()),
+        if !crate::facts::holds(&inf.fact, v, &group, None) {
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::FactInput,
+                crate::diag::Site::Slot(inf.slot),
+                alloc::format!("input fails its {} fact", inf.fact.kind_name()),
             )
             .with_fact(inf.fact.clone()));
         }
@@ -239,16 +234,23 @@ pub fn preflight(
 
 /// Bytes of reference-interpreter scratch for `checked`.
 #[must_use]
-pub fn reference_scratch_bytes(checked: &CheckedGraph) -> u64 {
-    (checked.node_count() * core::mem::size_of::<Value>()) as u64
+pub fn reference_scratch_bytes(checked: &crate::check::CheckedGraph) -> u64 {
+    (checked.node_count() * core::mem::size_of::<crate::sem::Value>()) as u64
 }
 
-pub(crate) fn scratch_preflight(bytes: u64, control: &Control<'_>) -> Result<(), Diagnostic> {
+pub(crate) fn scratch_preflight(
+    bytes: u64,
+    control: &Control<'_>,
+) -> Result<(), crate::diag::Diagnostic> {
     let limit = control
         .forward_scratch
         .unwrap_or_else(|| crate::check::Budgets::default().forward_scratch);
     if bytes > limit {
-        Err(Diagnostic::budget(BudgetKind::ForwardScratch, limit, bytes))
+        Err(crate::diag::Diagnostic::budget(
+            crate::diag::BudgetKind::ForwardScratch,
+            limit,
+            bytes,
+        ))
     } else {
         Ok(())
     }
@@ -256,92 +258,98 @@ pub(crate) fn scratch_preflight(bytes: u64, control: &Control<'_>) -> Result<(),
 
 /// The fact an `index` read fails under `refuse`, for `G-FACT-FALSE`.
 #[must_use]
-pub fn index_refusal_fact(len: usize) -> Fact {
+pub fn index_refusal_fact(len: usize) -> crate::ir::Fact {
     let hi = (len.saturating_sub(1)) as f32;
-    Fact::Range {
-        lo: Literal::F32(0),
-        hi: Literal::f32(hi),
+    crate::ir::Fact::Range {
+        lo: crate::ir::Literal::F32(0),
+        hi: crate::ir::Literal::f32(hi),
     }
 }
 
 /// Evaluates one value node given operand access. Returns `Err(fact)` for a
 /// refusing index read. Guards are handled by the caller.
 pub(crate) fn eval_node(
-    op: &Op,
-    slot: &[Value],
-    get: impl Fn(NodeId) -> Value,
-) -> Result<Value, Fact> {
-    let f = |x: NodeId| match get(x) {
-        Value::F32(b) => f32::from_bits(b),
+    op: &crate::ir::Op,
+    slot: &[crate::sem::Value],
+    get: impl Fn(crate::ir::NodeId) -> crate::sem::Value,
+) -> Result<crate::sem::Value, crate::ir::Fact> {
+    let f = |x: crate::ir::NodeId| match get(x) {
+        crate::sem::Value::F32(b) => f32::from_bits(b),
         _ => f32::NAN,
     };
-    let i = |x: NodeId| match get(x) {
-        Value::I64(v) => v,
+    let i = |x: crate::ir::NodeId| match get(x) {
+        crate::sem::Value::I64(v) => v,
         _ => 0,
     };
     Ok(match op {
-        Op::Input(k) | Op::Param(k) => slot[*k as usize],
-        Op::Const(l) => Value::of_literal(*l),
-        Op::I64Add(a, b) => Value::I64(sem::i64_add(i(*a), i(*b))),
-        Op::I64Sub(a, b) => Value::I64(sem::i64_sub(i(*a), i(*b))),
-        Op::I64Mul(a, b) => Value::I64(sem::i64_mul(i(*a), i(*b))),
-        Op::I64Eq(a, b) => Value::Bool(i(*a) == i(*b)),
-        Op::F32Add(a, b) => Value::f32(sem::add(f(*a), f(*b))),
-        Op::F32Sub(a, b) => Value::f32(sem::sub(f(*a), f(*b))),
-        Op::F32Mul(a, b) => Value::f32(sem::mul(f(*a), f(*b))),
-        Op::F32Affine { bias, terms } => Value::f32(sem::affine(
+        crate::ir::Op::Input(k) | crate::ir::Op::Param(k) => slot[*k as usize],
+        crate::ir::Op::Const(l) => crate::sem::Value::of_literal(*l),
+        crate::ir::Op::I64Add(a, b) => crate::sem::Value::I64(crate::sem::i64_add(i(*a), i(*b))),
+        crate::ir::Op::I64Sub(a, b) => crate::sem::Value::I64(crate::sem::i64_sub(i(*a), i(*b))),
+        crate::ir::Op::I64Mul(a, b) => crate::sem::Value::I64(crate::sem::i64_mul(i(*a), i(*b))),
+        crate::ir::Op::I64Eq(a, b) => crate::sem::Value::Bool(i(*a) == i(*b)),
+        crate::ir::Op::F32Add(a, b) => crate::sem::Value::f32(crate::sem::add(f(*a), f(*b))),
+        crate::ir::Op::F32Sub(a, b) => crate::sem::Value::f32(crate::sem::sub(f(*a), f(*b))),
+        crate::ir::Op::F32Mul(a, b) => crate::sem::Value::f32(crate::sem::mul(f(*a), f(*b))),
+        crate::ir::Op::F32Affine { bias, terms } => crate::sem::Value::f32(crate::sem::affine(
             f32::from_bits(*bias),
             terms.iter().map(|t| {
                 (
                     f32::from_bits(t.coefficient),
                     match t.operand {
-                        AffineOperand::One => 1.0,
-                        AffineOperand::Node(x) => f(x),
+                        crate::ir::AffineOperand::One => 1.0,
+                        crate::ir::AffineOperand::Node(x) => f(x),
                     },
                 )
             }),
         )),
-        Op::F32Relu(x) => Value::f32(sem::relu(f(*x))),
-        Op::F32Reglu { left, gate } => Value::f32(sem::reglu(f(*left), f(*gate))),
-        Op::F32Step(s) => Value::f32(sem::step(f(*s))),
-        Op::F32Select { bit, off, on } => {
-            let (Value::F32(b), Value::F32(o0), Value::F32(o1)) = (get(*bit), get(*off), get(*on))
-            else {
-                return Ok(Value::F32(sem::POS_ZERO));
-            };
-            Value::F32(sem::select(b, o0, o1))
+        crate::ir::Op::F32Relu(x) => crate::sem::Value::f32(crate::sem::relu(f(*x))),
+        crate::ir::Op::F32Reglu { left, gate } => {
+            crate::sem::Value::f32(crate::sem::reglu(f(*left), f(*gate)))
         }
-        Op::F32Index {
+        crate::ir::Op::F32Step(s) => crate::sem::Value::f32(crate::sem::step(f(*s))),
+        crate::ir::Op::F32Select { bit, off, on } => {
+            let (crate::sem::Value::F32(b), crate::sem::Value::F32(o0), crate::sem::Value::F32(o1)) =
+                (get(*bit), get(*off), get(*on))
+            else {
+                return Ok(crate::sem::Value::F32(crate::sem::POS_ZERO));
+            };
+            crate::sem::Value::F32(crate::sem::select(b, o0, o1))
+        }
+        crate::ir::Op::F32Index {
             index,
             table,
             below,
             above,
-        } => match sem::index_position(f(*index), table.len(), *below, *above) {
+        } => match crate::sem::index_position(f(*index), table.len(), *below, *above) {
             Ok(Some(k)) => get(table[k]),
-            Ok(None) => Value::F32(sem::POS_ZERO),
-            Err(sem::IndexRefused) => return Err(index_refusal_fact(table.len())),
+            Ok(None) => crate::sem::Value::F32(crate::sem::POS_ZERO),
+            Err(crate::sem::IndexRefused) => return Err(index_refusal_fact(table.len())),
         },
-        Op::Guard { .. } => Value::Bool(true),
+        crate::ir::Op::Guard { .. } => crate::sem::Value::Bool(true),
     })
 }
 
 /// Tests a guard root.
 pub(crate) fn guard_holds(
-    checked: &CheckedGraph,
-    fact: &Fact,
-    value: NodeId,
-    get: impl Fn(NodeId) -> Value,
+    checked: &crate::check::CheckedGraph,
+    fact: &crate::ir::Fact,
+    value: crate::ir::NodeId,
+    get: impl Fn(crate::ir::NodeId) -> crate::sem::Value,
 ) -> bool {
-    let group = facts::group_values(fact, &get);
+    let group = crate::facts::group_values(fact, &get);
     let shape = match &checked.graph().nodes[value.index()].op {
-        Op::F32Index { table, .. } => Some(table.len() as u32),
+        crate::ir::Op::F32Index { table, .. } => Some(table.len() as u32),
         _ => None,
     };
-    facts::holds(fact, get(value), &group, shape)
+    crate::facts::holds(fact, get(value), &group, shape)
 }
 
 /// Graph outputs as fresh values.
-pub(crate) fn collect_outputs(checked: &CheckedGraph, get: impl Fn(NodeId) -> Value) -> Vec<Value> {
+pub(crate) fn collect_outputs(
+    checked: &crate::check::CheckedGraph,
+    get: impl Fn(crate::ir::NodeId) -> crate::sem::Value,
+) -> alloc::vec::Vec<crate::sem::Value> {
     checked.graph().outputs.iter().map(|o| get(*o)).collect()
 }
 
@@ -351,9 +359,9 @@ pub(crate) fn collect_outputs(checked: &CheckedGraph, get: impl Fn(NodeId) -> Va
 /// enters a new layer; fuel is charged per node.
 #[must_use]
 pub fn reference(
-    checked: &CheckedGraph,
-    inputs: &[Value],
-    snapshot: Option<&ParamSnapshot>,
+    checked: &crate::check::CheckedGraph,
+    inputs: &[crate::sem::Value],
+    snapshot: Option<&crate::snapshot::ParamSnapshot>,
     control: &mut Control<'_>,
 ) -> Report {
     let slots = match preflight(checked, inputs, snapshot) {
@@ -366,11 +374,12 @@ pub fn reference(
     }
     let _lease = ScratchLease::acquire(control.scratch.as_deref_mut(), bytes);
     let g = checked.graph();
-    let mut vals: Vec<Value> = Vec::with_capacity(g.nodes.len());
+    let mut vals: alloc::vec::Vec<crate::sem::Value> =
+        alloc::vec::Vec::with_capacity(g.nodes.len());
     let mut evaluated = 0u64;
     let mut entered: Option<u32> = None;
     for (i, node) in g.nodes.iter().enumerate() {
-        let id = NodeId(i as u32);
+        let id = crate::ir::NodeId(i as u32);
         let layer = checked.layer(id);
         if entered.is_none_or(|e| layer > e) {
             entered = Some(layer);
@@ -383,7 +392,7 @@ pub fn reference(
         }
         if control.fuel.is_some_and(|f| evaluated >= f) {
             return Report {
-                obs: Obs::Exhausted(BudgetKind::Fuel),
+                obs: Obs::Exhausted(crate::diag::BudgetKind::Fuel),
                 evaluated_nodes: evaluated,
             };
         }
@@ -391,8 +400,8 @@ pub fn reference(
         if let Some(count) = control.evaluated_nodes.as_deref_mut() {
             *count += 1;
         }
-        let get = |x: NodeId| vals[x.index()];
-        if let Op::Guard { fact, value } = &node.op {
+        let get = |x: crate::ir::NodeId| vals[x.index()];
+        if let crate::ir::Op::Guard { fact, value } = &node.op {
             if !guard_holds(checked, fact, *value, get) {
                 return Report {
                     obs: Obs::GuardFailed {
@@ -402,7 +411,7 @@ pub fn reference(
                     evaluated_nodes: evaluated,
                 };
             }
-            vals.push(Value::Bool(true));
+            vals.push(crate::sem::Value::Bool(true));
             continue;
         }
         match eval_node(&node.op, &slots, get) {
@@ -428,33 +437,41 @@ pub fn reference(
 /// interpreter's, so this is exactly where [`reference`] would report
 /// `G-FACT-FALSE` (design D10).
 #[must_use]
-pub fn first_failure(checked: &CheckedGraph, vals: &[f32]) -> Option<(NodeId, Fact)> {
+pub fn first_failure(
+    checked: &crate::check::CheckedGraph,
+    vals: &[f32],
+) -> Option<(crate::ir::NodeId, crate::ir::Fact)> {
     first_failure_observed(checked, vals, &mut None)
 }
 
 pub(crate) fn first_failure_observed(
-    checked: &CheckedGraph,
+    checked: &crate::check::CheckedGraph,
     vals: &[f32],
     evaluated_nodes: &mut Option<&mut u64>,
-) -> Option<(NodeId, Fact)> {
-    let get = |x: NodeId| Value::f32(vals[x.index()]);
+) -> Option<(crate::ir::NodeId, crate::ir::Fact)> {
+    let get = |x: crate::ir::NodeId| crate::sem::Value::f32(vals[x.index()]);
     for (i, node) in checked.graph().nodes.iter().enumerate() {
-        let id = NodeId(i as u32);
-        if matches!(node.op, Op::Guard { .. } | Op::F32Index { .. }) {
+        let id = crate::ir::NodeId(i as u32);
+        if matches!(
+            node.op,
+            crate::ir::Op::Guard { .. } | crate::ir::Op::F32Index { .. }
+        ) {
             if let Some(counter) = evaluated_nodes.as_deref_mut() {
                 *counter += 1;
             }
         }
         match &node.op {
-            Op::Guard { fact, value } if !guard_holds(checked, fact, *value, get) => {
+            crate::ir::Op::Guard { fact, value } if !guard_holds(checked, fact, *value, get) => {
                 return Some((id, fact.clone()));
             }
-            Op::F32Index {
+            crate::ir::Op::F32Index {
                 index,
                 table,
                 below,
                 above,
-            } if sem::index_position(vals[index.index()], table.len(), *below, *above).is_err() => {
+            } if crate::sem::index_position(vals[index.index()], table.len(), *below, *above)
+                .is_err() =>
+            {
                 return Some((id, index_refusal_fact(table.len())));
             }
             _ => {}
@@ -465,18 +482,21 @@ pub(crate) fn first_failure_observed(
 
 /// Helper: `F32` inputs from `f32` values.
 #[must_use]
-pub fn f32_inputs(values: &[f32]) -> Vec<Value> {
-    values.iter().map(|v| Value::f32(*v)).collect()
+pub fn f32_inputs(values: &[f32]) -> alloc::vec::Vec<crate::sem::Value> {
+    values.iter().map(|v| crate::sem::Value::f32(*v)).collect()
 }
 
 /// Helper: `I64` inputs.
 #[must_use]
-pub fn i64_inputs(values: &[i64]) -> Vec<Value> {
-    values.iter().map(|v| Value::I64(*v)).collect()
+pub fn i64_inputs(values: &[i64]) -> alloc::vec::Vec<crate::sem::Value> {
+    values.iter().map(|v| crate::sem::Value::I64(*v)).collect()
 }
 
 /// The scalar type of a value node's output (for evaluators' buffers).
 #[must_use]
-pub fn value_type(checked: &CheckedGraph, n: NodeId) -> Option<ScalarType> {
+pub fn value_type(
+    checked: &crate::check::CheckedGraph,
+    n: crate::ir::NodeId,
+) -> Option<crate::ir::ScalarType> {
     checked.ty(n)
 }
