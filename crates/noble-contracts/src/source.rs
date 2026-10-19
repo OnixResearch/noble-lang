@@ -548,14 +548,14 @@ impl Session {
             .iter()
             .rposition(|definition| definition.name == *name);
         if let Some(index) = original {
-            let compatible = replacement::compatible(
+            let is_compatible = replacement::compatible(
                 self,
                 &self.definitions[index],
                 replacement,
                 prepared.limits,
             )
             .map_err(|diagnostic| Error::at(Stage::Check, diagnostic))?;
-            if !compatible {
+            if !is_compatible {
                 return Err(Error::at(
                     Stage::Acceptance,
                     crate::invalid(
@@ -643,10 +643,10 @@ impl Session {
                     ),
                 ));
             }
-            let compatible =
+            let is_compatible =
                 replacement::compatible(&successor, &self.definitions[index], rebuilt, limits)
                     .map_err(|diagnostic| Error::at(Stage::Check, diagnostic))?;
-            if !compatible {
+            if !is_compatible {
                 return Err(Error::at(Stage::Acceptance, crate::invalid(
                     span, "rebuilt dependent changes the checked stack interface or increases effects",
                 )));

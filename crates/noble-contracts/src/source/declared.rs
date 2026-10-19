@@ -339,28 +339,28 @@ pub(crate) fn verify_named_export(
         ));
     }
     let mut at = 0u32;
-    let mut found = false;
-    let mut exported = false;
+    let mut is_found = false;
+    let mut is_exported = false;
     for member in members {
         match member {
             parsing::Member::Export(name) if name == definition => {
-                if exported {
+                if is_exported {
                     return Err(crate::invalid(
                         definition_span,
                         "duplicate named source export",
                     ));
                 }
-                exported = true;
+                is_exported = true;
             }
             parsing::Member::Definition { name, span, .. } => {
                 if name == definition {
-                    if found || at != ordinal || span != definition_span {
+                    if is_found || at != ordinal || span != definition_span {
                         return Err(crate::invalid(
                             definition_span,
                             "named source export has a different lexical definition",
                         ));
                     }
-                    found = true;
+                    is_found = true;
                 }
                 at = attempt!(at.checked_add(1).ok_or_else(|| {
                     crate::source::exhausted(
@@ -372,10 +372,10 @@ pub(crate) fn verify_named_export(
             _ => (),
         }
     }
-    if !found || !exported {
+    if !is_found || !is_exported {
         return Err(crate::invalid(
             definition_span,
-            "named source definition is absent or not exported",
+            "named source definition is absent or not is_exported",
         ));
     }
     Ok(())

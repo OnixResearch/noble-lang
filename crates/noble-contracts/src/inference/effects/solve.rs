@@ -62,13 +62,13 @@ pub(super) fn rigid(
             super::Effect::Union(_, _) => Symbolic::empty(),
         });
     }
-    let mut changed = true;
+    let mut is_changed = true;
     // Concrete and rigid bits only accumulate; an unconstrained hole can
     // only become constrained. The work meter bounds this finite fixed point
     // even when several independent equations constrain the same hole.
-    while changed {
+    while is_changed {
         attempt!(meter.charge(1, span));
-        changed = false;
+        is_changed = false;
         for (at, effect) in arena.effects.iter().enumerate() {
             attempt!(meter.charge(1, span));
             if let super::Effect::Union(a, b) = effect {
@@ -77,7 +77,7 @@ pub(super) fn rigid(
                 let next = left.union(right);
                 if facts[at] != next {
                     facts[at] = next;
-                    changed = true;
+                    is_changed = true;
                 }
             }
         }
@@ -91,7 +91,7 @@ pub(super) fn rigid(
                 unknown: left.unknown && right.unknown,
             };
             for id in [*a, *b] {
-                changed |= attempt!(equate_through_pure(
+                is_changed |= attempt!(equate_through_pure(
                     &arena.effects,
                     &mut facts,
                     id,

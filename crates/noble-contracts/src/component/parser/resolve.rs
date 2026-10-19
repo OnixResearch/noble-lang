@@ -78,7 +78,7 @@ pub(super) fn world(
     {
         return Err(crate::component::exhausted());
     }
-    let unsigned = world
+    let is_unsigned = world
         .imports
         .iter()
         .chain(world.exports.iter())
@@ -89,14 +89,14 @@ pub(super) fn world(
                 .chain(operation.results.iter())
                 .any(|ty| *ty == crate::component::Type::CheckedU64)
         });
-    if !checked_u64 && unsigned {
+    if !checked_u64 && is_unsigned {
         return Err(crate::component::error(
             crate::component::Stage::Binding,
             crate::DiagnosticKind::Invalid,
             "WIT u64 requires an explicitly selected checked I64 boundary",
         ));
     }
-    if checked_u64 && unsigned && !world.imports.is_empty() {
+    if checked_u64 && is_unsigned && !world.imports.is_empty() {
         return Err(crate::component::error(
             crate::component::Stage::Binding,
             crate::DiagnosticKind::Unsupported,
@@ -105,12 +105,12 @@ pub(super) fn world(
     }
     if checked_u64
         && world.exports.iter().any(|operation| {
-            let unsigned = operation
+            let is_unsigned = operation
                 .parameters
                 .iter()
                 .chain(operation.results.iter())
                 .any(|ty| *ty == crate::component::Type::CheckedU64);
-            unsigned
+            is_unsigned
                 && (world.asynchronous
                     || operation.asynchronous
                     || operation.parameters.len() != 1

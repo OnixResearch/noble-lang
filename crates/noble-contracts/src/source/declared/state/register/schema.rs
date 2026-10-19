@@ -240,8 +240,8 @@ impl<'a> Resolution<'a> {
         };
         let payload_params = [left, right];
         let schema = &self.collected.schemas[ordinal];
-        let exported = self.collected.exports.contains(&schema.name);
-        let public = types::public_operations(schema, &self.collected.exports, exported);
+        let is_exported = self.collected.exports.contains(&schema.name);
+        let public = types::public_operations(schema, &self.collected.exports, is_exported);
         let id = noble_kernel::types::NominalTypeId {
             module: self.identity,
             ordinal: ordinal as u32,
@@ -267,7 +267,7 @@ impl<'a> Resolution<'a> {
         let declaration = noble_kernel::contracts::GenericVariantDecl {
             id,
             payload_params,
-            exported,
+            exported: is_exported,
             public,
         };
         let environment = core::mem::take(&mut context.environment);

@@ -23,12 +23,12 @@ impl super::Arena {
     ) -> Result<(alloc::vec::Vec<u32>, bool), crate::Diagnostic> {
         let mut pending = alloc::vec![id];
         let mut bits = 0u64;
-        let mut unknown = false;
+        let mut is_unknown = false;
         while let Some(id) = pending.pop() {
             attempt!(meter.charge(1, span));
             match self.effects.get(attempt!(crate::offset(id, span))) {
                 Some(Effect::Constant(value)) => bits |= value,
-                Some(Effect::Hole | Effect::Rigid(_)) => unknown = true,
+                Some(Effect::Hole | Effect::Rigid(_)) => is_unknown = true,
                 Some(Effect::Union(left, right)) => {
                     pending.push(*left);
                     pending.push(*right);
@@ -44,7 +44,7 @@ impl super::Arena {
                 known.push(bit);
             }
         }
-        Ok((known, unknown))
+        Ok((known, is_unknown))
     }
 
     #[expect(

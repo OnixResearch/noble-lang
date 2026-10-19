@@ -140,7 +140,7 @@ pub(super) fn slot_invoke(
 ) -> Result<(), crate::Diagnostic> {
     let actual = attempt!(state.arena.stack_value(frame.stack, span, meter));
     let mut choice: Option<(u32, alloc::vec::Vec<u32>, usize)> = None;
-    let mut ambiguous = false;
+    let mut is_ambiguous = false;
     for borrowed in &state.borrows {
         attempt!(meter.charge(1, span));
         if selected.is_some_and(|ordinal| ordinal != borrowed.ordinal) {
@@ -163,7 +163,7 @@ pub(super) fn slot_invoke(
             continue;
         }
         let mut forwarded = alloc::vec::Vec::new();
-        let mut compatible = true;
+        let mut is_compatible = true;
         for formal in input
             .iter()
             .filter(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
@@ -176,12 +176,12 @@ pub(super) fn slot_invoke(
             match (positions.next(), positions.next()) {
                 (Some(position), None) => forwarded.push(position),
                 (None, _) | (Some(_), Some(_)) => {
-                    compatible = false;
+                    is_compatible = false;
                     break;
                 }
             }
         }
-        if !compatible {
+        if !is_compatible {
             continue;
         }
         let specificity = forwarded.len();
@@ -191,24 +191,24 @@ pub(super) fn slot_invoke(
                 .is_none_or(|(_, _, previous)| specificity > *previous)
         {
             choice = Some((borrowed.ordinal, forwarded, specificity));
-            ambiguous = false;
+            is_ambiguous = false;
         } else if choice
             .as_ref()
             .is_some_and(|(_, _, previous)| specificity == *previous)
         {
-            ambiguous = true;
+            is_ambiguous = true;
         }
     }
-    if ambiguous {
+    if is_ambiguous {
         return Err(crate::invalid(
             span,
-            "ambiguous compatible borrowed references; select slot.invoke.N",
+            "is_ambiguous is_compatible borrowed references; select slot.invoke.N",
         ));
     }
     let Some((ordinal, forwarded, _)) = choice else {
         return Err(crate::invalid(
             span,
-            "slot.invoke requires a compatible host-issued borrowed input and exact forwarded refs",
+            "slot.invoke requires a is_compatible host-issued borrowed input and exact forwarded refs",
         ));
     };
     let noble_kernel::types::Ty::LiveRef(input, output, ceiling) =
@@ -275,7 +275,7 @@ fn mismatched_literal_origin(
         return None;
     };
     let expected = scheme.stack_in.last()?;
-    let matches = match (expected, literal) {
+    let is_matches = match (expected, literal) {
         (noble_kernel::shapes::Pattern::I64, noble_kernel::untrusted::Lit::I64(_))
         | (noble_kernel::shapes::Pattern::Bool, noble_kernel::untrusted::Lit::Bool(_))
         | (noble_kernel::shapes::Pattern::Text, noble_kernel::untrusted::Lit::Text)
@@ -289,7 +289,7 @@ fn mismatched_literal_origin(
         ) => false,
         _ => return None,
     };
-    (!matches).then_some(draft.span)
+    (!is_matches).then_some(draft.span)
 }
 
 #[expect(

@@ -121,7 +121,7 @@ impl CheckedSelectedTarget<'_> {
             .get(start..end)
             .filter(|bytes| !bytes.is_empty())
             .ok_or(SourceProofRefusal::MismatchedSource)?;
-        let valid = match (&source.kind, checked) {
+        let is_valid = match (&source.kind, checked) {
             (
                 super::Kind::Literal(Lit::I64(a)),
                 Node::Literal {
@@ -152,7 +152,7 @@ impl CheckedSelectedTarget<'_> {
             }
             _ => false,
         };
-        if !valid {
+        if !is_valid {
             return Err(SourceProofRefusal::MismatchedSource);
         }
         if self

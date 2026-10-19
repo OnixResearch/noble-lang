@@ -956,8 +956,11 @@ fn parsed<'m>(
                     match items.first().and_then(|item| atom(item).ok()) {
                         Some("Pair") | Some("Sum") if items.len() == 3 => {
                             let first_depth = deeper(depth, items[1].span)?;
-                            let pair = atom(&items[0])? == "Pair";
-                            push_frame!(ParseFrame::CodeSecond(&items[2], depth, pair), form.span);
+                            let is_pair = atom(&items[0])? == "Pair";
+                            push_frame!(
+                                ParseFrame::CodeSecond(&items[2], depth, is_pair),
+                                form.span
+                            );
                             push_frame!(ParseFrame::Code(&items[1], first_depth), items[1].span);
                         }
                         Some("List") if items.len() == 2 => {
@@ -968,15 +971,15 @@ fn parsed<'m>(
                         _ => return Err(reject(form.span, "not a predicative Type0 code")),
                     }
                 }
-                ParseFrame::CodeSecond(second, depth, pair) => {
+                ParseFrame::CodeSecond(second, depth, is_pair) => {
                     let next_depth = deeper(depth, second.span)?;
-                    push_frame!(ParseFrame::CodePair(pair, second.span), second.span);
+                    push_frame!(ParseFrame::CodePair(is_pair, second.span), second.span);
                     push_frame!(ParseFrame::Code(second, next_depth), second.span);
                 }
-                ParseFrame::CodePair(pair, at) => {
+                ParseFrame::CodePair(is_pair, at) => {
                     let right = take_code!(values, at)?;
                     let left = take_code!(values, at)?;
-                    let ty = if pair {
+                    let ty = if is_pair {
                         Code::Pair(Box::new(left), Box::new(right))
                     } else {
                         Code::Sum(Box::new(left), Box::new(right))
@@ -2178,7 +2181,7 @@ fn check_dependency<'m>(
                         meter,
                         meter.charge(dependency.source.len(), dependency.declaration.span)
                     );
-                    let repeats = active.inline[..active.inline_len]
+                    let is_repeats = active.inline[..active.inline_len]
                         .iter()
                         .flatten()
                         .chain(active.spill.iter())
@@ -2187,19 +2190,19 @@ fn check_dependency<'m>(
                                 && ancestor.version == dependency.version
                                 && ancestor.declaration.name == dependency.declaration.name
                         });
-                    if repeats {
+                    if is_repeats {
                         return Err(reject(
                             dependency.declaration.span,
                             "cyclic proof dependency",
                         ));
                     }
-                    let private_local = parent.is_some_and(|(module, version, source, span)| {
+                    let is_private_local = parent.is_some_and(|(module, version, source, span)| {
                         dependency.module == module
                             && dependency.version == version
                             && dependency.source == source
                             && dependency.declaration.span.start < span
                     });
-                    if (!dependency.exported && !private_local)
+                    if (!dependency.exported && !is_private_local)
                         || dependency.source.is_empty()
                         || dependency.declaration.name.is_empty()
                     {
