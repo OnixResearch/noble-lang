@@ -243,7 +243,7 @@ fn nominal_construct(
         out,
         slots::SlotGuard { shape, depth: 1 }
     ));
-    attempt!(nominal_call(out, b"$op_nominal_construct", id));
+    attempt!(slots::nominal_call(out, b"$op_nominal_construct", id));
     out.append(branch)
 }
 
@@ -256,7 +256,7 @@ fn nominal_into(
         out,
         slots::SlotGuard { shape, depth: 1 }
     ));
-    nominal_call(out, b"$op_nominal_into", id)
+    slots::nominal_call(out, b"$op_nominal_into", id)
 }
 
 struct MatchShapes {
@@ -285,20 +285,7 @@ fn nominal_match(
         depth: 3,
     };
     attempt!(slots::checked_slot(out, nominal));
-    nominal_call(out, b"$op_nominal_match", id)
-}
-
-fn nominal_call(
-    out: &mut crate::output::Buffer,
-    function: &[u8],
-    id: noble_kernel::types::NominalTypeId,
-) -> Result<(), crate::Diagnostic> {
-    attempt!(out.append(b"(call "));
-    attempt!(out.append(function));
-    attempt!(out.append(b" "));
-    attempt!(out.i64(id.module as i64));
-    attempt!(out.append(b" "));
-    out.i32(id.ordinal)
+    slots::nominal_call(out, b"$op_nominal_match", id)
 }
 
 #[path = "functions/slots.rs"]

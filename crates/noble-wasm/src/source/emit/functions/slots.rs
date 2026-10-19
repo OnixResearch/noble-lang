@@ -19,3 +19,16 @@ pub(super) fn checked_slot(
     attempt!(out.i32(guard.depth));
     out.append(b")))) (then (call $fail (i32.const 4)) (return)))\n")
 }
+
+pub(super) fn nominal_call(
+    out: &mut crate::output::Buffer,
+    function: &[u8],
+    id: noble_kernel::types::NominalTypeId,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(call "));
+    attempt!(out.append(function));
+    attempt!(out.append(b" "));
+    attempt!(out.i64(id.module as i64));
+    attempt!(out.append(b" "));
+    out.i32(id.ordinal)
+}
