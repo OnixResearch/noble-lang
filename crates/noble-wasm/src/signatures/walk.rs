@@ -270,9 +270,5 @@ fn push_type(
     Ok(())
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; Core signature refusal must inspect program effects via EffSet::is_empty, which is nonconst over the kernel-owned effect set; the borrowed classifier cannot be const."
-)]
 #[path = "walk/effects.rs"]
 mod effects;
