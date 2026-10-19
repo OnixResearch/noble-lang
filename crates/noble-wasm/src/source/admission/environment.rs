@@ -239,11 +239,11 @@ fn canonical_prefix(
         }
         let mut index = 0usize;
         while index < 32 {
-            if !same_scheme(&env.defs[index], &fixed.defs[index])
+            let has_definition_drift = !same_scheme(&env.defs[index], &fixed.defs[index])
                 || env.kinds[index] != fixed.kinds[index]
                 || !env.deps[index].is_empty()
-                || env.definition_owners[index].is_some()
-            {
+                || env.definition_owners[index].is_some();
+            if has_definition_drift {
                 return Err(crate::Diagnostic::Invalid);
             }
             index += 1;
