@@ -1,4 +1,4 @@
-// Exact interchange and judging for the optional Wolfram provider (#24).
+// Exact interchange and judging for the optional Woxi provider (#24).
 //
 // A case reaches the reference as an exact tree, never as Noble source text:
 //   { op: 'lit', digits: '0001', scale: 3 }      digits / 10^scale (CALC-NUM-03)
@@ -17,7 +17,7 @@
 import assert from 'node:assert/strict';
 import { parseTree, render } from '../oracle/generate.mjs';
 
-export const POLICY_VERSION = 'noble-wolfram-policy/1';
+export const POLICY_VERSION = 'noble-woxi-policy/1';
 export const CATEGORIES = new Set(['DivisionByZero', 'NonIntegerExponent']);
 // Reference states that are never a comparison result.
 export const REFERENCE_STATES = new Set(['oracle-unavailable', 'oracle-timeout', 'oracle-error', 'unsupported',

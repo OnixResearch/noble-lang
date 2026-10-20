@@ -1,18 +1,19 @@
-# Optional Wolfram exact-arithmetic lane (#24)
+# Optional Woxi exact-arithmetic lane (#24)
 
 This directory is an optional, opt-in differential lane for the exact
 calculator. It compares what the real `noble calculator` binary printed with
-exact results computed by a Wolfram kernel. It is a provider under the
+exact results computed by [Woxi](https://github.com/ad-si/Woxi), the Rust
+Wolfram Language interpreter. It is a provider under the
 [CALC-12 oracle lane](../oracle/README.md) (#21). It does not replace that
 lane, the [#19 acceptance runner](../README.md) or any proof. Its results are
 test observations only. They never change a canonical case `state` or
 `evidence`.
 
-**Prerequisite status.** A fresh Wolfram comparison needs a separately
-licensed Wolfram kernel. On aspen3 (2026-10-15) no kernel was available, so
-no fresh oracle run has been made. Every result that needs one is reported as
-`oracle-unavailable`. [results.md](results.md) lists what ran and what is
-blocked.
+**Prerequisite status.** A fresh Woxi comparison needs only the Rust helper:
+`cargo build --release --locked` in [`helper/`](helper/). Woxi is a crates.io
+dependency (`woxi = "=0.3.0"`, AGPL-3.0-or-later) and does not require a
+Wolfram kernel, licence or client. The CPython `python-fractions` stand-in
+needs Python but is never reported as an oracle run.
 
 ## What is shared and what is not
 
@@ -23,25 +24,26 @@ blocked.
 | Text → tree | The #21 test re-parser `parseTree`, checked by `render(parseTree(text)) === text` |
 | Noble execution | The #19 runner (`acceptance.mjs --vectors`), one process per case; this lane reads only the retained stdin, stdout, stderr and supervisor result |
 | Fault models | The #21 [`faults.mjs`](../oracle/faults.mjs) models, used as harness-level implementations and for attribution |
-| **Reference** | **`bridge.py` only.** The guest modules, the Rust host and the #21 BigInt oracle never produce an expected value for this lane. The #21 oracle supplies only the runner's per-vector bookkeeping expectation, which this lane ignores. The tests also use it to cross-check retained fixtures. |
+| **Reference** | **`helper/` (the `woxi` crate) for `woxi`; `bridge.py` for the CPython stand-in.** The guest modules, the Rust host and the #21 BigInt oracle never produce an expected value for this lane. The #21 oracle supplies only the runner's per-vector bookkeeping expectation, which this lane ignores. The tests also use it to cross-check retained fixtures. |
 
 ## Supported subset and semantic adapter
 
 The subset covers single-line expressions over numeric literals with unary
 `-` and binary `+ - * / ^`, in the default display mode. The policy is
-`noble-wolfram-policy/1` and is implemented in `evaluate()` in
-[`bridge.py`](bridge.py). Operands are evaluated left to right, and the first
-diagnostic stops the walk (CALC-PARSE-02).
+`noble-woxi-policy/1` and is implemented in `evaluate()` in
+[`bridge.py`](bridge.py) and its Rust counterpart in
+[`helper/src/main.rs`](helper/src/main.rs). Operands are evaluated left to
+right, and the first diagnostic stops the walk (CALC-PARSE-02).
 
-| Noble operation | Reference computation (Wolfram) | Adapter policy |
+| Noble operation | Reference computation (Woxi) | Adapter policy |
 |---|---|---|
 | literal `d…d[.f…f]` | `Times[digits, Power[10, -scale]]` | CALC-NUM-03: digits are sent as an exact integer |
 | `-x` | `Times[-1, x]` | none |
 | `x + y`, `x - y`, `x * y` | `Plus`, `Subtract`, `Times` | none |
-| `x / y` | `Divide[x, y]` | `y = 0` gives `DivisionByZero`; no Wolfram call is made |
+| `x / y` | `Divide[x, y]` | `y = 0` gives `DivisionByZero`; no Woxi call is made |
 | `x ^ y` | `Power[x, e]` with integer `e` | `y` not integral by value gives `NonIntegerExponent` (`2/2` counts as integral). `y = 0` gives `1`, including `0^0`. `x = 0` with `e < 0` gives `DivisionByZero`. |
 
-Each step is one Wolfram evaluation, wrapped as
+Each step is one Woxi evaluation, wrapped as
 `TimeConstrained[MemoryConstrained[step, memory, mark], seconds, mark]`. The
 step result is checked before use: it must be an `Integer` or a normalized
 `Rational` (`d > 0`, `gcd = 1`). Anything else is an `oracle-error`. That
@@ -59,23 +61,23 @@ A case reaches the reference as a JSON tree, never as Noble source text:
 ```
 
 `digits` is the literal's digit string exactly as written, for example
-`"000000000000000000001"` with scale 20. Python turns it into an exact `int`,
-and wolframclient serializes that int as a WXF integer. No value passes
-through a machine float. The Wolfram Language parser never sees input,
-because the session is started with `inputform_string_evaluation=False` and
-every expression is built with wolframclient's `wl` factory. Results come back
-as decimal strings `{ "kind": "value", "n": "-7", "d": "2" }` or as
+`"000000000000000000001"` with scale 20. The Rust helper turns it into an
+exact decimal string and calls `woxi::interpret_with_stdout` on a generated
+`Rational[n, d]` expression. No input text and no machine float crosses the
+reference boundary: the helper builds every expression from exact decimal
+operands. Results come back as decimal strings
+`{ "kind": "value", "n": "-7", "d": "2" }` or as
 `{ "kind": "diagnostic", "category": "DivisionByZero", "rule": … }`.
 
-### Intentional differences from raw Wolfram
+### Intentional differences from raw Woxi
 
-With a kernel, each fresh run also evaluates these raw expressions (the
-`PROBES` in `bridge.py`) and records them. If a raw result differs from the
-expected one below, the policy's premise no longer holds for that kernel, and
-the run is an `oracle-error`. The expected raw strings were written from the
-Wolfram documentation. They have not been observed on a kernel yet.
+Each fresh Woxi run evaluates these raw expressions (`probes()` in
+[`helper/src/main.rs`](helper/src/main.rs)) and records them. If a raw result
+differs from the expected one below, the policy's premise no longer holds for
+that Woxi version, and the run is an `oracle-error`. The expected strings were
+confirmed against Woxi 0.3.0.
 
-| Input | Raw Wolfram | Noble contract (adapter) |
+| Input | Raw Woxi | Noble contract (adapter) |
 |---|---|---|
 | `0^0` | `Indeterminate` ([Power](https://reference.wolfram.com/language/ref/Power.html)) | `1` (CALC-NUM-05) |
 | `1 / 0` | `ComplexInfinity` | `DivisionByZero` (CALC-NUM-04) |
@@ -119,15 +121,15 @@ Each case gets exactly one verdict:
 
 Every report carries a `label`, which says where the expectations came from:
 
-- `fresh-oracle`: a Wolfram computation made in this run. This is the only
+- `fresh-oracle`: a Woxi computation made in this run. This is the only
   label that can give `lane_result: pass`.
 - `stand-in-reference`: the same adapter policy over CPython
   `fractions.Fraction` (`--arithmetic python-fractions`). The lane uses it to
-  exercise itself without a kernel. It is not Wolfram, and agreement with it
+  exercise itself without Woxi. It is not Woxi, and agreement with it
   is `stand-in-reference-agree`.
 - `offline-fixture-replay`: expectations read from a retained
-  `noble-wolfram-fixtures/v1` file. The file's own `expectation_source` is
-  shown too: `wolfram-recorded` or `python-fractions-stand-in`. Agreement is
+  `noble-woxi-fixtures/v1` file. The file's own `expectation_source` is
+  shown too: `woxi-recorded` or `python-fractions-stand-in`. Agreement is
   `offline-fixture-replay-agree`, never `pass`.
 
 `lane_result` takes the first value that applies:
@@ -155,8 +157,8 @@ An opt-in CI job can therefore tell all of these states apart.
 
 | Recorded | Where |
 |---|---|
-| Policy version and adapter revision: SHA-256 of `interchange.mjs`, `bridge.py` and `../oracle/generate.mjs` | every reference, fixture and report |
-| Client version, Python version, kernel `$Version`/`$VersionNumber`/`$ReleaseNumber`/`$SystemID` and path, time and memory settings, raw probe results | reference files (fresh Wolfram), copied into recorded fixtures |
+| Policy version and adapter revision: SHA-256 of `interchange.mjs`, `bridge.py`, the helper sources and `Cargo.lock`, and `../oracle/generate.mjs` | every reference, fixture and report |
+| Woxi version, helper version, time and memory settings, raw probe results | reference files (fresh Woxi), copied into recorded fixtures |
 | Seed, counts, PRNG, generator file hashes | corpus `generator` |
 | Corpus SHA-256 | reference files and reports |
 | Noble binary SHA-256, owner-supplied source identity, build profile, runner commit and embedded-source hashes, runner/worker Node, WAT assembler version, run configuration | copied from the #19 run receipt into each report |
@@ -168,10 +170,10 @@ verdicts when any of these holds:
 - the policy version or adapter revision differs from the current files;
 - a reference file was computed for a different corpus;
 - one of the optional pins differs: `--expect-binary-sha256`,
-  `--expect-source-id`, `--expect-kernel-version` or
-  `--expect-client-version`.
+  `--expect-source-id`, `--expect-woxi-version` or
+  `--expect-helper-version`.
 
-A fixture without a kernel version therefore fails a kernel pin. A fixture
+A fixture without a Woxi version therefore fails a Woxi pin. A fixture
 whose interchange hash no longer matches a case gives
 `no-recorded-expectation` for that case.
 
@@ -182,34 +184,42 @@ output must be a new file outside the repository, except the output of
 `record`.
 
 ```sh
-L=verification/calculator-v1/wolfram/lane.mjs
+L=verification/calculator-v1/woxi/lane.mjs
 node $L corpus --seed 2424 --count 12 --wide 6 --out C.json   # edge fixtures + seeded cases
 node $L vectors --corpus C.json --out V.json                  # #19 runner vector file
 node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA \
   --source-id SRC --build-profile release --out RUN_DIR --memory-max 2G --concurrency 6 --vectors V.json
-# fresh oracle (needs wolframclient and a licensed kernel; exit 3 when unavailable)
-node $L reference --corpus C.json --arithmetic wolfram --python VENV/bin/python [--kernel PATH] \
+# fresh Woxi reference (exit 3 when the helper is missing)
+node $L reference --corpus C.json --arithmetic woxi \
+  --bridge verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge \
   [--timeout 30] [--memory 1073741824] --out REF.json
 node $L compare --corpus C.json --run RUN_DIR --reference REF.json \
   --expect-binary-sha256 SHA --expect-source-id SRC --out REPORT.json
-# offline replay without Wolfram (labeled offline-fixture-replay)
+# offline replay without Woxi (labeled offline-fixture-replay)
 node $L compare --corpus C.json --run RUN_DIR --fixtures FIXTURES.json --out REPORT.json
-# retain a fresh run's results as replay fixtures (check the kernel licence first)
+# retain a fresh run's results as replay fixtures
 node $L record --corpus C.json --reference REF.json --out FIXTURES.json
 # harness-level #21 fault model as the implementation, with bounded shrinking
 node $L harness --corpus C.json --reference REF.json --implementation fault:integer-division \
-  --python PY [--shrink-rounds 4] [--shrink-candidates 6] --out H.json
+  --bridge BIN [--shrink-rounds 4] [--shrink-candidates 6] --out H.json
 # one real-binary shrink round: the input plus at most N candidates as a corpus
 node $L shrink --input '5 / 4 - 6 / 2' --shrink-candidates 3 --out S.json
 ```
 
-**Client setup.** wolframclient is MIT licensed and is not a repository
-dependency. Install it into a virtual environment outside the repository:
-`python3 -m venv VENV && VENV/bin/pip install wolframclient==1.4.0`. On NixOS
-the pyzmq wheel also needs `LD_LIBRARY_PATH` to point at a
-`gcc-…-lib/lib` directory, for libstdc++. Without the client, without a
-kernel, or without an activated licence, the bridge reports
-`oracle-unavailable` together with the exception text.
+**Helper setup.** Woxi is a crates.io dependency of the standalone helper
+crate (`verification/calculator-v1/woxi/helper`), licensed AGPL-3.0-or-later;
+it is not linked into any Noble production crate. Build it with the pinned
+Rust toolchain:
+
+```sh
+cargo build --release --locked --manifest-path verification/calculator-v1/woxi/helper/Cargo.toml
+```
+
+The committed `Cargo.lock` pins the full dependency graph. The first build
+needs crates.io access; subsequent builds run offline. The helper reports
+`oracle-unavailable` when the binary is missing and `oracle-error` when it
+crashes. `--arithmetic python-fractions` still uses the CPython stand-in and
+needs `python3`, but it never counts as an oracle run.
 
 **A real-binary shrink round.**
 
@@ -229,11 +239,11 @@ error. Every minimal case carries a `replay` object that holds:
 - a one-vector runner file and its command, to replay the Noble execution;
 - the bridge request and its command, to replay the oracle computation.
 
-**Tests.** The tests need neither Wolfram nor network access:
+**Tests.** The tests need neither Woxi nor network access:
 
 ```sh
-node --test verification/calculator-v1/wolfram/lane.test.mjs
-python3 -m unittest discover -s verification/calculator-v1/wolfram -p 'test_*.py'
+node --test verification/calculator-v1/woxi/lane.test.mjs
+python3 -m unittest discover -s verification/calculator-v1/woxi -p 'test_*.py'
 ```
 
 ## Retained fixtures
@@ -247,9 +257,9 @@ python3 -m unittest discover -s verification/calculator-v1/wolfram -p 'test_*.py
   (`expectation_source: python-fractions-stand-in`). A test checks that this
   file is current for the adapter revision and that each expectation agrees
   with the independent #21 BigInt oracle. Replaying it is
-  `offline-fixture-replay`. It is not a Wolfram comparison.
+  `offline-fixture-replay`. It is not a Woxi comparison.
 
-No `wolfram-recorded` fixture is committed. Before you commit one, check the
+No `woxi-recorded` fixture is committed. Before you commit one, check the
 redistribution and retention terms of the licence of the kernel that produced
 it.
 
@@ -276,7 +286,7 @@ lists the evidence for each row.
 
 ## Trust boundary
 
-- Wolfram is not a production dependency. Nothing in Cargo, the flake, the
+- Woxi is not a production dependency. Nothing in Cargo, the flake, the
   shipped calculator or the Wasm runtime changes. The bridge runs only in this
   verification lane, and only when you ask for it.
 - Reference output is untrusted candidate data. It is validated and then used

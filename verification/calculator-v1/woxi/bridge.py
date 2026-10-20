@@ -1,24 +1,20 @@
 #!/usr/bin/env python3
-"""Optional Wolfram reference for the Noble calculator (issue #24).
+"""Optional CPython stand-in reference for the Noble calculator (issue #24).
 
-Reads one request (schema noble-wolfram-request/v1) and writes one response
-(noble-wolfram-response/v1). The request carries each case as an exact
+Reads one request (schema noble-woxi-request/v1) and writes one response
+(noble-woxi-response/v1). The request carries each case as an exact
 interchange tree built by `interchange.mjs`: integer literals are decimal digit
 strings with a decimal scale, never floats and never Noble source text. This
 bridge walks the tree left to right and applies the Noble adapter policy
 (POLICY below) on exact integers. Each arithmetic step is one exact
-computation by the selected arithmetic:
+computation by `python-fractions`, a stand-in on CPython `fractions.Fraction`.
+It is not the Woxi reference and its results are never reported as an oracle
+run. The Woxi reference is the Rust helper in [`helper/`](helper/src/main.rs),
+which links the `woxi` crate and applies the same adapter policy.
 
-  wolfram          a Wolfram kernel via WolframClientForPython (MIT). The
-                   expression is built from wolframclient's `wl` factory and
-                   sent as WXF, so the Wolfram Language parser never sees input.
-  python-fractions a stand-in on CPython `fractions.Fraction`. It is not
-                   Wolfram and its results are never reported as an oracle run.
-
-The kernel is untrusted: only an Integer or a normalized Rational is accepted
-as a step result. Anything else is an `oracle-error`; a Wolfram timeout or
-memory abort is an `oracle-timeout`, never Noble's deterministic
-ResourceLimit. A missing client, kernel or license is `oracle-unavailable`.
+Only exact integers and normalized rationals are accepted as step results.
+Anything else is an `oracle-error`; a resource abort is an `oracle-timeout`,
+never Noble's deterministic ResourceLimit.
 
 Usage: bridge.py REQUEST.json RESPONSE.json
 """
@@ -29,27 +25,10 @@ import platform
 import sys
 from fractions import Fraction
 
-POLICY_VERSION = "noble-wolfram-policy/1"
-REQUEST_SCHEMA = "noble-wolfram-request/v1"
-RESPONSE_SCHEMA = "noble-wolfram-response/v1"
-TIMEOUT_MARK = "noble-oracle-timeout"
-MEMORY_MARK = "noble-oracle-memory"
+POLICY_VERSION = "noble-woxi-policy/1"
+REQUEST_SCHEMA = "noble-woxi-request/v1"
+RESPONSE_SCHEMA = "noble-woxi-response/v1"
 BINARY_OPS = ("add", "sub", "mul", "div", "pow")
-
-# Raw Wolfram evaluations that document the intentional differences. The
-# adapter never uses these values; a different raw result means the policy's
-# premises changed for this kernel and the run is an oracle-error.
-# (id, head, base, exponent or (numerator, denominator), expected InputForm)
-PROBES = (
-    ("zero-power-zero", "Power", 0, 0, "Indeterminate"),
-    ("one-over-zero", "Divide", 1, 0, "ComplexInfinity"),
-    ("zero-over-zero", "Divide", 0, 0, "Indeterminate"),
-    ("zero-power-negative", "Power", 0, -1, "ComplexInfinity"),
-    ("perfect-square-half-power", "Power", 4, (1, 2), "2"),
-    ("irrational-half-power", "Power", 2, (1, 2), "Sqrt[2]"),
-)
-
-
 class Diagnostic(Exception):
     """A Noble numeric diagnostic predicted by the adapter policy."""
 
@@ -79,7 +58,7 @@ def exact(numerator, denominator):
 def evaluate(node, arith, trace):
     """Noble adapter policy over exact steps; operands evaluate left to right.
 
-    POLICY (noble-wolfram-policy/1):
+    POLICY (noble-woxi-policy/1):
       lit  digits/10^scale, from the exact digit string;
       neg  -x;  add x+y;  sub x-y;  mul x*y;
       div  y = 0 is DivisionByZero (no reference call), else x/y;
@@ -167,108 +146,6 @@ class FractionArithmetic:
         pass
 
 
-class Unavailable(Exception):
-    pass
-
-
-class WolframArithmetic:
-    """Exact steps on a Wolfram kernel through WolframClientForPython."""
-
-    name = "wolfram"
-
-    def __init__(self, kernel, timeout_seconds, memory_bytes):
-        try:
-            import wolframclient
-            from wolframclient.deserializers import binary_deserialize
-            from wolframclient.evaluation import WolframLanguageSession
-            from wolframclient.language import wl
-            from wolframclient.language.expression import WLFunction, WLSymbol
-        except Exception as error:  # ImportError, or a native pyzmq load failure
-            raise Unavailable(f"wolframclient is not importable: {error}") from error
-        self.wl = wl
-        self.WLFunction = WLFunction
-        self.WLSymbol = WLSymbol
-        self.deserialize = binary_deserialize
-        self.timeout = timeout_seconds
-        self.memory = memory_bytes
-        try:
-            # inputform_string_evaluation=False: a Python string is never
-            # parsed as Wolfram Language input.
-            self.session = WolframLanguageSession(kernel=kernel, inputform_string_evaluation=False)
-            self.session.start(block=True, timeout=max(60, timeout_seconds))
-        except Exception as error:
-            raise Unavailable(f"no usable Wolfram kernel: {type(error).__name__}: {error}") from error
-        version = self._call_raw(wl.List(WLSymbol("$Version"), WLSymbol("$VersionNumber"),
-                                         WLSymbol("$ReleaseNumber"), WLSymbol("$SystemID")))
-        self.environment = {
-            "client": {"package": "wolframclient", "version": wolframclient.__version__},
-            "python": platform.python_version(),
-            "kernel": {"path": kernel, "version": str(version[0]), "version_number": str(version[1]),
-                       "release": str(version[2]), "system_id": str(version[3])},
-            "resource_settings": {"time_constrained_seconds": timeout_seconds, "memory_constrained_bytes": memory_bytes},
-        }
-
-    def _call_raw(self, expr):
-        wxf = self.session.evaluate_wxf(expr)
-        return self.deserialize(wxf)
-
-    def _operand(self, value):
-        n, d = value
-        return n if d == 1 else self.wl.Rational(n, d)
-
-    def _step(self, expr):
-        wl = self.wl
-        guarded = wl.TimeConstrained(wl.MemoryConstrained(expr, self.memory, MEMORY_MARK), self.timeout, TIMEOUT_MARK)
-        result = self._call_raw(guarded)
-        if result in (TIMEOUT_MARK, MEMORY_MARK):
-            raise OracleTimeout(f"Wolfram {result}")
-        if type(result) is int:
-            return exact(result, 1)
-        if isinstance(result, self.WLFunction) and getattr(result.head, "name", None) == "Rational" \
-                and len(result.args) == 2:
-            return exact(*result.args)
-        raise OracleError(f"non-exact Wolfram result {result!r}")
-
-    def literal(self, digits, scale):
-        return self._step(self.wl.Times(digits, self.wl.Power(10, -scale)))
-
-    def neg(self, x):
-        return self._step(self.wl.Times(-1, self._operand(x)))
-
-    def add(self, x, y):
-        return self._step(self.wl.Plus(self._operand(x), self._operand(y)))
-
-    def sub(self, x, y):
-        return self._step(self.wl.Subtract(self._operand(x), self._operand(y)))
-
-    def mul(self, x, y):
-        return self._step(self.wl.Times(self._operand(x), self._operand(y)))
-
-    def div(self, x, y):
-        return self._step(self.wl.Divide(self._operand(x), self._operand(y)))
-
-    def pow(self, x, e):
-        return self._step(self.wl.Power(self._operand(x), e))
-
-    def probes(self):
-        wl = self.wl
-        out = []
-        for name, head, left, right, expected in PROBES:
-            argument = right if isinstance(right, int) else wl.Rational(*right)
-            shown = right if isinstance(right, int) else f"Rational[{right[0]}, {right[1]}]"
-            # Quiet suppresses the kernel's Power::infy style messages only.
-            text = self._call_raw(wl.Quiet(wl.ToString(wl.InputForm(getattr(wl, head)(left, argument)))))
-            out.append({"id": name, "expression": f"{head}[{left}, {shown}]", "raw_result": str(text),
-                        "expected_raw": expected, "ok": str(text) == expected})
-        return out
-
-    def close(self):
-        try:
-            self.session.terminate()
-        except Exception:
-            pass
-
-
 def reference(case, arith):
     trace = []
     try:
@@ -292,17 +169,12 @@ def run(request, make_arithmetic=None):
     kind = request["arithmetic"]
     response = {"schema": RESPONSE_SCHEMA, "policy_version": POLICY_VERSION, "arithmetic": kind,
                 "python": platform.python_version()}
-    try:
-        if make_arithmetic is not None:
-            arith = make_arithmetic(request)
-        elif kind == "python-fractions":
-            arith = FractionArithmetic()
-        elif kind == "wolfram":
-            arith = WolframArithmetic(request.get("kernel"), request["timeout_seconds"], request["memory_bytes"])
-        else:
-            raise SystemExit(f"unknown arithmetic {kind}")
-    except Unavailable as error:
-        return {**response, "status": "oracle-unavailable", "reason": str(error), "results": []}
+    if make_arithmetic is not None:
+        arith = make_arithmetic(request)
+    elif kind == "python-fractions":
+        arith = FractionArithmetic()
+    else:
+        raise SystemExit(f"arithmetic {kind} is not served by bridge.py; use the Woxi helper")
     try:
         response["environment"] = arith.environment
         probes = arith.probes()

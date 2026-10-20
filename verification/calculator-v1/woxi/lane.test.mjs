@@ -1,7 +1,7 @@
-// Offline tests of the optional Wolfram lane (#24): interchange, untrusted
+// Offline tests of the optional Woxi lane (#24): interchange, untrusted
 // reference validation, judging, bounded shrinking, provenance and replay.
-// No Wolfram kernel, client or Python is needed.
-//   node --test verification/calculator-v1/wolfram/lane.test.mjs
+// No Woxi kernel, client or Python is needed.
+//   node --test verification/calculator-v1/woxi/lane.test.mjs
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -15,7 +15,7 @@ import { fromText, judge, signature, validateReference } from './interchange.mjs
 import { adapterProvenance, buildCorpus, compareRun, shrink, SCHEMAS } from './lane.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const scratch = () => fs.mkdtempSync(path.join(os.tmpdir(), 'wolfram-lane-'));
+const scratch = () => fs.mkdtempSync(path.join(os.tmpdir(), 'woxi-lane-'));
 const value = (n, d = '1') => ({ kind: 'value', n, d });
 const diagnostic = category => ({ kind: 'diagnostic', category });
 const observed = (stdout, stderr = [], status = stderr.length ? 1 : 0) => ({ stdout, stderr, status, signal: null, timedOut: false });
@@ -56,7 +56,7 @@ test('reference results are validated as untrusted data', () => {
     { kind: 'value', n: '0', d: '2' }, { kind: 'diagnostic', category: 'ComplexInfinity' }, { kind: 'Certified' }, null]) {
     assert.equal(validateReference(bad).kind, 'oracle-error', JSON.stringify(bad));
   }
-  assert.equal(validateReference({ kind: 'oracle-timeout', detail: 'Wolfram noble-oracle-timeout' }).kind, 'oracle-timeout');
+  assert.equal(validateReference({ kind: 'oracle-timeout', detail: 'Woxi noble-oracle-timeout' }).kind, 'oracle-timeout');
 });
 
 test('judging distinguishes value, normalization, category and stream mismatches', () => {
@@ -141,7 +141,7 @@ const edgeCorpus = dir => {
   return { corpus, sha256: crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'), path: file };
 };
 
-test('offline fixture replay is labeled and never reported as a Wolfram pass', () => {
+test('offline fixture replay is labeled and never reported as a Woxi pass', () => {
   const dir = scratch();
   const info = edgeCorpus(dir);
   const fixtures = path.join(here, 'fixtures/edge-expected-stand-in.json');
@@ -174,7 +174,7 @@ test('stale or mismatched provenance invalidates every verdict', () => {
   const fixtures = JSON.parse(fs.readFileSync(path.join(here, 'fixtures/edge-expected-stand-in.json'), 'utf8'));
   const variants = {
     adapter: { ...fixtures, adapter: { ...fixtures.adapter, revision: '0'.repeat(64) } },
-    policy: { ...fixtures, policy_version: 'noble-wolfram-policy/0' },
+    policy: { ...fixtures, policy_version: 'noble-woxi-policy/0' },
   };
   for (const [name, content] of Object.entries(variants)) {
     const file = path.join(dir, `${name}.json`);
@@ -186,8 +186,8 @@ test('stale or mismatched provenance invalidates every verdict', () => {
   const fixturesFile = path.join(here, 'fixtures/edge-expected-stand-in.json');
   assert.equal(compareRun(info, path.join(dir, 'run'), { fixtures: fixturesFile, 'expect-binary-sha256': 'other' })
     .lane_result, 'stale-provenance');
-  assert.equal(compareRun(info, path.join(dir, 'run'), { fixtures: fixturesFile, 'expect-kernel-version': '14.1.0' })
-    .lane_result, 'stale-provenance', 'a stand-in fixture cannot satisfy a kernel pin');
+  assert.equal(compareRun(info, path.join(dir, 'run'), { fixtures: fixturesFile, 'expect-woxi-version': '0.3.0' })
+    .lane_result, 'stale-provenance', 'a stand-in fixture cannot satisfy a Woxi pin');
 });
 
 test('an unavailable or stand-in reference is visible and never a pass', () => {
@@ -199,22 +199,22 @@ test('an unavailable or stand-in reference is visible and never a pass', () => {
   const referenceFile = (status, label, arithmetic, reference) => {
     const file = path.join(dir, `${label}-${status}.json`);
     fs.writeFileSync(file, JSON.stringify({ schema: SCHEMAS.reference, label, arithmetic, status,
-      reason: status === 'ok' ? null : 'no usable Wolfram kernel', policy_version: adapterProvenance().policy_version,
+      reason: status === 'ok' ? null : 'no usable Woxi kernel', policy_version: adapterProvenance().policy_version,
       adapter: adapterProvenance(), corpus: { sha256: info.sha256 }, environment: null, probes: null,
       results: [{ id: pick.id, interchange_sha256: pick.interchange_sha256, reference }] }));
     return file;
   };
   const unavailable = compareRun(one, path.join(dir, 'run'), { reference: referenceFile('oracle-unavailable', 'fresh-oracle',
-    'wolfram', { kind: 'oracle-unavailable', detail: 'no usable Wolfram kernel' }) });
+    'woxi', { kind: 'oracle-unavailable', detail: 'no usable Woxi kernel' }) });
   assert.equal(unavailable.lane_result, 'oracle-unavailable');
   assert.deepEqual(unavailable.summary, { 'oracle-unavailable': 1 });
   const standIn = compareRun(one, path.join(dir, 'run'), { reference: referenceFile('ok', 'stand-in-reference',
     'python-fractions', { kind: 'value', n: '3', d: '10' }) });
   assert.equal(standIn.lane_result, 'stand-in-reference-agree');
-  const timeout = compareRun(one, path.join(dir, 'run'), { reference: referenceFile('ok', 'fresh-oracle', 'wolfram',
-    { kind: 'oracle-timeout', detail: 'Wolfram noble-oracle-timeout' }) });
+  const timeout = compareRun(one, path.join(dir, 'run'), { reference: referenceFile('ok', 'fresh-oracle', 'woxi',
+    { kind: 'oracle-timeout', detail: 'Woxi noble-oracle-timeout' }) });
   assert.equal(timeout.lane_result, 'incomplete');
-  const pass = compareRun(one, path.join(dir, 'run'), { reference: referenceFile('ok', 'fresh-oracle', 'wolfram',
+  const pass = compareRun(one, path.join(dir, 'run'), { reference: referenceFile('ok', 'fresh-oracle', 'woxi',
     { kind: 'value', n: '3', d: '10' }) });
   assert.equal(pass.lane_result, 'pass');
 });

@@ -1,18 +1,21 @@
 {
-  "schema": "noble-wolfram-fixtures/v1",
+  "schema": "noble-woxi-fixtures/v1",
   "expectation_source": "python-fractions-stand-in",
-  "policy_version": "noble-wolfram-policy/1",
+  "policy_version": "noble-woxi-policy/1",
   "adapter": {
-    "policy_version": "noble-wolfram-policy/1",
+    "policy_version": "noble-woxi-policy/1",
     "files": {
-      "wolfram/interchange.mjs": "7c841d1ced499eafa41dbe37a1c37a5c38449c941a17ec6ab9e6aaf77e6b94d7",
-      "wolfram/bridge.py": "205cba1bc3205df68de378517d14182f46598e83afd22ef15fe34ed10b263886",
+      "woxi/interchange.mjs": "4c833070a4198cd95977ba5315e8eb07d66f0979e0ca62b8584ee53acfd50d05",
+      "woxi/bridge.py": "a7ee9fbb4f02f94a27d25549f4a1a2dffddfbc89a5ff52404c55fd31870d765c",
+      "woxi/helper/src/main.rs": "965eaec3b4bc5d8baf3b46a4f19403fd6132f689a82ad4f497f15460e36b8634",
+      "woxi/helper/Cargo.toml": "e16b180129b131e2b1dd894b0aa8fc11a6640518f5b5be9f2f3aea6ffcbb355e",
+      "woxi/helper/Cargo.lock": "74795fd5fd639576412fd5ace53604ffd5eb5b3c568377618c8c88826a79c92f",
       "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
     },
-    "revision": "b9b99666736bee4f17e2c6749b60c49eb8d47b9b1f966adb18506f16b7ddadbb"
+    "revision": "f6f50c80a70026ea0ae8f8e0c267b20021c317f755ed83ecd835d0df112b4a98"
   },
   "reference_provenance": {
-    "file_sha256": "e162f0e099e762c4e0fd62342308f23d931f3aead3b5c7ff0750230924beabc4",
+    "file_sha256": "ec52fe294da468834de8871b4e90b4dff326f528f25e99e1c1cf035589120cb3",
     "label": "stand-in-reference",
     "arithmetic": "python-fractions",
     "environment": {
@@ -20,8 +23,8 @@
       "python": "3.13.12"
     },
     "probes": [],
-    "corpus_sha256": "1707a0be7d2312df55e050dda267fd89322a75c1dd9d11ba0993aa4c4a6b1cd0",
-    "started": "2026-10-15T22:09:26.023Z"
+    "corpus_sha256": "998eab089fa5f68fe0c6bc13f740e9d0be6dbbde51970d85b5545b215eadcbd5",
+    "started": "2026-10-20T01:14:20.459Z"
   },
   "cases": [
     {

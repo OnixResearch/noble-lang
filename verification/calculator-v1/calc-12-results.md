@@ -4,8 +4,8 @@ These are implementation observations recorded on 2026-10-15. They do not
 change the state or evidence of any canonical case; CALC-12 stays
 `absent` / `not-run`.
 
-The optional [Wolfram lane](wolfram/README.md) (#24) and its
-[results](wolfram/results.md) are recorded separately.
+The optional [Woxi lane](woxi/README.md) (#24) and its
+[results](woxi/results.md) are recorded separately.
 
 The lanes are documented separately: the [oracle](oracle/README.md), the
 [seeded faults](seeded-faults/README.md) and the

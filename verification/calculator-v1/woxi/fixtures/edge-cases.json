@@ -1,6 +1,6 @@
 {
-  "schema": "noble-wolfram-edge-cases/v1",
-  "note": "Inputs only. Expected results come from a reference run (fresh Wolfram, or the labeled python-fractions stand-in) and are retained separately as noble-wolfram-fixtures/v1 files. Texts use the #21 generator's render spelling so the interchange tree round-trips byte for byte.",
+  "schema": "noble-woxi-edge-cases/v1",
+  "note": "Inputs only. Expected results come from a reference run (fresh Wolfram, or the labeled python-fractions stand-in) and are retained separately as noble-woxi-fixtures/v1 files. Texts use the #21 generator's render spelling so the interchange tree round-trips byte for byte.",
   "cases": [
     { "id": "decimal-sum", "text": "0.1 + 0.2", "purpose": "exact decimal interpretation: 3/10, not a binary float" },
     { "id": "decimal-literal", "text": "0.1", "purpose": "CALC-12 probe: one tenth is exact", "calc12_fault": "binary-float-decimal-parser" },

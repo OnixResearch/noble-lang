@@ -1,25 +1,27 @@
 #!/usr/bin/env node
-// Optional Wolfram exact-arithmetic differential lane (#24).
+// Optional Woxi exact-arithmetic differential lane (#24).
 //
 // Separate from the CALC-12 oracle lane (#21), the #19 acceptance runner and
 // any proof. It shares only the #21 generator (corpus and shrink candidates)
-// and the #19 runner's vector schema and retained process I/O. The reference
-// is `bridge.py`; nothing here computes an expected value.
+// and the #19 runner's vector schema and retained process I/O. The `woxi`
+// reference is the Rust helper in `helper/` (the `woxi` crate); the
+// `python-fractions` stand-in is `bridge.py`. Nothing here computes an
+// expected value.
 //
 //   lane.mjs corpus    --seed N --count N --wide N --out NEW_FILE
 //   lane.mjs vectors   --corpus FILE --out NEW_FILE
-//   lane.mjs reference --corpus FILE --arithmetic wolfram|python-fractions [--python PY]
-//                      [--kernel PATH] [--timeout S] [--memory BYTES] --out NEW_FILE
+//   lane.mjs reference --corpus FILE --arithmetic woxi|python-fractions
+//                      [--bridge BIN] [--python PY] [--timeout S] [--memory BYTES] --out NEW_FILE
 //   lane.mjs record    --corpus FILE --reference FILE --out NEW_FILE
 //   lane.mjs compare   --corpus FILE --run RUN_DIR (--reference FILE | --fixtures FILE)
 //                      [--expect-binary-sha256 H] [--expect-source-id S]
-//                      [--expect-kernel-version V] [--expect-client-version V] --out NEW_FILE
+//                      [--expect-woxi-version V] [--expect-helper-version V] --out NEW_FILE
 //   lane.mjs harness   --corpus FILE --reference FILE --implementation fault:NAME|calc12-oracle
-//                      [--python PY] [--shrink-rounds N] [--shrink-candidates N] --out NEW_FILE
+//                      [--bridge BIN] [--python PY] [--shrink-rounds N] [--shrink-candidates N] --out NEW_FILE
 //   lane.mjs shrink    (--corpus FILE --case ID | --input TEXT) [--shrink-candidates N] --out NEW_FILE
 //
 // Exit status of `reference`, `compare` and `harness`: 0 pass (or agreement in
-// a non-Wolfram mode), 1 disagreement, 2 incomplete, 3 oracle-unavailable,
+// a non-Woxi mode), 1 disagreement, 2 incomplete, 3 oracle-unavailable,
 // 4 stale provenance or oracle-error.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -39,26 +41,27 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const lane = path.resolve(here, '..');
 const root = path.resolve(here, '../../..');
 export const SCHEMAS = Object.freeze({
-  corpus: 'noble-wolfram-corpus/v1', reference: 'noble-wolfram-reference/v1', fixtures: 'noble-wolfram-fixtures/v1',
-  report: 'noble-wolfram-comparison/v1', harness: 'noble-wolfram-harness/v1', request: 'noble-wolfram-request/v1',
+  corpus: 'noble-woxi-corpus/v1', reference: 'noble-woxi-reference/v1', fixtures: 'noble-woxi-fixtures/v1',
+  report: 'noble-woxi-comparison/v1', harness: 'noble-woxi-harness/v1', request: 'noble-woxi-request/v1',
 });
 // Files that determine the reference computation for a given interchange tree
 // (and the tree for a given text). A change to any of them invalidates every
 // reference file and fixture recorded before it.
-const ADAPTER_FILES = ['wolfram/interchange.mjs', 'wolfram/bridge.py', 'oracle/generate.mjs'];
-const CORPUS_FILES = ['oracle/generate.mjs', 'oracle/calculator.mjs', 'oracle/rational.mjs', 'wolfram/lane.mjs',
-  'wolfram/fixtures/edge-cases.json'];
+const ADAPTER_FILES = ['woxi/interchange.mjs', 'woxi/bridge.py', 'woxi/helper/src/main.rs',
+  'woxi/helper/Cargo.toml', 'woxi/helper/Cargo.lock', 'oracle/generate.mjs'];
+const CORPUS_FILES = ['oracle/generate.mjs', 'oracle/calculator.mjs', 'oracle/rational.mjs', 'woxi/lane.mjs',
+  'woxi/fixtures/edge-cases.json'];
 const EDGE_FILE = path.join(here, 'fixtures/edge-cases.json');
 const BUDGET_FLAGS = new Set(['--input-bytes', '--numeric-digits', '--intermediate-bits', '--syntax-depth',
   '--call-depth', '--evaluation-work', '--output-size']);
-export const LABELS = Object.freeze({ wolfram: 'fresh-oracle', 'python-fractions': 'stand-in-reference' });
-const RECORDED_SOURCE = Object.freeze({ wolfram: 'wolfram-recorded', 'python-fractions': 'python-fractions-stand-in' });
+export const LABELS = Object.freeze({ woxi: 'fresh-oracle', 'python-fractions': 'stand-in-reference' });
+const RECORDED_SOURCE = Object.freeze({ woxi: 'woxi-recorded', 'python-fractions': 'python-fractions-stand-in' });
 export const NON_CLAIMS = Object.freeze([
   'Agreement on finitely many inputs is test evidence only; it establishes no universal arithmetic theorem and no parser correctness (CALC-EVIDENCE-01).',
-  'Reference output (Wolfram or otherwise) is untrusted candidate data: it mints no Certified status, discharges no proof obligation, changes no accepted program semantics and changes no canonical case state.',
-  'Only a fresh-oracle run is a Wolfram comparison; stand-in-reference and offline-fixture-replay results are labeled as such and never count as one.',
+  'Reference output (Woxi or otherwise) is untrusted candidate data: it mints no Certified status, discharges no proof obligation, changes no accepted program semantics and changes no canonical case state.',
+  'Only a fresh-oracle run is a Woxi comparison; stand-in-reference and offline-fixture-replay results are labeled as such and never count as one.',
   'Grammar, diagnostic spans, lexical sessions, session rollback, deterministic budgets and host failures are outside this lane (CALC-12 oracle #21, runner #19, budgets #20).',
-  'A Wolfram timeout or memory abort is an oracle failure, not Noble\'s ResourceLimit; a Noble ResourceLimit is a budget divergence, not a disagreement.',
+  'A Woxi timeout or memory abort is an oracle failure, not Noble\'s ResourceLimit; a Noble ResourceLimit is a budget divergence, not a disagreement.',
 ]);
 
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -128,7 +131,7 @@ const caseOf = (id, text, extra) => {
 export const buildCorpus = ({ seed, count, wide }) => {
   assert.ok([seed, count, wide].every(value => Number.isInteger(value) && value >= 0));
   const edge = readJson(EDGE_FILE);
-  assert.equal(edge.schema, 'noble-wolfram-edge-cases/v1');
+  assert.equal(edge.schema, 'noble-woxi-edge-cases/v1');
   const cases = edge.cases.map(item => caseOf(`edge/${item.id}`, item.text,
     { origin: 'edge-fixture', purpose: item.purpose, calc12_fault: item.calc12_fault ?? null }));
   const seen = new Set(cases.map(c => c.text));
@@ -175,31 +178,38 @@ const runnerExpect = text => {
 };
 
 export const vectorsOf = (corpus, corpusSha) => validateVectors({
-  schema: VECTOR_SCHEMA, lane: 'optional Wolfram lane (#24); expectations are runner bookkeeping from the CALC-12 oracle',
+  schema: VECTOR_SCHEMA, lane: 'optional Woxi lane (#24); expectations are runner bookkeeping from the CALC-12 oracle',
   corpus_sha256: corpusSha,
-  vectors: corpus.cases.map(item => ({ id: `WOLFRAM/${item.id}`, case: 'CALC-12-wolfram', kind: 'line', support: 'cli',
+  vectors: corpus.cases.map(item => ({ id: `WOXI/${item.id}`, case: 'CALC-12-woxi', kind: 'line', support: 'cli',
     flags: item.flags, operations: [{ line: item.text, expect: runnerExpect(item.text) }] })),
 });
 
 // ---- reference ---------------------------------------------------------
 
-export const requestOf = (cases, { arithmetic, kernel = null, timeout = 30, memory = 1 << 30 }) => ({
-  schema: SCHEMAS.request, policy_version: POLICY_VERSION, arithmetic, kernel, timeout_seconds: timeout,
+export const requestOf = (cases, { arithmetic, timeout = 30, memory = 1 << 30 }) => ({
+  schema: SCHEMAS.request, policy_version: POLICY_VERSION, arithmetic, timeout_seconds: timeout,
   memory_bytes: memory, cases: cases.map(item => ({ id: item.id, interchange: item.interchange })),
 });
 
-// Runs bridge.py once. Returns the bridge response plus how it was invoked.
-export const callBridge = (request, { python = 'python3', scratch }) => {
+// Runs the selected reference once. Woxi is the Rust helper; python-fractions
+// is the CPython stand-in. Both answer the same response schema.
+export const callBridge = (request, { bridge, python = 'python3', scratch }) => {
   fs.mkdirSync(scratch, { recursive: true });
   const stamp = `${process.pid}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   const requestFile = path.join(scratch, `request-${stamp}.json`);
   const responseFile = path.join(scratch, `response-${stamp}.json`);
   fs.writeFileSync(requestFile, `${JSON.stringify(request, null, 2)}\n`, { flag: 'wx' });
-  const child = spawnSync(python, [path.join(here, 'bridge.py'), requestFile, responseFile], { encoding: 'utf8' });
-  const invocation = { python, exit_status: child.status, stderr_tail: (child.stderr ?? '').slice(-2000),
-    launch_error: child.error ? String(child.error) : null };
+  const woxi = request.arithmetic === 'woxi';
+  const command = woxi ? bridge : python;
+  const args = woxi ? [requestFile, responseFile] : [path.join(here, 'bridge.py'), requestFile, responseFile];
+  const child = spawnSync(command, args, { encoding: 'utf8' });
+  const invocation = woxi
+    ? { provider: 'woxi', bridge, exit_status: child.status, stderr_tail: (child.stderr ?? '').slice(-2000),
+      launch_error: child.error ? String(child.error) : null }
+    : { provider: 'python-fractions', python, exit_status: child.status,
+      stderr_tail: (child.stderr ?? '').slice(-2000), launch_error: child.error ? String(child.error) : null };
   if (child.error || !fs.existsSync(responseFile)) {
-    const reason = child.error ? `python not runnable: ${child.error.message}` : `bridge exited ${child.status} without a response`;
+    const reason = child.error ? `${command} not runnable: ${child.error.message}` : `reference exited ${child.status} without a response`;
     // A missing interpreter is a missing prerequisite; a bridge crash is an infrastructure error.
     return { response: { status: child.error?.code === 'ENOENT' ? 'oracle-unavailable' : 'oracle-error', reason, results: [] },
       invocation };
@@ -210,7 +220,7 @@ export const callBridge = (request, { python = 'python3', scratch }) => {
 const referenceFile = (corpusInfo, cases, options) => {
   const started = new Date().toISOString();
   const { response, invocation } = callBridge(requestOf(cases, options),
-    { python: options.python, scratch: options.scratch });
+    { bridge: options.bridge, python: options.python, scratch: options.scratch });
   const results = new Map((response.results ?? []).map(r => [r.id, r.reference]));
   return {
     schema: SCHEMAS.reference, label: LABELS[options.arithmetic], arithmetic: options.arithmetic,
@@ -243,13 +253,13 @@ const providerOf = (options, corpusInfo) => {
     check('policy_version', file.policy_version, POLICY_VERSION);
     check('adapter revision', file.adapter.revision, current.revision);
     check('corpus sha256', file.corpus.sha256, corpusInfo.sha256);
-    const kernel = file.environment?.kernel?.version ?? null;
-    const client = file.environment?.client?.version ?? null;
-    if (options['expect-kernel-version'] !== undefined) check('kernel version', kernel, options['expect-kernel-version']);
-    if (options['expect-client-version'] !== undefined) check('client version', client, options['expect-client-version']);
+    const woxi = file.environment?.woxi_version ?? null;
+    const helper = file.environment?.helper_version ?? null;
+    if (options['expect-woxi-version'] !== undefined) check('woxi version', woxi, options['expect-woxi-version']);
+    if (options['expect-helper-version'] !== undefined) check('helper version', helper, options['expect-helper-version']);
     const results = new Map(file.results.map(r => [r.id, r]));
-    return { label: file.label, expectation_source: file.label === 'fresh-oracle' ? 'fresh Wolfram computation'
-      : 'fresh python-fractions stand-in computation (not Wolfram)',
+    return { label: file.label, expectation_source: file.label === 'fresh-oracle' ? 'fresh Woxi computation'
+      : 'fresh python-fractions stand-in computation (not Woxi)',
     status: file.status, reason: file.reason, stale, arithmetic: file.arithmetic,
     provenance: { file: path.resolve(options.reference), sha256: sha(fs.readFileSync(options.reference)),
       policy_version: file.policy_version, adapter: file.adapter, environment: file.environment, probes: file.probes,
@@ -267,8 +277,8 @@ const providerOf = (options, corpusInfo) => {
   assert.equal(file.schema, SCHEMAS.fixtures);
   check('policy_version', file.policy_version, POLICY_VERSION);
   check('adapter revision', file.adapter.revision, current.revision);
-  const kernel = file.reference_provenance?.environment?.kernel?.version ?? null;
-  if (options['expect-kernel-version'] !== undefined) check('kernel version', kernel, options['expect-kernel-version']);
+  const woxi = file.reference_provenance?.environment?.woxi_version ?? null;
+  if (options['expect-woxi-version'] !== undefined) check('woxi version', woxi, options['expect-woxi-version']);
   const byHash = new Map(file.cases.map(c => [c.interchange_sha256, c]));
   return { label: 'offline-fixture-replay', expectation_source: file.expectation_source, status: 'ok', reason: null,
     stale, arithmetic: null,
@@ -307,11 +317,13 @@ const attribute = (text, observed) => FAULT_NAMES.filter(name => {
 
 export const replayArtifact = (item, provider) => ({
   text: item.text, flags: item.flags, interchange: item.interchange, interchange_sha256: item.interchange_sha256,
-  noble: { vector_file: { schema: VECTOR_SCHEMA, vectors: [{ id: 'WOLFRAM/replay', case: 'CALC-12-wolfram', kind: 'line',
+  noble: { vector_file: { schema: VECTOR_SCHEMA, vectors: [{ id: 'WOXI/replay', case: 'CALC-12-woxi', kind: 'line',
     support: 'cli', flags: item.flags, operations: [{ line: item.text, expect: runnerExpect(item.text) }] }] },
   command: 'node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls' },
-  oracle: { request: requestOf([item], { arithmetic: provider.arithmetic ?? 'wolfram' }),
-    command: 'python3 verification/calculator-v1/wolfram/bridge.py REQUEST.json NEW_RESPONSE.json',
+  oracle: { request: requestOf([item], { arithmetic: provider.arithmetic ?? 'woxi' }),
+    command: (provider.arithmetic ?? 'woxi') === 'woxi'
+      ? 'verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json'
+      : 'python3 verification/calculator-v1/woxi/bridge.py REQUEST.json NEW_RESPONSE.json',
     available_in_this_report: provider.label === 'fresh-oracle' },
 });
 
@@ -385,7 +397,7 @@ export const compareRun = (corpusInfo, runDir, options) => {
   const verdicts = [...results.map(r => r.verdict), ...outside.map(o => o.verdict), ...notRun.map(() => 'not-run')];
   const report = {
     schema: SCHEMAS.report,
-    lane: 'optional Wolfram exact-arithmetic lane (#24); distinct from the CALC-12 oracle (#21), #19 acceptance and proofs',
+    lane: 'optional Woxi exact-arithmetic lane (#24); distinct from the CALC-12 oracle (#21), #19 acceptance and proofs',
     label: provider.label, expectation_source: provider.expectation_source, reference_status: provider.status,
     reference_reason: provider.reason, lane_result: laneResult(provider, verdicts), stale_provenance: provider.stale,
     provenance: { lane: { ...adapterProvenance(), repository: gitState(), node: process.version },
@@ -470,7 +482,7 @@ const harness = (options, corpusInfo) => {
       return { id: `shrink-${pad(index)}`, interchange, interchange_sha256: interchangeSha(interchange) };
     });
     const { response } = callBridge(requestOf(items, { arithmetic: provider.arithmetic }),
-      { python: options.python, scratch });
+      { bridge: options.bridge, python: options.python, scratch });
     const byId = new Map((response.results ?? []).map(r => [r.id, r.reference]));
     return items.map(item => validateReference(byId.get(item.id) ?? { kind: response.status === 'ok' ? 'oracle-error'
       : response.status, detail: response.reason }));
@@ -518,10 +530,11 @@ const commands = {
   },
   reference: options => {
     const info = loadCorpus(options.corpus);
-    assert.ok(LABELS[options.arithmetic], '--arithmetic wolfram|python-fractions');
+    assert.ok(LABELS[options.arithmetic], '--arithmetic woxi|python-fractions');
     const out = fresh(options.out);
     const file = referenceFile(info, info.corpus.cases, { arithmetic: options.arithmetic, python: options.python ?? 'python3',
-      kernel: options.kernel ?? null, timeout: Number(options.timeout ?? 30), memory: Number(options.memory ?? 2 ** 30),
+      bridge: options.bridge ?? path.join(here, 'helper/target/release/noble-woxi-bridge'),
+      timeout: Number(options.timeout ?? 30), memory: Number(options.memory ?? 2 ** 30),
       scratch: `${out}.bridge` });
     write(out, file);
     console.log(`${file.label}: ${file.status}${file.reason ? `: ${file.reason}` : ''}`);
@@ -575,8 +588,8 @@ const commands = {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [command, ...rest] = process.argv.slice(2);
   const { values } = parseArgs({ args: rest, options: Object.fromEntries(['seed', 'count', 'wide', 'out', 'corpus',
-    'arithmetic', 'python', 'kernel', 'timeout', 'memory', 'reference', 'fixtures', 'run', 'expect-binary-sha256',
-    'expect-source-id', 'expect-kernel-version', 'expect-client-version', 'implementation', 'shrink-rounds',
+    'arithmetic', 'python', 'bridge', 'timeout', 'memory', 'reference', 'fixtures', 'run', 'expect-binary-sha256',
+    'expect-source-id', 'expect-woxi-version', 'expect-helper-version', 'implementation', 'shrink-rounds',
     'shrink-candidates', 'case', 'input'].map(name => [name, { type: 'string' }])) });
   assert.ok(commands[command], `usage: lane.mjs ${Object.keys(commands).join('|')} …`);
   assert.ok(values.out, '--out NEW_FILE is required');

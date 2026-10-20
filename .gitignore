@@ -5,3 +5,4 @@ target/
 .octet/
 proofs/m1/NobleKernel.lean
 proofs/m1/translation.json
+__pycache__/

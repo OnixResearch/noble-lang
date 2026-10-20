@@ -106,9 +106,9 @@ two ways:
 The models are incorrect by construction and never serve as an oracle. The
 real mutant patches live in [`../seeded-faults/`](../seeded-faults/README.md).
 
-## Optional Wolfram provider
+## Optional Woxi provider
 
-The [Wolfram lane](../wolfram/README.md) (#24) is an opt-in second
+The [Woxi lane](../woxi/README.md) (#24) is an opt-in second
 exact-arithmetic reference. It is limited to the arithmetic subset. It
 reuses this directory's generator, shrink candidates and fault models, but
 not its arithmetic.

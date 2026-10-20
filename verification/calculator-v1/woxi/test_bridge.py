@@ -1,7 +1,7 @@
-"""Offline tests of bridge.py: adapter policy, untrusted-result validation and
-unavailable states. Standard library only; no Wolfram kernel or client.
+"""Offline tests of bridge.py: adapter policy and unavailable states.
+Standard library only; the Woxi reference is the separate Rust helper.
 
-    python3 -m unittest discover -s verification/calculator-v1/wolfram -p 'test_*.py'
+    python3 -m unittest discover -s verification/calculator-v1/woxi -p 'test_*.py'
 """
 
 import os
@@ -82,67 +82,14 @@ class Policy(unittest.TestCase):
         self.assertEqual(outcome({"op": "call", "x": lit("1"), "y": lit("2")})["kind"], "oracle-error")
 
 
-class FakeFunction:
-    def __init__(self, head, args):
-        self.head = type("Symbol", (), {"name": head})()
-        self.args = args
-
-
-class UntrustedResults(unittest.TestCase):
-    """WolframArithmetic._step accepts only Integer or normalized Rational."""
-
-    def arith(self, result):
-        arith = object.__new__(bridge.WolframArithmetic)
-        arith.WLFunction = FakeFunction
-        arith.timeout = arith.memory = 1
-        arith.wl = type("WL", (), {"__getattr__": lambda self, name: (lambda *a: (name, a))})()
-        arith._call_raw = lambda expr: result
-        return arith
-
-    def test_exact_results_are_accepted(self):
-        self.assertEqual(self.arith(12).add((1, 1), (11, 1)), (12, 1))
-        self.assertEqual(self.arith(FakeFunction("Rational", (3, 10))).add((1, 10), (1, 5)), (3, 10))
-
-    def test_inexact_or_malformed_results_are_oracle_errors(self):
-        for result in (float("nan"), 0.3, True, FakeFunction("Rational", (2, 4)), FakeFunction("Rational", (1, -2)),
-                       FakeFunction("DirectedInfinity", (1,)), "ComplexInfinity"):
-            with self.assertRaises(bridge.OracleError, msg=repr(result)):
-                self.arith(result).mul((1, 1), (1, 1))
-
-    def test_time_and_memory_aborts_are_oracle_timeouts(self):
-        for mark in (bridge.TIMEOUT_MARK, bridge.MEMORY_MARK):
-            with self.assertRaises(bridge.OracleTimeout):
-                self.arith(mark).pow((2, 1), 10)
-        self.assertEqual(bridge.reference({"id": "t", "interchange": op("mul", lit("2"), lit("3"))},
-                                          self.arith(bridge.TIMEOUT_MARK))["kind"], "oracle-timeout")
-
-
 class States(unittest.TestCase):
     def request(self, **overrides):
-        return {"schema": bridge.REQUEST_SCHEMA, "policy_version": bridge.POLICY_VERSION, "arithmetic": "wolfram",
-                "kernel": None, "timeout_seconds": 1, "memory_bytes": 1,
+        return {"schema": bridge.REQUEST_SCHEMA, "policy_version": bridge.POLICY_VERSION, "arithmetic": "python-fractions",
+                "timeout_seconds": 1, "memory_bytes": 1,
                 "cases": [{"id": "a", "interchange": lit("1")}], **overrides}
 
-    def test_missing_client_is_unavailable(self):
-        saved = sys.modules.get("wolframclient")
-        sys.modules["wolframclient"] = None  # makes `import wolframclient` raise ImportError
-        try:
-            response = bridge.run(self.request())
-        finally:
-            if saved is None:
-                del sys.modules["wolframclient"]
-            else:
-                sys.modules["wolframclient"] = saved
-        self.assertEqual(response["status"], "oracle-unavailable")
-        self.assertEqual(response["results"], [])
-
-    def test_missing_kernel_is_unavailable(self):
-        def no_kernel(_request):
-            raise bridge.Unavailable("no usable Wolfram kernel: Cannot locate a kernel automatically.")
-        self.assertEqual(bridge.run(self.request(), make_arithmetic=no_kernel)["status"], "oracle-unavailable")
-
     def test_policy_mismatch_is_an_error(self):
-        response = bridge.run(self.request(policy_version="noble-wolfram-policy/0"))
+        response = bridge.run(self.request(policy_version="noble-woxi-policy/0"))
         self.assertEqual(response["status"], "oracle-error")
 
     def test_changed_policy_probe_is_an_error(self):
@@ -153,7 +100,7 @@ class States(unittest.TestCase):
         self.assertEqual(response["status"], "oracle-error")
         self.assertIn("zero-power-zero", response["reason"])
 
-    def test_stand_in_runs_without_wolfram(self):
+    def test_stand_in_runs_without_woxi(self):
         response = bridge.run(self.request(arithmetic="python-fractions"))
         self.assertEqual((response["status"], response["results"][0]["reference"]["n"]), ("ok", "1"))
 

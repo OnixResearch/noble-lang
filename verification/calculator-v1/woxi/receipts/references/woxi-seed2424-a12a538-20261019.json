@@ -1,0 +1,531 @@
+{
+  "schema": "noble-woxi-reference/v1",
+  "label": "fresh-oracle",
+  "arithmetic": "woxi",
+  "status": "ok",
+  "reason": null,
+  "policy_version": "noble-woxi-policy/1",
+  "adapter": {
+    "policy_version": "noble-woxi-policy/1",
+    "files": {
+      "woxi/interchange.mjs": "4c833070a4198cd95977ba5315e8eb07d66f0979e0ca62b8584ee53acfd50d05",
+      "woxi/bridge.py": "a7ee9fbb4f02f94a27d25549f4a1a2dffddfbc89a5ff52404c55fd31870d765c",
+      "woxi/helper/src/main.rs": "965eaec3b4bc5d8baf3b46a4f19403fd6132f689a82ad4f497f15460e36b8634",
+      "woxi/helper/Cargo.toml": "e16b180129b131e2b1dd894b0aa8fc11a6640518f5b5be9f2f3aea6ffcbb355e",
+      "woxi/helper/Cargo.lock": "74795fd5fd639576412fd5ace53604ffd5eb5b3c568377618c8c88826a79c92f",
+      "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+    },
+    "revision": "f6f50c80a70026ea0ae8f8e0c267b20021c317f755ed83ecd835d0df112b4a98"
+  },
+  "corpus": {
+    "path": "/tmp/woxi-C.json",
+    "sha256": "a31c204e849560503c7ca898ea6f1c480edbf80365539629fc97a112fe760af1",
+    "generator": {
+      "seed": 2424,
+      "count": 12,
+      "wide": 6,
+      "prng": "mulberry32 (#21 oracle/generate.mjs)",
+      "files": {
+        "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+        "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+        "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+        "woxi/lane.mjs": "916c688c450ded30f9ad473dcdec992a2d94aec5553870eb79a4aea5dbcd7724",
+        "woxi/fixtures/edge-cases.json": "92067cf1426b2e66141e99a471f4819d36feb9503a5b3c8bf5ffd210cd9bb16d"
+      }
+    }
+  },
+  "environment": {
+    "implementation": "woxi",
+    "woxi_version": "0.3.0",
+    "helper_version": "0.1.0",
+    "rust": "unknown"
+  },
+  "probes": [
+    {
+      "id": "zero-power-zero",
+      "expression": "0^0",
+      "raw_result": "Indeterminate",
+      "expected_raw": "Indeterminate",
+      "ok": true
+    },
+    {
+      "id": "one-over-zero",
+      "expression": "1/0",
+      "raw_result": "ComplexInfinity",
+      "expected_raw": "ComplexInfinity",
+      "ok": true
+    },
+    {
+      "id": "zero-over-zero",
+      "expression": "0/0",
+      "raw_result": "Indeterminate",
+      "expected_raw": "Indeterminate",
+      "ok": true
+    },
+    {
+      "id": "zero-power-negative",
+      "expression": "0^-1",
+      "raw_result": "ComplexInfinity",
+      "expected_raw": "ComplexInfinity",
+      "ok": true
+    },
+    {
+      "id": "perfect-square-half-power",
+      "expression": "4^(1/2)",
+      "raw_result": "2",
+      "expected_raw": "2",
+      "ok": true
+    },
+    {
+      "id": "irrational-half-power",
+      "expression": "2^(1/2)",
+      "raw_result": "Sqrt[2]",
+      "expected_raw": "Sqrt[2]",
+      "ok": true
+    }
+  ],
+  "bridge": {
+    "provider": "woxi",
+    "bridge": "/home/brittonr/.cache/noble-issues/wt/woxi-oracle/verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge",
+    "exit_status": 0,
+    "stderr_tail": "\n                                        0\nPower::indet: Indeterminate expression 0  encountered.\n\n                                 1\nPower::infy: Infinite expression - encountered.\n                                 0\n\n                                 1\nPower::infy: Infinite expression - encountered.\n                                 0\n\nInfinity::indet: Indeterminate expression 0 ComplexInfinity encountered.\n\n                                 1\nPower::infy: Infinite expression - encountered.\n                                 0\nok\n",
+    "launch_error": null,
+    "response_policy_version": "noble-woxi-policy/1"
+  },
+  "started": "2026-10-20T01:14:14.866Z",
+  "finished": "2026-10-20T01:14:14.885Z",
+  "results": [
+    {
+      "id": "edge/decimal-sum",
+      "interchange_sha256": "a0f988af42ada11352b04a6dd72d9c5fae4608bcd92bdb552966c550025d8ca6",
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "10"
+      }
+    },
+    {
+      "id": "edge/decimal-literal",
+      "interchange_sha256": "e6fb91dfeef498329d2b48490957381b8fb4d479c569774934d849aec1d9a975",
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "10"
+      }
+    },
+    {
+      "id": "edge/decimal-tiny",
+      "interchange_sha256": "69d90b45a5f1ddf85b2a3d26a0fe716c5b2f4ed8aafdfccbdec229257f8052eb",
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "100000000000000000000"
+      }
+    },
+    {
+      "id": "edge/decimal-scaled",
+      "interchange_sha256": "47e31fe527c56ea547dcda11b6bb570ace74c730cce1c3d7887425dee2aa5355",
+      "reference": {
+        "kind": "value",
+        "n": "14159",
+        "d": "100000"
+      }
+    },
+    {
+      "id": "edge/decimal-times-integer",
+      "interchange_sha256": "f95baf9682d427c1c56dab6bdc89fb01551dd5c98444a3511249cd36e5874174",
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/rational-sum",
+      "interchange_sha256": "d4e51e14537bf56dedcd95252f66c31faedf5b1058a355b0598cb8195764f58f",
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      }
+    },
+    {
+      "id": "edge/normalize-quotient",
+      "interchange_sha256": "d92a2f98ca2472c4b7e57cfe73307116b97ab89e7705a6f5a03716c3191f7710",
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      }
+    },
+    {
+      "id": "edge/rational-quotient",
+      "interchange_sha256": "fa29f47a031fd20c8a774e1f52a0b2f5664b49410b04c06c4a2f26391aef01c8",
+      "reference": {
+        "kind": "value",
+        "n": "7",
+        "d": "2"
+      }
+    },
+    {
+      "id": "edge/signed-quotient",
+      "interchange_sha256": "32b42b1a918899cfad7869fe12118a4d25e49ef764ab45e00a04144e0cb345f4",
+      "reference": {
+        "kind": "value",
+        "n": "-1",
+        "d": "2"
+      }
+    },
+    {
+      "id": "edge/subtract",
+      "interchange_sha256": "2f0b2a3ea9df25c477e5e2afb8858c237df36223e052b501b354cee98383d472",
+      "reference": {
+        "kind": "value",
+        "n": "7",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/negative-result",
+      "interchange_sha256": "03027c6ac657909b3a49a4cd47e7d912b66c6655542b177b894950609356c214",
+      "reference": {
+        "kind": "value",
+        "n": "-5",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/negative-zero",
+      "interchange_sha256": "33fb3de1197112812ed259c20631f24990610594847b4dc288b9ab06fc9f885d",
+      "reference": {
+        "kind": "value",
+        "n": "0",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/i64-max-plus-one",
+      "interchange_sha256": "8abbb2119cafa10284372cdfc84347ba46033b219bde93d884f5010f29ebfd30",
+      "reference": {
+        "kind": "value",
+        "n": "9223372036854775808",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/i64-min-minus-one",
+      "interchange_sha256": "836f4ebf9a9666262e97ad5588b1dbb69106f38fb002037b837efd30acdedd91",
+      "reference": {
+        "kind": "value",
+        "n": "-9223372036854775809",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/float-precision-trap",
+      "interchange_sha256": "81e2db5f6d044a53454825eb927991d06e6c10ba5fae1a40dbde89d3826787b3",
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/u64-squared",
+      "interchange_sha256": "6ab44423167563b39caeed60b87286b007fc1b523c8b6a538f55cfbb505e7da5",
+      "reference": {
+        "kind": "value",
+        "n": "340282366920938463463374607431768211456",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/wide-quotient",
+      "interchange_sha256": "c6561cec79992a612600dcbd6918c5367d601b5a414fff84a3f294c9728312d7",
+      "reference": {
+        "kind": "value",
+        "n": "13717421",
+        "d": "109739369"
+      }
+    },
+    {
+      "id": "edge/power-right-associative",
+      "interchange_sha256": "a878d0de0ecc7c90c4553bf107e0231652f77b5a0e12d3175dfd48c66472cc5c",
+      "reference": {
+        "kind": "value",
+        "n": "512",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/power-negative-exponent",
+      "interchange_sha256": "ffdc8e797d3229358359c413056329b703b06cd2bdea305849a3e95006b7eab0",
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "8"
+      }
+    },
+    {
+      "id": "edge/power-rational-base",
+      "interchange_sha256": "022f716443a9b9dcd42bcc4ac52fdb00d62ad8f6cf3a7af0fe72e82ae2cf5fec",
+      "reference": {
+        "kind": "value",
+        "n": "9",
+        "d": "4"
+      }
+    },
+    {
+      "id": "edge/power-negative-base",
+      "interchange_sha256": "f5507bb1e9eb9b6dceb235fc608af25c14d3a762fe1c7b9a73a7100570fabd7d",
+      "reference": {
+        "kind": "value",
+        "n": "-8",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/power-unary-precedence",
+      "interchange_sha256": "2a72468bcd96cb021ce990c9f93fec0a18fbb060189faf1f3e1cf753fa7c7a90",
+      "reference": {
+        "kind": "value",
+        "n": "-4",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/power-integral-by-value",
+      "interchange_sha256": "4d60d1177456ea681b880b863c79d0d9bc7686c243c44f708bde5cc0e3fe505d",
+      "reference": {
+        "kind": "value",
+        "n": "4",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/zero-power-zero",
+      "interchange_sha256": "3f2f54be01fad986353ea68187c64ff8ec70101a331c63069b675cd2a5b6f361",
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      }
+    },
+    {
+      "id": "edge/divide-by-zero",
+      "interchange_sha256": "9304a2d2e7dcdeeb82965336dae9f4079d72c42a8acf71adf43665e851d15f47",
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      }
+    },
+    {
+      "id": "edge/zero-over-zero",
+      "interchange_sha256": "4a53cf9da38791d177a6abd57cbaf474bc3bbb473b9d18bc30d3c37ed47d78bb",
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      }
+    },
+    {
+      "id": "edge/zero-negative-power",
+      "interchange_sha256": "caae3583a2d862604d8b4702a3952359f0c552f19dda8cfcb4e3e05edcc25d6f",
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-base-negative-exponent"
+      }
+    },
+    {
+      "id": "edge/nonintegral-exponent-exact-root",
+      "interchange_sha256": "5d917bea039a97656e134c6c195eca0140b76db6130df04495281128b7600828",
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      }
+    },
+    {
+      "id": "edge/nonintegral-exponent",
+      "interchange_sha256": "3e4b2e258b0696671b0a1caad0c838fd23b82bf32fe357935e34d8abd656c7c6",
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      }
+    },
+    {
+      "id": "edge/first-error-left",
+      "interchange_sha256": "2be80b980e18de161d3c267dc813658b21ca9799a7cd238948711e0335d5a67f",
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      }
+    },
+    {
+      "id": "edge/first-error-right",
+      "interchange_sha256": "05a9b11217e0f978d6a1513244bafcac834b5b6d6cbe715789515df7aa4b3ecd",
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-01",
+      "interchange_sha256": "3b33d01350a8fe676b29789b0cf307931c9b4b9e3ad08c469450006b6066c0fc",
+      "reference": {
+        "kind": "value",
+        "n": "48",
+        "d": "1"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-02",
+      "interchange_sha256": "6c84e609d6c5649c6d2695084670afb21dab1397c6a52af7e56bb2d1a9c10f90",
+      "reference": {
+        "kind": "value",
+        "n": "-4",
+        "d": "1"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-03",
+      "interchange_sha256": "d82fdcd9a4d61e326341d370c9f759b853f001f9e9c4c7e7e038e34d97cb19a7",
+      "reference": {
+        "kind": "value",
+        "n": "-3",
+        "d": "5"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-04",
+      "interchange_sha256": "8abdc4fbd4e0e6383f2a4391fc52de3b8d4fef1bff4b4ac1f22309f876c885c9",
+      "reference": {
+        "kind": "value",
+        "n": "-27",
+        "d": "5"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-05",
+      "interchange_sha256": "427526bc1db7e8c86d389aec960397a2267b59a802d42f51323ebe996bcc7385",
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-07",
+      "interchange_sha256": "fe2db4f441452268b738324cc0718f913d4e64b3411776ba872f89cd727dc282",
+      "reference": {
+        "kind": "value",
+        "n": "18446744073709551619",
+        "d": "1"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-08",
+      "interchange_sha256": "2c6ef98bc1f1c62b80f77c9283bce00e2cab8dfc3ed26af71f18f7742f2075ec",
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "1"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-09",
+      "interchange_sha256": "1ba5d19969b0eeec5fab121a8d26962ed4eda89dff33dfa9c477448e593e2854",
+      "reference": {
+        "kind": "value",
+        "n": "83",
+        "d": "25"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-10",
+      "interchange_sha256": "8f53a856a6bdf4103b1ad4b596640248c30391c155d50e3ec04c9a975eba403c",
+      "reference": {
+        "kind": "value",
+        "n": "2289",
+        "d": "1525"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-11",
+      "interchange_sha256": "ed7802ec70d203ea49e1bbf88f7e883b332fe0e5f09492bfd8b291f0d16fcf17",
+      "reference": {
+        "kind": "value",
+        "n": "-27",
+        "d": "1"
+      }
+    },
+    {
+      "id": "seed-2424/calc12-12",
+      "interchange_sha256": "ff5ea8a2999290d19d4444feaf614e1425ef5a78c831b06fabf8c729ee6495cf",
+      "reference": {
+        "kind": "value",
+        "n": "-19",
+        "d": "24"
+      }
+    },
+    {
+      "id": "seed-2424/wide-01",
+      "interchange_sha256": "14e0f0030ba910b42f7d3ce2599d8ab965f2ef4e80c4e746dc4575cbf3d5528b",
+      "reference": {
+        "kind": "value",
+        "n": "2191235959321850841137201618",
+        "d": "1"
+      }
+    },
+    {
+      "id": "seed-2424/wide-02",
+      "interchange_sha256": "a758a7d1c46f5411567d7be47a0be1cde5d21ac447b34fd04ee953b46eadfdac",
+      "reference": {
+        "kind": "value",
+        "n": "-801448065849856090234574",
+        "d": "1"
+      }
+    },
+    {
+      "id": "seed-2424/wide-03",
+      "interchange_sha256": "8574137372f929c757bc163bb9fceb77762959ed277c248a33520b56b9a0877c",
+      "reference": {
+        "kind": "value",
+        "n": "105933469824051790035249342573421213688979",
+        "d": "1"
+      }
+    },
+    {
+      "id": "seed-2424/wide-04",
+      "interchange_sha256": "1ebe4711cb391a3ecd410ec5a4607dda2035385ea2e55152be53883d1f341558",
+      "reference": {
+        "kind": "value",
+        "n": "9945638250859729114534795789",
+        "d": "4165748366043675355632459975"
+      }
+    },
+    {
+      "id": "seed-2424/wide-05",
+      "interchange_sha256": "4dc3c805db06a68854a55b70caba53cbf4dec4b057df85bb565890be70cae003",
+      "reference": {
+        "kind": "value",
+        "n": "-941049368211521303183466891155519205182399",
+        "d": "10000000000000000000000"
+      }
+    },
+    {
+      "id": "seed-2424/wide-06",
+      "interchange_sha256": "3ce6a2a8394197df602be657a7b4d09b9f0286aa4687549d95368306ff7544a8",
+      "reference": {
+        "kind": "value",
+        "n": "-497558334749684148988",
+        "d": "175"
+      }
+    }
+  ]
+}

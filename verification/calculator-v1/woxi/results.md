@@ -1,46 +1,59 @@
-# Wolfram lane results (#24)
+# Woxi lane results (#24)
 
-These are test observations recorded on 2026-10-15 on aspen3. They change no
+These are test observations recorded on 2026-10-19 on aspen3. They change no
 canonical case `state` or `evidence`, and CALC-12 stays `absent` / `not-run`.
 The lane is described in [README.md](README.md). Compact receipts are in
-`verification/calculator-v1/wolfram/receipts/`; every file there is listed
+`verification/calculator-v1/woxi/receipts/`; every file there is listed
 with its SHA-256 in [`receipts/sha256.txt`](receipts/sha256.txt).
 
-## Prerequisite: no licensed Wolfram kernel
+## Fresh Woxi reference (2026-10-19)
 
-Every check below was read-only. Nothing was downloaded, installed or
-activated, apart from the MIT-licensed client in a temporary virtual
-environment.
+The Wolfram kernel was replaced by [Woxi](https://github.com/ad-si/Woxi)
+0.3.0, the Rust Wolfram Language interpreter. No kernel, licence or
+Wolfram client is involved. The helper
+([`helper/src/main.rs`](helper/src/main.rs)) links the `woxi` crate and calls
+`interpret_with_stdout` on exact `Rational[n, d]` expressions.
 
-- `command -v wolframscript WolframKernel math wolfram` finds nothing.
-- `/usr/local/Wolfram`, `/opt/Wolfram*`, `~/.Wolfram*`,
-  `~/.WolframEngine`, `~/.Mathematica` and `~/.config/Wolfram` do not exist.
-- No `wolfram`/`mathematica` path is in `/nix/store`. The profile's `smath`
-  is LibreOffice Math.
-- nixpkgs offers `wolfram-engine` 14.1.0, which is `unfree` and not
-  redistributable. Its source,
-  `/nix/store/0crwh4b3h4fllbx772v436d42rjj79rz-WolframEngine_14.1.0_LIN.sh.drv`,
-  is a `requireFile` (`restrict-message` builder): the user must download the
-  licensed installer, and an activation is still needed after that. That
-  installer is not in the store.
-- The client is obtainable. `wolframclient` 1.4.0 (MIT) was installed into a
-  temporary virtual environment outside the repository, using the devShell's
-  Python 3.13.12. On NixOS its pyzmq wheel needs libstdc++ through
-  `LD_LIBRARY_PATH`. Starting a session then fails with
-  `WolframKernelException: Cannot locate a kernel automatically. Please
-  provide an explicit kernel path.` This failure is retained in
-  [`receipts/inputs/reference-wolfram-unavailable.json`](receipts/inputs/reference-wolfram-unavailable.json),
-  where the lane reports it as `oracle-unavailable` with exit status 3.
+| Item | Value |
+|---|---|
+| Noble source | `6617abddab3cebc8022b27725112acddf2559aee` (release build) |
+| Binary SHA-256 | `218ec4bf9659d9ecfed1b53fa95738b3b6260ef1857156993a52337404be3338` |
+| Corpus | seed 2424, 12 seeded + 36 edge/wide cases; 48 run, 1 malformed excluded |
+| Woxi / helper | `0.3.0` / `0.1.0`, `Cargo.lock` committed |
+| Reference | [`receipts/references/woxi-seed2424-a12a538-20261019.json`](receipts/references/woxi-seed2424-a12a538-20261019.json), status `ok` |
+| Comparison | [`receipts/comparisons/woxi-seed2424-6617abd-20261019.json`](receipts/comparisons/woxi-seed2424-6617abd-20261019.json) |
+| Run receipt | [`receipts/runs/woxi-seed2424-6617abd-20261019/receipt.json`](receipts/runs/woxi-seed2424-6617abd-20261019/receipt.json) |
 
-**So no fresh Wolfram oracle computation was made.** These steps are blocked
-on a licensed kernel:
+**Raw probes observed on Woxi 0.3.0** (all six match the policy premise):
+`0^0 = Indeterminate`, `1/0 = ComplexInfinity`, `0/0 = Indeterminate`,
+`0^-1 = ComplexInfinity`, `4^(1/2) = 2`, `2^(1/2) = Sqrt[2]`.
 
-- every `fresh-oracle` comparison;
-- the raw policy probes (`0^0`, `1 / 0`, `0 / 0`, `0^-1`, `4^(1/2)`, `2^(1/2)`);
-- recording `wolfram-recorded` fixtures, together with pinning a kernel
-  version.
+**Comparison summary:** 39 `agree`, 9 `budget-divergence`, 2 `unsupported`,
+**0 `disagree`**. The nine budget divergences are the wide/u64 cases where
+Noble reports `ResourceLimit` at the 2 GiB runner bound (`edge/u64-squared`,
+`edge/wide-quotient`, `seed-2424/calc12-07`, `seed-2424/wide-01..06`). The two
+unsupported entries are the acceptance runner's control vectors, not corpus
+cases. By the lane's own definition a run with non-agreements and no
+disagreement is `incomplete`, not `pass`; the report says exactly that.
 
-None of these is reported as passed.
+### What changed from the Wolfram provider
+
+- The reference is a Rust process built from the committed `Cargo.lock`; the
+  `woxi` crate is AGPL-3.0-or-later and is not linked into production crates.
+- `TimeConstrained` is a no-op in Woxi and `MemoryConstrained` is a symbol, so
+  the adapter enforces its own exponent/scale bounds (`1 << 20`) and the lane
+  keeps the runner's wall-clock and memory limits. A bound hit is
+  `oracle-timeout`, never Noble's deterministic `ResourceLimit`.
+- Provenance records `woxi_version` and `helper_version`; the raw probes are
+  now observed rather than documentation-only.
+
+### Previous provider (historical)
+
+The 2026-10-15 attempt used a Wolfram kernel and recorded
+`oracle-unavailable`: no kernel or licence was available. Those receipts and
+the fault-model results below are retained as history; they are not Woxi
+results. The prior `reference-woxi-unavailable.json` input is kept under
+`receipts/inputs/` only as a record of that attempt.
 
 ## What ran instead
 
@@ -65,7 +78,7 @@ alone.
 | I64-wrapping | `fail` | 12 (`value-mismatch`) | `9223372036854775807 + 1` | `-9223372036854775808` | `9223372036854775808` | unchanged |
 | failure-mutates-session | `stand-in-reference-agree` | 0 | none (stateful fault) | | | |
 | #21 BigInt oracle (sanity) | `stand-in-reference-agree` | 0 | | | | |
-| reversed-subtraction against the unavailable Wolfram reference | `oracle-unavailable` | 48 `oracle-unavailable` | | | | |
+| reversed-subtraction against the historical unavailable Wolfram reference | `oracle-unavailable` | 48 `oracle-unavailable` | | | | |
 
 The category mismatches are real, for example:
 
@@ -114,8 +127,9 @@ Every kept candidate has the original's signature,
 two things:
 
 - the one-vector runner file and its command, to replay the Noble execution;
-- the bridge request and its command, to replay the oracle computation. Its
-  `available_in_this_report` is `false`, because no kernel was available.
+- the bridge request and its command, to replay the oracle computation. The
+  historical comparison has `available_in_this_report: false`; the fresh
+  Woxi report above has it `true`.
 
 ### The integrated calculator on the seed-2424 corpus
 
@@ -191,12 +205,12 @@ arithmetic disagreement. This lane does not judge it either way.
 
 ## Receipts
 
-`verification/calculator-v1/wolfram/receipts/` holds the following, each
+`verification/calculator-v1/woxi/receipts/` holds the following, each
 listed in [`receipts/sha256.txt`](receipts/sha256.txt), a file that
 `sha256sum -c` accepts:
 
 - `inputs/`: the seed-2424 corpus, its runner vector file, the edge-only
-  corpus, the stand-in reference and the `oracle-unavailable` Wolfram
+  corpus, the stand-in reference and the `oracle-unavailable` Woxi
   reference;
 - `comparisons/`, `harness/`, `mutant-replay/` and `shrink/`: every report
   cited above;
@@ -212,22 +226,22 @@ receipts.
 ## Reproducing
 
 ```sh
-L=verification/calculator-v1/wolfram/lane.mjs
+L=verification/calculator-v1/woxi/lane.mjs
 node $L corpus --seed 2424 --count 12 --wide 6 --out C.json     # same cases as receipts/inputs/corpus-seed2424.json
 node $L vectors --corpus C.json --out V.json
 node verification/calculator-v1/acceptance.mjs --binary noble-integration-eccbc02-release \
   --binary-sha256 f7f02dfbc9f6723a10879fd269abd4319a8736aa9d952ebb06f5d9bc2c5085ec \
   --source-id eccbc024c837f21caf26ffe2d6be7e6c1d6bb1fb --build-profile release \
   --out RUN --memory-max 2G --concurrency 6 --vector-timeout 2400 --vectors V.json
-node $L reference --corpus C.json --arithmetic wolfram --python VENV/bin/python --out REF.json  # needs a licensed kernel
+node $L reference --corpus C.json --arithmetic woxi --bridge helper/target/release/noble-woxi-bridge --out REF.json
 node $L compare --corpus C.json --run RUN --reference REF.json \
   --expect-binary-sha256 f7f02dfbc9f6723a10879fd269abd4319a8736aa9d952ebb06f5d9bc2c5085ec \
   --expect-source-id eccbc024c837f21caf26ffe2d6be7e6c1d6bb1fb --out REPORT.json
 ```
 
 The `stand-in-reference` rows use `--arithmetic python-fractions` in place
-of `wolfram`. The `offline-fixture-replay` rows use
-`--fixtures verification/calculator-v1/wolfram/fixtures/edge-expected-stand-in.json`
+of `woxi`. The `offline-fixture-replay` rows use
+`--fixtures verification/calculator-v1/woxi/fixtures/edge-expected-stand-in.json`
 in place of `--reference`. The `harness`, `shrink` and mutant-replay commands
 are listed in the [README](README.md).
 
@@ -236,17 +250,17 @@ are listed in the [README](README.md).
 | Criterion | Status |
 |---|---|
 | Document the subset, the interchange, the adapter and the intentional differences | Done ([README](README.md)) |
-| Compare against independent exact Wolfram results on edge fixtures and a seeded corpus, including values beyond I64 and `0.1 + 0.2 = 3/10` | **Blocked**: no licensed kernel. The same corpus ran on the integrated binary. It was compared with the labeled stand-in and with retained fixtures, and the Wolfram comparison is reported as `oracle-unavailable`. |
-| Seeded faults fail for their intended reasons; document coverage | Done with the stand-in and with the retained #21 real-mutant raw I/O; not done against Wolfram (blocked). Coverage is mapped in the README. |
-| Bounded-shrink artifacts with replay commands | Done: two real-binary rounds plus harness shrinks, each with a replay object. Oracle replay needs a kernel. |
-| Pin versions, seeds and policy; reject stale provenance | Done, and shown by the wrong-binary-pin report and the tests. A kernel version cannot be pinned until a kernel exists. |
-| Default builds and offline replay work without Wolfram; unavailable, error and unsupported states are distinct | Done |
+| Compare against independent exact Woxi results on edge fixtures and a seeded corpus, including values beyond I64 and `0.1 + 0.2 = 3/10` | **Done** for the 48-case seed-2424 corpus at `6617abd`: 39 agree, 9 budget-divergence, 2 runner controls unsupported, 0 disagree. The wide cases hit Noble's 2 GiB runner bound, so the lane reports `incomplete`, honestly. |
+| Seeded faults fail for their intended reasons; document coverage | Done with the stand-in and with the retained #21 real-mutant raw I/O. The Woxi reference is available, but the fault-model comparison has not been re-run against it in this record; coverage is mapped in the README. |
+| Bounded-shrink artifacts with replay commands | Done: two real-binary rounds plus harness shrinks, each with a replay object. Oracle replay now runs the Woxi helper. |
+| Pin versions, seeds and policy; reject stale provenance | Done, and shown by the wrong-binary-pin report and the tests. `woxi_version` and `helper_version` are pinned by `--expect-woxi-version` / `--expect-helper-version`. |
+| Default builds and offline replay work without Woxi; unavailable, error and unsupported states are distinct | Done |
 | Production dependencies and certification authority unchanged; tested results distinguished from proofs | Done |
 
 ## Non-claims
 
-- Agreement on finitely many inputs is test evidence only. No Wolfram result
-  was obtained. The stand-in agreements are not a Wolfram comparison.
+- Agreement on finitely many inputs is test evidence only. No Woxi result
+  was obtained. The stand-in agreements are not a Woxi comparison.
 - No proof is made or checked. No `Certified` status, canonical case state or
   `tasks.md` item changes.
 - Grammar, spans, sessions, budgets and host failures are not judged here.

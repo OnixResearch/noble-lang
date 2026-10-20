@@ -1,0 +1,1809 @@
+{
+  "schema": "noble-woxi-comparison/v1",
+  "lane": "optional Woxi exact-arithmetic lane (#24); distinct from the CALC-12 oracle (#21), #19 acceptance and proofs",
+  "label": "fresh-oracle",
+  "expectation_source": "fresh Woxi computation",
+  "reference_status": "ok",
+  "reference_reason": null,
+  "lane_result": "incomplete",
+  "stale_provenance": [],
+  "provenance": {
+    "lane": {
+      "policy_version": "noble-woxi-policy/1",
+      "files": {
+        "woxi/interchange.mjs": "4c833070a4198cd95977ba5315e8eb07d66f0979e0ca62b8584ee53acfd50d05",
+        "woxi/bridge.py": "a7ee9fbb4f02f94a27d25549f4a1a2dffddfbc89a5ff52404c55fd31870d765c",
+        "woxi/helper/src/main.rs": "965eaec3b4bc5d8baf3b46a4f19403fd6132f689a82ad4f497f15460e36b8634",
+        "woxi/helper/Cargo.toml": "e16b180129b131e2b1dd894b0aa8fc11a6640518f5b5be9f2f3aea6ffcbb355e",
+        "woxi/helper/Cargo.lock": "74795fd5fd639576412fd5ace53604ffd5eb5b3c568377618c8c88826a79c92f",
+        "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+      },
+      "revision": "f6f50c80a70026ea0ae8f8e0c267b20021c317f755ed83ecd835d0df112b4a98",
+      "repository": {
+        "commit": "6617abddab3cebc8022b27725112acddf2559aee",
+        "tracked_changes": ""
+      },
+      "node": "v24.13.0"
+    },
+    "reference": {
+      "file": "/tmp/woxi-REF.json",
+      "sha256": "8d7b40e2cfb7b4def555bc551202c29a6a0470505a4efe56b1caf81ff75305d1",
+      "policy_version": "noble-woxi-policy/1",
+      "adapter": {
+        "policy_version": "noble-woxi-policy/1",
+        "files": {
+          "woxi/interchange.mjs": "4c833070a4198cd95977ba5315e8eb07d66f0979e0ca62b8584ee53acfd50d05",
+          "woxi/bridge.py": "a7ee9fbb4f02f94a27d25549f4a1a2dffddfbc89a5ff52404c55fd31870d765c",
+          "woxi/helper/src/main.rs": "965eaec3b4bc5d8baf3b46a4f19403fd6132f689a82ad4f497f15460e36b8634",
+          "woxi/helper/Cargo.toml": "e16b180129b131e2b1dd894b0aa8fc11a6640518f5b5be9f2f3aea6ffcbb355e",
+          "woxi/helper/Cargo.lock": "74795fd5fd639576412fd5ace53604ffd5eb5b3c568377618c8c88826a79c92f",
+          "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+        },
+        "revision": "f6f50c80a70026ea0ae8f8e0c267b20021c317f755ed83ecd835d0df112b4a98"
+      },
+      "environment": {
+        "implementation": "woxi",
+        "woxi_version": "0.3.0",
+        "helper_version": "0.1.0",
+        "rust": "unknown"
+      },
+      "probes": [
+        {
+          "id": "zero-power-zero",
+          "expression": "0^0",
+          "raw_result": "Indeterminate",
+          "expected_raw": "Indeterminate",
+          "ok": true
+        },
+        {
+          "id": "one-over-zero",
+          "expression": "1/0",
+          "raw_result": "ComplexInfinity",
+          "expected_raw": "ComplexInfinity",
+          "ok": true
+        },
+        {
+          "id": "zero-over-zero",
+          "expression": "0/0",
+          "raw_result": "Indeterminate",
+          "expected_raw": "Indeterminate",
+          "ok": true
+        },
+        {
+          "id": "zero-power-negative",
+          "expression": "0^-1",
+          "raw_result": "ComplexInfinity",
+          "expected_raw": "ComplexInfinity",
+          "ok": true
+        },
+        {
+          "id": "perfect-square-half-power",
+          "expression": "4^(1/2)",
+          "raw_result": "2",
+          "expected_raw": "2",
+          "ok": true
+        },
+        {
+          "id": "irrational-half-power",
+          "expression": "2^(1/2)",
+          "raw_result": "Sqrt[2]",
+          "expected_raw": "Sqrt[2]",
+          "ok": true
+        }
+      ],
+      "corpus": {
+        "path": "/tmp/woxi-C.json",
+        "sha256": "a31c204e849560503c7ca898ea6f1c480edbf80365539629fc97a112fe760af1",
+        "generator": {
+          "seed": 2424,
+          "count": 12,
+          "wide": 6,
+          "prng": "mulberry32 (#21 oracle/generate.mjs)",
+          "files": {
+            "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+            "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+            "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+            "woxi/lane.mjs": "916c688c450ded30f9ad473dcdec992a2d94aec5553870eb79a4aea5dbcd7724",
+            "woxi/fixtures/edge-cases.json": "92067cf1426b2e66141e99a471f4819d36feb9503a5b3c8bf5ffd210cd9bb16d"
+          }
+        }
+      },
+      "started": "2026-10-20T01:14:14.866Z",
+      "finished": "2026-10-20T01:14:14.885Z"
+    },
+    "corpus": {
+      "path": "/tmp/woxi-C.json",
+      "sha256": "a31c204e849560503c7ca898ea6f1c480edbf80365539629fc97a112fe760af1",
+      "generator": {
+        "seed": 2424,
+        "count": 12,
+        "wide": 6,
+        "prng": "mulberry32 (#21 oracle/generate.mjs)",
+        "files": {
+          "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+          "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+          "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+          "woxi/lane.mjs": "916c688c450ded30f9ad473dcdec992a2d94aec5553870eb79a4aea5dbcd7724",
+          "woxi/fixtures/edge-cases.json": "92067cf1426b2e66141e99a471f4819d36feb9503a5b3c8bf5ffd210cd9bb16d"
+        }
+      }
+    },
+    "noble": {
+      "binary": {
+        "path": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+        "realpath": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+        "sha256": "218ec4bf9659d9ecfed1b53fa95738b3b6260ef1857156993a52337404be3338",
+        "bytes": 29216360,
+        "build_profile": "release",
+        "source_identity": "6617abddab3cebc8022b27725112acddf2559aee"
+      },
+      "source": {
+        "commit": "6617abddab3cebc8022b27725112acddf2559aee",
+        "tracked_changes": "",
+        "embedded": [
+          {
+            "path": "crates/noble-cli/src/calculator.rs",
+            "sha256": "2ee3eb7ba339032697533053cb6abafe4ca7307b1c312a1ba553f8a81fca8ba3"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/abi.json",
+            "sha256": "1284792be03cf5e544dc51b977e9d7c0ee7b38d743698c0420f14ef408249a44"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/config.json",
+            "sha256": "e1ce176367c48e86d4a85975a3c4f7b187cc3fa7a5ec9072dc149155037a98db"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/declared-abi.json",
+            "sha256": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/engine-host.mjs",
+            "sha256": "827946ba44ae66227e02eff711e7b90382c7af56a50b937c17192fd2a46f2496"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/engine.mjs",
+            "sha256": "cfcecfec1898708747ef7aac29e8d5550e6d9e9efbafe05ea7d4fe6a3ba9aa4a"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/preamble.mjs",
+            "sha256": "1787a81093cfb8c0286fa09d5bc4129dcb5ba5cd75a3a407b9f25009d75ceb28"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/protocol.mjs",
+            "sha256": "e8b5ed5c8c52818f1cfd2f5b9e4d1613e81fb0d7bee0514cb2c88f3872e819f3"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/safety-observe.mjs",
+            "sha256": "dd2a78f22a175d80762557401c6083269e690ded61a31b0ee5a1b68c10b01b59"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+            "sha256": "0387b7d0e6177c5fd1201fb8ddfbd338ea1b7e7ca1523cc9cb5a3c6bda89425d"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/slot-policy.mjs",
+            "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+            "sha256": "44936e4f9fd69b952f4bf7bc959f29c5ff838fc91645075076cf97df2159bd93"
+          },
+          {
+            "path": "crates/noble-cli/src/core/runtime/values.mjs",
+            "sha256": "add0eda94de18275fd8552ec5e0b5fa0f4a0f2ba80ffe02ed55d9931e9deafb4"
+          },
+          {
+            "path": "crates/noble-cli/src/core/worker.rs",
+            "sha256": "47409b41a2e07f4b62848c89309acc73f8a993adddd1bf79a8aeb46c281e903d"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calc-errors.noble",
+            "sha256": "319efe57c1044d650d356744aa94b783205f56d3b65b3383a753dfc26115aa3d"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-bigint.noble",
+            "sha256": "ff93762aba8f2e9a14853f1c258f23fd6ed7b93dbe2f5963c1dc4083aadbcade"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-bindings.noble",
+            "sha256": "d35ec885d16df3b880867e2fd1c57cb16d7dc5cdb8cb48793f9e88913e580166"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-bits.noble",
+            "sha256": "8b9ad75b3b19d180732f348d27497ce60fbcc6c9922e32e102e5e137f46ade7a"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-decimal.noble",
+            "sha256": "a7664741535f30a36befa428d4626befdd3e29a042f896d5bc67f6ca773cb7ea"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-definitions.noble",
+            "sha256": "da61b1eebc4bec5270a88f4b7dfe560e5641a7b05212dc352dc89d5a0678f7ab"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-display.noble",
+            "sha256": "f3976f0ded740f45a666ebfa81b8b1f85a094bbc91be9db7b2eb69a1724a98f7"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-expression.noble",
+            "sha256": "4245ebcc3fe68db00e52509024aff5136852e7466c1ee8d9a32b0362705c44ca"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-lexical.noble",
+            "sha256": "4c9f9d80528ff4ba2cff6d22181b34f684b5de3e2e4a3f2c029c4be8a4979dcf"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/calculator-numeric.noble",
+            "sha256": "0e8cb62321d32314e181c81160708567795da3cf77ff8020a76c9134f454a176"
+          },
+          {
+            "path": "crates/noble-contracts/src/fixtures/result.noble",
+            "sha256": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80"
+          }
+        ]
+      },
+      "toolchain": {
+        "runner_node": {
+          "path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+          "version": "v24.13.0"
+        },
+        "worker_node": {
+          "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+          "version": "v24.13.0",
+          "error": null
+        },
+        "assembler": {
+          "argv": [
+            "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+            "--internal-calculator-wat-version"
+          ],
+          "status": 0,
+          "stdout": "noble-calculator-wat 1.243.0"
+        }
+      },
+      "config": {
+        "concurrency": 4,
+        "vector_timeout_ms": 7200000,
+        "session_timeout_ms": 21600000,
+        "memory_max": "2G",
+        "memory_wrapper": [
+          "/nix/store/l5hiab3932k2n4d6nirh09mk6xgxp61w-systemd-261.3/bin/systemd-run",
+          "--user",
+          "--scope",
+          "--quiet",
+          "--collect",
+          "-p",
+          "MemoryMax=2G",
+          "-p",
+          "MemorySwapMax=0",
+          "-p",
+          "OOMPolicy=continue",
+          "--"
+        ],
+        "sample_ms": 1000,
+        "calculator_args": [],
+        "child_env": {
+          "PATH": "/nonexistent",
+          "LANG": "C",
+          "LC_ALL": "C",
+          "RUST_BACKTRACE": "1",
+          "TMPDIR": "<OUTPUT>/tmp/<vector>"
+        },
+        "cwd": "/home/brittonr/.cache/noble-issues/wt/woxi-oracle",
+        "selection": {
+          "cases": [],
+          "vectors": [],
+          "controls": true,
+          "controls_only": false
+        }
+      },
+      "run": {
+        "started": "2026-10-20T01:36:43.764Z",
+        "finished": "2026-10-20T01:55:00.385Z",
+        "host": "aspen3",
+        "kernel": "6.18.54",
+        "cpus": 32,
+        "memory_bytes": 130458030080,
+        "argv": [
+          "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+          "/home/brittonr/.cache/noble-issues/wt/woxi-oracle/verification/calculator-v1/acceptance.mjs",
+          "--binary",
+          "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+          "--binary-sha256",
+          "218ec4bf9659d9ecfed1b53fa95738b3b6260ef1857156993a52337404be3338",
+          "--source-id",
+          "6617abddab3cebc8022b27725112acddf2559aee",
+          "--build-profile",
+          "release",
+          "--out",
+          "/tmp/woxi-RUN2",
+          "--memory-max",
+          "2G",
+          "--concurrency",
+          "4",
+          "--vectors",
+          "/tmp/woxi-V.json"
+        ]
+      }
+    },
+    "run_dir": "/tmp/woxi-RUN2",
+    "run_receipt": "/tmp/woxi-RUN2/receipt.json"
+  },
+  "summary": {
+    "agree": 39,
+    "budget-divergence": 9,
+    "unsupported": 2
+  },
+  "results": [
+    {
+      "id": "edge/decimal-literal",
+      "text": "0.1",
+      "slug": "WOXI_edge_decimal-literal",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "a6311009c6c322ca8ac2e620cff5204f0c3af23115d403293a0cb5be36796688",
+      "wall_ms": 66211.15753,
+      "observed": {
+        "stdout": [
+          "1/10"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "10"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-scaled",
+      "text": "3.14159 - 3",
+      "slug": "WOXI_edge_decimal-scaled",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "fb075af1272f2c80ec879a2c9b97fd7112ac78f8bd98bafb5c165b2fd81a1155",
+      "wall_ms": 93928.631051,
+      "observed": {
+        "stdout": [
+          "14159/100000"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "14159",
+        "d": "100000"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-sum",
+      "text": "0.1 + 0.2",
+      "slug": "WOXI_edge_decimal-sum",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "5bf8c160b2911d2226a532ea41647f4f7f06b8ff60676f7996ff8a12b21489e4",
+      "wall_ms": 100886.703289,
+      "observed": {
+        "stdout": [
+          "3/10"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "10"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-times-integer",
+      "text": "1.5 * 2",
+      "slug": "WOXI_edge_decimal-times-integer",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "9f734cfc09f7ff6f4f41c75ad1557ed52c155104f3b2fe83ccbb4aeed08d54e4",
+      "wall_ms": 92398.144424,
+      "observed": {
+        "stdout": [
+          "3"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/decimal-tiny",
+      "text": "0.00000000000000000001",
+      "slug": "WOXI_edge_decimal-tiny",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "f564695674af7cfd6e6181305959973784857d308c67dc4d3ae121b2a3c45f1e",
+      "wall_ms": 66201.260769,
+      "observed": {
+        "stdout": [
+          "1/100000000000000000000"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "100000000000000000000"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/divide-by-zero",
+      "text": "1 / 0",
+      "slug": "WOXI_edge_divide-by-zero",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "5faf0dde2eeedd038959cc2ef00551732a2c360fb66839f83e9113ce8fbf9280",
+      "wall_ms": 57745.896257,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          2,
+          3
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/first-error-left",
+      "text": "(1 / 0)^(1 / 2)",
+      "slug": "WOXI_edge_first-error-left",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "e3fde2a86d5b400c08573c06029cfbe6558c5dfde72735d37d592168d8085b52",
+      "wall_ms": 58279.75986,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "DivisionByZero [3,4) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          3,
+          4
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/first-error-right",
+      "text": "2^(1 / 2) + 1 / 0",
+      "slug": "WOXI_edge_first-error-right",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "8661f7dc98641390d67df11f40ae24ddee0a3a6a3a617a169f76ee16074497a7",
+      "wall_ms": 80567.502094,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/float-precision-trap",
+      "text": "9007199254740993 - 9007199254740992",
+      "slug": "WOXI_edge_float-precision-trap",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "b1e338c8908751091f185604486ade3e26e2e4b3859a733e9df764854a1e5f1f",
+      "wall_ms": 86742.668598,
+      "observed": {
+        "stdout": [
+          "1"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/i64-max-plus-one",
+      "text": "9223372036854775807 + 1",
+      "slug": "WOXI_edge_i64-max-plus-one",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "a1de396186c1a8fb137a975b4e94fd4c2d3e569de8e8ff9d1aa554f1dba58a96",
+      "wall_ms": 87257.208532,
+      "observed": {
+        "stdout": [
+          "9223372036854775808"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "9223372036854775808",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/i64-min-minus-one",
+      "text": "-9223372036854775808 - 1",
+      "slug": "WOXI_edge_i64-min-minus-one",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "dc65b5eee6fcce2fc5119b0a5ef2b71155530a2d3fa220e5622bc00de6f43a91",
+      "wall_ms": 94667.047532,
+      "observed": {
+        "stdout": [
+          "-9223372036854775809"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-9223372036854775809",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/negative-result",
+      "text": "0 - 5",
+      "slug": "WOXI_edge_negative-result",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "bee965762b09641064d243b94a9b93bd763d691f444147f13e2b13a3773757fa",
+      "wall_ms": 84634.93867,
+      "observed": {
+        "stdout": [
+          "-5"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-5",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/negative-zero",
+      "text": "-0",
+      "slug": "WOXI_edge_negative-zero",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "dde762c792f326de5677fd0629e0a0d9541a153228dd46781c4aeb5e842f460e",
+      "wall_ms": 68753.899886,
+      "observed": {
+        "stdout": [
+          "0"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "0",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/nonintegral-exponent",
+      "text": "2^(1 / 2)",
+      "slug": "WOXI_edge_nonintegral-exponent",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "6df033566963885ed0cb59fa368bcb4a15e21d3c46f933656dc8f36b858ca4e8",
+      "wall_ms": 80058.69269,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/nonintegral-exponent-exact-root",
+      "text": "4^(1 / 2)",
+      "slug": "WOXI_edge_nonintegral-exponent-exact-root",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "af9c77c8db1506cbba37e184741d79ee0c5c4ee473c679a660f4c633f4614721",
+      "wall_ms": 81289.060895,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/normalize-quotient",
+      "text": "2 / 4",
+      "slug": "WOXI_edge_normalize-quotient",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "b11f0b74ef91c88de981ee18836780047d032fac1932d464d154183c30671980",
+      "wall_ms": 89777.935533,
+      "observed": {
+        "stdout": [
+          "1/2"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-integral-by-value",
+      "text": "4^(2 / 2)",
+      "slug": "WOXI_edge_power-integral-by-value",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "c227e0e3507e0922e401e95d46ffba7498a9e5edce44a23a77d8b716e3784f91",
+      "wall_ms": 130965.215577,
+      "observed": {
+        "stdout": [
+          "4"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "4",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-negative-base",
+      "text": "(-2)^3",
+      "slug": "WOXI_edge_power-negative-base",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "55de4d5beebe9ffc7352fc11182989ec5e32aa403c05eb6a6c7e9093e83733d4",
+      "wall_ms": 111026.915646,
+      "observed": {
+        "stdout": [
+          "-8"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-8",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-negative-exponent",
+      "text": "2^-3",
+      "slug": "WOXI_edge_power-negative-exponent",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "90ece8ec721369013e6c7dfaf5afd36b80d1388597f1a8ce639c3c54a3cc7a0c",
+      "wall_ms": 109114.242624,
+      "observed": {
+        "stdout": [
+          "1/8"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "8"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-rational-base",
+      "text": "(2 / 3)^-2",
+      "slug": "WOXI_edge_power-rational-base",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "053152476a257178f2f6dae920ba2e6c9415215e91497d768a3c072e107a5bf9",
+      "wall_ms": 134487.975906,
+      "observed": {
+        "stdout": [
+          "9/4"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "9",
+        "d": "4"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-right-associative",
+      "text": "2^3^2",
+      "slug": "WOXI_edge_power-right-associative",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "f09c3b1882aa759a742c1010398ee872e49908dea59c2e9ce0c08284d885ffb6",
+      "wall_ms": 104648.302752,
+      "observed": {
+        "stdout": [
+          "512"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "512",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-unary-precedence",
+      "text": "-2^2",
+      "slug": "WOXI_edge_power-unary-precedence",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "c857c64a530f545e584d29014a0eb73e130b5e291f28fbe36d78a112d218c349",
+      "wall_ms": 112240.912896,
+      "observed": {
+        "stdout": [
+          "-4"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-4",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/rational-quotient",
+      "text": "7 / 2",
+      "slug": "WOXI_edge_rational-quotient",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "640d730e6142ba1f432aaa4dbb176fa104c6b8f6b5421bc1107df40783d0a339",
+      "wall_ms": 86224.6083,
+      "observed": {
+        "stdout": [
+          "7/2"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "7",
+        "d": "2"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/rational-sum",
+      "text": "1 / 3 + 1 / 6",
+      "slug": "WOXI_edge_rational-sum",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "eadd79c32e4e7455f1c79f9af36542a6a0782c9e3be20f83cf096da8fc37ef83",
+      "wall_ms": 96930.088571,
+      "observed": {
+        "stdout": [
+          "1/2"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/signed-quotient",
+      "text": "7 / -14",
+      "slug": "WOXI_edge_signed-quotient",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "3a166c9d199c1eebe366bff5871faa16b13858edeade750f3155f1474b1c2cb0",
+      "wall_ms": 97227.33141,
+      "observed": {
+        "stdout": [
+          "-1/2"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-1",
+        "d": "2"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/subtract",
+      "text": "10 - 3",
+      "slug": "WOXI_edge_subtract",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "0ae0e51aee07bfd04300fbdbbaaa26cbfc1c2f1846eee7f4df7941d45fc96a2c",
+      "wall_ms": 84616.769096,
+      "observed": {
+        "stdout": [
+          "7"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "7",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/u64-squared",
+      "text": "18446744073709551616 * 18446744073709551616",
+      "slug": "WOXI_edge_u64-squared",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "a592a12863e17f5258aeb0b68fe504c0490416d444d5a5508591b263f631e38c",
+      "wall_ms": 55576.620188,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "ResourceLimit EvaluationWork [21,22) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "340282366920938463463374607431768211456",
+        "d": "1"
+      },
+      "verdict": "budget-divergence",
+      "mismatch": null,
+      "reasons": [
+        "observed a deterministic guest ResourceLimit; the reference has no budget model"
+      ],
+      "signature": "budget-divergence:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/wide-quotient",
+      "text": "123456789012345678901234567890 / 987654321098765432109876543210",
+      "slug": "WOXI_edge_wide-quotient",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "8e39fb54f1e7c13f98d60e0f2f1c86bee14fe8528b48cf640953bbba625d4381",
+      "wall_ms": 48675.838797,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "ResourceLimit EvaluationWork [33,63) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "13717421",
+        "d": "109739369"
+      },
+      "verdict": "budget-divergence",
+      "mismatch": null,
+      "reasons": [
+        "observed a deterministic guest ResourceLimit; the reference has no budget model"
+      ],
+      "signature": "budget-divergence:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-negative-power",
+      "text": "0^-1",
+      "slug": "WOXI_edge_zero-negative-power",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "adc6a6661b97f2afc9cd77c49f5a641914266fdac5b13c0d26ea0f9174699eab",
+      "wall_ms": 64271.4483,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "DivisionByZero [1,2) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-base-negative-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-over-zero",
+      "text": "0 / 0",
+      "slug": "WOXI_edge_zero-over-zero",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "2a09c93e4031a6d942c54a681873248768b1e4884cca04ea6f10bd0961becddb",
+      "wall_ms": 57336.568777,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          2,
+          3
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-power-zero",
+      "text": "0^0",
+      "slug": "WOXI_edge_zero-power-zero",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "90ecb3404125b7cc816b42dbb56d2ce47df0dc74f4ef91b135414537ce62ff4b",
+      "wall_ms": 89301.471128,
+      "observed": {
+        "stdout": [
+          "1"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-01",
+      "text": "4 * 3 * 4",
+      "slug": "WOXI_seed-2424_calc12-01",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "90a1fad3e88d009f54056b43f216519e1932cec1b142c98841f6a21f1ccfb2d7",
+      "wall_ms": 90795.692731,
+      "observed": {
+        "stdout": [
+          "48"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "48",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-02",
+      "text": "-4^1",
+      "slug": "WOXI_seed-2424_calc12-02",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "70b3966a6a1a18699851d13d4816f620f2d6340286a700662074a2d06bd897a4",
+      "wall_ms": 105298.285573,
+      "observed": {
+        "stdout": [
+          "-4"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-4",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-03",
+      "text": "3 / 3 - 8 / 5",
+      "slug": "WOXI_seed-2424_calc12-03",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "7358b2676c8484d15c3b5c0e4ee1ce19017604eb24c4add4a8936ba3b06d15e2",
+      "wall_ms": 108002.185763,
+      "observed": {
+        "stdout": [
+          "-3/5"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-3",
+        "d": "5"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-04",
+      "text": "1.3 - (0.7 + 6)",
+      "slug": "WOXI_seed-2424_calc12-04",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "49ece2fc561cf4c373dbe2ac02ca4689981edb2d46e7e234e869ad6194d059ba",
+      "wall_ms": 114039.566567,
+      "observed": {
+        "stdout": [
+          "-27/5"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-27",
+        "d": "5"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-05",
+      "text": "5^(1 / 2)",
+      "slug": "WOXI_seed-2424_calc12-05",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "84a875cd5b174caba2bdcd35e34cab8bf3c65336b0609420cc585a7aa8556e13",
+      "wall_ms": 82999.513975,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-07",
+      "text": "2^64 + 3",
+      "slug": "WOXI_seed-2424_calc12-07",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "3431c5202adaea06354905e65893e8c2b08f36718de62a17d85537ba7ec7990e",
+      "wall_ms": 115829.369561,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "ResourceLimit EvaluationWork [5,6) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "18446744073709551619",
+        "d": "1"
+      },
+      "verdict": "budget-divergence",
+      "mismatch": null,
+      "reasons": [
+        "observed a deterministic guest ResourceLimit; the reference has no budget model"
+      ],
+      "signature": "budget-divergence:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-08",
+      "text": "3^2^0",
+      "slug": "WOXI_seed-2424_calc12-08",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "b28da8144c747fffa29b846b3f728490e4b26a36caf4d78e2ee2aedf3cbd240e",
+      "wall_ms": 96461.71437,
+      "observed": {
+        "stdout": [
+          "3"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-09",
+      "text": "4.32 + -1",
+      "slug": "WOXI_seed-2424_calc12-09",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "cc6d465456245761f4f27b107157bec302ab83fcb23810926daf2322541fdc06",
+      "wall_ms": 112912.288725,
+      "observed": {
+        "stdout": [
+          "83/25"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "83",
+        "d": "25"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-10",
+      "text": "0.26 + 7.57 / (4.10 + 2)",
+      "slug": "WOXI_seed-2424_calc12-10",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "6feabc91be3ab8b3e9cf031b2fb8f8d3eefab656fc5021acb1ff8849af431fe3",
+      "wall_ms": 114271.52443,
+      "observed": {
+        "stdout": [
+          "2289/1525"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "2289",
+        "d": "1525"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-11",
+      "text": "-3^3",
+      "slug": "WOXI_seed-2424_calc12-11",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "0baf7d10342bb45bcbd927a859a4316d65a82d26478147ca0ad617435dc1d37b",
+      "wall_ms": 118947.251832,
+      "observed": {
+        "stdout": [
+          "-27"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-27",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-12",
+      "text": "2 / 6 - 9 / 8",
+      "slug": "WOXI_seed-2424_calc12-12",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "b865717159c11780cacdb888d20b4f8b4761a7cdf4306572d9d3ebacec5f15c6",
+      "wall_ms": 109454.379733,
+      "observed": {
+        "stdout": [
+          "-19/24"
+        ],
+        "stderr": [],
+        "status": 0,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-19",
+        "d": "24"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-01",
+      "text": "4960813911821797228 + 2191235954361036929315404390",
+      "slug": "WOXI_seed-2424_wide-01",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "c780958b15b8eb23d49457e132eb700cb7e89d2557b2a043592e2bd69e07db25",
+      "wall_ms": 55187.015238,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "ResourceLimit EvaluationWork [22,50) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "2191235959321850841137201618",
+        "d": "1"
+      },
+      "verdict": "budget-divergence",
+      "mismatch": null,
+      "reasons": [
+        "observed a deterministic guest ResourceLimit; the reference has no budget model"
+      ],
+      "signature": "budget-divergence:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-02",
+      "text": "59039983304222846951 - 801507105833160313081525",
+      "slug": "WOXI_seed-2424_wide-02",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "f1b689f48b79da6bdeeaed5942469ce28bcb2e6454ff40f7def958fc9e82593c",
+      "wall_ms": 77261.646043,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "ResourceLimit EvaluationWork [21,22) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-801448065849856090234574",
+        "d": "1"
+      },
+      "verdict": "budget-divergence",
+      "mismatch": null,
+      "reasons": [
+        "observed a deterministic guest ResourceLimit; the reference has no budget model"
+      ],
+      "signature": "budget-divergence:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-03",
+      "text": "152493688672462140629 * 694674453390552926151",
+      "slug": "WOXI_seed-2424_wide-03",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "7344a91420b82bb83c9791a531edff511408d25d75a7006530fc71b2f4ae3735",
+      "wall_ms": 61865.629726,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "ResourceLimit EvaluationWork [22,23) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "105933469824051790035249342573421213688979",
+        "d": "1"
+      },
+      "verdict": "budget-divergence",
+      "mismatch": null,
+      "reasons": [
+        "observed a deterministic guest ResourceLimit; the reference has no budget model"
+      ],
+      "signature": "budget-divergence:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-04",
+      "text": "9945638250859729114534795789 / 4165748366043675355632459975",
+      "slug": "WOXI_seed-2424_wide-04",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "9c4ffd732ab00a10672f1f42db559df83b56623e0c00cd5265884f35338ae3e3",
+      "wall_ms": 52088.55008,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "ResourceLimit EvaluationWork [31,59) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "9945638250859729114534795789",
+        "d": "4165748366043675355632459975"
+      },
+      "verdict": "budget-divergence",
+      "mismatch": null,
+      "reasons": [
+        "observed a deterministic guest ResourceLimit; the reference has no budget model"
+      ],
+      "signature": "budget-divergence:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-05",
+      "text": "-94104936821152130319 + 0.6533108844480794817601",
+      "slug": "WOXI_seed-2424_wide-05",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "9b02ded39f0e959869606fce1396b050888d710945fcb988f379a7c10039e47f",
+      "wall_ms": 63428.108779,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "ResourceLimit EvaluationWork [24,48) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-941049368211521303183466891155519205182399",
+        "d": "10000000000000000000000"
+      },
+      "verdict": "budget-divergence",
+      "mismatch": null,
+      "reasons": [
+        "observed a deterministic guest ResourceLimit; the reference has no budget model"
+      ],
+      "signature": "budget-divergence:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-06",
+      "text": "(3646291547905551258222 - 5636524886904287854174) / 700",
+      "slug": "WOXI_seed-2424_wide-06",
+      "binary": "/home/brittonr/.cache/noble-issues/targets/woxi/release/noble",
+      "flags": [],
+      "stdin_sha256": "3fe666d4609a007d0723211d396e6f7f9e75469f3d17962ff369d3ea242d25d7",
+      "wall_ms": 75109.452036,
+      "observed": {
+        "stdout": [],
+        "stderr": [
+          "ResourceLimit EvaluationWork [24,25) provenance=unavailable"
+        ],
+        "status": 1,
+        "signal": null,
+        "timedOut": false
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-497558334749684148988",
+        "d": "175"
+      },
+      "verdict": "budget-divergence",
+      "mismatch": null,
+      "reasons": [
+        "observed a deterministic guest ResourceLimit; the reference has no budget model"
+      ],
+      "signature": "budget-divergence:-:value:-",
+      "matches_fault_models": []
+    }
+  ],
+  "outside_lane": [
+    {
+      "slug": "control_forced-timeout_CALC-02_02",
+      "lines": [
+        "1 2"
+      ],
+      "flags": [],
+      "verdict": "unsupported",
+      "reason": "proc input is not a single-line case of this corpus"
+    },
+    {
+      "slug": "control_wrong-expected_CALC-02_02",
+      "lines": [
+        "1 2"
+      ],
+      "flags": [],
+      "verdict": "unsupported",
+      "reason": "proc input is not a single-line case of this corpus"
+    }
+  ],
+  "not_run": [],
+  "non_claims": [
+    "Agreement on finitely many inputs is test evidence only; it establishes no universal arithmetic theorem and no parser correctness (CALC-EVIDENCE-01).",
+    "Reference output (Woxi or otherwise) is untrusted candidate data: it mints no Certified status, discharges no proof obligation, changes no accepted program semantics and changes no canonical case state.",
+    "Only a fresh-oracle run is a Woxi comparison; stand-in-reference and offline-fixture-replay results are labeled as such and never count as one.",
+    "Grammar, diagnostic spans, lexical sessions, session rollback, deterministic budgets and host failures are outside this lane (CALC-12 oracle #21, runner #19, budgets #20).",
+    "A Woxi timeout or memory abort is an oracle failure, not Noble's ResourceLimit; a Noble ResourceLimit is a budget divergence, not a disagreement."
+  ]
+}
