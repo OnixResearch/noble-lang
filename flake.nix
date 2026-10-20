@@ -2,7 +2,7 @@
   description = "Noble workspace tools, bounded Wasm experiments and incremental quality gates";
 
   inputs = {
-    octet.url = "git+ssh://git@github.com/OnixResearch/octet?rev=235255bc4972ced9128fd5b4d1ec66ff7508ded4";
+    octet.url = "git+ssh://git@github.com/OnixResearch/octet?rev=b20681f87046fb83fb72b18908564c6674402977";
     aeneas.url = "github:AeneasVerif/aeneas/505b6ca35217e7be5c96c3e2f8045edfbdf47291";
     cairn.url = "git+ssh://git@github.com/OnixResearch/cairn?rev=15f00875562025e7ea7e0d1f4af24d1a2e2ac06f";
     nixpkgs.follows = "octet/nixpkgs";

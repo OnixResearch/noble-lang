@@ -7,7 +7,6 @@
   "nix/octet-typed-call-collector.patch"
   "nix/octet-trait-body-resolver.patch"
   "nix/octet-dynamic-trait-ufcs.patch"
-  "nix/octet-compiler-owned-desugarings.patch"
   "nix/octet-path-engine-only.patch"
   "nix/octet-path-libc-only.patch"
   "nix/octet-path-metadata-locked.patch"

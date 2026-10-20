@@ -23,11 +23,14 @@ DYLINT_RUSTFLAGS="$WARNS" cargo octet check --workspace \
 
 `octet summary`: `Status: lint-failure` (exit 1 from the still-blocked
 architecture phase), **`Lint phase: clean (static_lint)`**, `Findings: 0`.
-`Architecture findings: 3794`, receipt
-`50ac74c754fa5055c270e04fb72e9d12146fb916afb5e41f93077da6c170256f`; that phase
-is issue #25's open decision and is unchanged by this record (3794 at the
-start of this sweep; one intermediate `?` added a `QuestionMark` unknown and was
-replaced before the final measurement).
+`Architecture findings: 1181`, receipt
+`6b1a0114b006e214ce41ec04e08e839ff45a09c76213eb20e0d1a0ed6a533a09`, measured
+with the selected Octet `b20681f87046fb83fb72b18908564c6674402977`. The
+compiler-desugaring class is zero: `?`, `for` and range expressions are
+compiler-owned expansions in Octet, and Noble no longer carries a local patch
+for them. The remaining findings are 1113 `AmbiguousTraitDispatch`, 60
+`UnresolvedDefinition` and 8 `DynamicDispatch`. They belong to issue #25's open
+disposition, not to the lint phase.
 
 Per-finding baseline inventory and disposition:
 [`dispositions.tsv`](dispositions.tsv) (327 rows: one row per

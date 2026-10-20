@@ -48,17 +48,12 @@ let
     name = "octet-dynamic-trait-ufcs.patch";
     sha256 = "sha256-1uR6T1SHOQFtF27XZXYGSjmbTkGcwsuqR3vefqYposY=";
   };
-  desugaringPatch = builtins.path {
-    path = ./octet-compiler-owned-desugarings.patch;
-    name = "octet-compiler-owned-desugarings.patch";
-    sha256 = "sha256-oy5FjJzxGfBM/Dw7jc9UmxfeEqn+CcVRoPGiQhcSnQk=";
-  };
   preFixtureSource = pkgs.applyPatches {
-    name = "octet-pinned-235255bc-diagnostic-path-source";
+    name = "octet-pinned-b20681f-diagnostic-path-source";
     src = selected.octet.src;
     patches = [ enginePatch libcPatch metadataLockedPatch resolvedPlanPatch ];
   };
-  fixtureLockedSource = pkgs.runCommand "octet-pinned-235255bc-locked-fixtures-source" {
+  fixtureLockedSource = pkgs.runCommand "octet-pinned-b20681f-locked-fixtures-source" {
     nativeBuildInputs = [ pkgs.git ];
   } ''
     mkdir -p "$out"
@@ -69,9 +64,9 @@ let
     git apply ${fixtureLockPatch}
   '';
   patchedSource = pkgs.applyPatches {
-    name = "octet-pinned-235255bc-typed-strict-trait-source";
+    name = "octet-pinned-b20681f-typed-strict-trait-source";
     src = fixtureLockedSource;
-    patches = [ typedCallPatch traitBodyPatch dynamicTraitUfcsPatch desugaringPatch ];
+    patches = [ typedCallPatch traitBodyPatch dynamicTraitUfcsPatch ];
   };
   rustToolchain = pkgs.rust-bin.fromRustupToolchainFile "${octet.outPath}/rust-toolchain.toml";
   craneLib = (octet.inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
