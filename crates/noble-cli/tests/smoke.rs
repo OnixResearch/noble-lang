@@ -9,6 +9,10 @@
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
+
+#[path = "smoke/reports.rs"]
+mod reports;
+
 // r[verify VT-M1-02]
 #[test]
 fn shell_calls_the_real_transition() -> Result<(), std::io::Error> {

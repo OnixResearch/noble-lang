@@ -1,0 +1,288 @@
+[
+  {
+    "id": "null",
+    "document": "null",
+    "json": true,
+    "accept": true,
+    "value": null
+  },
+  {
+    "id": "true",
+    "document": "true",
+    "json": true,
+    "accept": true,
+    "value": true
+  },
+  {
+    "id": "false",
+    "document": "false",
+    "json": true,
+    "accept": true,
+    "value": false
+  },
+  {
+    "id": "whitespace",
+    "document": " \t\r\n[null,true,false]\n",
+    "json": true,
+    "accept": true,
+    "value": [
+      null,
+      true,
+      false
+    ]
+  },
+  {
+    "id": "negative-zero",
+    "document": "-0",
+    "json": true,
+    "accept": true,
+    "value": 0
+  },
+  {
+    "id": "object-escapes",
+    "document": "{\"\\u0062\":[1,-2],\"a\":\"\\uD83D\\uDE00\"}",
+    "json": true,
+    "accept": true,
+    "value": {
+      "b": [
+        1,
+        -2
+      ],
+      "a": "😀"
+    }
+  },
+  {
+    "id": "raw-and-escaped-unicode",
+    "document": "[\"é中😀\",\"\\u00e9\\u4e2d\\ud83d\\ude00\"]",
+    "json": true,
+    "accept": true,
+    "value": [
+      "é中😀",
+      "é中😀"
+    ]
+  },
+  {
+    "id": "escaped-controls",
+    "document": "\"\\u0000\\b\\f\\n\\r\\t\"",
+    "json": true,
+    "accept": true,
+    "value": "\u0000\b\f\n\r\t"
+  },
+  {
+    "id": "line-separators-and-del",
+    "document": "\"  \"",
+    "json": true,
+    "accept": true,
+    "value": "  "
+  },
+  {
+    "id": "leading-zero",
+    "document": "01",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "negative-leading-zero",
+    "document": "-01",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "nested-leading-zero",
+    "document": "[00]",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "leading-plus",
+    "document": "+1",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "bare-minus",
+    "document": "-",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "double-minus",
+    "document": "--1",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "hex-number",
+    "document": "0x10",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "numeric-separator",
+    "document": "1_0",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "fraction",
+    "document": "1.5",
+    "json": true,
+    "accept": false
+  },
+  {
+    "id": "exponent",
+    "document": "1e0",
+    "json": true,
+    "accept": false
+  },
+  {
+    "id": "signed-exponent",
+    "document": "1E+2",
+    "json": true,
+    "accept": false
+  },
+  {
+    "id": "signed-underflow",
+    "document": "-9223372036854775809",
+    "json": true,
+    "accept": false
+  },
+  {
+    "id": "unsigned-overflow",
+    "document": "18446744073709551616",
+    "json": true,
+    "accept": false
+  },
+  {
+    "id": "raw-nul",
+    "document": "\"a\u0000b\"",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "raw-newline",
+    "document": "\"a\nb\"",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "invalid-short-escape",
+    "document": "\"\\v\"",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "signed-unicode-digits",
+    "document": "\"\\u+041\"",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "short-unicode-escape",
+    "document": "\"\\u123\"",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "nonhex-unicode-escape",
+    "document": "\"\\u00x1\"",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "isolated-high-surrogate",
+    "document": "\"\\ud800\"",
+    "json": true,
+    "accept": false
+  },
+  {
+    "id": "isolated-low-surrogate",
+    "document": "\"\\udc00\"",
+    "json": true,
+    "accept": false
+  },
+  {
+    "id": "reversed-surrogates",
+    "document": "\"\\udc00\\ud800\"",
+    "json": true,
+    "accept": false
+  },
+  {
+    "id": "duplicate-key",
+    "document": "{\"a\":0,\"a\":1}",
+    "json": true,
+    "accept": false
+  },
+  {
+    "id": "duplicate-decoded-key",
+    "document": "{\"a\":0,\"\\u0061\":1}",
+    "json": true,
+    "accept": false
+  },
+  {
+    "id": "trailing-document",
+    "document": "null null",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "array-trailing-comma",
+    "document": "[1,]",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "object-trailing-comma",
+    "document": "{\"a\":1,}",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "missing-array-comma",
+    "document": "[1 2]",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "missing-object-comma",
+    "document": "{\"a\":1 \"b\":2}",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "missing-object-colon",
+    "document": "{\"a\" 1}",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "comment",
+    "document": "/* x */null",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "bom",
+    "document": "﻿null",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "non-json-space",
+    "document": " null",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "nan",
+    "document": "NaN",
+    "json": false,
+    "accept": false
+  },
+  {
+    "id": "infinity",
+    "document": "Infinity",
+    "json": false,
+    "accept": false
+  }
+]

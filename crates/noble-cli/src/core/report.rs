@@ -4,9 +4,14 @@
 //! The contract driver must read individual observations (stack entries,
 //! handles, inspection events) without trusting the document's shape, so every
 //! read is bounded and every mismatch is a diagnostic rather than a panic.
-//! This reader accepts ordinary JSON only: no comments, no trailing data.
+//! The protocol uses JSON strings and containers, with integer-only numbers in
+//! I64 MIN..U64 MAX. Signed consumers still require I64; unsigned consumers
+//! reject negatives. Duplicate decoded keys and trailing data are refused.
 
 mod strings;
+
+#[cfg(test)]
+mod tests;
 
 /// Largest reply document this reader accepts; the worker protocol vector owns
 /// the framing limit and this is the second, independent bound.
@@ -22,6 +27,8 @@ pub(super) enum Value {
     Null,
     Bool(bool),
     Number(i64),
+    /// Positive integers above I64 MAX, without widening signed field domains.
+    Unsigned(u64),
     Text(std::string::String),
     Array(std::vec::Vec<Value>),
     Object(std::collections::BTreeMap<std::string::String, Value>),
@@ -44,9 +51,10 @@ impl Value {
 
     /// An unsigned handle or index; negative numbers are refused.
     pub(super) fn index(&self) -> Option<u64> {
-        match self.number() {
-            Some(value) if value >= 0 => u64::try_from(value).ok(),
-            Some(_) | None => None,
+        match self {
+            Value::Number(value) => u64::try_from(*value).ok(),
+            Value::Unsigned(value) => Some(*value),
+            _ => None,
         }
     }
 
@@ -169,14 +177,26 @@ impl Cursor<'_> {
         while self.peek().is_some_and(|byte| byte.is_ascii_digit()) {
             self.at += 1;
         }
-        if self.at == digits_start_byte {
+        if self.at == digits_start_byte
+            || (self.bytes[digits_start_byte] == b'0' && self.at - digits_start_byte > 1)
+        {
             return Err("report document has an invalid number".into());
         }
         let text = attempt!(std::str::from_utf8(&self.bytes[start..self.at])
             .map_err(|_| std::string::String::from("report document has invalid number bytes")));
-        text.parse::<i64>()
-            .map(Value::Number)
-            .map_err(|_| "report number is outside signed 64-bit".into())
+        if self.bytes[start] == b'-' {
+            return text
+                .parse::<i64>()
+                .map(Value::Number)
+                .map_err(|_| "report number is below signed 64-bit".into());
+        }
+        let value = attempt!(text
+            .parse::<u64>()
+            .map_err(|_| "report number exceeds unsigned 64-bit"));
+        Ok(match i64::try_from(value) {
+            Ok(value) => Value::Number(value),
+            Err(_) => Value::Unsigned(value),
+        })
     }
 
     fn array(&mut self, depth: usize) -> Parsed {

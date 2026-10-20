@@ -698,86 +698,6 @@
       "disposition": "open",
       "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:11134:11141",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:1617:1627",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:4334:4341",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:5552:5554",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:6930:6932",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:7459:7461",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:7835:7837",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:8126:8129",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:8449:8452",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:9237:9239",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session/binding.rs:2346:2348",
       "refinement": "open"
     },
@@ -947,70 +867,6 @@
       "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
       "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/framing.rs:562:565",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report.rs:5524:5530",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report.rs:5814:5817",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report.rs:5972:5975",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:1513:1516",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:1731:1733",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:2359:2362",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:2603:2605",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:645:647",
       "refinement": "open"
     },
     {
@@ -96172,6 +96028,622 @@
       "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/declared/state/register/collection.rs:11451:11468",
       "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:11248:11255",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:1642:1652",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:4448:4455",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:5666:5668",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:7044:7046",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:7573:7575",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:7949:7951",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:8240:8243",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:8563:8566",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values.rs:9351:9353",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values/tests.rs:1002:1009",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values/tests.rs:1117:2492",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values/tests.rs:1338:1345",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values/tests.rs:1812:1819",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values/tests.rs:1950:1957",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values/tests.rs:2207:2214",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values/tests.rs:2502:3333",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values/tests.rs:3092:3099",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values/tests.rs:676:691",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/reporting/values/tests.rs:888:902",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report.rs:5832:5838",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report.rs:6220:6223",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report.rs:6453:6456",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:1040:1042",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:1880:1883",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:2331:2333",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:2884:2886",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:3320:3323",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/strings.rs:3408:3414",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/bounds.rs:1719:1729",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/bounds.rs:383:1908",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/bounds.rs:790:800",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/bounds.rs:8:373",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/numbers.rs:1350:1357",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/numbers.rs:1462:2089",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/numbers.rs:2002:2009",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/numbers.rs:859:1452",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/numbers.rs:8:849",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/strings.rs:1125:1352",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/strings.rs:1362:1564",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/strings.rs:1574:1961",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/strings.rs:1971:2306",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/strings.rs:2316:2830",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/strings.rs:243:503",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/strings.rs:513:830",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/strings.rs:840:1115",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/report/tests/strings.rs:8:233",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::reporting::values::tests",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::reporting::values::tests::reencoded_report_integers_remain_exact_at_both_numeric_boundaries",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::reporting::values::tests::report_corpus_preserves_independently_decoded_semantics",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::reporting::values::tests::same_integer_json",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::reporting::values::tests::test",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::strings::<impl core::report::Cursor<'_>>::raw_string_run",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::strings::<impl core::report::Cursor<'_>>::string_escape",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::strings::<impl core::report::Cursor<'_>>::surrogate_pair",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::strings::<impl core::report::Cursor<'_>>::unicode_code_unit",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::bounds",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::bounds::document_limit_counts_utf8_bytes_at_the_exact_boundary",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::bounds::nesting_limit_counts_values_including_empty_containers",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::bounds::test",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::numbers",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::numbers::integer_boundaries_preserve_signed_and_unsigned_domains",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::numbers::string_writer_reader_roundtrips_preserve_unicode_and_controls",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::numbers::test",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::numbers::unsigned_writer_reader_roundtrips_do_not_narrow_to_i64",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings::accepts_unicode_escape_scalar_boundaries",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings::decodes_all_escaped_controls",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings::decodes_every_short_escape",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings::decodes_long_mixed_utf8_string_in_order",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings::decodes_surrogate_pair_extremes",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings::matches_raw_and_escaped_bmp_and_non_bmp",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings::rejects_every_raw_control_byte",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings::rejects_malformed_isolated_and_reversed_surrogates",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings::rejects_non_hex_and_signed_unicode_escape_digits",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed 2026-10-20 issue #54 bounded report JSON dialect: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::report::tests::strings::test",
+      "refinement": "not-applicable"
     }
   ],
   "test_subjects": [
@@ -98349,18 +98821,23 @@
     "noble-cli::closure@crates/noble-cli/tests/ngraph.rs:95202:97683",
     "noble-cli::closure@crates/noble-cli/tests/ngraph.rs:97046:97049",
     "noble-cli::closure@crates/noble-cli/tests/ngraph.rs:98469:100414",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:1142:1924",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:11507:13736",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:12580:12637",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:12752:12760",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:13274:13330",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:13900:14915",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:1934:4036",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:4046:6075",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:510:1110",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:6202:6682",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:6692:7700",
-    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:8836:11270",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:11551:13780",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:1186:1968",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:12624:12681",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:12796:12804",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:13318:13374",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:13944:14959",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:1978:4080",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:4090:6119",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:554:1154",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:6246:6726",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:6736:7744",
+    "noble-cli::closure@crates/noble-cli/tests/smoke.rs:8880:11314",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/reports.rs:2441:3176",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/reports.rs:3186:3824",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/reports.rs:3834:4841",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/reports.rs:4851:5366",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/reports.rs:5376:6580",
     "noble-contracts::closure@crates/noble-contracts/tests/companion.rs:1353:1360",
     "noble-contracts::closure@crates/noble-contracts/tests/companion.rs:2371:3259",
     "noble-contracts::closure@crates/noble-contracts/tests/companion.rs:3269:4298",
@@ -99924,6 +100401,8 @@
     "service::test",
     "service::wrong_profile_cannot_reuse_host_issued_facet",
     "service::{use#0}",
+    "smoke::<reports::TemporaryDirectory as std::ops::Drop>",
+    "smoke::<reports::TemporaryDirectory as std::ops::Drop>::drop",
     "smoke::calculator_module_reuse_is_byte_identical_to_fresh_preparation",
     "smoke::calculator_retains_state_after_exact_tiny_decimal",
     "smoke::calculator_run",
@@ -99932,6 +100411,23 @@
     "smoke::conditional_join_reports_are_located_and_never_execute",
     "smoke::main",
     "smoke::main::test",
+    "smoke::reports",
+    "smoke::reports::NEXT_FILE_ID",
+    "smoke::reports::TemporaryDirectory",
+    "smoke::reports::TemporaryDirectory::file",
+    "smoke::reports::TemporaryDirectory::new",
+    "smoke::reports::admit_artifact",
+    "smoke::reports::artifact_claim_file_limit_accepts_exactly_1024_bytes_then_refuses",
+    "smoke::reports::artifact_claim_file_limit_accepts_exactly_1024_bytes_then_refuses::EMPTY_MODULE",
+    "smoke::reports::assert_refusal",
+    "smoke::reports::editor_integer_remains_i64_only",
+    "smoke::reports::escaped_claims_reach_effect_policy_but_manifest_flags_do_not_grant_authority",
+    "smoke::reports::escaped_claims_reach_effect_policy_but_manifest_flags_do_not_grant_authority::EMIT_IMPORT_MODULE",
+    "smoke::reports::malformed_artifact_claim_json_refuses_before_guest_or_protected_operations",
+    "smoke::reports::malformed_artifact_claim_json_refuses_before_guest_or_protected_operations::EMPTY_MODULE",
+    "smoke::reports::manifest_source_claim_cannot_replace_host_selected_source",
+    "smoke::reports::manifest_source_claim_cannot_replace_host_selected_source::EMPTY_MODULE",
+    "smoke::reports::test",
     "smoke::shell_calls_the_real_transition",
     "smoke::shell_rejects_invalid_input_without_transition_output",
     "smoke::shell_rejects_non_utf8_budget",

@@ -1,5 +1,8 @@
 // Same explicit bounded-depth traversal as workflow::encoding, over parsed
 // worker observations. Public detail omits all cell handles; raw slots retain them.
+#[cfg(test)]
+mod tests;
+
 #[octet::sealed_enum]
 enum Frame<'a> {
     Value(&'a crate::core::report::Value),
@@ -71,6 +74,7 @@ fn append<'a>(
             out.push_str(if *value { "true" } else { "false" })
         }
         crate::core::report::Value::Number(value) => out.push_str(&value.to_string()),
+        crate::core::report::Value::Unsigned(value) => out.push_str(&value.to_string()),
         crate::core::report::Value::Text(value) => {
             crate::workflow::encoding::quote_json(value, out)
         }

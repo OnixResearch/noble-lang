@@ -173,3 +173,110 @@ Task 5.1 added the reviewed expectation `policy/m1-acceptance.ncl`, the pure com
 The expectation must not be reconstructed from the receipt under evaluation.
 Source archives, hashes, and replay remain useful evidence without becoming independently authenticated acceptance.
 The final CI gate must run every required positive and negative matrix cell without silently omitting unavailable scopes.
+
+## Bounded report JSON dialect — issue #54
+
+This section records the bounded reader/writer contract. These controls concern
+JSON decoding and refusal behavior, not artifact admission or a new M1
+acceptance claim.
+
+`crates/noble-cli/src/core/report.rs` is the shared bounded reader for engine
+reports, artifact claim manifests, and editor JSON. `parse` measures
+`str::len()` in UTF-8 bytes, accepts at most 4,194,304 bytes including leading
+and trailing JSON whitespace, starts the root value at depth 0, and rejects a
+value at depth 32 or greater. Therefore the deepest accepted value is at depth
+31; an empty container at depth 31 is valid, but a child value at depth 32 is
+not. After the value only JSON whitespace bytes SP, HT, LF, and CR are skipped;
+any remaining byte is trailing data. No BOM, comments, non-JSON whitespace,
+or extra trailing bytes are accepted. `crates/noble-cli/src/core/artifact.rs`
+also retains its independent 1,024-byte manifest-file limit, so artifact
+claims do not receive the reader's full 4 MiB allowance.
+
+The number grammar is an integer-only subset of JSON: `-?(0|[1-9][0-9]*)`,
+with the resulting domain `I64::MIN..=U64::MAX`. Negative integers, including
+`-0`, are represented as `Value::Number(i64)`; nonnegative integers through
+`I64::MAX` use the same variant; only `I64::MAX + 1..=U64::MAX` use
+`Value::Unsigned(u64)`. Fractions, exponents, plus signs, leading zeroes, and
+values outside that union are refused. Integer semantics identify `-0` with
+`0`; their encoded bytes need not be identical. `Value::number()` remains I64-only;
+`Value::index()` accepts the nonnegative portion through U64 and refuses every
+negative number.
+
+Strings require valid UTF-8 and JSON escapes. Raw U+0000–U+001F characters are
+refused; their escaped representations are accepted. Object keys must be unique
+after escape decoding. Unicode escapes must decode to
+Unicode scalar values: a high surrogate must be followed by a low surrogate,
+and isolated low, reversed, or otherwise invalid surrogate sequences reject.
+This scalar-value rule is an intentional restriction of the chosen dialect,
+not a claim about the behavior of ECMAScript `JSON.parse`, which accepts
+isolated surrogate escape sequences. Invalid UTF-8 is refused at the byte-to-
+`str` boundary before `core::report::parse` is called.
+
+| Numeric surface | Source path and domain | JSON representation and scope |
+|---|---|---|
+| Shared Rust report writer | `workflow/encoding.rs`: `Json::Number(u64)` is written as base-10 digits by `append_value`; no floating point or JS conversion is involved. | Exact numeric JSON through U64 MAX. The parsed-report serializer in `core/companions/reporting/values.rs` preserves both signed and unsigned integer variants. |
+| Editor `format` and integer node | `core/editor.rs`: `decode` checks `format` with `Value::number()`, and `decode_terminal_node` maps only `Value::Number(i64)` to `Node::Integer`. | Signed I64 only. A `Value::Unsigned` remains invalid for editor integers; this change does not widen editor or source-schema integer fields. |
+| Engine arena generation | `core/runtime/abi.json` declares `generation` as `i32`; `core/runtime/engine.mjs` reports the imported Wasm global directly. | JavaScript `Number`, signed i32 domain; distinct from source or slot generation. |
+| Live selected-source generation and grant owner | `core/runtime/engine.mjs` stores `liveSourceGeneration` as `BigInt`, increments only after publication, refuses publication at its signed-i64 ceiling, and emits it with `.toString()`. The grant protocol validates `owner` as a U64 `BigInt` and emits that owner with `.toString()` as well. | Decimal JSON strings: `source_generation` is 0 through I64 MAX; grant `owner` spans U64. These are not JSON numbers or the Wasm arena generation. |
+| Live-slot epoch, incarnation, and slot generation | `core/runtime/slot-registry.mjs` keeps these counters as `BigInt`, bounds them at U64 MAX, and refuses increments at exhaustion. `core/runtime/slot-engine.mjs` emits them with `.toString()`. | Decimal JSON strings with U64 domains. Values above I64 MAX are reachable in the API domain by repeated successful registry transitions, but no near-boundary execution is claimed. |
+| Cell/Program handles | `core/runtime/abi.json` caps Core session cells at 4,096; `core/runtime/values.mjs` validates observed handles against the heap cursor/session bound, while `engine.mjs` bounds injected Program and companion-cell handles at 4,096. The separate live-slot backend returns Wasm handles through `>>> 0` in `slot-engine.mjs`. | Numeric JSON handles are small bounded integers (Core ≤4,096; live-slot backend u32), not full-U64 identities. Rust `u64` handle wrappers do not widen the runtime handle domain. |
+| Contract/evidence/event fields | `core/runtime/engine.mjs` caps contract/evidence indexes, revisions, rulesets, and related schema IDs at `u32::MAX` (handles remain capped separately at 4,096). `core/companions/reporting.rs::nested_number` and `reporting/values.rs::reflection_events` parse with the U64 index accessor and then require a successful u32 conversion. | Per-field u32 limits remain in force; the reader's U64 number domain does not widen a consumer/schema field. |
+| Runtime counters and metrics | `core/runtime/engine-host.mjs` resets host counters per worker and refuses trace recording at 4,096 rows; guest/protected request fields are per-submission deltas in `engine.mjs`. ABI metrics use i64 Wasm exports but derive from per-submission allocation, execution, stack, and reflection bounds in `abi.json`. | Emitted as JavaScript `Number` and serialized by `JSON.stringify` in `core/runtime/protocol.mjs`; do not infer exact U64 precision from their JSON spelling. Current bounded counters/metrics are not an observed source of numeric values above I64 MAX. |
+| Rust session submission counter | `core.rs` stores `Session::submissions` as `u64`, advances it with `checked_add`, and passes it to `core/output.rs`, which writes the `submission` field as `Json::Number(u64)`. A reportable source refusal occurs after the counter increment and before worker launch. | The Rust CLI report API can therefore represent a submission above I64 MAX after sufficiently many submissions; that is API-domain reachability, not a retained run. Worker command submissions are separately limited to JavaScript's safe-integer ceiling in `core/runtime/protocol.mjs`. |
+| I64 payloads and U64 bit payloads | `core/runtime/values.mjs` emits runtime I64 stack/literal values with `String(value)` and unsigned 64-bit payloads/identities with `String(BigInt.asUintN(64, value))`. `core/companions/reporting/inputs.rs` also sends I64 values and U64 statement/identity values as decimal strings; `reporting.rs::integer_of` parses I64, while `reporting/values.rs::reflection_events` parses U64 event text. | Decimal JSON strings preserve the full respective signed-I64 or unsigned-U64 domain. They are not candidates for the reader's numeric `Value::Number`/`Value::Unsigned` variants. |
+
+Candidate artifact manifests remain non-authoritative after successful parsing.
+`core/artifact.rs::claims` accepts only the fixed manifest fields, validates
+the optional boolean/text types, and deliberately discards `trusted_correspondence`,
+`allowed`, `source`, and `digest`; only `claimed_effects` proceeds as a claim.
+`core/artifact.rs::decide` selects source and allowed effects from CLI arguments.
+The worker checks claims against imports in the Wasm bytes, checks effects
+against host-selected policy, requires host-selected source, and compares the
+artifact with independent source compilation before installation or execution.
+The `tests/smoke/reports.rs` cases exercise malformed claims, escaped claim
+strings including a surrogate pair, forged optional fields, host-source
+precedence, the 1,024-byte file boundary, and the unchanged I64 editor domain.
+Parser acceptance alone is never evidence of artifact admission.
+
+### Executed bounded controls
+
+The source-bound probe executed before the fix accepted `01`, `-01`, and raw
+newline/NUL characters inside strings, rejected a valid surrogate pair, and
+rejected U64 values above I64 MAX. The same cases after the fix reject those
+malformed encodings, decode the pair to its Unicode scalar, and preserve exact
+U64 numbers without treating them as I64 editor integers.
+
+The checked-in minimal corpus is
+`crates/noble-cli/src/core/report/tests/corpus.json`. Its 44 cases distinguish
+ordinary JSON grammar (`json`) from the chosen protocol subset (`accept`).
+Selected Node v24.13.0 `JSON.parse` agreed with every grammar expectation:
+19 ordinary-JSON inputs and 9 protocol-supported inputs. The other valid JSON
+inputs are intentionally outside the protocol (fraction/exponent/range,
+unpaired-surrogate, or duplicate-key restrictions). Rust `serde_json` supplies
+independent semantic decoding for supported cases; report re-encoding is
+compared semantically, with integer `-0` equal to `0`, not byte-for-byte.
+Separate tests cover full I64/U64 boundaries, every raw control byte and short
+escape, surrogate boundaries, duplicate decoded keys, trailing data, valid
+UTF-8, the exact 4 MiB byte limit, and the exact depth-32 rejection boundary.
+
+The actual CLI smoke exercised malformed claims, valid escaped claims with a
+surrogate pair, host-selected source correspondence, I64 MIN/MAX editor values,
+and an above-I64 editor value. Every observed report had zero guest requests
+and protected operations. Valid escaped claims still produced
+`effect-policy-reject`, and a mismatched artifact with independently selected
+source produced `correspondence-reject`; no artifact admission is claimed.
+
+The focused run passed 59 tests, with one pre-existing ignored test. Command in
+the configured pinned toolchain:
+
+```sh
+cargo test -p noble-cli --bin noble --test core --test editor --test smoke \
+  --locked --offline -- --test-threads 4
+```
+
+The existing hour-long calculator-state test remains explicitly ignored by
+that command; it is not included in the executed claim above. Local raw probe,
+independent-parser, test, and CLI records are retained under
+`~/.cache/noble-issues/issue54-*`; the corpus and regression source are retained
+in the repository for replay. This finite evidence is not a proof, a large-U64
+runtime-counter execution, or a whole-workspace acceptance claim.
