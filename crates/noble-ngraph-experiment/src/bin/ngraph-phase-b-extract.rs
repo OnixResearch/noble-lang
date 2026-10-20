@@ -58,7 +58,10 @@ const TRUSTED: [&str; 7] = [
 ];
 
 // Issue #14 evidence record builder; the ordered parameters are one receipt row.
-#[allow(clippy::too_many_arguments, reason = "Issue #14 evidence record builder; the ordered parameters are one receipt row.")]
+#[allow(
+    clippy::too_many_arguments,
+    reason = "Issue #14 evidence record builder; the ordered parameters are one receipt row."
+)]
 fn record(
     id: &str,
     requirements: &[&str],

@@ -274,7 +274,10 @@ fn l1_timing(timing: &[Timing], wall: Duration) -> L1Summary {
         .collect();
     let (rj, rm) = stats(roots);
     // Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values.
-    #[allow(clippy::cast_precision_loss, reason = "Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values.")]
+    #[allow(
+        clippy::cast_precision_loss,
+        reason = "Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values."
+    )]
     let rate = timing.len() as f64 / wall.as_secs_f64();
     L1Summary {
         json: Json::obj([
@@ -436,7 +439,10 @@ fn total_stats(reps: usize, mut f: impl FnMut() -> i64) -> (Json, f64, i64) {
 }
 
 // Issue #14 campaign leg; its linear measurement order is the review subject.
-#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
+#[allow(
+    clippy::too_many_lines,
+    reason = "Issue #14 campaign leg; its linear measurement order is the review subject."
+)]
 fn main() -> ExitCode {
     let a = match args() {
         Ok(a) => a,
@@ -469,7 +475,10 @@ fn main() -> ExitCode {
     let mut rng = SplitMix64::new(a.seed);
     let mut vectors = vec![[5i64, 4i64]];
     // Issue #14 evidence: the value is range-checked before this diagnostic cast.
-    #[allow(clippy::cast_possible_wrap, reason = "Issue #14 evidence: the value is range-checked before this diagnostic cast.")]
+    #[allow(
+        clippy::cast_possible_wrap,
+        reason = "Issue #14 evidence: the value is range-checked before this diagnostic cast."
+    )]
     while vectors.len() < a.w1_vectors {
         vectors.push([rng.next_u64() as i64, rng.next_u64() as i64]);
     }

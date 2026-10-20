@@ -136,7 +136,10 @@ const TRUSTED: [&str; 5] = [
 ];
 
 // Issue #14 evidence record builder; the ordered parameters are one receipt row.
-#[allow(clippy::too_many_arguments, reason = "Issue #14 evidence record builder; the ordered parameters are one receipt row.")]
+#[allow(
+    clippy::too_many_arguments,
+    reason = "Issue #14 evidence record builder; the ordered parameters are one receipt row."
+)]
 fn record(
     id: &str,
     requirements: &[&str],
@@ -283,7 +286,10 @@ fn b1(cfg: &Json) -> (Json, bool) {
 }
 
 // Issue #14 campaign leg; its linear measurement order is the review subject.
-#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
+#[allow(
+    clippy::too_many_lines,
+    reason = "Issue #14 campaign leg; its linear measurement order is the review subject."
+)]
 fn b2(cfg: &Json, a: &Args) -> (Vec<Json>, bool) {
     let mut out = Vec::new();
     let mut all = true;
@@ -515,7 +521,10 @@ fn b4(cfg: &Json, a: &Args) -> (Json, bool) {
 }
 
 // Issue #14 campaign leg; its linear measurement order is the review subject.
-#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
+#[allow(
+    clippy::too_many_lines,
+    reason = "Issue #14 campaign leg; its linear measurement order is the review subject."
+)]
 fn b5(cfg: &Json) -> (Json, bool) {
     let c = b5_contract(B5_SEED, B5_DATA_SEED);
     let id_before = c.model.id();
@@ -661,7 +670,10 @@ fn b5(cfg: &Json) -> (Json, bool) {
 }
 
 // Issue #14 campaign leg; its linear measurement order is the review subject.
-#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
+#[allow(
+    clippy::too_many_lines,
+    reason = "Issue #14 campaign leg; its linear measurement order is the review subject."
+)]
 fn b6(cfg: &Json) -> (Json, bool) {
     let g = checked(fixtures::f1());
     let s = ParamSnapshot::new(&BLAKE3, &g, &F1_FIXED).expect("snapshot");

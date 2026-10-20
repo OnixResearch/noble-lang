@@ -100,7 +100,10 @@ fn throughput(mut f: impl FnMut()) -> f64 {
         n += 64;
     }
     // Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values.
-    #[allow(clippy::cast_precision_loss, reason = "Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values.")]
+    #[allow(
+        clippy::cast_precision_loss,
+        reason = "Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values."
+    )]
     let r = n as f64 / t.elapsed().as_secs_f64();
     r
 }
@@ -205,7 +208,10 @@ fn phase_profile(a: &Args, c: &train::Contract, s: &ParamSnapshot, xi: &[Value])
 }
 
 // Issue #14 campaign leg; its linear measurement order is the review subject.
-#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
+#[allow(
+    clippy::too_many_lines,
+    reason = "Issue #14 campaign leg; its linear measurement order is the review subject."
+)]
 fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
     let t = Instant::now();
     let g = net.graph(name);
@@ -216,7 +222,10 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
     let s = ParamSnapshot::new(&BLAKE3, &c, &p).expect("snapshot");
     let mut rng = SplitMix64::new(0x00c1_0003);
     // Issue #14 evidence: the value is range-checked before this bounded diagnostic cast.
-    #[allow(clippy::cast_possible_truncation, reason = "Issue #14 evidence: the value is range-checked before this bounded diagnostic cast.")]
+    #[allow(
+        clippy::cast_possible_truncation,
+        reason = "Issue #14 evidence: the value is range-checked before this bounded diagnostic cast."
+    )]
     let x: Vec<f32> = (0..net.inputs())
         .map(|_| (rng.next_f64() * 2.0 - 1.0) as f32)
         .collect();
@@ -314,7 +323,10 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
         )
         .expect("trains");
         // Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values.
-        #[allow(clippy::cast_precision_loss, reason = "Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values.")]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values."
+        )]
         ours.push(ns(t.elapsed()) / steps as f64);
         loss_ratio = r.losses[r.losses.len() - 1] / r.losses[0];
         training_result = Json::obj([
@@ -387,7 +399,10 @@ fn w3(a: &Args, name: &str, net: ReGluNet) -> W3Out {
 }
 
 // Issue #14 campaign leg; its linear measurement order is the review subject.
-#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
+#[allow(
+    clippy::too_many_lines,
+    reason = "Issue #14 campaign leg; its linear measurement order is the review subject."
+)]
 fn w4(a: &Args) -> (Json, f64) {
     let t = Instant::now();
     let g = workloads::w4_graph();
@@ -397,7 +412,10 @@ fn w4(a: &Args) -> (Json, f64) {
     let table: Vec<f32> = (0..W4_TABLE).map(workloads::w4_entry).collect();
     let mut rng = SplitMix64::new(0x00c1_0004);
     // Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values.
-    #[allow(clippy::cast_precision_loss, reason = "Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values.")]
+    #[allow(
+        clippy::cast_precision_loss,
+        reason = "Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values."
+    )]
     let idx: Vec<f32> = (0..workloads::W4_READS)
         .map(|_| rng.below(W4_TABLE as u64) as f32)
         .collect();
@@ -405,7 +423,10 @@ fn w4(a: &Args) -> (Json, f64) {
     let mut agree = true;
     for _ in 0..200 {
         // Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values.
-        #[allow(clippy::cast_precision_loss, reason = "Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values.")]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Issue #14 F32 evidence: diagnostics deliberately widen exact f32 values."
+        )]
         let ix: Vec<f32> = (0..workloads::W4_READS)
             .map(|_| rng.below(W4_TABLE as u64 + 2) as f32)
             .collect();
@@ -468,7 +489,10 @@ fn w4(a: &Args) -> (Json, f64) {
 }
 
 // Issue #14 campaign leg; its linear measurement order is the review subject.
-#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
+#[allow(
+    clippy::too_many_lines,
+    reason = "Issue #14 campaign leg; its linear measurement order is the review subject."
+)]
 fn w12(a: &Args) -> Json {
     let g1 = workloads::w1_graph();
     let c1 = check(&BLAKE3, g1.clone()).expect("W1");
@@ -551,7 +575,10 @@ fn w12(a: &Args) -> Json {
 }
 
 // Issue #14 campaign leg; its linear measurement order is the review subject.
-#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
+#[allow(
+    clippy::too_many_lines,
+    reason = "Issue #14 campaign leg; its linear measurement order is the review subject."
+)]
 fn main() {
     let a = args();
     let load_start = read("/proc/loadavg");
