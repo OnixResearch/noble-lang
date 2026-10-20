@@ -2,6 +2,7 @@ import NobleFoundation.Repr
 import NobleFoundation.Literal
 import NobleFoundation.Instr
 import NobleFoundation.Sequence
+import NobleFoundation.Branch
 import NobleFoundation.Regressions
 import NobleFoundation.Helper
 import NobleFoundation.Slice

@@ -18,12 +18,15 @@
 //   env -i NODE verification/foundation/differential.mjs --seed N --count K \
 //     --foundation FOUNDATION_CHECK_JSON --output NEW_DIR [--allow-dirty] [--skip-checker-lanes]
 //   env -i NODE verification/foundation/differential.mjs --verify RECEIPT_JSON
+// Add --emi for the separately Lean-checked fixed-input if/case lane.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { userInfo } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MIN, MAX, wrap, refRun, opSource, opsSource, leanInt, leanOps, leanList, prng } from './arithmetic.mjs';
+import { buildCli, createCliObserver, matchesScalar } from './execution.mjs';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
 const project = join(root, 'proofs/foundation');
@@ -42,7 +45,9 @@ const theoremsUsed = ['NobleFoundation.PExpr.exec_inputs_run', 'NobleFoundation.
   'NobleFoundation.exec_inputs_nested', 'NobleFoundation.exec_lowerAll', 'NobleFoundation.PExpr.exec_run_ref',
   'NobleFoundation.accumulate_eq_acceptLiteral', 'NobleFoundation.refRun_range', 'NobleFoundation.wrap_eq_knum01'];
 const boundSources = [
-  'verification/foundation/differential.mjs', 'proofs/foundation/NobleFoundation/Sequence.lean',
+  'verification/foundation/differential.mjs', 'verification/foundation/arithmetic.mjs',
+  'verification/foundation/execution.mjs', 'verification/selected-vendor.mjs',
+  'proofs/foundation/NobleFoundation/Sequence.lean',
   'proofs/foundation/NobleFoundation/Literal.lean', 'proofs/foundation/NobleFoundation/Repr.lean',
   'proofs/m3/MathlibI64.lean', 'proofs/mc1/NobleContracts/Model.lean', 'proofs/mc1/NobleContracts/Rules.lean',
   'crates/noble-wasm/runtime/operations.wat', 'crates/noble-wasm/runtime/stack.wat',
@@ -58,8 +63,19 @@ const fileHash = path => digest(readFileSync(path));
 const requireThat = (condition, message) => { if (!condition) throw Error(message); };
 const commandLog = [];
 function run(command, args, options = {}) {
-  const result = spawnSync(command, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
-    timeout: 3600000, env: childBase, ...options });
+  const { captureDirectory, ...spawnOptions } = options;
+  const raw = spawnSync(command, args, { maxBuffer: 64 * 1024 * 1024,
+    timeout: 3600000, env: childBase, ...spawnOptions, encoding: null });
+  if (captureDirectory) {
+    mkdirSync(captureDirectory);
+    writeFileSync(join(captureDirectory, 'stdout'), raw.stdout ?? Buffer.alloc(0));
+    writeFileSync(join(captureDirectory, 'stderr'), raw.stderr ?? Buffer.alloc(0));
+    if (spawnOptions.input !== undefined) writeFileSync(join(captureDirectory, 'stdin'), spawnOptions.input);
+    writeFileSync(join(captureDirectory, 'command.json'), JSON.stringify({ command, argv: args,
+      cwd: spawnOptions.cwd ?? null, exit: raw.status, signal: raw.signal,
+      error: raw.error ? String(raw.error) : null }, null, 2) + '\n');
+  }
+  const result = { ...raw, stdout: raw.stdout?.toString('utf8') ?? '', stderr: raw.stderr?.toString('utf8') ?? '' };
   commandLog.push({ command: command.split('/').pop(), args: args.length, exit: result.status });
   if (result.error || (result.status !== 0 && !options.allowFailure)) {
     throw Error(`${command} ${args.join(' ')} failed: ${result.error?.message ?? result.status}\n${result.stderr}\n${result.stdout}`);
@@ -73,21 +89,6 @@ const gitState = cwd => ({
 });
 
 // ---------------------------------------------------------------- reference
-const MIN = -(2n ** 63n), MAX = 2n ** 63n - 1n;
-const wrap = z => BigInt.asIntN(64, z); // K-NUM-01 = MathlibI64.wrap (wrap_eq_knum01)
-const inRange = n => n >= MIN && n <= MAX;
-/** AOp: {push:n} | 'add' | 'sub' | 'mul'. Mirrors NobleFoundation.AOp.ref (top-first). */
-function refStep(op, s, mutant = {}) {
-  if (typeof op === 'object') return inRange(op.push) ? [op.push, ...s] : null;
-  if (s.length < 2) return null;
-  const [y, x, ...rest] = s;
-  const value = op === 'add' ? x + y : op === 'mul' ? x * y : (mutant.reversedSub ? y - x : x - y);
-  return [wrap(value), ...rest];
-}
-function refRun(ops, s, mutant) {
-  for (const op of ops) { s = refStep(op, s, mutant); if (!s) return null; }
-  return s;
-}
 /** PExpr: {arith:[ops]} | {quoted:n} | {compose:[P,Q]}; flat mirrors PExpr.flat. */
 function flat(P, mutant = {}) {
   if (P.arith) return P.arith;
@@ -110,8 +111,6 @@ function expectation(c, mutant = {}) {
 }
 
 // ----------------------------------------------------------------- rendering
-const opSource = op => typeof op === 'object' ? String(op.push) : { add: '+', sub: '-', mul: '*' }[op];
-const opsSource = ops => ops.map(opSource).join(' ');
 function programSource(P) {
   if (P.arith) return `[ ${opsSource(P.arith)} ]`;
   if (P.quoted !== undefined) return `${P.quoted} quote`;
@@ -124,15 +123,11 @@ function caseSource(c) {
   else parts.push(opsSource(c.ins), `[ ${opsSource(c.ops)} ] quote run run`);
   return parts.filter(Boolean).join(' ') + '\n';
 }
-const leanInt = n => n < 0n ? `(${n})` : `${n}`;
-const leanOp = op => typeof op === 'object' ? `.push ${leanInt(op.push)}` : `.${op}`;
-const leanOps = ops => `[${ops.map(leanOp).join(', ')}]`;
 function leanProgram(P) {
   if (P.arith) return `(.arith ${leanOps(P.arith)})`;
   if (P.quoted !== undefined) return `(.quoted ${leanInt(P.quoted)})`;
   return `(.compose ${leanProgram(P.compose[0])} ${leanProgram(P.compose[1])})`;
 }
-const leanList = values => `[${values.map(leanInt).join(', ')}]`;
 /** Lean checks bound to one case: refRun result by `decide`, then the MC1 theorem. */
 function leanCase(c, index, result) {
   const name = `case_${index}`;
@@ -153,16 +148,6 @@ function leanCase(c, index, result) {
 }
 
 // ----------------------------------------------------------------- generation
-function prng(seed) { // splitmix64
-  let state = BigInt.asUintN(64, BigInt(seed));
-  return () => {
-    state = BigInt.asUintN(64, state + 0x9e3779b97f4a7c15n);
-    let z = state;
-    z = BigInt.asUintN(64, (z ^ (z >> 30n)) * 0xbf58476d1ce4e5b9n);
-    z = BigInt.asUintN(64, (z ^ (z >> 27n)) * 0x94d049bb133111ebn);
-    return z ^ (z >> 31n);
-  };
-}
 const BOUNDARY = [0n, 1n, -1n, 2n, -2n, 3n, -3n, MAX, MIN, MAX - 1n, MIN + 1n, 2n ** 31n, -(2n ** 31n),
   2n ** 32n, 2n ** 32n - 1n, 2n ** 62n, -(2n ** 62n), 3037000499n, 3037000500n, -3037000500n];
 function generator(seed) {
@@ -250,6 +235,11 @@ if (forbidden.length) {
   console.error(`[differential] FAIL unsafe caller environment: ${forbidden.sort().join(', ')}`);
   process.exit(1);
 }
+if (args.includes('--emi')) {
+  const { runEmi } = await import('./emi.mjs');
+  await runEmi({ args, option, root, project, selection, childBase, run, gitState, leanBin, node, boundSources });
+  process.exit();
+}
 if (option('--verify')) {
   // Reject stale evidence: the receipt must describe this exact clean tree and
   // every bound file must still have its recorded hash.
@@ -299,11 +289,7 @@ try {
   receipt.foundation_receipt_sha256 = fileHash(foundationPath);
 
   // CLI from this checkout (as compare.mjs), tools and helpers recorded.
-  const env = { ...childBase, TMPDIR: out, CARGO_HOME: join(home, '.cargo'), RUSTC_WRAPPER: '',
-    CARGO_TARGET_DIR: join(root, 'target') };
-  run(join(rustBin, 'cargo'), ['build', '--locked', '--offline', '-j', '4', '-p', 'noble-cli'],
-    { cwd: root, env, timeout: 3600000 });
-  const cli = join(root, 'target/debug/noble');
+  const { cli, env } = buildCli({ root, out, selection, childBase, run });
   const tools = { node, wasm_tools: join(selection.tool_paths.wasm_tools.output, 'bin/wasm-tools'),
     wasm_opt: join(selection.tool_paths.binaryen.output, 'bin/wasm-opt') };
   receipt.toolchain = { cli_sha256: fileHash(cli), lean: foundation.lean, mathlib_commit: foundation.mathlib_commit,
@@ -332,32 +318,11 @@ try {
   receipt.expected_lean = { path: 'Expected.lean', sha256: fileHash(leanFile), kernel_checked_cases: cases.length };
 
   // Execute each case in both optimization modes.
-  let serial = 0;
-  const observe = (c, mode) => {
-    const tag = `${c.index}-${mode}-${++serial}`;
-    const dir = join(out, `case-${tag}`);
-    const file = join(out, `case-${tag}.noble`);
-    writeFileSync(file, c.source);
-    const result = run(cli, ['run', file, '--opt', mode, '--emit', dir], { cwd: root, env, allowFailure: true });
-    const report = JSON.parse(result.stdout);
-    const obs = { outcome: report.outcome, stage: report.stage, diagnostic: report.diagnostic ?? null,
-      guest_requests: report.guest_requests, trace: report.request_trace ?? [] };
-    if (report.outcome === 'normal') {
-      requireThat(report.module?.optimized === (mode === 'on'), `case ${c.index}/${mode}: optimization flag mismatch`);
-      const wasm = join(dir, 'engine', mode === 'on' ? 'module-1-optimized.wasm' : 'module-1.wasm');
-      requireThat(report.module.wasm_sha256 === fileHash(wasm) &&
-        report.module.source_sha256 === digest(Buffer.from(c.source)), `case ${c.index}/${mode}: emitted bytes do not bind report`);
-      obs.wasm_sha256 = report.module.wasm_sha256;
-      obs.stack = report.stack.map(v => [v.type, String(v.value)]);
-    }
-    return obs;
-  };
+  const observe = createCliObserver({ root, out, cli, env, run });
   const decodeSigned = v => v;
   const decodeUnsigned = ([type, v]) => type === 'I64' ? [type, String(BigInt.asUintN(64, BigInt(v)))] : [type, v];
   const agrees = (expected, obs, decode = x => x) => expected.outcome === 'normal'
-    ? obs.outcome === 'normal' && obs.guest_requests === 0 &&
-      JSON.stringify(obs.trace) === JSON.stringify(expected.trace) &&
-      JSON.stringify(obs.stack.map(decode)) === JSON.stringify(expected.stack)
+    ? matchesScalar(expected, obs, decode)
     : obs.outcome === 'reject' && obs.stage === 'parse' && obs.diagnostic === 'integer literal is outside I64';
   const observations = new Map();
   receipt.cases = [];

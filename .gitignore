@@ -1,6 +1,6 @@
 .pi/
 node_modules/
-target/
+target
 .lake/
 .octet/
 proofs/m1/NobleKernel.lean

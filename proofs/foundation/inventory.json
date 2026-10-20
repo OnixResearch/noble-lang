@@ -532,6 +532,42 @@
       "claim": "inputs then [ ops ] quote run run equals refRun, any prefix"
     },
     {
+      "name": "NobleFoundation.exec_branchCode_selected",
+      "phase": 4,
+      "role": "emi-branch",
+      "claim": "MC1 branch code executes exactly the selected lowered branch; the untaken block is constructed but not run"
+    },
+    {
+      "name": "NobleFoundation.exec_branchRef",
+      "phase": 4,
+      "role": "emi-branch",
+      "claim": "successful independent if/I64-case reference agrees with exact MC1 normal result, preserving any public prefix"
+    },
+    {
+      "name": "NobleFoundation.selectedOps_untaken",
+      "phase": 4,
+      "role": "emi-branch",
+      "claim": "changing the untaken branch leaves the selected straight-line operation sequence unchanged"
+    },
+    {
+      "name": "NobleFoundation.branchRef_untaken",
+      "phase": 4,
+      "role": "emi-branch",
+      "claim": "changing only the untaken branch leaves if/I64-case reference outcomes unchanged"
+    },
+    {
+      "name": "NobleFoundation.exec_branchCode_untaken",
+      "phase": 4,
+      "role": "emi-branch",
+      "claim": "changing only the untaken branch leaves all normal MC1 outcomes unchanged on admitted selector inputs"
+    },
+    {
+      "name": "NobleFoundation.branchVisits_selected",
+      "phase": 4,
+      "role": "emi-branch",
+      "claim": "selected-branch visit vector is [1,0] for left and [0,1] for right"
+    },
+    {
       "name": "NobleFoundation.stackTyped_length",
       "phase": 2,
       "role": "preservation",

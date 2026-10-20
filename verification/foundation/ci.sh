@@ -42,6 +42,19 @@ stage differential env -i "$node" verification/foundation/differential.mjs --see
   --foundation "$out/check/foundation-check.json" --output "$out/differential" || status=1
 stage verify env -i "$node" verification/foundation/differential.mjs \
   --verify "$out/differential/differential.json" || status=1
+# Keep the EMI controller's V8 compilation and heap bounds explicit. The
+# receipt records these flags separately from the guest runtime limits.
+emi_node=(env -i "$node" --no-liftoff --no-wasm-lazy-compilation --no-wasm-tier-up \
+  --stack-size=1024 --max-old-space-size=256)
+stage emi "${emi_node[@]}" verification/foundation/differential.mjs --emi --seed 53 --count 16 \
+  --foundation "$out/check/foundation-check.json" --output "$out/emi" || status=1
+stage emi-verify "${emi_node[@]}" verification/foundation/differential.mjs --emi \
+  --verify "$out/emi/emi.json" || status=1
+stage emi-replay "${emi_node[@]}" verification/foundation/differential.mjs --emi \
+  --replay "$out/emi/minimal-control.json" \
+  --foundation "$out/check/foundation-check.json" --output "$out/emi-replay" || status=1
+stage emi-replay-verify "${emi_node[@]}" verification/foundation/differential.mjs --emi \
+  --verify "$out/emi-replay/emi.json" || status=1
 # Stale-evidence control: the retained in-repo receipt names an older tree and
 # must be refused.
 stale=$(ls -d verification/foundation/receipts/*/ | head -n 1)

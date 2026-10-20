@@ -19,6 +19,11 @@ implementation theorem about the Rust frontend, `noble-wasm` lowering,
 runtime helpers, `wasm-opt`, V8 or the loader. The tables below show
 where each claim stops.
 
+The separate input-specific EMI lane adds one scalar `if` or I64 sum `case`
+through [`NobleFoundation/Branch.lean`](NobleFoundation/Branch.lean). Its
+branch theorems do not extend the arithmetic comparator's whitelist or
+claim universal equivalence of the generated original and variant.
+
 ## Reproduce
 
 Prerequisites:
@@ -46,6 +51,12 @@ env -i "$NODE" verification/foundation/differential.mjs --seed 15 --count 80 \
   --foundation "$OUT/check/foundation-check.json" --output "$OUT/differential"
 # 4. reject stale evidence: succeeds only on the clean tree the receipt names
 env -i "$NODE" verification/foundation/differential.mjs --verify "$OUT/differential/differential.json"
+# 5. Input-specific branch EMI, with independent admission and fresh Lean checks
+env -i "$NODE" --no-liftoff --no-wasm-lazy-compilation --no-wasm-tier-up \
+  --stack-size=1024 --max-old-space-size=256 \
+  verification/foundation/differential.mjs --emi --seed 53 --count 16 \
+  --foundation "$OUT/check/foundation-check.json" --output "$OUT/emi"
+env -i "$NODE" verification/foundation/differential.mjs --emi --verify "$OUT/emi/emi.json"
 ```
 
 The existing fixed-vector comparator
@@ -88,6 +99,10 @@ pin. The Lean kernel checks this project's proofs against those imported
 | Words | `+` (4), `-` (5), `*` (6), `quote` (8), `compose` (9), `run` (10), `reflect` (11, recipe observation only), literal blocks `[ … ]` | `=` (7), `dip`, `swap`, `dup`, `drop` and branching are outside the theorems. MC1 models them, but they are not part of this fragment |
 | Definitions/imports | none | named calls and declared modules belong to #7 |
 | Optimization | the model is mode-independent | off/on behavior is a Wasm/optimizer claim, see Phase 3/4 |
+
+This table describes the original arithmetic/Program fragment. The bounded
+EMI branch extension and its excluded observations are specified separately
+under Phase 4 below.
 
 ### Representation relation and observations
 
@@ -259,6 +274,77 @@ runner then uses `bubblewrap-0.12.0` and records that path in the receipt.
 Unsupported modes: none. Both `off` and `on` are supported by
 `Core-Bootstrap`.
 
+### Input-specific branch EMI (issue #53)
+
+`differential.mjs --emi` reuses the arithmetic reference, renderers, CLI
+builder and scalar observation comparison. Its independent branch model
+covers one scalar `if`, or one `inl`/`inr` I64 payload followed by `case`.
+Both bodies contain only I64 literals and `+`, `-`, `*`. The selector,
+scalar input and Bool/I64 bottom prefix are fixed literals in the complete
+source program. Both branches have the same ordered stack interface and
+the entire source is independently admitted through the real frontend and
+kernel before execution. A valid but unexecuted word outside this model
+is still ineligible.
+
+The deterministic corpus has 16–64 positive pairs and three tagged refusal
+probes: an out-of-range literal, a wrong branch type, and an admitted word
+outside the model whitelist. Only one declared site in the untaken branch
+changes: a constant, arithmetic operator, neutral insertion, or neutral
+removal. Refused pairs are eligibility outcomes, not compiler disagreements.
+Counts distinguish generated and eligible branch/transformation coverage,
+refusal classes, opt modes, and checked subjects.
+
+For every eligible pair, fresh Lean declarations bind both complete bodies,
+the fixed input, prefix and selector. Kernel-checked `decide` expectations
+and `exec_branchRef` establish the ordered scalar result and preserved
+prefix in MC1. Structural selected-body equality and the checked visit
+vector establish nonexecution of the changed branch in this fragment.
+The proof record binds both exact source hashes and the model-pair/input
+hashes; changed bytes cannot reuse the original pair's evidence.
+
+Original and variant execute with opt off and on against that independent
+expectation, not merely against each other. Every run requires normal
+return, the exact ordered scalar stack, unchanged bottom prefix, an empty
+request trace, and zero guest requests/protected operations. Reflection,
+recipe/identity observations, returned Programs, effects/resources, live
+slots and quota-sensitive equivalence claims are excluded.
+
+The selected ABI maxima are supplied explicitly. Admission, assembly,
+optimization and execution artifacts are retained, with exact source,
+WAT/Wasm, report and tool hashes. Allocation/operand/continuation peaks,
+execution steps, structural recipe/depth bounds, and the separate bounded
+stack-inspection reflection counter must each leave more than half their
+selected limit free. Scalar stack inspection is not a guest `reflect`.
+Exhaustion and insufficient headroom are separate discrepancy classes;
+neither counts as an equivalent run. Preparation cost and code size are
+not claimed equal.
+
+Seven controls must be detected: selected-branch mutation, changed output
+order, prefix corruption, an actual host request with a forged empty trace,
+stale exact-subject evidence, a stale foundation tree, and an intentionally
+reversed selected-branch lowering. The lowering control changes actual
+WAT and executes the resulting Wasm in both opt modes. It is not a forged
+expected value.
+
+The shrinker changes the program/variant/fixed-input triple, including the
+mutation site. Every retained candidate is re-admitted, freshly checked by
+Lean and re-executed while preserving eligibility and the discrepancy
+class. Its 64-attempt bound, outcomes and local-minimal/bound-exhausted
+status are recorded. Replay the retained lowering-control discrepancy with:
+
+```sh
+env -i "$NODE" verification/foundation/differential.mjs --emi \
+  --replay "$OUT/emi/minimal-control.json" \
+  --foundation "$OUT/check/foundation-check.json" --output "$OUT/emi-replay"
+```
+
+`--emi --verify` requires the exact clean source tree, unchanged bound
+source/model files and every indexed artifact hash. Raw command captures
+retain argv, exit, separate stdout/stderr and supplied stdin. Imported
+Mathlib `.olean` files retain the cache trust assumption above. The Rust
+renderer/lowering refinement remains open: these are finite fixed-input
+EMI results, not a compiler theorem or universal program equivalence.
+
 ### CI
 
 The CI recipe is [`verification/foundation/ci.sh`](../../verification/foundation/ci.sh)
@@ -268,7 +354,11 @@ It runs these stages:
 2. `slice.mjs`;
 3. `differential.mjs --seed 15 --count 80`;
 4. `--verify` on the fresh receipt;
-5. a stale-evidence control: the retained `receipts/898cfe1` receipt must be
+5. `differential.mjs --emi --seed 53 --count 16`;
+6. `--emi --verify` on its fresh receipt;
+7. replay of the EMI control's retained minimal discrepancy;
+8. verification of the replay receipt;
+9. a stale-evidence control: the retained `receipts/898cfe1` receipt must be
    refused.
 
 It writes `summary.txt` and exits nonzero if any stage fails.
@@ -336,7 +426,7 @@ stated, because those cover the whole language or the implementation.
 |---|---|---|
 | 1 | whitelist/representation/observation table; signed ZMod/BitVec/K-NUM-01 correspondence; universal add/sub/mul with preserved typed prefix and orientation; literal refusal vs wrapping (spec and transcription); lifting to sequences and quote/compose/run; regressions; inventory and axiom audit | Rust frontend ↔ transcription refinement; MC1 `CodeTyped` ↔ kernel acceptance |
 | 3 | one example from Lean spec to admitted bytes (opt off/on), helper model, ACORR-mapped refusals | E5 lowering, E7 assembler, E8 optimizer, E10 loader/engine, E12 PAA-1 envelope, ACORR-CASE-09, quote/compose/run helper models |
-| 4 | seeded differential comparator, Lean-checked expectations, opt off/on, shrinking, mutation controls, checker lanes, source-bound receipts, `--verify`, retained in-repo receipts, `ci.sh` recipe | Nix-sandbox CI check (see "CI": networked Mathlib cache, absent offline inputs, host services for the slice); rebuilt Mathlib `.olean` files |
+| 4 | seeded differential comparator; separate fixed-input scalar if/case EMI; Lean-checked expectations, opt off/on, shrinking and replay, mutation controls, checker lanes, source-bound receipts, `--verify`, retained in-repo receipts, `ci.sh` recipe | Nix-sandbox CI check (see "CI": networked Mathlib cache, absent offline inputs, host services for the slice); rebuilt Mathlib `.olean` files; Rust renderer/lowering refinement and universal compiler equivalence |
 | 2 | MC1: preservation and primitive progress, pure laws and negative cases. Effects/resource layer: preservation, total progress, effect soundness for every prefix including denied/failed, ownership preservation with declared transitions, resource-free capture, resource negative cases | the whole language and implementation, abnormal cleanup, aggregates/borrowing, effectful equivalence laws, normalization |
 
 ### Effect and resource layer (`NobleFoundation/Effects.lean`)
