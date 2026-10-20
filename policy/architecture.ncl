@@ -8,9 +8,9 @@ let contracts = import "./architecture.contracts.ncl" in
     source_scopes = ["crates/noble-kernel/src", "crates/noble-contracts/src", "crates/noble-wasm/src", "crates/noble-cli/src", "crates/noble-syndicate/src", "crates/noble-ngraph/src", "crates/noble-ngraph-experiment/src"],
     targets = [{
       triple = "x86_64-unknown-linux-gnu",
-      # The complete `--all-features` plan. `noble-cli` declares the empty
-      # `safety-observe` feature for its explicit evidence build, so the
-      # declared row must name it for the plan-equivalence check to hold.
+      # The complete plan. `noble-cli` declares the empty `safety-observe`
+      # feature for its explicit evidence build; units without that feature
+      # retain the default configuration.
       features = ["safety-observe"],
       default_features = true,
     }],

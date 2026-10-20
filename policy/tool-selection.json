@@ -73,7 +73,7 @@
     "word_bits": 64
   },
   "file_sha256": {
-    ".pre-commit-config.yaml": "968b8b2fa4e321c91a6ddad1eac2a4043dc6cf04d03582a19be60a1555591ad5",
+    ".pre-commit-config.yaml": "548cb1a1e56a47c8154dd20e58256033f4fa4d6f94fc20445ff5af45f9c1bdf4",
     "Cargo.lock": "5ba51b5c980e43c0e4956034f3be9e41bd94b5b953ec7f03e3704c5fe47e2ce3",
     "Cargo.toml": "d0d718b46958904e242065b9d20d5e6fac83ca1395570ed0da00ecac5aa6afd6",
     "crates/noble-cli/Cargo.toml": "80cc18103c3c6a2cdabee9b8709ba88ffe8c50543a0c23275dfd0d3d0598d256",
@@ -118,7 +118,7 @@
     "crates/noble-wasm/wit/syndicate.wit": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
     "dylint.toml": "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
     "flake.lock": "709df81d5a19c565946291861e7e07555db8be47edf0e30b6fe19e56d8c80179",
-    "flake.nix": "30b810cbe2bd58f55d14f75d697a87682d40360c19e3658ffb8ae8fae91e73ad",
+    "flake.nix": "774e4d60692feaaaefafc9c21d3c0869c443bff97bea3e0c70330778e53e090c",
     "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
     "nix/boundary-controls.nix": "e0b7b69118c9acaeca811d9eb2a89db07046ecadb7b720bc9aeea08a781fdd56",
     "nix/m3-wasm-app.nix": "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
@@ -140,8 +140,8 @@
     "policy/architecture-export-spec.ncl": "e32a2c75f975e768b292702500ca902bb944f07a5ce156bcbfa00bff576681bd",
     "policy/architecture.contracts.ncl": "9cbbe9437d789e2ed7cdf1cfda992616fd3de18af169e23e1e8e9652a8c1571e",
     "policy/architecture.json": "f3f0cc67ac1e2ad1bcb955cc9d3dd34fae2afdec92eea59fc0059174a01874ce",
-    "policy/architecture.manifest.json": "bac9bbdb3a8f3cd9e86076fcef830e454050e787c030f0049105f17a3bff2006",
-    "policy/architecture.ncl": "d74dcbbbe53fd10bffdc8c0bc55f34edb40a64aefb42f78f44bc8ef165530d92",
+    "policy/architecture.manifest.json": "6d2c0f60f7cb8bd941a822b9516e88435d383f7dabda0c12fa77dda182478627",
+    "policy/architecture.ncl": "b63dd7d1cdfd7f7c97f626212014924794d7de60b7fa0acc71f267320ea0d8dc",
     "proofs/m1/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
     "proofs/m1/lakefile.toml": "99c002cbb3acacde1c2ee1e8c9c02a0ca7a18a0938a7bcdefde6621888855c5d",
     "proofs/m1/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",

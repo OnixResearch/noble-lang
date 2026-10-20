@@ -184,8 +184,8 @@
         cargoToml = builtins.readFile ./Cargo.toml;
         architecturePolicyJson = builtins.readFile ./policy/architecture.json;
       };
-      # Compiler-derived inventory artifacts. Use the reviewed ordinary production row.
-      # This IR collection is separate from the all-features deny-all gate.
+      # Compiler-derived inventory artifacts. Use the reviewed all-features
+      # production row so the invocation plan matches the architecture policy.
       inventoryArtifacts = pkgs.runCommand "noble-inventory-artifacts" {
         buildInputs = [ selectedWasmtimeSource reviewedVendor ];
         nativeBuildInputs = [
@@ -204,7 +204,7 @@
         chmod -R u+w source
         cd source
         exec cargo-octet check --workspace --output-format json --artifact-dir "$out" \
-          -- --all-targets --offline -j4
+          -- --all-targets --features safety-observe --offline -j4
       '';
       inventory = import ./nix/source-inventory-derive.nix {
         ir = builtins.fromJSON (builtins.readFile "${inventoryArtifacts}/compiler-architecture-ir.json");

@@ -87,22 +87,6 @@ let
   exceptedWithoutRecord = filter (
     s: s.disposition == "excepted" && !(elem s.qualified_path exceptionSymbols)
   ) bodies;
-  configurationKey = c: builtins.toJSON {
-    target = c.target;
-    features = c.features;
-    default_features = c.default_features;
-  };
-  observedConfigurations = sorted (map configurationKey inventory.configurations);
-  declaredConfigurations = sorted (
-    map (
-      row:
-      builtins.toJSON {
-        target = row.triple;
-        features = row.features;
-        default_features = row.default_features;
-      }
-    ) architecturePolicy.production.targets
-  );
   declaredPackages = architecturePolicy.production.packages;
   observedPackages = unique (map (u: u.package_name) inventory.units);
   declaredScopes = architecturePolicy.production.source_scopes;
@@ -139,7 +123,28 @@ let
     ++ require (empty inventory.coverage.duplicate_units) "coverage-duplicate-units"
     ++ require (inventory.coverage.expected_units == inventory.coverage.observed_units)
       "coverage-unit-count"
-    ++ require (observedConfigurations == declaredConfigurations) "required-configuration"
+    ++ require (
+      all (
+        observed:
+        any (
+          declared:
+          declared.triple == observed.target
+          && declared.default_features == observed.default_features
+          && (observed.features == [ ] || declared.features == observed.features)
+        ) architecturePolicy.production.targets
+      ) inventory.configurations
+    ) "required-configuration"
+    ++ require (
+      all (
+        declared:
+        any (
+          observed:
+          declared.triple == observed.target
+          && declared.default_features == observed.default_features
+          && declared.features == observed.features
+        ) inventory.configurations
+      ) architecturePolicy.production.targets
+    ) "required-configuration"
     ++ require (all (pkg: elem pkg observedPackages) declaredPackages) "package-coverage"
     ++ require (
       all (scope: any (path: pathStartsWith scope path) observedPathsInUnits) declaredScopes
