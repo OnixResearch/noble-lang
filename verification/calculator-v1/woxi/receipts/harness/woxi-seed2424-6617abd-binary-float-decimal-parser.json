@@ -1,0 +1,2533 @@
+{
+  "schema": "noble-woxi-harness/v1",
+  "implementation": "fault:binary-float-decimal-parser",
+  "fault_reason": "numeric literals pass through an IEEE-754 binary double",
+  "label": "fresh-oracle",
+  "expectation_source": "fresh Woxi computation",
+  "reference_status": "ok",
+  "lane_result": "fail",
+  "stale_provenance": [],
+  "provenance": {
+    "lane": {
+      "policy_version": "noble-woxi-policy/1",
+      "files": {
+        "woxi/interchange.mjs": "4c833070a4198cd95977ba5315e8eb07d66f0979e0ca62b8584ee53acfd50d05",
+        "woxi/bridge.py": "a7ee9fbb4f02f94a27d25549f4a1a2dffddfbc89a5ff52404c55fd31870d765c",
+        "woxi/helper/src/main.rs": "965eaec3b4bc5d8baf3b46a4f19403fd6132f689a82ad4f497f15460e36b8634",
+        "woxi/helper/Cargo.toml": "e16b180129b131e2b1dd894b0aa8fc11a6640518f5b5be9f2f3aea6ffcbb355e",
+        "woxi/helper/Cargo.lock": "74795fd5fd639576412fd5ace53604ffd5eb5b3c568377618c8c88826a79c92f",
+        "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+      },
+      "revision": "f6f50c80a70026ea0ae8f8e0c267b20021c317f755ed83ecd835d0df112b4a98",
+      "repository": {
+        "commit": "536cbe5a0f53c20bed3bddb26f0fc5bf63bf829f",
+        "tracked_changes": ""
+      },
+      "node": "v24.13.0"
+    },
+    "reference": {
+      "file": "/tmp/woxi-REF.json",
+      "sha256": "8d7b40e2cfb7b4def555bc551202c29a6a0470505a4efe56b1caf81ff75305d1",
+      "policy_version": "noble-woxi-policy/1",
+      "adapter": {
+        "policy_version": "noble-woxi-policy/1",
+        "files": {
+          "woxi/interchange.mjs": "4c833070a4198cd95977ba5315e8eb07d66f0979e0ca62b8584ee53acfd50d05",
+          "woxi/bridge.py": "a7ee9fbb4f02f94a27d25549f4a1a2dffddfbc89a5ff52404c55fd31870d765c",
+          "woxi/helper/src/main.rs": "965eaec3b4bc5d8baf3b46a4f19403fd6132f689a82ad4f497f15460e36b8634",
+          "woxi/helper/Cargo.toml": "e16b180129b131e2b1dd894b0aa8fc11a6640518f5b5be9f2f3aea6ffcbb355e",
+          "woxi/helper/Cargo.lock": "74795fd5fd639576412fd5ace53604ffd5eb5b3c568377618c8c88826a79c92f",
+          "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d"
+        },
+        "revision": "f6f50c80a70026ea0ae8f8e0c267b20021c317f755ed83ecd835d0df112b4a98"
+      },
+      "environment": {
+        "implementation": "woxi",
+        "woxi_version": "0.3.0",
+        "helper_version": "0.1.0",
+        "rust": "unknown"
+      },
+      "probes": [
+        {
+          "id": "zero-power-zero",
+          "expression": "0^0",
+          "raw_result": "Indeterminate",
+          "expected_raw": "Indeterminate",
+          "ok": true
+        },
+        {
+          "id": "one-over-zero",
+          "expression": "1/0",
+          "raw_result": "ComplexInfinity",
+          "expected_raw": "ComplexInfinity",
+          "ok": true
+        },
+        {
+          "id": "zero-over-zero",
+          "expression": "0/0",
+          "raw_result": "Indeterminate",
+          "expected_raw": "Indeterminate",
+          "ok": true
+        },
+        {
+          "id": "zero-power-negative",
+          "expression": "0^-1",
+          "raw_result": "ComplexInfinity",
+          "expected_raw": "ComplexInfinity",
+          "ok": true
+        },
+        {
+          "id": "perfect-square-half-power",
+          "expression": "4^(1/2)",
+          "raw_result": "2",
+          "expected_raw": "2",
+          "ok": true
+        },
+        {
+          "id": "irrational-half-power",
+          "expression": "2^(1/2)",
+          "raw_result": "Sqrt[2]",
+          "expected_raw": "Sqrt[2]",
+          "ok": true
+        }
+      ],
+      "corpus": {
+        "path": "/tmp/woxi-C.json",
+        "sha256": "a31c204e849560503c7ca898ea6f1c480edbf80365539629fc97a112fe760af1",
+        "generator": {
+          "seed": 2424,
+          "count": 12,
+          "wide": 6,
+          "prng": "mulberry32 (#21 oracle/generate.mjs)",
+          "files": {
+            "oracle/generate.mjs": "ed915ddc592127c6e7ecba4f9aba09e3e06cd2972315b9a35d722fecdd10427d",
+            "oracle/calculator.mjs": "38e784c3675429fe044518c35e3cda1bc4105cfc63638a6ff5ab967fec30aaa9",
+            "oracle/rational.mjs": "54cba2d335f85d90441bf437b3f3a6b2ff353d036440952d83561cf993ab1c65",
+            "woxi/lane.mjs": "916c688c450ded30f9ad473dcdec992a2d94aec5553870eb79a4aea5dbcd7724",
+            "woxi/fixtures/edge-cases.json": "92067cf1426b2e66141e99a471f4819d36feb9503a5b3c8bf5ffd210cd9bb16d"
+          }
+        }
+      },
+      "started": "2026-10-20T01:14:14.866Z",
+      "finished": "2026-10-20T01:14:14.885Z"
+    },
+    "corpus": {
+      "path": "/tmp/woxi-C.json",
+      "sha256": "a31c204e849560503c7ca898ea6f1c480edbf80365539629fc97a112fe760af1"
+    }
+  },
+  "summary": {
+    "disagree": 16,
+    "agree": 32
+  },
+  "results": [
+    {
+      "id": "edge/decimal-sum",
+      "text": "0.1 + 0.2",
+      "observed": {
+        "stdout": [
+          "10808639105689191/36028797018963968"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "10"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 10808639105689191/36028797018963968 != reference 3/10"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "0.1",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 4,
+            "kept": "0.1"
+          }
+        ],
+        "replay": {
+          "text": "0.1",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "01",
+            "scale": 1
+          },
+          "interchange_sha256": "e6fb91dfeef498329d2b48490957381b8fb4d479c569774934d849aec1d9a975",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "0.1",
+                      "expect": {
+                        "value": "1/10"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "01",
+                    "scale": 1
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/decimal-literal",
+      "text": "0.1",
+      "observed": {
+        "stdout": [
+          "3602879701896397/36028797018963968"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "10"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 3602879701896397/36028797018963968 != reference 1/10"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "0.1",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 0,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [],
+        "replay": {
+          "text": "0.1",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "01",
+            "scale": 1
+          },
+          "interchange_sha256": "e6fb91dfeef498329d2b48490957381b8fb4d479c569774934d849aec1d9a975",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "0.1",
+                      "expect": {
+                        "value": "1/10"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "01",
+                    "scale": 1
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/decimal-tiny",
+      "text": "0.00000000000000000001",
+      "observed": {
+        "stdout": [
+          "6646139978924579/664613997892457936451903530140172288"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "100000000000000000000"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 6646139978924579/664613997892457936451903530140172288 != reference 1/100000000000000000000"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "0.00000000000000000001",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 0,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [],
+        "replay": {
+          "text": "0.00000000000000000001",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "000000000000000000001",
+            "scale": 20
+          },
+          "interchange_sha256": "69d90b45a5f1ddf85b2a3d26a0fe716c5b2f4ed8aafdfccbdec229257f8052eb",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "0.00000000000000000001",
+                      "expect": {
+                        "value": "1/100000000000000000000"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "000000000000000000001",
+                    "scale": 20
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/decimal-scaled",
+      "text": "3.14159 - 3",
+      "observed": {
+        "stdout": [
+          "159416167809847/1125899906842624"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "14159",
+        "d": "100000"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 159416167809847/1125899906842624 != reference 14159/100000"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "3.14159",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 4,
+            "kept": "3.14159"
+          }
+        ],
+        "replay": {
+          "text": "3.14159",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "314159",
+            "scale": 5
+          },
+          "interchange_sha256": "ce3c886ae938486338ff9a504ce855865b696b7de5180babf3f6a9934707b967",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "3.14159",
+                      "expect": {
+                        "value": "314159/100000"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "314159",
+                    "scale": 5
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/decimal-times-integer",
+      "text": "1.5 * 2",
+      "observed": {
+        "stdout": [
+          "3"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/rational-sum",
+      "text": "1 / 3 + 1 / 6",
+      "observed": {
+        "stdout": [
+          "1/2"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/normalize-quotient",
+      "text": "2 / 4",
+      "observed": {
+        "stdout": [
+          "1/2"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "2"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/rational-quotient",
+      "text": "7 / 2",
+      "observed": {
+        "stdout": [
+          "7/2"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "7",
+        "d": "2"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/signed-quotient",
+      "text": "7 / -14",
+      "observed": {
+        "stdout": [
+          "-1/2"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-1",
+        "d": "2"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/subtract",
+      "text": "10 - 3",
+      "observed": {
+        "stdout": [
+          "7"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "7",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/negative-result",
+      "text": "0 - 5",
+      "observed": {
+        "stdout": [
+          "-5"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-5",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/negative-zero",
+      "text": "-0",
+      "observed": {
+        "stdout": [
+          "0"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "0",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/i64-max-plus-one",
+      "text": "9223372036854775807 + 1",
+      "observed": {
+        "stdout": [
+          "9223372036854775809"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "9223372036854775808",
+        "d": "1"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 9223372036854775809 != reference 9223372036854775808"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "1152921504606847000",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 4,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 4,
+            "kept": "9223372036854775807"
+          },
+          {
+            "round": 2,
+            "tried": 2,
+            "kept": "4611686018427388000"
+          },
+          {
+            "round": 3,
+            "tried": 2,
+            "kept": "2305843009213694000"
+          },
+          {
+            "round": 4,
+            "tried": 2,
+            "kept": "1152921504606847000"
+          }
+        ],
+        "replay": {
+          "text": "1152921504606847000",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "1152921504606847000",
+            "scale": 0
+          },
+          "interchange_sha256": "4313c8ee16a2cc34a5a7e356383d70f1063834a6de972cc6f33e5cf2e28f2938",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "1152921504606847000",
+                      "expect": {
+                        "value": "1152921504606847000"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "1152921504606847000",
+                    "scale": 0
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/i64-min-minus-one",
+      "text": "-9223372036854775808 - 1",
+      "observed": {
+        "stdout": [
+          "-9223372036854775809"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-9223372036854775809",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/float-precision-trap",
+      "text": "9007199254740993 - 9007199254740992",
+      "observed": {
+        "stdout": [
+          "0"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 0 != reference 1"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "9007199254740993",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "9007199254740993"
+          }
+        ],
+        "replay": {
+          "text": "9007199254740993",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "9007199254740993",
+            "scale": 0
+          },
+          "interchange_sha256": "70a74d6ede0faf2ed01dccf8b8d4c9f20f773f519af8cead36fceba4b6e5a6cf",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "9007199254740993",
+                      "expect": {
+                        "value": "9007199254740993"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "9007199254740993",
+                    "scale": 0
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/u64-squared",
+      "text": "18446744073709551616 * 18446744073709551616",
+      "observed": {
+        "stdout": [
+          "340282366920938463463374607431768211456"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "340282366920938463463374607431768211456",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/wide-quotient",
+      "text": "123456789012345678901234567890 / 987654321098765432109876543210",
+      "observed": {
+        "stdout": [
+          "3508852984519583/28070824131952048"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "13717421",
+        "d": "109739369"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 3508852984519583/28070824131952048 != reference 13717421/109739369"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "123456789012345678901234567890",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 4,
+            "kept": "123456789012345678901234567890"
+          }
+        ],
+        "replay": {
+          "text": "123456789012345678901234567890",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "123456789012345678901234567890",
+            "scale": 0
+          },
+          "interchange_sha256": "cdb978a98099b4e727baa8759a05a87edf97f618a058190488b66759758c3a14",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "123456789012345678901234567890",
+                      "expect": {
+                        "value": "123456789012345678901234567890"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "123456789012345678901234567890",
+                    "scale": 0
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "edge/power-right-associative",
+      "text": "2^3^2",
+      "observed": {
+        "stdout": [
+          "512"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "512",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-negative-exponent",
+      "text": "2^-3",
+      "observed": {
+        "stdout": [
+          "1/8"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "8"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-rational-base",
+      "text": "(2 / 3)^-2",
+      "observed": {
+        "stdout": [
+          "9/4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "9",
+        "d": "4"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-negative-base",
+      "text": "(-2)^3",
+      "observed": {
+        "stdout": [
+          "-8"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-8",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-unary-precedence",
+      "text": "-2^2",
+      "observed": {
+        "stdout": [
+          "-4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-4",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/power-integral-by-value",
+      "text": "4^(2 / 2)",
+      "observed": {
+        "stdout": [
+          "4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "4",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-power-zero",
+      "text": "0^0",
+      "observed": {
+        "stdout": [
+          "1"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "1",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/divide-by-zero",
+      "text": "1 / 0",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          2,
+          3
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-over-zero",
+      "text": "0 / 0",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [2,3) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          2,
+          3
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/zero-negative-power",
+      "text": "0^-1",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-base-negative-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/nonintegral-exponent-exact-root",
+      "text": "4^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/nonintegral-exponent",
+      "text": "2^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/first-error-left",
+      "text": "(1 / 0)^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "DivisionByZero [3,4) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "DivisionByZero",
+        "rule": "zero-divisor"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          3,
+          4
+        ]
+      ],
+      "signature": "agree:-:diagnostic:DivisionByZero",
+      "matches_fault_models": []
+    },
+    {
+      "id": "edge/first-error-right",
+      "text": "2^(1 / 2) + 1 / 0",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-01",
+      "text": "4 * 3 * 4",
+      "observed": {
+        "stdout": [
+          "48"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "48",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-02",
+      "text": "-4^1",
+      "observed": {
+        "stdout": [
+          "-4"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-4",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-03",
+      "text": "3 / 3 - 8 / 5",
+      "observed": {
+        "stdout": [
+          "-3/5"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-3",
+        "d": "5"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-04",
+      "text": "1.3 - (0.7 + 6)",
+      "observed": {
+        "stdout": [
+          "-12159718993900339/2251799813685248"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-27",
+        "d": "5"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value -12159718993900339/2251799813685248 != reference -27/5"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "1.3",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "1.3"
+          }
+        ],
+        "replay": {
+          "text": "1.3",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "13",
+            "scale": 1
+          },
+          "interchange_sha256": "6815593df1c9a5796b7fbcfebc98e8b51c7d0bdc777db8d4d8ba450711666c02",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "1.3",
+                      "expect": {
+                        "value": "13/10"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "13",
+                    "scale": 1
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/calc12-05",
+      "text": "5^(1 / 2)",
+      "observed": {
+        "stdout": [],
+        "status": 1,
+        "signal": null,
+        "timedOut": false,
+        "stderr": [
+          "NonIntegerExponent [1,2) provenance=unavailable"
+        ]
+      },
+      "reference": {
+        "kind": "diagnostic",
+        "category": "NonIntegerExponent",
+        "rule": "nonintegral-exponent"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [
+        [
+          1,
+          2
+        ]
+      ],
+      "signature": "agree:-:diagnostic:NonIntegerExponent",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-07",
+      "text": "2^64 + 3",
+      "observed": {
+        "stdout": [
+          "18446744073709551619"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "18446744073709551619",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-08",
+      "text": "3^2^0",
+      "observed": {
+        "stdout": [
+          "3"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "3",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-09",
+      "text": "4.32 + -1",
+      "observed": {
+        "stdout": [
+          "467248461339689/140737488355328"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "83",
+        "d": "25"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 467248461339689/140737488355328 != reference 83/25"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "4.32",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 4,
+            "kept": "4.32"
+          }
+        ],
+        "replay": {
+          "text": "4.32",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "432",
+            "scale": 2
+          },
+          "interchange_sha256": "034e772998996c583846d64b4536a00639b44d4e3e938179c90bb4a907c95144",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "4.32",
+                      "expect": {
+                        "value": "108/25"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "432",
+                    "scale": 2
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/calc12-10",
+      "text": "0.26 + 7.57 / (4.10 + 2)",
+      "observed": {
+        "stdout": [
+          "7737739263793112474652059162553/5155112440928132599179951210496"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "2289",
+        "d": "1525"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 7737739263793112474652059162553/5155112440928132599179951210496 != reference 2289/1525"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "0.26",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "0.26"
+          }
+        ],
+        "replay": {
+          "text": "0.26",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "026",
+            "scale": 2
+          },
+          "interchange_sha256": "2704d4eacd80669c7feecbac76276fac028198ba0ca09ed589644ae18e38651e",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "0.26",
+                      "expect": {
+                        "value": "13/50"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "026",
+                    "scale": 2
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/calc12-11",
+      "text": "-3^3",
+      "observed": {
+        "stdout": [
+          "-27"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-27",
+        "d": "1"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/calc12-12",
+      "text": "2 / 6 - 9 / 8",
+      "observed": {
+        "stdout": [
+          "-19/24"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-19",
+        "d": "24"
+      },
+      "verdict": "agree",
+      "mismatch": null,
+      "reasons": [],
+      "spans_not_judged": [],
+      "signature": "agree:-:value:-",
+      "matches_fault_models": []
+    },
+    {
+      "id": "seed-2424/wide-01",
+      "text": "4960813911821797228 + 2191235954361036929315404390",
+      "observed": {
+        "stdout": [
+          "2191235959321850760721090560"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "2191235959321850841137201618",
+        "d": "1"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 2191235959321850760721090560 != reference 2191235959321850841137201618"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "620101738977724700",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 4,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 5,
+            "kept": "4960813911821797228"
+          },
+          {
+            "round": 2,
+            "tried": 2,
+            "kept": "2480406955910898700"
+          },
+          {
+            "round": 3,
+            "tried": 2,
+            "kept": "1240203477955449300"
+          },
+          {
+            "round": 4,
+            "tried": 2,
+            "kept": "620101738977724700"
+          }
+        ],
+        "replay": {
+          "text": "620101738977724700",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "620101738977724700",
+            "scale": 0
+          },
+          "interchange_sha256": "a0deb5e2c285bc9850eedda8ea9c0fff02188da8100a0f03c10a42f3f117687b",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "620101738977724700",
+                      "expect": {
+                        "value": "620101738977724700"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "620101738977724700",
+                    "scale": 0
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/wide-02",
+      "text": "59039983304222846951 - 801507105833160313081525",
+      "observed": {
+        "stdout": [
+          "-801448065849856030007296"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-801448065849856090234574",
+        "d": "1"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value -801448065849856030007296 != reference -801448065849856090234574"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "7379997913027855000",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 4,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 5,
+            "kept": "59039983304222846951"
+          },
+          {
+            "round": 2,
+            "tried": 2,
+            "kept": "29519991652111420000"
+          },
+          {
+            "round": 3,
+            "tried": 2,
+            "kept": "14759995826055710000"
+          },
+          {
+            "round": 4,
+            "tried": 2,
+            "kept": "7379997913027855000"
+          }
+        ],
+        "replay": {
+          "text": "7379997913027855000",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "7379997913027855000",
+            "scale": 0
+          },
+          "interchange_sha256": "6789429ee37b24a98ac5aab9ce831e59976369b3f861ec7952d387cd4153ab7d",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "7379997913027855000",
+                      "expect": {
+                        "value": "7379997913027855000"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "7379997913027855000",
+                    "scale": 0
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/wide-03",
+      "text": "152493688672462140629 * 694674453390552926151",
+      "observed": {
+        "stdout": [
+          "105933469824051801711535051508618937499648"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "105933469824051790035249342573421213688979",
+        "d": "1"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 105933469824051801711535051508618937499648 != reference 105933469824051790035249342573421213688979"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "19061711084057768000",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 4,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "152493688672462140629"
+          },
+          {
+            "round": 2,
+            "tried": 2,
+            "kept": "76246844336231070000"
+          },
+          {
+            "round": 3,
+            "tried": 2,
+            "kept": "38123422168115536000"
+          },
+          {
+            "round": 4,
+            "tried": 2,
+            "kept": "19061711084057768000"
+          }
+        ],
+        "replay": {
+          "text": "19061711084057768000",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "19061711084057768000",
+            "scale": 0
+          },
+          "interchange_sha256": "bbaea7c9b9870d5df131544cafc90fe3ccd3e043d903cf9132ad60624585fca8",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "19061711084057768000",
+                      "expect": {
+                        "value": "19061711084057768000"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "19061711084057768000",
+                    "scale": 0
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/wide-04",
+      "text": "9945638250859729114534795789 / 4165748366043675355632459975",
+      "observed": {
+        "stdout": [
+          "18091010589814192/7577452135671911"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "9945638250859729114534795789",
+        "d": "4165748366043675355632459975"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value 18091010589814192/7577452135671911 != reference 9945638250859729114534795789/4165748366043675355632459975"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "4165748366043675355632459975",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 1,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 4,
+            "kept": "4165748366043675355632459975"
+          }
+        ],
+        "replay": {
+          "text": "4165748366043675355632459975",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "4165748366043675355632459975",
+            "scale": 0
+          },
+          "interchange_sha256": "e4c263d343a6f725598fa33b05204aec65d0a488dbcc91b0cfd0a07063d509bc",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "4165748366043675355632459975",
+                      "expect": {
+                        "value": "4165748366043675355632459975"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "4165748366043675355632459975",
+                    "scale": 0
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/wide-05",
+      "text": "-94104936821152130319 + 0.6533108844480794817601",
+      "observed": {
+        "stdout": [
+          "-105952739600366208386444437501555419/1125899906842624"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-941049368211521303183466891155519205182399",
+        "d": "10000000000000000000000"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value -105952739600366208386444437501555419/1125899906842624 != reference -941049368211521303183466891155519205182399/10000000000000000000000"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "23526234205288034000",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 4,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "-94104936821152130319"
+          },
+          {
+            "round": 2,
+            "tried": 3,
+            "kept": "94104936821152130319"
+          },
+          {
+            "round": 3,
+            "tried": 2,
+            "kept": "47052468410576070000"
+          },
+          {
+            "round": 4,
+            "tried": 2,
+            "kept": "23526234205288034000"
+          }
+        ],
+        "replay": {
+          "text": "23526234205288034000",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "23526234205288034000",
+            "scale": 0
+          },
+          "interchange_sha256": "0ec65aa3b10f4e634116cc65a3cfd65336b32be4a6464468c4e53353fe9d1785",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "23526234205288034000",
+                      "expect": {
+                        "value": "23526234205288034000"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "23526234205288034000",
+                    "scale": 0
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    },
+    {
+      "id": "seed-2424/wide-06",
+      "text": "(3646291547905551258222 - 5636524886904287854174) / 700",
+      "observed": {
+        "stdout": [
+          "-497558334749684006912/175"
+        ],
+        "status": 0,
+        "signal": null,
+        "timedOut": false,
+        "stderr": []
+      },
+      "reference": {
+        "kind": "value",
+        "n": "-497558334749684148988",
+        "d": "175"
+      },
+      "verdict": "disagree",
+      "mismatch": "value-mismatch",
+      "reasons": [
+        "value -497558334749684006912/175 != reference -497558334749684148988/175"
+      ],
+      "spans_not_judged": [],
+      "signature": "disagree:value-mismatch:value:-",
+      "matches_fault_models": [
+        "binary-float-decimal-parser"
+      ],
+      "shrunk": {
+        "input": "3646291547905551258222",
+        "signature": "disagree:value-mismatch:value:-",
+        "rounds_used": 3,
+        "rounds_limit": 4,
+        "candidates_limit": 6,
+        "trail": [
+          {
+            "round": 1,
+            "tried": 6,
+            "kept": "(3646291547905551258222) / 700"
+          },
+          {
+            "round": 2,
+            "tried": 6,
+            "kept": "(3646291547905551258222)"
+          },
+          {
+            "round": 3,
+            "tried": 2,
+            "kept": "3646291547905551258222"
+          }
+        ],
+        "replay": {
+          "text": "3646291547905551258222",
+          "flags": [],
+          "interchange": {
+            "op": "lit",
+            "digits": "3646291547905551258222",
+            "scale": 0
+          },
+          "interchange_sha256": "2fa86c4428cd8938e64db148f874b8b6bee5f2344816e028d3f410841f5c6879",
+          "noble": {
+            "vector_file": {
+              "schema": "noble-calculator-vectors/v1",
+              "vectors": [
+                {
+                  "id": "WOXI/replay",
+                  "case": "CALC-12-woxi",
+                  "kind": "line",
+                  "support": "cli",
+                  "flags": [],
+                  "operations": [
+                    {
+                      "line": "3646291547905551258222",
+                      "expect": {
+                        "value": "3646291547905551258222"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "command": "node verification/calculator-v1/acceptance.mjs --binary BIN --binary-sha256 SHA --source-id SRC --build-profile PROFILE --out NEW_DIR --vectors VECTOR_FILE --no-controls"
+          },
+          "oracle": {
+            "request": {
+              "schema": "noble-woxi-request/v1",
+              "policy_version": "noble-woxi-policy/1",
+              "arithmetic": "woxi",
+              "timeout_seconds": 30,
+              "memory_bytes": 1073741824,
+              "cases": [
+                {
+                  "interchange": {
+                    "op": "lit",
+                    "digits": "3646291547905551258222",
+                    "scale": 0
+                  }
+                }
+              ]
+            },
+            "command": "verification/calculator-v1/woxi/helper/target/release/noble-woxi-bridge REQUEST.json NEW_RESPONSE.json",
+            "available_in_this_report": true
+          }
+        }
+      }
+    }
+  ],
+  "non_claims": [
+    "Agreement on finitely many inputs is test evidence only; it establishes no universal arithmetic theorem and no parser correctness (CALC-EVIDENCE-01).",
+    "Reference output (Woxi or otherwise) is untrusted candidate data: it mints no Certified status, discharges no proof obligation, changes no accepted program semantics and changes no canonical case state.",
+    "Only a fresh-oracle run is a Woxi comparison; stand-in-reference and offline-fixture-replay results are labeled as such and never count as one.",
+    "Grammar, diagnostic spans, lexical sessions, session rollback, deterministic budgets and host failures are outside this lane (CALC-12 oracle #21, runner #19, budgets #20).",
+    "A Woxi timeout or memory abort is an oracle failure, not Noble's ResourceLimit; a Noble ResourceLimit is a budget divergence, not a disagreement."
+  ]
+}

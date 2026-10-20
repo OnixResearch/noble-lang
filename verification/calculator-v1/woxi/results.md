@@ -90,6 +90,16 @@ The shrinker preserves the domain premise. A `DivisionByZero` disagreement
 never shrinks to a value case. A candidate whose reference is unavailable is
 never accepted.
 
+**Re-run against the fresh Woxi reference (2026-10-19, `6617abd`).** The
+same six fault implementations and the stateful control were judged against
+`receipts/references/woxi-seed2424-a12a538-20261019.json`, with the Woxi
+helper supplying shrink-candidate references (`--bridge`). Every count
+reproduces the table exactly: reversed-subtraction 10, left-associated-power
+2, non-normalized-rational 12, integer-division 15,
+binary-float-decimal-parser 16 and I64-wrapping 12 disagreements, each
+attributed only to its own model; `failure-mutates-session` agrees on 48/48.
+Receipts: `receipts/harness/woxi-seed2424-6617abd-*.json`.
+
 ### Real #21 mutant binaries (retained raw I/O, offline fixture replay)
 
 This lane re-judged the raw stdin, stdout, stderr and exit status that #21
@@ -251,7 +261,7 @@ are listed in the [README](README.md).
 |---|---|
 | Document the subset, the interchange, the adapter and the intentional differences | Done ([README](README.md)) |
 | Compare against independent exact Woxi results on edge fixtures and a seeded corpus, including values beyond I64 and `0.1 + 0.2 = 3/10` | **Done** for the 48-case seed-2424 corpus at `6617abd`: 39 agree, 9 budget-divergence, 2 runner controls unsupported, 0 disagree. The wide cases hit Noble's 2 GiB runner bound, so the lane reports `incomplete`, honestly. |
-| Seeded faults fail for their intended reasons; document coverage | Done with the stand-in and with the retained #21 real-mutant raw I/O. The Woxi reference is available, but the fault-model comparison has not been re-run against it in this record; coverage is mapped in the README. |
+| Seeded faults fail for their intended reasons; document coverage | Done with the fresh Woxi reference and with the retained #21 real-mutant raw I/O: six fault models fail with intended attribution and the stateful control agrees 48/48. Coverage is mapped in the README. |
 | Bounded-shrink artifacts with replay commands | Done: two real-binary rounds plus harness shrinks, each with a replay object. Oracle replay now runs the Woxi helper. |
 | Pin versions, seeds and policy; reject stale provenance | Done, and shown by the wrong-binary-pin report and the tests. `woxi_version` and `helper_version` are pinned by `--expect-woxi-version` / `--expect-helper-version`. |
 | Default builds and offline replay work without Woxi; unavailable, error and unsupported states are distinct | Done |
