@@ -1,6 +1,5 @@
-
 diff --git a/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs b/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
-index 93606040..0b80b276 100644
+index 9360604..0b80b27 100644
 --- a/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
 +++ b/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
 @@ -43,4 +43,66 @@ pub fn observe<F: Fn(u32) -> u32>(
@@ -71,7 +70,7 @@ index 93606040..0b80b276 100644
 +    Ok(bytes.len())
  }
 diff --git a/src/architecture_collector.rs b/src/architecture_collector.rs
-index ec83249e..f4867c5f 100644
+index 005e43e..47123c7 100644
 --- a/src/architecture_collector.rs
 +++ b/src/architecture_collector.rs
 @@ -35,6 +35,7 @@ use rustc_lint::LintContext;
@@ -82,7 +81,7 @@ index ec83249e..f4867c5f 100644
  use rustc_session::impl_lint_pass;
  use rustc_span::Span;
  use rustc_span::Spanned;
-@@ -497,6 +498,7 @@ impl ArchitectureCollector {
+@@ -498,6 +499,7 @@ impl ArchitectureCollector {
          cx: &LateContext<'_>,
          expr: &hir::Expr<'_>,
          def_id: Option<DefId>,
@@ -90,7 +89,7 @@ index ec83249e..f4867c5f 100644
          dispatch: DispatchKind,
      ) {
          let caller_item_id = self.caller_item_id(cx, expr.hir_id);
-@@ -532,20 +534,27 @@ impl ArchitectureCollector {
+@@ -533,20 +535,27 @@ impl ArchitectureCollector {
          assign_fact_identity(&mut fact);
          self.push_fact(fact);
  
@@ -132,10 +131,10 @@ index ec83249e..f4867c5f 100644
          }
          if let Some(def_id) = def_id
              && definition_is_foreign(cx, def_id)
-@@ -1243,15 +1252,33 @@ impl<'tcx> LateLintPass<'tcx> for ArchitectureCollector {
-                     ty::Closure(current, _) => Some(*current),
+@@ -1234,15 +1243,33 @@ impl<'tcx> LateLintPass<'tcx> for ArchitectureCollector {
                      _ => None,
-                 });
+                 }
+                 .or_else(|| callee_def_id(cx, callee));
 -                let dispatch = def_id.map_or(DispatchKind::Unknown, |current| dispatch_kind(cx, current, None));
 -                self.collect_call(cx, expr, def_id, dispatch);
 +                let resolved = def_id.map(|current| {
@@ -171,7 +170,7 @@ index ec83249e..f4867c5f 100644
              }
              _ => {}
          }
-@@ -1264,6 +1291,31 @@ impl<'tcx> LateLintPass<'tcx> for ArchitectureCollector {
+@@ -1255,6 +1282,31 @@ impl<'tcx> LateLintPass<'tcx> for ArchitectureCollector {
      }
  }
  
@@ -204,7 +203,7 @@ index ec83249e..f4867c5f 100644
      let path = cx.tcx.def_path_str(def_id);
      if def_id.is_local() {
 diff --git a/tests/ui.rs b/tests/ui.rs
-index 4fd65287..982e19fe 100644
+index 4fd6528..982e19f 100644
 --- a/tests/ui.rs
 +++ b/tests/ui.rs
 @@ -1,6 +1,7 @@

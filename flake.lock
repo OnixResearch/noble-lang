@@ -1555,16 +1555,16 @@
         "valence": "valence"
       },
       "locked": {
-        "lastModified": 1792474385,
-        "narHash": "sha256-DJcmcXnvbAUN0WjBcI7D5uDBjQWUNRhA2F87lsp6eEk=",
+        "lastModified": 1792514055,
+        "narHash": "sha256-b9eFelLNGuhS4FpGD3uVh3yS0J2jtGz2/NDN+9agVP4=",
         "ref": "refs/heads/main",
-        "rev": "b20681f87046fb83fb72b18908564c6674402977",
-        "revCount": 673,
+        "rev": "9d134f00e902586c08bc71e8dc910d305c8dd875",
+        "revCount": 677,
         "type": "git",
         "url": "ssh://git@github.com/OnixResearch/octet"
       },
       "original": {
-        "rev": "b20681f87046fb83fb72b18908564c6674402977",
+        "rev": "9d134f00e902586c08bc71e8dc910d305c8dd875",
         "type": "git",
         "url": "ssh://git@github.com/OnixResearch/octet"
       }

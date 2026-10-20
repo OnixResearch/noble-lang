@@ -36,12 +36,12 @@ let
   typedCallPatch = builtins.path {
     path = ./octet-typed-call-collector.patch;
     name = "octet-typed-call-collector.patch";
-    sha256 = "sha256-Xnv4404uFoMUX4XfONrdGwxBZP37bRoVc7tcZLp95Tk=";
+    sha256 = "sha256-bXATgATupIT3nfU/C5rFV6efFaKh1MK5Le+Rgdg0Bms=";
   };
   traitBodyPatch = builtins.path {
     path = ./octet-trait-body-resolver.patch;
     name = "octet-trait-body-resolver.patch";
-    sha256 = "sha256-O425gW3T8/7ABG0LVZSyzaSYHdBYAUxVPcezVp+eWi4=";
+    sha256 = "sha256-hQuZjZOkTWltqS0YGlHwr2ql7LbtMweiOpR6iqHmfH0=";
   };
   dynamicTraitUfcsPatch = builtins.path {
     path = ./octet-dynamic-trait-ufcs.patch;

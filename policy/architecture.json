@@ -106,6 +106,34 @@
       ]
     }
   ],
+  "dynamic_dispatch": {
+    "external_crates": [
+      "alloc",
+      "core",
+      "rustc_apfloat",
+      "std"
+    ],
+    "local_traits": [
+      {
+        "owner": "noble-maintainers",
+        "path": "noble_ngraph::grad::Real",
+        "reason": "The trait and every implementation are declared in noble-ngraph; the dynamic call set is closed over those local implementation bodies, whose effect facts are collected separately.",
+        "review_condition": "Reopen if an implementation is added outside noble-ngraph or the trait gains an effectful default body."
+      },
+      {
+        "owner": "noble-maintainers",
+        "path": "noble_ngraph::identity::IdentityHasher",
+        "reason": "The hashing trait and its implementations are local to noble-ngraph and have no environment, observability or unsafe capability effect.",
+        "review_condition": "Reopen if the trait gains a foreign implementation or an implementation acquires a capability effect."
+      },
+      {
+        "owner": "noble-maintainers",
+        "path": "noble_ngraph::identity::IdentityScheme",
+        "reason": "The identity-scheme trait and its implementations are local to noble-ngraph; its methods only construct identity hashers and have no ambient capability effect.",
+        "review_condition": "Reopen if an implementation is added outside noble-ngraph or the trait gains an effectful method."
+      }
+    ]
+  },
   "mode": "gate",
   "non_claims": [
     "complete-fcis-proof",

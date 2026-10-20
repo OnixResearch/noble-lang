@@ -31,8 +31,8 @@ let Pin = { rev | String, narHash | String } in
       narHash = "sha256-9tpvMGFteZnd3gRQZFlRCohVpqooygFuy9yjuyRL2C0=",
     },
     octet = {
-      rev = "b20681f87046fb83fb72b18908564c6674402977",
-      narHash = "sha256-DJcmcXnvbAUN0WjBcI7D5uDBjQWUNRhA2F87lsp6eEk=",
+      rev = "9d134f00e902586c08bc71e8dc910d305c8dd875",
+      narHash = "sha256-b9eFelLNGuhS4FpGD3uVh3yS0J2jtGz2/NDN+9agVP4=",
     },
     rust_overlay = {
       rev = "e598b37857b895b81020a65a802ef55f5bbed72f",

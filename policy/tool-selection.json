@@ -117,31 +117,31 @@
     "crates/noble-wasm/wit/bootstrap.wit": "d1928908b21d1d63be477fdf2226a6547db7d6efa5ef905635498d1d1e43bc68",
     "crates/noble-wasm/wit/syndicate.wit": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
     "dylint.toml": "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
-    "flake.lock": "35b15e30b4559b9747ba04e80aca41019e0094caeb2c18ab5e6995cdd1d890a0",
-    "flake.nix": "94c74a7e0721a8770573373f7073ff42838bbd312071cb76c57a11e878fb0a99",
+    "flake.lock": "709df81d5a19c565946291861e7e07555db8be47edf0e30b6fe19e56d8c80179",
+    "flake.nix": "30b810cbe2bd58f55d14f75d697a87682d40360c19e3658ffb8ae8fae91e73ad",
     "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
     "nix/boundary-controls.nix": "e0b7b69118c9acaeca811d9eb2a89db07046ecadb7b720bc9aeea08a781fdd56",
     "nix/m3-wasm-app.nix": "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
     "nix/native-assurance-app.nix": "dacb83263d3d384fec40cff87c5d0495fbb4e10d17dd4c00821c26f16151303b",
     "nix/octet-dynamic-trait-ufcs.patch": "ea2822d321cd11a4839ae7e8201b7116e8ab71eccf00b300809ea5c6072ad498",
-    "nix/octet-patched-source.nix": "4f339b484abfaeec62adfb40aa30f236c21282cdcd049a27f91acde83426a23d",
+    "nix/octet-patched-source.nix": "6d8ace72aa19c49166133fa24560c7b47603e5bc2dab2d84d5fb381d7a6b3c68",
     "nix/octet-path-engine-only.patch": "94d224b22edc2cdef761af90bceb8f1ae2bb840394abef54ca044a3ec360153d",
     "nix/octet-path-libc-only.patch": "d2869b1b8912c57a294aefc82d4dfa54b17bd1cb645ecf819d9613122c999519",
     "nix/octet-path-metadata-locked.patch": "706770a709bb9d3fc4df77fcc6c2d628fb7e927b71abbf9f052369d42c876026",
     "nix/octet-path-resolved-plan-only.patch": "36b37afc68179c3bda13d33a234dd2a5aed268f4afe9a456ef1e5c7a7c9a7fa4",
     "nix/octet-path-test-lock-fixtures.patch": "27e6649ad2838412c0e89c42f3b76462ddee3a0e3835c19ed71c3ed682fcc1e8",
-    "nix/octet-trait-body-resolver.patch": "a36496ddf747a76da56e3a87788ad1c57b7a52d01b48cbdaef60997515233048",
-    "nix/octet-typed-call-collector.patch": "31a00d55558a1a52995691b95c79cd729443beaa2472d9c62ce83d96ab225fee",
+    "nix/octet-trait-body-resolver.patch": "cfd4454d9cc4844a8ca0d0884c7ae3aaa10ad32e550bd35dc48d6ecc40869902",
+    "nix/octet-typed-call-collector.patch": "aaccd1b6d1fb9dfe6568856093b318bb3f9b6875bdfcb3ed3a8b5e14bc113429",
     "nix/offline-inputs.nix": "9d35078501b7e138659434fe98baff1b9e0128973d454500c344161e193d69c7",
     "nix/reviewed-vendor.nix": "f15f4fd1184c3c0416ae446e0ade9904de0391494260bf0e5f0ebb026bebaa35",
     "nix/source-inventory-app.nix": "1dd64568be5dd46eee3d4200ba653f2341e1a5024d731c3e965cf798e3e0504e",
     "nix/tool-selection-files.nix": "866b9a3d2c21530b9289479f1ae950d43523b93bef58392cd254d654fee92692",
     "nix/tool-selection.nix": "0bdac355b02d5b8283e0351fee2a249edfbd5f14fbf8612b03f384e6a4a3b8a7",
     "policy/architecture-export-spec.ncl": "e32a2c75f975e768b292702500ca902bb944f07a5ce156bcbfa00bff576681bd",
-    "policy/architecture.contracts.ncl": "afc38f939e83744d5963b766c783c3de4d98a4362f95190464f912c672db1104",
-    "policy/architecture.json": "e56f74fbfe39dd813a8f6f669f05bf6f4e1609f6907ef61d7cdf21d1aa6d37e3",
-    "policy/architecture.manifest.json": "ecec83b86c594f5249446226f20439148fb9d7ef5ed39b3c02581370a17863b1",
-    "policy/architecture.ncl": "cee21bd0ca7cbd9bd31783945ed084b6eb8c32cca1acb26c323d358186f4d855",
+    "policy/architecture.contracts.ncl": "9cbbe9437d789e2ed7cdf1cfda992616fd3de18af169e23e1e8e9652a8c1571e",
+    "policy/architecture.json": "f3f0cc67ac1e2ad1bcb955cc9d3dd34fae2afdec92eea59fc0059174a01874ce",
+    "policy/architecture.manifest.json": "bac9bbdb3a8f3cd9e86076fcef830e454050e787c030f0049105f17a3bff2006",
+    "policy/architecture.ncl": "d74dcbbbe53fd10bffdc8c0bc55f34edb40a64aefb42f78f44bc8ef165530d92",
     "proofs/m1/lake-manifest.json": "2b876b213022b444fbe1b1118283dcec613f2cb5fa1d6aed08339f356775dd8f",
     "proofs/m1/lakefile.toml": "99c002cbb3acacde1c2ee1e8c9c02a0ca7a18a0938a7bcdefde6621888855c5d",
     "proofs/m1/lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee",
@@ -287,8 +287,8 @@
       "rev": "9cf7092bdd603554bd8b63c216e8943cf9b12512"
     },
     "octet": {
-      "narHash": "sha256-DJcmcXnvbAUN0WjBcI7D5uDBjQWUNRhA2F87lsp6eEk=",
-      "rev": "b20681f87046fb83fb72b18908564c6674402977"
+      "narHash": "sha256-b9eFelLNGuhS4FpGD3uVh3yS0J2jtGz2/NDN+9agVP4=",
+      "rev": "9d134f00e902586c08bc71e8dc910d305c8dd875"
     },
     "rust_overlay": {
       "narHash": "sha256-KlepQu/O5m11lAjcJ4ER5bc6bIzyX2UMPDARzMzQfIw=",
@@ -329,12 +329,12 @@
       "output": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0"
     },
     "octet": {
-      "derivation": "/nix/store/g597agjnz41z2mzbm96s46rkrah60kr0-cargo-octet-0.1.0-typed-strict-trait.drv",
-      "output": "/nix/store/7gfw0d9p6lkidlmiwxr4wiwff4plyc6g-cargo-octet-0.1.0-typed-strict-trait"
+      "derivation": "/nix/store/izwmmqx0p177k4dcd6nznihx1q3wyljq-cargo-octet-0.1.0-typed-strict-trait.drv",
+      "output": "/nix/store/znmkgimllzx7gyrlani4xbj1fs47vnf5-cargo-octet-0.1.0-typed-strict-trait"
     },
     "octet_standards": {
-      "derivation": "/nix/store/cpb94swsigrlbk4a3iabqsxkx4m1nw3g-octet-standards-0.1.0.drv",
-      "output": "/nix/store/ba7irj4g1zh78nllv1rngsf9n36hqzli-octet-standards-0.1.0"
+      "derivation": "/nix/store/7i1yb8b2k8x7r5cv8ngmkagcd9alva1l-octet-standards-0.1.0.drv",
+      "output": "/nix/store/m3nfxp90pws6805xsqljnzl2i8gxwc0c-octet-standards-0.1.0"
     },
     "quality_rust": {
       "derivation": "/nix/store/zxvqck0x496vcj2qn1r0wil6bb85zj7b-rust-default-1.96.0-nightly-2026-03-21.drv",

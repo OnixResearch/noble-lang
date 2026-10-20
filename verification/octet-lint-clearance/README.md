@@ -21,16 +21,19 @@ DYLINT_RUSTFLAGS="$WARNS" cargo octet check --workspace \
 | Before (`main` @ `25b24c9`) | 1890 | 72 |
 | After | **0** | 0 |
 
-`octet summary`: `Status: lint-failure` (exit 1 from the still-blocked
-architecture phase), **`Lint phase: clean (static_lint)`**, `Findings: 0`.
-`Architecture findings: 1181`, receipt
-`6b1a0114b006e214ce41ec04e08e839ff45a09c76213eb20e0d1a0ed6a533a09`, measured
-with the selected Octet `b20681f87046fb83fb72b18908564c6674402977`. The
-compiler-desugaring class is zero: `?`, `for` and range expressions are
-compiler-owned expansions in Octet, and Noble no longer carries a local patch
-for them. The remaining findings are 1113 `AmbiguousTraitDispatch`, 60
-`UnresolvedDefinition` and 8 `DynamicDispatch`. They belong to issue #25's open
-disposition, not to the lint phase.
+`octet summary`: **`Status: clean`**, **`Lint phase: clean (static_lint)`**,
+`Findings: 0`, **`Architecture phase: clean (policy-check)`**,
+`Architecture findings: 0`, receipt
+`e593ad4c7c4fc7fbac4ec322df05444c1269c5a60959e6f337c7ad2bc2c34b7c`, measured
+with the selected Octet `9d134f00e902586c08bc71e8dc910d305c8dd875`.
+
+The compiler-architecture classes are resolved rather than waived:
+`?`, `for` and range expressions are compiler-owned expansions; closure and
+function-item calls record their compiler-resolved body; function-value calls
+are recorded as the language `Fn` call interface; and the policy's
+`dynamic_dispatch` list explicitly classifies standard-library/`rustc_apfloat`
+trait calls plus the three closed noble-ngraph traits, with owner, reason and a
+review condition for each local trait. No architecture waiver is used.
 
 Per-finding baseline inventory and disposition:
 [`dispositions.tsv`](dispositions.tsv) (327 rows: one row per

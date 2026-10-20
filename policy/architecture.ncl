@@ -325,6 +325,33 @@ let contracts = import "./architecture.contracts.ncl" in
   core_no_std = [{ scope = "noble-kernel" }, { scope = "noble-contracts" }, { scope = "noble-wasm" }, { scope = "noble-ngraph" }],
   admission = null,
   waivers = [],
+  dynamic_dispatch = {
+    # Standard-library trait calls on generic and iterator receivers are
+    # dynamic by language semantics. Their capability effects remain classified
+    # from the resolved definition path; external target behavior is governed by
+    # the provider and dependency rules above.
+    external_crates = ["alloc", "core", "rustc_apfloat", "std"],
+    local_traits = [
+      {
+        path = "noble_ngraph::grad::Real",
+        owner = "noble-maintainers",
+        reason = "The trait and every implementation are declared in noble-ngraph; the dynamic call set is closed over those local implementation bodies, whose effect facts are collected separately.",
+        review_condition = "Reopen if an implementation is added outside noble-ngraph or the trait gains an effectful default body.",
+      },
+      {
+        path = "noble_ngraph::identity::IdentityHasher",
+        owner = "noble-maintainers",
+        reason = "The hashing trait and its implementations are local to noble-ngraph and have no environment, observability or unsafe capability effect.",
+        review_condition = "Reopen if the trait gains a foreign implementation or an implementation acquires a capability effect.",
+      },
+      {
+        path = "noble_ngraph::identity::IdentityScheme",
+        owner = "noble-maintainers",
+        reason = "The identity-scheme trait and its implementations are local to noble-ngraph; its methods only construct identity hashers and have no ambient capability effect.",
+        review_condition = "Reopen if an implementation is added outside noble-ngraph or the trait gains an effectful method.",
+      },
+    ],
+  },
   collection_limits = {
     # The pinned offline all-targets/all-features Cargo plan selected exactly 54
     # workspace units before Calculator-v1; its two noble-wasm integration test

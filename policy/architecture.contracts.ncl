@@ -166,6 +166,16 @@ let CollectionLimits = {
   max_shard_bytes | Positive,
   max_artifact_bytes | Positive,
 } in
+let DynamicTrait = {
+  path | NonEmptyString,
+  owner | NonEmptyString,
+  reason | NonEmptyString,
+  review_condition | NonEmptyString,
+} in
+let DynamicDispatch = {
+  external_crates | Array NonEmptyString | default = [],
+  local_traits | Array DynamicTrait | default = [],
+} in
 let ProjectArchitecturePolicyContract = {
   schema_version | SchemaVersion,
   project_id | NonEmptyString,
@@ -180,6 +190,7 @@ let ProjectArchitecturePolicyContract = {
   core_no_std | Array NoStdObligation | default = [],
   admission | default = null,
   waivers | Array Waiver | default = [],
+  dynamic_dispatch | DynamicDispatch | default = {},
   collection_limits | CollectionLimits,
   non_claims | NonEmptyArray | Array NonEmptyString,
 } in
@@ -316,6 +327,8 @@ let rules_valid = fun policy =>
       policy.admission == null
   )
   && !has_duplicates (policy.waivers |> std.array.map (fun waiver => waiver.finding_id))
+  && !has_duplicates policy.dynamic_dispatch.external_crates
+  && !has_duplicates (policy.dynamic_dispatch.local_traits |> std.array.map (fun local => local.path))
   && policy.collection_limits.max_shards >= policy.collection_limits.max_units
 in
 let ProjectArchitecturePolicyRulesContract = std.contract.from_predicate rules_valid in

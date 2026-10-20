@@ -1,6 +1,6 @@
 diff --git a/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs b/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
 new file mode 100644
-index 00000000..93606040
+index 0000000..9360604
 --- /dev/null
 +++ b/fixtures/compiler-architecture-ir/negative/typed_calls_and_boundaries.rs
 @@ -0,0 +1,46 @@
@@ -51,10 +51,10 @@ index 00000000..93606040
 +    generic_port.invoke();
 +}
 diff --git a/src/architecture_collector.rs b/src/architecture_collector.rs
-index dd776898..ec83249e 100644
+index ced02a7..113a6b1 100644
 --- a/src/architecture_collector.rs
 +++ b/src/architecture_collector.rs
-@@ -513,7 +513,14 @@ impl ArchitectureCollector {
+@@ -514,7 +514,14 @@ impl ArchitectureCollector {
          }
          let callee_item_id = def_id
              .filter(|current| current.is_local())
@@ -70,7 +70,7 @@ index dd776898..ec83249e 100644
          let mut fact = CompilerArchitectureFact::Call {
              fact_id: String::new(),
              caller_item_id: caller_item_id.clone(),
-@@ -560,6 +567,19 @@ impl ArchitectureCollector {
+@@ -561,6 +568,19 @@ impl ArchitectureCollector {
                  "dynamic dispatch target is not statically unique",
              );
          }
@@ -90,7 +90,7 @@ index dd776898..ec83249e 100644
          self.collect_constructor(cx, expr, &caller_item_id, def_id, &span_id);
          if expr.span.from_expansion() {
              self.collect_expansion(cx, expr.span, &span_id);
-@@ -610,31 +630,7 @@ impl ArchitectureCollector {
+@@ -611,31 +631,7 @@ impl ArchitectureCollector {
              return item_id.clone();
          }
          if cx.tcx.def_kind(owner) == DefKind::Closure {
@@ -123,7 +123,7 @@ index dd776898..ec83249e 100644
          }
          // r[impl octet.compiler_architecture_ir.body_owner_kinds]
          // A call can belong to a constant initializer, not only a function.
-@@ -644,6 +640,37 @@ impl ArchitectureCollector {
+@@ -645,6 +641,37 @@ impl ArchitectureCollector {
          self.collect_item(cx, owner, kind, cx.tcx.def_span(owner), kind == ItemKind::Function)
      }
  
@@ -161,7 +161,7 @@ index dd776898..ec83249e 100644
      fn insert_item_identity(&mut self, def_id: LocalDefId, item_id: &str) {
          if let std::collections::hash_map::Entry::Occupied(mut existing) = self.item_ids.entry(def_id) {
              existing.insert(item_id.to_owned());
-@@ -1192,26 +1219,30 @@ impl<'tcx> LateLintPass<'tcx> for ArchitectureCollector {
+@@ -1193,17 +1220,7 @@ impl<'tcx> LateLintPass<'tcx> for ArchitectureCollector {
      fn check_trait_item(&mut self, cx: &LateContext<'tcx>, item: &'tcx hir::TraitItem<'tcx>) {
          let signature = matches!(item.kind, hir::TraitItemKind::Fn(..));
          let item_kind = def_kind_to_item_kind(cx.tcx.def_kind(item.owner_id.def_id));
@@ -180,33 +180,8 @@ index dd776898..ec83249e 100644
      }
  
      fn check_expr(&mut self, cx: &LateContext<'tcx>, expr: &'tcx hir::Expr<'tcx>) {
-         match &expr.kind {
-             hir::ExprKind::Call(callee, _) => {
-                 let def_id = match &callee.kind {
--                    hir::ExprKind::Path(qpath) => cx.qpath_res(qpath, callee.hir_id).opt_def_id(),
-+                    hir::ExprKind::Path(qpath) => cx
-+                        .qpath_res(qpath, callee.hir_id)
-+                        .opt_def_id()
-+                        .filter(|current| {
-+                            matches!(cx.tcx.def_kind(*current), DefKind::Fn | DefKind::AssocFn | DefKind::Ctor(..))
-+                        }),
-                     _ => None,
--                };
-+                }
-+                .or_else(|| match cx.typeck_results().expr_ty(callee).kind() {
-+                    ty::FnDef(current, _)
-+                        if matches!(cx.tcx.def_kind(*current), DefKind::Fn | DefKind::AssocFn | DefKind::Ctor(..)) =>
-+                    {
-+                        Some(*current)
-+                    }
-+                    ty::Closure(current, _) => Some(*current),
-+                    _ => None,
-+                });
-                 let dispatch = def_id.map_or(DispatchKind::Unknown, |current| dispatch_kind(cx, current, None));
-                 self.collect_call(cx, expr, def_id, dispatch);
-             }
 diff --git a/tests/ui.rs b/tests/ui.rs
-index a6524ae8..4fd65287 100644
+index a6524ae..4fd6528 100644
 --- a/tests/ui.rs
 +++ b/tests/ui.rs
 @@ -10,6 +10,7 @@ use std::time::SystemTime;

@@ -34,12 +34,12 @@
     output = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0",
   },
   octet = {
-    derivation = "/nix/store/g597agjnz41z2mzbm96s46rkrah60kr0-cargo-octet-0.1.0-typed-strict-trait.drv",
-    output = "/nix/store/7gfw0d9p6lkidlmiwxr4wiwff4plyc6g-cargo-octet-0.1.0-typed-strict-trait",
+    derivation = "/nix/store/izwmmqx0p177k4dcd6nznihx1q3wyljq-cargo-octet-0.1.0-typed-strict-trait.drv",
+    output = "/nix/store/znmkgimllzx7gyrlani4xbj1fs47vnf5-cargo-octet-0.1.0-typed-strict-trait",
   },
   octet_standards = {
-    derivation = "/nix/store/cpb94swsigrlbk4a3iabqsxkx4m1nw3g-octet-standards-0.1.0.drv",
-    output = "/nix/store/ba7irj4g1zh78nllv1rngsf9n36hqzli-octet-standards-0.1.0",
+    derivation = "/nix/store/7i1yb8b2k8x7r5cv8ngmkagcd9alva1l-octet-standards-0.1.0.drv",
+    output = "/nix/store/m3nfxp90pws6805xsqljnzl2i8gxwc0c-octet-standards-0.1.0",
   },
   quality_rust = {
     derivation = "/nix/store/zxvqck0x496vcj2qn1r0wil6bb85zj7b-rust-default-1.96.0-nightly-2026-03-21.drv",
