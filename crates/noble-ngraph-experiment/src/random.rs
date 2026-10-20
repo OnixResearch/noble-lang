@@ -82,6 +82,7 @@ pub fn random_f32(rng: &mut SplitMix64) -> f32 {
 
 /// Generates a random `ngraph-f32/0` graph with about `ops` operation nodes.
 #[must_use]
+// One graph generator: its admission loop and mirror stay together so the generated shape and its receipt fields cannot drift.
 #[allow(clippy::too_many_lines)]
 pub fn graph(seed: u64, ops: usize) -> RandomGraph {
     let mut rng = SplitMix64::new(seed);

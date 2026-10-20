@@ -259,7 +259,7 @@ fn decimal(text: &str) -> Option<Decimal<'_>> {
             let (sign, digits) = match e.as_bytes().first() {
                 Some(b'-') => (-1, &e[1..]),
                 Some(b'+') => (1, &e[1..]),
-                _ => (1, e),
+                Some(_) | None => (1, e),
             };
             if digits.is_empty() || !all_digits(digits) {
                 return None;

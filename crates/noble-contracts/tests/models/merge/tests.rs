@@ -1,3 +1,8 @@
+#![allow(
+    tigerstyle::assertion_density,
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts-maintainers; this test-only model harness constructs each finite relation and asserts its outcome, so long setup legs, exhaustive matches and fresh per-iteration fixtures are the readable form."
+)]
 #![expect(
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-maintainers; the test-only model modules import their sibling relation, identity and fixture types directly so the bounded model stays readable"

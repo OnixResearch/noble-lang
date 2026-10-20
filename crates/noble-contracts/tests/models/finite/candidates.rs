@@ -1,3 +1,9 @@
+#![allow(
+    tigerstyle::allocation_in_loop,
+    tigerstyle::assertion_density,
+    tigerstyle::numeric_units,
+    reason = "Owner: noble-contracts-maintainers; this test-only model harness constructs each finite relation and asserts its outcome, so long setup legs, exhaustive matches and fresh per-iteration fixtures are the readable form."
+)]
 #![expect(
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-maintainers; the test-only family checker imports kernel type and effect domain types directly so the candidate rules stay readable"

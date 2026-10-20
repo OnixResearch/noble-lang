@@ -214,6 +214,7 @@ fn unary(
 /// The B2 `F32` boundary vectors (reassociation, FMA, signed zero, nonfinite,
 /// subnormal, repeated reads). Index boundary cases live in [`f3`].
 #[must_use]
+// One measured boundary-vector set: splitting it would separate the reassociation, FMA and signed-zero cases from their shared fixture.
 #[allow(clippy::too_many_lines)]
 pub fn b2_vectors() -> Vec<Vector> {
     let two24 = 16_777_216.0f32;

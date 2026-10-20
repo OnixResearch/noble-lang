@@ -344,7 +344,7 @@ impl Compiled {
         match self.checked.ty(n) {
             Some(crate::ir::ScalarType::F32) => crate::sem::Value::F32(w.f[r].to_bits()),
             Some(crate::ir::ScalarType::Bool) => crate::sem::Value::Bool(w.i[r] != 0),
-            _ => crate::sem::Value::I64(w.i[r]),
+            Some(crate::ir::ScalarType::I64) | None => crate::sem::Value::I64(w.i[r]),
         }
     }
 

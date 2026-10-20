@@ -123,8 +123,9 @@
     "nix/boundary-controls.nix": "e0b7b69118c9acaeca811d9eb2a89db07046ecadb7b720bc9aeea08a781fdd56",
     "nix/m3-wasm-app.nix": "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
     "nix/native-assurance-app.nix": "dacb83263d3d384fec40cff87c5d0495fbb4e10d17dd4c00821c26f16151303b",
+    "nix/octet-compiler-owned-desugarings.patch": "5f373868b98747e557eed8aaddf76b0091ed1be3efdb17b5d6ae0675e9e8920b",
     "nix/octet-dynamic-trait-ufcs.patch": "ea2822d321cd11a4839ae7e8201b7116e8ab71eccf00b300809ea5c6072ad498",
-    "nix/octet-patched-source.nix": "72201f73768c1ecfcb970be238db243086ea2cff03bd6fabee00419ca4f0c5fd",
+    "nix/octet-patched-source.nix": "03e8927f2ecc4ba88cc065da8684202b3310d92364d048b19c1bfee09f896239",
     "nix/octet-path-engine-only.patch": "94d224b22edc2cdef761af90bceb8f1ae2bb840394abef54ca044a3ec360153d",
     "nix/octet-path-libc-only.patch": "d2869b1b8912c57a294aefc82d4dfa54b17bd1cb645ecf819d9613122c999519",
     "nix/octet-path-metadata-locked.patch": "706770a709bb9d3fc4df77fcc6c2d628fb7e927b71abbf9f052369d42c876026",
@@ -135,7 +136,7 @@
     "nix/offline-inputs.nix": "9d35078501b7e138659434fe98baff1b9e0128973d454500c344161e193d69c7",
     "nix/reviewed-vendor.nix": "f15f4fd1184c3c0416ae446e0ade9904de0391494260bf0e5f0ebb026bebaa35",
     "nix/source-inventory-app.nix": "1dd64568be5dd46eee3d4200ba653f2341e1a5024d731c3e965cf798e3e0504e",
-    "nix/tool-selection-files.nix": "866b9a3d2c21530b9289479f1ae950d43523b93bef58392cd254d654fee92692",
+    "nix/tool-selection-files.nix": "b05af1928485159f2923a6c60d033138d523dadefb72cfb7b38fee9030fcdf67",
     "nix/tool-selection.nix": "0bdac355b02d5b8283e0351fee2a249edfbd5f14fbf8612b03f384e6a4a3b8a7",
     "policy/architecture-export-spec.ncl": "e32a2c75f975e768b292702500ca902bb944f07a5ce156bcbfa00bff576681bd",
     "policy/architecture.contracts.ncl": "afc38f939e83744d5963b766c783c3de4d98a4362f95190464f912c672db1104",
@@ -329,8 +330,8 @@
       "output": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0"
     },
     "octet": {
-      "derivation": "/nix/store/fh42f6yzlqz3a4hpz3bvsdvzdw2lghn6-cargo-octet-0.1.0-typed-strict-trait.drv",
-      "output": "/nix/store/nwjvr71aksyyfcympfh3lvk50d5wrgxr-cargo-octet-0.1.0-typed-strict-trait"
+      "derivation": "/nix/store/ap96za3l3ssqxrmwig335cb4v5700rfi-cargo-octet-0.1.0-typed-strict-trait.drv",
+      "output": "/nix/store/jkgk6cd9dqwlvzbv476z25ir3zq531fl-cargo-octet-0.1.0-typed-strict-trait"
     },
     "octet_standards": {
       "derivation": "/nix/store/ackprds206cvvx31x6b1dwarwc812jpv-octet-standards-0.1.0.drv",

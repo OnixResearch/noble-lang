@@ -1,3 +1,10 @@
+#![allow(
+    tigerstyle::ambiguous_params,
+    tigerstyle::compound_condition,
+    tigerstyle::fragile_exhaustive_enum_match,
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts-maintainers; this cfg(test) finite-model oracle is an independent reference implementation whose bounded assignments and exhaustive matches are the scenario under test."
+)]
 //! Independent finite-model oracle for the frontend effect solver.
 //!
 //! This module is compiled only for tests. The reference representation and

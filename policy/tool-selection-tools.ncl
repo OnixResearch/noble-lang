@@ -34,8 +34,8 @@
     output = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0",
   },
   octet = {
-    derivation = "/nix/store/fh42f6yzlqz3a4hpz3bvsdvzdw2lghn6-cargo-octet-0.1.0-typed-strict-trait.drv",
-    output = "/nix/store/nwjvr71aksyyfcympfh3lvk50d5wrgxr-cargo-octet-0.1.0-typed-strict-trait",
+    derivation = "/nix/store/ap96za3l3ssqxrmwig335cb4v5700rfi-cargo-octet-0.1.0-typed-strict-trait.drv",
+    output = "/nix/store/jkgk6cd9dqwlvzbv476z25ir3zq531fl-cargo-octet-0.1.0-typed-strict-trait",
   },
   octet_standards = {
     derivation = "/nix/store/ackprds206cvvx31x6b1dwarwc812jpv-octet-standards-0.1.0.drv",

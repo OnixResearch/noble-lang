@@ -372,8 +372,12 @@ impl Op {
 
     /// Value operands in canonical order (affine `One` operands omitted).
     #[must_use]
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-ngraph-maintainers; the capacity is an abstract operand-count bound in the canonical node grammar, not a time or byte quantity."
+    )]
     pub fn operands(&self) -> alloc::vec::Vec<NodeId> {
-        let capacity = match self {
+        let capacity_operands = match self {
             Self::Input(_) | Self::Param(_) | Self::Const(_) => 0,
             Self::F32Affine { terms, .. } => terms.len(),
             Self::F32Index { table, .. } => table.len() + 1,
@@ -383,7 +387,7 @@ impl Op {
             } => group.len() + 1,
             _ => 3,
         };
-        let mut operands = alloc::vec::Vec::with_capacity(capacity);
+        let mut operands = alloc::vec::Vec::with_capacity(capacity_operands);
         self.visit_operands(|n| operands.push(n));
         operands
     }

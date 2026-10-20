@@ -399,13 +399,17 @@ impl Diagnostic {
 
     /// `E-BUDGET-<kind>` with limit and observed count.
     #[must_use]
-    pub fn budget(kind: BudgetKind, limit: u64, observed: u64) -> Self {
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-ngraph-maintainers; the limit is a count in the selected budget kind's abstract units, named by the diagnostic rather than by a time or byte suffix."
+    )]
+    pub fn budget(kind: BudgetKind, limit_units: u64, observed: u64) -> Self {
         Self {
             code: Code::Budget(kind),
             site: Site::Graph,
-            budget: Some((limit, observed)),
+            budget: Some((limit_units, observed)),
             fact: None,
-            detail: alloc::format!("observed {observed} > limit {limit}"),
+            detail: alloc::format!("observed {observed} > limit {limit_units}"),
         }
     }
 

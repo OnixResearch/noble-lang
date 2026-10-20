@@ -31,7 +31,7 @@ pub(super) const CHECKER: [Kind; 9] = [
     kind!("--budget-inputs", inputs),
     kind!("--budget-outputs", outputs),
     kind!("--budget-affine-terms", affine_terms),
-    kind!("--budget-table-length", table_length),
+    kind!("--budget-table-length", table_length_entries),
     kind!("--budget-table-entries", table_entries),
     kind!("--budget-facts", facts),
     kind!("--budget-graph-bytes", graph_bytes),

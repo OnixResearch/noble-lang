@@ -149,6 +149,7 @@ fn eval_case(
 
 /// Runs every core B3 control.
 #[must_use]
+// One ordered control sweep: the B3 cases share the same diagnostic fixture and must run in the published order.
 #[allow(clippy::too_many_lines)]
 pub fn run_all() -> Vec<Rejection> {
     let d = Budgets::default();

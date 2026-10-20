@@ -1,6 +1,9 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 #![allow(
+    tigerstyle::ambiguous_params,
+    tigerstyle::assertion_density,
+    tigerstyle::raw_arithmetic_overflow,
     tigerstyle::ambient_clock,
     tigerstyle::ambient_env,
     tigerstyle::bool_naming,
@@ -54,7 +57,8 @@ const TRUSTED: [&str; 7] = [
     "blake3 =1.8.7 (pure) and sha256sum for identities: a hash identifies bytes, it proves nothing",
 ];
 
-#[allow(clippy::too_many_arguments)]
+// Issue #14 evidence record builder; the ordered parameters are one receipt row.
+#[allow(clippy::too_many_arguments, reason = "Issue #14 evidence record builder; the ordered parameters are one receipt row.")]
 fn record(
     id: &str,
     requirements: &[&str],

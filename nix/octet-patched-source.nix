@@ -48,6 +48,11 @@ let
     name = "octet-dynamic-trait-ufcs.patch";
     sha256 = "sha256-1uR6T1SHOQFtF27XZXYGSjmbTkGcwsuqR3vefqYposY=";
   };
+  desugaringPatch = builtins.path {
+    path = ./octet-compiler-owned-desugarings.patch;
+    name = "octet-compiler-owned-desugarings.patch";
+    sha256 = "sha256-oy5FjJzxGfBM/Dw7jc9UmxfeEqn+CcVRoPGiQhcSnQk=";
+  };
   preFixtureSource = pkgs.applyPatches {
     name = "octet-pinned-235255bc-diagnostic-path-source";
     src = selected.octet.src;
@@ -66,7 +71,7 @@ let
   patchedSource = pkgs.applyPatches {
     name = "octet-pinned-235255bc-typed-strict-trait-source";
     src = fixtureLockedSource;
-    patches = [ typedCallPatch traitBodyPatch dynamicTraitUfcsPatch ];
+    patches = [ typedCallPatch traitBodyPatch dynamicTraitUfcsPatch desugaringPatch ];
   };
   rustToolchain = pkgs.rust-bin.fromRustupToolchainFile "${octet.outPath}/rust-toolchain.toml";
   craneLib = (octet.inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;

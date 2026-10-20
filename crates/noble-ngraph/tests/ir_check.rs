@@ -5,6 +5,8 @@
     tigerstyle::no_unwrap,
     tigerstyle::non_trait_imports,
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::assertion_density,
+    tigerstyle::raw_arithmetic_overflow,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! Checker and reference-interpreter behaviour on directly built IR.

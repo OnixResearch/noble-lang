@@ -247,13 +247,13 @@ pub(crate) fn scratch_preflight(
     bytes: u64,
     control: &Control<'_>,
 ) -> Result<(), crate::diag::Diagnostic> {
-    let limit = control
+    let limit_bytes = control
         .forward_scratch
         .unwrap_or_else(|| crate::check::Budgets::default().forward_scratch);
-    if bytes > limit {
+    if bytes > limit_bytes {
         Err(crate::diag::Diagnostic::budget(
             crate::diag::BudgetKind::ForwardScratch,
-            limit,
+            limit_bytes,
             bytes,
         ))
     } else {

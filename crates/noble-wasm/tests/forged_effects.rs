@@ -5,6 +5,7 @@
     tigerstyle::explicit_defaults,
     tigerstyle::non_trait_imports,
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! ADAPT-06: a layout-valid source submission whose public environment

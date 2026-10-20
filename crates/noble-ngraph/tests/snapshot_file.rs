@@ -7,6 +7,8 @@
     tigerstyle::no_unwrap,
     tigerstyle::non_trait_imports,
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::assertion_density,
+    tigerstyle::raw_arithmetic_overflow,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! Snapshot files (design D6, NGRAPH-SNAP-02, NGRAPH-CASE-12/13 at the

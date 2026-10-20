@@ -10,6 +10,10 @@
     tigerstyle::renamed_imports,
     tigerstyle::unchecked_narrowing,
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::allocation_in_loop,
+    tigerstyle::assertion_density,
+    tigerstyle::foreign_enum_catch_all,
+    tigerstyle::raw_arithmetic_overflow,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 use noble_kernel::contracts::{Behavior, Definition};

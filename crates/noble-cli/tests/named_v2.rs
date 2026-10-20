@@ -8,6 +8,8 @@
     tigerstyle::excessive_file_length,
     tigerstyle::non_trait_imports,
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::assertion_density,
+    tigerstyle::numeric_units,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! Consumer-visible named v2 proof controls. The strict-kernel cases run when

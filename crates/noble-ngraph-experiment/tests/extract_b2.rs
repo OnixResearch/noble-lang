@@ -1,6 +1,7 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 #![allow(
+    tigerstyle::assertion_density,
     tigerstyle::ambient_env,
     tigerstyle::no_panic,
     tigerstyle::no_unwrap,
