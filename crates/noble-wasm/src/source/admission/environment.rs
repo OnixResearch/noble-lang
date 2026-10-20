@@ -232,6 +232,10 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
     tigerstyle::function_length,
     reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
 )]
+#[expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-wasm-maintainers; each fixed definition row owns a fresh empty dependency list, so one buffer cannot be moved into every row."
+)]
 fn canonical_prefix(
     env: &noble_kernel::contracts::Env,
     live: bool,

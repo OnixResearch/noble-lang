@@ -6,6 +6,8 @@
     tigerstyle::no_unwrap,
     tigerstyle::non_trait_imports,
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::assertion_density,
+    tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! Phase B B1: lowering of the design's I1–I4 Core programs through D7

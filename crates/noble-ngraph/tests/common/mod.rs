@@ -3,6 +3,9 @@
     tigerstyle::fallible_int_fallback,
     tigerstyle::no_unwrap,
     tigerstyle::non_trait_imports,
+    tigerstyle::ambiguous_params,
+    tigerstyle::assertion_density,
+    tigerstyle::raw_arithmetic_overflow,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! A test-only identity scheme: four SipHash-1-3 streams (std's

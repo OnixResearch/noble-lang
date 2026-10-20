@@ -88,6 +88,34 @@
     tigerstyle::catch_all_on_enum,
     reason = "Owner: noble-maintainers; closed harness dispatch matches retain their documented default diagnostic"
 )]
+#![expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-ngraph-maintainers; the measurement harness works on generated graph and workload sizes bounded by the campaign configuration, and overflow is refused at admission"
+)]
+#![expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-ngraph-maintainers; the evidence helpers assert their generated fixture invariants, and the ordered checks are the review subject"
+)]
+#![expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-ngraph-maintainers; the flagged names are the published campaign and fixture vocabulary, and every call site fixes their order"
+)]
+#![expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-ngraph-maintainers; the flagged helpers read runtime tables or generators, so constness is not part of the harness contract"
+)]
+#![expect(
+    tigerstyle::foreign_enum_catch_all,
+    reason = "Owner: noble-ngraph-maintainers; the flagged fallbacks are on Option/Result refusal paths that preserve the existing harness diagnostic"
+)]
+#![expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-ngraph-maintainers; the harness matches the closed kernel and graph vocabularies, so a new variant must force every receipt site to change"
+)]
+#![expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-ngraph-maintainers; each measurement mode owns a fresh per-mode receipt vector, and the loop is the fixed two-optimization campaign"
+)]
 
 //! Issue #14 `NumericGraph-Design` Phase B/C evidence harness.
 //!

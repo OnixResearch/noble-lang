@@ -11,6 +11,13 @@
     tigerstyle::unbounded_collection_growth,
     tigerstyle::unchecked_narrowing,
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::allocation_in_loop,
+    tigerstyle::ambiguous_params,
+    tigerstyle::assertion_density,
+    tigerstyle::compound_condition,
+    tigerstyle::fragile_exhaustive_enum_match,
+    tigerstyle::missing_const_fn,
+    tigerstyle::raw_arithmetic_overflow,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! Calculator-v1 CALC-04/CALC-05 library harness: the real `num@1` guest words

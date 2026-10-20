@@ -887,6 +887,10 @@ fn shape(ty: &noble_kernel::types::Ty) -> Result<crate::ir::ShapeTree, crate::di
     tigerstyle::nested_conditionals,
     reason = "Owner: noble-maintainers; the nested match keeps the identity filter and per-node behavior cases together"
 )]
+#[expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-ngraph-maintainers; each body's callee list is moved into its call-graph entry, so a reused buffer cannot be stored for every row."
+)]
 fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::Diagnostic> {
     let env = &a.submission.environment;
     let mut root_id = u64::MAX;
@@ -898,7 +902,7 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
         let identity = match body.identity {
             None if i == 0 => root_id,
             Some(id) if a.closure().binary_search(&id).is_ok() => id,
-            _ => continue,
+            None | Some(_) => continue,
         };
         let mut local = 0u64;
         let mut callees = alloc::vec::Vec::new();
@@ -921,7 +925,45 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
                             }
                         }
                     }
-                    _ => {}
+                    None
+                    | Some(
+                        noble_kernel::contracts::Behavior::Dup
+                        | noble_kernel::contracts::Behavior::Drop
+                        | noble_kernel::contracts::Behavior::Swap
+                        | noble_kernel::contracts::Behavior::Dip
+                        | noble_kernel::contracts::Behavior::Quote
+                        | noble_kernel::contracts::Behavior::Compose
+                        | noble_kernel::contracts::Behavior::Run
+                        | noble_kernel::contracts::Behavior::Reflect
+                        | noble_kernel::contracts::Behavior::Unit
+                        | noble_kernel::contracts::Behavior::Pair
+                        | noble_kernel::contracts::Behavior::Unpair
+                        | noble_kernel::contracts::Behavior::Inl
+                        | noble_kernel::contracts::Behavior::Inr
+                        | noble_kernel::contracts::Behavior::Case
+                        | noble_kernel::contracts::Behavior::If
+                        | noble_kernel::contracts::Behavior::Nil
+                        | noble_kernel::contracts::Behavior::Cons
+                        | noble_kernel::contracts::Behavior::ListCase
+                        | noble_kernel::contracts::Behavior::TestEmit
+                        | noble_kernel::contracts::Behavior::TextByte
+                        | noble_kernel::contracts::Behavior::CalculatorIterate
+                        | noble_kernel::contracts::Behavior::CalculatorCompare
+                        | noble_kernel::contracts::Behavior::CalculatorDivRem
+                        | noble_kernel::contracts::Behavior::CalculatorTextFromAscii
+                        | noble_kernel::contracts::Behavior::CalculatorTextLength
+                        | noble_kernel::contracts::Behavior::Reserved
+                        | noble_kernel::contracts::Behavior::BoundEmit(_)
+                        | noble_kernel::contracts::Behavior::BoundClock(_)
+                        | noble_kernel::contracts::Behavior::NominalNew(_)
+                        | noble_kernel::contracts::Behavior::NominalInto(_)
+                        | noble_kernel::contracts::Behavior::NominalLeft(_)
+                        | noble_kernel::contracts::Behavior::NominalRight(_)
+                        | noble_kernel::contracts::Behavior::NominalMatch(_)
+                        | noble_kernel::contracts::Behavior::GenericLeft(_)
+                        | noble_kernel::contracts::Behavior::GenericRight(_)
+                        | noble_kernel::contracts::Behavior::GenericMatch(_),
+                    ) => {}
                 },
                 noble_kernel::untrusted::Node::Literal { .. }
                 | noble_kernel::untrusted::Node::Quotation { .. }

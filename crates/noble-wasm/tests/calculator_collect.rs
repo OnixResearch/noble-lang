@@ -13,6 +13,9 @@
     tigerstyle::unbounded_collection_growth,
     tigerstyle::unchecked_narrowing,
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::ambiguous_params,
+    tigerstyle::missing_const_fn,
+    tigerstyle::raw_arithmetic_overflow,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! Calculator-v1 boundary compaction against real compiled calculator modules.

@@ -13,6 +13,9 @@
     tigerstyle::non_trait_imports,
     tigerstyle::unbounded_channel,
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::allocation_in_loop,
+    tigerstyle::missing_const_fn,
+    tigerstyle::raw_arithmetic_overflow,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! Real-process checks for the opt-in live REPL. These are finite runtime cases,

@@ -387,7 +387,7 @@ fn forward_observed<R: Real>(
                 above,
             } => match position(x(index), table.len(), *below, *above) {
                 Some(Some(k)) => x(&table[k]),
-                _ => R::ZERO,
+                Some(None) | None => R::ZERO,
             },
             _ => R::ZERO,
         };
@@ -496,7 +496,7 @@ pub fn backward<R: Real>(
                     IndexPolicy::BackwardDifference => {
                         let read = |p: Option<Option<usize>>| match p {
                             Some(Some(k)) => vals[table[k].index()],
-                            _ => R::ZERO,
+                            Some(None) | None => R::ZERO,
                         };
                         let here = read(position(i, table.len(), *below, *above));
                         let prev =

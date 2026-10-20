@@ -1,3 +1,12 @@
+#![allow(
+    tigerstyle::ambiguous_params,
+    tigerstyle::assertion_density,
+    tigerstyle::compound_condition,
+    tigerstyle::fragile_exhaustive_enum_match,
+    tigerstyle::numeric_units,
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts-maintainers; this test-only model harness constructs each finite relation and asserts its outcome, so long setup legs, exhaustive matches and fresh per-iteration fixtures are the readable form."
+)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Op {
     Push(u64),

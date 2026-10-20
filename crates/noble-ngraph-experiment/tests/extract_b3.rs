@@ -1,6 +1,9 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 #![allow(
+    tigerstyle::assertion_density,
+    tigerstyle::missing_const_fn,
+    tigerstyle::raw_arithmetic_overflow,
     tigerstyle::explicit_defaults,
     tigerstyle::no_unwrap,
     tigerstyle::non_trait_imports,

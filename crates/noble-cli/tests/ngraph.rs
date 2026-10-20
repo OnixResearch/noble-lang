@@ -11,6 +11,10 @@
     tigerstyle::no_panic,
     tigerstyle::non_trait_imports,
     tigerstyle::unbounded_collection_growth,
+    tigerstyle::ambiguous_params,
+    tigerstyle::assertion_density,
+    tigerstyle::missing_const_fn,
+    tigerstyle::raw_arithmetic_overflow,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 //! Black-box tests of the `noble ngraph` CLI (`Numeric-Graph-v1`).

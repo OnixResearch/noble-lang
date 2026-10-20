@@ -1,6 +1,8 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 #![allow(
+    tigerstyle::assertion_density,
+    tigerstyle::missing_const_fn,
     tigerstyle::compound_assertion,
     tigerstyle::explicit_defaults,
     tigerstyle::no_unwrap,

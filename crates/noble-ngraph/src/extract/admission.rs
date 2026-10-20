@@ -193,6 +193,10 @@ pub fn admit<'s>(
 
 type Accepted<'s> = (Body<'s>, noble_kernel::untrusted::Checked);
 
+#[expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-ngraph-maintainers; every accepted body owns a fresh empty interface list stored in the returned table, so a reused buffer cannot be moved into each row."
+)]
 fn accept_all(
     submission: &noble_kernel::execution::Submission,
 ) -> Result<alloc::vec::Vec<Accepted<'_>>, crate::diag::Diagnostic> {
@@ -339,6 +343,10 @@ fn index_interfaces<'s>(
 #[expect(
     tigerstyle::unbounded_collection_growth,
     reason = "Owner: noble-maintainers; both collections are bounded by the validated body's node and closure counts"
+)]
+#[expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-ngraph-maintainers; each visited body's child list is moved into the closure table, so one reused buffer cannot be stored for every row."
 )]
 fn recompute_closure(
     submission: &noble_kernel::execution::Submission,

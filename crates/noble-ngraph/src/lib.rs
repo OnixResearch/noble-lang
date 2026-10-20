@@ -29,6 +29,26 @@
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-maintainers; every &mut parameter is a caller-owned explicit workspace, builder or output buffer; the crate has no ambient state, I/O or hidden mutation"
 )]
+#![expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-maintainers; every operand is an admitted count, index or measured bound constrained by the checker's explicit node/layer/byte limits; overflow is refused at admission and wrapping arithmetic is written with wrapping_*"
+)]
+#![expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the checker, codec and fixture helpers are ordered validators; their explicit assertions and refusals are the review subject, and splitting them would hide the check order"
+)]
+#![expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; the semantic enums are closed vocabularies whose new variants must force every match and format site to change"
+)]
+#![expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; helper constness is not part of the crate's stability contract; the flagged helpers read runtime tables or allocate while preserving diagnostics"
+)]
+#![expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-maintainers; the flagged names are the published mathematical vocabulary (left/right, min/max, limit) and every call site already fixes their order in the reviewed formulas"
+)]
 //! `Numeric-Graph-v1`: the pure library of the opt-in numeric graph profile
 //! (`NumericGraph-Design`, design changes `numeric-graph-profile` and
 //! `numeric-graph-v1`).

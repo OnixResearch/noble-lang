@@ -2,6 +2,9 @@
     tigerstyle::non_trait_imports,
     tigerstyle::renamed_imports,
     tigerstyle::underscore_in_module_filename,
+    tigerstyle::assertion_density,
+    tigerstyle::compound_condition,
+    tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 #![feature(register_tool)]

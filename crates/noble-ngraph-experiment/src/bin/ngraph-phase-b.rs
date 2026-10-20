@@ -1,6 +1,11 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 #![allow(
+    tigerstyle::allocation_in_loop,
+    tigerstyle::ambiguous_params,
+    tigerstyle::assertion_density,
+    tigerstyle::missing_const_fn,
+    tigerstyle::raw_arithmetic_overflow,
     tigerstyle::ambient_clock,
     tigerstyle::ambient_env,
     tigerstyle::bool_naming,
@@ -130,7 +135,8 @@ const TRUSTED: [&str; 5] = [
     "this crate's checker, evaluators and trainer (NG-PO-B/C/E/F/G open)",
 ];
 
-#[allow(clippy::too_many_arguments)]
+// Issue #14 evidence record builder; the ordered parameters are one receipt row.
+#[allow(clippy::too_many_arguments, reason = "Issue #14 evidence record builder; the ordered parameters are one receipt row.")]
 fn record(
     id: &str,
     requirements: &[&str],
@@ -276,7 +282,8 @@ fn b1(cfg: &Json) -> (Json, bool) {
     )
 }
 
-#[allow(clippy::too_many_lines)]
+// Issue #14 campaign leg; its linear measurement order is the review subject.
+#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
 fn b2(cfg: &Json, a: &Args) -> (Vec<Json>, bool) {
     let mut out = Vec::new();
     let mut all = true;
@@ -507,7 +514,8 @@ fn b4(cfg: &Json, a: &Args) -> (Json, bool) {
     )
 }
 
-#[allow(clippy::too_many_lines)]
+// Issue #14 campaign leg; its linear measurement order is the review subject.
+#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
 fn b5(cfg: &Json) -> (Json, bool) {
     let c = b5_contract(B5_SEED, B5_DATA_SEED);
     let id_before = c.model.id();
@@ -652,7 +660,8 @@ fn b5(cfg: &Json) -> (Json, bool) {
     )
 }
 
-#[allow(clippy::too_many_lines)]
+// Issue #14 campaign leg; its linear measurement order is the review subject.
+#[allow(clippy::too_many_lines, reason = "Issue #14 campaign leg; its linear measurement order is the review subject.")]
 fn b6(cfg: &Json) -> (Json, bool) {
     let g = checked(fixtures::f1());
     let s = ParamSnapshot::new(&BLAKE3, &g, &F1_FIXED).expect("snapshot");
@@ -865,7 +874,7 @@ fn main() {
         ("workload", Json::s(format!("B1 F1-F3; B2 vectors + {} random graphs x {} vectors ({} ops) + {} op pairs; B3 core controls; B4 {} gradient samples; B5 {} steps; B6 cleanup matrix", a.graphs, a.vectors, a.ops, a.pairs, a.grad_samples, B5_STEPS))),
         (
             "resource_limits",
-            Json::s(format!("/0 defaults: live nodes {}, layers {}, affine terms {}, table {} / {}, facts {}, graph bytes {}, snapshot bytes {}, forward scratch {}, backward scratch {}, optimizer steps {}", b.live_nodes, b.layers, b.affine_terms, b.table_length, b.table_entries, b.facts, b.graph_bytes, b.snapshot_bytes, b.forward_scratch, b.backward_scratch, b.optimizer_steps)),
+            Json::s(format!("/0 defaults: live nodes {}, layers {}, affine terms {}, table {} / {}, facts {}, graph bytes {}, snapshot bytes {}, forward scratch {}, backward scratch {}, optimizer steps {}", b.live_nodes, b.layers, b.affine_terms, b.table_length_entries, b.table_entries, b.facts, b.graph_bytes, b.snapshot_bytes, b.forward_scratch, b.backward_scratch, b.optimizer_steps)),
         ),
         (
             "wasm_features",

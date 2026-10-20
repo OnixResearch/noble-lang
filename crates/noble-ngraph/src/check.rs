@@ -36,7 +36,11 @@ pub struct Budgets {
     /// Terms per `affine`.
     pub affine_terms: u64,
     /// Index table length.
-    pub table_length: u64,
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-ngraph-maintainers; this is an abstract graph-budget row count in the profile's canonical entry units, not a time or byte quantity."
+    )]
+    pub table_length_entries: u64,
     /// Total index table entries.
     pub table_entries: u64,
     /// Facts.
@@ -64,7 +68,7 @@ impl Default for Budgets {
             inputs: 65_536,
             outputs: 65_536,
             affine_terms: 4_096,
-            table_length: 65_536,
+            table_length_entries: 65_536,
             table_entries: 1_048_576,
             facts: 262_144,
             graph_bytes: 32 * 1024 * 1024,
@@ -87,7 +91,7 @@ impl Budgets {
             self.inputs,
             self.outputs,
             self.affine_terms,
-            self.table_length,
+            self.table_length_entries,
             self.table_entries,
             self.facts,
             self.graph_bytes,
@@ -120,24 +124,33 @@ impl Budgets {
 ///
 /// # Errors
 /// `E-BUDGET-<kind>` with the limit and observed count.
+#[expect(
+    tigerstyle::numeric_units,
+    reason = "Owner: noble-ngraph-maintainers; the limit is a count in the selected budget kind's abstract units, named by the diagnostic rather than by a time or byte suffix."
+)]
 pub const fn charge(
     kind: crate::diag::BudgetKind,
-    limit: u64,
+    limit_units: u64,
     observed: u64,
 ) -> Result<(), crate::diag::BudgetKind> {
-    if observed > limit {
+    if observed > limit_units {
         Err(kind)
     } else {
         Ok(())
     }
 }
 
+#[expect(
+    tigerstyle::numeric_units,
+    reason = "Owner: noble-ngraph-maintainers; the limit is a count in the selected budget kind's abstract units, named by the diagnostic rather than by a time or byte suffix."
+)]
 fn budget(
     kind: crate::diag::BudgetKind,
-    limit: u64,
+    limit_units: u64,
     observed: u64,
 ) -> Result<(), crate::diag::Diagnostic> {
-    charge(kind, limit, observed).map_err(|k| crate::diag::Diagnostic::budget(k, limit, observed))
+    charge(kind, limit_units, observed)
+        .map_err(|k| crate::diag::Diagnostic::budget(k, limit_units, observed))
 }
 
 /// An input/param fact validated before evaluation (`E-FACT-INPUT`).
@@ -418,7 +431,7 @@ pub fn check_with(
             crate::ir::Op::F32Index { table, .. } => {
                 budget(
                     crate::diag::BudgetKind::TableLength,
-                    budgets.table_length,
+                    budgets.table_length_entries,
                     table.len() as u64,
                 )?;
                 table_entries += table.len() as u64;
@@ -639,10 +652,6 @@ fn finite_bits(bits: u32) -> bool {
     f32::from_bits(bits).is_finite()
 }
 
-#[expect(
-    tigerstyle::catch_all_on_enum,
-    reason = "Owner: noble-maintainers; the remaining branch is the closed TypeError diagnostic, not an unhandled constructor"
-)]
 fn check_types(
     g: &crate::ir::Graph,
 ) -> Result<alloc::vec::Vec<Option<crate::ir::ScalarType>>, crate::diag::Diagnostic> {
@@ -671,7 +680,7 @@ fn check_types(
                         alloc::format!("operand %{} is {}", o.0, t.name()),
                     ))
                 }
-                _ => Err(crate::diag::Diagnostic::malformed(
+                Some(_) | None => Err(crate::diag::Diagnostic::malformed(
                     crate::diag::Malformed::TypeError,
                     site.clone(),
                     alloc::format!("operand %{} is not {}", o.0, ty.name()),
@@ -969,7 +978,7 @@ fn check_facts(
                     Some(crate::ir::ScalarType::I64) => {
                         crate::facts::Abs::I64(crate::facts::AbsI64::UNKNOWN)
                     }
-                    _ => crate::facts::Abs::Bool,
+                    Some(crate::ir::ScalarType::Bool) | None => crate::facts::Abs::Bool,
                 };
                 for inf in &input_facts {
                     if inf.node == id {

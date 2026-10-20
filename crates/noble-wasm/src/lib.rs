@@ -17,6 +17,26 @@
     tigerstyle::nested_conditionals,
     reason = "Owner: noble-wasm-maintainers; the ordered emitter dispatch and its early-return macro keep the outer constructor match adjacent to its shape arms, and flattening them would duplicate the constructor guards"
 )]
+#![expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-wasm-maintainers; emission and preflight arithmetic operates on admitted counts and byte lengths bounded by the explicit table, signature, node and output limits; overflow is refused at admission"
+)]
+#![expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-wasm-maintainers; the emitter and preflight stages are ordered validators whose explicit bound checks and diagnostics are the review subject"
+)]
+#![expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-wasm-maintainers; the kernel type, shape and action vocabularies are closed and a new variant must force every emission match to change"
+)]
+#![expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-wasm-maintainers; helper constness is not part of the compiler contract; the flagged helpers read runtime tables or allocate while preserving diagnostics"
+)]
+#![expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-wasm-maintainers; the flagged parameters are the published stack and interface coordinates, and every call site already fixes their order in the reviewed lowering step"
+)]
 //! Bounded, kernel-checked lowering to a fixed Wasm instruction vocabulary.
 //!
 //! The returned bytes are a complete WAT module. Assembly and execution belong

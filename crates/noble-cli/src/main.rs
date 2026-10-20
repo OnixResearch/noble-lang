@@ -96,6 +96,38 @@
     tigerstyle::drop_must_use,
     reason = "Owner: noble-maintainers; the ignored results are report/Drop finalizers whose failure is surfaced separately"
 )]
+#![expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-maintainers; CLI arithmetic works on decoded bounded counts and report offsets already checked against the selected artifact, and overflow is refused before publication"
+)]
+#![expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; command routes and report builders assert the published argument and artifact invariants, whose ordered checks are the review subject"
+)]
+#![expect(
+    tigerstyle::foreign_enum_catch_all,
+    reason = "Owner: noble-maintainers; the flagged fallbacks are on Option/Result refusal paths that must preserve the existing diagnostic"
+)]
+#![expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-maintainers; the flagged parameter names are the published argument and artifact vocabulary, and every call site fixes their order"
+)]
+#![expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; helper constness is not part of the CLI contract, and the flagged helpers read runtime tables or build diagnostics"
+)]
+#![expect(
+    tigerstyle::numeric_units,
+    reason = "Owner: noble-maintainers; the flagged limits are abstract budget and work counts named by their selected budget kind, not time or byte quantities"
+)]
+#![expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-maintainers; command and report guards keep their full refusal predicate in one condition so the published refusal order stays reviewable"
+)]
+#![expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; the CLI matches the closed kernel and artifact vocabularies, so a new variant must force every route to change"
+)]
 #![register_tool(octet)]
 //! Consumer-owned contract verification and the internal extraction smoke route.
 

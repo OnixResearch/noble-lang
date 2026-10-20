@@ -1,6 +1,7 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 #![allow(
+    tigerstyle::missing_const_fn,
     tigerstyle::explicit_defaults,
     tigerstyle::function_length,
     tigerstyle::no_unwrap,

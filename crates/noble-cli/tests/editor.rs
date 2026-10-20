@@ -4,6 +4,8 @@
     tigerstyle::ambient_env,
     tigerstyle::function_length,
     tigerstyle::non_trait_imports,
+    tigerstyle::ambiguous_params,
+    tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 use std::{io::Write, path::Path, process::Command};
