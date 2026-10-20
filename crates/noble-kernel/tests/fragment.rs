@@ -7,6 +7,9 @@
 #[path = "fragment/witnesses.rs"]
 mod witnesses;
 
+#[path = "fragment/kinds.rs"]
+mod kinds;
+
 #[test]
 fn data_is_recursive_over_resource_payloads() {
     let resource = noble_kernel::types::Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE);

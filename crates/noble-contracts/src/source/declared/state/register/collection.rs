@@ -14,6 +14,7 @@ pub(super) struct Collected {
         alloc::string::String,
         alloc::string::String,
         alloc::vec::Vec<alloc::string::String>,
+        crate::Span,
     )>,
     pub contracts: alloc::vec::Vec<crate::source::declared::parsing::Contract>,
     pub proofs: alloc::vec::Vec<crate::source::declared::parsing::Proof>,
@@ -80,7 +81,8 @@ impl Collected {
                         name,
                         binders,
                         words,
-                    } => collected.add_signature(name, binders, words),
+                        span,
+                    } => collected.add_signature(name, binders, words, span),
                     crate::source::declared::parsing::Member::Definition {
                         name,
                         bytes,
@@ -243,14 +245,19 @@ impl Collected {
         name: alloc::string::String,
         binders: alloc::string::String,
         words: alloc::vec::Vec<alloc::string::String>,
+        span: crate::Span,
     ) -> Result<Self, crate::source::Error> {
-        if self.signatures.iter().any(|(known, _, _)| known == &name) {
+        if self
+            .signatures
+            .iter()
+            .any(|(known, _, _, _)| known == &name)
+        {
             return Err(crate::source::declared::error(
                 crate::source::Stage::Resolve,
                 "duplicate source signature",
             ));
         }
-        self.signatures.push((name, binders, words));
+        self.signatures.push((name, binders, words, span));
         Ok(self)
     }
 
@@ -299,7 +306,7 @@ impl Collected {
     }
 
     fn validate(&self) -> Result<(), crate::source::Error> {
-        if self.signatures.iter().any(|(name, _, _)| {
+        if self.signatures.iter().any(|(name, _, _, _)| {
             !self
                 .definitions
                 .iter()

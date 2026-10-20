@@ -220,7 +220,7 @@ fn require_parts(
     }
 }
 
-/// Require one pattern to match its kind, queueing its sub-patterns.
+/// Require one value pattern to match its position, queueing its sub-patterns.
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; require_pattern consumes boxed patterns and grows the owned Vec work queue; these allocation/drop operations are runtime-only."
@@ -239,12 +239,7 @@ fn require_pattern(
             Ok(()) => Ok(work),
             Err(problem) => Err(problem),
         },
-        Pattern::StackVar(var) => {
-            match require_kind(kinds, var, crate::words::VariableKind::Stack) {
-                Ok(()) => Ok(work),
-                Err(problem) => Err(problem),
-            }
-        }
+        Pattern::StackVar(_) => Err(Defect::KindMismatch),
         Pattern::Pair(left, right) | Pattern::Sum(left, right) => {
             work.push(Step::Pattern(*left));
             work.push(Step::Pattern(*right));

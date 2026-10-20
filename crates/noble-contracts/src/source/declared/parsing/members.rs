@@ -414,10 +414,12 @@ fn signature(
             "signature requires bracketed interface",
         ));
     }
+    let interface_start = cursor.tokens[cursor.at].span.start;
     cursor.at += 1;
     let mut words = alloc::vec::Vec::new();
     while cursor.at < cursor.tokens.len() {
         if let crate::source::lexer::TokenKind::Close = &cursor.tokens[cursor.at].kind {
+            let end = cursor.tokens[cursor.at].span.end;
             cursor.at += 1;
             return Ok((
                 cursor,
@@ -425,6 +427,10 @@ fn signature(
                     name,
                     binders: alloc::string::String::from(binders),
                     words,
+                    span: crate::Span {
+                        start: interface_start,
+                        end,
+                    },
                 },
             ));
         }

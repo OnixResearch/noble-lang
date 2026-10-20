@@ -49,6 +49,7 @@ pub(super) enum Member {
         name: alloc::string::String,
         binders: alloc::string::String,
         words: alloc::vec::Vec<alloc::string::String>,
+        span: crate::Span,
     },
     Export(alloc::string::String),
     Definition {

@@ -25,6 +25,14 @@ Stacks are ordered lists of types, top on the right. Limits bound stack length a
 
 Schemes quantify over stack variables, value-type variables, and effect variables. Every variable set is finite and rank-1.
 
+A stack variable denotes zero or more types and is legal only as an entry in
+a stack list, including a nested Program's input or output list. Pair/Sum
+payloads, List elements, and generic-family arguments each require one value
+type. `Pair<S,I64>` with `S:stack` is therefore malformed even if a particular
+binding of `S` contains exactly one type. `Scheme::validate` rejects these
+wrong-position occurrences with `Defect::KindMismatch`; it does not impose a
+hidden singleton restriction on otherwise valid stack bindings.
+
 ```text
 dup   : S a -- S a a ! {}                 where Data(a)
 drop  : S a -- S ! {}                     where Data(a)
@@ -49,6 +57,16 @@ test.emit : S Text -- S Unit ! {test.emit}
 ```
 
 The environment also supplies named definitions with the same scheme form and the concrete effect-identity list.
+
+Declared-Modules-v1 source signatures pass through the same formation check
+before body inference. Invalid constructor arguments produce an ordinary
+invalid-signature diagnostic located at the bracketed interface, not an
+internal frontend error. Regression controls are in
+`crates/noble-kernel/tests/fragment/kinds.rs` and
+`crates/noble-contracts/tests/declared/signatures.rs`; they also preserve
+ordinary value/effect binders and empty, singleton, and multi-value stack
+bindings in nested Program/LiveRef stack lists. LiveRef is outside the M2
+fragment above. These are implementation tests, not a new extraction or proof.
 
 ## Candidate and request schema (`noble-candidate/v0`)
 

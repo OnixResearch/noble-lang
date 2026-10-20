@@ -64,10 +64,14 @@ impl super::ModuleSession {
         let families =
             crate::source::declared::signatures::families(&next, &collected.schemas, identity);
         let mut signatures = alloc::vec::Vec::with_capacity(collected.signatures.len());
-        for (name, binders, words) in &collected.signatures {
+        for (name, binders, words, span) in &collected.signatures {
             let scheme = attempt!(crate::source::declared::signatures::parse(
                 binders, words, &families,
-            ));
+            )
+            .map_err(|mut error| {
+                error.diagnostic.span = *span;
+                error
+            }));
             if collected.exports.contains(name)
                 && !next.source.declared.as_ref().is_some_and(|context| {
                     crate::source::declared::signatures::exported(&scheme, &context.environment)

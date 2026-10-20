@@ -9,6 +9,9 @@ mod named;
 #[path = "declared/origin.rs"]
 mod origin;
 
+#[path = "declared/signatures.rs"]
+mod signatures;
+
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
     nodes: 16_384,
