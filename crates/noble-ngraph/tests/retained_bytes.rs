@@ -7,8 +7,9 @@
     tigerstyle::non_trait_imports,
     tigerstyle::underscore_in_module_filename,
     tigerstyle::missing_const_fn,
+    tigerstyle::numeric_units,
     tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form. The reserved capacity is an abstract element count, not a byte or time quantity."
 )]
 //! Retained-byte accounting (`graph_bytes`).
 //!
@@ -135,7 +136,9 @@ fn shape_storage_is_charged_and_budgeted() {
 #[test]
 fn fact_payloads_are_charged() {
     let mut g = small_graph();
-    let bare = retained_bytes(&g);
+    // `Vec::clone` normalizes spare capacity, so compare against a clone: the
+    // baseline must have the same node allocation shape as `with_rule`.
+    let bare = retained_bytes(&g.clone());
 
     g.facts = vec![FactRecord {
         node: NodeId(0),
@@ -199,4 +202,69 @@ fn node_operation_payloads_are_charged() {
         retained_bytes(&graph) >= retained_bytes(&small) + dropped,
         "shrinking the term list must lower the charge by at least the dropped payload"
     );
+}
+
+#[test]
+fn node_spare_capacity_is_charged_and_refused() {
+    let mut g = small_graph();
+    let empty = retained_bytes(&g);
+    let previous_capacity = g.nodes.capacity();
+    g.nodes.reserve_exact(previous_capacity + 4_096);
+    let retained_capacity = g.nodes.capacity();
+    assert!(retained_capacity > previous_capacity);
+    assert_eq!(g.nodes.len(), 1);
+
+    let node_bytes = core::mem::size_of::<noble_ngraph::ir::Node>() as u64;
+    let growth = (retained_capacity - previous_capacity) as u64 * node_bytes;
+    assert_eq!(
+        retained_bytes(&g),
+        empty.saturating_add(growth),
+        "node capacity growth must add exactly its element storage"
+    );
+
+    // Consume the reserved graph directly: a clone need not preserve capacity.
+    let observed = refusal_charge(g, empty);
+    assert!(
+        observed >= empty.saturating_add(growth),
+        "observed {observed} must cover {growth} spare node bytes above {empty}"
+    );
+
+    let mut admitted = small_graph();
+    admitted.nodes.reserve_exact(previous_capacity + 4_096);
+    let corrected = retained_bytes(&admitted);
+    let checked = check_with(&IDS, admitted, &budgets_for(corrected))
+        .expect("the corrected budget covers the spare node capacity");
+    assert_eq!(checked.graph().nodes.capacity(), retained_capacity);
+}
+
+#[test]
+fn fact_spare_capacity_is_charged_and_refused() {
+    let mut g = small_graph();
+    let empty = retained_bytes(&g);
+    let previous_capacity = g.facts.capacity();
+    g.facts.reserve_exact(previous_capacity + 4_096);
+    let retained_capacity = g.facts.capacity();
+    assert!(retained_capacity > previous_capacity);
+    assert!(g.facts.is_empty());
+
+    let fact_bytes = core::mem::size_of::<noble_ngraph::ir::FactRecord>() as u64;
+    let growth = (retained_capacity - previous_capacity) as u64 * fact_bytes;
+    assert_eq!(
+        retained_bytes(&g),
+        empty.saturating_add(growth),
+        "empty fact capacity must charge its backing storage"
+    );
+
+    let observed = refusal_charge(g, empty);
+    assert!(
+        observed >= empty.saturating_add(growth),
+        "observed {observed} must cover {growth} spare fact bytes above {empty}"
+    );
+
+    let mut admitted = small_graph();
+    admitted.facts.reserve_exact(previous_capacity + 4_096);
+    let corrected = retained_bytes(&admitted);
+    let checked = check_with(&IDS, admitted, &budgets_for(corrected))
+        .expect("the corrected budget covers the spare fact capacity");
+    assert_eq!(checked.graph().facts.capacity(), retained_capacity);
 }

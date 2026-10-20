@@ -283,9 +283,9 @@ impl CheckedGraph {
 /// Estimated retained bytes of a graph (charged against `graph_bytes`).
 ///
 /// The estimate covers the `crate::ir::Graph` header plus every graph-owned heap
-/// allocation: the interface slot and output vectors, node headers with their
-/// operation payloads and `origin.expansion` vectors, fact headers with
-/// `one-hot` groups and `derived`/`evidence` provenance payloads, the subject
+/// allocation: the interface slot and output vectors, the node and fact vectors
+/// with their operation payloads and `origin.expansion` vectors, `one-hot`
+/// groups and `derived`/`evidence` provenance payloads, the subject
 /// closure, and the input/output shape vectors together with the boxed pair
 /// children of every shape tree.
 ///
@@ -323,8 +323,9 @@ pub fn retained_bytes(g: &crate::ir::Graph) -> u64 {
     let mut b = core::mem::size_of::<crate::ir::Graph>() as u64;
     b = b.saturating_add(vec_bytes(&g.slots));
     b = b.saturating_add(vec_bytes(&g.outputs));
+    b = b.saturating_add(vec_bytes(&g.nodes));
+    b = b.saturating_add(vec_bytes(&g.facts));
     for n in &g.nodes {
-        b = b.saturating_add(core::mem::size_of::<crate::ir::Node>() as u64);
         b = b.saturating_add(match &n.op {
             crate::ir::Op::F32Affine { terms, .. } => vec_bytes(terms),
             crate::ir::Op::F32Index { table, .. } => vec_bytes(table),
@@ -339,7 +340,6 @@ pub fn retained_bytes(g: &crate::ir::Graph) -> u64 {
         }
     }
     for f in &g.facts {
-        b = b.saturating_add(core::mem::size_of::<crate::ir::FactRecord>() as u64);
         b = b.saturating_add(match &f.fact {
             crate::ir::Fact::OneHot { group, .. } => vec_bytes(group),
             _ => 0,
